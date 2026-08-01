@@ -95,10 +95,25 @@ create table evento (
 insert into evento ("id") values (true);
 
 -- ============================================================
--- RLS: activada en las 5 tablas. evento/mesas/fotos_familiares
--- quedan abiertas (igual de "sin contraseña" que hoy). invitados
--- y colaboradores NO tienen ninguna política — solo se pueden
--- tocar a través de las funciones de más abajo.
+-- 6. SECRETO DEL ANFITRIÓN (tabla completamente cerrada — el
+--    código que hace de "contraseña" para el modo Anfitrión).
+--    Importante: esto NO puede vivir como columna de `evento`,
+--    porque esa tabla está abierta a todo el mundo (ver abajo).
+-- ============================================================
+create table anfitrion_secreto (
+  "id"     boolean primary key default true check ("id"),
+  "token"  uuid not null default gen_random_uuid()
+);
+insert into anfitrion_secreto ("id") values (true);
+alter table anfitrion_secreto enable row level security;
+revoke all on table anfitrion_secreto from anon, authenticated;
+-- Sin ninguna política de acceso = nadie puede leerla directamente.
+
+-- ============================================================
+-- RLS: activada en las 6 tablas. evento/mesas/fotos_familiares
+-- quedan abiertas (datos sin sensibilidad real). invitados,
+-- colaboradores y anfitrion_secreto NO tienen ninguna política
+-- — solo se pueden tocar a través de las funciones de más abajo.
 -- ============================================================
 alter table evento             enable row level security;
 alter table mesas              enable row level security;
@@ -117,24 +132,43 @@ revoke all on table invitados     from anon, authenticated;
 revoke all on table colaboradores from anon, authenticated;
 
 -- ============================================================
--- RPCs — lado anfitrión (acceso completo, sin contraseña, igual
--- que hoy: quien tiene el enlace base es el anfitrión).
+-- RPCs — lado anfitrión. Exigen p_token, comprobado en el propio
+-- SQL contra anfitrion_secreto — sin el token correcto, no
+-- devuelven ni graban nada. Así la web pública, sin el enlace
+-- secreto del anfitrión, no expone datos ni por la propia API.
 -- ============================================================
-create or replace function anfitrion_listar_colaboradores()
+create or replace function anfitrion_verificar_token(p_token uuid)
+returns boolean
+language sql security definer set search_path = public, pg_temp
+as $$ select p_token = (select "token" from anfitrion_secreto limit 1); $$;
+
+create or replace function anfitrion_listar_colaboradores(p_token uuid)
 returns setof colaboradores
 language sql security definer set search_path = public, pg_temp
-as $$ select * from colaboradores order by "nombre"; $$;
+as $$
+  select c.* from colaboradores c
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  order by c."nombre";
+$$;
 
-create or replace function anfitrion_listar_invitados()
+create or replace function anfitrion_listar_invitados(p_token uuid)
 returns setof invitados
 language sql security definer set search_path = public, pg_temp
-as $$ select * from invitados order by "apellido", "nombre"; $$;
+as $$
+  select i.* from invitados i
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  order by i."apellido", i."nombre";
+$$;
 
-create or replace function anfitrion_guardar_colaboradores(p_filas jsonb)
+create or replace function anfitrion_guardar_colaboradores(p_token uuid, p_filas jsonb)
 returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
   insert into colaboradores ("id", "nombre", "invitadoId", "email")
   select
     (f->>'id')::uuid, f->>'nombre', nullif(f->>'invitadoId','')::uuid,
@@ -153,11 +187,15 @@ begin
 end;
 $$;
 
-create or replace function anfitrion_guardar_invitados(p_filas jsonb)
+create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
 returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
   insert into invitados (
     "id","nombre","apellido","zona","confirmado","colaboradorId",
     "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
@@ -236,10 +274,11 @@ $$;
 
 -- Permisos de ejecución (los permisos de tabla siguen revocados,
 -- solo estas funciones son alcanzables):
-grant execute on function anfitrion_listar_colaboradores() to anon;
-grant execute on function anfitrion_listar_invitados() to anon;
-grant execute on function anfitrion_guardar_colaboradores(jsonb) to anon;
-grant execute on function anfitrion_guardar_invitados(jsonb) to anon;
+grant execute on function anfitrion_verificar_token(uuid) to anon;
+grant execute on function anfitrion_listar_colaboradores(uuid) to anon;
+grant execute on function anfitrion_listar_invitados(uuid) to anon;
+grant execute on function anfitrion_guardar_colaboradores(uuid, jsonb) to anon;
+grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
 grant execute on function colaborador_mi_perfil(uuid) to anon;
 grant execute on function colaborador_mis_invitados(uuid) to anon;
 grant execute on function colaborador_guardar_invitado(uuid, uuid, jsonb) to anon;

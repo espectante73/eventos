@@ -20,24 +20,22 @@ const EVENTO_POR_DEFECTO = {
 };
 
 function avisar(mensaje, error) {
-  // Centralizado para poder cambiarlo fácilmente (toast, etc.) más adelante.
   // eslint-disable-next-line no-console
   console.error(mensaje, error);
   window.alert(mensaje);
 }
 
 export function useLedgerData(rol) {
-  const esColaborador = Boolean(rol) && rol !== "anfitrion";
-
   const [evento, setEvento] = useState(EVENTO_POR_DEFECTO);
   const [colaboradores, setColaboradores] = useState([]);
   const [invitados, setInvitados] = useState([]);
   const [mesas, setMesas] = useState([]);
   const [fotosFamiliares, setFotosFamiliares] = useState({});
   const [loaded, setLoaded] = useState(false);
+  const [esAnfitrion, setEsAnfitrion] = useState(false);
 
-  // Se mantienen al día en cada render para poder comparar "antes/después"
-  // dentro de persistInvitados sin depender de closures obsoletas.
+  // Se mantiene al día para poder comparar "antes/después" dentro de
+  // persistInvitados sin depender de closures obsoletas.
   const invitadosRef = useRef(invitados);
   useEffect(() => {
     invitadosRef.current = invitados;
@@ -48,75 +46,100 @@ export function useLedgerData(rol) {
 
     (async () => {
       setLoaded(false);
+      setEsAnfitrion(false);
 
-      const { data: eventoFilas, error: errEvento } = await supabase
-        .from("evento")
-        .select("*")
-        .limit(1);
-      if (errEvento) avisar("No se pudo cargar el evento.", errEvento);
+      // Sin ningún código en el enlace: no se intenta cargar nada real.
+      // No hay "modo por defecto" — antes esto era el fallo de seguridad.
+      if (!rol) {
+        setColaboradores([]);
+        setInvitados([]);
+        setMesas([]);
+        setLoaded(true);
+        return;
+      }
 
-      const { data: fotosFilas, error: errFotos } = await supabase
-        .from("fotos_familiares")
-        .select("*");
-      if (errFotos) avisar("No se pudieron cargar las fotos familiares.", errFotos);
+      // 1) ¿El código del enlace es el de un colaborador real?
+      const { data: perfil, error: errPerfil } = await supabase.rpc(
+        "colaborador_mi_perfil",
+        { p_colaborador_id: rol }
+      );
+      if (errPerfil) avisar("No se pudo comprobar el enlace.", errPerfil);
 
-      let colaboradoresNuevos = [];
-      let invitadosNuevos = [];
-      let mesasNuevas = [];
-
-      if (esColaborador) {
-        const { data: perfil, error: errPerfil } = await supabase.rpc(
-          "colaborador_mi_perfil",
-          { p_colaborador_id: rol }
-        );
-        if (errPerfil) avisar("No se pudo identificar al colaborador.", errPerfil);
-        colaboradoresNuevos = perfil || [];
-
+      if (perfil && perfil.length > 0) {
+        const { data: eventoFilas } = await supabase.from("evento").select("*").limit(1);
+        const { data: fotosFilas } = await supabase.from("fotos_familiares").select("*");
         const { data: misInvitados, error: errInv } = await supabase.rpc(
           "colaborador_mis_invitados",
           { p_colaborador_id: rol }
         );
         if (errInv) avisar("No se pudieron cargar tus invitados asignados.", errInv);
-        invitadosNuevos = misInvitados || [];
 
-        mesasNuevas = []; // La vista de colaborador nunca necesita las mesas.
-      } else {
+        if (cancelado) return;
+        if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
+        setFotosFamiliares(
+          Object.fromEntries((fotosFilas || []).map((r) => [r.grupoFamiliar, r.url]))
+        );
+        setColaboradores(perfil);
+        setInvitados(misInvitados || []);
+        setMesas([]); // La vista de colaborador nunca necesita las mesas.
+        setEsAnfitrion(false);
+        setLoaded(true);
+        return;
+      }
+
+      // 2) ¿El código del enlace es el secreto del anfitrión?
+      const { data: esValido, error: errToken } = await supabase.rpc(
+        "anfitrion_verificar_token",
+        { p_token: rol }
+      );
+      if (errToken) avisar("No se pudo comprobar el enlace.", errToken);
+
+      if (esValido === true) {
+        const { data: eventoFilas } = await supabase.from("evento").select("*").limit(1);
+        const { data: fotosFilas } = await supabase.from("fotos_familiares").select("*");
         const { data: todosColaboradores, error: errCol } = await supabase.rpc(
-          "anfitrion_listar_colaboradores"
+          "anfitrion_listar_colaboradores",
+          { p_token: rol }
         );
         if (errCol) avisar("No se pudieron cargar los colaboradores.", errCol);
-        colaboradoresNuevos = todosColaboradores || [];
-
         const { data: todosInvitados, error: errInv } = await supabase.rpc(
-          "anfitrion_listar_invitados"
+          "anfitrion_listar_invitados",
+          { p_token: rol }
         );
         if (errInv) avisar("No se pudieron cargar los invitados.", errInv);
-        invitadosNuevos = todosInvitados || [];
-
         const { data: todasMesas, error: errMesas } = await supabase
           .from("mesas")
           .select("*")
           .order("numero", { ascending: true });
         if (errMesas) avisar("No se pudieron cargar las mesas.", errMesas);
-        mesasNuevas = todasMesas || [];
+
+        if (cancelado) return;
+        if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
+        setFotosFamiliares(
+          Object.fromEntries((fotosFilas || []).map((r) => [r.grupoFamiliar, r.url]))
+        );
+        setColaboradores(todosColaboradores || []);
+        setInvitados(todosInvitados || []);
+        setMesas(todasMesas || []);
+        setEsAnfitrion(true);
+        setLoaded(true);
+        return;
       }
 
+      // 3) Ni colaborador ni anfitrión: enlace no reconocido. No se
+      // devuelve ni se intenta cargar ningún dato real.
       if (cancelado) return;
-
-      if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
-      setFotosFamiliares(
-        Object.fromEntries((fotosFilas || []).map((r) => [r.grupoFamiliar, r.url]))
-      );
-      setColaboradores(colaboradoresNuevos);
-      setInvitados(invitadosNuevos);
-      setMesas(mesasNuevas);
+      setColaboradores([]);
+      setInvitados([]);
+      setMesas([]);
+      setEsAnfitrion(false);
       setLoaded(true);
     })();
 
     return () => {
       cancelado = true;
     };
-  }, [rol, esColaborador]);
+  }, [rol]);
 
   const persistEvento = useCallback(async (next) => {
     setEvento(next);
@@ -141,14 +164,18 @@ export function useLedgerData(rol) {
     if (error) avisar("No se pudo guardar la foto familiar.", error);
   }, []);
 
-  const persistColaboradores = useCallback(async (next) => {
-    setColaboradores(next);
-    if (esColaborador) return; // Un colaborador nunca modifica la lista de colaboradores.
-    const { error } = await supabase.rpc("anfitrion_guardar_colaboradores", {
-      p_filas: next,
-    });
-    if (error) avisar("No se pudieron guardar los colaboradores.", error);
-  }, [esColaborador]);
+  const persistColaboradores = useCallback(
+    async (next) => {
+      setColaboradores(next);
+      if (!esAnfitrion) return; // Un colaborador nunca modifica la lista de colaboradores.
+      const { error } = await supabase.rpc("anfitrion_guardar_colaboradores", {
+        p_token: rol,
+        p_filas: next,
+      });
+      if (error) avisar("No se pudieron guardar los colaboradores.", error);
+    },
+    [esAnfitrion, rol]
+  );
 
   const persistInvitados = useCallback(
     async (next) => {
@@ -156,20 +183,17 @@ export function useLedgerData(rol) {
       setInvitados(next);
       invitadosRef.current = next;
 
-      if (!esColaborador) {
-        // Anfitrión: reemplaza el array completo de una vez (inserta/actualiza
-        // todo lo que venga en `next`, y borra lo que ya no esté).
+      if (esAnfitrion) {
         const { error } = await supabase.rpc("anfitrion_guardar_invitados", {
+          p_token: rol,
           p_filas: next,
         });
         if (error) avisar("No se pudieron guardar los invitados.", error);
         return;
       }
 
-      // Colaborador: solo puede cambiar UNA fila a la vez (su propio flujo de
-      // trabajo nunca edita varias a la vez), y solo mediante las dos
-      // funciones que de verdad comprueban en el servidor que ese invitado
-      // es suyo.
+      // Colaborador: solo cambia una fila a la vez, y solo mediante las
+      // funciones que comprueban en el servidor que ese invitado es suyo.
       const anteriorPorId = Object.fromEntries(anterior.map((g) => [g.id, g]));
       const cambiado = next.find((g) => {
         const previo = anteriorPorId[g.id];
@@ -205,7 +229,7 @@ export function useLedgerData(rol) {
         }
       }
     },
-    [esColaborador, rol]
+    [esAnfitrion, rol]
   );
 
   return {
@@ -215,6 +239,7 @@ export function useLedgerData(rol) {
     mesas,
     fotosFamiliares,
     loaded,
+    esAnfitrion,
     persistEvento,
     persistColaboradores,
     persistInvitados,

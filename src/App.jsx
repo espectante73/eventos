@@ -24,6 +24,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
+import { supabase } from "./supabaseClient";
 
 const VERSION_APP = "4.0";
 
@@ -3310,11 +3311,32 @@ function VistaColaborador({ data, colaboradorId }) {
 
 export default function App() {
   const urlRol = getRolFromUrl();
-  const rolBloqueado = Boolean(urlRol);
-  const [rol, setRol] = useState(urlRol || "anfitrion");
+  // Se comprueba UNA sola vez si el código del enlace original de la URL
+  // es el secreto del anfitrión — independiente de lo que `rol` valga
+  // después (que cambia sin tocar la URL cuando el anfitrión previsualiza
+  // la vista de un colaborador desde las pestañas de abajo).
+  const [esAnfitrionOriginal, setEsAnfitrionOriginal] = useState(null);
+  const [rol, setRol] = useState(urlRol || null);
   const data = useLedgerData(rol);
 
-  if (!data.loaded) {
+  useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      if (!urlRol) {
+        setEsAnfitrionOriginal(false);
+        return;
+      }
+      const { data: esValido } = await supabase.rpc("anfitrion_verificar_token", {
+        p_token: urlRol,
+      });
+      if (!cancelado) setEsAnfitrionOriginal(esValido === true);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [urlRol]);
+
+  if (!data.loaded || esAnfitrionOriginal === null) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -3335,29 +3357,14 @@ export default function App() {
       }}
     >
       <div className="max-w-4xl mx-auto px-4 py-6">
-        {rolBloqueado ? (
-          <div
-            className="text-xs uppercase mb-6 inline-block px-2 py-1 rounded"
-            style={{
-              color: C.gold,
-              border: `1px solid ${C.line}`,
-              fontFamily: "'IBM Plex Mono', monospace",
-              letterSpacing: "0.06em",
-            }}
-          >
-            Vista fija de enlace ·{" "}
-            {rol === "anfitrion"
-              ? "Anfitrión"
-              : data.colaboradores.find((c) => c.id === rol)?.nombre || "rol no encontrado"}
-          </div>
-        ) : (
+        {esAnfitrionOriginal ? (
           <div className="flex flex-wrap items-center gap-2 mb-6">
             <button
-              onClick={() => setRol("anfitrion")}
+              onClick={() => setRol(urlRol)}
               className="px-3 py-1.5 rounded text-sm font-medium"
               style={{
-                background: rol === "anfitrion" ? C.ink : "transparent",
-                color: rol === "anfitrion" ? C.paper : C.ink,
+                background: data.esAnfitrion ? C.ink : "transparent",
+                color: data.esAnfitrion ? C.paper : C.ink,
                 border: `1px solid ${C.ink}`,
               }}
             >
@@ -3387,15 +3394,28 @@ export default function App() {
               );
             })}
           </div>
-        )}
+        ) : urlRol ? (
+          <div
+            className="text-xs uppercase mb-6 inline-block px-2 py-1 rounded"
+            style={{
+              color: C.gold,
+              border: `1px solid ${C.line}`,
+              fontFamily: "'IBM Plex Mono', monospace",
+              letterSpacing: "0.06em",
+            }}
+          >
+            Vista fija de enlace ·{" "}
+            {data.colaboradores.find((c) => c.id === rol)?.nombre || "rol no encontrado"}
+          </div>
+        ) : null}
 
-        {rol === "anfitrion" ? (
+        {data.esAnfitrion ? (
           <VistaAnfitrion data={data} />
         ) : data.colaboradores.some((c) => c.id === rol) ? (
           <VistaColaborador data={data} colaboradorId={rol} />
         ) : (
           <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.7 }}>
-            Este enlace no corresponde a ningún colaborador activo. Pide al Anfitrión un enlace actualizado.
+            Este enlace no es válido o ha caducado. Pide al anfitrión un enlace actualizado.
           </p>
         )}
       </div>
