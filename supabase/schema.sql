@@ -1,0 +1,246 @@
+-- ============================================================
+-- Esquema de la app de eventos (Supabase / Postgres)
+--
+-- Cómo usarlo: pega TODO este archivo en el editor SQL de tu
+-- proyecto de Supabase (Database > SQL Editor > New query) y
+-- ejecútalo una sola vez. Es seguro volver a ejecutarlo si algo
+-- falla a medias, salvo la línea "insert into evento" (fallará
+-- la segunda vez porque ya existe la fila — no pasa nada, ignórala).
+--
+-- Nombres de columna en camelCase (a propósito): así el objeto
+-- de JavaScript de la app y la fila de la base de datos usan
+-- literalmente las mismas claves, sin tener que traducir entre
+-- "grupoFamiliar" y "grupo_familiar" en ningún sitio del código.
+-- ============================================================
+
+-- ============================================================
+-- 1. INVITADOS (la FK hacia colaboradores se añade después, para
+--    resolver la referencia circular entre las dos tablas)
+-- ============================================================
+create table invitados (
+  "id"              uuid primary key default gen_random_uuid(),
+  "nombre"          text not null default '',
+  "apellido"        text not null default '',
+  "zona"            text not null default '',
+  "confirmado"      boolean not null default false,
+  "colaboradorId"   uuid null,
+  "grupoFamiliar"   text not null default '',
+  "mesa"            integer null,
+  "anioNacimiento"  text not null default '',
+  "anioBoda"        text not null default '',
+  "email"           text not null default '',
+  "cancion"         text not null default '',
+  "alergias"        text not null default '',
+  "observaciones"   text not null default '',
+  "pagado"          boolean not null default false
+);
+
+-- ============================================================
+-- 2. COLABORADORES
+-- ============================================================
+create table colaboradores (
+  "id"          uuid primary key default gen_random_uuid(),
+  "nombre"      text not null default '',
+  "invitadoId"  uuid null references invitados("id") on delete set null,
+  "email"       text not null default ''
+);
+
+alter table invitados
+  add constraint invitados_colaborador_fk
+  foreign key ("colaboradorId") references colaboradores("id") on delete set null;
+
+-- ============================================================
+-- 3. MESAS (1 a 15, número fijo)
+-- ============================================================
+create table mesas (
+  "numero"     integer primary key check ("numero" between 1 and 15),
+  "capacidad"  integer not null default 10 check ("capacidad" >= 0)
+);
+insert into mesas ("numero", "capacidad")
+  select n, 10 from generate_series(1, 15) as n;
+
+alter table invitados
+  add constraint invitados_mesa_fk
+  foreign key ("mesa") references mesas("numero") on delete set null;
+
+-- ============================================================
+-- 4. FOTOS FAMILIARES (diccionario: grupoFamiliar -> url)
+-- ============================================================
+create table fotos_familiares (
+  "grupoFamiliar"  text primary key,
+  "url"            text not null default ''
+);
+
+-- ============================================================
+-- 5. EVENTO (una única fila, forzado con un truco de PK booleana)
+-- ============================================================
+create table evento (
+  "id"                      boolean primary key default true check ("id"),
+  "nombre"                  text not null default '',
+  "fecha"                   text not null default '',
+  "hora"                    text not null default '',
+  "precio"                  text not null default '',   -- campo antiguo sin uso hoy, se mantiene por compatibilidad
+  "imagen"                  text not null default '/cabecera-defecto.jpg',
+  "imagenInvitacion"        text not null default '/invitacion-defecto.jpg',
+  "lugar"                   text not null default '',
+  "direccion"               text not null default '',
+  "precioAdulto"            text not null default '',
+  "precioNino"              text not null default '',
+  "edadNinoDesde"           text not null default '2',
+  "edadNinoHasta"           text not null default '12',
+  "urlPublica"              text not null default '',
+  "ocultarTituloEnImagen"   boolean not null default true,
+  "emailAnfitrion"          text not null default ''
+);
+insert into evento ("id") values (true);
+
+-- ============================================================
+-- RLS: activada en las 5 tablas. evento/mesas/fotos_familiares
+-- quedan abiertas (igual de "sin contraseña" que hoy). invitados
+-- y colaboradores NO tienen ninguna política — solo se pueden
+-- tocar a través de las funciones de más abajo.
+-- ============================================================
+alter table evento             enable row level security;
+alter table mesas              enable row level security;
+alter table fotos_familiares   enable row level security;
+alter table invitados          enable row level security;
+alter table colaboradores      enable row level security;
+
+create policy "anon_full_access" on evento             for all using (true) with check (true);
+create policy "anon_full_access" on mesas              for all using (true) with check (true);
+create policy "anon_full_access" on fotos_familiares   for all using (true) with check (true);
+
+-- Cinturón y tirantes: quitamos también los permisos de tabla que
+-- Supabase concede por defecto, para que no exista ningún camino
+-- directo a estas dos tablas salvo por las funciones RPC.
+revoke all on table invitados     from anon, authenticated;
+revoke all on table colaboradores from anon, authenticated;
+
+-- ============================================================
+-- RPCs — lado anfitrión (acceso completo, sin contraseña, igual
+-- que hoy: quien tiene el enlace base es el anfitrión).
+-- ============================================================
+create or replace function anfitrion_listar_colaboradores()
+returns setof colaboradores
+language sql security definer set search_path = public, pg_temp
+as $$ select * from colaboradores order by "nombre"; $$;
+
+create or replace function anfitrion_listar_invitados()
+returns setof invitados
+language sql security definer set search_path = public, pg_temp
+as $$ select * from invitados order by "apellido", "nombre"; $$;
+
+create or replace function anfitrion_guardar_colaboradores(p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  insert into colaboradores ("id", "nombre", "invitadoId", "email")
+  select
+    (f->>'id')::uuid, f->>'nombre', nullif(f->>'invitadoId','')::uuid,
+    coalesce(f->>'email', '')
+  from jsonb_array_elements(p_filas) as f
+  on conflict ("id") do update
+    set "nombre" = excluded."nombre",
+        "invitadoId" = excluded."invitadoId",
+        "email" = excluded."email";
+
+  delete from colaboradores c
+  where not exists (
+    select 1 from jsonb_array_elements(p_filas) f
+    where (f->>'id')::uuid = c."id"
+  );
+end;
+$$;
+
+create or replace function anfitrion_guardar_invitados(p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  insert into invitados (
+    "id","nombre","apellido","zona","confirmado","colaboradorId",
+    "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
+    "cancion","alergias","observaciones","pagado"
+  )
+  select
+    (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
+    coalesce((f->>'confirmado')::boolean, false),
+    nullif(f->>'colaboradorId','')::uuid,
+    f->>'grupoFamiliar', nullif(f->>'mesa','')::integer,
+    f->>'anioNacimiento', f->>'anioBoda', f->>'email', f->>'cancion',
+    f->>'alergias', f->>'observaciones',
+    coalesce((f->>'pagado')::boolean, false)
+  from jsonb_array_elements(p_filas) as f
+  on conflict ("id") do update set
+    "nombre"=excluded."nombre", "apellido"=excluded."apellido",
+    "zona"=excluded."zona", "confirmado"=excluded."confirmado",
+    "colaboradorId"=excluded."colaboradorId", "grupoFamiliar"=excluded."grupoFamiliar",
+    "mesa"=excluded."mesa", "anioNacimiento"=excluded."anioNacimiento",
+    "anioBoda"=excluded."anioBoda", "email"=excluded."email",
+    "cancion"=excluded."cancion", "alergias"=excluded."alergias",
+    "observaciones"=excluded."observaciones", "pagado"=excluded."pagado";
+
+  delete from invitados g
+  where not exists (
+    select 1 from jsonb_array_elements(p_filas) f
+    where (f->>'id')::uuid = g."id"
+  );
+end;
+$$;
+
+-- ============================================================
+-- RPCs — lado colaborador (comprueban de verdad la propiedad del
+-- invitado dentro del propio SQL, no solo en el navegador).
+-- ============================================================
+create or replace function colaborador_mi_perfil(p_colaborador_id uuid)
+returns setof colaboradores
+language sql security definer set search_path = public, pg_temp
+as $$ select * from colaboradores where "id" = p_colaborador_id; $$;
+
+create or replace function colaborador_mis_invitados(p_colaborador_id uuid)
+returns setof invitados
+language sql security definer set search_path = public, pg_temp
+as $$ select * from invitados where "colaboradorId" = p_colaborador_id; $$;
+
+-- Solo puede tocar estos 6 campos, y solo si el invitado es
+-- realmente suyo — el resto de columnas de p_cambios, si vinieran,
+-- se ignoran sin más.
+create or replace function colaborador_guardar_invitado(
+  p_colaborador_id uuid, p_invitado_id uuid, p_cambios jsonb
+)
+returns setof invitados
+language sql security definer set search_path = public, pg_temp
+as $$
+  update invitados set
+    "anioNacimiento" = coalesce(p_cambios->>'anioNacimiento', "anioNacimiento"),
+    "anioBoda"       = coalesce(p_cambios->>'anioBoda', "anioBoda"),
+    "email"          = coalesce(p_cambios->>'email', "email"),
+    "cancion"        = coalesce(p_cambios->>'cancion', "cancion"),
+    "alergias"       = coalesce(p_cambios->>'alergias', "alergias"),
+    "observaciones"  = coalesce(p_cambios->>'observaciones', "observaciones")
+  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+  returning *;
+$$;
+
+create or replace function colaborador_marcar_pagado(
+  p_colaborador_id uuid, p_invitado_id uuid, p_pagado boolean
+)
+returns setof invitados
+language sql security definer set search_path = public, pg_temp
+as $$
+  update invitados set "pagado" = p_pagado
+  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+  returning *;
+$$;
+
+-- Permisos de ejecución (los permisos de tabla siguen revocados,
+-- solo estas funciones son alcanzables):
+grant execute on function anfitrion_listar_colaboradores() to anon;
+grant execute on function anfitrion_listar_invitados() to anon;
+grant execute on function anfitrion_guardar_colaboradores(jsonb) to anon;
+grant execute on function anfitrion_guardar_invitados(jsonb) to anon;
+grant execute on function colaborador_mi_perfil(uuid) to anon;
+grant execute on function colaborador_mis_invitados(uuid) to anon;
+grant execute on function colaborador_guardar_invitado(uuid, uuid, jsonb) to anon;
+grant execute on function colaborador_marcar_pagado(uuid, uuid, boolean) to anon;
