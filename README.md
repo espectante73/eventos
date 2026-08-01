@@ -49,17 +49,32 @@ verdad vive en `src/`.
 
 ## Cómo funcionan los roles
 
-No hay usuarios ni contraseñas: cada persona accede mediante un enlace.
+No hay usuarios ni contraseñas: cada persona accede mediante un enlace con
+un código secreto (imposible de adivinar). La URL base de la web, sin
+código, no muestra ningún dato — solo un aviso de "enlace no válido".
 
-- La URL base de la web = vista de **anfitrión** (acceso completo).
+- `?rol=<token-secreto-del-anfitrión>` = vista de **anfitrión** (acceso
+  completo). El token vive en la tabla `anfitrion_secreto` (completamente
+  cerrada, sin acceso directo) y se comprueba en el propio servidor
+  mediante RPCs — ver `supabase/schema.sql`. Para consultarlo o
+  regenerarlo, usa el editor SQL de Supabase:
+  ```sql
+  select "token" from anfitrion_secreto;
+  ```
 - `?rol=<id-del-colaborador>` = vista de **colaborador**, restringida de
   verdad a nivel de base de datos a sus invitados asignados (no solo
   ocultada en la pantalla — ver `supabase/schema.sql`).
 
+**Importante:** guarda el enlace de anfitrión en un sitio privado (no lo
+compartas ni lo pegues en ningún sitio público) — quien lo tenga, tiene
+acceso total a los datos del evento.
+
 ## Estado del proyecto
 
-- ✅ Web básica funcionando (este commit): datos compartidos vía Supabase,
-  aislamiento real entre colaboradores, despliegue automático.
+- ✅ Web básica funcionando: datos compartidos vía Supabase, aislamiento
+  real entre colaboradores, despliegue automático.
+- ✅ Acceso de anfitrión cerrado con enlace secreto (token), igual de
+  seguro que el de los colaboradores.
 - ⏳ Pendiente (fase 2): avisos automáticos por email (Resend) cuando se
   asigna un invitado a un colaborador, o cuando este completa datos/registra
   un pago.
