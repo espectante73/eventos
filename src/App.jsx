@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Check,
   X,
@@ -2907,6 +2907,15 @@ function VistaAnfitrion({ data }) {
 
 // ---------- Colaborador view ----------
 
+const ETIQUETAS_CAMPOS_INVITADO = {
+  anioNacimiento: "Año de nacimiento",
+  anioBoda: "Año de boda",
+  email: "Email",
+  cancion: "Canción",
+  alergias: "Alergias",
+  observaciones: "Observaciones",
+};
+
 function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCambiarFotoFamiliar }) {
   const [form, setForm] = useState(invitado);
   const [foto, setFoto] = useState(fotoFamiliar || "");
@@ -2922,9 +2931,42 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
   const [alergiaSel, setAlergiaSel] = useState(() => parsearAlergias(invitado.alergias));
   const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [errorFoto, setErrorFoto] = useState("");
+  const [aviso, setAviso] = useState("");
+  const avisoTimeout = useRef(null);
   useEffect(() => setForm(invitado), [invitado.id]);
   useEffect(() => setFoto(fotoFamiliar || ""), [fotoFamiliar, invitado.id]);
   useEffect(() => setAlergiaSel(parsearAlergias(invitado.alergias)), [invitado.id]);
+  useEffect(() => () => clearTimeout(avisoTimeout.current), []);
+
+  const mostrarAviso = (texto) => {
+    setAviso(texto);
+    clearTimeout(avisoTimeout.current);
+    avisoTimeout.current = setTimeout(() => setAviso(""), 3000);
+  };
+
+  // Cada campo se guarda solo al salir de él (igual que el resto de la
+  // app) — sin botón "Guardar". El aviso dice exactamente qué campo(s)
+  // cambiaron, o "Sin cambios" si el valor era el mismo de antes.
+  const revisarYGuardar = (formActualizado) => {
+    const cambiados = Object.keys(ETIQUETAS_CAMPOS_INVITADO).filter(
+      (campo) => (formActualizado[campo] || "") !== (invitado[campo] || "")
+    );
+    if (cambiados.length === 0) {
+      mostrarAviso("Sin cambios.");
+      return;
+    }
+    onGuardar(formActualizado);
+    mostrarAviso(`Guardado: ${cambiados.map((c) => ETIQUETAS_CAMPOS_INVITADO[c]).join(", ")}.`);
+  };
+
+  const guardarFoto = (nuevaFoto) => {
+    if ((nuevaFoto || "") === (fotoFamiliar || "")) {
+      mostrarAviso("Sin cambios.");
+      return;
+    }
+    if (onCambiarFotoFamiliar) onCambiarFotoFamiliar(invitado.grupoFamiliar, nuevaFoto);
+    mostrarAviso(nuevaFoto ? "Guardado: foto familiar." : "Foto familiar eliminada.");
+  };
 
   const onSeleccionarArchivoFoto = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -2935,6 +2977,7 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
     try {
       const dataUrl = await redimensionarImagenArchivo(file);
       setFoto(dataUrl);
+      guardarFoto(dataUrl);
     } catch (_) {
       setErrorFoto("No se ha podido procesar la imagen. Prueba con otra o pega un enlace.");
     } finally {
@@ -2954,12 +2997,16 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
   const marcarNo = () => {
     const next = { no: true, gluten: false, lactosa: false, otras: "" };
     setAlergiaSel(next);
-    setForm({ ...form, alergias: reconstruirAlergias(next) });
+    const actualizado = { ...form, alergias: reconstruirAlergias(next) };
+    setForm(actualizado);
+    revisarYGuardar(actualizado);
   };
   const alternarAlergia = (clave) => {
     const next = { ...alergiaSel, no: false, [clave]: !alergiaSel[clave] };
     setAlergiaSel(next);
-    setForm({ ...form, alergias: reconstruirAlergias(next) });
+    const actualizado = { ...form, alergias: reconstruirAlergias(next) };
+    setForm(actualizado);
+    revisarYGuardar(actualizado);
   };
   const cambiarOtras = (valor) => {
     const texto = valor.slice(0, 15);
@@ -2968,27 +3015,33 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
     setForm({ ...form, alergias: reconstruirAlergias(next) });
   };
 
-  const guardarTodo = () => {
-    onGuardar(form);
-    if (onCambiarFotoFamiliar) onCambiarFotoFamiliar(invitado.grupoFamiliar, foto);
-  };
-
   return (
     <div
       className="p-4 rounded space-y-3"
       style={{ background: "#fff", border: `1px solid ${C.line}` }}
     >
-      <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
-        {form.apellido}, {form.nombre}{" "}
-        <span className="text-xs font-normal" style={{ color: C.charcoal, opacity: 0.6 }}>
-          · {form.zona || "sin zona"}
-        </span>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
+          {form.apellido}, {form.nombre}{" "}
+          <span className="text-xs font-normal" style={{ color: C.charcoal, opacity: 0.6 }}>
+            · {form.zona || "sin zona"}
+          </span>
+        </div>
+        {aviso && (
+          <span
+            className="text-xs px-2 py-0.5 rounded"
+            style={{ background: C.ink, color: C.paper }}
+          >
+            {aviso}
+          </span>
+        )}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <Field label="Año nacimiento">
+        <Field label="Año nacimiento (obligatorio)">
           <TextInput
             value={form.anioNacimiento}
             onChange={(e) => setForm({ ...form, anioNacimiento: e.target.value })}
+            onBlur={() => revisarYGuardar(form)}
             placeholder="1988"
           />
         </Field>
@@ -2996,6 +3049,7 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
           <TextInput
             value={form.anioBoda}
             onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
+            onBlur={() => revisarYGuardar(form)}
             placeholder="2015 (si aplica)"
           />
         </Field>
@@ -3003,6 +3057,7 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
           <TextInput
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
+            onBlur={() => revisarYGuardar(form)}
             placeholder="correo@ejemplo.com (acceso al álbum)"
           />
         </Field>
@@ -3010,6 +3065,7 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
           <TextInput
             value={form.cancion}
             onChange={(e) => setForm({ ...form, cancion: e.target.value })}
+            onBlur={() => revisarYGuardar(form)}
             placeholder="Título — Artista"
           />
         </Field>
@@ -3028,6 +3084,7 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
                 <TextInput
                   value={foto}
                   onChange={(e) => setFoto(e.target.value)}
+                  onBlur={() => guardarFoto(foto)}
                   placeholder="https://... enlace de Google Fotos (si aplica)"
                   className="w-full"
                 />
@@ -3048,7 +3105,10 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
                   {foto && (
                     <button
                       type="button"
-                      onClick={() => setFoto("")}
+                      onClick={() => {
+                        setFoto("");
+                        guardarFoto("");
+                      }}
                       className="text-xs"
                       style={{ color: C.wax }}
                     >
@@ -3096,6 +3156,7 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
             <TextInput
               value={alergiaSel.otras}
               onChange={(e) => cambiarOtras(e.target.value)}
+              onBlur={() => revisarYGuardar(form)}
               placeholder="Otra (máx. 15)"
               maxLength={15}
               style={{ maxWidth: 140 }}
@@ -3107,30 +3168,24 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
             <TextInput
               value={form.observaciones || ""}
               onChange={(e) => setForm({ ...form, observaciones: e.target.value })}
+              onBlur={() => revisarYGuardar(form)}
               placeholder="Cualquier detalle adicional"
               className="w-full"
             />
           </Field>
         </div>
       </div>
-      <div className="flex gap-2">
-        <button
-          onClick={guardarTodo}
-          className="px-3 py-1.5 rounded text-sm font-medium"
-          style={{ background: C.ink, color: C.paper }}
-        >
-          Guardar datos
-        </button>
-        {onCancelar && (
+      {onCancelar && (
+        <div className="flex gap-2">
           <button
             onClick={onCancelar}
             className="px-3 py-1.5 rounded text-sm font-medium"
             style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
           >
-            Cancelar
+            Cerrar
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -3233,7 +3288,6 @@ function VistaColaborador({ data, colaboradorId }) {
 
   const guardar = (form) => {
     persistInvitados(invitados.map((g) => (g.id === form.id ? form : g)));
-    setAbiertoId(null);
   };
 
   const cambiarFotoFamiliar = (grupoFamiliar, url) => {
