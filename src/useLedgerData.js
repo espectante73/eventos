@@ -202,13 +202,16 @@ export function useLedgerData(rol) {
           p_filas: next,
         });
         if (error) avisar("No se pudieron guardar los invitados.", error);
-        // Una reasignación puede marcar a algún colaborador con aviso
-        // pendiente en el servidor — recargamos para que se vea al momento.
-        const { data: todosColaboradores, error: errCol } = await supabase.rpc(
-          "anfitrion_listar_colaboradores",
+        // Una reasignación marca "avisoPendiente" en el propio invitado, en
+        // el servidor — recargamos para que se vea al momento.
+        const { data: todosInvitados, error: errInv } = await supabase.rpc(
+          "anfitrion_listar_invitados",
           { p_token: rol }
         );
-        if (!errCol) setColaboradores(todosColaboradores || []);
+        if (!errInv) {
+          setInvitados(todosInvitados || []);
+          invitadosRef.current = todosInvitados || [];
+        }
         return;
       }
 
@@ -263,11 +266,14 @@ export function useLedgerData(rol) {
         avisar("No se pudo avisar al colaborador.", error);
         return;
       }
-      const [{ data: todosColaboradores }, { data: avisos }] = await Promise.all([
-        supabase.rpc("anfitrion_listar_colaboradores", { p_token: rol }),
+      const [{ data: todosInvitados }, { data: avisos }] = await Promise.all([
+        supabase.rpc("anfitrion_listar_invitados", { p_token: rol }),
         supabase.rpc("anfitrion_listar_avisos_enviados", { p_token: rol }),
       ]);
-      if (todosColaboradores) setColaboradores(todosColaboradores);
+      if (todosInvitados) {
+        setInvitados(todosInvitados);
+        invitadosRef.current = todosInvitados;
+      }
       if (avisos) setAvisosEnviados(avisos);
     },
     [esAnfitrion, rol]

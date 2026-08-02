@@ -585,6 +585,7 @@ function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEl
   const [releveInvitadoId, setReleveInvitadoId] = useState("");
 
   const asignados = invitados.filter((g) => resolverColaborador(g, colaboradores)?.id === c.id);
+  const pendientesAviso = asignados.filter((g) => g.avisoPendiente);
   const enlacePersonal = buildLink(c.id, evento?.urlPublica);
 
   const copiarEnlace = async () => {
@@ -697,13 +698,13 @@ function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEl
         )}
       </div>
 
-      {c.avisoPendiente && (
+      {pendientesAviso.length > 0 && (
         <div
           className="flex items-center justify-between gap-2 mt-2 px-2 py-1 rounded"
           style={{ background: "#FBEAEC" }}
         >
           <span className="text-xs" style={{ color: C.wax }}>
-            ⚠ Pendiente de avisar
+            ⚠ {pendientesAviso.length} pendiente{pendientesAviso.length === 1 ? "" : "s"} de avisar
           </span>
           <button
             onClick={() => onAvisar(c.id)}
@@ -997,12 +998,18 @@ function VistaAnfitrion({ data }) {
   const [mostrarAnadir, setMostrarAnadir] = useState(false);
   const [orden, setOrden] = useState({ columna: "invitado", direccion: "asc" });
 
-  // "avisoPendiente" vive en el servidor (columna en colaboradores), no
-  // solo en memoria — así no se pierde el rastro si cancelas o cierras la
+  // "avisoPendiente" vive en el servidor (columna en invitados), no solo
+  // en memoria — así no se pierde el rastro si cancelas o cierras la
   // pestaña. Al cerrar la tabla, si queda alguien pendiente, se pregunta.
   const [mostrarResumenAsignacion, setMostrarResumenAsignacion] = useState(false);
   const [enviandoAvisosAsignacion, setEnviandoAvisosAsignacion] = useState(false);
-  const colaboradoresPendientes = colaboradores.filter((c) => c.avisoPendiente);
+  // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
+  // por colaborador — así se sabe exactamente cuáles son los nuevos.
+  const invitadosPendientesDe = (colaboradorId) =>
+    invitados.filter((g) => g.colaboradorId === colaboradorId && g.avisoPendiente);
+  const colaboradoresPendientes = colaboradores.filter(
+    (c) => invitadosPendientesDe(c.id).length > 0
+  );
 
   // Antes de mandar un aviso individual ("Avisar ahora"), se enseña el
   // mensaje exacto que se va a enviar y se pide confirmar — con opción de
@@ -1018,9 +1025,12 @@ function VistaAnfitrion({ data }) {
     setAvisoPreview(null);
   };
 
-  const irAEditarPlantillaAviso = () => {
+  const irAEditarAsignacion = () => {
+    if (avisoPreview) {
+      setFiltros((f) => ({ ...f, colaboradorId: avisoPreview.id }));
+    }
     setAvisoPreview(null);
-    setAbierto((a) => ({ ...a, configuracion: true, avisos: false }));
+    setAbierto((a) => ({ ...a, invitados: true, avisos: false }));
   };
 
   const cambiarOrden = (columna) => {
@@ -2912,6 +2922,17 @@ function VistaAnfitrion({ data }) {
             className="text-xs uppercase mb-2"
             style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
           >
+            Invitados nuevos que se le van a notificar
+          </p>
+          <ul className="text-sm space-y-1 mb-4" style={{ color: C.ink }}>
+            {invitadosPendientesDe(avisoPreview.id).map((g) => (
+              <li key={g.id}>{g.apellido}, {g.nombre}</li>
+            ))}
+          </ul>
+          <p
+            className="text-xs uppercase mb-2"
+            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+          >
             Mensaje que se enviará
           </p>
           <div
@@ -2941,11 +2962,11 @@ function VistaAnfitrion({ data }) {
               Cancelar
             </button>
             <button
-              onClick={irAEditarPlantillaAviso}
+              onClick={irAEditarAsignacion}
               className="px-3 py-2 rounded text-sm font-medium"
               style={{ border: `1px solid ${C.gold}`, color: C.gold }}
             >
-              Editar mensaje
+              Editar asignación
             </button>
           </div>
         </ModalFlotante>

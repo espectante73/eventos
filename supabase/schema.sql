@@ -32,21 +32,21 @@ create table invitados (
   "cancion"         text not null default '',
   "alergias"        text not null default '',
   "observaciones"   text not null default '',
-  "pagado"          boolean not null default false
+  "pagado"          boolean not null default false,
+  -- Se marca al asignarle (o reasignarle) un colaborador, y se limpia al
+  -- avisar de verdad a ese colaborador — así se sabe exactamente cuáles
+  -- son "los invitados nuevos" de cada aviso, no solo un sí/no genérico.
+  "avisoPendiente"  boolean not null default false
 );
 
 -- ============================================================
 -- 2. COLABORADORES
 -- ============================================================
 create table colaboradores (
-  "id"              uuid primary key default gen_random_uuid(),
-  "nombre"          text not null default '',
-  "invitadoId"      uuid null references invitados("id") on delete set null,
-  "email"           text not null default '',
-  -- Se marca al asignarle un invitado nuevo, y se limpia al avisarle de
-  -- verdad — así el anfitrión puede ver siempre quién tiene un aviso
-  -- pendiente, aunque cierre la app antes de mandarlo.
-  "avisoPendiente"  boolean not null default false
+  "id"          uuid primary key default gen_random_uuid(),
+  "nombre"      text not null default '',
+  "invitadoId"  uuid null references invitados("id") on delete set null,
+  "email"       text not null default ''
 );
 
 alter table invitados
@@ -311,10 +311,20 @@ create or replace function anfitrion_avisar_colaborador(p_token uuid, p_colabora
 returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
+declare
+  lista_invitados text;
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
+
+  select string_agg(
+    '<li>' || coalesce("nombre", '') || ' ' || coalesce("apellido", '') || '</li>',
+    '' order by "apellido", "nombre"
+  )
+  into lista_invitados
+  from invitados
+  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true;
 
   perform enviar_email(
     (select "email" from colaboradores where "id" = p_colaborador_id),
@@ -323,6 +333,10 @@ begin
       (select "plantillaAsignacion" from evento limit 1),
       '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
     ) ||
+    case
+      when lista_invitados is not null then '<ul>' || lista_invitados || '</ul>'
+      else ''
+    end ||
     case
       when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
       else
@@ -335,7 +349,8 @@ begin
     '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
   );
 
-  update colaboradores set "avisoPendiente" = false where "id" = p_colaborador_id;
+  update invitados set "avisoPendiente" = false
+  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true;
 end;
 $$;
 
@@ -345,17 +360,19 @@ language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare
   r record;
+  ids_a_marcar uuid[] := '{}';
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
 
-  -- Ya no se manda ningún email aquí (mandaba uno por cada cambio suelto).
-  -- Solo se marca al colaborador como "con aviso pendiente" — el anfitrión
-  -- decide cuándo avisarle de verdad (al cerrar la tabla, o desde su
-  -- tarjeta / la sección Avisos).
+  -- Se detecta ANTES de tocar nada (comparando contra el valor guardado),
+  -- pero se marca DESPUÉS del insert/upsert de más abajo — así funciona
+  -- también para invitados recién creados, que todavía no existen en la
+  -- tabla en este punto.
   for r in
     select
+      (f->>'id')::uuid as invitado_id,
       nullif(f->>'colaboradorId','')::uuid as nuevo_colaborador_id,
       i."colaboradorId" as anterior_colaborador_id
     from jsonb_array_elements(p_filas) as f
@@ -363,7 +380,7 @@ begin
   loop
     if r.nuevo_colaborador_id is not null
        and r.nuevo_colaborador_id is distinct from r.anterior_colaborador_id then
-      update colaboradores set "avisoPendiente" = true where "id" = r.nuevo_colaborador_id;
+      ids_a_marcar := array_append(ids_a_marcar, r.invitado_id);
     end if;
   end loop;
 
@@ -389,6 +406,10 @@ begin
     "anioBoda"=excluded."anioBoda", "email"=excluded."email",
     "cancion"=excluded."cancion", "alergias"=excluded."alergias",
     "observaciones"=excluded."observaciones", "pagado"=excluded."pagado";
+
+  if array_length(ids_a_marcar, 1) > 0 then
+    update invitados set "avisoPendiente" = true where "id" = any(ids_a_marcar);
+  end if;
 
   delete from invitados g
   where not exists (
