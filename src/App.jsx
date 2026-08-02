@@ -3410,6 +3410,17 @@ function VistaColaborador({ data, colaboradorId }) {
                 ? gruposFamiliaresACargo.map((g) => `Familia ${g}`).join(", ")
                 : "ninguno"}
             </div>
+            <div className="text-xs mt-1" style={{ color: C.charcoal, opacity: 0.7 }}>
+              Tu email de contacto:{" "}
+              {colaborador.email ? (
+                <span style={{ color: C.ink }}>{colaborador.email}</span>
+              ) : (
+                <span style={{ color: C.wax }}>sin registrar — pídeselo al anfitrión</span>
+              )}
+              <span className="italic ml-1" style={{ opacity: 0.6 }}>
+                (solo lo puede cambiar el anfitrión)
+              </span>
+            </div>
           </div>
           <Seal count={pendientes.length} />
         </div>

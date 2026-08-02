@@ -307,7 +307,17 @@ begin
         replace(
           (select "plantillaAsignacion" from evento limit 1),
           '{invitado}', trim(coalesce(r.nombre_invitado, '') || ' ' || coalesce(r.apellido_invitado, ''))
-        ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+        ) ||
+        case
+          when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
+          else
+            '<div style="margin-top:18px;"><a href="' ||
+            (select "urlPublica" from evento limit 1) || '?rol=' || r.nuevo_colaborador_id::text ||
+            '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
+            'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
+            'font-weight:600;font-family:sans-serif;">Entrar a mi enlace</a></div>'
+        end ||
+        '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
       );
     end if;
   end loop;
