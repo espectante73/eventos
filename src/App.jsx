@@ -963,7 +963,7 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
 
       ctx.font = `bold ${Math.round(W * 0.028)}px 'Fraunces', serif`;
       if (fechaValor) ctx.fillText(fechaValor, xValor, yFecha + bajarDesdeEtiqueta);
-      if (horaValor) ctx.fillText(horaValor, xValor, yHora + bajarDesdeEtiqueta - 3);
+      if (horaValor) ctx.fillText(horaValor, xValor, yHora + bajarDesdeEtiqueta - 5);
 
       if (lugarValor) {
         // La dirección suele ser larga: letra más pequeña, también debajo
