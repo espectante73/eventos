@@ -3235,21 +3235,37 @@ function FilaInvitadoColaborador({
   fotosFamiliares,
 }) {
   const importe = importeEsperadoInvitado(g, evento);
+
+  // Confirmación siempre (marcar Y quitar): con todas las filas cerradas muy
+  // juntas, el pulgar puede tocar el botón de pago de un invitado equivocado
+  // por error — así hay una última comprobación antes de que cuente.
+  const confirmarPago = () => {
+    const nombreCompleto = `${g.nombre} ${g.apellido}`.trim();
+    const mensaje = g.pagado
+      ? `¿Quitar el pago de ${nombreCompleto}?`
+      : `¿Marcar a ${nombreCompleto} como pagado?`;
+    if (window.confirm(mensaje)) {
+      onMarcarPagado(g.id, !g.pagado);
+    }
+  };
+
   return (
     <div className="rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
       <div className="flex flex-wrap items-center gap-3 p-3 text-sm">
-        <button
-          onClick={onToggleAbierto}
-          className="flex items-center gap-2"
-          style={{ color: C.ink }}
-        >
-          <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
-            {g.apellido}, {g.nombre}
-          </span>
-          <span className="text-xs" style={{ color: C.gold }}>
-            {abierto ? "▾" : "▸"}
-          </span>
-        </button>
+        {!abierto && (
+          <button onClick={confirmarPago} className="flex items-center gap-1">
+            {g.pagado ? (
+              <Stamp color={C.ink}>Pagado</Stamp>
+            ) : (
+              <span
+                className="text-xs px-2 py-0.5 rounded"
+                style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
+              >
+                Pendiente de pago
+              </span>
+            )}
+          </button>
+        )}
         {datosCompletos(g) ? (
           <span className="flex items-center gap-1 text-xs" style={{ color: C.ink, opacity: 0.7 }}>
             <Check size={12} /> datos {contarDatosRellenados(g, fotoFamiliar)} de {TOTAL_DATOS_INVITADO}
@@ -3259,22 +3275,18 @@ function FilaInvitadoColaborador({
             <Bell size={12} /> datos {contarDatosRellenados(g, fotoFamiliar)} de {TOTAL_DATOS_INVITADO}
           </span>
         )}
-        {!abierto && (
-          <div className="flex items-center gap-2 ml-auto">
-            <button onClick={() => onMarcarPagado(g.id, !g.pagado)} className="flex items-center gap-1">
-              {g.pagado ? (
-                <Stamp color={C.ink}>Pagado</Stamp>
-              ) : (
-                <span
-                  className="text-xs px-2 py-0.5 rounded"
-                  style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
-                >
-                  Pendiente de pago
-                </span>
-              )}
-            </button>
-          </div>
-        )}
+        <button
+          onClick={onToggleAbierto}
+          className="flex items-center gap-2 ml-auto"
+          style={{ color: C.ink }}
+        >
+          <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+            {g.apellido}, {g.nombre}
+          </span>
+          <span className="text-xs" style={{ color: C.gold }}>
+            {abierto ? "▾" : "▸"}
+          </span>
+        </button>
       </div>
       {abierto && (
         <div className="p-3 pt-0">
