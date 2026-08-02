@@ -833,7 +833,14 @@ function redimensionarImagenArchivo(file, maxDim = 1600, calidad = 0.82) {
   });
 }
 
-function envolverTexto(ctx, texto, x, y, maxWidth, lineHeight) {
+// "Ana, Pedro y Luis" — coma entre todos salvo el último, que lleva "y".
+function listaConY(items) {
+  if (items.length === 0) return "";
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;
+}
+
+function partirLineas(ctx, texto, maxWidth) {
   const palabras = texto.split(" ");
   let linea = "";
   const lineas = [];
@@ -847,8 +854,32 @@ function envolverTexto(ctx, texto, x, y, maxWidth, lineHeight) {
     }
   }
   lineas.push(linea.trim());
-  const inicioY = y - ((lineas.length - 1) * lineHeight) / 2;
-  lineas.forEach((l, i) => ctx.fillText(l, x, inicioY + i * lineHeight));
+  return lineas;
+}
+
+// Canvas no tiene alineación "justificada" nativa: se reparte el espacio
+// sobrante entre palabras a mano. La última línea de cada bloque no se
+// estira (así es como se ve un párrafo justificado normal).
+function dibujarLineaJustificada(ctx, linea, x, y, maxWidth, esUltima) {
+  const palabras = linea.split(" ").filter(Boolean);
+  ctx.textAlign = "left";
+  if (esUltima || palabras.length < 2) {
+    ctx.fillText(linea, x, y);
+    return;
+  }
+  const anchoTexto = palabras.reduce((s, p) => s + ctx.measureText(p).width, 0);
+  const espacioExtra = (maxWidth - anchoTexto) / (palabras.length - 1);
+  let cursorX = x;
+  palabras.forEach((palabra) => {
+    ctx.fillText(palabra, cursorX, y);
+    cursorX += ctx.measureText(palabra).width + espacioExtra;
+  });
+}
+
+function dibujarParrafoJustificado(ctx, lineas, x, y, maxWidth, lineHeight) {
+  lineas.forEach((linea, i) => {
+    dibujarLineaJustificada(ctx, linea, x, y + i * lineHeight, maxWidth, i === lineas.length - 1);
+  });
 }
 
 function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaTexto) {
@@ -871,29 +902,44 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
       ctx.fillStyle = "#DEC8B0";
       ctx.fillRect(RECUADRO.left * W, yTop, (RECUADRO.right - RECUADRO.left) * W, altoRecuadro);
 
-      ctx.textAlign = "left";
       ctx.fillStyle = "#1F3A2E";
 
-      ctx.font = `bold ${Math.round(W * 0.033)}px Georgia, serif`;
-      envolverTexto(
+      const fuenteNombres = `bold ${Math.round(W * 0.033)}px 'Fraunces', serif`;
+      const fuenteMesa = `bold ${Math.round(W * 0.037)}px 'Fraunces', serif`;
+      const lineHeightNombres = Math.round(W * 0.037);
+      const lineHeightMesa = Math.round(W * 0.041);
+      const espacioEntreBloques = Math.round(W * 0.02);
+
+      ctx.font = fuenteNombres;
+      const lineasNombres = partirLineas(
         ctx,
-        `Familia ${apellidoFamilia}: ${nombresMiembros.join(", ")}`,
-        xIzq,
-        yTop + altoRecuadro * 0.32,
-        anchoDisponible,
-        Math.round(W * 0.037)
+        `${apellidoFamilia}, ${listaConY(nombresMiembros)}`,
+        anchoDisponible
       );
+      const alturaNombres = lineasNombres.length * lineHeightNombres;
+
+      let lineasMesa = [];
+      let alturaMesa = 0;
+      if (mesaTexto) {
+        ctx.font = fuenteMesa;
+        lineasMesa = partirLineas(ctx, mesaTexto, anchoDisponible);
+        alturaMesa = lineasMesa.length * lineHeightMesa;
+      }
+
+      // Centrado vertical de todo el bloque (nombres + mesa) dentro del
+      // recuadro, en vez de posiciones fijas.
+      const alturaTotal = alturaNombres + (mesaTexto ? espacioEntreBloques + alturaMesa : 0);
+      let cursorY =
+        yTop + (altoRecuadro - alturaTotal) / 2 + lineHeightNombres * 0.78;
+
+      ctx.font = fuenteNombres;
+      dibujarParrafoJustificado(ctx, lineasNombres, xIzq, cursorY, anchoDisponible, lineHeightNombres);
+      cursorY += alturaNombres;
 
       if (mesaTexto) {
-        ctx.font = `bold ${Math.round(W * 0.037)}px Georgia, serif`;
-        envolverTexto(
-          ctx,
-          mesaTexto,
-          xIzq,
-          yTop + altoRecuadro * 0.8,
-          anchoDisponible,
-          Math.round(W * 0.041)
-        );
+        cursorY += espacioEntreBloques;
+        ctx.font = fuenteMesa;
+        dibujarParrafoJustificado(ctx, lineasMesa, xIzq, cursorY, anchoDisponible, lineHeightMesa);
       }
 
       try {
@@ -935,6 +981,103 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
     img.onerror = () => resolve(null);
     img.src = imagenBase;
   });
+}
+
+// ---------- Carpeta de guardado de invitaciones (persistente) ----------
+// La API de acceso al sistema de archivos (showDirectoryPicker) solo existe
+// en navegadores basados en Chromium (Chrome, Edge...) — en Safari/Firefox
+// se usa automáticamente el método de descarga normal, sin carpeta fija.
+const IDB_NOMBRE = "eventos-app";
+const IDB_ALMACEN = "handles";
+const IDB_CLAVE_CARPETA = "carpetaInvitaciones";
+
+function abrirIDB() {
+  return new Promise((resolve, reject) => {
+    const peticion = indexedDB.open(IDB_NOMBRE, 1);
+    peticion.onupgradeneeded = () => peticion.result.createObjectStore(IDB_ALMACEN);
+    peticion.onsuccess = () => resolve(peticion.result);
+    peticion.onerror = () => reject(peticion.error);
+  });
+}
+
+async function guardarHandleCarpeta(handle) {
+  const db = await abrirIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_ALMACEN, "readwrite");
+    tx.objectStore(IDB_ALMACEN).put(handle, IDB_CLAVE_CARPETA);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function leerHandleCarpeta() {
+  const db = await abrirIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_ALMACEN, "readonly");
+    const peticion = tx.objectStore(IDB_ALMACEN).get(IDB_CLAVE_CARPETA);
+    peticion.onsuccess = () => resolve(peticion.result || null);
+    peticion.onerror = () => reject(peticion.error);
+  });
+}
+
+// Pide la carpeta al usuario (una vez) y la recuerda para la próxima vez —
+// "forzarElegir" se usa desde el botón "Cambiar carpeta" para elegir otra.
+async function obtenerCarpetaInvitaciones({ forzarElegir }) {
+  if (!window.showDirectoryPicker) return null;
+
+  if (!forzarElegir) {
+    try {
+      const handleGuardado = await leerHandleCarpeta();
+      if (handleGuardado) {
+        const permiso = await handleGuardado.queryPermission({ mode: "readwrite" });
+        if (permiso === "granted") return handleGuardado;
+        if (permiso === "prompt") {
+          const concedido = await handleGuardado.requestPermission({ mode: "readwrite" });
+          if (concedido === "granted") return handleGuardado;
+        }
+      }
+    } catch (_) {
+      // Sigue abajo y pide una carpeta nueva si algo falla.
+    }
+  }
+
+  try {
+    const handleNuevo = await window.showDirectoryPicker();
+    await guardarHandleCarpeta(handleNuevo);
+    return handleNuevo;
+  } catch (_) {
+    return null; // El usuario cerró el selector sin elegir nada.
+  }
+}
+
+function descargarDataUrlClasico(dataUrl, nombreArchivo) {
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+// Guarda directamente en la carpeta elegida si el navegador lo permite;
+// si no (Safari/Firefox, o el usuario nunca eligió carpeta), cae al método
+// clásico de descarga (va a la carpeta de Descargas de siempre).
+async function guardarArchivoInvitacion(dataUrl, nombreArchivo) {
+  const carpeta = await obtenerCarpetaInvitaciones({ forzarElegir: false });
+  if (!carpeta) {
+    descargarDataUrlClasico(dataUrl, nombreArchivo);
+    return;
+  }
+  try {
+    const respuesta = await fetch(dataUrl);
+    const blob = await respuesta.blob();
+    const fileHandle = await carpeta.getFileHandle(nombreArchivo, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+  } catch (_) {
+    descargarDataUrlClasico(dataUrl, nombreArchivo);
+  }
 }
 
 function ProgresoBar({ label, completado, total, color }) {
@@ -1611,18 +1754,34 @@ function VistaAnfitrion({ data }) {
   })();
 
   const [descargando, setDescargando] = useState(null);
+  const [nombreCarpetaInvitaciones, setNombreCarpetaInvitaciones] = useState(null);
+
+  useEffect(() => {
+    if (!window.showDirectoryPicker) return;
+    leerHandleCarpeta()
+      .then((handle) => setNombreCarpetaInvitaciones(handle ? handle.name : null))
+      .catch(() => {});
+  }, []);
 
   const descargarInvitacion = async (familia) => {
     setDescargando(familia.clave);
+    // Fraunces tiene que estar realmente cargada antes de dibujar en el
+    // canvas — si no, el navegador la ignora en silencio y usa una por
+    // defecto sin avisar.
+    try {
+      await document.fonts.load("bold 40px 'Fraunces'");
+    } catch (_) {
+      // Si falla la carga, se sigue igualmente con la fuente de reserva.
+    }
     const nombres = familia.confirmados.map((m) => m.nombre);
     const cantidad = familia.confirmados.length;
     const mesas = [...new Set(familia.confirmados.map((m) => m.mesa).filter(Boolean))];
     const mesaTexto =
       mesas.length === 1
-        ? `Mesa ${mesas[0]} · ${cantidad} ${cantidad === 1 ? "persona" : "personas"}`
+        ? `Mesa ${mesas[0]} · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`
         : mesas.length > 1
-        ? `Mesas ${mesas.join(", ")} · ${cantidad} ${cantidad === 1 ? "persona" : "personas"}`
-        : `${cantidad} ${cantidad === 1 ? "persona" : "personas"}`;
+        ? `Mesas ${mesas.join(", ")} · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`
+        : `${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`;
     const dataUrl = await generarInvitacionImagen(evento, familia.apellido, nombres, mesaTexto);
     setDescargando(null);
     if (!dataUrl) {
@@ -1631,12 +1790,8 @@ function VistaAnfitrion({ data }) {
       );
       return;
     }
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = `invitacion-${familia.apellido.replace(/\s+/g, "-")}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const nombreArchivo = `${evento.nombre || "evento"}_${familia.clave}.png`.replace(/[\\/:*?"<>|]/g, "-");
+    await guardarArchivoInvitacion(dataUrl, nombreArchivo);
   };
 
   const [mostrarExportar, setMostrarExportar] = useState(false);
@@ -2452,6 +2607,26 @@ function VistaAnfitrion({ data }) {
                 />
               </Field>
             </div>
+
+            {window.showDirectoryPicker && (
+              <div className="mb-4 flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={async () => {
+                    const carpeta = await obtenerCarpetaInvitaciones({ forzarElegir: true });
+                    setNombreCarpetaInvitaciones(carpeta ? carpeta.name : null);
+                  }}
+                  className="text-xs px-2 py-1 rounded font-medium"
+                  style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+                >
+                  {nombreCarpetaInvitaciones ? "Cambiar carpeta" : "Elegir carpeta de guardado"}
+                </button>
+                <span className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+                  {nombreCarpetaInvitaciones
+                    ? `Guardando en: "${nombreCarpetaInvitaciones}"`
+                    : "Sin elegir — se descargará a la carpeta de Descargas de siempre."}
+                </span>
+              </div>
+            )}
             <div className="space-y-2">
               {familiasListasParaInvitacion.map((familia) => (
                 <div
@@ -3573,6 +3748,12 @@ function FilaInvitadoColaborador({
   // por error — así hay una última comprobación antes de que cuente.
   const confirmarPago = () => {
     const nombreCompleto = `${g.nombre} ${g.apellido}`.trim();
+    if (!g.pagado && !datosCompletos(g)) {
+      window.alert(
+        `No se puede marcar a ${nombreCompleto} como pagado todavía: faltan sus datos obligatorios (año de nacimiento y alergias).`
+      );
+      return;
+    }
     const mensaje = g.pagado
       ? `¿Quitar el pago de ${nombreCompleto}?`
       : `¿Marcar a ${nombreCompleto} como pagado?`;

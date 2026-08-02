@@ -453,15 +453,37 @@ as $$
   returning *;
 $$;
 
+-- No se puede marcar como pagado (p_pagado = true) si al invitado le
+-- faltan sus datos obligatorios (año de nacimiento y alergias) — quitar
+-- el pago (p_pagado = false) sigue permitido siempre.
 create or replace function colaborador_marcar_pagado(
   p_colaborador_id uuid, p_invitado_id uuid, p_pagado boolean
 )
 returns setof invitados
-language sql security definer set search_path = public, pg_temp
+language plpgsql security definer set search_path = public, pg_temp
 as $$
+declare
+  actualizado invitados;
+begin
+  if p_pagado then
+    perform 1 from invitados
+    where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+      and coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> '';
+    if not found then
+      return;
+    end if;
+  end if;
+
   update invitados set "pagado" = p_pagado
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
-  returning *;
+  returning * into actualizado;
+
+  if not found then
+    return;
+  end if;
+
+  return next actualizado;
+end;
 $$;
 
 -- Avisos por confirmación explícita del colaborador (no automáticos): al
