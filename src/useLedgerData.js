@@ -17,6 +17,12 @@ const EVENTO_POR_DEFECTO = {
   urlPublica: "",
   ocultarTituloEnImagen: true,
   emailAnfitrion: "",
+  plantillaAsignacion:
+    "Hola,<br><br>Se te ha asignado <b>{invitado}</b> como invitado.<br>Entra en tu enlace cuando puedas para completar sus datos.",
+  plantillaDatosCompletados:
+    "Hola,<br><br><b>{colaborador}</b> ha completado los datos de <b>{invitado}</b>.",
+  plantillaPagoRegistrado:
+    "Hola,<br><br><b>{colaborador}</b> ha marcado como pagado a <b>{invitado}</b>.",
 };
 
 function avisar(mensaje, error) {

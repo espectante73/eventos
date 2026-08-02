@@ -90,7 +90,13 @@ create table evento (
   "edadNinoHasta"           text not null default '12',
   "urlPublica"              text not null default '',
   "ocultarTituloEnImagen"   boolean not null default true,
-  "emailAnfitrion"          text not null default ''
+  "emailAnfitrion"          text not null default '',
+  -- Plantillas de los avisos automáticos por email. {colaborador} y
+  -- {invitado} se sustituyen por los nombres reales al enviar — así el
+  -- anfitrión puede cambiar el texto desde Configuración sin tocar código.
+  "plantillaAsignacion"        text not null default 'Hola,<br><br>Se te ha asignado <b>{invitado}</b> como invitado.<br>Entra en tu enlace cuando puedas para completar sus datos.',
+  "plantillaDatosCompletados"  text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado los datos de <b>{invitado}</b>.',
+  "plantillaPagoRegistrado"    text not null default 'Hola,<br><br><b>{colaborador}</b> ha marcado como pagado a <b>{invitado}</b>.'
 );
 insert into evento ("id") values (true);
 
@@ -110,10 +116,25 @@ revoke all on table anfitrion_secreto from anon, authenticated;
 -- Sin ninguna política de acceso = nadie puede leerla directamente.
 
 -- ============================================================
--- RLS: activada en las 6 tablas. evento/mesas/fotos_familiares
+-- 7. CONFIG SECRETA DE EMAILS (clave de Resend y remitente).
+--    Misma idea que anfitrion_secreto: tabla completamente
+--    cerrada, solo legible desde dentro de enviar_email().
+-- ============================================================
+create table config_secretos (
+  "id"              boolean primary key default true check ("id"),
+  "resendApiKey"    text not null default '',
+  "emailRemitente"  text not null default 'onboarding@resend.dev'
+);
+insert into config_secretos ("id") values (true);
+alter table config_secretos enable row level security;
+revoke all on table config_secretos from anon, authenticated;
+
+-- ============================================================
+-- RLS: activada en las 7 tablas. evento/mesas/fotos_familiares
 -- quedan abiertas (datos sin sensibilidad real). invitados,
--- colaboradores y anfitrion_secreto NO tienen ninguna política
--- — solo se pueden tocar a través de las funciones de más abajo.
+-- colaboradores, anfitrion_secreto y config_secretos NO tienen
+-- ninguna política — solo se pueden tocar a través de las
+-- funciones de más abajo.
 -- ============================================================
 alter table evento             enable row level security;
 alter table mesas              enable row level security;
@@ -130,6 +151,39 @@ create policy "anon_full_access" on fotos_familiares   for all using (true) with
 -- directo a estas dos tablas salvo por las funciones RPC.
 revoke all on table invitados     from anon, authenticated;
 revoke all on table colaboradores from anon, authenticated;
+
+-- ============================================================
+-- ENVÍO DE EMAILS (Resend), disparado desde las funciones de
+-- guardado de más abajo cuando ocurre algo relevante. Nunca se
+-- llama desde el navegador — la clave de Resend nunca sale del
+-- servidor.
+-- ============================================================
+create extension if not exists pg_net;
+
+create or replace function enviar_email(p_para text, p_asunto text, p_html text)
+returns void
+language plpgsql security definer set search_path = public, net, pg_temp
+as $$
+begin
+  if p_para is null or trim(p_para) = '' then
+    return; -- sin email no hay a quién avisar
+  end if;
+
+  perform net.http_post(
+    url := 'https://api.resend.com/emails',
+    headers := jsonb_build_object(
+      'Authorization', 'Bearer ' || (select "resendApiKey" from config_secretos limit 1),
+      'Content-Type', 'application/json'
+    ),
+    body := jsonb_build_object(
+      'from', (select "emailRemitente" from config_secretos limit 1),
+      'to', p_para,
+      'subject', p_asunto,
+      'html', p_html
+    )
+  );
+end;
+$$;
 
 -- ============================================================
 -- RPCs — lado anfitrión. Exigen p_token, comprobado en el propio
@@ -191,10 +245,37 @@ create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jso
 returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
+declare
+  r record;
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
+
+  -- Aviso de asignación: se compara contra el valor guardado ANTES de
+  -- sobrescribir nada. Si un invitado pasa a tener un colaborador nuevo
+  -- (que antes no tenía, o tenía otro distinto), avisamos a ese colaborador.
+  for r in
+    select
+      f->>'nombre' as nombre_invitado,
+      f->>'apellido' as apellido_invitado,
+      nullif(f->>'colaboradorId','')::uuid as nuevo_colaborador_id,
+      i."colaboradorId" as anterior_colaborador_id
+    from jsonb_array_elements(p_filas) as f
+    left join invitados i on i."id" = (f->>'id')::uuid
+  loop
+    if r.nuevo_colaborador_id is not null
+       and r.nuevo_colaborador_id is distinct from r.anterior_colaborador_id then
+      perform enviar_email(
+        (select "email" from colaboradores where "id" = r.nuevo_colaborador_id),
+        'Nuevo invitado asignado',
+        replace(
+          (select "plantillaAsignacion" from evento limit 1),
+          '{invitado}', trim(coalesce(r.nombre_invitado, '') || ' ' || coalesce(r.apellido_invitado, ''))
+        ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+      );
+    end if;
+  end loop;
 
   insert into invitados (
     "id","nombre","apellido","zona","confirmado","colaboradorId",
@@ -248,8 +329,19 @@ create or replace function colaborador_guardar_invitado(
   p_colaborador_id uuid, p_invitado_id uuid, p_cambios jsonb
 )
 returns setof invitados
-language sql security definer set search_path = public, pg_temp
+language plpgsql security definer set search_path = public, pg_temp
 as $$
+declare
+  anterior invitados;
+  actualizado invitados;
+begin
+  select * into anterior from invitados
+  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id;
+
+  if not found then
+    return;
+  end if;
+
   update invitados set
     "anioNacimiento" = coalesce(p_cambios->>'anioNacimiento', "anioNacimiento"),
     "anioBoda"       = coalesce(p_cambios->>'anioBoda', "anioBoda"),
@@ -258,18 +350,63 @@ as $$
     "alergias"       = coalesce(p_cambios->>'alergias', "alergias"),
     "observaciones"  = coalesce(p_cambios->>'observaciones', "observaciones")
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
-  returning *;
+  returning * into actualizado;
+
+  -- El único dato obligatorio en la app es el año de nacimiento (ver
+  -- datosCompletos() en App.jsx) — el aviso se dispara justo al pasar
+  -- de "sin ese dato" a "con ese dato".
+  if coalesce(anterior."anioNacimiento", '') = ''
+     and coalesce(actualizado."anioNacimiento", '') <> '' then
+    perform enviar_email(
+      (select "emailAnfitrion" from evento limit 1),
+      'Datos completados',
+      replace(
+        replace(
+          (select "plantillaDatosCompletados" from evento limit 1),
+          '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
+        ),
+        '{invitado}', trim(coalesce(actualizado."nombre", '') || ' ' || coalesce(actualizado."apellido", ''))
+      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+    );
+  end if;
+
+  return next actualizado;
+end;
 $$;
 
 create or replace function colaborador_marcar_pagado(
   p_colaborador_id uuid, p_invitado_id uuid, p_pagado boolean
 )
 returns setof invitados
-language sql security definer set search_path = public, pg_temp
+language plpgsql security definer set search_path = public, pg_temp
 as $$
+declare
+  actualizado invitados;
+begin
   update invitados set "pagado" = p_pagado
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
-  returning *;
+  returning * into actualizado;
+
+  if not found then
+    return;
+  end if;
+
+  if p_pagado then
+    perform enviar_email(
+      (select "emailAnfitrion" from evento limit 1),
+      'Pago registrado',
+      replace(
+        replace(
+          (select "plantillaPagoRegistrado" from evento limit 1),
+          '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
+        ),
+        '{invitado}', trim(coalesce(actualizado."nombre", '') || ' ' || coalesce(actualizado."apellido", ''))
+      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+    );
+  end if;
+
+  return next actualizado;
+end;
 $$;
 
 -- Permisos de ejecución (los permisos de tabla siguen revocados,

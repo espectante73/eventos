@@ -1279,6 +1279,12 @@ function VistaAnfitrion({ data }) {
       urlPublica: "",
       ocultarTituloEnImagen: true,
       emailAnfitrion: "",
+      plantillaAsignacion:
+        "Hola,<br><br>Se te ha asignado <b>{invitado}</b> como invitado.<br>Entra en tu enlace cuando puedas para completar sus datos.",
+      plantillaDatosCompletados:
+        "Hola,<br><br><b>{colaborador}</b> ha completado los datos de <b>{invitado}</b>.",
+      plantillaPagoRegistrado:
+        "Hola,<br><br><b>{colaborador}</b> ha marcado como pagado a <b>{invitado}</b>.",
     });
     persistColaboradores([]);
     persistInvitados([]);
@@ -2563,6 +2569,50 @@ function VistaAnfitrion({ data }) {
                   onChange={(e) => persistEvento({ ...evento, emailAnfitrion: e.target.value })}
                   placeholder="tu@email.com"
                   className="w-full"
+                />
+              </Field>
+            </div>
+
+            <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+              <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
+                Texto de los avisos automáticos por email. Usa <code>{"{colaborador}"}</code> y{" "}
+                <code>{"{invitado}"}</code> donde quieras que aparezcan esos nombres — se
+                rellenan solos al enviar. Admite HTML sencillo (<code>&lt;b&gt;</code>,{" "}
+                <code>&lt;br&gt;</code>).
+              </p>
+              <Field label="Aviso al colaborador: se le asigna un invitado nuevo">
+                <textarea
+                  value={evento.plantillaAsignacion || ""}
+                  onChange={(e) =>
+                    persistEvento({ ...evento, plantillaAsignacion: e.target.value })
+                  }
+                  rows={3}
+                  className="w-full"
+                  style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
+                />
+              </Field>
+              <div className="h-2" />
+              <Field label="Aviso al anfitrión: un colaborador completó los datos">
+                <textarea
+                  value={evento.plantillaDatosCompletados || ""}
+                  onChange={(e) =>
+                    persistEvento({ ...evento, plantillaDatosCompletados: e.target.value })
+                  }
+                  rows={3}
+                  className="w-full"
+                  style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
+                />
+              </Field>
+              <div className="h-2" />
+              <Field label="Aviso al anfitrión: un colaborador registró un pago">
+                <textarea
+                  value={evento.plantillaPagoRegistrado || ""}
+                  onChange={(e) =>
+                    persistEvento({ ...evento, plantillaPagoRegistrado: e.target.value })
+                  }
+                  rows={3}
+                  className="w-full"
+                  style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
                 />
               </Field>
             </div>
