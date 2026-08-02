@@ -2916,7 +2916,7 @@ const ETIQUETAS_CAMPOS_INVITADO = {
   observaciones: "Observaciones",
 };
 
-function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCambiarFotoFamiliar }) {
+function FormularioDatos({ invitado, onGuardar, fotoFamiliar, onCambiarFotoFamiliar }) {
   const [form, setForm] = useState(invitado);
   const [foto, setFoto] = useState(fotoFamiliar || "");
   const parsearAlergias = (texto) => {
@@ -3020,24 +3020,43 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
       className="p-3 rounded space-y-2"
       style={{ background: "#fff", border: `1px solid ${C.line}` }}
     >
-      <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex items-start justify-between flex-wrap gap-2">
         <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
           {form.apellido}, {form.nombre}{" "}
           <span className="text-xs font-normal" style={{ color: C.charcoal, opacity: 0.6 }}>
             · {form.zona || "sin zona"}
           </span>
         </div>
-        {aviso && (
-          <span
-            className="text-xs px-2 py-0.5 rounded"
-            style={{ background: C.ink, color: C.paper }}
-          >
-            {aviso}
-          </span>
-        )}
+        <div style={{ minWidth: 180, maxWidth: 220 }}>
+          <Field label="Email">
+            <TextInput
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onBlur={() => revisarYGuardar(form)}
+              placeholder="correo@ejemplo.com"
+              className="w-full"
+            />
+          </Field>
+        </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <Field label="Año nac. (obligatorio)">
+      {aviso && (
+        <span
+          className="inline-block text-xs px-2 py-0.5 rounded"
+          style={{ background: C.ink, color: C.paper }}
+        >
+          {aviso}
+        </span>
+      )}
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-start">
+        <label className="flex flex-col gap-1 text-sm">
+          <span
+            className="uppercase tracking-wide text-xs"
+            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" }}
+          >
+            Año nac.
+            <br />
+            (obligatorio)
+          </span>
           <TextInput
             value={form.anioNacimiento}
             onChange={(e) => setForm({ ...form, anioNacimiento: e.target.value })}
@@ -3046,7 +3065,7 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
             maxLength={4}
             style={{ maxWidth: 70 }}
           />
-        </Field>
+        </label>
         <Field label="Año de boda">
           <TextInput
             value={form.anioBoda}
@@ -3058,25 +3077,58 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
           />
         </Field>
         <div className="col-span-2">
-          <Field label="Email">
-            <TextInput
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              onBlur={() => revisarYGuardar(form)}
-              placeholder="correo@ejemplo.com (acceso al álbum)"
-              className="w-full"
-            />
-          </Field>
-        </div>
-        <div className="col-span-2">
-          <Field label="Canción para bailar">
-            <TextInput
-              value={form.cancion}
-              onChange={(e) => setForm({ ...form, cancion: e.target.value })}
-              onBlur={() => revisarYGuardar(form)}
-              placeholder="Título — Artista"
-              className="w-full"
-            />
+          <Field label={`Foto familiar (${invitado.grupoFamiliar || invitado.apellido})`}>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                {foto && (
+                  <img
+                    src={foto}
+                    alt="Foto de familia"
+                    className="rounded object-cover"
+                    style={{ width: 32, height: 32, border: `1px solid ${C.line}` }}
+                  />
+                )}
+                <label
+                  className="text-xs px-2 py-1 rounded cursor-pointer"
+                  style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+                >
+                  {subiendoFoto ? "Procesando…" : "Subir foto"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={onSeleccionarArchivoFoto}
+                    disabled={subiendoFoto}
+                    style={{ display: "none" }}
+                  />
+                </label>
+                {foto && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFoto("");
+                      guardarFoto("");
+                    }}
+                    className="text-xs"
+                    style={{ color: C.wax }}
+                  >
+                    Quitar
+                  </button>
+                )}
+              </div>
+              <TextInput
+                value={foto}
+                onChange={(e) => setFoto(e.target.value)}
+                onBlur={() => guardarFoto(foto)}
+                placeholder="o pega un enlace"
+                className="w-full"
+                style={{ fontSize: 11 }}
+              />
+              {errorFoto && (
+                <p className="text-xs" style={{ color: C.wax }}>
+                  {errorFoto}
+                </p>
+              )}
+            </div>
           </Field>
         </div>
         <div className="col-span-2">
@@ -3090,112 +3142,54 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
             />
           </Field>
         </div>
-        <div className="col-span-2 sm:col-span-4">
-          <Field label={`Foto de boda de la familia (${invitado.grupoFamiliar || invitado.apellido})`}>
-            <div className="flex items-center gap-3 flex-wrap">
-              {foto && (
-                <img
-                  src={foto}
-                  alt="Foto de familia"
-                  className="rounded object-cover"
-                  style={{ width: 40, height: 40, border: `1px solid ${C.line}` }}
-                />
-              )}
-              <div className="flex-1 space-y-1" style={{ minWidth: 220 }}>
-                <TextInput
-                  value={foto}
-                  onChange={(e) => setFoto(e.target.value)}
-                  onBlur={() => guardarFoto(foto)}
-                  placeholder="https://... enlace de Google Fotos (si aplica)"
-                  className="w-full"
-                />
-                <div className="flex items-center gap-3 flex-wrap">
-                  <label
-                    className="text-xs px-2 py-1 rounded cursor-pointer"
-                    style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-                  >
-                    {subiendoFoto ? "Procesando…" : "Subir desde el dispositivo"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={onSeleccionarArchivoFoto}
-                      disabled={subiendoFoto}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                  {foto && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFoto("");
-                        guardarFoto("");
-                      }}
-                      className="text-xs"
-                      style={{ color: C.wax }}
-                    >
-                      Quitar foto
-                    </button>
-                  )}
-                </div>
-                {errorFoto && (
-                  <p className="text-xs" style={{ color: C.wax }}>
-                    {errorFoto}
-                  </p>
-                )}
-              </div>
-            </div>
-          </Field>
-        </div>
-        <div className="col-span-2 sm:col-span-4">
-          <span
-            className="text-xs uppercase block mb-1"
-            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
-          >
-            Alergias
-          </span>
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-1 text-sm" style={{ color: C.charcoal }}>
-              <input type="checkbox" checked={alergiaSel.no} onChange={marcarNo} />
-              No
-            </label>
-            <label className="flex items-center gap-1 text-sm" style={{ color: C.charcoal }}>
-              <input
-                type="checkbox"
-                checked={alergiaSel.gluten}
-                onChange={() => alternarAlergia("gluten")}
-              />
-              Gluten
-            </label>
-            <label className="flex items-center gap-1 text-sm" style={{ color: C.charcoal }}>
-              <input
-                type="checkbox"
-                checked={alergiaSel.lactosa}
-                onChange={() => alternarAlergia("lactosa")}
-              />
-              Lactosa
-            </label>
-            <TextInput
-              value={alergiaSel.otras}
-              onChange={(e) => cambiarOtras(e.target.value)}
-              onBlur={() => revisarYGuardar(form)}
-              placeholder="Otra (máx. 15)"
-              maxLength={15}
-              style={{ maxWidth: 140 }}
+      </div>
+      <Field label="Canción para bailar">
+        <TextInput
+          value={form.cancion}
+          onChange={(e) => setForm({ ...form, cancion: e.target.value })}
+          onBlur={() => revisarYGuardar(form)}
+          placeholder="Título — Artista"
+          className="w-full"
+        />
+      </Field>
+      <div>
+        <span
+          className="text-xs uppercase block mb-1"
+          style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+        >
+          Alergias
+        </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-1 text-sm" style={{ color: C.charcoal }}>
+            <input type="checkbox" checked={alergiaSel.no} onChange={marcarNo} />
+            No
+          </label>
+          <label className="flex items-center gap-1 text-sm" style={{ color: C.charcoal }}>
+            <input
+              type="checkbox"
+              checked={alergiaSel.gluten}
+              onChange={() => alternarAlergia("gluten")}
             />
-          </div>
+            Gluten
+          </label>
+          <label className="flex items-center gap-1 text-sm" style={{ color: C.charcoal }}>
+            <input
+              type="checkbox"
+              checked={alergiaSel.lactosa}
+              onChange={() => alternarAlergia("lactosa")}
+            />
+            Lactosa
+          </label>
+          <TextInput
+            value={alergiaSel.otras}
+            onChange={(e) => cambiarOtras(e.target.value)}
+            onBlur={() => revisarYGuardar(form)}
+            placeholder="Otra (máx. 15)"
+            maxLength={15}
+            style={{ maxWidth: 140 }}
+          />
         </div>
       </div>
-      {onCancelar && (
-        <div className="flex gap-2">
-          <button
-            onClick={onCancelar}
-            className="px-3 py-1.5 rounded text-sm font-medium"
-            style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-          >
-            Cerrar
-          </button>
-        </div>
-      )}
     </div>
   );
 }
@@ -3205,7 +3199,6 @@ function FilaInvitadoColaborador({
   abierto,
   onToggleAbierto,
   onGuardar,
-  onCancelar,
   fotoFamiliar,
   onCambiarFotoFamiliar,
   onMarcarPagado,
@@ -3238,6 +3231,15 @@ function FilaInvitadoColaborador({
           </span>
         )}
         <div className="flex items-center gap-2 ml-auto">
+          {abierto && (
+            <button
+              onClick={onToggleAbierto}
+              className="px-2 py-0.5 rounded text-xs font-medium"
+              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+            >
+              Cerrar
+            </button>
+          )}
           <span
             className="text-xs px-2 py-0.5 rounded"
             style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.8 }}
@@ -3264,7 +3266,6 @@ function FilaInvitadoColaborador({
           <FormularioDatos
             invitado={g}
             onGuardar={onGuardar}
-            onCancelar={onCancelar}
             fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
             onCambiarFotoFamiliar={onCambiarFotoFamiliar}
           />
@@ -3426,7 +3427,6 @@ function VistaColaborador({ data, colaboradorId }) {
               abierto={abiertoId === g.id}
               onToggleAbierto={() => toggleAbierto(g)}
               onGuardar={guardar}
-              onCancelar={() => setAbiertoId(null)}
               fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
               onCambiarFotoFamiliar={cambiarFotoFamiliar}
               onMarcarPagado={marcarPagado}
