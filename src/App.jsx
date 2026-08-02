@@ -882,7 +882,49 @@ function dibujarParrafoJustificado(ctx, lineas, x, y, maxWidth, lineHeight) {
   });
 }
 
-function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaTexto) {
+// Rejilla temporal (cada 5% del ancho/alto) con la fracción escrita en cada
+// línea — sirve para leer directamente en la imagen las coordenadas que hay
+// que darle a RECUADRO/RECUADRO_DATOS, en vez de estimarlas a ojo desde una
+// captura. Solo se activa con el modo calibración; nunca en una invitación
+// real enviada a un invitado.
+function dibujarCuadriculaCalibracion(ctx, W, H) {
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.font = "bold 16px monospace";
+  ctx.textBaseline = "top";
+  ctx.textAlign = "left";
+
+  const dibujarEtiqueta = (texto, x, y) => {
+    const ancho = ctx.measureText(texto).width;
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillRect(x, y, ancho + 4, 18);
+    ctx.fillStyle = "#C2006B";
+    ctx.fillText(texto, x + 2, y + 1);
+  };
+
+  ctx.strokeStyle = "rgba(220,0,120,0.5)";
+  for (let i = 1; i < 20; i++) {
+    const frac = i * 0.05;
+    const x = Math.round(frac * W);
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, H);
+    ctx.stroke();
+    dibujarEtiqueta(frac.toFixed(2), x + 2, 2);
+  }
+  for (let i = 1; i < 20; i++) {
+    const frac = i * 0.05;
+    const y = Math.round(frac * H);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+    dibujarEtiqueta(frac.toFixed(2), 2, y + 2);
+  }
+  ctx.restore();
+}
+
+function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaTexto, mostrarCuadricula = false) {
   return new Promise((resolve) => {
     // Recuadro recalibrado con precisión sobre la plantilla real, con margen
     // interior comprobado (izquierda, derecha, arriba, abajo como fracción
@@ -992,6 +1034,8 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
         dibujarParrafoJustificado(ctx, b.lineas, xIzq, cursorY, anchoDisponible, b.lineHeight);
         cursorY += b.lineas.length * b.lineHeight + espacioEntreBloques;
       });
+
+      if (mostrarCuadricula) dibujarCuadriculaCalibracion(ctx, W, H);
 
       try {
         resolve(canvas.toDataURL("image/png"));
@@ -1884,7 +1928,9 @@ function VistaAnfitrion({ data }) {
       .catch(() => {});
   }, []);
 
-  const generarImagenParaFamilia = async (familia) => {
+  const [modoCalibracion, setModoCalibracion] = useState(false);
+
+  const generarImagenParaFamilia = async (familia, mostrarCuadricula = modoCalibracion) => {
     // Fraunces tiene que estar realmente cargada antes de dibujar en el
     // canvas — si no, el navegador la ignora en silencio y usa una por
     // defecto sin avisar.
@@ -1902,7 +1948,7 @@ function VistaAnfitrion({ data }) {
         : mesas.length > 1
         ? `Mesas ${mesas.join(", ")} · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`
         : `${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`;
-    return generarInvitacionImagen(evento, familia.apellido, nombres, mesaTexto);
+    return generarInvitacionImagen(evento, familia.apellido, nombres, mesaTexto, mostrarCuadricula);
   };
 
   const descargarInvitacion = async (familia) => {
@@ -2865,6 +2911,22 @@ function VistaAnfitrion({ data }) {
                 </p>
               )}
             </div>
+
+            <label
+              className="mb-4 flex items-center gap-2 text-xs p-2 rounded cursor-pointer"
+              style={{ background: modoCalibracion ? "#FDECF3" : C.paperDark, border: `1px dashed ${C.line}` }}
+            >
+              <input
+                type="checkbox"
+                checked={modoCalibracion}
+                onChange={(e) => setModoCalibracion(e.target.checked)}
+              />
+              <span>
+                Modo calibración: dibuja una cuadrícula con las coordenadas (cada 5% del ancho/alto) sobre
+                la imagen — actívalo, descarga o previsualiza una invitación, y pásame esos números para ajustar
+                mejor la posición del texto. Desactívalo cuando termines.
+              </span>
+            </label>
 
             {window.showDirectoryPicker && (
               <div className="mb-4 flex items-center gap-2 flex-wrap">
