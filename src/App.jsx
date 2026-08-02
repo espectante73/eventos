@@ -1873,6 +1873,56 @@ function VistaAnfitrion({ data }) {
     }
   };
 
+  // Envío por bloques: se elige un colaborador y solo se ven/envían las
+  // familias de sus invitados asignados, con un resumen de confirmación
+  // antes de mandar nada — para no arriesgarse a un envío masivo por error.
+  const [colaboradorInvitacionSel, setColaboradorInvitacionSel] = useState("");
+  const [mostrarResumenLoteInvitaciones, setMostrarResumenLoteInvitaciones] = useState(false);
+  const [enviandoLoteInvitaciones, setEnviandoLoteInvitaciones] = useState(false);
+
+  const familiasParaMostrarInvitacion = colaboradorInvitacionSel
+    ? familiasListasParaInvitacion.filter((f) =>
+        f.confirmados.some(
+          (m) => resolverColaborador(m, colaboradores)?.id === colaboradorInvitacionSel
+        )
+      )
+    : familiasListasParaInvitacion;
+
+  const confirmarEnvioLoteInvitaciones = async () => {
+    setEnviandoLoteInvitaciones(true);
+    let enviados = 0;
+    const saltados = [];
+    for (const familia of familiasParaMostrarInvitacion) {
+      const destinatario = familia.confirmados[0];
+      if (!destinatario?.email) {
+        saltados.push(`${familia.apellido} (sin email)`);
+        continue;
+      }
+      const dataUrl = await generarImagenParaFamilia(familia);
+      if (!dataUrl) {
+        saltados.push(`${familia.apellido} (no se pudo generar la imagen)`);
+        continue;
+      }
+      const base64 = dataUrl.split(",")[1] || "";
+      const ok = await enviarInvitacionFamilia(
+        destinatario.email,
+        `Tu invitación — ${evento.nombre || "evento"}`,
+        evento.plantillaInvitacionFamilia || "",
+        base64
+      );
+      if (ok) enviados++;
+      else saltados.push(`${familia.apellido} (error al enviar)`);
+    }
+    setEnviandoLoteInvitaciones(false);
+    setMostrarResumenLoteInvitaciones(false);
+    window.alert(
+      `Enviadas ${enviados} invitaciones.` +
+        (saltados.length > 0
+          ? `\n\nNo se pudieron enviar (${saltados.length}):\n${saltados.join("\n")}`
+          : "")
+    );
+  };
+
   const [mostrarExportar, setMostrarExportar] = useState(false);
   const [mostrarRestaurar, setMostrarRestaurar] = useState(false);
   const [textoRestaurar, setTextoRestaurar] = useState("");
@@ -2706,8 +2756,40 @@ function VistaAnfitrion({ data }) {
                 </span>
               </div>
             )}
+
+            <div className="mb-4 p-3 rounded flex flex-wrap items-end gap-2" style={{ background: C.paperDark, border: `1px dashed ${C.line}` }}>
+              <Field label="Envío por bloques: elige un colaborador">
+                <select
+                  value={colaboradorInvitacionSel}
+                  onChange={(e) => setColaboradorInvitacionSel(e.target.value)}
+                  style={{ ...inputStyle, minWidth: 220 }}
+                >
+                  <option value="">Ver todas las familias (sin agrupar)</option>
+                  {colaboradores.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              {colaboradorInvitacionSel && (
+                <button
+                  onClick={() => setMostrarResumenLoteInvitaciones(true)}
+                  disabled={familiasParaMostrarInvitacion.length === 0}
+                  className="px-3 py-2 rounded text-sm font-medium"
+                  style={{
+                    background: familiasParaMostrarInvitacion.length === 0 ? C.line : C.wax,
+                    color: familiasParaMostrarInvitacion.length === 0 ? C.charcoal : "#fff",
+                  }}
+                >
+                  Revisar y enviar a {familiasParaMostrarInvitacion.length} familia
+                  {familiasParaMostrarInvitacion.length === 1 ? "" : "s"}
+                </button>
+              )}
+            </div>
+
             <div className="space-y-2">
-              {familiasListasParaInvitacion.map((familia) => (
+              {familiasParaMostrarInvitacion.map((familia) => (
                 <div
                   key={familia.clave}
                   className="p-3 rounded text-sm"
@@ -2786,10 +2868,11 @@ function VistaAnfitrion({ data }) {
                   </div>
                 </div>
               ))}
-              {familiasListasParaInvitacion.length === 0 && (
+              {familiasParaMostrarInvitacion.length === 0 && (
                 <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                  Todavía ninguna familia tiene el pago completo y la mesa asignada para todos
-                  sus confirmados.
+                  {colaboradorInvitacionSel
+                    ? "Este colaborador no tiene ninguna familia con el pago y la mesa completos todavía."
+                    : "Todavía ninguna familia tiene el pago completo y la mesa asignada para todos sus confirmados."}
                 </p>
               )}
             </div>
@@ -3370,6 +3453,66 @@ function VistaAnfitrion({ data }) {
             </button>
             <button
               onClick={() => setPreviewInvitacion(null)}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </ModalFlotante>
+      )}
+
+      {mostrarResumenLoteInvitaciones && (
+        <ModalFlotante
+          titulo={`Enviar invitaciones — ${
+            colaboradores.find((c) => c.id === colaboradorInvitacionSel)?.nombre || ""
+          }`}
+          onCerrar={() => setMostrarResumenLoteInvitaciones(false)}
+        >
+          <p className="text-sm mb-3" style={{ color: C.charcoal }}>
+            Revisa antes de enviar — se manda un email por familia, cada una con su propia
+            invitación adjunta:
+          </p>
+          <ul className="text-sm space-y-2 mb-4">
+            {familiasParaMostrarInvitacion.map((familia) => {
+              const destinatario = familia.confirmados[0];
+              return (
+                <li key={familia.clave} className="pb-2" style={{ borderBottom: `1px solid ${C.line}` }}>
+                  <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
+                    Familia {familia.apellido}
+                  </div>
+                  <div style={{ color: C.charcoal, opacity: 0.8 }}>
+                    {familia.confirmados.map((m) => m.nombre).join(", ")} —{" "}
+                    {familia.confirmados.length} confirmado
+                    {familia.confirmados.length === 1 ? "" : "s"}, todos con pago hecho
+                  </div>
+                  {destinatario?.email ? (
+                    <div className="text-xs" style={{ color: C.ink }}>
+                      Se enviará a: {destinatario.nombre} — {destinatario.email}
+                    </div>
+                  ) : (
+                    <div className="text-xs" style={{ color: C.wax }}>
+                      ⚠ Sin email — esta familia se saltará
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={confirmarEnvioLoteInvitaciones}
+              disabled={enviandoLoteInvitaciones}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{ background: C.ink, color: C.paper }}
+            >
+              {enviandoLoteInvitaciones
+                ? "Enviando…"
+                : `Confirmar y enviar ${familiasParaMostrarInvitacion.length} invitaciones`}
+            </button>
+            <button
+              onClick={() => setMostrarResumenLoteInvitaciones(false)}
+              disabled={enviandoLoteInvitaciones}
               className="px-3 py-2 rounded text-sm font-medium"
               style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
             >
