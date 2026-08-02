@@ -913,7 +913,7 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
       ctx.font = fuenteNombres;
       const lineasNombres = partirLineas(
         ctx,
-        `${apellidoFamilia}, ${listaConY(nombresMiembros)}`,
+        `${apellidoFamilia}; ${listaConY(nombresMiembros)}`,
         anchoDisponible
       );
       const alturaNombres = lineasNombres.length * lineHeightNombres;
@@ -1137,7 +1137,7 @@ function GrupoFamiliarInput({ value, onCommit }) {
 }
 
 function VistaAnfitrion({ data }) {
-  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, avisosEnviados } = data;
+  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares } = data;
 
   const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
@@ -1733,6 +1733,18 @@ function VistaAnfitrion({ data }) {
     }
   };
 
+  // Si el anfitrión reordenó los nombres a mano (p.ej. esposo primero),
+  // se respeta ese orden; los que falten en él (recién confirmados) van
+  // al final, en su orden normal.
+  const ordenarConfirmados = (confirmados, ordenIds) => {
+    if (!ordenIds || ordenIds.length === 0) return confirmados;
+    const porId = Object.fromEntries(confirmados.map((m) => [m.id, m]));
+    const ordenados = ordenIds.map((id) => porId[id]).filter(Boolean);
+    const idsOrdenados = new Set(ordenIds);
+    const resto = confirmados.filter((m) => !idsOrdenados.has(m.id));
+    return [...ordenados, ...resto];
+  };
+
   const familiasListasParaInvitacion = (() => {
     const grupos = {};
     invitados.forEach((g) => {
@@ -1741,17 +1753,33 @@ function VistaAnfitrion({ data }) {
     });
     return Object.entries(grupos)
       .map(([clave, miembros]) => {
-        const confirmados = miembros.filter((m) => m.confirmado);
+        const confirmados = ordenarConfirmados(
+          miembros.filter((m) => m.confirmado),
+          ordenFamiliares[clave]
+        );
         const apellido = miembros[0].apellido || clave;
         return {
           clave,
           apellido,
           confirmados,
-          listaParaInvitacion: confirmados.length > 0 && confirmados.every((m) => m.pagado),
+          listaParaInvitacion:
+            confirmados.length > 0 &&
+            confirmados.every((m) => m.pagado) &&
+            confirmados.every((m) => m.mesa),
         };
       })
       .filter((f) => f.listaParaInvitacion);
   })();
+
+  const moverNombreFamilia = (familia, invitadoId, direccion) => {
+    const ids = familia.confirmados.map((m) => m.id);
+    const idx = ids.indexOf(invitadoId);
+    const nuevoIdx = idx + direccion;
+    if (nuevoIdx < 0 || nuevoIdx >= ids.length) return;
+    const nuevosIds = [...ids];
+    [nuevosIds[idx], nuevosIds[nuevoIdx]] = [nuevosIds[nuevoIdx], nuevosIds[idx]];
+    persistOrdenFamiliares({ ...ordenFamiliares, [familia.clave]: nuevosIds });
+  };
 
   const [descargando, setDescargando] = useState(null);
   const [nombreCarpetaInvitaciones, setNombreCarpetaInvitaciones] = useState(null);
@@ -2631,31 +2659,60 @@ function VistaAnfitrion({ data }) {
               {familiasListasParaInvitacion.map((familia) => (
                 <div
                   key={familia.clave}
-                  className="flex flex-wrap items-center justify-between gap-2 p-3 rounded text-sm"
+                  className="p-3 rounded text-sm"
                   style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
                 >
-                  <div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                     <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
                       Familia {familia.apellido}
                     </span>
-                    <span className="ml-2 text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-                      {familia.confirmados.map((m) => m.nombre).join(", ")}
-                    </span>
+                    <button
+                      onClick={() => descargarInvitacion(familia)}
+                      disabled={descargando === familia.clave}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium"
+                      style={{ background: C.ink, color: C.paper, opacity: descargando === familia.clave ? 0.6 : 1 }}
+                    >
+                      <ImageIcon size={13} />
+                      {descargando === familia.clave ? "Generando..." : "Descargar invitación"}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => descargarInvitacion(familia)}
-                    disabled={descargando === familia.clave}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium"
-                    style={{ background: C.ink, color: C.paper, opacity: descargando === familia.clave ? 0.6 : 1 }}
-                  >
-                    <ImageIcon size={13} />
-                    {descargando === familia.clave ? "Generando..." : "Descargar invitación"}
-                  </button>
+                  <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>
+                    Orden de los nombres en la invitación (usa las flechas para cambiarlo, p.ej.
+                    para poner al esposo primero):
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {familia.confirmados.map((m, i) => (
+                      <div
+                        key={m.id}
+                        className="flex items-center gap-1 px-2 py-1 rounded text-xs"
+                        style={{ background: "#fff", border: `1px solid ${C.line}` }}
+                      >
+                        <span style={{ color: C.ink }}>{m.nombre}</span>
+                        <button
+                          onClick={() => moverNombreFamilia(familia, m.id, -1)}
+                          disabled={i === 0}
+                          style={{ color: i === 0 ? C.line : C.gold }}
+                          title="Mover antes"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          onClick={() => moverNombreFamilia(familia, m.id, 1)}
+                          disabled={i === familia.confirmados.length - 1}
+                          style={{ color: i === familia.confirmados.length - 1 ? C.line : C.gold }}
+                          title="Mover después"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
               {familiasListasParaInvitacion.length === 0 && (
                 <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                  Todavía ninguna familia tiene el pago completo.
+                  Todavía ninguna familia tiene el pago completo y la mesa asignada para todos
+                  sus confirmados.
                 </p>
               )}
             </div>

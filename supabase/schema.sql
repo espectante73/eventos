@@ -76,6 +76,18 @@ create table fotos_familiares (
 );
 
 -- ============================================================
+-- 4b. ORDEN DE NOMBRES POR FAMILIA (diccionario: grupoFamiliar ->
+--     array de ids de invitados, en el orden elegido a mano por el
+--     anfitrión — para poner al esposo primero, etc., en la
+--     invitación). Si una familia no tiene fila aquí, se usa el
+--     orden por defecto.
+-- ============================================================
+create table orden_familias (
+  "grupoFamiliar"  text primary key,
+  "orden"          text[] not null default '{}'
+);
+
+-- ============================================================
 -- 5. EVENTO (una única fila, forzado con un truco de PK booleana)
 -- ============================================================
 create table evento (
@@ -147,21 +159,23 @@ alter table avisos_enviados enable row level security;
 revoke all on table avisos_enviados from anon, authenticated;
 
 -- ============================================================
--- RLS: activada en las 8 tablas. evento/mesas/fotos_familiares
--- quedan abiertas (datos sin sensibilidad real). invitados,
--- colaboradores, anfitrion_secreto, config_secretos y
+-- RLS: activada en las 9 tablas. evento/mesas/fotos_familiares/
+-- orden_familias quedan abiertas (datos sin sensibilidad real).
+-- invitados, colaboradores, anfitrion_secreto, config_secretos y
 -- avisos_enviados NO tienen ninguna política — solo se pueden
 -- tocar a través de las funciones de más abajo.
 -- ============================================================
 alter table evento             enable row level security;
 alter table mesas              enable row level security;
 alter table fotos_familiares   enable row level security;
+alter table orden_familias     enable row level security;
 alter table invitados          enable row level security;
 alter table colaboradores      enable row level security;
 
 create policy "anon_full_access" on evento             for all using (true) with check (true);
 create policy "anon_full_access" on mesas              for all using (true) with check (true);
 create policy "anon_full_access" on fotos_familiares   for all using (true) with check (true);
+create policy "anon_full_access" on orden_familias     for all using (true) with check (true);
 
 -- Cinturón y tirantes: quitamos también los permisos de tabla que
 -- Supabase concede por defecto, para que no exista ningún camino

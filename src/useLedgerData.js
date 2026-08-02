@@ -40,6 +40,9 @@ export function useLedgerData(rol) {
   const [loaded, setLoaded] = useState(false);
   const [esAnfitrion, setEsAnfitrion] = useState(false);
   const [avisosEnviados, setAvisosEnviados] = useState([]);
+  // Orden manual de nombres por familia (para la invitación) — solo lo usa
+  // el anfitrión, igual que las mesas.
+  const [ordenFamiliares, setOrdenFamiliares] = useState({});
 
   // Se mantiene al día para poder comparar "antes/después" dentro de
   // persistInvitados sin depender de closures obsoletas.
@@ -124,6 +127,10 @@ export function useLedgerData(rol) {
           { p_token: rol }
         );
         if (errAvisos) avisar("No se pudo cargar el historial de avisos.", errAvisos);
+        const { data: ordenFilas, error: errOrden } = await supabase
+          .from("orden_familias")
+          .select("*");
+        if (errOrden) avisar("No se pudo cargar el orden de las familias.", errOrden);
 
         if (cancelado) return;
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
@@ -134,6 +141,9 @@ export function useLedgerData(rol) {
         setInvitados(todosInvitados || []);
         setMesas(todasMesas || []);
         setAvisosEnviados(avisos || []);
+        setOrdenFamiliares(
+          Object.fromEntries((ordenFilas || []).map((r) => [r.grupoFamiliar, r.orden]))
+        );
         setEsAnfitrion(true);
         setLoaded(true);
         return;
@@ -175,6 +185,17 @@ export function useLedgerData(rol) {
     if (filas.length === 0) return;
     const { error } = await supabase.from("fotos_familiares").upsert(filas);
     if (error) avisar("No se pudo guardar la foto familiar.", error);
+  }, []);
+
+  const persistOrdenFamiliares = useCallback(async (next) => {
+    setOrdenFamiliares(next);
+    const filas = Object.entries(next).map(([grupoFamiliar, orden]) => ({
+      grupoFamiliar,
+      orden,
+    }));
+    if (filas.length === 0) return;
+    const { error } = await supabase.from("orden_familias").upsert(filas);
+    if (error) avisar("No se pudo guardar el orden de la familia.", error);
   }, []);
 
   const persistColaboradores = useCallback(
@@ -294,5 +315,7 @@ export function useLedgerData(rol) {
     persistFotosFamiliares,
     avisarColaborador,
     avisosEnviados,
+    ordenFamiliares,
+    persistOrdenFamiliares,
   };
 }
