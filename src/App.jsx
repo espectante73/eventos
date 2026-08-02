@@ -903,7 +903,10 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
       const yFecha = RECUADRO_DATOS.top * H + altoDatos * (1 / 6);
       const yHora = RECUADRO_DATOS.top * H + altoDatos * (3 / 6);
       const yLugar = RECUADRO_DATOS.top * H + altoDatos * (5 / 6);
-      const bajarDesdeEtiqueta = altoDatos * 0.32;
+      // La distancia entre el centro de una fila y la siguiente es
+      // altoDatos/3 — hay que bajar bastante menos que eso, si no el
+      // valor cae encima de la etiqueta de abajo.
+      const bajarDesdeEtiqueta = altoDatos * 0.15;
 
       ctx.fillStyle = "#1F3A2E";
       ctx.textAlign = "left";
@@ -922,9 +925,11 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
         // de su etiqueta y bajando desde ahí línea a línea.
         ctx.font = `bold ${Math.round(W * 0.0165)}px 'Fraunces', serif`;
         const lineHeightLugar = Math.round(W * 0.0205);
+        // Aquí no se baja tanto: el hueco hasta el borde inferior del
+        // recuadro es pequeño y hay que dejar sitio para varias líneas.
         const lineasLugar = partirLineas(ctx, lugarValor, anchoValor);
         lineasLugar.forEach((linea, i) =>
-          ctx.fillText(linea, xValor, yLugar + bajarDesdeEtiqueta * 0.75 + i * lineHeightLugar)
+          ctx.fillText(linea, xValor, yLugar + bajarDesdeEtiqueta * 0.3 + i * lineHeightLugar)
         );
       }
 
