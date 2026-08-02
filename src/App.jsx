@@ -3350,6 +3350,7 @@ function VistaColaborador({ data, colaboradorId }) {
     (g) => resolverColaborador(g, colaboradores)?.id === colaboradorId
   );
   const confirmados = misInvitados.filter((g) => g.confirmado);
+  const tentativos = misInvitados.filter((g) => !g.confirmado);
   const esPendiente = (g) =>
     g.id === abiertoId ? pendienteAlAbrir : !datosCompletos(g);
   const pendientes = confirmados.filter(esPendiente);
@@ -3407,6 +3408,8 @@ function VistaColaborador({ data, colaboradorId }) {
     window.alert(
       data
         ? "Aviso enviado al anfitrión: datos completos."
+        : tentativos.length > 0
+        ? "Todavía tienes invitados en tentativa sin confirmar — pídele al anfitrión que los confirme antes de avisar."
         : "Todavía faltan invitados por completar sus datos."
     );
   };
@@ -3424,6 +3427,8 @@ function VistaColaborador({ data, colaboradorId }) {
     window.alert(
       data
         ? "Aviso enviado al anfitrión: pagos completos."
+        : tentativos.length > 0
+        ? "Todavía tienes invitados en tentativa sin confirmar — pídele al anfitrión que los confirme antes de avisar."
         : "Todavía faltan invitados por pagar."
     );
   };
@@ -3524,6 +3529,12 @@ function VistaColaborador({ data, colaboradorId }) {
             <li>Invitados confirmados: {confirmados.length}</li>
             <li>Con datos completos: {completos.length} de {confirmados.length}</li>
             <li>Con el pago hecho: {pagados.length} de {confirmados.length}</li>
+            {tentativos.length > 0 && (
+              <li style={{ color: C.wax }}>
+                ⚠ {tentativos.length} en tentativa (sin confirmar) — mientras existan, no se
+                puede avisar al anfitrión de que has terminado.
+              </li>
+            )}
           </ul>
           <div className="space-y-2">
             <button
@@ -3531,8 +3542,14 @@ function VistaColaborador({ data, colaboradorId }) {
               disabled={enviandoDatos}
               className="w-full px-3 py-2 rounded text-sm font-medium"
               style={{
-                background: pendientes.length === 0 && confirmados.length > 0 ? C.ink : C.line,
-                color: pendientes.length === 0 && confirmados.length > 0 ? C.paper : C.charcoal,
+                background:
+                  tentativos.length === 0 && pendientes.length === 0 && confirmados.length > 0
+                    ? C.ink
+                    : C.line,
+                color:
+                  tentativos.length === 0 && pendientes.length === 0 && confirmados.length > 0
+                    ? C.paper
+                    : C.charcoal,
               }}
             >
               {enviandoDatos ? "Enviando…" : "Confirmar datos completos y avisar"}
@@ -3542,8 +3559,14 @@ function VistaColaborador({ data, colaboradorId }) {
               disabled={enviandoPagos}
               className="w-full px-3 py-2 rounded text-sm font-medium"
               style={{
-                background: noPagados.length === 0 && confirmados.length > 0 ? C.ink : C.line,
-                color: noPagados.length === 0 && confirmados.length > 0 ? C.paper : C.charcoal,
+                background:
+                  tentativos.length === 0 && noPagados.length === 0 && confirmados.length > 0
+                    ? C.ink
+                    : C.line,
+                color:
+                  tentativos.length === 0 && noPagados.length === 0 && confirmados.length > 0
+                    ? C.paper
+                    : C.charcoal,
               }}
             >
               {enviandoPagos ? "Enviando…" : "Confirmar pagos completos y avisar"}

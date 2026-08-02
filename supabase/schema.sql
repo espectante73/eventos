@@ -416,9 +416,17 @@ returns boolean
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare
+  tentativa integer;
   total integer;
   completos integer;
 begin
+  -- Si todavía tiene algún invitado en tentativa (sin confirmar) entre los
+  -- suyos, no se avisa — el anfitrión quiere el informe final, no uno por
+  -- cada tanda de confirmados que se vaya completando.
+  select count(*) into tentativa
+  from invitados
+  where "colaboradorId" = p_colaborador_id and "confirmado" = false;
+
   select count(*), count(*) filter (
     where coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> ''
   )
@@ -426,7 +434,7 @@ begin
   from invitados
   where "colaboradorId" = p_colaborador_id and "confirmado" = true;
 
-  if total > 0 and total = completos then
+  if tentativa = 0 and total > 0 and total = completos then
     perform enviar_email(
       (select "emailAnfitrion" from evento limit 1),
       'Datos completados',
@@ -446,15 +454,20 @@ returns boolean
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare
+  tentativa integer;
   total integer;
   pagados integer;
 begin
+  select count(*) into tentativa
+  from invitados
+  where "colaboradorId" = p_colaborador_id and "confirmado" = false;
+
   select count(*), count(*) filter (where "pagado")
   into total, pagados
   from invitados
   where "colaboradorId" = p_colaborador_id and "confirmado" = true;
 
-  if total > 0 and total = pagados then
+  if tentativa = 0 and total > 0 and total = pagados then
     perform enviar_email(
       (select "emailAnfitrion" from evento limit 1),
       'Pagos completos',
