@@ -2941,8 +2941,6 @@ function FormularioDatos({
   fotoFamiliar,
   onCambiarFotoFamiliar,
   importe,
-  pagado,
-  onMarcarPagado,
   onCerrar,
 }) {
   const [form, setForm] = useState(invitado);
@@ -3071,18 +3069,6 @@ function FormularioDatos({
           >
             € {importe.toFixed(2)}
           </span>
-          <button onClick={onMarcarPagado} className="flex items-center gap-1">
-            {pagado ? (
-              <Stamp color={C.ink}>Pagado</Stamp>
-            ) : (
-              <span
-                className="text-xs px-2 py-0.5 rounded"
-                style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
-              >
-                Pendiente de pago
-              </span>
-            )}
-          </button>
           <button
             onClick={onCerrar}
             className="ml-auto px-4 py-2 rounded text-sm font-semibold"
@@ -3277,13 +3263,6 @@ function FilaInvitadoColaborador({
         )}
         {!abierto && (
           <div className="flex items-center gap-2 ml-auto">
-            <span
-              className="text-xs px-2 py-0.5 rounded"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.8 }}
-              title="Importe calculado según edad y los precios de Configuración"
-            >
-              € {importe.toFixed(2)}
-            </span>
             <button onClick={() => onMarcarPagado(g.id, !g.pagado)} className="flex items-center gap-1">
               {g.pagado ? (
                 <Stamp color={C.ink}>Pagado</Stamp>
@@ -3307,8 +3286,6 @@ function FilaInvitadoColaborador({
             fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
             onCambiarFotoFamiliar={onCambiarFotoFamiliar}
             importe={importe}
-            pagado={g.pagado}
-            onMarcarPagado={() => onMarcarPagado(g.id, !g.pagado)}
             onCerrar={onToggleAbierto}
           />
         </div>
