@@ -1137,7 +1137,7 @@ function GrupoFamiliarInput({ value, onCommit }) {
 }
 
 function VistaAnfitrion({ data }) {
-  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares } = data;
+  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia } = data;
 
   const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
@@ -1351,6 +1351,10 @@ function VistaAnfitrion({ data }) {
     persistInvitados(invitados.map((g) => (g.id === id ? { ...g, zona } : g)));
   };
 
+  const asignarEmailInvitado = (id, email) => {
+    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, email } : g)));
+  };
+
   const ocupacionMesa = (numero) =>
     invitados.filter((g) => g.mesa === numero && g.confirmado).length;
 
@@ -1532,6 +1536,8 @@ function VistaAnfitrion({ data }) {
         "Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.",
       plantillaPagoRegistrado:
         "Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.",
+      plantillaInvitacionFamilia:
+        "Hola,<br><br>Aquí tienes tu invitación. ¡Os esperamos con muchas ganas!",
     });
     persistColaboradores([]);
     persistInvitados([]);
@@ -1791,8 +1797,7 @@ function VistaAnfitrion({ data }) {
       .catch(() => {});
   }, []);
 
-  const descargarInvitacion = async (familia) => {
-    setDescargando(familia.clave);
+  const generarImagenParaFamilia = async (familia) => {
     // Fraunces tiene que estar realmente cargada antes de dibujar en el
     // canvas — si no, el navegador la ignora en silencio y usa una por
     // defecto sin avisar.
@@ -1810,7 +1815,12 @@ function VistaAnfitrion({ data }) {
         : mesas.length > 1
         ? `Mesas ${mesas.join(", ")} · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`
         : `${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`;
-    const dataUrl = await generarInvitacionImagen(evento, familia.apellido, nombres, mesaTexto);
+    return generarInvitacionImagen(evento, familia.apellido, nombres, mesaTexto);
+  };
+
+  const descargarInvitacion = async (familia) => {
+    setDescargando(familia.clave);
+    const dataUrl = await generarImagenParaFamilia(familia);
     setDescargando(null);
     if (!dataUrl) {
       window.alert(
@@ -1820,6 +1830,47 @@ function VistaAnfitrion({ data }) {
     }
     const nombreArchivo = `${evento.nombre || "evento"}_${familia.clave}.png`.replace(/[\\/:*?"<>|]/g, "-");
     await guardarArchivoInvitacion(dataUrl, nombreArchivo);
+  };
+
+  const [previewInvitacion, setPreviewInvitacion] = useState(null); // { familia, dataUrl, destinatario } | null
+  const [enviandoInvitacion, setEnviandoInvitacion] = useState(false);
+
+  const abrirPreviewInvitacion = async (familia) => {
+    const destinatario = familia.confirmados[0];
+    if (!destinatario?.email) {
+      window.alert(
+        `No se puede enviar todavía: ${destinatario?.nombre || "la primera persona del orden"} ` +
+          `no tiene email guardado. Rellénalo (aquí mismo, en la lista de nombres) o cambia el orden de la familia.`
+      );
+      return;
+    }
+    setDescargando(familia.clave);
+    const dataUrl = await generarImagenParaFamilia(familia);
+    setDescargando(null);
+    if (!dataUrl) {
+      window.alert(
+        "No se ha podido generar la imagen, probablemente porque la URL de la imagen del evento no permite descargarla desde otro origen. Prueba con otra imagen alojada en un servicio que sí lo permita, o quita la URL para usar el fondo por defecto."
+      );
+      return;
+    }
+    setPreviewInvitacion({ familia, dataUrl, destinatario });
+  };
+
+  const confirmarEnvioInvitacion = async () => {
+    if (!previewInvitacion) return;
+    setEnviandoInvitacion(true);
+    const base64 = previewInvitacion.dataUrl.split(",")[1] || "";
+    const ok = await enviarInvitacionFamilia(
+      previewInvitacion.destinatario.email,
+      `Tu invitación — ${evento.nombre || "evento"}`,
+      evento.plantillaInvitacionFamilia || "",
+      base64
+    );
+    setEnviandoInvitacion(false);
+    if (ok) {
+      window.alert(`Invitación enviada a ${previewInvitacion.destinatario.email}.`);
+      setPreviewInvitacion(null);
+    }
   };
 
   const [mostrarExportar, setMostrarExportar] = useState(false);
@@ -2666,28 +2717,40 @@ function VistaAnfitrion({ data }) {
                     <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
                       Familia {familia.apellido}
                     </span>
-                    <button
-                      onClick={() => descargarInvitacion(familia)}
-                      disabled={descargando === familia.clave}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium"
-                      style={{ background: C.ink, color: C.paper, opacity: descargando === familia.clave ? 0.6 : 1 }}
-                    >
-                      <ImageIcon size={13} />
-                      {descargando === familia.clave ? "Generando..." : "Descargar invitación"}
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => descargarInvitacion(familia)}
+                        disabled={descargando === familia.clave}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium"
+                        style={{ background: C.ink, color: C.paper, opacity: descargando === familia.clave ? 0.6 : 1 }}
+                      >
+                        <ImageIcon size={13} />
+                        {descargando === familia.clave ? "Generando..." : "Descargar"}
+                      </button>
+                      <button
+                        onClick={() => abrirPreviewInvitacion(familia)}
+                        disabled={descargando === familia.clave}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium"
+                        style={{ background: C.gold, color: "#fff", opacity: descargando === familia.clave ? 0.6 : 1 }}
+                      >
+                        <Mail size={13} />
+                        {descargando === familia.clave ? "Generando..." : "Enviar por email"}
+                      </button>
+                    </div>
                   </div>
                   <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>
                     Orden de los nombres en la invitación (usa las flechas para cambiarlo, p.ej.
-                    para poner al esposo primero):
+                    para poner al esposo primero — a esa persona se le enviará el email) y su
+                    email de contacto:
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="space-y-1">
                     {familia.confirmados.map((m, i) => (
                       <div
                         key={m.id}
-                        className="flex items-center gap-1 px-2 py-1 rounded text-xs"
+                        className="flex items-center gap-2 px-2 py-1 rounded text-xs"
                         style={{ background: "#fff", border: `1px solid ${C.line}` }}
                       >
-                        <span style={{ color: C.ink }}>{m.nombre}</span>
+                        <span style={{ color: C.ink, minWidth: 90 }}>{m.nombre}</span>
                         <button
                           onClick={() => moverNombreFamilia(familia, m.id, -1)}
                           disabled={i === 0}
@@ -2704,6 +2767,20 @@ function VistaAnfitrion({ data }) {
                         >
                           ▼
                         </button>
+                        <div className="flex-1">
+                          <GrupoFamiliarInput
+                            value={m.email || ""}
+                            onCommit={(v) => asignarEmailInvitado(m.id, v)}
+                          />
+                        </div>
+                        {i === 0 && (
+                          <span
+                            className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
+                            style={{ background: C.paperDark, color: C.charcoal }}
+                          >
+                            destinatario
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -2993,6 +3070,18 @@ function VistaAnfitrion({ data }) {
                   style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
                 />
               </Field>
+              <div className="h-2" />
+              <Field label="Email a la familia: envío de la invitación">
+                <textarea
+                  value={evento.plantillaInvitacionFamilia || ""}
+                  onChange={(e) =>
+                    persistEvento({ ...evento, plantillaInvitacionFamilia: e.target.value })
+                  }
+                  rows={3}
+                  className="w-full"
+                  style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
+                />
+              </Field>
             </div>
 
             <div className="mt-4 pt-4" style={{ borderTop: `2px solid ${C.wax}` }}>
@@ -3228,6 +3317,63 @@ function VistaAnfitrion({ data }) {
               style={{ border: `1px solid ${C.gold}`, color: C.gold }}
             >
               Editar asignación
+            </button>
+          </div>
+        </ModalFlotante>
+      )}
+
+      {previewInvitacion && (
+        <ModalFlotante
+          titulo={`Enviar invitación — Familia ${previewInvitacion.familia.apellido}`}
+          onCerrar={() => setPreviewInvitacion(null)}
+        >
+          <p
+            className="text-xs uppercase mb-1"
+            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+          >
+            Destinatario
+          </p>
+          <p className="text-sm mb-3" style={{ color: C.ink }}>
+            {previewInvitacion.destinatario.nombre} — {previewInvitacion.destinatario.email}
+          </p>
+          <p
+            className="text-xs uppercase mb-1"
+            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+          >
+            Invitación
+          </p>
+          <img
+            src={previewInvitacion.dataUrl}
+            alt="Vista previa de la invitación"
+            className="rounded mb-3"
+            style={{ maxWidth: "100%", border: `1px solid ${C.line}` }}
+          />
+          <p
+            className="text-xs uppercase mb-1"
+            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+          >
+            Mensaje del email
+          </p>
+          <div
+            className="p-3 rounded text-sm mb-4"
+            style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
+            dangerouslySetInnerHTML={{ __html: evento.plantillaInvitacionFamilia || "" }}
+          />
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={confirmarEnvioInvitacion}
+              disabled={enviandoInvitacion}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{ background: C.ink, color: C.paper }}
+            >
+              {enviandoInvitacion ? "Enviando…" : "Aceptar y enviar"}
+            </button>
+            <button
+              onClick={() => setPreviewInvitacion(null)}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+            >
+              Cancelar
             </button>
           </div>
         </ModalFlotante>

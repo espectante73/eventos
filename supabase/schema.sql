@@ -112,7 +112,8 @@ create table evento (
   -- anfitrión puede cambiar el texto desde Configuración sin tocar código.
   "plantillaAsignacion"        text not null default 'Hola,<br><br>Tienes invitados nuevos asignados.<br>Entra en tu enlace cuando puedas para revisarlos y completar sus datos.',
   "plantillaDatosCompletados"  text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.',
-  "plantillaPagoRegistrado"    text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.'
+  "plantillaPagoRegistrado"    text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.',
+  "plantillaInvitacionFamilia" text not null default 'Hola,<br><br>Aquí tienes tu invitación. ¡Os esperamos con muchas ganas!'
 );
 insert into evento ("id") values (true);
 
@@ -191,7 +192,15 @@ revoke all on table colaboradores from anon, authenticated;
 -- ============================================================
 create extension if not exists pg_net;
 
-create or replace function enviar_email(p_para text, p_asunto text, p_html text)
+drop function if exists enviar_email(text, text, text);
+
+-- "p_adjunto_*" son opcionales — se usan para adjuntar la imagen de la
+-- invitación (ver anfitrion_enviar_invitacion_familia). El resto de
+-- avisos de la app los deja vacíos, sin cambiar nada en su llamada.
+create or replace function enviar_email(
+  p_para text, p_asunto text, p_html text,
+  p_adjunto_nombre text default null, p_adjunto_base64 text default null
+)
 returns void
 language plpgsql security definer set search_path = public, net, pg_temp
 as $$
@@ -213,7 +222,17 @@ begin
       'to', p_para,
       'subject', p_asunto,
       'html', p_html
-    )
+    ) || case
+      when p_adjunto_base64 is not null and trim(p_adjunto_base64) <> '' then
+        jsonb_build_object(
+          'attachments',
+          jsonb_build_array(jsonb_build_object(
+            'filename', coalesce(nullif(p_adjunto_nombre, ''), 'invitacion.png'),
+            'content', p_adjunto_base64
+          ))
+        )
+      else '{}'::jsonb
+    end
   );
 end;
 $$;
@@ -365,6 +384,25 @@ begin
 
   update invitados set "avisoPendiente" = false
   where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true;
+end;
+$$;
+
+-- Envía la invitación (imagen generada en el navegador) por email a una
+-- familia. El destinatario y el texto los decide el anfitrión al
+-- confirmar en la vista previa — aquí solo se comprueba el token y se
+-- reenvía a enviar_email() con el adjunto.
+create or replace function anfitrion_enviar_invitacion_familia(
+  p_token uuid, p_email text, p_asunto text, p_html text, p_imagen_base64 text
+)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  perform enviar_email(p_email, p_asunto, p_html, 'invitacion.png', p_imagen_base64);
 end;
 $$;
 
@@ -593,6 +631,7 @@ grant execute on function anfitrion_listar_invitados(uuid) to anon;
 grant execute on function anfitrion_guardar_colaboradores(uuid, jsonb) to anon;
 grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
 grant execute on function anfitrion_avisar_colaborador(uuid, uuid) to anon;
+grant execute on function anfitrion_enviar_invitacion_familia(uuid, text, text, text, text) to anon;
 grant execute on function anfitrion_listar_avisos_enviados(uuid) to anon;
 grant execute on function colaborador_mi_perfil(uuid) to anon;
 grant execute on function colaborador_mis_invitados(uuid) to anon;

@@ -23,6 +23,8 @@ const EVENTO_POR_DEFECTO = {
     "Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.",
   plantillaPagoRegistrado:
     "Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.",
+  plantillaInvitacionFamilia:
+    "Hola,<br><br>Aquí tienes tu invitación. ¡Os esperamos con muchas ganas!",
 };
 
 function avisar(mensaje, error) {
@@ -300,6 +302,29 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
+  const enviarInvitacionFamilia = useCallback(
+    async (email, asunto, html, imagenBase64) => {
+      if (!esAnfitrion) return false;
+      const { error } = await supabase.rpc("anfitrion_enviar_invitacion_familia", {
+        p_token: rol,
+        p_email: email,
+        p_asunto: asunto,
+        p_html: html,
+        p_imagen_base64: imagenBase64,
+      });
+      if (error) {
+        avisar("No se pudo enviar la invitación por email.", error);
+        return false;
+      }
+      const { data: avisos } = await supabase.rpc("anfitrion_listar_avisos_enviados", {
+        p_token: rol,
+      });
+      if (avisos) setAvisosEnviados(avisos);
+      return true;
+    },
+    [esAnfitrion, rol]
+  );
+
   return {
     evento,
     colaboradores,
@@ -314,6 +339,7 @@ export function useLedgerData(rol) {
     persistMesas,
     persistFotosFamiliares,
     avisarColaborador,
+    enviarInvitacionFamilia,
     avisosEnviados,
     ordenFamiliares,
     persistOrdenFamiliares,
