@@ -96,7 +96,7 @@ create table evento (
   -- anfitrión puede cambiar el texto desde Configuración sin tocar código.
   "plantillaAsignacion"        text not null default 'Hola,<br><br>Se te ha asignado <b>{invitado}</b> como invitado.<br>Entra en tu enlace cuando puedas para completar sus datos.',
   "plantillaDatosCompletados"  text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado los datos de <b>{invitado}</b>.',
-  "plantillaPagoRegistrado"    text not null default 'Hola,<br><br><b>{colaborador}</b> ha marcado como pagado a <b>{invitado}</b>.'
+  "plantillaPagoRegistrado"    text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.'
 );
 insert into evento ("id") values (true);
 
@@ -416,28 +416,41 @@ returns setof invitados
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare
+  anterior invitados;
   actualizado invitados;
+  total integer;
+  pagados integer;
 begin
-  update invitados set "pagado" = p_pagado
-  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
-  returning * into actualizado;
+  select * into anterior from invitados
+  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id;
 
   if not found then
     return;
   end if;
 
-  if p_pagado then
-    perform enviar_email(
-      (select "emailAnfitrion" from evento limit 1),
-      'Pago registrado',
-      replace(
+  update invitados set "pagado" = p_pagado
+  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+  returning * into actualizado;
+
+  -- Un solo email por colaborador, cuando de verdad termina TODOS sus
+  -- pagos — no uno por cada invitado (serían demasiados y sin mucho
+  -- valor). Solo se dispara justo al completar el último que faltaba.
+  if p_pagado and not coalesce(anterior."pagado", false) then
+    select count(*), count(*) filter (where "pagado")
+    into total, pagados
+    from invitados
+    where "colaboradorId" = p_colaborador_id;
+
+    if total > 0 and total = pagados then
+      perform enviar_email(
+        (select "emailAnfitrion" from evento limit 1),
+        'Pagos completos',
         replace(
           (select "plantillaPagoRegistrado" from evento limit 1),
           '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
-        ),
-        '{invitado}', trim(coalesce(actualizado."nombre", '') || ' ' || coalesce(actualizado."apellido", ''))
-      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
-    );
+        ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+      );
+    end if;
   end if;
 
   return next actualizado;

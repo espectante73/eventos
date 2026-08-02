@@ -22,7 +22,7 @@ const EVENTO_POR_DEFECTO = {
   plantillaDatosCompletados:
     "Hola,<br><br><b>{colaborador}</b> ha completado los datos de <b>{invitado}</b>.",
   plantillaPagoRegistrado:
-    "Hola,<br><br><b>{colaborador}</b> ha marcado como pagado a <b>{invitado}</b>.",
+    "Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.",
 };
 
 function avisar(mensaje, error) {

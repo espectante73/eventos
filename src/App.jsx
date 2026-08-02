@@ -1284,7 +1284,7 @@ function VistaAnfitrion({ data }) {
       plantillaDatosCompletados:
         "Hola,<br><br><b>{colaborador}</b> ha completado los datos de <b>{invitado}</b>.",
       plantillaPagoRegistrado:
-        "Hola,<br><br><b>{colaborador}</b> ha marcado como pagado a <b>{invitado}</b>.",
+        "Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.",
     });
     persistColaboradores([]);
     persistInvitados([]);
@@ -2613,7 +2613,7 @@ function VistaAnfitrion({ data }) {
                 />
               </Field>
               <div className="h-2" />
-              <Field label="Aviso al anfitrión: un colaborador registró un pago">
+              <Field label="Aviso al anfitrión: un colaborador completó todos sus pagos">
                 <textarea
                   value={evento.plantillaPagoRegistrado || ""}
                   onChange={(e) =>
