@@ -3051,6 +3051,9 @@ function FormularioDatos({
       className="p-3 rounded space-y-3"
       style={{ background: "#fff", border: `1px solid ${C.line}` }}
     >
+      <p className="text-xs font-bold" style={{ color: C.wax }}>
+        * campos obligatorios (año nacimiento y alergias)
+      </p>
       <div>
         <div className="flex items-center gap-2 flex-wrap">
           <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
@@ -3175,9 +3178,6 @@ function FormularioDatos({
             )}
           </Field>
         </div>
-        <span className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
-          * campos obligatorios (año nacimiento y alergias)
-        </span>
       </div>
       <Field label="Canción">
         <TextInput
