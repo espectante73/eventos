@@ -892,32 +892,38 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
     // Recuadro grande de la izquierda (FECHA / HORA / LUGAR con su icono ya
     // impreso en la plantilla) — el valor se escribe en el hueco a la
     // derecha de cada icono, sin tapar nada (ahí no hay texto de ejemplo).
-    const RECUADRO_DATOS = { left: 0.065, right: 0.46, top: 0.535, bottom: 0.775 };
+    const RECUADRO_DATOS = { left: 0.065, right: 0.49, top: 0.345, bottom: 0.65 };
 
     const dibujarDatosGenerales = (ctx, W, H) => {
-      const xValor = RECUADRO_DATOS.left * W + (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.46;
-      const anchoValor = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.5;
+      const xValor = RECUADRO_DATOS.left * W + (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.47;
+      const anchoValor = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.53;
       const altoDatos = (RECUADRO_DATOS.bottom - RECUADRO_DATOS.top) * H;
       const yFecha = RECUADRO_DATOS.top * H + altoDatos * (1 / 6);
       const yHora = RECUADRO_DATOS.top * H + altoDatos * (3 / 6);
       const yLugar = RECUADRO_DATOS.top * H + altoDatos * (5 / 6);
-      const lineHeightDatos = Math.round(W * 0.026);
 
       ctx.fillStyle = "#1F3A2E";
-      ctx.font = `bold ${Math.round(W * 0.022)}px 'Fraunces', serif`;
       ctx.textAlign = "left";
       ctx.textBaseline = "middle";
 
       const fechaValor = evento.fecha ? formatearFecha(evento.fecha) : "";
       const horaValor = evento.hora ? `${evento.hora}h` : "";
-      const lugarValor = [evento.lugar, evento.direccion].filter(Boolean).join(", ");
+      const lugarValor = [evento.lugar, evento.direccion].filter(Boolean).join(", ").trim();
 
+      ctx.font = `bold ${Math.round(W * 0.022)}px 'Fraunces', serif`;
       if (fechaValor) ctx.fillText(fechaValor, xValor, yFecha);
       if (horaValor) ctx.fillText(horaValor, xValor, yHora);
+
       if (lugarValor) {
+        // La dirección suele ser larga: letra más pequeña y empieza a la
+        // altura de su etiqueta, bajando desde ahí (no se puede centrar en
+        // un punto fijo si ocupa varias líneas).
+        ctx.font = `bold ${Math.round(W * 0.0165)}px 'Fraunces', serif`;
+        const lineHeightLugar = Math.round(W * 0.0205);
         const lineasLugar = partirLineas(ctx, lugarValor, anchoValor);
-        const inicioY = yLugar - ((lineasLugar.length - 1) * lineHeightDatos) / 2;
-        lineasLugar.forEach((linea, i) => ctx.fillText(linea, xValor, inicioY + i * lineHeightDatos));
+        lineasLugar.forEach((linea, i) =>
+          ctx.fillText(linea, xValor, yLugar + i * lineHeightLugar)
+        );
       }
 
       // El resto del dibujo (nombre/mesa) asume la base de línea por
