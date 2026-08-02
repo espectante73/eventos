@@ -252,6 +252,15 @@ begin
           'Tus invitados asignados',
           'Hola,<br><br>Ya tienes registrado tu email. Estos son los invitados que ya tenías asignados:' ||
             '<ul>' || resumen || '</ul>' ||
+            case
+              when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
+              else
+                '<div style="margin-top:18px;"><a href="' ||
+                (select "urlPublica" from evento limit 1) || '?rol=' || r.colaborador_id::text ||
+                '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
+                'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
+                'font-weight:600;font-family:sans-serif;">Entrar a mi enlace</a></div>'
+            end ||
             '<small>Aviso automático de la app de invitados del evento.</small>'
         );
       end if;
