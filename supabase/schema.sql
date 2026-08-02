@@ -285,51 +285,48 @@ begin
 end;
 $$;
 
-create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
+-- Aviso explícito: el anfitrión lo confirma él mismo (tras revisar el
+-- resumen de cambios al cerrar la tabla), en vez de dispararse solo por
+-- cada asignación suelta — evita el aluvión de emails a los colaboradores.
+create or replace function anfitrion_avisar_colaborador(p_token uuid, p_colaborador_id uuid)
 returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
-declare
-  r record;
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
 
-  -- Aviso de asignación: se compara contra el valor guardado ANTES de
-  -- sobrescribir nada. Si un invitado pasa a tener un colaborador nuevo
-  -- (que antes no tenía, o tenía otro distinto), avisamos a ese colaborador.
-  for r in
-    select
-      f->>'nombre' as nombre_invitado,
-      f->>'apellido' as apellido_invitado,
-      nullif(f->>'colaboradorId','')::uuid as nuevo_colaborador_id,
-      i."colaboradorId" as anterior_colaborador_id
-    from jsonb_array_elements(p_filas) as f
-    left join invitados i on i."id" = (f->>'id')::uuid
-  loop
-    if r.nuevo_colaborador_id is not null
-       and r.nuevo_colaborador_id is distinct from r.anterior_colaborador_id then
-      perform enviar_email(
-        (select "email" from colaboradores where "id" = r.nuevo_colaborador_id),
-        'Nuevo invitado asignado',
-        replace(
-          (select "plantillaAsignacion" from evento limit 1),
-          '{invitado}', trim(coalesce(r.nombre_invitado, '') || ' ' || coalesce(r.apellido_invitado, ''))
-        ) ||
-        case
-          when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
-          else
-            '<div style="margin-top:18px;"><a href="' ||
-            (select "urlPublica" from evento limit 1) || '?rol=' || r.nuevo_colaborador_id::text ||
-            '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
-            'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
-            'font-weight:600;font-family:sans-serif;">Abrir formulario</a></div>'
-        end ||
-        '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
-      );
-    end if;
-  end loop;
+  perform enviar_email(
+    (select "email" from colaboradores where "id" = p_colaborador_id),
+    'Tus invitados asignados',
+    'Hola,<br><br>Tienes cambios en tus invitados asignados. Entra en tu enlace para revisarlos.' ||
+    case
+      when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
+      else
+        '<div style="margin-top:18px;"><a href="' ||
+        (select "urlPublica" from evento limit 1) || '?rol=' || p_colaborador_id::text ||
+        '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
+        'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
+        'font-weight:600;font-family:sans-serif;">Abrir formulario</a></div>'
+    end ||
+    '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+  );
+end;
+$$;
+
+create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  -- El aviso de asignación ya no se manda aquí automáticamente (mandaba un
+  -- email por cada cambio suelto). Ahora el anfitrión lo confirma él mismo
+  -- al cerrar la tabla, vía anfitrion_avisar_colaborador.
 
   insert into invitados (
     "id","nombre","apellido","zona","confirmado","colaboradorId",
@@ -489,6 +486,7 @@ grant execute on function anfitrion_listar_colaboradores(uuid) to anon;
 grant execute on function anfitrion_listar_invitados(uuid) to anon;
 grant execute on function anfitrion_guardar_colaboradores(uuid, jsonb) to anon;
 grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
+grant execute on function anfitrion_avisar_colaborador(uuid, uuid) to anon;
 grant execute on function colaborador_mi_perfil(uuid) to anon;
 grant execute on function colaborador_mis_invitados(uuid) to anon;
 grant execute on function colaborador_guardar_invitado(uuid, uuid, jsonb) to anon;

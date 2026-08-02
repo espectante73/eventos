@@ -238,6 +238,18 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
+  const avisarColaborador = useCallback(
+    async (colaboradorId) => {
+      if (!esAnfitrion) return;
+      const { error } = await supabase.rpc("anfitrion_avisar_colaborador", {
+        p_token: rol,
+        p_colaborador_id: colaboradorId,
+      });
+      if (error) avisar("No se pudo avisar al colaborador.", error);
+    },
+    [esAnfitrion, rol]
+  );
+
   return {
     evento,
     colaboradores,
@@ -251,5 +263,6 @@ export function useLedgerData(rol) {
     persistInvitados,
     persistMesas,
     persistFotosFamiliares,
+    avisarColaborador,
   };
 }

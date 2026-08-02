@@ -966,7 +966,7 @@ function GrupoFamiliarInput({ value, onCommit }) {
 }
 
 function VistaAnfitrion({ data }) {
-  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares } = data;
+  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador } = data;
 
   const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
@@ -974,6 +974,13 @@ function VistaAnfitrion({ data }) {
   const [mostrarImport, setMostrarImport] = useState(false);
   const [mostrarAnadir, setMostrarAnadir] = useState(false);
   const [orden, setOrden] = useState({ columna: "invitado", direccion: "asc" });
+
+  // Cambios de asignación acumulados desde que se abrió la tabla — al
+  // cerrarla se pregunta si avisar a esos colaboradores, en vez de mandar
+  // un email suelto por cada cambio (que era un caos para ellos).
+  const [cambiosAsignacion, setCambiosAsignacion] = useState({});
+  const [mostrarResumenAsignacion, setMostrarResumenAsignacion] = useState(false);
+  const [enviandoAvisosAsignacion, setEnviandoAvisosAsignacion] = useState(false);
 
   const cambiarOrden = (columna) => {
     setOrden((o) =>
@@ -1100,11 +1107,39 @@ function VistaAnfitrion({ data }) {
   };
 
   const asignarColaborador = (id, colaboradorId) => {
+    const nuevoId = colaboradorId || null;
+    const actual = invitados.find((g) => g.id === id);
+    if (nuevoId && nuevoId !== actual?.colaboradorId) {
+      setCambiosAsignacion((prev) => ({ ...prev, [nuevoId]: (prev[nuevoId] || 0) + 1 }));
+    }
     persistInvitados(
-      invitados.map((g) =>
-        g.id === id ? { ...g, colaboradorId: colaboradorId || null } : g
-      )
+      invitados.map((g) => (g.id === id ? { ...g, colaboradorId: nuevoId } : g))
     );
+  };
+
+  const intentarCerrarInvitados = () => {
+    if (abierto.invitados && Object.keys(cambiosAsignacion).length > 0) {
+      setMostrarResumenAsignacion(true);
+      return;
+    }
+    toggle("invitados");
+  };
+
+  const enviarAvisosAsignacion = async () => {
+    setEnviandoAvisosAsignacion(true);
+    for (const colaboradorId of Object.keys(cambiosAsignacion)) {
+      await avisarColaborador(colaboradorId);
+    }
+    setEnviandoAvisosAsignacion(false);
+    setCambiosAsignacion({});
+    setMostrarResumenAsignacion(false);
+    toggle("invitados");
+  };
+
+  const cancelarAvisosAsignacion = () => {
+    setCambiosAsignacion({});
+    setMostrarResumenAsignacion(false);
+    toggle("invitados");
   };
 
   const asignarGrupoFamiliar = (id, grupoFamiliar) => {
@@ -1866,7 +1901,7 @@ function VistaAnfitrion({ data }) {
         >
           <div className="flex items-center gap-3">
             <button
-              onClick={() => toggle("invitados")}
+              onClick={intentarCerrarInvitados}
               className="flex items-center gap-2 text-xl"
               style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}
             >
@@ -2745,6 +2780,56 @@ function VistaAnfitrion({ data }) {
           </div>
         )}
       </section>
+
+      {mostrarResumenAsignacion && (
+        <ModalFlotante
+          titulo="Resumen de asignaciones"
+          onCerrar={() => setMostrarResumenAsignacion(false)}
+        >
+          <p className="text-sm mb-3" style={{ color: C.charcoal }}>
+            Has asignado invitados nuevos a estos colaboradores. ¿Quieres avisarles ya?
+          </p>
+          <ul className="text-sm space-y-1 mb-4" style={{ color: C.ink }}>
+            {Object.entries(cambiosAsignacion).map(([colaboradorId, cantidad]) => {
+              const nombre = colaboradores.find((c) => c.id === colaboradorId)?.nombre || "—";
+              const tieneEmail = Boolean(colaboradores.find((c) => c.id === colaboradorId)?.email);
+              return (
+                <li key={colaboradorId}>
+                  {nombre}: {cantidad} invitado{cantidad === 1 ? "" : "s"} nuevo
+                  {cantidad === 1 ? "" : "s"}
+                  {!tieneEmail && (
+                    <span style={{ color: C.wax }}> — sin email, no se le podrá avisar</span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={enviarAvisosAsignacion}
+              disabled={enviandoAvisosAsignacion}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{ background: C.ink, color: C.paper }}
+            >
+              {enviandoAvisosAsignacion ? "Enviando…" : "Enviar avisos"}
+            </button>
+            <button
+              onClick={() => setMostrarResumenAsignacion(false)}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+            >
+              Seguir editando
+            </button>
+            <button
+              onClick={cancelarAvisosAsignacion}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{ border: `1px solid ${C.wax}`, color: C.wax }}
+            >
+              Cancelar (no avisar)
+            </button>
+          </div>
+        </ModalFlotante>
+      )}
 
       {panelFlotante && panelFlotante !== "avisosMesas" && (
         <ModalFlotante
