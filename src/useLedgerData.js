@@ -144,7 +144,16 @@ export function useLedgerData(rol) {
         setMesas(todasMesas || []);
         setAvisosEnviados(avisos || []);
         setOrdenFamiliares(
-          Object.fromEntries((ordenFilas || []).map((r) => [r.grupoFamiliar, r.orden]))
+          Object.fromEntries(
+            (ordenFilas || []).map((r) => [
+              r.grupoFamiliar,
+              {
+                orden: r.orden,
+                invitacionEnviada: r.invitacionEnviada,
+                invitacionEnviadaEn: r.invitacionEnviadaEn,
+              },
+            ])
+          )
         );
         setEsAnfitrion(true);
         setLoaded(true);
@@ -191,9 +200,11 @@ export function useLedgerData(rol) {
 
   const persistOrdenFamiliares = useCallback(async (next) => {
     setOrdenFamiliares(next);
-    const filas = Object.entries(next).map(([grupoFamiliar, orden]) => ({
+    const filas = Object.entries(next).map(([grupoFamiliar, datos]) => ({
       grupoFamiliar,
-      orden,
+      orden: datos.orden || [],
+      invitacionEnviada: Boolean(datos.invitacionEnviada),
+      invitacionEnviadaEn: datos.invitacionEnviadaEn || null,
     }));
     if (filas.length === 0) return;
     const { error } = await supabase.from("orden_familias").upsert(filas);

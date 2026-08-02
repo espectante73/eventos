@@ -76,15 +76,18 @@ create table fotos_familiares (
 );
 
 -- ============================================================
--- 4b. ORDEN DE NOMBRES POR FAMILIA (diccionario: grupoFamiliar ->
---     array de ids de invitados, en el orden elegido a mano por el
+-- 4b. ORDEN Y ESTADO DE ENVÍO POR FAMILIA (diccionario: grupoFamiliar ->
+--     array de ids de invitados en el orden elegido a mano por el
 --     anfitrión — para poner al esposo primero, etc., en la
---     invitación). Si una familia no tiene fila aquí, se usa el
---     orden por defecto.
+--     invitación — y si ya se le envió la invitación por email o no.
+--     Si una familia no tiene fila aquí, se usa el orden por defecto
+--     y se considera que no se le ha enviado nada todavía.
 -- ============================================================
 create table orden_familias (
-  "grupoFamiliar"  text primary key,
-  "orden"          text[] not null default '{}'
+  "grupoFamiliar"        text primary key,
+  "orden"                text[] not null default '{}',
+  "invitacionEnviada"    boolean not null default false,
+  "invitacionEnviadaEn"  timestamptz
 );
 
 -- ============================================================

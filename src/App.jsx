@@ -905,42 +905,48 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
       ctx.fillStyle = "#1F3A2E";
 
       const fuenteNombres = `bold ${Math.round(W * 0.033)}px 'Fraunces', serif`;
-      const fuenteMesa = `bold ${Math.round(W * 0.037)}px 'Fraunces', serif`;
+      const fuenteDetalle = `bold ${Math.round(W * 0.026)}px 'Fraunces', serif`;
       const lineHeightNombres = Math.round(W * 0.037);
-      const lineHeightMesa = Math.round(W * 0.041);
-      const espacioEntreBloques = Math.round(W * 0.02);
+      const lineHeightDetalle = Math.round(W * 0.03);
+      const espacioEntreBloques = Math.round(W * 0.016);
 
+      // Fecha/hora y lugar/dirección se toman de Configuración — si el
+      // anfitrión los rellena ahí, aparecen solos en la invitación.
+      const fechaHoraTexto = evento.fecha
+        ? `${formatearFecha(evento.fecha)}${evento.hora ? ` · ${evento.hora}h` : ""}`
+        : "";
+      const lugarTexto = [evento.lugar, evento.direccion].filter(Boolean).join(", ");
+
+      // Cada bloque es un párrafo independiente, todos centrados juntos
+      // como un único conjunto dentro del recuadro (en vez de posiciones
+      // fijas) — así es fácil añadir o quitar bloques sin recalcular nada.
+      const bloques = [];
       ctx.font = fuenteNombres;
-      const lineasNombres = partirLineas(
-        ctx,
-        `${apellidoFamilia}; ${listaConY(nombresMiembros)}`,
-        anchoDisponible
-      );
-      const alturaNombres = lineasNombres.length * lineHeightNombres;
+      bloques.push({
+        lineas: partirLineas(ctx, `${apellidoFamilia}; ${listaConY(nombresMiembros)}`, anchoDisponible),
+        font: fuenteNombres,
+        lineHeight: lineHeightNombres,
+      });
+      [mesaTexto, fechaHoraTexto, lugarTexto].forEach((texto) => {
+        if (!texto) return;
+        ctx.font = fuenteDetalle;
+        bloques.push({
+          lineas: partirLineas(ctx, texto, anchoDisponible),
+          font: fuenteDetalle,
+          lineHeight: lineHeightDetalle,
+        });
+      });
 
-      let lineasMesa = [];
-      let alturaMesa = 0;
-      if (mesaTexto) {
-        ctx.font = fuenteMesa;
-        lineasMesa = partirLineas(ctx, mesaTexto, anchoDisponible);
-        alturaMesa = lineasMesa.length * lineHeightMesa;
-      }
+      const alturaTotal =
+        bloques.reduce((s, b) => s + b.lineas.length * b.lineHeight, 0) +
+        (bloques.length - 1) * espacioEntreBloques;
+      let cursorY = yTop + (altoRecuadro - alturaTotal) / 2 + lineHeightNombres * 0.78;
 
-      // Centrado vertical de todo el bloque (nombres + mesa) dentro del
-      // recuadro, en vez de posiciones fijas.
-      const alturaTotal = alturaNombres + (mesaTexto ? espacioEntreBloques + alturaMesa : 0);
-      let cursorY =
-        yTop + (altoRecuadro - alturaTotal) / 2 + lineHeightNombres * 0.78;
-
-      ctx.font = fuenteNombres;
-      dibujarParrafoJustificado(ctx, lineasNombres, xIzq, cursorY, anchoDisponible, lineHeightNombres);
-      cursorY += alturaNombres;
-
-      if (mesaTexto) {
-        cursorY += espacioEntreBloques;
-        ctx.font = fuenteMesa;
-        dibujarParrafoJustificado(ctx, lineasMesa, xIzq, cursorY, anchoDisponible, lineHeightMesa);
-      }
+      bloques.forEach((b) => {
+        ctx.font = b.font;
+        dibujarParrafoJustificado(ctx, b.lineas, xIzq, cursorY, anchoDisponible, b.lineHeight);
+        cursorY += b.lineas.length * b.lineHeight + espacioEntreBloques;
+      });
 
       try {
         resolve(canvas.toDataURL("image/png"));
@@ -1761,13 +1767,15 @@ function VistaAnfitrion({ data }) {
       .map(([clave, miembros]) => {
         const confirmados = ordenarConfirmados(
           miembros.filter((m) => m.confirmado),
-          ordenFamiliares[clave]
+          ordenFamiliares[clave]?.orden
         );
         const apellido = miembros[0].apellido || clave;
         return {
           clave,
           apellido,
           confirmados,
+          invitacionEnviada: Boolean(ordenFamiliares[clave]?.invitacionEnviada),
+          invitacionEnviadaEn: ordenFamiliares[clave]?.invitacionEnviadaEn || null,
           listaParaInvitacion:
             confirmados.length > 0 &&
             confirmados.every((m) => m.pagado) &&
@@ -1784,11 +1792,45 @@ function VistaAnfitrion({ data }) {
     if (nuevoIdx < 0 || nuevoIdx >= ids.length) return;
     const nuevosIds = [...ids];
     [nuevosIds[idx], nuevosIds[nuevoIdx]] = [nuevosIds[nuevoIdx], nuevosIds[idx]];
-    persistOrdenFamiliares({ ...ordenFamiliares, [familia.clave]: nuevosIds });
+    persistOrdenFamiliares({
+      ...ordenFamiliares,
+      [familia.clave]: { ...ordenFamiliares[familia.clave], orden: nuevosIds },
+    });
+  };
+
+  const marcarInvitacionEnviada = (clave) => {
+    persistOrdenFamiliares({
+      ...ordenFamiliares,
+      [clave]: {
+        ...ordenFamiliares[clave],
+        invitacionEnviada: true,
+        invitacionEnviadaEn: new Date().toISOString(),
+      },
+    });
   };
 
   const [descargando, setDescargando] = useState(null);
   const [nombreCarpetaInvitaciones, setNombreCarpetaInvitaciones] = useState(null);
+  const [subiendoPlantillaInvitacion, setSubiendoPlantillaInvitacion] = useState(false);
+  const [errorPlantillaInvitacion, setErrorPlantillaInvitacion] = useState("");
+
+  const onSeleccionarArchivoPlantillaInvitacion = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setErrorPlantillaInvitacion("");
+    setSubiendoPlantillaInvitacion(true);
+    try {
+      // Plantilla más grande que una foto normal (maxDim mayor): es el
+      // fondo completo de la invitación, necesita quedar nítido.
+      const dataUrl = await redimensionarImagenArchivo(file, 2000, 0.88);
+      persistEvento({ ...evento, imagenInvitacion: dataUrl });
+    } catch (_) {
+      setErrorPlantillaInvitacion("No se ha podido procesar la imagen. Prueba con otra o pega un enlace.");
+    } finally {
+      setSubiendoPlantillaInvitacion(false);
+    }
+  };
 
   useEffect(() => {
     if (!window.showDirectoryPicker) return;
@@ -1868,6 +1910,7 @@ function VistaAnfitrion({ data }) {
     );
     setEnviandoInvitacion(false);
     if (ok) {
+      marcarInvitacionEnviada(previewInvitacion.familia.clave);
       window.alert(`Invitación enviada a ${previewInvitacion.destinatario.email}.`);
       setPreviewInvitacion(null);
     }
@@ -1888,11 +1931,18 @@ function VistaAnfitrion({ data }) {
       )
     : familiasListasParaInvitacion;
 
+  // El envío por bloque solo manda a las que todavía no se les envió nada
+  // (para no repetir sin querer) — las ya enviadas se pueden reenviar a
+  // mano, una a una, con el botón individual de cada tarjeta.
+  const familiasPendientesDeEnviar = familiasParaMostrarInvitacion.filter(
+    (f) => !f.invitacionEnviada
+  );
+
   const confirmarEnvioLoteInvitaciones = async () => {
     setEnviandoLoteInvitaciones(true);
     let enviados = 0;
     const saltados = [];
-    for (const familia of familiasParaMostrarInvitacion) {
+    for (const familia of familiasPendientesDeEnviar) {
       const destinatario = familia.confirmados[0];
       if (!destinatario?.email) {
         saltados.push(`${familia.apellido} (sin email)`);
@@ -1910,8 +1960,12 @@ function VistaAnfitrion({ data }) {
         evento.plantillaInvitacionFamilia || "",
         base64
       );
-      if (ok) enviados++;
-      else saltados.push(`${familia.apellido} (error al enviar)`);
+      if (ok) {
+        enviados++;
+        marcarInvitacionEnviada(familia.clave);
+      } else {
+        saltados.push(`${familia.apellido} (error al enviar)`);
+      }
     }
     setEnviandoLoteInvitaciones(false);
     setMostrarResumenLoteInvitaciones(false);
@@ -2735,6 +2789,36 @@ function VistaAnfitrion({ data }) {
                   className="w-full"
                 />
               </Field>
+              <div className="flex items-center gap-3 flex-wrap mt-2">
+                <label
+                  className="text-xs px-2 py-1 rounded cursor-pointer"
+                  style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+                >
+                  {subiendoPlantillaInvitacion ? "Procesando…" : "Subir archivo desde el dispositivo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={onSeleccionarArchivoPlantillaInvitacion}
+                    disabled={subiendoPlantillaInvitacion}
+                    style={{ display: "none" }}
+                  />
+                </label>
+                {evento.imagenInvitacion && (
+                  <button
+                    type="button"
+                    onClick={() => persistEvento({ ...evento, imagenInvitacion: "" })}
+                    className="text-xs"
+                    style={{ color: C.wax }}
+                  >
+                    Quitar y usar la plantilla incluida
+                  </button>
+                )}
+              </div>
+              {errorPlantillaInvitacion && (
+                <p className="text-xs mt-1" style={{ color: C.wax }}>
+                  {errorPlantillaInvitacion}
+                </p>
+              )}
             </div>
 
             {window.showDirectoryPicker && (
@@ -2775,15 +2859,15 @@ function VistaAnfitrion({ data }) {
               {colaboradorInvitacionSel && (
                 <button
                   onClick={() => setMostrarResumenLoteInvitaciones(true)}
-                  disabled={familiasParaMostrarInvitacion.length === 0}
+                  disabled={familiasPendientesDeEnviar.length === 0}
                   className="px-3 py-2 rounded text-sm font-medium"
                   style={{
-                    background: familiasParaMostrarInvitacion.length === 0 ? C.line : C.wax,
-                    color: familiasParaMostrarInvitacion.length === 0 ? C.charcoal : "#fff",
+                    background: familiasPendientesDeEnviar.length === 0 ? C.line : C.wax,
+                    color: familiasPendientesDeEnviar.length === 0 ? C.charcoal : "#fff",
                   }}
                 >
-                  Revisar y enviar a {familiasParaMostrarInvitacion.length} familia
-                  {familiasParaMostrarInvitacion.length === 1 ? "" : "s"}
+                  Revisar y enviar a {familiasPendientesDeEnviar.length} familia
+                  {familiasPendientesDeEnviar.length === 1 ? "" : "s"} (sin enviar todavía)
                 </button>
               )}
             </div>
@@ -2796,8 +2880,23 @@ function VistaAnfitrion({ data }) {
                   style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                    <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
-                      Familia {familia.apellido}
+                    <span className="flex items-center gap-2">
+                      <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
+                        Familia {familia.apellido}
+                      </span>
+                      {familia.invitacionEnviada && (
+                        <span
+                          className="flex items-center gap-1 text-xs px-2 py-0.5 rounded"
+                          style={{ background: C.ink, color: C.paper }}
+                          title={
+                            familia.invitacionEnviadaEn
+                              ? new Date(familia.invitacionEnviadaEn).toLocaleString("es-ES")
+                              : ""
+                          }
+                        >
+                          <Check size={11} /> Invitación enviada
+                        </span>
+                      )}
                     </span>
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -3237,6 +3336,74 @@ function VistaAnfitrion({ data }) {
               )}
             </div>
 
+            <div className="mb-5">
+              <p
+                className="text-xs uppercase mb-2"
+                style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+              >
+                Invitaciones a familias
+              </p>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="text-center p-2 rounded" style={{ background: C.paperDark }}>
+                  <div style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 18 }}>
+                    {familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada).length}
+                  </div>
+                  <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pendientes</div>
+                </div>
+                <div className="text-center p-2 rounded" style={{ background: C.paperDark }}>
+                  <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
+                    {familiasListasParaInvitacion.filter((f) => f.invitacionEnviada).length}
+                  </div>
+                  <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Enviadas</div>
+                </div>
+                <div className="text-center p-2 rounded" style={{ background: C.paperDark }}>
+                  <div style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 18 }}>
+                    {
+                      familiasListasParaInvitacion.filter(
+                        (f) => !f.invitacionEnviada && !f.confirmados[0]?.email
+                      ).length
+                    }
+                  </div>
+                  <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Sin email</div>
+                </div>
+              </div>
+              {familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada).length === 0 ? (
+                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  Ninguna familia lista con la invitación pendiente de enviar.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {familiasListasParaInvitacion
+                    .filter((f) => !f.invitacionEnviada)
+                    .map((f) => (
+                      <div
+                        key={f.clave}
+                        className="flex items-center justify-between gap-2 px-2 py-1.5 rounded"
+                        style={{ background: "#FBEAEC" }}
+                      >
+                        <span className="text-sm" style={{ color: C.ink }}>
+                          Familia {f.apellido}
+                          {!f.confirmados[0]?.email && (
+                            <span className="text-xs" style={{ color: C.wax }}> — sin email</span>
+                          )}
+                        </span>
+                        <button
+                          onClick={() => abrirPreviewInvitacion(f)}
+                          disabled={!f.confirmados[0]?.email || descargando === f.clave}
+                          className="text-xs px-2 py-1 rounded font-medium"
+                          style={{
+                            background: f.confirmados[0]?.email ? C.wax : C.line,
+                            color: f.confirmados[0]?.email ? "#fff" : C.charcoal,
+                          }}
+                        >
+                          {descargando === f.clave ? "Generando…" : "Enviar ahora"}
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
             <div>
               <p
                 className="text-xs uppercase mb-2"
@@ -3474,7 +3641,7 @@ function VistaAnfitrion({ data }) {
             invitación adjunta:
           </p>
           <ul className="text-sm space-y-2 mb-4">
-            {familiasParaMostrarInvitacion.map((familia) => {
+            {familiasPendientesDeEnviar.map((familia) => {
               const destinatario = familia.confirmados[0];
               return (
                 <li key={familia.clave} className="pb-2" style={{ borderBottom: `1px solid ${C.line}` }}>
@@ -3508,7 +3675,7 @@ function VistaAnfitrion({ data }) {
             >
               {enviandoLoteInvitaciones
                 ? "Enviando…"
-                : `Confirmar y enviar ${familiasParaMostrarInvitacion.length} invitaciones`}
+                : `Confirmar y enviar ${familiasPendientesDeEnviar.length} invitaciones`}
             </button>
             <button
               onClick={() => setMostrarResumenLoteInvitaciones(false)}
