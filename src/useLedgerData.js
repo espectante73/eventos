@@ -20,7 +20,7 @@ const EVENTO_POR_DEFECTO = {
   plantillaAsignacion:
     "Hola,<br><br>Se te ha asignado <b>{invitado}</b> como invitado.<br>Entra en tu enlace cuando puedas para completar sus datos.",
   plantillaDatosCompletados:
-    "Hola,<br><br><b>{colaborador}</b> ha completado los datos de <b>{invitado}</b>.",
+    "Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.",
   plantillaPagoRegistrado:
     "Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.",
 };

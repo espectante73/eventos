@@ -95,7 +95,7 @@ create table evento (
   -- {invitado} se sustituyen por los nombres reales al enviar — así el
   -- anfitrión puede cambiar el texto desde Configuración sin tocar código.
   "plantillaAsignacion"        text not null default 'Hola,<br><br>Se te ha asignado <b>{invitado}</b> como invitado.<br>Entra en tu enlace cuando puedas para completar sus datos.',
-  "plantillaDatosCompletados"  text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado los datos de <b>{invitado}</b>.',
+  "plantillaDatosCompletados"  text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.',
   "plantillaPagoRegistrado"    text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.'
 );
 insert into evento ("id") values (true);
@@ -369,6 +369,8 @@ as $$
 declare
   anterior invitados;
   actualizado invitados;
+  total integer;
+  completos integer;
 begin
   select * into anterior from invitados
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id;
@@ -387,22 +389,29 @@ begin
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
   returning * into actualizado;
 
-  -- El único dato obligatorio en la app es el año de nacimiento (ver
-  -- datosCompletos() en App.jsx) — el aviso se dispara justo al pasar
-  -- de "sin ese dato" a "con ese dato".
-  if coalesce(anterior."anioNacimiento", '') = ''
-     and coalesce(actualizado."anioNacimiento", '') <> '' then
-    perform enviar_email(
-      (select "emailAnfitrion" from evento limit 1),
-      'Datos completados',
-      replace(
+  -- Un solo email por colaborador, cuando de verdad termina los datos de
+  -- TODOS sus invitados asignados — no uno por cada invitado individual
+  -- (los datos obligatorios son año de nacimiento y alergias, ver
+  -- datosCompletos() en App.jsx).
+  if (coalesce(anterior."anioNacimiento", '') = '' or coalesce(anterior."alergias", '') = '')
+     and coalesce(actualizado."anioNacimiento", '') <> '' and coalesce(actualizado."alergias", '') <> '' then
+    select count(*), count(*) filter (
+      where coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> ''
+    )
+    into total, completos
+    from invitados
+    where "colaboradorId" = p_colaborador_id;
+
+    if total > 0 and total = completos then
+      perform enviar_email(
+        (select "emailAnfitrion" from evento limit 1),
+        'Datos completados',
         replace(
           (select "plantillaDatosCompletados" from evento limit 1),
           '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
-        ),
-        '{invitado}', trim(coalesce(actualizado."nombre", '') || ' ' || coalesce(actualizado."apellido", ''))
-      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
-    );
+        ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+      );
+    end if;
   end if;
 
   return next actualizado;

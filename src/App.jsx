@@ -1301,7 +1301,7 @@ function VistaAnfitrion({ data }) {
       plantillaAsignacion:
         "Hola,<br><br>Se te ha asignado <b>{invitado}</b> como invitado.<br>Entra en tu enlace cuando puedas para completar sus datos.",
       plantillaDatosCompletados:
-        "Hola,<br><br><b>{colaborador}</b> ha completado los datos de <b>{invitado}</b>.",
+        "Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.",
       plantillaPagoRegistrado:
         "Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.",
     });
@@ -2620,7 +2620,7 @@ function VistaAnfitrion({ data }) {
                 />
               </Field>
               <div className="h-2" />
-              <Field label="Aviso al anfitrión: un colaborador completó los datos">
+              <Field label="Aviso al anfitrión: un colaborador completó todos los datos">
                 <textarea
                   value={evento.plantillaDatosCompletados || ""}
                   onChange={(e) =>
