@@ -965,8 +965,8 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
       if (lugarValor) {
         // La dirección suele ser larga: letra más pequeña, también debajo
         // de su etiqueta y bajando desde ahí línea a línea.
-        ctx.font = `bold ${Math.round(W * 0.019)}px 'Fraunces', serif`;
-        const lineHeightLugar = Math.round(W * 0.0235);
+        ctx.font = `bold ${Math.round(W * 0.021)}px 'Fraunces', serif`;
+        const lineHeightLugar = Math.round(W * 0.026);
         // Aquí no se baja tanto: el hueco hasta el borde inferior del
         // recuadro es pequeño y hay que dejar sitio para varias líneas.
         const lineasLugar = partirLineas(ctx, lugarValor, anchoValor);
@@ -997,9 +997,9 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
 
       ctx.fillStyle = "#1F3A2E";
 
-      const fuenteNombres = `bold ${Math.round(W * 0.033)}px 'Fraunces', serif`;
+      const fuenteNombres = `bold ${Math.round(W * 0.031)}px 'Fraunces', serif`;
       const fuenteDetalle = `bold ${Math.round(W * 0.037)}px 'Fraunces', serif`;
-      const lineHeightNombres = Math.round(W * 0.037);
+      const lineHeightNombres = Math.round(W * 0.035);
       const lineHeightDetalle = Math.round(W * 0.041);
       const espacioEntreBloques = Math.round(W * 0.02);
 
@@ -1022,12 +1022,9 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
         });
       }
 
-      const alturaTotal =
-        bloques.reduce((s, b) => s + b.lineas.length * b.lineHeight, 0) +
-        (bloques.length - 1) * espacioEntreBloques;
-      // Un poco más abajo del centro exacto (0.62 en vez de 0.5) — el
-      // centrado matemático quedaba demasiado alto dentro del recuadro real.
-      let cursorY = yTop + (altoRecuadro - alturaTotal) * 0.62 + lineHeightNombres * 0.78;
+      // Posición fija según la cuadrícula de calibración (y=0.85 del alto
+      // total), en vez del centrado matemático anterior.
+      let cursorY = 0.85 * H + lineHeightNombres * 0.78;
 
       bloques.forEach((b) => {
         ctx.font = b.font;
