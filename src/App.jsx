@@ -79,6 +79,24 @@ function datosCompletos(g) {
   return Boolean(g.anioNacimiento);
 }
 
+// Los 6 campos de texto que rellena el colaborador, más la foto familiar
+// (que vive aparte, en fotosFamiliares) = 7 en total. El pago no cuenta
+// aquí — tiene su propia insignia ("Pagado"/"Pendiente de pago") aparte.
+const CAMPOS_DATOS_INVITADO = [
+  "anioNacimiento",
+  "anioBoda",
+  "email",
+  "cancion",
+  "alergias",
+  "observaciones",
+];
+const TOTAL_DATOS_INVITADO = CAMPOS_DATOS_INVITADO.length + 1;
+
+function contarDatosRellenados(g, foto) {
+  const rellenos = CAMPOS_DATOS_INVITADO.filter((c) => (g[c] || "").trim() !== "").length;
+  return rellenos + (foto ? 1 : 0);
+}
+
 function tieneAlergiaReal(g) {
   // "No" es una respuesta explícita de que no hay alergia — no cuenta como alergia.
   return Boolean(g.alergias && g.alergias.trim() && g.alergias.trim() !== "No");
@@ -3030,40 +3048,43 @@ function FormularioDatos({
       style={{ background: "#fff", border: `1px solid ${C.line}` }}
     >
       <div>
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
-              {form.apellido}, {form.nombre}
-            </span>
-            <span
-              className="text-xs px-2 py-0.5 rounded"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.8 }}
-              title="Importe calculado según edad y los precios de Configuración"
-            >
-              € {importe.toFixed(2)}
-            </span>
-            <button onClick={onMarcarPagado} className="flex items-center gap-1">
-              {pagado ? (
-                <Stamp color={C.ink}>Pagado</Stamp>
-              ) : (
-                <span
-                  className="text-xs px-2 py-0.5 rounded"
-                  style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
-                >
-                  Pendiente de pago
-                </span>
-              )}
-            </button>
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
+            {form.apellido}, {form.nombre}
+          </span>
+          <span className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+            datos {contarDatosRellenados(form, foto)} de {TOTAL_DATOS_INVITADO}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap mt-1">
+          <span
+            className="text-xs px-2 py-0.5 rounded"
+            style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.8 }}
+            title="Importe calculado según edad y los precios de Configuración"
+          >
+            € {importe.toFixed(2)}
+          </span>
+          <button onClick={onMarcarPagado} className="flex items-center gap-1">
+            {pagado ? (
+              <Stamp color={C.ink}>Pagado</Stamp>
+            ) : (
+              <span
+                className="text-xs px-2 py-0.5 rounded"
+                style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
+              >
+                Pendiente de pago
+              </span>
+            )}
+          </button>
           <button
             onClick={onCerrar}
-            className="px-4 py-2 rounded text-sm font-semibold"
+            className="ml-auto px-4 py-2 rounded text-sm font-semibold"
             style={{ background: C.ink, color: C.paper }}
           >
             Cerrar
           </button>
         </div>
-        <div className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <div className="text-xs mt-1" style={{ color: C.charcoal, opacity: 0.6 }}>
           Familia {invitado.grupoFamiliar || form.apellido} · {form.zona || "sin zona"}
         </div>
       </div>
@@ -3243,11 +3264,11 @@ function FilaInvitadoColaborador({
         </button>
         {datosCompletos(g) ? (
           <span className="flex items-center gap-1 text-xs" style={{ color: C.ink, opacity: 0.7 }}>
-            <Check size={12} /> datos completos
+            <Check size={12} /> datos {contarDatosRellenados(g, fotoFamiliar)} de {TOTAL_DATOS_INVITADO}
           </span>
         ) : (
           <span className="flex items-center gap-1 text-xs" style={{ color: C.wax }}>
-            <Bell size={12} /> por rellenar
+            <Bell size={12} /> datos {contarDatosRellenados(g, fotoFamiliar)} de {TOTAL_DATOS_INVITADO}
           </span>
         )}
         {!abierto && (
