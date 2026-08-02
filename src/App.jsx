@@ -2203,7 +2203,7 @@ function VistaAnfitrion({ data }) {
                       g.zona || "—"
                     )}
                   </span>
-                  <span className="text-xs">
+                  <span className="text-xs flex items-center gap-1">
                     <select
                       value={g.colaboradorId || ""}
                       onChange={(e) => asignarColaborador(g.id, e.target.value)}
@@ -2216,6 +2216,15 @@ function VistaAnfitrion({ data }) {
                         </option>
                       ))}
                     </select>
+                    {g.colaboradorId &&
+                      !colaboradores.find((c) => c.id === g.colaboradorId)?.email && (
+                        <span
+                          title="Este colaborador no tiene email guardado — no recibirá el aviso de esta asignación"
+                          style={{ color: C.wax, flexShrink: 0 }}
+                        >
+                          ⚠
+                        </span>
+                      )}
                   </span>
                   <span className="text-xs">
                     <select

@@ -218,10 +218,45 @@ create or replace function anfitrion_guardar_colaboradores(p_token uuid, p_filas
 returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
+declare
+  r record;
+  resumen text;
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
+
+  -- Aviso de "ponerse al día": si un colaborador pasa de no tener email a
+  -- tenerlo, le mandamos ya mismo la lista de invitados que tuviera
+  -- asignados de antes (por si se le asignaron sin que aún tuviera email).
+  for r in
+    select
+      (f->>'id')::uuid as colaborador_id,
+      nullif(f->>'email','') as nuevo_email,
+      c."email" as anterior_email
+    from jsonb_array_elements(p_filas) as f
+    left join colaboradores c on c."id" = (f->>'id')::uuid
+  loop
+    if r.nuevo_email is not null and coalesce(r.anterior_email, '') = '' then
+      select string_agg(
+        '<li>' || coalesce(i."nombre", '') || ' ' || coalesce(i."apellido", '') || '</li>',
+        '' order by i."apellido", i."nombre"
+      )
+      into resumen
+      from invitados i
+      where i."colaboradorId" = r.colaborador_id;
+
+      if resumen is not null then
+        perform enviar_email(
+          r.nuevo_email,
+          'Tus invitados asignados',
+          'Hola,<br><br>Ya tienes registrado tu email. Estos son los invitados que ya tenías asignados:' ||
+            '<ul>' || resumen || '</ul>' ||
+            '<small>Aviso automático de la app de invitados del evento.</small>'
+        );
+      end if;
+    end if;
+  end loop;
 
   insert into colaboradores ("id", "nombre", "invitadoId", "email")
   select
