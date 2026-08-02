@@ -26,12 +26,17 @@ import {
 import { useLedgerData } from "./useLedgerData";
 import { supabase } from "./supabaseClient";
 
-const VERSION_APP = "4.0";
+const VERSION_APP = "5.0";
 
 // Versiones anteriores ya cerradas (números enteros completos): un resumen
 // breve por versión mayor, en vez de listar cada sub-versión — ocupa menos
 // espacio en la sección "Versiones".
 const RESUMEN_VERSIONES_ANTERIORES = [
+  {
+    version: "4",
+    cambios:
+      "Migración a una web real: los datos ya no viven en un Artifact sino en una base de datos compartida (Supabase), con web propia (Vite) desplegada automáticamente desde GitHub. El aislamiento entre colaboradores (cada uno solo ve sus invitados asignados) se cumple en el propio servidor, no solo en la pantalla.",
+  },
   {
     version: "3",
     cambios:
@@ -51,9 +56,9 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 
 const HISTORIAL_VERSIONES = [
   {
-    version: "4.0",
+    version: "5.0",
     cambios:
-      "Migración a una web real: los datos ya no viven en este Artifact sino en una base de datos compartida (Supabase), con web propia (Vite) desplegada automáticamente desde GitHub. El aislamiento entre colaboradores (cada uno solo ve sus invitados asignados) ahora se cumple en el propio servidor, no solo en la pantalla.",
+      "Cierra el acceso del anfitrión con enlace secreto (igual que los colaboradores) tras detectarse un fallo real. Añade avisos automáticos por email (Resend): asignación de invitados, datos completos y pagos completos, con confirmación explícita del colaborador (no por cada cambio suelto), vista previa antes de enviar, registro de enviados/pendientes y opción de corregir la asignación antes de avisar. Formulario del colaborador rediseñado para móvil, con guardado automático campo a campo y año de nacimiento + alergias como únicos datos obligatorios.",
   },
 ];
 
