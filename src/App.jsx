@@ -3085,7 +3085,7 @@ function FormularioDatos({
         />
       </Field>
       <div>
-        <div className="flex gap-3">
+        <div className="flex items-start gap-3 flex-wrap">
           <Field label="Año nac. *">
             <TextInput
               value={form.anioNacimiento}
@@ -3106,6 +3106,49 @@ function FormularioDatos({
               style={{ width: 90 }}
             />
           </Field>
+          <Field label="Foto boda">
+            <div className="flex items-center gap-2 flex-wrap">
+              {foto && (
+                <img
+                  src={foto}
+                  alt="Foto de familia"
+                  className="rounded object-cover"
+                  style={{ width: 32, height: 32, border: `1px solid ${C.line}` }}
+                />
+              )}
+              <label
+                className="text-xs px-2 py-1 rounded cursor-pointer"
+                style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+              >
+                {subiendoFoto ? "Procesando…" : "Subir foto"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={onSeleccionarArchivoFoto}
+                  disabled={subiendoFoto}
+                  style={{ display: "none" }}
+                />
+              </label>
+              {foto && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFoto("");
+                    guardarFoto("");
+                  }}
+                  className="text-xs"
+                  style={{ color: C.wax }}
+                >
+                  Quitar
+                </button>
+              )}
+            </div>
+            {errorFoto && (
+              <p className="text-xs" style={{ color: C.wax }}>
+                {errorFoto}
+              </p>
+            )}
+          </Field>
         </div>
         <span className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
           * campo obligatorio
@@ -3119,49 +3162,6 @@ function FormularioDatos({
           placeholder="Título — Artista"
           className="w-full"
         />
-      </Field>
-      <Field label="Foto boda">
-        <div className="flex items-center gap-2 flex-wrap">
-          {foto && (
-            <img
-              src={foto}
-              alt="Foto de familia"
-              className="rounded object-cover"
-              style={{ width: 32, height: 32, border: `1px solid ${C.line}` }}
-            />
-          )}
-          <label
-            className="text-xs px-2 py-1 rounded cursor-pointer"
-            style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-          >
-            {subiendoFoto ? "Procesando…" : "Subir foto"}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={onSeleccionarArchivoFoto}
-              disabled={subiendoFoto}
-              style={{ display: "none" }}
-            />
-          </label>
-          {foto && (
-            <button
-              type="button"
-              onClick={() => {
-                setFoto("");
-                guardarFoto("");
-              }}
-              className="text-xs"
-              style={{ color: C.wax }}
-            >
-              Quitar
-            </button>
-          )}
-        </div>
-        {errorFoto && (
-          <p className="text-xs" style={{ color: C.wax }}>
-            {errorFoto}
-          </p>
-        )}
       </Field>
       <Field label="Observaciones">
         <TextInput
