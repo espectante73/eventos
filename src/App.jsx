@@ -3060,8 +3060,6 @@ function FormularioDatos({
           <span className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
             datos {contarDatosRellenados(form, foto)} de {TOTAL_DATOS_INVITADO}
           </span>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap mt-1">
           <span
             className="text-xs px-2 py-0.5 rounded"
             style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.8 }}
