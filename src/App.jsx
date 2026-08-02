@@ -3017,7 +3017,7 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
 
   return (
     <div
-      className="p-4 rounded space-y-3"
+      className="p-3 rounded space-y-2"
       style={{ background: "#fff", border: `1px solid ${C.line}` }}
     >
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -3036,13 +3036,15 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
           </span>
         )}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <Field label="Año nacimiento (obligatorio)">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <Field label="Año nac. (obligatorio)">
           <TextInput
             value={form.anioNacimiento}
             onChange={(e) => setForm({ ...form, anioNacimiento: e.target.value })}
             onBlur={() => revisarYGuardar(form)}
             placeholder="1988"
+            maxLength={4}
+            style={{ maxWidth: 70 }}
           />
         </Field>
         <Field label="Año de boda">
@@ -3050,34 +3052,53 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
             value={form.anioBoda}
             onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
             onBlur={() => revisarYGuardar(form)}
-            placeholder="2015 (si aplica)"
+            placeholder="2015"
+            maxLength={4}
+            style={{ maxWidth: 70 }}
           />
         </Field>
-        <Field label="Email">
-          <TextInput
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            onBlur={() => revisarYGuardar(form)}
-            placeholder="correo@ejemplo.com (acceso al álbum)"
-          />
-        </Field>
-        <Field label="Canción para bailar">
-          <TextInput
-            value={form.cancion}
-            onChange={(e) => setForm({ ...form, cancion: e.target.value })}
-            onBlur={() => revisarYGuardar(form)}
-            placeholder="Título — Artista"
-          />
-        </Field>
-        <div className="col-span-2 md:col-span-3">
+        <div className="col-span-2">
+          <Field label="Email">
+            <TextInput
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onBlur={() => revisarYGuardar(form)}
+              placeholder="correo@ejemplo.com (acceso al álbum)"
+              className="w-full"
+            />
+          </Field>
+        </div>
+        <div className="col-span-2">
+          <Field label="Canción para bailar">
+            <TextInput
+              value={form.cancion}
+              onChange={(e) => setForm({ ...form, cancion: e.target.value })}
+              onBlur={() => revisarYGuardar(form)}
+              placeholder="Título — Artista"
+              className="w-full"
+            />
+          </Field>
+        </div>
+        <div className="col-span-2">
+          <Field label="Observaciones">
+            <TextInput
+              value={form.observaciones || ""}
+              onChange={(e) => setForm({ ...form, observaciones: e.target.value })}
+              onBlur={() => revisarYGuardar(form)}
+              placeholder="Cualquier detalle adicional"
+              className="w-full"
+            />
+          </Field>
+        </div>
+        <div className="col-span-2 sm:col-span-4">
           <Field label={`Foto de boda de la familia (${invitado.grupoFamiliar || invitado.apellido})`}>
-            <div className="flex items-start gap-3 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap">
               {foto && (
                 <img
                   src={foto}
                   alt="Foto de familia"
                   className="rounded object-cover"
-                  style={{ width: 56, height: 56, border: `1px solid ${C.line}` }}
+                  style={{ width: 40, height: 40, border: `1px solid ${C.line}` }}
                 />
               )}
               <div className="flex-1 space-y-1" style={{ minWidth: 220 }}>
@@ -3125,7 +3146,7 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
             </div>
           </Field>
         </div>
-        <div className="col-span-2 md:col-span-3">
+        <div className="col-span-2 sm:col-span-4">
           <span
             className="text-xs uppercase block mb-1"
             style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
@@ -3162,17 +3183,6 @@ function FormularioDatos({ invitado, onGuardar, onCancelar, fotoFamiliar, onCamb
               style={{ maxWidth: 140 }}
             />
           </div>
-        </div>
-        <div className="col-span-2 md:col-span-3">
-          <Field label="Observaciones">
-            <TextInput
-              value={form.observaciones || ""}
-              onChange={(e) => setForm({ ...form, observaciones: e.target.value })}
-              onBlur={() => revisarYGuardar(form)}
-              placeholder="Cualquier detalle adicional"
-              className="w-full"
-            />
-          </Field>
         </div>
       </div>
       {onCancelar && (
@@ -3268,13 +3278,20 @@ function VistaColaborador({ data, colaboradorId }) {
   const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento } = data;
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
   const [abiertoId, setAbiertoId] = useState(null);
+  // Mientras un invitado está abierto, se queda fijo en la sección donde
+  // estaba al abrirlo (pendiente o completo), aunque sus datos cambien
+  // mientras tanto — si no, al rellenar el año de nacimiento saltaría de
+  // lista a mitad de edición, cerrando/recreando el formulario de golpe.
+  const [pendienteAlAbrir, setPendienteAlAbrir] = useState(null);
 
   const misInvitados = invitados.filter(
     (g) => resolverColaborador(g, colaboradores)?.id === colaboradorId
   );
   const confirmados = misInvitados.filter((g) => g.confirmado);
-  const pendientes = confirmados.filter((g) => !datosCompletos(g));
-  const completos = confirmados.filter((g) => datosCompletos(g));
+  const esPendiente = (g) =>
+    g.id === abiertoId ? pendienteAlAbrir : !datosCompletos(g);
+  const pendientes = confirmados.filter(esPendiente);
+  const completos = confirmados.filter((g) => !esPendiente(g));
   const pagados = confirmados.filter((g) => g.pagado);
   const noPagados = confirmados.filter((g) => !g.pagado);
 
@@ -3300,7 +3317,12 @@ function VistaColaborador({ data, colaboradorId }) {
     persistInvitados(invitados.map((g) => (g.id === id ? { ...g, pagado } : g)));
   };
 
-  const toggleAbierto = (id) => setAbiertoId((actual) => (actual === id ? null : id));
+  const toggleAbierto = (g) =>
+    setAbiertoId((actual) => {
+      if (actual === g.id) return null;
+      setPendienteAlAbrir(!datosCompletos(g));
+      return g.id;
+    });
 
   if (!colaborador) return null;
 
@@ -3311,7 +3333,10 @@ function VistaColaborador({ data, colaboradorId }) {
       <div className="p-4 rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
+            <div
+              className="uppercase tracking-wide"
+              style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 22 }}
+            >
               Colaborador
             </div>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 20 }}>
@@ -3374,7 +3399,7 @@ function VistaColaborador({ data, colaboradorId }) {
               key={g.id}
               g={g}
               abierto={abiertoId === g.id}
-              onToggleAbierto={() => toggleAbierto(g.id)}
+              onToggleAbierto={() => toggleAbierto(g)}
               onGuardar={guardar}
               fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
               onCambiarFotoFamiliar={cambiarFotoFamiliar}
@@ -3399,7 +3424,7 @@ function VistaColaborador({ data, colaboradorId }) {
               key={g.id}
               g={g}
               abierto={abiertoId === g.id}
-              onToggleAbierto={() => toggleAbierto(g.id)}
+              onToggleAbierto={() => toggleAbierto(g)}
               onGuardar={guardar}
               onCancelar={() => setAbiertoId(null)}
               fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
