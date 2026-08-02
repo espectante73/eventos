@@ -895,12 +895,15 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
     const RECUADRO_DATOS = { left: 0.065, right: 0.49, top: 0.345, bottom: 0.65 };
 
     const dibujarDatosGenerales = (ctx, W, H) => {
-      const xValor = RECUADRO_DATOS.left * W + (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.47;
-      const anchoValor = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.53;
+      // Los valores van DEBAJO de su etiqueta (no al lado), usando casi
+      // todo el ancho del recuadro — así la letra puede ser más grande.
+      const xValor = RECUADRO_DATOS.left * W + (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.15;
+      const anchoValor = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.8;
       const altoDatos = (RECUADRO_DATOS.bottom - RECUADRO_DATOS.top) * H;
       const yFecha = RECUADRO_DATOS.top * H + altoDatos * (1 / 6);
       const yHora = RECUADRO_DATOS.top * H + altoDatos * (3 / 6);
       const yLugar = RECUADRO_DATOS.top * H + altoDatos * (5 / 6);
+      const bajarDesdeEtiqueta = altoDatos * 0.32;
 
       ctx.fillStyle = "#1F3A2E";
       ctx.textAlign = "left";
@@ -910,19 +913,18 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
       const horaValor = evento.hora ? `${evento.hora}h` : "";
       const lugarValor = [evento.lugar, evento.direccion].filter(Boolean).join(", ").trim();
 
-      ctx.font = `bold ${Math.round(W * 0.022)}px 'Fraunces', serif`;
-      if (fechaValor) ctx.fillText(fechaValor, xValor, yFecha);
-      if (horaValor) ctx.fillText(horaValor, xValor, yHora);
+      ctx.font = `bold ${Math.round(W * 0.028)}px 'Fraunces', serif`;
+      if (fechaValor) ctx.fillText(fechaValor, xValor, yFecha + bajarDesdeEtiqueta);
+      if (horaValor) ctx.fillText(horaValor, xValor, yHora + bajarDesdeEtiqueta);
 
       if (lugarValor) {
-        // La dirección suele ser larga: letra más pequeña y empieza a la
-        // altura de su etiqueta, bajando desde ahí (no se puede centrar en
-        // un punto fijo si ocupa varias líneas).
+        // La dirección suele ser larga: letra más pequeña, también debajo
+        // de su etiqueta y bajando desde ahí línea a línea.
         ctx.font = `bold ${Math.round(W * 0.0165)}px 'Fraunces', serif`;
         const lineHeightLugar = Math.round(W * 0.0205);
         const lineasLugar = partirLineas(ctx, lugarValor, anchoValor);
         lineasLugar.forEach((linea, i) =>
-          ctx.fillText(linea, xValor, yLugar + i * lineHeightLugar)
+          ctx.fillText(linea, xValor, yLugar + bajarDesdeEtiqueta * 0.75 + i * lineHeightLugar)
         );
       }
 
@@ -976,7 +978,9 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
       const alturaTotal =
         bloques.reduce((s, b) => s + b.lineas.length * b.lineHeight, 0) +
         (bloques.length - 1) * espacioEntreBloques;
-      let cursorY = yTop + (altoRecuadro - alturaTotal) / 2 + lineHeightNombres * 0.78;
+      // Un poco más abajo del centro exacto (0.62 en vez de 0.5) — el
+      // centrado matemático quedaba demasiado alto dentro del recuadro real.
+      let cursorY = yTop + (altoRecuadro - alturaTotal) * 0.62 + lineHeightNombres * 0.78;
 
       bloques.forEach((b) => {
         ctx.font = b.font;
