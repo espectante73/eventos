@@ -905,21 +905,14 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
       ctx.fillStyle = "#1F3A2E";
 
       const fuenteNombres = `bold ${Math.round(W * 0.033)}px 'Fraunces', serif`;
-      const fuenteDetalle = `bold ${Math.round(W * 0.026)}px 'Fraunces', serif`;
+      const fuenteDetalle = `bold ${Math.round(W * 0.037)}px 'Fraunces', serif`;
       const lineHeightNombres = Math.round(W * 0.037);
-      const lineHeightDetalle = Math.round(W * 0.03);
-      const espacioEntreBloques = Math.round(W * 0.016);
+      const lineHeightDetalle = Math.round(W * 0.041);
+      const espacioEntreBloques = Math.round(W * 0.02);
 
-      // Fecha/hora y lugar/dirección se toman de Configuración — si el
-      // anfitrión los rellena ahí, aparecen solos en la invitación.
-      const fechaHoraTexto = evento.fecha
-        ? `${formatearFecha(evento.fecha)}${evento.hora ? ` · ${evento.hora}h` : ""}`
-        : "";
-      const lugarTexto = [evento.lugar, evento.direccion].filter(Boolean).join(", ");
-
-      // Cada bloque es un párrafo independiente, todos centrados juntos
-      // como un único conjunto dentro del recuadro (en vez de posiciones
-      // fijas) — así es fácil añadir o quitar bloques sin recalcular nada.
+      // Solo nombre de familia y mesa van en este recuadro — está calibrado
+      // muy justo para esos dos bloques. Fecha/hora/lugar (genéricos, iguales
+      // en todas las invitaciones) se dibujan aparte, no aquí.
       const bloques = [];
       ctx.font = fuenteNombres;
       bloques.push({
@@ -927,15 +920,14 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
         font: fuenteNombres,
         lineHeight: lineHeightNombres,
       });
-      [mesaTexto, fechaHoraTexto, lugarTexto].forEach((texto) => {
-        if (!texto) return;
+      if (mesaTexto) {
         ctx.font = fuenteDetalle;
         bloques.push({
-          lineas: partirLineas(ctx, texto, anchoDisponible),
+          lineas: partirLineas(ctx, mesaTexto, anchoDisponible),
           font: fuenteDetalle,
           lineHeight: lineHeightDetalle,
         });
-      });
+      }
 
       const alturaTotal =
         bloques.reduce((s, b) => s + b.lineas.length * b.lineHeight, 0) +
