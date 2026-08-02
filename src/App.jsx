@@ -2485,7 +2485,7 @@ function VistaAnfitrion({ data }) {
           Configuración
         </SectionTitle>
         {abierto.configuracion && (
-          <div className="p-4 rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+          <ModalFlotante titulo="Configuración" onCerrar={() => toggle("configuracion")}>
             <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
               Datos del evento (esto es lo que se ve en la portada).
             </p>
@@ -2588,8 +2588,8 @@ function VistaAnfitrion({ data }) {
 
             <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
               <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
-                Tu email, para recibir avisos automáticos cuando un colaborador complete los
-                datos de un invitado o registre un pago.
+                Tu email, para recibir avisos automáticos cuando un colaborador complete todos
+                los datos o todos los pagos de sus invitados asignados.
               </p>
               <Field label="Tu email (anfitrión)">
                 <TextInput
@@ -2599,6 +2599,38 @@ function VistaAnfitrion({ data }) {
                   className="w-full"
                 />
               </Field>
+            </div>
+
+            <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+              <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
+                Email de cada colaborador, para avisarles cuando les asignes un invitado nuevo.
+                Rellénalos aquí todos de una vez (no hace falta que cada colaborador entre a su
+                propio enlace para ponerlo).
+              </p>
+              {colaboradores.length === 0 ? (
+                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  Todavía no hay colaboradores.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {colaboradores.map((c) => (
+                    <div key={c.id} className="flex items-center gap-2">
+                      <span
+                        className="text-sm flex-shrink-0"
+                        style={{ color: C.ink, minWidth: 140, maxWidth: 140 }}
+                      >
+                        {c.nombre}
+                      </span>
+                      <div className="flex-1">
+                        <GrupoFamiliarInput
+                          value={c.email || ""}
+                          onCommit={(v) => cambiarEmailColaborador(c.id, v)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
@@ -2658,7 +2690,7 @@ function VistaAnfitrion({ data }) {
                 <Trash2 size={14} /> BORRAR TODO
               </button>
             </div>
-          </div>
+          </ModalFlotante>
         )}
       </section>
 
