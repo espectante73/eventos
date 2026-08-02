@@ -259,7 +259,7 @@ begin
                 (select "urlPublica" from evento limit 1) || '?rol=' || r.colaborador_id::text ||
                 '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
                 'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
-                'font-weight:600;font-family:sans-serif;">Entrar a mi enlace</a></div>'
+                'font-weight:600;font-family:sans-serif;">Abrir formulario</a></div>'
             end ||
             '<small>Aviso automático de la app de invitados del evento.</small>'
         );
@@ -324,7 +324,7 @@ begin
             (select "urlPublica" from evento limit 1) || '?rol=' || r.nuevo_colaborador_id::text ||
             '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
             'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
-            'font-weight:600;font-family:sans-serif;">Entrar a mi enlace</a></div>'
+            'font-weight:600;font-family:sans-serif;">Abrir formulario</a></div>'
         end ||
         '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
       );
@@ -383,21 +383,8 @@ create or replace function colaborador_guardar_invitado(
   p_colaborador_id uuid, p_invitado_id uuid, p_cambios jsonb
 )
 returns setof invitados
-language plpgsql security definer set search_path = public, pg_temp
+language sql security definer set search_path = public, pg_temp
 as $$
-declare
-  anterior invitados;
-  actualizado invitados;
-  total integer;
-  completos integer;
-begin
-  select * into anterior from invitados
-  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id;
-
-  if not found then
-    return;
-  end if;
-
   update invitados set
     "anioNacimiento" = coalesce(p_cambios->>'anioNacimiento', "anioNacimiento"),
     "anioBoda"       = coalesce(p_cambios->>'anioBoda', "anioBoda"),
@@ -406,82 +393,79 @@ begin
     "alergias"       = coalesce(p_cambios->>'alergias', "alergias"),
     "observaciones"  = coalesce(p_cambios->>'observaciones', "observaciones")
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
-  returning * into actualizado;
-
-  -- Un solo email por colaborador, cuando de verdad termina los datos de
-  -- TODOS sus invitados asignados — no uno por cada invitado individual
-  -- (los datos obligatorios son año de nacimiento y alergias, ver
-  -- datosCompletos() en App.jsx).
-  if (coalesce(anterior."anioNacimiento", '') = '' or coalesce(anterior."alergias", '') = '')
-     and coalesce(actualizado."anioNacimiento", '') <> '' and coalesce(actualizado."alergias", '') <> '' then
-    select count(*), count(*) filter (
-      where coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> ''
-    )
-    into total, completos
-    from invitados
-    where "colaboradorId" = p_colaborador_id;
-
-    if total > 0 and total = completos then
-      perform enviar_email(
-        (select "emailAnfitrion" from evento limit 1),
-        'Datos completados',
-        replace(
-          (select "plantillaDatosCompletados" from evento limit 1),
-          '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
-        ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
-      );
-    end if;
-  end if;
-
-  return next actualizado;
-end;
+  returning *;
 $$;
 
 create or replace function colaborador_marcar_pagado(
   p_colaborador_id uuid, p_invitado_id uuid, p_pagado boolean
 )
 returns setof invitados
+language sql security definer set search_path = public, pg_temp
+as $$
+  update invitados set "pagado" = p_pagado
+  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+  returning *;
+$$;
+
+-- Avisos por confirmación explícita del colaborador (no automáticos): al
+-- pulsar "He terminado", la app comprueba de verdad el estado en el
+-- servidor antes de avisar al anfitrión — así nunca se manda un aviso
+-- fuera de sitio, ni se repite por cada cambio suelto durante el trabajo.
+create or replace function colaborador_confirmar_datos_completos(p_colaborador_id uuid)
+returns boolean
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare
-  anterior invitados;
-  actualizado invitados;
+  total integer;
+  completos integer;
+begin
+  select count(*), count(*) filter (
+    where coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> ''
+  )
+  into total, completos
+  from invitados
+  where "colaboradorId" = p_colaborador_id and "confirmado" = true;
+
+  if total > 0 and total = completos then
+    perform enviar_email(
+      (select "emailAnfitrion" from evento limit 1),
+      'Datos completados',
+      replace(
+        (select "plantillaDatosCompletados" from evento limit 1),
+        '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
+      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+    );
+    return true;
+  end if;
+  return false;
+end;
+$$;
+
+create or replace function colaborador_confirmar_pagos_completos(p_colaborador_id uuid)
+returns boolean
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
   total integer;
   pagados integer;
 begin
-  select * into anterior from invitados
-  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id;
+  select count(*), count(*) filter (where "pagado")
+  into total, pagados
+  from invitados
+  where "colaboradorId" = p_colaborador_id and "confirmado" = true;
 
-  if not found then
-    return;
+  if total > 0 and total = pagados then
+    perform enviar_email(
+      (select "emailAnfitrion" from evento limit 1),
+      'Pagos completos',
+      replace(
+        (select "plantillaPagoRegistrado" from evento limit 1),
+        '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
+      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+    );
+    return true;
   end if;
-
-  update invitados set "pagado" = p_pagado
-  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
-  returning * into actualizado;
-
-  -- Un solo email por colaborador, cuando de verdad termina TODOS sus
-  -- pagos — no uno por cada invitado (serían demasiados y sin mucho
-  -- valor). Solo se dispara justo al completar el último que faltaba.
-  if p_pagado and not coalesce(anterior."pagado", false) then
-    select count(*), count(*) filter (where "pagado")
-    into total, pagados
-    from invitados
-    where "colaboradorId" = p_colaborador_id;
-
-    if total > 0 and total = pagados then
-      perform enviar_email(
-        (select "emailAnfitrion" from evento limit 1),
-        'Pagos completos',
-        replace(
-          (select "plantillaPagoRegistrado" from evento limit 1),
-          '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
-        ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
-      );
-    end if;
-  end if;
-
-  return next actualizado;
+  return false;
 end;
 $$;
 
@@ -496,3 +480,5 @@ grant execute on function colaborador_mi_perfil(uuid) to anon;
 grant execute on function colaborador_mis_invitados(uuid) to anon;
 grant execute on function colaborador_guardar_invitado(uuid, uuid, jsonb) to anon;
 grant execute on function colaborador_marcar_pagado(uuid, uuid, boolean) to anon;
+grant execute on function colaborador_confirmar_datos_completos(uuid) to anon;
+grant execute on function colaborador_confirmar_pagos_completos(uuid) to anon;

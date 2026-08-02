@@ -3386,6 +3386,48 @@ function VistaColaborador({ data, colaboradorId }) {
       return g.id;
     });
 
+  // El aviso al anfitrión ya no se dispara solo (eso mandaba demasiados
+  // emails durante el trabajo normal) — el colaborador lo confirma él
+  // mismo cuando de verdad ha terminado, y el servidor vuelve a comprobar
+  // que sea cierto antes de enviar nada.
+  const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
+  const [enviandoDatos, setEnviandoDatos] = useState(false);
+  const [enviandoPagos, setEnviandoPagos] = useState(false);
+
+  const confirmarDatosCompletos = async () => {
+    setEnviandoDatos(true);
+    const { data, error } = await supabase.rpc("colaborador_confirmar_datos_completos", {
+      p_colaborador_id: colaboradorId,
+    });
+    setEnviandoDatos(false);
+    if (error) {
+      window.alert("No se pudo avisar al anfitrión. Inténtalo de nuevo.");
+      return;
+    }
+    window.alert(
+      data
+        ? "Aviso enviado al anfitrión: datos completos."
+        : "Todavía faltan invitados por completar sus datos."
+    );
+  };
+
+  const confirmarPagosCompletos = async () => {
+    setEnviandoPagos(true);
+    const { data, error } = await supabase.rpc("colaborador_confirmar_pagos_completos", {
+      p_colaborador_id: colaboradorId,
+    });
+    setEnviandoPagos(false);
+    if (error) {
+      window.alert("No se pudo avisar al anfitrión. Inténtalo de nuevo.");
+      return;
+    }
+    window.alert(
+      data
+        ? "Aviso enviado al anfitrión: pagos completos."
+        : "Todavía faltan invitados por pagar."
+    );
+  };
+
   if (!colaborador) return null;
 
   const formatoEuro = (n) => `€ ${n.toFixed(2)}`;
@@ -3460,7 +3502,55 @@ function VistaColaborador({ data, colaboradorId }) {
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Diferencia pendiente</div>
           </div>
         </div>
+
+        <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+          <button
+            onClick={() => setMostrarConfirmar(true)}
+            className="px-4 py-2 rounded text-sm font-semibold"
+            style={{ background: C.ink, color: C.paper }}
+          >
+            He terminado mi trabajo
+          </button>
+        </div>
       </div>
+
+      {mostrarConfirmar && (
+        <ModalFlotante titulo="¿Has terminado tu trabajo?" onCerrar={() => setMostrarConfirmar(false)}>
+          <p className="text-sm mb-3" style={{ color: C.charcoal }}>
+            Revisa el resumen antes de avisar al anfitrión — solo se envía el aviso si de verdad
+            está todo completo.
+          </p>
+          <ul className="text-sm space-y-1 mb-4" style={{ color: C.ink }}>
+            <li>Invitados confirmados: {confirmados.length}</li>
+            <li>Con datos completos: {completos.length} de {confirmados.length}</li>
+            <li>Con el pago hecho: {pagados.length} de {confirmados.length}</li>
+          </ul>
+          <div className="space-y-2">
+            <button
+              onClick={confirmarDatosCompletos}
+              disabled={enviandoDatos}
+              className="w-full px-3 py-2 rounded text-sm font-medium"
+              style={{
+                background: pendientes.length === 0 && confirmados.length > 0 ? C.ink : C.line,
+                color: pendientes.length === 0 && confirmados.length > 0 ? C.paper : C.charcoal,
+              }}
+            >
+              {enviandoDatos ? "Enviando…" : "Confirmar datos completos y avisar"}
+            </button>
+            <button
+              onClick={confirmarPagosCompletos}
+              disabled={enviandoPagos}
+              className="w-full px-3 py-2 rounded text-sm font-medium"
+              style={{
+                background: noPagados.length === 0 && confirmados.length > 0 ? C.ink : C.line,
+                color: noPagados.length === 0 && confirmados.length > 0 ? C.paper : C.charcoal,
+              }}
+            >
+              {enviandoPagos ? "Enviando…" : "Confirmar pagos completos y avisar"}
+            </button>
+          </div>
+        </ModalFlotante>
+      )}
 
       <section>
         <SectionTitle icon={Bell}>
