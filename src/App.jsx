@@ -897,8 +897,8 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
     const dibujarDatosGenerales = (ctx, W, H) => {
       // Los valores van DEBAJO de su etiqueta (no al lado), usando casi
       // todo el ancho del recuadro — así la letra puede ser más grande.
-      const xValor = RECUADRO_DATOS.left * W + (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.15;
-      const anchoValor = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.8;
+      const xValor = RECUADRO_DATOS.left * W + (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.19;
+      const anchoValor = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.76;
       const altoDatos = (RECUADRO_DATOS.bottom - RECUADRO_DATOS.top) * H;
       const yFecha = RECUADRO_DATOS.top * H + altoDatos * (1 / 6);
       const yHora = RECUADRO_DATOS.top * H + altoDatos * (3 / 6);
@@ -923,8 +923,8 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
       if (lugarValor) {
         // La dirección suele ser larga: letra más pequeña, también debajo
         // de su etiqueta y bajando desde ahí línea a línea.
-        ctx.font = `bold ${Math.round(W * 0.0165)}px 'Fraunces', serif`;
-        const lineHeightLugar = Math.round(W * 0.0205);
+        ctx.font = `bold ${Math.round(W * 0.019)}px 'Fraunces', serif`;
+        const lineHeightLugar = Math.round(W * 0.0235);
         // Aquí no se baja tanto: el hueco hasta el borde inferior del
         // recuadro es pequeño y hay que dejar sitio para varias líneas.
         const lineasLugar = partirLineas(ctx, lugarValor, anchoValor);
