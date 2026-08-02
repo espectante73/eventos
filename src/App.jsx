@@ -2919,15 +2919,39 @@ function VistaAnfitrion({ data }) {
           onCerrar={() => setAvisoPreview(null)}
         >
           <p
-            className="text-xs uppercase mb-2"
+            className="text-xs uppercase mb-1"
             style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
           >
-            Invitados nuevos que se le van a notificar
+            Colaborador
+          </p>
+          <p className="text-sm mb-3" style={{ color: C.ink }}>
+            {avisoPreview.nombre}
+            {" — "}
+            {colaboradores.find((c) => c.id === avisoPreview.id)?.email || "sin email"}
+          </p>
+          <p
+            className="text-xs uppercase mb-1"
+            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+          >
+            Invitados asignados ({invitados.filter((g) => g.colaboradorId === avisoPreview.id).length}
+            {" "}en total)
           </p>
           <ul className="text-sm space-y-1 mb-4" style={{ color: C.ink }}>
-            {invitadosPendientesDe(avisoPreview.id).map((g) => (
-              <li key={g.id}>{g.apellido}, {g.nombre}</li>
-            ))}
+            {invitados
+              .filter((g) => g.colaboradorId === avisoPreview.id)
+              .map((g) => (
+                <li key={g.id}>
+                  {g.apellido}, {g.nombre}
+                  {g.avisoPendiente && (
+                    <span
+                      className="text-xs ml-2 px-1.5 py-0.5 rounded"
+                      style={{ background: C.wax, color: "#fff" }}
+                    >
+                      nuevo
+                    </span>
+                  )}
+                </li>
+              ))}
           </ul>
           <p
             className="text-xs uppercase mb-2"
