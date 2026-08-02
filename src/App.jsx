@@ -963,7 +963,9 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
 
       ctx.font = `bold ${Math.round(W * 0.028)}px 'Fraunces', serif`;
       if (fechaValor) ctx.fillText(fechaValor, xValor, yFecha + bajarDesdeEtiqueta);
-      if (horaValor) ctx.fillText(horaValor, xValor, yHora + bajarDesdeEtiqueta - 5);
+      // Corregido directamente con la lectura de la cuadrícula: estaba en
+      // y=0.54 y debía quedar en y=0.52 (diferencia de 0.02 del alto total).
+      if (horaValor) ctx.fillText(horaValor, xValor, yHora + bajarDesdeEtiqueta - 5 - 0.02 * H);
 
       if (lugarValor) {
         // La dirección suele ser larga: letra más pequeña, también debajo
