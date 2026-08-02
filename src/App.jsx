@@ -889,6 +889,42 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
     // del ancho/alto de la imagen)
     const RECUADRO = { left: 0.505, right: 0.96, top: 0.83, bottom: 0.915 };
 
+    // Recuadro grande de la izquierda (FECHA / HORA / LUGAR con su icono ya
+    // impreso en la plantilla) — el valor se escribe en el hueco a la
+    // derecha de cada icono, sin tapar nada (ahí no hay texto de ejemplo).
+    const RECUADRO_DATOS = { left: 0.065, right: 0.46, top: 0.535, bottom: 0.775 };
+
+    const dibujarDatosGenerales = (ctx, W, H) => {
+      const xValor = RECUADRO_DATOS.left * W + (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.46;
+      const anchoValor = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.5;
+      const altoDatos = (RECUADRO_DATOS.bottom - RECUADRO_DATOS.top) * H;
+      const yFecha = RECUADRO_DATOS.top * H + altoDatos * (1 / 6);
+      const yHora = RECUADRO_DATOS.top * H + altoDatos * (3 / 6);
+      const yLugar = RECUADRO_DATOS.top * H + altoDatos * (5 / 6);
+      const lineHeightDatos = Math.round(W * 0.026);
+
+      ctx.fillStyle = "#1F3A2E";
+      ctx.font = `bold ${Math.round(W * 0.022)}px 'Fraunces', serif`;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+
+      const fechaValor = evento.fecha ? formatearFecha(evento.fecha) : "";
+      const horaValor = evento.hora ? `${evento.hora}h` : "";
+      const lugarValor = [evento.lugar, evento.direccion].filter(Boolean).join(", ");
+
+      if (fechaValor) ctx.fillText(fechaValor, xValor, yFecha);
+      if (horaValor) ctx.fillText(horaValor, xValor, yHora);
+      if (lugarValor) {
+        const lineasLugar = partirLineas(ctx, lugarValor, anchoValor);
+        const inicioY = yLugar - ((lineasLugar.length - 1) * lineHeightDatos) / 2;
+        lineasLugar.forEach((linea, i) => ctx.fillText(linea, xValor, inicioY + i * lineHeightDatos));
+      }
+
+      // El resto del dibujo (nombre/mesa) asume la base de línea por
+      // defecto — se restaura para no descuadrarlo.
+      ctx.textBaseline = "alphabetic";
+    };
+
     const dibujarTextoYResolver = (canvas, ctx) => {
       const W = canvas.width;
       const H = canvas.height;
@@ -896,6 +932,8 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
       const anchoDisponible = (RECUADRO.right - RECUADRO.left) * W * 0.92;
       const yTop = RECUADRO.top * H;
       const altoRecuadro = (RECUADRO.bottom - RECUADRO.top) * H;
+
+      dibujarDatosGenerales(ctx, W, H);
 
       // Fondo sólido (mismo tono crema del recuadro) para tapar el texto
       // de ejemplo de la plantilla antes de escribir el de verdad encima.
