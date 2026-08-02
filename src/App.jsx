@@ -946,8 +946,8 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
       // el tamaño de la imagen, así que -1/-2 aquí son 1/2 píxeles de verdad)
       // para ganar algo de aire y poder agrandar la letra de lugar.
       const yFecha = RECUADRO_DATOS.top * H + altoDatos * (1 / 6) - 1;
-      const yHora = RECUADRO_DATOS.top * H + altoDatos * (3 / 6) - 2;
-      const yLugar = RECUADRO_DATOS.top * H + altoDatos * (5 / 6) - 2;
+      const yHora = RECUADRO_DATOS.top * H + altoDatos * (3 / 6) - 3;
+      const yLugar = RECUADRO_DATOS.top * H + altoDatos * (5 / 6) - 3;
       // La distancia entre el centro de una fila y la siguiente es
       // altoDatos/3 — hay que bajar bastante menos que eso, si no el
       // valor cae encima de la etiqueta de abajo.
@@ -963,13 +963,13 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
 
       ctx.font = `bold ${Math.round(W * 0.028)}px 'Fraunces', serif`;
       if (fechaValor) ctx.fillText(fechaValor, xValor, yFecha + bajarDesdeEtiqueta);
-      if (horaValor) ctx.fillText(horaValor, xValor, yHora + bajarDesdeEtiqueta);
+      if (horaValor) ctx.fillText(horaValor, xValor, yHora + bajarDesdeEtiqueta - 3);
 
       if (lugarValor) {
         // La dirección suele ser larga: letra más pequeña, también debajo
         // de su etiqueta y bajando desde ahí línea a línea.
-        ctx.font = `bold ${Math.round(W * 0.023)}px 'Fraunces', serif`;
-        const lineHeightLugar = Math.round(W * 0.028);
+        ctx.font = `bold ${Math.round(W * 0.023) + 2}px 'Fraunces', serif`;
+        const lineHeightLugar = Math.round(W * 0.028) + 2;
         // Aquí no se baja tanto: el hueco hasta el borde inferior del
         // recuadro es pequeño y hay que dejar sitio para varias líneas.
         const lineasLugar = partirLineas(ctx, lugarValor, anchoValor);
