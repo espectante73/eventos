@@ -73,10 +73,11 @@ const C = {
 const uid = () => crypto.randomUUID();
 
 function datosCompletos(g) {
-  // Único dato obligatorio: el año de nacimiento. Todo lo demás (boda, foto,
-  // email, alergias, canción) es opcional — puede ser soltero/a, menor de edad,
-  // o simplemente no querer compartir más datos.
-  return Boolean(g.anioNacimiento);
+  // Únicos datos obligatorios: año de nacimiento y alergias (aunque la
+  // respuesta sea "No", tiene que estar contestada explícitamente). Todo lo
+  // demás (boda, foto, email, canción) es opcional — puede ser soltero/a,
+  // menor de edad, o simplemente no querer compartir más datos.
+  return Boolean(g.anioNacimiento) && Boolean(g.alergias);
 }
 
 // Los 6 campos de texto que rellena el colaborador, más la foto familiar
@@ -2946,10 +2947,13 @@ function FormularioDatos({
 }) {
   const [form, setForm] = useState(invitado);
   const [foto, setFoto] = useState(fotoFamiliar || "");
+  // Ninguna casilla marcada por defecto: si no se ha tocado nada, "alergias"
+  // se queda vacío de verdad (no cuenta como respondido en "datos X de 7"
+  // hasta que el colaborador marque algo, aunque sea "No" explícitamente).
   const parsearAlergias = (texto) => {
     const partes = (texto || "").split(",").map((s) => s.trim()).filter(Boolean);
     return {
-      no: partes.length === 0 || partes.includes("No"),
+      no: partes.includes("No"),
       gluten: partes.includes("Gluten"),
       lactosa: partes.includes("Lactosa"),
       otras: partes.find((p) => p !== "No" && p !== "Gluten" && p !== "Lactosa") || "",
@@ -3172,7 +3176,7 @@ function FormularioDatos({
           </Field>
         </div>
         <span className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
-          * campo obligatorio
+          * campos obligatorios (año nacimiento y alergias)
         </span>
       </div>
       <Field label="Canción">
@@ -3198,7 +3202,7 @@ function FormularioDatos({
           className="text-xs uppercase block mb-1"
           style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
         >
-          Alergias
+          Alergias *
         </span>
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-1 text-sm" style={{ color: C.charcoal }}>
