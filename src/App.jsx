@@ -2916,7 +2916,16 @@ const ETIQUETAS_CAMPOS_INVITADO = {
   observaciones: "Observaciones",
 };
 
-function FormularioDatos({ invitado, onGuardar, fotoFamiliar, onCambiarFotoFamiliar }) {
+function FormularioDatos({
+  invitado,
+  onGuardar,
+  fotoFamiliar,
+  onCambiarFotoFamiliar,
+  importe,
+  pagado,
+  onMarcarPagado,
+  onCerrar,
+}) {
   const [form, setForm] = useState(invitado);
   const [foto, setFoto] = useState(fotoFamiliar || "");
   const parsearAlergias = (texto) => {
@@ -3021,8 +3030,38 @@ function FormularioDatos({ invitado, onGuardar, fotoFamiliar, onCambiarFotoFamil
       style={{ background: "#fff", border: `1px solid ${C.line}` }}
     >
       <div>
-        <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
-          {form.apellido}, {form.nombre}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
+              {form.apellido}, {form.nombre}
+            </span>
+            <span
+              className="text-xs px-2 py-0.5 rounded"
+              style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.8 }}
+              title="Importe calculado según edad y los precios de Configuración"
+            >
+              € {importe.toFixed(2)}
+            </span>
+            <button onClick={onMarcarPagado} className="flex items-center gap-1">
+              {pagado ? (
+                <Stamp color={C.ink}>Pagado</Stamp>
+              ) : (
+                <span
+                  className="text-xs px-2 py-0.5 rounded"
+                  style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
+                >
+                  Pendiente de pago
+                </span>
+              )}
+            </button>
+          </div>
+          <button
+            onClick={onCerrar}
+            className="px-4 py-2 rounded text-sm font-semibold"
+            style={{ background: C.ink, color: C.paper }}
+          >
+            Cerrar
+          </button>
         </div>
         <div className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
           Familia {invitado.grupoFamiliar || form.apellido} · {form.zona || "sin zona"}
@@ -3211,36 +3250,29 @@ function FilaInvitadoColaborador({
             <Bell size={12} /> por rellenar
           </span>
         )}
-        <div className="flex items-center gap-2 ml-auto">
-          {abierto && (
-            <button
-              onClick={onToggleAbierto}
-              className="px-2 py-0.5 rounded text-xs font-medium"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+        {!abierto && (
+          <div className="flex items-center gap-2 ml-auto">
+            <span
+              className="text-xs px-2 py-0.5 rounded"
+              style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.8 }}
+              title="Importe calculado según edad y los precios de Configuración"
             >
-              Cerrar
+              € {importe.toFixed(2)}
+            </span>
+            <button onClick={() => onMarcarPagado(g.id, !g.pagado)} className="flex items-center gap-1">
+              {g.pagado ? (
+                <Stamp color={C.ink}>Pagado</Stamp>
+              ) : (
+                <span
+                  className="text-xs px-2 py-0.5 rounded"
+                  style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
+                >
+                  Pendiente de pago
+                </span>
+              )}
             </button>
-          )}
-          <span
-            className="text-xs px-2 py-0.5 rounded"
-            style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.8 }}
-            title="Importe calculado según edad y los precios de Configuración"
-          >
-            € {importe.toFixed(2)}
-          </span>
-          <button onClick={() => onMarcarPagado(g.id, !g.pagado)} className="flex items-center gap-1">
-            {g.pagado ? (
-              <Stamp color={C.ink}>Pagado</Stamp>
-            ) : (
-              <span
-                className="text-xs px-2 py-0.5 rounded"
-                style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
-              >
-                Pendiente de pago
-              </span>
-            )}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
       {abierto && (
         <div className="p-3 pt-0">
@@ -3249,6 +3281,10 @@ function FilaInvitadoColaborador({
             onGuardar={onGuardar}
             fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
             onCambiarFotoFamiliar={onCambiarFotoFamiliar}
+            importe={importe}
+            pagado={g.pagado}
+            onMarcarPagado={() => onMarcarPagado(g.id, !g.pagado)}
+            onCerrar={onToggleAbierto}
           />
         </div>
       )}
