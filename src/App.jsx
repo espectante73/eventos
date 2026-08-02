@@ -1022,9 +1022,11 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
         });
       }
 
-      // Posición fija según la cuadrícula de calibración (y=0.85 del alto
-      // total), en vez del centrado matemático anterior.
-      let cursorY = 0.85 * H + lineHeightNombres * 0.78;
+      // Posición fija según la cuadrícula de calibración: y=0.85 del alto
+      // total es directamente donde se apoya la línea de base del texto
+      // (sin ningún desplazamiento añadido, para que coincida con lo que
+      // se lee en la cuadrícula).
+      let cursorY = 0.85 * H;
 
       bloques.forEach((b) => {
         ctx.font = b.font;
