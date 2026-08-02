@@ -3024,7 +3024,7 @@ function FormularioDatos({ invitado, onGuardar, fotoFamiliar, onCambiarFotoFamil
         <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
           {form.apellido}, {form.nombre}{" "}
           <span className="text-xs font-normal" style={{ color: C.charcoal, opacity: 0.6 }}>
-            · {form.zona || "sin zona"}
+            · Familia {invitado.grupoFamiliar || form.apellido} · {form.zona || "sin zona"}
           </span>
         </div>
         <div style={{ minWidth: 180, maxWidth: 220 }}>
@@ -3047,91 +3047,85 @@ function FormularioDatos({ invitado, onGuardar, fotoFamiliar, onCambiarFotoFamil
           {aviso}
         </span>
       )}
-      <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 items-start">
-        <label className="flex flex-col gap-1 text-sm">
-          <span
-            className="uppercase tracking-wide text-xs"
-            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" }}
-          >
-            Año nac.
-            <br />
-            (obligatorio)
-          </span>
+      <div className="flex flex-wrap items-end gap-3">
+        <Field label="Año nac. *">
           <TextInput
             value={form.anioNacimiento}
             onChange={(e) => setForm({ ...form, anioNacimiento: e.target.value })}
             onBlur={() => revisarYGuardar(form)}
             placeholder="1988"
             maxLength={4}
-            style={{ maxWidth: 70 }}
+            style={{ width: 70 }}
           />
-        </label>
-        <Field label="Año de boda">
+        </Field>
+        <Field label="Año boda">
           <TextInput
             value={form.anioBoda}
             onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
             onBlur={() => revisarYGuardar(form)}
             placeholder="2015"
             maxLength={4}
-            style={{ maxWidth: 70 }}
+            style={{ width: 70 }}
           />
         </Field>
-        <div className="col-span-2">
-          <Field label={`Foto familiar (${invitado.grupoFamiliar || invitado.apellido})`}>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                {foto && (
-                  <img
-                    src={foto}
-                    alt="Foto de familia"
-                    className="rounded object-cover"
-                    style={{ width: 32, height: 32, border: `1px solid ${C.line}` }}
-                  />
-                )}
-                <label
-                  className="text-xs px-2 py-1 rounded cursor-pointer"
-                  style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-                >
-                  {subiendoFoto ? "Procesando…" : "Subir foto"}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={onSeleccionarArchivoFoto}
-                    disabled={subiendoFoto}
-                    style={{ display: "none" }}
-                  />
-                </label>
-                {foto && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFoto("");
-                      guardarFoto("");
-                    }}
-                    className="text-xs"
-                    style={{ color: C.wax }}
-                  >
-                    Quitar
-                  </button>
-                )}
-              </div>
-              <TextInput
-                value={foto}
-                onChange={(e) => setFoto(e.target.value)}
-                onBlur={() => guardarFoto(foto)}
-                placeholder="o pega un enlace"
-                className="w-full"
-                style={{ fontSize: 11 }}
+        <Field label="Canción">
+          <TextInput
+            value={form.cancion}
+            onChange={(e) => setForm({ ...form, cancion: e.target.value })}
+            onBlur={() => revisarYGuardar(form)}
+            placeholder="Título — Artista"
+            style={{ width: 160 }}
+          />
+        </Field>
+        <span className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
+          * campo obligatorio
+        </span>
+      </div>
+      <div className="flex flex-wrap items-start gap-4">
+        <Field label="Foto familiar">
+          <div className="flex items-center gap-2 flex-wrap">
+            {foto && (
+              <img
+                src={foto}
+                alt="Foto de familia"
+                className="rounded object-cover"
+                style={{ width: 32, height: 32, border: `1px solid ${C.line}` }}
               />
-              {errorFoto && (
-                <p className="text-xs" style={{ color: C.wax }}>
-                  {errorFoto}
-                </p>
-              )}
-            </div>
-          </Field>
-        </div>
-        <div className="col-span-2">
+            )}
+            <label
+              className="text-xs px-2 py-1 rounded cursor-pointer"
+              style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+            >
+              {subiendoFoto ? "Procesando…" : "Subir foto"}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={onSeleccionarArchivoFoto}
+                disabled={subiendoFoto}
+                style={{ display: "none" }}
+              />
+            </label>
+            {foto && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFoto("");
+                  guardarFoto("");
+                }}
+                className="text-xs"
+                style={{ color: C.wax }}
+              >
+                Quitar
+              </button>
+            )}
+          </div>
+          {errorFoto && (
+            <p className="text-xs" style={{ color: C.wax }}>
+              {errorFoto}
+            </p>
+          )}
+        </Field>
+        <div className="flex-1" style={{ minWidth: 200 }}>
           <Field label="Observaciones">
             <TextInput
               value={form.observaciones || ""}
@@ -3143,15 +3137,6 @@ function FormularioDatos({ invitado, onGuardar, fotoFamiliar, onCambiarFotoFamil
           </Field>
         </div>
       </div>
-      <Field label="Canción para bailar">
-        <TextInput
-          value={form.cancion}
-          onChange={(e) => setForm({ ...form, cancion: e.target.value })}
-          onBlur={() => revisarYGuardar(form)}
-          placeholder="Título — Artista"
-          className="w-full"
-        />
-      </Field>
       <div>
         <span
           className="text-xs uppercase block mb-1"
