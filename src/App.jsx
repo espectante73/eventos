@@ -939,8 +939,8 @@ function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaT
     const dibujarDatosGenerales = (ctx, W, H) => {
       // Los valores van DEBAJO de su etiqueta (no al lado), usando casi
       // todo el ancho del recuadro — así la letra puede ser más grande.
-      const xValor = RECUADRO_DATOS.left * W + (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.19;
-      const anchoValor = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.76;
+      const xValor = RECUADRO_DATOS.left * W + (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.27;
+      const anchoValor = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.68;
       const altoDatos = (RECUADRO_DATOS.bottom - RECUADRO_DATOS.top) * H;
       const yFecha = RECUADRO_DATOS.top * H + altoDatos * (1 / 6);
       const yHora = RECUADRO_DATOS.top * H + altoDatos * (3 / 6);
