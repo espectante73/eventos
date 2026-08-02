@@ -1004,6 +1004,25 @@ function VistaAnfitrion({ data }) {
   const [enviandoAvisosAsignacion, setEnviandoAvisosAsignacion] = useState(false);
   const colaboradoresPendientes = colaboradores.filter((c) => c.avisoPendiente);
 
+  // Antes de mandar un aviso individual ("Avisar ahora"), se enseña el
+  // mensaje exacto que se va a enviar y se pide confirmar — con opción de
+  // ir directo a editar la plantilla si algo no convence.
+  const [avisoPreview, setAvisoPreview] = useState(null); // { id, nombre } | null
+  const [enviandoAvisoPreview, setEnviandoAvisoPreview] = useState(false);
+
+  const confirmarEnvioAvisoPreview = async () => {
+    if (!avisoPreview) return;
+    setEnviandoAvisoPreview(true);
+    await avisarColaborador(avisoPreview.id);
+    setEnviandoAvisoPreview(false);
+    setAvisoPreview(null);
+  };
+
+  const irAEditarPlantillaAviso = () => {
+    setAvisoPreview(null);
+    setAbierto((a) => ({ ...a, configuracion: true, avisos: false }));
+  };
+
   const cambiarOrden = (columna) => {
     setOrden((o) =>
       o.columna === columna
@@ -1350,7 +1369,7 @@ function VistaAnfitrion({ data }) {
       ocultarTituloEnImagen: true,
       emailAnfitrion: "",
       plantillaAsignacion:
-        "Hola,<br><br>Se te ha asignado <b>{invitado}</b> como invitado.<br>Entra en tu enlace cuando puedas para completar sus datos.",
+        "Hola,<br><br>Tienes invitados nuevos asignados.<br>Entra en tu enlace cuando puedas para revisarlos y completar sus datos.",
       plantillaDatosCompletados:
         "Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.",
       plantillaPagoRegistrado:
@@ -1806,7 +1825,7 @@ function VistaAnfitrion({ data }) {
                     onRelevar={relevarColaborador}
                     onAsignarColaborador={asignarColaborador}
                     onCambiarEmail={cambiarEmailColaborador}
-                    onAvisar={avisarColaborador}
+                    onAvisar={(id) => setAvisoPreview({ id, nombre: c.nombre })}
                   />
                 );
               })}
@@ -2688,12 +2707,11 @@ function VistaAnfitrion({ data }) {
 
             <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
               <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
-                Texto de los avisos automáticos por email. Usa <code>{"{colaborador}"}</code> y{" "}
-                <code>{"{invitado}"}</code> donde quieras que aparezcan esos nombres — se
-                rellenan solos al enviar. Admite HTML sencillo (<code>&lt;b&gt;</code>,{" "}
-                <code>&lt;br&gt;</code>).
+                Texto de los avisos automáticos por email. Usa <code>{"{colaborador}"}</code>{" "}
+                donde quieras que aparezca ese nombre — se rellena solo al enviar. Admite HTML
+                sencillo (<code>&lt;b&gt;</code>, <code>&lt;br&gt;</code>).
               </p>
-              <Field label="Aviso al colaborador: se le asigna un invitado nuevo">
+              <Field label="Aviso al colaborador: tiene invitados nuevos o cambiados asignados">
                 <textarea
                   value={evento.plantillaAsignacion || ""}
                   onChange={(e) =>
@@ -2784,7 +2802,7 @@ function VistaAnfitrion({ data }) {
                         )}
                       </span>
                       <button
-                        onClick={() => avisarColaborador(c.id)}
+                        onClick={() => setAvisoPreview({ id: c.id, nombre: c.nombre })}
                         disabled={!c.email}
                         className="text-xs px-2 py-1 rounded font-medium"
                         style={{
@@ -2884,6 +2902,54 @@ function VistaAnfitrion({ data }) {
           </div>
         )}
       </section>
+
+      {avisoPreview && (
+        <ModalFlotante
+          titulo={`Avisar a ${avisoPreview.nombre}`}
+          onCerrar={() => setAvisoPreview(null)}
+        >
+          <p
+            className="text-xs uppercase mb-2"
+            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+          >
+            Mensaje que se enviará
+          </p>
+          <div
+            className="p-3 rounded text-sm mb-4"
+            style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
+            dangerouslySetInnerHTML={{
+              __html: (evento.plantillaAsignacion || "").replace(
+                "{colaborador}",
+                avisoPreview.nombre
+              ),
+            }}
+          />
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={confirmarEnvioAvisoPreview}
+              disabled={enviandoAvisoPreview}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{ background: C.ink, color: C.paper }}
+            >
+              {enviandoAvisoPreview ? "Enviando…" : "Aceptar y enviar"}
+            </button>
+            <button
+              onClick={() => setAvisoPreview(null)}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={irAEditarPlantillaAviso}
+              className="px-3 py-2 rounded text-sm font-medium"
+              style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+            >
+              Editar mensaje
+            </button>
+          </div>
+        </ModalFlotante>
+      )}
 
       {mostrarResumenAsignacion && (
         <ModalFlotante

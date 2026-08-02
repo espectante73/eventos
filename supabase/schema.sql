@@ -98,7 +98,7 @@ create table evento (
   -- Plantillas de los avisos automáticos por email. {colaborador} y
   -- {invitado} se sustituyen por los nombres reales al enviar — así el
   -- anfitrión puede cambiar el texto desde Configuración sin tocar código.
-  "plantillaAsignacion"        text not null default 'Hola,<br><br>Se te ha asignado <b>{invitado}</b> como invitado.<br>Entra en tu enlace cuando puedas para completar sus datos.',
+  "plantillaAsignacion"        text not null default 'Hola,<br><br>Tienes invitados nuevos asignados.<br>Entra en tu enlace cuando puedas para revisarlos y completar sus datos.',
   "plantillaDatosCompletados"  text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.',
   "plantillaPagoRegistrado"    text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.'
 );
@@ -319,7 +319,10 @@ begin
   perform enviar_email(
     (select "email" from colaboradores where "id" = p_colaborador_id),
     'Tus invitados asignados',
-    'Hola,<br><br>Tienes cambios en tus invitados asignados. Entra en tu enlace para revisarlos.' ||
+    replace(
+      (select "plantillaAsignacion" from evento limit 1),
+      '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
+    ) ||
     case
       when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
       else

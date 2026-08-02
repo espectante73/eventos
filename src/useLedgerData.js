@@ -18,7 +18,7 @@ const EVENTO_POR_DEFECTO = {
   ocultarTituloEnImagen: true,
   emailAnfitrion: "",
   plantillaAsignacion:
-    "Hola,<br><br>Se te ha asignado <b>{invitado}</b> como invitado.<br>Entra en tu enlace cuando puedas para completar sus datos.",
+    "Hola,<br><br>Tienes invitados nuevos asignados.<br>Entra en tu enlace cuando puedas para revisarlos y completar sus datos.",
   plantillaDatosCompletados:
     "Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.",
   plantillaPagoRegistrado:
