@@ -39,6 +39,7 @@ export function useLedgerData(rol) {
   const [fotosFamiliares, setFotosFamiliares] = useState({});
   const [loaded, setLoaded] = useState(false);
   const [esAnfitrion, setEsAnfitrion] = useState(false);
+  const [avisosEnviados, setAvisosEnviados] = useState([]);
 
   // Se mantiene al día para poder comparar "antes/después" dentro de
   // persistInvitados sin depender de closures obsoletas.
@@ -118,6 +119,11 @@ export function useLedgerData(rol) {
           .select("*")
           .order("numero", { ascending: true });
         if (errMesas) avisar("No se pudieron cargar las mesas.", errMesas);
+        const { data: avisos, error: errAvisos } = await supabase.rpc(
+          "anfitrion_listar_avisos_enviados",
+          { p_token: rol }
+        );
+        if (errAvisos) avisar("No se pudo cargar el historial de avisos.", errAvisos);
 
         if (cancelado) return;
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
@@ -127,6 +133,7 @@ export function useLedgerData(rol) {
         setColaboradores(todosColaboradores || []);
         setInvitados(todosInvitados || []);
         setMesas(todasMesas || []);
+        setAvisosEnviados(avisos || []);
         setEsAnfitrion(true);
         setLoaded(true);
         return;
@@ -195,6 +202,13 @@ export function useLedgerData(rol) {
           p_filas: next,
         });
         if (error) avisar("No se pudieron guardar los invitados.", error);
+        // Una reasignación puede marcar a algún colaborador con aviso
+        // pendiente en el servidor — recargamos para que se vea al momento.
+        const { data: todosColaboradores, error: errCol } = await supabase.rpc(
+          "anfitrion_listar_colaboradores",
+          { p_token: rol }
+        );
+        if (!errCol) setColaboradores(todosColaboradores || []);
         return;
       }
 
@@ -245,7 +259,16 @@ export function useLedgerData(rol) {
         p_token: rol,
         p_colaborador_id: colaboradorId,
       });
-      if (error) avisar("No se pudo avisar al colaborador.", error);
+      if (error) {
+        avisar("No se pudo avisar al colaborador.", error);
+        return;
+      }
+      const [{ data: todosColaboradores }, { data: avisos }] = await Promise.all([
+        supabase.rpc("anfitrion_listar_colaboradores", { p_token: rol }),
+        supabase.rpc("anfitrion_listar_avisos_enviados", { p_token: rol }),
+      ]);
+      if (todosColaboradores) setColaboradores(todosColaboradores);
+      if (avisos) setAvisosEnviados(avisos);
     },
     [esAnfitrion, rol]
   );
@@ -264,5 +287,6 @@ export function useLedgerData(rol) {
     persistMesas,
     persistFotosFamiliares,
     avisarColaborador,
+    avisosEnviados,
   };
 }

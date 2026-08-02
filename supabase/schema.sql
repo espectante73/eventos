@@ -39,10 +39,14 @@ create table invitados (
 -- 2. COLABORADORES
 -- ============================================================
 create table colaboradores (
-  "id"          uuid primary key default gen_random_uuid(),
-  "nombre"      text not null default '',
-  "invitadoId"  uuid null references invitados("id") on delete set null,
-  "email"       text not null default ''
+  "id"              uuid primary key default gen_random_uuid(),
+  "nombre"          text not null default '',
+  "invitadoId"      uuid null references invitados("id") on delete set null,
+  "email"           text not null default '',
+  -- Se marca al asignarle un invitado nuevo, y se limpia al avisarle de
+  -- verdad — así el anfitrión puede ver siempre quién tiene un aviso
+  -- pendiente, aunque cierre la app antes de mandarlo.
+  "avisoPendiente"  boolean not null default false
 );
 
 alter table invitados
@@ -130,11 +134,24 @@ alter table config_secretos enable row level security;
 revoke all on table config_secretos from anon, authenticated;
 
 -- ============================================================
--- RLS: activada en las 7 tablas. evento/mesas/fotos_familiares
+-- 8. REGISTRO DE AVISOS ENVIADOS (para el panel "Avisos" del
+--    anfitrión). Se rellena solo, desde dentro de enviar_email().
+-- ============================================================
+create table avisos_enviados (
+  "id"           bigint generated always as identity primary key,
+  "destinatario" text not null,
+  "asunto"       text not null,
+  "creadoEn"     timestamptz not null default now()
+);
+alter table avisos_enviados enable row level security;
+revoke all on table avisos_enviados from anon, authenticated;
+
+-- ============================================================
+-- RLS: activada en las 8 tablas. evento/mesas/fotos_familiares
 -- quedan abiertas (datos sin sensibilidad real). invitados,
--- colaboradores, anfitrion_secreto y config_secretos NO tienen
--- ninguna política — solo se pueden tocar a través de las
--- funciones de más abajo.
+-- colaboradores, anfitrion_secreto, config_secretos y
+-- avisos_enviados NO tienen ninguna política — solo se pueden
+-- tocar a través de las funciones de más abajo.
 -- ============================================================
 alter table evento             enable row level security;
 alter table mesas              enable row level security;
@@ -168,6 +185,8 @@ begin
   if p_para is null or trim(p_para) = '' then
     return; -- sin email no hay a quién avisar
   end if;
+
+  insert into avisos_enviados ("destinatario", "asunto") values (p_para, p_asunto);
 
   perform net.http_post(
     url := 'https://api.resend.com/emails',
@@ -312,6 +331,8 @@ begin
     end ||
     '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
   );
+
+  update colaboradores set "avisoPendiente" = false where "id" = p_colaborador_id;
 end;
 $$;
 
@@ -319,14 +340,29 @@ create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jso
 returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
+declare
+  r record;
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
 
-  -- El aviso de asignación ya no se manda aquí automáticamente (mandaba un
-  -- email por cada cambio suelto). Ahora el anfitrión lo confirma él mismo
-  -- al cerrar la tabla, vía anfitrion_avisar_colaborador.
+  -- Ya no se manda ningún email aquí (mandaba uno por cada cambio suelto).
+  -- Solo se marca al colaborador como "con aviso pendiente" — el anfitrión
+  -- decide cuándo avisarle de verdad (al cerrar la tabla, o desde su
+  -- tarjeta / la sección Avisos).
+  for r in
+    select
+      nullif(f->>'colaboradorId','')::uuid as nuevo_colaborador_id,
+      i."colaboradorId" as anterior_colaborador_id
+    from jsonb_array_elements(p_filas) as f
+    left join invitados i on i."id" = (f->>'id')::uuid
+  loop
+    if r.nuevo_colaborador_id is not null
+       and r.nuevo_colaborador_id is distinct from r.anterior_colaborador_id then
+      update colaboradores set "avisoPendiente" = true where "id" = r.nuevo_colaborador_id;
+    end if;
+  end loop;
 
   insert into invitados (
     "id","nombre","apellido","zona","confirmado","colaboradorId",
@@ -479,6 +515,16 @@ begin
 end;
 $$;
 
+create or replace function anfitrion_listar_avisos_enviados(p_token uuid)
+returns setof avisos_enviados
+language sql security definer set search_path = public, pg_temp
+as $$
+  select * from avisos_enviados
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  order by "creadoEn" desc
+  limit 200;
+$$;
+
 -- Permisos de ejecución (los permisos de tabla siguen revocados,
 -- solo estas funciones son alcanzables):
 grant execute on function anfitrion_verificar_token(uuid) to anon;
@@ -487,6 +533,7 @@ grant execute on function anfitrion_listar_invitados(uuid) to anon;
 grant execute on function anfitrion_guardar_colaboradores(uuid, jsonb) to anon;
 grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
 grant execute on function anfitrion_avisar_colaborador(uuid, uuid) to anon;
+grant execute on function anfitrion_listar_avisos_enviados(uuid) to anon;
 grant execute on function colaborador_mi_perfil(uuid) to anon;
 grant execute on function colaborador_mis_invitados(uuid) to anon;
 grant execute on function colaborador_guardar_invitado(uuid, uuid, jsonb) to anon;

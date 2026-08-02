@@ -577,7 +577,7 @@ function BuscadorInvitado({ invitados, invitadoId, onSeleccionar, placeholder })
   );
 }
 
-function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail }) {
+function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onAvisar }) {
   const [copiado, setCopiado] = useState(false);
   const [relevando, setRelevando] = useState(false);
   const [mostrarAsignados, setMostrarAsignados] = useState(false);
@@ -696,6 +696,28 @@ function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEl
           </span>
         )}
       </div>
+
+      {c.avisoPendiente && (
+        <div
+          className="flex items-center justify-between gap-2 mt-2 px-2 py-1 rounded"
+          style={{ background: "#FBEAEC" }}
+        >
+          <span className="text-xs" style={{ color: C.wax }}>
+            ⚠ Pendiente de avisar
+          </span>
+          <button
+            onClick={() => onAvisar(c.id)}
+            disabled={!c.email}
+            className="text-xs px-2 py-1 rounded font-medium"
+            style={{
+              background: c.email ? C.wax : C.line,
+              color: c.email ? "#fff" : C.charcoal,
+            }}
+          >
+            Avisar ahora
+          </button>
+        </div>
+      )}
 
       {mostrarLink && (
         <div className="mt-2" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 8 }}>
@@ -966,7 +988,7 @@ function GrupoFamiliarInput({ value, onCommit }) {
 }
 
 function VistaAnfitrion({ data }) {
-  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador } = data;
+  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, avisosEnviados } = data;
 
   const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
@@ -975,12 +997,12 @@ function VistaAnfitrion({ data }) {
   const [mostrarAnadir, setMostrarAnadir] = useState(false);
   const [orden, setOrden] = useState({ columna: "invitado", direccion: "asc" });
 
-  // Cambios de asignación acumulados desde que se abrió la tabla — al
-  // cerrarla se pregunta si avisar a esos colaboradores, en vez de mandar
-  // un email suelto por cada cambio (que era un caos para ellos).
-  const [cambiosAsignacion, setCambiosAsignacion] = useState({});
+  // "avisoPendiente" vive en el servidor (columna en colaboradores), no
+  // solo en memoria — así no se pierde el rastro si cancelas o cierras la
+  // pestaña. Al cerrar la tabla, si queda alguien pendiente, se pregunta.
   const [mostrarResumenAsignacion, setMostrarResumenAsignacion] = useState(false);
   const [enviandoAvisosAsignacion, setEnviandoAvisosAsignacion] = useState(false);
+  const colaboradoresPendientes = colaboradores.filter((c) => c.avisoPendiente);
 
   const cambiarOrden = (columna) => {
     setOrden((o) =>
@@ -1108,17 +1130,13 @@ function VistaAnfitrion({ data }) {
 
   const asignarColaborador = (id, colaboradorId) => {
     const nuevoId = colaboradorId || null;
-    const actual = invitados.find((g) => g.id === id);
-    if (nuevoId && nuevoId !== actual?.colaboradorId) {
-      setCambiosAsignacion((prev) => ({ ...prev, [nuevoId]: (prev[nuevoId] || 0) + 1 }));
-    }
     persistInvitados(
       invitados.map((g) => (g.id === id ? { ...g, colaboradorId: nuevoId } : g))
     );
   };
 
   const intentarCerrarInvitados = () => {
-    if (abierto.invitados && Object.keys(cambiosAsignacion).length > 0) {
+    if (abierto.invitados && colaboradoresPendientes.length > 0) {
       setMostrarResumenAsignacion(true);
       return;
     }
@@ -1127,17 +1145,15 @@ function VistaAnfitrion({ data }) {
 
   const enviarAvisosAsignacion = async () => {
     setEnviandoAvisosAsignacion(true);
-    for (const colaboradorId of Object.keys(cambiosAsignacion)) {
-      await avisarColaborador(colaboradorId);
+    for (const c of colaboradoresPendientes) {
+      await avisarColaborador(c.id);
     }
     setEnviandoAvisosAsignacion(false);
-    setCambiosAsignacion({});
     setMostrarResumenAsignacion(false);
     toggle("invitados");
   };
 
   const cancelarAvisosAsignacion = () => {
-    setCambiosAsignacion({});
     setMostrarResumenAsignacion(false);
     toggle("invitados");
   };
@@ -1487,6 +1503,7 @@ function VistaAnfitrion({ data }) {
     configuracion: false,
     invitaciones: false,
     versiones: false,
+    avisos: false,
   });
   const toggle = (clave) => setAbierto((a) => ({ ...a, [clave]: !a[clave] }));
   const [mostrarPeligro, setMostrarPeligro] = useState(false);
@@ -1789,6 +1806,7 @@ function VistaAnfitrion({ data }) {
                     onRelevar={relevarColaborador}
                     onAsignarColaborador={asignarColaborador}
                     onCambiarEmail={cambiarEmailColaborador}
+                    onAvisar={avisarColaborador}
                   />
                 );
               })}
@@ -2729,6 +2747,92 @@ function VistaAnfitrion({ data }) {
         )}
       </section>
 
+      {/* Avisos */}
+      <section>
+        <SectionTitle
+          icon={Bell}
+          onToggle={() => toggle("avisos")}
+          abierto={abierto.avisos}
+        >
+          Avisos {colaboradoresPendientes.length > 0 && `(${colaboradoresPendientes.length})`}
+        </SectionTitle>
+        {abierto.avisos && (
+          <ModalFlotante titulo="Avisos" onCerrar={() => toggle("avisos")}>
+            <div className="mb-5">
+              <p
+                className="text-xs uppercase mb-2"
+                style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+              >
+                Pendientes de avisar
+              </p>
+              {colaboradoresPendientes.length === 0 ? (
+                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  Ninguno — todos los colaboradores están al día.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {colaboradoresPendientes.map((c) => (
+                    <div
+                      key={c.id}
+                      className="flex items-center justify-between gap-2 px-2 py-1.5 rounded"
+                      style={{ background: "#FBEAEC" }}
+                    >
+                      <span className="text-sm" style={{ color: C.ink }}>
+                        {c.nombre}
+                        {!c.email && (
+                          <span className="text-xs" style={{ color: C.wax }}> — sin email</span>
+                        )}
+                      </span>
+                      <button
+                        onClick={() => avisarColaborador(c.id)}
+                        disabled={!c.email}
+                        className="text-xs px-2 py-1 rounded font-medium"
+                        style={{
+                          background: c.email ? C.wax : C.line,
+                          color: c.email ? "#fff" : C.charcoal,
+                        }}
+                      >
+                        Avisar ahora
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <p
+                className="text-xs uppercase mb-2"
+                style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+              >
+                Emails enviados (últimos {avisosEnviados.length})
+              </p>
+              {avisosEnviados.length === 0 ? (
+                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  Todavía no se ha enviado ningún aviso.
+                </p>
+              ) : (
+                <div className="space-y-1" style={{ maxHeight: 320, overflowY: "auto" }}>
+                  {avisosEnviados.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-center justify-between gap-2 text-xs py-1"
+                      style={{ borderBottom: `1px solid ${C.line}` }}
+                    >
+                      <span style={{ color: C.ink }}>{a.asunto}</span>
+                      <span style={{ color: C.charcoal, opacity: 0.7 }}>{a.destinatario}</span>
+                      <span style={{ color: C.charcoal, opacity: 0.5 }} className="whitespace-nowrap">
+                        {new Date(a.creadoEn).toLocaleString("es-ES")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </ModalFlotante>
+        )}
+      </section>
+
       {/* Versiones */}
       <section>
         <SectionTitle
@@ -2787,22 +2891,17 @@ function VistaAnfitrion({ data }) {
           onCerrar={() => setMostrarResumenAsignacion(false)}
         >
           <p className="text-sm mb-3" style={{ color: C.charcoal }}>
-            Has asignado invitados nuevos a estos colaboradores. ¿Quieres avisarles ya?
+            Estos colaboradores tienen invitados nuevos asignados. ¿Quieres avisarles ya?
           </p>
           <ul className="text-sm space-y-1 mb-4" style={{ color: C.ink }}>
-            {Object.entries(cambiosAsignacion).map(([colaboradorId, cantidad]) => {
-              const nombre = colaboradores.find((c) => c.id === colaboradorId)?.nombre || "—";
-              const tieneEmail = Boolean(colaboradores.find((c) => c.id === colaboradorId)?.email);
-              return (
-                <li key={colaboradorId}>
-                  {nombre}: {cantidad} invitado{cantidad === 1 ? "" : "s"} nuevo
-                  {cantidad === 1 ? "" : "s"}
-                  {!tieneEmail && (
-                    <span style={{ color: C.wax }}> — sin email, no se le podrá avisar</span>
-                  )}
-                </li>
-              );
-            })}
+            {colaboradoresPendientes.map((c) => (
+              <li key={c.id}>
+                {c.nombre}
+                {!c.email && (
+                  <span style={{ color: C.wax }}> — sin email, no se le podrá avisar</span>
+                )}
+              </li>
+            ))}
           </ul>
           <div className="flex flex-wrap gap-2">
             <button
