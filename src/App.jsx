@@ -5094,6 +5094,36 @@ export default function App() {
   const [rol, setRol] = useState(urlRol || null);
   const data = useLedgerData(rol);
 
+  // Aviso de nueva versión desplegada: al ser una web de una sola página,
+  // el navegador se queda con el JS ya cargado aunque Vercel despliegue
+  // código nuevo — sin esto, hay que acordarse de recargar a mano cada vez.
+  // Se compara el archivo .js que carga esta pestaña con el que carga
+  // /index.html ahora mismo (sin caché); si difieren, hay una versión nueva.
+  const [hayNuevaVersion, setHayNuevaVersion] = useState(false);
+  useEffect(() => {
+    const scriptActual = document.querySelector("script[type='module']")?.getAttribute("src");
+    if (!scriptActual) return;
+    const comprobar = async () => {
+      try {
+        const res = await fetch("/", { cache: "no-store" });
+        const html = await res.text();
+        const match = html.match(/<script[^>]*type=["']module["'][^>]*src=["']([^"']+)["']/);
+        if (match && match[1] !== scriptActual) setHayNuevaVersion(true);
+      } catch (_) {
+        // Sin conexión o fallo de red: no pasa nada, se reintenta luego.
+      }
+    };
+    const intervalo = setInterval(comprobar, 3 * 60 * 1000);
+    const alVolverVisible = () => {
+      if (document.visibilityState === "visible") comprobar();
+    };
+    document.addEventListener("visibilitychange", alVolverVisible);
+    return () => {
+      clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", alVolverVisible);
+    };
+  }, []);
+
   useEffect(() => {
     let cancelado = false;
     (async () => {
@@ -5131,6 +5161,21 @@ export default function App() {
           "repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(31,58,46,0.05) 28px)",
       }}
     >
+      {hayNuevaVersion && (
+        <div
+          className="flex items-center justify-center gap-3 px-4 py-2 text-sm"
+          style={{ background: C.ink, color: C.paper }}
+        >
+          Hay una versión nueva de la app.
+          <button
+            onClick={() => window.location.reload()}
+            className="px-2 py-0.5 rounded font-medium"
+            style={{ background: C.paper, color: C.ink }}
+          >
+            Actualizar ahora
+          </button>
+        </div>
+      )}
       <div className="max-w-4xl mx-auto px-4 py-6">
         {esAnfitrionOriginal ? (
           <div className="flex flex-wrap items-center gap-2 mb-6">
