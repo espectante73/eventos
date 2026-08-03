@@ -640,7 +640,7 @@ begin
   if p_token <> (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
-  update invitados set "mesa" = null;
+  update invitados set "mesa" = null where true;
 end;
 $$;
 
@@ -652,7 +652,7 @@ begin
   if p_token <> (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
-  update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null;
+  update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null where true;
 end;
 $$;
 
@@ -664,7 +664,7 @@ begin
   if p_token <> (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
-  delete from avisos_enviados;
+  delete from avisos_enviados where true;
 end;
 $$;
 
@@ -681,7 +681,7 @@ begin
   if p_token <> (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
-  update invitados set "colaboradorId" = null, "avisoPendiente" = false;
+  update invitados set "colaboradorId" = null, "avisoPendiente" = false where true;
 end;
 $$;
 
