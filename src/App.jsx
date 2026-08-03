@@ -26,7 +26,7 @@ import {
 import { useLedgerData } from "./useLedgerData";
 import { supabase } from "./supabaseClient";
 
-const VERSION_APP = "5.0";
+const VERSION_APP = "5.1";
 
 // Versiones anteriores ya cerradas (números enteros completos): un resumen
 // breve por versión mayor, en vez de listar cada sub-versión — ocupa menos
@@ -55,6 +55,11 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 ];
 
 const HISTORIAL_VERSIONES = [
+  {
+    version: "5.1",
+    cambios:
+      'Envío de la invitación por email directamente a cada familia (con la imagen adjunta), dirigido a la primera persona de un orden que ahora se puede reordenar a mano (para poner al esposo primero, etc.), con vista previa y confirmación antes de enviar, y envío seguro por bloques eligiendo un colaborador. Bloqueo de "pagado" si faltan datos del invitado, y de generar la invitación si falta mesa asignada. Fecha/hora/lugar (tomados de Configuración) añadidos a la imagen de la invitación, con modo de cuadrícula de calibración para ajustar su posición con precisión. Plantilla de invitación ahora también se puede subir como archivo, con carpeta de guardado persistente. Dashboard de "Avisos" ampliado con el estado de las invitaciones por familia. Nueva Zona de Reinicio en Configuración (por colaborador, familia o invitado, con copia de seguridad automática y palabra de confirmación) para limpiar datos de pruebas sin borrar invitados. Aviso automático en pantalla cuando hay una versión nueva desplegada.',
+  },
   {
     version: "5.0",
     cambios:
