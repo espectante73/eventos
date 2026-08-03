@@ -331,6 +331,90 @@ function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitulo }) {
   );
 }
 
+// Orden fijo de apertura en cascada — cada sección siempre aparece en el
+// mismo sitio relativo, en vez de saltar de posición según el orden en que
+// se abran.
+const ORDEN_VENTANAS = [
+  "progreso",
+  "colaboradores",
+  "mesas",
+  "invitaciones",
+  "copiaSeguridad",
+  "configuracion",
+  "avisos",
+  "versiones",
+];
+
+const ETIQUETAS_VENTANAS = {
+  progreso: "Progreso de recopilación",
+  colaboradores: "Colaboradores",
+  mesas: "Mesas",
+  invitaciones: "Invitaciones",
+  copiaSeguridad: "Copia de seguridad",
+  configuracion: "Configuración",
+  avisos: "Avisos",
+  versiones: "Versiones",
+};
+
+// Ventana flotante independiente y no bloqueante: a diferencia de
+// ModalFlotante, no oscurece el resto de la pantalla ni impide que haya
+// varias abiertas a la vez — pensada para las secciones de administración
+// que se abren desde el desplegable de navegación (Mesas, Invitaciones,
+// Configuración...), donde puede interesar ver más de una a la vez.
+function VentanaFlotante({ clave, titulo, onCerrar, children, acciones }) {
+  const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onCerrar();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCerrar]);
+
+  return (
+    <div
+      className="fixed rounded-lg flex flex-col"
+      style={{
+        background: C.paper,
+        border: `1px solid ${C.line}`,
+        width: "min(620px, calc(100vw - 2rem))",
+        maxHeight: "80vh",
+        boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+        top: `calc(1rem + ${idx * 20}px)`,
+        left: `calc(1rem + ${idx * 20}px)`,
+        zIndex: 50 + idx,
+      }}
+    >
+      <div
+        className="flex items-center justify-between px-4 py-3"
+        style={{ borderBottom: `1px solid ${C.line}` }}
+      >
+        <h3
+          className="text-lg"
+          style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}
+        >
+          {titulo}
+        </h3>
+        <button onClick={onCerrar} title="Cerrar">
+          <X size={18} style={{ color: C.charcoal }} />
+        </button>
+      </div>
+      <div className="p-4" style={{ flex: 1, overflowY: "auto" }}>
+        {children}
+      </div>
+      {acciones && (
+        <div
+          className="flex items-center gap-2 px-4 py-3 flex-wrap"
+          style={{ borderTop: `1px solid ${C.line}` }}
+        >
+          {acciones}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SectionTitle({ icon: Icon, children, onToggle, abierto, compacto }) {
   const plegable = typeof onToggle === "function";
   const contenido = (
@@ -2259,6 +2343,23 @@ function VistaAnfitrion({ data }) {
     <div className="space-y-8">
       <Portada evento={evento} editable onChange={persistEvento} />
 
+      <select
+        value=""
+        onChange={(e) => {
+          if (e.target.value) toggle(e.target.value);
+        }}
+        style={{ ...inputStyle, maxWidth: 260 }}
+        title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
+      >
+        <option value="">Abrir sección…</option>
+        {ORDEN_VENTANAS.map((clave) => (
+          <option key={clave} value={clave}>
+            {abierto[clave] ? "✓ " : ""}
+            {ETIQUETAS_VENTANAS[clave]}
+          </option>
+        ))}
+      </select>
+
       {/* Resumen */}
       <section className="grid grid-cols-3 gap-3">
         {[
@@ -2288,12 +2389,12 @@ function VistaAnfitrion({ data }) {
       </section>
 
       {/* Progreso de recopilación */}
-      <section>
-        <SectionTitle icon={Bell} onToggle={() => toggle("progreso")} abierto={abierto.progreso}>
-          Progreso de recopilación
-        </SectionTitle>
-        {abierto.progreso && (
-          <div className="p-4 rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+      {abierto.progreso && (
+        <VentanaFlotante
+          clave="progreso"
+          titulo="Progreso de recopilación"
+          onCerrar={() => toggle("progreso")}
+        >
             <ProgresoBar
               label="General (confirmados con datos completos)"
               completado={invitados.filter((g) => g.confirmado && datosCompletos(g)).length}
@@ -2343,17 +2444,12 @@ function VistaAnfitrion({ data }) {
                 total={confirmadosCount}
               />
             </div>
-          </div>
-        )}
-      </section>
+        </VentanaFlotante>
+      )}
 
       {/* Colaboradores */}
-      <section>
-        <SectionTitle icon={Users} onToggle={() => toggle("colaboradores")} abierto={abierto.colaboradores}>
-          Colaboradores
-        </SectionTitle>
-        {abierto.colaboradores && (
-          <>
+      {abierto.colaboradores && (
+        <VentanaFlotante clave="colaboradores" titulo="Colaboradores" onCerrar={() => toggle("colaboradores")}>
             <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
               Los colaboradores son también invitados del evento: búscalo por apellido o
               nombre entre los ya añadidos a la lista. Si aún no está en la lista, añádelo
@@ -2405,17 +2501,12 @@ function VistaAnfitrion({ data }) {
                 </p>
               )}
             </div>
-          </>
-        )}
-      </section>
+        </VentanaFlotante>
+      )}
 
       {/* Mesas */}
-      <section>
-        <SectionTitle icon={Users} onToggle={() => toggle("mesas")} abierto={abierto.mesas}>
-          Mesas (1–15)
-        </SectionTitle>
-        {abierto.mesas && (
-        <>
+      {abierto.mesas && (
+        <VentanaFlotante clave="mesas" titulo="Mesas" onCerrar={() => toggle("mesas")}>
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
             Define primero cuántos comensales caben en cada mesa. Luego puedes generar una
@@ -2496,9 +2587,8 @@ function VistaAnfitrion({ data }) {
             );
           })}
         </div>
-        </>
-        )}
-      </section>
+        </VentanaFlotante>
+      )}
 
       {/* Invitados */}
       <section>
@@ -2981,16 +3071,14 @@ function VistaAnfitrion({ data }) {
       </section>
 
       {/* Invitaciones */}
-      <section>
-        <SectionTitle
-          icon={ImageIcon}
-          onToggle={() => toggle("invitaciones")}
-          abierto={abierto.invitaciones}
+      {abierto.invitaciones && (
+        <VentanaFlotante
+          clave="invitaciones"
+          titulo={`Invitaciones${
+            familiasListasParaInvitacion.length > 0 ? ` (${familiasListasParaInvitacion.length})` : ""
+          }`}
+          onCerrar={() => toggle("invitaciones")}
         >
-          Invitaciones {familiasListasParaInvitacion.length > 0 && `(${familiasListasParaInvitacion.length})`}
-        </SectionTitle>
-        {abierto.invitaciones && (
-          <div className="p-4 rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
             <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
               Solo aparecen aquí las familias en las que <strong>todos</strong> sus confirmados
               ya han pagado. Genera la imagen (con el apellido familiar y los nombres de los
@@ -3208,21 +3296,16 @@ function VistaAnfitrion({ data }) {
                 </p>
               )}
             </div>
-          </div>
-        )}
-      </section>
+        </VentanaFlotante>
+      )}
 
       {/* Copia de seguridad */}
-      <section>
-        <SectionTitle
-          icon={Copy}
-          onToggle={() => toggle("copiaSeguridad")}
-          abierto={abierto.copiaSeguridad}
+      {abierto.copiaSeguridad && (
+        <VentanaFlotante
+          clave="copiaSeguridad"
+          titulo="Copia de seguridad"
+          onCerrar={() => toggle("copiaSeguridad")}
         >
-          Copia de seguridad
-        </SectionTitle>
-        {abierto.copiaSeguridad && (
-          <div className="p-4 rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
             <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
               Antes de pedir más cambios y volver a publicar el artefacto, exporta todo (evento,
               colaboradores, mesas e invitados) y guárdalo en una nota. Tras publicar la nueva
@@ -3282,21 +3365,12 @@ function VistaAnfitrion({ data }) {
                 </button>
               </div>
             )}
-          </div>
-        )}
-      </section>
+        </VentanaFlotante>
+      )}
 
       {/* Configuración */}
-      <section>
-        <SectionTitle
-          icon={DollarSign}
-          onToggle={() => toggle("configuracion")}
-          abierto={abierto.configuracion}
-        >
-          Configuración
-        </SectionTitle>
-        {abierto.configuracion && (
-          <ModalFlotante titulo="Configuración" onCerrar={() => toggle("configuracion")}>
+      {abierto.configuracion && (
+        <VentanaFlotante clave="configuracion" titulo="Configuración" onCerrar={() => toggle("configuracion")}>
             <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
               Datos del evento (esto es lo que se ve en la portada).
             </p>
@@ -3632,8 +3706,8 @@ function VistaAnfitrion({ data }) {
                 <Trash2 size={14} /> BORRAR TODO
               </button>
             </div>
-          </ModalFlotante>
-        )}
+        </VentanaFlotante>
+      )}
 
         {rMostrarConfirmar && rCategoria && (
           <ModalFlotante
@@ -3744,19 +3818,14 @@ function VistaAnfitrion({ data }) {
             </div>
           </ModalFlotante>
         )}
-      </section>
 
       {/* Avisos */}
-      <section>
-        <SectionTitle
-          icon={Bell}
-          onToggle={() => toggle("avisos")}
-          abierto={abierto.avisos}
+      {abierto.avisos && (
+        <VentanaFlotante
+          clave="avisos"
+          titulo={`Avisos${colaboradoresPendientes.length > 0 ? ` (${colaboradoresPendientes.length})` : ""}`}
+          onCerrar={() => toggle("avisos")}
         >
-          Avisos {colaboradoresPendientes.length > 0 && `(${colaboradoresPendientes.length})`}
-        </SectionTitle>
-        {abierto.avisos && (
-          <ModalFlotante titulo="Avisos" onCerrar={() => toggle("avisos")}>
             <div className="mb-5">
               <p
                 className="text-xs uppercase mb-2"
@@ -3896,21 +3965,12 @@ function VistaAnfitrion({ data }) {
                 </div>
               )}
             </div>
-          </ModalFlotante>
-        )}
-      </section>
+        </VentanaFlotante>
+      )}
 
       {/* Versiones */}
-      <section>
-        <SectionTitle
-          icon={Clock}
-          onToggle={() => toggle("versiones")}
-          abierto={abierto.versiones}
-        >
-          Versiones
-        </SectionTitle>
-        {abierto.versiones && (
-          <div className="p-4 rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+      {abierto.versiones && (
+        <VentanaFlotante clave="versiones" titulo="Versiones" onCerrar={() => toggle("versiones")}>
             <div className="space-y-3">
               {HISTORIAL_VERSIONES.map((v) => (
                 <div
@@ -3948,9 +4008,8 @@ function VistaAnfitrion({ data }) {
                 </div>
               </div>
             )}
-          </div>
-        )}
-      </section>
+        </VentanaFlotante>
+      )}
 
       {avisoPreview && (
         <ModalFlotante
