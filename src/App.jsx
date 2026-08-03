@@ -801,6 +801,21 @@ function descargarCSV(nombreArchivo, cabeceras, filas) {
   URL.revokeObjectURL(url);
 }
 
+// Copia de seguridad en JSON de lo que se va a poner a cero, descargada al
+// dispositivo justo antes de ejecutar cualquier reinicio en bloque — para
+// poder recuperar los datos a mano si hiciera falta.
+function descargarJSON(nombreArchivo, datos) {
+  const blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 // Redimensiona una foto subida desde el dispositivo a un JPEG razonable antes
 // de guardarla como data URL, para no disparar el tamaño de lo almacenado.
 function redimensionarImagenArchivo(file, maxDim = 1600, calidad = 0.82) {
@@ -1236,7 +1251,7 @@ function GrupoFamiliarInput({ value, onCommit }) {
 }
 
 function VistaAnfitrion({ data }) {
-  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia } = data;
+  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearMesas, resetearInvitaciones, resetearAvisos, resetearAsignacionesColaborador } = data;
 
   const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
@@ -1642,6 +1657,57 @@ function VistaAnfitrion({ data }) {
     persistInvitados([]);
     persistMesas(Array.from({ length: 15 }, (_, i) => ({ numero: i + 1, capacidad: 10 })));
     persistFotosFamiliares({});
+  };
+
+  // ---------- Zona de reinicio (por secciones, sin tocar a los invitados) ----------
+  const REINICIOS = {
+    mesas: {
+      titulo: "Reiniciar mesas",
+      palabra: "MESAS",
+      descripcion:
+        "Vacía la mesa asignada de todos los invitados (vuelven a \"sin mesa\"). Los invitados y sus datos no se tocan.",
+      accion: resetearMesas,
+    },
+    invitaciones: {
+      titulo: "Reiniciar invitaciones",
+      palabra: "INVITACIONES",
+      descripcion:
+        'Pone a cero el estado de "invitación enviada" de todas las familias, para poder volver a generarlas y enviarlas. El orden manual de cada familia no se toca.',
+      accion: resetearInvitaciones,
+    },
+    avisos: {
+      titulo: "Reiniciar avisos",
+      palabra: "AVISOS",
+      descripcion:
+        'Vacía el historial de emails enviados (el panel de "Avisos"). No reenvía ni deshace ningún email ya enviado de verdad.',
+      accion: resetearAvisos,
+    },
+    colaborador: {
+      titulo: "Reiniciar colaborador",
+      palabra: "COLABORADOR",
+      descripcion:
+        "Quita la asignación de colaborador a todos los invitados (vuelven a \"sin asignar\") y limpia el aviso pendiente asociado. Ni los invitados ni los colaboradores se borran — un colaborador sigue siendo, él mismo, un invitado más.",
+      accion: resetearAsignacionesColaborador,
+    },
+  };
+  const [reinicioPendiente, setReinicioPendiente] = useState(null); // "mesas" | "invitaciones" | "avisos" | null
+  const [palabraConfirmacion, setPalabraConfirmacion] = useState("");
+  const [reiniciando, setReiniciando] = useState(false);
+
+  const confirmarReinicio = async () => {
+    const cfg = REINICIOS[reinicioPendiente];
+    if (!cfg || palabraConfirmacion.trim().toUpperCase() !== cfg.palabra) return;
+    setReiniciando(true);
+    // Copia de seguridad de TODO el evento, descargada justo antes de tocar
+    // nada — por si hiciera falta recuperar algo a mano después.
+    descargarJSON(
+      `backup-antes-de-reiniciar-${cfg.palabra.toLowerCase()}-${Date.now()}.json`,
+      JSON.parse(exportarTodo())
+    );
+    await cfg.accion();
+    setReiniciando(false);
+    setReinicioPendiente(null);
+    setPalabraConfirmacion("");
   };
 
   const exportarTodo = () => {
@@ -3377,6 +3443,31 @@ function VistaAnfitrion({ data }) {
               </Field>
             </div>
 
+            <div className="mt-4 pt-4" style={{ borderTop: `2px solid ${C.line}` }}>
+              <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
+                Zona de reinicio: pone a cero secciones concretas para volver a empezar (útil tras
+                pruebas, o para reutilizar la app en otro evento). Los invitados y sus nombres{" "}
+                <strong>nunca</strong> se borran aquí — solo estos campos. Cada botón descarga
+                automáticamente una copia de seguridad de todo el evento antes de ejecutar nada, y
+                pide escribir una palabra exacta para confirmar.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(REINICIOS).map(([clave, cfg]) => (
+                  <button
+                    key={clave}
+                    onClick={() => {
+                      setReinicioPendiente(clave);
+                      setPalabraConfirmacion("");
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
+                    style={{ border: `1px solid ${C.wax}`, color: C.wax }}
+                  >
+                    <Repeat size={14} /> {cfg.titulo}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="mt-4 pt-4" style={{ borderTop: `2px solid ${C.wax}` }}>
               <p className="text-xs mb-2" style={{ color: C.wax, fontWeight: 700 }}>
                 ⚠ Zona de peligro: esto borra evento, colaboradores, invitados, mesas y fotos —
@@ -3388,6 +3479,64 @@ function VistaAnfitrion({ data }) {
                 style={{ background: C.wax, color: "#fff" }}
               >
                 <Trash2 size={14} /> BORRAR TODO
+              </button>
+            </div>
+          </ModalFlotante>
+        )}
+
+        {reinicioPendiente && (
+          <ModalFlotante
+            titulo={REINICIOS[reinicioPendiente].titulo}
+            onCerrar={() => {
+              setReinicioPendiente(null);
+              setPalabraConfirmacion("");
+            }}
+          >
+            <p className="text-sm mb-3" style={{ color: C.charcoal }}>
+              {REINICIOS[reinicioPendiente].descripcion}
+            </p>
+            <p className="text-xs mb-3" style={{ color: C.wax }}>
+              Se descargará antes una copia de seguridad completa del evento. Esta acción no se
+              puede deshacer desde la app.
+            </p>
+            <Field
+              label={`Escribe "${REINICIOS[reinicioPendiente].palabra}" para confirmar`}
+            >
+              <TextInput
+                value={palabraConfirmacion}
+                onChange={(e) => setPalabraConfirmacion(e.target.value)}
+                placeholder={REINICIOS[reinicioPendiente].palabra}
+                className="w-full"
+              />
+            </Field>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={confirmarReinicio}
+                disabled={
+                  reiniciando ||
+                  palabraConfirmacion.trim().toUpperCase() !== REINICIOS[reinicioPendiente].palabra
+                }
+                className="px-3 py-2 rounded text-sm font-medium"
+                style={{
+                  background:
+                    palabraConfirmacion.trim().toUpperCase() === REINICIOS[reinicioPendiente].palabra
+                      ? C.wax
+                      : C.line,
+                  color: "#fff",
+                }}
+              >
+                {reiniciando ? "Reiniciando…" : "Confirmar reinicio"}
+              </button>
+              <button
+                onClick={() => {
+                  setReinicioPendiente(null);
+                  setPalabraConfirmacion("");
+                }}
+                disabled={reiniciando}
+                className="px-3 py-2 rounded text-sm"
+                style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+              >
+                Cancelar
               </button>
             </div>
           </ModalFlotante>

@@ -313,6 +313,76 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
+  const resetearMesas = useCallback(async () => {
+    if (!esAnfitrion) return false;
+    const { error } = await supabase.rpc("anfitrion_resetear_mesas", { p_token: rol });
+    if (error) {
+      avisar("No se pudieron reiniciar las mesas.", error);
+      return false;
+    }
+    const { data: todosInvitados } = await supabase.rpc("anfitrion_listar_invitados", {
+      p_token: rol,
+    });
+    if (todosInvitados) {
+      setInvitados(todosInvitados);
+      invitadosRef.current = todosInvitados;
+    }
+    return true;
+  }, [esAnfitrion, rol]);
+
+  const resetearInvitaciones = useCallback(async () => {
+    if (!esAnfitrion) return false;
+    const { error } = await supabase.rpc("anfitrion_resetear_invitaciones", { p_token: rol });
+    if (error) {
+      avisar("No se pudieron reiniciar las invitaciones.", error);
+      return false;
+    }
+    const { data: ordenFilas } = await supabase.from("orden_familias").select("*");
+    setOrdenFamiliares(
+      Object.fromEntries(
+        (ordenFilas || []).map((r) => [
+          r.grupoFamiliar,
+          {
+            orden: r.orden,
+            invitacionEnviada: r.invitacionEnviada,
+            invitacionEnviadaEn: r.invitacionEnviadaEn,
+          },
+        ])
+      )
+    );
+    return true;
+  }, [esAnfitrion]);
+
+  const resetearAvisos = useCallback(async () => {
+    if (!esAnfitrion) return false;
+    const { error } = await supabase.rpc("anfitrion_resetear_avisos", { p_token: rol });
+    if (error) {
+      avisar("No se pudo vaciar el historial de avisos.", error);
+      return false;
+    }
+    setAvisosEnviados([]);
+    return true;
+  }, [esAnfitrion, rol]);
+
+  const resetearAsignacionesColaborador = useCallback(async () => {
+    if (!esAnfitrion) return false;
+    const { error } = await supabase.rpc("anfitrion_resetear_asignaciones_colaborador", {
+      p_token: rol,
+    });
+    if (error) {
+      avisar("No se pudieron reiniciar las asignaciones de colaborador.", error);
+      return false;
+    }
+    const { data: todosInvitados } = await supabase.rpc("anfitrion_listar_invitados", {
+      p_token: rol,
+    });
+    if (todosInvitados) {
+      setInvitados(todosInvitados);
+      invitadosRef.current = todosInvitados;
+    }
+    return true;
+  }, [esAnfitrion, rol]);
+
   const enviarInvitacionFamilia = useCallback(
     async (email, asunto, html, imagenBase64) => {
       if (!esAnfitrion) return false;
@@ -354,5 +424,9 @@ export function useLedgerData(rol) {
     avisosEnviados,
     ordenFamiliares,
     persistOrdenFamiliares,
+    resetearMesas,
+    resetearInvitaciones,
+    resetearAvisos,
+    resetearAsignacionesColaborador,
   };
 }

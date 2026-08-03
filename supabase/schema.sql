@@ -626,6 +626,65 @@ as $$
   limit 200;
 $$;
 
+-- ============================================================
+-- ZONA DE REINICIO ("botón nuclear"): pone a cero secciones
+-- concretas sin borrar nunca al invitado en sí (nombre, apellido,
+-- grupo familiar, email...). Pensado para poder reutilizar la app
+-- en otro evento, o limpiar datos de pruebas antes del real.
+-- ============================================================
+create or replace function anfitrion_resetear_mesas(p_token uuid)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token <> (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+  update invitados set "mesa" = null;
+end;
+$$;
+
+create or replace function anfitrion_resetear_invitaciones(p_token uuid)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token <> (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+  update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null;
+end;
+$$;
+
+create or replace function anfitrion_resetear_avisos(p_token uuid)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token <> (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+  delete from avisos_enviados;
+end;
+$$;
+
+-- Quita la asignación de colaborador a TODOS los invitados (vuelven a
+-- "sin asignar"). Ni el invitado ni el colaborador se borran — un
+-- colaborador es, él mismo, un invitado más que además ayuda a
+-- gestionar a otros. El aviso pendiente también se limpia: si la
+-- asignación era de prueba, el aviso que generó también lo era.
+create or replace function anfitrion_resetear_asignaciones_colaborador(p_token uuid)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token <> (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+  update invitados set "colaboradorId" = null, "avisoPendiente" = false;
+end;
+$$;
+
 -- Permisos de ejecución (los permisos de tabla siguen revocados,
 -- solo estas funciones son alcanzables):
 grant execute on function anfitrion_verificar_token(uuid) to anon;
@@ -636,6 +695,10 @@ grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
 grant execute on function anfitrion_avisar_colaborador(uuid, uuid) to anon;
 grant execute on function anfitrion_enviar_invitacion_familia(uuid, text, text, text, text) to anon;
 grant execute on function anfitrion_listar_avisos_enviados(uuid) to anon;
+grant execute on function anfitrion_resetear_mesas(uuid) to anon;
+grant execute on function anfitrion_resetear_invitaciones(uuid) to anon;
+grant execute on function anfitrion_resetear_avisos(uuid) to anon;
+grant execute on function anfitrion_resetear_asignaciones_colaborador(uuid) to anon;
 grant execute on function colaborador_mi_perfil(uuid) to anon;
 grant execute on function colaborador_mis_invitados(uuid) to anon;
 grant execute on function colaborador_guardar_invitado(uuid, uuid, jsonb) to anon;
