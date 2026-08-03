@@ -1251,7 +1251,7 @@ function GrupoFamiliarInput({ value, onCommit }) {
 }
 
 function VistaAnfitrion({ data }) {
-  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearMesas, resetearInvitaciones, resetearAvisos, resetearAsignacionesColaborador } = data;
+  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearAvisos, resetearPorInvitados } = data;
 
   const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
@@ -1660,54 +1660,105 @@ function VistaAnfitrion({ data }) {
   };
 
   // ---------- Zona de reinicio (por secciones, sin tocar a los invitados) ----------
-  const REINICIOS = {
-    mesas: {
-      titulo: "Reiniciar mesas",
-      palabra: "MESAS",
-      descripcion:
-        "Vacía la mesa asignada de todos los invitados (vuelven a \"sin mesa\"). Los invitados y sus datos no se tocan.",
-      accion: resetearMesas,
+  // ---------- Reinicio "por invitados": colaborador -> alcance -> categoría ----------
+  const CATEGORIAS_RESET = {
+    datos: {
+      titulo: "Datos del invitado",
+      familiar: false,
+      descripcion: "Vacía año nacimiento, año de boda, email, canción, alergias y observaciones.",
     },
-    invitaciones: {
-      titulo: "Reiniciar invitaciones",
-      palabra: "INVITACIONES",
-      descripcion:
-        'Pone a cero el estado de "invitación enviada" de todas las familias, para poder volver a generarlas y enviarlas. El orden manual de cada familia no se toca.',
-      accion: resetearInvitaciones,
+    pago: {
+      titulo: "Pago",
+      familiar: false,
+      descripcion: 'Vuelve a "no pagado".',
     },
-    avisos: {
-      titulo: "Reiniciar avisos",
-      palabra: "AVISOS",
-      descripcion:
-        'Vacía el historial de emails enviados (el panel de "Avisos"). No reenvía ni deshace ningún email ya enviado de verdad.',
-      accion: resetearAvisos,
+    mesa: {
+      titulo: "Mesa",
+      familiar: false,
+      descripcion: 'Quita la mesa asignada (vuelve a "sin mesa").',
     },
-    colaborador: {
-      titulo: "Reiniciar colaborador",
-      palabra: "COLABORADOR",
+    asignacion: {
+      titulo: "Asignación de colaborador",
+      familiar: false,
       descripcion:
-        "Quita la asignación de colaborador a todos los invitados (vuelven a \"sin asignar\") y limpia el aviso pendiente asociado. Ni los invitados ni los colaboradores se borran — un colaborador sigue siendo, él mismo, un invitado más.",
-      accion: resetearAsignacionesColaborador,
+        'Quita la asignación de colaborador (vuelve a "sin asignar"). Ni el invitado ni el colaborador se borran.',
+    },
+    foto: {
+      titulo: "Foto familiar",
+      familiar: true,
+      descripcion: "Borra la foto guardada de la familia.",
+    },
+    invitacion: {
+      titulo: "Invitación",
+      familiar: true,
+      descripcion: 'Pone a cero el aviso de "invitación enviada" de la familia.',
     },
   };
-  const [reinicioPendiente, setReinicioPendiente] = useState(null); // "mesas" | "invitaciones" | "avisos" | null
-  const [palabraConfirmacion, setPalabraConfirmacion] = useState("");
-  const [reiniciando, setReiniciando] = useState(false);
+  // Cualquier reinicio que toque invitados limpia también su aviso
+  // pendiente — si la asignación o el dato era de prueba, el aviso que
+  // generó también lo era (se aplica siempre en el propio RPC).
 
-  const confirmarReinicio = async () => {
-    const cfg = REINICIOS[reinicioPendiente];
-    if (!cfg || palabraConfirmacion.trim().toUpperCase() !== cfg.palabra) return;
-    setReiniciando(true);
-    // Copia de seguridad de TODO el evento, descargada justo antes de tocar
-    // nada — por si hiciera falta recuperar algo a mano después.
+  const [rColaborador, setRColaborador] = useState(""); // "" = todos los colaboradores
+  const [rAlcance, setRAlcance] = useState("todos"); // "todos" | "familia" | "invitado"
+  const [rFamiliaClave, setRFamiliaClave] = useState("");
+  const [rInvitadoId, setRInvitadoId] = useState("");
+  const [rCategoria, setRCategoria] = useState("");
+  const [rPalabra, setRPalabra] = useState("");
+  const [rEjecutando, setREjecutando] = useState(false);
+  const [rMostrarConfirmar, setRMostrarConfirmar] = useState(false);
+
+  const invitadosParaReset = rColaborador
+    ? invitados.filter((g) => g.colaboradorId === rColaborador)
+    : invitados;
+
+  const familiasParaReset = (() => {
+    const vistos = new Map();
+    invitadosParaReset.forEach((g) => {
+      const clave = g.grupoFamiliar || g.apellido || g.id;
+      if (!vistos.has(clave)) vistos.set(clave, g.apellido || clave);
+    });
+    return Array.from(vistos.entries()).map(([clave, etiqueta]) => ({ clave, etiqueta }));
+  })();
+
+  const invitadoIdsParaReset = (() => {
+    if (rAlcance === "invitado") return rInvitadoId ? [rInvitadoId] : [];
+    if (rAlcance === "familia") {
+      if (!rFamiliaClave) return [];
+      return invitadosParaReset
+        .filter((g) => (g.grupoFamiliar || g.apellido || g.id) === rFamiliaClave)
+        .map((g) => g.id);
+    }
+    return invitadosParaReset.map((g) => g.id);
+  })();
+
+  const confirmarResetPorInvitados = async () => {
+    if (rPalabra.trim().toUpperCase() !== "REINICIAR") return;
+    if (invitadoIdsParaReset.length === 0 || !rCategoria) return;
+    setREjecutando(true);
     descargarJSON(
-      `backup-antes-de-reiniciar-${cfg.palabra.toLowerCase()}-${Date.now()}.json`,
+      `backup-antes-de-reiniciar-${rCategoria}-${Date.now()}.json`,
       JSON.parse(exportarTodo())
     );
-    await cfg.accion();
-    setReiniciando(false);
-    setReinicioPendiente(null);
-    setPalabraConfirmacion("");
+    await resetearPorInvitados(invitadoIdsParaReset, rCategoria);
+    setREjecutando(false);
+    setRMostrarConfirmar(false);
+    setRPalabra("");
+    setRCategoria("");
+  };
+
+  // ---------- Reinicio de avisos (historial global, sin vínculo a invitado/colaborador) ----------
+  const [reinicioAvisosPendiente, setReinicioAvisosPendiente] = useState(false);
+  const [palabraAvisos, setPalabraAvisos] = useState("");
+  const [reiniciandoAvisos, setReiniciandoAvisos] = useState(false);
+
+  const confirmarReinicioAvisos = async () => {
+    if (palabraAvisos.trim().toUpperCase() !== "AVISOS") return;
+    setReiniciandoAvisos(true);
+    descargarJSON(`backup-antes-de-reiniciar-avisos-${Date.now()}.json`, JSON.parse(exportarTodo()));
+    await resetearAvisos();
+    setReiniciandoAvisos(false);
+    setReinicioAvisosPendiente(false);
+    setPalabraAvisos("");
   };
 
   const exportarTodo = () => {
@@ -3444,27 +3495,122 @@ function VistaAnfitrion({ data }) {
             </div>
 
             <div className="mt-4 pt-4" style={{ borderTop: `2px solid ${C.line}` }}>
-              <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
-                Zona de reinicio: pone a cero secciones concretas para volver a empezar (útil tras
-                pruebas, o para reutilizar la app en otro evento). Los invitados y sus nombres{" "}
-                <strong>nunca</strong> se borran aquí — solo estos campos. Cada botón descarga
-                automáticamente una copia de seguridad de todo el evento antes de ejecutar nada, y
-                pide escribir una palabra exacta para confirmar.
+              <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
+                Zona de reinicio: pone a cero campos concretos de los invitados de un colaborador
+                (útil tras pruebas, o para reutilizar la app en otro evento). Los invitados y los
+                colaboradores <strong>nunca</strong> se borran aquí — solo los campos que elijas.
+                Se descarga automáticamente una copia de seguridad de todo el evento antes de
+                ejecutar nada, y hay que escribir "REINICIAR" para confirmar.
               </p>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(REINICIOS).map(([clave, cfg]) => (
-                  <button
-                    key={clave}
-                    onClick={() => {
-                      setReinicioPendiente(clave);
-                      setPalabraConfirmacion("");
+              <div className="flex flex-wrap items-end gap-2 mb-2">
+                <Field label="Colaborador">
+                  <select
+                    value={rColaborador}
+                    onChange={(e) => {
+                      setRColaborador(e.target.value);
+                      setRAlcance("todos");
+                      setRFamiliaClave("");
+                      setRInvitadoId("");
                     }}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-                    style={{ border: `1px solid ${C.wax}`, color: C.wax }}
+                    style={{ ...inputStyle, minWidth: 200 }}
                   >
-                    <Repeat size={14} /> {cfg.titulo}
-                  </button>
-                ))}
+                    <option value="">Todos los colaboradores</option>
+                    {colaboradores.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Alcance">
+                  <select
+                    value={rAlcance}
+                    onChange={(e) => {
+                      setRAlcance(e.target.value);
+                      setRFamiliaClave("");
+                      setRInvitadoId("");
+                    }}
+                    style={{ ...inputStyle, minWidth: 180 }}
+                  >
+                    <option value="todos">Todos sus invitados</option>
+                    <option value="familia">Una familia en concreto</option>
+                    <option value="invitado">Un invitado en concreto</option>
+                  </select>
+                </Field>
+                {rAlcance === "familia" && (
+                  <Field label="Familia">
+                    <select
+                      value={rFamiliaClave}
+                      onChange={(e) => setRFamiliaClave(e.target.value)}
+                      style={{ ...inputStyle, minWidth: 200 }}
+                    >
+                      <option value="">Elige una familia…</option>
+                      {familiasParaReset.map((f) => (
+                        <option key={f.clave} value={f.clave}>
+                          {f.etiqueta}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+                {rAlcance === "invitado" && (
+                  <Field label="Invitado">
+                    <select
+                      value={rInvitadoId}
+                      onChange={(e) => setRInvitadoId(e.target.value)}
+                      style={{ ...inputStyle, minWidth: 220 }}
+                    >
+                      <option value="">Elige un invitado…</option>
+                      {ordenarPorApellidoNombre(invitadosParaReset).map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.apellido}, {g.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {Object.entries(CATEGORIAS_RESET)
+                  .filter(([, cfg]) => !cfg.familiar || rAlcance !== "invitado")
+                  .map(([clave, cfg]) => (
+                    <button
+                      key={clave}
+                      onClick={() => {
+                        setRCategoria(clave);
+                        setRMostrarConfirmar(true);
+                        setRPalabra("");
+                      }}
+                      disabled={invitadoIdsParaReset.length === 0}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
+                      style={{
+                        border: `1px solid ${C.wax}`,
+                        color: invitadoIdsParaReset.length === 0 ? C.line : C.wax,
+                      }}
+                    >
+                      <Repeat size={14} /> {cfg.titulo}
+                    </button>
+                  ))}
+              </div>
+              <p className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
+                {rAlcance === "invitado"
+                  ? rInvitadoId
+                    ? "Afecta a 1 invitado."
+                    : "Elige un invitado arriba."
+                  : rAlcance === "familia"
+                  ? rFamiliaClave
+                    ? `Afecta a ${invitadoIdsParaReset.length} invitado(s) de esa familia.`
+                    : "Elige una familia arriba."
+                  : `Afecta a ${invitadoIdsParaReset.length} invitado(s).`}
+              </p>
+              <div className="mt-3 pt-3" style={{ borderTop: `1px dashed ${C.line}` }}>
+                <button
+                  onClick={() => setReinicioAvisosPendiente(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
+                  style={{ border: `1px solid ${C.wax}`, color: C.wax }}
+                >
+                  <Repeat size={14} /> Reiniciar avisos (historial de emails)
+                </button>
               </div>
             </div>
 
@@ -3484,55 +3630,107 @@ function VistaAnfitrion({ data }) {
           </ModalFlotante>
         )}
 
-        {reinicioPendiente && (
+        {rMostrarConfirmar && rCategoria && (
           <ModalFlotante
-            titulo={REINICIOS[reinicioPendiente].titulo}
+            titulo={CATEGORIAS_RESET[rCategoria].titulo}
             onCerrar={() => {
-              setReinicioPendiente(null);
-              setPalabraConfirmacion("");
+              setRMostrarConfirmar(false);
+              setRPalabra("");
             }}
           >
             <p className="text-sm mb-3" style={{ color: C.charcoal }}>
-              {REINICIOS[reinicioPendiente].descripcion}
+              {CATEGORIAS_RESET[rCategoria].descripcion} Afecta a {invitadoIdsParaReset.length}{" "}
+              invitado(s)
+              {rColaborador
+                ? ` de ${colaboradores.find((c) => c.id === rColaborador)?.nombre || "ese colaborador"}`
+                : " (todos los colaboradores)"}
+              {rAlcance === "familia" && rFamiliaClave ? `, familia "${rFamiliaClave}"` : ""}
+              {rAlcance === "invitado" && rInvitadoId
+                ? `, solo ${invitados.find((g) => g.id === rInvitadoId)?.nombre || "ese invitado"}`
+                : ""}
+              .
             </p>
             <p className="text-xs mb-3" style={{ color: C.wax }}>
               Se descargará antes una copia de seguridad completa del evento. Esta acción no se
               puede deshacer desde la app.
             </p>
-            <Field
-              label={`Escribe "${REINICIOS[reinicioPendiente].palabra}" para confirmar`}
-            >
+            <Field label='Escribe "REINICIAR" para confirmar'>
               <TextInput
-                value={palabraConfirmacion}
-                onChange={(e) => setPalabraConfirmacion(e.target.value)}
-                placeholder={REINICIOS[reinicioPendiente].palabra}
+                value={rPalabra}
+                onChange={(e) => setRPalabra(e.target.value)}
+                placeholder="REINICIAR"
                 className="w-full"
               />
             </Field>
             <div className="flex gap-2 mt-3">
               <button
-                onClick={confirmarReinicio}
-                disabled={
-                  reiniciando ||
-                  palabraConfirmacion.trim().toUpperCase() !== REINICIOS[reinicioPendiente].palabra
-                }
+                onClick={confirmarResetPorInvitados}
+                disabled={rEjecutando || rPalabra.trim().toUpperCase() !== "REINICIAR"}
                 className="px-3 py-2 rounded text-sm font-medium"
                 style={{
-                  background:
-                    palabraConfirmacion.trim().toUpperCase() === REINICIOS[reinicioPendiente].palabra
-                      ? C.wax
-                      : C.line,
+                  background: rPalabra.trim().toUpperCase() === "REINICIAR" ? C.wax : C.line,
                   color: "#fff",
                 }}
               >
-                {reiniciando ? "Reiniciando…" : "Confirmar reinicio"}
+                {rEjecutando ? "Reiniciando…" : "Confirmar reinicio"}
               </button>
               <button
                 onClick={() => {
-                  setReinicioPendiente(null);
-                  setPalabraConfirmacion("");
+                  setRMostrarConfirmar(false);
+                  setRPalabra("");
                 }}
-                disabled={reiniciando}
+                disabled={rEjecutando}
+                className="px-3 py-2 rounded text-sm"
+                style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </ModalFlotante>
+        )}
+
+        {reinicioAvisosPendiente && (
+          <ModalFlotante
+            titulo="Reiniciar avisos"
+            onCerrar={() => {
+              setReinicioAvisosPendiente(false);
+              setPalabraAvisos("");
+            }}
+          >
+            <p className="text-sm mb-3" style={{ color: C.charcoal }}>
+              Vacía el historial de emails enviados (el panel de "Avisos"). No reenvía ni deshace
+              ningún email ya enviado de verdad.
+            </p>
+            <p className="text-xs mb-3" style={{ color: C.wax }}>
+              Se descargará antes una copia de seguridad completa del evento. Esta acción no se
+              puede deshacer desde la app.
+            </p>
+            <Field label='Escribe "AVISOS" para confirmar'>
+              <TextInput
+                value={palabraAvisos}
+                onChange={(e) => setPalabraAvisos(e.target.value)}
+                placeholder="AVISOS"
+                className="w-full"
+              />
+            </Field>
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={confirmarReinicioAvisos}
+                disabled={reiniciandoAvisos || palabraAvisos.trim().toUpperCase() !== "AVISOS"}
+                className="px-3 py-2 rounded text-sm font-medium"
+                style={{
+                  background: palabraAvisos.trim().toUpperCase() === "AVISOS" ? C.wax : C.line,
+                  color: "#fff",
+                }}
+              >
+                {reiniciandoAvisos ? "Reiniciando…" : "Confirmar reinicio"}
+              </button>
+              <button
+                onClick={() => {
+                  setReinicioAvisosPendiente(false);
+                  setPalabraAvisos("");
+                }}
+                disabled={reiniciandoAvisos}
                 className="px-3 py-2 rounded text-sm"
                 style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
               >

@@ -313,46 +313,6 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
-  const resetearMesas = useCallback(async () => {
-    if (!esAnfitrion) return false;
-    const { error } = await supabase.rpc("anfitrion_resetear_mesas", { p_token: rol });
-    if (error) {
-      avisar("No se pudieron reiniciar las mesas.", error);
-      return false;
-    }
-    const { data: todosInvitados } = await supabase.rpc("anfitrion_listar_invitados", {
-      p_token: rol,
-    });
-    if (todosInvitados) {
-      setInvitados(todosInvitados);
-      invitadosRef.current = todosInvitados;
-    }
-    return true;
-  }, [esAnfitrion, rol]);
-
-  const resetearInvitaciones = useCallback(async () => {
-    if (!esAnfitrion) return false;
-    const { error } = await supabase.rpc("anfitrion_resetear_invitaciones", { p_token: rol });
-    if (error) {
-      avisar("No se pudieron reiniciar las invitaciones.", error);
-      return false;
-    }
-    const { data: ordenFilas } = await supabase.from("orden_familias").select("*");
-    setOrdenFamiliares(
-      Object.fromEntries(
-        (ordenFilas || []).map((r) => [
-          r.grupoFamiliar,
-          {
-            orden: r.orden,
-            invitacionEnviada: r.invitacionEnviada,
-            invitacionEnviadaEn: r.invitacionEnviadaEn,
-          },
-        ])
-      )
-    );
-    return true;
-  }, [esAnfitrion]);
-
   const resetearAvisos = useCallback(async () => {
     if (!esAnfitrion) return false;
     const { error } = await supabase.rpc("anfitrion_resetear_avisos", { p_token: rol });
@@ -364,24 +324,53 @@ export function useLedgerData(rol) {
     return true;
   }, [esAnfitrion, rol]);
 
-  const resetearAsignacionesColaborador = useCallback(async () => {
-    if (!esAnfitrion) return false;
-    const { error } = await supabase.rpc("anfitrion_resetear_asignaciones_colaborador", {
-      p_token: rol,
-    });
-    if (error) {
-      avisar("No se pudieron reiniciar las asignaciones de colaborador.", error);
-      return false;
-    }
-    const { data: todosInvitados } = await supabase.rpc("anfitrion_listar_invitados", {
-      p_token: rol,
-    });
-    if (todosInvitados) {
-      setInvitados(todosInvitados);
-      invitadosRef.current = todosInvitados;
-    }
-    return true;
-  }, [esAnfitrion, rol]);
+  // Reinicio "por invitados": categoria es "datos" | "pago" | "mesa" |
+  // "asignacion" | "foto" | "invitacion" — el conjunto de invitados afectados
+  // (todos los de un colaborador, una familia, o uno solo) se calcula en la
+  // propia pantalla y aquí solo se manda la lista de ids ya resuelta.
+  const resetearPorInvitados = useCallback(
+    async (invitadoIds, categoria) => {
+      if (!esAnfitrion || !invitadoIds || invitadoIds.length === 0) return false;
+      const { error } = await supabase.rpc("anfitrion_resetear_por_invitados", {
+        p_token: rol,
+        p_invitado_ids: invitadoIds,
+        p_categoria: categoria,
+      });
+      if (error) {
+        avisar("No se pudo ejecutar el reinicio.", error);
+        return false;
+      }
+      const [{ data: todosInvitados }, { data: fotosFilas }, { data: ordenFilas }] =
+        await Promise.all([
+          supabase.rpc("anfitrion_listar_invitados", { p_token: rol }),
+          supabase.from("fotos_familiares").select("*"),
+          supabase.from("orden_familias").select("*"),
+        ]);
+      if (todosInvitados) {
+        setInvitados(todosInvitados);
+        invitadosRef.current = todosInvitados;
+      }
+      if (fotosFilas) {
+        setFotosFamiliares(Object.fromEntries(fotosFilas.map((r) => [r.grupoFamiliar, r.url])));
+      }
+      if (ordenFilas) {
+        setOrdenFamiliares(
+          Object.fromEntries(
+            ordenFilas.map((r) => [
+              r.grupoFamiliar,
+              {
+                orden: r.orden,
+                invitacionEnviada: r.invitacionEnviada,
+                invitacionEnviadaEn: r.invitacionEnviadaEn,
+              },
+            ])
+          )
+        );
+      }
+      return true;
+    },
+    [esAnfitrion, rol]
+  );
 
   const enviarInvitacionFamilia = useCallback(
     async (email, asunto, html, imagenBase64) => {
@@ -424,9 +413,7 @@ export function useLedgerData(rol) {
     avisosEnviados,
     ordenFamiliares,
     persistOrdenFamiliares,
-    resetearMesas,
-    resetearInvitaciones,
     resetearAvisos,
-    resetearAsignacionesColaborador,
+    resetearPorInvitados,
   };
 }

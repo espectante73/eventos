@@ -627,35 +627,11 @@ as $$
 $$;
 
 -- ============================================================
--- ZONA DE REINICIO ("botón nuclear"): pone a cero secciones
--- concretas sin borrar nunca al invitado en sí (nombre, apellido,
--- grupo familiar, email...). Pensado para poder reutilizar la app
--- en otro evento, o limpiar datos de pruebas antes del real.
+-- ZONA DE REINICIO ("botón nuclear"): pone a cero campos concretos
+-- sin borrar nunca al invitado ni al colaborador en sí. Pensado para
+-- poder reutilizar la app en otro evento, o limpiar datos de pruebas
+-- antes del real.
 -- ============================================================
-create or replace function anfitrion_resetear_mesas(p_token uuid)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token <> (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-  update invitados set "mesa" = null where true;
-end;
-$$;
-
-create or replace function anfitrion_resetear_invitaciones(p_token uuid)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token <> (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-  update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null where true;
-end;
-$$;
-
 create or replace function anfitrion_resetear_avisos(p_token uuid)
 returns void
 language plpgsql security definer set search_path = public, pg_temp
@@ -668,12 +644,19 @@ begin
 end;
 $$;
 
--- Quita la asignación de colaborador a TODOS los invitados (vuelven a
--- "sin asignar"). Ni el invitado ni el colaborador se borran — un
--- colaborador es, él mismo, un invitado más que además ayuda a
--- gestionar a otros. El aviso pendiente también se limpia: si la
--- asignación era de prueba, el aviso que generó también lo era.
-create or replace function anfitrion_resetear_asignaciones_colaborador(p_token uuid)
+-- Reinicio "por invitados": el conjunto exacto de invitados afectados
+-- (todos los de un colaborador, una familia, o uno solo) se calcula en la
+-- propia app y se manda aquí ya resuelto como lista de ids — así no hace
+-- falta duplicar en SQL la lógica de "clave de familia" (grupoFamiliar,
+-- con reserva a apellido) que ya usa el frontend en varios sitios.
+-- Categorías a nivel de invitado (datos/pago/mesa/asignación) limpian
+-- también el aviso pendiente: si lo que se resetea era de prueba, el
+-- aviso que generó también lo era.
+create or replace function anfitrion_resetear_por_invitados(
+  p_token uuid,
+  p_invitado_ids uuid[],
+  p_categoria text
+)
 returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
@@ -681,7 +664,34 @@ begin
   if p_token <> (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
-  update invitados set "colaboradorId" = null, "avisoPendiente" = false where true;
+
+  if p_categoria = 'datos' then
+    update invitados set
+      "anioNacimiento" = '', "anioBoda" = '', "email" = '',
+      "cancion" = '', "alergias" = '', "observaciones" = '',
+      "avisoPendiente" = false
+    where "id" = any(p_invitado_ids);
+  elsif p_categoria = 'pago' then
+    update invitados set "pagado" = false, "avisoPendiente" = false
+    where "id" = any(p_invitado_ids);
+  elsif p_categoria = 'mesa' then
+    update invitados set "mesa" = null, "avisoPendiente" = false
+    where "id" = any(p_invitado_ids);
+  elsif p_categoria = 'asignacion' then
+    update invitados set "colaboradorId" = null, "avisoPendiente" = false
+    where "id" = any(p_invitado_ids);
+  elsif p_categoria = 'foto' then
+    delete from fotos_familiares where "grupoFamiliar" in (
+      select distinct coalesce(nullif("grupoFamiliar", ''), "apellido")
+      from invitados where "id" = any(p_invitado_ids)
+    );
+  elsif p_categoria = 'invitacion' then
+    update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null
+    where "grupoFamiliar" in (
+      select distinct coalesce(nullif("grupoFamiliar", ''), "apellido")
+      from invitados where "id" = any(p_invitado_ids)
+    );
+  end if;
 end;
 $$;
 
@@ -695,10 +705,8 @@ grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
 grant execute on function anfitrion_avisar_colaborador(uuid, uuid) to anon;
 grant execute on function anfitrion_enviar_invitacion_familia(uuid, text, text, text, text) to anon;
 grant execute on function anfitrion_listar_avisos_enviados(uuid) to anon;
-grant execute on function anfitrion_resetear_mesas(uuid) to anon;
-grant execute on function anfitrion_resetear_invitaciones(uuid) to anon;
 grant execute on function anfitrion_resetear_avisos(uuid) to anon;
-grant execute on function anfitrion_resetear_asignaciones_colaborador(uuid) to anon;
+grant execute on function anfitrion_resetear_por_invitados(uuid, uuid[], text) to anon;
 grant execute on function colaborador_mi_perfil(uuid) to anon;
 grant execute on function colaborador_mis_invitados(uuid) to anon;
 grant execute on function colaborador_guardar_invitado(uuid, uuid, jsonb) to anon;
