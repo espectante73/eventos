@@ -675,6 +675,84 @@ function InfoItem({ icon: Icon, label, value }) {
   );
 }
 
+// Mesa redonda con sillas alrededor (número de sillas = capacidad, con un
+// máximo visual para no amontonarlas si la capacidad es muy alta). El
+// tamaño del círculo es fijo; solo cambia cuántas sillas se dibujan.
+function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapacidad, onEliminar }) {
+  const sillas = Math.max(0, Math.min(m.capacidad, 16));
+  const diametro = 84;
+  const lienzo = diametro + 26;
+  const radioSillas = diametro / 2 + 9;
+  const centro = lienzo / 2;
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div className="relative" style={{ width: lienzo, height: lienzo }}>
+        {Array.from({ length: sillas }).map((_, i) => {
+          const angulo = (2 * Math.PI * i) / sillas - Math.PI / 2;
+          const cx = centro + radioSillas * Math.cos(angulo);
+          const cy = centro + radioSillas * Math.sin(angulo);
+          return (
+            <div
+              key={i}
+              className="absolute rounded-sm"
+              style={{
+                width: 10,
+                height: 7,
+                left: cx - 5,
+                top: cy - 3.5,
+                background: C.paperDark,
+                border: `1px solid ${C.line}`,
+                transform: `rotate(${(angulo * 180) / Math.PI + 90}deg)`,
+              }}
+            />
+          );
+        })}
+        <div
+          className="absolute rounded-full flex items-center justify-center"
+          style={{
+            width: diametro,
+            height: diametro,
+            left: (lienzo - diametro) / 2,
+            top: (lienzo - diametro) / 2,
+            background: lleno || tieneAlergias ? "#F0D3C8" : "#E3E9AE",
+            border: `2px solid ${tieneAlergias || lleno ? C.wax : C.line}`,
+          }}
+        >
+          <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 22, color: C.ink }}>
+            {m.numero}
+          </span>
+        </div>
+        {onEliminar && (
+          <button
+            onClick={onEliminar}
+            className="absolute rounded-full flex items-center justify-center"
+            style={{ width: 18, height: 18, top: -2, right: -2, background: C.wax, color: "#fff" }}
+            title="Quitar esta mesa"
+          >
+            <X size={11} />
+          </button>
+        )}
+      </div>
+      <input
+        type="number"
+        min={0}
+        value={m.capacidad}
+        onChange={(e) => onCambiarCapacidad(e.target.value)}
+        style={{ ...inputStyle, width: 56, textAlign: "center", padding: "2px 4px" }}
+      />
+      <div className="text-xs" style={{ color: lleno ? C.wax : C.charcoal, opacity: 0.75 }}>
+        {ocupados}/{m.capacidad}
+      </div>
+      {tieneAlergias && (
+        <div className="text-xs" style={{ color: C.wax, fontWeight: 700 }}>
+          ⚠ alergias
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ---------- Anfitrión view ----------
 
 function BuscadorInvitado({ invitados, invitadoId, onSeleccionar, placeholder }) {
@@ -1649,6 +1727,22 @@ function VistaAnfitrion({ data }) {
     );
   };
 
+  const anadirMesa = () => {
+    const siguiente = mesas.reduce((max, m) => Math.max(max, m.numero), 0) + 1;
+    persistMesas([...mesas, { numero: siguiente, capacidad: 10 }]);
+  };
+
+  const eliminarMesa = (numero) => {
+    const ocupada = invitados.some((g) => g.mesa === numero);
+    if (ocupada) {
+      window.alert(
+        `La mesa ${numero} tiene invitados asignados — quítalos de esa mesa antes de eliminarla.`
+      );
+      return;
+    }
+    persistMesas(mesas.filter((m) => m.numero !== numero));
+  };
+
   // Auto-asignación de mesas: nunca reparte un grupo familiar entre varias
   // mesas por su cuenta. Si parte del grupo ya está sentada a mano, intenta
   // completar el resto en esa misma mesa; si no cabe entero (ahí o en
@@ -1810,7 +1904,7 @@ function VistaAnfitrion({ data }) {
     });
     persistColaboradores([]);
     persistInvitados([]);
-    persistMesas(Array.from({ length: 15 }, (_, i) => ({ numero: i + 1, capacidad: 10 })));
+    persistMesas([]);
     persistFotosFamiliares({});
   };
 
@@ -2579,9 +2673,16 @@ function VistaAnfitrion({ data }) {
             >
               Auto-asignar (preliminar)
             </button>
+            <button
+              onClick={anadirMesa}
+              className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap"
+              style={{ border: `1px solid ${C.ink}`, color: C.ink }}
+            >
+              <Plus size={14} /> Añadir mesa
+            </button>
           </div>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+        <div className="flex flex-wrap gap-4">
           {mesas.map((m) => {
             const ocupados = ocupacionMesa(m.numero);
             const lleno = ocupados >= m.capacidad && m.capacidad > 0;
@@ -2589,52 +2690,22 @@ function VistaAnfitrion({ data }) {
               (g) => g.mesa === m.numero && g.confirmado && tieneAlergiaReal(g)
             );
             return (
-              <div
+              <MesaRedonda
                 key={m.numero}
-                className="p-2 rounded text-center"
-                style={{
-                  background: "#fff",
-                  border: `2px solid ${tieneAlergias ? C.wax : lleno ? C.wax : C.line}`,
-                }}
-              >
-                <div
-                  className="text-xs uppercase flex items-center justify-center gap-1"
-                  style={{
-                    color: lleno || tieneAlergias ? C.wax : C.gold,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontWeight: lleno || tieneAlergias ? 700 : 400,
-                  }}
-                >
-                  {tieneAlergias && <AlertTriangle size={11} />}
-                  Mesa {m.numero}
-                </div>
-                <input
-                  type="number"
-                  min={0}
-                  value={m.capacidad}
-                  onChange={(e) => cambiarCapacidadMesa(m.numero, e.target.value)}
-                  style={{
-                    ...inputStyle,
-                    width: "100%",
-                    textAlign: "center",
-                    padding: "3px 5px",
-                    marginTop: 4,
-                  }}
-                />
-                <div
-                  className="text-xs mt-1"
-                  style={{ color: lleno ? C.wax : C.charcoal, opacity: 0.75 }}
-                >
-                  {ocupados}/{m.capacidad}
-                </div>
-                {tieneAlergias && (
-                  <div className="text-xs mt-1" style={{ color: C.wax, fontWeight: 700 }}>
-                    ⚠ alergias
-                  </div>
-                )}
-              </div>
+                m={m}
+                ocupados={ocupados}
+                lleno={lleno}
+                tieneAlergias={tieneAlergias}
+                onCambiarCapacidad={(v) => cambiarCapacidadMesa(m.numero, v)}
+                onEliminar={() => eliminarMesa(m.numero)}
+              />
             );
           })}
+          {mesas.length === 0 && (
+            <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+              Todavía no hay mesas — pulsa "Añadir mesa" para crear la primera.
+            </p>
+          )}
         </div>
         </VentanaFlotante>
       )}

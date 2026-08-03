@@ -56,12 +56,12 @@ alter table invitados
 -- ============================================================
 -- 3. MESAS (1 a 15, número fijo)
 -- ============================================================
+-- Cantidad de mesas libre (se añaden/quitan una a una desde la app) — sin
+-- límite fijo de 15 como en versiones anteriores.
 create table mesas (
-  "numero"     integer primary key check ("numero" between 1 and 15),
+  "numero"     integer primary key check ("numero" > 0),
   "capacidad"  integer not null default 10 check ("capacidad" >= 0)
 );
-insert into mesas ("numero", "capacidad")
-  select n, 10 from generate_series(1, 15) as n;
 
 alter table invitados
   add constraint invitados_mesa_fk
