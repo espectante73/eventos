@@ -141,9 +141,14 @@ revoke all on table anfitrion_secreto from anon, authenticated;
 --    cerrada, solo legible desde dentro de enviar_email().
 -- ============================================================
 create table config_secretos (
-  "id"              boolean primary key default true check ("id"),
-  "resendApiKey"    text not null default '',
-  "emailRemitente"  text not null default 'onboarding@resend.dev'
+  "id"                      boolean primary key default true check ("id"),
+  "resendApiKey"            text not null default '',
+  -- Remitente por defecto: avisos internos (colaborador/anfitrión).
+  "emailRemitente"          text not null default 'onboarding@resend.dev',
+  -- Remitente específico para el email de invitación a la familia
+  -- (distinto del anterior, para que el invitado vea un remitente
+  -- pensado para él, no uno "interno" de gestión).
+  "emailRemitenteFamilia"   text not null default 'onboarding@resend.dev'
 );
 insert into config_secretos ("id") values (true);
 alter table config_secretos enable row level security;
@@ -200,9 +205,17 @@ drop function if exists enviar_email(text, text, text);
 -- "p_adjunto_*" son opcionales — se usan para adjuntar la imagen de la
 -- invitación (ver anfitrion_enviar_invitacion_familia). El resto de
 -- avisos de la app los deja vacíos, sin cambiar nada en su llamada.
+-- Cambia de 5 a 6 parámetros (se añade p_remitente) — hace falta borrar
+-- la versión de 5 antes, si no create or replace deja las DOS funciones
+-- a la vez (misma lección que la vez anterior que se tocó esta función).
+drop function if exists enviar_email(text, text, text, text, text);
+
 create or replace function enviar_email(
   p_para text, p_asunto text, p_html text,
-  p_adjunto_nombre text default null, p_adjunto_base64 text default null
+  p_adjunto_nombre text default null, p_adjunto_base64 text default null,
+  -- Remitente concreto a usar; si se deja null, se usa el remitente por
+  -- defecto (avisos internos). El email a la familia pasa el suyo propio.
+  p_remitente text default null
 )
 returns void
 language plpgsql security definer set search_path = public, net, pg_temp
@@ -221,7 +234,7 @@ begin
       'Content-Type', 'application/json'
     ),
     body := jsonb_build_object(
-      'from', (select "emailRemitente" from config_secretos limit 1),
+      'from', coalesce(p_remitente, (select "emailRemitente" from config_secretos limit 1)),
       'to', p_para,
       'subject', p_asunto,
       'html', p_html
@@ -405,7 +418,10 @@ begin
     return;
   end if;
 
-  perform enviar_email(p_email, p_asunto, p_html, 'invitacion.png', p_imagen_base64);
+  perform enviar_email(
+    p_email, p_asunto, p_html, 'invitacion.png', p_imagen_base64,
+    (select "emailRemitenteFamilia" from config_secretos limit 1)
+  );
 end;
 $$;
 
