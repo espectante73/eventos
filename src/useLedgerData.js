@@ -53,6 +53,14 @@ export function useLedgerData(rol) {
     invitadosRef.current = invitados;
   }, [invitados]);
 
+  // Igual que invitadosRef, pero para mesas — hace falta para saber qué
+  // números de mesa se han quitado y borrarlos también en Supabase (un
+  // upsert por sí solo nunca borra filas que ya no estén en la lista).
+  const mesasRef = useRef(mesas);
+  useEffect(() => {
+    mesasRef.current = mesas;
+  }, [mesas]);
+
   useEffect(() => {
     let cancelado = false;
 
@@ -182,9 +190,25 @@ export function useLedgerData(rol) {
   }, []);
 
   const persistMesas = useCallback(async (next) => {
+    const anterior = mesasRef.current;
     setMesas(next);
-    const { error } = await supabase.from("mesas").upsert(next);
-    if (error) avisar("No se pudieron guardar las mesas.", error);
+    mesasRef.current = next;
+
+    const numerosNuevos = new Set(next.map((m) => m.numero));
+    const numerosBorrados = anterior
+      .filter((m) => !numerosNuevos.has(m.numero))
+      .map((m) => m.numero);
+    if (numerosBorrados.length > 0) {
+      const { error: errBorrar } = await supabase
+        .from("mesas")
+        .delete()
+        .in("numero", numerosBorrados);
+      if (errBorrar) avisar("No se pudieron eliminar las mesas quitadas.", errBorrar);
+    }
+    if (next.length > 0) {
+      const { error } = await supabase.from("mesas").upsert(next);
+      if (error) avisar("No se pudieron guardar las mesas.", error);
+    }
   }, []);
 
   const persistFotosFamiliares = useCallback(async (next) => {

@@ -1764,12 +1764,16 @@ function VistaAnfitrion({ data }) {
   };
 
   const eliminarMesa = (numero) => {
-    const ocupada = invitados.some((g) => g.mesa === numero);
-    if (ocupada) {
-      window.alert(
-        `La mesa ${numero} tiene invitados asignados — quítalos de esa mesa antes de eliminarla.`
+    const afectados = invitados.filter((g) => g.mesa === numero);
+    if (afectados.length > 0) {
+      const confirmar = window.confirm(
+        `La mesa ${numero} tiene ${afectados.length} invitado(s) asignado(s). Al eliminarla, ` +
+          `vuelven a quedar sin mesa (no se borra a nadie). ¿Continuar?`
       );
-      return;
+      if (!confirmar) return;
+      persistInvitados(
+        invitados.map((g) => (g.mesa === numero ? { ...g, mesa: null } : g))
+      );
     }
     persistMesas(mesas.filter((m) => m.numero !== numero));
   };
