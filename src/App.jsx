@@ -634,8 +634,8 @@ function Portada({ evento, editable, onChange, abierto, toggle }) {
           style={{
             bottom: 8,
             right: 8,
-            background: "transparent",
-            color: C.ink,
+            background: C.ink,
+            color: C.paper,
             border: `1px solid ${C.ink}`,
             appearance: "none",
             WebkitAppearance: "none",
