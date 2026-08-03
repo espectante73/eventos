@@ -365,9 +365,13 @@ function VentanaFlotante({ clave, titulo, onCerrar, children, acciones }) {
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
   const posInicial = { top: 16 + idx * 20, left: 16 + idx * 20 };
   const [pos, setPos] = useState(posInicial);
+  // null = todavía sin redimensionar a mano: usa el tamaño por defecto.
+  const [tam, setTam] = useState(null);
+  const ventanaRef = useRef(null);
   // Offset entre el punto donde se agarra la cabecera y la esquina de la
   // ventana — así no "salta" al primer píxel del ratón al empezar a arrastrar.
   const arrastre = useRef(null);
+  const redimension = useRef(null);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -380,15 +384,23 @@ function VentanaFlotante({ clave, titulo, onCerrar, children, acciones }) {
   useEffect(() => {
     const coords = (e) => (e.touches ? e.touches[0] : e);
     const mover = (e) => {
-      if (!arrastre.current) return;
       const { clientX, clientY } = coords(e);
-      setPos({
-        left: Math.max(0, clientX - arrastre.current.dx),
-        top: Math.max(0, clientY - arrastre.current.dy),
-      });
+      if (arrastre.current) {
+        setPos({
+          left: Math.max(0, clientX - arrastre.current.dx),
+          top: Math.max(0, clientY - arrastre.current.dy),
+        });
+      }
+      if (redimension.current) {
+        setTam({
+          width: Math.max(280, redimension.current.anchoInicial + (clientX - redimension.current.x)),
+          height: Math.max(200, redimension.current.altoInicial + (clientY - redimension.current.y)),
+        });
+      }
     };
     const soltar = () => {
       arrastre.current = null;
+      redimension.current = null;
     };
     window.addEventListener("mousemove", mover);
     window.addEventListener("mouseup", soltar);
@@ -407,14 +419,22 @@ function VentanaFlotante({ clave, titulo, onCerrar, children, acciones }) {
     arrastre.current = { dx: clientX - pos.left, dy: clientY - pos.top };
   };
 
+  const iniciarRedimension = (e) => {
+    const { clientX, clientY } = e.touches ? e.touches[0] : e;
+    const rect = ventanaRef.current.getBoundingClientRect();
+    redimension.current = { x: clientX, y: clientY, anchoInicial: rect.width, altoInicial: rect.height };
+  };
+
   return (
     <div
+      ref={ventanaRef}
       className="fixed rounded-lg flex flex-col"
       style={{
         background: C.paper,
         border: `1px solid ${C.line}`,
-        width: "min(620px, calc(100vw - 2rem))",
-        maxHeight: "80vh",
+        width: tam ? tam.width : "min(620px, calc(100vw - 2rem))",
+        height: tam ? tam.height : undefined,
+        maxHeight: tam ? undefined : "80vh",
         boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
         top: pos.top,
         left: pos.left,
@@ -448,6 +468,17 @@ function VentanaFlotante({ clave, titulo, onCerrar, children, acciones }) {
           {acciones}
         </div>
       )}
+      <div
+        onMouseDown={iniciarRedimension}
+        onTouchStart={iniciarRedimension}
+        className="absolute"
+        style={{ width: 18, height: 18, right: 2, bottom: 2, cursor: "nwse-resize", touchAction: "none" }}
+        title="Arrastra para cambiar el tamaño"
+      >
+        <svg width="18" height="18" viewBox="0 0 16 16">
+          <path d="M14 2 L2 14 M14 7 L7 14 M14 12 L12 14" stroke={C.line} strokeWidth="1.5" />
+        </svg>
+      </div>
     </div>
   );
 }
