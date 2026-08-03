@@ -363,6 +363,11 @@ const ETIQUETAS_VENTANAS = {
 // Configuración...), donde puede interesar ver más de una a la vez.
 function VentanaFlotante({ clave, titulo, onCerrar, children, acciones }) {
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
+  const posInicial = { top: 16 + idx * 20, left: 16 + idx * 20 };
+  const [pos, setPos] = useState(posInicial);
+  // Offset entre el punto donde se agarra la cabecera y la esquina de la
+  // ventana — así no "salta" al primer píxel del ratón al empezar a arrastrar.
+  const arrastre = useRef(null);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -371,6 +376,36 @@ function VentanaFlotante({ clave, titulo, onCerrar, children, acciones }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onCerrar]);
+
+  useEffect(() => {
+    const coords = (e) => (e.touches ? e.touches[0] : e);
+    const mover = (e) => {
+      if (!arrastre.current) return;
+      const { clientX, clientY } = coords(e);
+      setPos({
+        left: Math.max(0, clientX - arrastre.current.dx),
+        top: Math.max(0, clientY - arrastre.current.dy),
+      });
+    };
+    const soltar = () => {
+      arrastre.current = null;
+    };
+    window.addEventListener("mousemove", mover);
+    window.addEventListener("mouseup", soltar);
+    window.addEventListener("touchmove", mover);
+    window.addEventListener("touchend", soltar);
+    return () => {
+      window.removeEventListener("mousemove", mover);
+      window.removeEventListener("mouseup", soltar);
+      window.removeEventListener("touchmove", mover);
+      window.removeEventListener("touchend", soltar);
+    };
+  }, []);
+
+  const iniciarArrastre = (e) => {
+    const { clientX, clientY } = e.touches ? e.touches[0] : e;
+    arrastre.current = { dx: clientX - pos.left, dy: clientY - pos.top };
+  };
 
   return (
     <div
@@ -381,14 +416,16 @@ function VentanaFlotante({ clave, titulo, onCerrar, children, acciones }) {
         width: "min(620px, calc(100vw - 2rem))",
         maxHeight: "80vh",
         boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
-        top: `calc(1rem + ${idx * 20}px)`,
-        left: `calc(1rem + ${idx * 20}px)`,
+        top: pos.top,
+        left: pos.left,
         zIndex: 50 + idx,
       }}
     >
       <div
-        className="flex items-center justify-between px-4 py-3"
-        style={{ borderBottom: `1px solid ${C.line}` }}
+        className="flex items-center justify-between px-4 py-3 cursor-move select-none"
+        style={{ borderBottom: `1px solid ${C.line}`, touchAction: "none" }}
+        onMouseDown={iniciarArrastre}
+        onTouchStart={iniciarArrastre}
       >
         <h3
           className="text-lg"
@@ -2348,7 +2385,16 @@ function VistaAnfitrion({ data }) {
         onChange={(e) => {
           if (e.target.value) toggle(e.target.value);
         }}
-        style={{ ...inputStyle, maxWidth: 260 }}
+        className="fixed px-3 py-1.5 rounded text-sm font-medium"
+        style={{
+          bottom: 16,
+          right: 16,
+          zIndex: 40,
+          background: "transparent",
+          color: C.ink,
+          border: `1px solid ${C.ink}`,
+          boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+        }}
         title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
       >
         <option value="">Abrir sección…</option>
@@ -5227,16 +5273,16 @@ export default function App() {
     >
       {hayNuevaVersion && (
         <div
-          className="flex items-center justify-center gap-3 px-4 py-2 text-sm"
-          style={{ background: C.ink, color: C.paper }}
+          className="fixed flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
+          style={{ background: C.ink, color: C.paper, top: 12, right: 12, zIndex: 60, boxShadow: "0 4px 14px rgba(0,0,0,0.3)" }}
         >
-          Hay una versión nueva de la app.
+          Versión nueva
           <button
             onClick={() => window.location.reload()}
             className="px-2 py-0.5 rounded font-medium"
             style={{ background: C.paper, color: C.ink }}
           >
-            Actualizar ahora
+            Actualizar
           </button>
         </div>
       )}
