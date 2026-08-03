@@ -711,7 +711,7 @@ function InfoItem({ icon: Icon, label, value }) {
 // Mesa redonda con sillas alrededor (número de sillas = capacidad, con un
 // máximo visual para no amontonarlas si la capacidad es muy alta). El
 // tamaño del círculo es fijo; solo cambia cuántas sillas se dibujan.
-function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapacidad, onEliminar }) {
+function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapacidad, onEliminar, onVaciar }) {
   const sillas = Math.max(0, Math.min(m.capacidad, 16));
   const diametro = 84;
   const lienzo = diametro + 26;
@@ -781,6 +781,16 @@ function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapacidad, on
         <div className="text-xs" style={{ color: C.wax, fontWeight: 700 }}>
           ⚠ alergias
         </div>
+      )}
+      {onVaciar && ocupados > 0 && (
+        <button
+          onClick={onVaciar}
+          className="text-xs underline"
+          style={{ color: C.wax }}
+          title="Desasignar a todos los invitados de esta mesa (no se borra a nadie)"
+        >
+          Vaciar mesa
+        </button>
       )}
     </div>
   );
@@ -1893,6 +1903,17 @@ function VistaAnfitrion({ data }) {
     persistMesas(mesas.filter((m) => m.numero !== numero));
   };
 
+  const vaciarMesa = (numero) => {
+    const afectados = invitados.filter((g) => g.mesa === numero);
+    if (afectados.length === 0) return;
+    const confirmar = window.confirm(
+      `Vaciar la mesa ${numero}: ${afectados.length} invitado(s) volverán a quedar sin mesa ` +
+        `(no se borra a nadie). ¿Continuar?`
+    );
+    if (!confirmar) return;
+    persistInvitados(invitados.map((g) => (g.mesa === numero ? { ...g, mesa: null } : g)));
+  };
+
   // Posición por defecto en rejilla para las mesas que todavía no se han
   // arrastrado a mano en el plano (posX/posY a null).
   const posicionPorDefecto = (indice, total) => {
@@ -2869,6 +2890,7 @@ function VistaAnfitrion({ data }) {
                 tieneAlergias={tieneAlergias}
                 onCambiarCapacidad={(v) => cambiarCapacidadMesa(m.numero, v)}
                 onEliminar={() => eliminarMesa(m.numero)}
+                onVaciar={() => vaciarMesa(m.numero)}
               />
             );
           })}
