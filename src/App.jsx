@@ -522,7 +522,7 @@ function TextInput(props) {
 
 // ---------- Cover / Event details ----------
 
-function Portada({ evento, editable, onChange }) {
+function Portada({ evento, editable, onChange, abierto, toggle }) {
   const [form, setForm] = useState(evento);
   const [mostrarImagenInput, setMostrarImagenInput] = useState(false);
   useEffect(() => setForm(evento), [evento]);
@@ -532,7 +532,7 @@ function Portada({ evento, editable, onChange }) {
   return (
     <div
       className="rounded-lg overflow-hidden mb-8"
-      style={{ border: `1px solid ${C.line}`, background: "#FBF7EC" }}
+      style={{ border: `1px solid ${C.line}`, background: "#FBF7EC", position: "relative" }}
     >
       <div
         className="h-40 flex items-center justify-center relative"
@@ -623,6 +623,35 @@ function Portada({ evento, editable, onChange }) {
           <InfoItem icon={MapPin} label="Dirección" value={form.direccion || "—"} />
         </div>
       </div>
+
+      {editable && toggle && (
+        <select
+          value=""
+          onChange={(e) => {
+            if (e.target.value) toggle(e.target.value);
+          }}
+          className="absolute px-3 py-1.5 rounded text-sm font-medium"
+          style={{
+            bottom: 8,
+            right: 8,
+            background: "transparent",
+            color: C.ink,
+            border: `1px solid ${C.ink}`,
+            appearance: "none",
+            WebkitAppearance: "none",
+            MozAppearance: "none",
+          }}
+          title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
+        >
+          <option value="">Abrir sección…</option>
+          {ORDEN_VENTANAS.map((clave) => (
+            <option key={clave} value={clave}>
+              {abierto[clave] ? "✓ " : ""}
+              {ETIQUETAS_VENTANAS[clave]}
+            </option>
+          ))}
+        </select>
+      )}
     </div>
   );
 }
@@ -2378,41 +2407,7 @@ function VistaAnfitrion({ data }) {
 
   return (
     <div className="space-y-8">
-      <Portada evento={evento} editable onChange={persistEvento} />
-
-      {/* Envoltorio "sticky" (no "fixed"): así se queda pegado a la esquina
-          inferior derecha DEL PANEL de contenido mientras haces scroll, en
-          vez de a la esquina de la pantalla entera (que en monitores anchos
-          quedaba lejos del contenido real). */}
-      <div
-        style={{ position: "sticky", bottom: 16, zIndex: 40, display: "flex", justifyContent: "flex-end", pointerEvents: "none" }}
-      >
-      <select
-        value=""
-        onChange={(e) => {
-          if (e.target.value) toggle(e.target.value);
-        }}
-        className="px-3 py-1.5 rounded text-sm font-medium"
-        style={{
-          pointerEvents: "auto",
-          background: "transparent",
-          color: C.ink,
-          border: `1px solid ${C.ink}`,
-          appearance: "none",
-          WebkitAppearance: "none",
-          MozAppearance: "none",
-        }}
-        title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
-      >
-        <option value="">Abrir sección…</option>
-        {ORDEN_VENTANAS.map((clave) => (
-          <option key={clave} value={clave}>
-            {abierto[clave] ? "✓ " : ""}
-            {ETIQUETAS_VENTANAS[clave]}
-          </option>
-        ))}
-      </select>
-      </div>
+      <Portada evento={evento} editable onChange={persistEvento} abierto={abierto} toggle={toggle} />
 
       {/* Resumen */}
       <section className="grid grid-cols-3 gap-3">
