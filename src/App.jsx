@@ -338,6 +338,7 @@ const ORDEN_VENTANAS = [
   "progreso",
   "colaboradores",
   "mesas",
+  "plano",
   "invitaciones",
   "copiaSeguridad",
   "configuracion",
@@ -349,6 +350,7 @@ const ETIQUETAS_VENTANAS = {
   progreso: "Progreso de recopilación",
   colaboradores: "Colaboradores",
   mesas: "Mesas",
+  plano: "Plano de mesas",
   invitaciones: "Invitaciones",
   copiaSeguridad: "Copia de seguridad",
   configuracion: "Configuración",
@@ -780,6 +782,70 @@ function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapacidad, on
           ⚠ alergias
         </div>
       )}
+    </div>
+  );
+}
+
+// Mesa arrastrable dentro del lienzo del plano — la posición se guarda como
+// porcentaje (0-100) del ancho/alto del lienzo, no en píxeles, para que
+// siga siendo válida aunque se cambie el tamaño de la ventana o se imprima
+// en otro formato.
+function MesaPlano({ m, ocupados, canvasRef, onMover }) {
+  const arrastrando = useRef(false);
+
+  useEffect(() => {
+    const coords = (e) => (e.touches ? e.touches[0] : e);
+    const mover = (e) => {
+      if (!arrastrando.current || !canvasRef.current) return;
+      const rect = canvasRef.current.getBoundingClientRect();
+      const { clientX, clientY } = coords(e);
+      const x = Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100));
+      const y = Math.min(100, Math.max(0, ((clientY - rect.top) / rect.height) * 100));
+      onMover(m.numero, x, y);
+    };
+    const soltar = () => {
+      arrastrando.current = false;
+    };
+    window.addEventListener("mousemove", mover);
+    window.addEventListener("mouseup", soltar);
+    window.addEventListener("touchmove", mover);
+    window.addEventListener("touchend", soltar);
+    return () => {
+      window.removeEventListener("mousemove", mover);
+      window.removeEventListener("mouseup", soltar);
+      window.removeEventListener("touchmove", mover);
+      window.removeEventListener("touchend", soltar);
+    };
+  }, [m.numero, canvasRef, onMover]);
+
+  const diametro = 48;
+
+  return (
+    <div
+      onMouseDown={() => (arrastrando.current = true)}
+      onTouchStart={() => (arrastrando.current = true)}
+      className="absolute rounded-full flex items-center justify-center select-none"
+      style={{
+        width: diametro,
+        height: diametro,
+        left: `${m.posX}%`,
+        top: `${m.posY}%`,
+        transform: "translate(-50%, -50%)",
+        background: "#E3E9AE",
+        border: `2px solid ${C.line}`,
+        cursor: "grab",
+        touchAction: "none",
+      }}
+      title={`Mesa ${m.numero} — ${ocupados}/${m.capacidad}`}
+    >
+      <div className="text-center leading-tight">
+        <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 15, color: C.ink }}>
+          {m.numero}
+        </div>
+        <div style={{ fontSize: 9, color: C.charcoal }}>
+          {ocupados}/{m.capacidad}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1778,6 +1844,25 @@ function VistaAnfitrion({ data }) {
     persistMesas(mesas.filter((m) => m.numero !== numero));
   };
 
+  // Posición por defecto en rejilla para las mesas que todavía no se han
+  // arrastrado a mano en el plano (posX/posY a null).
+  const posicionPorDefecto = (indice, total) => {
+    const columnas = Math.max(1, Math.ceil(Math.sqrt(total)));
+    const filas = Math.max(1, Math.ceil(total / columnas));
+    const col = indice % columnas;
+    const fila = Math.floor(indice / columnas);
+    return {
+      posX: ((col + 0.5) / columnas) * 100,
+      posY: ((fila + 0.5) / filas) * 100,
+    };
+  };
+
+  const moverMesaPlano = (numero, posX, posY) => {
+    persistMesas(
+      mesas.map((m) => (m.numero === numero ? { ...m, posX, posY } : m))
+    );
+  };
+
   // Auto-asignación de mesas: nunca reparte un grupo familiar entre varias
   // mesas por su cuenta. Si parte del grupo ya está sentada a mano, intenta
   // completar el resto en esa misma mesa; si no cabe entero (ahí o en
@@ -2182,6 +2267,7 @@ function VistaAnfitrion({ data }) {
     progreso: false,
     colaboradores: false,
     mesas: false,
+    plano: false,
     invitados: false,
     configuracion: false,
     invitaciones: false,
@@ -2194,6 +2280,7 @@ function VistaAnfitrion({ data }) {
   // ventana flotante; independiente de qué secciones estén plegadas.
   const [panelFlotante, setPanelFlotante] = useState(null);
   const [avisosMesas, setAvisosMesas] = useState([]);
+  const lienzoPlanoRef = useRef(null);
 
   const imprimirPanelActivo = () => {
     setTimeout(() => {
@@ -2742,6 +2829,69 @@ function VistaAnfitrion({ data }) {
             </p>
           )}
         </div>
+        </VentanaFlotante>
+      )}
+
+      {/* Plano de mesas */}
+      {abierto.plano && (
+        <VentanaFlotante clave="plano" titulo="Plano de mesas" onCerrar={() => toggle("plano")}>
+          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
+            Arrastra cada mesa a la posición que quieras para representar cómo queda en el local.
+            La posición se guarda sola. Para imprimirlo en A2, pulsa "Imprimir" y elige el tamaño
+            de papel A2 en el diálogo de impresión de tu navegador.
+          </p>
+          <div className="flex items-center gap-2 mb-3">
+            <button
+              onClick={() => {
+                setTimeout(() => {
+                  try {
+                    window.print();
+                  } catch (_) {
+                    // Bloqueado por el navegador: Cmd/Ctrl+P a mano.
+                  }
+                }, 60);
+              }}
+              className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
+              style={{ background: C.ink, color: C.paper }}
+            >
+              <Printer size={14} /> Imprimir (A2)
+            </button>
+          </div>
+          <div id="zona-imprimible-plano">
+            <div
+              ref={lienzoPlanoRef}
+              className="relative w-full rounded"
+              style={{
+                aspectRatio: "594 / 420",
+                background: "#F7F4EA",
+                backgroundImage:
+                  "linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px)",
+                backgroundSize: "5% 5%",
+                border: `1px solid ${C.line}`,
+              }}
+            >
+              {mesas.map((m, i) => {
+                const ocupados = ocupacionMesa(m.numero);
+                const posDefecto = posicionPorDefecto(i, mesas.length);
+                const posX = m.posX ?? posDefecto.posX;
+                const posY = m.posY ?? posDefecto.posY;
+                return (
+                  <MesaPlano
+                    key={m.numero}
+                    m={{ ...m, posX, posY }}
+                    ocupados={ocupados}
+                    canvasRef={lienzoPlanoRef}
+                    onMover={moverMesaPlano}
+                  />
+                );
+              })}
+            </div>
+          </div>
+          {mesas.length === 0 && (
+            <p className="text-sm italic mt-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+              Todavía no hay mesas — créalas primero en "Mesas".
+            </p>
+          )}
         </VentanaFlotante>
       )}
 

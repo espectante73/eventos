@@ -8,4 +8,20 @@
   body * { visibility: hidden; }
   #zona-imprimible, #zona-imprimible * { visibility: visible; }
   #zona-imprimible { position: absolute; left: 0; top: 0; width: 100%; }
+
+  #zona-imprimible-plano, #zona-imprimible-plano * { visibility: visible; }
+  #zona-imprimible-plano {
+    /* "fixed" (no "absolute"): esta zona vive dentro de una ventana
+       flotante con su propia posición/tamaño arbitrarios — "fixed" la
+       escapa de esa caja y la ancla de verdad a la página impresa. */
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+  }
+  @page {
+    size: A2 landscape;
+    margin: 10mm;
+  }
 }

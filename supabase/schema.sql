@@ -60,7 +60,11 @@ alter table invitados
 -- límite fijo de 15 como en versiones anteriores.
 create table mesas (
   "numero"     integer primary key check ("numero" > 0),
-  "capacidad"  integer not null default 10 check ("capacidad" >= 0)
+  "capacidad"  integer not null default 10 check ("capacidad" >= 0),
+  -- Posición en el plano de mesas (0-100, % del ancho/alto del lienzo).
+  -- null = todavía no se ha colocado a mano, usa una rejilla por defecto.
+  "posX"       numeric null,
+  "posY"       numeric null
 );
 
 alter table invitados
