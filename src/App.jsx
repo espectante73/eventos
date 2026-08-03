@@ -792,6 +792,16 @@ function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapacidad, on
 // en otro formato.
 function MesaPlano({ m, ocupados, canvasRef, onMover }) {
   const arrastrando = useRef(false);
+  // Posición visual mientras se arrastra — no llama a guardar hasta soltar,
+  // para no disparar una petición a la base de datos en cada píxel de
+  // movimiento del ratón (eso fue justo el fallo: si una fallaba, el aviso
+  // se repetía sin parar porque el ratón seguía generando eventos).
+  const [posVisual, setPosVisual] = useState({ x: m.posX, y: m.posY });
+  const posFinal = useRef({ x: m.posX, y: m.posY });
+
+  useEffect(() => {
+    if (!arrastrando.current) setPosVisual({ x: m.posX, y: m.posY });
+  }, [m.posX, m.posY]);
 
   useEffect(() => {
     const coords = (e) => (e.touches ? e.touches[0] : e);
@@ -801,10 +811,13 @@ function MesaPlano({ m, ocupados, canvasRef, onMover }) {
       const { clientX, clientY } = coords(e);
       const x = Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100));
       const y = Math.min(100, Math.max(0, ((clientY - rect.top) / rect.height) * 100));
-      onMover(m.numero, x, y);
+      posFinal.current = { x, y };
+      setPosVisual({ x, y });
     };
     const soltar = () => {
+      if (!arrastrando.current) return;
       arrastrando.current = false;
+      onMover(m.numero, posFinal.current.x, posFinal.current.y);
     };
     window.addEventListener("mousemove", mover);
     window.addEventListener("mouseup", soltar);
@@ -828,8 +841,8 @@ function MesaPlano({ m, ocupados, canvasRef, onMover }) {
       style={{
         width: diametro,
         height: diametro,
-        left: `${m.posX}%`,
-        top: `${m.posY}%`,
+        left: `${posVisual.x}%`,
+        top: `${posVisual.y}%`,
         transform: "translate(-50%, -50%)",
         background: "#E3E9AE",
         border: `2px solid ${C.line}`,
