@@ -2380,20 +2380,27 @@ function VistaAnfitrion({ data }) {
     <div className="space-y-8">
       <Portada evento={evento} editable onChange={persistEvento} />
 
+      {/* Envoltorio "sticky" (no "fixed"): así se queda pegado a la esquina
+          inferior derecha DEL PANEL de contenido mientras haces scroll, en
+          vez de a la esquina de la pantalla entera (que en monitores anchos
+          quedaba lejos del contenido real). */}
+      <div
+        style={{ position: "sticky", bottom: 16, zIndex: 40, display: "flex", justifyContent: "flex-end", pointerEvents: "none" }}
+      >
       <select
         value=""
         onChange={(e) => {
           if (e.target.value) toggle(e.target.value);
         }}
-        className="fixed px-3 py-1.5 rounded text-sm font-medium"
+        className="px-3 py-1.5 rounded text-sm font-medium"
         style={{
-          bottom: 16,
-          right: 16,
-          zIndex: 40,
+          pointerEvents: "auto",
           background: "transparent",
           color: C.ink,
           border: `1px solid ${C.ink}`,
-          boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+          appearance: "none",
+          WebkitAppearance: "none",
+          MozAppearance: "none",
         }}
         title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
       >
@@ -2405,6 +2412,7 @@ function VistaAnfitrion({ data }) {
           </option>
         ))}
       </select>
+      </div>
 
       {/* Resumen */}
       <section className="grid grid-cols-3 gap-3">
