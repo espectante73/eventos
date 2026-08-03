@@ -831,32 +831,68 @@ function MesaPlano({ m, ocupados, canvasRef, onMover }) {
     };
   }, [m.numero, canvasRef, onMover]);
 
-  const diametro = 48;
+  const diametro = 44;
+  const sillas = Math.max(0, Math.min(m.capacidad, 16));
+  const radioSillas = diametro / 2 + 6;
+  const lienzoMesa = diametro + 16;
+  const centro = lienzoMesa / 2;
 
   return (
     <div
       onMouseDown={() => (arrastrando.current = true)}
       onTouchStart={() => (arrastrando.current = true)}
-      className="absolute rounded-full flex items-center justify-center select-none"
+      className="absolute select-none"
       style={{
-        width: diametro,
-        height: diametro,
+        width: lienzoMesa,
+        height: lienzoMesa,
         left: `${posVisual.x}%`,
         top: `${posVisual.y}%`,
         transform: "translate(-50%, -50%)",
-        background: "#E3E9AE",
-        border: `2px solid ${C.line}`,
         cursor: "grab",
         touchAction: "none",
       }}
       title={`Mesa ${m.numero} — ${ocupados}/${m.capacidad}`}
     >
-      <div className="text-center leading-tight">
-        <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 15, color: C.ink }}>
-          {m.numero}
-        </div>
-        <div style={{ fontSize: 9, color: C.charcoal }}>
-          {ocupados}/{m.capacidad}
+      {/* Sillas alrededor — su número sigue a la capacidad, igual que en
+          la sección Mesas, para que el plano refleje lo mismo. */}
+      {Array.from({ length: sillas }).map((_, i) => {
+        const angulo = (2 * Math.PI * i) / sillas - Math.PI / 2;
+        const cx = centro + radioSillas * Math.cos(angulo);
+        const cy = centro + radioSillas * Math.sin(angulo);
+        return (
+          <div
+            key={i}
+            className="absolute rounded-sm"
+            style={{
+              width: 6,
+              height: 4,
+              left: cx - 3,
+              top: cy - 2,
+              background: C.paperDark,
+              border: `1px solid ${C.line}`,
+              transform: `rotate(${(angulo * 180) / Math.PI + 90}deg)`,
+            }}
+          />
+        );
+      })}
+      <div
+        className="absolute rounded-full flex items-center justify-center"
+        style={{
+          width: diametro,
+          height: diametro,
+          left: (lienzoMesa - diametro) / 2,
+          top: (lienzoMesa - diametro) / 2,
+          background: "#E3E9AE",
+          border: `2px solid ${C.line}`,
+        }}
+      >
+        <div className="text-center leading-tight">
+          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 13, color: C.ink }}>
+            {m.numero}
+          </div>
+          <div style={{ fontSize: 8, color: C.charcoal }}>
+            {ocupados}/{m.capacidad}
+          </div>
         </div>
       </div>
     </div>
