@@ -485,7 +485,11 @@ function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra })
         >
           {titulo}
         </h3>
-        <div className="flex items-center gap-2">
+        <div
+          className="flex items-center gap-2"
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
           {extra}
           <button onClick={onCerrar} title="Cerrar">
             <X size={18} style={{ color: C.charcoal }} />
