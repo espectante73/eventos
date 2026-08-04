@@ -5771,42 +5771,53 @@ export default function App() {
       )}
       <div className="max-w-4xl mx-auto px-4 py-6">
         {esAnfitrionOriginal ? (
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            <button
-              onClick={() => setRol(urlRol)}
-              className="px-3 py-1.5 rounded text-sm font-medium"
-              style={{
-                background: data.esAnfitrion ? C.ink : "transparent",
-                color: data.esAnfitrion ? C.paper : C.ink,
-                border: `1px solid ${C.ink}`,
-              }}
-            >
-              Anfitrión
-            </button>
-            {data.colaboradores.map((c) => {
-              const pendientes = data.invitados.filter(
+          (() => {
+            const pendientesPorColaborador = (id) =>
+              data.invitados.filter(
                 (g) =>
-                  resolverColaborador(g, data.colaboradores)?.id === c.id &&
+                  resolverColaborador(g, data.colaboradores)?.id === id &&
                   g.confirmado &&
                   !datosCompletos(g)
               ).length;
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => setRol(c.id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium"
-                  style={{
-                    background: rol === c.id ? C.ink : "transparent",
-                    color: rol === c.id ? C.paper : C.ink,
-                    border: `1px solid ${C.ink}`,
-                  }}
-                >
-                  {c.nombre}
-                  {pendientes > 0 && <Seal count={pendientes} />}
-                </button>
-              );
-            })}
-          </div>
+            const totalPendientes = data.colaboradores.reduce(
+              (s, c) => s + pendientesPorColaborador(c.id),
+              0
+            );
+            // Barra única (no una fila de botones): pensada para el pulgar en
+            // móvil grande (iPhone 14 Pro Max de referencia) — bastante alta
+            // para tocar bien, y un <select> nativo abre el selector grande
+            // del sistema en vez de un menú propio que hay que construir.
+            return (
+              <select
+                value={rol || ""}
+                onChange={(e) => setRol(e.target.value)}
+                className="w-full mb-6 px-4 rounded font-medium"
+                style={{
+                  height: 48,
+                  fontSize: 16,
+                  background: C.ink,
+                  color: C.paper,
+                  border: "none",
+                  appearance: "none",
+                  WebkitAppearance: "none",
+                  MozAppearance: "none",
+                }}
+              >
+                <option value={urlRol}>
+                  Anfitrión{totalPendientes > 0 ? ` (${totalPendientes} pendientes)` : ""}
+                </option>
+                {data.colaboradores.map((c) => {
+                  const pendientes = pendientesPorColaborador(c.id);
+                  return (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                      {pendientes > 0 ? ` (${pendientes} pendientes)` : ""}
+                    </option>
+                  );
+                })}
+              </select>
+            );
+          })()
         ) : urlRol ? (
           <div
             className="text-xs uppercase mb-6 inline-block px-2 py-1 rounded"
