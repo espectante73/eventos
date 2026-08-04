@@ -180,7 +180,10 @@ create table gastos (
   "id"         uuid primary key default gen_random_uuid(),
   "concepto"   text not null default '',
   "categoria"  text not null default '',
-  "importe"    numeric not null default 0,
+  -- Texto, no numeric: igual que precioAdulto/precioNino del evento — se
+  -- guarda tal cual se escribe (admite coma decimal) y solo se convierte a
+  -- número al sumar, nunca al guardar cada pulsación.
+  "importe"    text not null default '',
   "pagado"     boolean not null default false
 );
 alter table gastos enable row level security;
@@ -688,7 +691,7 @@ begin
     (f->>'id')::uuid,
     coalesce(f->>'concepto', ''),
     coalesce(f->>'categoria', ''),
-    coalesce((f->>'importe')::numeric, 0),
+    coalesce(f->>'importe', ''),
     coalesce((f->>'pagado')::boolean, false)
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update

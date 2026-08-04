@@ -1730,21 +1730,19 @@ function VistaAnfitrion({ data }) {
   };
 
   // ---------- Estado de cuentas (gastos) ----------
+  // "importe" se guarda tal cual se escribe (texto), igual que precioAdulto/
+  // precioNino del evento — se convierte a número solo al sumar
+  // (parsePrecio), nunca en cada pulsación. Convertirlo a número al momento
+  // borraba la coma decimal a medio escribir (9,18 acababa siendo 918).
   const agregarGasto = () => {
     persistGastos([
       ...gastos,
-      { id: uid(), concepto: "", categoria: "", importe: 0, pagado: false },
+      { id: uid(), concepto: "", categoria: "", importe: "", pagado: false },
     ]);
   };
 
   const cambiarGasto = (id, campo, valor) => {
-    persistGastos(
-      gastos.map((g) =>
-        g.id === id
-          ? { ...g, [campo]: campo === "importe" ? parsePrecio(valor) : valor }
-          : g
-      )
-    );
+    persistGastos(gastos.map((g) => (g.id === id ? { ...g, [campo]: valor } : g)));
   };
 
   const eliminarGasto = (id) => {
@@ -3711,10 +3709,10 @@ function VistaAnfitrion({ data }) {
             const pendienteCobro = confirmados
               .filter((g) => !g.pagado)
               .reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
-            const totalGastos = gastos.reduce((s, g) => s + (g.importe || 0), 0);
+            const totalGastos = gastos.reduce((s, g) => s + parsePrecio(g.importe), 0);
             const gastosPagados = gastos
               .filter((g) => g.pagado)
-              .reduce((s, g) => s + (g.importe || 0), 0);
+              .reduce((s, g) => s + parsePrecio(g.importe), 0);
             const balance = recaudado - gastosPagados;
             const formato = (n) =>
               n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
