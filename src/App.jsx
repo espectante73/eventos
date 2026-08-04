@@ -334,16 +334,19 @@ function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitulo }) {
 // Orden fijo de apertura en cascada — cada sección siempre aparece en el
 // mismo sitio relativo, en vez de saltar de posición según el orden en que
 // se abran.
+// Orden alfabético (por la etiqueta visible, no por la clave interna) —
+// así el desplegable es predecible según crece: siempre se sabe dónde
+// buscar algo sin tener que recordar un grupo temático.
 const ORDEN_VENTANAS = [
-  "progreso",
+  "avisos",
   "colaboradores",
+  "configuracion",
+  "copiaSeguridad",
+  "cuentas",
+  "invitaciones",
   "mesas",
   "plano",
-  "invitaciones",
-  "cuentas",
-  "copiaSeguridad",
-  "configuracion",
-  "avisos",
+  "progreso",
   "versiones",
 ];
 
