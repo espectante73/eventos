@@ -71,6 +71,9 @@ const HISTORIAL_VERSIONES = [
       "Estado de cuentas: nueva sección con lo recaudado y pendiente de cobro calculados solos a partir de los pagos de invitados, más una lista editable de gastos (incluye también los costes de la propia app, como el dominio o la suscripción) y el balance resultante.",
       'Navegación: las secciones (Mesas, Configuración, Avisos...) dejan de estar apiladas en una página larga y pasan a abrirse como ventanas flotantes movibles y redimensionables, accesibles desde un único desplegable ordenado alfabéticamente. El cambio entre Anfitrión y colaboradores se redujo a una sola barra táctil, pensada para el pulgar en móvil.',
       "Portada: el botón para cambiar la imagen (poco visible sobre algunas fotos) se quita de encima de la portada; ahora se edita desde Configuración, junto con el resto de datos del evento.",
+      "Imágenes: la imagen de portada y la de la plantilla de invitación se suben ahora como archivo desde el dispositivo, en vez de pegar una URL — igual que ya funcionaba la foto de boda.",
+      "Email del colaborador: se edita en un solo sitio (Colaboradores); se quita el duplicado de Configuración, y en el formulario de datos del invitado aparece ensombrecido (solo lectura) cuando ese invitado es también un colaborador.",
+      "Configuración: al tener ya muchas partes, añade un desplegable fijo en la esquina para saltar directamente a cada una (Datos del evento, Precios, Zona de reinicio...).",
     ],
   },
 ];
@@ -370,6 +373,19 @@ const ETIQUETAS_VENTANAS = {
   avisos: "Avisos",
   versiones: "Versiones",
 };
+
+// Sub-secciones dentro de la propia ventana de Configuración: como ya son
+// muchas y la ventana se queda larga, el desplegable de sus "acciones"
+// (pie fijo, siempre visible) salta directamente a cada una por su id.
+const SECCIONES_CONFIGURACION = [
+  { id: "config-datos-evento", etiqueta: "Datos del evento" },
+  { id: "config-precios", etiqueta: "Precios" },
+  { id: "config-url-web", etiqueta: "URL de la web" },
+  { id: "config-email-anfitrion", etiqueta: "Tu email (anfitrión)" },
+  { id: "config-plantillas-email", etiqueta: "Plantillas de los avisos" },
+  { id: "config-zona-reinicio", etiqueta: "Zona de reinicio" },
+  { id: "config-zona-peligro", etiqueta: "Zona de peligro" },
+];
 
 // Ventana flotante independiente y no bloqueante: a diferencia de
 // ModalFlotante, no oscurece el resto de la pantalla ni impide que haya
@@ -2474,9 +2490,28 @@ function VistaAnfitrion({ data }) {
       const dataUrl = await redimensionarImagenArchivo(file, 2000, 0.88);
       persistEvento({ ...evento, imagenInvitacion: dataUrl });
     } catch (_) {
-      setErrorPlantillaInvitacion("No se ha podido procesar la imagen. Prueba con otra o pega un enlace.");
+      setErrorPlantillaInvitacion("No se ha podido procesar la imagen. Prueba con otra.");
     } finally {
       setSubiendoPlantillaInvitacion(false);
+    }
+  };
+
+  const [subiendoImagenPortada, setSubiendoImagenPortada] = useState(false);
+  const [errorImagenPortada, setErrorImagenPortada] = useState("");
+
+  const onSeleccionarArchivoImagenPortada = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setErrorImagenPortada("");
+    setSubiendoImagenPortada(true);
+    try {
+      const dataUrl = await redimensionarImagenArchivo(file);
+      persistEvento({ ...evento, imagen: dataUrl });
+    } catch (_) {
+      setErrorImagenPortada("No se ha podido procesar la imagen. Prueba con otra.");
+    } finally {
+      setSubiendoImagenPortada(false);
     }
   };
 
@@ -3460,38 +3495,40 @@ function VistaAnfitrion({ data }) {
             </p>
             <div className="mb-4 p-3 rounded" style={{ background: C.paperDark, border: `1px dashed ${C.line}` }}>
               <Field label="Imagen de la plantilla de invitación (vertical, para móvil)">
-                <TextInput
-                  value={evento.imagenInvitacion || ""}
-                  onChange={(e) => persistEvento({ ...evento, imagenInvitacion: e.target.value })}
-                  placeholder="https://... (déjalo vacío para usar la plantilla incluida)"
-                  className="w-full"
-                />
-              </Field>
-              <div className="flex items-center gap-3 flex-wrap mt-2">
-                <label
-                  className="text-xs px-2 py-1 rounded cursor-pointer"
-                  style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-                >
-                  {subiendoPlantillaInvitacion ? "Procesando…" : "Subir archivo desde el dispositivo"}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={onSeleccionarArchivoPlantillaInvitacion}
-                    disabled={subiendoPlantillaInvitacion}
-                    style={{ display: "none" }}
-                  />
-                </label>
-                {evento.imagenInvitacion && (
-                  <button
-                    type="button"
-                    onClick={() => persistEvento({ ...evento, imagenInvitacion: "" })}
-                    className="text-xs"
-                    style={{ color: C.wax }}
+                <div className="flex items-center gap-3 flex-wrap">
+                  {evento.imagenInvitacion && (
+                    <img
+                      src={evento.imagenInvitacion}
+                      alt="Plantilla de invitación"
+                      className="rounded object-cover"
+                      style={{ width: 40, height: 60, border: `1px solid ${C.line}` }}
+                    />
+                  )}
+                  <label
+                    className="text-xs px-2 py-1 rounded cursor-pointer"
+                    style={{ border: `1px solid ${C.gold}`, color: C.gold }}
                   >
-                    Quitar y usar la plantilla incluida
-                  </button>
-                )}
-              </div>
+                    {subiendoPlantillaInvitacion ? "Procesando…" : "Subir archivo desde el dispositivo"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={onSeleccionarArchivoPlantillaInvitacion}
+                      disabled={subiendoPlantillaInvitacion}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                  {evento.imagenInvitacion && (
+                    <button
+                      type="button"
+                      onClick={() => persistEvento({ ...evento, imagenInvitacion: "" })}
+                      className="text-xs"
+                      style={{ color: C.wax }}
+                    >
+                      Quitar y usar la plantilla incluida
+                    </button>
+                  )}
+                </div>
+              </Field>
               {errorPlantillaInvitacion && (
                 <p className="text-xs mt-1" style={{ color: C.wax }}>
                   {errorPlantillaInvitacion}
@@ -3878,72 +3915,138 @@ function VistaAnfitrion({ data }) {
 
       {/* Configuración */}
       {abierto.configuracion && (
-        <VentanaFlotante clave="configuracion" titulo="Configuración" onCerrar={() => toggle("configuracion")}>
-            <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
-              Datos del evento (esto es lo que se ve en la portada).
-            </p>
-            <div className="grid grid-cols-2 gap-4 mb-4" style={{ maxWidth: 500 }}>
-              <div style={{ gridColumn: "span 2 / span 2" }}>
-                <Field label="Nombre del evento">
+        <VentanaFlotante
+          clave="configuracion"
+          titulo="Configuración"
+          onCerrar={() => toggle("configuracion")}
+          acciones={
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  document.getElementById(e.target.value)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+              className="ml-auto px-3 py-1.5 rounded text-sm font-medium"
+              style={{
+                background: C.ink,
+                color: C.paper,
+                border: `1px solid ${C.ink}`,
+                appearance: "none",
+                WebkitAppearance: "none",
+                MozAppearance: "none",
+              }}
+              title="Ir directamente a esa parte de Configuración"
+            >
+              <option value="">Ir a sección…</option>
+              {SECCIONES_CONFIGURACION.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.etiqueta}
+                </option>
+              ))}
+            </select>
+          }
+        >
+            <div id="config-datos-evento">
+              <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
+                Datos del evento (esto es lo que se ve en la portada).
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-4" style={{ maxWidth: 500 }}>
+                <div style={{ gridColumn: "span 2 / span 2" }}>
+                  <Field label="Nombre del evento">
+                    <TextInput
+                      value={evento.nombre}
+                      onChange={(e) => persistEvento({ ...evento, nombre: e.target.value })}
+                      placeholder="Boda de..."
+                      className="w-full"
+                    />
+                  </Field>
+                </div>
+                <Field label="Fecha">
                   <TextInput
-                    value={evento.nombre}
-                    onChange={(e) => persistEvento({ ...evento, nombre: e.target.value })}
-                    placeholder="Boda de..."
-                    className="w-full"
+                    type="date"
+                    value={evento.fecha}
+                    onChange={(e) => persistEvento({ ...evento, fecha: e.target.value })}
                   />
                 </Field>
-              </div>
-              <Field label="Fecha">
-                <TextInput
-                  type="date"
-                  value={evento.fecha}
-                  onChange={(e) => persistEvento({ ...evento, fecha: e.target.value })}
-                />
-              </Field>
-              <Field label="Hora">
-                <TextInput
-                  type="time"
-                  value={evento.hora}
-                  onChange={(e) => persistEvento({ ...evento, hora: e.target.value })}
-                />
-              </Field>
-              <Field label="Lugar">
-                <TextInput
-                  value={evento.lugar}
-                  onChange={(e) => persistEvento({ ...evento, lugar: e.target.value })}
-                  placeholder="Finca El Rincón"
-                />
-              </Field>
-              <Field label="Dirección">
-                <TextInput
-                  value={evento.direccion}
-                  onChange={(e) => persistEvento({ ...evento, direccion: e.target.value })}
-                  placeholder="Calle, número, municipio"
-                />
-              </Field>
-              <div style={{ gridColumn: "span 2 / span 2" }}>
-                <Field label="Imagen de portada (URL)">
+                <Field label="Hora">
                   <TextInput
-                    value={evento.imagen}
-                    onChange={(e) => persistEvento({ ...evento, imagen: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full"
+                    type="time"
+                    value={evento.hora}
+                    onChange={(e) => persistEvento({ ...evento, hora: e.target.value })}
                   />
                 </Field>
-                <label className="flex items-center gap-2 mt-2 text-xs" style={{ color: C.charcoal }}>
-                  <input
-                    type="checkbox"
-                    checked={evento.ocultarTituloEnImagen}
-                    onChange={(e) => persistEvento({ ...evento, ocultarTituloEnImagen: e.target.checked })}
+                <Field label="Lugar">
+                  <TextInput
+                    value={evento.lugar}
+                    onChange={(e) => persistEvento({ ...evento, lugar: e.target.value })}
+                    placeholder="Finca El Rincón"
                   />
-                  La imagen ya incluye el título (ocultar el texto superpuesto)
-                </label>
+                </Field>
+                <Field label="Dirección">
+                  <TextInput
+                    value={evento.direccion}
+                    onChange={(e) => persistEvento({ ...evento, direccion: e.target.value })}
+                    placeholder="Calle, número, municipio"
+                  />
+                </Field>
+                <div style={{ gridColumn: "span 2 / span 2" }}>
+                  <Field label="Imagen de portada">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {evento.imagen && (
+                        <img
+                          src={evento.imagen}
+                          alt="Portada"
+                          className="rounded object-cover"
+                          style={{ width: 60, height: 40, border: `1px solid ${C.line}` }}
+                        />
+                      )}
+                      <label
+                        className="text-xs px-2 py-1 rounded cursor-pointer"
+                        style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+                      >
+                        {subiendoImagenPortada ? "Procesando…" : "Subir imagen desde el dispositivo"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={onSeleccionarArchivoImagenPortada}
+                          disabled={subiendoImagenPortada}
+                          style={{ display: "none" }}
+                        />
+                      </label>
+                      {evento.imagen !== "/cabecera-defecto.jpg" && (
+                        <button
+                          type="button"
+                          onClick={() => persistEvento({ ...evento, imagen: "/cabecera-defecto.jpg" })}
+                          className="text-xs"
+                          style={{ color: C.wax }}
+                        >
+                          Quitar y usar la imagen incluida
+                        </button>
+                      )}
+                    </div>
+                    {errorImagenPortada && (
+                      <p className="text-xs mt-1" style={{ color: C.wax }}>
+                        {errorImagenPortada}
+                      </p>
+                    )}
+                  </Field>
+                  <label className="flex items-center gap-2 mt-2 text-xs" style={{ color: C.charcoal }}>
+                    <input
+                      type="checkbox"
+                      checked={evento.ocultarTituloEnImagen}
+                      onChange={(e) => persistEvento({ ...evento, ocultarTituloEnImagen: e.target.checked })}
+                    />
+                    La imagen ya incluye el título (ocultar el texto superpuesto)
+                  </label>
+                </div>
               </div>
             </div>
-            <p className="text-xs mb-3 pt-3" style={{ color: C.charcoal, opacity: 0.75, borderTop: `1px solid ${C.line}` }}>
-              Precios de referencia para calcular el cobro de cada familia (número de adultos
-              y niños según los datos que recopile cada colaborador).
-            </p>
+            <div id="config-precios">
+              <p className="text-xs mb-3 pt-3" style={{ color: C.charcoal, opacity: 0.75, borderTop: `1px solid ${C.line}` }}>
+                Precios de referencia para calcular el cobro de cada familia (número de adultos
+                y niños según los datos que recopile cada colaborador).
+              </p>
             <div className="grid grid-cols-2 gap-4" style={{ maxWidth: 400 }}>
               <Field label="Precio adulto">
                 <TextInput
@@ -3980,8 +4083,9 @@ function VistaAnfitrion({ data }) {
                 </span>
               </Field>
             </div>
+            </div>
 
-            <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+            <div id="config-url-web" className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
               <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
                 <strong>Importante:</strong> pega aquí la URL de tu web ya publicada (la del
                 dominio que te dé Vercel, o el tuyo propio si le pones uno). Sin este dato, los
@@ -3997,7 +4101,7 @@ function VistaAnfitrion({ data }) {
               </Field>
             </div>
 
-            <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+            <div id="config-email-anfitrion" className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
               <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
                 Tu email, para recibir avisos automáticos cuando un colaborador complete todos
                 los datos o todos los pagos de sus invitados asignados.
@@ -4012,39 +4116,7 @@ function VistaAnfitrion({ data }) {
               </Field>
             </div>
 
-            <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
-              <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
-                Email de cada colaborador, para avisarles cuando les asignes un invitado nuevo.
-                Rellénalos aquí todos de una vez (no hace falta que cada colaborador entre a su
-                propio enlace para ponerlo).
-              </p>
-              {colaboradores.length === 0 ? (
-                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                  Todavía no hay colaboradores.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {colaboradores.map((c) => (
-                    <div key={c.id} className="flex items-center gap-2">
-                      <span
-                        className="text-sm flex-shrink-0"
-                        style={{ color: C.ink, minWidth: 140, maxWidth: 140 }}
-                      >
-                        {c.nombre}
-                      </span>
-                      <div className="flex-1">
-                        <GrupoFamiliarInput
-                          value={c.email || ""}
-                          onCommit={(v) => cambiarEmailColaborador(c.id, v)}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+            <div id="config-plantillas-email" className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
               <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
                 Texto de los avisos automáticos por email. Usa <code>{"{colaborador}"}</code>{" "}
                 donde quieras que aparezca ese nombre — se rellena solo al enviar. Admite HTML
@@ -4099,7 +4171,7 @@ function VistaAnfitrion({ data }) {
               </Field>
             </div>
 
-            <div className="mt-4 pt-4" style={{ borderTop: `2px solid ${C.line}` }}>
+            <div id="config-zona-reinicio" className="mt-4 pt-4" style={{ borderTop: `2px solid ${C.line}` }}>
               <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
                 Zona de reinicio: pone a cero campos concretos de los invitados de un colaborador
                 (útil tras pruebas, o para reutilizar la app en otro evento). Los invitados y los
@@ -4219,7 +4291,7 @@ function VistaAnfitrion({ data }) {
               </div>
             </div>
 
-            <div className="mt-4 pt-4" style={{ borderTop: `2px solid ${C.wax}` }}>
+            <div id="config-zona-peligro" className="mt-4 pt-4" style={{ borderTop: `2px solid ${C.wax}` }}>
               <p className="text-xs mb-2" style={{ color: C.wax, fontWeight: 700 }}>
                 ⚠ Zona de peligro: esto borra evento, colaboradores, invitados, mesas y fotos —
                 todo el contenido de la aplicación. No se puede deshacer.
@@ -5014,6 +5086,7 @@ function FormularioDatos({
   onCambiarFotoFamiliar,
   importe,
   onCerrar,
+  colaboradorVinculado,
 }) {
   const [form, setForm] = useState(invitado);
   const [foto, setFoto] = useState(fotoFamiliar || "");
@@ -5160,13 +5233,27 @@ function FormularioDatos({
         </span>
       )}
       <Field label="Email">
-        <TextInput
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          onBlur={() => revisarYGuardar(form)}
-          placeholder="correo@ejemplo.com"
-          className="w-full"
-        />
+        {colaboradorVinculado ? (
+          <div>
+            <div
+              className="w-full px-2 py-1.5 rounded text-sm"
+              style={{ background: C.paperDark, color: C.charcoal, opacity: 0.7 }}
+            >
+              {colaboradorVinculado.email || "sin registrar"}
+            </div>
+            <span className="text-xs italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+              Se edita en Colaboradores, no aquí.
+            </span>
+          </div>
+        ) : (
+          <TextInput
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            onBlur={() => revisarYGuardar(form)}
+            placeholder="correo@ejemplo.com"
+            className="w-full"
+          />
+        )}
       </Field>
       <div>
         <div className="flex items-start gap-3 flex-wrap">
@@ -5305,6 +5392,7 @@ function FilaInvitadoColaborador({
   onMarcarPagado,
   evento,
   fotosFamiliares,
+  colaboradorVinculado,
 }) {
   const importe = importeEsperadoInvitado(g, evento);
 
@@ -5375,6 +5463,7 @@ function FilaInvitadoColaborador({
             onCambiarFotoFamiliar={onCambiarFotoFamiliar}
             importe={importe}
             onCerrar={onToggleAbierto}
+            colaboradorVinculado={colaboradorVinculado}
           />
         </div>
       )}
@@ -5638,6 +5727,7 @@ function VistaColaborador({ data, colaboradorId }) {
               onMarcarPagado={marcarPagado}
               evento={evento}
               fotosFamiliares={fotosFamiliares}
+              colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
             />
           ))}
           {pendientes.length === 0 && (
@@ -5663,6 +5753,7 @@ function VistaColaborador({ data, colaboradorId }) {
               onMarcarPagado={marcarPagado}
               evento={evento}
               fotosFamiliares={fotosFamiliares}
+              colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
             />
           ))}
           {completos.length === 0 && (
