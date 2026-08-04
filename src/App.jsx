@@ -348,6 +348,10 @@ function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitulo }) {
 // Orden alfabético (por la etiqueta visible, no por la clave interna) —
 // así el desplegable es predecible según crece: siempre se sabe dónde
 // buscar algo sin tener que recordar un grupo temático.
+// Contador compartido por todas las VentanaFlotante para decidir cuál va
+// por delante: cada vez que se toca o se abre una, sube y se lo queda ella.
+let contadorZIndexVentanas = 50;
+
 const ORDEN_VENTANAS = [
   "avisos",
   "colaboradores",
@@ -399,6 +403,11 @@ function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra })
   const [pos, setPos] = useState(posInicial);
   // null = todavía sin redimensionar a mano: usa el tamaño por defecto.
   const [tam, setTam] = useState(null);
+  // El z-index no depende de qué ventana sea, sino de cuál se tocó la
+  // última — así la recién abierta (o la que se acaba de pulsar) queda
+  // siempre por delante, en vez de que unas pocas queden ancladas arriba.
+  const [zIndex, setZIndex] = useState(() => ++contadorZIndexVentanas);
+  const traerAlFrente = () => setZIndex(++contadorZIndexVentanas);
   const ventanaRef = useRef(null);
   // Offset entre el punto donde se agarra la cabecera y la esquina de la
   // ventana — así no "salta" al primer píxel del ratón al empezar a arrastrar.
@@ -461,6 +470,8 @@ function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra })
     <div
       ref={ventanaRef}
       className="fixed rounded-lg flex flex-col"
+      onMouseDownCapture={traerAlFrente}
+      onTouchStartCapture={traerAlFrente}
       style={{
         background: C.paper,
         border: `1px solid ${C.line}`,
@@ -470,7 +481,7 @@ function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra })
         boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
         top: pos.top,
         left: pos.left,
-        zIndex: 50 + idx,
+        zIndex,
       }}
     >
       <div
