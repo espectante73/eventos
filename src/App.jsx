@@ -73,7 +73,7 @@ const HISTORIAL_VERSIONES = [
       "Portada: el botón para cambiar la imagen (poco visible sobre algunas fotos) se quita de encima de la portada; ahora se edita desde Configuración, junto con el resto de datos del evento.",
       "Imágenes: la imagen de portada y la de la plantilla de invitación se suben ahora como archivo desde el dispositivo, en vez de pegar una URL — igual que ya funcionaba la foto de boda.",
       "Email del colaborador: se edita en un solo sitio (Colaboradores); se quita el duplicado de Configuración, y en el formulario de datos del invitado aparece ensombrecido (solo lectura) cuando ese invitado es también un colaborador.",
-      "Configuración: al tener ya muchas partes, añade un desplegable fijo en la esquina para saltar directamente a cada una (Datos del evento, Precios, Zona de reinicio...).",
+      "Configuración: sus partes (Precios, URL web, Email anfitrión, Texto emails, Reinicios, Borrado total...) ahora se pliegan por defecto, con un desplegable \"SECCIÓN\" junto al título que las despliega y salta directamente a la elegida.",
     ],
   },
 ];
@@ -374,17 +374,17 @@ const ETIQUETAS_VENTANAS = {
   versiones: "Versiones",
 };
 
-// Sub-secciones dentro de la propia ventana de Configuración: como ya son
-// muchas y la ventana se queda larga, el desplegable de sus "acciones"
-// (pie fijo, siempre visible) salta directamente a cada una por su id.
+// Sub-secciones dentro de la propia ventana de Configuración: empiezan
+// todas plegadas, y el desplegable "SECCIÓN" de su cabecera despliega
+// la elegida y salta a ella por su id.
 const SECCIONES_CONFIGURACION = [
   { id: "config-datos-evento", etiqueta: "Datos del evento" },
   { id: "config-precios", etiqueta: "Precios" },
-  { id: "config-url-web", etiqueta: "URL de la web" },
-  { id: "config-email-anfitrion", etiqueta: "Tu email (anfitrión)" },
-  { id: "config-plantillas-email", etiqueta: "Plantillas de los avisos" },
-  { id: "config-zona-reinicio", etiqueta: "Zona de reinicio" },
-  { id: "config-zona-peligro", etiqueta: "Zona de peligro" },
+  { id: "config-url-web", etiqueta: "URL web" },
+  { id: "config-email-anfitrion", etiqueta: "Email anfitrión" },
+  { id: "config-plantillas-email", etiqueta: "Texto emails" },
+  { id: "config-zona-reinicio", etiqueta: "Reinicios" },
+  { id: "config-zona-peligro", etiqueta: "Borrado total" },
 ];
 
 // Ventana flotante independiente y no bloqueante: a diferencia de
@@ -392,7 +392,7 @@ const SECCIONES_CONFIGURACION = [
 // varias abiertas a la vez — pensada para las secciones de administración
 // que se abren desde el desplegable de navegación (Mesas, Invitaciones,
 // Configuración...), donde puede interesar ver más de una a la vez.
-function VentanaFlotante({ clave, titulo, onCerrar, children, acciones }) {
+function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra }) {
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
   const posInicial = { top: 16 + idx * 20, left: 16 + idx * 20 };
   const [pos, setPos] = useState(posInicial);
@@ -484,9 +484,12 @@ function VentanaFlotante({ clave, titulo, onCerrar, children, acciones }) {
         >
           {titulo}
         </h3>
-        <button onClick={onCerrar} title="Cerrar">
-          <X size={18} style={{ color: C.charcoal }} />
-        </button>
+        <div className="flex items-center gap-2">
+          {extra}
+          <button onClick={onCerrar} title="Cerrar">
+            <X size={18} style={{ color: C.charcoal }} />
+          </button>
+        </div>
       </div>
       <div className="p-4" style={{ flex: 1, overflowY: "auto" }}>
         {children}
@@ -547,6 +550,22 @@ function SectionTitle({ icon: Icon, children, onToggle, abierto, compacto }) {
     <h2 className="flex items-center gap-2 text-xl mb-4 pb-2" style={estilo}>
       {contenido}
     </h2>
+  );
+}
+
+// Titulillo plegable de una sub-sección de Configuración: empieza cerrado,
+// y su línea superior (borde del contenedor que lo envuelve) hace también
+// de separador visual entre sub-secciones.
+function TitulilloConfig({ abierto, onClick, color, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 text-xs uppercase w-full text-left mb-2"
+      style={{ color: color || C.gold, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" }}
+    >
+      <span style={{ color: C.charcoal, opacity: 0.6 }}>{abierto ? "▾" : "▸"}</span>
+      {children}
+    </button>
   );
 }
 
@@ -2148,6 +2167,11 @@ function VistaAnfitrion({ data }) {
   // Cualquier reinicio que toque invitados limpia también su aviso
   // pendiente — si la asignación o el dato era de prueba, el aviso que
   // generó también lo era (se aplica siempre en el propio RPC).
+
+  // Todas las sub-secciones de Configuración empiezan plegadas.
+  const [seccionesConfigAbiertas, setSeccionesConfigAbiertas] = useState({});
+  const toggleSeccionConfig = (id) =>
+    setSeccionesConfigAbiertas((s) => ({ ...s, [id]: !s[id] }));
 
   const [rColaborador, setRColaborador] = useState(""); // "" = todos los colaboradores
   const [rAlcance, setRAlcance] = useState("todos"); // "todos" | "familia" | "invitado"
@@ -3919,15 +3943,19 @@ function VistaAnfitrion({ data }) {
           clave="configuracion"
           titulo="Configuración"
           onCerrar={() => toggle("configuracion")}
-          acciones={
+          extra={
             <select
               value=""
               onChange={(e) => {
                 if (e.target.value) {
-                  document.getElementById(e.target.value)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  setSeccionesConfigAbiertas((s) => ({ ...s, [e.target.value]: true }));
+                  setTimeout(
+                    () => document.getElementById(e.target.value)?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                    0
+                  );
                 }
               }}
-              className="ml-auto px-3 py-1.5 rounded text-sm font-medium"
+              className="px-2 py-1 rounded text-xs font-medium"
               style={{
                 background: C.ink,
                 color: C.paper,
@@ -3936,9 +3964,9 @@ function VistaAnfitrion({ data }) {
                 WebkitAppearance: "none",
                 MozAppearance: "none",
               }}
-              title="Ir directamente a esa parte de Configuración"
+              title="Despliega y salta directamente a esa parte de Configuración"
             >
-              <option value="">Ir a sección…</option>
+              <option value="">SECCIÓN</option>
               {SECCIONES_CONFIGURACION.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.etiqueta}
@@ -3948,6 +3976,14 @@ function VistaAnfitrion({ data }) {
           }
         >
             <div id="config-datos-evento">
+              <TitulilloConfig
+                abierto={!!seccionesConfigAbiertas["config-datos-evento"]}
+                onClick={() => toggleSeccionConfig("config-datos-evento")}
+              >
+                Datos del evento
+              </TitulilloConfig>
+              {seccionesConfigAbiertas["config-datos-evento"] && (
+              <>
               <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
                 Datos del evento (esto es lo que se ve en la portada).
               </p>
@@ -4041,9 +4077,19 @@ function VistaAnfitrion({ data }) {
                   </label>
                 </div>
               </div>
+              </>
+              )}
             </div>
-            <div id="config-precios">
-              <p className="text-xs mb-3 pt-3" style={{ color: C.charcoal, opacity: 0.75, borderTop: `1px solid ${C.line}` }}>
+            <div id="config-precios" className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+              <TitulilloConfig
+                abierto={!!seccionesConfigAbiertas["config-precios"]}
+                onClick={() => toggleSeccionConfig("config-precios")}
+              >
+                Precios
+              </TitulilloConfig>
+              {seccionesConfigAbiertas["config-precios"] && (
+              <>
+              <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
                 Precios de referencia para calcular el cobro de cada familia (número de adultos
                 y niños según los datos que recopile cada colaborador).
               </p>
@@ -4083,9 +4129,19 @@ function VistaAnfitrion({ data }) {
                 </span>
               </Field>
             </div>
+              </>
+              )}
             </div>
 
             <div id="config-url-web" className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+              <TitulilloConfig
+                abierto={!!seccionesConfigAbiertas["config-url-web"]}
+                onClick={() => toggleSeccionConfig("config-url-web")}
+              >
+                URL web
+              </TitulilloConfig>
+              {seccionesConfigAbiertas["config-url-web"] && (
+              <>
               <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
                 <strong>Importante:</strong> pega aquí la URL de tu web ya publicada (la del
                 dominio que te dé Vercel, o el tuyo propio si le pones uno). Sin este dato, los
@@ -4099,9 +4155,19 @@ function VistaAnfitrion({ data }) {
                   className="w-full"
                 />
               </Field>
+              </>
+              )}
             </div>
 
             <div id="config-email-anfitrion" className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+              <TitulilloConfig
+                abierto={!!seccionesConfigAbiertas["config-email-anfitrion"]}
+                onClick={() => toggleSeccionConfig("config-email-anfitrion")}
+              >
+                Email anfitrión
+              </TitulilloConfig>
+              {seccionesConfigAbiertas["config-email-anfitrion"] && (
+              <>
               <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
                 Tu email, para recibir avisos automáticos cuando un colaborador complete todos
                 los datos o todos los pagos de sus invitados asignados.
@@ -4114,9 +4180,19 @@ function VistaAnfitrion({ data }) {
                   className="w-full"
                 />
               </Field>
+              </>
+              )}
             </div>
 
             <div id="config-plantillas-email" className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+              <TitulilloConfig
+                abierto={!!seccionesConfigAbiertas["config-plantillas-email"]}
+                onClick={() => toggleSeccionConfig("config-plantillas-email")}
+              >
+                Texto emails
+              </TitulilloConfig>
+              {seccionesConfigAbiertas["config-plantillas-email"] && (
+              <>
               <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
                 Texto de los avisos automáticos por email. Usa <code>{"{colaborador}"}</code>{" "}
                 donde quieras que aparezca ese nombre — se rellena solo al enviar. Admite HTML
@@ -4169,9 +4245,19 @@ function VistaAnfitrion({ data }) {
                   style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
                 />
               </Field>
+              </>
+              )}
             </div>
 
             <div id="config-zona-reinicio" className="mt-4 pt-4" style={{ borderTop: `2px solid ${C.line}` }}>
+              <TitulilloConfig
+                abierto={!!seccionesConfigAbiertas["config-zona-reinicio"]}
+                onClick={() => toggleSeccionConfig("config-zona-reinicio")}
+              >
+                Reinicios
+              </TitulilloConfig>
+              {seccionesConfigAbiertas["config-zona-reinicio"] && (
+              <>
               <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
                 Zona de reinicio: pone a cero campos concretos de los invitados de un colaborador
                 (útil tras pruebas, o para reutilizar la app en otro evento). Los invitados y los
@@ -4289,9 +4375,20 @@ function VistaAnfitrion({ data }) {
                   <Repeat size={14} /> Reiniciar avisos (historial de emails)
                 </button>
               </div>
+              </>
+              )}
             </div>
 
             <div id="config-zona-peligro" className="mt-4 pt-4" style={{ borderTop: `2px solid ${C.wax}` }}>
+              <TitulilloConfig
+                abierto={!!seccionesConfigAbiertas["config-zona-peligro"]}
+                onClick={() => toggleSeccionConfig("config-zona-peligro")}
+                color={C.wax}
+              >
+                Borrado total
+              </TitulilloConfig>
+              {seccionesConfigAbiertas["config-zona-peligro"] && (
+              <>
               <p className="text-xs mb-2" style={{ color: C.wax, fontWeight: 700 }}>
                 ⚠ Zona de peligro: esto borra evento, colaboradores, invitados, mesas y fotos —
                 todo el contenido de la aplicación. No se puede deshacer.
@@ -4303,6 +4400,8 @@ function VistaAnfitrion({ data }) {
               >
                 <Trash2 size={14} /> BORRAR TODO
               </button>
+              </>
+              )}
             </div>
         </VentanaFlotante>
       )}
