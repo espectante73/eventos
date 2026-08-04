@@ -2,21 +2,25 @@ name: Backup diario de la base de datos
 
 # Se ejecuta solo (todos los días) y también se puede lanzar a mano desde
 # la pestaña "Actions" del repositorio en GitHub (botón "Run workflow").
+#
+# El volcado se guarda como "artifact" de esta ejecución (Actions → esta
+# ejecución → Artifacts, al final de la página), NO se commitea al
+# repositorio: la base de datos guarda credenciales propias (clave de
+# Resend, token del anfitrión) que nunca deben quedar en el historial de
+# git, así que se excluyen del volcado y además éste se mantiene fuera de
+# git por completo.
 on:
   schedule:
     - cron: "0 4 * * *" # 04:00 UTC ≈ 05:00/06:00 hora Canarias
   workflow_dispatch: {}
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Clonar el repositorio
-        uses: actions/checkout@v4
-
       - name: Exportar la base de datos de Supabase
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
@@ -27,16 +31,13 @@ jobs:
           fi
           mkdir -p backups
           docker run --rm postgres:17 pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges \
-            > backups/ultimo-backup.sql
+            --exclude-table-data='public.config_secretos' \
+            --exclude-table-data='public.anfitrion_secreto' \
+            > "backups/backup-$(date -u +%F).sql"
 
-      - name: Guardar el backup en el propio repositorio
-        run: |
-          git config user.name "Backup automático"
-          git config user.email "actions@github.com"
-          git add backups/ultimo-backup.sql
-          if git diff --cached --quiet; then
-            echo "Sin cambios respecto al backup anterior."
-          else
-            git commit -m "Backup automático $(date -u +%F)"
-            git push
-          fi
+      - name: Adjuntar el backup a esta ejecución
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-base-de-datos
+          path: backups/*.sql
+          retention-days: 90
