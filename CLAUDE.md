@@ -45,6 +45,38 @@ código de envío está roto sin descartar antes un problema de configuración
 (clave de API, remitente) o de plantilla. Cuando se confirme que la prueba
 fue bien (o mal), actualizar esta sección y el README.
 
+## Backup automático de la base de datos
+
+Existe un backup diario automático vía GitHub Actions
+(`.github/workflows/backup.yml`), configurado el 2026-08-05. Se ejecuta
+solo cada día y también se puede lanzar a mano desde la pestaña Actions
+("Run workflow"). El volcado (`pg_dump`) se guarda como **artifact** de
+esa ejecución (Actions → la ejecución → sección "Artifacts", se conservan
+90 días) — deliberadamente **no** se commitea al repositorio.
+
+Motivo de no commitearlo: la base de datos guarda credenciales propias en
+las tablas `config_secretos` (clave de la API de Resend) y
+`anfitrion_secreto` (token de acceso del anfitrión). Un primer intento de
+guardar el volcado dentro del repo fue bloqueado por el "secret scanning"
+de GitHub al detectar la clave real de Resend en texto plano — señal
+correcta, no un error a silenciar. La solución fue doble: excluir los
+datos de esas dos tablas del volcado (`--exclude-table-data`, se conserva
+la estructura por si hace falta restaurar, pero no el secreto) y además
+sacar el backup por completo del historial de git usando artifacts en vez
+de un commit.
+
+Requiere el secreto de repositorio `SUPABASE_DB_URL` (Settings → Secrets
+and variables → Actions), con la cadena de conexión **"Session pooler"**
+de Supabase (no "Direct connection": esa es solo IPv6 y GitHub Actions no
+la alcanza de forma fiable).
+
+⚠️ Gotcha ya encontrado: `pg_dump` debe ser de una versión igual o mayor
+que la del servidor de Postgres de Supabase, si no aborta con "server
+version mismatch". El workflow usa la imagen Docker `postgres:17`; si
+Supabase sube de versión mayor en el futuro (revisar en Project Settings →
+Database, o en el mensaje de error si el workflow empieza a fallar de
+nuevo), hay que subir el número de esa imagen a juego.
+
 ## Reglas de diseño ya decididas
 
 ### "Reset" nunca borra invitados ni colaboradores
