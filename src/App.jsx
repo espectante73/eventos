@@ -70,6 +70,7 @@ const HISTORIAL_VERSIONES = [
       "Plano de mesas: nueva sección con un lienzo donde cada mesa se arrastra a la posición que quieras (se guarda sola), con botón de impresión preparado para papel A2.",
       "Estado de cuentas: nueva sección con lo recaudado y pendiente de cobro calculados solos a partir de los pagos de invitados, más una lista editable de gastos (incluye también los costes de la propia app, como el dominio o la suscripción) y el balance resultante.",
       'Navegación: las secciones (Mesas, Configuración, Avisos...) dejan de estar apiladas en una página larga y pasan a abrirse como ventanas flotantes movibles y redimensionables, accesibles desde un único desplegable ordenado alfabéticamente. El cambio entre Anfitrión y colaboradores se redujo a una sola barra táctil, pensada para el pulgar en móvil.',
+      "Portada: el botón para cambiar la imagen (poco visible sobre algunas fotos) se quita de encima de la portada; ahora se edita desde Configuración, junto con el resto de datos del evento.",
     ],
   },
 ];
@@ -567,12 +568,9 @@ function TextInput(props) {
 
 // ---------- Cover / Event details ----------
 
-function Portada({ evento, editable, onChange, abierto, toggle }) {
+function Portada({ evento, editable, abierto, toggle }) {
   const [form, setForm] = useState(evento);
-  const [mostrarImagenInput, setMostrarImagenInput] = useState(false);
   useEffect(() => setForm(evento), [evento]);
-
-  const commit = () => onChange(form);
 
   return (
     <div
@@ -593,44 +591,6 @@ function Portada({ evento, editable, onChange, abierto, toggle }) {
         >
           v{VERSION_APP}
         </span>
-        {editable && (
-          <button
-            onClick={() => setMostrarImagenInput((v) => !v)}
-            className="absolute top-2 right-2 flex items-center gap-1 text-xs px-2 py-1 rounded z-10"
-            style={{ background: "rgba(255,255,255,0.85)", color: C.ink }}
-            title="Cambiar imagen del evento"
-          >
-            <ImageIcon size={13} /> Imagen {mostrarImagenInput ? "▾" : "▸"}
-          </button>
-        )}
-        {editable && mostrarImagenInput && (
-          <div
-            className="absolute top-10 right-2 p-2 rounded z-10"
-            style={{ background: "#fff", border: `1px solid ${C.line}`, width: 260, boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}
-          >
-            <Field label="Imagen (URL)">
-              <TextInput
-                value={form.imagen}
-                onChange={(e) => setForm({ ...form, imagen: e.target.value })}
-                onBlur={commit}
-                placeholder="https://..."
-                className="w-full"
-              />
-            </Field>
-            <label className="flex items-center gap-2 mt-2 text-xs" style={{ color: C.charcoal }}>
-              <input
-                type="checkbox"
-                checked={form.ocultarTituloEnImagen}
-                onChange={(e) => {
-                  const next = { ...form, ocultarTituloEnImagen: e.target.checked };
-                  setForm(next);
-                  onChange(next);
-                }}
-              />
-              La imagen ya incluye el título (ocultar el texto superpuesto)
-            </label>
-          </div>
-        )}
         {!form.imagen && (
           <ImageIcon color={C.paper} size={30} strokeWidth={1.3} />
         )}
@@ -2730,7 +2690,7 @@ function VistaAnfitrion({ data }) {
 
   return (
     <div className="space-y-8">
-      <Portada evento={evento} editable onChange={persistEvento} abierto={abierto} toggle={toggle} />
+      <Portada evento={evento} editable abierto={abierto} toggle={toggle} />
 
       {/* Resumen */}
       <section className="grid grid-cols-3 gap-3">
@@ -3961,6 +3921,24 @@ function VistaAnfitrion({ data }) {
                   placeholder="Calle, número, municipio"
                 />
               </Field>
+              <div style={{ gridColumn: "span 2 / span 2" }}>
+                <Field label="Imagen de portada (URL)">
+                  <TextInput
+                    value={evento.imagen}
+                    onChange={(e) => persistEvento({ ...evento, imagen: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full"
+                  />
+                </Field>
+                <label className="flex items-center gap-2 mt-2 text-xs" style={{ color: C.charcoal }}>
+                  <input
+                    type="checkbox"
+                    checked={evento.ocultarTituloEnImagen}
+                    onChange={(e) => persistEvento({ ...evento, ocultarTituloEnImagen: e.target.checked })}
+                  />
+                  La imagen ya incluye el título (ocultar el texto superpuesto)
+                </label>
+              </div>
             </div>
             <p className="text-xs mb-3 pt-3" style={{ color: C.charcoal, opacity: 0.75, borderTop: `1px solid ${C.line}` }}>
               Precios de referencia para calcular el cobro de cada familia (número de adultos
