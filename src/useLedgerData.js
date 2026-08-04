@@ -42,6 +42,8 @@ export function useLedgerData(rol) {
   const [loaded, setLoaded] = useState(false);
   const [esAnfitrion, setEsAnfitrion] = useState(false);
   const [avisosEnviados, setAvisosEnviados] = useState([]);
+  // Estado de cuentas — solo lo carga/usa el anfitrión, nunca colaboradores.
+  const [gastos, setGastos] = useState([]);
   // Orden manual de nombres por familia (para la invitación) — solo lo usa
   // el anfitrión, igual que las mesas.
   const [ordenFamiliares, setOrdenFamiliares] = useState({});
@@ -141,6 +143,11 @@ export function useLedgerData(rol) {
           .from("orden_familias")
           .select("*");
         if (errOrden) avisar("No se pudo cargar el orden de las familias.", errOrden);
+        const { data: todosGastos, error: errGastos } = await supabase.rpc(
+          "anfitrion_listar_gastos",
+          { p_token: rol }
+        );
+        if (errGastos) avisar("No se pudo cargar el estado de cuentas.", errGastos);
 
         if (cancelado) return;
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
@@ -151,6 +158,7 @@ export function useLedgerData(rol) {
         setInvitados(todosInvitados || []);
         setMesas(todasMesas || []);
         setAvisosEnviados(avisos || []);
+        setGastos(todosGastos || []);
         setOrdenFamiliares(
           Object.fromEntries(
             (ordenFilas || []).map((r) => [
@@ -244,6 +252,19 @@ export function useLedgerData(rol) {
         p_filas: next,
       });
       if (error) avisar("No se pudieron guardar los colaboradores.", error);
+    },
+    [esAnfitrion, rol]
+  );
+
+  const persistGastos = useCallback(
+    async (next) => {
+      setGastos(next);
+      if (!esAnfitrion) return; // Estado de cuentas: solo el anfitrión lo toca.
+      const { error } = await supabase.rpc("anfitrion_guardar_gastos", {
+        p_token: rol,
+        p_filas: next,
+      });
+      if (error) avisar("No se pudo guardar el estado de cuentas.", error);
     },
     [esAnfitrion, rol]
   );
@@ -439,5 +460,7 @@ export function useLedgerData(rol) {
     persistOrdenFamiliares,
     resetearAvisos,
     resetearPorInvitados,
+    gastos,
+    persistGastos,
   };
 }

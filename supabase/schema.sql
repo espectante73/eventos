@@ -172,11 +172,26 @@ alter table avisos_enviados enable row level security;
 revoke all on table avisos_enviados from anon, authenticated;
 
 -- ============================================================
--- RLS: activada en las 9 tablas. evento/mesas/fotos_familiares/
+-- 9. GASTOS (Estado de cuentas — solo el anfitrión, nunca los
+--    colaboradores). Igual de cerrada que invitados/colaboradores:
+--    solo alcanzable a través de las funciones RPC de más abajo.
+-- ============================================================
+create table gastos (
+  "id"         uuid primary key default gen_random_uuid(),
+  "concepto"   text not null default '',
+  "categoria"  text not null default '',
+  "importe"    numeric not null default 0,
+  "pagado"     boolean not null default false
+);
+alter table gastos enable row level security;
+revoke all on table gastos from anon, authenticated;
+
+-- ============================================================
+-- RLS: activada en las 10 tablas. evento/mesas/fotos_familiares/
 -- orden_familias quedan abiertas (datos sin sensibilidad real).
--- invitados, colaboradores, anfitrion_secreto, config_secretos y
--- avisos_enviados NO tienen ninguna política — solo se pueden
--- tocar a través de las funciones de más abajo.
+-- invitados, colaboradores, anfitrion_secreto, config_secretos,
+-- avisos_enviados y gastos NO tienen ninguna política — solo se
+-- pueden tocar a través de las funciones de más abajo.
 -- ============================================================
 alter table evento             enable row level security;
 alter table mesas              enable row level security;
@@ -647,6 +662,50 @@ as $$
 $$;
 
 -- ============================================================
+-- ESTADO DE CUENTAS (gastos) — mismo patrón que colaboradores:
+-- upsert por id + borra los que ya no estén en la lista.
+-- ============================================================
+create or replace function anfitrion_listar_gastos(p_token uuid)
+returns setof gastos
+language sql security definer set search_path = public, pg_temp
+as $$
+  select * from gastos
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  order by "categoria", "concepto";
+$$;
+
+create or replace function anfitrion_guardar_gastos(p_token uuid, p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token <> (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  insert into gastos ("id", "concepto", "categoria", "importe", "pagado")
+  select
+    (f->>'id')::uuid,
+    coalesce(f->>'concepto', ''),
+    coalesce(f->>'categoria', ''),
+    coalesce((f->>'importe')::numeric, 0),
+    coalesce((f->>'pagado')::boolean, false)
+  from jsonb_array_elements(p_filas) as f
+  on conflict ("id") do update
+    set "concepto" = excluded."concepto",
+        "categoria" = excluded."categoria",
+        "importe" = excluded."importe",
+        "pagado" = excluded."pagado";
+
+  delete from gastos g
+  where not exists (
+    select 1 from jsonb_array_elements(p_filas) f
+    where (f->>'id')::uuid = g."id"
+  );
+end;
+$$;
+
+-- ============================================================
 -- ZONA DE REINICIO ("botón nuclear"): pone a cero campos concretos
 -- sin borrar nunca al invitado ni al colaborador en sí. Pensado para
 -- poder reutilizar la app en otro evento, o limpiar datos de pruebas
@@ -727,6 +786,8 @@ grant execute on function anfitrion_enviar_invitacion_familia(uuid, text, text, 
 grant execute on function anfitrion_listar_avisos_enviados(uuid) to anon;
 grant execute on function anfitrion_resetear_avisos(uuid) to anon;
 grant execute on function anfitrion_resetear_por_invitados(uuid, uuid[], text) to anon;
+grant execute on function anfitrion_listar_gastos(uuid) to anon;
+grant execute on function anfitrion_guardar_gastos(uuid, jsonb) to anon;
 grant execute on function colaborador_mi_perfil(uuid) to anon;
 grant execute on function colaborador_mis_invitados(uuid) to anon;
 grant execute on function colaborador_guardar_invitado(uuid, uuid, jsonb) to anon;
