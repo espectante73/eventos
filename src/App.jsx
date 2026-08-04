@@ -26,12 +26,17 @@ import {
 import { useLedgerData } from "./useLedgerData";
 import { supabase } from "./supabaseClient";
 
-const VERSION_APP = "5.1";
+const VERSION_APP = "6.0";
 
 // Versiones anteriores ya cerradas (números enteros completos): un resumen
 // breve por versión mayor, en vez de listar cada sub-versión — ocupa menos
 // espacio en la sección "Versiones".
 const RESUMEN_VERSIONES_ANTERIORES = [
+  {
+    version: "5",
+    cambios:
+      'Enlace del anfitrión cerrado con token secreto. Avisos automáticos por email (Resend) para asignación de invitados, datos completos y pagos completos, y envío de la invitación (con imagen adjunta) a cada familia, todo con vista previa y confirmación explícita — nunca disparado solo. Formulario del colaborador rediseñado para móvil. Cuadrícula de calibración para posicionar fecha/hora/lugar sobre la imagen de la invitación. Zona de Reinicio para limpiar datos de pruebas sin borrar invitados ni colaboradores.',
+  },
   {
     version: "4",
     cambios:
@@ -54,16 +59,18 @@ const RESUMEN_VERSIONES_ANTERIORES = [
   },
 ];
 
+// A partir de la 6.0, "cambios" es una lista de párrafos cortos (uno por
+// área mejorada) en vez de un único bloque de texto largo — más fácil de
+// leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
-    version: "5.1",
-    cambios:
-      'Envío de la invitación por email directamente a cada familia (con la imagen adjunta), dirigido a la primera persona de un orden que ahora se puede reordenar a mano (para poner al esposo primero, etc.), con vista previa y confirmación antes de enviar, y envío seguro por bloques eligiendo un colaborador. Bloqueo de "pagado" si faltan datos del invitado, y de generar la invitación si falta mesa asignada. Fecha/hora/lugar (tomados de Configuración) añadidos a la imagen de la invitación, con modo de cuadrícula de calibración para ajustar su posición con precisión. Plantilla de invitación ahora también se puede subir como archivo, con carpeta de guardado persistente. Dashboard de "Avisos" ampliado con el estado de las invitaciones por familia. Nueva Zona de Reinicio en Configuración (por colaborador, familia o invitado, con copia de seguridad automática y palabra de confirmación) para limpiar datos de pruebas sin borrar invitados. Aviso automático en pantalla cuando hay una versión nueva desplegada.',
-  },
-  {
-    version: "5.0",
-    cambios:
-      "Cierra el acceso del anfitrión con enlace secreto (igual que los colaboradores) tras detectarse un fallo real. Añade avisos automáticos por email (Resend): asignación de invitados, datos completos y pagos completos, con confirmación explícita del colaborador (no por cada cambio suelto), vista previa antes de enviar, registro de enviados/pendientes y opción de corregir la asignación antes de avisar. Formulario del colaborador rediseñado para móvil, con guardado automático campo a campo y año de nacimiento + alergias como únicos datos obligatorios.",
+    version: "6.0",
+    cambios: [
+      'Mesas: ahora se dibujan redondas con sillas alrededor (su número sigue a la capacidad), la cantidad de mesas es libre (añadir/quitar, sin el límite fijo de 15), y "Vaciar mesa" desasigna a todos sus invitados de golpe sin borrar a nadie.',
+      "Plano de mesas: nueva sección con un lienzo donde cada mesa se arrastra a la posición que quieras (se guarda sola), con botón de impresión preparado para papel A2.",
+      "Estado de cuentas: nueva sección con lo recaudado y pendiente de cobro calculados solos a partir de los pagos de invitados, más una lista editable de gastos (incluye también los costes de la propia app, como el dominio o la suscripción) y el balance resultante.",
+      'Navegación: las secciones (Mesas, Configuración, Avisos...) dejan de estar apiladas en una página larga y pasan a abrirse como ventanas flotantes movibles y redimensionables, accesibles desde un único desplegable ordenado alfabéticamente. El cambio entre Anfitrión y colaboradores se redujo a una sola barra táctil, pensada para el pulgar en móvil.',
+    ],
   },
 ];
 
@@ -1737,6 +1744,10 @@ function VistaAnfitrion({ data }) {
   // precioNino del evento — se convierte a número solo al sumar
   // (parsePrecio), nunca en cada pulsación. Convertirlo a número al momento
   // borraba la coma decimal a medio escribir (9,18 acababa siendo 918).
+  // La lista de gastos empieza plegada: al abrir la sección solo se ven los
+  // 4 recuadros (recaudado/pendiente/gastos/balance).
+  const [mostrarListaGastos, setMostrarListaGastos] = useState(false);
+
   const agregarGasto = () => {
     persistGastos([
       ...gastos,
@@ -3765,10 +3776,16 @@ function VistaAnfitrion({ data }) {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-                    Gastos ({gastos.length})
-                  </p>
+                <button
+                  onClick={() => setMostrarListaGastos((v) => !v)}
+                  className="flex items-center gap-2 text-sm font-medium mb-2"
+                  style={{ color: C.ink }}
+                >
+                  {mostrarListaGastos ? "▾" : "▸"} Gastos ({gastos.length})
+                </button>
+                {mostrarListaGastos && (
+                <>
+                <div className="flex items-center justify-end mb-2">
                   <button
                     onClick={agregarGasto}
                     className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
@@ -3822,6 +3839,8 @@ function VistaAnfitrion({ data }) {
                     </p>
                   )}
                 </div>
+                </>
+                )}
               </>
             );
           })()}
@@ -4510,9 +4529,13 @@ function VistaAnfitrion({ data }) {
                   <Stamp color={v.version === VERSION_APP ? C.ink : C.charcoal}>
                     v{v.version}
                   </Stamp>
-                  <p className="text-sm" style={{ color: C.charcoal }}>
-                    {v.cambios}
-                  </p>
+                  <div className="space-y-2">
+                    {(Array.isArray(v.cambios) ? v.cambios : [v.cambios]).map((parrafo, i) => (
+                      <p key={i} className="text-sm" style={{ color: C.charcoal }}>
+                        {parrafo}
+                      </p>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
