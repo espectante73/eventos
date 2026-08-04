@@ -1,0 +1,42 @@
+name: Backup diario de la base de datos
+
+# Se ejecuta solo (todos los días) y también se puede lanzar a mano desde
+# la pestaña "Actions" del repositorio en GitHub (botón "Run workflow").
+on:
+  schedule:
+    - cron: "0 4 * * *" # 04:00 UTC ≈ 05:00/06:00 hora Canarias
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Exportar la base de datos de Supabase
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "Falta el secreto SUPABASE_DB_URL en la configuración del repositorio." >&2
+            exit 1
+          fi
+          mkdir -p backups
+          docker run --rm postgres:16 pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges \
+            > backups/ultimo-backup.sql
+
+      - name: Guardar el backup en el propio repositorio
+        run: |
+          git config user.name "Backup automático"
+          git config user.email "actions@github.com"
+          git add backups/ultimo-backup.sql
+          if git diff --cached --quiet; then
+            echo "Sin cambios respecto al backup anterior."
+          else
+            git commit -m "Backup automático $(date -u +%F)"
+            git push
+          fi
