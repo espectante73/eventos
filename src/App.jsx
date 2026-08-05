@@ -74,6 +74,8 @@ const HISTORIAL_VERSIONES = [
       "Imágenes: la imagen de portada y la de la plantilla de invitación se suben ahora como archivo desde el dispositivo, en vez de pegar una URL — igual que ya funcionaba la foto de boda.",
       "Email del colaborador: se edita en un solo sitio (Colaboradores); se quita el duplicado de Configuración, y en el formulario de datos del invitado aparece ensombrecido (solo lectura) cuando ese invitado es también un colaborador.",
       "Configuración: la ventana pasa a ser solo un desplegable \"SECCIÓN\" — cada parte (Precios, URL web, Email anfitrión, Texto emails, Reinicios, Borrado total...) se abre en su propia ventana independiente, igual que Mesas o Avisos.",
+      "Ventanas: cualquiera pasa a primer plano en cuanto se toca, en vez de quedarse algunas ancladas por encima de las demás.",
+      "Solidez: BORRAR TODO descarga ahora la misma copia de seguridad automática que ya tenían los reinicios. Y si guardar algo falla (sin conexión, fallo del servidor), la pantalla deja de mostrar el cambio como si se hubiera guardado — se deshace solo en vez de mentir hasta que recargues.",
     ],
   },
 ];
@@ -2098,6 +2100,10 @@ function VistaAnfitrion({ data }) {
     if (!primera) return;
     const segunda = window.confirm(`${aviso}\n\nÚltima confirmación: se borrará TODO de verdad. ¿Confirmas definitivamente?`);
     if (!segunda) return;
+    // Misma red de seguridad que ya tienen los reinicios: nunca se ejecuta
+    // el borrado más destructivo de la app sin dejar antes una copia
+    // completa descargada al dispositivo.
+    descargarJSON(`backup-antes-de-borrar-todo-${Date.now()}.json`, JSON.parse(exportarTodo()));
     persistEvento({
       nombre: "",
       fecha: "",

@@ -49,7 +49,12 @@ export function useLedgerData(rol) {
   const [ordenFamiliares, setOrdenFamiliares] = useState({});
 
   // Se mantiene al día para poder comparar "antes/después" dentro de
-  // persistInvitados sin depender de closures obsoletas.
+  // persistInvitados sin depender de closures obsoletas. También sirve
+  // para revertir la pantalla si el guardado en Supabase falla — todos los
+  // persistX actualizan el estado local antes de confirmar el guardado
+  // (para que la pantalla responda al instante), así que si la escritura
+  // real falla, hay que deshacer ese cambio optimista o la pantalla se
+  // queda mintiendo (muestra el dato nuevo aunque nunca se guardó).
   const invitadosRef = useRef(invitados);
   useEffect(() => {
     invitadosRef.current = invitados;
@@ -62,6 +67,31 @@ export function useLedgerData(rol) {
   useEffect(() => {
     mesasRef.current = mesas;
   }, [mesas]);
+
+  const eventoRef = useRef(evento);
+  useEffect(() => {
+    eventoRef.current = evento;
+  }, [evento]);
+
+  const colaboradoresRef = useRef(colaboradores);
+  useEffect(() => {
+    colaboradoresRef.current = colaboradores;
+  }, [colaboradores]);
+
+  const fotosFamiliaresRef = useRef(fotosFamiliares);
+  useEffect(() => {
+    fotosFamiliaresRef.current = fotosFamiliares;
+  }, [fotosFamiliares]);
+
+  const ordenFamiliaresRef = useRef(ordenFamiliares);
+  useEffect(() => {
+    ordenFamiliaresRef.current = ordenFamiliares;
+  }, [ordenFamiliares]);
+
+  const gastosRef = useRef(gastos);
+  useEffect(() => {
+    gastosRef.current = gastos;
+  }, [gastos]);
 
   useEffect(() => {
     let cancelado = false;
@@ -192,9 +222,15 @@ export function useLedgerData(rol) {
   }, [rol]);
 
   const persistEvento = useCallback(async (next) => {
+    const anterior = eventoRef.current;
     setEvento(next);
+    eventoRef.current = next;
     const { error } = await supabase.from("evento").update(next).eq("id", true);
-    if (error) avisar("No se pudo guardar la configuración del evento.", error);
+    if (error) {
+      avisar("No se pudo guardar la configuración del evento. Se deshace el cambio en pantalla.", error);
+      setEvento(anterior);
+      eventoRef.current = anterior;
+    }
   }, []);
 
   const persistMesas = useCallback(async (next) => {
@@ -206,32 +242,54 @@ export function useLedgerData(rol) {
     const numerosBorrados = anterior
       .filter((m) => !numerosNuevos.has(m.numero))
       .map((m) => m.numero);
+    let huboError = false;
     if (numerosBorrados.length > 0) {
       const { error: errBorrar } = await supabase
         .from("mesas")
         .delete()
         .in("numero", numerosBorrados);
-      if (errBorrar) avisar("No se pudieron eliminar las mesas quitadas.", errBorrar);
+      if (errBorrar) {
+        avisar("No se pudieron eliminar las mesas quitadas.", errBorrar);
+        huboError = true;
+      }
     }
     if (next.length > 0) {
       const { error } = await supabase.from("mesas").upsert(next);
-      if (error) avisar("No se pudieron guardar las mesas.", error);
+      if (error) {
+        avisar("No se pudieron guardar las mesas.", error);
+        huboError = true;
+      }
+    }
+    // Si algo falló a mitad, la pantalla no puede seguir mostrando el
+    // cambio como si se hubiera guardado entero — se deshace por completo
+    // y se recarga desde la base de datos la próxima vez que haga falta.
+    if (huboError) {
+      setMesas(anterior);
+      mesasRef.current = anterior;
     }
   }, []);
 
   const persistFotosFamiliares = useCallback(async (next) => {
+    const anterior = fotosFamiliaresRef.current;
     setFotosFamiliares(next);
+    fotosFamiliaresRef.current = next;
     const filas = Object.entries(next).map(([grupoFamiliar, url]) => ({
       grupoFamiliar,
       url,
     }));
     if (filas.length === 0) return;
     const { error } = await supabase.from("fotos_familiares").upsert(filas);
-    if (error) avisar("No se pudo guardar la foto familiar.", error);
+    if (error) {
+      avisar("No se pudo guardar la foto familiar. Se deshace el cambio en pantalla.", error);
+      setFotosFamiliares(anterior);
+      fotosFamiliaresRef.current = anterior;
+    }
   }, []);
 
   const persistOrdenFamiliares = useCallback(async (next) => {
+    const anterior = ordenFamiliaresRef.current;
     setOrdenFamiliares(next);
+    ordenFamiliaresRef.current = next;
     const filas = Object.entries(next).map(([grupoFamiliar, datos]) => ({
       grupoFamiliar,
       orden: datos.orden || [],
@@ -240,31 +298,47 @@ export function useLedgerData(rol) {
     }));
     if (filas.length === 0) return;
     const { error } = await supabase.from("orden_familias").upsert(filas);
-    if (error) avisar("No se pudo guardar el orden de la familia.", error);
+    if (error) {
+      avisar("No se pudo guardar el orden de la familia. Se deshace el cambio en pantalla.", error);
+      setOrdenFamiliares(anterior);
+      ordenFamiliaresRef.current = anterior;
+    }
   }, []);
 
   const persistColaboradores = useCallback(
     async (next) => {
+      const anterior = colaboradoresRef.current;
       setColaboradores(next);
+      colaboradoresRef.current = next;
       if (!esAnfitrion) return; // Un colaborador nunca modifica la lista de colaboradores.
       const { error } = await supabase.rpc("anfitrion_guardar_colaboradores", {
         p_token: rol,
         p_filas: next,
       });
-      if (error) avisar("No se pudieron guardar los colaboradores.", error);
+      if (error) {
+        avisar("No se pudieron guardar los colaboradores. Se deshace el cambio en pantalla.", error);
+        setColaboradores(anterior);
+        colaboradoresRef.current = anterior;
+      }
     },
     [esAnfitrion, rol]
   );
 
   const persistGastos = useCallback(
     async (next) => {
+      const anterior = gastosRef.current;
       setGastos(next);
+      gastosRef.current = next;
       if (!esAnfitrion) return; // Estado de cuentas: solo el anfitrión lo toca.
       const { error } = await supabase.rpc("anfitrion_guardar_gastos", {
         p_token: rol,
         p_filas: next,
       });
-      if (error) avisar("No se pudo guardar el estado de cuentas.", error);
+      if (error) {
+        avisar("No se pudo guardar el estado de cuentas. Se deshace el cambio en pantalla.", error);
+        setGastos(anterior);
+        gastosRef.current = anterior;
+      }
     },
     [esAnfitrion, rol]
   );
@@ -282,7 +356,10 @@ export function useLedgerData(rol) {
         });
         if (error) avisar("No se pudieron guardar los invitados.", error);
         // Una reasignación marca "avisoPendiente" en el propio invitado, en
-        // el servidor — recargamos para que se vea al momento.
+        // el servidor — recargamos para que se vea al momento. Si el guardado
+        // falló y esta recarga también falla, no hay verdad del servidor que
+        // consultar: se deshace el cambio optimista en vez de dejar la
+        // pantalla mostrando datos que nunca llegaron a guardarse.
         const { data: todosInvitados, error: errInv } = await supabase.rpc(
           "anfitrion_listar_invitados",
           { p_token: rol }
@@ -290,6 +367,9 @@ export function useLedgerData(rol) {
         if (!errInv) {
           setInvitados(todosInvitados || []);
           invitadosRef.current = todosInvitados || [];
+        } else if (error) {
+          setInvitados(anterior);
+          invitadosRef.current = anterior;
         }
         return;
       }
@@ -318,7 +398,9 @@ export function useLedgerData(rol) {
           p_pagado: cambiado.pagado,
         });
         if (error || !data || data.length === 0) {
-          avisar("No se pudo actualizar el pago (¿sigue asignado a ti este invitado?).", error);
+          avisar("No se pudo actualizar el pago (¿sigue asignado a ti este invitado?). Se deshace el cambio en pantalla.", error);
+          setInvitados(anterior);
+          invitadosRef.current = anterior;
         }
       } else {
         const { data, error } = await supabase.rpc("colaborador_guardar_invitado", {
@@ -327,7 +409,9 @@ export function useLedgerData(rol) {
           p_cambios: cambiado,
         });
         if (error || !data || data.length === 0) {
-          avisar("No se pudieron guardar los datos (¿sigue asignado a ti este invitado?).", error);
+          avisar("No se pudieron guardar los datos (¿sigue asignado a ti este invitado?). Se deshace el cambio en pantalla.", error);
+          setInvitados(anterior);
+          invitadosRef.current = anterior;
         }
       }
     },
