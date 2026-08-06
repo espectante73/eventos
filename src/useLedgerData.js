@@ -99,17 +99,25 @@ export function useLedgerData(rol) {
   useEffect(() => {
     let cancelado = false;
 
-    (async () => {
-      setLoaded(false);
-      setEsAnfitrion(false);
+    // "mostrarCarga": true solo en la primera carga (pantalla "Abriendo el
+    // libro de invitados…"). Las actualizaciones periódicas de fondo son
+    // silenciosas — sin esto, la pantalla entera parpadearía a "cargando"
+    // cada minuto solo para enterarse de cambios de otra persona.
+    const cargarDatos = async (mostrarCarga) => {
+      if (mostrarCarga) {
+        setLoaded(false);
+        setEsAnfitrion(false);
+      }
 
       // Sin ningún código en el enlace: no se intenta cargar nada real.
       // No hay "modo por defecto" — antes esto era el fallo de seguridad.
       if (!rol) {
-        setColaboradores([]);
-        setInvitados([]);
-        setMesas([]);
-        setLoaded(true);
+        if (mostrarCarga) {
+          setColaboradores([]);
+          setInvitados([]);
+          setMesas([]);
+          setLoaded(true);
+        }
         return;
       }
 
@@ -118,7 +126,10 @@ export function useLedgerData(rol) {
         "colaborador_mi_perfil",
         { p_colaborador_id: rol }
       );
-      if (errPerfil) avisar("No se pudo comprobar el enlace.", errPerfil);
+      if (errPerfil) {
+        if (mostrarCarga) avisar("No se pudo comprobar el enlace.", errPerfil);
+        return;
+      }
 
       if (perfil && perfil.length > 0) {
         const { data: eventoFilas } = await supabase.from("evento").select("*").limit(1);
@@ -127,7 +138,7 @@ export function useLedgerData(rol) {
           "colaborador_mis_invitados",
           { p_colaborador_id: rol }
         );
-        if (errInv) avisar("No se pudieron cargar tus invitados asignados.", errInv);
+        if (errInv && mostrarCarga) avisar("No se pudieron cargar tus invitados asignados.", errInv);
 
         if (cancelado) return;
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
@@ -135,7 +146,7 @@ export function useLedgerData(rol) {
           Object.fromEntries((fotosFilas || []).map((r) => [r.grupoFamiliar, r.url]))
         );
         setColaboradores(perfil);
-        setInvitados(misInvitados || []);
+        if (!errInv) setInvitados(misInvitados || []);
         setMesas([]); // La vista de colaborador nunca necesita las mesas.
         setEsAnfitrion(false);
         setLoaded(true);
@@ -147,7 +158,10 @@ export function useLedgerData(rol) {
         "anfitrion_verificar_token",
         { p_token: rol }
       );
-      if (errToken) avisar("No se pudo comprobar el enlace.", errToken);
+      if (errToken) {
+        if (mostrarCarga) avisar("No se pudo comprobar el enlace.", errToken);
+        return;
+      }
 
       if (esValido === true) {
         const { data: eventoFilas } = await supabase.from("evento").select("*").limit(1);
@@ -156,42 +170,42 @@ export function useLedgerData(rol) {
           "anfitrion_listar_colaboradores",
           { p_token: rol }
         );
-        if (errCol) avisar("No se pudieron cargar los colaboradores.", errCol);
+        if (errCol && mostrarCarga) avisar("No se pudieron cargar los colaboradores.", errCol);
         const { data: todosInvitados, error: errInv } = await supabase.rpc(
           "anfitrion_listar_invitados",
           { p_token: rol }
         );
-        if (errInv) avisar("No se pudieron cargar los invitados.", errInv);
+        if (errInv && mostrarCarga) avisar("No se pudieron cargar los invitados.", errInv);
         const { data: todasMesas, error: errMesas } = await supabase
           .from("mesas")
           .select("*")
           .order("numero", { ascending: true });
-        if (errMesas) avisar("No se pudieron cargar las mesas.", errMesas);
+        if (errMesas && mostrarCarga) avisar("No se pudieron cargar las mesas.", errMesas);
         const { data: avisos, error: errAvisos } = await supabase.rpc(
           "anfitrion_listar_avisos_enviados",
           { p_token: rol }
         );
-        if (errAvisos) avisar("No se pudo cargar el historial de avisos.", errAvisos);
+        if (errAvisos && mostrarCarga) avisar("No se pudo cargar el historial de avisos.", errAvisos);
         const { data: ordenFilas, error: errOrden } = await supabase
           .from("orden_familias")
           .select("*");
-        if (errOrden) avisar("No se pudo cargar el orden de las familias.", errOrden);
+        if (errOrden && mostrarCarga) avisar("No se pudo cargar el orden de las familias.", errOrden);
         const { data: todosGastos, error: errGastos } = await supabase.rpc(
           "anfitrion_listar_gastos",
           { p_token: rol }
         );
-        if (errGastos) avisar("No se pudo cargar el estado de cuentas.", errGastos);
+        if (errGastos && mostrarCarga) avisar("No se pudo cargar el estado de cuentas.", errGastos);
 
         if (cancelado) return;
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
         setFotosFamiliares(
           Object.fromEntries((fotosFilas || []).map((r) => [r.grupoFamiliar, r.url]))
         );
-        setColaboradores(todosColaboradores || []);
-        setInvitados(todosInvitados || []);
-        setMesas(todasMesas || []);
-        setAvisosEnviados(avisos || []);
-        setGastos(todosGastos || []);
+        if (!errCol) setColaboradores(todosColaboradores || []);
+        if (!errInv) setInvitados(todosInvitados || []);
+        if (!errMesas) setMesas(todasMesas || []);
+        if (!errAvisos) setAvisosEnviados(avisos || []);
+        if (!errGastos) setGastos(todosGastos || []);
         setOrdenFamiliares(
           Object.fromEntries(
             (ordenFilas || []).map((r) => [
@@ -212,15 +226,34 @@ export function useLedgerData(rol) {
       // 3) Ni colaborador ni anfitrión: enlace no reconocido. No se
       // devuelve ni se intenta cargar ningún dato real.
       if (cancelado) return;
-      setColaboradores([]);
-      setInvitados([]);
-      setMesas([]);
-      setEsAnfitrion(false);
-      setLoaded(true);
-    })();
+      if (mostrarCarga) {
+        setColaboradores([]);
+        setInvitados([]);
+        setMesas([]);
+        setEsAnfitrion(false);
+        setLoaded(true);
+      }
+    };
+
+    cargarDatos(true);
+
+    // Sin esto, cada sesión de navegador (la tuya, la de cada colaborador)
+    // se queda con la primera copia de los datos para siempre — si otra
+    // persona cambia algo, esta pestaña no se entera hasta recargar a
+    // mano. No es Realtime de verdad (eso exigiría montar autenticación
+    // real primero, ver CLAUDE.md), pero evita tener que recargar sin
+    // parar: se vuelve a preguntar sola cada minuto, y también al volver
+    // a esta pestaña tras estar en otra.
+    const intervalo = setInterval(() => cargarDatos(false), 60 * 1000);
+    const alVolverVisible = () => {
+      if (document.visibilityState === "visible") cargarDatos(false);
+    };
+    document.addEventListener("visibilitychange", alVolverVisible);
 
     return () => {
       cancelado = true;
+      clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", alVolverVisible);
     };
   }, [rol]);
 
