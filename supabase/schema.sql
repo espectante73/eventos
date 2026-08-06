@@ -258,13 +258,26 @@ create table avisos_enviados (
   "id"           bigint generated always as identity primary key,
   "destinatario" text not null,
   "asunto"       text not null,
-  -- 'colaborador' (asignación, datos completos, pagos, prueba) o 'familia'
-  -- (invitación) — para poder filtrar el historial por tipo en la app.
-  "tipo"         text not null default 'colaborador',
+  -- 'asignados' (aviso de invitados nuevos/cambiados, y prueba), 'datos'
+  -- (aviso de datos/pagos completados) o 'invitacion' (a una familia) —
+  -- para poder filtrar el historial por tipo en la app.
+  "tipo"         text not null default 'asignados',
   "creadoEn"     timestamptz not null default now()
 );
 alter table avisos_enviados enable row level security;
 revoke all on table avisos_enviados from anon, authenticated;
+
+-- Migración de una sola vez (segura de repetir): reclasifica cualquier
+-- fila que se guardara con el esquema de tipos antiguo ('colaborador' /
+-- 'familia', dos tipos) al nuevo de tres, usando el asunto fijo de cada
+-- email para saber cuál era.
+update avisos_enviados set "tipo" = case
+  when "asunto" in ('Datos completados', 'Pagos completos') then 'datos'
+  when "asunto" = 'Tus invitados asignados' or "asunto" = 'Email de prueba' then 'asignados'
+  when "tipo" = 'familia' then 'invitacion'
+  else "tipo"
+end
+where "tipo" in ('colaborador', 'familia');
 
 -- ============================================================
 -- 9. GASTOS (Estado de cuentas — solo el anfitrión, nunca los
@@ -340,9 +353,11 @@ create or replace function enviar_email(
   -- Remitente concreto a usar; si se deja null, se usa el remitente por
   -- defecto (avisos internos). El email a la familia pasa el suyo propio.
   p_remitente text default null,
-  -- 'colaborador' por defecto (asignación/datos/pagos/prueba); la
-  -- invitación a familia es la única que pasa 'familia' explícitamente.
-  p_tipo text default 'colaborador'
+  -- Tres tipos, para el filtro del historial en la app: 'asignados' (aviso
+  -- al colaborador de invitados nuevos/cambiados, y el email de prueba),
+  -- 'datos' (aviso al anfitrión de que un colaborador completó datos o
+  -- pagos) e 'invitacion' (la invitación final a una familia).
+  p_tipo text default 'asignados'
 )
 returns void
 language plpgsql security definer set search_path = public, net, pg_temp
@@ -577,7 +592,7 @@ begin
   perform enviar_email(
     p_email, p_asunto, p_html, 'invitacion.png', p_imagen_base64,
     (select "emailRemitenteFamilia" from config_secretos limit 1),
-    'familia'
+    'invitacion'
   );
 end;
 $$;
@@ -735,7 +750,8 @@ begin
       replace(
         (select "plantillaDatosCompletados" from evento limit 1),
         '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
-      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>',
+      p_tipo := 'datos'
     );
     return true;
   end if;
@@ -765,7 +781,8 @@ begin
       replace(
         (select "plantillaPagoRegistrado" from evento limit 1),
         '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
-      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>',
+      p_tipo := 'datos'
     );
     return true;
   end if;

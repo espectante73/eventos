@@ -78,7 +78,7 @@ const HISTORIAL_VERSIONES = [
       "Solidez: BORRAR TODO descarga ahora la misma copia de seguridad automática que ya tenían los reinicios. Y si guardar algo falla (sin conexión, fallo del servidor), la pantalla deja de mostrar el cambio como si se hubiera guardado — se deshace solo en vez de mentir hasta que recargues. Además, si algo revienta al pintar la pantalla, ahora se ve un aviso con botón de recargar en vez de quedarse todo en blanco sin explicación.",
       "Emails, tras la primera prueba real: la tentativa ya no bloquea avisar al anfitrión ni aparece nombrada en el email al colaborador (evita preguntas antes de tiempo); \"He terminado mi trabajo\" se movió a la derecha; y en Colaboradores hay un botón \"Probar\" para confirmar al momento que un email está bien escrito, en vez de descubrirlo días después.",
       "Corrige que los modales de confirmación (REINICIAR, \"¿has terminado?\"...) podían abrirse ocultos detrás de una ventana ya abierta un rato, por quedarse con un z-index fijo mientras las ventanas ya lo tenían dinámico.",
-      "Avisos: panel con el total pendiente de datos (solo confirmados) e invitaciones, y el historial de emails enviados se puede filtrar por tipo (colaboradores / familias).",
+      "Avisos: panel con el total pendiente de datos (solo confirmados) e invitaciones, y el historial de emails enviados ahora se filtra por 3 tipos (Asignados, Datos, Invitación) y se ordena por Fecha, Tipo o Email.",
       "Solidez de fondo: avisoPendiente e invitacionEnviada dejan de fijarse a mano en cada función y se recalculan solos según el estado real. Además, cada sesión (la tuya, la de cada colaborador) vuelve a pedir los datos sola cada minuto, para no quedarse con una copia vieja si otra persona cambia algo mientras tanto.",
     ],
   },
@@ -1734,7 +1734,15 @@ function VistaAnfitrion({ data }) {
   const datosConfirmadosPendientes = invitados.filter(
     (g) => g.avisoPendiente && g.confirmado
   ).length;
-  const [filtroTipoAviso, setFiltroTipoAviso] = useState("todos"); // "todos" | "colaborador" | "familia"
+  const [filtroTipoAviso, setFiltroTipoAviso] = useState("todos"); // "todos" | "asignados" | "datos" | "invitacion"
+  const [ordenAvisos, setOrdenAvisos] = useState({ columna: "fecha", direccion: "desc" });
+  const cambiarOrdenAvisos = (columna) => {
+    setOrdenAvisos((o) =>
+      o.columna === columna
+        ? { columna, direccion: o.direccion === "asc" ? "desc" : "asc" }
+        : { columna, direccion: "asc" }
+    );
+  };
 
   // Antes de mandar un aviso individual ("Avisar ahora"), se enseña el
   // mensaje exacto que se va a enviar y se pide confirmar — con opción de
@@ -4651,8 +4659,9 @@ function VistaAnfitrion({ data }) {
               <div className="flex gap-2 mb-2">
                 {[
                   { clave: "todos", etiqueta: "Todos" },
-                  { clave: "colaborador", etiqueta: "Datos (colaboradores)" },
-                  { clave: "familia", etiqueta: "Invitaciones" },
+                  { clave: "asignados", etiqueta: "Asignados" },
+                  { clave: "datos", etiqueta: "Datos" },
+                  { clave: "invitacion", etiqueta: "Invitación" },
                 ].map((op) => (
                   <button
                     key={op.clave}
@@ -4669,30 +4678,74 @@ function VistaAnfitrion({ data }) {
                 ))}
               </div>
               {(() => {
+                const ETIQUETA_TIPO_AVISO = {
+                  asignados: "Asignados",
+                  datos: "Datos",
+                  invitacion: "Invitación",
+                };
                 const emailsFiltrados = avisosEnviados.filter(
                   (a) => filtroTipoAviso === "todos" || a.tipo === filtroTipoAviso
                 );
-                return emailsFiltrados.length === 0 ? (
-                  <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                    {avisosEnviados.length === 0
-                      ? "Todavía no se ha enviado ningún aviso."
-                      : "Ninguno de este tipo todavía."}
-                  </p>
-                ) : (
-                  <div className="space-y-1" style={{ maxHeight: 320, overflowY: "auto" }}>
-                    {emailsFiltrados.map((a) => (
+                const emailsOrdenados = [...emailsFiltrados].sort((a, b) => {
+                  let cmp = 0;
+                  if (ordenAvisos.columna === "fecha") {
+                    cmp = new Date(a.creadoEn) - new Date(b.creadoEn);
+                  } else if (ordenAvisos.columna === "email") {
+                    cmp = (a.destinatario || "").localeCompare(b.destinatario || "");
+                  } else if (ordenAvisos.columna === "tipo") {
+                    cmp = (a.tipo || "").localeCompare(b.tipo || "");
+                  }
+                  return ordenAvisos.direccion === "asc" ? cmp : -cmp;
+                });
+                if (emailsOrdenados.length === 0) {
+                  return (
+                    <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                      {avisosEnviados.length === 0
+                        ? "Todavía no se ha enviado ningún aviso."
+                        : "Ninguno de este tipo todavía."}
+                    </p>
+                  );
+                }
+                const columnas = "110px 80px 1fr 1fr";
+                return (
+                  <div style={{ maxHeight: 320, overflowY: "auto" }}>
                     <div
-                      key={a.id}
-                      className="flex items-center justify-between gap-2 text-xs py-1"
-                      style={{ borderBottom: `1px solid ${C.line}` }}
+                      className="grid text-xs mb-1 pb-1"
+                      style={{ gridTemplateColumns: columnas, borderBottom: `1px solid ${C.line}` }}
                     >
-                      <span style={{ color: C.ink }}>{a.asunto}</span>
-                      <span style={{ color: C.charcoal, opacity: 0.7 }}>{a.destinatario}</span>
-                      <span style={{ color: C.charcoal, opacity: 0.5 }} className="whitespace-nowrap">
-                        {new Date(a.creadoEn).toLocaleString("es-ES")}
-                      </span>
+                      <EncabezadoOrdenable columna="fecha" orden={ordenAvisos} onClick={cambiarOrdenAvisos}>
+                        Fecha
+                      </EncabezadoOrdenable>
+                      <EncabezadoOrdenable columna="tipo" orden={ordenAvisos} onClick={cambiarOrdenAvisos}>
+                        Tipo
+                      </EncabezadoOrdenable>
+                      <EncabezadoOrdenable columna="email" orden={ordenAvisos} onClick={cambiarOrdenAvisos}>
+                        Email
+                      </EncabezadoOrdenable>
+                      <span className="text-center" style={{ color: C.gold }}>Asunto</span>
                     </div>
-                    ))}
+                    <div className="space-y-1">
+                      {emailsOrdenados.map((a) => (
+                        <div
+                          key={a.id}
+                          className="grid items-center text-xs py-1"
+                          style={{ gridTemplateColumns: columnas, borderBottom: `1px solid ${C.line}` }}
+                        >
+                          <span style={{ color: C.charcoal, opacity: 0.5 }} className="whitespace-nowrap">
+                            {new Date(a.creadoEn).toLocaleString("es-ES")}
+                          </span>
+                          <span style={{ color: C.charcoal, opacity: 0.7 }}>
+                            {ETIQUETA_TIPO_AVISO[a.tipo] || a.tipo}
+                          </span>
+                          <span style={{ color: C.charcoal, opacity: 0.7 }} className="truncate">
+                            {a.destinatario}
+                          </span>
+                          <span style={{ color: C.ink }} className="truncate">
+                            {a.asunto}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 );
               })()}
