@@ -4370,7 +4370,9 @@ function VistaAnfitrion({ data }) {
                       style={{ ...inputStyle, minWidth: 220 }}
                     >
                       <option value="">Elige un invitado…</option>
-                      {ordenarPorApellidoNombre(invitadosParaReset).map((g) => (
+                      {ordenarPorApellidoNombre(
+                        invitadosParaReset.filter((g) => g.confirmado)
+                      ).map((g) => (
                         <option key={g.id} value={g.id}>
                           {g.apellido}, {g.nombre}
                         </option>
