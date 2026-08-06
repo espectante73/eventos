@@ -378,6 +378,12 @@ $$;
 -- Aviso explícito: el anfitrión lo confirma él mismo (tras revisar el
 -- resumen de cambios al cerrar la tabla), en vez de dispararse solo por
 -- cada asignación suelta — evita el aluvión de emails a los colaboradores.
+--
+-- Solo se avisa (y solo se lista) de los invitados YA CONFIRMADOS: a los
+-- que siguen en tentativa no se les nombra en el email, para no generar
+-- sospechas sobre la organización del evento antes de que esté decidido
+-- si van o no. Su "avisoPendiente" se queda tal cual (sin tocar) — si más
+-- adelante se confirman, entran solos en la siguiente tanda de aviso.
 create or replace function anfitrion_avisar_colaborador(p_token uuid, p_colaborador_id uuid)
 returns void
 language plpgsql security definer set search_path = public, pg_temp
@@ -395,7 +401,7 @@ begin
   )
   into lista_invitados
   from invitados
-  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true;
+  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true and "confirmado" = true;
 
   perform enviar_email(
     (select "email" from colaboradores where "id" = p_colaborador_id),
@@ -421,7 +427,30 @@ begin
   );
 
   update invitados set "avisoPendiente" = false
-  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true;
+  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true and "confirmado" = true;
+end;
+$$;
+
+-- Prueba puntual, a demanda del anfitrión, de que el email de un
+-- colaborador es correcto y llega de verdad — pensado para usarse justo
+-- después de escribir o corregir ese email, en vez de descubrir un fallo
+-- días después porque nunca le llegó ningún aviso real.
+create or replace function anfitrion_probar_email_colaborador(p_token uuid, p_colaborador_id uuid)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  perform enviar_email(
+    (select "email" from colaboradores where "id" = p_colaborador_id),
+    'Email de prueba',
+    'Hola,<br><br>Esto es un email de prueba para confirmar que esta dirección está bien escrita ' ||
+    'y te llegan los avisos de la app de invitados del evento.<br><br>' ||
+    'Si has recibido esto, todo funciona correctamente — no hace falta que respondas.'
+  );
 end;
 $$;
 
@@ -462,17 +491,25 @@ begin
   -- Se detecta ANTES de tocar nada (comparando contra el valor guardado),
   -- pero se marca DESPUÉS del insert/upsert de más abajo — así funciona
   -- también para invitados recién creados, que todavía no existen en la
-  -- tabla en este punto.
+  -- tabla en este punto. Dos motivos para marcar "avisoPendiente": que
+  -- cambie a quién está asignado, o que un tentativa que ya tenía
+  -- colaborador pase a confirmado — ese paso es justo lo que lo convierte
+  -- en alguien de quien SÍ hay que avisar (antes, en tentativa, no se
+  -- nombra en ningún aviso — ver anfitrion_avisar_colaborador).
   for r in
     select
       (f->>'id')::uuid as invitado_id,
       nullif(f->>'colaboradorId','')::uuid as nuevo_colaborador_id,
-      i."colaboradorId" as anterior_colaborador_id
+      i."colaboradorId" as anterior_colaborador_id,
+      coalesce((f->>'confirmado')::boolean, false) as nuevo_confirmado,
+      coalesce(i."confirmado", false) as anterior_confirmado
     from jsonb_array_elements(p_filas) as f
     left join invitados i on i."id" = (f->>'id')::uuid
   loop
-    if r.nuevo_colaborador_id is not null
-       and r.nuevo_colaborador_id is distinct from r.anterior_colaborador_id then
+    if r.nuevo_colaborador_id is not null and (
+      r.nuevo_colaborador_id is distinct from r.anterior_colaborador_id
+      or (r.nuevo_confirmado and not r.anterior_confirmado)
+    ) then
       ids_a_marcar := array_append(ids_a_marcar, r.invitado_id);
     end if;
   end loop;
@@ -588,17 +625,15 @@ returns boolean
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare
-  tentativa integer;
   total integer;
   completos integer;
 begin
-  -- Si todavía tiene algún invitado en tentativa (sin confirmar) entre los
-  -- suyos, no se avisa — el anfitrión quiere el informe final, no uno por
-  -- cada tanda de confirmados que se vaya completando.
-  select count(*) into tentativa
-  from invitados
-  where "colaboradorId" = p_colaborador_id and "confirmado" = false;
-
+  -- Solo se cuentan los invitados YA CONFIRMADOS de este colaborador — los
+  -- que sigan en tentativa no bloquean el aviso: si más adelante se
+  -- confirman, forman su propia tanda nueva (ver anfitrion_guardar_invitados
+  -- y anfitrion_avisar_colaborador). Antes exigía cero tentativas en total,
+  -- pero eso impedía avisar de un lote ya completo solo porque hubiera
+  -- otro invitado todavía por confirmar sin relación con ese lote.
   select count(*), count(*) filter (
     where coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> ''
   )
@@ -606,7 +641,7 @@ begin
   from invitados
   where "colaboradorId" = p_colaborador_id and "confirmado" = true;
 
-  if tentativa = 0 and total > 0 and total = completos then
+  if total > 0 and total = completos then
     perform enviar_email(
       (select "emailAnfitrion" from evento limit 1),
       'Datos completados',
@@ -626,20 +661,17 @@ returns boolean
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 declare
-  tentativa integer;
   total integer;
   pagados integer;
 begin
-  select count(*) into tentativa
-  from invitados
-  where "colaboradorId" = p_colaborador_id and "confirmado" = false;
-
+  -- Mismo criterio que colaborador_confirmar_datos_completos: solo cuentan
+  -- los ya confirmados, la tentativa no bloquea.
   select count(*), count(*) filter (where "pagado")
   into total, pagados
   from invitados
   where "colaboradorId" = p_colaborador_id and "confirmado" = true;
 
-  if tentativa = 0 and total > 0 and total = pagados then
+  if total > 0 and total = pagados then
     perform enviar_email(
       (select "emailAnfitrion" from evento limit 1),
       'Pagos completos',
@@ -785,6 +817,7 @@ grant execute on function anfitrion_listar_invitados(uuid) to anon;
 grant execute on function anfitrion_guardar_colaboradores(uuid, jsonb) to anon;
 grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
 grant execute on function anfitrion_avisar_colaborador(uuid, uuid) to anon;
+grant execute on function anfitrion_probar_email_colaborador(uuid, uuid) to anon;
 grant execute on function anfitrion_enviar_invitacion_familia(uuid, text, text, text, text) to anon;
 grant execute on function anfitrion_listar_avisos_enviados(uuid) to anon;
 grant execute on function anfitrion_resetear_avisos(uuid) to anon;

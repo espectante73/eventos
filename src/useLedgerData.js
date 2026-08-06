@@ -18,7 +18,10 @@ const EVENTO_POR_DEFECTO = {
   ocultarTituloEnImagen: true,
   emailAnfitrion: "",
   plantillaAsignacion:
-    "Hola,<br><br>Tienes invitados nuevos asignados.<br>Entra en tu enlace cuando puedas para revisarlos y completar sus datos.",
+    "Hola,<br><br>Tienes invitados nuevos asignados.<br>Entra en tu enlace cuando puedas para revisarlos y completar sus datos." +
+    '<p style="color:#B00020;font-weight:700;text-transform:uppercase;font-family:Georgia,serif;margin-top:14px;">' +
+    "Si ya has rellenado los datos de los nuevos que adjunto en este email, ignora este aviso." +
+    "</p>",
   plantillaDatosCompletados:
     "Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.",
   plantillaPagoRegistrado:
@@ -442,6 +445,26 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
+  // Prueba puntual de un email de colaborador (p.ej. justo después de
+  // corregir una errata): no cambia ningún dato, solo intenta el envío y
+  // devuelve si funcionó, para que el anfitrión lo sepa al momento en vez
+  // de descubrirlo días después porque nunca llegó ningún aviso real.
+  const probarEmailColaborador = useCallback(
+    async (colaboradorId) => {
+      if (!esAnfitrion) return false;
+      const { error } = await supabase.rpc("anfitrion_probar_email_colaborador", {
+        p_token: rol,
+        p_colaborador_id: colaboradorId,
+      });
+      if (error) {
+        avisar("No se pudo enviar el email de prueba.", error);
+        return false;
+      }
+      return true;
+    },
+    [esAnfitrion, rol]
+  );
+
   const resetearAvisos = useCallback(async () => {
     if (!esAnfitrion) return false;
     const { error } = await supabase.rpc("anfitrion_resetear_avisos", { p_token: rol });
@@ -538,6 +561,7 @@ export function useLedgerData(rol) {
     persistMesas,
     persistFotosFamiliares,
     avisarColaborador,
+    probarEmailColaborador,
     enviarInvitacionFamilia,
     avisosEnviados,
     ordenFamiliares,

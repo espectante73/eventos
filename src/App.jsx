@@ -76,6 +76,7 @@ const HISTORIAL_VERSIONES = [
       "Configuración: la ventana pasa a ser solo un desplegable \"SECCIÓN\" — cada parte (Precios, URL web, Email anfitrión, Texto emails, Reinicios, Borrado total...) se abre en su propia ventana independiente, igual que Mesas o Avisos.",
       "Ventanas: cualquiera pasa a primer plano en cuanto se toca, en vez de quedarse algunas ancladas por encima de las demás.",
       "Solidez: BORRAR TODO descarga ahora la misma copia de seguridad automática que ya tenían los reinicios. Y si guardar algo falla (sin conexión, fallo del servidor), la pantalla deja de mostrar el cambio como si se hubiera guardado — se deshace solo en vez de mentir hasta que recargues. Además, si algo revienta al pintar la pantalla, ahora se ve un aviso con botón de recargar en vez de quedarse todo en blanco sin explicación.",
+      "Emails, tras la primera prueba real: la tentativa ya no bloquea avisar al anfitrión ni aparece nombrada en el email al colaborador (evita preguntas antes de tiempo); \"He terminado mi trabajo\" se movió a la derecha; y en Colaboradores hay un botón \"Probar\" para confirmar al momento que un email está bien escrito, en vez de descubrirlo días después.",
     ],
   },
 ];
@@ -980,15 +981,29 @@ function BuscadorInvitado({ invitados, invitadoId, onSeleccionar, placeholder })
   );
 }
 
-function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onAvisar }) {
+function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onAvisar, onProbarEmail }) {
   const [copiado, setCopiado] = useState(false);
   const [relevando, setRelevando] = useState(false);
   const [mostrarAsignados, setMostrarAsignados] = useState(false);
   const [mostrarLink, setMostrarLink] = useState(false);
   const [releveInvitadoId, setReleveInvitadoId] = useState("");
+  const [probando, setProbando] = useState(false);
+  const [resultadoPrueba, setResultadoPrueba] = useState(""); // "" | "ok" | "error"
+
+  const probarEmail = async () => {
+    setProbando(true);
+    setResultadoPrueba("");
+    const ok = await onProbarEmail(c.id);
+    setProbando(false);
+    setResultadoPrueba(ok ? "ok" : "error");
+  };
 
   const asignados = invitados.filter((g) => resolverColaborador(g, colaboradores)?.id === c.id);
-  const pendientesAviso = asignados.filter((g) => g.avisoPendiente);
+  // Los invitados en tentativa nunca se nombran en el email al colaborador
+  // (ver anfitrion_avisar_colaborador) — así que tampoco cuentan aquí como
+  // "pendiente de avisar", o el botón "Avisar ahora" mandaría un email
+  // vacío de contenido.
+  const pendientesAviso = asignados.filter((g) => g.avisoPendiente && g.confirmado);
   const enlacePersonal = buildLink(c.id, evento?.urlPublica);
 
   const copiarEnlace = async () => {
@@ -1091,7 +1106,10 @@ function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEl
         <div className="flex-1">
           <GrupoFamiliarInput
             value={c.email || ""}
-            onCommit={(v) => onCambiarEmail(c.id, v)}
+            onCommit={(v) => {
+              onCambiarEmail(c.id, v);
+              setResultadoPrueba("");
+            }}
           />
         </div>
         {!c.email && (
@@ -1099,7 +1117,34 @@ function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEl
             sin email (no recibirá avisos)
           </span>
         )}
+        {c.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email) && (
+          <button
+            onClick={probarEmail}
+            disabled={probando}
+            className="text-xs px-2 py-1 rounded whitespace-nowrap"
+            style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+            title="Envía un email de prueba a esta dirección para confirmar que llega"
+          >
+            {probando ? "Enviando…" : "Probar"}
+          </button>
+        )}
       </div>
+      {c.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email) && (
+        <p className="text-xs mt-1" style={{ color: C.wax }}>
+          ⚠ No parece un email válido — revísalo antes de que este colaborador se quede sin
+          avisos sin que nadie lo note.
+        </p>
+      )}
+      {resultadoPrueba === "ok" && (
+        <p className="text-xs mt-1" style={{ color: C.ink }}>
+          ✓ Email de prueba enviado — confirma con el colaborador que le ha llegado.
+        </p>
+      )}
+      {resultadoPrueba === "error" && (
+        <p className="text-xs mt-1" style={{ color: C.wax }}>
+          ⚠ No se pudo enviar el email de prueba. Mira "Avisos enviados" o los logs de Resend.
+        </p>
+      )}
 
       {pendientesAviso.length > 0 && (
         <div
@@ -1649,7 +1694,7 @@ function GrupoFamiliarInput({ value, onCommit }) {
 }
 
 function VistaAnfitrion({ data }) {
-  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearAvisos, resetearPorInvitados, gastos, persistGastos } = data;
+  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, probarEmailColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearAvisos, resetearPorInvitados, gastos, persistGastos } = data;
 
   const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
@@ -1664,9 +1709,12 @@ function VistaAnfitrion({ data }) {
   const [mostrarResumenAsignacion, setMostrarResumenAsignacion] = useState(false);
   const [enviandoAvisosAsignacion, setEnviandoAvisosAsignacion] = useState(false);
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
-  // por colaborador — así se sabe exactamente cuáles son los nuevos.
+  // por colaborador — así se sabe exactamente cuáles son los nuevos. Los
+  // que siguen en tentativa no cuentan: no se nombran en el email al
+  // colaborador (ver anfitrion_avisar_colaborador), así que preguntar aquí
+  // "¿avisar ya?" por un tentativa mandaría un aviso sin contenido.
   const invitadosPendientesDe = (colaboradorId) =>
-    invitados.filter((g) => g.colaboradorId === colaboradorId && g.avisoPendiente);
+    invitados.filter((g) => g.colaboradorId === colaboradorId && g.avisoPendiente && g.confirmado);
   const colaboradoresPendientes = colaboradores.filter(
     (c) => invitadosPendientesDe(c.id).length > 0
   );
@@ -2121,7 +2169,10 @@ function VistaAnfitrion({ data }) {
       ocultarTituloEnImagen: true,
       emailAnfitrion: "",
       plantillaAsignacion:
-        "Hola,<br><br>Tienes invitados nuevos asignados.<br>Entra en tu enlace cuando puedas para revisarlos y completar sus datos.",
+        "Hola,<br><br>Tienes invitados nuevos asignados.<br>Entra en tu enlace cuando puedas para revisarlos y completar sus datos." +
+        '<p style="color:#B00020;font-weight:700;text-transform:uppercase;font-family:Georgia,serif;margin-top:14px;">' +
+        "Si ya has rellenado los datos de los nuevos que adjunto en este email, ignora este aviso." +
+        "</p>",
       plantillaDatosCompletados:
         "Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.",
       plantillaPagoRegistrado:
@@ -2884,6 +2935,7 @@ function VistaAnfitrion({ data }) {
                     onAsignarColaborador={asignarColaborador}
                     onCambiarEmail={cambiarEmailColaborador}
                     onAvisar={(id) => setAvisoPreview({ id, nombre: c.nombre })}
+                    onProbarEmail={probarEmailColaborador}
                   />
                 );
               })}
@@ -4710,12 +4762,20 @@ function VistaAnfitrion({ data }) {
               .map((g) => (
                 <li key={g.id}>
                   {g.apellido}, {g.nombre}
-                  {g.avisoPendiente && (
+                  {g.avisoPendiente && g.confirmado && (
                     <span
                       className="text-xs ml-2 px-1.5 py-0.5 rounded"
                       style={{ background: C.wax, color: "#fff" }}
                     >
-                      nuevo
+                      nuevo — se incluye en el email
+                    </span>
+                  )}
+                  {g.avisoPendiente && !g.confirmado && (
+                    <span
+                      className="text-xs ml-2 px-1.5 py-0.5 rounded"
+                      style={{ background: C.line, color: C.charcoal }}
+                    >
+                      tentativa — no se avisa todavía
                     </span>
                   )}
                 </li>
@@ -5611,9 +5671,7 @@ function VistaColaborador({ data, colaboradorId }) {
     window.alert(
       data
         ? "Aviso enviado al anfitrión: datos completos."
-        : tentativos.length > 0
-        ? "Todavía tienes invitados en tentativa sin confirmar — pídele al anfitrión que los confirme antes de avisar."
-        : "Todavía faltan invitados por completar sus datos."
+        : "Todavía faltan invitados confirmados por completar sus datos."
     );
   };
 
@@ -5630,9 +5688,7 @@ function VistaColaborador({ data, colaboradorId }) {
     window.alert(
       data
         ? "Aviso enviado al anfitrión: pagos completos."
-        : tentativos.length > 0
-        ? "Todavía tienes invitados en tentativa sin confirmar — pídele al anfitrión que los confirme antes de avisar."
-        : "Todavía faltan invitados por pagar."
+        : "Todavía faltan invitados confirmados por pagar."
     );
   };
 
@@ -5711,7 +5767,7 @@ function VistaColaborador({ data, colaboradorId }) {
           </div>
         </div>
 
-        <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
+        <div className="mt-4 pt-4 flex justify-end" style={{ borderTop: `1px solid ${C.line}` }}>
           <button
             onClick={() => setMostrarConfirmar(true)}
             className="px-4 py-2 rounded text-sm font-semibold"
@@ -5726,16 +5782,16 @@ function VistaColaborador({ data, colaboradorId }) {
         <ModalFlotante titulo="¿Has terminado tu trabajo?" onCerrar={() => setMostrarConfirmar(false)}>
           <p className="text-sm mb-3" style={{ color: C.charcoal }}>
             Revisa el resumen antes de avisar al anfitrión — solo se envía el aviso si de verdad
-            está todo completo.
+            está todo completo. Solo cuentan tus invitados ya confirmados.
           </p>
           <ul className="text-sm space-y-1 mb-4" style={{ color: C.ink }}>
             <li>Invitados confirmados: {confirmados.length}</li>
             <li>Con datos completos: {completos.length} de {confirmados.length}</li>
             <li>Con el pago hecho: {pagados.length} de {confirmados.length}</li>
             {tentativos.length > 0 && (
-              <li style={{ color: C.wax }}>
-                ⚠ {tentativos.length} en tentativa (sin confirmar) — mientras existan, no se
-                puede avisar al anfitrión de que has terminado.
+              <li style={{ color: C.charcoal, opacity: 0.7 }}>
+                ℹ️ {tentativos.length} en tentativa (sin confirmar) — no cuentan para este aviso.
+                Si se confirman más adelante, podrás avisar de nuevo entonces.
               </li>
             )}
           </ul>
@@ -5745,14 +5801,8 @@ function VistaColaborador({ data, colaboradorId }) {
               disabled={enviandoDatos}
               className="w-full px-3 py-2 rounded text-sm font-medium"
               style={{
-                background:
-                  tentativos.length === 0 && pendientes.length === 0 && confirmados.length > 0
-                    ? C.ink
-                    : C.line,
-                color:
-                  tentativos.length === 0 && pendientes.length === 0 && confirmados.length > 0
-                    ? C.paper
-                    : C.charcoal,
+                background: pendientes.length === 0 && confirmados.length > 0 ? C.ink : C.line,
+                color: pendientes.length === 0 && confirmados.length > 0 ? C.paper : C.charcoal,
               }}
             >
               {enviandoDatos ? "Enviando…" : "Confirmar datos completos y avisar"}
@@ -5762,14 +5812,8 @@ function VistaColaborador({ data, colaboradorId }) {
               disabled={enviandoPagos}
               className="w-full px-3 py-2 rounded text-sm font-medium"
               style={{
-                background:
-                  tentativos.length === 0 && noPagados.length === 0 && confirmados.length > 0
-                    ? C.ink
-                    : C.line,
-                color:
-                  tentativos.length === 0 && noPagados.length === 0 && confirmados.length > 0
-                    ? C.paper
-                    : C.charcoal,
+                background: noPagados.length === 0 && confirmados.length > 0 ? C.ink : C.line,
+                color: noPagados.length === 0 && confirmados.length > 0 ? C.paper : C.charcoal,
               }}
             >
               {enviandoPagos ? "Enviando…" : "Confirmar pagos completos y avisar"}
