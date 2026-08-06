@@ -144,6 +144,13 @@ nuevos con otro comportamiento.
   compartido, `contadorZIndexVentanas`), y los controles de su cabecera
   (como un desplegable) no inician el arrastre.
 
+⚠️ Gotcha ya encontrado: `ModalFlotante` (los diálogos con fondo oscurecido
+— confirmaciones, vistas previas) comparte el mismo `contadorZIndexVentanas`
+y también debe pedir un número al montarse (`useState(() => ++contadorZIndexVentanas)`).
+Si algún modal nuevo se queda con un z-index fijo en vez de pedirlo al
+contador, puede abrirse oculto detrás de una `VentanaFlotante` que ya
+llevara un rato en uso (su z-index ya habría subido por encima).
+
 Cómo aplicar:
 1. Toda ventana nueva se monta con `VentanaFlotante`, heredando gratis el
    comportamiento anterior.
