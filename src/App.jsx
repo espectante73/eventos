@@ -5974,7 +5974,11 @@ export default function App() {
         // Sin conexión o fallo de red: no pasa nada, se reintenta luego.
       }
     };
-    const intervalo = setInterval(comprobar, 3 * 60 * 1000);
+    // Antes solo se comprobaba cada 3 minutos, así que nada más publicar un
+    // cambio en Vercel tocaba esperar sin saber si ya había llegado. Ahora
+    // se comprueba también nada más cargar la página, y cada minuto.
+    comprobar();
+    const intervalo = setInterval(comprobar, 60 * 1000);
     const alVolverVisible = () => {
       if (document.visibilityState === "visible") comprobar();
     };
