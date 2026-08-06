@@ -126,6 +126,26 @@ con la firma **anterior** exacta (tipos en el mismo orden). Ver el
 historial de `drop function if exists enviar_email(...)` en
 `supabase/schema.sql` como referencia de las tres firmas que ha tenido.
 
+⚠️ Cómo se acabó de diagnosticar el episodio del 2026-08-06 (por si se
+repite): el primer intento de `drop function` no lo arregló porque el
+propio SQL Editor de Supabase tenía contenido antiguo sin borrar en la
+misma pestaña ("Untitled query" reutilizada de una vez anterior) — al
+pulsar "Run" se re-ejecutó también un `create or replace function
+enviar_email(...)` viejo de 6 parámetros que quedaba ahí debajo, y volvió
+a dejar las dos versiones a la vez. Para pedirle al usuario que ejecute
+SQL nuevo: decirle explícitamente que **borre todo el contenido del
+editor primero** y pegue solo el bloque nuevo, en vez de asumir que la
+pestaña está vacía. Para diagnosticar "function is not unique" con
+certeza, esta consulta lista las firmas reales que existen de verdad en
+la base de datos (más fiable que mirar el código fuente, que solo dice
+lo que *debería* haber):
+```sql
+select p.oid::regprocedure as firma
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where p.proname = 'nombre_funcion' and n.nspname = 'public';
+```
+
 ### "Reset" nunca borra invitados ni colaboradores
 
 Cualquier función de reinicio/limpieza de datos de prueba (mesas, pagos,
