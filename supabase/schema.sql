@@ -786,17 +786,23 @@ begin
     return;
   end if;
 
+  -- "datos"/"pago"/"mesa" no desasignan al colaborador — si sigue siendo
+  -- suyo, borrarle estos datos de prueba lo deja igual que recién asignado:
+  -- tiene de nuevo algo pendiente de rellenar, así que vuelve a quedar
+  -- "avisoPendiente" para poder avisarle otra vez (útil sobre todo para
+  -- repetir una prueba completa con el mismo colaborador). Si ya no tiene
+  -- colaborador, no hay a quién avisar y se queda en false igualmente.
   if p_categoria = 'datos' then
     update invitados set
       "anioNacimiento" = '', "anioBoda" = '', "email" = '',
       "cancion" = '', "alergias" = '', "observaciones" = '',
-      "avisoPendiente" = false
+      "avisoPendiente" = ("colaboradorId" is not null)
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'pago' then
-    update invitados set "pagado" = false, "avisoPendiente" = false
+    update invitados set "pagado" = false, "avisoPendiente" = ("colaboradorId" is not null)
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'mesa' then
-    update invitados set "mesa" = null, "avisoPendiente" = false
+    update invitados set "mesa" = null, "avisoPendiente" = ("colaboradorId" is not null)
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'asignacion' then
     update invitados set "colaboradorId" = null, "avisoPendiente" = false

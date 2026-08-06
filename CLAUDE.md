@@ -119,7 +119,15 @@ Al construir un reinicio nuevo:
   salvo que de verdad se quiera afectar a todos), idealmente acotado por
   colaborador/familia/invitado concreto — patrón
   `anfitrion_resetear_por_invitados(p_token, p_invitado_ids, p_categoria)`.
-- Limpiar también `avisoPendiente` en el mismo paso si toca a invitados.
+- `avisoPendiente` en el mismo paso: **solo se limpia a `false` si la
+  categoría de verdad desasigna al colaborador** ("asignación" — ya no hay
+  a quién avisar). Las demás (datos/pago/mesa) no desasignan, así que
+  vuelven a poner `avisoPendiente = ("colaboradorId" is not null)`: si el
+  invitado sigue siendo de ese colaborador, borrarle sus datos de prueba
+  lo deja igual que recién asignado — tiene de nuevo algo pendiente de
+  rellenar, y hace falta poder avisarle otra vez sin reasignar a mano
+  (imprescindible para repetir una prueba completa con el mismo
+  colaborador).
 - Pedir escribir una palabra de confirmación exacta (no un simple clic) y
   descargar automáticamente una copia de seguridad completa del evento
   (JSON) antes de ejecutar — nunca ejecutar un reinicio en bloque sin ese
