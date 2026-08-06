@@ -4599,6 +4599,36 @@ function VistaAnfitrion({ data }) {
                 className="text-xs uppercase mb-2"
                 style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
               >
+                Emails enviados (últimos {avisosEnviados.length})
+              </p>
+              {avisosEnviados.length === 0 ? (
+                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  Todavía no se ha enviado ningún aviso.
+                </p>
+              ) : (
+                <div className="space-y-1" style={{ maxHeight: 320, overflowY: "auto" }}>
+                  {avisosEnviados.map((a) => (
+                    <div
+                      key={a.id}
+                      className="flex items-center justify-between gap-2 text-xs py-1"
+                      style={{ borderBottom: `1px solid ${C.line}` }}
+                    >
+                      <span style={{ color: C.ink }}>{a.asunto}</span>
+                      <span style={{ color: C.charcoal, opacity: 0.7 }}>{a.destinatario}</span>
+                      <span style={{ color: C.charcoal, opacity: 0.5 }} className="whitespace-nowrap">
+                        {new Date(a.creadoEn).toLocaleString("es-ES")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5 pt-4" style={{ borderTop: `2px solid ${C.line}` }}>
+              <p
+                className="text-xs uppercase mb-2"
+                style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+              >
                 Invitaciones a familias
               </p>
               <div className="grid grid-cols-3 gap-2 mb-3">
@@ -4658,36 +4688,6 @@ function VistaAnfitrion({ data }) {
                         </button>
                       </div>
                     ))}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <p
-                className="text-xs uppercase mb-2"
-                style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
-              >
-                Emails enviados (últimos {avisosEnviados.length})
-              </p>
-              {avisosEnviados.length === 0 ? (
-                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                  Todavía no se ha enviado ningún aviso.
-                </p>
-              ) : (
-                <div className="space-y-1" style={{ maxHeight: 320, overflowY: "auto" }}>
-                  {avisosEnviados.map((a) => (
-                    <div
-                      key={a.id}
-                      className="flex items-center justify-between gap-2 text-xs py-1"
-                      style={{ borderBottom: `1px solid ${C.line}` }}
-                    >
-                      <span style={{ color: C.ink }}>{a.asunto}</span>
-                      <span style={{ color: C.charcoal, opacity: 0.7 }}>{a.destinatario}</span>
-                      <span style={{ color: C.charcoal, opacity: 0.5 }} className="whitespace-nowrap">
-                        {new Date(a.creadoEn).toLocaleString("es-ES")}
-                      </span>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>
