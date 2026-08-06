@@ -36,6 +36,13 @@ sacó varios ajustes reales, ya aplicados en código y en la base de datos:
   investigó por qué no le llegaban avisos — la causa raíz de por qué
   corregirla y recargar no bastaba a la primera no se ha localizado del
   todo; si se repite, hace falta investigarlo con el paso a paso exacto.
+- "Reiniciar avisos (historial de emails)" ahora también vuelve a marcar
+  como pendientes (`avisoPendiente = true`) a todos los invitados ya
+  asignados a un colaborador, no solo borra el historial. Motivo: los
+  reinicios por invitado (datos/pago/mesa/asignación) ya limpian
+  "avisoPendiente" como parte de su categoría — sin este cambio, tras
+  usarlos no quedaba ningún botón con el que volver a probar el envío
+  real, aunque el colaborador tuviera un email válido.
 
 ⚠️ El README sigue sin reflejar nada de esto (habla de "pendiente" para
 toda la fase de emails) — está desactualizado, no lo tomes como fuente de
