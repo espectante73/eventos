@@ -78,6 +78,7 @@ const HISTORIAL_VERSIONES = [
       "Solidez: BORRAR TODO descarga ahora la misma copia de seguridad automática que ya tenían los reinicios. Y si guardar algo falla (sin conexión, fallo del servidor), la pantalla deja de mostrar el cambio como si se hubiera guardado — se deshace solo en vez de mentir hasta que recargues. Además, si algo revienta al pintar la pantalla, ahora se ve un aviso con botón de recargar en vez de quedarse todo en blanco sin explicación.",
       "Emails, tras la primera prueba real: la tentativa ya no bloquea avisar al anfitrión ni aparece nombrada en el email al colaborador (evita preguntas antes de tiempo); \"He terminado mi trabajo\" se movió a la derecha; y en Colaboradores hay un botón \"Probar\" para confirmar al momento que un email está bien escrito, en vez de descubrirlo días después.",
       "Corrige que los modales de confirmación (REINICIAR, \"¿has terminado?\"...) podían abrirse ocultos detrás de una ventana ya abierta un rato, por quedarse con un z-index fijo mientras las ventanas ya lo tenían dinámico.",
+      "Avisos: panel con el total pendiente de datos (solo confirmados) e invitaciones, y el historial de emails enviados se puede filtrar por tipo (colaboradores / familias).",
     ],
   },
 ];
@@ -1726,6 +1727,13 @@ function VistaAnfitrion({ data }) {
   const colaboradoresPendientes = colaboradores.filter(
     (c) => invitadosPendientesDe(c.id).length > 0
   );
+  // Total de confirmados con datos pendientes de avisar, sin desglosar por
+  // colaborador — para el panel resumen de Avisos. La tentativa nunca cuenta
+  // aquí (mismo motivo que arriba).
+  const datosConfirmadosPendientes = invitados.filter(
+    (g) => g.avisoPendiente && g.confirmado
+  ).length;
+  const [filtroTipoAviso, setFiltroTipoAviso] = useState("todos"); // "todos" | "colaborador" | "familia"
 
   // Antes de mandar un aviso individual ("Avisar ahora"), se enseña el
   // mensaje exacto que se va a enviar y se pide confirmar — con opción de
@@ -4552,6 +4560,42 @@ function VistaAnfitrion({ data }) {
           titulo={`Avisos${colaboradoresPendientes.length > 0 ? ` (${colaboradoresPendientes.length})` : ""}`}
           onCerrar={() => toggle("avisos")}
         >
+            <div className="grid grid-cols-2 gap-2 mb-5">
+              <div className="text-center p-2 rounded" style={{ background: C.paperDark }}>
+                <div
+                  style={{
+                    fontFamily: "'Fraunces', serif",
+                    color: datosConfirmadosPendientes > 0 ? C.wax : C.ink,
+                    fontWeight: 700,
+                    fontSize: 18,
+                  }}
+                >
+                  {datosConfirmadosPendientes}
+                </div>
+                <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+                  Datos pendientes (confirmados)
+                </div>
+              </div>
+              <div className="text-center p-2 rounded" style={{ background: C.paperDark }}>
+                <div
+                  style={{
+                    fontFamily: "'Fraunces', serif",
+                    color:
+                      familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada).length > 0
+                        ? C.wax
+                        : C.ink,
+                    fontWeight: 700,
+                    fontSize: 18,
+                  }}
+                >
+                  {familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada).length}
+                </div>
+                <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+                  Invitaciones pendientes
+                </div>
+              </div>
+            </div>
+
             <div className="mb-5">
               <p
                 className="text-xs uppercase mb-2"
@@ -4599,15 +4643,41 @@ function VistaAnfitrion({ data }) {
                 className="text-xs uppercase mb-2"
                 style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
               >
-                Emails enviados (últimos {avisosEnviados.length})
+                Emails enviados
               </p>
-              {avisosEnviados.length === 0 ? (
-                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                  Todavía no se ha enviado ningún aviso.
-                </p>
-              ) : (
-                <div className="space-y-1" style={{ maxHeight: 320, overflowY: "auto" }}>
-                  {avisosEnviados.map((a) => (
+              <div className="flex gap-2 mb-2">
+                {[
+                  { clave: "todos", etiqueta: "Todos" },
+                  { clave: "colaborador", etiqueta: "Datos (colaboradores)" },
+                  { clave: "familia", etiqueta: "Invitaciones" },
+                ].map((op) => (
+                  <button
+                    key={op.clave}
+                    onClick={() => setFiltroTipoAviso(op.clave)}
+                    className="text-xs px-2 py-1 rounded font-medium"
+                    style={{
+                      background: filtroTipoAviso === op.clave ? C.ink : "transparent",
+                      color: filtroTipoAviso === op.clave ? C.paper : C.charcoal,
+                      border: `1px solid ${filtroTipoAviso === op.clave ? C.ink : C.line}`,
+                    }}
+                  >
+                    {op.etiqueta}
+                  </button>
+                ))}
+              </div>
+              {(() => {
+                const emailsFiltrados = avisosEnviados.filter(
+                  (a) => filtroTipoAviso === "todos" || a.tipo === filtroTipoAviso
+                );
+                return emailsFiltrados.length === 0 ? (
+                  <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                    {avisosEnviados.length === 0
+                      ? "Todavía no se ha enviado ningún aviso."
+                      : "Ninguno de este tipo todavía."}
+                  </p>
+                ) : (
+                  <div className="space-y-1" style={{ maxHeight: 320, overflowY: "auto" }}>
+                    {emailsFiltrados.map((a) => (
                     <div
                       key={a.id}
                       className="flex items-center justify-between gap-2 text-xs py-1"
@@ -4619,9 +4689,10 @@ function VistaAnfitrion({ data }) {
                         {new Date(a.creadoEn).toLocaleString("es-ES")}
                       </span>
                     </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="mt-5 pt-4" style={{ borderTop: `2px solid ${C.line}` }}>

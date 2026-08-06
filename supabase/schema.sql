@@ -166,6 +166,9 @@ create table avisos_enviados (
   "id"           bigint generated always as identity primary key,
   "destinatario" text not null,
   "asunto"       text not null,
+  -- 'colaborador' (asignación, datos completos, pagos, prueba) o 'familia'
+  -- (invitación) — para poder filtrar el historial por tipo en la app.
+  "tipo"         text not null default 'colaborador',
   "creadoEn"     timestamptz not null default now()
 );
 alter table avisos_enviados enable row level security;
@@ -237,7 +240,10 @@ create or replace function enviar_email(
   p_adjunto_nombre text default null, p_adjunto_base64 text default null,
   -- Remitente concreto a usar; si se deja null, se usa el remitente por
   -- defecto (avisos internos). El email a la familia pasa el suyo propio.
-  p_remitente text default null
+  p_remitente text default null,
+  -- 'colaborador' por defecto (asignación/datos/pagos/prueba); la
+  -- invitación a familia es la única que pasa 'familia' explícitamente.
+  p_tipo text default 'colaborador'
 )
 returns void
 language plpgsql security definer set search_path = public, net, pg_temp
@@ -247,7 +253,7 @@ begin
     return; -- sin email no hay a quién avisar
   end if;
 
-  insert into avisos_enviados ("destinatario", "asunto") values (p_para, p_asunto);
+  insert into avisos_enviados ("destinatario", "asunto", "tipo") values (p_para, p_asunto, p_tipo);
 
   perform net.http_post(
     url := 'https://api.resend.com/emails',
@@ -471,7 +477,8 @@ begin
 
   perform enviar_email(
     p_email, p_asunto, p_html, 'invitacion.png', p_imagen_base64,
-    (select "emailRemitenteFamilia" from config_secretos limit 1)
+    (select "emailRemitenteFamilia" from config_secretos limit 1),
+    'familia'
   );
 end;
 $$;
