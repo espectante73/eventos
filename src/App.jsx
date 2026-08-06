@@ -77,6 +77,7 @@ const HISTORIAL_VERSIONES = [
       "Ventanas: cualquiera pasa a primer plano en cuanto se toca, en vez de quedarse algunas ancladas por encima de las demás.",
       "Solidez: BORRAR TODO descarga ahora la misma copia de seguridad automática que ya tenían los reinicios. Y si guardar algo falla (sin conexión, fallo del servidor), la pantalla deja de mostrar el cambio como si se hubiera guardado — se deshace solo en vez de mentir hasta que recargues. Además, si algo revienta al pintar la pantalla, ahora se ve un aviso con botón de recargar en vez de quedarse todo en blanco sin explicación.",
       "Emails, tras la primera prueba real: la tentativa ya no bloquea avisar al anfitrión ni aparece nombrada en el email al colaborador (evita preguntas antes de tiempo); \"He terminado mi trabajo\" se movió a la derecha; y en Colaboradores hay un botón \"Probar\" para confirmar al momento que un email está bien escrito, en vez de descubrirlo días después.",
+      "Corrige que los modales de confirmación (REINICIAR, \"¿has terminado?\"...) podían abrirse ocultos detrás de una ventana ya abierta un rato, por quedarse con un z-index fijo mientras las ventanas ya lo tenían dinámico.",
     ],
   },
 ];
@@ -298,10 +299,17 @@ function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitulo }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onCerrar]);
 
+  // Un modal de verdad (con fondo oscurecido) tiene que quedar SIEMPRE por
+  // delante de cualquier VentanaFlotante que ya estuviera abierta — si no,
+  // en cuanto una ventana llevaba un rato usándose (z-index ya subido),
+  // el modal se abría oculto detrás de ella. Se pide el mismo contador
+  // compartido, así queda garantizado por encima de todo lo anterior.
+  const [zIndex] = useState(() => ++contadorZIndexVentanas);
+
   return (
     <div
       className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ background: "rgba(31,25,15,0.55)", zIndex: 50 }}
+      style={{ background: "rgba(31,25,15,0.55)", zIndex }}
       onClick={onCerrar}
     >
       <div
