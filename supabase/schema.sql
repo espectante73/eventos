@@ -95,6 +95,98 @@ create table orden_familias (
 );
 
 -- ============================================================
+-- 4b. TRIGGERS: "avisoPendiente" e "invitacionEnviada" dejan de ser
+--     banderas que cada función RPC tiene que acordarse de actualizar a
+--     mano (y por eso se desincronizaban entre sí) — pasan a recalcularse
+--     solas dentro de la propia base de datos en cuanto cambia algo
+--     relevante. Las RPC ya NO necesitan tocar estas columnas ellas
+--     mismas salvo para el único gesto deliberado de cada una: "ya avisé"
+--     (avisoPendiente = false) o el reinicio explícito para pruebas.
+-- ============================================================
+
+-- Se dispara con cualquier alta o cambio en invitados. Si se desasigna
+-- del colaborador, no hay a quién avisar → false. Si sigue asignado y
+-- confirmado, y cambió algo que le importa al colaborador (asignación,
+-- confirmación, datos, pago o mesa), pasa a pendiente — sea la primera
+-- vez (alta nueva) o la enésima (un reinicio de pruebas, una edición
+-- real, lo que sea). El único sitio que lo pone en false a propósito es
+-- anfitrion_avisar_colaborador, cuando de verdad ya se avisó.
+create or replace function trg_recalcular_aviso_pendiente()
+returns trigger
+language plpgsql
+as $$
+begin
+  -- Vía de escape para las funciones del propio colaborador (rellenar
+  -- datos, marcar pago): su cambio no debe generarle un aviso a sí mismo.
+  if coalesce(current_setting('eventos.recalculo_aviso_activo', true), 'on') = 'off' then
+    return new;
+  end if;
+
+  if new."colaboradorId" is null then
+    new."avisoPendiente" := false;
+  elsif TG_OP = 'INSERT' then
+    new."avisoPendiente" := new."confirmado";
+  elsif new."confirmado" and (
+    new."colaboradorId" is distinct from old."colaboradorId" or
+    new."confirmado" is distinct from old."confirmado" or
+    new."anioNacimiento" is distinct from old."anioNacimiento" or
+    new."anioBoda" is distinct from old."anioBoda" or
+    new."email" is distinct from old."email" or
+    new."cancion" is distinct from old."cancion" or
+    new."alergias" is distinct from old."alergias" or
+    new."observaciones" is distinct from old."observaciones" or
+    new."pagado" is distinct from old."pagado" or
+    new."mesa" is distinct from old."mesa"
+  ) then
+    new."avisoPendiente" := true;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists invitados_recalcular_aviso on invitados;
+create trigger invitados_recalcular_aviso
+before insert or update on invitados
+for each row execute function trg_recalcular_aviso_pendiente();
+
+-- Si una familia ya tiene la invitación marcada como enviada y luego
+-- cambia algo que puede afectar a quién debería salir en ella (se
+-- confirma un nuevo miembro, paga, se le asigna mesa, o cambia de
+-- familia), se invalida el envío anterior — vuelve a aparecer en
+-- "pendientes" en vez de darse por hecha para siempre con datos vejos.
+-- Es intencionadamente un poco "generoso" invalidando: preferible
+-- reaparecer en pendientes alguna vez de más que perder en silencio a
+-- alguien que se sumó después de enviada la invitación.
+create or replace function trg_invalidar_invitacion_familia()
+returns trigger
+language plpgsql
+as $$
+declare
+  clave text;
+  clave_anterior text;
+begin
+  clave := coalesce(nullif(new."grupoFamiliar", ''), new."apellido");
+  update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null
+  where "grupoFamiliar" = clave and "invitacionEnviada" = true;
+
+  if TG_OP = 'UPDATE' then
+    clave_anterior := coalesce(nullif(old."grupoFamiliar", ''), old."apellido");
+    if clave_anterior is distinct from clave then
+      update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null
+      where "grupoFamiliar" = clave_anterior and "invitacionEnviada" = true;
+    end if;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists invitados_invalidar_invitacion on invitados;
+create trigger invitados_invalidar_invitacion
+after insert or update of "confirmado", "pagado", "mesa", "grupoFamiliar", "apellido" on invitados
+for each row execute function trg_invalidar_invitacion_familia();
+
+-- ============================================================
 -- 5. EVENTO (una única fila, forzado con un truco de PK booleana)
 -- ============================================================
 create table evento (
@@ -494,40 +586,14 @@ create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jso
 returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
-declare
-  r record;
-  ids_a_marcar uuid[] := '{}';
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
 
-  -- Se detecta ANTES de tocar nada (comparando contra el valor guardado),
-  -- pero se marca DESPUÉS del insert/upsert de más abajo — así funciona
-  -- también para invitados recién creados, que todavía no existen en la
-  -- tabla en este punto. Dos motivos para marcar "avisoPendiente": que
-  -- cambie a quién está asignado, o que un tentativa que ya tenía
-  -- colaborador pase a confirmado — ese paso es justo lo que lo convierte
-  -- en alguien de quien SÍ hay que avisar (antes, en tentativa, no se
-  -- nombra en ningún aviso — ver anfitrion_avisar_colaborador).
-  for r in
-    select
-      (f->>'id')::uuid as invitado_id,
-      nullif(f->>'colaboradorId','')::uuid as nuevo_colaborador_id,
-      i."colaboradorId" as anterior_colaborador_id,
-      coalesce((f->>'confirmado')::boolean, false) as nuevo_confirmado,
-      coalesce(i."confirmado", false) as anterior_confirmado
-    from jsonb_array_elements(p_filas) as f
-    left join invitados i on i."id" = (f->>'id')::uuid
-  loop
-    if r.nuevo_colaborador_id is not null and (
-      r.nuevo_colaborador_id is distinct from r.anterior_colaborador_id
-      or (r.nuevo_confirmado and not r.anterior_confirmado)
-    ) then
-      ids_a_marcar := array_append(ids_a_marcar, r.invitado_id);
-    end if;
-  end loop;
-
+  -- "avisoPendiente" ya no se calcula aquí a mano — lo recalcula solo el
+  -- trigger invitados_recalcular_aviso en cuanto cambia algo relevante
+  -- (asignación, confirmación, datos, pago o mesa).
   insert into invitados (
     "id","nombre","apellido","zona","confirmado","colaboradorId",
     "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
@@ -550,10 +616,6 @@ begin
     "anioBoda"=excluded."anioBoda", "email"=excluded."email",
     "cancion"=excluded."cancion", "alergias"=excluded."alergias",
     "observaciones"=excluded."observaciones", "pagado"=excluded."pagado";
-
-  if array_length(ids_a_marcar, 1) > 0 then
-    update invitados set "avisoPendiente" = true where "id" = any(ids_a_marcar);
-  end if;
 
   delete from invitados g
   where not exists (
@@ -580,12 +642,20 @@ as $$ select * from invitados where "colaboradorId" = p_colaborador_id; $$;
 -- Solo puede tocar estos 6 campos, y solo si el invitado es
 -- realmente suyo — el resto de columnas de p_cambios, si vinieran,
 -- se ignoran sin más.
+-- "set_config(..., true)" desactiva el trigger de avisoPendiente solo
+-- para esta transacción: cuando el propio colaborador rellena sus datos
+-- no hay que "avisarle" de su propio cambio (eso generaría un falso
+-- pendiente cada vez que hace su trabajo normal) — avisoPendiente solo
+-- debe reaccionar a cambios que vengan del lado del anfitrión.
 create or replace function colaborador_guardar_invitado(
   p_colaborador_id uuid, p_invitado_id uuid, p_cambios jsonb
 )
 returns setof invitados
-language sql security definer set search_path = public, pg_temp
+language plpgsql security definer set search_path = public, pg_temp
 as $$
+begin
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
+  return query
   update invitados set
     "anioNacimiento" = coalesce(p_cambios->>'anioNacimiento', "anioNacimiento"),
     "anioBoda"       = coalesce(p_cambios->>'anioBoda', "anioBoda"),
@@ -595,11 +665,13 @@ as $$
     "observaciones"  = coalesce(p_cambios->>'observaciones', "observaciones")
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
   returning *;
+end;
 $$;
 
 -- No se puede marcar como pagado (p_pagado = true) si al invitado le
 -- faltan sus datos obligatorios (año de nacimiento y alergias) — quitar
--- el pago (p_pagado = false) sigue permitido siempre.
+-- el pago (p_pagado = false) sigue permitido siempre. Mismo motivo que
+-- arriba para desactivar el trigger: es el propio colaborador actuando.
 create or replace function colaborador_marcar_pagado(
   p_colaborador_id uuid, p_invitado_id uuid, p_pagado boolean
 )
@@ -618,6 +690,7 @@ begin
     end if;
   end if;
 
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
   update invitados set "pagado" = p_pagado
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
   returning * into actualizado;
@@ -800,26 +873,23 @@ begin
     return;
   end if;
 
-  -- "datos"/"pago"/"mesa" no desasignan al colaborador — si sigue siendo
-  -- suyo, borrarle estos datos de prueba lo deja igual que recién asignado:
-  -- tiene de nuevo algo pendiente de rellenar, así que vuelve a quedar
-  -- "avisoPendiente" para poder avisarle otra vez (útil sobre todo para
-  -- repetir una prueba completa con el mismo colaborador). Si ya no tiene
-  -- colaborador, no hay a quién avisar y se queda en false igualmente.
+  -- "avisoPendiente" ya no se fija aquí a mano en ninguna categoría — lo
+  -- recalcula solo el trigger invitados_recalcular_aviso al ver cambiar
+  -- estos mismos campos (y sí distingue confirmado/tentativa él solo,
+  -- cosa que este código ya no necesita saber).
   if p_categoria = 'datos' then
     update invitados set
       "anioNacimiento" = '', "anioBoda" = '', "email" = '',
-      "cancion" = '', "alergias" = '', "observaciones" = '',
-      "avisoPendiente" = ("colaboradorId" is not null)
+      "cancion" = '', "alergias" = '', "observaciones" = ''
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'pago' then
-    update invitados set "pagado" = false, "avisoPendiente" = ("colaboradorId" is not null)
+    update invitados set "pagado" = false
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'mesa' then
-    update invitados set "mesa" = null, "avisoPendiente" = ("colaboradorId" is not null)
+    update invitados set "mesa" = null
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'asignacion' then
-    update invitados set "colaboradorId" = null, "avisoPendiente" = false
+    update invitados set "colaboradorId" = null
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'foto' then
     delete from fotos_familiares where "grupoFamiliar" in (

@@ -146,6 +146,39 @@ join pg_namespace n on n.oid = p.pronamespace
 where p.proname = 'nombre_funcion' and n.nspname = 'public';
 ```
 
+### "avisoPendiente" e "invitacionEnviada" se recalculan solos (triggers), no se fijan a mano
+
+El 2026-08-06, tras varias rondas de bugs (cada uno en un sitio distinto
+donde se nos olvidaba actualizar la bandera al tocar otra parte del
+código), se identificó el patrón de fondo: la app "registraba lo que
+HACÍA" (una bandera que alguien enciende/apaga a mano en cada función)
+en vez de "leer lo que TIENE" (recalcular del estado actual cada vez).
+Eso obligaba a mantener la misma lógica sincronizada a mano en 4+ sitios
+distintos, y se desincronizaba cada vez que se tocaba solo uno.
+
+Solución: dos triggers en Postgres sobre `invitados`
+(`trg_recalcular_aviso_pendiente`, `trg_invalidar_invitacion_familia`,
+ver `supabase/schema.sql`) que recalculan estas dos columnas solos en
+cuanto cambia algo relevante. Ninguna función RPC debería volver a poner
+`avisoPendiente` o `invitacionEnviada` a mano salvo:
+- `anfitrion_avisar_colaborador`: el único gesto deliberado de "ya avisé
+  de verdad" (`avisoPendiente = false`).
+- `anfitrion_resetear_avisos`: fuerza `avisoPendiente = true` a propósito,
+  para poder repetir una prueba sin reasignar (el trigger no interfiere
+  porque solo actúa si detecta un cambio en las columnas que vigila).
+- `colaborador_guardar_invitado` / `colaborador_marcar_pagado`: llaman a
+  `perform set_config('eventos.recalculo_aviso_activo', 'off', true)`
+  antes de su propio `update`, para que el trigger no le "avise" al
+  colaborador de su propio cambio — si algún día se ve `avisoPendiente`
+  activándose solo porque un colaborador rellenó datos, es que a esa
+  función nueva le falta este mismo `set_config`.
+
+**Si se añade una función nueva que cambia campos de `invitados`
+relevantes para avisos** (confirmado, colaboradorId, datos, pago, mesa),
+no hace falta tocar `avisoPendiente` — el trigger ya se entera solo. Si
+esa función representa una acción del propio colaborador sobre sus
+datos (no del anfitrión), añadir el mismo `set_config` de supresión.
+
 ### "Reset" nunca borra invitados ni colaboradores
 
 Cualquier función de reinicio/limpieza de datos de prueba (mesas, pagos,
