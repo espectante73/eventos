@@ -235,6 +235,13 @@ drop function if exists enviar_email(text, text, text);
 -- a la vez (misma lección que la vez anterior que se tocó esta función).
 drop function if exists enviar_email(text, text, text, text, text);
 
+-- Cambia de 6 a 7 parámetros (se añade p_tipo) — MISMA lección otra vez:
+-- sin este drop, quedan las dos versiones a la vez y cualquier llamada
+-- con menos de 6 argumentos (la inmensa mayoría de las llamadas de la
+-- app) se vuelve ambigua para Postgres ("function is not unique") y
+-- falla — esto es justo lo que rompió "Avisar ahora" el 2026-08-06.
+drop function if exists enviar_email(text, text, text, text, text, text);
+
 create or replace function enviar_email(
   p_para text, p_asunto text, p_html text,
   p_adjunto_nombre text default null, p_adjunto_base64 text default null,

@@ -105,6 +105,27 @@ nuevo), hay que subir el número de esa imagen a juego.
 
 ## Reglas de diseño ya decididas
 
+### Cambiar la firma de una función SQL exige `drop function` de la firma vieja
+
+Esto ya ha roto la app **tres veces** (todas en `enviar_email`, la última
+el 2026-08-06 al añadir `p_tipo` — rompió "Avisar ahora" en toda la app
+porque las llamadas con pocos argumentos se volvían ambiguas entre las
+dos versiones coexistentes). `create or replace function` en Postgres
+**no** reemplaza una función si cambia su número de parámetros — crea una
+segunda función en paralelo (mismo nombre, distinta firma). Con
+parámetros opcionales de por medio, cualquier llamada que no dé el
+número exacto de argumentos de ninguna de las dos se vuelve ambigua
+("function is not unique") y falla.
+
+**Antes de añadir o quitar un parámetro a cualquier función SQL ya
+existente**, incluir siempre, justo antes del `create or replace`:
+```sql
+drop function if exists nombre_funcion(tipos, de, los, parámetros, viejos);
+```
+con la firma **anterior** exacta (tipos en el mismo orden). Ver el
+historial de `drop function if exists enviar_email(...)` en
+`supabase/schema.sql` como referencia de las tres firmas que ha tenido.
+
 ### "Reset" nunca borra invitados ni colaboradores
 
 Cualquier función de reinicio/limpieza de datos de prueba (mesas, pagos,
