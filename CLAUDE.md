@@ -11,39 +11,58 @@ quede desactualizado; no dejes que se pudra como pasó con el README.
 Responder siempre en español al trabajar en este proyecto, salvo que se
 pida explícitamente lo contrario.
 
-## Estado actual (2026-08-04)
+## Estado actual (2026-08-06)
 
 La app está en **v6.0**. El evento real de referencia es una **boda el 13
 de noviembre de 2026** (Rte. El Rincón, Icod de los Vinos, Tenerife).
 
 El sistema de avisos automáticos por email (Resend, vía función SQL
-`enviar_email` que llama a Resend directamente desde Postgres) ya está
-**construido** en `supabase/schema.sql`: asignar invitado a colaborador,
-aviso de datos completos, aviso de pago completo, invitación a familia —
-pero **aún no se ha probado en vivo con un colaborador real**. Es
-intencional: se quería tener lista la Zona de Reinicio antes, para poder
-limpiar las pruebas sin miedo a perder datos reales.
+`enviar_email` que llama a Resend directamente desde Postgres) **ya se ha
+probado en vivo con un colaborador real** y funciona. La primera prueba
+sacó varios ajustes reales, ya aplicados en código y en la base de datos:
 
-⚠️ El README sigue marcando la fase de emails como "⏳ pendiente" — está
-desactualizado respecto al código. No lo tomes como fuente de verdad sobre
-el estado de los emails.
+- El email al colaborador con invitados asignados **solo nombra a los
+  confirmados** — los que siguen en tentativa no se mencionan, para no
+  levantar sospechas sobre la organización antes de tiempo. Si un
+  tentativa se confirma más tarde, genera su propia tanda de aviso nueva
+  (no se pierde, solo se retrasa).
+- "He terminado mi trabajo" (colaborador) ya no lo bloquea tener
+  invitados en tentativa sin confirmar — solo mira que los confirmados de
+  ese lote estén completos.
+- Nuevo botón "Probar" junto al email de cada colaborador (sección
+  Colaboradores): envía un email de prueba al momento, con aviso visible
+  si el formato no parece válido. Motivo: una errata de un carácter en un
+  email de colaborador pasó desapercibida varios días hasta que se
+  investigó por qué no le llegaban avisos — la causa raíz de por qué
+  corregirla y recargar no bastaba a la primera no se ha localizado del
+  todo; si se repite, hace falta investigarlo con el paso a paso exacto.
 
-Desde que se construyó el sistema de emails, el trabajo se ha ido en
-mejoras de comodidad no relacionadas con emails: Plano de mesas (arrastrable
-+ impresión A2), Estado de cuentas (gastos y balance), varios arreglos de UI.
+⚠️ El README sigue sin reflejar nada de esto (habla de "pendiente" para
+toda la fase de emails) — está desactualizado, no lo tomes como fuente de
+verdad.
+
+Desde que se construyó el sistema de emails, el resto del trabajo se ha
+ido en: mejoras de comodidad (Plano de mesas, Estado de cuentas), el
+modelo de ventanas flotantes (ver más abajo), solidez general (backup
+automático también en BORRAR TODO, reversión de guardados fallidos, Error
+Boundary) y backup diario automático de la base de datos (ver más abajo).
 
 **Por qué importa:** el plan es reutilizar esta misma app para **otros
 eventos futuros** con pequeñas adaptaciones — no es un proyecto de un solo
 uso. Por eso la Zona de Reinicio es una función permanente de la app, no un
 script SQL de usar y tirar.
 
-**Próximos pasos probables:** validar el flujo real de emails con un
-colaborador de verdad. Si se reporta un email que no llega o llega mal,
+**Próximos pasos probables:** seguir probando el flujo de emails en vivo
+con los ajustes de hoy ya activos (código en Vercel y funciones SQL ya
+aplicadas en Supabase). Si se reporta un email que no llega o llega mal,
 mirar primero el registro "Avisos enviados" dentro de la propia app (tabla
 `avisos_enviados`) y, si hace falta, los logs de Resend — no asumir que el
 código de envío está roto sin descartar antes un problema de configuración
-(clave de API, remitente) o de plantilla. Cuando se confirme que la prueba
-fue bien (o mal), actualizar esta sección y el README.
+(clave de API, remitente) o de plantilla. Pendiente de decidir: si añadir
+una batería de pruebas automáticas (al menos unitarias, sobre las
+funciones puras del código) antes de abordar dividir `App.jsx` en varios
+archivos — ese reparto es un cambio grande con riesgo real de rotura
+sutil, dado que no hay ninguna prueba automática todavía.
 
 ## Backup automático de la base de datos
 
