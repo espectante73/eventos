@@ -473,6 +473,17 @@ export function useLedgerData(rol) {
       return false;
     }
     setAvisosEnviados([]);
+    // También vuelve a marcar como pendientes a los ya asignados (lo hace
+    // el propio RPC) — sin recargar esto, el botón "Avisar ahora" seguiría
+    // sin aparecer hasta refrescar la página a mano.
+    const { data: todosInvitados, error: errInv } = await supabase.rpc(
+      "anfitrion_listar_invitados",
+      { p_token: rol }
+    );
+    if (!errInv) {
+      setInvitados(todosInvitados || []);
+      invitadosRef.current = todosInvitados || [];
+    }
     return true;
   }, [esAnfitrion, rol]);
 

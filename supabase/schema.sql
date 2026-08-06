@@ -746,6 +746,12 @@ $$;
 -- poder reutilizar la app en otro evento, o limpiar datos de pruebas
 -- antes del real.
 -- ============================================================
+-- Borra el historial (para poder repetir pruebas) Y vuelve a marcar como
+-- pendientes a todos los invitados que ya tienen colaborador asignado —
+-- si no, cualquier otro reinicio que ya hubiera limpiado "avisoPendiente"
+-- (datos/pago/mesa/asignación, ver anfitrion_resetear_por_invitados) deja
+-- sin ningún botón con el que volver a probar el envío real, aunque el
+-- colaborador tenga un email perfectamente válido.
 create or replace function anfitrion_resetear_avisos(p_token uuid)
 returns void
 language plpgsql security definer set search_path = public, pg_temp
@@ -755,6 +761,7 @@ begin
     return;
   end if;
   delete from avisos_enviados where true;
+  update invitados set "avisoPendiente" = true where "colaboradorId" is not null;
 end;
 $$;
 
