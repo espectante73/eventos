@@ -105,6 +105,25 @@ nuevo), hay que subir el número de esa imagen a juego.
 
 ## Reglas de diseño ya decididas
 
+### `enviar_email` nunca debe esperar de forma bloqueante la respuesta HTTP
+
+Se probó el 2026-08-08: usar `net.http_collect_response(request_id, async
+:= false)` dentro de `enviar_email` para confirmar si Resend aceptó el
+envío. Provocó `ERROR 57014: canceling statement due to statement
+timeout` en los logs reales de Postgres al probarlo — y lo más grave:
+Postgres cancela la transacción **entera** cuando eso pasa, deshaciendo
+también el propio `net.http_post` que dispara el envío. Es decir, el
+intento de "saber si se envió" podía hacer que el email **ni se llegara
+a enviar de verdad**. Se revirtió de inmediato.
+
+`net.http_post` es "disparar y no esperar" a propósito — es lo único
+seguro de hacer dentro de `enviar_email`. Si en el futuro se quiere
+confirmar la entrega real, tiene que ser **en una transacción aparte**
+(por ejemplo, guardar el `request_id` devuelto y comprobarlo después,
+desde otra llamada, nunca bloqueando el propio envío). La columna
+`avisos_enviados.exito` ya existe en el esquema para ese día, sin usarse
+todavía.
+
 ### Cambiar la firma de una función SQL exige `drop function` de la firma vieja
 
 Esto ya ha roto la app **tres veces** (todas en `enviar_email`, la última
