@@ -28,6 +28,11 @@ verdad vive en `src/`.
    ```bash
    npm run dev
    ```
+4. (opcional) Corre la batería de pruebas unitarias sobre las funciones
+   puras de `App.jsx` — no toca Supabase ni la base de datos real:
+   ```bash
+   npm test
+   ```
 
 ## Configurar Supabase (una sola vez)
 

@@ -102,7 +102,7 @@ const C = {
 // realmente imposible de adivinar (no hay contraseña, el id ES la "llave").
 const uid = () => crypto.randomUUID();
 
-function datosCompletos(g) {
+export function datosCompletos(g) {
   // Únicos datos obligatorios: año de nacimiento y alergias (aunque la
   // respuesta sea "No", tiene que estar contestada explícitamente). Todo lo
   // demás (boda, foto, email, canción) es opcional — puede ser soltero/a,
@@ -123,17 +123,17 @@ const CAMPOS_DATOS_INVITADO = [
 ];
 const TOTAL_DATOS_INVITADO = CAMPOS_DATOS_INVITADO.length + 1;
 
-function contarDatosRellenados(g, foto) {
+export function contarDatosRellenados(g, foto) {
   const rellenos = CAMPOS_DATOS_INVITADO.filter((c) => (g[c] || "").trim() !== "").length;
   return rellenos + (foto ? 1 : 0);
 }
 
-function tieneAlergiaReal(g) {
+export function tieneAlergiaReal(g) {
   // "No" es una respuesta explícita de que no hay alergia — no cuenta como alergia.
   return Boolean(g.alergias && g.alergias.trim() && g.alergias.trim() !== "No");
 }
 
-function getRolFromUrl() {
+export function getRolFromUrl() {
   try {
     return new URLSearchParams(window.location.search).get("rol");
   } catch (_) {
@@ -141,7 +141,7 @@ function getRolFromUrl() {
   }
 }
 
-function buildLink(rolValue, urlPublica) {
+export function buildLink(rolValue, urlPublica) {
   try {
     const base = urlPublica && urlPublica.trim() ? urlPublica.trim() : window.location.href;
     const url = new URL(base);
@@ -157,7 +157,7 @@ const MESES_ES = [
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
 ];
 
-function formatearFecha(fechaISO) {
+export function formatearFecha(fechaISO) {
   if (!fechaISO) return "";
   const partes = fechaISO.split("-");
   if (partes.length !== 3) return fechaISO;
@@ -167,7 +167,7 @@ function formatearFecha(fechaISO) {
   return `${parseInt(dia, 10)} ${MESES_ES[mesIndice]} ${anio}`;
 }
 
-function ordenarPorApellidoNombre(lista) {
+export function ordenarPorApellidoNombre(lista) {
   return lista
     .slice()
     .sort(
@@ -177,7 +177,7 @@ function ordenarPorApellidoNombre(lista) {
     );
 }
 
-function calcularEdad(anioNacimiento, evento) {
+export function calcularEdad(anioNacimiento, evento) {
   const anio = parseInt(anioNacimiento, 10);
   if (!anio || isNaN(anio)) return null;
   const anioReferencia =
@@ -186,7 +186,7 @@ function calcularEdad(anioNacimiento, evento) {
   return edad > 0 && edad < 130 ? edad : null;
 }
 
-function edadPromedio(invitados, evento) {
+export function edadPromedio(invitados, evento) {
   const edades = invitados
     .map((g) => calcularEdad(g.anioNacimiento, evento))
     .filter((e) => e !== null);
@@ -194,7 +194,7 @@ function edadPromedio(invitados, evento) {
   return Math.round(edades.reduce((a, b) => a + b, 0) / edades.length);
 }
 
-function parsePrecio(valor) {
+export function parsePrecio(valor) {
   if (!valor) return 0;
   const limpio = String(valor)
     .replace(/[^\d,.-]/g, "")
@@ -207,7 +207,7 @@ function parsePrecio(valor) {
 // año de nacimiento y la fecha del evento) y el rango/precios fijados en Configuración.
 // Por debajo de "desde" no paga (bebés); entre "desde" y "hasta" paga precio niño;
 // de "hasta" en adelante paga precio adulto.
-function importeEsperadoInvitado(g, evento) {
+export function importeEsperadoInvitado(g, evento) {
   const edad = calcularEdad(g.anioNacimiento, evento);
   const desde = parseInt(evento?.edadNinoDesde, 10);
   const hasta = parseInt(evento?.edadNinoHasta, 10);
@@ -220,12 +220,12 @@ function importeEsperadoInvitado(g, evento) {
 }
 
 // La asignación de colaborador es siempre manual y exclusiva del Anfitrión.
-function resolverColaborador(g, colaboradores) {
+export function resolverColaborador(g, colaboradores) {
   if (!g.colaboradorId) return null;
   return colaboradores.find((c) => c.id === g.colaboradorId) || null;
 }
 
-function parseImport(texto, colaboradores) {
+export function parseImport(texto, colaboradores) {
   return texto
     .split(/\r?\n/)
     .map((l) => l.trim())
@@ -1295,7 +1295,7 @@ function redimensionarImagenArchivo(file, maxDim = 1600, calidad = 0.82) {
 }
 
 // "Ana, Pedro y Luis" — coma entre todos salvo el último, que lleva "y".
-function listaConY(items) {
+export function listaConY(items) {
   if (items.length === 0) return "";
   if (items.length === 1) return items[0];
   return `${items.slice(0, -1).join(", ")} y ${items[items.length - 1]}`;

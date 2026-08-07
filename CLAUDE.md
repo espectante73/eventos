@@ -65,11 +65,20 @@ aplicadas en Supabase). Si se reporta un email que no llega o llega mal,
 mirar primero el registro "Avisos enviados" dentro de la propia app (tabla
 `avisos_enviados`) y, si hace falta, los logs de Resend — no asumir que el
 código de envío está roto sin descartar antes un problema de configuración
-(clave de API, remitente) o de plantilla. Pendiente de decidir: si añadir
-una batería de pruebas automáticas (al menos unitarias, sobre las
-funciones puras del código) antes de abordar dividir `App.jsx` en varios
-archivos — ese reparto es un cambio grande con riesgo real de rotura
-sutil, dado que no hay ninguna prueba automática todavía.
+(clave de API, remitente) o de plantilla.
+
+**2026-08-08: ya existe red de pruebas mínima (Vitest + jsdom).** `npm
+test` ejecuta `src/App.test.js`, con tests unitarios sobre las funciones
+puras clave de `App.jsx` (cálculo de edad/precio esperado, `datosCompletos`,
+`parseImport`, `buildLink`, orden por apellido, etc.) — se exportaron esas
+funciones desde `App.jsx` sin moverlas de sitio, solo para poder
+importarlas en el test. Esto desbloquea el siguiente paso pendiente:
+**dividir `App.jsx` (más de 6.000 líneas) en varios ficheros**. Al mover
+código, correr `npm test` primero — si algo cambia de comportamiento por
+accidente al reorganizar, debe fallar aquí y no descubrirse semanas
+después con un dato real mal calculado. Antes de dar por bueno el reparto,
+ampliar estos tests para cubrir cualquier función pura nueva que quede
+aislada al separar ficheros.
 
 ## Backup automático de la base de datos
 
