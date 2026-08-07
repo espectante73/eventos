@@ -1,26 +1,14 @@
-// Batería mínima de pruebas unitarias sobre las funciones puras de App.jsx
-// (sin tocar ningún componente ni la base de datos real). Objetivo: tener
-// una red de seguridad ANTES de abordar el reparto de App.jsx en varios
-// ficheros (ver CLAUDE.md) — si al mover código algo cambia de
-// comportamiento por accidente, esto debe fallar y decirlo, en vez de
-// descubrirse semanas después con un dato real mal calculado.
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   datosCompletos,
   contarDatosRellenados,
   tieneAlergiaReal,
-  getRolFromUrl,
-  buildLink,
-  formatearFecha,
-  ordenarPorApellidoNombre,
   calcularEdad,
   edadPromedio,
-  parsePrecio,
   importeEsperadoInvitado,
   resolverColaborador,
   parseImport,
-  listaConY,
-} from "./App.jsx";
+} from "./invitados";
 
 describe("datosCompletos", () => {
   it("exige año de nacimiento Y alergias, no solo uno de los dos", () => {
@@ -64,35 +52,6 @@ describe("contarDatosRellenados", () => {
   });
 });
 
-describe("formatearFecha", () => {
-  it("convierte ISO a formato largo en español", () => {
-    expect(formatearFecha("2026-11-13")).toBe("13 noviembre 2026");
-  });
-  it("devuelve tal cual si no reconoce el formato", () => {
-    expect(formatearFecha("")).toBe("");
-    expect(formatearFecha("13/11/2026")).toBe("13/11/2026");
-    expect(formatearFecha("2026-99-13")).toBe("2026-99-13");
-  });
-});
-
-describe("ordenarPorApellidoNombre", () => {
-  it("ordena por apellido y, en empate, por nombre — sin mutar el original", () => {
-    const original = [
-      { apellido: "Zeta", nombre: "Ana" },
-      { apellido: "Alba", nombre: "Zoe" },
-      { apellido: "Alba", nombre: "Ana" },
-    ];
-    const copia = [...original];
-    const resultado = ordenarPorApellidoNombre(original);
-    expect(resultado.map((g) => `${g.apellido} ${g.nombre}`)).toEqual([
-      "Alba Ana",
-      "Alba Zoe",
-      "Zeta Ana",
-    ]);
-    expect(original).toEqual(copia); // no se toca el array de entrada
-  });
-});
-
 describe("calcularEdad", () => {
   const evento = { fecha: "2026-11-13" };
   it("calcula respecto al año del evento, no al año actual", () => {
@@ -118,16 +77,6 @@ describe("edadPromedio", () => {
   it("null si nadie tiene edad calculable", () => {
     expect(edadPromedio([{ anioNacimiento: "" }], evento)).toBeNull();
     expect(edadPromedio([], evento)).toBeNull();
-  });
-});
-
-describe("parsePrecio", () => {
-  it("admite coma decimal y limpia símbolos", () => {
-    expect(parsePrecio("35,50 €")).toBe(35.5);
-    expect(parsePrecio("40")).toBe(40);
-    expect(parsePrecio("")).toBe(0);
-    expect(parsePrecio(null)).toBe(0);
-    expect(parsePrecio("abc")).toBe(0);
   });
 });
 
@@ -192,34 +141,5 @@ describe("parseImport", () => {
     const texto = ",Ruiz,Pedro,ana pérez,";
     const filas = parseImport(texto, colaboradores);
     expect(filas[0].colaboradorId).toBe("c1");
-  });
-});
-
-describe("listaConY", () => {
-  it("junta con comas y un 'y' final, como en una frase", () => {
-    expect(listaConY([])).toBe("");
-    expect(listaConY(["Ana"])).toBe("Ana");
-    expect(listaConY(["Ana", "Bea"])).toBe("Ana y Bea");
-    expect(listaConY(["Ana", "Bea", "Cris"])).toBe("Ana, Bea y Cris");
-  });
-});
-
-describe("getRolFromUrl / buildLink (dependen de window.location)", () => {
-  beforeEach(() => {
-    window.history.pushState({}, "", "https://ejemplo.com/?rol=abc123");
-  });
-
-  it("lee el parámetro ?rol= de la URL actual", () => {
-    expect(getRolFromUrl()).toBe("abc123");
-  });
-
-  it("construye el enlace con el rol añadido, sobre la URL pública si se da una", () => {
-    const link = buildLink("nuevo-id", "https://miboda.com/");
-    expect(link).toBe("https://miboda.com/?rol=nuevo-id");
-  });
-
-  it("si no hay URL pública, usa la URL actual del navegador", () => {
-    const link = buildLink("nuevo-id", "");
-    expect(link).toBe("https://ejemplo.com/?rol=nuevo-id");
   });
 });
