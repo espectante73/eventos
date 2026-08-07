@@ -79,6 +79,7 @@ const HISTORIAL_VERSIONES = [
       "Emails, tras la primera prueba real: la tentativa ya no bloquea avisar al anfitrión ni aparece nombrada en el email al colaborador (evita preguntas antes de tiempo); \"He terminado mi trabajo\" se movió a la derecha; y en Colaboradores hay un botón \"Probar\" para confirmar al momento que un email está bien escrito, en vez de descubrirlo días después.",
       "Corrige que los modales de confirmación (REINICIAR, \"¿has terminado?\"...) podían abrirse ocultos detrás de una ventana ya abierta un rato, por quedarse con un z-index fijo mientras las ventanas ya lo tenían dinámico.",
       "Avisos: panel con el total pendiente de datos (solo confirmados) e invitaciones, y el historial de emails enviados ahora se filtra por 3 tipos (Asignados, Datos, Invitación) y se ordena por Fecha, Tipo o Email.",
+      "Corrige que BORRAR TODO y los reinicios no llegaban a aplicarse desde el móvil: la descarga automática de la copia de seguridad se disparaba antes de la acción real, y en algunos navegadores móviles eso podía interrumpirla antes de completarse. Ahora la copia se descarga después de que la acción ya haya terminado.",
       "Solidez de fondo: avisoPendiente e invitacionEnviada dejan de fijarse a mano en cada función y se recalculan solos según el estado real. Además, cada sesión (la tuya, la de cada colaborador) vuelve a pedir los datos sola cada minuto, para no quedarse con una copia vieja si otra persona cambia algo mientras tanto.",
     ],
   },
@@ -2173,10 +2174,13 @@ function VistaAnfitrion({ data }) {
     if (!primera) return;
     const segunda = window.confirm(`${aviso}\n\nÚltima confirmación: se borrará TODO de verdad. ¿Confirmas definitivamente?`);
     if (!segunda) return;
-    // Misma red de seguridad que ya tienen los reinicios: nunca se ejecuta
-    // el borrado más destructivo de la app sin dejar antes una copia
-    // completa descargada al dispositivo.
-    descargarJSON(`backup-antes-de-borrar-todo-${Date.now()}.json`, JSON.parse(exportarTodo()));
+    // El contenido del backup se captura YA (antes de borrar nada), pero
+    // el DISPARO de la descarga se deja para el final, después de lanzar
+    // el borrado — en móvil (sobre todo iOS), un <a download> hacia un
+    // blob: puede navegar la propia pestaña en vez de descargar sin más;
+    // si eso pasara antes de esta llamada, la página se recargaría y el
+    // borrado ni siquiera llegaría a intentarse.
+    const datosBackup = JSON.parse(exportarTodo());
     persistEvento({
       nombre: "",
       fecha: "",
@@ -2209,6 +2213,7 @@ function VistaAnfitrion({ data }) {
     persistInvitados([]);
     persistMesas([]);
     persistFotosFamiliares({});
+    descargarJSON(`backup-antes-de-borrar-todo-${Date.now()}.json`, datosBackup);
   };
 
   // ---------- Zona de reinicio (por secciones, sin tocar a los invitados) ----------
@@ -2287,11 +2292,14 @@ function VistaAnfitrion({ data }) {
     if (rPalabra.trim().toUpperCase() !== "REINICIAR") return;
     if (invitadoIdsParaReset.length === 0 || !rCategoria) return;
     setREjecutando(true);
-    descargarJSON(
-      `backup-antes-de-reiniciar-${rCategoria}-${Date.now()}.json`,
-      JSON.parse(exportarTodo())
-    );
+    // El contenido se captura ya (antes de resetear), pero la descarga se
+    // dispara después de que el reinicio termine de verdad — en móvil, un
+    // <a download> puede navegar la pestaña en vez de descargar sin más;
+    // si eso pasara antes del await de abajo, el reinicio ni se llegaría
+    // a intentar (visto en pruebas reales: en el móvil no se aplicaba).
+    const datosBackup = JSON.parse(exportarTodo());
     await resetearPorInvitados(invitadoIdsParaReset, rCategoria);
+    descargarJSON(`backup-antes-de-reiniciar-${rCategoria}-${Date.now()}.json`, datosBackup);
     setREjecutando(false);
     setRMostrarConfirmar(false);
     setRPalabra("");
@@ -2306,8 +2314,11 @@ function VistaAnfitrion({ data }) {
   const confirmarReinicioAvisos = async () => {
     if (palabraAvisos.trim().toUpperCase() !== "AVISOS") return;
     setReiniciandoAvisos(true);
-    descargarJSON(`backup-antes-de-reiniciar-avisos-${Date.now()}.json`, JSON.parse(exportarTodo()));
+    // Mismo motivo que en confirmarResetPorInvitados: capturar antes,
+    // descargar después de que la acción real ya haya terminado.
+    const datosBackup = JSON.parse(exportarTodo());
     await resetearAvisos();
+    descargarJSON(`backup-antes-de-reiniciar-avisos-${Date.now()}.json`, datosBackup);
     setReiniciandoAvisos(false);
     setReinicioAvisosPendiente(false);
     setPalabraAvisos("");
