@@ -67,18 +67,35 @@ mirar primero el registro "Avisos enviados" dentro de la propia app (tabla
 código de envío está roto sin descartar antes un problema de configuración
 (clave de API, remitente) o de plantilla.
 
-**2026-08-08: ya existe red de pruebas mínima (Vitest + jsdom).** `npm
-test` ejecuta `src/App.test.js`, con tests unitarios sobre las funciones
-puras clave de `App.jsx` (cálculo de edad/precio esperado, `datosCompletos`,
-`parseImport`, `buildLink`, orden por apellido, etc.) — se exportaron esas
-funciones desde `App.jsx` sin moverlas de sitio, solo para poder
-importarlas en el test. Esto desbloquea el siguiente paso pendiente:
-**dividir `App.jsx` (más de 6.000 líneas) en varios ficheros**. Al mover
-código, correr `npm test` primero — si algo cambia de comportamiento por
-accidente al reorganizar, debe fallar aquí y no descubrirse semanas
-después con un dato real mal calculado. Antes de dar por bueno el reparto,
-ampliar estos tests para cubrir cualquier función pura nueva que quede
-aislada al separar ficheros.
+**2026-08-08: red de pruebas (Vitest + jsdom) y ESLint (`no-undef`).**
+`npm test` corre los tests unitarios (co-localizados en `src/lib/*.test.js`)
+sobre las funciones puras; `npm run lint` detecta al instante cualquier
+referencia a una variable no importada — el fallo silencioso más peligroso
+al mover código entre ficheros en JS sin tipos (no rompe el build, solo
+revienta en tiempo de ejecución la primera vez que se toca esa rama). Las
+dos se usaron como red de seguridad, junto a `npm run build`, en las 3
+fases siguientes.
+
+**2026-08-08: `App.jsx` dividido de 6.262 a 240 líneas (rama
+`refactor/dividir-app-jsx`, sin fusionar todavía — pendiente de que el
+usuario la pruebe a mano en `npm run dev`).** Mismo código, mismos
+comentarios, solo cambia el fichero, en 3 fases (cada una con su propio
+commit, verificado con lint+test+build antes del siguiente):
+- Fase 1: funciones puras a `src/lib/*.js` (con sus tests co-localizados).
+- Fase 2: componentes de presentación "hoja" (reciben props, no dependen
+  del estado de `VistaAnfitrion`) a `src/components/*.jsx`, más `theme.js`
+  (paleta `C`, `inputStyle`) y `constants.js` (`VERSION_APP`) como módulos
+  compartidos nuevos para que ni App.jsx ni los componentes dependan el
+  uno del otro.
+- Fase 3: `VistaAnfitrion` (~3.650 líneas) y `VistaColaborador` a
+  `src/vistas/*.jsx`, tal cual, sin dividir su interior todavía.
+El tamaño del bundle final es prácticamente idéntico al de antes de
+empezar (511.98 kB vs 511.97 kB) — señal de que nada se perdió ni se
+duplicó. **Fase 4, deliberadamente pospuesta:** `VistaAnfitrion` sigue
+siendo un único componente con ~40 `useState` propios (Mesas, Avisos,
+Cuentas, Reinicio, Colaboradores... todo mezclado) — dividir eso de
+verdad en sub-componentes con su propio estado es un rediseño real, no
+un corte-y-pega, y merece su propia sesión aparte.
 
 ## Backup automático de la base de datos
 
