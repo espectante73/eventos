@@ -97,6 +97,33 @@ Cuentas, Reinicio, Colaboradores... todo mezclado) — dividir eso de
 verdad en sub-componentes con su propio estado es un rediseño real, no
 un corte-y-pega, y merece su propia sesión aparte.
 
+**Orden de trabajo propuesto para la Fase 4** (pendiente de empezar —
+requiere primero fusionar `refactor/dividir-app-jsx` a `main` una vez
+probada, y arrancar en una rama nueva desde ahí). Mapa real de
+`VistaAnfitrion.jsx`: 17 `VentanaFlotante` distintas mezcladas en el
+mismo componente, más un "cascarón" de ~1.165 líneas antes de la primera
+ventana (ahí viven casi todos los `useState` y las funciones de guardado
+— la parte más entrelazada, por eso se deja para el final):
+- Ronda 1 (calentamiento, <100 líneas cada una): `versiones`, `progreso`,
+  `copiaSeguridad`, `config-url-web`, `config-email-anfitrion`,
+  `config-precios`.
+- Ronda 2 (resto de Configuración): `config-datos-evento`,
+  `config-plantillas-email`, `config-zona-reinicio`,
+  `config-zona-peligro`.
+- Ronda 3: `colaboradores` y `mesas` — su JSX propio ya es corto porque
+  `ColaboradorCard`/`MesaRedonda` se sacaron en la Fase 2.
+- Ronda 4 (las grandes, más cuidado): `plano` (543 líneas, lienzo
+  arrastrable), `cuentas`, `avisos`, `invitaciones`.
+- Ronda 5: el cascarón final (estado `abierto`/`toggle` y navegación),
+  una vez las 17 ventanas ya son componentes propios.
+
+Cada ronda: su propia rama de trabajo mental, verificada con
+lint+test+build+prueba manual de esa ventana concreta, y su propio
+commit — nunca todo junto. La Ronda 1 es la que dirá cuánto se comparte
+de verdad entre ventanas (algunas funciones del cascarón pueden usarse en
+varias a la vez); hasta hacerla no hay un tiempo total fiable para el
+resto.
+
 ## Backup automático de la base de datos
 
 Existe un backup diario automático vía GitHub Actions
