@@ -181,6 +181,12 @@ export function useLedgerData(rol) {
           .select("*")
           .order("numero", { ascending: true });
         if (errMesas && mostrarCarga) avisar("No se pudieron cargar las mesas.", errMesas);
+        // Comprobación aparte (nunca dentro de enviar_email — ver el
+        // episodio del 2026-08-08 documentado en schema.sql) de si Resend
+        // ya confirmó los envíos recientes. Es "best effort": si falla, no
+        // se avisa con una alerta — simplemente el ✓/✗/? de esta vuelta se
+        // queda como estaba y se reintenta solo en el próximo refresco.
+        await supabase.rpc("anfitrion_actualizar_estado_avisos", { p_token: rol });
         const { data: avisos, error: errAvisos } = await supabase.rpc(
           "anfitrion_listar_avisos_enviados",
           { p_token: rol }

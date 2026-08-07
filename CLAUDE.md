@@ -117,12 +117,18 @@ intento de "saber si se envió" podía hacer que el email **ni se llegara
 a enviar de verdad**. Se revirtió de inmediato.
 
 `net.http_post` es "disparar y no esperar" a propósito — es lo único
-seguro de hacer dentro de `enviar_email`. Si en el futuro se quiere
-confirmar la entrega real, tiene que ser **en una transacción aparte**
-(por ejemplo, guardar el `request_id` devuelto y comprobarlo después,
-desde otra llamada, nunca bloqueando el propio envío). La columna
-`avisos_enviados.exito` ya existe en el esquema para ese día, sin usarse
-todavía.
+seguro de hacer dentro de `enviar_email`. La confirmación real ya está
+resuelta (2026-08-07, mismo día): `enviar_email` guarda el `request_id`
+que devuelve `net.http_post` (eso sí es instantáneo, no espera nada) en
+`avisos_enviados.requestId`, y una función **totalmente aparte**,
+`anfitrion_actualizar_estado_avisos`, es la que más tarde mira si ya hay
+respuesta — con `net.http_collect_response(request_id, async := true)`,
+que es la versión que NUNCA bloquea: si la respuesta no está lista
+todavía, lo dice al momento ('PENDING') y sigue con el siguiente aviso.
+Esa comprobación se dispara sola desde `useLedgerData.js`, aprovechando
+el refresco automático de cada minuto — nunca desde dentro del envío.
+`avisos_enviados.exito` vuelve a mostrarse como ✓/✗/? en el historial de
+Avisos, ahora sí con datos reales detrás.
 
 ### Cambiar la firma de una función SQL exige `drop function` de la firma vieja
 

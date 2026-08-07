@@ -262,15 +262,21 @@ create table avisos_enviados (
   -- (aviso de datos/pagos completados) o 'invitacion' (a una familia) —
   -- para poder filtrar el historial por tipo en la app.
   "tipo"         text not null default 'asignados',
-  -- null = no se pudo confirmar (versión de pg_net, timeout...) — se
-  -- intentó enviar igual, solo no se sabe el resultado. true = Resend
-  -- respondió aceptándolo. false = Resend lo rechazó de entrada (clave
-  -- inválida, remitente mal configurado...).
+  -- null = todavía sin confirmar (o pg_net nunca llegó a tener respuesta
+  -- dentro de la ventana que comprueba anfitrion_actualizar_estado_avisos).
+  -- true = Resend respondió aceptándolo. false = Resend lo rechazó de
+  -- entrada (clave inválida, remitente mal configurado...).
   "exito"        boolean,
+  -- Id que devuelve net.http_post() al encolar la petición (no la
+  -- respuesta en sí) — sirve para poder preguntar MÁS TARDE, en otra
+  -- transacción, si ya hay respuesta. Ver enviar_email() y
+  -- anfitrion_actualizar_estado_avisos() más abajo.
+  "requestId"    bigint,
   "creadoEn"     timestamptz not null default now()
 );
 alter table avisos_enviados enable row level security;
 revoke all on table avisos_enviados from anon, authenticated;
+alter table avisos_enviados add column if not exists "requestId" bigint;
 
 -- Migración de una sola vez (segura de repetir): reclasifica cualquier
 -- fila que se guardara con el esquema de tipos antiguo ('colaborador' /
@@ -367,6 +373,9 @@ create or replace function enviar_email(
 returns void
 language plpgsql security definer set search_path = public, net, pg_temp
 as $$
+declare
+  v_id bigint;
+  v_request_id bigint;
 begin
   if p_para is null or trim(p_para) = '' then
     return; -- sin email no hay a quién avisar
@@ -378,11 +387,19 @@ begin
   -- timeout" — Postgres cancela la transacción ENTERA si tarda más de lo
   -- permitido, y eso deshace también el propio net.http_post: el email
   -- deja de enviarse de verdad, no solo de confirmarse. net.http_post es
-  -- "dispara y olvida" a propósito — confirmar la entrega real exigiría
-  -- comprobarlo después, en una transacción aparte, no aquí dentro.
-  insert into avisos_enviados ("destinatario", "asunto", "tipo") values (p_para, p_asunto, p_tipo);
+  -- "dispara y olvida" a propósito.
+  --
+  -- Lo que SÍ es seguro hacer aquí: net.http_post() devuelve al momento
+  -- (sin esperar nada) un "requestId" que solo sirve para poder mirar la
+  -- respuesta MÁS TARDE, en otra transacción aparte. Guardarlo no es lo
+  -- mismo que esperar la respuesta — es dejar la miga de pan para que
+  -- anfitrion_actualizar_estado_avisos() la siga después, sin bloquear
+  -- nunca el envío en sí. Ver esa función más abajo.
+  insert into avisos_enviados ("destinatario", "asunto", "tipo")
+  values (p_para, p_asunto, p_tipo)
+  returning "id" into v_id;
 
-  perform net.http_post(
+  v_request_id := net.http_post(
     url := 'https://api.resend.com/emails',
     headers := jsonb_build_object(
       'Authorization', 'Bearer ' || (select "resendApiKey" from config_secretos limit 1),
@@ -405,6 +422,8 @@ begin
       else '{}'::jsonb
     end
   );
+
+  update avisos_enviados set "requestId" = v_request_id where "id" = v_id;
 end;
 $$;
 
@@ -813,6 +832,54 @@ as $$
   limit 200;
 $$;
 
+-- Comprobación NO bloqueante de si Resend ya respondió a los envíos
+-- recientes — separada a propósito de enviar_email() (ver el episodio del
+-- 2026-08-08 documentado ahí). Se llama aparte, en su propia transacción,
+-- típicamente desde el refresco automático de cada minuto de la app.
+create or replace function anfitrion_actualizar_estado_avisos(p_token uuid)
+returns void
+language plpgsql security definer set search_path = public, net, pg_temp
+as $$
+declare
+  fila record;
+  v_resultado net.http_response_result;
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  -- Solo los recientes y aún sin confirmar: pasada una hora, si pg_net
+  -- todavía no tiene respuesta, ya no la va a tener — se queda en "sin
+  -- confirmar" para siempre y repasarlo más no serviría de nada.
+  for fila in
+    select "id", "requestId" from avisos_enviados
+    where "requestId" is not null
+      and "exito" is null
+      and "creadoEn" > now() - interval '1 hour'
+  loop
+    begin
+      -- async := true es la clave: mira si la respuesta YA está lista y,
+      -- si no, lo dice (status 'PENDING') y sigue al momento con el
+      -- siguiente aviso — nunca espera, nunca puede agotar el tiempo
+      -- máximo de la consulta. Es justo lo que enviar_email() no puede
+      -- permitirse hacer dentro de su propia transacción.
+      v_resultado := net.http_collect_response(fila."requestId", async := true);
+      if v_resultado.status = 'SUCCESS' then
+        update avisos_enviados
+        set "exito" = ((v_resultado.response).status_code between 200 and 299)
+        where "id" = fila."id";
+      elsif v_resultado.status = 'ERROR' then
+        update avisos_enviados set "exito" = false where "id" = fila."id";
+      end if;
+      -- status 'PENDING': todavía no hay respuesta — se deja tal cual,
+      -- para que la próxima llamada (dentro de un minuto) vuelva a mirar.
+    exception when others then
+      null; -- un aviso problemático no debe impedir comprobar el resto.
+    end;
+  end loop;
+end;
+$$;
+
 -- ============================================================
 -- ESTADO DE CUENTAS (gastos) — mismo patrón que colaboradores:
 -- upsert por id + borra los que ya no estén en la lista.
@@ -947,6 +1014,7 @@ grant execute on function anfitrion_avisar_colaborador(uuid, uuid) to anon;
 grant execute on function anfitrion_probar_email_colaborador(uuid, uuid) to anon;
 grant execute on function anfitrion_enviar_invitacion_familia(uuid, text, text, text, text) to anon;
 grant execute on function anfitrion_listar_avisos_enviados(uuid) to anon;
+grant execute on function anfitrion_actualizar_estado_avisos(uuid) to anon;
 grant execute on function anfitrion_resetear_avisos(uuid) to anon;
 grant execute on function anfitrion_resetear_por_invitados(uuid, uuid[], text) to anon;
 grant execute on function anfitrion_listar_gastos(uuid) to anon;

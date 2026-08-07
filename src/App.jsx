@@ -82,6 +82,7 @@ const HISTORIAL_VERSIONES = [
       "Corrige que BORRAR TODO y los reinicios no llegaban a aplicarse desde el móvil: la descarga automática de la copia de seguridad se disparaba antes de la acción real, y en algunos navegadores móviles eso podía interrumpirla antes de completarse. Ahora la copia se descarga después de que la acción ya haya terminado.",
       "Se probó y se revirtió: confirmar en el momento si Resend acepta un envío. Esperar esa respuesta dentro de la misma función podía agotar el tiempo máximo de una consulta y cancelar el envío entero, no solo la confirmación — enviar_email vuelve a ser \"disparar y no esperar\", que es lo fiable.",
       "Solidez de fondo: avisoPendiente e invitacionEnviada dejan de fijarse a mano en cada función y se recalculan solos según el estado real. Además, cada sesión (la tuya, la de cada colaborador) vuelve a pedir los datos sola cada minuto, para no quedarse con una copia vieja si otra persona cambia algo mientras tanto.",
+      "Emails: la confirmación ✓/✗/? vuelve al historial de Avisos, esta vez bien separada del envío — enviar_email() solo guarda dónde mirar la respuesta más tarde, y una comprobación aparte (que nunca espera ni puede bloquear nada) la va resolviendo sola con el refresco de cada minuto.",
     ],
   },
 ];
@@ -4707,7 +4708,7 @@ function VistaAnfitrion({ data }) {
                     </p>
                   );
                 }
-                const columnas = "110px 80px 1fr 1fr";
+                const columnas = "110px 28px 80px 1fr 1fr";
                 return (
                   <div style={{ maxHeight: 320, overflowY: "auto" }}>
                     <div
@@ -4717,6 +4718,7 @@ function VistaAnfitrion({ data }) {
                       <EncabezadoOrdenable columna="fecha" orden={ordenAvisos} onClick={cambiarOrdenAvisos}>
                         Fecha
                       </EncabezadoOrdenable>
+                      <span title="¿Resend confirmó el envío?" style={{ color: C.gold }}>✓?</span>
                       <EncabezadoOrdenable columna="tipo" orden={ordenAvisos} onClick={cambiarOrdenAvisos}>
                         Tipo
                       </EncabezadoOrdenable>
@@ -4734,6 +4736,18 @@ function VistaAnfitrion({ data }) {
                         >
                           <span style={{ color: C.charcoal, opacity: 0.5 }} className="whitespace-nowrap">
                             {new Date(a.creadoEn).toLocaleString("es-ES")}
+                          </span>
+                          <span
+                            title={
+                              a.exito === true
+                                ? "Resend lo aceptó"
+                                : a.exito === false
+                                ? "Resend lo rechazó — revisa la clave o el remitente"
+                                : "Todavía sin confirmar (se comprueba solo cada minuto)"
+                            }
+                            style={{ color: a.exito === true ? C.ink : a.exito === false ? C.wax : C.line }}
+                          >
+                            {a.exito === true ? "✓" : a.exito === false ? "✗" : "?"}
                           </span>
                           <span style={{ color: C.charcoal, opacity: 0.7 }}>
                             {ETIQUETA_TIPO_AVISO[a.tipo] || a.tipo}
