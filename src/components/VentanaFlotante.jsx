@@ -1,0 +1,249 @@
+// Modal bloqueante (ModalFlotante) y ventana flotante movible/redimensionable
+// no bloqueante (VentanaFlotante) — la base de toda la navegación por
+// secciones de la app (Mesas, Avisos, Configuración...). Movidas fuera de
+// App.jsx en el reparto del 2026-08-08 (ver CLAUDE.md).
+import { useState, useEffect, useRef } from "react";
+import { X } from "lucide-react";
+import { C } from "../theme";
+
+// Ventana flotante genérica: independiente de qué secciones estén plegadas,
+// para que Imprimir/Canciones/Alergias y los avisos de mesas funcionen siempre.
+export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitulo }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onCerrar();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCerrar]);
+
+  // Un modal de verdad (con fondo oscurecido) tiene que quedar SIEMPRE por
+  // delante de cualquier VentanaFlotante que ya estuviera abierta — si no,
+  // en cuanto una ventana llevaba un rato usándose (z-index ya subido),
+  // el modal se abría oculto detrás de ella. Se pide el mismo contador
+  // compartido, así queda garantizado por encima de todo lo anterior.
+  const [zIndex] = useState(() => ++contadorZIndexVentanas);
+
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ background: "rgba(31,25,15,0.55)", zIndex }}
+      onClick={onCerrar}
+    >
+      <div
+        className="rounded-lg w-full flex flex-col"
+        style={{
+          background: C.paper,
+          border: `1px solid ${C.line}`,
+          maxWidth: 720,
+          maxHeight: "88vh",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="flex items-center justify-between px-4 py-3"
+          style={{ borderBottom: `1px solid ${C.line}` }}
+        >
+          <h3
+            className="text-lg"
+            style={{ fontFamily: "'Fraunces', serif", color: colorTitulo || C.ink, fontWeight: 700 }}
+          >
+            {titulo}
+          </h3>
+          <button onClick={onCerrar} title="Cerrar">
+            <X size={18} style={{ color: C.charcoal }} />
+          </button>
+        </div>
+        <div className="p-4" style={{ flex: 1, overflowY: "auto" }}>
+          {children}
+        </div>
+        {acciones && (
+          <div
+            className="flex items-center gap-2 px-4 py-3 flex-wrap"
+            style={{ borderTop: `1px solid ${C.line}` }}
+          >
+            {acciones}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Orden fijo de apertura en cascada — cada sección siempre aparece en el
+// mismo sitio relativo, en vez de saltar de posición según el orden en que
+// se abran.
+// Orden alfabético (por la etiqueta visible, no por la clave interna) —
+// así el desplegable es predecible según crece: siempre se sabe dónde
+// buscar algo sin tener que recordar un grupo temático.
+// Contador compartido por todas las VentanaFlotante para decidir cuál va
+// por delante: cada vez que se toca o se abre una, sube y se lo queda ella.
+let contadorZIndexVentanas = 50;
+
+export const ORDEN_VENTANAS = [
+  "avisos",
+  "colaboradores",
+  "configuracion",
+  "copiaSeguridad",
+  "cuentas",
+  "invitaciones",
+  "mesas",
+  "plano",
+  "progreso",
+  "versiones",
+];
+
+export const ETIQUETAS_VENTANAS = {
+  progreso: "Progreso de recopilación",
+  colaboradores: "Colaboradores",
+  mesas: "Mesas",
+  plano: "Plano de mesas",
+  invitaciones: "Invitaciones",
+  cuentas: "Estado de cuentas",
+  copiaSeguridad: "Copia de seguridad",
+  configuracion: "Configuración",
+  avisos: "Avisos",
+  versiones: "Versiones",
+};
+
+// Ventana flotante independiente y no bloqueante: a diferencia de
+// ModalFlotante, no oscurece el resto de la pantalla ni impide que haya
+// varias abiertas a la vez — pensada para las secciones de administración
+// que se abren desde el desplegable de navegación (Mesas, Invitaciones,
+// Configuración...), donde puede interesar ver más de una a la vez.
+export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra }) {
+  const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
+  const posInicial = { top: 16 + idx * 20, left: 16 + idx * 20 };
+  const [pos, setPos] = useState(posInicial);
+  // null = todavía sin redimensionar a mano: usa el tamaño por defecto.
+  const [tam, setTam] = useState(null);
+  // El z-index no depende de qué ventana sea, sino de cuál se tocó la
+  // última — así la recién abierta (o la que se acaba de pulsar) queda
+  // siempre por delante, en vez de que unas pocas queden ancladas arriba.
+  const [zIndex, setZIndex] = useState(() => ++contadorZIndexVentanas);
+  const traerAlFrente = () => setZIndex(++contadorZIndexVentanas);
+  const ventanaRef = useRef(null);
+  // Offset entre el punto donde se agarra la cabecera y la esquina de la
+  // ventana — así no "salta" al primer píxel del ratón al empezar a arrastrar.
+  const arrastre = useRef(null);
+  const redimension = useRef(null);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onCerrar();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCerrar]);
+
+  useEffect(() => {
+    const coords = (e) => (e.touches ? e.touches[0] : e);
+    const mover = (e) => {
+      const { clientX, clientY } = coords(e);
+      if (arrastre.current) {
+        setPos({
+          left: Math.max(0, clientX - arrastre.current.dx),
+          top: Math.max(0, clientY - arrastre.current.dy),
+        });
+      }
+      if (redimension.current) {
+        setTam({
+          width: Math.max(280, redimension.current.anchoInicial + (clientX - redimension.current.x)),
+          height: Math.max(200, redimension.current.altoInicial + (clientY - redimension.current.y)),
+        });
+      }
+    };
+    const soltar = () => {
+      arrastre.current = null;
+      redimension.current = null;
+    };
+    window.addEventListener("mousemove", mover);
+    window.addEventListener("mouseup", soltar);
+    window.addEventListener("touchmove", mover);
+    window.addEventListener("touchend", soltar);
+    return () => {
+      window.removeEventListener("mousemove", mover);
+      window.removeEventListener("mouseup", soltar);
+      window.removeEventListener("touchmove", mover);
+      window.removeEventListener("touchend", soltar);
+    };
+  }, []);
+
+  const iniciarArrastre = (e) => {
+    const { clientX, clientY } = e.touches ? e.touches[0] : e;
+    arrastre.current = { dx: clientX - pos.left, dy: clientY - pos.top };
+  };
+
+  const iniciarRedimension = (e) => {
+    const { clientX, clientY } = e.touches ? e.touches[0] : e;
+    const rect = ventanaRef.current.getBoundingClientRect();
+    redimension.current = { x: clientX, y: clientY, anchoInicial: rect.width, altoInicial: rect.height };
+  };
+
+  return (
+    <div
+      ref={ventanaRef}
+      className="fixed rounded-lg flex flex-col"
+      onMouseDownCapture={traerAlFrente}
+      onTouchStartCapture={traerAlFrente}
+      style={{
+        background: C.paper,
+        border: `1px solid ${C.line}`,
+        width: tam ? tam.width : "min(620px, calc(100vw - 2rem))",
+        height: tam ? tam.height : undefined,
+        maxHeight: tam ? undefined : "80vh",
+        boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+        top: pos.top,
+        left: pos.left,
+        zIndex,
+      }}
+    >
+      <div
+        className="flex items-center justify-between px-4 py-3 cursor-move select-none"
+        style={{ borderBottom: `1px solid ${C.line}`, touchAction: "none" }}
+        onMouseDown={iniciarArrastre}
+        onTouchStart={iniciarArrastre}
+      >
+        <h3
+          className="text-lg"
+          style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}
+        >
+          {titulo}
+        </h3>
+        <div
+          className="flex items-center gap-2"
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          {extra}
+          <button onClick={onCerrar} title="Cerrar">
+            <X size={18} style={{ color: C.charcoal }} />
+          </button>
+        </div>
+      </div>
+      <div className="p-4" style={{ flex: 1, overflowY: "auto" }}>
+        {children}
+      </div>
+      {acciones && (
+        <div
+          className="flex items-center gap-2 px-4 py-3 flex-wrap"
+          style={{ borderTop: `1px solid ${C.line}` }}
+        >
+          {acciones}
+        </div>
+      )}
+      <div
+        onMouseDown={iniciarRedimension}
+        onTouchStart={iniciarRedimension}
+        className="absolute"
+        style={{ width: 18, height: 18, right: 2, bottom: 2, cursor: "nwse-resize", touchAction: "none" }}
+        title="Arrastra para cambiar el tamaño"
+      >
+        <svg width="18" height="18" viewBox="0 0 16 16">
+          <path d="M14 2 L2 14 M14 7 L7 14 M14 12 L12 14" stroke={C.line} strokeWidth="1.5" />
+        </svg>
+      </div>
+    </div>
+  );
+}
