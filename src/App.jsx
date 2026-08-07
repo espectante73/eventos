@@ -993,7 +993,7 @@ function BuscadorInvitado({ invitados, invitadoId, onSeleccionar, placeholder })
   );
 }
 
-function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onAvisar, onProbarEmail }) {
+function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail }) {
   const [copiado, setCopiado] = useState(false);
   const [relevando, setRelevando] = useState(false);
   const [mostrarAsignados, setMostrarAsignados] = useState(false);
@@ -1160,23 +1160,13 @@ function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEl
 
       {pendientesAviso.length > 0 && (
         <div
-          className="flex items-center justify-between gap-2 mt-2 px-2 py-1 rounded"
+          className="flex items-center gap-2 mt-2 px-2 py-1 rounded"
           style={{ background: "#FBEAEC" }}
         >
           <span className="text-xs" style={{ color: C.wax }}>
             ⚠ {pendientesAviso.length} pendiente{pendientesAviso.length === 1 ? "" : "s"} de avisar
+            — avisa desde la ventana "Avisos".
           </span>
-          <button
-            onClick={() => onAvisar(c.id)}
-            disabled={!c.email}
-            className="text-xs px-2 py-1 rounded font-medium"
-            style={{
-              background: c.email ? C.wax : C.line,
-              color: c.email ? "#fff" : C.charcoal,
-            }}
-          >
-            Avisar ahora
-          </button>
         </div>
       )}
 
@@ -2971,7 +2961,6 @@ function VistaAnfitrion({ data }) {
                     onRelevar={relevarColaborador}
                     onAsignarColaborador={asignarColaborador}
                     onCambiarEmail={cambiarEmailColaborador}
-                    onAvisar={(id) => setAvisoPreview({ id, nombre: c.nombre })}
                     onProbarEmail={probarEmailColaborador}
                   />
                 );
