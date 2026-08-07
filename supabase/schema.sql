@@ -367,20 +367,22 @@ create or replace function enviar_email(
 returns void
 language plpgsql security definer set search_path = public, net, pg_temp
 as $$
-declare
-  v_id bigint;
-  v_request_id bigint;
-  v_resultado net.http_response_result;
 begin
   if p_para is null or trim(p_para) = '' then
     return; -- sin email no hay a quién avisar
   end if;
 
-  insert into avisos_enviados ("destinatario", "asunto", "tipo")
-  values (p_para, p_asunto, p_tipo)
-  returning "id" into v_id;
+  -- IMPORTANTE (episodio del 2026-08-08): NO esperar aquí la respuesta de
+  -- Resend de forma bloqueante (net.http_collect_response con async :=
+  -- false). Se probó y provocó "canceling statement due to statement
+  -- timeout" — Postgres cancela la transacción ENTERA si tarda más de lo
+  -- permitido, y eso deshace también el propio net.http_post: el email
+  -- deja de enviarse de verdad, no solo de confirmarse. net.http_post es
+  -- "dispara y olvida" a propósito — confirmar la entrega real exigiría
+  -- comprobarlo después, en una transacción aparte, no aquí dentro.
+  insert into avisos_enviados ("destinatario", "asunto", "tipo") values (p_para, p_asunto, p_tipo);
 
-  v_request_id := net.http_post(
+  perform net.http_post(
     url := 'https://api.resend.com/emails',
     headers := jsonb_build_object(
       'Authorization', 'Bearer ' || (select "resendApiKey" from config_secretos limit 1),
@@ -403,24 +405,6 @@ begin
       else '{}'::jsonb
     end
   );
-
-  -- Intento de confirmar si Resend aceptó el envío de verdad (en vez de
-  -- darlo siempre por bueno solo porque se llegó a llamar a la API).
-  -- Si esto falla por lo que sea (versión de pg_net distinta, timeout
-  -- esperando la respuesta...), el email ya se ha intentado enviar de
-  -- todas formas — sencillamente se queda como "sin confirmar" (null)
-  -- en vez de romper el envío en sí.
-  begin
-    v_resultado := net.http_collect_response(v_request_id, async := false);
-    update avisos_enviados
-    set "exito" = (
-      v_resultado.status = 'SUCCESS'
-      and (v_resultado.response).status_code between 200 and 299
-    )
-    where "id" = v_id;
-  exception when others then
-    null;
-  end;
 end;
 $$;
 
