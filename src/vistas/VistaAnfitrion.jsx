@@ -75,6 +75,10 @@ import { VentanaConfigZonaReinicio } from "./anfitrion/VentanaConfigZonaReinicio
 import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
 import { VentanaColaboradores } from "./anfitrion/VentanaColaboradores";
 import { VentanaMesas } from "./anfitrion/VentanaMesas";
+import { VentanaPlano } from "./anfitrion/VentanaPlano";
+import { VentanaCuentas } from "./anfitrion/VentanaCuentas";
+import { VentanaAvisos } from "./anfitrion/VentanaAvisos";
+import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 
 // Cada parte de Configuración es su propia ventana flotante independiente
 // (igual que Mesas, Avisos...), abierta desde el desplegable "SECCIÓN" en
@@ -114,43 +118,6 @@ export function VistaAnfitrion({ data }) {
   const colaboradoresPendientes = colaboradores.filter(
     (c) => invitadosPendientesDe(c.id).length > 0
   );
-  // Total de confirmados con datos pendientes de avisar, sin desglosar por
-  // colaborador — para el panel resumen de Avisos. La tentativa nunca cuenta
-  // aquí (mismo motivo que arriba).
-  const datosConfirmadosPendientes = invitados.filter(
-    (g) => g.avisoPendiente && g.confirmado
-  ).length;
-  const [filtroTipoAviso, setFiltroTipoAviso] = useState("todos"); // "todos" | "asignados" | "datos" | "invitacion"
-  const [ordenAvisos, setOrdenAvisos] = useState({ columna: "fecha", direccion: "desc" });
-  const cambiarOrdenAvisos = (columna) => {
-    setOrdenAvisos((o) =>
-      o.columna === columna
-        ? { columna, direccion: o.direccion === "asc" ? "desc" : "asc" }
-        : { columna, direccion: "asc" }
-    );
-  };
-
-  // Antes de mandar un aviso individual ("Avisar ahora"), se enseña el
-  // mensaje exacto que se va a enviar y se pide confirmar — con opción de
-  // ir directo a editar la plantilla si algo no convence.
-  const [avisoPreview, setAvisoPreview] = useState(null); // { id, nombre } | null
-  const [enviandoAvisoPreview, setEnviandoAvisoPreview] = useState(false);
-
-  const confirmarEnvioAvisoPreview = async () => {
-    if (!avisoPreview) return;
-    setEnviandoAvisoPreview(true);
-    await avisarColaborador(avisoPreview.id);
-    setEnviandoAvisoPreview(false);
-    setAvisoPreview(null);
-  };
-
-  const irAEditarAsignacion = () => {
-    if (avisoPreview) {
-      setFiltros((f) => ({ ...f, colaboradorId: avisoPreview.id }));
-    }
-    setAvisoPreview(null);
-    setAbierto((a) => ({ ...a, invitados: true, avisos: false }));
-  };
 
   const cambiarOrden = (columna) => {
     setOrden((o) =>
@@ -175,24 +142,6 @@ export function VistaAnfitrion({ data }) {
   // precioNino del evento — se convierte a número solo al sumar
   // (parsePrecio), nunca en cada pulsación. Convertirlo a número al momento
   // borraba la coma decimal a medio escribir (9,18 acababa siendo 918).
-  // La lista de gastos empieza plegada: al abrir la sección solo se ven los
-  // 4 recuadros (recaudado/pendiente/gastos/balance).
-  const [mostrarListaGastos, setMostrarListaGastos] = useState(false);
-
-  const agregarGasto = () => {
-    persistGastos([
-      ...gastos,
-      { id: uid(), concepto: "", categoria: "", importe: "", pagado: false },
-    ]);
-  };
-
-  const cambiarGasto = (id, campo, valor) => {
-    persistGastos(gastos.map((g) => (g.id === id ? { ...g, [campo]: valor } : g)));
-  };
-
-  const eliminarGasto = (id) => {
-    persistGastos(gastos.filter((g) => g.id !== id));
-  };
 
   const agregarInvitado = () => {
     if (
@@ -270,10 +219,6 @@ export function VistaAnfitrion({ data }) {
     persistInvitados(invitados.map((g) => (g.id === id ? { ...g, zona } : g)));
   };
 
-  const asignarEmailInvitado = (id, email) => {
-    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, email } : g)));
-  };
-
   const ocupacionMesa = (numero) =>
     invitados.filter((g) => g.mesa === numero && g.confirmado).length;
 
@@ -290,25 +235,6 @@ export function VistaAnfitrion({ data }) {
     }
     persistInvitados(
       invitados.map((g) => (g.id === id ? { ...g, mesa: numero } : g))
-    );
-  };
-
-  // Posición por defecto en rejilla para las mesas que todavía no se han
-  // arrastrado a mano en el plano (posX/posY a null).
-  const posicionPorDefecto = (indice, total) => {
-    const columnas = Math.max(1, Math.ceil(Math.sqrt(total)));
-    const filas = Math.max(1, Math.ceil(total / columnas));
-    const col = indice % columnas;
-    const fila = Math.floor(indice / columnas);
-    return {
-      posX: ((col + 0.5) / columnas) * 100,
-      posY: ((fila + 0.5) / filas) * 100,
-    };
-  };
-
-  const moverMesaPlano = (numero, posX, posY) => {
-    persistMesas(
-      mesas.map((m) => (m.numero === numero ? { ...m, posX, posY } : m))
     );
   };
 
@@ -370,7 +296,6 @@ export function VistaAnfitrion({ data }) {
   // null | "tabla" | "canciones" | "alergias" | "avisosMesas" — controla la
   // ventana flotante; independiente de qué secciones estén plegadas.
   const [panelFlotante, setPanelFlotante] = useState(null);
-  const lienzoPlanoRef = useRef(null);
 
   const imprimirPanelActivo = () => {
     setTimeout(() => {
@@ -478,19 +403,6 @@ export function VistaAnfitrion({ data }) {
     return elegido ? { ...elegido, email: emailDeInvitado(elegido) } : elegido;
   };
 
-  const moverNombreFamilia = (familia, invitadoId, direccion) => {
-    const ids = familia.confirmados.map((m) => m.id);
-    const idx = ids.indexOf(invitadoId);
-    const nuevoIdx = idx + direccion;
-    if (nuevoIdx < 0 || nuevoIdx >= ids.length) return;
-    const nuevosIds = [...ids];
-    [nuevosIds[idx], nuevosIds[nuevoIdx]] = [nuevosIds[nuevoIdx], nuevosIds[idx]];
-    persistOrdenFamiliares({
-      ...ordenFamiliares,
-      [familia.clave]: { ...ordenFamiliares[familia.clave], orden: nuevosIds },
-    });
-  };
-
   const marcarInvitacionEnviada = (clave) => {
     persistOrdenFamiliares({
       ...ordenFamiliares,
@@ -503,54 +415,6 @@ export function VistaAnfitrion({ data }) {
   };
 
   const [descargando, setDescargando] = useState(null);
-  const [nombreCarpetaInvitaciones, setNombreCarpetaInvitaciones] = useState(null);
-  const [subiendoPlantillaInvitacion, setSubiendoPlantillaInvitacion] = useState(false);
-  const [errorPlantillaInvitacion, setErrorPlantillaInvitacion] = useState("");
-
-  const onSeleccionarArchivoPlantillaInvitacion = async (e) => {
-    const file = e.target.files && e.target.files[0];
-    e.target.value = "";
-    if (!file) return;
-    setErrorPlantillaInvitacion("");
-    setSubiendoPlantillaInvitacion(true);
-    try {
-      // Plantilla más grande que una foto normal (maxDim mayor): es el
-      // fondo completo de la invitación, necesita quedar nítido.
-      const dataUrl = await redimensionarImagenArchivo(file, 2000, 0.88);
-      persistEvento({ ...evento, imagenInvitacion: dataUrl });
-    } catch (_) {
-      setErrorPlantillaInvitacion("No se ha podido procesar la imagen. Prueba con otra.");
-    } finally {
-      setSubiendoPlantillaInvitacion(false);
-    }
-  };
-
-  const [subiendoImagenPortada, setSubiendoImagenPortada] = useState(false);
-  const [errorImagenPortada, setErrorImagenPortada] = useState("");
-
-  const onSeleccionarArchivoImagenPortada = async (e) => {
-    const file = e.target.files && e.target.files[0];
-    e.target.value = "";
-    if (!file) return;
-    setErrorImagenPortada("");
-    setSubiendoImagenPortada(true);
-    try {
-      const dataUrl = await redimensionarImagenArchivo(file);
-      persistEvento({ ...evento, imagen: dataUrl });
-    } catch (_) {
-      setErrorImagenPortada("No se ha podido procesar la imagen. Prueba con otra.");
-    } finally {
-      setSubiendoImagenPortada(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!window.showDirectoryPicker) return;
-    leerHandleCarpeta()
-      .then((handle) => setNombreCarpetaInvitaciones(handle ? handle.name : null))
-      .catch(() => {});
-  }, []);
-
   const [modoCalibracion, setModoCalibracion] = useState(false);
 
   const generarImagenParaFamilia = async (familia, mostrarCuadricula = modoCalibracion) => {
@@ -572,20 +436,6 @@ export function VistaAnfitrion({ data }) {
         ? `Mesas ${mesas.join(", ")} · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`
         : `${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`;
     return generarInvitacionImagen(evento, familia.apellido, nombres, mesaTexto, mostrarCuadricula);
-  };
-
-  const descargarInvitacion = async (familia) => {
-    setDescargando(familia.clave);
-    const dataUrl = await generarImagenParaFamilia(familia);
-    setDescargando(null);
-    if (!dataUrl) {
-      window.alert(
-        "No se ha podido generar la imagen, probablemente porque la URL de la imagen del evento no permite descargarla desde otro origen. Prueba con otra imagen alojada en un servicio que sí lo permita, o quita la URL para usar el fondo por defecto."
-      );
-      return;
-    }
-    const nombreArchivo = `${evento.nombre || "evento"}_${familia.clave}.png`.replace(/[\\/:*?"<>|]/g, "-");
-    await guardarArchivoInvitacion(dataUrl, nombreArchivo);
   };
 
   const [previewInvitacion, setPreviewInvitacion] = useState(null); // { familia, dataUrl, destinatario } | null
@@ -628,67 +478,6 @@ export function VistaAnfitrion({ data }) {
       window.alert(`Invitación enviada a ${previewInvitacion.destinatario.email}.`);
       setPreviewInvitacion(null);
     }
-  };
-
-  // Envío por bloques: se elige un colaborador y solo se ven/envían las
-  // familias de sus invitados asignados, con un resumen de confirmación
-  // antes de mandar nada — para no arriesgarse a un envío masivo por error.
-  const [colaboradorInvitacionSel, setColaboradorInvitacionSel] = useState("");
-  const [mostrarResumenLoteInvitaciones, setMostrarResumenLoteInvitaciones] = useState(false);
-  const [enviandoLoteInvitaciones, setEnviandoLoteInvitaciones] = useState(false);
-
-  const familiasParaMostrarInvitacion = colaboradorInvitacionSel
-    ? familiasListasParaInvitacion.filter((f) =>
-        f.confirmados.some(
-          (m) => resolverColaborador(m, colaboradores)?.id === colaboradorInvitacionSel
-        )
-      )
-    : familiasListasParaInvitacion;
-
-  // El envío por bloque solo manda a las que todavía no se les envió nada
-  // (para no repetir sin querer) — las ya enviadas se pueden reenviar a
-  // mano, una a una, con el botón individual de cada tarjeta.
-  const familiasPendientesDeEnviar = familiasParaMostrarInvitacion.filter(
-    (f) => !f.invitacionEnviada
-  );
-
-  const confirmarEnvioLoteInvitaciones = async () => {
-    setEnviandoLoteInvitaciones(true);
-    let enviados = 0;
-    const saltados = [];
-    for (const familia of familiasPendientesDeEnviar) {
-      const destinatario = destinatarioConEmail(familia);
-      if (!destinatario?.email) {
-        saltados.push(`${familia.apellido} (sin email)`);
-        continue;
-      }
-      const dataUrl = await generarImagenParaFamilia(familia);
-      if (!dataUrl) {
-        saltados.push(`${familia.apellido} (no se pudo generar la imagen)`);
-        continue;
-      }
-      const base64 = dataUrl.split(",")[1] || "";
-      const ok = await enviarInvitacionFamilia(
-        destinatario.email,
-        `Tu invitación — ${evento.nombre || "evento"}`,
-        evento.plantillaInvitacionFamilia || "",
-        base64
-      );
-      if (ok) {
-        enviados++;
-        marcarInvitacionEnviada(familia.clave);
-      } else {
-        saltados.push(`${familia.apellido} (error al enviar)`);
-      }
-    }
-    setEnviandoLoteInvitaciones(false);
-    setMostrarResumenLoteInvitaciones(false);
-    window.alert(
-      `Enviadas ${enviados} invitaciones.` +
-        (saltados.length > 0
-          ? `\n\nNo se pudieron enviar (${saltados.length}):\n${saltados.join("\n")}`
-          : "")
-    );
   };
 
   const [modoEdicion, setModoEdicion] = useState(false);
@@ -808,65 +597,7 @@ export function VistaAnfitrion({ data }) {
 
       {/* Plano de mesas */}
       {abierto.plano && (
-        <VentanaFlotante clave="plano" titulo="Plano de mesas" onCerrar={() => toggle("plano")}>
-          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
-            Arrastra cada mesa a la posición que quieras para representar cómo queda en el local.
-            La posición se guarda sola. Para imprimirlo en A2, pulsa "Imprimir" y elige el tamaño
-            de papel A2 en el diálogo de impresión de tu navegador.
-          </p>
-          <div className="flex items-center gap-2 mb-3">
-            <button
-              onClick={() => {
-                setTimeout(() => {
-                  try {
-                    window.print();
-                  } catch (_) {
-                    // Bloqueado por el navegador: Cmd/Ctrl+P a mano.
-                  }
-                }, 60);
-              }}
-              className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
-              <Printer size={14} /> Imprimir (A2)
-            </button>
-          </div>
-          <div id="zona-imprimible-plano">
-            <div
-              ref={lienzoPlanoRef}
-              className="relative w-full rounded"
-              style={{
-                aspectRatio: "594 / 420",
-                background: "#F7F4EA",
-                backgroundImage:
-                  "linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px)",
-                backgroundSize: "5% 5%",
-                border: `1px solid ${C.line}`,
-              }}
-            >
-              {mesas.map((m, i) => {
-                const ocupados = ocupacionMesa(m.numero);
-                const posDefecto = posicionPorDefecto(i, mesas.length);
-                const posX = m.posX ?? posDefecto.posX;
-                const posY = m.posY ?? posDefecto.posY;
-                return (
-                  <MesaPlano
-                    key={m.numero}
-                    m={{ ...m, posX, posY }}
-                    ocupados={ocupados}
-                    canvasRef={lienzoPlanoRef}
-                    onMover={moverMesaPlano}
-                  />
-                );
-              })}
-            </div>
-          </div>
-          {mesas.length === 0 && (
-            <p className="text-sm italic mt-2" style={{ color: C.charcoal, opacity: 0.6 }}>
-              Todavía no hay mesas — créalas primero en "Mesas".
-            </p>
-          )}
-        </VentanaFlotante>
+        <VentanaPlano data={data} ocupacionMesa={ocupacionMesa} onCerrar={() => toggle("plano")} />
       )}
 
       {/* Invitados */}
@@ -1351,390 +1082,24 @@ export function VistaAnfitrion({ data }) {
 
       {/* Invitaciones */}
       {abierto.invitaciones && (
-        <VentanaFlotante
-          clave="invitaciones"
-          titulo={`Invitaciones${
-            familiasListasParaInvitacion.length > 0 ? ` (${familiasListasParaInvitacion.length})` : ""
-          }`}
+        <VentanaInvitaciones
+          data={data}
+          familiasListasParaInvitacion={familiasListasParaInvitacion}
+          destinatarioConEmail={destinatarioConEmail}
+          descargando={descargando}
+          setDescargando={setDescargando}
+          abrirPreviewInvitacion={abrirPreviewInvitacion}
+          generarImagenParaFamilia={generarImagenParaFamilia}
+          modoCalibracion={modoCalibracion}
+          setModoCalibracion={setModoCalibracion}
+          marcarInvitacionEnviada={marcarInvitacionEnviada}
           onCerrar={() => toggle("invitaciones")}
-        >
-            <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
-              Solo aparecen aquí las familias en las que <strong>todos</strong> sus confirmados
-              ya han pagado. Genera la imagen (con el apellido familiar y los nombres de los
-              integrantes) y descárgala para enviarla tú mismo por WhatsApp o email — un
-              artefacto de Claude no puede enviar correos automáticamente.
-            </p>
-            <div className="mb-4 p-3 rounded" style={{ background: C.paperDark, border: `1px dashed ${C.line}` }}>
-              <Field label="Imagen de la plantilla de invitación (vertical, para móvil)">
-                <div className="flex items-center gap-3 flex-wrap">
-                  {evento.imagenInvitacion && (
-                    <img
-                      src={evento.imagenInvitacion}
-                      alt="Plantilla de invitación"
-                      className="rounded object-cover"
-                      style={{ width: 40, height: 60, border: `1px solid ${C.line}` }}
-                    />
-                  )}
-                  <label
-                    className="text-xs px-2 py-1 rounded cursor-pointer"
-                    style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-                  >
-                    {subiendoPlantillaInvitacion ? "Procesando…" : "Subir archivo desde el dispositivo"}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={onSeleccionarArchivoPlantillaInvitacion}
-                      disabled={subiendoPlantillaInvitacion}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                  {evento.imagenInvitacion && (
-                    <button
-                      type="button"
-                      onClick={() => persistEvento({ ...evento, imagenInvitacion: "" })}
-                      className="text-xs"
-                      style={{ color: C.wax }}
-                    >
-                      Quitar y usar la plantilla incluida
-                    </button>
-                  )}
-                </div>
-              </Field>
-              {errorPlantillaInvitacion && (
-                <p className="text-xs mt-1" style={{ color: C.wax }}>
-                  {errorPlantillaInvitacion}
-                </p>
-              )}
-            </div>
-
-            <label
-              className="mb-4 flex items-center gap-2 text-xs p-2 rounded cursor-pointer"
-              style={{ background: modoCalibracion ? "#FDECF3" : C.paperDark, border: `1px dashed ${C.line}` }}
-            >
-              <input
-                type="checkbox"
-                checked={modoCalibracion}
-                onChange={(e) => setModoCalibracion(e.target.checked)}
-              />
-              <span>
-                Modo calibración: dibuja una cuadrícula con las coordenadas (cada 5% del ancho/alto) sobre
-                la imagen — actívalo, descarga o previsualiza una invitación, y pásame esos números para ajustar
-                mejor la posición del texto. Desactívalo cuando termines.
-              </span>
-            </label>
-
-            {window.showDirectoryPicker && (
-              <div className="mb-4 flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={async () => {
-                    const carpeta = await obtenerCarpetaInvitaciones({ forzarElegir: true });
-                    setNombreCarpetaInvitaciones(carpeta ? carpeta.name : null);
-                  }}
-                  className="text-xs px-2 py-1 rounded font-medium"
-                  style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-                >
-                  {nombreCarpetaInvitaciones ? "Cambiar carpeta" : "Elegir carpeta de guardado"}
-                </button>
-                <span className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-                  {nombreCarpetaInvitaciones
-                    ? `Guardando en: "${nombreCarpetaInvitaciones}"`
-                    : "Sin elegir — se descargará a la carpeta de Descargas de siempre."}
-                </span>
-              </div>
-            )}
-
-            <div className="mb-4 p-3 rounded flex flex-wrap items-end gap-2" style={{ background: C.paperDark, border: `1px dashed ${C.line}` }}>
-              <Field label="Envío por bloques: elige un colaborador">
-                <select
-                  value={colaboradorInvitacionSel}
-                  onChange={(e) => setColaboradorInvitacionSel(e.target.value)}
-                  style={{ ...inputStyle, minWidth: 220 }}
-                >
-                  <option value="">Ver todas las familias (sin agrupar)</option>
-                  {colaboradores.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nombre}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              {colaboradorInvitacionSel && (
-                <button
-                  onClick={() => setMostrarResumenLoteInvitaciones(true)}
-                  disabled={familiasPendientesDeEnviar.length === 0}
-                  className="px-3 py-2 rounded text-sm font-medium"
-                  style={{
-                    background: familiasPendientesDeEnviar.length === 0 ? C.line : C.wax,
-                    color: familiasPendientesDeEnviar.length === 0 ? C.charcoal : "#fff",
-                  }}
-                >
-                  Revisar y enviar a {familiasPendientesDeEnviar.length} familia
-                  {familiasPendientesDeEnviar.length === 1 ? "" : "s"} (sin enviar todavía)
-                </button>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              {familiasParaMostrarInvitacion.map((familia) => (
-                <div
-                  key={familia.clave}
-                  className="p-3 rounded text-sm"
-                  style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                    <span className="flex items-center gap-2">
-                      <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
-                        Familia {familia.apellido}
-                      </span>
-                      {familia.invitacionEnviada && (
-                        <span
-                          className="flex items-center gap-1 text-xs px-2 py-0.5 rounded"
-                          style={{ background: C.ink, color: C.paper }}
-                          title={
-                            familia.invitacionEnviadaEn
-                              ? new Date(familia.invitacionEnviadaEn).toLocaleString("es-ES")
-                              : ""
-                          }
-                        >
-                          <Check size={11} /> Invitación enviada
-                        </span>
-                      )}
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => descargarInvitacion(familia)}
-                        disabled={descargando === familia.clave}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium"
-                        style={{ background: C.ink, color: C.paper, opacity: descargando === familia.clave ? 0.6 : 1 }}
-                      >
-                        <ImageIcon size={13} />
-                        {descargando === familia.clave ? "Generando..." : "Descargar"}
-                      </button>
-                      <button
-                        onClick={() => abrirPreviewInvitacion(familia)}
-                        disabled={descargando === familia.clave}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium"
-                        style={{ background: C.gold, color: "#fff", opacity: descargando === familia.clave ? 0.6 : 1 }}
-                      >
-                        <Mail size={13} />
-                        {descargando === familia.clave ? "Generando..." : "Enviar por email"}
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>
-                    Orden de los nombres en la invitación (usa las flechas para cambiarlo, p.ej.
-                    para poner al esposo primero — a esa persona se le enviará el email) y su
-                    email de contacto:
-                  </p>
-                  <div className="space-y-1">
-                    {(() => {
-                      const idDestinatario = destinatarioConEmail(familia)?.id;
-                      return familia.confirmados.map((m, i) => {
-                        // Si esta persona es también colaborador, su email se
-                        // edita solo en Colaboradores (igual que en su propio
-                        // formulario de datos) — aquí se muestra de solo
-                        // lectura, no un campo editable que parecería vacío.
-                        const colaboradorVinculado = colaboradores.find(
-                          (c) => c.invitadoId === m.id
-                        );
-                        return (
-                          <div
-                            key={m.id}
-                            className="flex items-center gap-2 px-2 py-1 rounded text-xs"
-                            style={{ background: "#fff", border: `1px solid ${C.line}` }}
-                          >
-                            <span style={{ color: C.ink, minWidth: 90 }}>{m.nombre}</span>
-                            <button
-                              onClick={() => moverNombreFamilia(familia, m.id, -1)}
-                              disabled={i === 0}
-                              style={{ color: i === 0 ? C.line : C.gold }}
-                              title="Mover antes"
-                            >
-                              ▲
-                            </button>
-                            <button
-                              onClick={() => moverNombreFamilia(familia, m.id, 1)}
-                              disabled={i === familia.confirmados.length - 1}
-                              style={{ color: i === familia.confirmados.length - 1 ? C.line : C.gold }}
-                              title="Mover después"
-                            >
-                              ▼
-                            </button>
-                            <div className="flex-1">
-                              {colaboradorVinculado ? (
-                                <div
-                                  className="px-2 py-1 rounded"
-                                  style={{ background: C.paperDark, color: C.charcoal, opacity: 0.7 }}
-                                  title="Se edita en Colaboradores, no aquí"
-                                >
-                                  {colaboradorVinculado.email || "sin registrar"}
-                                </div>
-                              ) : (
-                                <GrupoFamiliarInput
-                                  value={m.email || ""}
-                                  onCommit={(v) => asignarEmailInvitado(m.id, v)}
-                                />
-                              )}
-                            </div>
-                            {m.id === idDestinatario && (
-                              <span
-                                className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
-                                style={{ background: C.paperDark, color: C.charcoal }}
-                              >
-                                destinatario
-                              </span>
-                            )}
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                </div>
-              ))}
-              {familiasParaMostrarInvitacion.length === 0 && (
-                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                  {colaboradorInvitacionSel
-                    ? "Este colaborador no tiene ninguna familia con el pago y la mesa completos todavía."
-                    : "Todavía ninguna familia tiene el pago completo y la mesa asignada para todos sus confirmados."}
-                </p>
-              )}
-            </div>
-        </VentanaFlotante>
+        />
       )}
 
       {/* Estado de cuentas */}
       {abierto.cuentas && (
-        <VentanaFlotante clave="cuentas" titulo="Estado de cuentas" onCerrar={() => toggle("cuentas")}>
-          {(() => {
-            const confirmados = invitados.filter((g) => g.confirmado);
-            const recaudado = confirmados
-              .filter((g) => g.pagado)
-              .reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
-            const pendienteCobro = confirmados
-              .filter((g) => !g.pagado)
-              .reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
-            const totalGastos = gastos.reduce((s, g) => s + parsePrecio(g.importe), 0);
-            const gastosPagados = gastos
-              .filter((g) => g.pagado)
-              .reduce((s, g) => s + parsePrecio(g.importe), 0);
-            const balance = recaudado - gastosPagados;
-            const formato = (n) =>
-              n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            return (
-              <>
-                <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
-                  "Lo que entra" se calcula solo (pagos de invitados confirmados). "Lo que sale"
-                  son los gastos que añadas abajo — incluye también los costes de la propia app
-                  (dominio, suscripciones...), no solo proveedores de la boda.
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-                  <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-                    <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 18, color: C.ink }}>
-                      {formato(recaudado)} €
-                    </div>
-                    <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
-                      Recaudado
-                    </div>
-                  </div>
-                  <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-                    <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 18, color: C.charcoal }}>
-                      {formato(pendienteCobro)} €
-                    </div>
-                    <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
-                      Pendiente de cobro
-                    </div>
-                  </div>
-                  <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-                    <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 18, color: C.wax }}>
-                      {formato(totalGastos)} €
-                    </div>
-                    <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
-                      Total gastos
-                    </div>
-                  </div>
-                  <div
-                    className="p-2 rounded text-center"
-                    style={{ background: balance >= 0 ? "#E3E9AE" : "#F0D3C8", border: `1px solid ${C.line}` }}
-                  >
-                    <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 18, color: C.ink }}>
-                      {formato(balance)} €
-                    </div>
-                    <div className="text-xs uppercase" style={{ color: C.charcoal, fontFamily: "'IBM Plex Mono', monospace" }}>
-                      Balance (recaudado − gastos pagados)
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setMostrarListaGastos((v) => !v)}
-                  className="flex items-center gap-2 text-sm font-medium mb-2"
-                  style={{ color: C.ink }}
-                >
-                  {mostrarListaGastos ? "▾" : "▸"} Gastos ({gastos.length})
-                </button>
-                {mostrarListaGastos && (
-                <>
-                <div className="flex items-center justify-end mb-2">
-                  <button
-                    onClick={agregarGasto}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-                    style={{ background: C.ink, color: C.paper }}
-                  >
-                    <Plus size={14} /> Añadir gasto
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {gastos.map((g) => (
-                    <div
-                      key={g.id}
-                      className="flex flex-wrap items-center gap-2 p-2 rounded"
-                      style={{ background: "#fff", border: `1px solid ${C.line}` }}
-                    >
-                      <TextInput
-                        value={g.concepto}
-                        onChange={(e) => cambiarGasto(g.id, "concepto", e.target.value)}
-                        placeholder="Concepto (ej. Suscripción Claude Code)"
-                        className="flex-1"
-                        style={{ minWidth: 160 }}
-                      />
-                      <TextInput
-                        value={g.categoria}
-                        onChange={(e) => cambiarGasto(g.id, "categoria", e.target.value)}
-                        placeholder="Categoría"
-                        style={{ width: 120 }}
-                      />
-                      <TextInput
-                        value={g.importe}
-                        onChange={(e) => cambiarGasto(g.id, "importe", e.target.value)}
-                        placeholder="Importe"
-                        style={{ width: 90, textAlign: "right" }}
-                      />
-                      <label className="flex items-center gap-1 text-xs" style={{ color: C.charcoal }}>
-                        <input
-                          type="checkbox"
-                          checked={g.pagado}
-                          onChange={(e) => cambiarGasto(g.id, "pagado", e.target.checked)}
-                        />
-                        Pagado
-                      </label>
-                      <button onClick={() => eliminarGasto(g.id)} title="Quitar este gasto">
-                        <X size={15} style={{ color: C.wax }} />
-                      </button>
-                    </div>
-                  ))}
-                  {gastos.length === 0 && (
-                    <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                      Todavía no hay gastos registrados.
-                    </p>
-                  )}
-                </div>
-                </>
-                )}
-              </>
-            );
-          })()}
-        </VentanaFlotante>
+        <VentanaCuentas data={data} onCerrar={() => toggle("cuentas")} />
       )}
 
       {/* Copia de seguridad */}
@@ -1808,368 +1173,22 @@ export function VistaAnfitrion({ data }) {
 
       {/* Avisos */}
       {abierto.avisos && (
-        <VentanaFlotante
-          clave="avisos"
-          titulo={`Avisos${colaboradoresPendientes.length > 0 ? ` (${colaboradoresPendientes.length})` : ""}`}
+        <VentanaAvisos
+          data={data}
+          familiasListasParaInvitacion={familiasListasParaInvitacion}
+          destinatarioConEmail={destinatarioConEmail}
+          descargando={descargando}
+          abrirPreviewInvitacion={abrirPreviewInvitacion}
+          colaboradoresPendientes={colaboradoresPendientes}
+          setFiltros={setFiltros}
+          setAbierto={setAbierto}
           onCerrar={() => toggle("avisos")}
-        >
-            <div className="grid grid-cols-2 gap-2 mb-5">
-              <div className="text-center p-2 rounded" style={{ background: C.paperDark }}>
-                <div
-                  style={{
-                    fontFamily: "'Fraunces', serif",
-                    color: datosConfirmadosPendientes > 0 ? C.wax : C.ink,
-                    fontWeight: 700,
-                    fontSize: 18,
-                  }}
-                >
-                  {datosConfirmadosPendientes}
-                </div>
-                <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-                  Datos pendientes (confirmados)
-                </div>
-              </div>
-              <div className="text-center p-2 rounded" style={{ background: C.paperDark }}>
-                <div
-                  style={{
-                    fontFamily: "'Fraunces', serif",
-                    color:
-                      familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada).length > 0
-                        ? C.wax
-                        : C.ink,
-                    fontWeight: 700,
-                    fontSize: 18,
-                  }}
-                >
-                  {familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada).length}
-                </div>
-                <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-                  Invitaciones pendientes
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-5">
-              <p
-                className="text-xs uppercase mb-2"
-                style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
-              >
-                Pendientes de avisar
-              </p>
-              {colaboradoresPendientes.length === 0 ? (
-                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                  Ninguno — todos los colaboradores están al día.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {colaboradoresPendientes.map((c) => (
-                    <div
-                      key={c.id}
-                      className="flex items-center justify-between gap-2 px-2 py-1.5 rounded"
-                      style={{ background: "#FBEAEC" }}
-                    >
-                      <span className="text-sm" style={{ color: C.ink }}>
-                        {c.nombre}
-                        {!c.email && (
-                          <span className="text-xs" style={{ color: C.wax }}> — sin email</span>
-                        )}
-                      </span>
-                      <button
-                        onClick={() => setAvisoPreview({ id: c.id, nombre: c.nombre })}
-                        disabled={!c.email}
-                        className="text-xs px-2 py-1 rounded font-medium"
-                        style={{
-                          background: c.email ? C.wax : C.line,
-                          color: c.email ? "#fff" : C.charcoal,
-                        }}
-                      >
-                        Avisar ahora
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="mb-5">
-              <p
-                className="text-xs uppercase mb-2"
-                style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
-              >
-                Emails enviados
-              </p>
-              <div className="flex gap-2 mb-2">
-                {[
-                  { clave: "todos", etiqueta: "Todos" },
-                  { clave: "asignados", etiqueta: "Asignados" },
-                  { clave: "datos", etiqueta: "Datos" },
-                  { clave: "invitacion", etiqueta: "Invitación" },
-                ].map((op) => (
-                  <button
-                    key={op.clave}
-                    onClick={() => setFiltroTipoAviso(op.clave)}
-                    className="text-xs px-2 py-1 rounded font-medium"
-                    style={{
-                      background: filtroTipoAviso === op.clave ? C.ink : "transparent",
-                      color: filtroTipoAviso === op.clave ? C.paper : C.charcoal,
-                      border: `1px solid ${filtroTipoAviso === op.clave ? C.ink : C.line}`,
-                    }}
-                  >
-                    {op.etiqueta}
-                  </button>
-                ))}
-              </div>
-              {(() => {
-                const ETIQUETA_TIPO_AVISO = {
-                  asignados: "Asignados",
-                  datos: "Datos",
-                  invitacion: "Invitación",
-                };
-                const emailsFiltrados = avisosEnviados.filter(
-                  (a) => filtroTipoAviso === "todos" || a.tipo === filtroTipoAviso
-                );
-                const emailsOrdenados = [...emailsFiltrados].sort((a, b) => {
-                  let cmp = 0;
-                  if (ordenAvisos.columna === "fecha") {
-                    cmp = new Date(a.creadoEn) - new Date(b.creadoEn);
-                  } else if (ordenAvisos.columna === "email") {
-                    cmp = (a.destinatario || "").localeCompare(b.destinatario || "");
-                  } else if (ordenAvisos.columna === "tipo") {
-                    cmp = (a.tipo || "").localeCompare(b.tipo || "");
-                  }
-                  return ordenAvisos.direccion === "asc" ? cmp : -cmp;
-                });
-                if (emailsOrdenados.length === 0) {
-                  return (
-                    <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                      {avisosEnviados.length === 0
-                        ? "Todavía no se ha enviado ningún aviso."
-                        : "Ninguno de este tipo todavía."}
-                    </p>
-                  );
-                }
-                const columnas = "110px 28px 80px 1fr 1fr";
-                return (
-                  <div style={{ maxHeight: 320, overflowY: "auto" }}>
-                    <div
-                      className="grid text-xs mb-1 pb-1"
-                      style={{ gridTemplateColumns: columnas, borderBottom: `1px solid ${C.line}` }}
-                    >
-                      <EncabezadoOrdenable columna="fecha" orden={ordenAvisos} onClick={cambiarOrdenAvisos}>
-                        Fecha
-                      </EncabezadoOrdenable>
-                      <span title="¿Resend confirmó el envío?" style={{ color: C.gold }}>✓?</span>
-                      <EncabezadoOrdenable columna="tipo" orden={ordenAvisos} onClick={cambiarOrdenAvisos}>
-                        Tipo
-                      </EncabezadoOrdenable>
-                      <EncabezadoOrdenable columna="email" orden={ordenAvisos} onClick={cambiarOrdenAvisos}>
-                        Email
-                      </EncabezadoOrdenable>
-                      <span className="text-center" style={{ color: C.gold }}>Asunto</span>
-                    </div>
-                    <div className="space-y-1">
-                      {emailsOrdenados.map((a) => (
-                        <div
-                          key={a.id}
-                          className="grid items-center text-xs py-1"
-                          style={{ gridTemplateColumns: columnas, borderBottom: `1px solid ${C.line}` }}
-                        >
-                          <span style={{ color: C.charcoal, opacity: 0.5 }} className="whitespace-nowrap">
-                            {new Date(a.creadoEn).toLocaleString("es-ES")}
-                          </span>
-                          <span
-                            title={
-                              a.exito === true
-                                ? "Resend lo aceptó"
-                                : a.exito === false
-                                ? "Resend lo rechazó — revisa la clave o el remitente"
-                                : "Todavía sin confirmar (se comprueba solo cada minuto)"
-                            }
-                            style={{ color: a.exito === true ? C.ink : a.exito === false ? C.wax : C.line }}
-                          >
-                            {a.exito === true ? "✓" : a.exito === false ? "✗" : "?"}
-                          </span>
-                          <span style={{ color: C.charcoal, opacity: 0.7 }}>
-                            {ETIQUETA_TIPO_AVISO[a.tipo] || a.tipo}
-                          </span>
-                          <span style={{ color: C.charcoal, opacity: 0.7 }} className="truncate">
-                            {a.destinatario}
-                          </span>
-                          <span style={{ color: C.ink }} className="truncate">
-                            {a.asunto}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            <div className="mt-5 pt-4" style={{ borderTop: `2px solid ${C.line}` }}>
-              <p
-                className="text-xs uppercase mb-2"
-                style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
-              >
-                Invitaciones a familias
-              </p>
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                <div className="text-center p-2 rounded" style={{ background: C.paperDark }}>
-                  <div style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 18 }}>
-                    {familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada).length}
-                  </div>
-                  <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pendientes</div>
-                </div>
-                <div className="text-center p-2 rounded" style={{ background: C.paperDark }}>
-                  <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
-                    {familiasListasParaInvitacion.filter((f) => f.invitacionEnviada).length}
-                  </div>
-                  <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Enviadas</div>
-                </div>
-                <div className="text-center p-2 rounded" style={{ background: C.paperDark }}>
-                  <div style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 18 }}>
-                    {
-                      familiasListasParaInvitacion.filter(
-                        (f) => !f.invitacionEnviada && !destinatarioConEmail(f)?.email
-                      ).length
-                    }
-                  </div>
-                  <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Sin email</div>
-                </div>
-              </div>
-              {familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada).length === 0 ? (
-                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                  Ninguna familia lista con la invitación pendiente de enviar.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {familiasListasParaInvitacion
-                    .filter((f) => !f.invitacionEnviada)
-                    .map((f) => (
-                      <div
-                        key={f.clave}
-                        className="flex items-center justify-between gap-2 px-2 py-1.5 rounded"
-                        style={{ background: "#FBEAEC" }}
-                      >
-                        <span className="text-sm" style={{ color: C.ink }}>
-                          Familia {f.apellido}
-                          {!destinatarioConEmail(f)?.email && (
-                            <span className="text-xs" style={{ color: C.wax }}> — sin email</span>
-                          )}
-                        </span>
-                        <button
-                          onClick={() => abrirPreviewInvitacion(f)}
-                          disabled={!destinatarioConEmail(f)?.email || descargando === f.clave}
-                          className="text-xs px-2 py-1 rounded font-medium"
-                          style={{
-                            background: destinatarioConEmail(f)?.email ? C.wax : C.line,
-                            color: destinatarioConEmail(f)?.email ? "#fff" : C.charcoal,
-                          }}
-                        >
-                          {descargando === f.clave ? "Generando…" : "Enviar ahora"}
-                        </button>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-        </VentanaFlotante>
+        />
       )}
 
       {/* Versiones */}
       {abierto.versiones && (
         <VentanaVersiones onCerrar={() => toggle("versiones")} />
-      )}
-
-      {avisoPreview && (
-        <ModalFlotante
-          titulo={`Avisar a ${avisoPreview.nombre}`}
-          onCerrar={() => setAvisoPreview(null)}
-        >
-          <p
-            className="text-xs uppercase mb-1"
-            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
-          >
-            Colaborador
-          </p>
-          <p className="text-sm mb-3" style={{ color: C.ink }}>
-            {avisoPreview.nombre}
-            {" — "}
-            {colaboradores.find((c) => c.id === avisoPreview.id)?.email || "sin email"}
-          </p>
-          <p
-            className="text-xs uppercase mb-1"
-            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
-          >
-            Invitados asignados ({invitados.filter((g) => g.colaboradorId === avisoPreview.id).length}
-            {" "}en total)
-          </p>
-          <ul className="text-sm space-y-1 mb-4" style={{ color: C.ink }}>
-            {invitados
-              .filter((g) => g.colaboradorId === avisoPreview.id)
-              .map((g) => (
-                <li key={g.id}>
-                  {g.apellido}, {g.nombre}
-                  {g.avisoPendiente && g.confirmado && (
-                    <span
-                      className="text-xs ml-2 px-1.5 py-0.5 rounded"
-                      style={{ background: C.wax, color: "#fff" }}
-                    >
-                      nuevo — se incluye en el email
-                    </span>
-                  )}
-                  {g.avisoPendiente && !g.confirmado && (
-                    <span
-                      className="text-xs ml-2 px-1.5 py-0.5 rounded"
-                      style={{ background: C.line, color: C.charcoal }}
-                    >
-                      tentativa — no se avisa todavía
-                    </span>
-                  )}
-                </li>
-              ))}
-          </ul>
-          <p
-            className="text-xs uppercase mb-2"
-            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
-          >
-            Mensaje que se enviará
-          </p>
-          <div
-            className="p-3 rounded text-sm mb-4"
-            style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
-            dangerouslySetInnerHTML={{
-              __html: (evento.plantillaAsignacion || "").replace(
-                "{colaborador}",
-                avisoPreview.nombre
-              ),
-            }}
-          />
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={confirmarEnvioAvisoPreview}
-              disabled={enviandoAvisoPreview}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
-              {enviandoAvisoPreview ? "Enviando…" : "Aceptar y enviar"}
-            </button>
-            <button
-              onClick={() => setAvisoPreview(null)}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={irAEditarAsignacion}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-            >
-              Editar asignación
-            </button>
-          </div>
-        </ModalFlotante>
       )}
 
       {previewInvitacion && (
@@ -2220,66 +1239,6 @@ export function VistaAnfitrion({ data }) {
             </button>
             <button
               onClick={() => setPreviewInvitacion(null)}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-            >
-              Cancelar
-            </button>
-          </div>
-        </ModalFlotante>
-      )}
-
-      {mostrarResumenLoteInvitaciones && (
-        <ModalFlotante
-          titulo={`Enviar invitaciones — ${
-            colaboradores.find((c) => c.id === colaboradorInvitacionSel)?.nombre || ""
-          }`}
-          onCerrar={() => setMostrarResumenLoteInvitaciones(false)}
-        >
-          <p className="text-sm mb-3" style={{ color: C.charcoal }}>
-            Revisa antes de enviar — se manda un email por familia, cada una con su propia
-            invitación adjunta:
-          </p>
-          <ul className="text-sm space-y-2 mb-4">
-            {familiasPendientesDeEnviar.map((familia) => {
-              const destinatario = destinatarioConEmail(familia);
-              return (
-                <li key={familia.clave} className="pb-2" style={{ borderBottom: `1px solid ${C.line}` }}>
-                  <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
-                    Familia {familia.apellido}
-                  </div>
-                  <div style={{ color: C.charcoal, opacity: 0.8 }}>
-                    {familia.confirmados.map((m) => m.nombre).join(", ")} —{" "}
-                    {familia.confirmados.length} confirmado
-                    {familia.confirmados.length === 1 ? "" : "s"}, todos con pago hecho
-                  </div>
-                  {destinatario?.email ? (
-                    <div className="text-xs" style={{ color: C.ink }}>
-                      Se enviará a: {destinatario.nombre} — {destinatario.email}
-                    </div>
-                  ) : (
-                    <div className="text-xs" style={{ color: C.wax }}>
-                      ⚠ Sin email — esta familia se saltará
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={confirmarEnvioLoteInvitaciones}
-              disabled={enviandoLoteInvitaciones}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
-              {enviandoLoteInvitaciones
-                ? "Enviando…"
-                : `Confirmar y enviar ${familiasPendientesDeEnviar.length} invitaciones`}
-            </button>
-            <button
-              onClick={() => setMostrarResumenLoteInvitaciones(false)}
-              disabled={enviandoLoteInvitaciones}
               className="px-3 py-2 rounded text-sm font-medium"
               style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
             >
