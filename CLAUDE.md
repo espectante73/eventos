@@ -338,3 +338,21 @@ esto proactivamente ANTES de iterar a ciegas con capturas de pantalla.
 Preferir coordenadas fijas leídas de la cuadrícula antes que acumular
 offsets relativos sobre fórmulas antiguas (arrastran errores difíciles de
 razonar).
+
+### El email de un invitado que también es colaborador vive en dos sitios
+
+Cuando un invitado es también colaborador (gestiona sus propios
+invitados asignados), su email **no se edita en su propia ficha** — el
+campo se deja vacío a propósito y se muestra de solo lectura ("Se edita
+en Colaboradores, no aquí", ver `VistaColaborador.jsx`); el email real
+vive en el registro de `colaboradores` (`colaboradores.find(c =>
+c.invitadoId === invitado.id)`).
+
+Cualquier código nuevo que necesite "el email de un invitado" (no solo
+mostrarlo, también para decidir si puede enviársele algo) tiene que
+mirar los dos sitios, nunca solo `invitado.email` — si esa persona es
+además la única de su unidad familiar, no hay ningún otro miembro al que
+recurrir como alternativa. Ver `emailDeInvitado()` y
+`destinatarioConEmail()` en `VistaAnfitrion.jsx` (ventana Invitaciones,
+detectado y corregido el 2026-08-08 al probar la Fase 4 Ronda 1) —
+mismo patrón a seguir si aparece otro sitio que necesite esto.
