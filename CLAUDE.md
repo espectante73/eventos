@@ -91,38 +91,47 @@ commit, verificado con lint+test+build antes del siguiente):
   `src/vistas/*.jsx`, tal cual, sin dividir su interior todavía.
 El tamaño del bundle final es prácticamente idéntico al de antes de
 empezar (511.98 kB vs 511.97 kB) — señal de que nada se perdió ni se
-duplicó. **Fase 4, deliberadamente pospuesta:** `VistaAnfitrion` sigue
-siendo un único componente con ~40 `useState` propios (Mesas, Avisos,
-Cuentas, Reinicio, Colaboradores... todo mezclado) — dividir eso de
-verdad en sub-componentes con su propio estado es un rediseño real, no
-un corte-y-pega, y merece su propia sesión aparte.
+duplicó.
 
-**Orden de trabajo propuesto para la Fase 4** (pendiente de empezar —
-requiere primero fusionar `refactor/dividir-app-jsx` a `main` una vez
-probada, y arrancar en una rama nueva desde ahí). Mapa real de
-`VistaAnfitrion.jsx`: 17 `VentanaFlotante` distintas mezcladas en el
-mismo componente, más un "cascarón" de ~1.165 líneas antes de la primera
-ventana (ahí viven casi todos los `useState` y las funciones de guardado
-— la parte más entrelazada, por eso se deja para el final):
-- Ronda 1 (calentamiento, <100 líneas cada una): `versiones`, `progreso`,
-  `copiaSeguridad`, `config-url-web`, `config-email-anfitrion`,
-  `config-precios`.
-- Ronda 2 (resto de Configuración): `config-datos-evento`,
-  `config-plantillas-email`, `config-zona-reinicio`,
-  `config-zona-peligro`.
-- Ronda 3: `colaboradores` y `mesas` — su JSX propio ya es corto porque
-  `ColaboradorCard`/`MesaRedonda` se sacaron en la Fase 2.
-- Ronda 4 (las grandes, más cuidado): `plano` (543 líneas, lienzo
-  arrastrable), `cuentas`, `avisos`, `invitaciones`.
-- Ronda 5: el cascarón final (estado `abierto`/`toggle` y navegación),
-  una vez las 17 ventanas ya son componentes propios.
+**Fase 4 — COMPLETA (2026-08-08/09).** Dividido el interior de
+`VistaAnfitrion.jsx` en 5 rondas de riesgo creciente, cada una en su
+propia rama, probada a mano por el usuario y fusionada antes de empezar
+la siguiente:
+- Ronda 1: `versiones`, `progreso`, `copiaSeguridad`, `config-url-web`,
+  `config-email-anfitrion`, `config-precios`. De paso, corrigió dos
+  fallos reales ya existentes en Invitaciones con el email de un
+  invitado que también es colaborador (ver más abajo,
+  `emailDeInvitado`/`destinatarioConEmail`).
+- Ronda 2: `config-datos-evento`, `config-plantillas-email`,
+  `config-zona-reinicio`, `config-zona-peligro`.
+- Ronda 3: `colaboradores` y `mesas`.
+- Ronda 4 (la más grande): `plano`, `cuentas`, `avisos`, `invitaciones`.
+  Avisos e Invitaciones comparten de verdad el motor de "enviar la
+  invitación a una familia" — esa parte se quedó en el cascarón, pasada
+  como props a las dos, en vez de duplicarla.
+- Ronda 5 (última): la tabla "Lista de invitados" (ni siquiera era una
+  ventana flotante, era la sección siempre visible) a
+  `SeccionInvitados.jsx`.
 
-Cada ronda: su propia rama de trabajo mental, verificada con
-lint+test+build+prueba manual de esa ventana concreta, y su propio
-commit — nunca todo junto. La Ronda 1 es la que dirá cuánto se comparte
-de verdad entre ventanas (algunas funciones del cascarón pueden usarse en
-varias a la vez); hasta hacerla no hay un tiempo total fiable para el
-resto.
+Resultado: `VistaAnfitrion.jsx` pasó de **3.788 a 548 líneas**. Cada
+ventana vive ahora en su propio fichero bajo `src/vistas/anfitrion/`. Lo
+que queda en el cascarón (`VistaAnfitrion.jsx`) es exactamente lo que
+comparten de verdad 2+ ventanas entre sí (`asignarColaborador`,
+`ocupacionMesa`, `panelFlotante`/`setPanelFlotante`,
+`filtros`/`setFiltros`, el motor de invitaciones) — pasado como props a
+quien lo necesite, nunca duplicado. Patrón a seguir si se añade una
+ventana nueva: si su lógica no la usa nadie más, vive entera en su
+propio fichero; si la comparten dos o más, se queda en el cascarón y se
+pasa como prop.
+
+Dos lecciones confirmadas durante el reparto:
+- `npm run lint` (no-undef) cazó al vuelo una constante perdida al mover
+  un bloque grande (Ronda 2), antes de llegar al navegador.
+- `npm run build` (no el lint) cazó un import de la librería equivocada
+  (`calcularEdad`/`edadPromedio` importados de `lib/formato` en vez de
+  `lib/invitados`, Ronda 5) — ESLint no lo ve porque el nombre sí existe
+  en algún sitio; solo Rollup, al construir de verdad, comprueba que el
+  módulo de origen lo exporte. Las dos comprobaciones son necesarias.
 
 ## Backup automático de la base de datos
 
