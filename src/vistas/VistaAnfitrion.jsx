@@ -73,6 +73,8 @@ import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
 import { VentanaConfigPlantillasEmail } from "./anfitrion/VentanaConfigPlantillasEmail";
 import { VentanaConfigZonaReinicio } from "./anfitrion/VentanaConfigZonaReinicio";
 import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
+import { VentanaColaboradores } from "./anfitrion/VentanaColaboradores";
+import { VentanaMesas } from "./anfitrion/VentanaMesas";
 
 // Cada parte de Configuración es su propia ventana flotante independiente
 // (igual que Mesas, Avisos...), abierta desde el desplegable "SECCIÓN" en
@@ -91,7 +93,6 @@ const SECCIONES_CONFIGURACION = [
 export function VistaAnfitrion({ data }) {
   const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, probarEmailColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearAvisos, resetearPorInvitados, gastos, persistGastos } = data;
 
-  const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
   const [textoImport, setTextoImport] = useState("");
   const [mostrarImport, setMostrarImport] = useState(false);
@@ -169,31 +170,6 @@ export function VistaAnfitrion({ data }) {
     pagado: "",
   });
 
-  const idsYaColaboradores = new Set(colaboradores.map((c) => c.invitadoId).filter(Boolean));
-  const invitadosDisponiblesParaColaborador = invitados.filter((g) => !idsYaColaboradores.has(g.id));
-
-  const agregarColaborador = () => {
-    if (!nuevoColab.invitadoId) return;
-
-    const inv = invitados.find((g) => g.id === nuevoColab.invitadoId);
-    if (!inv) return;
-    const nombreFinal = `${inv.apellido}, ${inv.nombre}`.trim();
-
-    persistColaboradores([
-      ...colaboradores,
-      { id: uid(), nombre: nombreFinal, invitadoId: nuevoColab.invitadoId, email: "" },
-    ]);
-    setNuevoColab({ invitadoId: "" });
-  };
-
-  const eliminarColaborador = (id) => {
-    persistColaboradores(colaboradores.filter((c) => c.id !== id));
-  };
-
-  const cambiarEmailColaborador = (id, email) => {
-    persistColaboradores(colaboradores.map((c) => (c.id === id ? { ...c, email } : c)));
-  };
-
   // ---------- Estado de cuentas (gastos) ----------
   // "importe" se guarda tal cual se escribe (texto), igual que precioAdulto/
   // precioNino del evento — se convierte a número solo al sumar
@@ -216,57 +192,6 @@ export function VistaAnfitrion({ data }) {
 
   const eliminarGasto = (id) => {
     persistGastos(gastos.filter((g) => g.id !== id));
-  };
-
-  // Relevo: un nuevo colaborador toma el relevo del anterior. Los invitados ya
-  // asignados (y sus datos ya recopilados) pasan al nuevo sin perder nada.
-  const relevarColaborador = (idAnterior, { invitadoId, nombreNuevo }) => {
-    const anterior = colaboradores.find((c) => c.id === idAnterior);
-    if (!anterior) return;
-
-    let invitadoIdFinal = invitadoId;
-    let nombreFinal = nombreNuevo;
-    let invitadosSiguientes = invitados;
-
-    if (invitadoIdFinal) {
-      const inv = invitados.find((g) => g.id === invitadoIdFinal);
-      if (inv) nombreFinal = `${inv.apellido}, ${inv.nombre}`.trim();
-    } else if (nombreFinal) {
-      const [apellido = "", nombre = ""] = nombreFinal.split(",").map((s) => s.trim());
-      const nuevoInvitadoObj = {
-        id: uid(),
-        nombre,
-        apellido,
-        zona: "",
-        confirmado: false,
-        colaboradorId: null,
-        grupoFamiliar: apellido || nombre,
-        mesa: null,
-        anioNacimiento: "",
-        anioBoda: "",
-        email: "",
-        cancion: "",
-        alergias: "",
-        observaciones: "",
-        pagado: false,
-      };
-      invitadoIdFinal = nuevoInvitadoObj.id;
-      invitadosSiguientes = [...invitados, nuevoInvitadoObj];
-    } else {
-      return;
-    }
-
-    const nuevoId = uid();
-    persistColaboradores(
-      colaboradores
-        .filter((c) => c.id !== idAnterior)
-        .concat({ id: nuevoId, nombre: nombreFinal, invitadoId: invitadoIdFinal, email: "" })
-    );
-    persistInvitados(
-      invitadosSiguientes.map((g) =>
-        g.colaboradorId === idAnterior ? { ...g, colaboradorId: nuevoId } : g
-      )
-    );
   };
 
   const agregarInvitado = () => {
@@ -368,43 +293,6 @@ export function VistaAnfitrion({ data }) {
     );
   };
 
-  const cambiarCapacidadMesa = (numero, capacidad) => {
-    persistMesas(
-      mesas.map((m) => (m.numero === numero ? { ...m, capacidad: Number(capacidad) || 0 } : m))
-    );
-  };
-
-  const anadirMesa = () => {
-    const siguiente = mesas.reduce((max, m) => Math.max(max, m.numero), 0) + 1;
-    persistMesas([...mesas, { numero: siguiente, capacidad: 10 }]);
-  };
-
-  const eliminarMesa = (numero) => {
-    const afectados = invitados.filter((g) => g.mesa === numero);
-    if (afectados.length > 0) {
-      const confirmar = window.confirm(
-        `La mesa ${numero} tiene ${afectados.length} invitado(s) asignado(s). Al eliminarla, ` +
-          `vuelven a quedar sin mesa (no se borra a nadie). ¿Continuar?`
-      );
-      if (!confirmar) return;
-      persistInvitados(
-        invitados.map((g) => (g.mesa === numero ? { ...g, mesa: null } : g))
-      );
-    }
-    persistMesas(mesas.filter((m) => m.numero !== numero));
-  };
-
-  const vaciarMesa = (numero) => {
-    const afectados = invitados.filter((g) => g.mesa === numero);
-    if (afectados.length === 0) return;
-    const confirmar = window.confirm(
-      `Vaciar la mesa ${numero}: ${afectados.length} invitado(s) volverán a quedar sin mesa ` +
-        `(no se borra a nadie). ¿Continuar?`
-    );
-    if (!confirmar) return;
-    persistInvitados(invitados.map((g) => (g.mesa === numero ? { ...g, mesa: null } : g)));
-  };
-
   // Posición por defecto en rejilla para las mesas que todavía no se han
   // arrastrado a mano en el plano (posX/posY a null).
   const posicionPorDefecto = (indice, total) => {
@@ -422,98 +310,6 @@ export function VistaAnfitrion({ data }) {
     persistMesas(
       mesas.map((m) => (m.numero === numero ? { ...m, posX, posY } : m))
     );
-  };
-
-  // Auto-asignación de mesas: nunca reparte un grupo familiar entre varias
-  // mesas por su cuenta. Si parte del grupo ya está sentada a mano, intenta
-  // completar el resto en esa misma mesa; si no cabe entero (ahí o en
-  // cualquier otra), no toca nada y genera un aviso para que el Anfitrión lo
-  // resuelva a mano (subiendo capacidad, moviendo gente, etc.).
-  const autoAsignarMesas = () => {
-    const nuevos = invitados.map((g) => ({ ...g }));
-    const ocupacion = {};
-    mesas.forEach((m) => {
-      ocupacion[m.numero] = nuevos.filter((g) => g.mesa === m.numero && g.confirmado).length;
-    });
-
-    const gruposMap = {};
-    nuevos.forEach((g) => {
-      if (g.confirmado) {
-        const key = (g.grupoFamiliar || g.apellido || g.id).trim().toLowerCase();
-        (gruposMap[key] = gruposMap[key] || []).push(g);
-      }
-    });
-
-    const avisos = [];
-
-    // Los grupos con más gente sin sentar van primero, para que no se queden
-    // sin hueco por culpa de familias pequeñas que se adelantaron.
-    const gruposOrdenados = Object.values(gruposMap).sort(
-      (a, b) => b.filter((g) => !g.mesa).length - a.filter((g) => !g.mesa).length
-    );
-
-    gruposOrdenados.forEach((grupo) => {
-      const sinMesa = grupo.filter((g) => !g.mesa);
-      if (sinMesa.length === 0) return;
-
-      const nombreGrupo = grupo[0].grupoFamiliar || grupo[0].apellido || "(sin nombre)";
-      const mesasYaUsadas = [...new Set(grupo.filter((g) => g.mesa).map((g) => g.mesa))];
-
-      if (mesasYaUsadas.length > 1) {
-        avisos.push({
-          grupo: nombreGrupo,
-          motivo: `ya está repartida a mano entre las mesas ${mesasYaUsadas.join(
-            ", "
-          )} — revísalo si no era intencional`,
-        });
-        return;
-      }
-
-      const mesaObjetivo =
-        mesasYaUsadas.length === 1 ? mesas.find((m) => m.numero === mesasYaUsadas[0]) : null;
-
-      if (mesaObjetivo) {
-        const hueco = mesaObjetivo.capacidad - (ocupacion[mesaObjetivo.numero] || 0);
-        if (hueco >= sinMesa.length) {
-          sinMesa.forEach((g) => {
-            g.mesa = mesaObjetivo.numero;
-          });
-          ocupacion[mesaObjetivo.numero] = (ocupacion[mesaObjetivo.numero] || 0) + sinMesa.length;
-        } else {
-          avisos.push({
-            grupo: nombreGrupo,
-            motivo: `no caben ${sinMesa.length} persona${
-              sinMesa.length !== 1 ? "s" : ""
-            } más en la Mesa ${mesaObjetivo.numero} (solo ${Math.max(
-              hueco,
-              0
-            )} libres) — se han dejado sin mesa`,
-          });
-        }
-        return;
-      }
-
-      const mesaElegida = mesas.find(
-        (m) => m.capacidad - (ocupacion[m.numero] || 0) >= sinMesa.length
-      );
-      if (mesaElegida) {
-        sinMesa.forEach((g) => {
-          g.mesa = mesaElegida.numero;
-        });
-        ocupacion[mesaElegida.numero] = (ocupacion[mesaElegida.numero] || 0) + sinMesa.length;
-      } else {
-        avisos.push({
-          grupo: nombreGrupo,
-          motivo: `ninguna mesa tiene ${sinMesa.length} hueco${
-            sinMesa.length !== 1 ? "s" : ""
-          } libres juntos — se han dejado sin mesa`,
-        });
-      }
-    });
-
-    persistInvitados(nuevos);
-    setAvisosMesas(avisos);
-    setPanelFlotante(avisos.length > 0 ? "avisosMesas" : null);
   };
 
   const importarInvitados = () => {
@@ -574,7 +370,6 @@ export function VistaAnfitrion({ data }) {
   // null | "tabla" | "canciones" | "alergias" | "avisosMesas" — controla la
   // ventana flotante; independiente de qué secciones estén plegadas.
   const [panelFlotante, setPanelFlotante] = useState(null);
-  const [avisosMesas, setAvisosMesas] = useState([]);
   const lienzoPlanoRef = useRef(null);
 
   const imprimirPanelActivo = () => {
@@ -993,123 +788,22 @@ export function VistaAnfitrion({ data }) {
 
       {/* Colaboradores */}
       {abierto.colaboradores && (
-        <VentanaFlotante clave="colaboradores" titulo="Colaboradores" onCerrar={() => toggle("colaboradores")}>
-            <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
-              Los colaboradores son también invitados del evento: búscalo por apellido o
-              nombre entre los ya añadidos a la lista. Si aún no está en la lista, añádelo
-              primero abajo en "Lista de invitados".
-            </p>
-            <div className="flex flex-wrap gap-2 mb-3">
-              <BuscadorInvitado
-                invitados={invitadosDisponiblesParaColaborador}
-                invitadoId={nuevoColab.invitadoId}
-                onSeleccionar={(id) => setNuevoColab({ ...nuevoColab, invitadoId: id })}
-                placeholder="Buscar invitado para hacerlo colaborador..."
-              />
-              <button
-                onClick={agregarColaborador}
-                className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-                style={{ background: C.ink, color: C.paper }}
-              >
-                <Plus size={14} /> Añadir
-              </button>
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-3">
-              {colaboradores.map((c) => {
-                const pendientes = invitados.filter(
-                  (g) =>
-                    resolverColaborador(g, colaboradores)?.id === c.id &&
-                    g.confirmado &&
-                    !datosCompletos(g)
-                ).length;
-                return (
-                  <ColaboradorCard
-                    key={c.id}
-                    c={c}
-                    pendientes={pendientes}
-                    invitados={invitados}
-                    colaboradores={colaboradores}
-                    evento={evento}
-                    onEliminar={eliminarColaborador}
-                    onRelevar={relevarColaborador}
-                    onAsignarColaborador={asignarColaborador}
-                    onCambiarEmail={cambiarEmailColaborador}
-                    onProbarEmail={probarEmailColaborador}
-                  />
-                );
-              })}
-              {colaboradores.length === 0 && (
-                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                  Aún no hay colaboradores.
-                </p>
-              )}
-            </div>
-        </VentanaFlotante>
+        <VentanaColaboradores
+          data={data}
+          asignarColaborador={asignarColaborador}
+          onCerrar={() => toggle("colaboradores")}
+        />
       )}
 
       {/* Mesas */}
       {abierto.mesas && (
-        <VentanaFlotante clave="mesas" titulo="Mesas" onCerrar={() => toggle("mesas")}>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-            Define primero cuántos comensales caben en cada mesa. Luego puedes generar una
-            distribución preliminar (respetando el grupo familiar) y ajustarla a mano.
-          </p>
-          <div className="flex items-center gap-2 ml-3">
-            {avisosMesas.length > 0 && (
-              <button
-                onClick={() => setPanelFlotante("avisosMesas")}
-                className="flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium whitespace-nowrap"
-                style={{ background: C.wax, color: "#fff" }}
-                title="Ver familias que se quedaron sin mesa"
-              >
-                <AlertTriangle size={12} /> {avisosMesas.length} aviso{avisosMesas.length !== 1 && "s"}
-              </button>
-            )}
-            <button
-              onClick={autoAsignarMesas}
-              className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap"
-              style={{ background: C.ink, color: C.paper }}
-            >
-              Auto-asignar (preliminar)
-            </button>
-            <button
-              onClick={anadirMesa}
-              className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap"
-              style={{ border: `1px solid ${C.ink}`, color: C.ink }}
-            >
-              <Plus size={14} /> Añadir mesa
-            </button>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-4">
-          {mesas.map((m) => {
-            const ocupados = ocupacionMesa(m.numero);
-            const lleno = ocupados >= m.capacidad && m.capacidad > 0;
-            const tieneAlergias = invitados.some(
-              (g) => g.mesa === m.numero && g.confirmado && tieneAlergiaReal(g)
-            );
-            return (
-              <MesaRedonda
-                key={m.numero}
-                m={m}
-                ocupados={ocupados}
-                lleno={lleno}
-                tieneAlergias={tieneAlergias}
-                onCambiarCapacidad={(v) => cambiarCapacidadMesa(m.numero, v)}
-                onEliminar={() => eliminarMesa(m.numero)}
-                onVaciar={() => vaciarMesa(m.numero)}
-              />
-            );
-          })}
-          {mesas.length === 0 && (
-            <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-              Todavía no hay mesas — pulsa "Añadir mesa" para crear la primera.
-            </p>
-          )}
-        </div>
-        </VentanaFlotante>
+        <VentanaMesas
+          data={data}
+          ocupacionMesa={ocupacionMesa}
+          panelFlotante={panelFlotante}
+          setPanelFlotante={setPanelFlotante}
+          onCerrar={() => toggle("mesas")}
+        />
       )}
 
       {/* Plano de mesas */}
@@ -2821,31 +2515,6 @@ export function VistaAnfitrion({ data }) {
         </ModalFlotante>
       )}
 
-      {panelFlotante === "avisosMesas" && (
-        <ModalFlotante
-          titulo="⚠ Familias sin mesa completa"
-          colorTitulo={C.wax}
-          onCerrar={() => setPanelFlotante(null)}
-        >
-          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
-            La auto-asignación nunca reparte un grupo familiar entre mesas por su cuenta.
-            Estas familias se han quedado (total o parcialmente) sin mesa — sube la capacidad
-            de alguna mesa, mueve gente a mano, o vuelve a pulsar "Auto-asignar" tras
-            ajustarlo. Cuando ya no queden avisos, la distribución está completa.
-          </p>
-          <div className="space-y-2">
-            {avisosMesas.map((a, i) => (
-              <div
-                key={i}
-                className="p-2 rounded text-sm"
-                style={{ background: "#FBEAEA", border: `1px solid ${C.wax}`, color: C.charcoal }}
-              >
-                <strong style={{ color: C.wax }}>Familia {a.grupo}</strong>: {a.motivo}
-              </div>
-            ))}
-          </div>
-        </ModalFlotante>
-      )}
     </div>
   );
 }
