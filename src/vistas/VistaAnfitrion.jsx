@@ -813,6 +813,28 @@ export function VistaAnfitrion({ data }) {
       .filter((f) => f.listaParaInvitacion);
   })();
 
+  // El email de un invitado puede vivir en su propio registro, o -si ese
+  // invitado es también colaborador- en el registro de colaboradores (se
+  // edita solo ahí; el campo de su propia ficha se queda vacío a
+  // propósito y se muestra de solo lectura, ver VistaColaborador). Para
+  // saber la dirección real de alguien hay que mirar los dos sitios.
+  const emailDeInvitado = (miembro) =>
+    miembro.email || colaboradores.find((c) => c.invitadoId === miembro.id)?.email || "";
+
+  // El destinatario del email de invitación no tiene por qué ser el primero
+  // del orden de nombres (ese orden es solo para el texto de la propia
+  // invitación) — se busca el primer confirmado de la familia que SÍ tenga
+  // email (propio o de su colaborador vinculado), sea cual sea su
+  // posición. Antes se miraba solo confirmados[0].email y, si esa persona
+  // en concreto no tenía email en su propia ficha, se daba la familia
+  // entera por "sin email" — aunque otro miembro sí lo tuviera, o aunque
+  // esa misma persona lo tuviera guardado como colaborador.
+  const destinatarioConEmail = (familia) => {
+    const elegido =
+      familia.confirmados.find((m) => emailDeInvitado(m)) || familia.confirmados[0];
+    return elegido ? { ...elegido, email: emailDeInvitado(elegido) } : elegido;
+  };
+
   const moverNombreFamilia = (familia, invitadoId, direccion) => {
     const ids = familia.confirmados.map((m) => m.id);
     const idx = ids.indexOf(invitadoId);
@@ -927,11 +949,11 @@ export function VistaAnfitrion({ data }) {
   const [enviandoInvitacion, setEnviandoInvitacion] = useState(false);
 
   const abrirPreviewInvitacion = async (familia) => {
-    const destinatario = familia.confirmados[0];
+    const destinatario = destinatarioConEmail(familia);
     if (!destinatario?.email) {
       window.alert(
-        `No se puede enviar todavía: ${destinatario?.nombre || "la primera persona del orden"} ` +
-          `no tiene email guardado. Rellénalo (aquí mismo, en la lista de nombres) o cambia el orden de la familia.`
+        "No se puede enviar todavía: ninguno de los confirmados de esta familia tiene " +
+          "email guardado. Rellena el de alguno de ellos (en su formulario de datos) para poder enviarle la invitación."
       );
       return;
     }
@@ -992,7 +1014,7 @@ export function VistaAnfitrion({ data }) {
     let enviados = 0;
     const saltados = [];
     for (const familia of familiasPendientesDeEnviar) {
-      const destinatario = familia.confirmados[0];
+      const destinatario = destinatarioConEmail(familia);
       if (!destinatario?.email) {
         saltados.push(`${familia.apellido} (sin email)`);
         continue;
@@ -2849,7 +2871,7 @@ export function VistaAnfitrion({ data }) {
                   <div style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 18 }}>
                     {
                       familiasListasParaInvitacion.filter(
-                        (f) => !f.invitacionEnviada && !f.confirmados[0]?.email
+                        (f) => !f.invitacionEnviada && !destinatarioConEmail(f)?.email
                       ).length
                     }
                   </div>
@@ -2872,17 +2894,17 @@ export function VistaAnfitrion({ data }) {
                       >
                         <span className="text-sm" style={{ color: C.ink }}>
                           Familia {f.apellido}
-                          {!f.confirmados[0]?.email && (
+                          {!destinatarioConEmail(f)?.email && (
                             <span className="text-xs" style={{ color: C.wax }}> — sin email</span>
                           )}
                         </span>
                         <button
                           onClick={() => abrirPreviewInvitacion(f)}
-                          disabled={!f.confirmados[0]?.email || descargando === f.clave}
+                          disabled={!destinatarioConEmail(f)?.email || descargando === f.clave}
                           className="text-xs px-2 py-1 rounded font-medium"
                           style={{
-                            background: f.confirmados[0]?.email ? C.wax : C.line,
-                            color: f.confirmados[0]?.email ? "#fff" : C.charcoal,
+                            background: destinatarioConEmail(f)?.email ? C.wax : C.line,
+                            color: destinatarioConEmail(f)?.email ? "#fff" : C.charcoal,
                           }}
                         >
                           {descargando === f.clave ? "Generando…" : "Enviar ahora"}
@@ -3061,7 +3083,7 @@ export function VistaAnfitrion({ data }) {
           </p>
           <ul className="text-sm space-y-2 mb-4">
             {familiasPendientesDeEnviar.map((familia) => {
-              const destinatario = familia.confirmados[0];
+              const destinatario = destinatarioConEmail(familia);
               return (
                 <li key={familia.clave} className="pb-2" style={{ borderBottom: `1px solid ${C.line}` }}>
                   <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
