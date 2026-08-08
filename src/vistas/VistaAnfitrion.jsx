@@ -62,6 +62,13 @@ import { MesaRedonda, MesaPlano } from "../components/Mesas";
 import { BuscadorInvitado } from "../components/BuscadorInvitado";
 import { ColaboradorCard } from "../components/ColaboradorCard";
 import { uid } from "../lib/id";
+import { exportarTodo } from "../lib/backup";
+import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
+import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
+import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
+import { VentanaConfigPrecios } from "./anfitrion/VentanaConfigPrecios";
+import { VentanaConfigUrlWeb } from "./anfitrion/VentanaConfigUrlWeb";
+import { VentanaConfigEmailAnfitrion } from "./anfitrion/VentanaConfigEmailAnfitrion";
 
 // Cada parte de Configuración es su propia ventana flotante independiente
 // (igual que Mesas, Avisos...), abierta desde el desplegable "SECCIÓN" en
@@ -76,66 +83,6 @@ const SECCIONES_CONFIGURACION = [
   { id: "config-zona-reinicio", etiqueta: "Reinicios" },
   { id: "config-zona-peligro", etiqueta: "Borrado total" },
 ];
-
-// Versiones anteriores ya cerradas (números enteros completos): un resumen
-// breve por versión mayor, en vez de listar cada sub-versión — ocupa menos
-// espacio en la sección "Versiones".
-const RESUMEN_VERSIONES_ANTERIORES = [
-  {
-    version: "5",
-    cambios:
-      'Enlace del anfitrión cerrado con token secreto. Avisos automáticos por email (Resend) para asignación de invitados, datos completos y pagos completos, y envío de la invitación (con imagen adjunta) a cada familia, todo con vista previa y confirmación explícita — nunca disparado solo. Formulario del colaborador rediseñado para móvil. Cuadrícula de calibración para posicionar fecha/hora/lugar sobre la imagen de la invitación. Zona de Reinicio para limpiar datos de pruebas sin borrar invitados ni colaboradores.',
-  },
-  {
-    version: "4",
-    cambios:
-      "Migración a una web real: los datos ya no viven en un Artifact sino en una base de datos compartida (Supabase), con web propia (Vite) desplegada automáticamente desde GitHub. El aislamiento entre colaboradores (cada uno solo ve sus invitados asignados) se cumple en el propio servidor, no solo en la pantalla.",
-  },
-  {
-    version: "3",
-    cambios:
-      "Los campos de edición se movieron a Configuración; portada solo lectura con la fecha en formato largo.",
-  },
-  {
-    version: "2",
-    cambios:
-      "Cobro automático por edad y precios, invitación generada con plantilla vertical (Familia/Mesa/PAGADO integrado), alergias con selectores dedicados y aviso en mesa, BORRAR TODO en Configuración, y encabezados sin flecha.",
-  },
-  {
-    version: "1",
-    cambios:
-      "Primera versión estable: tabla ordenable, imagen de cabecera incrustada, enlaces de colaborador vía URL pública, foto de boda por familia, y límite de capacidad respetado en mesas.",
-  },
-];
-
-// A partir de la 6.0, "cambios" es una lista de párrafos cortos (uno por
-// área mejorada) en vez de un único bloque de texto largo — más fácil de
-// leer de un vistazo.
-const HISTORIAL_VERSIONES = [
-  {
-    version: "6.0",
-    cambios: [
-      'Mesas: ahora se dibujan redondas con sillas alrededor (su número sigue a la capacidad), la cantidad de mesas es libre (añadir/quitar, sin el límite fijo de 15), y "Vaciar mesa" desasigna a todos sus invitados de golpe sin borrar a nadie.',
-      "Plano de mesas: nueva sección con un lienzo donde cada mesa se arrastra a la posición que quieras (se guarda sola), con botón de impresión preparado para papel A2.",
-      "Estado de cuentas: nueva sección con lo recaudado y pendiente de cobro calculados solos a partir de los pagos de invitados, más una lista editable de gastos (incluye también los costes de la propia app, como el dominio o la suscripción) y el balance resultante.",
-      'Navegación: las secciones (Mesas, Configuración, Avisos...) dejan de estar apiladas en una página larga y pasan a abrirse como ventanas flotantes movibles y redimensionables, accesibles desde un único desplegable ordenado alfabéticamente. El cambio entre Anfitrión y colaboradores se redujo a una sola barra táctil, pensada para el pulgar en móvil.',
-      "Portada: el botón para cambiar la imagen (poco visible sobre algunas fotos) se quita de encima de la portada; ahora se edita desde Configuración, junto con el resto de datos del evento.",
-      "Imágenes: la imagen de portada y la de la plantilla de invitación se suben ahora como archivo desde el dispositivo, en vez de pegar una URL — igual que ya funcionaba la foto de boda.",
-      "Email del colaborador: se edita en un solo sitio (Colaboradores); se quita el duplicado de Configuración, y en el formulario de datos del invitado aparece ensombrecido (solo lectura) cuando ese invitado es también un colaborador.",
-      "Configuración: la ventana pasa a ser solo un desplegable \"SECCIÓN\" — cada parte (Precios, URL web, Email anfitrión, Texto emails, Reinicios, Borrado total...) se abre en su propia ventana independiente, igual que Mesas o Avisos.",
-      "Ventanas: cualquiera pasa a primer plano en cuanto se toca, en vez de quedarse algunas ancladas por encima de las demás.",
-      "Solidez: BORRAR TODO descarga ahora la misma copia de seguridad automática que ya tenían los reinicios. Y si guardar algo falla (sin conexión, fallo del servidor), la pantalla deja de mostrar el cambio como si se hubiera guardado — se deshace solo en vez de mentir hasta que recargues. Además, si algo revienta al pintar la pantalla, ahora se ve un aviso con botón de recargar en vez de quedarse todo en blanco sin explicación.",
-      "Emails, tras la primera prueba real: la tentativa ya no bloquea avisar al anfitrión ni aparece nombrada en el email al colaborador (evita preguntas antes de tiempo); \"He terminado mi trabajo\" se movió a la derecha; y en Colaboradores hay un botón \"Probar\" para confirmar al momento que un email está bien escrito, en vez de descubrirlo días después.",
-      "Corrige que los modales de confirmación (REINICIAR, \"¿has terminado?\"...) podían abrirse ocultos detrás de una ventana ya abierta un rato, por quedarse con un z-index fijo mientras las ventanas ya lo tenían dinámico.",
-      "Avisos: panel con el total pendiente de datos (solo confirmados) e invitaciones, y el historial de emails enviados ahora se filtra por 3 tipos (Asignados, Datos, Invitación) y se ordena por Fecha, Tipo o Email.",
-      "Corrige que BORRAR TODO y los reinicios no llegaban a aplicarse desde el móvil: la descarga automática de la copia de seguridad se disparaba antes de la acción real, y en algunos navegadores móviles eso podía interrumpirla antes de completarse. Ahora la copia se descarga después de que la acción ya haya terminado.",
-      "Se probó y se revirtió: confirmar en el momento si Resend acepta un envío. Esperar esa respuesta dentro de la misma función podía agotar el tiempo máximo de una consulta y cancelar el envío entero, no solo la confirmación — enviar_email vuelve a ser \"disparar y no esperar\", que es lo fiable.",
-      "Solidez de fondo: avisoPendiente e invitacionEnviada dejan de fijarse a mano en cada función y se recalculan solos según el estado real. Además, cada sesión (la tuya, la de cada colaborador) vuelve a pedir los datos sola cada minuto, para no quedarse con una copia vieja si otra persona cambia algo mientras tanto.",
-      "Emails: la confirmación ✓/✗/? vuelve al historial de Avisos, esta vez bien separada del envío — enviar_email() solo guarda dónde mirar la respuesta más tarde, y una comprobación aparte (que nunca espera ni puede bloquear nada) la va resolviendo sola con el refresco de cada minuto.",
-    ],
-  },
-];
-
 
 export function VistaAnfitrion({ data }) {
   const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, probarEmailColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearAvisos, resetearPorInvitados, gastos, persistGastos } = data;
@@ -613,7 +560,7 @@ export function VistaAnfitrion({ data }) {
     // blob: puede navegar la propia pestaña en vez de descargar sin más;
     // si eso pasara antes de esta llamada, la página se recargaría y el
     // borrado ni siquiera llegaría a intentarse.
-    const datosBackup = JSON.parse(exportarTodo());
+    const datosBackup = JSON.parse(exportarTodo({ evento, mesas, fotosFamiliares, colaboradores, invitados }));
     persistEvento({
       nombre: "",
       fecha: "",
@@ -730,7 +677,7 @@ export function VistaAnfitrion({ data }) {
     // <a download> puede navegar la pestaña en vez de descargar sin más;
     // si eso pasara antes del await de abajo, el reinicio ni se llegaría
     // a intentar (visto en pruebas reales: en el móvil no se aplicaba).
-    const datosBackup = JSON.parse(exportarTodo());
+    const datosBackup = JSON.parse(exportarTodo({ evento, mesas, fotosFamiliares, colaboradores, invitados }));
     await resetearPorInvitados(invitadoIdsParaReset, rCategoria);
     descargarJSON(`backup-antes-de-reiniciar-${rCategoria}-${Date.now()}.json`, datosBackup);
     setREjecutando(false);
@@ -749,140 +696,12 @@ export function VistaAnfitrion({ data }) {
     setReiniciandoAvisos(true);
     // Mismo motivo que en confirmarResetPorInvitados: capturar antes,
     // descargar después de que la acción real ya haya terminado.
-    const datosBackup = JSON.parse(exportarTodo());
+    const datosBackup = JSON.parse(exportarTodo({ evento, mesas, fotosFamiliares, colaboradores, invitados }));
     await resetearAvisos();
     descargarJSON(`backup-antes-de-reiniciar-avisos-${Date.now()}.json`, datosBackup);
     setReiniciandoAvisos(false);
     setReinicioAvisosPendiente(false);
     setPalabraAvisos("");
-  };
-
-  const exportarTodo = () => {
-    const datos = {
-      version: 1,
-      evento,
-      mesas,
-      fotosFamiliares,
-      colaboradores: colaboradores.map((c) => ({
-        nombre: c.nombre,
-        email: c.email || "",
-      })),
-      invitados: ordenarPorApellidoNombre(invitados).map((g) => {
-        const col = resolverColaborador(g, colaboradores);
-        return {
-          grupoFamiliar: g.grupoFamiliar || g.apellido || "",
-          apellido: g.apellido || "",
-          nombre: g.nombre || "",
-          zona: g.zona || "",
-          confirmado: Boolean(g.confirmado),
-          colaboradorNombre: col ? col.nombre : "",
-          mesa: g.mesa || null,
-          anioNacimiento: g.anioNacimiento || "",
-          anioBoda: g.anioBoda || "",
-          email: g.email || "",
-          cancion: g.cancion || "",
-          alergias: g.alergias || "",
-          observaciones: g.observaciones || "",
-          pagado: Boolean(g.pagado),
-        };
-      }),
-    };
-    return JSON.stringify(datos, null, 2);
-  };
-
-  const restaurarTodo = () => {
-    let datos;
-    try {
-      datos = JSON.parse(textoRestaurar);
-    } catch (_) {
-      // No es JSON: puede ser el formato antiguo de "solo invitados" (separado
-      // por tabulaciones). Lo intentamos como alternativa antes de rendirnos.
-      const filas = parseImport(textoRestaurar, colaboradores);
-      if (filas.length === 0) {
-        window.alert(
-          "No he podido leer ese texto. Pega el contenido que generó \"Exportar todo\" (o, si es una copia antigua de solo invitados, en el formato Grupo familiar, Apellido, Nombre, Colaborador, Zona)."
-        );
-        return;
-      }
-      const ok = window.confirm(
-        `Esto es un formato antiguo: solo recuperaré los ${filas.length} invitados (nombre, apellido, zona, grupo familiar y colaborador si coincide el nombre). El evento, las mesas y los datos de colaborador/año/email/etc. de cada invitado NO se restauran con este formato. ¿Continuar?`
-      );
-      if (!ok) return;
-      const nuevos = filas.map((r) => ({
-        id: uid(),
-        nombre: r.nombre,
-        apellido: r.apellido,
-        zona: r.zona,
-        confirmado: false,
-        colaboradorId: r.colaboradorId,
-        grupoFamiliar: r.grupoFamiliar,
-        mesa: null,
-        anioNacimiento: "",
-        anioBoda: "",
-        email: "",
-        cancion: "",
-        alergias: "",
-        observaciones: "",
-        pagado: false,
-      }));
-      persistInvitados([...invitados, ...nuevos]);
-      setTextoRestaurar("");
-      setMostrarRestaurar(false);
-      return;
-    }
-
-    // 1) Invitados primero, con ids nuevos (los antiguos ya no sirven).
-    const nuevosInvitados = (datos.invitados || []).map((r) => ({
-      id: uid(),
-      nombre: r.nombre || "",
-      apellido: r.apellido || "",
-      zona: r.zona || "",
-      confirmado: Boolean(r.confirmado),
-      colaboradorId: null,
-      grupoFamiliar: r.grupoFamiliar || r.apellido || "",
-      mesa: r.mesa || null,
-      anioNacimiento: r.anioNacimiento || "",
-      anioBoda: r.anioBoda || "",
-      email: r.email || "",
-      cancion: r.cancion || "",
-      alergias: r.alergias || "",
-      observaciones: r.observaciones || "",
-      pagado: Boolean(r.pagado),
-      _colaboradorNombreTmp: r.colaboradorNombre || "",
-    }));
-
-    // 2) Colaboradores, enlazados al invitado que coincide en apellido y nombre.
-    const nuevosColaboradores = (datos.colaboradores || []).map((c) => {
-      const [ap, no] = (c.nombre || "").split(",").map((s) => s.trim());
-      const match = nuevosInvitados.find((g) => g.apellido === ap && g.nombre === no);
-      return {
-        id: uid(),
-        nombre: c.nombre || "",
-        invitadoId: match ? match.id : null,
-        email: c.email || "",
-      };
-    });
-
-    // 3) Resolver el colaborador asignado a cada invitado, y limpiar el campo temporal.
-    const invitadosFinal = nuevosInvitados.map((g) => {
-      const { _colaboradorNombreTmp, ...resto } = g;
-      if (_colaboradorNombreTmp) {
-        const col = nuevosColaboradores.find((c) => c.nombre === _colaboradorNombreTmp);
-        resto.colaboradorId = col ? col.id : null;
-      }
-      return resto;
-    });
-
-    const eventoRestaurado = datos.evento || evento;
-    if (!eventoRestaurado.imagen) eventoRestaurado.imagen = "/cabecera-defecto.jpg";
-    if (!eventoRestaurado.imagenInvitacion) eventoRestaurado.imagenInvitacion = "/invitacion-defecto.jpg";
-    persistEvento(eventoRestaurado);
-    if (datos.mesas) persistMesas(datos.mesas);
-    if (datos.fotosFamiliares) persistFotosFamiliares(datos.fotosFamiliares);
-    persistColaboradores(nuevosColaboradores);
-    persistInvitados(invitadosFinal);
-    setTextoRestaurar("");
-    setMostrarRestaurar(false);
   };
 
   const total = invitados.length;
@@ -1207,9 +1026,6 @@ export function VistaAnfitrion({ data }) {
     );
   };
 
-  const [mostrarExportar, setMostrarExportar] = useState(false);
-  const [mostrarRestaurar, setMostrarRestaurar] = useState(false);
-  const [textoRestaurar, setTextoRestaurar] = useState("");
   const [modoEdicion, setModoEdicion] = useState(false);
 
   const zonasUnicas = [...new Set(invitados.map((g) => g.zona).filter(Boolean))].sort();
@@ -1302,61 +1118,7 @@ export function VistaAnfitrion({ data }) {
 
       {/* Progreso de recopilación */}
       {abierto.progreso && (
-        <VentanaFlotante
-          clave="progreso"
-          titulo="Progreso de recopilación"
-          onCerrar={() => toggle("progreso")}
-        >
-            <ProgresoBar
-              label="General (confirmados con datos completos)"
-              completado={invitados.filter((g) => g.confirmado && datosCompletos(g)).length}
-              total={confirmadosCount}
-              color={C.wax}
-            />
-            <div className="grid sm:grid-cols-2 gap-x-6">
-              {colaboradores.map((c) => {
-                const suyos = invitados.filter(
-                  (g) => resolverColaborador(g, colaboradores)?.id === c.id && g.confirmado
-                );
-                const completos = suyos.filter((g) => datosCompletos(g)).length;
-                return (
-                  <ProgresoBar
-                    key={c.id}
-                    label={c.nombre}
-                    completado={completos}
-                    total={suyos.length}
-                  />
-                );
-              })}
-            </div>
-            {colaboradores.length === 0 && (
-              <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                Añade colaboradores para ver su progreso individual.
-              </p>
-            )}
-            <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
-              <ProgresoBar
-                label="Cobro (confirmados que ya han pagado)"
-                completado={invitados.filter((g) => g.confirmado && g.pagado).length}
-                total={confirmadosCount}
-                color={C.gold}
-              />
-            </div>
-            <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
-              <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
-                Informativo — no bloquea a nadie, solo para saber cuánto falta de la canción
-                para el DJ. Las alergias se avisan directamente en la mesa (sección Mesas) y
-                tienen su propia lista imprimible más abajo.
-              </p>
-              <ProgresoBar
-                label="Con canción registrada"
-                completado={
-                  invitados.filter((g) => g.confirmado && g.cancion && g.cancion.trim()).length
-                }
-                total={confirmadosCount}
-              />
-            </div>
-        </VentanaFlotante>
+        <VentanaProgreso data={data} onCerrar={() => toggle("progreso")} />
       )}
 
       {/* Colaboradores */}
@@ -2391,71 +2153,7 @@ export function VistaAnfitrion({ data }) {
 
       {/* Copia de seguridad */}
       {abierto.copiaSeguridad && (
-        <VentanaFlotante
-          clave="copiaSeguridad"
-          titulo="Copia de seguridad"
-          onCerrar={() => toggle("copiaSeguridad")}
-        >
-            <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
-              Antes de pedir más cambios y volver a publicar el artefacto, exporta todo (evento,
-              colaboradores, mesas e invitados) y guárdalo en una nota. Tras publicar la nueva
-              versión, pega ese mismo texto aquí para recuperarlo todo de una vez.
-            </p>
-            <div className="flex flex-wrap gap-2 mb-3">
-              <button
-                onClick={() => setMostrarExportar((v) => !v)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-                style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-              >
-                <Copy size={14} /> Exportar todo
-              </button>
-              <button
-                onClick={() => setMostrarRestaurar((v) => !v)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-                style={{ border: `1px solid ${C.ink}`, color: C.ink }}
-              >
-                <Repeat size={14} /> Restaurar todo
-              </button>
-            </div>
-
-            {mostrarExportar && (
-              <div className="mb-3">
-                <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.75 }}>
-                  Toca dentro del cuadro, Cmd/Ctrl+A y Cmd/Ctrl+C para copiarlo todo.
-                </p>
-                <textarea
-                  readOnly
-                  value={exportarTodo()}
-                  onFocus={(e) => e.target.select()}
-                  rows={8}
-                  className="w-full"
-                  style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
-                />
-              </div>
-            )}
-
-            {mostrarRestaurar && (
-              <div>
-                <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.75 }}>
-                  Pega aquí el texto que generó "Exportar todo" en una versión anterior.
-                </p>
-                <textarea
-                  value={textoRestaurar}
-                  onChange={(e) => setTextoRestaurar(e.target.value)}
-                  rows={8}
-                  className="w-full mb-2"
-                  style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
-                />
-                <button
-                  onClick={restaurarTodo}
-                  className="px-3 py-1.5 rounded text-sm font-medium"
-                  style={{ background: C.ink, color: C.paper }}
-                >
-                  Restaurar
-                </button>
-              </div>
-            )}
-        </VentanaFlotante>
+        <VentanaCopiaSeguridad data={data} onCerrar={() => toggle("copiaSeguridad")} />
       )}
 
       {/* Configuración: solo el lanzador — cada parte se abre como ventana propia */}
@@ -2597,95 +2295,15 @@ export function VistaAnfitrion({ data }) {
       )}
 
       {abierto["config-precios"] && (
-        <VentanaFlotante
-          clave="config-precios"
-          titulo="Precios"
-          onCerrar={() => toggle("config-precios")}
-        >
-              <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
-                Precios de referencia para calcular el cobro de cada familia (número de adultos
-                y niños según los datos que recopile cada colaborador).
-              </p>
-              <div className="grid grid-cols-2 gap-4" style={{ maxWidth: 400 }}>
-                <Field label="Precio adulto">
-                  <TextInput
-                    value={evento.precioAdulto}
-                    onChange={(e) => persistEvento({ ...evento, precioAdulto: e.target.value })}
-                    placeholder="€ 45"
-                  />
-                </Field>
-                <Field label="Precio niño">
-                  <TextInput
-                    value={evento.precioNino}
-                    onChange={(e) => persistEvento({ ...evento, precioNino: e.target.value })}
-                    placeholder="€ 20"
-                  />
-                </Field>
-                <Field label="Edad niño desde">
-                  <TextInput
-                    value={evento.edadNinoDesde}
-                    onChange={(e) => persistEvento({ ...evento, edadNinoDesde: e.target.value })}
-                    placeholder="2"
-                  />
-                  <span className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
-                    Menores de esta edad no pagan entrada
-                  </span>
-                </Field>
-                <Field label="Edad niño hasta">
-                  <TextInput
-                    value={evento.edadNinoHasta}
-                    onChange={(e) => persistEvento({ ...evento, edadNinoHasta: e.target.value })}
-                    placeholder="12"
-                  />
-                  <span className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
-                    Desde esta edad (incluida) pagan precio adulto
-                  </span>
-                </Field>
-              </div>
-        </VentanaFlotante>
+        <VentanaConfigPrecios data={data} onCerrar={() => toggle("config-precios")} />
       )}
 
       {abierto["config-url-web"] && (
-        <VentanaFlotante
-          clave="config-url-web"
-          titulo="URL web"
-          onCerrar={() => toggle("config-url-web")}
-        >
-              <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
-                <strong>Importante:</strong> pega aquí la URL de tu web ya publicada (la del
-                dominio que te dé Vercel, o el tuyo propio si le pones uno). Sin este dato, los
-                enlaces que copies para cada colaborador no apuntarán al sitio correcto.
-              </p>
-              <Field label="URL de la web">
-                <TextInput
-                  value={evento.urlPublica}
-                  onChange={(e) => persistEvento({ ...evento, urlPublica: e.target.value })}
-                  placeholder="https://tu-boda.vercel.app"
-                  className="w-full"
-                />
-              </Field>
-        </VentanaFlotante>
+        <VentanaConfigUrlWeb data={data} onCerrar={() => toggle("config-url-web")} />
       )}
 
       {abierto["config-email-anfitrion"] && (
-        <VentanaFlotante
-          clave="config-email-anfitrion"
-          titulo="Email anfitrión"
-          onCerrar={() => toggle("config-email-anfitrion")}
-        >
-              <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
-                Tu email, para recibir avisos automáticos cuando un colaborador complete todos
-                los datos o todos los pagos de sus invitados asignados.
-              </p>
-              <Field label="Tu email (anfitrión)">
-                <TextInput
-                  value={evento.emailAnfitrion || ""}
-                  onChange={(e) => persistEvento({ ...evento, emailAnfitrion: e.target.value })}
-                  placeholder="tu@email.com"
-                  className="w-full"
-                />
-              </Field>
-        </VentanaFlotante>
+        <VentanaConfigEmailAnfitrion data={data} onCerrar={() => toggle("config-email-anfitrion")} />
       )}
 
       {abierto["config-plantillas-email"] && (
@@ -3279,49 +2897,7 @@ export function VistaAnfitrion({ data }) {
 
       {/* Versiones */}
       {abierto.versiones && (
-        <VentanaFlotante clave="versiones" titulo="Versiones" onCerrar={() => toggle("versiones")}>
-            <div className="space-y-3">
-              {HISTORIAL_VERSIONES.map((v) => (
-                <div
-                  key={v.version}
-                  className="flex items-start gap-3 p-3 rounded"
-                  style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
-                >
-                  <Stamp color={v.version === VERSION_APP ? C.ink : C.charcoal}>
-                    v{v.version}
-                  </Stamp>
-                  <div className="space-y-2">
-                    {(Array.isArray(v.cambios) ? v.cambios : [v.cambios]).map((parrafo, i) => (
-                      <p key={i} className="text-sm" style={{ color: C.charcoal }}>
-                        {parrafo}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {RESUMEN_VERSIONES_ANTERIORES.length > 0 && (
-              <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
-                <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.6 }}>
-                  Versiones anteriores completas (resumidas):
-                </p>
-                <div className="space-y-2">
-                  {RESUMEN_VERSIONES_ANTERIORES.map((v) => (
-                    <div
-                      key={v.version}
-                      className="flex items-start gap-3 p-2 rounded"
-                      style={{ background: C.paperDark, opacity: 0.8 }}
-                    >
-                      <Stamp color={C.charcoal}>v{v.version}</Stamp>
-                      <p className="text-xs" style={{ color: C.charcoal }}>
-                        {v.cambios}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-        </VentanaFlotante>
+        <VentanaVersiones onCerrar={() => toggle("versiones")} />
       )}
 
       {avisoPreview && (
