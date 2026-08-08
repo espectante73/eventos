@@ -362,18 +362,20 @@ export function VistaAnfitrion({ data }) {
         <VentanaPlano data={data} ocupacionMesa={ocupacionMesa} onCerrar={() => toggle("plano")} />
       )}
 
-      <SeccionInvitados
-        data={data}
-        asignarColaborador={asignarColaborador}
-        ocupacionMesa={ocupacionMesa}
-        panelFlotante={panelFlotante}
-        setPanelFlotante={setPanelFlotante}
-        abierto={abierto}
-        toggle={toggle}
-        colaboradoresPendientes={colaboradoresPendientes}
-        filtros={filtros}
-        setFiltros={setFiltros}
-      />
+      {/* Lista de invitados */}
+      {abierto.invitados && (
+        <SeccionInvitados
+          data={data}
+          asignarColaborador={asignarColaborador}
+          ocupacionMesa={ocupacionMesa}
+          panelFlotante={panelFlotante}
+          setPanelFlotante={setPanelFlotante}
+          colaboradoresPendientes={colaboradoresPendientes}
+          filtros={filtros}
+          setFiltros={setFiltros}
+          onCerrar={() => toggle("invitados")}
+        />
+      )}
 
       {/* Invitaciones */}
       {abierto.invitaciones && (

@@ -62,6 +62,8 @@ const HISTORIAL_VERSIONES = [
       "Solidez de fondo: avisoPendiente e invitacionEnviada dejan de fijarse a mano en cada función y se recalculan solos según el estado real. Además, cada sesión (la tuya, la de cada colaborador) vuelve a pedir los datos sola cada minuto, para no quedarse con una copia vieja si otra persona cambia algo mientras tanto.",
       "Emails: la confirmación ✓/✗/? vuelve al historial de Avisos, esta vez bien separada del envío — enviar_email() solo guarda dónde mirar la respuesta más tarde, y una comprobación aparte (que nunca espera ni puede bloquear nada) la va resolviendo sola con el refresco de cada minuto.",
       "Solidez de fondo: App.jsx (6.262 líneas) se reparte en ficheros por tipo (lib/, components/, vistas/) — mismo comportamiento, más fácil de mantener. Ahora en marcha: dividir también el interior de VistaAnfitrion, ventana a ventana.",
+      "Solidez de fondo: terminado el reparto del interior de VistaAnfitrion — cada ventana (Mesas, Avisos, Configuración...) vive ya en su propio fichero.",
+      "Lista de invitados pasa a ser una ventana flotante más (movible, cerrable, accesible desde el desplegable de arriba), igual que el resto — antes era la única sección fija en la página. Sus filtros y la cabecera de columnas se quedan fijos arriba al hacer scroll por la lista, para no perderlos de vista con listas largas.",
     ],
   },
 ];

@@ -1,9 +1,10 @@
-// "Lista de invitados": la sección siempre visible (no es una ventana
-// flotante) con el alta individual, la importación masiva, los filtros,
-// la tabla editable fila a fila, el resumen de asignaciones pendientes
-// de avisar al cerrar la sección, y el panel de imprimir/exportar CSV
+// Ventana "Lista de invitados": alta individual, importación masiva,
+// filtros, la tabla editable fila a fila, el resumen de asignaciones
+// pendientes de avisar al cerrarla, y el panel de imprimir/exportar CSV
 // (tabla completa, solo canciones, o solo alergias). Extraída de
-// VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4, Ronda 5).
+// VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4, Ronda 5);
+// convertida en ventana flotante (como el resto) el 2026-08-09, con la
+// fila de filtros fija arriba al hacer scroll por la lista.
 //
 // `asignarColaborador` y `ocupacionMesa` no viven aquí: los usan también
 // otras ventanas (Colaboradores, Mesas, Plano), así que siguen en
@@ -18,7 +19,6 @@ import {
   Check,
   Bell,
   Trash2,
-  Tag,
   Music,
   AlertTriangle,
   Plus,
@@ -33,7 +33,7 @@ import { ordenarPorApellidoNombre } from "../../lib/formato";
 import { descargarCSV } from "../../lib/descargas";
 import { TextInput } from "../../components/Formulario";
 import { Stamp, EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
-import { ModalFlotante } from "../../components/VentanaFlotante";
+import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 
 export function SeccionInvitados({
   data,
@@ -41,11 +41,10 @@ export function SeccionInvitados({
   ocupacionMesa,
   panelFlotante,
   setPanelFlotante,
-  abierto,
-  toggle,
   colaboradoresPendientes,
   filtros,
   setFiltros,
+  onCerrar,
 }) {
   const { evento, colaboradores, invitados, mesas, persistInvitados, avisarColaborador } = data;
 
@@ -58,7 +57,7 @@ export function SeccionInvitados({
 
   // "avisoPendiente" vive en el servidor (columna en invitados), no solo
   // en memoria — así no se pierde el rastro si cancelas o cierras la
-  // pestaña. Al cerrar la tabla, si queda alguien pendiente, se pregunta.
+  // ventana. Al cerrarla, si queda alguien pendiente, se pregunta.
   const [mostrarResumenAsignacion, setMostrarResumenAsignacion] = useState(false);
   const [enviandoAvisosAsignacion, setEnviandoAvisosAsignacion] = useState(false);
 
@@ -101,11 +100,11 @@ export function SeccionInvitados({
   };
 
   const intentarCerrarInvitados = () => {
-    if (abierto.invitados && colaboradoresPendientes.length > 0) {
+    if (colaboradoresPendientes.length > 0) {
       setMostrarResumenAsignacion(true);
       return;
     }
-    toggle("invitados");
+    onCerrar();
   };
 
   const enviarAvisosAsignacion = async () => {
@@ -115,12 +114,12 @@ export function SeccionInvitados({
     }
     setEnviandoAvisosAsignacion(false);
     setMostrarResumenAsignacion(false);
-    toggle("invitados");
+    onCerrar();
   };
 
   const cancelarAvisosAsignacion = () => {
     setMostrarResumenAsignacion(false);
-    toggle("invitados");
+    onCerrar();
   };
 
   const asignarGrupoFamiliar = (id, grupoFamiliar) => {
@@ -291,57 +290,45 @@ export function SeccionInvitados({
       return String(va).localeCompare(String(vb)) * dir;
     });
 
+  const columnasTabla = "1.2fr 1fr 0.8fr 1fr 0.8fr 0.9fr 1fr 0.9fr auto";
+
   return (
     <>
-      {/* Invitados */}
-      <section>
-        <div
-          className="mb-1 pb-2 flex items-center justify-between"
-          style={{ borderBottom: `1.5px solid ${C.line}` }}
-        >
-          <div className="flex items-center gap-3">
-            <button
-              onClick={intentarCerrarInvitados}
-              className="flex items-center gap-2 text-xl"
-              style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}
-            >
-              <Tag size={18} strokeWidth={2} />
-              Lista de invitados
-            </button>
-            {invitados.length > 0 && (
-              <div className="relative flex items-center gap-2">
-                <button
-                  onClick={() => setPanelFlotante("tabla")}
-                  className="flex items-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ background: C.gold, color: "#fff" }}
-                  title="Ver / imprimir / exportar la lista de invitados"
-                >
-                  <Printer size={12} /> Imprimir
-                </button>
-                <button
-                  onClick={() => setPanelFlotante("canciones")}
-                  className="flex items-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ background: C.gold, color: "#fff" }}
-                  title="Ver / imprimir / exportar solo la lista de canciones (para el DJ/grupo musical)"
-                >
-                  <Music size={12} /> Canciones
-                </button>
-                <button
-                  onClick={() => setPanelFlotante("alergias")}
-                  className="flex items-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ background: C.wax, color: "#fff" }}
-                  title="Ver / imprimir / exportar solo la lista de alergias, con su mesa (para cocina/catering)"
-                >
-                  <AlertTriangle size={12} /> Alergias
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {abierto.invitados && (
-        <>
-
+      <VentanaFlotante
+        clave="invitados"
+        titulo="Lista de invitados"
+        onCerrar={intentarCerrarInvitados}
+        extra={
+          invitados.length > 0 && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPanelFlotante("tabla")}
+                className="flex items-center gap-1 text-xs px-2 py-1 rounded"
+                style={{ background: C.gold, color: "#fff" }}
+                title="Ver / imprimir / exportar la lista de invitados"
+              >
+                <Printer size={12} /> Imprimir
+              </button>
+              <button
+                onClick={() => setPanelFlotante("canciones")}
+                className="flex items-center gap-1 text-xs px-2 py-1 rounded"
+                style={{ background: C.gold, color: "#fff" }}
+                title="Ver / imprimir / exportar solo la lista de canciones (para el DJ/grupo musical)"
+              >
+                <Music size={12} /> Canciones
+              </button>
+              <button
+                onClick={() => setPanelFlotante("alergias")}
+                className="flex items-center gap-1 text-xs px-2 py-1 rounded"
+                style={{ background: C.wax, color: "#fff" }}
+                title="Ver / imprimir / exportar solo la lista de alergias, con su mesa (para cocina/catering)"
+              >
+                <AlertTriangle size={12} /> Alergias
+              </button>
+            </div>
+          )
+        }
+      >
         <div className="flex flex-wrap gap-2 mb-3">
           <button
             onClick={() => setMostrarAnadir((v) => !v)}
@@ -467,131 +454,138 @@ export function SeccionInvitados({
             </strong>
           </div>
           <div style={{ minWidth: 780 }}>
+            {/* Cabecera + filtros fijos arriba mientras se hace scroll por
+                la lista — la lista puede ser larga y perder de vista qué
+                filtro tiene puesto cada columna es fácil sin esto. */}
             <div
-              className="grid text-xs uppercase px-3 py-2 text-center"
-              style={{
-                gridTemplateColumns: "1.2fr 1fr 0.8fr 1fr 0.8fr 0.9fr 1fr 0.9fr auto",
-                color: C.gold,
-                fontFamily: "'IBM Plex Mono', monospace",
-                borderBottom: `1px solid ${C.line}`,
-              }}
+              style={{ position: "sticky", top: 0, zIndex: 2, background: "#fff", overflowY: "visible" }}
             >
-              <EncabezadoOrdenable columna="invitado" orden={orden} onClick={cambiarOrden}>
-                Invitado
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
-                Grupo familiar
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable columna="zona" orden={orden} onClick={cambiarOrden}>
-                Zona
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable columna="colaborador" orden={orden} onClick={cambiarOrden}>
-                Colaborador
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable columna="mesa" orden={orden} onClick={cambiarOrden}>
-                Mesa
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable columna="confirmado" orden={orden} onClick={cambiarOrden}>
-                Confirmado
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable columna="datos" orden={orden} onClick={cambiarOrden}>
-                Datos
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable columna="pagado" orden={orden} onClick={cambiarOrden}>
-                Pagado
-              </EncabezadoOrdenable>
-              <span></span>
-            </div>
-            <div
-              className="grid px-3 py-1.5"
-              style={{
-                gridTemplateColumns: "1.2fr 1fr 0.8fr 1fr 0.8fr 0.9fr 1fr 0.9fr auto",
-                background: C.paperDark,
-                borderBottom: `1px solid ${C.line}`,
-              }}
-            >
-              <TextInput
-                value={filtros.texto}
-                onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
-                placeholder="Buscar..."
-                style={{ padding: "2px 5px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-              />
-              <select
-                value={filtros.grupoFamiliar}
-                onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
-                style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+              <div
+                className="grid text-xs uppercase px-3 py-2 text-center"
+                style={{
+                  gridTemplateColumns: columnasTabla,
+                  color: C.gold,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  borderBottom: `1px solid ${C.line}`,
+                }}
               >
-                <option value="">Todos</option>
-                {gruposFamiliaresUnicos.map((gf) => (
-                  <option key={gf} value={gf}>
-                    {gf}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filtros.zona}
-                onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
-                style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                <EncabezadoOrdenable columna="invitado" orden={orden} onClick={cambiarOrden}>
+                  Invitado
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
+                  Grupo familiar
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="zona" orden={orden} onClick={cambiarOrden}>
+                  Zona
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="colaborador" orden={orden} onClick={cambiarOrden}>
+                  Colaborador
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="mesa" orden={orden} onClick={cambiarOrden}>
+                  Mesa
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="confirmado" orden={orden} onClick={cambiarOrden}>
+                  Confirmado
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="datos" orden={orden} onClick={cambiarOrden}>
+                  Datos
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="pagado" orden={orden} onClick={cambiarOrden}>
+                  Pagado
+                </EncabezadoOrdenable>
+                <span></span>
+              </div>
+              <div
+                className="grid px-3 py-1.5"
+                style={{
+                  gridTemplateColumns: columnasTabla,
+                  background: C.paperDark,
+                  borderBottom: `1px solid ${C.line}`,
+                }}
               >
-                <option value="">Todas</option>
-                {zonasUnicas.map((z) => (
-                  <option key={z} value={z}>
-                    {z}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filtros.colaboradorId}
-                onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
-                style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-              >
-                <option value="">Todos</option>
-                {colaboradores.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nombre}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filtros.mesa}
-                onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
-                style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-              >
-                <option value="">Todas</option>
-                {mesas.map((m) => (
-                  <option key={m.numero} value={String(m.numero)}>
-                    {m.numero}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filtros.confirmado}
-                onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
-                style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-              >
-                <option value="">Todos</option>
-                <option value="confirmado">Confirmado</option>
-                <option value="tentativa">Tentativa</option>
-              </select>
-              <select
-                value={filtros.datos}
-                onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
-                style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-              >
-                <option value="">Todos</option>
-                <option value="completo">Completos</option>
-                <option value="pendiente">Por recopilar</option>
-              </select>
-              <select
-                value={filtros.pagado}
-                onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
-                style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-              >
-                <option value="">Todos</option>
-                <option value="pagado">Pagado</option>
-                <option value="pendiente">Pendiente</option>
-              </select>
-              <span />
+                <TextInput
+                  value={filtros.texto}
+                  onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
+                  placeholder="Buscar..."
+                  style={{ padding: "2px 5px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                />
+                <select
+                  value={filtros.grupoFamiliar}
+                  onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todos</option>
+                  {gruposFamiliaresUnicos.map((gf) => (
+                    <option key={gf} value={gf}>
+                      {gf}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filtros.zona}
+                  onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todas</option>
+                  {zonasUnicas.map((z) => (
+                    <option key={z} value={z}>
+                      {z}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filtros.colaboradorId}
+                  onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todos</option>
+                  {colaboradores.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filtros.mesa}
+                  onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todas</option>
+                  {mesas.map((m) => (
+                    <option key={m.numero} value={String(m.numero)}>
+                      {m.numero}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filtros.confirmado}
+                  onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todos</option>
+                  <option value="confirmado">Confirmado</option>
+                  <option value="tentativa">Tentativa</option>
+                </select>
+                <select
+                  value={filtros.datos}
+                  onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todos</option>
+                  <option value="completo">Completos</option>
+                  <option value="pendiente">Por recopilar</option>
+                </select>
+                <select
+                  value={filtros.pagado}
+                  onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todos</option>
+                  <option value="pagado">Pagado</option>
+                  <option value="pendiente">Pendiente</option>
+                </select>
+                <span />
+              </div>
             </div>
             {invitadosOrdenados.map((g, i) => {
               const col = resolverColaborador(g, colaboradores);
@@ -600,7 +594,7 @@ export function SeccionInvitados({
                   key={g.id}
                   className="grid items-center px-3 py-2 text-sm"
                   style={{
-                    gridTemplateColumns: "1.2fr 1fr 0.8fr 1fr 0.8fr 0.9fr 1fr 0.9fr auto",
+                    gridTemplateColumns: columnasTabla,
                     background: i % 2 ? C.paperDark : "#fff",
                     fontFamily: "'Inter', sans-serif",
                     color: C.charcoal,
@@ -769,9 +763,7 @@ export function SeccionInvitados({
             )}
           </div>
         </div>
-      </>
-      )}
-      </section>
+      </VentanaFlotante>
 
       {mostrarResumenAsignacion && (
         <ModalFlotante
