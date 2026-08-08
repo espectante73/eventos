@@ -1985,45 +1985,67 @@ export function VistaAnfitrion({ data }) {
                     email de contacto:
                   </p>
                   <div className="space-y-1">
-                    {familia.confirmados.map((m, i) => (
-                      <div
-                        key={m.id}
-                        className="flex items-center gap-2 px-2 py-1 rounded text-xs"
-                        style={{ background: "#fff", border: `1px solid ${C.line}` }}
-                      >
-                        <span style={{ color: C.ink, minWidth: 90 }}>{m.nombre}</span>
-                        <button
-                          onClick={() => moverNombreFamilia(familia, m.id, -1)}
-                          disabled={i === 0}
-                          style={{ color: i === 0 ? C.line : C.gold }}
-                          title="Mover antes"
-                        >
-                          ▲
-                        </button>
-                        <button
-                          onClick={() => moverNombreFamilia(familia, m.id, 1)}
-                          disabled={i === familia.confirmados.length - 1}
-                          style={{ color: i === familia.confirmados.length - 1 ? C.line : C.gold }}
-                          title="Mover después"
-                        >
-                          ▼
-                        </button>
-                        <div className="flex-1">
-                          <GrupoFamiliarInput
-                            value={m.email || ""}
-                            onCommit={(v) => asignarEmailInvitado(m.id, v)}
-                          />
-                        </div>
-                        {i === 0 && (
-                          <span
-                            className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
-                            style={{ background: C.paperDark, color: C.charcoal }}
+                    {(() => {
+                      const idDestinatario = destinatarioConEmail(familia)?.id;
+                      return familia.confirmados.map((m, i) => {
+                        // Si esta persona es también colaborador, su email se
+                        // edita solo en Colaboradores (igual que en su propio
+                        // formulario de datos) — aquí se muestra de solo
+                        // lectura, no un campo editable que parecería vacío.
+                        const colaboradorVinculado = colaboradores.find(
+                          (c) => c.invitadoId === m.id
+                        );
+                        return (
+                          <div
+                            key={m.id}
+                            className="flex items-center gap-2 px-2 py-1 rounded text-xs"
+                            style={{ background: "#fff", border: `1px solid ${C.line}` }}
                           >
-                            destinatario
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                            <span style={{ color: C.ink, minWidth: 90 }}>{m.nombre}</span>
+                            <button
+                              onClick={() => moverNombreFamilia(familia, m.id, -1)}
+                              disabled={i === 0}
+                              style={{ color: i === 0 ? C.line : C.gold }}
+                              title="Mover antes"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              onClick={() => moverNombreFamilia(familia, m.id, 1)}
+                              disabled={i === familia.confirmados.length - 1}
+                              style={{ color: i === familia.confirmados.length - 1 ? C.line : C.gold }}
+                              title="Mover después"
+                            >
+                              ▼
+                            </button>
+                            <div className="flex-1">
+                              {colaboradorVinculado ? (
+                                <div
+                                  className="px-2 py-1 rounded"
+                                  style={{ background: C.paperDark, color: C.charcoal, opacity: 0.7 }}
+                                  title="Se edita en Colaboradores, no aquí"
+                                >
+                                  {colaboradorVinculado.email || "sin registrar"}
+                                </div>
+                              ) : (
+                                <GrupoFamiliarInput
+                                  value={m.email || ""}
+                                  onCommit={(v) => asignarEmailInvitado(m.id, v)}
+                                />
+                              )}
+                            </div>
+                            {m.id === idDestinatario && (
+                              <span
+                                className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
+                                style={{ background: C.paperDark, color: C.charcoal }}
+                              >
+                                destinatario
+                              </span>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               ))}
