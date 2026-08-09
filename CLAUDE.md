@@ -383,6 +383,15 @@ ese email con `colaboradores.email` / `evento.emailAnfitrion`. Si el
 email no coincide con nadie conocido, la cuenta se crea igual pero sin
 ningún acceso (autorregistrarse nunca concede acceso por sí solo).
 
+**Cambio de email de un colaborador ya enlazado:** basta con que el
+anfitrión actualice su email en Colaboradores y esa persona vuelva a
+"Crear cuenta" con el email nuevo — el trigger re-enlaza sin pedir
+ningún paso manual de por medio (el `update` de `colaboradores` no lleva
+condición "solo si no tenía cuenta ya", a propósito, para permitir
+justo este caso). La cuenta de Auth vieja queda huérfana (sin acceso,
+inofensiva) y no hace falta borrarla para que esto funcione — se puede
+limpiar a mano desde el panel si se quiere, sin prisa.
+
 ⚠️ **Postgres concede EXECUTE a PUBLIC por defecto en cualquier función
 nueva.** `mi_rol()` se creó con `grant execute ... to authenticated`
 pero SIN revocar antes el permiso por defecto de PUBLIC — una prueba en
