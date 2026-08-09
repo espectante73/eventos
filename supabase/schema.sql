@@ -1088,3 +1088,41 @@ $$;
 -- todas formas, pero cerrarla del todo a quien no ha iniciado sesión es
 -- más explícito.
 grant execute on function mi_rol() to authenticated;
+
+-- ============================================================
+-- AUTORREGISTRO: en vez de que el anfitrión tenga que crear a mano la
+-- cuenta de Auth de cada colaborador (Authentication > Users, uno a uno,
+-- copiando el UID a mano), cada persona crea su PROPIA cuenta desde la
+-- pantalla de login ("Crear cuenta") usando el email con el que YA está
+-- registrada -- el mismo que se usa para los avisos automáticos.
+--
+-- Este trigger se dispara solo, dentro de la propia base de datos, en
+-- cuanto se crea una fila nueva en auth.users (o sea, en cuanto alguien
+-- termina de crear su cuenta). Si el email coincide con el del anfitrión
+-- (evento.emailAnfitrion) o con el de un colaborador ya existente, la
+-- enlaza automáticamente -- exactamente lo mismo que hacíamos a mano con
+-- el "update colaboradores set authUserId = ...". Si el email no
+-- coincide con nadie conocido, no pasa nada: esa cuenta simplemente no
+-- queda enlazada a ningún acceso (pantalla "cuenta sin vincular").
+-- ============================================================
+create or replace function vincular_cuenta_nueva()
+returns trigger
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if lower(new.email) = lower((select "emailAnfitrion" from evento limit 1)) then
+    insert into anfitriones ("authUserId") values (new.id)
+    on conflict do nothing;
+  else
+    update colaboradores
+    set "authUserId" = new.id
+    where lower("email") = lower(new.email) and "authUserId" is null;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_vincular_cuenta_nueva on auth.users;
+create trigger trg_vincular_cuenta_nueva
+after insert on auth.users
+for each row execute function vincular_cuenta_nueva();
