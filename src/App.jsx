@@ -283,11 +283,11 @@ export default function App() {
       )}
       <div className="max-w-4xl mx-auto px-4 py-6">
         {session && (
-          <div className="flex justify-end mb-2">
+          <div className="flex justify-end mb-4">
             <button
               onClick={() => supabase.auth.signOut()}
-              className="text-xs underline"
-              style={{ color: C.charcoal, opacity: 0.6 }}
+              className="px-4 rounded text-sm font-medium"
+              style={{ height: 40, background: C.ink, color: C.paper }}
             >
               Cerrar sesión
             </button>
