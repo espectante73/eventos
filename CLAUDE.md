@@ -365,3 +365,48 @@ recurrir como alternativa. Ver `emailDeInvitado()` y
 `destinatarioConEmail()` en `VistaAnfitrion.jsx` (ventana Invitaciones,
 detectado y corregido el 2026-08-08 al probar la Fase 4 Ronda 1) —
 mismo patrón a seguir si aparece otro sitio que necesite esto.
+
+### Login real (Supabase Auth) — capa añadida en paralelo al enlace-token
+
+**2026-08-09.** Se añadió login real (email + contraseña) para anfitrión
+y colaboradores, SIN reescribir ninguna de las ~20 RPC existentes: una
+función nueva, `mi_rol()`, traduce `auth.uid()` (quién ha iniciado
+sesión) al mismo token/id que ya usaba el enlace mágico. El enlace-token
+se mantiene funcionando en paralelo (si no hay sesión pero sí hay
+`?rol=...`, se usa el flujo de siempre) — ver
+`.claude/plans/login-supabase-auth.md` para el plan completo.
+
+Cada colaborador crea su PROPIA cuenta desde "Crear cuenta" en el login,
+usando el mismo email con el que ya está dado de alta — un trigger
+(`vincular_cuenta_nueva` sobre `auth.users`) la enlaza sola comparando
+ese email con `colaboradores.email` / `evento.emailAnfitrion`. Si el
+email no coincide con nadie conocido, la cuenta se crea igual pero sin
+ningún acceso (autorregistrarse nunca concede acceso por sí solo).
+
+⚠️ **Postgres concede EXECUTE a PUBLIC por defecto en cualquier función
+nueva.** `mi_rol()` se creó con `grant execute ... to authenticated`
+pero SIN revocar antes el permiso por defecto de PUBLIC — una prueba en
+vivo confirmó que respondía 200 OK con datos aunque la llamada viniera
+sin sesión (`anon`). No llegó a ser una fuga real (sin sesión,
+`auth.uid()` es `null` y no encuentra ninguna fila), pero el aislamiento
+no era el que decía el comentario. Se corrigió añadiendo `revoke execute
+on function mi_rol() from public;` antes del `grant`. **Cualquier
+función nueva que dependa de `auth.uid()` para su seguridad debe llevar
+ese `revoke` explícito** — a diferencia de las RPC del enlace-token (que
+sí se conceden a propósito a `anon`, porque ellas mismas comprueban el
+token dentro del SQL), aquí el permiso de ejecución en sí es parte del
+cierre de seguridad.
+
+⚠️ **El envío de emails de Supabase Auth (confirmación, recuperación de
+contraseña) tiene un límite de tasa bajo en el plan gratuito** — ya se
+alcanzó ("email rate limit exceeded") solo con las pruebas de esta
+sesión. Si hace falta dar de alta a varios colaboradores por
+autorregistro en poco tiempo, puede hacer falta escalonarlo o configurar
+un SMTP propio (p.ej. Resend, ya usado para los avisos) en Authentication
+→ Settings → SMTP Settings.
+
+⚠️ **El enlace de confirmación/recuperación de Supabase apunta a la
+"Site URL" configurada en Authentication → URL Configuration** — si no
+coincide con el dominio real (`https://nexuspoint.rsvp`), el enlace del
+email lleva a una URL que no conecta ("Safari no puede abrir..."). Ya
+corregido, pero a vigilar si se cambia de dominio en el futuro.

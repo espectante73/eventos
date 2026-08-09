@@ -1087,6 +1087,14 @@ $$;
 -- sesión iniciada, auth.uid() es null y no encontraría ninguna fila de
 -- todas formas, pero cerrarla del todo a quien no ha iniciado sesión es
 -- más explícito.
+-- ⚠️ Postgres concede EXECUTE a PUBLIC (todo el mundo, incluido "anon")
+-- por defecto al crear cualquier función nueva -- hay que revocarlo antes
+-- de conceder solo a "authenticated", o el "grant" de abajo no cierra
+-- nada de verdad (detectado el 2026-08-09 con una prueba en vivo: sin
+-- este revoke, mi_rol() respondía 200 OK con datos aunque la llamada
+-- viniera sin sesión). Mismo gotcha a vigilar en cualquier función nueva
+-- que dependa de auth.uid() para su seguridad.
+revoke execute on function mi_rol() from public;
 grant execute on function mi_rol() to authenticated;
 
 -- ============================================================
