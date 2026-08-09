@@ -1122,9 +1122,17 @@ begin
     insert into anfitriones ("authUserId") values (new.id)
     on conflict do nothing;
   else
+    -- Sin la condición "and authUserId is null": si un colaborador cambia
+    -- de email (el anfitrión lo actualiza en Colaboradores) y se registra
+    -- de nuevo con el email nuevo, la cuenta nueva TOMA el relevo aunque
+    -- ya hubiera una cuenta vieja enlazada -- sin tener que desvincularla
+    -- a mano con un update aparte primero. La cuenta vieja de Auth queda
+    -- huérfana (sin acceso, inofensiva) hasta que alguien la borre a mano
+    -- desde el panel si quiere limpiarla; no hace falta limpiarla para
+    -- que esto funcione.
     update colaboradores
     set "authUserId" = new.id
-    where lower("email") = lower(new.email) and "authUserId" is null;
+    where lower("email") = lower(new.email);
   end if;
   return new;
 end;
