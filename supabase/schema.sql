@@ -606,6 +606,49 @@ begin
 end;
 $$;
 
+-- Sustituye al antiguo "Copiar enlace" de ColaboradorCard.jsx: en vez de
+-- que el anfitrión copie el enlace-token a mano y lo pegue donde quiera,
+-- este manda directamente por email un enlace a la pantalla de login con
+-- "Crear cuenta" ya abierta y el email del colaborador ya relleno
+-- (?crear=<email>, ver App.jsx / VistaLogin.jsx). El '+' se escapa a mano
+-- porque URLSearchParams (que lo lee en el navegador) trata un '+' suelto
+-- como un espacio -- sin este replace, un email con '+' llegaría mal leído.
+create or replace function anfitrion_enviar_invitacion_login(p_token uuid, p_colaborador_id uuid)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  v_email text;
+  v_nombre text;
+  v_enlace text;
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  select "email", "nombre" into v_email, v_nombre from colaboradores where "id" = p_colaborador_id;
+  if v_email is null or trim(v_email) = '' then
+    return; -- sin email no hay a quién enviarlo
+  end if;
+
+  v_enlace := coalesce((select "urlPublica" from evento limit 1), '')
+    || '?crear=' || replace(v_email, '+', '%2B');
+
+  perform enviar_email(
+    v_email,
+    'Tu acceso para colaborar',
+    'Hola ' || coalesce(nullif(v_nombre, ''), '') || ',<br><br>' ||
+    'Ya puedes crear tu cuenta para gestionar tus invitados asignados. ' ||
+    'Pulsa el botón y elige tu contraseña:' ||
+    '<div style="margin-top:18px;"><a href="' || v_enlace ||
+    '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
+    'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
+    'font-weight:600;font-family:sans-serif;">Crear mi cuenta</a></div>' ||
+    '<br><small>Si el botón no funciona, copia este enlace: ' || v_enlace || '</small>'
+  );
+end;
+$$;
+
 -- Envía la invitación (imagen generada en el navegador) por email a una
 -- familia. El destinatario y el texto los decide el anfitrión al
 -- confirmar en la vista previa — aquí solo se comprueba el token y se
@@ -1012,6 +1055,7 @@ grant execute on function anfitrion_guardar_colaboradores(uuid, jsonb) to anon;
 grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
 grant execute on function anfitrion_avisar_colaborador(uuid, uuid) to anon;
 grant execute on function anfitrion_probar_email_colaborador(uuid, uuid) to anon;
+grant execute on function anfitrion_enviar_invitacion_login(uuid, uuid) to anon;
 grant execute on function anfitrion_enviar_invitacion_familia(uuid, text, text, text, text) to anon;
 grant execute on function anfitrion_listar_avisos_enviados(uuid) to anon;
 grant execute on function anfitrion_actualizar_estado_avisos(uuid) to anon;

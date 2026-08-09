@@ -3,22 +3,21 @@
 // relevar/eliminar. Movida fuera de App.jsx en el reparto del 2026-08-08
 // (ver CLAUDE.md).
 import { useState } from "react";
-import { Check, Copy, Repeat, Trash2, Mail } from "lucide-react";
+import { Send, Repeat, Trash2, Mail } from "lucide-react";
 import { C, inputStyle } from "../theme";
-import { buildLink } from "../lib/url";
 import { resolverColaborador, datosCompletos } from "../lib/invitados";
 import { ordenarPorApellidoNombre } from "../lib/formato";
 import { Seal, GrupoFamiliarInput } from "./Widgets";
 import { BuscadorInvitado } from "./BuscadorInvitado";
 
-export function ColaboradorCard({ c, pendientes, invitados, colaboradores, evento, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail }) {
-  const [copiado, setCopiado] = useState(false);
+export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin }) {
   const [relevando, setRelevando] = useState(false);
   const [mostrarAsignados, setMostrarAsignados] = useState(false);
-  const [mostrarLink, setMostrarLink] = useState(false);
   const [releveInvitadoId, setReleveInvitadoId] = useState("");
   const [probando, setProbando] = useState(false);
   const [resultadoPrueba, setResultadoPrueba] = useState(""); // "" | "ok" | "error"
+  const [enviandoInvitacion, setEnviandoInvitacion] = useState(false);
+  const [resultadoInvitacion, setResultadoInvitacion] = useState(""); // "" | "ok" | "error"
 
   const probarEmail = async () => {
     setProbando(true);
@@ -28,25 +27,23 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, event
     setResultadoPrueba(ok ? "ok" : "error");
   };
 
+  // Sustituye al antiguo "Copiar enlace": en vez de que el anfitrión copie
+  // y pegue un enlace-token a mano, se manda directamente por email un
+  // enlace al login con "Crear cuenta" ya abierta y su email ya relleno.
+  const enviarInvitacion = async () => {
+    setEnviandoInvitacion(true);
+    setResultadoInvitacion("");
+    const ok = await onEnviarInvitacionLogin(c.id);
+    setEnviandoInvitacion(false);
+    setResultadoInvitacion(ok ? "ok" : "error");
+  };
+
   const asignados = invitados.filter((g) => resolverColaborador(g, colaboradores)?.id === c.id);
   // Los invitados en tentativa nunca se nombran en el email al colaborador
   // (ver anfitrion_avisar_colaborador) — así que tampoco cuentan aquí como
   // "pendiente de avisar", o el botón "Avisar ahora" mandaría un email
   // vacío de contenido.
   const pendientesAviso = asignados.filter((g) => g.avisoPendiente && g.confirmado);
-  const enlacePersonal = buildLink(c.id, evento?.urlPublica);
-
-  const copiarEnlace = async () => {
-    try {
-      await navigator.clipboard.writeText(enlacePersonal);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 1500);
-    } catch (_) {
-      // El portapapeles puede estar bloqueado en este entorno: mostramos el
-      // enlace en un campo de texto para que se seleccione y copie a mano.
-    }
-    setMostrarLink(true);
-  };
 
   const confirmarRelevo = () => {
     if (!releveInvitadoId) return;
@@ -115,12 +112,16 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, event
         </button>
         <div className="flex items-center gap-3">
           <Seal count={pendientes} size={26} />
-          <button onClick={copiarEnlace} title="Copiar enlace de este colaborador">
-            {copiado ? (
-              <Check size={20} style={{ color: C.ink }} />
-            ) : (
-              <Copy size={20} style={{ color: C.gold }} />
-            )}
+          <button
+            onClick={enviarInvitacion}
+            disabled={enviandoInvitacion || !c.email}
+            title={
+              c.email
+                ? "Enviar por email la invitación para crear su cuenta"
+                : "Añade primero un email para poder enviarle la invitación"
+            }
+          >
+            <Send size={20} style={{ color: c.email ? C.gold : C.line }} />
           </button>
           <button onClick={() => setRelevando(true)} title="Relevar (sustituir) colaborador">
             <Repeat size={20} style={{ color: C.ink }} />
@@ -175,6 +176,16 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, event
           ⚠ No se pudo enviar el email de prueba. Mira "Avisos enviados" o los logs de Resend.
         </p>
       )}
+      {resultadoInvitacion === "ok" && (
+        <p className="text-xs mt-1" style={{ color: C.ink }}>
+          ✓ Invitación de acceso enviada — confirma con el colaborador que le ha llegado.
+        </p>
+      )}
+      {resultadoInvitacion === "error" && (
+        <p className="text-xs mt-1" style={{ color: C.wax }}>
+          ⚠ No se pudo enviar la invitación de acceso. Mira "Avisos enviados" o los logs de Resend.
+        </p>
+      )}
 
       {pendientesAviso.length > 0 && (
         <div
@@ -185,29 +196,6 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, event
             ⚠ {pendientesAviso.length} pendiente{pendientesAviso.length === 1 ? "" : "s"} de avisar
             — avisa desde la ventana "Avisos".
           </span>
-        </div>
-      )}
-
-      {mostrarLink && (
-        <div className="mt-2" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 8 }}>
-          {!evento?.urlPublica && (
-            <p className="text-xs mb-1" style={{ color: C.wax }}>
-              ⚠ Falta la URL pública en "Configuración" — este enlace probablemente no
-              funcionará para tu colaborador todavía.
-            </p>
-          )}
-          <div className="flex items-center gap-2">
-            <input
-              readOnly
-              value={enlacePersonal}
-              onFocus={(e) => e.target.select()}
-              onClick={(e) => e.target.select()}
-              style={{ ...inputStyle, flex: 1, fontSize: 11, fontFamily: "'IBM Plex Mono', monospace" }}
-            />
-            <span className="text-xs whitespace-nowrap" style={{ color: C.charcoal, opacity: 0.6 }}>
-              {copiado ? "¡copiado!" : "toca y Cmd/Ctrl+C"}
-            </span>
-          </div>
         </div>
       )}
 

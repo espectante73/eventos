@@ -20,9 +20,9 @@ import { supabase } from "../supabaseClient";
 
 const TITULOS = { entrar: "Entrar", crear: "Crear cuenta", recuperar: "Recuperar contraseña" };
 
-export function VistaLogin() {
-  const [modo, setModo] = useState("entrar"); // "entrar" | "crear" | "recuperar"
-  const [email, setEmail] = useState("");
+export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
+  const [modo, setModo] = useState(modoInicial); // "entrar" | "crear" | "recuperar"
+  const [email, setEmail] = useState(emailInicial);
   const [password, setPassword] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");

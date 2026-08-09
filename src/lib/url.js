@@ -19,3 +19,15 @@ export function buildLink(rolValue, urlPublica) {
     return "";
   }
 }
+
+// ?crear=<email> — abre el login directo en modo "Crear cuenta" con el
+// email ya relleno (ver VistaLogin.jsx). Se usa en el enlace que se manda
+// por email a un colaborador (anfitrion_enviar_invitacion_login), en vez
+// del enlace-token que antes se copiaba a mano.
+export function getEmailCrearCuentaFromUrl() {
+  try {
+    return new URLSearchParams(window.location.search).get("crear");
+  } catch (_) {
+    return null;
+  }
+}

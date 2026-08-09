@@ -504,6 +504,25 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
+  // Sustituye al antiguo "Copiar enlace": manda por email un enlace al
+  // login con "Crear cuenta" ya abierta y el email del colaborador ya
+  // relleno, en vez de que el anfitrión copie y pegue un enlace-token.
+  const enviarInvitacionLogin = useCallback(
+    async (colaboradorId) => {
+      if (!esAnfitrion) return false;
+      const { error } = await supabase.rpc("anfitrion_enviar_invitacion_login", {
+        p_token: rol,
+        p_colaborador_id: colaboradorId,
+      });
+      if (error) {
+        avisar("No se pudo enviar la invitación de acceso.", error);
+        return false;
+      }
+      return true;
+    },
+    [esAnfitrion, rol]
+  );
+
   const resetearAvisos = useCallback(async () => {
     if (!esAnfitrion) return false;
     const { error } = await supabase.rpc("anfitrion_resetear_avisos", { p_token: rol });
@@ -612,6 +631,7 @@ export function useLedgerData(rol) {
     persistFotosFamiliares,
     avisarColaborador,
     probarEmailColaborador,
+    enviarInvitacionLogin,
     enviarInvitacionFamilia,
     avisosEnviados,
     ordenFamiliares,
