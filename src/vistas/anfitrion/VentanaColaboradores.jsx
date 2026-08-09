@@ -17,7 +17,7 @@ import { ColaboradorCard } from "../../components/ColaboradorCard";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
 export function VentanaColaboradores({ data, asignarColaborador, onCerrar }) {
-  const { evento, colaboradores, invitados, persistColaboradores, persistInvitados, probarEmailColaborador } = data;
+  const { colaboradores, invitados, persistColaboradores, persistInvitados, probarEmailColaborador, enviarInvitacionLogin } = data;
   const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
 
   const idsYaColaboradores = new Set(colaboradores.map((c) => c.invitadoId).filter(Boolean));
@@ -134,12 +134,12 @@ export function VentanaColaboradores({ data, asignarColaborador, onCerrar }) {
               pendientes={pendientes}
               invitados={invitados}
               colaboradores={colaboradores}
-              evento={evento}
               onEliminar={eliminarColaborador}
               onRelevar={relevarColaborador}
               onAsignarColaborador={asignarColaborador}
               onCambiarEmail={cambiarEmailColaborador}
               onProbarEmail={probarEmailColaborador}
+              onEnviarInvitacionLogin={enviarInvitacionLogin}
             />
           );
         })}

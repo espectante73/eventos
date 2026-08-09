@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase } from "./supabaseClient";
-import { getRolFromUrl } from "./lib/url";
+import { getRolFromUrl, getEmailCrearCuentaFromUrl } from "./lib/url";
 import { datosCompletos, resolverColaborador } from "./lib/invitados";
 import { C } from "./theme";
 import { VistaAnfitrion } from "./vistas/VistaAnfitrion";
@@ -69,6 +69,10 @@ export class ErrorBoundary extends React.Component {
 
 export default function App() {
   const urlRol = getRolFromUrl();
+  // ?crear=<email> -- enlace enviado por email a un colaborador para que
+  // abra el login directo en modo "Crear cuenta" con su email ya relleno
+  // (ver ColaboradorCard.jsx / anfitrion_enviar_invitacion_login).
+  const emailCrearCuenta = getEmailCrearCuentaFromUrl();
   // Se comprueba UNA sola vez si el código del enlace original de la URL
   // es el secreto del anfitrión — independiente de lo que `rol` valga
   // después (que cambia sin tocar la URL cuando el anfitrión previsualiza
@@ -210,7 +214,12 @@ export default function App() {
   }
 
   if (session === null && !urlRol) {
-    return <VistaLogin />;
+    return (
+      <VistaLogin
+        modoInicial={emailCrearCuenta ? "crear" : "entrar"}
+        emailInicial={emailCrearCuenta || ""}
+      />
+    );
   }
 
   if (sinAccesoAsignado) {
