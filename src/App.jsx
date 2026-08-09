@@ -144,18 +144,19 @@ export default function App() {
         background: C.paper,
         backgroundImage:
           "repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(31,58,46,0.05) 28px)",
+        paddingTop: hayNuevaVersion ? 44 : 0,
       }}
     >
       {hayNuevaVersion && (
         <div
-          className="fixed flex items-center gap-2 px-3 py-2 rounded-lg text-xs"
-          style={{ background: C.ink, color: C.paper, top: 12, right: 12, zIndex: 60, boxShadow: "0 4px 14px rgba(0,0,0,0.3)" }}
+          className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 py-2 text-sm"
+          style={{ background: C.wax, color: "#fff", zIndex: 60, boxShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
         >
-          Versión nueva
+          <span className="font-medium">Hay una versión nueva de la app — recarga para actualizar.</span>
           <button
             onClick={() => window.location.reload()}
-            className="px-2 py-0.5 rounded font-medium"
-            style={{ background: C.paper, color: C.ink }}
+            className="px-3 py-1 rounded font-medium whitespace-nowrap"
+            style={{ background: "#fff", color: C.wax }}
           >
             Actualizar
           </button>

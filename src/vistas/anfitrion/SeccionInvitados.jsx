@@ -454,12 +454,17 @@ export function SeccionInvitados({
             </strong>
           </div>
           <div style={{ minWidth: 780 }}>
-            {/* Cabecera + filtros fijos arriba mientras se hace scroll por
-                la lista — la lista puede ser larga y perder de vista qué
-                filtro tiene puesto cada columna es fácil sin esto. */}
-            <div
-              style={{ position: "sticky", top: 0, zIndex: 2, background: "#fff", overflowY: "visible" }}
-            >
+            {/* Cabecera + filtros, deliberadamente FUERA del bloque con
+                scroll de abajo (no "position: sticky" encima del scroll):
+                el div de aquí al lado, al tener también scroll horizontal
+                propio (overflow-x-auto), se convierte él mismo en el
+                contenedor de referencia para cualquier "sticky" que
+                pusiéramos dentro — y ese contenedor nunca hace scroll
+                vertical de verdad (crece con su contenido), así que el
+                "sticky" no llegaba a fijarse nunca. Separar la cabecera en
+                su propio bloque, fuera del área que sí hace scroll, es el
+                mismo patrón ya probado en el historial de Avisos. */}
+            <div>
               <div
                 className="grid text-xs uppercase px-3 py-2 text-center"
                 style={{
@@ -587,6 +592,7 @@ export function SeccionInvitados({
                 <span />
               </div>
             </div>
+            <div style={{ maxHeight: "50vh", overflowY: "auto" }}>
             {invitadosOrdenados.map((g, i) => {
               const col = resolverColaborador(g, colaboradores);
               return (
@@ -761,6 +767,7 @@ export function SeccionInvitados({
                 Ningún invitado coincide con los filtros aplicados.
               </p>
             )}
+            </div>
           </div>
         </div>
       </VentanaFlotante>
