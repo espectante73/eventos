@@ -6,6 +6,8 @@ import { datosCompletos, resolverColaborador } from "./lib/invitados";
 import { C } from "./theme";
 import { VistaAnfitrion } from "./vistas/VistaAnfitrion";
 import { VistaColaborador } from "./vistas/VistaColaborador";
+import { VistaLogin } from "./vistas/VistaLogin";
+import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
 
 // ---------- Red de seguridad ante errores inesperados ----------
 
@@ -75,6 +77,57 @@ export default function App() {
   const [rol, setRol] = useState(urlRol || null);
   const data = useLedgerData(rol);
 
+  // ---------- Login real (Supabase Auth) ----------
+  // Capa añadida SOBRE el modelo de enlace-token existente, sin tocar
+  // ninguna de las RPC de anfitrión/colaborador ya probadas: en vez de
+  // reescribirlas todas para leer auth.uid(), se añade una única función
+  // nueva, mi_rol(), que traduce "quién ha iniciado sesión" al mismo
+  // token/id que ya usaba el enlace mágico — el resto de la app sigue
+  // funcionando exactamente igual por dentro. El enlace-token se mantiene
+  // en paralelo mientras se reparten las cuentas nuevas (ver
+  // .claude/plans/login-supabase-auth.md): si NO hay sesión pero SÍ hay
+  // ?rol=... en la URL, se seguye usando el flujo de siempre.
+  // undefined = comprobando todavía; null = confirmado que no hay sesión.
+  const [session, setSession] = useState(undefined);
+  // Evento más reciente de Supabase Auth — se usa solo para detectar
+  // PASSWORD_RECOVERY (clic en el enlace de "olvidé mi contraseña").
+  const [authEvent, setAuthEvent] = useState(null);
+  // true si hay sesión real pero mi_rol() no encuentra ninguna fila
+  // enlazada (cuenta creada pero todavía no vinculada a un colaborador ni
+  // al anfitrión).
+  const [sinAccesoAsignado, setSinAccesoAsignado] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => setSession(s));
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, s) => {
+      setAuthEvent(event);
+      setSession(s);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    let cancelado = false;
+    if (!session) return; // Sin sesión: manda el enlace-token de siempre.
+    (async () => {
+      const { data: filas, error } = await supabase.rpc("mi_rol");
+      if (cancelado) return;
+      if (error || !filas || filas.length === 0) {
+        setSinAccesoAsignado(true);
+        return;
+      }
+      setSinAccesoAsignado(false);
+      const { rol: rolResuelto, token } = filas[0];
+      setEsAnfitrionOriginal(rolResuelto === "anfitrion");
+      setRol(token);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [session]);
+
   // Aviso de nueva versión desplegada: al ser una web de una sola página,
   // el navegador se queda con el JS ya cargado aunque Vercel despliegue
   // código nuevo — sin esto, hay que acordarse de recargar a mano cada vez.
@@ -111,6 +164,9 @@ export default function App() {
 
   useEffect(() => {
     let cancelado = false;
+    // Esperando a saber si hay sesión, o ya hay una sesión real de verdad:
+    // en ambos casos manda el efecto de mi_rol() de arriba, no este.
+    if (session === undefined || session) return;
     (async () => {
       if (!urlRol) {
         setEsAnfitrionOriginal(false);
@@ -124,7 +180,50 @@ export default function App() {
     return () => {
       cancelado = true;
     };
-  }, [urlRol]);
+  }, [urlRol, session]);
+
+  if (authEvent === "PASSWORD_RECOVERY") {
+    return <VistaNuevaContrasena onListo={() => setAuthEvent(null)} />;
+  }
+
+  if (session === undefined) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: C.paper, color: C.ink, fontFamily: "'Fraunces', serif" }}
+      >
+        Abriendo el libro de invitados…
+      </div>
+    );
+  }
+
+  if (session === null && !urlRol) {
+    return <VistaLogin />;
+  }
+
+  if (sinAccesoAsignado) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
+      >
+        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+          <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: 0.8 }}>
+            Tu cuenta ha iniciado sesión correctamente, pero todavía no está
+            vinculada a ningún acceso (ni anfitrión ni colaborador). Pide al
+            anfitrión que la vincule.
+          </p>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="px-4 py-2 rounded text-sm font-medium"
+            style={{ background: C.ink, color: C.paper }}
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!data.loaded || esAnfitrionOriginal === null) {
     return (
@@ -163,6 +262,17 @@ export default function App() {
         </div>
       )}
       <div className="max-w-4xl mx-auto px-4 py-6">
+        {session && (
+          <div className="flex justify-end mb-2">
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="text-xs underline"
+              style={{ color: C.charcoal, opacity: 0.6 }}
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        )}
         {esAnfitrionOriginal ? (
           (() => {
             const pendientesPorColaborador = (id) =>

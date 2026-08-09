@@ -1025,3 +1025,62 @@ grant execute on function colaborador_guardar_invitado(uuid, uuid, jsonb) to ano
 grant execute on function colaborador_marcar_pagado(uuid, uuid, boolean) to anon;
 grant execute on function colaborador_confirmar_datos_completos(uuid) to anon;
 grant execute on function colaborador_confirmar_pagos_completos(uuid) to anon;
+
+-- ============================================================
+-- LOGIN REAL (Supabase Auth) — capa añadida SOBRE el modelo de
+-- enlace-token de arriba, sin tocar ninguna de las RPC anteriores.
+-- En vez de reescribir cada función de anfitrión/colaborador para leer
+-- auth.uid() (arriesgado: son ~20 funciones ya probadas en producción),
+-- se añade una única función nueva, mi_rol(), que traduce "quién ha
+-- iniciado sesión" al mismo p_token / p_colaborador_id de siempre. El
+-- resto de la app sigue funcionando exactamente igual por dentro — solo
+-- cambia CÓMO llega ese token al navegador (login en vez de URL).
+-- Ver .claude/plans/login-supabase-auth.md para el plan completo.
+--
+-- Esta sección SÍ se puede volver a ejecutar sola sin repetir todo el
+-- archivo: usa "if not exists" / "create or replace" en todo.
+-- ============================================================
+
+-- Enlaza cada colaborador con su cuenta real de Supabase Auth. Sigue
+-- existiendo el "id" de siempre como clave primaria — deja de viajar en
+-- la URL como secreto, pero la RPC colaborador_* que ya existen lo siguen
+-- recibiendo igual (mi_rol() se lo entrega a la app, la app se lo pasa a
+-- esas RPC exactamente como hacía con el token del enlace).
+alter table colaboradores add column if not exists "authUserId" uuid references auth.users("id") on delete set null;
+
+-- Cuentas autorizadas como anfitrión (normalmente una sola fila). Tabla
+-- completamente cerrada, misma idea que anfitrion_secreto: solo legible
+-- desde dentro de mi_rol().
+create table if not exists anfitriones (
+  "authUserId" uuid primary key references auth.users("id") on delete cascade
+);
+alter table anfitriones enable row level security;
+revoke all on table anfitriones from anon, authenticated;
+
+-- Se llama sin argumentos: usa auth.uid() (el usuario de la sesión activa
+-- que Supabase ya valida solo antes de llegar aquí). Devuelve una fila si
+-- esa cuenta está vinculada como anfitrión o como colaborador, ninguna si
+-- no está vinculada a nada todavía.
+create or replace function mi_rol()
+returns table("rol" text, "token" uuid)
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if exists (select 1 from anfitriones a where a."authUserId" = auth.uid()) then
+    return query select 'anfitrion'::text, (select "token" from anfitrion_secreto limit 1);
+    return;
+  end if;
+
+  return query
+    select 'colaborador'::text, c."id"
+    from colaboradores c
+    where c."authUserId" = auth.uid()
+    limit 1;
+end;
+$$;
+
+-- A diferencia de las RPC de arriba, esta NO se concede a "anon": sin
+-- sesión iniciada, auth.uid() es null y no encontraría ninguna fila de
+-- todas formas, pero cerrarla del todo a quien no ha iniciado sesión es
+-- más explícito.
+grant execute on function mi_rol() to authenticated;
