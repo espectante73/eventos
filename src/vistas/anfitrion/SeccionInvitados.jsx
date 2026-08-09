@@ -775,7 +775,7 @@ export function SeccionInvitados({
       {mostrarResumenAsignacion && (
         <ModalFlotante
           titulo="Resumen de asignaciones"
-          onCerrar={() => setMostrarResumenAsignacion(false)}
+          onCerrar={cancelarAvisosAsignacion}
         >
           <p className="text-sm mb-3" style={{ color: C.charcoal }}>
             Estos colaboradores tienen invitados nuevos asignados. ¿Quieres avisarles ya?
