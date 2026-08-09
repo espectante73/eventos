@@ -1066,8 +1066,12 @@ returns table("rol" text, "token" uuid)
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 begin
+  -- "token" a secas es ambiguo aquí: coincide con el nombre de la columna
+  -- de salida de la propia función (returns table(..., "token" uuid)) y
+  -- con la columna "token" de anfitrion_secreto -- hay que cualificar de
+  -- cuál se habla con el alias "s".
   if exists (select 1 from anfitriones a where a."authUserId" = auth.uid()) then
-    return query select 'anfitrion'::text, (select "token" from anfitrion_secreto limit 1);
+    return query select 'anfitrion'::text, s."token" from anfitrion_secreto s limit 1;
     return;
   end if;
 
