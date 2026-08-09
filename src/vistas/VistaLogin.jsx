@@ -1,9 +1,9 @@
 // Pantalla de login (email + contraseña) vía Supabase Auth, con un modo
-// "Crear cuenta" para autorregistro. Se muestra cuando no hay sesión activa
-// NI un enlace de token en la URL (?rol=...) — el modelo de enlaces se
-// mantiene en paralelo durante la transición (ver plan de login en
-// .claude/plans/login-supabase-auth.md), así que un enlace viejo sigue
-// funcionando sin pasar por aquí.
+// "Crear cuenta" para autorregistro y otro de "recuperar contraseña". Se
+// muestra cuando no hay sesión activa NI un enlace de token en la URL
+// (?rol=...) — el modelo de enlaces se mantiene en paralelo durante la
+// transición (ver plan de login en .claude/plans/login-supabase-auth.md),
+// así que un enlace viejo sigue funcionando sin pasar por aquí.
 //
 // El modo "Crear cuenta" existe para no obligar al anfitrión a crear a
 // mano, uno por uno, la cuenta de cada colaborador en el panel de
@@ -18,8 +18,10 @@ import { useState } from "react";
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 
+const TITULOS = { entrar: "Entrar", crear: "Crear cuenta", recuperar: "Recuperar contraseña" };
+
 export function VistaLogin() {
-  const [modo, setModo] = useState("entrar"); // "entrar" | "crear"
+  const [modo, setModo] = useState("entrar"); // "entrar" | "crear" | "recuperar"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [cargando, setCargando] = useState(false);
@@ -70,13 +72,29 @@ export function VistaLogin() {
     }
   };
 
+  const enviarRecuperacion = async (e) => {
+    e.preventDefault();
+    setError("");
+    setAviso("");
+    setCargando(true);
+    const { error: errReset } = await supabase.auth.resetPasswordForEmail(email);
+    setCargando(false);
+    if (errReset) {
+      setError("No se pudo enviar el email de recuperación.");
+    } else {
+      setAviso("Si ese email tiene una cuenta, te hemos enviado un enlace para crear una contraseña nueva.");
+    }
+  };
+
+  const enviar = modo === "entrar" ? entrar : modo === "crear" ? crearCuenta : enviarRecuperacion;
+
   return (
     <div
       className="min-h-screen flex items-center justify-center px-4"
       style={{ background: C.paper, fontFamily: "'Inter', sans-serif" }}
     >
       <form
-        onSubmit={modo === "entrar" ? entrar : crearCuenta}
+        onSubmit={enviar}
         className="w-full max-w-sm p-6 rounded-lg"
         style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
       >
@@ -84,12 +102,18 @@ export function VistaLogin() {
           className="text-xl mb-4 text-center"
           style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}
         >
-          {modo === "entrar" ? "Entrar" : "Crear cuenta"}
+          {TITULOS[modo]}
         </h1>
         {modo === "crear" && (
           <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
             Usa el mismo email con el que ya estás dado de alta como
             colaborador (el de los avisos) — así se te reconoce solo.
+          </p>
+        )}
+        {modo === "recuperar" && (
+          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
+            Escribe tu email y te enviamos un enlace para crear una
+            contraseña nueva.
           </p>
         )}
         <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>
@@ -104,18 +128,22 @@ export function VistaLogin() {
           style={{ ...inputStyle, width: "100%", height: 42 }}
           required
         />
-        <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>
-          Contraseña
-        </label>
-        <input
-          type="password"
-          autoComplete={modo === "entrar" ? "current-password" : "new-password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full mb-3"
-          style={{ ...inputStyle, width: "100%", height: 42 }}
-          required
-        />
+        {modo !== "recuperar" && (
+          <>
+            <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>
+              Contraseña
+            </label>
+            <input
+              type="password"
+              autoComplete={modo === "entrar" ? "current-password" : "new-password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full mb-3"
+              style={{ ...inputStyle, width: "100%", height: 42 }}
+              required
+            />
+          </>
+        )}
         {error && (
           <p className="text-sm mb-3" style={{ color: C.wax }}>
             {error}
@@ -132,29 +160,14 @@ export function VistaLogin() {
           className="w-full py-2 rounded font-medium mb-2"
           style={{ background: C.ink, color: C.paper, height: 44 }}
         >
-          {cargando ? "Un momento…" : modo === "entrar" ? "Entrar" : "Crear cuenta"}
+          {cargando ? "Un momento…" : modo === "recuperar" ? "Enviar enlace" : TITULOS[modo]}
         </button>
 
-        {modo === "entrar" ? (
+        {modo === "entrar" && (
           <>
             <button
               type="button"
-              onClick={async () => {
-                if (!email) {
-                  setError("Escribe primero tu email para poder enviarte el enlace de recuperación.");
-                  return;
-                }
-                setError("");
-                setAviso("");
-                setCargando(true);
-                const { error: errReset } = await supabase.auth.resetPasswordForEmail(email);
-                setCargando(false);
-                if (errReset) {
-                  setError("No se pudo enviar el email de recuperación.");
-                } else {
-                  setAviso("Si ese email tiene una cuenta, te hemos enviado un enlace para crear una contraseña nueva.");
-                }
-              }}
+              onClick={() => cambiarModo("recuperar")}
               disabled={cargando}
               className="w-full text-sm underline mb-1"
               style={{ color: C.charcoal, opacity: 0.7 }}
@@ -171,7 +184,8 @@ export function VistaLogin() {
               ¿No tienes cuenta todavía? Crear cuenta
             </button>
           </>
-        ) : (
+        )}
+        {(modo === "crear" || modo === "recuperar") && (
           <button
             type="button"
             onClick={() => cambiarModo("entrar")}
