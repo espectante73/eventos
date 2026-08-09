@@ -96,6 +96,10 @@ export default function App() {
   // enlazada (cuenta creada pero todavía no vinculada a un colaborador ni
   // al anfitrión).
   const [sinAccesoAsignado, setSinAccesoAsignado] = useState(false);
+  // Guarda el error real de mi_rol() (si lo hay) para mostrarlo en pantalla
+  // tal cual — así se puede diagnosticar un fallo de login sin depender de
+  // que quien lo prueba sepa abrir las herramientas de desarrollador.
+  const [errorMiRol, setErrorMiRol] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => setSession(s));
@@ -114,7 +118,15 @@ export default function App() {
     (async () => {
       const { data: filas, error } = await supabase.rpc("mi_rol");
       if (cancelado) return;
-      if (error || !filas || filas.length === 0) {
+      if (error) {
+        // eslint-disable-next-line no-console
+        console.error("Error al resolver mi_rol():", error);
+        setErrorMiRol(error.message || JSON.stringify(error));
+        setSinAccesoAsignado(true);
+        return;
+      }
+      setErrorMiRol(null);
+      if (!filas || filas.length === 0) {
         setSinAccesoAsignado(true);
         return;
       }
@@ -213,6 +225,14 @@ export default function App() {
             vinculada a ningún acceso (ni anfitrión ni colaborador). Pide al
             anfitrión que la vincule.
           </p>
+          {errorMiRol && (
+            <p
+              className="text-xs mb-4 p-2 rounded text-left"
+              style={{ color: C.wax, background: C.paperDark, fontFamily: "'IBM Plex Mono', monospace" }}
+            >
+              {errorMiRol}
+            </p>
+          )}
           <button
             onClick={() => supabase.auth.signOut()}
             className="px-4 py-2 rounded text-sm font-medium"
