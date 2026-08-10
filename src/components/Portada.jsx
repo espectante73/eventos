@@ -7,7 +7,7 @@ import { Calendar, Clock, MapPin, Image as ImageIcon } from "lucide-react";
 import { C } from "../theme";
 import { VERSION_APP } from "../constants";
 import { formatearFecha } from "../lib/formato";
-import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "./VentanaFlotante";
+import { DesplegableSecciones } from "./DesplegableSecciones";
 
 export function Portada({ evento, editable, abierto, toggle }) {
   const [form, setForm] = useState(evento);
@@ -70,44 +70,7 @@ export function Portada({ evento, editable, abierto, toggle }) {
         </div>
       </div>
 
-      {editable && toggle && (
-        <select
-          value=""
-          onChange={(e) => {
-            if (e.target.value) toggle(e.target.value);
-          }}
-          className="absolute px-3 py-1.5 rounded text-sm font-medium"
-          style={{
-            bottom: 8,
-            right: 8,
-            background: C.ink,
-            color: C.paper,
-            border: `1px solid ${C.ink}`,
-            appearance: "none",
-            WebkitAppearance: "none",
-            MozAppearance: "none",
-          }}
-          title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
-        >
-          {/* El estilo del <select> cerrado (arriba, C.ink/C.paper) no lo
-              hereda la lista de opciones al abrirse -- cada <option> pide
-              su propio color, para que al desplegarla no aparezca con los
-              colores por defecto del sistema (blanco y negro) en vez de
-              los de la app. En Safari (donde el desplegable es un menú
-              nativo del sistema) el navegador puede seguir ignorando
-              esto igualmente -- es una limitación del propio <select>
-              nativo, no de este estilo. */}
-          <option value="" style={{ background: C.paper, color: C.charcoal }}>
-            Abrir sección…
-          </option>
-          {ORDEN_VENTANAS.map((clave) => (
-            <option key={clave} value={clave} style={{ background: C.paper, color: C.ink }}>
-              {abierto[clave] ? "✓ " : ""}
-              {ETIQUETAS_VENTANAS[clave]}
-            </option>
-          ))}
-        </select>
-      )}
+      {editable && toggle && <DesplegableSecciones abierto={abierto} toggle={toggle} />}
     </div>
   );
 }
