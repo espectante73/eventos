@@ -119,7 +119,11 @@ export const ETIQUETAS_VENTANAS = {
 // varias abiertas a la vez — pensada para las secciones de administración
 // que se abren desde el desplegable de navegación (Mesas, Invitaciones,
 // Configuración...), donde puede interesar ver más de una a la vez.
-export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra }) {
+// `ancho`: ancho inicial opcional (antes de que se redimensione a mano),
+// para ventanas con muy poco contenido donde los 620px por defecto
+// dejarían un hueco vacío enorme (p.ej. Precios, que son solo 4 campos
+// de 1-2 cifras) — ver VentanaConfigPrecios.jsx.
+export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho }) {
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
   const posInicial = { top: 16 + idx * 20, left: 16 + idx * 20 };
   const [pos, setPos] = useState(posInicial);
@@ -197,7 +201,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       style={{
         background: C.paper,
         border: `1px solid ${C.line}`,
-        width: tam ? tam.width : "min(620px, calc(100vw - 2rem))",
+        width: tam ? tam.width : ancho || "min(620px, calc(100vw - 2rem))",
         height: tam ? tam.height : undefined,
         maxHeight: tam ? undefined : "80vh",
         boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
