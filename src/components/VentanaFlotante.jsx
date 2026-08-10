@@ -95,15 +95,20 @@ export const ORDEN_VENTANAS = [
   "versiones",
 ];
 
+// Etiquetas cortas (una palabra donde sea posible) -- son solo las del
+// menú "Abrir sección..." (DesplegableSecciones.jsx); el título completo
+// de cada ventana ya abierta se define aparte, en su propio fichero
+// (p.ej. VentanaVersiones.jsx sigue titulándose "Versiones", pero
+// VentanaPlano.jsx sigue titulándose "Plano de mesas" tal cual).
 export const ETIQUETAS_VENTANAS = {
-  progreso: "Progreso de recopilación",
+  progreso: "Progreso",
   colaboradores: "Colaboradores",
   mesas: "Mesas",
-  plano: "Plano de mesas",
+  plano: "Plano",
   invitaciones: "Invitaciones",
-  invitados: "Lista de invitados",
-  cuentas: "Estado de cuentas",
-  copiaSeguridad: "Copia de seguridad",
+  invitados: "Invitados",
+  cuentas: "Cuentas",
+  copiaSeguridad: "Backup",
   configuracion: "Configuración",
   avisos: "Avisos",
   versiones: "Versiones",
