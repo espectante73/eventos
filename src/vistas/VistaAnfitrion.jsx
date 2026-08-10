@@ -28,6 +28,9 @@ import {
   Repeat,
   Printer,
   MoreVertical,
+  Globe,
+  FileText,
+  RotateCcw,
 } from "lucide-react";
 import { formatearFecha, ordenarPorApellidoNombre, parsePrecio, listaConY } from "../lib/formato";
 import {
@@ -58,6 +61,7 @@ import { Seal, Stamp, ProgresoBar, EncabezadoOrdenable, GrupoFamiliarInput } fro
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { Portada } from "../components/Portada";
+import { MenuFlotante } from "../components/MenuFlotante";
 import { MesaRedonda, MesaPlano } from "../components/Mesas";
 import { BuscadorInvitado } from "../components/BuscadorInvitado";
 import { ColaboradorCard } from "../components/ColaboradorCard";
@@ -86,13 +90,13 @@ import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 // la cabecera de la ventana "Configuración" — que en sí misma no muestra
 // nada más que ese desplegable.
 const SECCIONES_CONFIGURACION = [
-  { id: "config-datos-evento", etiqueta: "Datos del evento" },
-  { id: "config-precios", etiqueta: "Precios" },
-  { id: "config-url-web", etiqueta: "URL web" },
-  { id: "config-email-anfitrion", etiqueta: "Email anfitrión" },
-  { id: "config-plantillas-email", etiqueta: "Texto emails" },
-  { id: "config-zona-reinicio", etiqueta: "Reinicios" },
-  { id: "config-zona-peligro", etiqueta: "Borrado total" },
+  { id: "config-datos-evento", etiqueta: "Datos del evento", icono: Calendar },
+  { id: "config-precios", etiqueta: "Precios", icono: Tag },
+  { id: "config-url-web", etiqueta: "URL web", icono: Globe },
+  { id: "config-email-anfitrion", etiqueta: "Email anfitrión", icono: Mail },
+  { id: "config-plantillas-email", etiqueta: "Texto emails", icono: FileText },
+  { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },
+  { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2 },
 ];
 
 export function VistaAnfitrion({ data }) {
@@ -411,30 +415,26 @@ export function VistaAnfitrion({ data }) {
           titulo="Configuración"
           onCerrar={() => toggle("configuracion")}
           extra={
-            <select
-              value=""
-              onChange={(e) => {
-                if (e.target.value) toggle(e.target.value);
-              }}
-              className="px-2 py-1 rounded text-xs font-medium"
-              style={{
-                background: C.ink,
-                color: C.paper,
-                border: `1px solid ${C.ink}`,
-                appearance: "none",
-                WebkitAppearance: "none",
-                MozAppearance: "none",
-              }}
-              title="Abre esa parte de Configuración en su propia ventana"
-            >
-              <option value="">SECCIÓN</option>
-              {SECCIONES_CONFIGURACION.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {abierto[s.id] ? "✓ " : ""}
-                  {s.etiqueta}
-                </option>
-              ))}
-            </select>
+            <MenuFlotante
+              anchor="bottom-left"
+              opciones={SECCIONES_CONFIGURACION.map((s) => ({
+                id: s.id,
+                etiqueta: (abierto[s.id] ? "✓ " : "") + s.etiqueta,
+                icono: s.icono,
+                onClick: () => toggle(s.id),
+              }))}
+              render={({ ref, toggle: abrirCerrar }) => (
+                <button
+                  ref={ref}
+                  onClick={abrirCerrar}
+                  className="px-2 py-1 rounded text-xs font-medium"
+                  style={{ background: C.ink, color: C.paper, border: `1px solid ${C.ink}` }}
+                  title="Abre esa parte de Configuración en su propia ventana"
+                >
+                  SECCIÓN
+                </button>
+              )}
+            />
           }
         >
         </VentanaFlotante>
