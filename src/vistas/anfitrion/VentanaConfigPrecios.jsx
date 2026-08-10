@@ -4,17 +4,21 @@
 // del usuario, con boceto propio) como dos grupos compactos, con el
 // mismo relleno verde oscuro / letra clara que el resto de la app
 // (botones, menús) en vez del fondo claro habitual de los formularios.
+// Icono € y números más grandes añadidos el mismo día, a petición del
+// usuario.
+import { Euro } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
-function GrupoPrecio({ titulo, etiquetaA, valorA, onCambiarA, etiquetaB, valorB, onCambiarB }) {
+function GrupoPrecio({ icono: Icono, titulo, etiquetaA, valorA, onCambiarA, etiquetaB, valorB, onCambiarB }) {
   return (
     <div className="rounded-lg p-3" style={{ background: C.ink }}>
-      {titulo && (
+      {(Icono || titulo) && (
         <div
-          className="text-center text-sm mb-1"
-          style={{ color: C.paper, textDecoration: "underline", textUnderlineOffset: 3 }}
+          className="flex items-center justify-center gap-1 text-sm mb-1"
+          style={{ color: C.paper, textDecoration: titulo ? "underline" : "none", textUnderlineOffset: 3 }}
         >
+          {Icono && <Icono size={15} style={{ opacity: 0.85 }} />}
           {titulo}
         </div>
       )}
@@ -30,12 +34,12 @@ function GrupoPrecio({ titulo, etiquetaA, valorA, onCambiarA, etiquetaB, valorB,
         <input
           value={valorA}
           onChange={onCambiarA}
-          style={{ ...inputStyle, width: 64, textAlign: "center" }}
+          style={{ ...inputStyle, width: 72, textAlign: "center", fontSize: 22, fontWeight: 700 }}
         />
         <input
           value={valorB}
           onChange={onCambiarB}
-          style={{ ...inputStyle, width: 64, textAlign: "center" }}
+          style={{ ...inputStyle, width: 72, textAlign: "center", fontSize: 22, fontWeight: 700 }}
         />
       </div>
     </div>
@@ -49,10 +53,11 @@ export function VentanaConfigPrecios({ data, onCerrar }) {
       clave="config-precios"
       titulo="Precios"
       onCerrar={onCerrar}
-      ancho="min(280px, calc(100vw - 2rem))"
+      ancho="min(300px, calc(100vw - 2rem))"
     >
       <div className="space-y-4">
         <GrupoPrecio
+          icono={Euro}
           etiquetaA="Adulto"
           valorA={evento.precioAdulto}
           onCambiarA={(e) => persistEvento({ ...evento, precioAdulto: e.target.value })}
