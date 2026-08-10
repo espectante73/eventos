@@ -34,8 +34,12 @@ function FilaMenu({ opcion, cerrarTodo }) {
 
   useEffect(() => {
     if (!abierto) return;
+    // Ojo: un submenú anidado vive en SU PROPIO portal (otro hijo directo
+    // de document.body), no dentro del DOM del panel padre -- por eso no
+    // basta con comprobar filaRef/panelRef (ver el mismo comentario, más
+    // detallado, en MenuFlotante más abajo).
     const cerrarSiFuera = (e) => {
-      if (filaRef.current?.contains(e.target) || panelRef.current?.contains(e.target)) return;
+      if (filaRef.current?.contains(e.target) || e.target.closest?.("[data-menu-panel]")) return;
       setAbierto(false);
     };
     document.addEventListener("mousedown", cerrarSiFuera);
@@ -78,6 +82,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
           createPortal(
             <div
               ref={panelRef}
+              data-menu-panel
               className="fixed rounded overflow-y-auto"
               style={{
                 top: pos.top,
@@ -147,8 +152,15 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
 
   useEffect(() => {
     if (!open) return;
+    // Un submenú anidado (ver FilaMenu arriba) vive en SU PROPIO portal --
+    // otro hijo directo de document.body, no un descendiente DOM de
+    // listaRef -- así que un clic dentro de él no pasa el .contains() de
+    // abajo aunque visualmente esté "dentro" de este menú. Sin el
+    // data-menu-panel de refuerzo, ese clic se interpretaba como "fuera"
+    // y cerraba TODO el árbol de menús antes de que el propio onClick del
+    // hijo llegara a disparar -- por eso los submenús no abrían nada.
     const cerrarSiFuera = (e) => {
-      if (botonRef.current?.contains(e.target) || listaRef.current?.contains(e.target)) return;
+      if (botonRef.current?.contains(e.target) || e.target.closest?.("[data-menu-panel]")) return;
       setOpen(false);
     };
     const onKey = (e) => {
@@ -172,6 +184,7 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
         createPortal(
           <div
             ref={listaRef}
+            data-menu-panel
             className="fixed rounded overflow-y-auto"
             style={{
               ...pos,

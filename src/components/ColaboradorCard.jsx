@@ -1,20 +1,18 @@
-// Tarjeta de un colaborador en la ventana "Datos Colab.": nombre, email
-// (con botón "Probar"), invitación de acceso, y las acciones de
-// relevar/eliminar. NO incluye la lista de invitados asignados — eso
-// vive en su propia ventana, "Formularios" (ver
-// ColaboradorFormularioCard.jsx) desde el reparto del 2026-08-09, que
-// separó "quién es cada colaborador" de "qué invitados gestiona cada
-// uno" (antes vivían mezclados en la misma tarjeta). Movida fuera de
-// App.jsx en el reparto del 2026-08-08 (ver CLAUDE.md).
+// Tarjeta de un colaborador en la ventana "Datos Colab.": enlace personal,
+// email (con botón "Probar"), sus invitados asignados, y las acciones de
+// relevar/eliminar. Movida fuera de App.jsx en el reparto del 2026-08-08
+// (ver CLAUDE.md).
 import { useState } from "react";
 import { Send, Repeat, Trash2, Mail } from "lucide-react";
-import { C } from "../theme";
-import { resolverColaborador } from "../lib/invitados";
+import { C, inputStyle } from "../theme";
+import { resolverColaborador, datosCompletos } from "../lib/invitados";
+import { ordenarPorApellidoNombre } from "../lib/formato";
 import { Seal, GrupoFamiliarInput } from "./Widgets";
 import { BuscadorInvitado } from "./BuscadorInvitado";
 
-export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin }) {
+export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin }) {
   const [relevando, setRelevando] = useState(false);
+  const [mostrarAsignados, setMostrarAsignados] = useState(false);
   const [releveInvitadoId, setReleveInvitadoId] = useState("");
   const [probando, setProbando] = useState(false);
   const [resultadoPrueba, setResultadoPrueba] = useState(""); // "" | "ok" | "error"
@@ -100,14 +98,18 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
       style={{ background: "#fff", border: `1px solid ${C.line}` }}
     >
       <div className="flex items-center justify-between">
-        <div>
+        <button
+          onClick={() => setMostrarAsignados((v) => !v)}
+          className="text-left flex-1"
+        >
           <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
             {c.nombre}
           </div>
           <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-            {asignados.length} asignado{asignados.length !== 1 && "s"}
+            {asignados.length} asignado{asignados.length !== 1 && "s"}{" "}
+            {mostrarAsignados ? "▲" : "▼"}
           </div>
-        </div>
+        </button>
         <div className="flex items-center gap-3">
           <Seal count={pendientes} size={26} />
           <button
@@ -194,6 +196,38 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
             ⚠ {pendientesAviso.length} pendiente{pendientesAviso.length === 1 ? "" : "s"} de avisar
             — avisa desde la ventana "Avisos".
           </span>
+        </div>
+      )}
+
+      {mostrarAsignados && (
+        <div className="mt-3 space-y-1.5" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 8 }}>
+          {asignados.length === 0 && (
+            <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+              Nadie asignado todavía.
+            </p>
+          )}
+          {ordenarPorApellidoNombre(asignados).map((g) => (
+            <div key={g.id} className="flex items-center justify-between gap-2 text-xs">
+              <span style={{ color: C.charcoal }}>
+                {g.apellido}, {g.nombre}{" "}
+                <span style={{ opacity: 0.5 }}>
+                  ({g.confirmado ? (datosCompletos(g) ? "completo" : "confirmado") : "tentativa"})
+                </span>
+              </span>
+              <select
+                value={g.colaboradorId || ""}
+                onChange={(e) => onAsignarColaborador(g.id, e.target.value)}
+                style={{ ...inputStyle, padding: "2px 4px", fontSize: 11 }}
+              >
+                <option value="">Sin asignar</option>
+                {colaboradores.map((otro) => (
+                  <option key={otro.id} value={otro.id}>
+                    {otro.nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
         </div>
       )}
     </div>

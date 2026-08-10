@@ -5,13 +5,13 @@
 // "Colaboradores" y "Configuración" no abren directamente una ventana:
 // despliegan su propio submenú anidado hacia la izquierda (igual patrón
 // que un menú de sistema operativo), sin pasar por una ventana
-// intermedia — antes "Configuración" era una ventana vacía que solo
-// contenía otro desplegable ("SECCIÓN"); ahora ese paso se salta del
-// todo. "Colaboradores" se dividió en dos ventanas reales (Datos Colab.
-// / Formularios, ver VentanaColaboradoresDatos.jsx y
-// VentanaColaboradoresFormularios.jsx) por el mismo motivo: son dos
-// cosas distintas (quién es cada colaborador vs. qué invitados gestiona
-// cada uno) que antes vivían mezcladas en una sola ventana.
+// intermedia. Dentro de "Colaboradores":
+// - "Datos Colab." abre la ventana de gestión de siempre (nombre, email,
+//   invitación, relevo, eliminar, asignados).
+// - "Formularios" NO abre ninguna ventana — despliega un tercer nivel con
+//   Anfitrión + cada colaborador, para cambiar de vista y previsualizar
+//   su formulario (sustituye a la barra ancha de arriba que existía
+//   antes en App.jsx, ahora eliminada — reparto del 2026-08-09).
 import {
   Bell,
   Users,
@@ -25,7 +25,9 @@ import {
   Gauge,
   History,
   UserCog,
-  ClipboardList,
+  Eye,
+  Crown,
+  UserCircle,
   Calendar,
   Tag,
   Globe,
@@ -52,12 +54,6 @@ const ICONOS_VENTANAS = {
   versiones: History,
 };
 
-// Submenú de "Colaboradores": las dos ventanas en las que se dividió.
-const SUBMENU_COLABORADORES = [
-  { id: "colaboradores-datos", etiqueta: "Datos Colab.", icono: UserCog },
-  { id: "colaboradores-formularios", etiqueta: "Formularios", icono: ClipboardList },
-];
-
 // Submenú de "Configuración": cada parte se abre en su propia ventana,
 // igual que antes — solo cambia cómo se llega hasta ella.
 const SUBMENU_CONFIGURACION = [
@@ -70,22 +66,35 @@ const SUBMENU_CONFIGURACION = [
   { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2 },
 ];
 
-export function DesplegableSecciones({ abierto, toggle }) {
-  const submenu = (lista) =>
-    lista.map((s) => ({
-      id: s.id,
-      etiqueta: (abierto[s.id] ? "✓ " : "") + s.etiqueta,
-      icono: s.icono,
-      onClick: () => toggle(s.id),
-    }));
-
+export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiarRol, anfitrionToken }) {
   const opciones = ORDEN_VENTANAS.map((clave) => {
     if (clave === "colaboradores") {
       return {
         id: clave,
         etiqueta: ETIQUETAS_VENTANAS[clave],
         icono: ICONOS_VENTANAS[clave],
-        submenu: submenu(SUBMENU_COLABORADORES),
+        submenu: [
+          {
+            id: "colaboradores-datos",
+            etiqueta: (abierto["colaboradores-datos"] ? "✓ " : "") + "Datos Colab.",
+            icono: UserCog,
+            onClick: () => toggle("colaboradores-datos"),
+          },
+          {
+            id: "colaboradores-formularios",
+            etiqueta: "Formularios",
+            icono: Eye,
+            submenu: [
+              { id: "rol-anfitrion", etiqueta: "Anfitrión", icono: Crown, onClick: () => onCambiarRol(anfitrionToken) },
+              ...colaboradores.map((c) => ({
+                id: `rol-${c.id}`,
+                etiqueta: c.nombre,
+                icono: UserCircle,
+                onClick: () => onCambiarRol(c.id),
+              })),
+            ],
+          },
+        ],
       };
     }
     if (clave === "configuracion") {
@@ -93,7 +102,12 @@ export function DesplegableSecciones({ abierto, toggle }) {
         id: clave,
         etiqueta: ETIQUETAS_VENTANAS[clave],
         icono: ICONOS_VENTANAS[clave],
-        submenu: submenu(SUBMENU_CONFIGURACION),
+        submenu: SUBMENU_CONFIGURACION.map((s) => ({
+          id: s.id,
+          etiqueta: (abierto[s.id] ? "✓ " : "") + s.etiqueta,
+          icono: s.icono,
+          onClick: () => toggle(s.id),
+        })),
       };
     }
     return {

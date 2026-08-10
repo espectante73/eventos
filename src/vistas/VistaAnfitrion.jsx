@@ -68,7 +68,6 @@ import { VentanaConfigPlantillasEmail } from "./anfitrion/VentanaConfigPlantilla
 import { VentanaConfigZonaReinicio } from "./anfitrion/VentanaConfigZonaReinicio";
 import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
 import { VentanaColaboradoresDatos } from "./anfitrion/VentanaColaboradoresDatos";
-import { VentanaColaboradoresFormularios } from "./anfitrion/VentanaColaboradoresFormularios";
 import { VentanaMesas } from "./anfitrion/VentanaMesas";
 import { VentanaPlano } from "./anfitrion/VentanaPlano";
 import { VentanaCuentas } from "./anfitrion/VentanaCuentas";
@@ -76,7 +75,7 @@ import { VentanaAvisos } from "./anfitrion/VentanaAvisos";
 import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 
-export function VistaAnfitrion({ data }) {
+export function VistaAnfitrion({ data, setRol, anfitrionToken }) {
   const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, probarEmailColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearAvisos, resetearPorInvitados, gastos, persistGastos } = data;
 
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
@@ -128,7 +127,6 @@ export function VistaAnfitrion({ data }) {
     copiaSeguridad: false,
     progreso: false,
     "colaboradores-datos": false,
-    "colaboradores-formularios": false,
     mesas: false,
     plano: false,
     invitados: false,
@@ -283,7 +281,15 @@ export function VistaAnfitrion({ data }) {
 
   return (
     <div className="space-y-8">
-      <Portada evento={evento} editable abierto={abierto} toggle={toggle} />
+      <Portada
+        evento={evento}
+        editable
+        abierto={abierto}
+        toggle={toggle}
+        colaboradores={colaboradores}
+        onCambiarRol={setRol}
+        anfitrionToken={anfitrionToken}
+      />
 
       {/* Resumen */}
       <section className="grid grid-cols-3 gap-3">
@@ -318,15 +324,13 @@ export function VistaAnfitrion({ data }) {
         <VentanaProgreso data={data} onCerrar={() => toggle("progreso")} />
       )}
 
-      {/* Colaboradores — dos ventanas, ver DesplegableSecciones.jsx (submenú "Colaboradores") */}
+      {/* Colaboradores: "Datos Colab." abre esta ventana; "Formularios" no
+          abre ninguna — cambia de vista directamente (ver DesplegableSecciones.jsx) */}
       {abierto["colaboradores-datos"] && (
-        <VentanaColaboradoresDatos data={data} onCerrar={() => toggle("colaboradores-datos")} />
-      )}
-      {abierto["colaboradores-formularios"] && (
-        <VentanaColaboradoresFormularios
+        <VentanaColaboradoresDatos
           data={data}
           asignarColaborador={asignarColaborador}
-          onCerrar={() => toggle("colaboradores-formularios")}
+          onCerrar={() => toggle("colaboradores-datos")}
         />
       )}
 
