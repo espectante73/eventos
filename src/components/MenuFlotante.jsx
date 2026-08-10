@@ -11,7 +11,7 @@
 // Se renderiza con un portal a document.body para no quedar recortado
 // por un overflow:hidden de algún ancestro (p.ej. la Portada, que lo
 // tiene por la imagen de cabecera).
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft } from "lucide-react";
 import { C } from "../theme";
@@ -35,6 +35,29 @@ function alturaMaximaDisponible(ancladoY, creceHaciaArriba) {
     ? ancladoY - MARGEN_BORDE
     : window.innerHeight - ancladoY - MARGEN_BORDE;
   return Math.max(ALTO_MINIMO, Math.min(disponible, window.innerHeight * 0.6));
+}
+
+// Corrección de última hora: la posición de apertura (arriba en
+// alturaMaximaDisponible y en abrir()/abrirSubmenu()) se calcula ANTES de
+// saber cuánto va a medir el panel de verdad (su ancho es "max-content",
+// depende del texto). En pantallas estrechas eso podía dejar un submenú
+// anidado abriéndose mayormente fuera de la pantalla por la izquierda
+// (detectado el 2026-08-09 con "Formularios", en móvil) — aquí se mide
+// el panel ya montado en el DOM y, si se sale por algún borde, se
+// empuja de vuelta dentro sin más.
+function useMantenerDentroDePantalla(activo, ref, pos, setPos) {
+  useLayoutEffect(() => {
+    if (!activo || !pos || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    if (pos.right !== undefined && rect.left < MARGEN_BORDE) {
+      const ajuste = MARGEN_BORDE - rect.left;
+      setPos((p) => (p ? { ...p, right: p.right - ajuste } : p));
+    } else if (pos.left !== undefined && rect.right > window.innerWidth - MARGEN_BORDE) {
+      const ajuste = rect.right - (window.innerWidth - MARGEN_BORDE);
+      setPos((p) => (p ? { ...p, left: p.left - ajuste } : p));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activo, pos?.top, pos?.bottom, pos?.left, pos?.right]);
 }
 
 // Una fila del panel: rótulo de grupo (no clicable), acción directa, o
@@ -74,6 +97,8 @@ function FilaMenu({ opcion, cerrarTodo }) {
       document.removeEventListener("touchstart", cerrarSiFuera);
     };
   }, [abierto]);
+
+  useMantenerDentroDePantalla(abierto, panelRef, pos, setPos);
 
   if (opcion.encabezado) {
     return (
@@ -215,6 +240,8 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
       window.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  useMantenerDentroDePantalla(open, listaRef, pos, setPos);
 
   return (
     <>
