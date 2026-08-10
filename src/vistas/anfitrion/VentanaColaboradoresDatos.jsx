@@ -1,12 +1,10 @@
-// Ventana "Colaboradores": añadir uno nuevo (buscando entre los invitados
-// ya existentes) y la tarjeta de cada uno (ColaboradorCard ya hace el
-// grueso: enlace, email, asignados, relevo...). Extraída de
-// VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4, Ronda 3).
-//
-// `asignarColaborador` no vive aquí: se sigue definiendo en VistaAnfitrion
-// porque la tabla principal de invitados (todavía sin repartir) también la
-// usa para su propio desplegable de asignación — moverla aquí duplicaría
-// esa lógica en dos sitios.
+// Ventana "Datos Colab.": añadir uno nuevo (buscando entre los invitados
+// ya existentes) y la tarjeta de cada uno (ColaboradorCard: enlace,
+// email, invitación, relevo, eliminar). Es la mitad de "quién es cada
+// colaborador" — la otra mitad ("qué invitados gestiona cada uno") vive
+// en VentanaColaboradoresFormularios.jsx. Ambas sustituyen a la antigua
+// VentanaColaboradores.jsx (reparto del 2026-08-09, dos ventanas
+// accesibles desde el submenú "Colaboradores" de "Abrir sección…").
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { C } from "../../theme";
@@ -16,7 +14,7 @@ import { BuscadorInvitado } from "../../components/BuscadorInvitado";
 import { ColaboradorCard } from "../../components/ColaboradorCard";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
-export function VentanaColaboradores({ data, asignarColaborador, onCerrar }) {
+export function VentanaColaboradoresDatos({ data, onCerrar }) {
   const { colaboradores, invitados, persistColaboradores, persistInvitados, probarEmailColaborador, enviarInvitacionLogin } = data;
   const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
 
@@ -97,7 +95,7 @@ export function VentanaColaboradores({ data, asignarColaborador, onCerrar }) {
   };
 
   return (
-    <VentanaFlotante clave="colaboradores" titulo="Colaboradores" onCerrar={onCerrar}>
+    <VentanaFlotante clave="colaboradores-datos" titulo="Datos de colaboradores" onCerrar={onCerrar}>
       <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
         Los colaboradores son también invitados del evento: búscalo por apellido o
         nombre entre los ya añadidos a la lista. Si aún no está en la lista, añádelo
@@ -136,7 +134,6 @@ export function VentanaColaboradores({ data, asignarColaborador, onCerrar }) {
               colaboradores={colaboradores}
               onEliminar={eliminarColaborador}
               onRelevar={relevarColaborador}
-              onAsignarColaborador={asignarColaborador}
               onCambiarEmail={cambiarEmailColaborador}
               onProbarEmail={probarEmailColaborador}
               onEnviarInvitacionLogin={enviarInvitacionLogin}
