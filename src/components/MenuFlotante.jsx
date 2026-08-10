@@ -87,19 +87,31 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
                 {o.separador && (
                   <div style={{ borderTop: "1px solid rgba(239,233,222,0.15)", margin: "4px 0" }} />
                 )}
-                <button
-                  onClick={() => {
-                    o.onClick();
-                    setOpen(false);
-                  }}
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm whitespace-nowrap"
-                  style={{ color: C.paper, background: "transparent" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,233,222,0.12)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                >
-                  {o.icono && <o.icono size={17} style={{ flexShrink: 0, opacity: 0.85 }} />}
-                  <span>{o.etiqueta}</span>
-                </button>
+                {o.encabezado ? (
+                  // Rótulo de grupo, no clicable — distingue de un vistazo
+                  // "cambiar de vista" de "abrir una ventana", para que no
+                  // se confundan aunque ambos grupos mencionen colaboradores.
+                  <div
+                    className="px-3 pt-1 pb-0.5 text-xs uppercase"
+                    style={{ color: C.paper, opacity: 0.45, letterSpacing: "0.06em" }}
+                  >
+                    {o.encabezado}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      o.onClick();
+                      setOpen(false);
+                    }}
+                    className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm whitespace-nowrap"
+                    style={{ color: C.paper, background: "transparent" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,233,222,0.12)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  >
+                    {o.icono && <o.icono size={17} style={{ flexShrink: 0, opacity: 0.85 }} />}
+                    <span>{o.etiqueta}</span>
+                  </button>
+                )}
               </div>
             ))}
           </div>,
