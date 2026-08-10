@@ -86,8 +86,9 @@ export function DesplegableSecciones({ abierto, toggle }) {
               background: C.ink,
               border: "1px solid rgba(239,233,222,0.2)",
               boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
-              minWidth: 220,
+              width: "max-content",
               maxHeight: "60vh",
+              padding: "4px 0",
               zIndex: 9999,
             }}
           >
@@ -100,12 +101,12 @@ export function DesplegableSecciones({ abierto, toggle }) {
                     toggle(clave);
                     setOpen(false);
                   }}
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm"
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm whitespace-nowrap"
                   style={{ color: C.paper, background: "transparent" }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,233,222,0.12)")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                 >
-                  {Icono && <Icono size={15} style={{ flexShrink: 0, opacity: 0.85 }} />}
+                  {Icono && <Icono size={17} style={{ flexShrink: 0, opacity: 0.85 }} />}
                   <span>
                     {abierto[clave] ? "✓ " : ""}
                     {ETIQUETAS_VENTANAS[clave]}
