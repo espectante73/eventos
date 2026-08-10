@@ -9,16 +9,11 @@ import {
   Check,
   X,
   Plus,
-  Mail,
   Music,
   AlertTriangle,
-  Users,
-  Calendar,
   Clock,
   MapPin,
-  Tag,
   Bell,
-  Trash2,
   Cake,
   Heart,
   DollarSign,
@@ -28,10 +23,6 @@ import {
   Repeat,
   Printer,
   MoreVertical,
-  Globe,
-  FileText,
-  RotateCcw,
-  ChevronLeft,
 } from "lucide-react";
 import { formatearFecha, ordenarPorApellidoNombre, parsePrecio, listaConY } from "../lib/formato";
 import {
@@ -59,13 +50,11 @@ import { generarInvitacionImagen } from "../lib/imagenInvitacion";
 import { C, inputStyle } from "../theme";
 import { VERSION_APP } from "../constants";
 import { Seal, Stamp, ProgresoBar, EncabezadoOrdenable, GrupoFamiliarInput } from "../components/Widgets";
-import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
+import { ModalFlotante } from "../components/VentanaFlotante";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { Portada } from "../components/Portada";
-import { MenuFlotante } from "../components/MenuFlotante";
 import { MesaRedonda, MesaPlano } from "../components/Mesas";
 import { BuscadorInvitado } from "../components/BuscadorInvitado";
-import { ColaboradorCard } from "../components/ColaboradorCard";
 import { uid } from "../lib/id";
 import { exportarTodo } from "../lib/backup";
 import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
@@ -78,27 +67,14 @@ import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
 import { VentanaConfigPlantillasEmail } from "./anfitrion/VentanaConfigPlantillasEmail";
 import { VentanaConfigZonaReinicio } from "./anfitrion/VentanaConfigZonaReinicio";
 import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
-import { VentanaColaboradores } from "./anfitrion/VentanaColaboradores";
+import { VentanaColaboradoresDatos } from "./anfitrion/VentanaColaboradoresDatos";
+import { VentanaColaboradoresFormularios } from "./anfitrion/VentanaColaboradoresFormularios";
 import { VentanaMesas } from "./anfitrion/VentanaMesas";
 import { VentanaPlano } from "./anfitrion/VentanaPlano";
 import { VentanaCuentas } from "./anfitrion/VentanaCuentas";
 import { VentanaAvisos } from "./anfitrion/VentanaAvisos";
 import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
-
-// Cada parte de Configuración es su propia ventana flotante independiente
-// (igual que Mesas, Avisos...), abierta desde el desplegable "SECCIÓN" en
-// la cabecera de la ventana "Configuración" — que en sí misma no muestra
-// nada más que ese desplegable.
-const SECCIONES_CONFIGURACION = [
-  { id: "config-datos-evento", etiqueta: "Datos del evento", icono: Calendar },
-  { id: "config-precios", etiqueta: "Precios", icono: Tag },
-  { id: "config-url-web", etiqueta: "URL web", icono: Globe },
-  { id: "config-email-anfitrion", etiqueta: "Email anfitrión", icono: Mail },
-  { id: "config-plantillas-email", etiqueta: "Texto emails", icono: FileText },
-  { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },
-  { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2 },
-];
 
 export function VistaAnfitrion({ data }) {
   const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, probarEmailColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearAvisos, resetearPorInvitados, gastos, persistGastos } = data;
@@ -151,11 +127,11 @@ export function VistaAnfitrion({ data }) {
   const [abierto, setAbierto] = useState({
     copiaSeguridad: false,
     progreso: false,
-    colaboradores: false,
+    "colaboradores-datos": false,
+    "colaboradores-formularios": false,
     mesas: false,
     plano: false,
     invitados: false,
-    configuracion: false,
     invitaciones: false,
     cuentas: false,
     versiones: false,
@@ -342,12 +318,15 @@ export function VistaAnfitrion({ data }) {
         <VentanaProgreso data={data} onCerrar={() => toggle("progreso")} />
       )}
 
-      {/* Colaboradores */}
-      {abierto.colaboradores && (
-        <VentanaColaboradores
+      {/* Colaboradores — dos ventanas, ver DesplegableSecciones.jsx (submenú "Colaboradores") */}
+      {abierto["colaboradores-datos"] && (
+        <VentanaColaboradoresDatos data={data} onCerrar={() => toggle("colaboradores-datos")} />
+      )}
+      {abierto["colaboradores-formularios"] && (
+        <VentanaColaboradoresFormularios
           data={data}
           asignarColaborador={asignarColaborador}
-          onCerrar={() => toggle("colaboradores")}
+          onCerrar={() => toggle("colaboradores-formularios")}
         />
       )}
 
@@ -409,39 +388,8 @@ export function VistaAnfitrion({ data }) {
         <VentanaCopiaSeguridad data={data} onCerrar={() => toggle("copiaSeguridad")} />
       )}
 
-      {/* Configuración: solo el lanzador — cada parte se abre como ventana propia */}
-      {abierto.configuracion && (
-        <VentanaFlotante
-          clave="configuracion"
-          titulo="Configuración"
-          onCerrar={() => toggle("configuracion")}
-          extra={
-            <MenuFlotante
-              anchor="left"
-              opciones={SECCIONES_CONFIGURACION.map((s) => ({
-                id: s.id,
-                etiqueta: (abierto[s.id] ? "✓ " : "") + s.etiqueta,
-                icono: s.icono,
-                onClick: () => toggle(s.id),
-              }))}
-              render={({ ref, toggle: abrirCerrar }) => (
-                <button
-                  ref={ref}
-                  onClick={abrirCerrar}
-                  className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium"
-                  style={{ background: C.ink, color: C.paper, border: `1px solid ${C.ink}` }}
-                  title="Abre esa parte de Configuración en su propia ventana"
-                >
-                  <ChevronLeft size={12} style={{ opacity: 0.8 }} />
-                  SECCIÓN
-                </button>
-              )}
-            />
-          }
-        >
-        </VentanaFlotante>
-      )}
-
+      {/* Configuración ya no tiene ventana propia: se abre directo desde el
+          submenú "Configuración" de "Abrir sección…" (ver DesplegableSecciones.jsx) */}
       {abierto["config-datos-evento"] && (
         <VentanaConfigDatosEvento data={data} onCerrar={() => toggle("config-datos-evento")} />
       )}
