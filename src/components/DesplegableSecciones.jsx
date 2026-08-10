@@ -8,7 +8,7 @@
 // del todo: ver VistaColaborador.jsx para el menú equivalente (más corto,
 // sin la lista de ventanas) que aparece ahí cuando el anfitrión está
 // previsualizando a un colaborador.
-import { Bell, Users, Settings, Save, Wallet, Mail, List, Utensils, Map, Gauge, History, Crown, UserCircle } from "lucide-react";
+import { Bell, Users, Settings, Save, Wallet, Mail, List, Utensils, Map, Gauge, History, Crown, UserCircle, ChevronLeft } from "lucide-react";
 import { C } from "../theme";
 import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "./VentanaFlotante";
 import { MenuFlotante } from "./MenuFlotante";
@@ -63,10 +63,11 @@ export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiar
         <button
           ref={ref}
           onClick={abrirCerrar}
-          className="absolute px-3 py-1.5 rounded text-sm font-medium"
+          className="absolute flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
           style={{ bottom: 8, right: 8, background: C.ink, color: C.paper, border: `1px solid ${C.ink}` }}
           title="Abre la sección elegida en una ventana flotante, o cambia de vista; puedes tener varias ventanas abiertas a la vez"
         >
+          <ChevronLeft size={14} style={{ opacity: 0.8 }} />
           Abrir sección…
         </button>
       )}
