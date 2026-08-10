@@ -13,12 +13,8 @@ import {
   Cake,
   Heart,
   Image as ImageIcon,
-  Crown,
-  UserCircle,
-  ChevronDown,
 } from "lucide-react";
 import { supabase } from "../supabaseClient";
-import { MenuFlotante } from "../components/MenuFlotante";
 import {
   datosCompletos,
   contarDatosRellenados,
@@ -437,7 +433,7 @@ function FilaInvitadoColaborador({
   );
 }
 
-export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken }) {
+export function VistaColaborador({ data, colaboradorId }) {
   const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento } = data;
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
   const [abiertoId, setAbiertoId] = useState(null);
@@ -566,36 +562,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            {esAnfitrionOriginal && (
-              <MenuFlotante
-                anchor="bottom-left"
-                opciones={[
-                  { id: "rol-anfitrion", etiqueta: "Anfitrión", icono: Crown, onClick: () => setRol(anfitrionToken) },
-                  ...colaboradores
-                    .filter((c) => c.id !== colaboradorId)
-                    .map((c) => ({
-                      id: `rol-${c.id}`,
-                      etiqueta: c.nombre,
-                      icono: UserCircle,
-                      onClick: () => setRol(c.id),
-                    })),
-                ]}
-                render={({ ref, toggle: abrirCerrar }) => (
-                  <button
-                    ref={ref}
-                    onClick={abrirCerrar}
-                    className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium"
-                    style={{ background: C.ink, color: C.paper }}
-                    title="Estás previsualizando como colaborador — cambia de vista aquí"
-                  >
-                    Cambiar vista <ChevronDown size={13} style={{ opacity: 0.8 }} />
-                  </button>
-                )}
-              />
-            )}
-            <Seal count={pendientes.length} />
-          </div>
+          <Seal count={pendientes.length} />
         </div>
 
         <div

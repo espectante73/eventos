@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase } from "./supabaseClient";
 import { getRolFromUrl, getEmailCrearCuentaFromUrl } from "./lib/url";
+import { datosCompletos, resolverColaborador } from "./lib/invitados";
 import { C } from "./theme";
 import { VistaAnfitrion } from "./vistas/VistaAnfitrion";
 import { VistaColaborador } from "./vistas/VistaColaborador";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
+import { MenuFlotante } from "./components/MenuFlotante";
 
 // ---------- Red de seguridad ante errores inesperados ----------
 
@@ -310,12 +313,58 @@ export default function App() {
             </button>
           </div>
         )}
-        {/* El cambio de vista Anfitrión/colaborador vivía aquí como barra
-            ancha aparte; se fusionó (2026-08-09, a petición del usuario)
-            dentro del propio menú "Abrir sección…" de la Portada (dentro de
-            VistaAnfitrion) y de su equivalente corto en VistaColaborador
-            cuando el anfitrión está previsualizando — ver DesplegableSecciones.jsx. */}
-        {!esAnfitrionOriginal && urlRol && (
+        {esAnfitrionOriginal ? (
+          (() => {
+            const pendientesPorColaborador = (id) =>
+              data.invitados.filter(
+                (g) =>
+                  resolverColaborador(g, data.colaboradores)?.id === id &&
+                  g.confirmado &&
+                  !datosCompletos(g)
+              ).length;
+            const totalPendientes = data.colaboradores.reduce(
+              (s, c) => s + pendientesPorColaborador(c.id),
+              0
+            );
+            const etiquetaAnfitrion = `Anfitrión${totalPendientes > 0 ? ` (${totalPendientes} pendientes)` : ""}`;
+            const etiquetaActual =
+              rol === anfitrionToken
+                ? etiquetaAnfitrion
+                : data.colaboradores.find((c) => c.id === rol)?.nombre || etiquetaAnfitrion;
+            const opcionesRol = [
+              { id: "anfitrion", etiqueta: etiquetaAnfitrion, onClick: () => setRol(anfitrionToken) },
+              ...data.colaboradores.map((c) => {
+                const pendientes = pendientesPorColaborador(c.id);
+                return {
+                  id: c.id,
+                  etiqueta: `${c.nombre}${pendientes > 0 ? ` (${pendientes} pendientes)` : ""}`,
+                  onClick: () => setRol(c.id),
+                };
+              }),
+            ];
+            // Barra única (no una fila de botones): pensada para el pulgar en
+            // móvil grande (iPhone 14 Pro Max de referencia) — bastante alta
+            // para tocar bien. Menú propio (mismos colores que el resto de
+            // la app) en vez del <select> nativo original.
+            return (
+              <MenuFlotante
+                anchor="bottom-left"
+                opciones={opcionesRol}
+                render={({ ref, toggle: abrirCerrar }) => (
+                  <button
+                    ref={ref}
+                    onClick={abrirCerrar}
+                    className="w-full mb-6 px-4 rounded font-medium flex items-center justify-between gap-2"
+                    style={{ height: 48, fontSize: 16, background: C.ink, color: C.paper, border: "none" }}
+                  >
+                    <span>{etiquetaActual}</span>
+                    <ChevronDown size={18} style={{ opacity: 0.8, flexShrink: 0 }} />
+                  </button>
+                )}
+              />
+            );
+          })()
+        ) : urlRol ? (
           <div
             className="text-xs uppercase mb-6 inline-block px-2 py-1 rounded"
             style={{
@@ -328,18 +377,12 @@ export default function App() {
             Vista fija de enlace ·{" "}
             {data.colaboradores.find((c) => c.id === rol)?.nombre || "rol no encontrado"}
           </div>
-        )}
+        ) : null}
 
         {data.esAnfitrion ? (
-          <VistaAnfitrion data={data} setRol={setRol} />
+          <VistaAnfitrion data={data} />
         ) : data.colaboradores.some((c) => c.id === rol) ? (
-          <VistaColaborador
-            data={data}
-            colaboradorId={rol}
-            esAnfitrionOriginal={esAnfitrionOriginal}
-            setRol={setRol}
-            anfitrionToken={anfitrionToken}
-          />
+          <VistaColaborador data={data} colaboradorId={rol} />
         ) : (
           <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.7 }}>
             Este enlace no es válido o ha caducado. Pide al anfitrión un enlace actualizado.
