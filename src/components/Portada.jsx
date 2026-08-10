@@ -9,7 +9,7 @@ import { VERSION_APP } from "../constants";
 import { formatearFecha } from "../lib/formato";
 import { DesplegableSecciones } from "./DesplegableSecciones";
 
-export function Portada({ evento, editable, abierto, toggle, colaboradores, onCambiarRol, anfitrionToken }) {
+export function Portada({ evento, editable, abierto, toggle, colaboradores, onCambiarRol }) {
   const [form, setForm] = useState(evento);
   useEffect(() => setForm(evento), [evento]);
 
@@ -76,7 +76,6 @@ export function Portada({ evento, editable, abierto, toggle, colaboradores, onCa
           toggle={toggle}
           colaboradores={colaboradores || []}
           onCambiarRol={onCambiarRol}
-          anfitrionToken={anfitrionToken}
         />
       )}
     </div>

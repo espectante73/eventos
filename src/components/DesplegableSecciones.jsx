@@ -8,7 +8,7 @@
 // del todo: ver VistaColaborador.jsx para el menú equivalente (más corto,
 // sin la lista de ventanas) que aparece ahí cuando el anfitrión está
 // previsualizando a un colaborador.
-import { Bell, Users, Settings, Save, Wallet, Mail, List, Utensils, Map, Gauge, History, Crown, UserCircle, ChevronLeft } from "lucide-react";
+import { Bell, Users, Settings, Save, Wallet, Mail, List, Utensils, Map, Gauge, History, UserCircle, ChevronLeft } from "lucide-react";
 import { C } from "../theme";
 import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "./VentanaFlotante";
 import { MenuFlotante } from "./MenuFlotante";
@@ -28,25 +28,28 @@ const ICONOS_VENTANAS = {
   versiones: History,
 };
 
-export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiarRol, anfitrionToken }) {
-  const opcionesRol = [
-    { id: "encabezado-vista", encabezado: "Ver como" },
-    {
-      id: "rol-anfitrion",
-      etiqueta: "✓ Anfitrión",
-      icono: Crown,
-      onClick: () => onCambiarRol(anfitrionToken),
-    },
-    ...colaboradores.map((c) => ({
-      id: `rol-${c.id}`,
-      etiqueta: c.nombre,
-      icono: UserCircle,
-      onClick: () => onCambiarRol(c.id),
-    })),
-  ];
+export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiarRol }) {
+  // "Anfitrión" no se lista aquí: este botón solo se ve cuando YA se está
+  // viendo como Anfitrión, así que sería una opción redundante — el
+  // camino de vuelta vive en el menú "Cambiar vista" de VistaColaborador,
+  // donde sí hace falta. Aquí solo se listan los colaboradores para
+  // previsualizar sus formularios (si no hay ninguno, no se muestra el
+  // grupo entero).
+  const opcionesRol =
+    colaboradores.length === 0
+      ? []
+      : [
+          { id: "encabezado-vista", encabezado: "Ver como" },
+          ...colaboradores.map((c) => ({
+            id: `rol-${c.id}`,
+            etiqueta: c.nombre,
+            icono: UserCircle,
+            onClick: () => onCambiarRol(c.id),
+          })),
+        ];
 
   const opcionesVentanas = [
-    { id: "encabezado-ventanas", encabezado: "Ventanas", separador: true },
+    { id: "encabezado-ventanas", encabezado: "Ventanas", separador: opcionesRol.length > 0 },
     ...ORDEN_VENTANAS.map((clave) => ({
       id: clave,
       etiqueta: (abierto[clave] ? "✓ " : "") + ETIQUETAS_VENTANAS[clave],

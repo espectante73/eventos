@@ -331,7 +331,7 @@ export default function App() {
         )}
 
         {data.esAnfitrion ? (
-          <VistaAnfitrion data={data} setRol={setRol} anfitrionToken={anfitrionToken} />
+          <VistaAnfitrion data={data} setRol={setRol} />
         ) : data.colaboradores.some((c) => c.id === rol) ? (
           <VistaColaborador
             data={data}
