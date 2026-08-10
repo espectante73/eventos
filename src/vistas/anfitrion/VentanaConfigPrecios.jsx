@@ -4,21 +4,21 @@
 // del usuario, con boceto propio) como dos grupos compactos, con el
 // mismo relleno verde oscuro / letra clara que el resto de la app
 // (botones, menús) en vez del fondo claro habitual de los formularios.
-// Icono € y números más grandes añadidos el mismo día, a petición del
-// usuario.
-import { Euro } from "lucide-react";
+// El icono € que se probó dentro de la ventana se quitó de aquí (el
+// mismo día): el formato € va pegado a cada número (grupo Adulto/Niño),
+// y el icono se quedó donde el usuario lo quería de verdad -- en el
+// desplegable "Abrir sección…", ver DesplegableSecciones.jsx.
 import { C, inputStyle } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
-function GrupoPrecio({ icono: Icono, titulo, etiquetaA, valorA, onCambiarA, etiquetaB, valorB, onCambiarB }) {
+function GrupoPrecio({ titulo, etiquetaA, valorA, onCambiarA, etiquetaB, valorB, onCambiarB, moneda }) {
   return (
     <div className="rounded-lg p-3" style={{ background: C.ink }}>
-      {(Icono || titulo) && (
+      {titulo && (
         <div
-          className="flex items-center justify-center gap-1 text-sm mb-1"
-          style={{ color: C.paper, textDecoration: titulo ? "underline" : "none", textUnderlineOffset: 3 }}
+          className="text-center text-sm mb-1"
+          style={{ color: C.paper, textDecoration: "underline", textUnderlineOffset: 3 }}
         >
-          {Icono && <Icono size={15} style={{ opacity: 0.85 }} />}
           {titulo}
         </div>
       )}
@@ -31,16 +31,21 @@ function GrupoPrecio({ icono: Icono, titulo, etiquetaA, valorA, onCambiarA, etiq
         <span>{etiquetaB}</span>
       </div>
       <div className="flex items-center justify-center gap-4">
-        <input
-          value={valorA}
-          onChange={onCambiarA}
-          style={{ ...inputStyle, width: 72, textAlign: "center", fontSize: 22, fontWeight: 700 }}
-        />
-        <input
-          value={valorB}
-          onChange={onCambiarB}
-          style={{ ...inputStyle, width: 72, textAlign: "center", fontSize: 22, fontWeight: 700 }}
-        />
+        {[
+          { valor: valorA, onCambiar: onCambiarA },
+          { valor: valorB, onCambiar: onCambiarB },
+        ].map(({ valor, onCambiar }, i) => (
+          <div key={i} className="flex items-center gap-1">
+            <input
+              value={valor}
+              onChange={onCambiar}
+              style={{ ...inputStyle, width: moneda ? 56 : 72, textAlign: "center", fontSize: 22, fontWeight: 700 }}
+            />
+            {moneda && (
+              <span style={{ color: C.paper, fontSize: 20, fontWeight: 700 }}>€</span>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -57,7 +62,7 @@ export function VentanaConfigPrecios({ data, onCerrar }) {
     >
       <div className="space-y-4">
         <GrupoPrecio
-          icono={Euro}
+          moneda
           etiquetaA="Adulto"
           valorA={evento.precioAdulto}
           onCambiarA={(e) => persistEvento({ ...evento, precioAdulto: e.target.value })}

@@ -29,7 +29,7 @@ import {
   Crown,
   UserCircle,
   Calendar,
-  Tag,
+  Euro,
   Globe,
   FileText,
   RotateCcw,
@@ -58,7 +58,7 @@ const ICONOS_VENTANAS = {
 // igual que antes — solo cambia cómo se llega hasta ella.
 const SUBMENU_CONFIGURACION = [
   { id: "config-datos-evento", etiqueta: "Datos del evento", icono: Calendar },
-  { id: "config-precios", etiqueta: "Precios", icono: Tag },
+  { id: "config-precios", etiqueta: "Precios", icono: Euro },
   { id: "config-url-web", etiqueta: "URL web", icono: Globe },
   { id: "config-email-anfitrion", etiqueta: "Email anfitrión", icono: Mail },
   { id: "config-plantillas-email", etiqueta: "Texto emails", icono: FileText },
