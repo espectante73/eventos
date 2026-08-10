@@ -30,6 +30,7 @@ const ICONOS_VENTANAS = {
 
 export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiarRol, anfitrionToken }) {
   const opcionesRol = [
+    { id: "encabezado-vista", encabezado: "Ver como" },
     {
       id: "rol-anfitrion",
       etiqueta: "✓ Anfitrión",
@@ -44,13 +45,15 @@ export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiar
     })),
   ];
 
-  const opcionesVentanas = ORDEN_VENTANAS.map((clave, i) => ({
-    id: clave,
-    etiqueta: (abierto[clave] ? "✓ " : "") + ETIQUETAS_VENTANAS[clave],
-    icono: ICONOS_VENTANAS[clave],
-    separador: i === 0,
-    onClick: () => toggle(clave),
-  }));
+  const opcionesVentanas = [
+    { id: "encabezado-ventanas", encabezado: "Ventanas", separador: true },
+    ...ORDEN_VENTANAS.map((clave) => ({
+      id: clave,
+      etiqueta: (abierto[clave] ? "✓ " : "") + ETIQUETAS_VENTANAS[clave],
+      icono: ICONOS_VENTANAS[clave],
+      onClick: () => toggle(clave),
+    })),
+  ];
 
   return (
     <MenuFlotante
