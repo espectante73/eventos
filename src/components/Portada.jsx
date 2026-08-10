@@ -89,9 +89,19 @@ export function Portada({ evento, editable, abierto, toggle }) {
           }}
           title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
         >
-          <option value="">Abrir sección…</option>
+          {/* El estilo del <select> cerrado (arriba, C.ink/C.paper) no lo
+              hereda la lista de opciones al abrirse -- cada <option> pide
+              su propio color, para que al desplegarla no aparezca con los
+              colores por defecto del sistema (blanco y negro) en vez de
+              los de la app. En Safari (donde el desplegable es un menú
+              nativo del sistema) el navegador puede seguir ignorando
+              esto igualmente -- es una limitación del propio <select>
+              nativo, no de este estilo. */}
+          <option value="" style={{ background: C.paper, color: C.charcoal }}>
+            Abrir sección…
+          </option>
           {ORDEN_VENTANAS.map((clave) => (
-            <option key={clave} value={clave}>
+            <option key={clave} value={clave} style={{ background: C.paper, color: C.ink }}>
               {abierto[clave] ? "✓ " : ""}
               {ETIQUETAS_VENTANAS[clave]}
             </option>
