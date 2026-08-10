@@ -12,8 +12,25 @@
 // fuera de esa jerarquía y no se recorta.
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { Bell, Users, Settings, Save, Wallet, Mail, List, Utensils, Map, Gauge, History } from "lucide-react";
 import { C } from "../theme";
 import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "./VentanaFlotante";
+
+// Un icono por sección, para ubicarla de un vistazo en la lista — antes
+// de esto era un <select> nativo, que no admite iconos en sus opciones.
+const ICONOS_VENTANAS = {
+  avisos: Bell,
+  colaboradores: Users,
+  configuracion: Settings,
+  copiaSeguridad: Save,
+  cuentas: Wallet,
+  invitaciones: Mail,
+  invitados: List,
+  mesas: Utensils,
+  plano: Map,
+  progreso: Gauge,
+  versiones: History,
+};
 
 export function DesplegableSecciones({ abierto, toggle }) {
   const [open, setOpen] = useState(false);
@@ -74,22 +91,28 @@ export function DesplegableSecciones({ abierto, toggle }) {
               zIndex: 9999,
             }}
           >
-            {ORDEN_VENTANAS.map((clave) => (
-              <button
-                key={clave}
-                onClick={() => {
-                  toggle(clave);
-                  setOpen(false);
-                }}
-                className="block w-full text-left px-3 py-2 text-sm"
-                style={{ color: C.paper, background: "transparent" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,233,222,0.12)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-              >
-                {abierto[clave] ? "✓ " : ""}
-                {ETIQUETAS_VENTANAS[clave]}
-              </button>
-            ))}
+            {ORDEN_VENTANAS.map((clave) => {
+              const Icono = ICONOS_VENTANAS[clave];
+              return (
+                <button
+                  key={clave}
+                  onClick={() => {
+                    toggle(clave);
+                    setOpen(false);
+                  }}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm"
+                  style={{ color: C.paper, background: "transparent" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,233,222,0.12)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                >
+                  {Icono && <Icono size={15} style={{ flexShrink: 0, opacity: 0.85 }} />}
+                  <span>
+                    {abierto[clave] ? "✓ " : ""}
+                    {ETIQUETAS_VENTANAS[clave]}
+                  </span>
+                </button>
+              );
+            })}
           </div>,
           document.body
         )}
