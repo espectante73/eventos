@@ -66,8 +66,8 @@ export function DesplegableSecciones({ abierto, toggle }) {
             style={{
               bottom: pos.bottom,
               right: pos.right,
-              background: C.paper,
-              border: `1px solid ${C.line}`,
+              background: C.ink,
+              border: "1px solid rgba(239,233,222,0.2)",
               boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
               minWidth: 220,
               maxHeight: "60vh",
@@ -82,8 +82,8 @@ export function DesplegableSecciones({ abierto, toggle }) {
                   setOpen(false);
                 }}
                 className="block w-full text-left px-3 py-2 text-sm"
-                style={{ color: C.ink, background: "transparent" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = C.paperDark)}
+                style={{ color: C.paper, background: "transparent" }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,233,222,0.12)")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
                 {abierto[clave] ? "✓ " : ""}
