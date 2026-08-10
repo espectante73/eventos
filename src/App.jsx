@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase } from "./supabaseClient";
 import { getRolFromUrl, getEmailCrearCuentaFromUrl } from "./lib/url";
@@ -8,6 +9,7 @@ import { VistaAnfitrion } from "./vistas/VistaAnfitrion";
 import { VistaColaborador } from "./vistas/VistaColaborador";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
+import { MenuFlotante } from "./components/MenuFlotante";
 
 // ---------- Red de seguridad ante errores inesperados ----------
 
@@ -80,6 +82,14 @@ export default function App() {
   const [esAnfitrionOriginal, setEsAnfitrionOriginal] = useState(null);
   const [rol, setRol] = useState(urlRol || null);
   const data = useLedgerData(rol);
+  // El token del anfitrión, estable aunque `rol` cambie al previsualizar un
+  // colaborador desde el selector de abajo — con el enlace-token viejo es
+  // simplemente `urlRol` (nunca cambia), pero con login no hay ningún
+  // `?rol=...` en la URL, así que hace falta guardarlo aparte la primera
+  // vez que mi_rol() lo resuelve (ver el efecto más abajo). Sin esto, volver
+  // a elegir "Anfitrión" tras previsualizar a un colaborador dejaría `rol`
+  // en null para cualquiera que haya entrado por login.
+  const [anfitrionToken, setAnfitrionToken] = useState(urlRol || null);
 
   // ---------- Login real (Supabase Auth) ----------
   // Capa añadida SOBRE el modelo de enlace-token existente, sin tocar
@@ -137,6 +147,7 @@ export default function App() {
       setSinAccesoAsignado(false);
       const { rol: rolResuelto, token } = filas[0];
       setEsAnfitrionOriginal(rolResuelto === "anfitrion");
+      if (rolResuelto === "anfitrion") setAnfitrionToken(token);
       setRol(token);
     })();
     return () => {
@@ -315,39 +326,45 @@ export default function App() {
               (s, c) => s + pendientesPorColaborador(c.id),
               0
             );
+            const etiquetaAnfitrion = `Anfitrión${totalPendientes > 0 ? ` (${totalPendientes} pendientes)` : ""}`;
+            const etiquetaActual =
+              rol === anfitrionToken
+                ? etiquetaAnfitrion
+                : data.colaboradores.find((c) => c.id === rol)?.nombre || etiquetaAnfitrion;
+            const opcionesRol = [
+              { id: "anfitrion", etiqueta: etiquetaAnfitrion, onClick: () => setRol(anfitrionToken) },
+              ...data.colaboradores.map((c) => {
+                const pendientes = pendientesPorColaborador(c.id);
+                return {
+                  id: c.id,
+                  etiqueta: `${c.nombre}${pendientes > 0 ? ` (${pendientes} pendientes)` : ""}`,
+                  onClick: () => setRol(c.id),
+                };
+              }),
+            ];
             // Barra única (no una fila de botones): pensada para el pulgar en
             // móvil grande (iPhone 14 Pro Max de referencia) — bastante alta
-            // para tocar bien, y un <select> nativo abre el selector grande
-            // del sistema en vez de un menú propio que hay que construir.
+            // para tocar bien. Antes era un <select> nativo (abría el
+            // selector grande del sistema en móvil); pasa a ser un menú
+            // propio para que tenga los mismos colores que el resto de la
+            // app en cualquier navegador (a petición del usuario, asumiendo
+            // perder ese selector nativo grande).
             return (
-              <select
-                value={rol || ""}
-                onChange={(e) => setRol(e.target.value)}
-                className="w-full mb-6 px-4 rounded font-medium"
-                style={{
-                  height: 48,
-                  fontSize: 16,
-                  background: C.ink,
-                  color: C.paper,
-                  border: "none",
-                  appearance: "none",
-                  WebkitAppearance: "none",
-                  MozAppearance: "none",
-                }}
-              >
-                <option value={urlRol}>
-                  Anfitrión{totalPendientes > 0 ? ` (${totalPendientes} pendientes)` : ""}
-                </option>
-                {data.colaboradores.map((c) => {
-                  const pendientes = pendientesPorColaborador(c.id);
-                  return (
-                    <option key={c.id} value={c.id}>
-                      {c.nombre}
-                      {pendientes > 0 ? ` (${pendientes} pendientes)` : ""}
-                    </option>
-                  );
-                })}
-              </select>
+              <MenuFlotante
+                anchor="bottom-left"
+                opciones={opcionesRol}
+                render={({ ref, toggle: abrirCerrar }) => (
+                  <button
+                    ref={ref}
+                    onClick={abrirCerrar}
+                    className="w-full mb-6 px-4 rounded font-medium flex items-center justify-between gap-2"
+                    style={{ height: 48, fontSize: 16, background: C.ink, color: C.paper, border: "none" }}
+                  >
+                    <span>{etiquetaActual}</span>
+                    <ChevronDown size={18} style={{ opacity: 0.8, flexShrink: 0 }} />
+                  </button>
+                )}
+              />
             );
           })()
         ) : urlRol ? (
