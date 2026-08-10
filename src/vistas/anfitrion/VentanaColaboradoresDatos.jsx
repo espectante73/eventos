@@ -1,10 +1,9 @@
 // Ventana "Datos Colab.": añadir uno nuevo (buscando entre los invitados
 // ya existentes) y la tarjeta de cada uno (ColaboradorCard: enlace,
-// email, invitación, relevo, eliminar). Es la mitad de "quién es cada
-// colaborador" — la otra mitad ("qué invitados gestiona cada uno") vive
-// en VentanaColaboradoresFormularios.jsx. Ambas sustituyen a la antigua
-// VentanaColaboradores.jsx (reparto del 2026-08-09, dos ventanas
-// accesibles desde el submenú "Colaboradores" de "Abrir sección…").
+// email, invitación, relevo, eliminar, y sus invitados asignados con
+// reasignación). Es la antigua VentanaColaboradores.jsx, solo renombrada
+// y con clave nueva — accesible desde el submenú "Colaboradores" de
+// "Abrir sección…" (reparto del 2026-08-09).
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { C } from "../../theme";
@@ -14,7 +13,7 @@ import { BuscadorInvitado } from "../../components/BuscadorInvitado";
 import { ColaboradorCard } from "../../components/ColaboradorCard";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
-export function VentanaColaboradoresDatos({ data, onCerrar }) {
+export function VentanaColaboradoresDatos({ data, asignarColaborador, onCerrar }) {
   const { colaboradores, invitados, persistColaboradores, persistInvitados, probarEmailColaborador, enviarInvitacionLogin } = data;
   const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
 
@@ -134,6 +133,7 @@ export function VentanaColaboradoresDatos({ data, onCerrar }) {
               colaboradores={colaboradores}
               onEliminar={eliminarColaborador}
               onRelevar={relevarColaborador}
+              onAsignarColaborador={asignarColaborador}
               onCambiarEmail={cambiarEmailColaborador}
               onProbarEmail={probarEmailColaborador}
               onEnviarInvitacionLogin={enviarInvitacionLogin}
