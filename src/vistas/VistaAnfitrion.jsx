@@ -31,6 +31,7 @@ import {
   Globe,
   FileText,
   RotateCcw,
+  ChevronLeft,
 } from "lucide-react";
 import { formatearFecha, ordenarPorApellidoNombre, parsePrecio, listaConY } from "../lib/formato";
 import {
@@ -435,10 +436,11 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken }) {
                 <button
                   ref={ref}
                   onClick={abrirCerrar}
-                  className="px-2 py-1 rounded text-xs font-medium"
+                  className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium"
                   style={{ background: C.ink, color: C.paper, border: `1px solid ${C.ink}` }}
                   title="Abre esa parte de Configuración en su propia ventana"
                 >
+                  <ChevronLeft size={12} style={{ opacity: 0.8 }} />
                   SECCIÓN
                 </button>
               )}
