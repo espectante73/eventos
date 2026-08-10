@@ -16,6 +16,27 @@ import { createPortal } from "react-dom";
 import { ChevronLeft } from "lucide-react";
 import { C } from "../theme";
 
+// Margen mínimo respecto al borde de la ventana, y altura mínima aunque
+// haya poco hueco (por debajo de esto, mejor dejar que se salga un poco
+// que quedarse ilegible).
+const MARGEN_BORDE = 12;
+const ALTO_MINIMO = 120;
+
+// Altura máxima real según el hueco disponible en pantalla, no un 60vh
+// fijo: si el botón está cerca del borde, un límite fijo deja que el
+// panel se salga igualmente por ese lado y las primeras opciones
+// queden inalcanzables (detectado el 2026-08-09: con "Abrir sección…"
+// cerca del borde superior, "Avisos" y "Colaboradores" — las primeras
+// de la lista — quedaban fuera de la ventana sin forma de llegar a
+// ellas). `ancladoY` es el borde fijo del panel (de dónde "cuelga");
+// `creceHaciaArriba` indica hacia qué lado se extiende el resto.
+function alturaMaximaDisponible(ancladoY, creceHaciaArriba) {
+  const disponible = creceHaciaArriba
+    ? ancladoY - MARGEN_BORDE
+    : window.innerHeight - ancladoY - MARGEN_BORDE;
+  return Math.max(ALTO_MINIMO, Math.min(disponible, window.innerHeight * 0.6));
+}
+
 // Una fila del panel: rótulo de grupo (no clicable), acción directa, o
 // disparador de un submenú anidado (se abre hacia la izquierda de la
 // propia fila, sin cerrar el panel padre — igual patrón que un menú de
@@ -28,7 +49,11 @@ function FilaMenu({ opcion, cerrarTodo }) {
 
   const abrirSubmenu = () => {
     const r = filaRef.current.getBoundingClientRect();
-    setPos({ top: r.top, right: window.innerWidth - r.left + 4 });
+    setPos({
+      top: r.top,
+      right: window.innerWidth - r.left + 4,
+      maxHeight: alturaMaximaDisponible(r.top, false), // crece hacia abajo desde r.top
+    });
     setAbierto(true);
   };
 
@@ -92,7 +117,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
                 boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
                 width: "max-content",
                 maxWidth: "min(320px, calc(100vw - 2rem))",
-                maxHeight: "60vh",
+                maxHeight: pos.maxHeight,
                 padding: "4px 0",
                 zIndex: 10000,
               }}
@@ -140,13 +165,28 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
 
   const abrir = () => {
     const r = botonRef.current.getBoundingClientRect();
-    setPos(
-      anchor === "right"
-        ? { bottom: window.innerHeight - r.top + 4, right: window.innerWidth - r.right }
-        : anchor === "left"
-        ? { top: r.top, right: window.innerWidth - r.left + 4 }
-        : { top: r.bottom + 4, left: r.left }
-    );
+    if (anchor === "right") {
+      // Cuelga del borde superior del botón y crece hacia arriba.
+      setPos({
+        bottom: window.innerHeight - r.top + 4,
+        right: window.innerWidth - r.right,
+        maxHeight: alturaMaximaDisponible(r.top, true),
+      });
+    } else if (anchor === "left") {
+      // Cuelga del borde superior del botón y crece hacia abajo.
+      setPos({
+        top: r.top,
+        right: window.innerWidth - r.left + 4,
+        maxHeight: alturaMaximaDisponible(r.top, false),
+      });
+    } else {
+      // "bottom-left": cuelga del borde inferior del botón y crece hacia abajo.
+      setPos({
+        top: r.bottom + 4,
+        left: r.left,
+        maxHeight: alturaMaximaDisponible(r.bottom, false),
+      });
+    }
     setOpen(true);
   };
 
@@ -193,7 +233,6 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
               boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
               width: "max-content",
               maxWidth: "min(320px, calc(100vw - 2rem))",
-              maxHeight: "60vh",
               padding: "4px 0",
               zIndex: 9999,
             }}
