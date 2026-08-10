@@ -100,7 +100,7 @@ const SECCIONES_CONFIGURACION = [
   { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2 },
 ];
 
-export function VistaAnfitrion({ data, setRol, anfitrionToken }) {
+export function VistaAnfitrion({ data, setRol }) {
   const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, probarEmailColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearAvisos, resetearPorInvitados, gastos, persistGastos } = data;
 
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
@@ -314,7 +314,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken }) {
         toggle={toggle}
         colaboradores={colaboradores}
         onCambiarRol={setRol}
-        anfitrionToken={anfitrionToken}
       />
 
       {/* Resumen */}
