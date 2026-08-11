@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatearFecha, ordenarPorApellidoNombre, parsePrecio, listaConY } from "./formato";
+import { formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY } from "./formato";
 
 describe("formatearFecha", () => {
   it("convierte ISO a formato largo en español", () => {
@@ -9,6 +9,16 @@ describe("formatearFecha", () => {
     expect(formatearFecha("")).toBe("");
     expect(formatearFecha("13/11/2026")).toBe("13/11/2026");
     expect(formatearFecha("2026-99-13")).toBe("2026-99-13");
+  });
+});
+
+describe("formatearDiaSemana", () => {
+  it("calcula el día de la semana en español, en UTC", () => {
+    expect(formatearDiaSemana("2026-11-13")).toBe("Viernes"); // boda real
+  });
+  it("devuelve vacío si no reconoce el formato", () => {
+    expect(formatearDiaSemana("")).toBe("");
+    expect(formatearDiaSemana("13/11/2026")).toBe("");
   });
 });
 

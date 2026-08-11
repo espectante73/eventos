@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { Calendar, Clock, MapPin, Image as ImageIcon } from "lucide-react";
 import { C } from "../theme";
 import { VERSION_APP } from "../constants";
-import { formatearFecha } from "../lib/formato";
+import { formatearFecha, formatearDiaSemana } from "../lib/formato";
 import { DesplegableSecciones } from "./DesplegableSecciones";
 
 export function Portada({ evento, editable, abierto, toggle, colaboradores, onCambiarRol, anfitrionToken }) {
@@ -61,12 +61,31 @@ export function Portada({ evento, editable, abierto, toggle, colaboradores, onCa
 
       <div className="p-5 space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
-          <InfoItem icon={Calendar} label="Fecha" value={formatearFecha(form.fecha) || "—"} />
+          <InfoItem
+            icon={Calendar}
+            label="Fecha"
+            value={form.fecha ? [formatearDiaSemana(form.fecha), formatearFecha(form.fecha)] : "—"}
+          />
           <InfoItem icon={Clock} label="Hora" value={form.hora || "—"} />
           <InfoItem icon={MapPin} label="Lugar" value={form.lugar || "—"} />
         </div>
         <div>
-          <InfoItem icon={MapPin} label="Dirección" value={form.direccion || "—"} />
+          <InfoItem
+            icon={MapPin}
+            label="Dirección"
+            value={
+              form.direccion
+                ? (() => {
+                    // Se divide en la primera coma (p.ej. "calle" / "ciudad,
+                    // provincia") -- si no hay coma, se queda en una sola línea.
+                    const i = form.direccion.indexOf(",");
+                    return i === -1
+                      ? form.direccion
+                      : [form.direccion.slice(0, i).trim(), form.direccion.slice(i + 1).trim()];
+                  })()
+                : "—"
+            }
+          />
         </div>
       </div>
 
@@ -83,7 +102,11 @@ export function Portada({ evento, editable, abierto, toggle, colaboradores, onCa
   );
 }
 
+// `value` admite un string (una línea, como antes) o un array de hasta 2
+// líneas — p.ej. Fecha (día de la semana / fecha) y Dirección (calle /
+// resto), a petición del usuario (2026-08-10).
 export function InfoItem({ icon: Icon, label, value }) {
+  const lineas = (Array.isArray(value) ? value : [value]).filter(Boolean);
   return (
     <div className="flex items-start gap-2">
       <Icon size={16} style={{ color: C.gold }} className="mt-0.5" />
@@ -94,9 +117,15 @@ export function InfoItem({ icon: Icon, label, value }) {
         >
           {label}
         </div>
-        <div style={{ color: C.charcoal, fontFamily: "'Inter', sans-serif" }}>
-          {value}
-        </div>
+        {lineas.length === 0 ? (
+          <div style={{ color: C.charcoal, fontFamily: "'Inter', sans-serif" }}>—</div>
+        ) : (
+          lineas.map((linea, i) => (
+            <div key={i} style={{ color: C.charcoal, fontFamily: "'Inter', sans-serif" }}>
+              {linea}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
