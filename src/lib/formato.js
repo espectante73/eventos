@@ -7,6 +7,10 @@ const MESES_ES = [
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
 ];
 
+const DIAS_ES = [
+  "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado",
+];
+
 export function formatearFecha(fechaISO) {
   if (!fechaISO) return "";
   const partes = fechaISO.split("-");
@@ -15,6 +19,19 @@ export function formatearFecha(fechaISO) {
   const mesIndice = parseInt(mes, 10) - 1;
   if (mesIndice < 0 || mesIndice > 11 || isNaN(parseInt(dia, 10))) return fechaISO;
   return `${parseInt(dia, 10)} ${MESES_ES[mesIndice]} ${anio}`;
+}
+
+// Día de la semana en español, calculado en UTC a propósito: "fechaISO" es
+// solo YYYY-MM-DD (sin hora), y construir la fecha en la zona horaria
+// local podría desplazarla al día anterior/siguiente según dónde se abra
+// la app — usando Date.UTC para construir y getUTCDay() para leer, el
+// resultado no depende de la zona horaria de quien mira la pantalla.
+export function formatearDiaSemana(fechaISO) {
+  if (!fechaISO) return "";
+  const partes = fechaISO.split("-").map((p) => parseInt(p, 10));
+  if (partes.length !== 3 || partes.some((p) => isNaN(p))) return "";
+  const [anio, mes, dia] = partes;
+  return DIAS_ES[new Date(Date.UTC(anio, mes - 1, dia)).getUTCDay()];
 }
 
 export function ordenarPorApellidoNombre(lista) {
