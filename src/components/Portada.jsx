@@ -18,8 +18,11 @@ export function Portada({ evento, editable, abierto, toggle, colaboradores, onCa
       className="rounded-lg overflow-hidden mb-8"
       style={{ border: `1px solid ${C.line}`, background: "#FBF7EC", position: "relative" }}
     >
+      {/* De h-40 (160px) a h-64 (256px, a petición del usuario, 2026-08-10):
+          había espacio de sobra en la portada, y con "cover" una caja más
+          alta recorta menos la foto de cabecera verticalmente. */}
       <div
-        className="h-40 flex items-center justify-center relative"
+        className="h-64 flex items-center justify-center relative"
         style={{
           background: form.imagen
             ? `center/cover no-repeat url(${form.imagen})`
