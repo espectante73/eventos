@@ -718,16 +718,35 @@ $$;
 -- ============================================================
 -- RPCs — lado colaborador (comprueban de verdad la propiedad del
 -- invitado dentro del propio SQL, no solo en el navegador).
--- ============================================================
+--
+-- 2026-08-12: se retira el enlace-token para colaboradores (Fase B del
+-- plan de login, ver .claude/plans/mejoras-pendientes-login-y-solidez.md
+-- -- detectado en pruebas en vivo que un colaborador seguía pudiendo
+-- entrar con su enlace ?rol=... antiguo aunque ya tuviera cuenta). Las
+-- 6 funciones de aquí abajo exigen ahora, ADEMÁS de p_colaborador_id,
+-- que auth.uid() (la sesión real de quien llama) sea justo el
+-- authUserId enlazado a ese colaborador -- p_colaborador_id deja de
+-- bastar por sí solo. El enlace-token del ANFITRIÓN no se toca (sigue
+-- siendo válido como plan B, a propósito).
 create or replace function colaborador_mi_perfil(p_colaborador_id uuid)
 returns setof colaboradores
 language sql security definer set search_path = public, pg_temp
-as $$ select * from colaboradores where "id" = p_colaborador_id; $$;
+as $$
+  select * from colaboradores
+  where "id" = p_colaborador_id and "authUserId" = auth.uid();
+$$;
 
 create or replace function colaborador_mis_invitados(p_colaborador_id uuid)
 returns setof invitados
 language sql security definer set search_path = public, pg_temp
-as $$ select * from invitados where "colaboradorId" = p_colaborador_id; $$;
+as $$
+  select i.* from invitados i
+  where i."colaboradorId" = p_colaborador_id
+    and exists (
+      select 1 from colaboradores c
+      where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
+    );
+$$;
 
 -- Solo puede tocar estos 6 campos, y solo si el invitado es
 -- realmente suyo — el resto de columnas de p_cambios, si vinieran,
@@ -744,6 +763,12 @@ returns setof invitados
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 begin
+  if not exists (
+    select 1 from colaboradores where "id" = p_colaborador_id and "authUserId" = auth.uid()
+  ) then
+    return;
+  end if;
+
   perform set_config('eventos.recalculo_aviso_activo', 'off', true);
   return query
   update invitados set
@@ -771,6 +796,12 @@ as $$
 declare
   actualizado invitados;
 begin
+  if not exists (
+    select 1 from colaboradores where "id" = p_colaborador_id and "authUserId" = auth.uid()
+  ) then
+    return;
+  end if;
+
   if p_pagado then
     perform 1 from invitados
     where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
@@ -805,6 +836,12 @@ declare
   total integer;
   completos integer;
 begin
+  if not exists (
+    select 1 from colaboradores where "id" = p_colaborador_id and "authUserId" = auth.uid()
+  ) then
+    return false;
+  end if;
+
   -- Solo se cuentan los invitados YA CONFIRMADOS de este colaborador — los
   -- que sigan en tentativa no bloquean el aviso: si más adelante se
   -- confirman, forman su propia tanda nueva (ver anfitrion_guardar_invitados
@@ -842,6 +879,12 @@ declare
   total integer;
   pagados integer;
 begin
+  if not exists (
+    select 1 from colaboradores where "id" = p_colaborador_id and "authUserId" = auth.uid()
+  ) then
+    return false;
+  end if;
+
   -- Mismo criterio que colaborador_confirmar_datos_completos: solo cuentan
   -- los ya confirmados, la tentativa no bloquea.
   select count(*), count(*) filter (where "pagado")

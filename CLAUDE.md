@@ -392,6 +392,20 @@ justo este caso). La cuenta de Auth vieja queda huérfana (sin acceso,
 inofensiva) y no hace falta borrarla para que esto funcione — se puede
 limpiar a mano desde el panel si se quiere, sin prisa.
 
+**2026-08-12: enlace-token retirado para colaboradores (Fase B resuelta
+a medias).** En pruebas en vivo se confirmó que un colaborador seguía
+pudiendo entrar con su enlace `?rol=...` antiguo aunque ya tuviera
+cuenta — el enlace nunca dejó de "funcionar" de verdad, solo dejó de
+ser el camino recomendado. Las 6 RPC `colaborador_*` ahora exigen
+además `"authUserId" = auth.uid()`: sin sesión real (el caso del enlace
+viejo), `auth.uid()` es `null` y no coincide con nada, así que esas
+funciones dejan de devolver datos — el enlace-token de colaborador ya
+NO funciona, solo el login. El enlace del **anfitrión** no se tocó
+(sigue siendo válido a propósito, como plan B) — su seguridad nunca
+dependió de estas 6 funciones. Ver Fase B en
+`.claude/plans/mejoras-pendientes-login-y-solidez.md` para la decisión
+pendiente que queda (qué hacer con el enlace del anfitrión).
+
 ⚠️ **Postgres concede EXECUTE a PUBLIC por defecto en cualquier función
 nueva.** `mi_rol()` se creó con `grant execute ... to authenticated`
 pero SIN revocar antes el permiso por defecto de PUBLIC — una prueba en
