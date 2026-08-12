@@ -110,35 +110,42 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
 
   return (
     <VentanaFlotante clave="config-modo-pruebas" titulo="Modo pruebas" onCerrar={onCerrar}>
-      <p className="text-sm mb-1" style={{ color: C.charcoal }}>
-        Guarda una foto de todo ahora mismo; al desactivarlo, vuelve a ella entera.
-      </p>
-      <p className="text-xs mb-3" style={{ color: C.wax }}>
-        ⚠ Los cambios reales de tus colaboradores mientras tanto también se perderán.
-      </p>
-      {colaboradores.length > 0 && (
-        <div className="mb-3">
-          <p className="text-xs mb-1" style={{ color: C.line }}>
-            Colaboradores habilitados durante la prueba (desmarca para bloquearlos):
+      <div className="flex mb-3">
+        <div className="flex-1 min-w-0 pr-4">
+          <p className="text-sm mb-1" style={{ color: C.charcoal }}>
+            Guarda una foto de todo ahora mismo; al desactivarlo, vuelve a ella entera.
           </p>
-          <div className="space-y-1">
-            {colaboradores.map((c) => (
-              <label
-                key={c.id}
-                className="flex items-center justify-end gap-2 text-sm py-0.5"
-                style={{ color: C.charcoal }}
-              >
-                {c.nombre}
-                <input
-                  type="checkbox"
-                  checked={habilitados.has(c.id)}
-                  onChange={() => alternarHabilitado(c.id)}
-                />
-              </label>
-            ))}
-          </div>
+          <p className="text-xs" style={{ color: C.wax }}>
+            ⚠ Los cambios reales de tus colaboradores mientras tanto también se perderán.
+          </p>
         </div>
-      )}
+        {colaboradores.length > 0 && (
+          <>
+            <div className="w-px my-1 self-stretch" style={{ background: C.line, opacity: 0.3 }} />
+            <div className="flex-1 min-w-0 pl-4">
+              <p className="text-xs mb-1" style={{ color: C.line }}>
+                Colaboradores habilitados durante la prueba (desmarca para bloquearlos):
+              </p>
+              <div className="space-y-1">
+                {colaboradores.map((c) => (
+                  <label
+                    key={c.id}
+                    className="flex items-center justify-end gap-2 text-sm py-0.5"
+                    style={{ color: C.charcoal }}
+                  >
+                    {c.nombre}
+                    <input
+                      type="checkbox"
+                      checked={habilitados.has(c.id)}
+                      onChange={() => alternarHabilitado(c.id)}
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
       <div className="flex justify-end">
         <button
           onClick={activar}
