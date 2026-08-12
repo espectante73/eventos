@@ -9,39 +9,8 @@
 import { ClipboardList, Euro, Mail } from "lucide-react";
 import { C } from "../../theme";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
-import { ProgresoBar } from "../../components/Widgets";
+import { ProgresoBar, BarraCompacta } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
-
-// Icono + barra fina en una sola línea, sin etiqueta de texto (el icono
-// hace de etiqueta, el color distingue de qué barra se trata) — el
-// título HTML sigue llevando el detalle exacto (n/total y %) para quien
-// pase el ratón o toque con el dedo.
-function BarraCompacta({ icono: Icono, completado, total, color }) {
-  const pct = total > 0 ? Math.round((completado / total) * 100) : 0;
-  return (
-    <div
-      className="flex items-center gap-1.5 mb-1"
-      title={`${completado}/${total} · ${pct}%`}
-    >
-      <Icono size={14} style={{ color, flexShrink: 0 }} />
-      <div style={{ flex: 1, background: C.paperDark, borderRadius: 3, height: 7, overflow: "hidden" }}>
-        <div style={{ width: `${pct}%`, background: color, height: "100%", transition: "width 0.3s ease" }} />
-      </div>
-      <span
-        style={{
-          fontSize: 10,
-          color: C.charcoal,
-          opacity: 0.7,
-          fontFamily: "'IBM Plex Mono', monospace",
-          minWidth: 30,
-          textAlign: "right",
-        }}
-      >
-        {pct}%
-      </span>
-    </div>
-  );
-}
 
 export function VentanaProgreso({ data, onCerrar }) {
   const { invitados, colaboradores, ordenFamiliares } = data;
