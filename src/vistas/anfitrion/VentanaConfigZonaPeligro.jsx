@@ -79,7 +79,7 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
       <button
         onClick={borrarTodoElContenido}
         className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-        style={{ background: C.wax, color: "#fff" }}
+        style={{ background: "#B00020", color: "#fff" }}
       >
         <Trash2 size={14} /> BORRAR TODO
       </button>

@@ -163,6 +163,10 @@ function FilaMenu({ opcion, cerrarTodo }) {
     );
   }
 
+  // `opcion.fondo`: opciones "de peligro" (Modo pruebas, Borrado total)
+  // llevan su propio chip de color de fondo (letra clara) en vez del
+  // resaltado normal al pasar el ratón — ver DesplegableSecciones.jsx.
+  const fondoBase = opcion.fondo || "transparent";
   return (
     <button
       onClick={() => {
@@ -170,9 +174,21 @@ function FilaMenu({ opcion, cerrarTodo }) {
         cerrarTodo();
       }}
       className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm whitespace-nowrap"
-      style={{ color: opcion.color || C.paper, background: "transparent" }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,233,222,0.12)")}
-      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+      style={{
+        color: opcion.color || C.paper,
+        background: fondoBase,
+        margin: opcion.fondo ? "2px 6px" : 0,
+        width: opcion.fondo ? "calc(100% - 12px)" : "100%",
+        borderRadius: opcion.fondo ? 4 : 0,
+      }}
+      onMouseEnter={(e) => {
+        if (opcion.fondo) e.currentTarget.style.filter = "brightness(1.2)";
+        else e.currentTarget.style.background = "rgba(239,233,222,0.12)";
+      }}
+      onMouseLeave={(e) => {
+        if (opcion.fondo) e.currentTarget.style.filter = "none";
+        else e.currentTarget.style.background = "transparent";
+      }}
     >
       {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: 0.85 }} />}
       <span>{opcion.etiqueta}</span>
