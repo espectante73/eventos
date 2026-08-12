@@ -10,7 +10,7 @@ import { importeEsperadoInvitado, resolverColaborador } from "../../lib/invitado
 import { parsePrecio, formatearFecha, ordenarPorApellidoNombre } from "../../lib/formato";
 import { uid } from "../../lib/id";
 import { construirAsuntoAcuse, construirHtmlAcuse } from "../../lib/acuseRecogida";
-import { generarImagenAcuse } from "../../lib/acuseImagen";
+import { generarPdfAcuse } from "../../lib/acuseImagen";
 import { TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
@@ -83,12 +83,12 @@ export function VentanaCuentas({ data, onCerrar }) {
   };
 
   const nombreArchivoAcuse = (c) =>
-    `acuse-${(c.nombre || "colaborador").replace(/\s+/g, "-").toLowerCase()}.png`;
+    `acuse-${(c.nombre || "colaborador").replace(/\s+/g, "-").toLowerCase()}.pdf`;
 
   const confirmarRecogida = async (c) => {
     const importe = parseFloat(importeConfirmar.replace(",", ".")) || 0;
     const fechaISO = new Date().toISOString().slice(0, 10);
-    const dataUrl = await generarImagenAcuse({
+    const dataUrl = await generarPdfAcuse({
       evento,
       colaborador: c,
       items: itemsRecaudadosPorColaborador(c),
@@ -109,7 +109,7 @@ export function VentanaCuentas({ data, onCerrar }) {
 
   const reenviarAcuse = async (c) => {
     setEnviandoId(c.id);
-    const dataUrl = await generarImagenAcuse({
+    const dataUrl = await generarPdfAcuse({
       evento,
       colaborador: c,
       items: itemsRecaudadosPorColaborador(c),
@@ -134,7 +134,7 @@ export function VentanaCuentas({ data, onCerrar }) {
   // "Probar" ya existente para el email de cada colaborador).
   const probarAcuse = async (c) => {
     setEnviandoId(c.id);
-    const dataUrl = await generarImagenAcuse({
+    const dataUrl = await generarPdfAcuse({
       evento,
       colaborador: c,
       items: itemsRecaudadosPorColaborador(c),
