@@ -18,12 +18,31 @@ const formatoEuro = (n) =>
 // Dibuja el recibo en un <canvas> y devuelve { canvas, W, H }. Separado
 // de la conversión a PDF para poder reutilizarlo si algún día hiciera
 // falta también como imagen suelta.
+// Proporción real de un A4 vertical (alto/ancho). Antes solo se le daba
+// al PDF una hoja A4 de verdad, pero el DIBUJO en sí seguía siendo un
+// rectángulo horizontal (ancho fijo, alto según el número de invitados)
+// simplemente centrado dentro de esa hoja -- con pocos invitados
+// quedaba un recibo apaisado con mucho margen blanco alrededor, no un
+// documento vertical de verdad. Ahora, si el contenido natural (según
+// cuántos invitados tenga el desglose) no llega a esta proporción, se
+// alarga el propio lienzo hasta cumplirla -- el recibo en sí es
+// vertical, no solo la hoja que lo contiene. Con MUCHOS invitados
+// (contenido ya más alto que ancho de sobra), no hace falta forzar
+// nada más.
+const RATIO_A4 = 841.89 / 595.28;
+
 function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
   const W = 800;
   const ALTO_ITEM = 30;
   const ALTO_CABECERA = 250;
   const ALTO_PIE = 230;
-  const H = ALTO_CABECERA + Math.max(items.length, 1) * ALTO_ITEM + ALTO_PIE;
+  const alturaContenido = ALTO_CABECERA + Math.max(items.length, 1) * ALTO_ITEM + ALTO_PIE;
+  const H = Math.max(alturaContenido, Math.round(W * RATIO_A4));
+  // El espacio de más (si lo hay) se inserta como aire entre el desglose
+  // y el bloque de total/fecha/firma, para que ese bloque quede hacia la
+  // mitad-final de la página en vez de pegado justo debajo de la lista
+  // con un hueco vacío después -- igual que un recibo/factura real.
+  const espacioExtra = H - alturaContenido;
 
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -76,7 +95,7 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
     });
   }
 
-  y += 14;
+  y += 14 + espacioExtra;
   ctx.strokeStyle = "#C9BFA9"; // C.line
   ctx.lineWidth = 1;
   ctx.beginPath();
