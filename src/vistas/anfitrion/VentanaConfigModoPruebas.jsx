@@ -42,6 +42,9 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
     });
   };
 
+  const marcarTodos = () => setHabilitados(new Set(colaboradores.map((c) => c.id)));
+  const desmarcarTodos = () => setHabilitados(new Set());
+
   const activar = async () => {
     const ok = window.confirm(
       "Se guarda una foto completa de los datos actuales del evento. Podrás volver a este " +
@@ -123,9 +126,30 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
           <>
             <div className="w-px my-1 self-stretch" style={{ background: C.line, opacity: 0.3 }} />
             <div className="flex-1 min-w-0 pl-4">
-              <p className="text-xs mb-1" style={{ color: C.line }}>
-                Colaboradores habilitados durante la prueba (desmarca para bloquearlos):
-              </p>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <p className="text-xs" style={{ color: C.line }}>
+                  Colaboradores habilitados durante la prueba:
+                </p>
+                <div className="flex items-center gap-1 text-xs whitespace-nowrap">
+                  <button
+                    type="button"
+                    onClick={marcarTodos}
+                    className="underline"
+                    style={{ color: C.wax }}
+                  >
+                    Todos
+                  </button>
+                  <span style={{ color: C.line }}>/</span>
+                  <button
+                    type="button"
+                    onClick={desmarcarTodos}
+                    className="underline"
+                    style={{ color: C.wax }}
+                  >
+                    Ninguno
+                  </button>
+                </div>
+              </div>
               <div className="space-y-1">
                 {colaboradores.map((c) => (
                   <label
