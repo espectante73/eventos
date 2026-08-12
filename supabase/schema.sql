@@ -1011,6 +1011,81 @@ end;
 $$;
 
 -- ============================================================
+-- RECOGIDA DE DINERO DE CADA COLABORADOR (2026-08-12): registro,
+-- aparte de "invitado pagó a su colaborador" (invitados.pagado), de
+-- "colaborador entregó lo recaudado al anfitrión" -- un evento propio,
+-- con su fecha e importe congelados en el momento de confirmarlo (no
+-- recalculado después, para que el acuse ya enviado siga siendo fiel a
+-- lo que de verdad se entregó ese día). El acuse (desglose por invitado,
+-- total, fecha, firma) se construye en el navegador (ya tiene los
+-- nombres cargados) y se manda por email al propio colaborador -- mismo
+-- patrón que anfitrion_enviar_invitacion_familia: el HTML llega ya
+-- hecho, aquí solo se reenvía a enviar_email() y se deja constancia.
+-- ============================================================
+alter table colaboradores add column if not exists "dineroRecogidoEn" timestamptz;
+alter table colaboradores add column if not exists "dineroRecogidoImporte" numeric;
+
+create or replace function anfitrion_confirmar_recogida_colaborador(
+  p_token uuid, p_colaborador_id uuid, p_importe numeric,
+  p_email text, p_asunto text, p_html text
+)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  update colaboradores
+  set "dineroRecogidoEn" = now(), "dineroRecogidoImporte" = p_importe
+  where "id" = p_colaborador_id;
+
+  -- enviar_email ya no hace nada si p_email viene vacío (ver su propio
+  -- guard) -- no hace falta comprobarlo aquí también.
+  perform enviar_email(p_email, p_asunto, p_html, null, null, null, 'asignados');
+end;
+$$;
+
+-- Reenviar el mismo acuse sin volver a "confirmar" (no toca la fecha ni
+-- el importe ya registrados) -- para cuando el colaborador dice que no
+-- le llegó o lo perdió.
+create or replace function anfitrion_reenviar_acuse_colaborador(
+  p_token uuid, p_email text, p_asunto text, p_html text
+)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  perform enviar_email(p_email, p_asunto, p_html, null, null, null, 'asignados');
+end;
+$$;
+
+-- Deshacer una recogida marcada por error -- no borra ningún dato de
+-- invitados ni pagos, solo el registro de la entrega en sí (mismo
+-- espíritu que la Zona de Reinicio: nunca borra invitados/colaboradores).
+create or replace function anfitrion_deshacer_recogida_colaborador(
+  p_token uuid, p_colaborador_id uuid
+)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  update colaboradores
+  set "dineroRecogidoEn" = null, "dineroRecogidoImporte" = null
+  where "id" = p_colaborador_id;
+end;
+$$;
+
+-- ============================================================
 -- ZONA DE REINICIO ("botón nuclear"): pone a cero campos concretos
 -- sin borrar nunca al invitado ni al colaborador en sí. Pensado para
 -- poder reutilizar la app en otro evento, o limpiar datos de pruebas
@@ -1106,6 +1181,8 @@ grant execute on function anfitrion_resetear_avisos(uuid) to anon;
 grant execute on function anfitrion_resetear_por_invitados(uuid, uuid[], text) to anon;
 grant execute on function anfitrion_listar_gastos(uuid) to anon;
 grant execute on function anfitrion_guardar_gastos(uuid, jsonb) to anon;
+grant execute on function anfitrion_confirmar_recogida_colaborador(uuid, uuid, numeric) to anon;
+grant execute on function anfitrion_deshacer_recogida_colaborador(uuid, uuid) to anon;
 grant execute on function colaborador_mi_perfil(uuid) to anon;
 grant execute on function colaborador_mis_invitados(uuid) to anon;
 grant execute on function colaborador_guardar_invitado(uuid, uuid, jsonb) to anon;
