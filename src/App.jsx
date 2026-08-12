@@ -80,6 +80,26 @@ export default function App() {
   const [esAnfitrionOriginal, setEsAnfitrionOriginal] = useState(null);
   const [rol, setRol] = useState(urlRol || null);
   const data = useLedgerData(rol);
+  // Previsualización "Formularios" (anfitrión viendo la pantalla de un
+  // colaborador): id del colaborador previsualizado, o null si se está
+  // viendo la propia vista de anfitrión. A propósito NO reutiliza `rol` --
+  // antes SÍ lo hacía (`setRol(c.id)`), lo que disparaba una recarga real
+  // de datos vía colaborador_mi_perfil/colaborador_mis_invitados exigiendo
+  // "authUserId = auth.uid()". Como el anfitrión sigue autenticado con SU
+  // propia sesión al previsualizar (nunca inicia sesión como ese
+  // colaborador), esa condición nunca se cumplía -- la previsualización
+  // llevaba rota desde el 2026-08-12 (retirada del enlace-token de
+  // colaborador), detectado el mismo día que Modo Pruebas se probó en
+  // vivo por primera vez. Con `vistaPrevia`, `rol` ya no cambia nunca al
+  // previsualizar: sigue siendo el del propio anfitrión, así que `data`
+  // conserva TODOS los colaboradores/invitados ya cargados, y
+  // VistaColaborador simplemente filtra esos mismos datos por
+  // `colaboradorId` (ya lo hacía así) en vez de pedir un juego de datos
+  // nuevo y más estrecho.
+  const [vistaPrevia, setVistaPrevia] = useState(null);
+  const cambiarVistaPrevia = (destino) => {
+    setVistaPrevia(destino === anfitrionToken ? null : destino);
+  };
   // El token del anfitrión, estable aunque `rol` cambie al previsualizar un
   // colaborador desde el selector de abajo — con el enlace-token viejo es
   // simplemente `urlRol` (nunca cambia), pero con login no hay ningún
@@ -355,8 +375,16 @@ export default function App() {
           </div>
         )}
 
-        {data.esAnfitrion ? (
-          <VistaAnfitrion data={data} setRol={setRol} anfitrionToken={anfitrionToken} />
+        {data.esAnfitrion && !vistaPrevia ? (
+          <VistaAnfitrion data={data} setRol={cambiarVistaPrevia} anfitrionToken={anfitrionToken} />
+        ) : data.esAnfitrion && vistaPrevia ? (
+          <VistaColaborador
+            data={data}
+            colaboradorId={vistaPrevia}
+            esAnfitrionOriginal={esAnfitrionOriginal}
+            setRol={cambiarVistaPrevia}
+            anfitrionToken={anfitrionToken}
+          />
         ) : data.colaboradores.some((c) => c.id === rol) ? (
           <VistaColaborador
             data={data}

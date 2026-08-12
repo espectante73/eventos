@@ -431,6 +431,27 @@ dependió de estas 6 funciones. Ver Fase B en
 `.claude/plans/mejoras-pendientes-login-y-solidez.md` para la decisión
 pendiente que queda (qué hacer con el enlace del anfitrión).
 
+⚠️ **Ese mismo cambio rompió, de rebote, la previsualización "Formularios"
+del anfitrión (App.jsx) sin que nadie lo notara hasta el 2026-08-12,
+al probar Modo Pruebas en vivo.** "Formularios" reutilizaba `setRol` para
+cambiar a la vista de un colaborador, lo que disparaba una recarga real
+de datos vía `colaborador_mi_perfil`/`colaborador_mis_invitados` — y esas
+dos exigen `authUserId = auth.uid()` desde la entrada de arriba. Como el
+anfitrión sigue con SU PROPIA sesión al previsualizar (nunca inicia
+sesión como ese colaborador), la condición nunca se cumplía: la
+previsualización mostraba "Este enlace no es válido..." en vez del
+formulario. Arreglado separando "quién soy" de "qué estoy
+previsualizando": `App.jsx` añadió un estado aparte, `vistaPrevia`, que
+NO toca `rol` ni dispara ningún refetch — simplemente le pasa a
+`VistaColaborador` los datos que el anfitrión YA tiene cargados enteros
+(todos los colaboradores, todos los invitados), y `VistaColaborador`
+los filtra por `colaboradorId` en el propio cliente (ya lo hacía así,
+funciona igual de bien con el listado completo que con uno ya
+filtrado). **Cualquier función nueva `colaborador_*` que dependa de
+`auth.uid()` debe asumir que el anfitrión puede querer "verla" sin ser
+esa persona** — para eso sirve `vistaPrevia`, no añadir excepciones a la
+propia RPC.
+
 ⚠️ **Postgres concede EXECUTE a PUBLIC por defecto en cualquier función
 nueva.** `mi_rol()` se creó con `grant execute ... to authenticated`
 pero SIN revocar antes el permiso por defecto de PUBLIC — una prueba en
