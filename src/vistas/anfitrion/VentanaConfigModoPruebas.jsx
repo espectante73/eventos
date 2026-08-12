@@ -25,8 +25,22 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
   } = data;
   const [palabra, setPalabra] = useState("");
   const [ejecutando, setEjecutando] = useState(false);
+  // Por defecto todos habilitados -- lo normal es que el propio
+  // anfitrión sea quien más prueba, así que "todos pueden seguir
+  // actuando" es el punto de partida más cómodo; se desmarca a quien no
+  // deba tocar nada real mientras dura la prueba.
+  const [habilitados, setHabilitados] = useState(() => new Set(colaboradores.map((c) => c.id)));
 
   const activo = Boolean(evento.modoPruebasActivo);
+
+  const alternarHabilitado = (id) => {
+    setHabilitados((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const activar = async () => {
     const ok = window.confirm(
@@ -35,7 +49,7 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
     );
     if (!ok) return;
     setEjecutando(true);
-    await activarModoPruebas();
+    await activarModoPruebas(Array.from(habilitados));
     // activarModoPruebas() recarga la página al terminar -- no hace
     // falta poner ejecutando a false, este componente ya no seguirá
     // montado.
@@ -105,6 +119,30 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
         ⚠ Mientras esté activo, cualquier cambio real que hagan tus colaboradores también se
         perderá al desactivarlo — es un reset global, no distingue pruebas de cambios de verdad.
       </p>
+      {colaboradores.length > 0 && (
+        <div className="mb-3">
+          <p className="text-xs font-semibold mb-1" style={{ color: C.charcoal }}>
+            Colaboradores que pueden seguir actuando mientras dure la prueba
+          </p>
+          <p className="text-xs mb-2" style={{ color: C.line }}>
+            A quien desmarques se le bloquean sus gestos (guardar datos, marcar pagos,
+            confirmar) hasta que desactives el Modo Pruebas — sin tocar su cuenta ni
+            desasignarle nada.
+          </p>
+          <div className="space-y-1 max-h-40 overflow-y-auto">
+            {colaboradores.map((c) => (
+              <label key={c.id} className="flex items-center gap-2 text-sm" style={{ color: C.charcoal }}>
+                <input
+                  type="checkbox"
+                  checked={habilitados.has(c.id)}
+                  onChange={() => alternarHabilitado(c.id)}
+                />
+                {c.nombre}
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
       <button
         onClick={activar}
         disabled={ejecutando}

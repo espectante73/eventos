@@ -544,8 +544,21 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
 
   const formatoEuro = (n) => `€ ${n.toFixed(2)}`;
 
+  // Bloqueado por el anfitrión durante el Modo Pruebas (ver
+  // colaborador_puede_actuar en schema.sql) -- los guardados que intente
+  // ya se deshacen solos en pantalla (persistInvitados), pero sin este
+  // aviso el mensaje de error genérico ("¿sigue asignado a ti este
+  // invitado?") confundiría más de lo que explica.
+  const bloqueadoEnPruebas = Boolean(evento.modoPruebasActivo) && colaborador.habilitadoEnPruebas === false;
+
   return (
     <div className="space-y-8">
+      {bloqueadoEnPruebas && (
+        <div className="p-3 rounded text-sm font-semibold" style={{ background: "#B00020", color: "#fff" }}>
+          🧪 El anfitrión ha activado el Modo Pruebas y te ha dejado fuera por ahora: no podrás
+          guardar datos, marcar pagos ni confirmar nada hasta que lo desactive.
+        </div>
+      )}
       <div className="p-4 rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
         <div className="flex items-center justify-between">
           <div>

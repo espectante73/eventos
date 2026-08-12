@@ -753,10 +753,7 @@ as $$
   select i.* from invitados i
   where i."colaboradorId" = p_colaborador_id
     and i."confirmado" = true
-    and exists (
-      select 1 from colaboradores c
-      where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
-    );
+    and colaborador_puede_actuar(p_colaborador_id);
 $$;
 
 -- Solo puede tocar estos 6 campos, y solo si el invitado es
@@ -774,9 +771,7 @@ returns setof invitados
 language plpgsql security definer set search_path = public, pg_temp
 as $$
 begin
-  if not exists (
-    select 1 from colaboradores where "id" = p_colaborador_id and "authUserId" = auth.uid()
-  ) then
+  if not colaborador_puede_actuar(p_colaborador_id) then
     return;
   end if;
 
@@ -807,9 +802,7 @@ as $$
 declare
   actualizado invitados;
 begin
-  if not exists (
-    select 1 from colaboradores where "id" = p_colaborador_id and "authUserId" = auth.uid()
-  ) then
+  if not colaborador_puede_actuar(p_colaborador_id) then
     return;
   end if;
 
@@ -847,9 +840,7 @@ declare
   total integer;
   completos integer;
 begin
-  if not exists (
-    select 1 from colaboradores where "id" = p_colaborador_id and "authUserId" = auth.uid()
-  ) then
+  if not colaborador_puede_actuar(p_colaborador_id) then
     return false;
   end if;
 
@@ -890,9 +881,7 @@ declare
   total integer;
   pagados integer;
 begin
-  if not exists (
-    select 1 from colaboradores where "id" = p_colaborador_id and "authUserId" = auth.uid()
-  ) then
+  if not colaborador_puede_actuar(p_colaborador_id) then
     return false;
   end if;
 
@@ -1130,6 +1119,36 @@ $$;
 -- ============================================================
 alter table evento add column if not exists "modoPruebasActivo" boolean not null default false;
 
+-- Selección de colaboradores habilitados DURANTE el Modo Pruebas: al
+-- activarlo, el anfitrión elige a quién se le sigue dejando actuar como
+-- colaborador (guardar datos, marcar pagos, confirmar...) mientras dura
+-- la prueba -- por defecto true (nadie queda bloqueado si nunca se ha
+-- tocado esta selección, p.ej. datos antiguos restaurados de un
+-- snapshot previo a este cambio). Los 5 gestos reales de colaborador
+-- (mi_perfil queda aparte, ver más abajo) pasan todos por
+-- colaborador_puede_actuar() para no repetir esta condición 5 veces.
+alter table colaboradores add column if not exists "habilitadoEnPruebas" boolean not null default true;
+
+-- colaborador_mi_perfil NO usa esta función a propósito: un colaborador
+-- deshabilitado durante el Modo Pruebas debe poder seguir viendo su
+-- propio perfil (para que la app le explique que está bloqueado en vez
+-- de fallar en seco) -- solo se bloquean sus gestos, no la lectura de
+-- quién es.
+create or replace function colaborador_puede_actuar(p_colaborador_id uuid)
+returns boolean
+language sql security definer set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1 from colaboradores c
+    where c."id" = p_colaborador_id
+      and c."authUserId" = auth.uid()
+      and (
+        not coalesce((select "modoPruebasActivo" from evento limit 1), false)
+        or c."habilitadoEnPruebas"
+      )
+  );
+$$;
+
 create table if not exists modo_pruebas_snapshot (
   "id"       boolean primary key default true check ("id"),
   "datos"    jsonb not null,
@@ -1138,7 +1157,17 @@ create table if not exists modo_pruebas_snapshot (
 alter table modo_pruebas_snapshot enable row level security;
 revoke all on table modo_pruebas_snapshot from anon, authenticated;
 
-create or replace function anfitrion_activar_modo_pruebas(p_token uuid)
+-- 2026-08-12: gana un segundo parámetro, p_colaborador_ids_habilitados --
+-- la lista de colaboradores a los que se les sigue dejando actuar
+-- (guardar datos, marcar pagos, confirmar) mientras dura la prueba. El
+-- resto queda bloqueado por colaborador_puede_actuar() sin necesidad de
+-- tocar su cuenta ni desasignarle nada. Cambia el número de parámetros
+-- -- hace falta el drop de la firma vieja (ver regla en CLAUDE.md).
+drop function if exists anfitrion_activar_modo_pruebas(uuid);
+
+create or replace function anfitrion_activar_modo_pruebas(
+  p_token uuid, p_colaborador_ids_habilitados uuid[]
+)
 returns void
 language plpgsql security definer set search_path = public, pg_temp
 as $$
@@ -1149,9 +1178,10 @@ begin
     return;
   end if;
 
-  -- La foto se toma ANTES de marcar modoPruebasActivo = true, para que
-  -- quede guardado el estado "normal" -- al restaurar, ese mismo false
-  -- vuelve solo, sin necesidad de tratarlo como caso especial aparte.
+  -- La foto se toma ANTES de marcar modoPruebasActivo = true (y ANTES de
+  -- tocar habilitadoEnPruebas), para que quede guardado el estado
+  -- "normal" -- al restaurar, ambas cosas vuelven solas, sin necesidad
+  -- de tratarlas como caso especial aparte.
   select jsonb_build_object(
     'evento', (select to_jsonb(e) from evento e limit 1),
     'colaboradores', (select coalesce(jsonb_agg(c), '[]'::jsonb) from colaboradores c),
@@ -1167,6 +1197,7 @@ begin
   values (true, v_datos, now())
   on conflict ("id") do update set "datos" = excluded."datos", "creadoEn" = excluded."creadoEn";
 
+  update colaboradores set "habilitadoEnPruebas" = ("id" = any(p_colaborador_ids_habilitados));
   update evento set "modoPruebasActivo" = true;
 end;
 $$;
@@ -1238,7 +1269,7 @@ begin
 end;
 $$;
 
-grant execute on function anfitrion_activar_modo_pruebas(uuid) to anon;
+grant execute on function anfitrion_activar_modo_pruebas(uuid, uuid[]) to anon;
 grant execute on function anfitrion_desactivar_modo_pruebas(uuid) to anon;
 
 -- ============================================================
