@@ -114,6 +114,25 @@ export function VentanaCuentas({ data, onCerrar }) {
     setEnviandoId(null);
   };
 
+  // "Probar acuse": manda el acuse con los datos reales de AHORA (sus
+  // invitados ya pagados) pero SIN confirmar ni registrar ninguna
+  // recogida -- no toca dineroRecogidoEn/Importe, así que no hace falta
+  // deshacer nada después. Pensado para ver de un vistazo cómo queda el
+  // email antes de usarlo de verdad (mismo espíritu que el botón
+  // "Probar" ya existente para el email de cada colaborador).
+  const probarAcuse = async (c) => {
+    setEnviandoId(c.id);
+    const html = construirHtmlAcuse({
+      evento,
+      colaborador: c,
+      items: itemsRecaudadosPorColaborador(c),
+      total: importeRecaudadoPorColaborador(c),
+      fechaISO: new Date().toISOString().slice(0, 10),
+    });
+    await reenviarAcuseColaborador(c.email, "[PRUEBA] " + construirAsuntoAcuse(evento), html);
+    setEnviandoId(null);
+  };
+
   return (
     <VentanaFlotante clave="cuentas" titulo="Estado de cuentas" onCerrar={onCerrar}>
       <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
@@ -242,17 +261,28 @@ export function VentanaCuentas({ data, onCerrar }) {
                     </button>
                   </>
                 ) : (
-                  <button
-                    onClick={() => abrirConfirmar(c)}
-                    disabled={importeSuyo === 0}
-                    className="px-3 py-1.5 rounded text-xs font-medium"
-                    style={{
-                      background: importeSuyo === 0 ? C.paperDark : C.ink,
-                      color: importeSuyo === 0 ? C.charcoal : C.paper,
-                    }}
-                  >
-                    Confirmar recogida
-                  </button>
+                  <>
+                    <button
+                      onClick={() => abrirConfirmar(c)}
+                      disabled={importeSuyo === 0}
+                      className="px-3 py-1.5 rounded text-xs font-medium"
+                      style={{
+                        background: importeSuyo === 0 ? C.paperDark : C.ink,
+                        color: importeSuyo === 0 ? C.charcoal : C.paper,
+                      }}
+                    >
+                      Confirmar recogida
+                    </button>
+                    <button
+                      onClick={() => probarAcuse(c)}
+                      disabled={enviandoId === c.id || !c.email}
+                      title="Enviar un acuse de prueba con los datos actuales, sin confirmar ni registrar nada"
+                      className="flex items-center gap-1 text-xs px-2 py-1 rounded"
+                      style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+                    >
+                      <Mail size={13} /> {enviandoId === c.id ? "Enviando…" : "Probar acuse"}
+                    </button>
+                  </>
                 )}
               </div>
             );
