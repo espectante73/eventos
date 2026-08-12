@@ -1,12 +1,47 @@
 // Ventana "Progreso de recopilación": barras de progreso generales, y
-// tres barras por colaborador (datos / pagos / invitaciones enviadas,
-// cada una de un color distinto, a petición del usuario 2026-08-12) y
-// de canciones registradas. Extraída de VistaAnfitrion.jsx en el
-// reparto del 2026-08-08 (Fase 4, Ronda 1).
+// tres barras compactas por colaborador (datos / pagos / invitaciones
+// enviadas) — icono en vez de texto y todo en la misma línea que la
+// barra (a petición del usuario, 2026-08-12: así caben más
+// colaboradores de un vistazo, con solo un margen mínimo entre las tres
+// porque cada una ya se distingue por su color). Y de canciones
+// registradas. Extraída de VistaAnfitrion.jsx en el reparto del
+// 2026-08-08 (Fase 4, Ronda 1).
+import { ClipboardList, Euro, Mail } from "lucide-react";
 import { C } from "../../theme";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
 import { ProgresoBar } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
+
+// Icono + barra fina en una sola línea, sin etiqueta de texto (el icono
+// hace de etiqueta, el color distingue de qué barra se trata) — el
+// título HTML sigue llevando el detalle exacto (n/total y %) para quien
+// pase el ratón o toque con el dedo.
+function BarraCompacta({ icono: Icono, completado, total, color }) {
+  const pct = total > 0 ? Math.round((completado / total) * 100) : 0;
+  return (
+    <div
+      className="flex items-center gap-1.5 mb-1"
+      title={`${completado}/${total} · ${pct}%`}
+    >
+      <Icono size={14} style={{ color, flexShrink: 0 }} />
+      <div style={{ flex: 1, background: C.paperDark, borderRadius: 3, height: 7, overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, background: color, height: "100%", transition: "width 0.3s ease" }} />
+      </div>
+      <span
+        style={{
+          fontSize: 10,
+          color: C.charcoal,
+          opacity: 0.7,
+          fontFamily: "'IBM Plex Mono', monospace",
+          minWidth: 30,
+          textAlign: "right",
+        }}
+      >
+        {pct}%
+      </span>
+    </div>
+  );
+}
 
 export function VentanaProgreso({ data, onCerrar }) {
   const { invitados, colaboradores, ordenFamiliares } = data;
@@ -20,7 +55,7 @@ export function VentanaProgreso({ data, onCerrar }) {
         total={confirmadosCount}
         color={C.wax}
       />
-      <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
+      <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
         {colaboradores.map((c) => {
           const suyos = invitados.filter(
             (g) => resolverColaborador(g, colaboradores)?.id === c.id && g.confirmado
@@ -45,14 +80,9 @@ export function VentanaProgreso({ data, onCerrar }) {
               >
                 {c.nombre}
               </div>
-              <ProgresoBar label="Datos" completado={completosDatos} total={suyos.length} color={C.ink} />
-              <ProgresoBar label="Pagos" completado={pagados} total={suyos.length} color={C.gold} />
-              <ProgresoBar
-                label="Invitaciones"
-                completado={familiasConInvitacion}
-                total={familias.length}
-                color={C.wax}
-              />
+              <BarraCompacta icono={ClipboardList} completado={completosDatos} total={suyos.length} color={C.ink} />
+              <BarraCompacta icono={Euro} completado={pagados} total={suyos.length} color={C.gold} />
+              <BarraCompacta icono={Mail} completado={familiasConInvitacion} total={familias.length} color={C.wax} />
             </div>
           );
         })}
