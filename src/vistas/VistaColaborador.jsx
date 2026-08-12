@@ -553,7 +553,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               {colaborador.nombre}
             </div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-              Familias asignadas:{" "}
+              FAMILIAS CONFIRMADAS:{" "}
               {gruposFamiliaresACargo.length > 0
                 ? gruposFamiliaresACargo.map((g) => `Familia ${g}`).join(", ")
                 : "ninguno"}
