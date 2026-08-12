@@ -26,8 +26,7 @@ import {
   History,
   UserCog,
   Eye,
-  Crown,
-  UserCircle,
+  User,
   Calendar,
   Euro,
   Globe,
@@ -36,6 +35,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { C } from "../theme";
+import { UserSolido } from "./Widgets";
 import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "./VentanaFlotante";
 import { MenuFlotante } from "./MenuFlotante";
 
@@ -85,11 +85,11 @@ export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiar
             etiqueta: "Formularios",
             icono: Eye,
             submenu: [
-              { id: "rol-anfitrion", etiqueta: "Anfitrión", icono: Crown, onClick: () => onCambiarRol(anfitrionToken) },
+              { id: "rol-anfitrion", etiqueta: "Anfitrión", icono: UserSolido, onClick: () => onCambiarRol(anfitrionToken) },
               ...colaboradores.map((c) => ({
                 id: `rol-${c.id}`,
                 etiqueta: c.nombre,
-                icono: UserCircle,
+                icono: User,
                 onClick: () => onCambiarRol(c.id),
               })),
             ],
