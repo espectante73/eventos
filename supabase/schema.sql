@@ -1110,6 +1110,138 @@ end;
 $$;
 
 -- ============================================================
+-- MODO PRUEBAS (2026-08-12): probar la app con datos reales sabiendo
+-- que se puede volver todo atrás de un golpe. Activar guarda una foto
+-- completa de los datos operativos (evento, colaboradores, invitados,
+-- mesas, gastos, orden de familias, fotos familiares, avisos enviados
+-- -- NUNCA anfitrion_secreto ni config_secretos, esas son credenciales,
+-- no datos del evento). Desactivar restaura esa foto entera: deshace
+-- TODO lo hecho mientras estuvo activo, no solo lo de la propia
+-- sesión -- es un reset global, no selectivo.
+--
+-- ⚠️ Aviso real, no solo teórico: como esto es una app compartida en
+-- vivo con colaboradores reales, si alguien más edita datos reales
+-- MIENTRAS el modo pruebas está activo, esos cambios también se
+-- pierden al desactivarlo -- la restauración no distingue "cambios de
+-- prueba" de "cambios reales", vuelve TODO al estado exacto de cuando
+-- se activó. Por eso "evento.modoPruebasActivo" es una columna abierta
+-- (visible para cualquier rol, no solo el anfitrión): la propia app
+-- avisa en rojo a cualquiera que la abra mientras está activo.
+-- ============================================================
+alter table evento add column if not exists "modoPruebasActivo" boolean not null default false;
+
+create table if not exists modo_pruebas_snapshot (
+  "id"       boolean primary key default true check ("id"),
+  "datos"    jsonb not null,
+  "creadoEn" timestamptz not null default now()
+);
+alter table modo_pruebas_snapshot enable row level security;
+revoke all on table modo_pruebas_snapshot from anon, authenticated;
+
+create or replace function anfitrion_activar_modo_pruebas(p_token uuid)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  v_datos jsonb;
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  -- La foto se toma ANTES de marcar modoPruebasActivo = true, para que
+  -- quede guardado el estado "normal" -- al restaurar, ese mismo false
+  -- vuelve solo, sin necesidad de tratarlo como caso especial aparte.
+  select jsonb_build_object(
+    'evento', (select to_jsonb(e) from evento e limit 1),
+    'colaboradores', (select coalesce(jsonb_agg(c), '[]'::jsonb) from colaboradores c),
+    'invitados', (select coalesce(jsonb_agg(i), '[]'::jsonb) from invitados i),
+    'mesas', (select coalesce(jsonb_agg(m), '[]'::jsonb) from mesas m),
+    'gastos', (select coalesce(jsonb_agg(g), '[]'::jsonb) from gastos g),
+    'ordenFamilias', (select coalesce(jsonb_agg(o), '[]'::jsonb) from orden_familias o),
+    'fotosFamiliares', (select coalesce(jsonb_agg(f), '[]'::jsonb) from fotos_familiares f),
+    'avisosEnviados', (select coalesce(jsonb_agg(a), '[]'::jsonb) from avisos_enviados a)
+  ) into v_datos;
+
+  insert into modo_pruebas_snapshot ("id", "datos", "creadoEn")
+  values (true, v_datos, now())
+  on conflict ("id") do update set "datos" = excluded."datos", "creadoEn" = excluded."creadoEn";
+
+  update evento set "modoPruebasActivo" = true;
+end;
+$$;
+
+create or replace function anfitrion_desactivar_modo_pruebas(p_token uuid)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  v_datos jsonb;
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  select "datos" into v_datos from modo_pruebas_snapshot where "id" = true;
+  if v_datos is null then
+    -- No hay foto guardada (nunca se activó de verdad) -- no hay nada
+    -- que restaurar, solo se asegura que la bandera quede apagada.
+    update evento set "modoPruebasActivo" = false;
+    return;
+  end if;
+
+  delete from invitados;
+  delete from colaboradores;
+  delete from mesas;
+  delete from gastos;
+  delete from orden_familias;
+  delete from fotos_familiares;
+  delete from avisos_enviados;
+  delete from evento;
+
+  -- invitados y colaboradores se referencian el uno al otro (FK
+  -- circular, ver el comentario de invitados_colaborador_fk más arriba)
+  -- -- no se pueden insertar ambos de golpe con esas columnas puestas.
+  -- Se insertan los invitados primero SIN colaboradorId (colaboradores
+  -- todavía no existen), luego los colaboradores (invitados ya
+  -- existen, esa FK sí cuadra), y por último se rellena
+  -- invitados.colaboradorId ahora que colaboradores ya existen.
+  insert into invitados
+  select * from jsonb_populate_recordset(
+    null::invitados,
+    (select coalesce(jsonb_agg(elem - 'colaboradorId'), '[]'::jsonb)
+     from jsonb_array_elements(v_datos->'invitados') elem)
+  );
+
+  insert into colaboradores
+  select * from jsonb_populate_recordset(null::colaboradores, v_datos->'colaboradores');
+
+  update invitados i set "colaboradorId" = (elem->>'colaboradorId')::uuid
+  from jsonb_array_elements(v_datos->'invitados') elem
+  where (elem->>'id')::uuid = i."id" and elem->>'colaboradorId' is not null;
+
+  insert into mesas select * from jsonb_populate_recordset(null::mesas, v_datos->'mesas');
+  insert into gastos select * from jsonb_populate_recordset(null::gastos, v_datos->'gastos');
+  insert into orden_familias
+  select * from jsonb_populate_recordset(null::orden_familias, v_datos->'ordenFamilias');
+  insert into fotos_familiares
+  select * from jsonb_populate_recordset(null::fotos_familiares, v_datos->'fotosFamiliares');
+  -- avisos_enviados.id es "generated always as identity" -- sin
+  -- OVERRIDING SYSTEM VALUE, Postgres rechaza los ids explícitos del
+  -- snapshot e intentaría generar unos nuevos.
+  insert into avisos_enviados overriding system value
+  select * from jsonb_populate_recordset(null::avisos_enviados, v_datos->'avisosEnviados');
+
+  insert into evento select * from jsonb_populate_record(null::evento, v_datos->'evento');
+
+  delete from modo_pruebas_snapshot;
+end;
+$$;
+
+grant execute on function anfitrion_activar_modo_pruebas(uuid) to anon;
+grant execute on function anfitrion_desactivar_modo_pruebas(uuid) to anon;
+
+-- ============================================================
 -- ZONA DE REINICIO ("botón nuclear"): pone a cero campos concretos
 -- sin borrar nunca al invitado ni al colaborador en sí. Pensado para
 -- poder reutilizar la app en otro evento, o limpiar datos de pruebas

@@ -65,6 +65,7 @@ import { VentanaConfigUrlWeb } from "./anfitrion/VentanaConfigUrlWeb";
 import { VentanaConfigEmailAnfitrion } from "./anfitrion/VentanaConfigEmailAnfitrion";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
 import { VentanaConfigPlantillasEmail } from "./anfitrion/VentanaConfigPlantillasEmail";
+import { VentanaConfigModoPruebas } from "./anfitrion/VentanaConfigModoPruebas";
 import { VentanaConfigZonaReinicio } from "./anfitrion/VentanaConfigZonaReinicio";
 import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
 import { VentanaColaboradoresDatos } from "./anfitrion/VentanaColaboradoresDatos";
@@ -412,6 +413,10 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken }) {
 
       {abierto["config-plantillas-email"] && (
         <VentanaConfigPlantillasEmail data={data} onCerrar={() => toggle("config-plantillas-email")} />
+      )}
+
+      {abierto["config-modo-pruebas"] && (
+        <VentanaConfigModoPruebas data={data} onCerrar={() => toggle("config-modo-pruebas")} />
       )}
 
       {abierto["config-zona-reinicio"] && (

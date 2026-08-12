@@ -170,7 +170,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
         cerrarTodo();
       }}
       className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm whitespace-nowrap"
-      style={{ color: C.paper, background: "transparent" }}
+      style={{ color: opcion.color || C.paper, background: "transparent" }}
       onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,233,222,0.12)")}
       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
     >

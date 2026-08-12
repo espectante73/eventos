@@ -464,6 +464,37 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
+  // Modo Pruebas: activar guarda una foto completa de los datos
+  // operativos; desactivar la restaura entera (reset global, no solo de
+  // lo tocado en esta sesión — ver el aviso largo en schema.sql). Se
+  // recarga la página entera después de cada una de las dos acciones en
+  // vez de intentar refrescar cada pieza de estado local a mano: cambia
+  // prácticamente todo a la vez (evento, colaboradores, invitados,
+  // mesas, gastos...) y una recarga limpia es más fiable que ir
+  // reconciliando estado optimista con lo que de verdad quedó en la base
+  // de datos.
+  const activarModoPruebas = useCallback(async () => {
+    if (!esAnfitrion) return false;
+    const { error } = await supabase.rpc("anfitrion_activar_modo_pruebas", { p_token: rol });
+    if (error) {
+      avisar("No se pudo activar el Modo Pruebas.", error);
+      return false;
+    }
+    window.location.reload();
+    return true;
+  }, [esAnfitrion, rol]);
+
+  const desactivarModoPruebas = useCallback(async () => {
+    if (!esAnfitrion) return false;
+    const { error } = await supabase.rpc("anfitrion_desactivar_modo_pruebas", { p_token: rol });
+    if (error) {
+      avisar("No se pudo desactivar el Modo Pruebas.", error);
+      return false;
+    }
+    window.location.reload();
+    return true;
+  }, [esAnfitrion, rol]);
+
   const persistInvitados = useCallback(
     async (next) => {
       const anterior = invitadosRef.current;
@@ -722,5 +753,7 @@ export function useLedgerData(rol) {
     confirmarRecogidaColaborador,
     reenviarAcuseColaborador,
     deshacerRecogidaColaborador,
+    activarModoPruebas,
+    desactivarModoPruebas,
   };
 }
