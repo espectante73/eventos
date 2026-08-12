@@ -385,6 +385,81 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
+  // Confirmar/deshacer que el anfitrión ha recibido de un colaborador lo
+  // recaudado de sus invitados -- evento aparte de "invitado pagó a su
+  // colaborador" (invitados.pagado). El importe se congela en el momento
+  // de confirmar (no se recalcula después), para que el acuse ya
+  // enviado siga siendo fiel a lo que de verdad se entregó ese día. El
+  // acuse (desglose por invitado, total, fecha, firma) se construye en
+  // el navegador (ver lib/acuseRecogida.js) y se manda por email al
+  // propio colaborador en la misma llamada.
+  const confirmarRecogidaColaborador = useCallback(
+    async (colaboradorId, importe, email, asunto, html) => {
+      if (!esAnfitrion) return false;
+      const { error } = await supabase.rpc("anfitrion_confirmar_recogida_colaborador", {
+        p_token: rol,
+        p_colaborador_id: colaboradorId,
+        p_importe: importe,
+        p_email: email,
+        p_asunto: asunto,
+        p_html: html,
+      });
+      if (error) {
+        avisar("No se pudo confirmar la recogida.", error);
+        return false;
+      }
+      const { data: todosColaboradores, error: errCol } = await supabase.rpc(
+        "anfitrion_listar_colaboradores",
+        { p_token: rol }
+      );
+      if (!errCol) setColaboradores(todosColaboradores || []);
+      return true;
+    },
+    [esAnfitrion, rol]
+  );
+
+  // Reenviar el mismo acuse sin volver a "confirmar" (no toca la fecha ni
+  // el importe ya registrados) -- para cuando el colaborador dice que no
+  // le llegó o lo perdió.
+  const reenviarAcuseColaborador = useCallback(
+    async (email, asunto, html) => {
+      if (!esAnfitrion) return false;
+      const { error } = await supabase.rpc("anfitrion_reenviar_acuse_colaborador", {
+        p_token: rol,
+        p_email: email,
+        p_asunto: asunto,
+        p_html: html,
+      });
+      if (error) {
+        avisar("No se pudo reenviar el acuse.", error);
+        return false;
+      }
+      return true;
+    },
+    [esAnfitrion, rol]
+  );
+
+  const deshacerRecogidaColaborador = useCallback(
+    async (colaboradorId) => {
+      if (!esAnfitrion) return false;
+      const { error } = await supabase.rpc("anfitrion_deshacer_recogida_colaborador", {
+        p_token: rol,
+        p_colaborador_id: colaboradorId,
+      });
+      if (error) {
+        avisar("No se pudo deshacer la recogida.", error);
+        return false;
+      }
+      const { data: todosColaboradores, error: errCol } = await supabase.rpc(
+        "anfitrion_listar_colaboradores",
+        { p_token: rol }
+      );
+      if (!errCol) setColaboradores(todosColaboradores || []);
+      return true;
+    },
+    [esAnfitrion, rol]
+  );
+
   const persistInvitados = useCallback(
     async (next) => {
       const anterior = invitadosRef.current;
@@ -640,5 +715,8 @@ export function useLedgerData(rol) {
     resetearPorInvitados,
     gastos,
     persistGastos,
+    confirmarRecogidaColaborador,
+    reenviarAcuseColaborador,
+    deshacerRecogidaColaborador,
   };
 }

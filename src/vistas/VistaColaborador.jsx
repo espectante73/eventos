@@ -638,6 +638,15 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           </div>
         </div>
 
+        <div className="mt-3">
+          <ProgresoBar
+            label="Progreso de pagos"
+            completado={pagados.length}
+            total={confirmados.length}
+            color={C.gold}
+          />
+        </div>
+
         <div className="mt-4 pt-4 flex justify-end" style={{ borderTop: `1px solid ${C.line}` }}>
           <button
             onClick={() => setMostrarConfirmar(true)}
