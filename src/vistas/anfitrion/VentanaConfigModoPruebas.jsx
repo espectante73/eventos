@@ -131,26 +131,32 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
           </p>
           <div className="space-y-1 max-h-40 overflow-y-auto">
             {colaboradores.map((c) => (
-              <label key={c.id} className="flex items-center gap-2 text-sm" style={{ color: C.charcoal }}>
+              <label
+                key={c.id}
+                className="flex items-center justify-between gap-2 text-sm py-0.5"
+                style={{ color: C.charcoal }}
+              >
+                {c.nombre}
                 <input
                   type="checkbox"
                   checked={habilitados.has(c.id)}
                   onChange={() => alternarHabilitado(c.id)}
                 />
-                {c.nombre}
               </label>
             ))}
           </div>
         </div>
       )}
-      <button
-        onClick={activar}
-        disabled={ejecutando}
-        className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold"
-        style={{ background: C.wax, color: "#fff" }}
-      >
-        <FlaskConical size={16} /> Activar Modo Pruebas
-      </button>
+      <div className="flex justify-end">
+        <button
+          onClick={activar}
+          disabled={ejecutando}
+          className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold"
+          style={{ background: C.wax, color: "#fff" }}
+        >
+          <FlaskConical size={16} /> Activar Modo Pruebas
+        </button>
+      </div>
     </VentanaFlotante>
   );
 }
