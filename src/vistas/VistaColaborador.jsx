@@ -13,8 +13,7 @@ import {
   Cake,
   Heart,
   Image as ImageIcon,
-  Crown,
-  UserCircle,
+  User,
   ClipboardList,
   Euro,
   ChevronDown,
@@ -32,7 +31,7 @@ import {
 import { ordenarPorApellidoNombre } from "../lib/formato";
 import { redimensionarImagenArchivo } from "../lib/descargas";
 import { C, inputStyle } from "../theme";
-import { Seal, Stamp, BarraCompacta } from "../components/Widgets";
+import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante } from "../components/VentanaFlotante";
 
@@ -580,13 +579,13 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               <MenuFlotante
                 anchor="bottom-left"
                 opciones={[
-                  { id: "rol-anfitrion", etiqueta: "Anfitrión", icono: Crown, onClick: () => setRol(anfitrionToken) },
+                  { id: "rol-anfitrion", etiqueta: "Anfitrión", icono: UserSolido, onClick: () => setRol(anfitrionToken) },
                   ...colaboradores
                     .filter((c) => c.id !== colaboradorId)
                     .map((c) => ({
                       id: `rol-${c.id}`,
                       etiqueta: c.nombre,
-                      icono: UserCircle,
+                      icono: User,
                       onClick: () => setRol(c.id),
                     })),
                 ]}

@@ -4,7 +4,16 @@
 // confirmación al perder el foco). Movidas fuera de App.jsx en el reparto
 // del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect } from "react";
+import { User } from "lucide-react";
 import { C, inputStyle } from "../theme";
+
+// "Icono de usuario sólido" (relleno) para distinguir al Anfitrión de
+// cada colaborador (icono de contorno normal, el mismo User sin
+// relleno) en los menús de cambio de vista — a petición del usuario,
+// 2026-08-12. Mismo glifo para los dos, solo cambia el relleno.
+export function UserSolido(props) {
+  return <User fill="currentColor" {...props} />;
+}
 
 export function Seal({ count, size = 22 }) {
   if (!count) return null;

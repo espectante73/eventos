@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { LogOut } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase } from "./supabaseClient";
 import { getRolFromUrl, getEmailCrearCuentaFromUrl } from "./lib/url";
@@ -252,10 +253,10 @@ export default function App() {
           )}
           <button
             onClick={() => supabase.auth.signOut()}
-            className="px-4 py-2 rounded text-sm font-medium"
+            className="flex items-center justify-center gap-1.5 px-4 py-2 rounded text-sm font-medium mx-auto"
             style={{ background: C.ink, color: C.paper }}
           >
-            Cerrar sesión
+            <LogOut size={15} /> Cerrar sesión
           </button>
         </div>
       </div>
@@ -303,10 +304,10 @@ export default function App() {
           <div className="flex justify-end mb-4">
             <button
               onClick={() => supabase.auth.signOut()}
-              className="px-4 rounded text-sm font-medium"
+              className="flex items-center gap-1.5 px-4 rounded text-sm font-medium"
               style={{ height: 40, background: C.ink, color: C.paper }}
             >
-              Cerrar sesión
+              <LogOut size={15} /> Cerrar sesión
             </button>
           </div>
         )}
