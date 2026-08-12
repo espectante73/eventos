@@ -746,6 +746,12 @@ $$;
 -- tentativa"). Con "confirmado" = true en el propio WHERE, ni siquiera
 -- llegan al navegador del colaborador -- no es solo ocultarlos, es no
 -- enviarlos.
+-- 2026-08-12: NO usa colaborador_puede_actuar() a propósito -- igual que
+-- colaborador_mi_perfil, esto es solo LECTURA. El bloqueo del Modo
+-- Pruebas (habilitadoEnPruebas) debe impedir guardar/marcar/confirmar,
+-- nunca ocultar al colaborador su propia lista de invitados asignados
+-- (eso rompía además la propia utilidad del Modo Pruebas: no se podía
+-- ni probar cómo se veía la pantalla del colaborador).
 create or replace function colaborador_mis_invitados(p_colaborador_id uuid)
 returns setof invitados
 language sql security definer set search_path = public, pg_temp
@@ -753,7 +759,10 @@ as $$
   select i.* from invitados i
   where i."colaboradorId" = p_colaborador_id
     and i."confirmado" = true
-    and colaborador_puede_actuar(p_colaborador_id);
+    and exists (
+      select 1 from colaboradores c
+      where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
+    );
 $$;
 
 -- Solo puede tocar estos 6 campos, y solo si el invitado es
