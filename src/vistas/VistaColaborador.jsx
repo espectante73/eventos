@@ -459,8 +459,12 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const pagados = confirmados.filter((g) => g.pagado);
   const noPagados = confirmados.filter((g) => !g.pagado);
 
+  // Solo confirmados: los tentativa nunca deben nombrarse al colaborador
+  // (mismo criterio que el email de "Tus invitados asignados", ver
+  // anfitrion_avisar_colaborador) -- no levantar sospechas sobre la
+  // organización antes de tiempo.
   const gruposFamiliaresACargo = [
-    ...new Set(misInvitados.map((g) => g.grupoFamiliar || g.apellido).filter(Boolean)),
+    ...new Set(confirmados.map((g) => g.grupoFamiliar || g.apellido).filter(Boolean)),
   ].sort();
 
   const importeEsperado = confirmados.reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
