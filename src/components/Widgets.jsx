@@ -71,6 +71,40 @@ export function ProgresoBar({ label, completado, total, color }) {
   );
 }
 
+// Icono + barra fina en una sola línea, sin etiqueta de texto (el icono
+// hace de etiqueta, el color distingue de qué barra se trata) — pensada
+// para caber varias seguidas con un margen mínimo. El detalle exacto
+// (n/total y %) sigue disponible al pasar el ratón o tocar (title del
+// navegador). Usada por VentanaProgreso (por colaborador) y
+// VistaColaborador (su propio progreso) — movida aquí al pasar a
+// usarla 2 sitios, 2026-08-12.
+export function BarraCompacta({ icono: Icono, completado, total, color }) {
+  const pct = total > 0 ? Math.round((completado / total) * 100) : 0;
+  return (
+    <div
+      className="flex items-center gap-1.5 mb-1"
+      title={`${completado}/${total} · ${pct}%`}
+    >
+      <Icono size={14} style={{ color, flexShrink: 0 }} />
+      <div style={{ flex: 1, background: C.paperDark, borderRadius: 3, height: 7, overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, background: color, height: "100%", transition: "width 0.3s ease" }} />
+      </div>
+      <span
+        style={{
+          fontSize: 10,
+          color: C.charcoal,
+          opacity: 0.7,
+          fontFamily: "'IBM Plex Mono', monospace",
+          minWidth: 30,
+          textAlign: "right",
+        }}
+      >
+        {pct}%
+      </span>
+    </div>
+  );
+}
+
 export function EncabezadoOrdenable({ columna, orden, onClick, children }) {
   const activo = orden.columna === columna;
   return (

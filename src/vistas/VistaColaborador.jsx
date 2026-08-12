@@ -15,6 +15,8 @@ import {
   Image as ImageIcon,
   Crown,
   UserCircle,
+  ClipboardList,
+  Euro,
   ChevronDown,
 } from "lucide-react";
 import { supabase } from "../supabaseClient";
@@ -30,7 +32,7 @@ import {
 import { ordenarPorApellidoNombre } from "../lib/formato";
 import { redimensionarImagenArchivo } from "../lib/descargas";
 import { C, inputStyle } from "../theme";
-import { Seal, Stamp, ProgresoBar } from "../components/Widgets";
+import { Seal, Stamp, BarraCompacta } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante } from "../components/VentanaFlotante";
 
@@ -438,7 +440,7 @@ function FilaInvitadoColaborador({
 }
 
 export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken }) {
-  const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento } = data;
+  const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento, ordenFamiliares } = data;
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
   const [abiertoId, setAbiertoId] = useState(null);
   // Mientras un invitado está abierto, se queda fijo en la sección donde
@@ -466,6 +468,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const gruposFamiliaresACargo = [
     ...new Set(confirmados.map((g) => g.grupoFamiliar || g.apellido).filter(Boolean)),
   ].sort();
+  const familiasConInvitacion = gruposFamiliaresACargo.filter(
+    (f) => ordenFamiliares[f]?.invitacionEnviada
+  ).length;
 
   const importeEsperado = confirmados.reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
   const importeCobrado = pagados.reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
@@ -638,13 +643,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           </div>
         </div>
 
-        <div className="mt-3">
-          <ProgresoBar
-            label="Progreso de pagos"
-            completado={pagados.length}
-            total={confirmados.length}
-            color={C.gold}
-          />
+        <div className="mt-3" style={{ maxWidth: 320 }}>
+          <BarraCompacta icono={ClipboardList} completado={completos.length} total={confirmados.length} color={C.ink} />
+          <BarraCompacta icono={Euro} completado={pagados.length} total={confirmados.length} color={C.gold} />
+          <BarraCompacta icono={Mail} completado={familiasConInvitacion} total={gruposFamiliaresACargo.length} color={C.wax} />
         </div>
 
         <div className="mt-4 pt-4 flex justify-end" style={{ borderTop: `1px solid ${C.line}` }}>
