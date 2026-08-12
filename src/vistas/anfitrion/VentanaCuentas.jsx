@@ -10,6 +10,7 @@ import { importeEsperadoInvitado, resolverColaborador } from "../../lib/invitado
 import { parsePrecio, formatearFecha, ordenarPorApellidoNombre } from "../../lib/formato";
 import { uid } from "../../lib/id";
 import { construirAsuntoAcuse, construirHtmlAcuse } from "../../lib/acuseRecogida";
+import { generarImagenAcuse } from "../../lib/acuseImagen";
 import { TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
@@ -81,10 +82,13 @@ export function VentanaCuentas({ data, onCerrar }) {
     setImporteConfirmar(importeRecaudadoPorColaborador(c).toFixed(2));
   };
 
+  const nombreArchivoAcuse = (c) =>
+    `acuse-${(c.nombre || "colaborador").replace(/\s+/g, "-").toLowerCase()}.png`;
+
   const confirmarRecogida = async (c) => {
     const importe = parseFloat(importeConfirmar.replace(",", ".")) || 0;
     const fechaISO = new Date().toISOString().slice(0, 10);
-    const html = construirHtmlAcuse({
+    const dataUrl = await generarImagenAcuse({
       evento,
       colaborador: c,
       items: itemsRecaudadosPorColaborador(c),
@@ -96,21 +100,29 @@ export function VentanaCuentas({ data, onCerrar }) {
       importe,
       c.email,
       construirAsuntoAcuse(evento),
-      html
+      construirHtmlAcuse({ colaborador: c }),
+      nombreArchivoAcuse(c),
+      dataUrl.split(",")[1] || ""
     );
     if (ok) setConfirmandoId(null);
   };
 
   const reenviarAcuse = async (c) => {
     setEnviandoId(c.id);
-    const html = construirHtmlAcuse({
+    const dataUrl = await generarImagenAcuse({
       evento,
       colaborador: c,
       items: itemsRecaudadosPorColaborador(c),
       total: c.dineroRecogidoImporte || 0,
       fechaISO: String(c.dineroRecogidoEn).slice(0, 10),
     });
-    await reenviarAcuseColaborador(c.email, construirAsuntoAcuse(evento), html);
+    await reenviarAcuseColaborador(
+      c.email,
+      construirAsuntoAcuse(evento),
+      construirHtmlAcuse({ colaborador: c }),
+      nombreArchivoAcuse(c),
+      dataUrl.split(",")[1] || ""
+    );
     setEnviandoId(null);
   };
 
@@ -122,14 +134,20 @@ export function VentanaCuentas({ data, onCerrar }) {
   // "Probar" ya existente para el email de cada colaborador).
   const probarAcuse = async (c) => {
     setEnviandoId(c.id);
-    const html = construirHtmlAcuse({
+    const dataUrl = await generarImagenAcuse({
       evento,
       colaborador: c,
       items: itemsRecaudadosPorColaborador(c),
       total: importeRecaudadoPorColaborador(c),
       fechaISO: new Date().toISOString().slice(0, 10),
     });
-    await reenviarAcuseColaborador(c.email, "[PRUEBA] " + construirAsuntoAcuse(evento), html);
+    await reenviarAcuseColaborador(
+      c.email,
+      "[PRUEBA] " + construirAsuntoAcuse(evento),
+      construirHtmlAcuse({ colaborador: c }),
+      nombreArchivoAcuse(c),
+      dataUrl.split(",")[1] || ""
+    );
     setEnviandoId(null);
   };
 
