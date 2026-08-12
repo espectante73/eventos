@@ -343,7 +343,12 @@ export default function App() {
           />
         ) : (
           <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.7 }}>
-            Este enlace no es válido o ha caducado. Pide al anfitrión un enlace actualizado.
+            Este enlace no es válido, ha caducado, o ya no funciona porque los enlaces de
+            colaborador se retiraron a favor del login.{" "}
+            <a href="/" style={{ color: C.ink, textDecoration: "underline" }}>
+              Inicia sesión con tu cuenta
+            </a>
+            , o pide al anfitrión que te vincule una si aún no tienes.
           </p>
         )}
       </div>
