@@ -101,10 +101,15 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
   // tamaño final, para que respiren de verdad.
   let y = 100;
 
+  // Nombre del evento en script dorado, a juego con "de todos" de la
+  // plantilla de invitación (misma familia, Alex Brush) -- antes iba en
+  // mayúsculas pequeñas sin relación visual con el resto de la
+  // papelería. Mismo sitio de siempre (y=100, gap de 34 después): solo
+  // cambia el tamaño/estilo de la letra, no la posición.
   ctx.textAlign = "center";
-  ctx.font = "bold 11px 'Inter', sans-serif";
+  ctx.font = "34px 'Alex Brush', cursive";
   ctx.fillStyle = COLOR.gold;
-  ctx.fillText((evento?.nombre || "EVENTO").toUpperCase(), CENTRO, y);
+  ctx.fillText(evento?.nombre || "Evento", CENTRO, y);
   y += 34;
 
   ctx.font = "bold 32px 'Fraunces', serif";
@@ -231,6 +236,17 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
 // Devuelve un data URL "data:application/pdf;base64,...." con el recibo
 // en una única página A4 vertical real, dibujada 1:1 (sin escalar).
 export async function generarPdfAcuse({ evento, colaborador, items, total, fechaISO }) {
+  // 'Alex Brush' no se usa en ningún otro sitio de la app (a diferencia
+  // de Fraunces/Inter, ya cargadas de sobra por el resto de la interfaz
+  // antes de llegar aquí) -- sin cargarla explícitamente antes de
+  // dibujar, el canvas la ignoraría en silencio y usaría una fuente de
+  // reserva sin avisar (mismo gotcha que Fraunces en
+  // generarImagenParaFamilia, ver VistaAnfitrion.jsx).
+  try {
+    await document.fonts.load("34px 'Alex Brush'");
+  } catch (_) {
+    // Sigue con la fuente de reserva si falla la carga.
+  }
   const canvas = dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO });
   const imagenPng = canvas.toDataURL("image/png");
 
