@@ -110,26 +110,18 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
 
   return (
     <VentanaFlotante clave="config-modo-pruebas" titulo="Modo pruebas" onCerrar={onCerrar}>
-      <p className="text-sm mb-3" style={{ color: C.charcoal }}>
-        Para probar cosas (como ver cómo queda un acuse, o marcar pagos de ejemplo) sabiendo
-        que puedes volver atrás de un golpe. Al activarlo se guarda una foto completa de los
-        datos de ahora mismo; al desactivarlo, se restaura esa foto entera.
+      <p className="text-sm mb-1" style={{ color: C.charcoal }}>
+        Guarda una foto de todo ahora mismo; al desactivarlo, vuelve a ella entera.
       </p>
       <p className="text-xs mb-3" style={{ color: C.wax }}>
-        ⚠ Mientras esté activo, cualquier cambio real que hagan tus colaboradores también se
-        perderá al desactivarlo — es un reset global, no distingue pruebas de cambios de verdad.
+        ⚠ Los cambios reales de tus colaboradores mientras tanto también se perderán.
       </p>
       {colaboradores.length > 0 && (
         <div className="mb-3">
-          <p className="text-xs font-semibold mb-1" style={{ color: C.charcoal }}>
-            Colaboradores que pueden seguir actuando mientras dure la prueba
+          <p className="text-xs mb-1" style={{ color: C.line }}>
+            Colaboradores habilitados durante la prueba (desmarca para bloquearlos):
           </p>
-          <p className="text-xs mb-2" style={{ color: C.line }}>
-            A quien desmarques se le bloquean sus gestos (guardar datos, marcar pagos,
-            confirmar) hasta que desactives el Modo Pruebas — sin tocar su cuenta ni
-            desasignarle nada.
-          </p>
-          <div className="space-y-1 max-h-40 overflow-y-auto">
+          <div className="space-y-1">
             {colaboradores.map((c) => (
               <label
                 key={c.id}
