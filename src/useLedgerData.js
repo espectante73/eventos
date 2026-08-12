@@ -390,11 +390,11 @@ export function useLedgerData(rol) {
   // colaborador" (invitados.pagado). El importe se congela en el momento
   // de confirmar (no se recalcula después), para que el acuse ya
   // enviado siga siendo fiel a lo que de verdad se entregó ese día. El
-  // acuse (desglose por invitado, total, fecha, firma) se construye en
-  // el navegador (ver lib/acuseRecogida.js) y se manda por email al
-  // propio colaborador en la misma llamada.
+  // acuse (desglose por invitado, total, fecha, firma) se genera como
+  // IMAGEN adjunta en el navegador (ver lib/acuseImagen.js) y se manda
+  // por email al propio colaborador en la misma llamada.
   const confirmarRecogidaColaborador = useCallback(
-    async (colaboradorId, importe, email, asunto, html) => {
+    async (colaboradorId, importe, email, asunto, html, adjuntoNombre, adjuntoBase64) => {
       if (!esAnfitrion) return false;
       const { error } = await supabase.rpc("anfitrion_confirmar_recogida_colaborador", {
         p_token: rol,
@@ -403,6 +403,8 @@ export function useLedgerData(rol) {
         p_email: email,
         p_asunto: asunto,
         p_html: html,
+        p_adjunto_nombre: adjuntoNombre,
+        p_adjunto_base64: adjuntoBase64,
       });
       if (error) {
         avisar("No se pudo confirmar la recogida.", error);
@@ -420,15 +422,17 @@ export function useLedgerData(rol) {
 
   // Reenviar el mismo acuse sin volver a "confirmar" (no toca la fecha ni
   // el importe ya registrados) -- para cuando el colaborador dice que no
-  // le llegó o lo perdió.
+  // le llegó o lo perdió. También la usa "Probar acuse".
   const reenviarAcuseColaborador = useCallback(
-    async (email, asunto, html) => {
+    async (email, asunto, html, adjuntoNombre, adjuntoBase64) => {
       if (!esAnfitrion) return false;
       const { error } = await supabase.rpc("anfitrion_reenviar_acuse_colaborador", {
         p_token: rol,
         p_email: email,
         p_asunto: asunto,
         p_html: html,
+        p_adjunto_nombre: adjuntoNombre,
+        p_adjunto_base64: adjuntoBase64,
       });
       if (error) {
         avisar("No se pudo reenviar el acuse.", error);

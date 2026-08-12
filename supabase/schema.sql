@@ -736,12 +736,23 @@ as $$
   where "id" = p_colaborador_id and "authUserId" = auth.uid();
 $$;
 
+-- 2026-08-12: deja de devolver los invitados en TENTATIVA -- son
+-- información confidencial de la organización (candidatos que el
+-- anfitrión aún no ha decidido confirmar) y solo el anfitrión debe
+-- poder verlos. Antes solo se ocultaban en algunos sitios de la
+-- pantalla del colaborador (p.ej. el email de aviso ya los excluía),
+-- pero esta misma RPC seguía mandándolos al navegador igualmente, y
+-- una parte de la pantalla llegó a mostrar cuántos había ("N en
+-- tentativa"). Con "confirmado" = true en el propio WHERE, ni siquiera
+-- llegan al navegador del colaborador -- no es solo ocultarlos, es no
+-- enviarlos.
 create or replace function colaborador_mis_invitados(p_colaborador_id uuid)
 returns setof invitados
 language sql security definer set search_path = public, pg_temp
 as $$
   select i.* from invitados i
   where i."colaboradorId" = p_colaborador_id
+    and i."confirmado" = true
     and exists (
       select 1 from colaboradores c
       where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
@@ -1025,9 +1036,18 @@ $$;
 alter table colaboradores add column if not exists "dineroRecogidoEn" timestamptz;
 alter table colaboradores add column if not exists "dineroRecogidoImporte" numeric;
 
+-- 2026-08-12: se añade el adjunto (imagen del acuse, ver
+-- lib/acuseImagen.js) -- el desglose por invitado pasa del cuerpo del
+-- email a un documento adjunto. Cambia de 6 a 8 parámetros: hay que
+-- borrar la firma vieja de 6 antes (esta función sí llegó a
+-- desplegarse) o quedan las dos coexistiendo y cualquier llamada se
+-- vuelve ambigua (mismo gotcha de siempre, ver CLAUDE.md).
+drop function if exists anfitrion_confirmar_recogida_colaborador(uuid, uuid, numeric, text, text, text);
+
 create or replace function anfitrion_confirmar_recogida_colaborador(
   p_token uuid, p_colaborador_id uuid, p_importe numeric,
-  p_email text, p_asunto text, p_html text
+  p_email text, p_asunto text, p_html text,
+  p_adjunto_nombre text, p_adjunto_base64 text
 )
 returns void
 language plpgsql security definer set search_path = public, pg_temp
@@ -1043,15 +1063,19 @@ begin
 
   -- enviar_email ya no hace nada si p_email viene vacío (ver su propio
   -- guard) -- no hace falta comprobarlo aquí también.
-  perform enviar_email(p_email, p_asunto, p_html, null, null, null, 'asignados');
+  perform enviar_email(p_email, p_asunto, p_html, p_adjunto_nombre, p_adjunto_base64, null, 'asignados');
 end;
 $$;
 
 -- Reenviar el mismo acuse sin volver a "confirmar" (no toca la fecha ni
 -- el importe ya registrados) -- para cuando el colaborador dice que no
--- le llegó o lo perdió.
+-- le llegó o lo perdió. También la usa "Probar acuse" (envía sin
+-- confirmar ni registrar nada).
+drop function if exists anfitrion_reenviar_acuse_colaborador(uuid, text, text, text);
+
 create or replace function anfitrion_reenviar_acuse_colaborador(
-  p_token uuid, p_email text, p_asunto text, p_html text
+  p_token uuid, p_email text, p_asunto text, p_html text,
+  p_adjunto_nombre text, p_adjunto_base64 text
 )
 returns void
 language plpgsql security definer set search_path = public, pg_temp
@@ -1061,7 +1085,7 @@ begin
     return;
   end if;
 
-  perform enviar_email(p_email, p_asunto, p_html, null, null, null, 'asignados');
+  perform enviar_email(p_email, p_asunto, p_html, p_adjunto_nombre, p_adjunto_base64, null, 'asignados');
 end;
 $$;
 
@@ -1181,8 +1205,8 @@ grant execute on function anfitrion_resetear_avisos(uuid) to anon;
 grant execute on function anfitrion_resetear_por_invitados(uuid, uuid[], text) to anon;
 grant execute on function anfitrion_listar_gastos(uuid) to anon;
 grant execute on function anfitrion_guardar_gastos(uuid, jsonb) to anon;
-grant execute on function anfitrion_confirmar_recogida_colaborador(uuid, uuid, numeric, text, text, text) to anon;
-grant execute on function anfitrion_reenviar_acuse_colaborador(uuid, text, text, text) to anon;
+grant execute on function anfitrion_confirmar_recogida_colaborador(uuid, uuid, numeric, text, text, text, text, text) to anon;
+grant execute on function anfitrion_reenviar_acuse_colaborador(uuid, text, text, text, text, text) to anon;
 grant execute on function anfitrion_deshacer_recogida_colaborador(uuid, uuid) to anon;
 grant execute on function colaborador_mi_perfil(uuid) to anon;
 grant execute on function colaborador_mis_invitados(uuid) to anon;

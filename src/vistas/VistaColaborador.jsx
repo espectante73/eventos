@@ -451,8 +451,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const misInvitados = invitados.filter(
     (g) => resolverColaborador(g, colaboradores)?.id === colaboradorId
   );
+  // Solo confirmados: desde el 2026-08-12, colaborador_mis_invitados ya
+  // no manda tentativa al navegador del colaborador (ver schema.sql) --
+  // este filtro es ahora un no-op de refuerzo, no la barrera real.
   const confirmados = misInvitados.filter((g) => g.confirmado);
-  const tentativos = misInvitados.filter((g) => !g.confirmado);
   const esPendiente = (g) =>
     g.id === abiertoId ? pendienteAlAbrir : !datosCompletos(g);
   const pendientes = confirmados.filter(esPendiente);
@@ -669,12 +671,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             <li>Invitados confirmados: {confirmados.length}</li>
             <li>Con datos completos: {completos.length} de {confirmados.length}</li>
             <li>Con el pago hecho: {pagados.length} de {confirmados.length}</li>
-            {tentativos.length > 0 && (
-              <li style={{ color: C.charcoal, opacity: 0.7 }}>
-                ℹ️ {tentativos.length} en tentativa (sin confirmar) — no cuentan para este aviso.
-                Si se confirman más adelante, podrás avisar de nuevo entonces.
-              </li>
-            )}
           </ul>
           <div className="space-y-2">
             <button
