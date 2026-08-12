@@ -133,7 +133,7 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
             {colaboradores.map((c) => (
               <label
                 key={c.id}
-                className="flex items-center justify-between gap-2 text-sm py-0.5"
+                className="flex items-center justify-end gap-2 text-sm py-0.5"
                 style={{ color: C.charcoal }}
               >
                 {c.nombre}
