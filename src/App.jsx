@@ -274,6 +274,13 @@ export default function App() {
     );
   }
 
+  // Visible para CUALQUIER rol (evento es de acceso abierto) — no solo el
+  // anfitrión: si un colaborador entra mientras está activo, también debe
+  // saber que todo lo que haga puede deshacerse al desactivarlo (ver
+  // VentanaConfigModoPruebas.jsx).
+  const modoPruebas = Boolean(data.evento?.modoPruebasActivo);
+  const alturaBanners = (modoPruebas ? 40 : 0) + (hayNuevaVersion ? 44 : 0);
+
   return (
     <div
       className="min-h-screen"
@@ -281,13 +288,29 @@ export default function App() {
         background: C.paper,
         backgroundImage:
           "repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(31,58,46,0.05) 28px)",
-        paddingTop: hayNuevaVersion ? 44 : 0,
+        paddingTop: alturaBanners,
+        border: modoPruebas ? "6px solid #B00020" : "none",
+        boxSizing: "border-box",
       }}
     >
+      {modoPruebas && (
+        <div
+          className="fixed left-0 right-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold"
+          style={{ top: 0, background: "#B00020", color: "#fff", zIndex: 61, boxShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
+        >
+          🧪 MODO PRUEBAS ACTIVO — todo lo que se haga se restaurará al desactivarlo
+        </div>
+      )}
       {hayNuevaVersion && (
         <div
-          className="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 px-4 py-2 text-sm"
-          style={{ background: C.wax, color: "#fff", zIndex: 60, boxShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
+          className="fixed left-0 right-0 flex items-center justify-between gap-3 px-4 py-2 text-sm"
+          style={{
+            top: modoPruebas ? 40 : 0,
+            background: C.wax,
+            color: "#fff",
+            zIndex: 60,
+            boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+          }}
         >
           <span className="font-medium">Hay una versión nueva de la app — recarga para actualizar.</span>
           <button

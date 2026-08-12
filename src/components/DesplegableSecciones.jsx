@@ -31,6 +31,7 @@ import {
   Euro,
   Globe,
   FileText,
+  FlaskConical,
   RotateCcw,
   Trash2,
 } from "lucide-react";
@@ -55,15 +56,20 @@ const ICONOS_VENTANAS = {
 };
 
 // Submenú de "Configuración": cada parte se abre en su propia ventana,
-// igual que antes — solo cambia cómo se llega hasta ella.
+// igual que antes — solo cambia cómo se llega hasta ella. "Modo
+// pruebas" y "Borrado total" llevan color rojo propio (de distinta
+// intensidad: Borrado total es lo más irreversible de los dos, así que
+// se ve más rojo) en vez del papel por defecto del resto de opciones —
+// a petición del usuario, 2026-08-12.
 const SUBMENU_CONFIGURACION = [
   { id: "config-datos-evento", etiqueta: "Datos del evento", icono: Calendar },
   { id: "config-precios", etiqueta: "Precios", icono: Euro },
   { id: "config-url-web", etiqueta: "URL web", icono: Globe },
   { id: "config-email-anfitrion", etiqueta: "Email anfitrión", icono: Mail },
   { id: "config-plantillas-email", etiqueta: "Texto emails", icono: FileText },
+  { id: "config-modo-pruebas", etiqueta: "Modo pruebas", icono: FlaskConical, color: C.wax },
   { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },
-  { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2 },
+  { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2, color: "#B00020" },
 ];
 
 export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiarRol, anfitrionToken }) {
@@ -106,6 +112,7 @@ export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiar
           id: s.id,
           etiqueta: (abierto[s.id] ? "✓ " : "") + s.etiqueta,
           icono: s.icono,
+          color: s.color,
           onClick: () => toggle(s.id),
         })),
       };
