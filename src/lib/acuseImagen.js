@@ -110,14 +110,36 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
   return { canvas, W, H };
 }
 
+// Tamaño real de un A4 vertical en puntos (1pt = 1/72"). Antes el PDF
+// usaba `format: [W, H]` con las dimensiones exactas del dibujo (800 de
+// ancho por una altura dinámica según el desglose) -- con pocos
+// invitados, H quedaba MENOR que W, así que la "hoja" en sí salía más
+// ancha que alta (apaisada de verdad, aunque orientation dijera
+// "portrait" -- eso solo pinta algo con un format con nombre tipo "a4",
+// no con dimensiones a medida). Al imprimirla en una hoja A4 vertical de
+// verdad salía incompleta/recortada. Ahora la hoja SIEMPRE es un A4
+// vertical real; el dibujo (que puede tener cualquier proporción según
+// cuántos invitados tenga el desglose) se escala para caber entero
+// dentro de los márgenes y se centra -- a petición del usuario
+// (2026-08-12).
+const A4_ANCHO_PT = 595.28;
+const A4_ALTO_PT = 841.89;
+const MARGEN_PT = 40;
+
 // Devuelve un data URL "data:application/pdf;base64,...." con el recibo
-// en una única página, del mismo tamaño que el dibujo (en puntos, 1px =
-// 1pt) para que no salga ni recortado ni con márgenes raros.
+// en una única página A4 vertical.
 export async function generarPdfAcuse({ evento, colaborador, items, total, fechaISO }) {
   const { canvas, W, H } = dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO });
   const imagenPng = canvas.toDataURL("image/png");
 
-  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: [W, H] });
-  pdf.addImage(imagenPng, "PNG", 0, 0, W, H);
+  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+  const anchoMax = A4_ANCHO_PT - MARGEN_PT * 2;
+  const altoMax = A4_ALTO_PT - MARGEN_PT * 2;
+  const escala = Math.min(anchoMax / W, altoMax / H);
+  const anchoFinal = W * escala;
+  const altoFinal = H * escala;
+  const x = (A4_ANCHO_PT - anchoFinal) / 2;
+  const y = (A4_ALTO_PT - altoFinal) / 2;
+  pdf.addImage(imagenPng, "PNG", x, y, anchoFinal, altoFinal);
   return pdf.output("datauristring"); // "data:application/pdf;base64,...."
 }
