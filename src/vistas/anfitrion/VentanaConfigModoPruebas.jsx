@@ -10,7 +10,6 @@ import { FlaskConical } from "lucide-react";
 import { C } from "../../theme";
 import { exportarTodo } from "../../lib/backup";
 import { descargarJSON } from "../../lib/descargas";
-import { Field, TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
 export function VentanaConfigModoPruebas({ data, onCerrar }) {
@@ -23,7 +22,6 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
     activarModoPruebas,
     desactivarModoPruebas,
   } = data;
-  const [palabra, setPalabra] = useState("");
   const [ejecutando, setEjecutando] = useState(false);
   // Por defecto todos habilitados -- lo normal es que el propio
   // anfitrión sea quien más prueba, así que "todos pueden seguir
@@ -59,14 +57,19 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
   };
 
   const desactivar = async () => {
+    const ok = window.confirm(
+      "Se restaura TODO exactamente a como estaba al activar el Modo Pruebas — se deshace " +
+        "cualquier cambio hecho desde entonces, sea de prueba o real.\n\n¿Desactivar y restaurar todo?"
+    );
+    if (!ok) return;
     setEjecutando(true);
     // Copia de seguridad del estado ACTUAL (antes de restaurar) además
     // de la foto que ya guarda el propio Modo Pruebas al activarse --
     // por si alguien más (un colaborador real) tocó algo de verdad
     // mientras estaba activo y ese cambio también se va a perder.
     const datosBackup = JSON.parse(exportarTodo({ evento, mesas, fotosFamiliares, colaboradores, invitados }));
-    const ok = await desactivarModoPruebas();
-    if (ok) {
+    const restaurado = await desactivarModoPruebas();
+    if (restaurado) {
       descargarJSON(`backup-antes-de-desactivar-modo-pruebas-${Date.now()}.json`, datosBackup);
     } else {
       setEjecutando(false);
@@ -88,22 +91,11 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
             seguridad del estado actual, por si hace falta recuperar algo a mano.
           </p>
         </div>
-        <Field label='Escribe "RESTAURAR" para confirmar'>
-          <TextInput
-            value={palabra}
-            onChange={(e) => setPalabra(e.target.value)}
-            placeholder="RESTAURAR"
-            className="w-full"
-          />
-        </Field>
         <button
           onClick={desactivar}
-          disabled={ejecutando || palabra.trim().toUpperCase() !== "RESTAURAR"}
-          className="mt-3 px-4 py-2 rounded text-sm font-semibold"
-          style={{
-            background: palabra.trim().toUpperCase() === "RESTAURAR" ? C.wax : C.line,
-            color: "#fff",
-          }}
+          disabled={ejecutando}
+          className="px-4 py-2 rounded text-sm font-semibold"
+          style={{ background: C.wax, color: "#fff" }}
         >
           {ejecutando ? "Restaurando…" : "Desactivar y restaurar todo"}
         </button>
