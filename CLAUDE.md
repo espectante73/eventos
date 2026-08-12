@@ -233,6 +233,31 @@ join pg_namespace n on n.oid = p.pronamespace
 where p.proname = 'nombre_funcion' and n.nspname = 'public';
 ```
 
+### Supabase exige `WHERE` en todo `UPDATE`/`DELETE` -- usar `where true` si de verdad es toda la tabla
+
+Detectado el 2026-08-12 al probar Modo Pruebas en vivo por primera vez:
+"Activar Modo Pruebas" fallaba con `code: 21000, message: "UPDATE
+requires a WHERE clause"`. Este proyecto de Supabase tiene activada la
+protección contra `UPDATE`/`DELETE` sin filtro (para evitar el clásico
+"borré/actualicé la tabla entera sin querer") -- se aplica a cualquier
+conexión, incluida la de las funciones `security definer` que llaman las
+RPC, no solo al SQL Editor.
+
+Cuando una función necesita de verdad tocar **toda** la tabla a
+propósito (no es un descuido, es la intención), añadir `where true` al
+final -- cumple la exigencia sintáctica sin cambiar el comportamiento.
+`anfitrion_resetear_avisos` ya lo hacía bien desde el principio
+(`delete from avisos_enviados where true;`); las funciones de Modo
+Pruebas (`anfitrion_activar_modo_pruebas`,
+`anfitrion_desactivar_modo_pruebas` -- esta última vacía y repuebla 8
+tablas enteras desde la foto guardada) se escribieron sin él y no se
+detectó hasta el primer uso real, porque nunca se había probado en vivo
+hasta entonces.
+
+**Al escribir cualquier `UPDATE`/`DELETE` nuevo que afecte a toda una
+tabla a propósito**, añadir `where true` desde el principio en vez de
+esperar a que falle en producción.
+
 ### "avisoPendiente" e "invitacionEnviada" se recalculan solos (triggers), no se fijan a mano
 
 El 2026-08-06, tras varias rondas de bugs (cada uno en un sitio distinto

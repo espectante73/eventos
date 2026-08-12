@@ -1197,8 +1197,11 @@ begin
   values (true, v_datos, now())
   on conflict ("id") do update set "datos" = excluded."datos", "creadoEn" = excluded."creadoEn";
 
-  update colaboradores set "habilitadoEnPruebas" = ("id" = any(p_colaborador_ids_habilitados));
-  update evento set "modoPruebasActivo" = true;
+  -- "where true": Supabase exige WHERE en todo UPDATE/DELETE -- estos
+  -- dos son intencionalmente sobre toda la tabla (1-N filas reales, muy
+  -- pocas), no un descuido.
+  update colaboradores set "habilitadoEnPruebas" = ("id" = any(p_colaborador_ids_habilitados)) where true;
+  update evento set "modoPruebasActivo" = true where true;
 end;
 $$;
 
@@ -1217,18 +1220,21 @@ begin
   if v_datos is null then
     -- No hay foto guardada (nunca se activó de verdad) -- no hay nada
     -- que restaurar, solo se asegura que la bandera quede apagada.
-    update evento set "modoPruebasActivo" = false;
+    update evento set "modoPruebasActivo" = false where true;
     return;
   end if;
 
-  delete from invitados;
-  delete from colaboradores;
-  delete from mesas;
-  delete from gastos;
-  delete from orden_familias;
-  delete from fotos_familiares;
-  delete from avisos_enviados;
-  delete from evento;
+  -- "where true" en los 8 delete: Supabase exige WHERE en todo
+  -- UPDATE/DELETE -- aquí el vaciado total es intencional (se
+  -- repueblan enteras justo debajo, desde la foto guardada).
+  delete from invitados where true;
+  delete from colaboradores where true;
+  delete from mesas where true;
+  delete from gastos where true;
+  delete from orden_familias where true;
+  delete from fotos_familiares where true;
+  delete from avisos_enviados where true;
+  delete from evento where true;
 
   -- invitados y colaboradores se referencian el uno al otro (FK
   -- circular, ver el comentario de invitados_colaborador_fk más arriba)
@@ -1265,7 +1271,7 @@ begin
 
   insert into evento select * from jsonb_populate_record(null::evento, v_datos->'evento');
 
-  delete from modo_pruebas_snapshot;
+  delete from modo_pruebas_snapshot where true;
 end;
 $$;
 
