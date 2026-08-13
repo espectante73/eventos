@@ -431,6 +431,25 @@ dependió de estas 6 funciones. Ver Fase B en
 `.claude/plans/mejoras-pendientes-login-y-solidez.md` para la decisión
 pendiente que queda (qué hacer con el enlace del anfitrión).
 
+**2026-08-12: pantalla dedicada "No tienes acceso" para el enlace
+`?rol=...` viejo sin sesión.** El usuario le pidió a un colaborador que
+probara entrar con un enlace de un email antiguo, sin haber iniciado
+sesión, para comprobar la seguridad — el colaborador lo describió como
+"una vista de colaborador sin datos", no como un bloqueo claro. La app
+sí lo bloqueaba de verdad (Fase B ya impedía que devolviera ningún
+dato), pero el AVISO al usuario final era confuso: una franja técnica
+("Vista fija de enlace · rol no encontrado") seguida de un párrafo
+discreto al fondo de la pantalla, que se podía leer como un fallo de la
+app en vez de como un cierre de seguridad correcto. `App.jsx` añadió una
+pantalla propia y clara ("No tienes acceso" + enlace a iniciar sesión)
+que corta el render ANTES de llegar al resto de la app, con la condición
+`session === null && !esAnfitrionOriginal && urlRol` — el `session ===
+null` es importante: sin él, un colaborador con sesión real que además
+tuviera un `?rol=...` suelto en la URL (arrastrado de un enlace viejo)
+vería este bloqueo por error, aunque `mi_rol()` ya le hubiera resuelto
+el acceso de verdad por su cuenta. La franja técnica que había antes se
+retiró (quedaba sin uso real tras esto).
+
 ⚠️ **Ese mismo cambio rompió, de rebote, la previsualización "Formularios"
 del anfitrión (App.jsx) sin que nadie lo notara hasta el 2026-08-12,
 al probar Modo Pruebas en vivo.** "Formularios" reutilizaba `setRol` para

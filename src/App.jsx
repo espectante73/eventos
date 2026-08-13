@@ -294,6 +294,48 @@ export default function App() {
     );
   }
 
+  // Enlace antiguo de colaborador (?rol=...) sin sesión real: desde que se
+  // retiró el enlace-token de colaborador (Fase B, 2026-08-12), este caso
+  // YA NUNCA resuelve a datos de verdad -- antes se colaba hasta el hueco
+  // de "Este enlace no es válido..." al final del render, con una franja
+  // técnica ("Vista fija de enlace · rol no encontrado") por encima. Un
+  // colaborador probando ese enlace viejo lo describió como "una vista de
+  // colaborador sin datos", no como un aviso de acceso denegado -- podía
+  // confundirse con un fallo de la app en vez de con un bloqueo de
+  // seguridad correcto. Pantalla dedicada y clara en su lugar, ANTES de
+  // llegar al resto del render. `session === null` (no solo `!esAnfitrionOriginal`)
+  // para no afectar a un colaborador con sesión real que además tenga un
+  // `?rol=...` suelto en la URL (mi_rol() ya resuelve su acceso aparte).
+  if (session === null && !esAnfitrionOriginal && urlRol) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
+      >
+        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+          <h1
+            className="text-xl mb-2"
+            style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}
+          >
+            No tienes acceso
+          </h1>
+          <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: 0.8 }}>
+            Este enlace ya no funciona — los enlaces directos de colaborador se retiraron a favor
+            del login real. Inicia sesión con tu cuenta para entrar, o pide al anfitrión que te
+            vincule una si todavía no tienes.
+          </p>
+          <a
+            href="/"
+            className="inline-block px-4 py-2 rounded text-sm font-medium"
+            style={{ background: C.ink, color: C.paper }}
+          >
+            Ir al inicio de sesión
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   // Visible para CUALQUIER rol (evento es de acceso abierto) — no solo el
   // anfitrión: si un colaborador entra mientras está activo, también debe
   // saber que todo lo que haga puede deshacerse al desactivarlo (ver
@@ -359,22 +401,13 @@ export default function App() {
             dentro de "Abrir sección… → Colaboradores → Formularios", ver
             DesplegableSecciones.jsx. Volver a Anfitrión mientras se
             previsualiza a un colaborador se hace desde el botón "Cambiar
-            vista" de VistaColaborador.jsx. */}
-        {!esAnfitrionOriginal && urlRol && (
-          <div
-            className="text-xs uppercase mb-6 inline-block px-2 py-1 rounded"
-            style={{
-              color: C.gold,
-              border: `1px solid ${C.line}`,
-              fontFamily: "'IBM Plex Mono', monospace",
-              letterSpacing: "0.06em",
-            }}
-          >
-            Vista fija de enlace ·{" "}
-            {data.colaboradores.find((c) => c.id === rol)?.nombre || "rol no encontrado"}
-          </div>
-        )}
-
+            vista" de VistaColaborador.jsx.
+            La franja "Vista fija de enlace" que iba aquí (para el enlace
+            ?rol=... sin login) se retiró el 2026-08-12: desde que ese
+            enlace dejó de funcionar de verdad (Fase B), lo único que
+            podía mostrar era "rol no encontrado" -- caso ahora cubierto
+            arriba con la pantalla dedicada "No tienes acceso", antes de
+            llegar siquiera a este punto del render. */}
         {data.esAnfitrion && !vistaPrevia ? (
           <VistaAnfitrion data={data} setRol={cambiarVistaPrevia} anfitrionToken={anfitrionToken} />
         ) : data.esAnfitrion && vistaPrevia ? (
