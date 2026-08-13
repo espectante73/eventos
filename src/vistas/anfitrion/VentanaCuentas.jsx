@@ -12,7 +12,7 @@ import { uid } from "../../lib/id";
 import { construirAsuntoAcuse, construirHtmlAcuse } from "../../lib/acuseRecogida";
 import { generarPdfAcuse } from "../../lib/acuseImagen";
 import { TextInput } from "../../components/Formulario";
-import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 
 export function VentanaCuentas({ data, onCerrar }) {
   const {
@@ -32,6 +32,14 @@ export function VentanaCuentas({ data, onCerrar }) {
   const [confirmandoId, setConfirmandoId] = useState(null);
   const [importeConfirmar, setImporteConfirmar] = useState("");
   const [enviandoId, setEnviandoId] = useState(null);
+  // Vista previa del acuse antes de enviarlo -- "Confirmar recogida" y
+  // "Probar acuse" ya no mandan nada directamente: generan el PDF,
+  // abren este modal para revisarlo, y solo se envía/confirma de verdad
+  // al pulsar "Aceptar" ahí dentro. { tipo: "confirmar" | "prueba",
+  // colaborador, dataUrl, importe (solo "confirmar"), asunto, html } | null
+  const [previewAcuse, setPreviewAcuse] = useState(null);
+  const [generandoPreview, setGenerandoPreview] = useState(null); // id del colaborador mientras se genera
+  const [enviandoAcuse, setEnviandoAcuse] = useState(false);
 
   const agregarGasto = () => {
     persistGastos([
@@ -85,26 +93,28 @@ export function VentanaCuentas({ data, onCerrar }) {
   const nombreArchivoAcuse = (c) =>
     `acuse-${(c.nombre || "colaborador").replace(/\s+/g, "-").toLowerCase()}.pdf`;
 
-  const confirmarRecogida = async (c) => {
+  // Ya no confirma/envía directamente -- genera el PDF y abre la vista
+  // previa; el envío real solo pasa si se acepta ahí (ver
+  // confirmarEnvioAcuse más abajo).
+  const abrirPreviewConfirmar = async (c) => {
     const importe = parseFloat(importeConfirmar.replace(",", ".")) || 0;
-    const fechaISO = new Date().toISOString().slice(0, 10);
+    setGenerandoPreview(c.id);
     const dataUrl = await generarPdfAcuse({
       evento,
       colaborador: c,
       items: itemsRecaudadosPorColaborador(c),
       total: importe,
-      fechaISO,
+      fechaISO: new Date().toISOString().slice(0, 10),
     });
-    const ok = await confirmarRecogidaColaborador(
-      c.id,
+    setGenerandoPreview(null);
+    setPreviewAcuse({
+      tipo: "confirmar",
+      colaborador: c,
+      dataUrl,
       importe,
-      c.email,
-      construirAsuntoAcuse(evento),
-      construirHtmlAcuse({ colaborador: c }),
-      nombreArchivoAcuse(c),
-      dataUrl.split(",")[1] || ""
-    );
-    if (ok) setConfirmandoId(null);
+      asunto: construirAsuntoAcuse(evento),
+      html: construirHtmlAcuse({ colaborador: c }),
+    });
   };
 
   const reenviarAcuse = async (c) => {
@@ -126,14 +136,13 @@ export function VentanaCuentas({ data, onCerrar }) {
     setEnviandoId(null);
   };
 
-  // "Probar acuse": manda el acuse con los datos reales de AHORA (sus
+  // "Probar acuse": genera el acuse con los datos reales de AHORA (sus
   // invitados ya pagados) pero SIN confirmar ni registrar ninguna
   // recogida -- no toca dineroRecogidoEn/Importe, así que no hace falta
-  // deshacer nada después. Pensado para ver de un vistazo cómo queda el
-  // email antes de usarlo de verdad (mismo espíritu que el botón
-  // "Probar" ya existente para el email de cada colaborador).
-  const probarAcuse = async (c) => {
-    setEnviandoId(c.id);
+  // deshacer nada después. Igual que "Confirmar recogida", ya no manda
+  // nada directamente: abre la vista previa primero.
+  const abrirPreviewProbar = async (c) => {
+    setGenerandoPreview(c.id);
     const dataUrl = await generarPdfAcuse({
       evento,
       colaborador: c,
@@ -141,17 +150,54 @@ export function VentanaCuentas({ data, onCerrar }) {
       total: importeRecaudadoPorColaborador(c),
       fechaISO: new Date().toISOString().slice(0, 10),
     });
-    await reenviarAcuseColaborador(
-      c.email,
-      "[PRUEBA] " + construirAsuntoAcuse(evento),
-      construirHtmlAcuse({ colaborador: c }),
-      nombreArchivoAcuse(c),
-      dataUrl.split(",")[1] || ""
-    );
-    setEnviandoId(null);
+    setGenerandoPreview(null);
+    setPreviewAcuse({
+      tipo: "prueba",
+      colaborador: c,
+      dataUrl,
+      asunto: "[PRUEBA] " + construirAsuntoAcuse(evento),
+      html: construirHtmlAcuse({ colaborador: c }),
+    });
+  };
+
+  // Único punto real de envío: se llama al aceptar la vista previa, sea
+  // "confirmar" (registra la recogida de verdad) o "prueba" (solo manda
+  // el email, sin tocar dineroRecogidoEn/Importe) -- el PDF ya generado
+  // para la vista previa se reutiliza tal cual, no se vuelve a construir.
+  const confirmarEnvioAcuse = async () => {
+    if (!previewAcuse) return;
+    setEnviandoAcuse(true);
+    const base64 = previewAcuse.dataUrl.split(",")[1] || "";
+    if (previewAcuse.tipo === "confirmar") {
+      const ok = await confirmarRecogidaColaborador(
+        previewAcuse.colaborador.id,
+        previewAcuse.importe,
+        previewAcuse.colaborador.email,
+        previewAcuse.asunto,
+        previewAcuse.html,
+        nombreArchivoAcuse(previewAcuse.colaborador),
+        base64
+      );
+      setEnviandoAcuse(false);
+      if (ok) {
+        setConfirmandoId(null);
+        setPreviewAcuse(null);
+      }
+    } else {
+      await reenviarAcuseColaborador(
+        previewAcuse.colaborador.email,
+        previewAcuse.asunto,
+        previewAcuse.html,
+        nombreArchivoAcuse(previewAcuse.colaborador),
+        base64
+      );
+      setEnviandoAcuse(false);
+      setPreviewAcuse(null);
+    }
   };
 
   return (
+    <>
     <VentanaFlotante clave="cuentas" titulo="Estado de cuentas" onCerrar={onCerrar}>
       <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
         "Lo que entra" se calcula solo (pagos de invitados confirmados). "Lo que sale"
@@ -239,11 +285,12 @@ export function VentanaCuentas({ data, onCerrar }) {
                     />
                     <span className="text-xs" style={{ color: C.charcoal }}>€</span>
                     <button
-                      onClick={() => confirmarRecogida(c)}
+                      onClick={() => abrirPreviewConfirmar(c)}
+                      disabled={generandoPreview === c.id}
                       className="px-3 py-1.5 rounded text-xs font-medium"
                       style={{ background: C.ink, color: C.paper }}
                     >
-                      Confirmar y enviar acuse
+                      {generandoPreview === c.id ? "Generando…" : "Revisar y confirmar"}
                     </button>
                     <button
                       onClick={() => setConfirmandoId(null)}
@@ -292,13 +339,13 @@ export function VentanaCuentas({ data, onCerrar }) {
                       Confirmar recogida
                     </button>
                     <button
-                      onClick={() => probarAcuse(c)}
-                      disabled={enviandoId === c.id || !c.email}
-                      title="Enviar un acuse de prueba con los datos actuales, sin confirmar ni registrar nada"
+                      onClick={() => abrirPreviewProbar(c)}
+                      disabled={generandoPreview === c.id || !c.email}
+                      title="Ver el acuse de prueba antes de enviarlo, sin confirmar ni registrar nada"
                       className="flex items-center gap-1 text-xs px-2 py-1 rounded"
                       style={{ border: `1px solid ${C.gold}`, color: C.gold }}
                     >
-                      <Mail size={13} /> {enviandoId === c.id ? "Enviando…" : "Probar acuse"}
+                      <Mail size={13} /> {generandoPreview === c.id ? "Generando…" : "Probar acuse"}
                     </button>
                   </>
                 )}
@@ -379,5 +426,61 @@ export function VentanaCuentas({ data, onCerrar }) {
       </>
       )}
     </VentanaFlotante>
+
+    {previewAcuse && (
+      <ModalFlotante
+        titulo={
+          (previewAcuse.tipo === "confirmar" ? "Confirmar recogida — " : "Probar acuse — ") +
+          previewAcuse.colaborador.nombre
+        }
+        onCerrar={() => setPreviewAcuse(null)}
+      >
+        <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
+          Destinatario
+        </p>
+        <p className="text-sm mb-3" style={{ color: previewAcuse.colaborador.email ? C.ink : C.wax }}>
+          {previewAcuse.colaborador.email || "Sin email — no se podrá enviar"}
+        </p>
+        {previewAcuse.tipo === "confirmar" && (
+          <>
+            <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
+              Importe a confirmar
+            </p>
+            <p className="text-sm mb-3" style={{ color: C.ink }}>{formato(previewAcuse.importe)} €</p>
+          </>
+        )}
+        <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
+          Acuse (PDF) — revisa que todo esté bien antes de continuar
+        </p>
+        <iframe
+          src={previewAcuse.dataUrl}
+          title="Vista previa del acuse"
+          className="rounded mb-3"
+          style={{ width: "100%", height: 420, border: `1px solid ${C.line}` }}
+        />
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={confirmarEnvioAcuse}
+            disabled={enviandoAcuse || !previewAcuse.colaborador.email}
+            className="px-3 py-2 rounded text-sm font-medium"
+            style={{ background: C.ink, color: C.paper }}
+          >
+            {enviandoAcuse
+              ? "Enviando…"
+              : previewAcuse.tipo === "confirmar"
+              ? "Aceptar y confirmar"
+              : "Aceptar y enviar"}
+          </button>
+          <button
+            onClick={() => setPreviewAcuse(null)}
+            className="px-3 py-2 rounded text-sm font-medium"
+            style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+          >
+            Cancelar
+          </button>
+        </div>
+      </ModalFlotante>
+    )}
+    </>
   );
 }
