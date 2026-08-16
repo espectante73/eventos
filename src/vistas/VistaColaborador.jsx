@@ -587,7 +587,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
               FAMILIAS CONFIRMADAS:{" "}
               {gruposFamiliaresACargo.length > 0
-                ? gruposFamiliaresACargo.map((g) => `Familia ${g}`).join(", ")
+                ? gruposFamiliaresACargo.join(", ")
                 : "ninguno"}
             </div>
             {/* Si ya tiene email registrado, no hace falta decir nada aquí
