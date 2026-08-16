@@ -560,6 +560,19 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         </div>
       )}
       <div className="p-4 rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+        {/* En su propia fila, no junto a "Cambiar vista" (a petición del
+            usuario) -- misma clase/aspecto que el resto de "Cerrar
+            sesión" de la app, solo cambia dónde se coloca. */}
+        {onCerrarSesion && (
+          <div className="flex justify-end mb-3">
+            <button
+              onClick={onCerrarSesion}
+              className="boton-3d boton-verde-solido flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium"
+            >
+              <LogOut size={13} /> Cerrar sesión
+            </button>
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <div>
             <div
@@ -615,18 +628,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   </button>
                 )}
               />
-            )}
-            {/* "Cerrar sesión" entra en el propio recuadro de datos (a
-                petición del usuario) en vez de ir en una fila suelta por
-                encima de todo -- eso sube el recuadro a la parte más alta
-                de la pantalla, sin el hueco que dejaba esa fila. */}
-            {onCerrarSesion && (
-              <button
-                onClick={onCerrarSesion}
-                className="boton-3d boton-verde-solido flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium"
-              >
-                <LogOut size={13} /> Cerrar sesión
-              </button>
             )}
             <Seal count={pendientes.length} />
           </div>
