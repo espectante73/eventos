@@ -136,13 +136,10 @@ function FilaMenu({ opcion, cerrarTodo }) {
             <div
               ref={panelRef}
               data-menu-panel
-              className="fixed rounded overflow-y-auto"
+              className="panel-flotante-cristal cristal-difuminado fixed rounded overflow-y-auto"
               style={{
                 top: pos.top,
                 right: pos.right,
-                background: C.ink,
-                border: "1px solid rgba(239,233,222,0.2)",
-                boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
                 width: "max-content",
                 maxWidth: "min(320px, calc(100vw - 2rem))",
                 maxHeight: pos.maxHeight,
@@ -274,12 +271,9 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
           <div
             ref={listaRef}
             data-menu-panel
-            className="fixed rounded overflow-y-auto"
+            className="panel-flotante-cristal cristal-difuminado fixed rounded overflow-y-auto"
             style={{
               ...pos,
-              background: C.ink,
-              border: "1px solid rgba(239,233,222,0.2)",
-              boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
               width: "max-content",
               maxWidth: "min(320px, calc(100vw - 2rem))",
               padding: "4px 0",

@@ -63,6 +63,22 @@
     0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
+/* .panel-flotante-cristal: mismo lenguaje visual que .boton-flotante-imagen
+   (degradado verde de la propia paleta + relieve suave), aplicado ahora
+   a los PANELES desplegables (MenuFlotante.jsx) -- a petición del
+   usuario, una vez asentado el estilo en los botones de la Portada, se
+   usa como base para el resto de la app. Más opaco que el de los
+   botones (0.92, no 0.82): un menú de opciones sobre contenido
+   cualquiera necesita leerse bien siempre, no solo sobre una foto
+   concreta ya pensada para eso. */
+.panel-flotante-cristal {
+  background: linear-gradient(180deg, rgba(36, 64, 47, 0.94), rgba(18, 32, 24, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
 /* .cristal-difuminado: desenfoca lo que queda DETRÁS del propio
    elemento (efecto "vidrio esmerilado") -- usado sobre la imagen de
    cabecera para que se vea difuminada justo donde van los datos del
