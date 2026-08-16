@@ -767,7 +767,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}
           >
             <Bell size={18} strokeWidth={2} />
-            Nuevos invitados {pendientes.length > 0 && `(${pendientes.length})`}
+            Invitados NUEVOS {pendientes.length > 0 && `(${pendientes.length})`}
           </h2>
           <button
             onClick={() => setMostrarConfirmar(true)}
@@ -801,7 +801,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       </section>
 
       <section>
-        <SectionTitle icon={Check}>Invitados completados</SectionTitle>
+        <SectionTitle icon={Check}>Invitados COMPLETADOS</SectionTitle>
         <div className="space-y-2">
           {ordenarPorApellidoNombre(completos).map((g) => (
             <FilaInvitadoColaborador
