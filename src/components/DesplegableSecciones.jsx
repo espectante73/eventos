@@ -72,7 +72,19 @@ const SUBMENU_CONFIGURACION = [
   { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2, fondo: "#B00020", color: C.paper },
 ];
 
-export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiarRol, anfitrionToken }) {
+// `posicion`: dónde flota el botón dentro de su contenedor (por defecto,
+// esquina inferior derecha) -- Portada.jsx lo reposiciona sobre la propia
+// imagen ("a los pies de la pareja", a petición del usuario, 2026-08-12),
+// manteniéndolo a la derecha a propósito: mejor alcance con el pulgar
+// derecho en móvil (mismo criterio ya aplicado en Modo Pruebas).
+export function DesplegableSecciones({
+  abierto,
+  toggle,
+  colaboradores,
+  onCambiarRol,
+  anfitrionToken,
+  posicion = { bottom: 8, right: 8 },
+}) {
   const opciones = ORDEN_VENTANAS.map((clave) => {
     if (clave === "colaboradores") {
       return {
@@ -135,7 +147,7 @@ export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiar
           ref={ref}
           onClick={abrirCerrar}
           className="boton-3d absolute px-3 py-1.5 rounded text-sm font-medium"
-          style={{ bottom: 8, right: 8, background: C.ink, color: C.paper, border: `1px solid ${C.ink}` }}
+          style={{ ...posicion, background: C.ink, color: C.paper, border: `1px solid ${C.ink}` }}
           title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
         >
           Abrir sección…

@@ -105,6 +105,22 @@ export function Portada({
             <LogOut size={14} /> Cerrar sesión
           </button>
         )}
+
+        {/* "A los pies de la pareja": sobre la propia foto, no en la
+            franja de datos de abajo -- a la derecha a propósito (alcance
+            del pulgar derecho en móvil). El % en vez de un valor fijo en
+            px sigue funcionando igual de bien pase lo que pase con el
+            alto real de la imagen (varía según su proporción). */}
+        {editable && toggle && (
+          <DesplegableSecciones
+            abierto={abierto}
+            toggle={toggle}
+            colaboradores={colaboradores || []}
+            onCambiarRol={onCambiarRol}
+            anfitrionToken={anfitrionToken}
+            posicion={{ bottom: "9%", right: 16 }}
+          />
+        )}
       </div>
 
       {/* Franja de datos EN VIVO, aparte de la imagen (a petición
@@ -127,7 +143,7 @@ export function Portada({
             {form.nombre || (editable ? "Nombre del evento" : "Evento sin nombre")}
           </h1>
         )}
-        <div className="flex flex-wrap items-start gap-x-6 gap-y-2" style={{ paddingRight: 110 }}>
+        <div className="flex flex-wrap items-start gap-x-6 gap-y-2">
           <InfoItem
             claro
             icon={Calendar}
@@ -152,16 +168,6 @@ export function Portada({
             />
           )}
         </div>
-
-        {editable && toggle && (
-          <DesplegableSecciones
-            abierto={abierto}
-            toggle={toggle}
-            colaboradores={colaboradores || []}
-            onCambiarRol={onCambiarRol}
-            anfitrionToken={anfitrionToken}
-          />
-        )}
       </div>
     </div>
   );
