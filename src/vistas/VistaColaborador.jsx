@@ -567,9 +567,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           <div className="flex justify-end mb-3">
             <button
               onClick={onCerrarSesion}
-              className="boton-3d boton-verde-solido flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium"
+              className="boton-3d boton-verde-solido flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
             >
-              <LogOut size={13} /> Cerrar sesión
+              <LogOut size={16} /> Cerrar sesión
             </button>
           </div>
         )}
