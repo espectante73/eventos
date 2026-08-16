@@ -699,14 +699,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           </div>
         </div>
 
-        <div className="mt-4 pt-4 flex justify-end" style={{ borderTop: `1px solid ${C.line}` }}>
-          <button
-            onClick={() => setMostrarConfirmar(true)}
-            className="boton-3d boton-verde-solido px-4 py-2 rounded-full text-sm font-semibold"
-          >
-            He terminado mi trabajo
-          </button>
-        </div>
         </div>
       </div>
 
@@ -757,9 +749,30 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       )}
 
       <section>
-        <SectionTitle icon={Bell}>
-          Nuevos invitados por completar {pendientes.length > 0 && `(${pendientes.length})`}
-        </SectionTitle>
+        {/* Título a la izquierda, botón a la derecha (antes el botón iba
+            solo, al final del recuadro de arriba) -- a petición del
+            usuario. Texto del título acortado ("Nuevos invitados por
+            completar" -> "Nuevos invitados"), y el botón renombrado
+            ("He terminado mi trabajo" -> "Datos completos"). No se usa
+            SectionTitle aquí (su margen/borde interno crea doble
+            espaciado al meterla en un flex row) -- mismo icono/estilo,
+            escrito a mano para que el borde de abajo abarque toda la
+            fila, título y botón incluidos. */}
+        <div className="flex items-center justify-between mb-4 pb-2" style={{ borderBottom: `1.5px solid ${C.line}` }}>
+          <h2
+            className="flex items-center gap-2 text-xl"
+            style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}
+          >
+            <Bell size={18} strokeWidth={2} />
+            Nuevos invitados {pendientes.length > 0 && `(${pendientes.length})`}
+          </h2>
+          <button
+            onClick={() => setMostrarConfirmar(true)}
+            className="boton-3d boton-verde-solido px-4 py-2 rounded-full text-sm font-semibold"
+          >
+            Datos completos
+          </button>
+        </div>
         <div className="space-y-2">
           {ordenarPorApellidoNombre(pendientes).map((g) => (
             <FilaInvitadoColaborador
