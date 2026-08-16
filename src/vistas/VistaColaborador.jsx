@@ -165,7 +165,13 @@ function FormularioDatos({
       // en vez del verde claro de la primera prueba.
       style={{ background: C.ink, border: `1px solid ${C.line}` }}
     >
-      <p className="text-xs font-bold" style={{ color: C.wax }}>
+      {/* Fondo propio (antes el rojo iba directo sobre el verde oscuro
+          del formulario -- poco legible, rojo sobre verde oscuro) -- a
+          petición del usuario. */}
+      <p
+        className="text-xs font-bold inline-block px-2 py-1 rounded"
+        style={{ color: C.wax, background: C.paper }}
+      >
         * campos obligatorios (año nacimiento y alergias)
       </p>
       <div>
