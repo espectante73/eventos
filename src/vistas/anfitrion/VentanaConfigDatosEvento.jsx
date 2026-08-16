@@ -19,7 +19,14 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
     setErrorImagenPortada("");
     setSubiendoImagenPortada(true);
     try {
-      const dataUrl = await redimensionarImagenArchivo(file);
+      // 2000px / calidad 0.9 (no los valores por defecto, 1600/0.82):
+      // desde el rediseño de la portada (2026-08-12) esta imagen se
+      // muestra como póster grande y protagonista, no ya como una franja
+      // pequeña de fondo -- con la compresión floja de antes se notaba
+      // pixelada. Mismo nivel que ya usa la plantilla de Invitaciones
+      // (redimensionarImagenArchivo(file, 2000, 0.88) en
+      // VentanaInvitaciones.jsx), incluso un punto por encima.
+      const dataUrl = await redimensionarImagenArchivo(file, 2000, 0.9);
       persistEvento({ ...evento, imagen: dataUrl });
     } catch (_) {
       setErrorImagenPortada("No se ha podido procesar la imagen. Prueba con otra.");
