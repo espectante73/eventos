@@ -632,43 +632,48 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           </div>
         </div>
 
+        {/* Recuadro más compacto (a petición del usuario): menos margen/
+            padding alrededor y letra más pequeña que antes -- mismos
+            datos, menos alto ocupado. */}
         <div
-          className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-4 pt-4"
+          className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 mt-2 pt-2"
           style={{ borderTop: `1px solid ${C.line}` }}
         >
           <div className="text-center">
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
+            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {noPagados.length}
             </div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
           </div>
           <div className="text-center">
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
+            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {pagados.length}
             </div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pagados</div>
           </div>
           <div className="text-center">
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
+            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importeEsperado)}
             </div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total esperado</div>
           </div>
           <div className="text-center">
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
+            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importeCobrado)}
             </div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Ya cobrado</div>
           </div>
           <div className="text-center">
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 18 }}>
+            <div style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importePendiente)}
             </div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Diferencia pendiente</div>
           </div>
         </div>
 
-        <div className="mt-3" style={{ maxWidth: 320 }}>
+        {/* Las 3 barras de porcentaje en 2 líneas (2 columnas), no en 3
+            líneas apiladas como antes -- a petición del usuario. */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2" style={{ maxWidth: 420 }}>
           <BarraCompacta icono={ClipboardList} completado={completos.length} total={confirmados.length} color={C.ink} />
           <BarraCompacta icono={Euro} completado={pagados.length} total={confirmados.length} color={C.gold} />
           <BarraCompacta icono={Mail} completado={familiasConInvitacion} total={gruposFamiliaresACargo.length} color={C.wax} />
