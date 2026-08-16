@@ -659,9 +659,12 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           className="grid grid-cols-3 gap-1.5 mt-2 pt-2"
           style={{ borderTop: `1px solid ${C.line}` }}
         >
-          {/* Texto arriba, importe/cantidad debajo (antes al revés) --
-              Cobrado en verde (C.ink) y Pendiente en rojo (C.wax), a
-              petición del usuario. */}
+          {/* No pagados/Pagados: texto arriba, cantidad debajo (sin
+              cambios). Los 3 recuadros de importe (dinero, no cuenta):
+              importe arriba, texto debajo -- al revés que los de
+              cantidad, a petición del usuario. Cobrado y Pendiente,
+              además, con fondo de color propio (verde/rojo) y letra
+              blanca, en vez de fondo neutro con solo el texto en color. */}
           <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
@@ -675,22 +678,22 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             </div>
           </div>
           <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total</div>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importeEsperado)}
             </div>
+            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total</div>
           </div>
-          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Cobrado</div>
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
+          <div className="h-full rounded p-2 text-center" style={{ background: C.ink }}>
+            <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importeCobrado)}
             </div>
+            <div className="text-xs" style={{ color: "#fff", opacity: 0.85 }}>Cobrado</div>
           </div>
-          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pendiente</div>
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 15 }}>
+          <div className="h-full rounded p-2 text-center" style={{ background: C.wax }}>
+            <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importePendiente)}
             </div>
+            <div className="text-xs" style={{ color: "#fff", opacity: 0.85 }}>Pendiente</div>
           </div>
           <div className="h-full rounded p-2 flex flex-col justify-center" style={{ background: C.paperDark }}>
             <BarraCompacta icono={ClipboardList} completado={completos.length} total={confirmados.length} color={C.ink} />
