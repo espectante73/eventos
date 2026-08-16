@@ -718,6 +718,80 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           </div>
         </div>
 
+        {/* Las 2 listas de invitados se meten AQUÍ DENTRO (antes eran
+            secciones sueltas fuera de este recuadro) -- a petición del
+            usuario: "sticky" solo mantiene la cabecera pegada mientras
+            se hace scroll DENTRO de su propio contenedor. Con las
+            listas fuera, el contenedor de la cabecera era corto (solo
+            estas tarjetas) y en cuanto se pasaba ese trozo la cabecera
+            subía igual que el resto -- no tenía más "sitio" donde
+            quedarse enganchada. Metiendo las listas aquí, el
+            contenedor pasa a abarcar todo el scroll del formulario. */}
+        <section className="mt-8">
+          <div className="flex items-center justify-between mb-4 pb-2" style={{ borderBottom: `1.5px solid ${C.line}` }}>
+            <h2
+              className="flex items-center gap-2 text-xl"
+              style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}
+            >
+              <Bell size={18} strokeWidth={2} />
+              Invitados NUEVOS {pendientes.length > 0 && `(${pendientes.length})`}
+            </h2>
+            <button
+              onClick={() => setMostrarConfirmar(true)}
+              className="boton-3d boton-verde-solido px-4 py-2 rounded-full text-sm font-semibold"
+            >
+              Datos completos
+            </button>
+          </div>
+          <div className="space-y-2">
+            {ordenarPorApellidoNombre(pendientes).map((g) => (
+              <FilaInvitadoColaborador
+                key={g.id}
+                g={g}
+                abierto={abiertoId === g.id}
+                onToggleAbierto={() => toggleAbierto(g)}
+                onGuardar={guardar}
+                fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
+                onCambiarFotoFamiliar={cambiarFotoFamiliar}
+                onMarcarPagado={marcarPagado}
+                evento={evento}
+                fotosFamiliares={fotosFamiliares}
+                colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
+              />
+            ))}
+            {pendientes.length === 0 && (
+              <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                No hay avisos pendientes.
+              </p>
+            )}
+          </div>
+        </section>
+
+        <section className="mt-8">
+          <SectionTitle icon={Check}>Invitados COMPLETADOS</SectionTitle>
+          <div className="space-y-2">
+            {ordenarPorApellidoNombre(completos).map((g) => (
+              <FilaInvitadoColaborador
+                key={g.id}
+                g={g}
+                abierto={abiertoId === g.id}
+                onToggleAbierto={() => toggleAbierto(g)}
+                onGuardar={guardar}
+                fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
+                onCambiarFotoFamiliar={cambiarFotoFamiliar}
+                onMarcarPagado={marcarPagado}
+                evento={evento}
+                fotosFamiliares={fotosFamiliares}
+                colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
+              />
+            ))}
+            {completos.length === 0 && (
+              <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                Todavía ningún invitado con datos completos.
+              </p>
+            )}
+          </div>
+        </section>
         </div>
       </div>
 
@@ -766,81 +840,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           </div>
         </ModalFlotante>
       )}
-
-      <section>
-        {/* Título a la izquierda, botón a la derecha (antes el botón iba
-            solo, al final del recuadro de arriba) -- a petición del
-            usuario. Texto del título acortado ("Nuevos invitados por
-            completar" -> "Nuevos invitados"), y el botón renombrado
-            ("He terminado mi trabajo" -> "Datos completos"). No se usa
-            SectionTitle aquí (su margen/borde interno crea doble
-            espaciado al meterla en un flex row) -- mismo icono/estilo,
-            escrito a mano para que el borde de abajo abarque toda la
-            fila, título y botón incluidos. */}
-        <div className="flex items-center justify-between mb-4 pb-2" style={{ borderBottom: `1.5px solid ${C.line}` }}>
-          <h2
-            className="flex items-center gap-2 text-xl"
-            style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}
-          >
-            <Bell size={18} strokeWidth={2} />
-            Invitados NUEVOS {pendientes.length > 0 && `(${pendientes.length})`}
-          </h2>
-          <button
-            onClick={() => setMostrarConfirmar(true)}
-            className="boton-3d boton-verde-solido px-4 py-2 rounded-full text-sm font-semibold"
-          >
-            Datos completos
-          </button>
-        </div>
-        <div className="space-y-2">
-          {ordenarPorApellidoNombre(pendientes).map((g) => (
-            <FilaInvitadoColaborador
-              key={g.id}
-              g={g}
-              abierto={abiertoId === g.id}
-              onToggleAbierto={() => toggleAbierto(g)}
-              onGuardar={guardar}
-              fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
-              onCambiarFotoFamiliar={cambiarFotoFamiliar}
-              onMarcarPagado={marcarPagado}
-              evento={evento}
-              fotosFamiliares={fotosFamiliares}
-              colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
-            />
-          ))}
-          {pendientes.length === 0 && (
-            <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-              No hay avisos pendientes.
-            </p>
-          )}
-        </div>
-      </section>
-
-      <section>
-        <SectionTitle icon={Check}>Invitados COMPLETADOS</SectionTitle>
-        <div className="space-y-2">
-          {ordenarPorApellidoNombre(completos).map((g) => (
-            <FilaInvitadoColaborador
-              key={g.id}
-              g={g}
-              abierto={abiertoId === g.id}
-              onToggleAbierto={() => toggleAbierto(g)}
-              onGuardar={guardar}
-              fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
-              onCambiarFotoFamiliar={cambiarFotoFamiliar}
-              onMarcarPagado={marcarPagado}
-              evento={evento}
-              fotosFamiliares={fotosFamiliares}
-              colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
-            />
-          ))}
-          {completos.length === 0 && (
-            <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-              Todavía ningún invitado con datos completos.
-            </p>
-          )}
-        </div>
-      </section>
     </div>
   );
 }
