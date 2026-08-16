@@ -682,20 +682,19 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               {formatoEuro(importePendiente)}
             </div>
           </div>
-          {/* Centradas en altura (flex) y con el dígito algo más grande
-              (18px, no 15px) -- a petición del usuario: en la fila
-              comparten alto con la de porcentajes (más contenido), y sus
-              2 líneas cortas se quedaban pegadas arriba con hueco vacío
-              debajo. */}
-          <div className="h-full rounded p-2 flex flex-col items-center justify-center text-center" style={{ background: C.paperDark }}>
+          {/* Solo el número se centra en el hueco que le queda -- el
+              título se queda arriba, a la misma altura que el resto de
+              tarjetas (antes centraba el bloque entero, y el título
+              también bajaba). Dígito algo más grande (18px, no 15px). */}
+          <div className="h-full rounded p-2 flex flex-col text-center" style={{ background: C.paperDark }}>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
+            <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
               {noPagados.length}
             </div>
           </div>
-          <div className="h-full rounded p-2 flex flex-col items-center justify-center text-center" style={{ background: C.paperDark }}>
+          <div className="h-full rounded p-2 flex flex-col text-center" style={{ background: C.paperDark }}>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pagados</div>
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
+            <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
               {pagados.length}
             </div>
           </div>
