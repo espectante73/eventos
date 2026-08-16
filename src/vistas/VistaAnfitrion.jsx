@@ -293,8 +293,12 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         onCerrarSesion={onCerrarSesion}
       />
 
-      {/* Resumen */}
-      <section className="grid grid-cols-3 gap-3">
+      {/* Resumen -- margen mínimo con el verde de la Portada (no el
+          espaciado habitual de "space-y-8" del contenedor, que aquí se
+          nota como un hueco de más justo debajo de la franja de datos).
+          El style inline (marginTop) gana por especificidad a la regla
+          de space-y-8, sin tocar el ritmo del resto de secciones. */}
+      <section className="grid grid-cols-3 gap-3" style={{ marginTop: 12 }}>
         {[
           { label: "Lista global", value: total },
           { label: "Tentativa", value: tentativaCount },
