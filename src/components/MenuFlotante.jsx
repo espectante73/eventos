@@ -107,7 +107,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
     return (
       <div
         className="px-3 pt-1 pb-0.5 text-xs uppercase"
-        style={{ color: C.gold, opacity: 0.7, letterSpacing: "0.06em" }}
+        style={{ color: C.goldClaro, opacity: 0.7, letterSpacing: "0.06em" }}
       >
         {opcion.encabezado}
       </div>
@@ -119,8 +119,17 @@ function FilaMenu({ opcion, cerrarTodo }) {
       <div ref={filaRef}>
         <button
           onClick={abrirSubmenu}
-          className="flex items-center justify-between gap-3 w-full text-left px-3 py-2 text-sm whitespace-nowrap"
-          style={{ color: C.gold, background: abierto ? "rgba(239,233,222,0.12)" : "transparent" }}
+          // Redondeado como un botón de la portada (a petición del
+          // usuario): margen a los lados + radio grande, en vez de una
+          // fila rectangular a todo lo ancho del panel.
+          className="flex items-center justify-between gap-3 text-left px-3 py-2 text-sm whitespace-nowrap"
+          style={{
+            color: C.goldClaro,
+            background: abierto ? "rgba(239,233,222,0.12)" : "transparent",
+            margin: "2px 6px",
+            width: "calc(100% - 12px)",
+            borderRadius: 9999,
+          }}
           onMouseEnter={(e) => !abierto && (e.currentTarget.style.background = "rgba(239,233,222,0.12)")}
           onMouseLeave={(e) => !abierto && (e.currentTarget.style.background = "transparent")}
         >
@@ -170,13 +179,16 @@ function FilaMenu({ opcion, cerrarTodo }) {
         opcion.onClick();
         cerrarTodo();
       }}
-      className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm whitespace-nowrap"
+      // Redondeado como un botón de la portada (a petición del usuario):
+      // margen a los lados + radio grande para TODAS las filas, no solo
+      // las "de peligro" (que antes eran las únicas con este tratamiento).
+      className="flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap"
       style={{
-        color: opcion.color || C.gold,
+        color: opcion.color || C.goldClaro,
         background: fondoBase,
-        margin: opcion.fondo ? "2px 6px" : 0,
-        width: opcion.fondo ? "calc(100% - 12px)" : "100%",
-        borderRadius: opcion.fondo ? 4 : 0,
+        margin: "2px 6px",
+        width: "calc(100% - 12px)",
+        borderRadius: 9999,
       }}
       onMouseEnter={(e) => {
         if (opcion.fondo) e.currentTarget.style.filter = "brightness(1.2)";

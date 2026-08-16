@@ -10,6 +10,11 @@ export const C = {
   ink: "#1F3A2E",
   wax: "#8C2F39",
   gold: "#B08D57",
+  // C.gold es demasiado apagado sobre fondos oscuros (los botones/paneles
+  // de cristal del repaso visual de 2026-08-12, fondo verde tinta) --
+  // este dorado más claro se lee mucho mejor ahí. C.gold se queda para
+  // fondos claros (el uso original, mayoritario en la app).
+  goldClaro: "#D9B778",
   charcoal: "#2B2620",
   line: "#C9BFA9",
 };
