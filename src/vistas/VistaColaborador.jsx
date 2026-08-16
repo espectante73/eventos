@@ -563,8 +563,14 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         {/* Cabecera igual que las ventanas de la app (fondo verde, letra
             dorada) -- a petición del usuario. "Apellido, Nombre" en una
             sola línea (colaborador.nombre ya viene así de guardado) en
-            vez de "Colaborador" + nombre en dos líneas: gana espacio. */}
-        <div className="panel-flotante-cristal flex items-center justify-between px-4 py-3">
+            vez de "Colaborador" + nombre en dos líneas: gana espacio.
+            "sticky": se queda fija arriba al bajar por la lista de
+            invitados (no compite con las franjas de aviso de App.jsx,
+            que van con z-index 60/61 -- esta se queda por debajo). */}
+        <div
+          className="panel-flotante-cristal flex items-center justify-between px-4 py-3 sticky"
+          style={{ top: 0, zIndex: 30 }}
+        >
           <h3
             className="text-lg"
             style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}
@@ -572,10 +578,12 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             {colaborador.nombre}
           </h3>
           {onCerrarSesion && (
+            // Borde dorado (antes sin borde) para que se distinga del
+            // propio fondo verde de la cabecera, a petición del usuario.
             <button
               onClick={onCerrarSesion}
               className="boton-3d flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium"
-              style={{ color: C.goldClaro }}
+              style={{ color: C.goldClaro, border: `1px solid ${C.goldClaro}` }}
             >
               <LogOut size={16} /> Cerrar sesión
             </button>
@@ -647,35 +655,38 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           className="grid grid-cols-3 gap-1.5 mt-2 pt-2"
           style={{ borderTop: `1px solid ${C.line}` }}
         >
+          {/* Texto arriba, importe/cantidad debajo (antes al revés) --
+              Cobrado en verde (C.ink) y Pendiente en rojo (C.wax), a
+              petición del usuario. */}
           <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
+            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {noPagados.length}
             </div>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
           </div>
           <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
+            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pagados</div>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {pagados.length}
             </div>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pagados</div>
           </div>
           <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
+            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total</div>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importeEsperado)}
             </div>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total</div>
           </div>
           <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
+            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Cobrado</div>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importeCobrado)}
             </div>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Cobrado</div>
           </div>
           <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
+            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pendiente</div>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importePendiente)}
             </div>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pendiente</div>
           </div>
           <div className="h-full rounded p-2 flex flex-col justify-center" style={{ background: C.paperDark }}>
             <BarraCompacta icono={ClipboardList} completado={completos.length} total={confirmados.length} color={C.ink} />
