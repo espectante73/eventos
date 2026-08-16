@@ -125,16 +125,12 @@ export const ETIQUETAS_VENTANAS = {
 // de 1-2 cifras) — ver VentanaConfigPrecios.jsx.
 export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho }) {
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
-  // El desplazamiento en cascada (16 + idx*20) tiene sentido con varias
-  // ventanas abiertas a la vez en escritorio -- en un móvil estrecho, la
-  // 3ª/4ª ventana podía arrancar con la mitad fuera de la pantalla por la
-  // derecha (el ancho por defecto ya usa casi todo el viewport ahí). Se
-  // acota "left" para que la ventana siempre empiece dentro de lo visible,
-  // sea cual sea el ancho real de la pantalla.
-  const posInicial = {
-    top: 16 + idx * 20,
-    left: Math.min(16 + idx * 20, Math.max(8, window.innerWidth - 320)),
-  };
+  // "left" fijo (no en cascada como antes): todas las ventanas nacen
+  // alineadas al mismo borde izquierdo, a petición del usuario -- el
+  // desplazamiento en cascada se queda solo en "top" (vertical), para
+  // que abrir varias a la vez se siga viendo cuáles hay sin que se tapen
+  // entre sí del todo.
+  const posInicial = { top: 16 + idx * 20, left: 16 };
   const [pos, setPos] = useState(posInicial);
   // null = todavía sin redimensionar a mano: usa el tamaño por defecto.
   const [tam, setTam] = useState(null);
@@ -210,7 +206,11 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       style={{
         background: C.paper,
         border: `1px solid ${C.line}`,
-        width: tam ? tam.width : ancho || "min(620px, calc(100vw - 2rem))",
+        // calc(100vw - 48px) (no 2rem/32px): con "left" ahora fijo en
+        // 16px, esto deja un margen visible mayor a la derecha (32px) --
+        // ventana claramente más estrecha que la pantalla, no pegada de
+        // borde a borde, a petición del usuario.
+        width: tam ? tam.width : ancho || "min(620px, calc(100vw - 48px))",
         height: tam ? tam.height : undefined,
         // 88vh (no 80vh): más aprovechado en una pantalla vertical de
         // móvil -- mismo valor que ya usa ModalFlotante, antes iban
