@@ -134,7 +134,7 @@ export function DesplegableSecciones({ abierto, toggle, colaboradores, onCambiar
         <button
           ref={ref}
           onClick={abrirCerrar}
-          className="absolute px-3 py-1.5 rounded text-sm font-medium"
+          className="boton-3d absolute px-3 py-1.5 rounded text-sm font-medium"
           style={{ bottom: 8, right: 8, background: C.ink, color: C.paper, border: `1px solid ${C.ink}` }}
           title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
         >

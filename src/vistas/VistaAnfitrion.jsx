@@ -76,7 +76,7 @@ import { VentanaAvisos } from "./anfitrion/VentanaAvisos";
 import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 
-export function VistaAnfitrion({ data, setRol, anfitrionToken }) {
+export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion }) {
   const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, probarEmailColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearAvisos, resetearPorInvitados, gastos, persistGastos } = data;
 
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
@@ -290,6 +290,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken }) {
         colaboradores={colaboradores}
         onCambiarRol={setRol}
         anfitrionToken={anfitrionToken}
+        onCerrarSesion={onCerrarSesion}
       />
 
       {/* Resumen */}

@@ -385,11 +385,16 @@ export default function App() {
         </div>
       )}
       <div className="max-w-4xl mx-auto px-4 py-6">
-        {session && (
+        {/* Para el anfitrión, "Cerrar sesión" vive DENTRO de la cabecera
+            (Portada) -- se pasa como prop más abajo. Aquí solo hace falta
+            este botón suelto para el resto de casos (colaborador
+            logueado, o el propio enlace del anfitrión sin sesión real),
+            donde no hay ninguna Portada que lo aloje. */}
+        {session && !(data.esAnfitrion && !vistaPrevia) && (
           <div className="flex justify-end mb-4">
             <button
               onClick={() => supabase.auth.signOut()}
-              className="flex items-center gap-1.5 px-4 rounded text-sm font-medium"
+              className="boton-3d flex items-center gap-1.5 px-4 rounded text-sm font-medium"
               style={{ height: 40, background: C.ink, color: C.paper }}
             >
               <LogOut size={15} /> Cerrar sesión
@@ -409,7 +414,12 @@ export default function App() {
             arriba con la pantalla dedicada "No tienes acceso", antes de
             llegar siquiera a este punto del render. */}
         {data.esAnfitrion && !vistaPrevia ? (
-          <VistaAnfitrion data={data} setRol={cambiarVistaPrevia} anfitrionToken={anfitrionToken} />
+          <VistaAnfitrion
+            data={data}
+            setRol={cambiarVistaPrevia}
+            anfitrionToken={anfitrionToken}
+            onCerrarSesion={session ? () => supabase.auth.signOut() : null}
+          />
         ) : data.esAnfitrion && vistaPrevia ? (
           <VistaColaborador
             data={data}
