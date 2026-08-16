@@ -42,17 +42,17 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="flex items-center justify-between px-4 py-3"
-          style={{ borderBottom: `1px solid ${C.line}` }}
+          className="panel-flotante-cristal flex items-center justify-between px-4 py-3 rounded-t-lg"
+          style={{ borderBottom: "none" }}
         >
           <h3
             className="text-lg"
-            style={{ fontFamily: "'Fraunces', serif", color: colorTitulo || C.ink, fontWeight: 700 }}
+            style={{ fontFamily: "'Fraunces', serif", color: colorTitulo || C.goldClaro, fontWeight: 700 }}
           >
             {titulo}
           </h3>
-          <button onClick={onCerrar} title="Cerrar">
-            <X size={18} style={{ color: C.charcoal }} />
+          <button onClick={onCerrar} title="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
+            <X size={18} />
           </button>
         </div>
         <div className="p-4" style={{ flex: 1, overflowY: "auto" }}>
@@ -125,7 +125,16 @@ export const ETIQUETAS_VENTANAS = {
 // de 1-2 cifras) — ver VentanaConfigPrecios.jsx.
 export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho }) {
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
-  const posInicial = { top: 16 + idx * 20, left: 16 + idx * 20 };
+  // El desplazamiento en cascada (16 + idx*20) tiene sentido con varias
+  // ventanas abiertas a la vez en escritorio -- en un móvil estrecho, la
+  // 3ª/4ª ventana podía arrancar con la mitad fuera de la pantalla por la
+  // derecha (el ancho por defecto ya usa casi todo el viewport ahí). Se
+  // acota "left" para que la ventana siempre empiece dentro de lo visible,
+  // sea cual sea el ancho real de la pantalla.
+  const posInicial = {
+    top: 16 + idx * 20,
+    left: Math.min(16 + idx * 20, Math.max(8, window.innerWidth - 320)),
+  };
   const [pos, setPos] = useState(posInicial);
   // null = todavía sin redimensionar a mano: usa el tamaño por defecto.
   const [tam, setTam] = useState(null);
@@ -203,7 +212,10 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
         border: `1px solid ${C.line}`,
         width: tam ? tam.width : ancho || "min(620px, calc(100vw - 2rem))",
         height: tam ? tam.height : undefined,
-        maxHeight: tam ? undefined : "80vh",
+        // 88vh (no 80vh): más aprovechado en una pantalla vertical de
+        // móvil -- mismo valor que ya usa ModalFlotante, antes iban
+        // distintos sin motivo real.
+        maxHeight: tam ? undefined : "88vh",
         boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
         top: pos.top,
         left: pos.left,
@@ -211,14 +223,14 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       }}
     >
       <div
-        className="flex items-center justify-between px-4 py-3 cursor-move select-none"
-        style={{ borderBottom: `1px solid ${C.line}`, touchAction: "none" }}
+        className="panel-flotante-cristal flex items-center justify-between px-4 py-3 rounded-t-lg cursor-move select-none"
+        style={{ touchAction: "none" }}
         onMouseDown={iniciarArrastre}
         onTouchStart={iniciarArrastre}
       >
         <h3
           className="text-lg"
-          style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}
+          style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}
         >
           {titulo}
         </h3>
@@ -228,8 +240,8 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
           onTouchStart={(e) => e.stopPropagation()}
         >
           {extra}
-          <button onClick={onCerrar} title="Cerrar">
-            <X size={18} style={{ color: C.charcoal }} />
+          <button onClick={onCerrar} title="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
+            <X size={18} />
           </button>
         </div>
       </div>
