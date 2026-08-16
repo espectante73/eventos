@@ -37,6 +37,32 @@
   transform: translateY(0);
 }
 
+/* .boton-flotante-imagen: para los botones que van ENCIMA de una foto
+   (Portada.jsx: "Cerrar sesión", "Abrir sección…") -- a diferencia de
+   .boton-3d normal (pensado para un fondo claro fijo), aquí el fondo
+   real de detrás puede ser cualquier cosa (una foto), así que necesita
+   más opacidad propia para que la letra dorada se siga leyendo bien
+   pase lo que pase debajo, y un relieve más marcado (degradado propio +
+   sombra más presente) para leerse como un botón "de verdad" flotando,
+   no solo una etiqueta semitransparente. Se combina con .cristal-difuminado
+   (desenfoca la foto de detrás) y .boton-3d (hover/active) -- las tres
+   clases juntas en el mismo botón. */
+.boton-flotante-imagen {
+  background: linear-gradient(180deg, rgba(36, 64, 47, 0.82), rgba(18, 32, 24, 0.82));
+  color: #D9B778;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.boton-flotante-imagen:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.4),
+    0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
 /* .cristal-difuminado: desenfoca lo que queda DETRÁS del propio
    elemento (efecto "vidrio esmerilado") -- usado sobre la imagen de
    cabecera para que se vea difuminada justo donde van los datos del
