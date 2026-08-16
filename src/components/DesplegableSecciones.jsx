@@ -146,8 +146,12 @@ export function DesplegableSecciones({
         <button
           ref={ref}
           onClick={abrirCerrar}
-          className="boton-3d absolute px-3 py-1.5 rounded text-sm font-medium"
-          style={{ ...posicion, background: C.ink, color: C.paper, border: `1px solid ${C.ink}` }}
+          // Mismo aspecto que "Cerrar sesión" (Portada.jsx): translúcido
+          // verde + letra dorada + píldora + cristal difuminado -- a
+          // petición del usuario, los dos botones que flotan sobre la
+          // imagen deben verse como un mismo par, no dos estilos distintos.
+          className="boton-3d cristal-difuminado absolute px-3 py-2 rounded-full text-xs font-medium"
+          style={{ ...posicion, background: "rgba(31,58,46,0.45)", color: C.gold, border: "1px solid rgba(255,255,255,0.25)" }}
           title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
         >
           Abrir sección…

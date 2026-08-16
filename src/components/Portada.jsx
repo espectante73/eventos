@@ -100,7 +100,7 @@ export function Portada({
           <button
             onClick={onCerrarSesion}
             className="boton-3d cristal-difuminado absolute top-4 right-4 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium"
-            style={{ background: "rgba(31,58,46,0.45)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}
+            style={{ background: "rgba(31,58,46,0.45)", color: C.gold, border: "1px solid rgba(255,255,255,0.25)" }}
           >
             <LogOut size={14} /> Cerrar sesión
           </button>
