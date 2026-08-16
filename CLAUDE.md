@@ -133,6 +133,125 @@ Dos lecciones confirmadas durante el reparto:
   en algún sitio; solo Rollup, al construir de verdad, comprueba que el
   módulo de origen lo exporte. Las dos comprobaciones son necesarias.
 
+## Sesión del 2026-08-12: Modo Pruebas, seguridad, acuse en PDF, y repaso visual
+
+Sesión larga, varios frentes distintos. Resumen para no tener que releer
+todo el historial de commits:
+
+**Modo Pruebas gana selección de colaboradores habilitados.**
+`colaboradores.habilitadoEnPruebas` (default `true`) + la función
+`colaborador_puede_actuar()` centraliza el bloqueo para las 5 RPC
+`colaborador_*` que actúan de verdad (`colaborador_mi_perfil` queda
+fuera a propósito: un colaborador bloqueado debe poder seguir viendo su
+propio perfil). `anfitrion_activar_modo_pruebas` ganó el parámetro
+`p_colaborador_ids_habilitados` (cambio de firma → hizo falta el `drop
+function` de siempre). `VentanaConfigModoPruebas.jsx` muestra un
+checklist con "Todos/Ninguno" antes de activar. Dos bugs reales
+encontrados y corregidos en el camino:
+- Las funciones de Modo Pruebas (activar/desactivar) tenían varios
+  `UPDATE`/`DELETE` intencionalmente sin `WHERE` (toda la tabla a
+  propósito) -- Supabase lo bloquea con código 21000 salvo que lleven
+  `where true` (ver la regla ya añadida más abajo, sección "Reglas de
+  diseño").
+- `colaborador_mis_invitados` quedó mal enganchada a
+  `colaborador_puede_actuar()` en la primera versión: eso bloqueaba
+  también la VISIBILIDAD de la lista (no solo los gestos) a quien
+  estuviera deshabilitado. Corregido para que solo dependa de
+  `authUserId = auth.uid()`, igual que `colaborador_mi_perfil`.
+
+**Bug de seguridad real, no solo de estilo: la previsualización
+"Formularios" del anfitrión llevaba rota desde el 12 de agosto (Fase
+B, retirada del enlace-token de colaborador)** -- cambiar `rol` para
+previsualizar disparaba una recarga real vía
+`colaborador_mi_perfil`/`colaborador_mis_invitados`, que exigen sesión
+real de ESE colaborador; el anfitrión sigue con la suya propia, así que
+nunca coincidía. `App.jsx` ganó un estado separado, `vistaPrevia`
+(distinto de `rol`): la previsualización ya no dispara ningún refetch,
+reutiliza los datos que el anfitrión ya tiene cargados enteros. Lección:
+cualquier RPC `colaborador_*` nueva que dependa de `auth.uid()` debe
+asumir que el anfitrión puede querer "verla" sin ser esa persona --
+para eso está `vistaPrevia`, no para añadir excepciones a la propia RPC.
+
+**Enlace `?rol=...` de colaborador sin sesión: pantalla dedicada "No
+tienes acceso"** (antes mostraba una franja técnica confusa que un
+colaborador probando la seguridad interpretó como un fallo de la app,
+no como un bloqueo). Condición `session === null && !esAnfitrionOriginal
+&& urlRol` -- el `session === null` importa: sin él, bloquearía por
+error a un colaborador con sesión real que además tuviera ese enlace
+viejo suelto en la URL.
+
+**PDF del acuse de recogida, rediseño completo** (`lib/acuseImagen.js`):
+antes se dibujaba a tamaño propio y se ESCALABA para caber en un A4 --
+eso encogía también la letra (el pie de página acababa a ~8pt reales).
+Ahora se dibuja YA a las medidas exactas de un A4 (595.28 x 841.89pt),
+sin ningún escalado. Tabla con cabecera y filas cebra, bloque de TOTAL
+en caja destacada, nombre del evento en script dorado (fuente "Alex
+Brush", cargada con `document.fonts.load()` porque no se usa en ningún
+otro sitio de la app -- mismo gotcha que Fraunces en
+`generarImagenParaFamilia`). Con pocos invitados (máximo real: 12-14)
+el hueco sobrante se reparte entre 3 puntos del dibujo para que se vea
+igual de equilibrado con 2 invitados que con 14. Verificado con
+node-canvas antes de subir cada ronda, no solo por cálculo -- así se
+cazó un hueco vacío real que el cálculo solo no habría revelado.
+
+**"Estado de cuentas": "Confirmar recogida" y "Probar acuse" ya no
+envían directamente** -- generan el PDF y abren una vista previa
+(mismo patrón que ya usaba Invitaciones) con el destinatario, el
+importe y el PDF incrustado; el envío real solo pasa al aceptar ahí.
+
+**Repaso visual completo ("toque más moderno, verde/dorado/marfil,
+toque 3D suave"), en Portada.jsx y de ahí a toda la app:**
+- Portada: pasó por 3 rediseños hasta encontrar el bueno. Primero
+  imagen a pantalla completa con datos superpuestos (recortaba la foto
+  en móvil), luego foto+franja separadas (arregló el recorte pero
+  pensada para foto panorámica), y por fin el definitivo: el póster
+  VERTICAL real de la invitación (`evento.imagen`, NO
+  `evento.imagenInvitacion` -- son dos imágenes distintas, la de
+  Invitaciones lleva recuadros de Familia/Mesa que no pintan nada en un
+  dashboard) en una tarjeta centrada de ancho máximo 480px, con
+  fecha/hora/lugar en vivo en su propia franja verde debajo (no
+  "quemados" en la imagen, para no depender de regenerarla si cambia
+  algo en Configuración).
+- Dos clases CSS reutilizables (`index.css`): `.boton-3d` (relieve
+  sutil, cualquier botón) y `.boton-verde-solido`/`.boton-flotante-imagen`
+  (degradado verde + letra dorada `C.goldClaro`, opaco para tarjetas
+  claras / translúcido+difuminado para ir sobre una foto).
+  `.panel-flotante-cristal` para paneles/cabeceras (desplegables,
+  cabeceras de `VentanaFlotante`).
+- `theme.js` ganó `C.goldClaro` (#D9B778): `C.gold` (#B08D57) es
+  demasiado apagado sobre fondo oscuro -- `C.gold` se queda para fondos
+  claros (uso original), `C.goldClaro` para texto sobre verde oscuro.
+- Cabeceras de `VentanaFlotante` y del recuadro de `VistaColaborador`:
+  mismo verde/dorado que los botones. La cabecera de `VistaColaborador`
+  es `sticky` -- ⚠️ gotcha real: no funcionaba hasta quitar
+  `overflow-hidden` del contenedor exterior (que estaba ahí solo para
+  redondear esquinas) -- `position: sticky` se anula sin avisar si
+  cualquier antecesor tiene `overflow` distinto de `visible`. El
+  redondeado se reparte ahora en cada pieza por separado
+  (`borderTopLeftRadius`/etc.) en vez de un `overflow-hidden` compartido.
+- Login (`VistaLogin.jsx`): mismo fondo verde y botón dorado.
+- `VistaColaborador.jsx`: recuadro de datos reordenado varias veces
+  hasta el layout final (2 filas de 3 tarjetas: Importe total/Cobrado/
+  Pendiente arriba, No pagados/Pagados/porcentajes abajo; Cobrado con
+  fondo verde y letra blanca, Pendiente con fondo rojo y letra blanca;
+  texto arriba y número/importe debajo en las 6, sin excepción). El
+  formulario de cada invitado (`FormularioDatos`) quedó en pruebas con
+  fondo verde oscuro (`C.ink`) + letras doradas, con el aviso de "*
+  campos obligatorios" en su propio recuadro crema (el rojo directo
+  sobre verde oscuro no se leía bien).
+
+⚠️ **Sin acceso a un navegador real para verificar visualmente estos
+cambios en vivo** (la sandbox no deja que un navegador headless lanzado
+aquí alcance `localhost`, y no hay credenciales de anfitrión
+compartidas) -- todo este repaso se verificó con lint/build y revisión
+cuidadosa del código, y se corrigió con las capturas reales que fue
+mandando el usuario en cada ronda. Varios bugs reales se colaron así
+(recorte de imagen por aspect-ratio, imagen equivocada usada en la
+Portada, fecha/hora/lugar desaparecidos por una condición mal
+compartida, sticky roto por overflow-hidden) -- si se retoma este
+repaso visual, pedir una captura real antes de dar un cambio de layout
+por bueno, no fiarse solo del razonamiento sobre el CSS.
+
 ## Backup automático de la base de datos
 
 Existe un backup diario automático vía GitHub Actions
