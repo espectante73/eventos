@@ -640,31 +640,37 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 mt-2 pt-2"
           style={{ borderTop: `1px solid ${C.line}` }}
         >
-          <div className="text-center">
+          {/* Cada dato en su propia tarjeta sombreada (C.paperDark, no
+              blanco -- el propio recuadro ya es blanco, así se
+              distinguen) con esquinas redondeadas, todas del mismo
+              tamaño (h-full: la más alta -- "Importe total esperado", 2
+              líneas -- marca la altura de las demás), a petición del
+              usuario. */}
+          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {noPagados.length}
             </div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
           </div>
-          <div className="text-center">
+          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {pagados.length}
             </div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pagados</div>
           </div>
-          <div className="text-center">
+          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importeEsperado)}
             </div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total esperado</div>
           </div>
-          <div className="text-center">
+          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importeCobrado)}
             </div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Ya cobrado</div>
           </div>
-          <div className="text-center">
+          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importePendiente)}
             </div>
