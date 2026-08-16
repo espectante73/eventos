@@ -659,22 +659,11 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           className="grid grid-cols-3 gap-1.5 mt-2 pt-2"
           style={{ borderTop: `1px solid ${C.line}` }}
         >
-          {/* Las 6 con el mismo orden: texto arriba, número/importe
-              debajo -- sin excepción para los 3 de dinero (se habían
-              puesto al revés por error). Cobrado y Pendiente conservan
-              su fondo de color propio (verde/rojo) con letra blanca. */}
-          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
-              {noPagados.length}
-            </div>
-          </div>
-          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pagados</div>
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
-              {pagados.length}
-            </div>
-          </div>
+          {/* Orden: fila 1 los 3 importes (dinero), fila 2 las cantidades
+              (No pagados/Pagados) + porcentajes -- a petición del
+              usuario. Texto arriba, número/importe debajo en las 6.
+              Cobrado y Pendiente conservan su fondo de color propio
+              (verde/rojo) con letra blanca. */}
           <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total</div>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
@@ -691,6 +680,18 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             <div className="text-xs" style={{ color: "#fff", opacity: 0.85 }}>Pendiente</div>
             <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importePendiente)}
+            </div>
+          </div>
+          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
+            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
+            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
+              {noPagados.length}
+            </div>
+          </div>
+          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
+            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pagados</div>
+            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
+              {pagados.length}
             </div>
           </div>
           <div className="h-full rounded p-2 flex flex-col justify-center" style={{ background: C.paperDark }}>
