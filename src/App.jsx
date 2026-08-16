@@ -273,8 +273,12 @@ export default function App() {
           )}
           <button
             onClick={() => supabase.auth.signOut()}
-            className="flex items-center justify-center gap-1.5 px-4 py-2 rounded text-sm font-medium mx-auto"
-            style={{ background: C.ink, color: C.paper }}
+            className="boton-3d flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium mx-auto"
+            style={{
+              background: "linear-gradient(180deg, #24402F, #12201A)",
+              color: C.goldClaro,
+              border: "1px solid rgba(255,255,255,0.15)",
+            }}
           >
             <LogOut size={15} /> Cerrar sesión
           </button>
@@ -394,8 +398,13 @@ export default function App() {
           <div className="flex justify-end mb-4">
             <button
               onClick={() => supabase.auth.signOut()}
-              className="boton-3d flex items-center gap-1.5 px-4 rounded text-sm font-medium"
-              style={{ height: 40, background: C.ink, color: C.paper }}
+              className="boton-3d flex items-center gap-1.5 px-4 rounded-full text-sm font-medium"
+              style={{
+                height: 40,
+                background: "linear-gradient(180deg, #24402F, #12201A)",
+                color: C.goldClaro,
+                border: "1px solid rgba(255,255,255,0.15)",
+              }}
             >
               <LogOut size={15} /> Cerrar sesión
             </button>
