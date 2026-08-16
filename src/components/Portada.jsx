@@ -85,52 +85,60 @@ export function Portada({
           />
         )}
 
-        {!form.ocultarTituloEnImagen && (
+        {/* El panel de datos SIEMPRE se ve (antes vivía en una sección
+            aparte, debajo de la imagen, sin depender de nada) -- solo el
+            <h1> de dentro se oculta con "ocultar título en imagen", para
+            cuando la propia foto ya trae el nombre del evento escrito
+            (como aquí: "Las Bodas de Todos" viene en la imagen). Fusionar
+            los dos en la misma condición fue un fallo real de la primera
+            versión de este rediseño: ocultaba fecha/hora/lugar sin querer
+            en cualquier evento con esa opción activada. */}
+        <div
           // pb-14 (no pb-5): dentro de esta misma imagen, abajo a la
           // derecha, flota el botón "Abrir sección…" (editable && toggle,
           // más abajo) -- hueco de sobra para que no tape la última línea
           // de texto (normalmente "Dirección", la que más se acerca a esa
           // esquina al envolver en pantallas estrechas).
-          <div
-            className="cristal-difuminado px-4 pt-8 pb-14 md:px-6"
-            style={{
-              background:
-                "linear-gradient(to top, rgba(20,17,10,0.82), rgba(20,17,10,0.55) 65%, rgba(20,17,10,0))",
-            }}
-          >
+          className="cristal-difuminado px-4 pt-8 pb-14 md:px-6"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(20,17,10,0.82), rgba(20,17,10,0.55) 65%, rgba(20,17,10,0))",
+          }}
+        >
+          {!form.ocultarTituloEnImagen && (
             <h1
               className="text-2xl md:text-3xl mb-2"
               style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700 }}
             >
               {form.nombre || (editable ? "Nombre del evento" : "Evento sin nombre")}
             </h1>
-            <div className="flex flex-wrap items-start gap-x-6 gap-y-2">
+          )}
+          <div className="flex flex-wrap items-start gap-x-6 gap-y-2">
+            <InfoItem
+              claro
+              icon={Calendar}
+              label="Fecha"
+              value={form.fecha ? [formatearDiaSemana(form.fecha), formatearFecha(form.fecha)] : "—"}
+            />
+            <InfoItem claro icon={Clock} label="Hora" value={form.hora || "—"} />
+            <InfoItem claro icon={MapPin} label="Lugar" value={form.lugar || "—"} />
+            {form.direccion && (
               <InfoItem
                 claro
-                icon={Calendar}
-                label="Fecha"
-                value={form.fecha ? [formatearDiaSemana(form.fecha), formatearFecha(form.fecha)] : "—"}
+                icon={MapPin}
+                label="Dirección"
+                value={(() => {
+                  // Se divide en la primera coma (p.ej. "calle" / "ciudad,
+                  // provincia") -- si no hay coma, se queda en una sola línea.
+                  const i = form.direccion.indexOf(",");
+                  return i === -1
+                    ? form.direccion
+                    : [form.direccion.slice(0, i).trim(), form.direccion.slice(i + 1).trim()];
+                })()}
               />
-              <InfoItem claro icon={Clock} label="Hora" value={form.hora || "—"} />
-              <InfoItem claro icon={MapPin} label="Lugar" value={form.lugar || "—"} />
-              {form.direccion && (
-                <InfoItem
-                  claro
-                  icon={MapPin}
-                  label="Dirección"
-                  value={(() => {
-                    // Se divide en la primera coma (p.ej. "calle" / "ciudad,
-                    // provincia") -- si no hay coma, se queda en una sola línea.
-                    const i = form.direccion.indexOf(",");
-                    return i === -1
-                      ? form.direccion
-                      : [form.direccion.slice(0, i).trim(), form.direccion.slice(i + 1).trim()];
-                  })()}
-                />
-              )}
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Dentro del propio bloque a ancho completo (no del wrapper
             exterior, que sigue acotado a max-w-4xl) -- si no, "right: 8"
