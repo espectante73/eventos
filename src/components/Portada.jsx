@@ -16,9 +16,8 @@
 // `aspect-ratio` panorámico en vez de una altura fija -- arregló el
 // recorte, pero seguía pensada para una foto ancha genérica.
 //
-// 3ª ronda (esta): el usuario quiere usar directamente el mismo diseño
-// que ya usa para la invitación de cada familia -- un póster VERTICAL
-// (retrato), no una foto panorámica. Ya no tiene sentido forzar ningún
+// 3ª ronda: el usuario quiere un póster VERTICAL (retrato) tipo
+// invitación, no una foto panorámica. Ya no tiene sentido forzar ningún
 // aspect-ratio ancho: se muestra con un <img> normal (alto automático
 // según su proporción real, nunca recortada) dentro de una tarjeta
 // centrada con ancho máximo (para que en una pantalla ancha de escritorio
@@ -27,6 +26,16 @@
 // debajo de la imagen (no "quemados" en el diseño, a petición del
 // usuario) -- si el póster ya trae esos datos dibujados a mano, la
 // franja de abajo simplemente los repite con los datos reales de la app.
+//
+// 4ª ronda (esta): esa 3ª ronda usaba evento.imagenInvitacion como
+// fuente de la imagen, asumiendo que era el mismo diseño que quería
+// para la portada -- error real: son dos imágenes DISTINTAS.
+// imagenInvitacion es la plantilla para generar la invitación de cada
+// familia (lleva recuadros reservados para "Familia"/"Mesa" que se
+// rellenan al generar cada una); la portada necesita su propia imagen,
+// sin esos recuadros. Vuelve a usar evento.imagen (el campo de siempre,
+// se sube en Configuración → Datos del evento), separado por completo
+// de Invitaciones.
 import { useState, useEffect } from "react";
 import { Calendar, Clock, MapPin, Image as ImageIcon, LogOut } from "lucide-react";
 import { C } from "../theme";
@@ -53,10 +62,15 @@ export function Portada({
   const [form, setForm] = useState(evento);
   useEffect(() => setForm(evento), [evento]);
 
-  // La misma imagen que ya se usa para generar la invitación de cada
-  // familia (mismo criterio que lib/imagenInvitacion.js: imagenInvitacion
-  // si existe, si no la de cabecera de siempre como reserva).
-  const imagenPortada = form.imagenInvitacion || form.imagen;
+  // NO usar evento.imagenInvitacion aquí -- esa es la plantilla para
+  // generar la invitación de cada familia (lleva recuadros reservados
+  // para "Familia"/"Mesa" que se rellenan al generar cada una), una
+  // imagen DISTINTA de la de portada aunque el usuario suba un diseño
+  // parecido para las dos. La portada usa su propio campo de siempre,
+  // evento.imagen (se sube en Configuración → Datos del evento) -- un
+  // primer intento de este mismo rediseño usó imagenInvitacion por
+  // error, mezclando las dos.
+  const imagenPortada = form.imagen;
 
   return (
     <div className="mx-auto mb-8" style={{ maxWidth: ANCHO_MAXIMO_PORTADA }}>
