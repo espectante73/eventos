@@ -559,31 +559,32 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           guardar datos, marcar pagos ni confirmar nada hasta que lo desactive.
         </div>
       )}
-      <div className="p-4 rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-        {/* En su propia fila, no junto a "Cambiar vista" (a petición del
-            usuario) -- misma clase/aspecto que el resto de "Cerrar
-            sesión" de la app, solo cambia dónde se coloca. */}
-        {onCerrarSesion && (
-          <div className="flex justify-end mb-3">
+      <div className="rounded overflow-hidden" style={{ border: `1px solid ${C.line}` }}>
+        {/* Cabecera igual que las ventanas de la app (fondo verde, letra
+            dorada) -- a petición del usuario. "Apellido, Nombre" en una
+            sola línea (colaborador.nombre ya viene así de guardado) en
+            vez de "Colaborador" + nombre en dos líneas: gana espacio. */}
+        <div className="panel-flotante-cristal flex items-center justify-between px-4 py-3">
+          <h3
+            className="text-lg"
+            style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}
+          >
+            {colaborador.nombre}
+          </h3>
+          {onCerrarSesion && (
             <button
               onClick={onCerrarSesion}
-              className="boton-3d boton-verde-solido flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
+              className="boton-3d flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium"
+              style={{ color: C.goldClaro }}
             >
               <LogOut size={16} /> Cerrar sesión
             </button>
-          </div>
-        )}
+          )}
+        </div>
+
+        <div className="p-4" style={{ background: "#fff" }}>
         <div className="flex items-center justify-between">
           <div>
-            <div
-              className="uppercase tracking-wide"
-              style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 22 }}
-            >
-              Colaborador
-            </div>
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 20 }}>
-              {colaborador.nombre}
-            </div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
               FAMILIAS CONFIRMADAS:{" "}
               {gruposFamiliaresACargo.length > 0
@@ -690,6 +691,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           >
             He terminado mi trabajo
           </button>
+        </div>
         </div>
       </div>
 
