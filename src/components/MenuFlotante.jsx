@@ -107,7 +107,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
     return (
       <div
         className="px-3 pt-1 pb-0.5 text-xs uppercase"
-        style={{ color: C.paper, opacity: 0.45, letterSpacing: "0.06em" }}
+        style={{ color: C.gold, opacity: 0.7, letterSpacing: "0.06em" }}
       >
         {opcion.encabezado}
       </div>
@@ -120,7 +120,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
         <button
           onClick={abrirSubmenu}
           className="flex items-center justify-between gap-3 w-full text-left px-3 py-2 text-sm whitespace-nowrap"
-          style={{ color: C.paper, background: abierto ? "rgba(239,233,222,0.12)" : "transparent" }}
+          style={{ color: C.gold, background: abierto ? "rgba(239,233,222,0.12)" : "transparent" }}
           onMouseEnter={(e) => !abierto && (e.currentTarget.style.background = "rgba(239,233,222,0.12)")}
           onMouseLeave={(e) => !abierto && (e.currentTarget.style.background = "transparent")}
         >
@@ -136,7 +136,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
             <div
               ref={panelRef}
               data-menu-panel
-              className="panel-flotante-cristal cristal-difuminado fixed rounded overflow-y-auto"
+              className="panel-flotante-cristal cristal-difuminado fixed rounded-xl overflow-y-auto"
               style={{
                 top: pos.top,
                 right: pos.right,
@@ -172,7 +172,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
       }}
       className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm whitespace-nowrap"
       style={{
-        color: opcion.color || C.paper,
+        color: opcion.color || C.gold,
         background: fondoBase,
         margin: opcion.fondo ? "2px 6px" : 0,
         width: opcion.fondo ? "calc(100% - 12px)" : "100%",
@@ -271,7 +271,7 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
           <div
             ref={listaRef}
             data-menu-panel
-            className="panel-flotante-cristal cristal-difuminado fixed rounded overflow-y-auto"
+            className="panel-flotante-cristal cristal-difuminado fixed rounded-xl overflow-y-auto"
             style={{
               ...pos,
               width: "max-content",
