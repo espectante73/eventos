@@ -17,6 +17,7 @@ import {
   ClipboardList,
   Euro,
   ChevronDown,
+  LogOut,
 } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
@@ -181,8 +182,7 @@ function FormularioDatos({
           </span>
           <button
             onClick={onCerrar}
-            className="ml-auto px-4 py-2 rounded text-sm font-semibold"
-            style={{ background: C.ink, color: C.paper }}
+            className="boton-3d boton-verde-solido ml-auto px-4 py-2 rounded-full text-sm font-semibold"
           >
             Cerrar
           </button>
@@ -438,7 +438,7 @@ function FilaInvitadoColaborador({
   );
 }
 
-export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken }) {
+export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken, onCerrarSesion }) {
   const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento, ordenFamiliares } = data;
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
   const [abiertoId, setAbiertoId] = useState(null);
@@ -577,17 +577,17 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 ? gruposFamiliaresACargo.map((g) => `Familia ${g}`).join(", ")
                 : "ninguno"}
             </div>
-            <div className="text-xs mt-1" style={{ color: C.charcoal, opacity: 0.7 }}>
-              Tu email de contacto:{" "}
-              {colaborador.email ? (
-                <span style={{ color: C.ink }}>{colaborador.email}</span>
-              ) : (
-                <span style={{ color: C.wax }}>sin registrar — pídeselo al anfitrión</span>
-              )}
-              <span className="italic ml-1" style={{ opacity: 0.6 }}>
-                (solo lo puede cambiar el anfitrión)
-              </span>
-            </div>
+            {/* Si ya tiene email registrado, no hace falta decir nada aquí
+                -- el aviso es solo para cuando falta, a petición del
+                usuario (antes se mostraba siempre, con el email delante). */}
+            {!colaborador.email && (
+              <div className="text-xs mt-1" style={{ color: C.wax }}>
+                Sin email de contacto{" "}
+                <span className="italic" style={{ opacity: 0.75 }}>
+                  (solo lo puede cambiar el anfitrión)
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
             {esAnfitrionOriginal && (
@@ -608,14 +608,25 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   <button
                     ref={ref}
                     onClick={abrirCerrar}
-                    className="flex items-center gap-1 px-2 py-1 rounded text-xs font-medium"
-                    style={{ background: C.ink, color: C.paper }}
+                    className="boton-3d boton-verde-solido flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium"
                     title="Estás previsualizando como colaborador — cambia de vista aquí"
                   >
                     Cambiar vista <ChevronDown size={13} style={{ opacity: 0.8 }} />
                   </button>
                 )}
               />
+            )}
+            {/* "Cerrar sesión" entra en el propio recuadro de datos (a
+                petición del usuario) en vez de ir en una fila suelta por
+                encima de todo -- eso sube el recuadro a la parte más alta
+                de la pantalla, sin el hueco que dejaba esa fila. */}
+            {onCerrarSesion && (
+              <button
+                onClick={onCerrarSesion}
+                className="boton-3d boton-verde-solido flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium"
+              >
+                <LogOut size={13} /> Cerrar sesión
+              </button>
             )}
             <Seal count={pendientes.length} />
           </div>
@@ -666,8 +677,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         <div className="mt-4 pt-4 flex justify-end" style={{ borderTop: `1px solid ${C.line}` }}>
           <button
             onClick={() => setMostrarConfirmar(true)}
-            className="px-4 py-2 rounded text-sm font-semibold"
-            style={{ background: C.ink, color: C.paper }}
+            className="boton-3d boton-verde-solido px-4 py-2 rounded-full text-sm font-semibold"
           >
             He terminado mi trabajo
           </button>
@@ -689,22 +699,30 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             <button
               onClick={confirmarDatosCompletos}
               disabled={enviandoDatos}
-              className="w-full px-3 py-2 rounded text-sm font-medium"
-              style={{
-                background: pendientes.length === 0 && confirmados.length > 0 ? C.ink : C.line,
-                color: pendientes.length === 0 && confirmados.length > 0 ? C.paper : C.charcoal,
-              }}
+              className={
+                "w-full px-3 py-2 rounded-full text-sm font-medium" +
+                (pendientes.length === 0 && confirmados.length > 0 ? " boton-3d boton-verde-solido" : "")
+              }
+              style={
+                pendientes.length === 0 && confirmados.length > 0
+                  ? undefined
+                  : { background: C.line, color: C.charcoal }
+              }
             >
               {enviandoDatos ? "Enviando…" : "Confirmar datos completos y avisar"}
             </button>
             <button
               onClick={confirmarPagosCompletos}
               disabled={enviandoPagos}
-              className="w-full px-3 py-2 rounded text-sm font-medium"
-              style={{
-                background: noPagados.length === 0 && confirmados.length > 0 ? C.ink : C.line,
-                color: noPagados.length === 0 && confirmados.length > 0 ? C.paper : C.charcoal,
-              }}
+              className={
+                "w-full px-3 py-2 rounded-full text-sm font-medium" +
+                (noPagados.length === 0 && confirmados.length > 0 ? " boton-3d boton-verde-solido" : "")
+              }
+              style={
+                noPagados.length === 0 && confirmados.length > 0
+                  ? undefined
+                  : { background: C.line, color: C.charcoal }
+              }
             >
               {enviandoPagos ? "Enviando…" : "Confirmar pagos completos y avisar"}
             </button>

@@ -273,12 +273,7 @@ export default function App() {
           )}
           <button
             onClick={() => supabase.auth.signOut()}
-            className="boton-3d flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium mx-auto"
-            style={{
-              background: "linear-gradient(180deg, #24402F, #12201A)",
-              color: C.goldClaro,
-              border: "1px solid rgba(255,255,255,0.15)",
-            }}
+            className="boton-3d boton-verde-solido flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium mx-auto"
           >
             <LogOut size={15} /> Cerrar sesión
           </button>
@@ -390,21 +385,20 @@ export default function App() {
       )}
       <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Para el anfitrión, "Cerrar sesión" vive DENTRO de la cabecera
-            (Portada) -- se pasa como prop más abajo. Aquí solo hace falta
-            este botón suelto para el resto de casos (colaborador
-            logueado, o el propio enlace del anfitrión sin sesión real),
-            donde no hay ninguna Portada que lo aloje. */}
-        {session && !(data.esAnfitrion && !vistaPrevia) && (
+            (Portada); para un colaborador (real o previsualizado), dentro
+            de su propio recuadro de datos (VistaColaborador) -- se pasa
+            como prop en los dos casos, más abajo. Aquí solo hace falta
+            este botón suelto para el caso residual: sesión real pero el
+            rol no resuelve a ninguno de los dos (enlace/estado
+            inconsistente, ver el párrafo "Este enlace no es válido..."
+            más abajo) -- ni Portada ni VistaColaborador llegan a montarse
+            para alojarlo ahí. */}
+        {session && !data.esAnfitrion && !data.colaboradores.some((c) => c.id === rol) && (
           <div className="flex justify-end mb-4">
             <button
               onClick={() => supabase.auth.signOut()}
-              className="boton-3d flex items-center gap-1.5 px-4 rounded-full text-sm font-medium"
-              style={{
-                height: 40,
-                background: "linear-gradient(180deg, #24402F, #12201A)",
-                color: C.goldClaro,
-                border: "1px solid rgba(255,255,255,0.15)",
-              }}
+              className="boton-3d boton-verde-solido flex items-center gap-1.5 px-4 rounded-full text-sm font-medium"
+              style={{ height: 40 }}
             >
               <LogOut size={15} /> Cerrar sesión
             </button>
@@ -436,6 +430,7 @@ export default function App() {
             esAnfitrionOriginal={esAnfitrionOriginal}
             setRol={cambiarVistaPrevia}
             anfitrionToken={anfitrionToken}
+            onCerrarSesion={session ? () => supabase.auth.signOut() : null}
           />
         ) : data.colaboradores.some((c) => c.id === rol) ? (
           <VistaColaborador
@@ -444,6 +439,7 @@ export default function App() {
             esAnfitrionOriginal={esAnfitrionOriginal}
             setRol={setRol}
             anfitrionToken={anfitrionToken}
+            onCerrarSesion={session ? () => supabase.auth.signOut() : null}
           />
         ) : (
           <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.7 }}>

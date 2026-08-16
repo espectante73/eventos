@@ -37,6 +37,19 @@
   transform: translateY(0);
 }
 
+/* .boton-verde-solido: mismo lenguaje (degradado verde + letra dorada)
+   pero OPACO, para botones sobre una tarjeta blanca/clara sólida (no
+   una foto) -- Login, "Cerrar sesión" de colaboradores, y ahora el
+   resto de botones de acción del formulario del colaborador. Se
+   combina con .boton-3d para el relieve; NO lleva cristal-difuminado
+   (ese difumina lo que hay detrás, aquí detrás solo hay una tarjeta
+   plana, no aporta nada). */
+.boton-verde-solido {
+  background: linear-gradient(180deg, #24402F, #12201A);
+  color: #D9B778; /* = theme.js C.goldClaro */
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
 /* .boton-flotante-imagen: para los botones que van ENCIMA de una foto
    (Portada.jsx: "Cerrar sesión", "Abrir sección…") -- a diferencia de
    .boton-3d normal (pensado para un fondo claro fijo), aquí el fondo

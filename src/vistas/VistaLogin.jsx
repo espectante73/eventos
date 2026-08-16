@@ -164,17 +164,8 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
         <button
           type="submit"
           disabled={cargando}
-          // Mismo aspecto que los botones "Cerrar sesión"/"Abrir sección…"
-          // de la Portada: degradado verde + letra dorada + relieve --
-          // aquí en versión OPACA (sin cristal-difuminado), porque este
-          // botón va sobre una tarjeta blanca sólida, no sobre una foto.
-          className="boton-3d w-full py-2 rounded-full font-medium mb-2"
-          style={{
-            background: "linear-gradient(180deg, #24402F, #12201A)",
-            color: C.goldClaro,
-            border: "1px solid rgba(255,255,255,0.15)",
-            height: 44,
-          }}
+          className="boton-3d boton-verde-solido w-full py-2 rounded-full font-medium mb-2"
+          style={{ height: 44 }}
         >
           {cargando ? "Un momento…" : modo === "recuperar" ? "Enviar enlace" : TITULOS[modo]}
         </button>
