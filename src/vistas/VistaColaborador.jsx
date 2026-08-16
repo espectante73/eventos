@@ -688,13 +688,13 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               también bajaba). Dígito algo más grande (18px, no 15px). */}
           <div className="h-full rounded p-2 flex flex-col text-center" style={{ background: C.paperDark }}>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
-            <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
+            <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18, marginTop: -2 }}>
               {noPagados.length}
             </div>
           </div>
           <div className="h-full rounded p-2 flex flex-col text-center" style={{ background: C.paperDark }}>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pagados</div>
-            <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18 }}>
+            <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18, marginTop: -2 }}>
               {pagados.length}
             </div>
           </div>
