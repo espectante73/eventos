@@ -559,17 +559,21 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           guardar datos, marcar pagos ni confirmar nada hasta que lo desactive.
         </div>
       )}
-      <div className="rounded overflow-hidden" style={{ border: `1px solid ${C.line}` }}>
+      <div style={{ border: `1px solid ${C.line}`, borderRadius: 6 }}>
         {/* Cabecera igual que las ventanas de la app (fondo verde, letra
             dorada) -- a petición del usuario. "Apellido, Nombre" en una
             sola línea (colaborador.nombre ya viene así de guardado) en
             vez de "Colaborador" + nombre en dos líneas: gana espacio.
             "sticky": se queda fija arriba al bajar por la lista de
             invitados (no compite con las franjas de aviso de App.jsx,
-            que van con z-index 60/61 -- esta se queda por debajo). */}
+            que van con z-index 60/61 -- esta se queda por debajo).
+            El redondeado va en esta pieza y en la del cuerpo (más abajo)
+            por separado, NO con "overflow-hidden" en el contenedor
+            exterior -- overflow distinto de "visible" en un antecesor
+            es justo lo que impedía que "sticky" funcionara de verdad. */}
         <div
           className="panel-flotante-cristal flex items-center justify-between px-4 py-3 sticky"
-          style={{ top: 0, zIndex: 30 }}
+          style={{ top: 0, zIndex: 30, borderTopLeftRadius: 6, borderTopRightRadius: 6 }}
         >
           <h3
             className="text-lg"
@@ -590,7 +594,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           )}
         </div>
 
-        <div className="p-4" style={{ background: "#fff" }}>
+        <div className="p-4" style={{ background: "#fff", borderBottomLeftRadius: 6, borderBottomRightRadius: 6 }}>
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
