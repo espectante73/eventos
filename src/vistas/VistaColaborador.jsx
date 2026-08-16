@@ -160,7 +160,11 @@ function FormularioDatos({
   return (
     <div
       className="p-3 rounded space-y-3"
-      style={{ background: "#fff", border: `1px solid ${C.line}` }}
+      // Prueba: fondo verde suave (no blanco) en el recuadro más interno
+      // -- el propio formulario de datos de cada invitado -- a petición
+      // del usuario. Mismo verde ya usado en la app (balance positivo,
+      // VentanaCuentas.jsx) para no inventar un tono nuevo.
+      style={{ background: "#E3E9AE", border: `1px solid ${C.line}` }}
     >
       <p className="text-xs font-bold" style={{ color: C.wax }}>
         * campos obligatorios (año nacimiento y alergias)
