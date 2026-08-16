@@ -160,38 +160,41 @@ function FormularioDatos({
   return (
     <div
       className="p-3 rounded space-y-3"
-      // Prueba: fondo verde suave (no blanco) en el recuadro más interno
-      // -- el propio formulario de datos de cada invitado -- a petición
-      // del usuario. Mismo verde ya usado en la app (balance positivo,
-      // VentanaCuentas.jsx) para no inventar un tono nuevo.
-      style={{ background: "#E3E9AE", border: `1px solid ${C.line}` }}
+      // Verde de la propia app (C.ink, el mismo de la cabecera/franja de
+      // datos), letras en dorado (C.goldClaro) -- a petición del usuario,
+      // en vez del verde claro de la primera prueba.
+      style={{ background: C.ink, border: `1px solid ${C.line}` }}
     >
       <p className="text-xs font-bold" style={{ color: C.wax }}>
         * campos obligatorios (año nacimiento y alergias)
       </p>
       <div>
         <div className="flex items-center gap-2 flex-wrap">
-          <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
+          <span style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 600 }}>
             {form.apellido}, {form.nombre}
           </span>
-          <span className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+          <span className="text-xs" style={{ color: C.goldClaro, opacity: 0.75 }}>
             datos {contarDatosRellenados(form, foto)} de {TOTAL_DATOS_INVITADO}
           </span>
           <span
             className="text-xs px-2 py-0.5 rounded"
-            style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.8 }}
+            style={{ border: `1px solid rgba(255,255,255,0.25)`, color: C.goldClaro, opacity: 0.9 }}
             title="Importe calculado según edad y los precios de Configuración"
           >
             € {importe.toFixed(2)}
           </span>
+          {/* Borde dorado (antes el débil de boton-verde-solido) para que
+              se distinga del propio fondo verde del formulario, a
+              petición del usuario. */}
           <button
             onClick={onCerrar}
             className="boton-3d boton-verde-solido ml-auto px-4 py-2 rounded-full text-sm font-semibold"
+            style={{ border: `1px solid ${C.goldClaro}` }}
           >
             Cerrar
           </button>
         </div>
-        <div className="text-xs mt-1" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <div className="text-xs mt-1" style={{ color: C.goldClaro, opacity: 0.7 }}>
           Familia {invitado.grupoFamiliar || form.apellido} · {form.zona || "sin zona"}
         </div>
       </div>
@@ -212,7 +215,7 @@ function FormularioDatos({
             >
               {colaboradorVinculado.email || "sin registrar"}
             </div>
-            <span className="text-xs italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+            <span className="text-xs italic" style={{ color: C.goldClaro, opacity: 0.7 }}>
               Se edita en Colaboradores, no aquí.
             </span>
           </div>
@@ -314,16 +317,16 @@ function FormularioDatos({
       <div>
         <span
           className="text-xs uppercase block mb-1"
-          style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+          style={{ color: C.goldClaro, fontFamily: "'IBM Plex Mono', monospace" }}
         >
           Alergias *
         </span>
         <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-1 text-sm" style={{ color: C.charcoal }}>
+          <label className="flex items-center gap-1 text-sm" style={{ color: C.goldClaro }}>
             <input type="checkbox" checked={alergiaSel.no} onChange={marcarNo} />
             No
           </label>
-          <label className="flex items-center gap-1 text-sm" style={{ color: C.charcoal }}>
+          <label className="flex items-center gap-1 text-sm" style={{ color: C.goldClaro }}>
             <input
               type="checkbox"
               checked={alergiaSel.gluten}
@@ -331,7 +334,7 @@ function FormularioDatos({
             />
             Gluten
           </label>
-          <label className="flex items-center gap-1 text-sm" style={{ color: C.charcoal }}>
+          <label className="flex items-center gap-1 text-sm" style={{ color: C.goldClaro }}>
             <input
               type="checkbox"
               checked={alergiaSel.lactosa}
