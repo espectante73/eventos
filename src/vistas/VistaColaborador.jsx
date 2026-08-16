@@ -798,7 +798,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       </section>
 
       <section>
-        <SectionTitle icon={Check}>Datos completos</SectionTitle>
+        <SectionTitle icon={Check}>Invitados completados</SectionTitle>
         <div className="space-y-2">
           {ordenarPorApellidoNombre(completos).map((g) => (
             <FilaInvitadoColaborador
