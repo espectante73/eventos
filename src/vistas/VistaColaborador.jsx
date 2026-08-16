@@ -636,16 +636,16 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         {/* Recuadro más compacto (a petición del usuario): menos margen/
             padding alrededor y letra más pequeña que antes -- mismos
             datos, menos alto ocupado. */}
+        {/* 2 filas de 3 recuadros (a petición del usuario): los 5 datos +
+            un 6º recuadro con las 3 barras de porcentaje dentro, todos
+            del mismo tamaño/estilo -- antes las barras iban aparte,
+            debajo, en su propia sección. Textos más cortos (Pendiente,
+            Importe total, Cobrado) para que quepan cómodos en un
+            recuadro más pequeño. */}
         <div
-          className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 mt-2 pt-2"
+          className="grid grid-cols-3 gap-1.5 mt-2 pt-2"
           style={{ borderTop: `1px solid ${C.line}` }}
         >
-          {/* Cada dato en su propia tarjeta sombreada (C.paperDark, no
-              blanco -- el propio recuadro ya es blanco, así se
-              distinguen) con esquinas redondeadas, todas del mismo
-              tamaño (h-full: la más alta -- "Importe total esperado", 2
-              líneas -- marca la altura de las demás), a petición del
-              usuario. */}
           <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {noPagados.length}
@@ -662,28 +662,25 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importeEsperado)}
             </div>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total esperado</div>
+            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total</div>
           </div>
           <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importeCobrado)}
             </div>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Ya cobrado</div>
+            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Cobrado</div>
           </div>
           <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
             <div style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700, fontSize: 15 }}>
               {formatoEuro(importePendiente)}
             </div>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Diferencia pendiente</div>
+            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pendiente</div>
           </div>
-        </div>
-
-        {/* Las 3 barras de porcentaje en 2 líneas (2 columnas), no en 3
-            líneas apiladas como antes -- a petición del usuario. */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2" style={{ maxWidth: 420 }}>
-          <BarraCompacta icono={ClipboardList} completado={completos.length} total={confirmados.length} color={C.ink} />
-          <BarraCompacta icono={Euro} completado={pagados.length} total={confirmados.length} color={C.gold} />
-          <BarraCompacta icono={Mail} completado={familiasConInvitacion} total={gruposFamiliaresACargo.length} color={C.wax} />
+          <div className="h-full rounded p-2 flex flex-col justify-center" style={{ background: C.paperDark }}>
+            <BarraCompacta icono={ClipboardList} completado={completos.length} total={confirmados.length} color={C.ink} />
+            <BarraCompacta icono={Euro} completado={pagados.length} total={confirmados.length} color={C.gold} />
+            <BarraCompacta icono={Mail} completado={familiasConInvitacion} total={gruposFamiliaresACargo.length} color={C.wax} />
+          </div>
         </div>
 
         <div className="mt-4 pt-4 flex justify-end" style={{ borderTop: `1px solid ${C.line}` }}>
