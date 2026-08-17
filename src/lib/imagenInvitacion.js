@@ -4,19 +4,19 @@
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { formatearFecha, formatearDiaSemana, listaConY } from "./formato";
 
-// Sombreado ajustado SOLO al texto que se va a escribir encima -- nunca un
-// recuadro grande. La plantilla real (public/invitacion-defecto.jpg) no
-// tiene un recuadro con borde en la zona de fecha/hora/lugar (es texto
-// suelto sobre el fondo de la página), así que rellenar una caja entera ahí
-// se salía por todos lados. Esto tapa justo el ancho/alto de la línea de
-// texto, con un margen pequeño, tanto si hay un recuadro real detrás (como
-// en familia/mesa) como si no.
-function resaltarTexto(ctx, x, yBase, ancho, fontSizePx, colorFondo) {
-  const padX = fontSizePx * 0.35;
-  const arriba = fontSizePx * 1.1;
-  const abajo = fontSizePx * 0.9;
+// Sombreado ajustado a una línea de texto -- nunca un recuadro grande. El
+// ancho SIEMPRE es el de la columna disponible (no el del texto medido):
+// la plantilla ya trae un valor de ejemplo quemado en esa misma línea (p.ej.
+// "Benito y Meritxell"), y si el texto nuevo es más corto que el viejo, un
+// sombreado ajustado solo al texto nuevo deja un trozo del viejo asomando
+// por el lado. Con el ancho de columna completo eso no puede pasar, y aun
+// así solo se sombrea esa línea -- no el recuadro entero.
+function resaltarLinea(ctx, x, yBase, anchoColumna, fontSizePx, colorFondo) {
+  const padX = fontSizePx * 0.6;
+  const arriba = fontSizePx * 1.4;
+  const abajo = fontSizePx * 1.0;
   ctx.fillStyle = colorFondo;
-  ctx.fillRect(x - padX, yBase - arriba, ancho + padX * 2, arriba + abajo);
+  ctx.fillRect(x - padX, yBase - arriba, anchoColumna + padX * 2, arriba + abajo);
 }
 
 export function partirLineas(ctx, texto, maxWidth) {
@@ -61,17 +61,11 @@ export function dibujarParrafoJustificado(ctx, lineas, x, y, maxWidth, lineHeigh
   });
 }
 
-// Igual que dibujarParrafoJustificado, pero primero sombrea cada línea
-// (ajustado a su ancho real: el ancho completo si va justificada, o el
-// ancho medido del texto si es la última línea/una sola palabra) antes de
-// escribir encima. Así el sombreado nunca es más grande que el propio texto.
+// Igual que dibujarParrafoJustificado, pero primero sombrea cada línea (al
+// ancho de columna completo -- ver resaltarLinea) antes de escribir encima.
 function dibujarParrafoConSombra(ctx, lineas, x, y, maxWidth, lineHeight, fontSizePx, colorFondo, colorTexto) {
   lineas.forEach((linea, i) => {
-    const esUltima = i === lineas.length - 1;
-    const palabras = linea.split(" ").filter(Boolean);
-    const esJustificada = !esUltima && palabras.length >= 2;
-    const anchoLinea = esJustificada ? maxWidth : ctx.measureText(linea).width;
-    resaltarTexto(ctx, x, y + i * lineHeight, anchoLinea, fontSizePx, colorFondo);
+    resaltarLinea(ctx, x, y + i * lineHeight, maxWidth, fontSizePx, colorFondo);
   });
   ctx.fillStyle = colorTexto;
   dibujarParrafoJustificado(ctx, lineas, x, y, maxWidth, lineHeight);
@@ -121,35 +115,47 @@ export function dibujarCuadriculaCalibracion(ctx, W, H) {
 
 export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaTexto, mostrarCuadricula = false) {
   return new Promise((resolve) => {
-    // Recuadro de familia/mesa (abajo a la derecha) -- este sí es un
-    // recuadro real de la plantilla, con esquinas redondeadas y borde
-    // dorado. Medido 2026-08-17 con cuadrícula de coordenadas directamente
-    // sobre la plantilla real (public/invitacion-defecto.jpg, la que de
-    // verdad usa la app), no sobre una captura ni un archivo de referencia
-    // aparte -- un intento anterior se calibró contra un mockup distinto y
-    // no coincidía con la plantilla en vivo.
-    const RECUADRO = { left: 0.478, right: 0.965, top: 0.805, bottom: 0.918 };
+    // Las dos zonas de abajo se midieron 2026-08-17 con cuadrícula de
+    // coordenadas sobre la plantilla real (confirmada contra una captura
+    // en vivo de la app con la cuadrícula activada: coinciden). AMBAS son
+    // recuadros reales con esquinas redondeadas y borde dorado, con datos
+    // de ejemplo quemados en el diseño ("FARIÑA; Benito y Meritxell" /
+    // "Mesa 5; 2 personas", "13 de noviembre de 2026", "18:30 h",
+    // "Icod de los Vinos, Tenerife"...) que hay que tapar línea a línea al
+    // escribir los datos reales encima.
 
-    // Zona de fecha/hora/lugar: a diferencia de familia/mesa, AQUÍ NO HAY
-    // NINGÚN RECUADRO en la plantilla -- son icono + etiqueta + valor
-    // impresos directamente sobre el fondo de la página. Las etiquetas
-    // ("FECHA", "HORA", "LUGAR") y los iconos ya vienen fijos en el diseño
-    // y no cambian de una invitación a otra, así que no se tocan. Solo se
-    // sombrea y reescribe el VALOR de cada campo (la parte que sí cambia
-    // según el evento), con un sombreado ajustado a ese texto concreto,
-    // nunca un recuadro. Coordenadas medidas 2026-08-17 igual que arriba.
+    // Recuadro de familia/mesa (abajo a la derecha).
+    const RECUADRO = { left: 0.505, right: 0.965, top: 0.797, bottom: 0.925 };
+
+    // Recuadro de fecha/hora/lugar (izquierda). Las etiquetas ("FECHA",
+    // "HORA", "LUGAR") y los iconos son fijos y no se tocan -- solo se
+    // sombrea y reescribe el VALOR de cada campo.
+    // No se puede saber a ciegas con qué tamaño/fuente exactos quedó
+    // impreso el valor de ejemplo en la plantilla -- ajustar un sombreado
+    // ceñido al texto NUEVO siempre deja algún borde del viejo asomando por
+    // un lado o por arriba/abajo. En vez de eso, cada campo tapa su ZONA
+    // completa (delimitada arriba por su etiqueta y abajo por la línea
+    // separadora o el borde del recuadro), de una sola vez -- igual de
+    // ajustado a "solo esa fila", pero sin depender de medir el texto viejo.
     const DATOS = {
-      x: 0.15, // columna de texto (a la derecha de los iconos)
-      anchoTexto: 0.36, // ancho disponible antes de invadir la foto de la pareja
-      yFecha: 0.487,
-      yDiaSemana: 0.508,
-      yHora: 0.573,
-      yLugar: 0.638,
+      x: 0.16, // columna de texto (a la derecha de los iconos)
+      anchoTexto: 0.26, // ancho de columna dentro del recuadro (hasta su borde derecho)
+      yFechaZonaInicio: 0.468,
+      yFechaZonaFin: 0.521,
+      yFechaValor: 0.487,
+      yDiaSemanaValor: 0.508,
+      yHoraZonaInicio: 0.555,
+      yHoraZonaFin: 0.6,
+      yHoraValor: 0.573,
+      yLugarZonaInicio: 0.622,
+      yLugarZonaFin: 0.693,
+      yLugarValor: 0.639,
     };
 
     const dibujarDatosGenerales = (ctx, W, H) => {
       const x = DATOS.x * W;
       const anchoTexto = DATOS.anchoTexto * W;
+      const padX = W * 0.032;
 
       const fechaValor = evento.fecha ? formatearFecha(evento.fecha) : "";
       const diaSemanaValor = evento.fecha ? formatearDiaSemana(evento.fecha) : "";
@@ -159,29 +165,42 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
       ctx.textAlign = "left";
       ctx.textBaseline = "alphabetic";
 
-      const escribirLinea = (texto, y, fontSizePx, font, colorTexto, colorFondo) => {
-        if (!texto) return;
-        ctx.font = font;
-        resaltarTexto(ctx, x, y, ctx.measureText(texto).width, fontSizePx, colorFondo);
-        ctx.fillStyle = colorTexto;
-        ctx.fillText(texto, x, y);
+      const tapZona = (zonaInicio, zonaFin) => {
+        ctx.fillStyle = "#F5F0E6";
+        ctx.fillRect(x - padX, zonaInicio * H, anchoTexto + padX * 2, (zonaFin - zonaInicio) * H);
       };
 
       const tamFecha = Math.round(W * 0.028);
-      escribirLinea(fechaValor, DATOS.yFecha * H, tamFecha, `bold ${tamFecha}px 'Fraunces', serif`, "#1F3A2E", "#F5F0E6");
       const tamDia = Math.round(W * 0.02);
-      escribirLinea(diaSemanaValor, DATOS.yDiaSemana * H, tamDia, `italic ${tamDia}px 'Fraunces', serif`, "#1F3A2E", "#F5F0E6");
-      escribirLinea(horaValor, DATOS.yHora * H, tamFecha, `bold ${tamFecha}px 'Fraunces', serif`, "#1F3A2E", "#F5F0E6");
+
+      if (fechaValor || diaSemanaValor) {
+        tapZona(DATOS.yFechaZonaInicio, DATOS.yFechaZonaFin);
+        ctx.fillStyle = "#1F3A2E";
+        if (fechaValor) {
+          ctx.font = `bold ${tamFecha}px 'Fraunces', serif`;
+          ctx.fillText(fechaValor, x, DATOS.yFechaValor * H);
+        }
+        if (diaSemanaValor) {
+          ctx.font = `italic ${tamDia}px 'Fraunces', serif`;
+          ctx.fillText(diaSemanaValor, x, DATOS.yDiaSemanaValor * H);
+        }
+      }
+
+      if (horaValor) {
+        tapZona(DATOS.yHoraZonaInicio, DATOS.yHoraZonaFin);
+        ctx.font = `bold ${tamFecha}px 'Fraunces', serif`;
+        ctx.fillStyle = "#1F3A2E";
+        ctx.fillText(horaValor, x, DATOS.yHoraValor * H);
+      }
 
       if (lugarValor) {
+        tapZona(DATOS.yLugarZonaInicio, DATOS.yLugarZonaFin);
         const tamLugar = Math.round(W * 0.02);
-        const fontLugar = `bold ${tamLugar}px 'Fraunces', serif`;
+        ctx.font = `bold ${tamLugar}px 'Fraunces', serif`;
+        ctx.fillStyle = "#1F3A2E";
         const lineHeight = Math.round(H * 0.024);
-        ctx.font = fontLugar;
-        let y = DATOS.yLugar * H;
+        let y = DATOS.yLugarValor * H;
         partirLineas(ctx, lugarValor, anchoTexto).forEach((linea) => {
-          resaltarTexto(ctx, x, y, ctx.measureText(linea).width, tamLugar, "#F5F0E6");
-          ctx.fillStyle = "#1F3A2E";
           ctx.fillText(linea, x, y);
           y += lineHeight;
         });
@@ -191,7 +210,7 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
     const dibujarTextoYResolver = (canvas, ctx) => {
       const W = canvas.width;
       const H = canvas.height;
-      const xIzq = RECUADRO.left * W + (RECUADRO.right - RECUADRO.left) * W * 0.06;
+      const xIzq = RECUADRO.left * W + (RECUADRO.right - RECUADRO.left) * W * 0.025;
       const anchoDisponible = (RECUADRO.right - RECUADRO.left) * W * 0.88;
 
       dibujarDatosGenerales(ctx, W, H);
@@ -226,8 +245,9 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
       }
 
       // Posición fija según la cuadrícula de calibración: ahí es donde
-      // caen las líneas de ejemplo "[Familia]" / "[Mesa]" de la plantilla.
-      let cursorY = 0.855 * H;
+      // caen las líneas de ejemplo "FARIÑA; Benito y Meritxell" / "Mesa 5;
+      // 2 personas" de la plantilla.
+      let cursorY = 0.845 * H;
 
       bloques.forEach((b) => {
         ctx.font = b.font;
