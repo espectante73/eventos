@@ -11,7 +11,7 @@
 import { ClipboardList, Euro, Mail, Music } from "lucide-react";
 import { C } from "../../theme";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
-import { ProgresoBar, BarraCompacta } from "../../components/Widgets";
+import { BarraCompacta } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
 export function VentanaProgreso({ data, onCerrar }) {
@@ -20,26 +20,40 @@ export function VentanaProgreso({ data, onCerrar }) {
 
   return (
     <VentanaFlotante clave="progreso" titulo="Progreso de recopilación" onCerrar={onCerrar}>
-      {/* Las dos barras generales van juntas arriba (antes la de Cobro
-          estaba separada, después del grid de colaboradores) y con
-          icono en vez de texto -- los mismos ClipboardList/Euro que ya
-          se usan en los recuadros de colaborador de más abajo, más
-          intuitivo que repetir la misma idea en dos formatos distintos
-          (a petición del usuario, 2026-08-17). */}
-      <ProgresoBar
-        label="Confirmados con datos completos"
-        icono={ClipboardList}
-        completado={invitados.filter((g) => g.confirmado && datosCompletos(g)).length}
-        total={confirmadosCount}
-        color={C.ink}
-      />
-      <ProgresoBar
-        label="Confirmados que ya han pagado"
-        icono={Euro}
-        completado={invitados.filter((g) => g.confirmado && g.pagado).length}
-        total={confirmadosCount}
-        color={C.gold}
-      />
+      {/* Las 3 barras generales (datos, cobro, canciones) en un solo
+          recuadro verde/dorado -- mismo lenguaje que el resto de la app
+          (Portada.jsx: degradado C.ink + borde/texto en dorado). Dentro,
+          BarraCompacta (icono + barra + porcentaje en una sola línea,
+          igual que los recuadros de colaborador de más abajo) en vez del
+          ProgresoBar grande de dos líneas -- ahorra espacio en pantalla.
+          `claro` en las 3 porque van sobre fondo oscuro. A petición del
+          usuario, 2026-08-17. */}
+      <div
+        className="rounded p-3 mb-3"
+        style={{ background: "linear-gradient(180deg, #1F3A2E 0%, #24402F 100%)", border: `1px solid ${C.gold}` }}
+      >
+        <BarraCompacta
+          icono={ClipboardList}
+          completado={invitados.filter((g) => g.confirmado && datosCompletos(g)).length}
+          total={confirmadosCount}
+          color={C.goldClaro}
+          claro
+        />
+        <BarraCompacta
+          icono={Euro}
+          completado={invitados.filter((g) => g.confirmado && g.pagado).length}
+          total={confirmadosCount}
+          color={C.goldClaro}
+          claro
+        />
+        <BarraCompacta
+          icono={Music}
+          completado={invitados.filter((g) => g.confirmado && g.cancion && g.cancion.trim()).length}
+          total={confirmadosCount}
+          color={C.goldClaro}
+          claro
+        />
+      </div>
       <div className="grid grid-cols-3 gap-1.5 pt-1" style={{ borderTop: `1px solid ${C.line}` }}>
         {colaboradores.map((c) => {
           const suyos = invitados.filter(
@@ -78,22 +92,11 @@ export function VentanaProgreso({ data, onCerrar }) {
           Añade colaboradores para ver su progreso individual.
         </p>
       )}
-      <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
-        <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
-          Informativo — no bloquea a nadie, solo para saber cuánto falta de la canción
-          para el DJ. Las alergias se avisan directamente en la mesa (sección Mesas) y
-          tienen su propia lista imprimible más abajo.
-        </p>
-        <ProgresoBar
-          label="Con canción registrada"
-          icono={Music}
-          completado={
-            invitados.filter((g) => g.confirmado && g.cancion && g.cancion.trim()).length
-          }
-          total={confirmadosCount}
-          color={C.wax}
-        />
-      </div>
+      <p className="text-xs mt-3" style={{ color: C.charcoal, opacity: 0.6 }}>
+        Canciones — informativo, no bloquea a nadie, solo para saber cuánto falta para el
+        DJ. Las alergias se avisan directamente en la mesa (sección Mesas) y tienen su
+        propia lista imprimible más abajo.
+      </p>
     </VentanaFlotante>
   );
 }

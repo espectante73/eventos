@@ -95,10 +95,12 @@ export function ProgresoBar({ label, icono: Icono, completado, total, color }) {
 // hace de etiqueta, el color distingue de qué barra se trata) — pensada
 // para caber varias seguidas con un margen mínimo. El detalle exacto
 // (n/total y %) sigue disponible al pasar el ratón o tocar (title del
-// navegador). Usada por VentanaProgreso (por colaborador) y
-// VistaColaborador (su propio progreso) — movida aquí al pasar a
-// usarla 2 sitios, 2026-08-12.
-export function BarraCompacta({ icono: Icono, completado, total, color }) {
+// navegador). Usada por VentanaProgreso (por colaborador y en el
+// recuadro general) y VistaColaborador (su propio progreso) — movida
+// aquí al pasar a usarla 2 sitios, 2026-08-12.
+// `claro`: variante para fondos oscuros (mismo criterio que InfoItem en
+// Portada.jsx) -- el porcentaje pasa a texto claro en vez de C.charcoal.
+export function BarraCompacta({ icono: Icono, completado, total, color, claro }) {
   const pct = total > 0 ? Math.round((completado / total) * 100) : 0;
   return (
     <div
@@ -112,8 +114,8 @@ export function BarraCompacta({ icono: Icono, completado, total, color }) {
       <span
         style={{
           fontSize: 10,
-          color: C.charcoal,
-          opacity: 0.7,
+          color: claro ? "rgba(255,255,255,0.9)" : C.charcoal,
+          opacity: claro ? 1 : 0.7,
           fontFamily: "'IBM Plex Mono', monospace",
           minWidth: 30,
           textAlign: "right",
