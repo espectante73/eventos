@@ -19,7 +19,7 @@ function resaltarLinea(ctx, x, yBase, anchoColumna, fontSizePx, colorFondo) {
   ctx.fillRect(x - padX, yBase - arriba, anchoColumna + padX * 2, arriba + abajo);
 }
 
-export function partirLineas(ctx, texto, maxWidth) {
+function partirLineas(ctx, texto, maxWidth) {
   const palabras = texto.split(" ");
   let linea = "";
   const lineas = [];
@@ -39,7 +39,7 @@ export function partirLineas(ctx, texto, maxWidth) {
 // Canvas no tiene alineación "justificada" nativa: se reparte el espacio
 // sobrante entre palabras a mano. La última línea de cada bloque no se
 // estira (así es como se ve un párrafo justificado normal).
-export function dibujarLineaJustificada(ctx, linea, x, y, maxWidth, esUltima) {
+function dibujarLineaJustificada(ctx, linea, x, y, maxWidth, esUltima) {
   const palabras = linea.split(" ").filter(Boolean);
   ctx.textAlign = "left";
   if (esUltima || palabras.length < 2) {
@@ -55,7 +55,7 @@ export function dibujarLineaJustificada(ctx, linea, x, y, maxWidth, esUltima) {
   });
 }
 
-export function dibujarParrafoJustificado(ctx, lineas, x, y, maxWidth, lineHeight) {
+function dibujarParrafoJustificado(ctx, lineas, x, y, maxWidth, lineHeight) {
   lineas.forEach((linea, i) => {
     dibujarLineaJustificada(ctx, linea, x, y + i * lineHeight, maxWidth, i === lineas.length - 1);
   });
@@ -76,7 +76,7 @@ function dibujarParrafoConSombra(ctx, lineas, x, y, maxWidth, lineHeight, fontSi
 // que darle a las constantes de más abajo, en vez de estimarlas a ojo desde
 // una captura. Solo se activa con el modo calibración; nunca en una
 // invitación real enviada a un invitado.
-export function dibujarCuadriculaCalibracion(ctx, W, H) {
+function dibujarCuadriculaCalibracion(ctx, W, H) {
   ctx.save();
   ctx.lineWidth = 1;
   ctx.font = "bold 16px monospace";

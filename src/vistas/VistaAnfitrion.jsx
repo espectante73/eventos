@@ -4,59 +4,11 @@
 // 2026-08-08 (ver CLAUDE.md) — sigue siendo un único componente grande;
 // dividir su interior es un cambio aparte, deliberadamente pospuesto (ver
 // CLAUDE.md, Fase 4).
-import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Check,
-  X,
-  Plus,
-  Music,
-  AlertTriangle,
-  Clock,
-  MapPin,
-  Bell,
-  Cake,
-  Heart,
-  DollarSign,
-  Image as ImageIcon,
-  Copy,
-  Pencil,
-  Repeat,
-  Printer,
-  MoreVertical,
-} from "lucide-react";
-import { formatearFecha, ordenarPorApellidoNombre, parsePrecio, listaConY } from "../lib/formato";
-import {
-  datosCompletos,
-  CAMPOS_DATOS_INVITADO,
-  TOTAL_DATOS_INVITADO,
-  contarDatosRellenados,
-  tieneAlergiaReal,
-  calcularEdad,
-  edadPromedio,
-  importeEsperadoInvitado,
-  resolverColaborador,
-  parseImport,
-} from "../lib/invitados";
-import { getRolFromUrl, buildLink } from "../lib/url";
-import {
-  descargarCSV,
-  descargarJSON,
-  redimensionarImagenArchivo,
-  guardarArchivoInvitacion,
-  obtenerCarpetaInvitaciones,
-  leerHandleCarpeta,
-} from "../lib/descargas";
+import { useState } from "react";
 import { generarInvitacionImagen } from "../lib/imagenInvitacion";
-import { C, inputStyle } from "../theme";
-import { VERSION_APP } from "../constants";
-import { Seal, Stamp, ProgresoBar, EncabezadoOrdenable, GrupoFamiliarInput } from "../components/Widgets";
+import { C } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
-import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { Portada, ANCHO_MAXIMO_PORTADA } from "../components/Portada";
-import { MesaRedonda, MesaPlano } from "../components/Mesas";
-import { BuscadorInvitado } from "../components/BuscadorInvitado";
-import { uid } from "../lib/id";
-import { exportarTodo } from "../lib/backup";
 import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
@@ -77,7 +29,7 @@ import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 
 export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion }) {
-  const { evento, colaboradores, invitados, mesas, fotosFamiliares, persistEvento, persistColaboradores, persistInvitados, persistMesas, persistFotosFamiliares, avisarColaborador, probarEmailColaborador, avisosEnviados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, resetearAvisos, resetearPorInvitados, gastos, persistGastos } = data;
+  const { evento, colaboradores, invitados, persistInvitados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia } = data;
 
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
   // por colaborador — así se sabe exactamente cuáles son los nuevos. Los

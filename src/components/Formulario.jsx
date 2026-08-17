@@ -4,7 +4,7 @@
 // 2026-08-08 (ver CLAUDE.md).
 import { C, inputStyle } from "../theme";
 
-export function SectionTitle({ icon: Icon, children, onToggle, abierto, compacto }) {
+export function SectionTitle({ icon: Icon, children, onToggle, compacto }) {
   const plegable = typeof onToggle === "function";
   const contenido = (
     <>

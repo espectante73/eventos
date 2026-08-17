@@ -594,7 +594,6 @@ export function SeccionInvitados({
             </div>
             <div style={{ maxHeight: "50vh", overflowY: "auto" }}>
             {invitadosOrdenados.map((g, i) => {
-              const col = resolverColaborador(g, colaboradores);
               return (
                 <div
                   key={g.id}

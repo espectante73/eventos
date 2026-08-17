@@ -77,7 +77,7 @@ const IDB_NOMBRE = "eventos-app";
 const IDB_ALMACEN = "handles";
 const IDB_CLAVE_CARPETA = "carpetaInvitaciones";
 
-export function abrirIDB() {
+function abrirIDB() {
   return new Promise((resolve, reject) => {
     const peticion = indexedDB.open(IDB_NOMBRE, 1);
     peticion.onupgradeneeded = () => peticion.result.createObjectStore(IDB_ALMACEN);
@@ -136,7 +136,7 @@ export async function obtenerCarpetaInvitaciones({ forzarElegir }) {
   }
 }
 
-export function descargarDataUrlClasico(dataUrl, nombreArchivo) {
+function descargarDataUrlClasico(dataUrl, nombreArchivo) {
   const a = document.createElement("a");
   a.href = dataUrl;
   a.download = nombreArchivo;

@@ -14,7 +14,7 @@
 // principal de invitados), así que también llega como prop.
 import { useState } from "react";
 import { C } from "../../theme";
-import { Stamp, EncabezadoOrdenable } from "../../components/Widgets";
+import { EncabezadoOrdenable } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 
 const ETIQUETA_TIPO_AVISO = {

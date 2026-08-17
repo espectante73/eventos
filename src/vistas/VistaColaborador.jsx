@@ -5,14 +5,8 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Check,
-  X,
   Mail,
-  Music,
-  AlertTriangle,
   Bell,
-  Cake,
-  Heart,
-  Image as ImageIcon,
   User,
   ClipboardList,
   Euro,
@@ -24,14 +18,13 @@ import { MenuFlotante } from "../components/MenuFlotante";
 import {
   datosCompletos,
   contarDatosRellenados,
-  tieneAlergiaReal,
   TOTAL_DATOS_INVITADO,
   importeEsperadoInvitado,
   resolverColaborador,
 } from "../lib/invitados";
 import { ordenarPorApellidoNombre } from "../lib/formato";
 import { redimensionarImagenArchivo } from "../lib/descargas";
-import { C, inputStyle } from "../theme";
+import { C } from "../theme";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante } from "../components/VentanaFlotante";
