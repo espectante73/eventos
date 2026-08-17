@@ -179,7 +179,7 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
       };
 
       const tamFecha = Math.round(W * 0.028);
-      const tamDia = Math.round(W * 0.02);
+      const tamDia = tamFecha;
 
       if (fechaValor || diaSemanaValor) {
         tapZona(DATOS.yFechaZonaInicio, DATOS.yFechaZonaFin);
