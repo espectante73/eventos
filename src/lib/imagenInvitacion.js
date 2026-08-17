@@ -175,7 +175,7 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
 
       const tapZona = (zonaInicio, zonaFin) => {
         ctx.fillStyle = "#F5F0E6";
-        ctx.fillRect(x - padX, zonaInicio * H, anchoTexto + padX * 2 - 3, (zonaFin - zonaInicio) * H);
+        ctx.fillRect(x - padX, zonaInicio * H, anchoTexto + padX * 2 - 15, (zonaFin - zonaInicio) * H);
       };
 
       const tamFecha = Math.round(W * 0.028);
