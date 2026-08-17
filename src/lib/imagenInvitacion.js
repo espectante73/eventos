@@ -2,26 +2,21 @@
 // líneas, justificado de texto, cuadrícula de calibración y el dibujo final
 // sobre la plantilla. Sin estado de React — movida fuera de App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
-import { formatearFecha, listaConY } from "./formato";
+import { formatearFecha, formatearDiaSemana, listaConY } from "./formato";
 
-// Los recuadros de la plantilla son rectángulos de esquinas redondeadas
-// con un borde dorado fino. Un fillRect normal (esquinas a 90°) sobresale
-// por las cuatro esquinas del recuadro real, invadiendo el fondo de al
-// lado -- por eso el marfil se dibuja con esta forma en vez de un
-// rectángulo liso.
-function dibujarRectRedondeado(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.arcTo(x + w, y, x + w, y + r, r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-  ctx.lineTo(x + r, y + h);
-  ctx.arcTo(x, y + h, x, y + h - r, r);
-  ctx.lineTo(x, y + r);
-  ctx.arcTo(x, y, x + r, y, r);
-  ctx.closePath();
-  ctx.fill();
+// Sombreado ajustado SOLO al texto que se va a escribir encima -- nunca un
+// recuadro grande. La plantilla real (public/invitacion-defecto.jpg) no
+// tiene un recuadro con borde en la zona de fecha/hora/lugar (es texto
+// suelto sobre el fondo de la página), así que rellenar una caja entera ahí
+// se salía por todos lados. Esto tapa justo el ancho/alto de la línea de
+// texto, con un margen pequeño, tanto si hay un recuadro real detrás (como
+// en familia/mesa) como si no.
+function resaltarTexto(ctx, x, yBase, ancho, fontSizePx, colorFondo) {
+  const padX = fontSizePx * 0.35;
+  const arriba = fontSizePx * 1.1;
+  const abajo = fontSizePx * 0.9;
+  ctx.fillStyle = colorFondo;
+  ctx.fillRect(x - padX, yBase - arriba, ancho + padX * 2, arriba + abajo);
 }
 
 export function partirLineas(ctx, texto, maxWidth) {
@@ -66,11 +61,27 @@ export function dibujarParrafoJustificado(ctx, lineas, x, y, maxWidth, lineHeigh
   });
 }
 
+// Igual que dibujarParrafoJustificado, pero primero sombrea cada línea
+// (ajustado a su ancho real: el ancho completo si va justificada, o el
+// ancho medido del texto si es la última línea/una sola palabra) antes de
+// escribir encima. Así el sombreado nunca es más grande que el propio texto.
+function dibujarParrafoConSombra(ctx, lineas, x, y, maxWidth, lineHeight, fontSizePx, colorFondo, colorTexto) {
+  lineas.forEach((linea, i) => {
+    const esUltima = i === lineas.length - 1;
+    const palabras = linea.split(" ").filter(Boolean);
+    const esJustificada = !esUltima && palabras.length >= 2;
+    const anchoLinea = esJustificada ? maxWidth : ctx.measureText(linea).width;
+    resaltarTexto(ctx, x, y + i * lineHeight, anchoLinea, fontSizePx, colorFondo);
+  });
+  ctx.fillStyle = colorTexto;
+  dibujarParrafoJustificado(ctx, lineas, x, y, maxWidth, lineHeight);
+}
+
 // Rejilla temporal (cada 5% del ancho/alto) con la fracción escrita en cada
 // línea — sirve para leer directamente en la imagen las coordenadas que hay
-// que darle a RECUADRO/RECUADRO_DATOS, en vez de estimarlas a ojo desde una
-// captura. Solo se activa con el modo calibración; nunca en una invitación
-// real enviada a un invitado.
+// que darle a las constantes de más abajo, en vez de estimarlas a ojo desde
+// una captura. Solo se activa con el modo calibración; nunca en una
+// invitación real enviada a un invitado.
 export function dibujarCuadriculaCalibracion(ctx, W, H) {
   ctx.save();
   ctx.lineWidth = 1;
@@ -110,114 +121,85 @@ export function dibujarCuadriculaCalibracion(ctx, W, H) {
 
 export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaTexto, mostrarCuadricula = false) {
   return new Promise((resolve) => {
-    // Recuadro de familia/mesa (abajo a la derecha). Recalibrado 2026-08-17
-    // midiendo con cuadrícula de coordenadas sobre el archivo real
-    // modelo-invitacion-editable.png (no una captura de pantalla).
-    const RECUADRO = { left: 0.505, right: 0.965, top: 0.797, bottom: 0.925 };
+    // Recuadro de familia/mesa (abajo a la derecha) -- este sí es un
+    // recuadro real de la plantilla, con esquinas redondeadas y borde
+    // dorado. Medido 2026-08-17 con cuadrícula de coordenadas directamente
+    // sobre la plantilla real (public/invitacion-defecto.jpg, la que de
+    // verdad usa la app), no sobre una captura ni un archivo de referencia
+    // aparte -- un intento anterior se calibró contra un mockup distinto y
+    // no coincidía con la plantilla en vivo.
+    const RECUADRO = { left: 0.478, right: 0.965, top: 0.805, bottom: 0.918 };
 
-    // Recuadro grande de la izquierda (fecha/hora/lugar). La plantilla
-    // trae la propia fecha/hora/lugar YA dibujados dentro del diseño, pero
-    // el usuario decidió mantener estos datos en vivo (no quemados en la
-    // imagen, por si cambian) en vez de quitarlos -- así que se cubre esa
-    // zona con un fondo marfil ANTES de escribir, para que la versión en
-    // vivo prevalezca sobre lo que ya trae la plantilla (mismo criterio
-    // que usa el recuadro de familia/mesa de arriba). Recalibrado
-    // 2026-08-17 igual que el de arriba, con cuadrícula sobre el archivo
-    // real.
-    const RECUADRO_DATOS = { left: 0.045, right: 0.445, top: 0.415, bottom: 0.697 };
+    // Zona de fecha/hora/lugar: a diferencia de familia/mesa, AQUÍ NO HAY
+    // NINGÚN RECUADRO en la plantilla -- son icono + etiqueta + valor
+    // impresos directamente sobre el fondo de la página. Las etiquetas
+    // ("FECHA", "HORA", "LUGAR") y los iconos ya vienen fijos en el diseño
+    // y no cambian de una invitación a otra, así que no se tocan. Solo se
+    // sombrea y reescribe el VALOR de cada campo (la parte que sí cambia
+    // según el evento), con un sombreado ajustado a ese texto concreto,
+    // nunca un recuadro. Coordenadas medidas 2026-08-17 igual que arriba.
+    const DATOS = {
+      x: 0.15, // columna de texto (a la derecha de los iconos)
+      anchoTexto: 0.36, // ancho disponible antes de invadir la foto de la pareja
+      yFecha: 0.487,
+      yDiaSemana: 0.508,
+      yHora: 0.573,
+      yLugar: 0.638,
+    };
 
     const dibujarDatosGenerales = (ctx, W, H) => {
-      const x0 = RECUADRO_DATOS.left * W;
-      const y0 = RECUADRO_DATOS.top * H;
-      const anchoBox = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W;
-      const altoBox = (RECUADRO_DATOS.bottom - RECUADRO_DATOS.top) * H;
-
-      // Metido un pelín hacia dentro del recuadro real de la plantilla para
-      // no tapar su borde dorado, y con esquinas redondeadas (medidas sobre
-      // la plantilla real) para no sobresalir en las cuatro esquinas.
-      const margen = W * 0.006;
-      ctx.fillStyle = "#F5F0E6"; // marfil
-      dibujarRectRedondeado(
-        ctx,
-        x0 + margen,
-        y0 + margen,
-        anchoBox - margen * 2,
-        altoBox - margen * 2,
-        W * 0.012
-      );
-
-      const xEtiqueta = x0 + anchoBox * 0.06;
-      const anchoValor = anchoBox * 0.88;
+      const x = DATOS.x * W;
+      const anchoTexto = DATOS.anchoTexto * W;
 
       const fechaValor = evento.fecha ? formatearFecha(evento.fecha) : "";
-      const horaValor = evento.hora ? `${evento.hora}h` : "";
+      const diaSemanaValor = evento.fecha ? formatearDiaSemana(evento.fecha) : "";
+      const horaValor = evento.hora ? `${evento.hora} h` : "";
       const lugarValor = [evento.lugar, evento.direccion].filter(Boolean).join(", ").trim();
 
       ctx.textAlign = "left";
       ctx.textBaseline = "alphabetic";
 
-      // Al tapar también la etiqueta/icono que traía la plantilla, ahora
-      // hacen falta etiquetas propias (antes no se dibujaban -- se
-      // apoyaban en el icono ya impreso de la plantilla vieja).
-      let y = y0 + altoBox * 0.14;
-      const dibujarCampo = (etiqueta, valor, esDireccion) => {
-        if (!valor) return;
-        ctx.font = `bold ${Math.round(W * 0.013)}px 'Inter', sans-serif`;
-        ctx.fillStyle = "#B08D57"; // C.gold
-        ctx.fillText(etiqueta.toUpperCase(), xEtiqueta, y);
-        y += altoBox * 0.055;
-
-        ctx.fillStyle = "#1F3A2E"; // C.ink
-        if (esDireccion) {
-          ctx.font = `bold ${Math.round(W * 0.02)}px 'Fraunces', serif`;
-          const lineHeight = Math.round(W * 0.025) + 4;
-          partirLineas(ctx, valor, anchoValor).forEach((linea) => {
-            ctx.fillText(linea, xEtiqueta, y);
-            y += lineHeight;
-          });
-        } else {
-          ctx.font = `bold ${Math.round(W * 0.028)}px 'Fraunces', serif`;
-          ctx.fillText(valor, xEtiqueta, y);
-          y += altoBox * 0.09;
-        }
-        y += altoBox * 0.06;
+      const escribirLinea = (texto, y, fontSizePx, font, colorTexto, colorFondo) => {
+        if (!texto) return;
+        ctx.font = font;
+        resaltarTexto(ctx, x, y, ctx.measureText(texto).width, fontSizePx, colorFondo);
+        ctx.fillStyle = colorTexto;
+        ctx.fillText(texto, x, y);
       };
 
-      dibujarCampo("Fecha", fechaValor, false);
-      dibujarCampo("Hora", horaValor, false);
-      dibujarCampo("Lugar", lugarValor, true);
+      const tamFecha = Math.round(W * 0.028);
+      escribirLinea(fechaValor, DATOS.yFecha * H, tamFecha, `bold ${tamFecha}px 'Fraunces', serif`, "#1F3A2E", "#F5F0E6");
+      const tamDia = Math.round(W * 0.02);
+      escribirLinea(diaSemanaValor, DATOS.yDiaSemana * H, tamDia, `italic ${tamDia}px 'Fraunces', serif`, "#1F3A2E", "#F5F0E6");
+      escribirLinea(horaValor, DATOS.yHora * H, tamFecha, `bold ${tamFecha}px 'Fraunces', serif`, "#1F3A2E", "#F5F0E6");
+
+      if (lugarValor) {
+        const tamLugar = Math.round(W * 0.02);
+        const fontLugar = `bold ${tamLugar}px 'Fraunces', serif`;
+        const lineHeight = Math.round(H * 0.024);
+        ctx.font = fontLugar;
+        let y = DATOS.yLugar * H;
+        partirLineas(ctx, lugarValor, anchoTexto).forEach((linea) => {
+          resaltarTexto(ctx, x, y, ctx.measureText(linea).width, tamLugar, "#F5F0E6");
+          ctx.fillStyle = "#1F3A2E";
+          ctx.fillText(linea, x, y);
+          y += lineHeight;
+        });
+      }
     };
 
     const dibujarTextoYResolver = (canvas, ctx) => {
       const W = canvas.width;
       const H = canvas.height;
-      const xIzq = RECUADRO.left * W + (RECUADRO.right - RECUADRO.left) * W * 0.04;
-      const anchoDisponible = (RECUADRO.right - RECUADRO.left) * W * 0.92;
-      const yTop = RECUADRO.top * H;
-      const altoRecuadro = (RECUADRO.bottom - RECUADRO.top) * H;
+      const xIzq = RECUADRO.left * W + (RECUADRO.right - RECUADRO.left) * W * 0.06;
+      const anchoDisponible = (RECUADRO.right - RECUADRO.left) * W * 0.88;
 
       dibujarDatosGenerales(ctx, W, H);
 
-      // Fondo sólido (mismo tono crema del recuadro) para tapar el texto
-      // de ejemplo de la plantilla antes de escribir el de verdad encima.
-      // Igual que en dibujarDatosGenerales: metido hacia dentro y con
-      // esquinas redondeadas para no sobresalir del recuadro real.
-      const margenFamilia = W * 0.006;
-      const anchoRecuadro = (RECUADRO.right - RECUADRO.left) * W;
-      ctx.fillStyle = "#DEC8B0";
-      dibujarRectRedondeado(
-        ctx,
-        RECUADRO.left * W + margenFamilia,
-        yTop + margenFamilia,
-        anchoRecuadro - margenFamilia * 2,
-        altoRecuadro - margenFamilia * 2,
-        W * 0.012
-      );
-
-      ctx.fillStyle = "#1F3A2E";
-
       const fuenteNombres = `bold ${Math.round(W * 0.031)}px 'Fraunces', serif`;
       const fuenteDetalle = `bold ${Math.round(W * 0.037)}px 'Fraunces', serif`;
+      const tamNombres = Math.round(W * 0.031);
+      const tamDetalle = Math.round(W * 0.037);
       const lineHeightNombres = Math.round(W * 0.035);
       const lineHeightDetalle = Math.round(W * 0.041);
       const espacioEntreBloques = Math.round(W * 0.02);
@@ -230,6 +212,7 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
       bloques.push({
         lineas: partirLineas(ctx, `${apellidoFamilia}: ${listaConY(nombresMiembros)}`, anchoDisponible),
         font: fuenteNombres,
+        fontSizePx: tamNombres,
         lineHeight: lineHeightNombres,
       });
       if (mesaTexto) {
@@ -237,19 +220,18 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
         bloques.push({
           lineas: partirLineas(ctx, mesaTexto, anchoDisponible),
           font: fuenteDetalle,
+          fontSizePx: tamDetalle,
           lineHeight: lineHeightDetalle,
         });
       }
 
-      // Posición fija según la cuadrícula de calibración: y=0.85 del alto
-      // total es directamente donde se apoya la línea de base del texto
-      // (sin ningún desplazamiento añadido, para que coincida con lo que
-      // se lee en la cuadrícula).
-      let cursorY = 0.85 * H;
+      // Posición fija según la cuadrícula de calibración: ahí es donde
+      // caen las líneas de ejemplo "[Familia]" / "[Mesa]" de la plantilla.
+      let cursorY = 0.855 * H;
 
       bloques.forEach((b) => {
         ctx.font = b.font;
-        dibujarParrafoJustificado(ctx, b.lineas, xIzq, cursorY, anchoDisponible, b.lineHeight);
+        dibujarParrafoConSombra(ctx, b.lineas, xIzq, cursorY, anchoDisponible, b.lineHeight, b.fontSizePx, "#DEC8B0", "#1F3A2E");
         cursorY += b.lineas.length * b.lineHeight + espacioEntreBloques;
       });
 
