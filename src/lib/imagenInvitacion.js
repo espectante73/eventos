@@ -144,12 +144,12 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
       yFechaZonaFin: 0.521,
       yFechaValor: 0.487,
       yDiaSemanaValor: 0.508,
-      yHoraZonaInicio: 0.555,
-      yHoraZonaFin: 0.6,
-      yHoraValor: 0.573,
+      yHoraZonaInicio: 0.522,
+      yHoraZonaFin: 0.567,
+      yHoraValor: 0.54,
       yLugarZonaInicio: 0.622,
       yLugarZonaFin: 0.693,
-      yLugarValor: 0.639,
+      yLugarValor: 0.64,
     };
 
     const dibujarDatosGenerales = (ctx, W, H) => {
