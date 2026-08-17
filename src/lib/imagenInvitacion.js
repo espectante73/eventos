@@ -90,23 +90,21 @@ export function dibujarCuadriculaCalibracion(ctx, W, H) {
 
 export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaTexto, mostrarCuadricula = false) {
   return new Promise((resolve) => {
-    // Recuadro recalibrado con precisión sobre la plantilla real, con margen
-    // interior comprobado (izquierda, derecha, arriba, abajo como fracción
-    // del ancho/alto de la imagen)
-    const RECUADRO = { left: 0.505, right: 0.96, top: 0.83, bottom: 0.915 };
+    // Recuadro de familia/mesa (abajo a la derecha). Recalibrado 2026-08-17
+    // midiendo con cuadrícula de coordenadas sobre el archivo real
+    // modelo-invitacion-editable.png (no una captura de pantalla).
+    const RECUADRO = { left: 0.505, right: 0.965, top: 0.797, bottom: 0.925 };
 
-    // Recuadro grande de la izquierda (fecha/hora/lugar). Recalibrado
-    // 2026-08-12 para la plantilla nueva del usuario -- a diferencia de
-    // la plantilla anterior (que dejaba este hueco en blanco, con solo
-    // icono+etiqueta impresos), esta plantilla nueva trae la propia
-    // fecha/hora/lugar YA dibujados dentro del diseño. El usuario decidió
-    // mantener estos datos en vivo (no quemados en la imagen, por si
-    // cambian) en vez de quitarlos -- así que ahora se cubre esa zona con
-    // un fondo marfil ANTES de escribir, para que la versión en vivo
-    // prevalezca sobre lo que ya trae la plantilla (mismo criterio que ya
-    // usa el recuadro de familia/mesa más abajo, que también tapa su
-    // propio hueco antes de escribir).
-    const RECUADRO_DATOS = { left: 0.05, right: 0.55, top: 0.40, bottom: 0.70 };
+    // Recuadro grande de la izquierda (fecha/hora/lugar). La plantilla
+    // trae la propia fecha/hora/lugar YA dibujados dentro del diseño, pero
+    // el usuario decidió mantener estos datos en vivo (no quemados en la
+    // imagen, por si cambian) en vez de quitarlos -- así que se cubre esa
+    // zona con un fondo marfil ANTES de escribir, para que la versión en
+    // vivo prevalezca sobre lo que ya trae la plantilla (mismo criterio
+    // que usa el recuadro de familia/mesa de arriba). Recalibrado
+    // 2026-08-17 igual que el de arriba, con cuadrícula sobre el archivo
+    // real.
+    const RECUADRO_DATOS = { left: 0.045, right: 0.445, top: 0.415, bottom: 0.697 };
 
     const dibujarDatosGenerales = (ctx, W, H) => {
       const x0 = RECUADRO_DATOS.left * W;
