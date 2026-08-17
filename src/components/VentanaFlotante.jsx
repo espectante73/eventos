@@ -55,7 +55,7 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
             <X size={18} />
           </button>
         </div>
-        <div className="p-4" style={{ flex: 1, overflowY: "auto" }}>
+        <div className="p-4" style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain" }}>
           {children}
         </div>
         {acciones && (
@@ -220,6 +220,12 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
         top: pos.top,
         left: pos.left,
         zIndex,
+        // Sin esto, un dedo arrastrando sobre el cuerpo de la ventana (no
+        // la cabecera) podía "encadenar" el gesto de scroll hacia lo que
+        // hay detrás en cuanto el contenido interno no tenía más recorrido
+        // que desplazar -- se sentía como "arrastro la ventana y se mueve
+        // otra cosa". `contain` corta esa cadena aquí mismo.
+        overscrollBehavior: "contain",
       }}
     >
       <div
