@@ -28,9 +28,21 @@ export function VentanaProgreso({ data, onCerrar }) {
           ProgresoBar grande de dos líneas -- ahorra espacio en pantalla.
           `claro` en las 3 porque van sobre fondo oscuro. A petición del
           usuario, 2026-08-17. */}
+      {/* Margen negativo en 3 lados para "salirse" del padding del cuerpo
+          de la ventana (p-4 = 16px) y dejar solo un margen pequeño (6px)
+          hasta el borde real de la ventana, en vez del hueco grande de
+          antes -- a petición del usuario. Abajo se queda igual (mb-3):
+          ahí el margen es hacia la siguiente sección, no hacia el borde
+          de la ventana. */}
       <div
         className="rounded p-3 mb-3"
-        style={{ background: "linear-gradient(180deg, #1F3A2E 0%, #24402F 100%)", border: `1px solid ${C.gold}` }}
+        style={{
+          background: "linear-gradient(180deg, #1F3A2E 0%, #24402F 100%)",
+          border: `1px solid ${C.gold}`,
+          marginTop: -10,
+          marginLeft: -10,
+          marginRight: -10,
+        }}
       >
         <BarraCompacta
           icono={ClipboardList}
