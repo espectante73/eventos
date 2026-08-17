@@ -1,16 +1,31 @@
 // Ventana "Progreso de recopilación": barras de progreso generales, y
-// tres barras compactas por colaborador (datos / pagos / invitaciones
-// enviadas) — icono en vez de texto y todo en la misma línea que la
-// barra (a petición del usuario, 2026-08-12: así caben más
-// colaboradores de un vistazo, con solo un margen mínimo entre las tres
-// porque cada una ya se distingue por su color). Y de canciones
-// registradas. Extraída de VistaAnfitrion.jsx en el reparto del
+// tres recuadros compactos por colaborador (datos / pagos / invitaciones
+// enviadas) — mismo formato que las tarjetas del propio formulario del
+// colaborador (VistaColaborador.jsx: grid-cols-3 de recuadros redondeados
+// con la etiqueta arriba y el número debajo), a petición del usuario
+// (2026-08-17), en vez de las 3 barras apiladas que había antes. Y de
+// canciones registradas. Extraída de VistaAnfitrion.jsx en el reparto del
 // 2026-08-08 (Fase 4, Ronda 1).
-import { ClipboardList, Euro, Mail } from "lucide-react";
 import { C } from "../../theme";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
-import { ProgresoBar, BarraCompacta } from "../../components/Widgets";
+import { ProgresoBar } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
+
+// Un recuadro de la fila de 3 -- mismo estilo que "No pagados"/"Pagados"
+// en la tarjeta del colaborador (rounded, p-2, texto centrado, etiqueta
+// arriba en gris y número debajo en Fraunces, color propio por métrica).
+function RecuadroProgreso({ etiqueta, completado, total, color }) {
+  return (
+    <div className="rounded p-2 text-center" style={{ background: C.paperDark }}>
+      <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+        {etiqueta}
+      </div>
+      <div style={{ fontFamily: "'Fraunces', serif", color, fontWeight: 700, fontSize: 15 }}>
+        {completado}/{total}
+      </div>
+    </div>
+  );
+}
 
 export function VentanaProgreso({ data, onCerrar }) {
   const { invitados, colaboradores, ordenFamiliares } = data;
@@ -49,9 +64,11 @@ export function VentanaProgreso({ data, onCerrar }) {
               >
                 {c.nombre}
               </div>
-              <BarraCompacta icono={ClipboardList} completado={completosDatos} total={suyos.length} color={C.ink} />
-              <BarraCompacta icono={Euro} completado={pagados} total={suyos.length} color={C.gold} />
-              <BarraCompacta icono={Mail} completado={familiasConInvitacion} total={familias.length} color={C.wax} />
+              <div className="grid grid-cols-3 gap-1.5">
+                <RecuadroProgreso etiqueta="Datos" completado={completosDatos} total={suyos.length} color={C.ink} />
+                <RecuadroProgreso etiqueta="Pagos" completado={pagados} total={suyos.length} color={C.gold} />
+                <RecuadroProgreso etiqueta="Invit." completado={familiasConInvitacion} total={familias.length} color={C.wax} />
+              </div>
             </div>
           );
         })}
