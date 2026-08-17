@@ -95,58 +95,68 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
     // del ancho/alto de la imagen)
     const RECUADRO = { left: 0.505, right: 0.96, top: 0.83, bottom: 0.915 };
 
-    // Recuadro grande de la izquierda (FECHA / HORA / LUGAR con su icono ya
-    // impreso en la plantilla) — el valor se escribe en el hueco a la
-    // derecha de cada icono, sin tapar nada (ahí no hay texto de ejemplo).
-    const RECUADRO_DATOS = { left: 0.065, right: 0.49, top: 0.345, bottom: 0.65 };
+    // Recuadro grande de la izquierda (fecha/hora/lugar). Recalibrado
+    // 2026-08-12 para la plantilla nueva del usuario -- a diferencia de
+    // la plantilla anterior (que dejaba este hueco en blanco, con solo
+    // icono+etiqueta impresos), esta plantilla nueva trae la propia
+    // fecha/hora/lugar YA dibujados dentro del diseño. El usuario decidió
+    // mantener estos datos en vivo (no quemados en la imagen, por si
+    // cambian) en vez de quitarlos -- así que ahora se cubre esa zona con
+    // un fondo marfil ANTES de escribir, para que la versión en vivo
+    // prevalezca sobre lo que ya trae la plantilla (mismo criterio que ya
+    // usa el recuadro de familia/mesa más abajo, que también tapa su
+    // propio hueco antes de escribir).
+    const RECUADRO_DATOS = { left: 0.05, right: 0.55, top: 0.40, bottom: 0.70 };
 
     const dibujarDatosGenerales = (ctx, W, H) => {
-      // Los valores van DEBAJO de su etiqueta (no al lado), usando casi
-      // todo el ancho del recuadro — así la letra puede ser más grande.
-      const xValor = RECUADRO_DATOS.left * W + (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.27;
-      const anchoValor = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W * 0.68;
-      const altoDatos = (RECUADRO_DATOS.bottom - RECUADRO_DATOS.top) * H;
-      // Pequeño ajuste fino en píxeles reales (el canvas tiene exactamente
-      // el tamaño de la imagen, así que -1/-2 aquí son 1/2 píxeles de verdad)
-      // para ganar algo de aire y poder agrandar la letra de lugar.
-      const yFecha = RECUADRO_DATOS.top * H + altoDatos * (1 / 6) - 1;
-      const yHora = RECUADRO_DATOS.top * H + altoDatos * (3 / 6) - 3;
-      const yLugar = RECUADRO_DATOS.top * H + altoDatos * (5 / 6) - 3;
-      // La distancia entre el centro de una fila y la siguiente es
-      // altoDatos/3 — hay que bajar bastante menos que eso, si no el
-      // valor cae encima de la etiqueta de abajo.
-      const bajarDesdeEtiqueta = altoDatos * 0.15;
+      const x0 = RECUADRO_DATOS.left * W;
+      const y0 = RECUADRO_DATOS.top * H;
+      const anchoBox = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W;
+      const altoBox = (RECUADRO_DATOS.bottom - RECUADRO_DATOS.top) * H;
 
-      ctx.fillStyle = "#1F3A2E";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#F5F0E6"; // marfil
+      ctx.fillRect(x0, y0, anchoBox, altoBox);
+
+      const xEtiqueta = x0 + anchoBox * 0.06;
+      const anchoValor = anchoBox * 0.88;
 
       const fechaValor = evento.fecha ? formatearFecha(evento.fecha) : "";
       const horaValor = evento.hora ? `${evento.hora}h` : "";
       const lugarValor = [evento.lugar, evento.direccion].filter(Boolean).join(", ").trim();
 
-      ctx.font = `bold ${Math.round(W * 0.028)}px 'Fraunces', serif`;
-      if (fechaValor) ctx.fillText(fechaValor, xValor, yFecha + bajarDesdeEtiqueta);
-      // Posición fija según la cuadrícula de calibración (y=0.53 del alto
-      // total), sin acumular más offsets sobre la fórmula anterior.
-      if (horaValor) ctx.fillText(horaValor, xValor, 0.53 * H);
-
-      if (lugarValor) {
-        // La dirección suele ser larga: letra más pequeña, también debajo
-        // de su etiqueta y bajando desde ahí línea a línea.
-        ctx.font = `bold ${Math.round(W * 0.023) + 2}px 'Fraunces', serif`;
-        const lineHeightLugar = Math.round(W * 0.028) + 2;
-        // Aquí no se baja tanto: el hueco hasta el borde inferior del
-        // recuadro es pequeño y hay que dejar sitio para varias líneas.
-        const lineasLugar = partirLineas(ctx, lugarValor, anchoValor);
-        lineasLugar.forEach((linea, i) =>
-          ctx.fillText(linea, xValor, yLugar + bajarDesdeEtiqueta * 0.3 + i * lineHeightLugar)
-        );
-      }
-
-      // El resto del dibujo (nombre/mesa) asume la base de línea por
-      // defecto — se restaura para no descuadrarlo.
+      ctx.textAlign = "left";
       ctx.textBaseline = "alphabetic";
+
+      // Al tapar también la etiqueta/icono que traía la plantilla, ahora
+      // hacen falta etiquetas propias (antes no se dibujaban -- se
+      // apoyaban en el icono ya impreso de la plantilla vieja).
+      let y = y0 + altoBox * 0.14;
+      const dibujarCampo = (etiqueta, valor, esDireccion) => {
+        if (!valor) return;
+        ctx.font = `bold ${Math.round(W * 0.013)}px 'Inter', sans-serif`;
+        ctx.fillStyle = "#B08D57"; // C.gold
+        ctx.fillText(etiqueta.toUpperCase(), xEtiqueta, y);
+        y += altoBox * 0.055;
+
+        ctx.fillStyle = "#1F3A2E"; // C.ink
+        if (esDireccion) {
+          ctx.font = `bold ${Math.round(W * 0.02)}px 'Fraunces', serif`;
+          const lineHeight = Math.round(W * 0.025) + 4;
+          partirLineas(ctx, valor, anchoValor).forEach((linea) => {
+            ctx.fillText(linea, xEtiqueta, y);
+            y += lineHeight;
+          });
+        } else {
+          ctx.font = `bold ${Math.round(W * 0.028)}px 'Fraunces', serif`;
+          ctx.fillText(valor, xEtiqueta, y);
+          y += altoBox * 0.09;
+        }
+        y += altoBox * 0.06;
+      };
+
+      dibujarCampo("Fecha", fechaValor, false);
+      dibujarCampo("Hora", horaValor, false);
+      dibujarCampo("Lugar", lugarValor, true);
     };
 
     const dibujarTextoYResolver = (canvas, ctx) => {
