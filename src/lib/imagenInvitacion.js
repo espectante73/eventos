@@ -239,7 +239,6 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
           const tamDia = tamFecha;
 
           if (fechaValor || diaSemanaValor) {
-            dibujarIcono(ctx, W, H, ICONOS.fecha);
             tapZona(DATOS.yFechaZonaInicio, DATOS.yFechaZonaFin);
             ctx.fillStyle = "#1F3A2E";
             if (fechaValor) {
@@ -250,29 +249,37 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
               ctx.font = `italic ${tamDia}px 'Fraunces', serif`;
               ctx.fillText(diaSemanaValor, x, DATOS.yDiaSemanaValor * H);
             }
+            // El icono se dibuja el último, encima del sombreado de texto,
+            // para quedar siempre en primer plano (antes el sombreado podía
+            // pintar por encima de una esquina del icono).
+            dibujarIcono(ctx, W, H, ICONOS.fecha);
           }
 
           if (horaValor) {
-            dibujarIcono(ctx, W, H, ICONOS.hora);
             tapZona(DATOS.yHoraZonaInicio, DATOS.yHoraZonaFin);
             ctx.font = `bold ${tamFecha}px 'Fraunces', serif`;
             ctx.fillStyle = "#1F3A2E";
             ctx.fillText(horaValor, x, DATOS.yHoraValor * H);
+            dibujarIcono(ctx, W, H, ICONOS.hora);
           }
 
           if (lineasLugar.length > 0) {
-            dibujarIcono(ctx, W, H, ICONOS.lugar);
             tapZona(DATOS.yLugarZonaInicio, DATOS.yLugarZonaFin);
             const tamLugar = Math.round(W * 0.022);
-            ctx.font = `bold ${tamLugar}px 'Fraunces', serif`;
+            // El nombre del lugar (primera línea, p.ej. "Rte. El Rincón")
+            // va más grande que el resto de la dirección -- pedido
+            // explícito del usuario.
+            const tamLugarNombre = Math.round(W * 0.027);
             ctx.fillStyle = "#1F3A2E";
             const lineHeight = Math.round(H * 0.024);
             const xLugar = x - 3;
             let y = DATOS.yLugarValor * H + 3;
-            lineasLugar.forEach((linea) => {
+            lineasLugar.forEach((linea, i) => {
+              ctx.font = `bold ${i === 0 ? tamLugarNombre : tamLugar}px 'Fraunces', serif`;
               ctx.fillText(linea, xLugar, y);
               y += lineHeight;
             });
+            dibujarIcono(ctx, W, H, ICONOS.lugar);
           }
         };
 
