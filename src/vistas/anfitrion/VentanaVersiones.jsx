@@ -65,6 +65,11 @@ const HISTORIAL_VERSIONES = [
       "Solidez de fondo: terminado el reparto del interior de VistaAnfitrion — cada ventana (Mesas, Avisos, Configuración...) vive ya en su propio fichero.",
       "Lista de invitados pasa a ser una ventana flotante más (movible, cerrable, accesible desde el desplegable de arriba), igual que el resto — antes era la única sección fija en la página. Sus filtros y la cabecera de columnas se quedan fijos arriba al hacer scroll por la lista, para no perderlos de vista con listas largas.",
       "Corrige que cerrar la ventana de Lista de invitados podía dejar la pantalla en un bucle de renderizado (la ventana se abría y cerraba sola sin parar) por un efecto que se reiniciaba con cada cierre en vez de una sola vez.",
+      "Invitación: fecha/hora/lugar y familia/mesa recalibradas sobre la plantilla real (coordenadas exactas, sombreado ajustado a cada línea de texto en vez de al recuadro entero), con los mismos iconos de calendario/reloj/ubicación que usa la propia app en vez de los que traía la plantilla.",
+      "Portada: los 3 recuadros de estadísticas (Lista global, Tentativa, Confirmados) sobresalían del ancho de la imagen en pantallas anchas — ahora comparten el mismo ancho máximo y quedan pegados a la franja verde de debajo.",
+      "Progreso de recopilación: cada colaborador pasa a ser un solo recuadro compacto (antes 3 barras sueltas), y las barras generales (datos, cobro, canciones) se juntan en un recuadro verde/dorado único con formato icono+barra+porcentaje en una línea.",
+      "Corrige que arrastrar una ventana flotante tocando su cuerpo (no la cabecera) podía mover lo que hay detrás en móvil, por un encadenamiento de scroll del navegador.",
+      "Limpieza de fondo: unos 80 imports y variables sin usar (sobras del reparto de App.jsx en ventanas separadas) detectados y eliminados.",
     ],
   },
 ];
