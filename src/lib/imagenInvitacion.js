@@ -153,7 +153,7 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
     };
 
     const dibujarDatosGenerales = (ctx, W, H) => {
-      const x = DATOS.x * W;
+      const x = DATOS.x * W - 4;
       const anchoTexto = DATOS.anchoTexto * W;
       const padX = W * 0.032;
 
