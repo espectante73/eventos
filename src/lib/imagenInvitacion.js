@@ -207,9 +207,10 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
         ctx.font = `bold ${tamLugar}px 'Fraunces', serif`;
         ctx.fillStyle = "#1F3A2E";
         const lineHeight = Math.round(H * 0.024);
+        const xLugar = x - 3;
         let y = DATOS.yLugarValor * H + 3;
         lineasLugar.forEach((linea) => {
-          ctx.fillText(linea, x, y);
+          ctx.fillText(linea, xLugar, y);
           y += lineHeight;
         });
       }
