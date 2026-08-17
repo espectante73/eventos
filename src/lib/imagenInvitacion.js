@@ -160,7 +160,15 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
       const fechaValor = evento.fecha ? formatearFecha(evento.fecha) : "";
       const diaSemanaValor = evento.fecha ? formatearDiaSemana(evento.fecha) : "";
       const horaValor = evento.hora ? `${evento.hora} h` : "";
-      const lugarValor = [evento.lugar, evento.direccion].filter(Boolean).join(", ").trim();
+      // Líneas explícitas en vez de partir por ancho: 1) nombre del lugar,
+      // 2) cada tramo de la dirección separado por coma en su propia línea
+      // (p.ej. "Ctra. el Amparo 190" / "38430 Icod de los Vinos") -- así
+      // coincide con el salto de línea real de la dirección en vez de con
+      // donde el texto justo deja de caber en el ancho disponible.
+      const lineasLugar = [
+        evento.lugar,
+        ...(evento.direccion ? evento.direccion.split(",").map((s) => s.trim()) : []),
+      ].filter(Boolean);
 
       ctx.textAlign = "left";
       ctx.textBaseline = "alphabetic";
@@ -193,14 +201,14 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
         ctx.fillText(horaValor, x, DATOS.yHoraValor * H);
       }
 
-      if (lugarValor) {
+      if (lineasLugar.length > 0) {
         tapZona(DATOS.yLugarZonaInicio, DATOS.yLugarZonaFin);
-        const tamLugar = Math.round(W * 0.02);
+        const tamLugar = Math.round(W * 0.022);
         ctx.font = `bold ${tamLugar}px 'Fraunces', serif`;
         ctx.fillStyle = "#1F3A2E";
         const lineHeight = Math.round(H * 0.024);
-        let y = DATOS.yLugarValor * H;
-        partirLineas(ctx, lugarValor, anchoTexto).forEach((linea) => {
+        let y = DATOS.yLugarValor * H + 3;
+        lineasLugar.forEach((linea) => {
           ctx.fillText(linea, x, y);
           y += lineHeight;
         });
