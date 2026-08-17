@@ -1,31 +1,18 @@
-// Ventana "Progreso de recopilación": barras de progreso generales, y
-// tres recuadros compactos por colaborador (datos / pagos / invitaciones
-// enviadas) — mismo formato que las tarjetas del propio formulario del
-// colaborador (VistaColaborador.jsx: grid-cols-3 de recuadros redondeados
-// con la etiqueta arriba y el número debajo), a petición del usuario
-// (2026-08-17), en vez de las 3 barras apiladas que había antes. Y de
-// canciones registradas. Extraída de VistaAnfitrion.jsx en el reparto del
-// 2026-08-08 (Fase 4, Ronda 1).
+// Ventana "Progreso de recopilación": barras de progreso generales, y un
+// recuadro compacto POR COLABORADOR (no uno por métrica) con sus 3 barras
+// dentro (datos / pagos / invitaciones enviadas) -- mismo recuadro que ya
+// usa el propio formulario del colaborador para su resumen (el 6º
+// recuadro de VistaColaborador.jsx: rounded, fondo C.paperDark, las 3
+// BarraCompacta apiladas dentro), alineados 3 por fila -- a petición del
+// usuario (2026-08-17; primer intento puso 3 recuadros por colaborador,
+// uno por métrica, que no era la idea). Y de canciones registradas.
+// Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4,
+// Ronda 1).
+import { ClipboardList, Euro, Mail } from "lucide-react";
 import { C } from "../../theme";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
-import { ProgresoBar } from "../../components/Widgets";
+import { ProgresoBar, BarraCompacta } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
-
-// Un recuadro de la fila de 3 -- mismo estilo que "No pagados"/"Pagados"
-// en la tarjeta del colaborador (rounded, p-2, texto centrado, etiqueta
-// arriba en gris y número debajo en Fraunces, color propio por métrica).
-function RecuadroProgreso({ etiqueta, completado, total, color }) {
-  return (
-    <div className="rounded p-2 text-center" style={{ background: C.paperDark }}>
-      <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-        {etiqueta}
-      </div>
-      <div style={{ fontFamily: "'Fraunces', serif", color, fontWeight: 700, fontSize: 15 }}>
-        {completado}/{total}
-      </div>
-    </div>
-  );
-}
 
 export function VentanaProgreso({ data, onCerrar }) {
   const { invitados, colaboradores, ordenFamiliares } = data;
@@ -39,7 +26,7 @@ export function VentanaProgreso({ data, onCerrar }) {
         total={confirmadosCount}
         color={C.wax}
       />
-      <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+      <div className="grid grid-cols-3 gap-1.5">
         {colaboradores.map((c) => {
           const suyos = invitados.filter(
             (g) => resolverColaborador(g, colaboradores)?.id === c.id && g.confirmado
@@ -57,18 +44,17 @@ export function VentanaProgreso({ data, onCerrar }) {
             (f) => ordenFamiliares[f]?.invitacionEnviada
           ).length;
           return (
-            <div key={c.id}>
+            <div key={c.id} className="rounded p-2" style={{ background: C.paperDark }}>
               <div
-                className="text-sm mb-1"
+                className="text-xs mb-1 truncate"
                 style={{ color: C.ink, fontWeight: 600, fontFamily: "'Fraunces', serif" }}
+                title={c.nombre}
               >
                 {c.nombre}
               </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                <RecuadroProgreso etiqueta="Datos" completado={completosDatos} total={suyos.length} color={C.ink} />
-                <RecuadroProgreso etiqueta="Pagos" completado={pagados} total={suyos.length} color={C.gold} />
-                <RecuadroProgreso etiqueta="Invit." completado={familiasConInvitacion} total={familias.length} color={C.wax} />
-              </div>
+              <BarraCompacta icono={ClipboardList} completado={completosDatos} total={suyos.length} color={C.ink} />
+              <BarraCompacta icono={Euro} completado={pagados} total={suyos.length} color={C.gold} />
+              <BarraCompacta icono={Mail} completado={familiasConInvitacion} total={familias.length} color={C.wax} />
             </div>
           );
         })}
