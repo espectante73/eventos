@@ -189,11 +189,11 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
         // (no al tamaño del icono viejo que tapa), así que cabe con margen
         // dentro del recuadro en vez de sobresalir.
         const ICONOS = {
-          x: 0.065,
+          x: 0.08,
           tam: 0.06,
-          fecha: { y: 0.457, img: iconoFecha },
-          hora: { y: 0.543, img: iconoHora },
-          lugar: { y: 0.611, img: iconoLugar },
+          fecha: { y: 0.465, img: iconoFecha },
+          hora: { y: 0.56, img: iconoHora },
+          lugar: { y: 0.635, img: iconoLugar },
         };
 
         const dibujarIcono = (ctx, W, H, def) => {
