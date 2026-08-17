@@ -73,7 +73,12 @@ export function Portada({
   const imagenPortada = form.imagen;
 
   return (
-    <div className="mx-auto mb-8" style={{ maxWidth: ANCHO_MAXIMO_PORTADA }}>
+    // Sin mb-8: el margen hacia lo que viene después (la franja de
+    // estadísticas en VistaAnfitrion.jsx) se controla ahí, con un
+    // marginTop propio -- con mb-8 aquí, el colapso de márgenes entre
+    // hermanos hacía que "ganara" el mayor de los dos (32px) sin importar
+    // lo bajo que se pusiera el marginTop de la franja de abajo.
+    <div className="mx-auto" style={{ maxWidth: ANCHO_MAXIMO_PORTADA }}>
       <div className="relative rounded-t-lg overflow-hidden">
         {imagenPortada ? (
           <img src={imagenPortada} alt="" className="w-full block" />

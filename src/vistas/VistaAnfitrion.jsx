@@ -303,7 +303,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
           de space-y-8, sin tocar el ritmo del resto de secciones. */}
       <section
         className="grid grid-cols-3 gap-3 mx-auto"
-        style={{ marginTop: 4, maxWidth: ANCHO_MAXIMO_PORTADA }}
+        style={{ marginTop: 6, maxWidth: ANCHO_MAXIMO_PORTADA }}
       >
         {[
           { label: "Lista global", value: total },
