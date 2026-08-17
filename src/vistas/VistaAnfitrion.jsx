@@ -52,7 +52,7 @@ import { VERSION_APP } from "../constants";
 import { Seal, Stamp, ProgresoBar, EncabezadoOrdenable, GrupoFamiliarInput } from "../components/Widgets";
 import { ModalFlotante } from "../components/VentanaFlotante";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
-import { Portada } from "../components/Portada";
+import { Portada, ANCHO_MAXIMO_PORTADA } from "../components/Portada";
 import { MesaRedonda, MesaPlano } from "../components/Mesas";
 import { BuscadorInvitado } from "../components/BuscadorInvitado";
 import { uid } from "../lib/id";
@@ -293,12 +293,18 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         onCerrarSesion={onCerrarSesion}
       />
 
-      {/* Resumen -- margen mínimo con el verde de la Portada (no el
-          espaciado habitual de "space-y-8" del contenedor, que aquí se
+      {/* Resumen -- mismo ancho máximo y centrado que la Portada (antes no
+          tenía tope de ancho y en pantallas anchas sobresalía por los
+          lados de la imagen/franja verde de arriba, a las que debe
+          quedar alineado). Margen mínimo con el verde de la Portada (no
+          el espaciado habitual de "space-y-8" del contenedor, que aquí se
           nota como un hueco de más justo debajo de la franja de datos).
           El style inline (marginTop) gana por especificidad a la regla
           de space-y-8, sin tocar el ritmo del resto de secciones. */}
-      <section className="grid grid-cols-3 gap-3" style={{ marginTop: 12 }}>
+      <section
+        className="grid grid-cols-3 gap-3 mx-auto"
+        style={{ marginTop: 4, maxWidth: ANCHO_MAXIMO_PORTADA }}
+      >
         {[
           { label: "Lista global", value: total },
           { label: "Tentativa", value: tentativaCount },
