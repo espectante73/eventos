@@ -4,6 +4,26 @@
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { formatearFecha, listaConY } from "./formato";
 
+// Los recuadros de la plantilla son rectángulos de esquinas redondeadas
+// con un borde dorado fino. Un fillRect normal (esquinas a 90°) sobresale
+// por las cuatro esquinas del recuadro real, invadiendo el fondo de al
+// lado -- por eso el marfil se dibuja con esta forma en vez de un
+// rectángulo liso.
+function dibujarRectRedondeado(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+  ctx.fill();
+}
+
 export function partirLineas(ctx, texto, maxWidth) {
   const palabras = texto.split(" ");
   let linea = "";
@@ -112,8 +132,19 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
       const anchoBox = (RECUADRO_DATOS.right - RECUADRO_DATOS.left) * W;
       const altoBox = (RECUADRO_DATOS.bottom - RECUADRO_DATOS.top) * H;
 
+      // Metido un pelín hacia dentro del recuadro real de la plantilla para
+      // no tapar su borde dorado, y con esquinas redondeadas (medidas sobre
+      // la plantilla real) para no sobresalir en las cuatro esquinas.
+      const margen = W * 0.006;
       ctx.fillStyle = "#F5F0E6"; // marfil
-      ctx.fillRect(x0, y0, anchoBox, altoBox);
+      dibujarRectRedondeado(
+        ctx,
+        x0 + margen,
+        y0 + margen,
+        anchoBox - margen * 2,
+        altoBox - margen * 2,
+        W * 0.012
+      );
 
       const xEtiqueta = x0 + anchoBox * 0.06;
       const anchoValor = anchoBox * 0.88;
@@ -169,8 +200,19 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
 
       // Fondo sólido (mismo tono crema del recuadro) para tapar el texto
       // de ejemplo de la plantilla antes de escribir el de verdad encima.
+      // Igual que en dibujarDatosGenerales: metido hacia dentro y con
+      // esquinas redondeadas para no sobresalir del recuadro real.
+      const margenFamilia = W * 0.006;
+      const anchoRecuadro = (RECUADRO.right - RECUADRO.left) * W;
       ctx.fillStyle = "#DEC8B0";
-      ctx.fillRect(RECUADRO.left * W, yTop, (RECUADRO.right - RECUADRO.left) * W, altoRecuadro);
+      dibujarRectRedondeado(
+        ctx,
+        RECUADRO.left * W + margenFamilia,
+        yTop + margenFamilia,
+        anchoRecuadro - margenFamilia * 2,
+        altoRecuadro - margenFamilia * 2,
+        W * 0.012
+      );
 
       ctx.fillStyle = "#1F3A2E";
 
