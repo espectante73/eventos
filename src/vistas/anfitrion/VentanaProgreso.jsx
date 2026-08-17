@@ -31,11 +31,11 @@ export function VentanaProgreso({ data, onCerrar }) {
       {/* Margen negativo en 3 lados para "salirse" del padding del cuerpo
           de la ventana (p-4 = 16px) y dejar solo un margen pequeño (2px)
           hasta el borde real de la ventana, en vez del hueco grande de
-          antes -- a petición del usuario. Abajo se queda igual (mb-3):
-          ahí el margen es hacia la siguiente sección, no hacia el borde
-          de la ventana. */}
+          antes -- a petición del usuario. Abajo también se sube (mb-1 en
+          vez de mb-3): la línea separadora de la fila de colaboradores
+          (borderTop del grid de más abajo) queda más pegada al recuadro. */}
       <div
-        className="rounded p-3 mb-3"
+        className="rounded p-3 mb-1"
         style={{
           background: "linear-gradient(180deg, #1F3A2E 0%, #24402F 100%)",
           border: `1px solid ${C.gold}`,
