@@ -178,7 +178,7 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
       const bloques = [];
       ctx.font = fuenteNombres;
       bloques.push({
-        lineas: partirLineas(ctx, `${apellidoFamilia}; ${listaConY(nombresMiembros)}`, anchoDisponible),
+        lineas: partirLineas(ctx, `${apellidoFamilia}: ${listaConY(nombresMiembros)}`, anchoDisponible),
         font: fuenteNombres,
         lineHeight: lineHeightNombres,
       });
