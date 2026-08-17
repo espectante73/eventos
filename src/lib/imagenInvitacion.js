@@ -260,7 +260,7 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
 
       bloques.forEach((b) => {
         ctx.font = b.font;
-        dibujarParrafoConSombra(ctx, b.lineas, xIzq, cursorY, anchoDisponible, b.lineHeight, b.fontSizePx, "#DEC8B0", "#1F3A2E");
+        dibujarParrafoConSombra(ctx, b.lineas, xIzq, cursorY, anchoDisponible, b.lineHeight, b.fontSizePx, "#F5F0E6", "#1F3A2E");
         cursorY += b.lineas.length * b.lineHeight + espacioEntreBloques;
       });
 
