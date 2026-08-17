@@ -173,8 +173,8 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
           yHoraZonaFin: 0.607,
           yHoraValor: 0.58,
           yLugarZonaInicio: 0.64,
-          yLugarZonaFin: 0.693,
-          yLugarValor: 0.64,
+          yLugarZonaFin: 0.7,
+          yLugarValor: 0.65,
         };
 
         // Posición e icono de cada fila, en columna con el texto. Centro Y
