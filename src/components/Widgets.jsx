@@ -53,15 +53,26 @@ export function Stamp({ children, color = C.ink }) {
   );
 }
 
-export function ProgresoBar({ label, completado, total, color }) {
+// `icono` (opcional): sustituye el texto de `label` por un icono, para las
+// barras que ya tienen su equivalente en icono en otro sitio de la app
+// (p.ej. los recuadros de colaborador) — más intuitivo que repetir el
+// mismo texto en dos formatos distintos. Si no se pasa, se comporta
+// exactamente igual que antes (label en texto).
+export function ProgresoBar({ label, icono: Icono, completado, total, color }) {
   const pct = total > 0 ? Math.round((completado / total) * 100) : 0;
   return (
     <div className="mb-3">
       <div
-        className="flex justify-between text-xs mb-1"
+        className="flex justify-between items-center text-xs mb-1"
         style={{ fontFamily: "'IBM Plex Mono', monospace", color: C.charcoal }}
       >
-        <span>{label}</span>
+        {Icono ? (
+          <span title={label} style={{ display: "flex" }}>
+            <Icono size={14} style={{ color: color || C.ink }} />
+          </span>
+        ) : (
+          <span>{label}</span>
+        )}
         <span>
           {completado}/{total} · {pct}%
         </span>

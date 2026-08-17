@@ -8,7 +8,7 @@
 // uno por métrica, que no era la idea). Y de canciones registradas.
 // Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4,
 // Ronda 1).
-import { ClipboardList, Euro, Mail } from "lucide-react";
+import { ClipboardList, Euro, Mail, Music } from "lucide-react";
 import { C } from "../../theme";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
 import { ProgresoBar, BarraCompacta } from "../../components/Widgets";
@@ -20,13 +20,27 @@ export function VentanaProgreso({ data, onCerrar }) {
 
   return (
     <VentanaFlotante clave="progreso" titulo="Progreso de recopilación" onCerrar={onCerrar}>
+      {/* Las dos barras generales van juntas arriba (antes la de Cobro
+          estaba separada, después del grid de colaboradores) y con
+          icono en vez de texto -- los mismos ClipboardList/Euro que ya
+          se usan en los recuadros de colaborador de más abajo, más
+          intuitivo que repetir la misma idea en dos formatos distintos
+          (a petición del usuario, 2026-08-17). */}
       <ProgresoBar
-        label="General (confirmados con datos completos)"
+        label="Confirmados con datos completos"
+        icono={ClipboardList}
         completado={invitados.filter((g) => g.confirmado && datosCompletos(g)).length}
         total={confirmadosCount}
-        color={C.wax}
+        color={C.ink}
       />
-      <div className="grid grid-cols-3 gap-1.5">
+      <ProgresoBar
+        label="Confirmados que ya han pagado"
+        icono={Euro}
+        completado={invitados.filter((g) => g.confirmado && g.pagado).length}
+        total={confirmadosCount}
+        color={C.gold}
+      />
+      <div className="grid grid-cols-3 gap-1.5 pt-1" style={{ borderTop: `1px solid ${C.line}` }}>
         {colaboradores.map((c) => {
           const suyos = invitados.filter(
             (g) => resolverColaborador(g, colaboradores)?.id === c.id && g.confirmado
@@ -65,14 +79,6 @@ export function VentanaProgreso({ data, onCerrar }) {
         </p>
       )}
       <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
-        <ProgresoBar
-          label="Cobro (confirmados que ya han pagado)"
-          completado={invitados.filter((g) => g.confirmado && g.pagado).length}
-          total={confirmadosCount}
-          color={C.gold}
-        />
-      </div>
-      <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
         <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
           Informativo — no bloquea a nadie, solo para saber cuánto falta de la canción
           para el DJ. Las alergias se avisan directamente en la mesa (sección Mesas) y
@@ -80,10 +86,12 @@ export function VentanaProgreso({ data, onCerrar }) {
         </p>
         <ProgresoBar
           label="Con canción registrada"
+          icono={Music}
           completado={
             invitados.filter((g) => g.confirmado && g.cancion && g.cancion.trim()).length
           }
           total={confirmadosCount}
+          color={C.wax}
         />
       </div>
     </VentanaFlotante>
