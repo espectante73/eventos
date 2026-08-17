@@ -181,9 +181,16 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
         // aproximado de cada etiqueta (FECHA/HORA/LUGAR) medido sobre la
         // plantilla real, para que el icono nuevo quede a la misma altura
         // que el que sustituye.
+        // x/tam recalibrados: la versión anterior (x=0.048, tam=0.075) hacía
+        // que el parche de fondo se saliera por la izquierda del recuadro
+        // real (que empieza en x=0.045) -- con tam más grande, el margen del
+        // parche (tam*0.35) por sí solo ya superaba ese borde. Ahora el
+        // icono es más pequeño y el parche va ceñido a su propio tamaño
+        // (no al tamaño del icono viejo que tapa), así que cabe con margen
+        // dentro del recuadro en vez de sobresalir.
         const ICONOS = {
-          x: 0.048,
-          tam: 0.075,
+          x: 0.065,
+          tam: 0.06,
           fecha: { y: 0.457, img: iconoFecha },
           hora: { y: 0.543, img: iconoHora },
           lugar: { y: 0.611, img: iconoLugar },
@@ -194,11 +201,11 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
           const tam = ICONOS.tam * W;
           const xIcono = ICONOS.x * W;
           const yCentro = def.y * H;
-          // Tapa primero el icono que trae la plantilla (algo más grande
-          // que el icono nuevo, para cubrirlo entero) antes de dibujar el
-          // de la app encima.
+          const margen = tam * 0.12;
+          // Parche ceñido al propio icono nuevo (más pequeño que antes),
+          // no al icono viejo que tapa -- ya no se sale del recuadro.
           ctx.fillStyle = "#F5F0E6";
-          ctx.fillRect(xIcono - tam * 0.35, yCentro - tam * 0.75, tam * 1.7, tam * 1.5);
+          ctx.fillRect(xIcono - margen, yCentro - tam / 2 - margen, tam + margen * 2, tam + margen * 2);
           ctx.drawImage(def.img, xIcono, yCentro - tam / 2, tam, tam);
         };
 
