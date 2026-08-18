@@ -144,7 +144,12 @@ function FilaMenu({ opcion, cerrarTodo }) {
             <div
               ref={panelRef}
               data-menu-panel
-              className="panel-flotante-cristal cristal-difuminado fixed rounded-xl overflow-y-auto"
+              // Sin panel-flotante-cristal/cristal-difuminado (a petición
+              // del usuario): cada fila ya lleva su propio fondo/contorno
+              // (boton-flotante-imagen), así que el contenedor no necesita
+              // uno propio -- se ve el fondo real (la imagen de la
+              // Portada) entre una fila y otra, en vez de un panel sólido.
+              className="fixed rounded-xl overflow-y-auto"
               style={{
                 top: pos.top,
                 right: pos.right,
@@ -279,7 +284,12 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
           <div
             ref={listaRef}
             data-menu-panel
-            className="panel-flotante-cristal cristal-difuminado fixed rounded-xl overflow-y-auto"
+            // Sin panel-flotante-cristal/cristal-difuminado (a petición
+            // del usuario): cada fila ya lleva su propio fondo/contorno
+            // (boton-flotante-imagen), así que el contenedor no necesita
+            // uno propio -- se ve el fondo real (la imagen de la
+            // Portada) entre una fila y otra, en vez de un panel sólido.
+            className="fixed rounded-xl overflow-y-auto"
             style={{
               ...pos,
               width: "max-content",
