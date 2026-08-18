@@ -13,7 +13,6 @@
 // tiene por la imagen de cabecera).
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft } from "lucide-react";
 import { C } from "../theme";
 
 // Margen mínimo respecto al borde de la ventana, y altura mínima aunque
@@ -138,7 +137,10 @@ function FilaMenu({ opcion, cerrarTodo }) {
           // Redondeado como un botón de la portada (a petición del
           // usuario anterior): margen a los lados + radio grande, en vez
           // de una fila rectangular a todo lo ancho del panel.
-          className="boton-3d boton-flotante-imagen flex items-center justify-between gap-3 text-left px-3 py-2 text-sm whitespace-nowrap"
+          // Sin flecha (a petición del usuario, 2026-08-18: "a ver cómo
+          // queda") -- ya no hace falta justify-between al no haber un
+          // segundo elemento que empujar al extremo opuesto.
+          className="boton-3d boton-flotante-imagen flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap"
           style={{
             color: C.goldClaro,
             ...(abierto ? { background: "rgba(239,233,222,0.12)" } : {}),
@@ -147,15 +149,8 @@ function FilaMenu({ opcion, cerrarTodo }) {
             borderRadius: 9999,
           }}
         >
-          {/* Flecha al extremo IZQUIERDO del botón (antes a la derecha) --
-              a petición del usuario, 2026-08-18: con justify-between, el
-              primer hijo va al extremo opuesto (izquierda), el segundo al
-              derecho. */}
-          <ChevronLeft size={13} style={{ opacity: 0.6, flexShrink: 0 }} />
-          <span className="flex items-center gap-2">
-            {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: 0.85 }} />}
-            {opcion.etiqueta}
-          </span>
+          {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: 0.85 }} />}
+          {opcion.etiqueta}
         </button>
         {abierto &&
           pos &&
