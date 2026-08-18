@@ -35,12 +35,6 @@ import { TextInput } from "../../components/Formulario";
 import { Stamp, EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 
-// Ancho compartido por los 6 botones de la cabecera (Imprimir/Canciones/
-// Alergias + Añadir/Editar/Importar) -- así las dos filas quedan del mismo
-// ancho en vez de que cada botón se ajuste solo a su propio texto (a
-// petición del usuario, 2026-08-18).
-const ANCHO_BOTON_EXTRA = 92;
-
 export function SeccionInvitados({
   data,
   asignarColaborador,
@@ -305,72 +299,42 @@ export function SeccionInvitados({
         titulo="Lista de invitados"
         onCerrar={intentarCerrarInvitados}
         subtitulo={
-          // Segunda línea bajo el título: solo la edad media (se quitó
-          // "Lista invitados N", y el número va en negrita y 3px más
-          // grande que el resto de la línea) -- y debajo, la cabecera de
-          // columnas de la tabla (Invitado/Grupo familiar/...), subida
-          // aquí desde el cuerpo para que quede siempre visible en la
-          // barra verde aunque la tabla haga scroll (sustituye a la fila
-          // de cabecera que antes vivía dentro de la caja blanca, y a la
-          // línea suelta "Edad media de los asistentes" que había encima
-          // de la tabla) -- a petición del usuario, 2026-08-18.
-          // `stopPropagation` en mousedown/touchstart: es un control
-          // interactivo (los botones de ordenar) dentro de la cabecera
-          // arrastrable de la ventana, igual que ya exige `extra`.
-          <div className="flex flex-col gap-1 mt-0.5">
-            <div className="text-xs" style={{ color: C.goldClaro, opacity: 0.85 }}>
-              Edad media:{" "}
-              <strong style={{ fontSize: 15 }}>
-                {edadPromedio(invitadosOrdenados, evento) ?? "—"}
-              </strong>
-              {edadPromedio(invitadosOrdenados, evento) !== null && " años"}
-            </div>
-            <div
-              className="grid text-xs uppercase text-center"
-              style={{
-                gridTemplateColumns: columnasTabla,
-                color: C.goldClaro,
-                fontFamily: "'IBM Plex Mono', monospace",
-              }}
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-            >
-              <EncabezadoOrdenable claro columna="invitado" orden={orden} onClick={cambiarOrden}>
-                Invitado
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable claro columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
-                Grupo familiar
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable claro columna="zona" orden={orden} onClick={cambiarOrden}>
-                Zona
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable claro columna="colaborador" orden={orden} onClick={cambiarOrden}>
-                Colaborador
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable claro columna="mesa" orden={orden} onClick={cambiarOrden}>
-                Mesa
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable claro columna="confirmado" orden={orden} onClick={cambiarOrden}>
-                Confirmado
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable claro columna="datos" orden={orden} onClick={cambiarOrden}>
-                Datos
-              </EncabezadoOrdenable>
-              <EncabezadoOrdenable claro columna="pagado" orden={orden} onClick={cambiarOrden}>
-                Pagado
-              </EncabezadoOrdenable>
-              <span></span>
-            </div>
+          // Segunda línea bajo el título: solo la edad media (sin "Lista
+          // invitados N"), número en negrita y 3px más grande que el
+          // resto de la línea. La cabecera de columnas SE QUITA de aquí
+          // (la barra verde y la caja blanca de la tabla son anchos
+          // distintos -- título a la izquierda + botones a la derecha en
+          // la primera, ancho completo en la segunda -- así que una
+          // misma plantilla de columnas no podía coincidir entre las dos
+          // y las cabeceras quedaban descuadradas con los filtros/celdas
+          // de debajo). Vuelve a vivir junto a la fila de filtros, dentro
+          // de la propia caja blanca, que es el único sitio donde
+          // comparten de verdad el mismo contenedor -- a petición del
+          // usuario, 2026-08-18.
+          <div className="text-xs mt-0.5" style={{ color: C.goldClaro, opacity: 0.85 }}>
+            Edad media:{" "}
+            <strong style={{ fontSize: 15 }}>
+              {edadPromedio(invitadosOrdenados, evento) ?? "—"}
+            </strong>
+            {edadPromedio(invitadosOrdenados, evento) !== null && " años"}
           </div>
         }
         extra={
-          <div className="flex flex-col gap-1.5">
+          // Los 6 botones en una sola línea (antes 2 filas de 3, a
+          // petición del usuario 2026-08-18 tras ver que 2 filas no
+          // quedaba bien) -- ancho de contenido libre (ya no se fuerza un
+          // ancho igual, no aporta nada con una sola fila) y `flex-wrap`
+          // por si la ventana se redimensiona muy estrecha.
+          // Imprimir/Canciones mantienen el estilo borde+transparente
+          // igual que Añadir/Editar/Importar; Alergias se queda con su
+          // fondo propio a propósito (la única que avisa de algo).
+          <div className="flex items-center flex-wrap gap-1.5">
             {invitados.length > 0 && (
-              <div className="flex items-center gap-2">
+              <>
                 <button
                   onClick={() => setPanelFlotante("tabla")}
                   className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ border: `1px solid ${C.gold}`, color: C.goldClaro, width: ANCHO_BOTON_EXTRA }}
+                  style={{ border: `1px solid ${C.gold}`, color: C.goldClaro }}
                   title="Ver / imprimir / exportar la lista de invitados"
                 >
                   <Printer size={12} /> Imprimir
@@ -378,7 +342,7 @@ export function SeccionInvitados({
                 <button
                   onClick={() => setPanelFlotante("canciones")}
                   className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ border: `1px solid ${C.gold}`, color: C.goldClaro, width: ANCHO_BOTON_EXTRA }}
+                  style={{ border: `1px solid ${C.gold}`, color: C.goldClaro }}
                   title="Ver / imprimir / exportar solo la lista de canciones (para el DJ/grupo musical)"
                 >
                   <Music size={12} /> Canciones
@@ -386,63 +350,49 @@ export function SeccionInvitados({
                 <button
                   onClick={() => setPanelFlotante("alergias")}
                   className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ background: C.wax, color: "#fff", width: ANCHO_BOTON_EXTRA }}
+                  style={{ background: C.wax, color: "#fff" }}
                   title="Ver / imprimir / exportar solo la lista de alergias, con su mesa (para cocina/catering)"
                 >
                   <AlertTriangle size={12} /> Alergias
                 </button>
-              </div>
+              </>
             )}
-            {/* 2ª fila -- antes eran 3 botones sueltos en el cuerpo, con
-                texto largo ("Añadir invitado individual", "Importar desde
-                hoja de cálculo"); movidos aquí y acortados al mismo estilo
-                corto de la fila de arriba (a petición del usuario,
-                2026-08-18). Imprimir/Canciones pasan también a este mismo
-                formato (borde + transparente) para que los 6 boones se
-                vean como un solo grupo -- Alergias se queda con su fondo
-                propio a propósito (la única que avisa de algo). Los 6
-                comparten ANCHO_BOTON_EXTRA. */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setMostrarAnadir((v) => !v)}
-                className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-                style={{
-                  border: `1px solid ${C.gold}`,
-                  color: mostrarAnadir ? C.paper : C.goldClaro,
-                  background: mostrarAnadir ? C.gold : "transparent",
-                  width: ANCHO_BOTON_EXTRA,
-                }}
-                title="Añadir invitado individual"
-              >
-                <Plus size={12} /> Añadir
-              </button>
-              <button
-                onClick={() => setModoEdicion((v) => !v)}
-                className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-                style={{
-                  border: `1px solid ${C.gold}`,
-                  color: modoEdicion ? C.paper : C.goldClaro,
-                  background: modoEdicion ? C.gold : "transparent",
-                  width: ANCHO_BOTON_EXTRA,
-                }}
-                title="Activa este modo para poder corregir el grupo familiar de un invitado"
-              >
-                <Pencil size={12} /> {modoEdicion ? "Terminar" : "Editar"}
-              </button>
-              <button
-                onClick={() => setMostrarImport((v) => !v)}
-                className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-                style={{
-                  border: `1px solid ${C.gold}`,
-                  color: mostrarImport ? C.paper : C.goldClaro,
-                  background: mostrarImport ? C.gold : "transparent",
-                  width: ANCHO_BOTON_EXTRA,
-                }}
-                title="Importar desde hoja de cálculo"
-              >
-                <Copy size={12} /> Importar
-              </button>
-            </div>
+            <button
+              onClick={() => setMostrarAnadir((v) => !v)}
+              className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
+              style={{
+                border: `1px solid ${C.gold}`,
+                color: mostrarAnadir ? C.paper : C.goldClaro,
+                background: mostrarAnadir ? C.gold : "transparent",
+              }}
+              title="Añadir invitado individual"
+            >
+              <Plus size={12} /> Añadir
+            </button>
+            <button
+              onClick={() => setModoEdicion((v) => !v)}
+              className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
+              style={{
+                border: `1px solid ${C.gold}`,
+                color: modoEdicion ? C.paper : C.goldClaro,
+                background: modoEdicion ? C.gold : "transparent",
+              }}
+              title="Activa este modo para poder corregir el grupo familiar de un invitado"
+            >
+              <Pencil size={12} /> {modoEdicion ? "Terminar" : "Editar"}
+            </button>
+            <button
+              onClick={() => setMostrarImport((v) => !v)}
+              className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
+              style={{
+                border: `1px solid ${C.gold}`,
+                color: mostrarImport ? C.paper : C.goldClaro,
+                background: mostrarImport ? C.gold : "transparent",
+              }}
+              title="Importar desde hoja de cálculo"
+            >
+              <Copy size={12} /> Importar
+            </button>
           </div>
         }
       >
@@ -519,21 +469,60 @@ export function SeccionInvitados({
           style={{ border: `1px solid ${C.line}`, background: "#fff" }}
         >
           <div style={{ minWidth: 780 }}>
-            {/* La cabecera de columnas (Invitado/Grupo familiar/...) ya no
-                vive aquí -- subida a la barra verde de la ventana
-                (subtitulo, más arriba) para que quede siempre visible
-                aunque la tabla haga scroll. La fila de filtros, deliberadamente
-                FUERA del bloque con scroll de abajo (no "position: sticky"
-                encima del scroll): el div de aquí al lado, al tener
-                también scroll horizontal propio (overflow-x-auto), se
-                convierte él mismo en el contenedor de referencia para
-                cualquier "sticky" que pusiéramos dentro — y ese
-                contenedor nunca hace scroll vertical de verdad (crece con
-                su contenido), así que el "sticky" no llegaba a fijarse
-                nunca. Separarla en su propio bloque, fuera del área que sí
-                hace scroll, es el mismo patrón ya probado en el historial
-                de Avisos. */}
+            {/* Cabecera + filtros, deliberadamente FUERA del bloque con
+                scroll de abajo (no "position: sticky" encima del scroll):
+                el div de aquí al lado, al tener también scroll horizontal
+                propio (overflow-x-auto), se convierte él mismo en el
+                contenedor de referencia para cualquier "sticky" que
+                pusiéramos dentro — y ese contenedor nunca hace scroll
+                vertical de verdad (crece con su contenido), así que el
+                "sticky" no llegaba a fijarse nunca. Separar la cabecera en
+                su propio bloque, fuera del área que sí hace scroll, es el
+                mismo patrón ya probado en el historial de Avisos.
+                (2026-08-18: se probó a subir esta cabecera a la barra
+                verde de la ventana -- se deshizo, porque esa barra y esta
+                caja blanca son anchos distintos -flex título+botones vs.
+                ancho completo- así que una misma plantilla de columnas no
+                podía coincidir entre las dos, y quedaba descuadrada con
+                los filtros/celdas de debajo. Se queda aquí, en el ÚNICO
+                sitio donde cabecera, filtros y celdas comparten de verdad
+                el mismo contenedor y por tanto el mismo ancho real.) */}
             <div>
+              <div
+                className="grid text-xs uppercase px-3 py-2 text-center"
+                style={{
+                  gridTemplateColumns: columnasTabla,
+                  color: C.gold,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  borderBottom: `1px solid ${C.line}`,
+                }}
+              >
+                <EncabezadoOrdenable columna="invitado" orden={orden} onClick={cambiarOrden}>
+                  Invitado
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
+                  Grupo familiar
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="zona" orden={orden} onClick={cambiarOrden}>
+                  Zona
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="colaborador" orden={orden} onClick={cambiarOrden}>
+                  Colaborador
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="mesa" orden={orden} onClick={cambiarOrden}>
+                  Mesa
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="confirmado" orden={orden} onClick={cambiarOrden}>
+                  Confirmado
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="datos" orden={orden} onClick={cambiarOrden}>
+                  Datos
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable columna="pagado" orden={orden} onClick={cambiarOrden}>
+                  Pagado
+                </EncabezadoOrdenable>
+                <span></span>
+              </div>
               <div
                 className="grid px-3 py-1.5"
                 style={{
