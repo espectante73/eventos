@@ -20,38 +20,43 @@ export function VentanaProgreso({ data, onCerrar }) {
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
   const tentativaCount = total - confirmadosCount;
 
+  // Lista global/Tentativa/Confirmados: mudados de la Portada a la propia
+  // cabecera de esta ventana (antes 3 recuadros en el cuerpo, a petición
+  // del usuario 2026-08-18) -- 2ª línea las etiquetas, 3ª línea los
+  // números, con un fondo resaltado detrás de cada número para que se
+  // lean bien sobre el degradado verde de la cabecera.
+  const resumen = [
+    { label: "Lista global", value: total },
+    { label: "Tentativa", value: tentativaCount },
+    { label: "Confirmados", value: confirmadosCount },
+  ];
+
   return (
-    <VentanaFlotante clave="progreso" titulo="Progreso de recopilación" onCerrar={onCerrar}>
-      {/* Lista global/Tentativa/Confirmados: mudados aquí desde la Portada
-          (VistaAnfitrion.jsx) -- a petición del usuario, 2026-08-18, más
-          lógico en la ventana de estadísticas del evento que sueltos en
-          la pantalla de inicio. Mismo estilo que tenían allí. */}
-      <div className="grid grid-cols-3 gap-3 mb-3">
-        {[
-          { label: "Lista global", value: total },
-          { label: "Tentativa", value: tentativaCount },
-          { label: "Confirmados", value: confirmadosCount },
-        ].map((s) => (
-          <div
-            key={s.label}
-            className="p-3 rounded text-center"
-            style={{ background: "#fff", border: `1px solid ${C.line}` }}
-          >
-            <div
-              className="text-2xl"
-              style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}
-            >
-              {s.value}
+    <VentanaFlotante
+      clave="progreso"
+      titulo="Progreso de recopilación"
+      onCerrar={onCerrar}
+      subtitulo={
+        <div className="flex gap-4 mt-1">
+          {resumen.map((s) => (
+            <div key={s.label}>
+              <div
+                className="text-[10px] uppercase"
+                style={{ color: C.goldClaro, opacity: 0.75, fontFamily: "'IBM Plex Mono', monospace" }}
+              >
+                {s.label}
+              </div>
+              <div
+                className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
+                style={{ background: "rgba(239,233,222,0.92)", color: C.ink, fontFamily: "'Fraunces', serif" }}
+              >
+                {s.value}
+              </div>
             </div>
-            <div
-              className="text-xs uppercase"
-              style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
-            >
-              {s.label}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      }
+    >
       {/* Las 3 barras generales (datos, cobro, canciones) en un solo
           recuadro verde/dorado -- mismo lenguaje que el resto de la app
           (Portada.jsx: degradado C.ink + borde/texto en dorado). Dentro,
@@ -137,9 +142,7 @@ export function VentanaProgreso({ data, onCerrar }) {
         </p>
       )}
       <p className="text-xs mt-3" style={{ color: C.charcoal, opacity: 0.6 }}>
-        Canciones. No es un dato obligatorio.
-        <br />
-        Alergias. Es un campo obligatorio.
+        <b>Canciones:</b> No obligatorio. <b>Alergias:</b> Obligatorio.
       </p>
     </VentanaFlotante>
   );

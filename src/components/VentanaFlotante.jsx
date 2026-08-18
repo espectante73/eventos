@@ -123,7 +123,10 @@ export const ETIQUETAS_VENTANAS = {
 // para ventanas con muy poco contenido donde los 620px por defecto
 // dejarían un hueco vacío enorme (p.ej. Precios, que son solo 4 campos
 // de 1-2 cifras) — ver VentanaConfigPrecios.jsx.
-export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho }) {
+// `subtitulo`: contenido opcional bajo el título, dentro de la propia
+// cabecera (p.ej. VentanaProgreso.jsx: una fila de etiquetas + otra de
+// números resaltados) -- a petición del usuario, 2026-08-18.
+export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo }) {
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
   // "left" fijo (no en cascada como antes): todas las ventanas nacen
   // alineadas al mismo borde izquierdo, a petición del usuario -- el
@@ -229,17 +232,20 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       }}
     >
       <div
-        className="panel-flotante-cristal flex items-center justify-between px-4 py-3 rounded-t-lg cursor-move select-none"
+        className="panel-flotante-cristal flex items-start justify-between px-4 py-3 rounded-t-lg cursor-move select-none"
         style={{ touchAction: "none" }}
         onMouseDown={iniciarArrastre}
         onTouchStart={iniciarArrastre}
       >
-        <h3
-          className="text-lg"
-          style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}
-        >
-          {titulo}
-        </h3>
+        <div>
+          <h3
+            className="text-lg"
+            style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}
+          >
+            {titulo}
+          </h3>
+          {subtitulo}
+        </div>
         <div
           className="flex items-center gap-2"
           onMouseDown={(e) => e.stopPropagation()}
