@@ -39,7 +39,7 @@ export function VentanaProgreso({ data, onCerrar }) {
       subtitulo={
         <div className="flex gap-4 mt-1">
           {resumen.map((s) => (
-            <div key={s.label}>
+            <div key={s.label} className="text-center">
               <div
                 className="text-[10px] uppercase"
                 style={{ color: C.goldClaro, opacity: 0.75, fontFamily: "'IBM Plex Mono', monospace" }}
