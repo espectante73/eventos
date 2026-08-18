@@ -232,30 +232,38 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       }}
     >
       <div
-        className="panel-flotante-cristal flex items-start justify-between px-4 py-3 rounded-t-lg cursor-move select-none"
+        className="panel-flotante-cristal rounded-t-lg cursor-move select-none"
         style={{ touchAction: "none" }}
         onMouseDown={iniciarArrastre}
         onTouchStart={iniciarArrastre}
       >
-        <div>
+        <div className="flex items-start justify-between px-4 py-3">
           <h3
             className="text-lg"
             style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}
           >
             {titulo}
           </h3>
-          {subtitulo}
+          <div
+            className="flex items-center gap-2"
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
+            {extra}
+            <button onClick={onCerrar} title="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
+              <X size={18} />
+            </button>
+          </div>
         </div>
-        <div
-          className="flex items-center gap-2"
-          onMouseDown={(e) => e.stopPropagation()}
-          onTouchStart={(e) => e.stopPropagation()}
-        >
-          {extra}
-          <button onClick={onCerrar} title="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
-            <X size={18} />
-          </button>
-        </div>
+        {/* `subtitulo` en su propia fila, a ANCHO COMPLETO de la cabecera
+            (no ya dentro del bloque del título, que solo mide lo que su
+            contenido necesita) -- así, si el contenido de `subtitulo`
+            necesita coincidir en ancho con algo del cuerpo (p.ej. la
+            cabecera de columnas de la tabla de Invitados, con el mismo
+            px-4/p-4 a los lados que usa el cuerpo), puede hacerlo de
+            verdad. Antes vivía pegado al título, comprimido por los
+            botones de la derecha -- a petición del usuario, 2026-08-18. */}
+        {subtitulo && <div className="px-4 pb-3 -mt-1">{subtitulo}</div>}
       </div>
       <div className="p-4" style={{ flex: 1, overflowY: "auto" }}>
         {children}

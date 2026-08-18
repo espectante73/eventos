@@ -298,25 +298,79 @@ export function SeccionInvitados({
         clave="invitados"
         titulo="Lista de invitados"
         onCerrar={intentarCerrarInvitados}
+        // Ventana con ancho inicial propio (no el genérico de 620px):
+        // suficiente para que la cabecera de columnas de abajo (misma
+        // anchura mínima que la tabla, 780px + su borde) quepa entera sin
+        // scroll horizontal la primera vez que se abre -- a petición del
+        // usuario, 2026-08-18 ("que siempre se abrirá con el ancho de los
+        // encabezados de columna").
+        ancho="min(820px, calc(100vw - 48px))"
         subtitulo={
-          // Segunda línea bajo el título: solo la edad media (sin "Lista
-          // invitados N"), número en negrita y 3px más grande que el
-          // resto de la línea. La cabecera de columnas SE QUITA de aquí
-          // (la barra verde y la caja blanca de la tabla son anchos
-          // distintos -- título a la izquierda + botones a la derecha en
-          // la primera, ancho completo en la segunda -- así que una
-          // misma plantilla de columnas no podía coincidir entre las dos
-          // y las cabeceras quedaban descuadradas con los filtros/celdas
-          // de debajo). Vuelve a vivir junto a la fila de filtros, dentro
-          // de la propia caja blanca, que es el único sitio donde
-          // comparten de verdad el mismo contenedor -- a petición del
-          // usuario, 2026-08-18.
-          <div className="text-xs mt-0.5" style={{ color: C.goldClaro, opacity: 0.85 }}>
-            Edad media:{" "}
-            <strong style={{ fontSize: 15 }}>
-              {edadPromedio(invitadosOrdenados, evento) ?? "—"}
-            </strong>
-            {edadPromedio(invitadosOrdenados, evento) !== null && " años"}
+          // Segunda línea bajo el título: la edad media (número en
+          // negrita y 3px más grande que el resto de la línea) y, debajo,
+          // la cabecera de columnas de la tabla (Invitado/Familia/...) --
+          // de vuelta a la barra verde (a petición del usuario,
+          // 2026-08-18: la quería ahí, no en la caja blanca). Ahora SÍ
+          // coincide con las columnas de la tabla porque `subtitulo` ya
+          // no vive comprimido junto al título/botones (ver
+          // VentanaFlotante.jsx) sino en su propia fila a ancho completo,
+          // con el mismo px-4 que el cuerpo -- el `rounded` con borde
+          // TRANSPARENTE de abajo replica el borde real de 1px de la caja
+          // blanca de la tabla, para que el ancho de contenido resultante
+          // sea exactamente el mismo en los dos sitios a cualquier tamaño
+          // de ventana, no solo en el ancho por defecto.
+          // `stopPropagation` en mousedown/touchstart: son controles
+          // interactivos (los botones de ordenar) dentro de la cabecera
+          // arrastrable de la ventana, igual que ya exige `extra`.
+          <div className="flex flex-col gap-1">
+            <div className="text-xs" style={{ color: C.goldClaro, opacity: 0.85 }}>
+              Edad media:{" "}
+              <strong style={{ fontSize: 15 }}>
+                {edadPromedio(invitadosOrdenados, evento) ?? "—"}
+              </strong>
+              {edadPromedio(invitadosOrdenados, evento) !== null && " años"}
+            </div>
+            <div
+              className="rounded"
+              style={{ border: "1px solid transparent", minWidth: 780 }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+            >
+              <div
+                className="grid text-xs uppercase px-3 text-center"
+                style={{
+                  gridTemplateColumns: columnasTabla,
+                  color: C.goldClaro,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                }}
+              >
+                <EncabezadoOrdenable claro columna="invitado" orden={orden} onClick={cambiarOrden}>
+                  Invitado
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable claro columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
+                  Familia
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable claro columna="zona" orden={orden} onClick={cambiarOrden}>
+                  Zona
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable claro columna="colaborador" orden={orden} onClick={cambiarOrden}>
+                  Colaborador
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable claro columna="mesa" orden={orden} onClick={cambiarOrden}>
+                  Mesa
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable claro columna="confirmado" orden={orden} onClick={cambiarOrden}>
+                  Confirmado
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable claro columna="datos" orden={orden} onClick={cambiarOrden}>
+                  Datos
+                </EncabezadoOrdenable>
+                <EncabezadoOrdenable claro columna="pagado" orden={orden} onClick={cambiarOrden}>
+                  Pagado
+                </EncabezadoOrdenable>
+                <span></span>
+              </div>
+            </div>
           </div>
         }
         extra={
@@ -469,60 +523,20 @@ export function SeccionInvitados({
           style={{ border: `1px solid ${C.line}`, background: "#fff" }}
         >
           <div style={{ minWidth: 780 }}>
-            {/* Cabecera + filtros, deliberadamente FUERA del bloque con
-                scroll de abajo (no "position: sticky" encima del scroll):
-                el div de aquí al lado, al tener también scroll horizontal
-                propio (overflow-x-auto), se convierte él mismo en el
-                contenedor de referencia para cualquier "sticky" que
-                pusiéramos dentro — y ese contenedor nunca hace scroll
-                vertical de verdad (crece con su contenido), así que el
-                "sticky" no llegaba a fijarse nunca. Separar la cabecera en
-                su propio bloque, fuera del área que sí hace scroll, es el
-                mismo patrón ya probado en el historial de Avisos.
-                (2026-08-18: se probó a subir esta cabecera a la barra
-                verde de la ventana -- se deshizo, porque esa barra y esta
-                caja blanca son anchos distintos -flex título+botones vs.
-                ancho completo- así que una misma plantilla de columnas no
-                podía coincidir entre las dos, y quedaba descuadrada con
-                los filtros/celdas de debajo. Se queda aquí, en el ÚNICO
-                sitio donde cabecera, filtros y celdas comparten de verdad
-                el mismo contenedor y por tanto el mismo ancho real.) */}
+            {/* La cabecera de columnas (Invitado/Familia/...) vive en la
+                barra verde de la ventana (subtitulo, más arriba) -- a
+                petición del usuario, 2026-08-18. La fila de filtros,
+                deliberadamente FUERA del bloque con scroll de abajo (no
+                "position: sticky" encima del scroll): el div de aquí al
+                lado, al tener también scroll horizontal propio
+                (overflow-x-auto), se convierte él mismo en el contenedor
+                de referencia para cualquier "sticky" que pusiéramos
+                dentro — y ese contenedor nunca hace scroll vertical de
+                verdad (crece con su contenido), así que el "sticky" no
+                llegaba a fijarse nunca. Separarla en su propio bloque,
+                fuera del área que sí hace scroll, es el mismo patrón ya
+                probado en el historial de Avisos. */}
             <div>
-              <div
-                className="grid text-xs uppercase px-3 py-2 text-center"
-                style={{
-                  gridTemplateColumns: columnasTabla,
-                  color: C.gold,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  borderBottom: `1px solid ${C.line}`,
-                }}
-              >
-                <EncabezadoOrdenable columna="invitado" orden={orden} onClick={cambiarOrden}>
-                  Invitado
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
-                  Familia
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="zona" orden={orden} onClick={cambiarOrden}>
-                  Zona
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="colaborador" orden={orden} onClick={cambiarOrden}>
-                  Colaborador
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="mesa" orden={orden} onClick={cambiarOrden}>
-                  Mesa
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="confirmado" orden={orden} onClick={cambiarOrden}>
-                  Confirmado
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="datos" orden={orden} onClick={cambiarOrden}>
-                  Datos
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="pagado" orden={orden} onClick={cambiarOrden}>
-                  Pagado
-                </EncabezadoOrdenable>
-                <span></span>
-              </div>
               <div
                 className="grid px-3 py-1.5"
                 style={{
