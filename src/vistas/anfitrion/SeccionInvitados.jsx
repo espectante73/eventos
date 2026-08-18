@@ -305,13 +305,62 @@ export function SeccionInvitados({
         titulo="Lista de invitados"
         onCerrar={intentarCerrarInvitados}
         subtitulo={
-          // Segunda línea bajo el título, mismo color que él (C.goldClaro)
-          // -- edad media + total de invitados (en negrita), a petición
-          // del usuario, 2026-08-18.
-          <div className="text-xs mt-0.5" style={{ color: C.goldClaro, opacity: 0.85 }}>
-            Edad media: {edadPromedio(invitadosOrdenados, evento) ?? "—"}
-            {edadPromedio(invitadosOrdenados, evento) !== null && " años"} · Lista invitados{" "}
-            <strong>{invitados.length}</strong>
+          // Segunda línea bajo el título: solo la edad media (se quitó
+          // "Lista invitados N", y el número va en negrita y 3px más
+          // grande que el resto de la línea) -- y debajo, la cabecera de
+          // columnas de la tabla (Invitado/Grupo familiar/...), subida
+          // aquí desde el cuerpo para que quede siempre visible en la
+          // barra verde aunque la tabla haga scroll (sustituye a la fila
+          // de cabecera que antes vivía dentro de la caja blanca, y a la
+          // línea suelta "Edad media de los asistentes" que había encima
+          // de la tabla) -- a petición del usuario, 2026-08-18.
+          // `stopPropagation` en mousedown/touchstart: es un control
+          // interactivo (los botones de ordenar) dentro de la cabecera
+          // arrastrable de la ventana, igual que ya exige `extra`.
+          <div className="flex flex-col gap-1 mt-0.5">
+            <div className="text-xs" style={{ color: C.goldClaro, opacity: 0.85 }}>
+              Edad media:{" "}
+              <strong style={{ fontSize: 15 }}>
+                {edadPromedio(invitadosOrdenados, evento) ?? "—"}
+              </strong>
+              {edadPromedio(invitadosOrdenados, evento) !== null && " años"}
+            </div>
+            <div
+              className="grid text-xs uppercase text-center"
+              style={{
+                gridTemplateColumns: columnasTabla,
+                color: C.goldClaro,
+                fontFamily: "'IBM Plex Mono', monospace",
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+            >
+              <EncabezadoOrdenable claro columna="invitado" orden={orden} onClick={cambiarOrden}>
+                Invitado
+              </EncabezadoOrdenable>
+              <EncabezadoOrdenable claro columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
+                Grupo familiar
+              </EncabezadoOrdenable>
+              <EncabezadoOrdenable claro columna="zona" orden={orden} onClick={cambiarOrden}>
+                Zona
+              </EncabezadoOrdenable>
+              <EncabezadoOrdenable claro columna="colaborador" orden={orden} onClick={cambiarOrden}>
+                Colaborador
+              </EncabezadoOrdenable>
+              <EncabezadoOrdenable claro columna="mesa" orden={orden} onClick={cambiarOrden}>
+                Mesa
+              </EncabezadoOrdenable>
+              <EncabezadoOrdenable claro columna="confirmado" orden={orden} onClick={cambiarOrden}>
+                Confirmado
+              </EncabezadoOrdenable>
+              <EncabezadoOrdenable claro columna="datos" orden={orden} onClick={cambiarOrden}>
+                Datos
+              </EncabezadoOrdenable>
+              <EncabezadoOrdenable claro columna="pagado" orden={orden} onClick={cambiarOrden}>
+                Pagado
+              </EncabezadoOrdenable>
+              <span></span>
+            </div>
           </div>
         }
         extra={
@@ -469,68 +518,22 @@ export function SeccionInvitados({
           className="rounded overflow-x-auto"
           style={{ border: `1px solid ${C.line}`, background: "#fff" }}
         >
-          <div
-            className="px-3 py-2 text-xs"
-            style={{
-              borderBottom: `1px solid ${C.line}`,
-              color: C.charcoal,
-              fontFamily: "'IBM Plex Mono', monospace",
-              background: C.paperDark,
-            }}
-          >
-            Edad media de los asistentes:{" "}
-            <strong style={{ color: C.ink }}>
-              {edadPromedio(invitadosOrdenados, evento) ?? "— (faltan años de nacimiento)"}
-              {edadPromedio(invitadosOrdenados, evento) !== null && " años"}
-            </strong>
-          </div>
           <div style={{ minWidth: 780 }}>
-            {/* Cabecera + filtros, deliberadamente FUERA del bloque con
-                scroll de abajo (no "position: sticky" encima del scroll):
-                el div de aquí al lado, al tener también scroll horizontal
-                propio (overflow-x-auto), se convierte él mismo en el
-                contenedor de referencia para cualquier "sticky" que
-                pusiéramos dentro — y ese contenedor nunca hace scroll
-                vertical de verdad (crece con su contenido), así que el
-                "sticky" no llegaba a fijarse nunca. Separar la cabecera en
-                su propio bloque, fuera del área que sí hace scroll, es el
-                mismo patrón ya probado en el historial de Avisos. */}
+            {/* La cabecera de columnas (Invitado/Grupo familiar/...) ya no
+                vive aquí -- subida a la barra verde de la ventana
+                (subtitulo, más arriba) para que quede siempre visible
+                aunque la tabla haga scroll. La fila de filtros, deliberadamente
+                FUERA del bloque con scroll de abajo (no "position: sticky"
+                encima del scroll): el div de aquí al lado, al tener
+                también scroll horizontal propio (overflow-x-auto), se
+                convierte él mismo en el contenedor de referencia para
+                cualquier "sticky" que pusiéramos dentro — y ese
+                contenedor nunca hace scroll vertical de verdad (crece con
+                su contenido), así que el "sticky" no llegaba a fijarse
+                nunca. Separarla en su propio bloque, fuera del área que sí
+                hace scroll, es el mismo patrón ya probado en el historial
+                de Avisos. */}
             <div>
-              <div
-                className="grid text-xs uppercase px-3 py-2 text-center"
-                style={{
-                  gridTemplateColumns: columnasTabla,
-                  color: C.gold,
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  borderBottom: `1px solid ${C.line}`,
-                }}
-              >
-                <EncabezadoOrdenable columna="invitado" orden={orden} onClick={cambiarOrden}>
-                  Invitado
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
-                  Grupo familiar
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="zona" orden={orden} onClick={cambiarOrden}>
-                  Zona
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="colaborador" orden={orden} onClick={cambiarOrden}>
-                  Colaborador
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="mesa" orden={orden} onClick={cambiarOrden}>
-                  Mesa
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="confirmado" orden={orden} onClick={cambiarOrden}>
-                  Confirmado
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="datos" orden={orden} onClick={cambiarOrden}>
-                  Datos
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable columna="pagado" orden={orden} onClick={cambiarOrden}>
-                  Pagado
-                </EncabezadoOrdenable>
-                <span></span>
-              </div>
               <div
                 className="grid px-3 py-1.5"
                 style={{

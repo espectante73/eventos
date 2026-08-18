@@ -127,13 +127,21 @@ export function BarraCompacta({ icono: Icono, completado, total, color, claro })
   );
 }
 
-export function EncabezadoOrdenable({ columna, orden, onClick, children }) {
+// `claro`: variante para usar sobre fondo oscuro (la barra verde de
+// cabecera de una VentanaFlotante) -- mismo patrón que `claro` en
+// BarraCompacta (VentanaProgreso.jsx). Sin él, se comporta exactamente
+// igual que antes (fondos claros, uso original en la tabla de Invitados
+// y en Avisos). A petición del usuario, 2026-08-18.
+export function EncabezadoOrdenable({ columna, orden, onClick, children, claro }) {
   const activo = orden.columna === columna;
   return (
     <button
       onClick={() => onClick(columna)}
       className="flex items-center justify-center gap-1 w-full"
-      style={{ borderRight: `1px solid ${C.line}`, color: activo ? C.ink : C.gold }}
+      style={{
+        borderRight: `1px solid ${claro ? "rgba(255,255,255,0.25)" : C.line}`,
+        color: claro ? (activo ? C.paper : C.goldClaro) : activo ? C.ink : C.gold,
+      }}
     >
       {children}
       <span style={{ fontSize: 10 }}>
