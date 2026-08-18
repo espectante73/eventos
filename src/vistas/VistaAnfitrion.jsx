@@ -8,7 +8,7 @@ import { useState } from "react";
 import { generarInvitacionImagen } from "../lib/imagenInvitacion";
 import { C } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
-import { Portada, ANCHO_MAXIMO_PORTADA } from "../components/Portada";
+import { Portada } from "../components/Portada";
 import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
@@ -71,10 +71,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
 
   const ocupacionMesa = (numero) =>
     invitados.filter((g) => g.mesa === numero && g.confirmado).length;
-
-  const total = invitados.length;
-  const confirmadosCount = invitados.filter((g) => g.confirmado).length;
-  const tentativaCount = total - confirmadosCount;
 
   const [abierto, setAbierto] = useState({
     copiaSeguridad: false,
@@ -245,43 +241,10 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         onCerrarSesion={onCerrarSesion}
       />
 
-      {/* Resumen -- mismo ancho máximo y centrado que la Portada (antes no
-          tenía tope de ancho y en pantallas anchas sobresalía por los
-          lados de la imagen/franja verde de arriba, a las que debe
-          quedar alineado). Margen mínimo con el verde de la Portada (no
-          el espaciado habitual de "space-y-8" del contenedor, que aquí se
-          nota como un hueco de más justo debajo de la franja de datos).
-          El style inline (marginTop) gana por especificidad a la regla
-          de space-y-8, sin tocar el ritmo del resto de secciones. */}
-      <section
-        className="grid grid-cols-3 gap-3 mx-auto"
-        style={{ marginTop: 6, maxWidth: ANCHO_MAXIMO_PORTADA }}
-      >
-        {[
-          { label: "Lista global", value: total },
-          { label: "Tentativa", value: tentativaCount },
-          { label: "Confirmados", value: confirmadosCount },
-        ].map((s) => (
-          <div
-            key={s.label}
-            className="p-3 rounded text-center"
-            style={{ background: "#fff", border: `1px solid ${C.line}` }}
-          >
-            <div
-              className="text-2xl"
-              style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}
-            >
-              {s.value}
-            </div>
-            <div
-              className="text-xs uppercase"
-              style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
-            >
-              {s.label}
-            </div>
-          </div>
-        ))}
-      </section>
+      {/* Los 3 recuadros de resumen (Lista global/Tentativa/Confirmados)
+          se mudaron a la ventana Progreso -- a petición del usuario,
+          2026-08-18: tienen más sentido ahí (la ventana de estadísticas
+          del evento) que sueltos en la Portada. */}
 
       {/* Progreso de recopilación */}
       {abierto.progreso && (

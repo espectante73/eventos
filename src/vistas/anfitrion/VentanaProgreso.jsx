@@ -16,10 +16,42 @@ import { VentanaFlotante } from "../../components/VentanaFlotante";
 
 export function VentanaProgreso({ data, onCerrar }) {
   const { invitados, colaboradores, ordenFamiliares } = data;
+  const total = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
+  const tentativaCount = total - confirmadosCount;
 
   return (
     <VentanaFlotante clave="progreso" titulo="Progreso de recopilación" onCerrar={onCerrar}>
+      {/* Lista global/Tentativa/Confirmados: mudados aquí desde la Portada
+          (VistaAnfitrion.jsx) -- a petición del usuario, 2026-08-18, más
+          lógico en la ventana de estadísticas del evento que sueltos en
+          la pantalla de inicio. Mismo estilo que tenían allí. */}
+      <div className="grid grid-cols-3 gap-3 mb-3">
+        {[
+          { label: "Lista global", value: total },
+          { label: "Tentativa", value: tentativaCount },
+          { label: "Confirmados", value: confirmadosCount },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="p-3 rounded text-center"
+            style={{ background: "#fff", border: `1px solid ${C.line}` }}
+          >
+            <div
+              className="text-2xl"
+              style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}
+            >
+              {s.value}
+            </div>
+            <div
+              className="text-xs uppercase"
+              style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
+            >
+              {s.label}
+            </div>
+          </div>
+        ))}
+      </div>
       {/* Las 3 barras generales (datos, cobro, canciones) en un solo
           recuadro verde/dorado -- mismo lenguaje que el resto de la app
           (Portada.jsx: degradado C.ink + borde/texto en dorado). Dentro,
