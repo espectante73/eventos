@@ -216,7 +216,7 @@ export function SeccionInvitados({
       });
       descargarCSV(
         `invitados-${evento.nombre || "evento"}.csv`,
-        ["Invitado", "Grupo familiar", "Zona", "Colaborador", "Mesa", "Confirmado", "Pagado"],
+        ["Invitado", "Familia", "Zona", "Colaborador", "Mesa", "Confirmado", "Pagado"],
         filas
       );
     } else if (panelFlotante === "canciones") {
@@ -501,7 +501,7 @@ export function SeccionInvitados({
                   Invitado
                 </EncabezadoOrdenable>
                 <EncabezadoOrdenable columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
-                  Grupo familiar
+                  Familia
                 </EncabezadoOrdenable>
                 <EncabezadoOrdenable columna="zona" orden={orden} onClick={cambiarOrden}>
                   Zona
@@ -895,7 +895,7 @@ export function SeccionInvitados({
                   }}
                 >
                   <span>Invitado</span>
-                  <span>Grupo familiar</span>
+                  <span>Familia</span>
                   <span>Zona</span>
                   <span>Colaborador</span>
                   <span>Mesa</span>
