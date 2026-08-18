@@ -35,6 +35,12 @@ import { TextInput } from "../../components/Formulario";
 import { Stamp, EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 
+// Ancho compartido por los 6 botones de la cabecera (Imprimir/Canciones/
+// Alergias + Añadir/Editar/Importar) -- así las dos filas quedan del mismo
+// ancho en vez de que cada botón se ajuste solo a su propio texto (a
+// petición del usuario, 2026-08-18).
+const ANCHO_BOTON_EXTRA = 92;
+
 export function SeccionInvitados({
   data,
   asignarColaborador,
@@ -298,30 +304,40 @@ export function SeccionInvitados({
         clave="invitados"
         titulo="Lista de invitados"
         onCerrar={intentarCerrarInvitados}
+        subtitulo={
+          // Segunda línea bajo el título, mismo color que él (C.goldClaro)
+          // -- edad media + total de invitados (en negrita), a petición
+          // del usuario, 2026-08-18.
+          <div className="text-xs mt-0.5" style={{ color: C.goldClaro, opacity: 0.85 }}>
+            Edad media: {edadPromedio(invitadosOrdenados, evento) ?? "—"}
+            {edadPromedio(invitadosOrdenados, evento) !== null && " años"} · Lista invitados{" "}
+            <strong>{invitados.length}</strong>
+          </div>
+        }
         extra={
           <div className="flex flex-col gap-1.5">
             {invitados.length > 0 && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPanelFlotante("tabla")}
-                  className="flex items-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ background: C.gold, color: "#fff" }}
+                  className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
+                  style={{ border: `1px solid ${C.gold}`, color: C.goldClaro, width: ANCHO_BOTON_EXTRA }}
                   title="Ver / imprimir / exportar la lista de invitados"
                 >
                   <Printer size={12} /> Imprimir
                 </button>
                 <button
                   onClick={() => setPanelFlotante("canciones")}
-                  className="flex items-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ background: C.gold, color: "#fff" }}
+                  className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
+                  style={{ border: `1px solid ${C.gold}`, color: C.goldClaro, width: ANCHO_BOTON_EXTRA }}
                   title="Ver / imprimir / exportar solo la lista de canciones (para el DJ/grupo musical)"
                 >
                   <Music size={12} /> Canciones
                 </button>
                 <button
                   onClick={() => setPanelFlotante("alergias")}
-                  className="flex items-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ background: C.wax, color: "#fff" }}
+                  className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
+                  style={{ background: C.wax, color: "#fff", width: ANCHO_BOTON_EXTRA }}
                   title="Ver / imprimir / exportar solo la lista de alergias, con su mesa (para cocina/catering)"
                 >
                   <AlertTriangle size={12} /> Alergias
@@ -331,16 +347,21 @@ export function SeccionInvitados({
             {/* 2ª fila -- antes eran 3 botones sueltos en el cuerpo, con
                 texto largo ("Añadir invitado individual", "Importar desde
                 hoja de cálculo"); movidos aquí y acortados al mismo estilo
-                corto de la fila de arriba para que las dos filas tengan un
-                ancho parecido (a petición del usuario, 2026-08-18). */}
+                corto de la fila de arriba (a petición del usuario,
+                2026-08-18). Imprimir/Canciones pasan también a este mismo
+                formato (borde + transparente) para que los 6 boones se
+                vean como un solo grupo -- Alergias se queda con su fondo
+                propio a propósito (la única que avisa de algo). Los 6
+                comparten ANCHO_BOTON_EXTRA. */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setMostrarAnadir((v) => !v)}
-                className="flex items-center gap-1 text-xs px-2 py-1 rounded"
+                className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
                 style={{
                   border: `1px solid ${C.gold}`,
                   color: mostrarAnadir ? C.paper : C.goldClaro,
                   background: mostrarAnadir ? C.gold : "transparent",
+                  width: ANCHO_BOTON_EXTRA,
                 }}
                 title="Añadir invitado individual"
               >
@@ -348,11 +369,12 @@ export function SeccionInvitados({
               </button>
               <button
                 onClick={() => setModoEdicion((v) => !v)}
-                className="flex items-center gap-1 text-xs px-2 py-1 rounded"
+                className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
                 style={{
                   border: `1px solid ${C.gold}`,
                   color: modoEdicion ? C.paper : C.goldClaro,
                   background: modoEdicion ? C.gold : "transparent",
+                  width: ANCHO_BOTON_EXTRA,
                 }}
                 title="Activa este modo para poder corregir el grupo familiar de un invitado"
               >
@@ -360,11 +382,12 @@ export function SeccionInvitados({
               </button>
               <button
                 onClick={() => setMostrarImport((v) => !v)}
-                className="flex items-center gap-1 text-xs px-2 py-1 rounded"
+                className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
                 style={{
                   border: `1px solid ${C.gold}`,
                   color: mostrarImport ? C.paper : C.goldClaro,
                   background: mostrarImport ? C.gold : "transparent",
+                  width: ANCHO_BOTON_EXTRA,
                 }}
                 title="Importar desde hoja de cálculo"
               >
