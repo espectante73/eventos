@@ -78,9 +78,22 @@ function useMantenerDentroDePantalla(activo, ref, pos, setPos) {
 // disparador de un submenú anidado (se abre hacia la izquierda de la
 // propia fila, sin cerrar el panel padre — igual patrón que un menú de
 // sistema operativo con flechas ">"/"‹").
-function FilaMenu({ opcion, cerrarTodo }) {
-  const [abierto, setAbierto] = useState(false);
+// `abierto`/`onAbrir`/`onCerrarPropio`: el "cuál está abierto" ya NO es
+// estado propio de cada fila (antes cada FilaMenu tenía su propio
+// useState, así que dos filas HERMANAS con submenú -- p.ej. Colaboradores
+// y Configuración -- podían quedar abiertas las dos a la vez y sus
+// paneles se solapaban, tapándose una a otra sin forma de llegar a la de
+// detrás; bug real reportado por el usuario, 2026-08-18). Ahora lo
+// controla el padre (MenuFlotante o la propia FilaMenu con submenú, ver
+// más abajo), que solo permite un id abierto por nivel -- abrir uno
+// cierra automáticamente cualquier hermano que estuviera abierto.
+function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
   const [pos, setPos] = useState(null);
+  // Mismo mecanismo que arriba, pero para las hermanas DENTRO del propio
+  // submenú de esta fila (p.ej. "Anfitrión"/cada colaborador, dentro de
+  // "Formularios") -- se declara aquí incondicional (reglas de los Hooks)
+  // aunque solo se use si opcion.submenu existe, más abajo.
+  const [abiertoIdHijo, setAbiertoIdHijo] = useState(null);
   const filaRef = useRef(null);
   const panelRef = useRef(null);
 
@@ -91,8 +104,15 @@ function FilaMenu({ opcion, cerrarTodo }) {
       right: window.innerWidth - r.left + 4,
       maxHeight: alturaMaximaDisponible(r.top, false), // crece hacia abajo desde r.top
     });
-    setAbierto(true);
+    onAbrir();
   };
+
+  // Mismo criterio que en MenuFlotante: al cerrarse ESTE submenú, se
+  // olvida cuál de sus propios hijos tenía a su vez un sub-submenú
+  // abierto (p.ej. dentro de "Formularios").
+  useEffect(() => {
+    if (!abierto) setAbiertoIdHijo(null);
+  }, [abierto]);
 
   useEffect(() => {
     if (!abierto) return;
@@ -102,7 +122,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
     // detallado, en MenuFlotante más abajo).
     const cerrarSiFuera = (e) => {
       if (filaRef.current?.contains(e.target) || e.target.closest?.("[data-menu-panel]")) return;
-      setAbierto(false);
+      onCerrarPropio();
     };
     document.addEventListener("mousedown", cerrarSiFuera);
     document.addEventListener("touchstart", cerrarSiFuera);
@@ -110,7 +130,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
       document.removeEventListener("mousedown", cerrarSiFuera);
       document.removeEventListener("touchstart", cerrarSiFuera);
     };
-  }, [abierto]);
+  }, [abierto, onCerrarPropio]);
 
   useMantenerDentroDePantalla(abierto, panelRef, pos, setPos);
 
@@ -175,7 +195,14 @@ function FilaMenu({ opcion, cerrarTodo }) {
               }}
             >
               {opcion.submenu.map((hijo) => (
-                <FilaMenu key={hijo.id} opcion={hijo} cerrarTodo={cerrarTodo} />
+                <FilaMenu
+                  key={hijo.id}
+                  opcion={hijo}
+                  cerrarTodo={cerrarTodo}
+                  abierto={abiertoIdHijo === hijo.id}
+                  onAbrir={() => setAbiertoIdHijo(hijo.id)}
+                  onCerrarPropio={() => setAbiertoIdHijo(null)}
+                />
               ))}
             </div>,
             document.body
@@ -231,6 +258,10 @@ function FilaMenu({ opcion, cerrarTodo }) {
 export function MenuFlotante({ render, opciones, anchor = "right" }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState(null);
+  // Cuál de las filas de nivel superior tiene su submenú abierto (ver el
+  // mismo mecanismo, más detallado, en el comentario de FilaMenu) --
+  // p.ej. Colaboradores/Configuración, hermanas directas aquí.
+  const [abiertoId, setAbiertoId] = useState(null);
   const botonRef = useRef(null);
   const listaRef = useRef(null);
 
@@ -260,6 +291,14 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
     }
     setOpen(true);
   };
+
+  // Al cerrar el menú entero, se olvida cuál de las filas tenía su
+  // submenú abierto -- si no, al reabrir esa fila quedaría con el estilo
+  // de "abierto" puesto sin que su panel llegara a mostrarse (su propio
+  // `pos` interno sí se reinicia solo, al ser una FilaMenu nueva).
+  useEffect(() => {
+    if (!open) setAbiertoId(null);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -313,7 +352,14 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
             }}
           >
             {opciones.map((o) => (
-              <FilaMenu key={o.id} opcion={o} cerrarTodo={() => setOpen(false)} />
+              <FilaMenu
+                key={o.id}
+                opcion={o}
+                cerrarTodo={() => setOpen(false)}
+                abierto={abiertoId === o.id}
+                onAbrir={() => setAbiertoId(o.id)}
+                onCerrarPropio={() => setAbiertoId(null)}
+              />
             ))}
           </div>,
           document.body

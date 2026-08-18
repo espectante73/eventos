@@ -66,7 +66,9 @@
    usuario, 2026-08-18: mismo contorno + relieve que "Cerrar sesión" en
    vez del simple resaltado plano que llevaban antes. */
 .boton-flotante-imagen {
-  background: linear-gradient(180deg, rgba(36, 64, 47, 0.82), rgba(18, 32, 24, 0.82));
+  /* 0.82 -> 0.90 (a petición del usuario, 2026-08-18): sigue siendo
+     translúcido -- le gusta el efecto -- pero algo más opaco que antes. */
+  background: linear-gradient(180deg, rgba(36, 64, 47, 0.9), rgba(18, 32, 24, 0.9));
   color: #D9B778; /* = theme.js C.goldClaro -- CSS no puede importar JS, mantener igual a mano si cambia */
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow:
