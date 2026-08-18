@@ -32,10 +32,10 @@ const ALTO_MINIMO = 120;
 // pesar de tener menos letras), y encima lleva el icono de flecha del
 // submenú de más -- icono(19) + gap(8) + texto(~92) + gap(12) +
 // flecha(13) + padding horizontal del botón(24) + compensación del
-// margen del botón(12) ≈ 180px, más un margen pequeño. -15px más (a
-// petición del usuario, seguía saliendo más ancho que antes de este
-// repaso): 173px.
-const ANCHO_PANEL = 173;
+// margen del botón(12) ≈ 180px, más un margen pequeño. -15px (seguía
+// saliendo más ancho que antes de este repaso): 173px. -15px otra vez
+// (a petición del usuario): 158px.
+const ANCHO_PANEL = 158;
 
 // Altura máxima real según el hueco disponible en pantalla, no un 60vh
 // fijo: si el botón está cerca del borde, un límite fijo deja que el
@@ -147,11 +147,15 @@ function FilaMenu({ opcion, cerrarTodo }) {
             borderRadius: 9999,
           }}
         >
+          {/* Flecha al extremo IZQUIERDO del botón (antes a la derecha) --
+              a petición del usuario, 2026-08-18: con justify-between, el
+              primer hijo va al extremo opuesto (izquierda), el segundo al
+              derecho. */}
+          <ChevronLeft size={13} style={{ opacity: 0.6, flexShrink: 0 }} />
           <span className="flex items-center gap-2">
             {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: 0.85 }} />}
             {opcion.etiqueta}
           </span>
-          <ChevronLeft size={13} style={{ opacity: 0.6, flexShrink: 0 }} />
         </button>
         {abierto &&
           pos &&
