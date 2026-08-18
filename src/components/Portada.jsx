@@ -88,7 +88,21 @@ export function Portada({
     <div className="mx-auto" style={{ maxWidth: ANCHO_MAXIMO_PORTADA }}>
       <div className="relative rounded-t-lg overflow-hidden">
         {imagenPortada ? (
-          <img src={imagenPortada} alt="" className="w-full block" />
+          // userSelect/WebkitUserSelect + WebkitTouchCallout: la imagen es
+          // decorativa (una foto con el diseño de la invitación ya
+          // dibujado encima) -- sin esto, un arrastre accidental del ratón
+          // o el reconocimiento de texto en imágenes de Safari/iOS (Live
+          // Text) puede "seleccionar" el texto que ya trae la propia
+          // foto, mostrando recuadros azules de selección encima (lo que
+          // reportó el usuario, 2026-08-18) — nada roto en el código, es
+          // comportamiento del navegador sobre cualquier imagen con texto
+          // legible.
+          <img
+            src={imagenPortada}
+            alt=""
+            className="w-full block"
+            style={{ userSelect: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
+          />
         ) : (
           <div
             className="w-full flex items-center justify-center"
