@@ -32,8 +32,10 @@ const ALTO_MINIMO = 120;
 // pesar de tener menos letras), y encima lleva el icono de flecha del
 // submenú de más -- icono(19) + gap(8) + texto(~92) + gap(12) +
 // flecha(13) + padding horizontal del botón(24) + compensación del
-// margen del botón(12) ≈ 180px, más un margen pequeño.
-const ANCHO_PANEL = 188;
+// margen del botón(12) ≈ 180px, más un margen pequeño. -15px más (a
+// petición del usuario, seguía saliendo más ancho que antes de este
+// repaso): 173px.
+const ANCHO_PANEL = 173;
 
 // Altura máxima real según el hueco disponible en pantalla, no un 60vh
 // fijo: si el botón está cerca del borde, un límite fijo deja que el
@@ -140,7 +142,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
           style={{
             color: C.goldClaro,
             ...(abierto ? { background: "rgba(239,233,222,0.12)" } : {}),
-            margin: "2px 6px",
+            margin: "5px 6px",
             width: "calc(100% - 12px)",
             borderRadius: 9999,
           }}
@@ -202,7 +204,7 @@ function FilaMenu({ opcion, cerrarTodo }) {
       style={{
         color: opcion.color || C.goldClaro,
         ...(opcion.fondo ? { background: opcion.fondo } : {}),
-        margin: "2px 6px",
+        margin: "5px 6px",
         width: "calc(100% - 12px)",
         borderRadius: 9999,
       }}
