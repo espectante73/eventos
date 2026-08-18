@@ -59,7 +59,12 @@
    sombra más presente) para leerse como un botón "de verdad" flotando,
    no solo una etiqueta semitransparente. Se combina con .cristal-difuminado
    (desenfoca la foto de detrás) y .boton-3d (hover/active) -- las tres
-   clases juntas en el mismo botón. */
+   clases juntas en el mismo botón.
+   También reutilizada (sin .cristal-difuminado, no hace falta un
+   segundo desenfoque encima del propio panel ya difuminado) en cada
+   fila de los paneles desplegables (MenuFlotante.jsx) -- a petición del
+   usuario, 2026-08-18: mismo contorno + relieve que "Cerrar sesión" en
+   vez del simple resaltado plano que llevaban antes. */
 .boton-flotante-imagen {
   background: linear-gradient(180deg, rgba(36, 64, 47, 0.82), rgba(18, 32, 24, 0.82));
   color: #D9B778; /* = theme.js C.goldClaro -- CSS no puede importar JS, mantener igual a mano si cambia */

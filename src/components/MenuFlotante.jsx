@@ -119,19 +119,21 @@ function FilaMenu({ opcion, cerrarTodo }) {
       <div ref={filaRef}>
         <button
           onClick={abrirSubmenu}
+          // Mismo contorno + relieve 3D que "Cerrar sesión" (boton-3d +
+          // boton-flotante-imagen: borde, degradado propio, sombra que
+          // crece al pasar el ratón) -- a petición del usuario, en vez
+          // del simple resaltado plano que llevaba antes cada fila.
           // Redondeado como un botón de la portada (a petición del
-          // usuario): margen a los lados + radio grande, en vez de una
-          // fila rectangular a todo lo ancho del panel.
-          className="flex items-center justify-between gap-3 text-left px-3 py-2 text-sm whitespace-nowrap"
+          // usuario anterior): margen a los lados + radio grande, en vez
+          // de una fila rectangular a todo lo ancho del panel.
+          className="boton-3d boton-flotante-imagen flex items-center justify-between gap-3 text-left px-3 py-2 text-sm whitespace-nowrap"
           style={{
             color: C.goldClaro,
-            background: abierto ? "rgba(239,233,222,0.12)" : "transparent",
+            ...(abierto ? { background: "rgba(239,233,222,0.12)" } : {}),
             margin: "2px 6px",
             width: "calc(100% - 12px)",
             borderRadius: 9999,
           }}
-          onMouseEnter={(e) => !abierto && (e.currentTarget.style.background = "rgba(239,233,222,0.12)")}
-          onMouseLeave={(e) => !abierto && (e.currentTarget.style.background = "transparent")}
         >
           <span className="flex items-center gap-2">
             {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: 0.85 }} />}
@@ -171,32 +173,32 @@ function FilaMenu({ opcion, cerrarTodo }) {
 
   // `opcion.fondo`: opciones "de peligro" (Modo pruebas, Borrado total)
   // llevan su propio chip de color de fondo (letra clara) en vez del
-  // resaltado normal al pasar el ratón — ver DesplegableSecciones.jsx.
-  const fondoBase = opcion.fondo || "transparent";
+  // degradado normal de boton-flotante-imagen — ver DesplegableSecciones.jsx.
+  // Se sigue aplicando por encima (inline gana a la clase), así que
+  // conservan su color propio pero ganan el mismo contorno + relieve 3D.
   return (
     <button
       onClick={() => {
         opcion.onClick();
         cerrarTodo();
       }}
-      // Redondeado como un botón de la portada (a petición del usuario):
-      // margen a los lados + radio grande para TODAS las filas, no solo
-      // las "de peligro" (que antes eran las únicas con este tratamiento).
-      className="flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap"
+      // Mismo contorno + relieve 3D que "Cerrar sesión" (boton-3d +
+      // boton-flotante-imagen) -- a petición del usuario. Redondeado
+      // como un botón de la portada (a petición del usuario anterior):
+      // margen a los lados + radio grande para TODAS las filas.
+      className="boton-3d boton-flotante-imagen flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap"
       style={{
         color: opcion.color || C.goldClaro,
-        background: fondoBase,
+        ...(opcion.fondo ? { background: opcion.fondo } : {}),
         margin: "2px 6px",
         width: "calc(100% - 12px)",
         borderRadius: 9999,
       }}
       onMouseEnter={(e) => {
         if (opcion.fondo) e.currentTarget.style.filter = "brightness(1.2)";
-        else e.currentTarget.style.background = "rgba(239,233,222,0.12)";
       }}
       onMouseLeave={(e) => {
         if (opcion.fondo) e.currentTarget.style.filter = "none";
-        else e.currentTarget.style.background = "transparent";
       }}
     >
       {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: 0.85 }} />}
