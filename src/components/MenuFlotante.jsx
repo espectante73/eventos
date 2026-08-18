@@ -24,10 +24,16 @@ const ALTO_MINIMO = 120;
 // Ancho fijo del panel (antes "max-content": cada panel se ajustaba solo
 // a su propio contenido, así que el desplegable de "Abrir sección…" y
 // cada submenú salían con un ancho distinto entre sí) -- a petición del
-// usuario, ceñido a la etiqueta más larga de todo el menú ("Email
-// anfitrión", en Configuración) más el icono, en vez de a cada panel por
-// separado. Así todos los botones quedan igual de estrechos.
-const ANCHO_PANEL = 210;
+// usuario, ceñido a la etiqueta más larga de todo el menú con un margen
+// pequeño, en vez de a cada panel por separado. Medido de verdad (no a
+// ojo: un primer intento a 210px salió más ancho que antes, corregido
+// aquí) con canvas.measureText a 14px -- "Colaboradores" es la más
+// ancha en píxeles reales (91.8px, más ancha que "Email anfitrión" a
+// pesar de tener menos letras), y encima lleva el icono de flecha del
+// submenú de más -- icono(19) + gap(8) + texto(~92) + gap(12) +
+// flecha(13) + padding horizontal del botón(24) + compensación del
+// margen del botón(12) ≈ 180px, más un margen pequeño.
+const ANCHO_PANEL = 188;
 
 // Altura máxima real según el hueco disponible en pantalla, no un 60vh
 // fijo: si el botón está cerca del borde, un límite fijo deja que el
