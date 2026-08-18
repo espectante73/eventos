@@ -62,7 +62,7 @@ const ICONOS_VENTANAS = {
 // de los dos, así que se ve más rojo — a petición del usuario,
 // 2026-08-12.
 const SUBMENU_CONFIGURACION = [
-  { id: "config-datos-evento", etiqueta: "Datos del evento", icono: Calendar },
+  { id: "config-datos-evento", etiqueta: "Datos evento", icono: Calendar },
   { id: "config-precios", etiqueta: "Precios", icono: Euro },
   { id: "config-url-web", etiqueta: "URL web", icono: Globe },
   { id: "config-email-anfitrion", etiqueta: "Email anfitrión", icono: Mail },

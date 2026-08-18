@@ -21,6 +21,13 @@ import { C } from "../theme";
 // que quedarse ilegible).
 const MARGEN_BORDE = 12;
 const ALTO_MINIMO = 120;
+// Ancho fijo del panel (antes "max-content": cada panel se ajustaba solo
+// a su propio contenido, así que el desplegable de "Abrir sección…" y
+// cada submenú salían con un ancho distinto entre sí) -- a petición del
+// usuario, ceñido a la etiqueta más larga de todo el menú ("Email
+// anfitrión", en Configuración) más el icono, en vez de a cada panel por
+// separado. Así todos los botones quedan igual de estrechos.
+const ANCHO_PANEL = 210;
 
 // Altura máxima real según el hueco disponible en pantalla, no un 60vh
 // fijo: si el botón está cerca del borde, un límite fijo deja que el
@@ -153,8 +160,8 @@ function FilaMenu({ opcion, cerrarTodo }) {
               style={{
                 top: pos.top,
                 right: pos.right,
-                width: "max-content",
-                maxWidth: "min(320px, calc(100vw - 2rem))",
+                width: ANCHO_PANEL,
+                maxWidth: "calc(100vw - 2rem)",
                 maxHeight: pos.maxHeight,
                 padding: "4px 0",
                 zIndex: 10000,
@@ -292,8 +299,8 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
             className="fixed rounded-xl overflow-y-auto"
             style={{
               ...pos,
-              width: "max-content",
-              maxWidth: "min(320px, calc(100vw - 2rem))",
+              width: ANCHO_PANEL,
+              maxWidth: "calc(100vw - 2rem)",
               padding: "4px 0",
               zIndex: 9999,
             }}
