@@ -330,9 +330,19 @@ export function SeccionInvitados({
               </strong>
               {edadPromedio(invitadosOrdenados, evento) !== null && " años"}
             </div>
+            {/* Sin `minWidth: 780` aquí (a diferencia de la tabla de
+                abajo, que sí lo lleva dentro de su propio contenedor con
+                scroll horizontal propio) -- en móvil vertical, la
+                ventana se encoge (ancho = calc(100vw - 48px), ver el
+                `ancho` de más arriba) y esta fila, al no tener scroll
+                propio, se salía literalmente fuera del marco de la
+                ventana en vez de encogerse con ella. Sigue coincidiendo
+                con la tabla en horizontal/escritorio (ahí la ventana ya
+                es más ancha que 780 de sobra) -- a petición del usuario,
+                2026-08-18. */}
             <div
               className="rounded"
-              style={{ border: "1px solid transparent", minWidth: 780 }}
+              style={{ border: "1px solid transparent" }}
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
             >
