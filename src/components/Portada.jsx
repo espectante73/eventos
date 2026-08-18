@@ -58,6 +58,13 @@ export function Portada({
   onCambiarRol,
   anfitrionToken,
   onCerrarSesion,
+  // `botonExtra`: para cuando esta Portada la usa alguien que NO es el
+  // anfitrión editando (p.ej. VistaColaborador.jsx) -- en vez del
+  // desplegable "Abrir sección…" (editable+toggle), se puede pasar aquí
+  // cualquier botón/menú propio, que ocupa el mismo sitio ("a los pies
+  // de la pareja"). Los dos son mutuamente excluyentes: si hay
+  // editable+toggle, botonExtra no se usa.
+  botonExtra,
 }) {
   const [form, setForm] = useState(evento);
   useEffect(() => setForm(evento), [evento]);
@@ -124,6 +131,11 @@ export function Portada({
             anfitrionToken={anfitrionToken}
             posicion={{ bottom: "9%", right: 16 }}
           />
+        )}
+        {!(editable && toggle) && botonExtra && (
+          <div className="absolute flex flex-col items-end gap-2" style={{ bottom: "9%", right: 16 }}>
+            {botonExtra}
+          </div>
         )}
       </div>
 

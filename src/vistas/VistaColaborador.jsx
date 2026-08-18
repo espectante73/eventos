@@ -11,7 +11,6 @@ import {
   ClipboardList,
   Euro,
   ChevronDown,
-  LogOut,
 } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
@@ -27,7 +26,8 @@ import { redimensionarImagenArchivo } from "../lib/descargas";
 import { C } from "../theme";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
-import { ModalFlotante } from "../components/VentanaFlotante";
+import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
+import { Portada } from "../components/Portada";
 
 // ---------- Colaborador view ----------
 
@@ -447,6 +447,13 @@ function FilaInvitadoColaborador({
 export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken, onCerrarSesion }) {
   const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento, ordenFamiliares } = data;
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
+  // Pantalla de inicio: la misma Portada que ve el anfitrión (sin sus 3
+  // recuadros de estadísticas, que no viven aquí sino en VistaAnfitrion.jsx),
+  // con un único botón "Abrir formulario" en vez del desplegable "Abrir
+  // sección…" -- a petición del usuario, 2026-08-18. Todo lo que antes iba
+  // siempre visible (resumen + listas de invitados) pasa a esta ventana,
+  // que se abre con ese botón.
+  const [formularioAbierto, setFormularioAbierto] = useState(false);
   const [abiertoId, setAbiertoId] = useState(null);
   // Mientras un invitado está abierto, se queda fijo en la sección donde
   // estaba al abrirlo (pendiente o completo), aunque sus datos cambien
@@ -565,63 +572,18 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           guardar datos, marcar pagos ni confirmar nada hasta que lo desactive.
         </div>
       )}
-      <div style={{ border: `1px solid ${C.line}`, borderRadius: 6 }}>
-        {/* Cabecera igual que las ventanas de la app (fondo verde, letra
-            dorada) -- a petición del usuario. "Apellido, Nombre" en una
-            sola línea (colaborador.nombre ya viene así de guardado) en
-            vez de "Colaborador" + nombre en dos líneas: gana espacio.
-            "sticky": se queda fija arriba al bajar por la lista de
-            invitados (no compite con las franjas de aviso de App.jsx,
-            que van con z-index 60/61 -- esta se queda por debajo).
-            El redondeado va en esta pieza y en la del cuerpo (más abajo)
-            por separado, NO con "overflow-hidden" en el contenedor
-            exterior -- overflow distinto de "visible" en un antecesor
-            es justo lo que impedía que "sticky" funcionara de verdad. */}
-        <div
-          className="panel-flotante-cristal flex items-center justify-between px-4 py-3 sticky"
-          style={{ top: 0, zIndex: 30, borderTopLeftRadius: 6, borderTopRightRadius: 6 }}
-        >
-          <h3
-            className="text-lg"
-            style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}
-          >
-            {colaborador.nombre}
-          </h3>
-          {onCerrarSesion && (
-            // Borde dorado (antes sin borde) para que se distinga del
-            // propio fondo verde de la cabecera, a petición del usuario.
-            <button
-              onClick={onCerrarSesion}
-              className="boton-3d flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium"
-              style={{ color: C.goldClaro, border: `1px solid ${C.goldClaro}` }}
-            >
-              <LogOut size={16} /> Cerrar sesión
-            </button>
-          )}
-        </div>
-
-        <div className="p-4" style={{ background: "#fff", borderBottomLeftRadius: 6, borderBottomRightRadius: 6 }}>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-              FAMILIAS CONFIRMADAS:{" "}
-              {gruposFamiliaresACargo.length > 0
-                ? gruposFamiliaresACargo.join(", ")
-                : "ninguno"}
-            </div>
-            {/* Si ya tiene email registrado, no hace falta decir nada aquí
-                -- el aviso es solo para cuando falta, a petición del
-                usuario (antes se mostraba siempre, con el email delante). */}
-            {!colaborador.email && (
-              <div className="text-xs mt-1" style={{ color: C.wax }}>
-                Sin email de contacto{" "}
-                <span className="italic" style={{ opacity: 0.75 }}>
-                  (solo lo puede cambiar el anfitrión)
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
+      {/* Misma Portada que ve el anfitrión (imagen + franja fecha/hora/
+          lugar en vivo) -- sin sus 3 recuadros de estadísticas (Lista
+          global/Tentativa/Confirmados: esos son del evento entero, viven
+          aparte en VistaAnfitrion.jsx, no aquí). En vez del desplegable
+          "Abrir sección…" (editable+toggle, que no se pasan aquí a
+          propósito), un único botón que abre el formulario -- a petición
+          del usuario, 2026-08-18. */}
+      <Portada
+        evento={evento}
+        onCerrarSesion={onCerrarSesion}
+        botonExtra={
+          <>
             {esAnfitrionOriginal && (
               <MenuFlotante
                 anchor="bottom-left"
@@ -648,145 +610,171 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 )}
               />
             )}
-            <Seal count={pendientes.length} />
-          </div>
-        </div>
-
-        {/* Recuadro más compacto (a petición del usuario): menos margen/
-            padding alrededor y letra más pequeña que antes -- mismos
-            datos, menos alto ocupado. */}
-        {/* 2 filas de 3 recuadros (a petición del usuario): los 5 datos +
-            un 6º recuadro con las 3 barras de porcentaje dentro, todos
-            del mismo tamaño/estilo -- antes las barras iban aparte,
-            debajo, en su propia sección. Textos más cortos (Pendiente,
-            Importe total, Cobrado) para que quepan cómodos en un
-            recuadro más pequeño. */}
-        <div
-          className="grid grid-cols-3 gap-1.5 mt-2 pt-2"
-          style={{ borderTop: `1px solid ${C.line}` }}
-        >
-          {/* Orden: fila 1 los 3 importes (dinero), fila 2 las cantidades
-              (No pagados/Pagados) + porcentajes -- a petición del
-              usuario. Texto arriba, número/importe debajo en las 6.
-              Cobrado y Pendiente conservan su fondo de color propio
-              (verde/rojo) con letra blanca. */}
-          <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total</div>
-            <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
-              {formatoEuro(importeEsperado)}
-            </div>
-          </div>
-          <div className="h-full rounded p-2 text-center" style={{ background: C.ink }}>
-            <div className="text-xs" style={{ color: "#fff", opacity: 0.85 }}>Cobrado</div>
-            <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: 15 }}>
-              {formatoEuro(importeCobrado)}
-            </div>
-          </div>
-          <div className="h-full rounded p-2 text-center" style={{ background: C.wax }}>
-            <div className="text-xs" style={{ color: "#fff", opacity: 0.85 }}>Pendiente</div>
-            <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: 15 }}>
-              {formatoEuro(importePendiente)}
-            </div>
-          </div>
-          {/* Solo el número se centra en el hueco que le queda -- el
-              título se queda arriba, a la misma altura que el resto de
-              tarjetas (antes centraba el bloque entero, y el título
-              también bajaba). Dígito algo más grande (18px, no 15px). */}
-          <div className="h-full rounded p-2 flex flex-col text-center" style={{ background: C.paperDark }}>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
-            <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18, marginTop: -2 }}>
-              {noPagados.length}
-            </div>
-          </div>
-          <div className="h-full rounded p-2 flex flex-col text-center" style={{ background: C.paperDark }}>
-            <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pagados</div>
-            <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18, marginTop: -2 }}>
-              {pagados.length}
-            </div>
-          </div>
-          <div className="h-full rounded p-2 flex flex-col justify-center" style={{ background: C.paperDark }}>
-            <BarraCompacta icono={ClipboardList} completado={completos.length} total={confirmados.length} color={C.ink} />
-            <BarraCompacta icono={Euro} completado={pagados.length} total={confirmados.length} color={C.gold} />
-            <BarraCompacta icono={Mail} completado={familiasConInvitacion} total={gruposFamiliaresACargo.length} color={C.wax} />
-          </div>
-        </div>
-
-        {/* Las 2 listas de invitados se meten AQUÍ DENTRO (antes eran
-            secciones sueltas fuera de este recuadro) -- a petición del
-            usuario: "sticky" solo mantiene la cabecera pegada mientras
-            se hace scroll DENTRO de su propio contenedor. Con las
-            listas fuera, el contenedor de la cabecera era corto (solo
-            estas tarjetas) y en cuanto se pasaba ese trozo la cabecera
-            subía igual que el resto -- no tenía más "sitio" donde
-            quedarse enganchada. Metiendo las listas aquí, el
-            contenedor pasa a abarcar todo el scroll del formulario. */}
-        <section className="mt-8">
-          <div className="flex items-center justify-between mb-4 pb-2" style={{ borderBottom: `1.5px solid ${C.line}` }}>
-            <h2
-              className="flex items-center gap-2 text-xl"
-              style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}
-            >
-              <Bell size={18} strokeWidth={2} />
-              Invitados NUEVOS {pendientes.length > 0 && `(${pendientes.length})`}
-            </h2>
             <button
-              onClick={() => setMostrarConfirmar(true)}
-              className="boton-3d boton-verde-solido px-4 py-2 rounded-full text-sm font-semibold"
+              onClick={() => setFormularioAbierto(true)}
+              className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
             >
-              Datos completos
+              Abrir formulario
+              <Seal count={pendientes.length} />
             </button>
-          </div>
-          <div className="space-y-2">
-            {ordenarPorApellidoNombre(pendientes).map((g) => (
-              <FilaInvitadoColaborador
-                key={g.id}
-                g={g}
-                abierto={abiertoId === g.id}
-                onToggleAbierto={() => toggleAbierto(g)}
-                onGuardar={guardar}
-                fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
-                onCambiarFotoFamiliar={cambiarFotoFamiliar}
-                onMarcarPagado={marcarPagado}
-                evento={evento}
-                fotosFamiliares={fotosFamiliares}
-                colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
-              />
-            ))}
-            {pendientes.length === 0 && (
-              <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                No hay avisos pendientes.
-              </p>
-            )}
-          </div>
-        </section>
+          </>
+        }
+      />
 
-        <section className="mt-8">
-          <SectionTitle icon={Check}>Invitados COMPLETADOS</SectionTitle>
-          <div className="space-y-2">
-            {ordenarPorApellidoNombre(completos).map((g) => (
-              <FilaInvitadoColaborador
-                key={g.id}
-                g={g}
-                abierto={abiertoId === g.id}
-                onToggleAbierto={() => toggleAbierto(g)}
-                onGuardar={guardar}
-                fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
-                onCambiarFotoFamiliar={cambiarFotoFamiliar}
-                onMarcarPagado={marcarPagado}
-                evento={evento}
-                fotosFamiliares={fotosFamiliares}
-                colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
-              />
-            ))}
-            {completos.length === 0 && (
-              <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                Todavía ningún invitado con datos completos.
-              </p>
-            )}
+      {formularioAbierto && (
+        <VentanaFlotante
+          clave="formulario-colaborador"
+          titulo={colaborador.nombre}
+          onCerrar={() => setFormularioAbierto(false)}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+                FAMILIAS CONFIRMADAS:{" "}
+                {gruposFamiliaresACargo.length > 0
+                  ? gruposFamiliaresACargo.join(", ")
+                  : "ninguno"}
+              </div>
+              {/* Si ya tiene email registrado, no hace falta decir nada aquí
+                  -- el aviso es solo para cuando falta, a petición del
+                  usuario (antes se mostraba siempre, con el email delante). */}
+              {!colaborador.email && (
+                <div className="text-xs mt-1" style={{ color: C.wax }}>
+                  Sin email de contacto{" "}
+                  <span className="italic" style={{ opacity: 0.75 }}>
+                    (solo lo puede cambiar el anfitrión)
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-        </section>
-        </div>
-      </div>
+
+          {/* Recuadro más compacto (a petición del usuario): menos margen/
+              padding alrededor y letra más pequeña que antes -- mismos
+              datos, menos alto ocupado. */}
+          {/* 2 filas de 3 recuadros (a petición del usuario): los 5 datos +
+              un 6º recuadro con las 3 barras de porcentaje dentro, todos
+              del mismo tamaño/estilo -- antes las barras iban aparte,
+              debajo, en su propia sección. Textos más cortos (Pendiente,
+              Importe total, Cobrado) para que quepan cómodos en un
+              recuadro más pequeño. */}
+          <div
+            className="grid grid-cols-3 gap-1.5 mt-2 pt-2"
+            style={{ borderTop: `1px solid ${C.line}` }}
+          >
+            {/* Orden: fila 1 los 3 importes (dinero), fila 2 las cantidades
+                (No pagados/Pagados) + porcentajes -- a petición del
+                usuario. Texto arriba, número/importe debajo en las 6.
+                Cobrado y Pendiente conservan su fondo de color propio
+                (verde/rojo) con letra blanca. */}
+            <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
+              <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total</div>
+              <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
+                {formatoEuro(importeEsperado)}
+              </div>
+            </div>
+            <div className="h-full rounded p-2 text-center" style={{ background: C.ink }}>
+              <div className="text-xs" style={{ color: "#fff", opacity: 0.85 }}>Cobrado</div>
+              <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: 15 }}>
+                {formatoEuro(importeCobrado)}
+              </div>
+            </div>
+            <div className="h-full rounded p-2 text-center" style={{ background: C.wax }}>
+              <div className="text-xs" style={{ color: "#fff", opacity: 0.85 }}>Pendiente</div>
+              <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: 15 }}>
+                {formatoEuro(importePendiente)}
+              </div>
+            </div>
+            {/* Solo el número se centra en el hueco que le queda -- el
+                título se queda arriba, a la misma altura que el resto de
+                tarjetas (antes centraba el bloque entero, y el título
+                también bajaba). Dígito algo más grande (18px, no 15px). */}
+            <div className="h-full rounded p-2 flex flex-col text-center" style={{ background: C.paperDark }}>
+              <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
+              <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18, marginTop: -2 }}>
+                {noPagados.length}
+              </div>
+            </div>
+            <div className="h-full rounded p-2 flex flex-col text-center" style={{ background: C.paperDark }}>
+              <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pagados</div>
+              <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18, marginTop: -2 }}>
+                {pagados.length}
+              </div>
+            </div>
+            <div className="h-full rounded p-2 flex flex-col justify-center" style={{ background: C.paperDark }}>
+              <BarraCompacta icono={ClipboardList} completado={completos.length} total={confirmados.length} color={C.ink} />
+              <BarraCompacta icono={Euro} completado={pagados.length} total={confirmados.length} color={C.gold} />
+              <BarraCompacta icono={Mail} completado={familiasConInvitacion} total={gruposFamiliaresACargo.length} color={C.wax} />
+            </div>
+          </div>
+
+          <section className="mt-8">
+            <div className="flex items-center justify-between mb-4 pb-2" style={{ borderBottom: `1.5px solid ${C.line}` }}>
+              <h2
+                className="flex items-center gap-2 text-xl"
+                style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}
+              >
+                <Bell size={18} strokeWidth={2} />
+                Invitados NUEVOS {pendientes.length > 0 && `(${pendientes.length})`}
+              </h2>
+              <button
+                onClick={() => setMostrarConfirmar(true)}
+                className="boton-3d boton-verde-solido px-4 py-2 rounded-full text-sm font-semibold"
+              >
+                Datos completos
+              </button>
+            </div>
+            <div className="space-y-2">
+              {ordenarPorApellidoNombre(pendientes).map((g) => (
+                <FilaInvitadoColaborador
+                  key={g.id}
+                  g={g}
+                  abierto={abiertoId === g.id}
+                  onToggleAbierto={() => toggleAbierto(g)}
+                  onGuardar={guardar}
+                  fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
+                  onCambiarFotoFamiliar={cambiarFotoFamiliar}
+                  onMarcarPagado={marcarPagado}
+                  evento={evento}
+                  fotosFamiliares={fotosFamiliares}
+                  colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
+                />
+              ))}
+              {pendientes.length === 0 && (
+                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  No hay avisos pendientes.
+                </p>
+              )}
+            </div>
+          </section>
+
+          <section className="mt-8">
+            <SectionTitle icon={Check}>Invitados COMPLETADOS</SectionTitle>
+            <div className="space-y-2">
+              {ordenarPorApellidoNombre(completos).map((g) => (
+                <FilaInvitadoColaborador
+                  key={g.id}
+                  g={g}
+                  abierto={abiertoId === g.id}
+                  onToggleAbierto={() => toggleAbierto(g)}
+                  onGuardar={guardar}
+                  fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
+                  onCambiarFotoFamiliar={cambiarFotoFamiliar}
+                  onMarcarPagado={marcarPagado}
+                  evento={evento}
+                  fotosFamiliares={fotosFamiliares}
+                  colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
+                />
+              ))}
+              {completos.length === 0 && (
+                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  Todavía ningún invitado con datos completos.
+                </p>
+              )}
+            </div>
+          </section>
+        </VentanaFlotante>
+      )}
 
       {mostrarConfirmar && (
         <ModalFlotante titulo="¿Has terminado tu trabajo?" onCerrar={() => setMostrarConfirmar(false)}>
