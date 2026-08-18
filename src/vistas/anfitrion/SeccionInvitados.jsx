@@ -299,73 +299,81 @@ export function SeccionInvitados({
         titulo="Lista de invitados"
         onCerrar={intentarCerrarInvitados}
         extra={
-          invitados.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            {invitados.length > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPanelFlotante("tabla")}
+                  className="flex items-center gap-1 text-xs px-2 py-1 rounded"
+                  style={{ background: C.gold, color: "#fff" }}
+                  title="Ver / imprimir / exportar la lista de invitados"
+                >
+                  <Printer size={12} /> Imprimir
+                </button>
+                <button
+                  onClick={() => setPanelFlotante("canciones")}
+                  className="flex items-center gap-1 text-xs px-2 py-1 rounded"
+                  style={{ background: C.gold, color: "#fff" }}
+                  title="Ver / imprimir / exportar solo la lista de canciones (para el DJ/grupo musical)"
+                >
+                  <Music size={12} /> Canciones
+                </button>
+                <button
+                  onClick={() => setPanelFlotante("alergias")}
+                  className="flex items-center gap-1 text-xs px-2 py-1 rounded"
+                  style={{ background: C.wax, color: "#fff" }}
+                  title="Ver / imprimir / exportar solo la lista de alergias, con su mesa (para cocina/catering)"
+                >
+                  <AlertTriangle size={12} /> Alergias
+                </button>
+              </div>
+            )}
+            {/* 2ª fila -- antes eran 3 botones sueltos en el cuerpo, con
+                texto largo ("Añadir invitado individual", "Importar desde
+                hoja de cálculo"); movidos aquí y acortados al mismo estilo
+                corto de la fila de arriba para que las dos filas tengan un
+                ancho parecido (a petición del usuario, 2026-08-18). */}
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setPanelFlotante("tabla")}
+                onClick={() => setMostrarAnadir((v) => !v)}
                 className="flex items-center gap-1 text-xs px-2 py-1 rounded"
-                style={{ background: C.gold, color: "#fff" }}
-                title="Ver / imprimir / exportar la lista de invitados"
+                style={{
+                  border: `1px solid ${C.gold}`,
+                  color: mostrarAnadir ? C.paper : C.goldClaro,
+                  background: mostrarAnadir ? C.gold : "transparent",
+                }}
+                title="Añadir invitado individual"
               >
-                <Printer size={12} /> Imprimir
+                <Plus size={12} /> Añadir
               </button>
               <button
-                onClick={() => setPanelFlotante("canciones")}
+                onClick={() => setModoEdicion((v) => !v)}
                 className="flex items-center gap-1 text-xs px-2 py-1 rounded"
-                style={{ background: C.gold, color: "#fff" }}
-                title="Ver / imprimir / exportar solo la lista de canciones (para el DJ/grupo musical)"
+                style={{
+                  border: `1px solid ${C.gold}`,
+                  color: modoEdicion ? C.paper : C.goldClaro,
+                  background: modoEdicion ? C.gold : "transparent",
+                }}
+                title="Activa este modo para poder corregir el grupo familiar de un invitado"
               >
-                <Music size={12} /> Canciones
+                <Pencil size={12} /> {modoEdicion ? "Terminar" : "Editar"}
               </button>
               <button
-                onClick={() => setPanelFlotante("alergias")}
+                onClick={() => setMostrarImport((v) => !v)}
                 className="flex items-center gap-1 text-xs px-2 py-1 rounded"
-                style={{ background: C.wax, color: "#fff" }}
-                title="Ver / imprimir / exportar solo la lista de alergias, con su mesa (para cocina/catering)"
+                style={{
+                  border: `1px solid ${C.gold}`,
+                  color: mostrarImport ? C.paper : C.goldClaro,
+                  background: mostrarImport ? C.gold : "transparent",
+                }}
+                title="Importar desde hoja de cálculo"
               >
-                <AlertTriangle size={12} /> Alergias
+                <Copy size={12} /> Importar
               </button>
             </div>
-          )
+          </div>
         }
       >
-        <div className="flex flex-wrap gap-2 mb-3">
-          <button
-            onClick={() => setMostrarAnadir((v) => !v)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-            style={{
-              border: `1px solid ${C.gold}`,
-              color: mostrarAnadir ? C.paper : C.gold,
-              background: mostrarAnadir ? C.gold : "transparent",
-            }}
-          >
-            <Plus size={14} /> Añadir invitado individual
-          </button>
-          <button
-            onClick={() => setModoEdicion((v) => !v)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-            style={{
-              border: `1px solid ${C.gold}`,
-              color: modoEdicion ? C.paper : C.gold,
-              background: modoEdicion ? C.gold : "transparent",
-            }}
-            title="Activa este modo para poder corregir el grupo familiar de un invitado"
-          >
-            <Pencil size={14} /> {modoEdicion ? "Terminar edición" : "Editar datos"}
-          </button>
-          <button
-            onClick={() => setMostrarImport((v) => !v)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-            style={{
-              border: `1px solid ${C.gold}`,
-              color: mostrarImport ? C.paper : C.gold,
-              background: mostrarImport ? C.gold : "transparent",
-            }}
-          >
-            <Copy size={14} /> Importar desde hoja de cálculo
-          </button>
-        </div>
-
         {mostrarAnadir && (
         <div className="flex flex-wrap gap-2 mb-3">
           <TextInput
