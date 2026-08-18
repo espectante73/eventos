@@ -21,9 +21,6 @@ import { C } from "../theme";
 // que quedarse ilegible).
 const MARGEN_BORDE = 12;
 const ALTO_MINIMO = 120;
-// Línea fina entre opciones, con margen a los lados para que no llegue a
-// los bordes redondeados del panel (a petición del usuario, 2026-08-10).
-const DIVISOR_DORADO = "1px solid rgba(176,141,87,0.35)"; // C.gold en rgba
 
 // Altura máxima real según el hueco disponible en pantalla, no un 60vh
 // fijo: si el botón está cerca del borde, un límite fijo deja que el
@@ -158,11 +155,8 @@ function FilaMenu({ opcion, cerrarTodo }) {
                 zIndex: 10000,
               }}
             >
-              {opcion.submenu.map((hijo, i) => (
-                <div key={hijo.id}>
-                  {i > 0 && <div style={{ borderTop: DIVISOR_DORADO, margin: "0 12px" }} />}
-                  <FilaMenu opcion={hijo} cerrarTodo={cerrarTodo} />
-                </div>
+              {opcion.submenu.map((hijo) => (
+                <FilaMenu key={hijo.id} opcion={hijo} cerrarTodo={cerrarTodo} />
               ))}
             </div>,
             document.body
@@ -294,11 +288,8 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
               zIndex: 9999,
             }}
           >
-            {opciones.map((o, i) => (
-              <div key={o.id}>
-                {i > 0 && <div style={{ borderTop: DIVISOR_DORADO, margin: "0 12px" }} />}
-                <FilaMenu opcion={o} cerrarTodo={() => setOpen(false)} />
-              </div>
+            {opciones.map((o) => (
+              <FilaMenu key={o.id} opcion={o} cerrarTodo={() => setOpen(false)} />
             ))}
           </div>,
           document.body
