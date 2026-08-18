@@ -137,9 +137,9 @@ export function VentanaProgreso({ data, onCerrar }) {
         </p>
       )}
       <p className="text-xs mt-3" style={{ color: C.charcoal, opacity: 0.6 }}>
-        Canciones — informativo, no bloquea a nadie, solo para saber cuánto falta para el
-        DJ. Las alergias se avisan directamente en la mesa (sección Mesas) y tienen su
-        propia lista imprimible más abajo.
+        Canciones. No es un dato obligatorio.
+        <br />
+        Alergias. Es un campo obligatorio.
       </p>
     </VentanaFlotante>
   );
