@@ -435,12 +435,12 @@ export function SeccionInvitados({
                   value={filtros.texto}
                   onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
                   placeholder="Buscar..."
-                  style={{ padding: "2px 5px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                  style={{ padding: "2px 5px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
                 />
                 <select
                   value={filtros.grupoFamiliar}
                   onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
                 >
                   <option value="">Todos</option>
                   {gruposFamiliaresUnicos.map((gf) => (
@@ -452,7 +452,7 @@ export function SeccionInvitados({
                 <select
                   value={filtros.zona}
                   onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
                 >
                   <option value="">Todas</option>
                   {zonasUnicas.map((z) => (
@@ -464,7 +464,7 @@ export function SeccionInvitados({
                 <select
                   value={filtros.colaboradorId}
                   onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
                 >
                   <option value="">Todos</option>
                   {colaboradores.map((c) => (
@@ -476,7 +476,7 @@ export function SeccionInvitados({
                 <select
                   value={filtros.mesa}
                   onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
                 >
                   <option value="">Todas</option>
                   {mesas.map((m) => (
@@ -488,7 +488,7 @@ export function SeccionInvitados({
                 <select
                   value={filtros.confirmado}
                   onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
                 >
                   <option value="">Todos</option>
                   <option value="confirmado">Confirmado</option>
@@ -497,7 +497,7 @@ export function SeccionInvitados({
                 <select
                   value={filtros.datos}
                   onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
                 >
                   <option value="">Todos</option>
                   <option value="completo">Completos</option>
@@ -506,7 +506,7 @@ export function SeccionInvitados({
                 <select
                   value={filtros.pagado}
                   onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
                 >
                   <option value="">Todos</option>
                   <option value="pagado">Pagado</option>
@@ -701,6 +701,14 @@ export function SeccionInvitados({
                 justifyContent: "center",
                 textAlign: "center",
                 padding: "8px 6px",
+                // Ver el mismo `minWidth: 0` en EncabezadoOrdenable
+                // (Widgets.jsx) -- aquí hace falta por el mismo motivo:
+                // sin él, un nombre largo o el texto de un <select>
+                // puede ensanchar ESTA fila más que su `fr`, y esa
+                // columna deja de coincidir con la cabecera/filtro de
+                // arriba (que tienen su propio contenido, más corto o
+                // más largo).
+                minWidth: 0,
                 ...extra,
               });
               return (
@@ -769,7 +777,7 @@ export function SeccionInvitados({
                     <select
                       value={g.colaboradorId || ""}
                       onChange={(e) => asignarColaborador(g.id, e.target.value)}
-                      style={{ ...inputStyle, padding: "3px 5px", fontSize: 12, width: "100%" }}
+                      style={{ ...inputStyle, padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0 }}
                     >
                       <option value="">Sin asignar</option>
                       {colaboradores.map((c) => (
@@ -792,7 +800,7 @@ export function SeccionInvitados({
                     <select
                       value={g.mesa || ""}
                       onChange={(e) => asignarMesa(g.id, e.target.value)}
-                      style={{ ...inputStyle, padding: "3px 5px", fontSize: 12, width: "100%" }}
+                      style={{ ...inputStyle, padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0 }}
                     >
                       <option value="">Sin mesa</option>
                       {mesas.map((m) => {

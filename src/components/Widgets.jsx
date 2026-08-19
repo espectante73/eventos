@@ -169,6 +169,21 @@ export function EncabezadoOrdenable({ columna, orden, onClick, children, claro }
       style={{
         borderRight: `1px solid ${claro ? "rgba(255,255,255,0.25)" : C.line}`,
         color: claro ? (activo ? C.paper : C.goldClaro) : activo ? C.ink : C.gold,
+        // `minWidth: 0`: sin esto, un <button> dentro de una celda de
+        // CSS grid NUNCA se encoge por debajo del ancho de su propio
+        // contenido (min-width:auto es el valor por defecto en un
+        // grid item) -- así que si el texto de una columna es más
+        // ancho que la fracción `fr` que le toca, el navegador ensancha
+        // la columna entera para hacerle sitio, y esa anchura real
+        // ganada deja de coincidir con la de la MISMA columna en otra
+        // fila con menos texto (p.ej. la cabecera vs. un filtro vs. una
+        // fila de datos, cada una con contenido distinto). Forzarlo a 0
+        // es el arreglo estándar de CSS Grid para que las columnas
+        // respeten de verdad su `fr` en vez del contenido -- a
+        // petición del usuario, 2026-08-19 (la pregunta del millón: el
+        // ancho de cada columna tiene que salir del `fr`, no del texto
+        // que le toque en cada fila).
+        minWidth: 0,
       }}
     >
       {children}
@@ -187,7 +202,7 @@ export function GrupoFamiliarInput({ value, onCommit }) {
       value={v}
       onChange={(e) => setV(e.target.value)}
       onBlur={() => onCommit(v)}
-      style={{ ...inputStyle, padding: "3px 5px", fontSize: 12, width: "100%" }}
+      style={{ ...inputStyle, padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0 }}
     />
   );
 }
