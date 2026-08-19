@@ -14,7 +14,7 @@
 // `filtros`/`setFiltros` igual: el botón "Editar asignación" de la
 // ventana Avisos necesita poder rellenar el filtro de colaborador de
 // esta misma tabla, así que ese estado también vive en VistaAnfitrion.
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Check,
   Bell,
@@ -60,6 +60,32 @@ export function SeccionInvitados({
   // ventana. Al cerrarla, si queda alguien pendiente, se pregunta.
   const [mostrarResumenAsignacion, setMostrarResumenAsignacion] = useState(false);
   const [enviandoAvisosAsignacion, setEnviandoAvisosAsignacion] = useState(false);
+
+  // La cabecera de columnas y los filtros viven en la barra verde
+  // (subtitulo) y las filas de datos en la caja blanca del cuerpo --
+  // dos ramas de DOM totalmente separadas dentro de VentanaFlotante
+  // (una es hermana de la otra, no una contiene a la otra), cada una
+  // calculando el ancho de su propia cuadrícula "a fórmula" (%, bordes,
+  // paddings...). El usuario reportó repetidas veces que, pese a que la
+  // fórmula debería dar el mismo resultado en las dos, en la práctica no
+  // coincidía siempre (redondeos, scrollbar del overflow-x-auto, ancho
+  // real tras redimensionar la ventana a mano...). En vez de seguir
+  // ajustando la fórmula a ciegas, se MIDE de verdad el ancho real que
+  // ocupa la tabla (con ResizeObserver, así se entera también si la
+  // ventana se redimensiona) y se lo aplicamos como `width` fijo en
+  // píxeles a la cabecera/filtros -- así coinciden siempre de verdad,
+  // sean cuales sean los redondeos de cada lado.
+  const tablaRef = useRef(null);
+  const [anchoTabla, setAnchoTabla] = useState(null);
+  useEffect(() => {
+    const el = tablaRef.current;
+    if (!el) return;
+    const medir = () => setAnchoTabla(el.clientWidth);
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const cambiarOrden = (columna) => {
     setOrden((o) =>
@@ -308,15 +334,18 @@ export function SeccionInvitados({
           // negrita y 3px más grande que el resto de la línea) y, debajo,
           // la cabecera de columnas de la tabla (Invitado/Familia/...) --
           // de vuelta a la barra verde (a petición del usuario,
-          // 2026-08-18: la quería ahí, no en la caja blanca). Ahora SÍ
-          // coincide con las columnas de la tabla porque `subtitulo` ya
-          // no vive comprimido junto al título/botones (ver
-          // VentanaFlotante.jsx) sino en su propia fila a ancho completo,
-          // con el mismo px-4 que el cuerpo -- el `rounded` con borde
-          // TRANSPARENTE de abajo replica el borde real de 1px de la caja
-          // blanca de la tabla, para que el ancho de contenido resultante
-          // sea exactamente el mismo en los dos sitios a cualquier tamaño
-          // de ventana, no solo en el ancho por defecto.
+          // 2026-08-18: la quería ahí, no en la caja blanca).
+          //
+          // El ancho de las dos rejillas de aquí abajo (cabecera de
+          // columnas y filtros) YA NO se deja "a fórmula" (%, bordes,
+          // paddings calculados a mano) -- después de varias rondas en
+          // las que seguía sin coincidir de verdad con la tabla del
+          // cuerpo (redondeos, la barra de scroll de overflow-x-auto,
+          // redimensionar la ventana a mano...), se mide el ancho REAL
+          // de la tabla con un ResizeObserver (`tablaRef`/`anchoTabla`,
+          // más arriba) y se aplica tal cual como `width` en px a las dos
+          // -- así coinciden siempre de verdad, no "deberían coincidir
+          // según el cálculo".
           // `stopPropagation` en mousedown/touchstart: son controles
           // interactivos (los botones de ordenar) dentro de la cabecera
           // arrastrable de la ventana, igual que ya exige `extra`.
@@ -358,6 +387,7 @@ export function SeccionInvitados({
                 className="grid text-xs uppercase text-center"
                 style={{
                   gridTemplateColumns: columnasTabla,
+                  width: anchoTabla ?? undefined,
                   color: C.goldClaro,
                   fontFamily: "'IBM Plex Mono', monospace",
                 }}
@@ -399,7 +429,7 @@ export function SeccionInvitados({
                   con la tabla de más abajo. */}
               <div
                 className="grid pb-1"
-                style={{ gridTemplateColumns: columnasTabla }}
+                style={{ gridTemplateColumns: columnasTabla, width: anchoTabla ?? undefined }}
               >
                 <TextInput
                   value={filtros.texto}
@@ -564,6 +594,14 @@ export function SeccionInvitados({
           </div>
         }
       >
+        {/* -16px: contrarresta el `p-4` (16px) de arriba del cuerpo de la
+            ventana -- sin esto quedaba un hueco vacío entre la barra
+            verde de filtros y la primera fila de la tabla (señalado en
+            rojo por el usuario en una captura), del mismo color de fondo
+            que el resto de la ventana (C.paper) y sin ningún elemento
+            dentro. Solo se toca el margen SUPERIOR: los laterales y el
+            inferior se quedan con el padding normal del cuerpo. */}
+        <div style={{ marginTop: -16 }}>
         {mostrarAnadir && (
         <div className="flex flex-wrap gap-2 mb-3">
           <TextInput
@@ -636,7 +674,7 @@ export function SeccionInvitados({
           className="rounded overflow-x-auto"
           style={{ border: `1px solid ${C.line}`, background: "#fff" }}
         >
-          <div style={{ minWidth: 780 }}>
+          <div ref={tablaRef} style={{ minWidth: 780 }}>
             {/* La cabecera de columnas Y la fila de filtros
                 (Invitado/Familia/... y sus buscadores) viven ahora en la
                 barra verde de la ventana (subtitulo, más arriba) -- a
@@ -839,6 +877,7 @@ export function SeccionInvitados({
             )}
             </div>
           </div>
+        </div>
         </div>
       </VentanaFlotante>
 
