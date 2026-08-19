@@ -35,10 +35,38 @@ export function Seal({ count, size = 22 }) {
   );
 }
 
-export function Stamp({ children, color = C.ink }) {
+// `pequeno` + `dorado`: variante más compacta (menos padding/letra más
+// chica, sin la rotación) y con los mismos colores que los botones de la
+// app (fondo verde C.ink + letra dorada C.goldClaro, como
+// .boton-verde-solido en index.css) en vez del sello de contorno de
+// siempre -- solo para la lista de Invitados (Confirmado/Pagado), a
+// petición del usuario, 2026-08-18: "el sello confirmado en esta lista es
+// muy grande, mejor más pequeño y ponle los colores como los botones".
+// Sin estos props, se comporta exactamente igual que antes (Versiones,
+// VistaColaborador).
+export function Stamp({ children, color = C.ink, pequeno, dorado }) {
+  if (dorado) {
+    return (
+      <span
+        className={`inline-block rounded font-semibold uppercase ${
+          pequeno ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs"
+        }`}
+        style={{
+          background: C.ink,
+          color: C.goldClaro,
+          fontFamily: "'IBM Plex Mono', monospace",
+          letterSpacing: "0.04em",
+        }}
+      >
+        {children}
+      </span>
+    );
+  }
   return (
     <span
-      className="inline-block px-2 py-0.5 text-xs tracking-widest uppercase font-semibold"
+      className={`inline-block tracking-widest uppercase font-semibold ${
+        pequeno ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs"
+      }`}
       style={{
         color,
         border: `1.5px solid ${color}`,

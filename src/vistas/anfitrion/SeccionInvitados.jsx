@@ -298,13 +298,14 @@ export function SeccionInvitados({
         clave="invitados"
         titulo="Lista de invitados"
         onCerrar={intentarCerrarInvitados}
-        // Ventana con ancho inicial propio (no el genérico de 620px):
-        // suficiente para que la cabecera de columnas de abajo (misma
-        // anchura mínima que la tabla, 780px + su borde) quepa entera sin
-        // scroll horizontal la primera vez que se abre -- a petición del
-        // usuario, 2026-08-18 ("que siempre se abrirá con el ancho de los
-        // encabezados de columna").
-        ancho="min(820px, calc(100vw - 48px))"
+        // Vista predefinida a ANCHO TOTAL de la pantalla (no un tamaño
+        // fijo tipo 620/820px como el resto de ventanas) -- igual en
+        // escritorio que en móvil, a petición del usuario, 2026-08-18:
+        // "quiero que la vista predefinida solamente de la lista
+        // invitados sea de su ancho total, y que en el móvil igual".
+        // Solo esta ventana lleva este `ancho`; el resto sigue con el
+        // valor por defecto de VentanaFlotante.
+        ancho="calc(100vw - 24px)"
         subtitulo={
           // Segunda línea bajo el título: la edad media (número en
           // negrita y 3px más grande que el resto de la línea) y, debajo,
@@ -634,21 +635,40 @@ export function SeccionInvitados({
                 petición del usuario, 2026-08-18. Aquí solo quedan las
                 filas de datos. */}
             <div style={{ maxHeight: "50vh", overflowY: "auto" }}>
-            {invitadosOrdenados.map((g, i) => {
+            {invitadosOrdenados.map((g) => {
+              // Sombreado por COLUMNA (no por fila, como antes) -- a
+              // petición del usuario, 2026-08-18: "sombrea las columnas
+              // alternadas". Mismo par de tonos que usaba el zebra de
+              // filas (blanco/paperDark), ahora aplicado a cada una de
+              // las 9 columnas por separado, así que la banda de color se
+              // ve igual en todas las filas y ayuda a seguir una columna
+              // de arriba abajo. `celda` centra el contenido (para que
+              // coincida con la cabecera, ya centrada) y estira el fondo
+              // a toda la altura real de la fila (la fila ya no fuerza
+              // `items-center`: por defecto un grid estira sus celdas).
+              const celda = (idx, extra) => ({
+                background: idx % 2 === 0 ? "#fff" : C.paperDark,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                padding: "8px 6px",
+                ...extra,
+              });
               return (
                 <div
                   key={g.id}
-                  className="grid items-center px-3 py-2 text-sm"
+                  className="grid text-sm"
                   style={{
                     gridTemplateColumns: columnasTabla,
-                    background: i % 2 ? C.paperDark : "#fff",
+                    borderBottom: `1px solid ${C.line}`,
                     fontFamily: "'Inter', sans-serif",
                     color: C.charcoal,
                   }}
                 >
-                  <span>
+                  <span style={celda(0)}>
                     {modoEdicion ? (
-                      <span className="flex gap-1">
+                      <span className="flex gap-1 w-full">
                         <div className="flex-1 min-w-0">
                           <GrupoFamiliarInput
                             value={g.apellido ?? ""}
@@ -677,7 +697,7 @@ export function SeccionInvitados({
                       </>
                     )}
                   </span>
-                  <span>
+                  <span style={celda(1)}>
                     {modoEdicion ? (
                       <GrupoFamiliarInput
                         value={g.grupoFamiliar ?? g.apellido ?? ""}
@@ -687,7 +707,7 @@ export function SeccionInvitados({
                       g.grupoFamiliar || g.apellido || "—"
                     )}
                   </span>
-                  <span>
+                  <span style={celda(2)}>
                     {modoEdicion ? (
                       <GrupoFamiliarInput
                         value={g.zona ?? ""}
@@ -697,7 +717,7 @@ export function SeccionInvitados({
                       g.zona || "—"
                     )}
                   </span>
-                  <span className="text-xs flex items-center gap-1">
+                  <span className="text-xs gap-1" style={celda(3)}>
                     <select
                       value={g.colaboradorId || ""}
                       onChange={(e) => asignarColaborador(g.id, e.target.value)}
@@ -720,7 +740,7 @@ export function SeccionInvitados({
                         </span>
                       )}
                   </span>
-                  <span className="text-xs">
+                  <span className="text-xs" style={celda(4)}>
                     <select
                       value={g.mesa || ""}
                       onChange={(e) => asignarMesa(g.id, e.target.value)}
@@ -738,13 +758,13 @@ export function SeccionInvitados({
                       })}
                     </select>
                   </span>
-                  <span>
+                  <span style={celda(5)}>
                     <button
                       onClick={() => toggleConfirmar(g.id)}
                       className="flex items-center gap-1"
                     >
                       {g.confirmado ? (
-                        <Stamp color={C.ink}>Confirmado</Stamp>
+                        <Stamp pequeno dorado>Confirmado</Stamp>
                       ) : (
                         <span
                           className="text-xs px-2 py-0.5 rounded"
@@ -755,7 +775,7 @@ export function SeccionInvitados({
                       )}
                     </button>
                   </span>
-                  <span>
+                  <span style={celda(6)}>
                     {g.confirmado ? (
                       datosCompletos(g) ? (
                         <span className="flex items-center gap-1 text-xs" style={{ color: C.ink }}>
@@ -772,10 +792,10 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  <span>
+                  <span style={celda(7)}>
                     {g.confirmado ? (
                       g.pagado ? (
-                        <Stamp color={C.ink}>Pagado</Stamp>
+                        <Stamp pequeno dorado>Pagado</Stamp>
                       ) : (
                         <span
                           className="text-xs px-2 py-0.5 rounded"
@@ -791,7 +811,7 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  <button onClick={() => eliminarInvitado(g.id)}>
+                  <button onClick={() => eliminarInvitado(g.id)} style={celda(8)}>
                     <Trash2 size={14} style={{ color: C.wax }} />
                   </button>
                 </div>
