@@ -299,7 +299,7 @@ export function SeccionInvitados({
   // coincidir), como `columnGap` de la grid -- así se resta del mismo
   // ancho total en las tres por igual y el reparto de columnas sigue
   // siendo exactamente el mismo entre ellas.
-  const GAP_COLUMNAS = 4;
+  const GAP_COLUMNAS = 10;
 
   return (
     <>
