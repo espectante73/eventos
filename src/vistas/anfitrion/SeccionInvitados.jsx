@@ -298,14 +298,11 @@ export function SeccionInvitados({
         clave="invitados"
         titulo="Lista de invitados"
         onCerrar={intentarCerrarInvitados}
-        // Vista predefinida a ANCHO TOTAL de la pantalla (no un tamaño
-        // fijo tipo 620/820px como el resto de ventanas) -- igual en
-        // escritorio que en móvil, a petición del usuario, 2026-08-18:
-        // "quiero que la vista predefinida solamente de la lista
-        // invitados sea de su ancho total, y que en el móvil igual".
-        // Solo esta ventana lleva este `ancho`; el resto sigue con el
-        // valor por defecto de VentanaFlotante.
-        ancho="calc(100vw - 24px)"
+        // Ancho fijo de vuelta (no ya "ancho total" de pantalla, se
+        // deshizo a petición del usuario, 2026-08-18) -- lo bastante
+        // ancha para que la cabecera de columnas quepa entera sin scroll
+        // horizontal nada más abrirla.
+        ancho="min(820px, calc(100vw - 48px))"
         subtitulo={
           // Segunda línea bajo el título: la edad media (número en
           // negrita y 3px más grande que el resto de la línea) y, debajo,
@@ -635,19 +632,21 @@ export function SeccionInvitados({
                 petición del usuario, 2026-08-18. Aquí solo quedan las
                 filas de datos. */}
             <div style={{ maxHeight: "50vh", overflowY: "auto" }}>
-            {invitadosOrdenados.map((g) => {
-              // Sombreado por COLUMNA (no por fila, como antes) -- a
-              // petición del usuario, 2026-08-18: "sombrea las columnas
-              // alternadas". Mismo par de tonos que usaba el zebra de
-              // filas (blanco/paperDark), ahora aplicado a cada una de
-              // las 9 columnas por separado, así que la banda de color se
-              // ve igual en todas las filas y ayuda a seguir una columna
-              // de arriba abajo. `celda` centra el contenido (para que
-              // coincida con la cabecera, ya centrada) y estira el fondo
-              // a toda la altura real de la fila (la fila ya no fuerza
-              // `items-center`: por defecto un grid estira sus celdas).
+            {invitadosOrdenados.map((g, i) => {
+              // Zebra por FILA, de vuelta a como estaba (blanco/paperDark
+              // en el propio fondo de la fila) -- el sombreado por
+              // columna de la ronda anterior no lo sustituía, se quedaba
+              // corto: era un AÑADIDO aparte, un verde muy suave por
+              // encima. A petición del usuario, 2026-08-18: "quiero las
+              // filas alternas como estaban antes, el sombreado alterno
+              // para las columnas un verde muy muy suave, solo era
+              // añadir esto último". `celda` sigue centrando el
+              // contenido (coincide con la cabecera, ya centrada) y ahora
+              // solo aporta el lavado verde translúcido de las columnas
+              // impares -- las pares quedan transparentes, dejando ver el
+              // zebra de la fila tal cual.
               const celda = (idx, extra) => ({
-                background: idx % 2 === 0 ? "#fff" : C.paperDark,
+                background: idx % 2 === 1 ? "rgba(31,58,46,0.07)" : "transparent",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -661,7 +660,7 @@ export function SeccionInvitados({
                   className="grid text-sm"
                   style={{
                     gridTemplateColumns: columnasTabla,
-                    borderBottom: `1px solid ${C.line}`,
+                    background: i % 2 ? C.paperDark : "#fff",
                     fontFamily: "'Inter', sans-serif",
                     color: C.charcoal,
                   }}
