@@ -61,31 +61,10 @@ export function SeccionInvitados({
   const [mostrarResumenAsignacion, setMostrarResumenAsignacion] = useState(false);
   const [enviandoAvisosAsignacion, setEnviandoAvisosAsignacion] = useState(false);
 
-  // La cabecera de columnas y los filtros viven en la barra verde
-  // (subtitulo) y las filas de datos en la caja blanca del cuerpo --
-  // dos ramas de DOM totalmente separadas dentro de VentanaFlotante
-  // (una es hermana de la otra, no una contiene a la otra), cada una
-  // calculando el ancho de su propia cuadrícula "a fórmula" (%, bordes,
-  // paddings...). El usuario reportó repetidas veces que, pese a que la
-  // fórmula debería dar el mismo resultado en las dos, en la práctica no
-  // coincidía siempre (redondeos, scrollbar del overflow-x-auto, ancho
-  // real tras redimensionar la ventana a mano...). En vez de seguir
-  // ajustando la fórmula a ciegas, se MIDE de verdad el ancho real que
-  // ocupa la tabla (con ResizeObserver, así se entera también si la
-  // ventana se redimensiona) y se lo aplicamos como `width` fijo en
-  // píxeles a la cabecera/filtros -- así coinciden siempre de verdad,
-  // sean cuales sean los redondeos de cada lado.
   const tablaRef = useRef(null);
+  const filaEjemploRef = useRef(null);
   const [anchoTabla, setAnchoTabla] = useState(null);
-  useEffect(() => {
-    const el = tablaRef.current;
-    if (!el) return;
-    const medir = () => setAnchoTabla(el.clientWidth);
-    medir();
-    const ro = new ResizeObserver(medir);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+  const [anchosColumnas, setAnchosColumnas] = useState(null);
 
   const cambiarOrden = (columna) => {
     setOrden((o) =>
@@ -317,6 +296,55 @@ export function SeccionInvitados({
     });
 
   const columnasTabla = "1.2fr 1fr 0.8fr 1fr 0.8fr 0.9fr 1fr 0.9fr auto";
+  const hayFilas = invitadosOrdenados.length > 0;
+
+  // La cabecera de columnas y los filtros viven en la barra verde
+  // (subtitulo) y las filas de datos en la caja blanca del cuerpo -- dos
+  // ramas de DOM totalmente separadas dentro de VentanaFlotante, cada
+  // una con su propia cuadrícula CSS Grid. Medir solo el ANCHO TOTAL
+  // (ronda anterior, `anchoTabla`) no bastaba: aunque el ancho total
+  // coincidiera al milímetro y minWidth:0 impidiera que el contenido
+  // ensanchara una columna de más, CADA cuadrícula sigue calculando sus
+  // propias fronteras internas a partir de `columnasTabla` (fracciones
+  // `fr`) por su cuenta -- y el navegador redondea esas fracciones a
+  // píxeles enteros de forma INDEPENDIENTE en cada cuadrícula, columna a
+  // columna según va avanzando. Con anchos casi iguales pero no
+  // idénticos al milésima, ese redondeo puede tomar una decisión
+  // distinta en una cuadrícula que en otra a partir de la 2ª o 3ª
+  // columna -- de ahí que el usuario viera la 1ª columna bien y el resto
+  // descuadrándose progresivamente.
+  //
+  // Arreglo definitivo: en vez de que cada cuadrícula calcule sus
+  // columnas por su cuenta, se MIDEN los anchos reales en px de las 9
+  // columnas de UNA fila de datos ya renderizada (`filaEjemploRef`) y se
+  // congelan como una lista de píxeles concretos (`anchosColumnas`,
+  // p.ej. "182px 152px 121px..."), que sustituye a `columnasTabla` en
+  // las TRES cuadrículas por igual -- todas usan literalmente los mismos
+  // números ya redondeados, no fracciones que cada una redondea a su
+  // manera. Con ResizeObserver sobre la tabla para volver a medir si la
+  // ventana cambia de tamaño, y `hayFilas` en las dependencias para
+  // volver a medir en cuanto exista ya una fila real de la que copiar
+  // (si los invitados tardan en llegar tras abrir la ventana, la primera
+  // pasada no tiene ninguna fila de la que medir todavía).
+  useEffect(() => {
+    const el = tablaRef.current;
+    if (!el) return;
+    const medir = () => {
+      setAnchoTabla(el.clientWidth);
+      const fila = filaEjemploRef.current;
+      if (fila) {
+        setAnchosColumnas(
+          Array.from(fila.children)
+            .map((celda) => `${celda.getBoundingClientRect().width}px`)
+            .join(" ")
+        );
+      }
+    };
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [hayFilas]);
 
   return (
     <>
@@ -386,7 +414,7 @@ export function SeccionInvitados({
               <div
                 className="grid text-xs uppercase text-center"
                 style={{
-                  gridTemplateColumns: columnasTabla,
+                  gridTemplateColumns: anchosColumnas ?? columnasTabla,
                   width: anchoTabla ?? undefined,
                   color: C.goldClaro,
                   fontFamily: "'IBM Plex Mono', monospace",
@@ -429,7 +457,7 @@ export function SeccionInvitados({
                   con la tabla de más abajo. */}
               <div
                 className="grid pb-1"
-                style={{ gridTemplateColumns: columnasTabla, width: anchoTabla ?? undefined }}
+                style={{ gridTemplateColumns: anchosColumnas ?? columnasTabla, width: anchoTabla ?? undefined }}
               >
                 <TextInput
                   value={filtros.texto}
@@ -714,9 +742,10 @@ export function SeccionInvitados({
               return (
                 <div
                   key={g.id}
+                  ref={i === 0 ? filaEjemploRef : undefined}
                   className="grid text-sm"
                   style={{
-                    gridTemplateColumns: columnasTabla,
+                    gridTemplateColumns: anchosColumnas ?? columnasTabla,
                     background: i % 2 ? C.paperDark : "#fff",
                     fontFamily: "'Inter', sans-serif",
                     color: C.charcoal,
