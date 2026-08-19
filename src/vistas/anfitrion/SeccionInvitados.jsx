@@ -291,6 +291,15 @@ export function SeccionInvitados({
     });
 
   const columnasTabla = "1.2fr 1fr 0.8fr 1fr 0.8fr 0.9fr 1fr 0.9fr auto";
+  // Margen mínimo entre columnas (cabecera, filtros y filas de datos):
+  // antes no había ningún hueco, así que los filtros (sin ningún borde
+  // propio entre sí) se veían pegados unos a otros, sin corresponder con
+  // claridad a la columna de la cabecera que tenían encima -- a petición
+  // del usuario, 2026-08-18. Mismo valor en las TRES filas (deben
+  // coincidir), como `columnGap` de la grid -- así se resta del mismo
+  // ancho total en las tres por igual y el reparto de columnas sigue
+  // siendo exactamente el mismo entre ellas.
+  const GAP_COLUMNAS = 4;
 
   return (
     <>
@@ -358,6 +367,7 @@ export function SeccionInvitados({
                 className="grid text-xs uppercase text-center"
                 style={{
                   gridTemplateColumns: columnasTabla,
+                  columnGap: GAP_COLUMNAS,
                   color: C.goldClaro,
                   fontFamily: "'IBM Plex Mono', monospace",
                 }}
@@ -392,13 +402,13 @@ export function SeccionInvitados({
                   columnas (antes vivía sola en la caja blanca) -- a
                   petición del usuario, 2026-08-18: "quiero que los campos
                   que están debajo de los encabezados sean parte de la
-                  cabecera de la lista invitados". Mismo `columnasTabla`
-                  y mismo `px-3` que la fila de arriba, así que siguen
-                  coincidiendo columna a columna entre sí y con la tabla
-                  de más abajo. */}
+                  cabecera de la lista invitados". Mismo `columnasTabla` y
+                  mismo `columnGap` que la fila de arriba (ver
+                  GAP_COLUMNAS), así que siguen coincidiendo columna a
+                  columna entre sí y con la tabla de más abajo. */}
               <div
                 className="grid pb-1"
-                style={{ gridTemplateColumns: columnasTabla }}
+                style={{ gridTemplateColumns: columnasTabla, columnGap: GAP_COLUMNAS }}
               >
                 <TextInput
                   value={filtros.texto}
@@ -670,6 +680,7 @@ export function SeccionInvitados({
                   className="grid text-sm"
                   style={{
                     gridTemplateColumns: columnasTabla,
+                    columnGap: GAP_COLUMNAS,
                     background: i % 2 ? C.paperDark : "#fff",
                     fontFamily: "'Inter', sans-serif",
                     color: C.charcoal,
