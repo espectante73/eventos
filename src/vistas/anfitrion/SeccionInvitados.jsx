@@ -344,8 +344,18 @@ export function SeccionInvitados({
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
             >
+              {/* Sin `px-3` aquí (a diferencia de como estaba antes): esos
+                  12px a cada lado encogían el ancho de ESTE grid 24px por
+                  debajo del de las filas de datos (que no llevan ningún
+                  padding de fila, solo padding por celda) -- mismo
+                  columnasTabla mismos números de fr, pero repartidos
+                  sobre un ancho total distinto, así que los límites de
+                  columna quedaban desplazados y el sombreado de la tabla
+                  no coincidía con su filtro de aquí arriba. Quitado en
+                  esta fila y en la de filtros de más abajo -- a petición
+                  del usuario, 2026-08-18. */}
               <div
-                className="grid text-xs uppercase px-3 text-center"
+                className="grid text-xs uppercase text-center"
                 style={{
                   gridTemplateColumns: columnasTabla,
                   color: C.goldClaro,
@@ -387,7 +397,7 @@ export function SeccionInvitados({
                   coincidiendo columna a columna entre sí y con la tabla
                   de más abajo. */}
               <div
-                className="grid px-3 pb-1"
+                className="grid pb-1"
                 style={{ gridTemplateColumns: columnasTabla }}
               >
                 <TextInput
