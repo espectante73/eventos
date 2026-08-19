@@ -380,6 +380,101 @@ export function SeccionInvitados({
                 </EncabezadoOrdenable>
                 <span></span>
               </div>
+              {/* Fila de filtros, subida aquí junto a la cabecera de
+                  columnas (antes vivía sola en la caja blanca) -- a
+                  petición del usuario, 2026-08-18: "quiero que los campos
+                  que están debajo de los encabezados sean parte de la
+                  cabecera de la lista invitados". Mismo `columnasTabla`
+                  y mismo `px-3` que la fila de arriba, así que siguen
+                  coincidiendo columna a columna entre sí y con la tabla
+                  de más abajo. */}
+              <div
+                className="grid px-3 pb-1"
+                style={{ gridTemplateColumns: columnasTabla }}
+              >
+                <TextInput
+                  value={filtros.texto}
+                  onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
+                  placeholder="Buscar..."
+                  style={{ padding: "2px 5px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                />
+                <select
+                  value={filtros.grupoFamiliar}
+                  onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todos</option>
+                  {gruposFamiliaresUnicos.map((gf) => (
+                    <option key={gf} value={gf}>
+                      {gf}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filtros.zona}
+                  onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todas</option>
+                  {zonasUnicas.map((z) => (
+                    <option key={z} value={z}>
+                      {z}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filtros.colaboradorId}
+                  onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todos</option>
+                  {colaboradores.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filtros.mesa}
+                  onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todas</option>
+                  {mesas.map((m) => (
+                    <option key={m.numero} value={String(m.numero)}>
+                      {m.numero}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filtros.confirmado}
+                  onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todos</option>
+                  <option value="confirmado">Confirmado</option>
+                  <option value="tentativa">Tentativa</option>
+                </select>
+                <select
+                  value={filtros.datos}
+                  onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todos</option>
+                  <option value="completo">Completos</option>
+                  <option value="pendiente">Por recopilar</option>
+                </select>
+                <select
+                  value={filtros.pagado}
+                  onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
+                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
+                >
+                  <option value="">Todos</option>
+                  <option value="pagado">Pagado</option>
+                  <option value="pendiente">Pendiente</option>
+                </select>
+                <span />
+              </div>
             </div>
           </div>
         }
@@ -533,112 +628,11 @@ export function SeccionInvitados({
           style={{ border: `1px solid ${C.line}`, background: "#fff" }}
         >
           <div style={{ minWidth: 780 }}>
-            {/* La cabecera de columnas (Invitado/Familia/...) vive en la
+            {/* La cabecera de columnas Y la fila de filtros
+                (Invitado/Familia/... y sus buscadores) viven ahora en la
                 barra verde de la ventana (subtitulo, más arriba) -- a
-                petición del usuario, 2026-08-18. La fila de filtros,
-                deliberadamente FUERA del bloque con scroll de abajo (no
-                "position: sticky" encima del scroll): el div de aquí al
-                lado, al tener también scroll horizontal propio
-                (overflow-x-auto), se convierte él mismo en el contenedor
-                de referencia para cualquier "sticky" que pusiéramos
-                dentro — y ese contenedor nunca hace scroll vertical de
-                verdad (crece con su contenido), así que el "sticky" no
-                llegaba a fijarse nunca. Separarla en su propio bloque,
-                fuera del área que sí hace scroll, es el mismo patrón ya
-                probado en el historial de Avisos. */}
-            <div>
-              <div
-                className="grid px-3 py-1.5"
-                style={{
-                  gridTemplateColumns: columnasTabla,
-                  background: C.paperDark,
-                  borderBottom: `1px solid ${C.line}`,
-                }}
-              >
-                <TextInput
-                  value={filtros.texto}
-                  onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
-                  placeholder="Buscar..."
-                  style={{ padding: "2px 5px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-                />
-                <select
-                  value={filtros.grupoFamiliar}
-                  onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-                >
-                  <option value="">Todos</option>
-                  {gruposFamiliaresUnicos.map((gf) => (
-                    <option key={gf} value={gf}>
-                      {gf}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={filtros.zona}
-                  onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-                >
-                  <option value="">Todas</option>
-                  {zonasUnicas.map((z) => (
-                    <option key={z} value={z}>
-                      {z}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={filtros.colaboradorId}
-                  onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-                >
-                  <option value="">Todos</option>
-                  {colaboradores.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nombre}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={filtros.mesa}
-                  onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-                >
-                  <option value="">Todas</option>
-                  {mesas.map((m) => (
-                    <option key={m.numero} value={String(m.numero)}>
-                      {m.numero}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={filtros.confirmado}
-                  onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-                >
-                  <option value="">Todos</option>
-                  <option value="confirmado">Confirmado</option>
-                  <option value="tentativa">Tentativa</option>
-                </select>
-                <select
-                  value={filtros.datos}
-                  onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-                >
-                  <option value="">Todos</option>
-                  <option value="completo">Completos</option>
-                  <option value="pendiente">Por recopilar</option>
-                </select>
-                <select
-                  value={filtros.pagado}
-                  onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", boxSizing: "border-box" }}
-                >
-                  <option value="">Todos</option>
-                  <option value="pagado">Pagado</option>
-                  <option value="pendiente">Pendiente</option>
-                </select>
-                <span />
-              </div>
-            </div>
+                petición del usuario, 2026-08-18. Aquí solo quedan las
+                filas de datos. */}
             <div style={{ maxHeight: "50vh", overflowY: "auto" }}>
             {invitadosOrdenados.map((g, i) => {
               return (
