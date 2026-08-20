@@ -357,9 +357,15 @@ export function SeccionInvitados({
   const totalInvitados = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
   const edadMedia = edadPromedio(invitadosOrdenados, evento);
+  // "Lista global" -> "Previstos" y "Tentativa" -> "Sin confirmar":
+  // nombres más precisos, a petición del usuario 2026-08-20 -- el
+  // primero es el TOTAL (confirmados + sin confirmar), y "Lista global"
+  // sonaba a lista ya cerrada/definitiva cuando en realidad la mayoría
+  // de esas personas todavía no han respondido; el segundo es
+  // exactamente eso, quien de ese total no ha confirmado todavía.
   const resumen = [
-    { label: "Lista global", value: totalInvitados },
-    { label: "Tentativa", value: totalInvitados - confirmadosCount },
+    { label: "Previstos", value: totalInvitados },
+    { label: "Sin confirmar", value: totalInvitados - confirmadosCount },
     { label: "Confirmados", value: confirmadosCount },
     // Edad media como recuadro más, en vez del texto suelto que llevaba
     // antes justo debajo del título -- a petición del usuario,
