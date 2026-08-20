@@ -962,8 +962,12 @@ export function SeccionInvitados({
                   <span style={celda(6)}>
                     {g.confirmado ? (
                       datosCompletos(g) ? (
-                        <span className="flex items-center gap-1 text-xs" style={{ color: C.ink, whiteSpace: "nowrap" }}>
-                          <Check size={13} /> completos
+                        // Sin la palabra "completos" -- solo el signo,
+                        // centrado en la celda (no a la izquierda como
+                        // el resto de columnas) y más grande, a
+                        // petición del usuario, 2026-08-20.
+                        <span className="flex items-center justify-center w-full">
+                          <Check size={20} style={{ color: C.ink }} />
                         </span>
                       ) : (
                         // "sin datos" (antes "por recopilar", que en una
