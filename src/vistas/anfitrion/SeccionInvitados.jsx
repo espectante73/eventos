@@ -324,6 +324,18 @@ export function SeccionInvitados({
   // 1.3fr -> 1.8fr (mismo ancho que Invitado): mismo motivo, a
   // petición del usuario, 2026-08-20.
   const columnasTabla = "1.8fr 1.3fr 1.1fr 1.8fr 1.4fr 1.2fr 1fr 0.9fr auto";
+  // Recuadro que diferencia cada columna en la barra verde (cabecera +
+  // filtros), en vez de las pequeñas líneas divisorias de antes (ya
+  // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
+  // TRANSPARENTE (blanco al 7%, no un color sólido: se sigue viendo el
+  // verde de fondo) alternando por columna, igual que ya se hace en las
+  // filas de datos de más abajo (pero ahí es oscuro sobre blanco; aquí
+  // claro sobre verde oscuro). El mismo tono en la celda de cabecera y
+  // en la de su filtro justo debajo (con las esquinas redondeadas solo
+  // arriba/abajo respectivamente) hace que las dos lean como un único
+  // recuadro que "incluye nombre y filtro" -- a petición del usuario,
+  // 2026-08-20.
+  const tintaColumnaCabecera = (idx) => (idx % 2 === 1 ? "rgba(255,255,255,0.07)" : "transparent");
   const hayFilas = invitadosOrdenados.length > 0;
 
   // La cabecera de columnas y los filtros viven en la barra verde
@@ -528,31 +540,47 @@ export function SeccionInvitados({
                   letterSpacing: "0.03em",
                 }}
               >
-                <EncabezadoOrdenable claro columna="invitado" orden={orden} onClick={cambiarOrden}>
-                  Invitado
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable claro columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
-                  Familia
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable claro columna="zona" orden={orden} onClick={cambiarOrden}>
-                  Zona
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable claro columna="colaborador" orden={orden} onClick={cambiarOrden}>
-                  Colaborador
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable claro columna="mesa" orden={orden} onClick={cambiarOrden}>
-                  Mesa
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable claro columna="confirmado" orden={orden} onClick={cambiarOrden}>
-                  Confirm.
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable claro columna="datos" orden={orden} onClick={cambiarOrden}>
-                  Datos
-                </EncabezadoOrdenable>
-                <EncabezadoOrdenable claro columna="pagado" orden={orden} onClick={cambiarOrden}>
-                  Pagado
-                </EncabezadoOrdenable>
-                <span></span>
+                <span style={{ background: tintaColumnaCabecera(0), borderRadius: "6px 6px 0 0" }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="invitado" orden={orden} onClick={cambiarOrden}>
+                    Invitado
+                  </EncabezadoOrdenable>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(1), borderRadius: "6px 6px 0 0" }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
+                    Familia
+                  </EncabezadoOrdenable>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(2), borderRadius: "6px 6px 0 0" }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="zona" orden={orden} onClick={cambiarOrden}>
+                    Zona
+                  </EncabezadoOrdenable>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(3), borderRadius: "6px 6px 0 0" }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="colaborador" orden={orden} onClick={cambiarOrden}>
+                    Colaborador
+                  </EncabezadoOrdenable>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "6px 6px 0 0" }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="mesa" orden={orden} onClick={cambiarOrden}>
+                    Mesa
+                  </EncabezadoOrdenable>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "6px 6px 0 0" }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="confirmado" orden={orden} onClick={cambiarOrden}>
+                    Confirm.
+                  </EncabezadoOrdenable>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "6px 6px 0 0" }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="datos" orden={orden} onClick={cambiarOrden}>
+                    Datos
+                  </EncabezadoOrdenable>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "6px 6px 0 0" }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="pagado" orden={orden} onClick={cambiarOrden}>
+                    Pagado
+                  </EncabezadoOrdenable>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "6px 6px 0 0" }}></span>
               </div>
               {/* Fila de filtros, subida aquí junto a la cabecera de
                   columnas (antes vivía sola en la caja blanca) -- a
@@ -578,199 +606,197 @@ export function SeccionInvitados({
                   marginBottom: -12,
                 }}
               >
-                <TextInput
-                  value={filtros.texto}
-                  onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
-                  placeholder="Buscar..."
-                  // Sin contorno, fondo transparente, mismas letras que
-                  // la cabecera de columnas (color + fuente) -- a
-                  // petición del usuario, 2026-08-20.
-                  style={{
-                    border: "none",
-                    background: "transparent",
-                    color: C.goldClaro,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    padding: "2px 5px",
-                    fontSize: 12,
-                    width: "100%",
-                    minWidth: 0,
-                    boxSizing: "border-box",
-                  }}
-                />
-                <select
-                  value={filtros.grupoFamiliar}
-                  onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
-                  // Sin contorno, fondo transparente, mismas letras que
-                  // la cabecera de columnas (color + fuente) -- a
-                  // petición del usuario, 2026-08-20.
-                  style={{
-                    ...inputStyle,
-                    border: "none",
-                    background: "transparent",
-                    color: C.goldClaro,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    padding: "2px 4px",
-                    fontSize: 12,
-                    width: "100%",
-                    minWidth: 0,
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <option value="">Todos</option>
-                  {gruposFamiliaresUnicos.map((gf) => (
-                    <option key={gf} value={gf}>
-                      {gf}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={filtros.zona}
-                  onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
-                  // Sin contorno, fondo transparente, mismas letras que
-                  // la cabecera de columnas (color + fuente) -- a
-                  // petición del usuario, 2026-08-20.
-                  style={{
-                    ...inputStyle,
-                    border: "none",
-                    background: "transparent",
-                    color: C.goldClaro,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    padding: "2px 4px",
-                    fontSize: 12,
-                    width: "100%",
-                    minWidth: 0,
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <option value="">Todas</option>
-                  {zonasUnicas.map((z) => (
-                    <option key={z} value={z}>
-                      {z}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={filtros.colaboradorId}
-                  onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
-                  // Sin contorno, fondo transparente, mismas letras que
-                  // la cabecera de columnas (color + fuente) -- a
-                  // petición del usuario, 2026-08-20.
-                  style={{
-                    ...inputStyle,
-                    border: "none",
-                    background: "transparent",
-                    color: C.goldClaro,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    padding: "2px 4px",
-                    fontSize: 12,
-                    width: "100%",
-                    minWidth: 0,
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <option value="">Todos</option>
-                  {colaboradores.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nombre}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={filtros.mesa}
-                  onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
-                  // Sin contorno, fondo transparente, mismas letras que
-                  // la cabecera de columnas (color + fuente) -- a
-                  // petición del usuario, 2026-08-20.
-                  style={{
-                    ...inputStyle,
-                    border: "none",
-                    background: "transparent",
-                    color: C.goldClaro,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    padding: "2px 4px",
-                    fontSize: 12,
-                    width: "100%",
-                    minWidth: 0,
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <option value="">Todas</option>
-                  {mesas.map((m) => (
-                    <option key={m.numero} value={String(m.numero)}>
-                      {m.numero}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={filtros.confirmado}
-                  onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
-                  // Sin contorno, fondo transparente, mismas letras que
-                  // la cabecera de columnas (color + fuente) -- a
-                  // petición del usuario, 2026-08-20.
-                  style={{
-                    ...inputStyle,
-                    border: "none",
-                    background: "transparent",
-                    color: C.goldClaro,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    padding: "2px 4px",
-                    fontSize: 12,
-                    width: "100%",
-                    minWidth: 0,
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <option value="">Todos</option>
-                  <option value="confirmado">Confirmado</option>
-                  <option value="tentativa">Sin confirmar</option>
-                </select>
-                <select
-                  value={filtros.datos}
-                  onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
-                  // Sin contorno, fondo transparente, mismas letras que
-                  // la cabecera de columnas (color + fuente) -- a
-                  // petición del usuario, 2026-08-20.
-                  style={{
-                    ...inputStyle,
-                    border: "none",
-                    background: "transparent",
-                    color: C.goldClaro,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    padding: "2px 4px",
-                    fontSize: 12,
-                    width: "100%",
-                    minWidth: 0,
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <option value="">Todos</option>
-                  <option value="completo">Completos</option>
-                  <option value="pendiente">Por recopilar</option>
-                </select>
-                <select
-                  value={filtros.pagado}
-                  onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
-                  // Sin contorno, fondo transparente, mismas letras que
-                  // la cabecera de columnas (color + fuente) -- a
-                  // petición del usuario, 2026-08-20.
-                  style={{
-                    ...inputStyle,
-                    border: "none",
-                    background: "transparent",
-                    color: C.goldClaro,
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    padding: "2px 4px",
-                    fontSize: 12,
-                    width: "100%",
-                    minWidth: 0,
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <option value="">Todos</option>
-                  <option value="pagado">Pagado</option>
-                  <option value="pendiente">Pendiente</option>
-                </select>
-                <span />
+                {/* Cada celda de filtro va envuelta en el mismo recuadro
+                    (misma `tintaColumnaCabecera(idx)`) que su cabecera
+                    de arriba, con las esquinas redondeadas solo abajo --
+                    juntas, cabecera+filtro se leen como un único
+                    recuadro por columna, a petición del usuario,
+                    2026-08-20. */}
+                <span style={{ background: tintaColumnaCabecera(0), borderRadius: "0 0 6px 6px" }}>
+                  <TextInput
+                    value={filtros.texto}
+                    onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
+                    placeholder="Buscar..."
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      color: C.goldClaro,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      padding: "2px 5px",
+                      fontSize: 12,
+                      width: "100%",
+                      minWidth: 0,
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </span>
+                <span style={{ background: tintaColumnaCabecera(1), borderRadius: "0 0 6px 6px" }}>
+                  <select
+                    value={filtros.grupoFamiliar}
+                    onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
+                    style={{
+                      ...inputStyle,
+                      border: "none",
+                      background: "transparent",
+                      color: C.goldClaro,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      padding: "2px 4px",
+                      fontSize: 12,
+                      width: "100%",
+                      minWidth: 0,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <option value="">Todos</option>
+                    {gruposFamiliaresUnicos.map((gf) => (
+                      <option key={gf} value={gf}>
+                        {gf}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(2), borderRadius: "0 0 6px 6px" }}>
+                  <select
+                    value={filtros.zona}
+                    onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
+                    style={{
+                      ...inputStyle,
+                      border: "none",
+                      background: "transparent",
+                      color: C.goldClaro,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      padding: "2px 4px",
+                      fontSize: 12,
+                      width: "100%",
+                      minWidth: 0,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <option value="">Todas</option>
+                    {zonasUnicas.map((z) => (
+                      <option key={z} value={z}>
+                        {z}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(3), borderRadius: "0 0 6px 6px" }}>
+                  <select
+                    value={filtros.colaboradorId}
+                    onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
+                    style={{
+                      ...inputStyle,
+                      border: "none",
+                      background: "transparent",
+                      color: C.goldClaro,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      padding: "2px 4px",
+                      fontSize: 12,
+                      width: "100%",
+                      minWidth: 0,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <option value="">Todos</option>
+                    {colaboradores.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "0 0 6px 6px" }}>
+                  <select
+                    value={filtros.mesa}
+                    onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
+                    style={{
+                      ...inputStyle,
+                      border: "none",
+                      background: "transparent",
+                      color: C.goldClaro,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      padding: "2px 4px",
+                      fontSize: 12,
+                      width: "100%",
+                      minWidth: 0,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <option value="">Todas</option>
+                    {mesas.map((m) => (
+                      <option key={m.numero} value={String(m.numero)}>
+                        {m.numero}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "0 0 6px 6px" }}>
+                  <select
+                    value={filtros.confirmado}
+                    onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
+                    style={{
+                      ...inputStyle,
+                      border: "none",
+                      background: "transparent",
+                      color: C.goldClaro,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      padding: "2px 4px",
+                      fontSize: 12,
+                      width: "100%",
+                      minWidth: 0,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <option value="">Todos</option>
+                    <option value="confirmado">Confirmado</option>
+                    <option value="tentativa">Sin confirmar</option>
+                  </select>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "0 0 6px 6px" }}>
+                  <select
+                    value={filtros.datos}
+                    onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
+                    style={{
+                      ...inputStyle,
+                      border: "none",
+                      background: "transparent",
+                      color: C.goldClaro,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      padding: "2px 4px",
+                      fontSize: 12,
+                      width: "100%",
+                      minWidth: 0,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <option value="">Todos</option>
+                    <option value="completo">Completos</option>
+                    <option value="pendiente">Por recopilar</option>
+                  </select>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "0 0 6px 6px" }}>
+                  <select
+                    value={filtros.pagado}
+                    onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
+                    style={{
+                      ...inputStyle,
+                      border: "none",
+                      background: "transparent",
+                      color: C.goldClaro,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      padding: "2px 4px",
+                      fontSize: 12,
+                      width: "100%",
+                      minWidth: 0,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <option value="">Todos</option>
+                    <option value="pagado">Pagado</option>
+                    <option value="pendiente">Pendiente</option>
+                  </select>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "0 0 6px 6px" }} />
               </div>
             </div>
           </div>

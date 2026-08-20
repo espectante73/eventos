@@ -163,14 +163,18 @@ export function BarraCompacta({ icono: Icono, completado, total, color, claro })
 // `claro` en BarraCompacta (VentanaProgreso.jsx). Sin él, se comporta
 // exactamente igual que antes (fondos claros: la tabla de Invitados y
 // Avisos). A petición del usuario, 2026-08-18.
-export function EncabezadoOrdenable({ columna, orden, onClick, children, claro }) {
+// `sinDivisor`: quita la línea vertical entre columnas -- se usa cuando
+// el propio llamador ya diferencia cada columna con su recuadro/sombra
+// (ver `tintaColumnaCabecera` en SeccionInvitados.jsx), a petición del
+// usuario, 2026-08-20. Sin este prop, se comporta igual que antes.
+export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, sinDivisor }) {
   const activo = orden.columna === columna;
   return (
     <button
       onClick={() => onClick(columna)}
       className="flex items-center justify-center gap-1 w-full"
       style={{
-        borderRight: `1px solid ${claro ? "rgba(255,255,255,0.25)" : C.line}`,
+        borderRight: sinDivisor ? "none" : `1px solid ${claro ? "rgba(255,255,255,0.25)" : C.line}`,
         // En la variante `claro` (barra verde de Invitados), TODAS las
         // columnas van del mismo dorado -- antes la columna activa
         // (Invitado, al ser el orden por defecto) se veía en un color
