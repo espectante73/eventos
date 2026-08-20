@@ -198,7 +198,21 @@ export function EncabezadoOrdenable({ columna, orden, onClick, children, claro }
     >
       {children}
       <span style={{ fontSize: 10 }}>
-        {activo ? (orden.direccion === "asc" ? "▲" : "▼") : "⇅"}
+        {/* En la variante `claro` (barra verde de Invitados), todas las
+            columnas usan el mismo tipo de flecha que ya llevaba
+            Invitado (▲/▼ de un solo sentido) en vez de mezclar con la
+            ⇅ de doble sentido para las que no están activas -- a
+            petición del usuario, 2026-08-20. La variante normal (fondo
+            claro, Avisos) no cambia. */}
+        {claro
+          ? activo && orden.direccion === "desc"
+            ? "▼"
+            : "▲"
+          : activo
+          ? orden.direccion === "asc"
+            ? "▲"
+            : "▼"
+          : "⇅"}
       </span>
     </button>
   );
