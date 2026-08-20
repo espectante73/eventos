@@ -615,25 +615,38 @@ export function SeccionInvitados({
           </div>
         }
         extra={
-          <div className="flex items-center gap-3">
-            {/* Lista global/Tentativa/Confirmados: mudados aquí desde
-                "Progreso de recopilación" -- sitio libre en esta cabecera
-                ahora que los 6 botones caben en un solo "Acciones", a
-                petición del usuario, 2026-08-20. */}
-            {resumen.map((s) => (
-              <div key={s.label} className="text-center">
-                <div
-                  className="text-[10px] uppercase"
-                  style={{ color: C.goldClaro, opacity: 0.75, fontFamily: "'IBM Plex Mono', monospace" }}
-                >
-                  {s.label}
-                </div>
-                <div
-                  className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
-                  style={{ background: "rgba(239,233,222,0.92)", color: C.ink, fontFamily: "'Fraunces', serif" }}
-                >
-                  {s.value}
-                </div>
+          <div className="flex items-center gap-2">
+            {/* Previstos/Sin confirmar/Confirmados/Edad media: mudados
+                aquí desde "Progreso de recopilación" -- sitio libre en
+                esta cabecera ahora que los 6 botones caben en un solo
+                "Acciones", a petición del usuario, 2026-08-20.
+                Agrupados de dos en dos dentro de su propio recuadro con
+                borde dorado (Previstos+Sin confirmar por un lado,
+                Confirmados+Edad media por otro) -- a petición del
+                usuario, para diferenciarlos visualmente como dos
+                bloques en vez de 4 sueltos. */}
+            {[resumen.slice(0, 2), resumen.slice(2, 4)].map((grupo, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 rounded px-2 py-1"
+                style={{ border: `1px solid ${C.gold}` }}
+              >
+                {grupo.map((s) => (
+                  <div key={s.label} className="text-center">
+                    <div
+                      className="text-[10px] uppercase"
+                      style={{ color: C.goldClaro, opacity: 0.75, fontFamily: "'IBM Plex Mono', monospace" }}
+                    >
+                      {s.label}
+                    </div>
+                    <div
+                      className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
+                      style={{ background: "rgba(239,233,222,0.92)", color: C.ink, fontFamily: "'Fraunces', serif" }}
+                    >
+                      {s.value}
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
             {/* Los 6 botones sueltos (Imprimir/Canciones/Alergias/Añadir/
