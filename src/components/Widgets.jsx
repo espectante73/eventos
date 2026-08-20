@@ -56,10 +56,9 @@ export function Stamp({ children, color = C.ink, pequeno, dorado }) {
           color: C.goldClaro,
           fontFamily: "'IBM Plex Mono', monospace",
           letterSpacing: "0.04em",
-          // Misma ligera inclinación que llevaba el sello original (el
-          // de contorno) -- se había perdido al crear esta variante
-          // "dorado", de vuelta a petición del usuario.
-          transform: "rotate(-2deg)",
+          // Inclinación del sello original (-2deg) + 2deg más, a
+          // petición del usuario, 2026-08-20.
+          transform: "rotate(-4deg)",
         }}
       >
         {children}
