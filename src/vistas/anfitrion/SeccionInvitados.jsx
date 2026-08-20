@@ -578,12 +578,39 @@ export function SeccionInvitados({
                   value={filtros.texto}
                   onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
                   placeholder="Buscar..."
-                  style={{ padding: "2px 5px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
+                  // Sin contorno, fondo transparente, mismas letras que
+                  // la cabecera de columnas (color + fuente) -- a
+                  // petición del usuario, 2026-08-20.
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    color: C.goldClaro,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    padding: "2px 5px",
+                    fontSize: 12,
+                    width: "100%",
+                    minWidth: 0,
+                    boxSizing: "border-box",
+                  }}
                 />
                 <select
                   value={filtros.grupoFamiliar}
                   onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
+                  // Sin contorno, fondo transparente, mismas letras que
+                  // la cabecera de columnas (color + fuente) -- a
+                  // petición del usuario, 2026-08-20.
+                  style={{
+                    ...inputStyle,
+                    border: "none",
+                    background: "transparent",
+                    color: C.goldClaro,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    padding: "2px 4px",
+                    fontSize: 12,
+                    width: "100%",
+                    minWidth: 0,
+                    boxSizing: "border-box",
+                  }}
                 >
                   <option value="">Todos</option>
                   {gruposFamiliaresUnicos.map((gf) => (
@@ -595,7 +622,21 @@ export function SeccionInvitados({
                 <select
                   value={filtros.zona}
                   onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
+                  // Sin contorno, fondo transparente, mismas letras que
+                  // la cabecera de columnas (color + fuente) -- a
+                  // petición del usuario, 2026-08-20.
+                  style={{
+                    ...inputStyle,
+                    border: "none",
+                    background: "transparent",
+                    color: C.goldClaro,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    padding: "2px 4px",
+                    fontSize: 12,
+                    width: "100%",
+                    minWidth: 0,
+                    boxSizing: "border-box",
+                  }}
                 >
                   <option value="">Todas</option>
                   {zonasUnicas.map((z) => (
@@ -607,7 +648,21 @@ export function SeccionInvitados({
                 <select
                   value={filtros.colaboradorId}
                   onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
+                  // Sin contorno, fondo transparente, mismas letras que
+                  // la cabecera de columnas (color + fuente) -- a
+                  // petición del usuario, 2026-08-20.
+                  style={{
+                    ...inputStyle,
+                    border: "none",
+                    background: "transparent",
+                    color: C.goldClaro,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    padding: "2px 4px",
+                    fontSize: 12,
+                    width: "100%",
+                    minWidth: 0,
+                    boxSizing: "border-box",
+                  }}
                 >
                   <option value="">Todos</option>
                   {colaboradores.map((c) => (
@@ -619,7 +674,21 @@ export function SeccionInvitados({
                 <select
                   value={filtros.mesa}
                   onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
+                  // Sin contorno, fondo transparente, mismas letras que
+                  // la cabecera de columnas (color + fuente) -- a
+                  // petición del usuario, 2026-08-20.
+                  style={{
+                    ...inputStyle,
+                    border: "none",
+                    background: "transparent",
+                    color: C.goldClaro,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    padding: "2px 4px",
+                    fontSize: 12,
+                    width: "100%",
+                    minWidth: 0,
+                    boxSizing: "border-box",
+                  }}
                 >
                   <option value="">Todas</option>
                   {mesas.map((m) => (
@@ -631,7 +700,21 @@ export function SeccionInvitados({
                 <select
                   value={filtros.confirmado}
                   onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
+                  // Sin contorno, fondo transparente, mismas letras que
+                  // la cabecera de columnas (color + fuente) -- a
+                  // petición del usuario, 2026-08-20.
+                  style={{
+                    ...inputStyle,
+                    border: "none",
+                    background: "transparent",
+                    color: C.goldClaro,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    padding: "2px 4px",
+                    fontSize: 12,
+                    width: "100%",
+                    minWidth: 0,
+                    boxSizing: "border-box",
+                  }}
                 >
                   <option value="">Todos</option>
                   <option value="confirmado">Confirmado</option>
@@ -640,7 +723,21 @@ export function SeccionInvitados({
                 <select
                   value={filtros.datos}
                   onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
+                  // Sin contorno, fondo transparente, mismas letras que
+                  // la cabecera de columnas (color + fuente) -- a
+                  // petición del usuario, 2026-08-20.
+                  style={{
+                    ...inputStyle,
+                    border: "none",
+                    background: "transparent",
+                    color: C.goldClaro,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    padding: "2px 4px",
+                    fontSize: 12,
+                    width: "100%",
+                    minWidth: 0,
+                    boxSizing: "border-box",
+                  }}
                 >
                   <option value="">Todos</option>
                   <option value="completo">Completos</option>
@@ -649,7 +746,21 @@ export function SeccionInvitados({
                 <select
                   value={filtros.pagado}
                   onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
-                  style={{ ...inputStyle, padding: "2px 4px", fontSize: 12, width: "100%", minWidth: 0, boxSizing: "border-box" }}
+                  // Sin contorno, fondo transparente, mismas letras que
+                  // la cabecera de columnas (color + fuente) -- a
+                  // petición del usuario, 2026-08-20.
+                  style={{
+                    ...inputStyle,
+                    border: "none",
+                    background: "transparent",
+                    color: C.goldClaro,
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    padding: "2px 4px",
+                    fontSize: 12,
+                    width: "100%",
+                    minWidth: 0,
+                    boxSizing: "border-box",
+                  }}
                 >
                   <option value="">Todos</option>
                   <option value="pagado">Pagado</option>
