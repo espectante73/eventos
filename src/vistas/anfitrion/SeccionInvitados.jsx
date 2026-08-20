@@ -25,6 +25,7 @@ import {
   Pencil,
   Copy,
   Printer,
+  MoreHorizontal,
 } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
@@ -34,6 +35,7 @@ import { descargarCSV } from "../../lib/descargas";
 import { TextInput } from "../../components/Formulario";
 import { Stamp, EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
+import { MenuFlotante } from "../../components/MenuFlotante";
 
 export function SeccionInvitados({
   data,
@@ -346,6 +348,51 @@ export function SeccionInvitados({
     return () => ro.disconnect();
   }, [hayFilas]);
 
+  // Los 6 botones de la cabecera (Imprimir/Canciones/Alergias/Añadir/
+  // Editar/Importar) se esconden en un desplegable ("Acciones"), en vez
+  // de ir todos sueltos en una fila -- a petición del usuario,
+  // 2026-08-20. Mismo componente MenuFlotante que ya usa el resto de la
+  // app (Abrir sección…, Modo pruebas...) en vez de un desplegable
+  // nuevo. Añadir/Editar/Importar activan un panel que se queda abierto
+  // debajo -- el "✓ " delante de la etiqueta cuando está activo es el
+  // mismo convenio ya usado en DesplegableSecciones.jsx para señalar
+  // "esto ya está abierto". Alergias conserva su fondo propio (la única
+  // que avisa de algo), igual que llevaba suelta.
+  const opcionesMenuInvitados = [
+    ...(invitados.length > 0
+      ? [
+          { id: "imprimir", etiqueta: "Imprimir", icono: Printer, onClick: () => setPanelFlotante("tabla") },
+          { id: "canciones", etiqueta: "Canciones", icono: Music, onClick: () => setPanelFlotante("canciones") },
+          {
+            id: "alergias",
+            etiqueta: "Alergias",
+            icono: AlertTriangle,
+            fondo: C.wax,
+            color: "#fff",
+            onClick: () => setPanelFlotante("alergias"),
+          },
+        ]
+      : []),
+    {
+      id: "anadir",
+      etiqueta: (mostrarAnadir ? "✓ " : "") + "Añadir invitado",
+      icono: Plus,
+      onClick: () => setMostrarAnadir((v) => !v),
+    },
+    {
+      id: "editar",
+      etiqueta: (modoEdicion ? "✓ " : "") + (modoEdicion ? "Terminar edición" : "Editar"),
+      icono: Pencil,
+      onClick: () => setModoEdicion((v) => !v),
+    },
+    {
+      id: "importar",
+      etiqueta: (mostrarImport ? "✓ " : "") + "Importar",
+      icono: Copy,
+      onClick: () => setMostrarImport((v) => !v),
+    },
+  ];
+
   return (
     <>
       <VentanaFlotante
@@ -546,80 +593,27 @@ export function SeccionInvitados({
           </div>
         }
         extra={
-          // Los 6 botones en una sola línea (antes 2 filas de 3, a
-          // petición del usuario 2026-08-18 tras ver que 2 filas no
-          // quedaba bien) -- ancho de contenido libre (ya no se fuerza un
-          // ancho igual, no aporta nada con una sola fila) y `flex-wrap`
-          // por si la ventana se redimensiona muy estrecha.
-          // Imprimir/Canciones mantienen el estilo borde+transparente
-          // igual que Añadir/Editar/Importar; Alergias se queda con su
-          // fondo propio a propósito (la única que avisa de algo).
-          <div className="flex items-center flex-wrap gap-1.5">
-            {invitados.length > 0 && (
-              <>
-                <button
-                  onClick={() => setPanelFlotante("tabla")}
-                  className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ border: `1px solid ${C.gold}`, color: C.goldClaro }}
-                  title="Ver / imprimir / exportar la lista de invitados"
-                >
-                  <Printer size={12} /> Imprimir
-                </button>
-                <button
-                  onClick={() => setPanelFlotante("canciones")}
-                  className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ border: `1px solid ${C.gold}`, color: C.goldClaro }}
-                  title="Ver / imprimir / exportar solo la lista de canciones (para el DJ/grupo musical)"
-                >
-                  <Music size={12} /> Canciones
-                </button>
-                <button
-                  onClick={() => setPanelFlotante("alergias")}
-                  className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ background: C.wax, color: "#fff" }}
-                  title="Ver / imprimir / exportar solo la lista de alergias, con su mesa (para cocina/catering)"
-                >
-                  <AlertTriangle size={12} /> Alergias
-                </button>
-              </>
+          // Los 6 botones sueltos (Imprimir/Canciones/Alergias/Añadir/
+          // Editar/Importar) se esconden ahora en un desplegable
+          // ("Acciones"), mismo MenuFlotante que usa el resto de la app
+          // -- a petición del usuario, 2026-08-20. `opcionesMenuInvitados`
+          // se construye más arriba, junto al resto de estado de esta
+          // ventana.
+          <MenuFlotante
+            anchor="bottom-left"
+            opciones={opcionesMenuInvitados}
+            render={({ ref, toggle }) => (
+              <button
+                ref={ref}
+                onClick={toggle}
+                className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
+                style={{ border: `1px solid ${C.gold}`, color: C.goldClaro }}
+                title="Imprimir, canciones, alergias, añadir, editar o importar"
+              >
+                <MoreHorizontal size={14} /> Acciones
+              </button>
             )}
-            <button
-              onClick={() => setMostrarAnadir((v) => !v)}
-              className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-              style={{
-                border: `1px solid ${C.gold}`,
-                color: mostrarAnadir ? C.paper : C.goldClaro,
-                background: mostrarAnadir ? C.gold : "transparent",
-              }}
-              title="Añadir invitado individual"
-            >
-              <Plus size={12} /> Añadir
-            </button>
-            <button
-              onClick={() => setModoEdicion((v) => !v)}
-              className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-              style={{
-                border: `1px solid ${C.gold}`,
-                color: modoEdicion ? C.paper : C.goldClaro,
-                background: modoEdicion ? C.gold : "transparent",
-              }}
-              title="Activa este modo para poder corregir el grupo familiar de un invitado"
-            >
-              <Pencil size={12} /> {modoEdicion ? "Terminar" : "Editar"}
-            </button>
-            <button
-              onClick={() => setMostrarImport((v) => !v)}
-              className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-              style={{
-                border: `1px solid ${C.gold}`,
-                color: mostrarImport ? C.paper : C.goldClaro,
-                background: mostrarImport ? C.gold : "transparent",
-              }}
-              title="Importar desde hoja de cálculo"
-            >
-              <Copy size={12} /> Importar
-            </button>
-          </div>
+          />
         }
       >
         {/* -16px: contrarresta el `p-4` (16px) de arriba del cuerpo de la
