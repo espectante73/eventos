@@ -298,15 +298,16 @@ export function SeccionInvitados({
     });
 
   // Invitado 1.2fr->1.8fr, Zona 0.8fr->1.1fr, Colaborador 1fr->1.3fr y
-  // Mesa 0.8fr->1.1fr: mismo motivo en las cuatro -- la fila entera se
-  // estira a la altura de su celda más alta, así que una columna
-  // estrecha con texto que no cabe (el nombre del colaborador
-  // seleccionado, "Mesa X (n/cap)") dejaba esa fila más alta que el
+  // Mesa 0.8fr->1.1fr->1.4fr (Mesa necesitó una segunda pasada: seguía
+  // sin caber "Mesa X (n/cap)"): mismo motivo en las cuatro -- la fila
+  // entera se estira a la altura de su celda más alta, así que una
+  // columna estrecha con texto que no cabe (el nombre del colaborador
+  // seleccionado, el texto de la mesa) dejaba esa fila más alta que el
   // resto, y además costaba leerlas. Las demás columnas se reparten el
   // resto igual que antes (mismos números de fr entre ellas), solo
   // ceden algo de su porcentaje relativo del ancho total -- a petición
   // del usuario, 2026-08-20.
-  const columnasTabla = "1.8fr 1fr 1.1fr 1.3fr 1.1fr 0.9fr 1fr 0.9fr auto";
+  const columnasTabla = "1.8fr 1fr 1.1fr 1.3fr 1.4fr 0.9fr 1fr 0.9fr auto";
   const hayFilas = invitadosOrdenados.length > 0;
 
   // La cabecera de columnas y los filtros viven en la barra verde
