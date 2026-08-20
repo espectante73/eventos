@@ -16,47 +16,10 @@ import { VentanaFlotante } from "../../components/VentanaFlotante";
 
 export function VentanaProgreso({ data, onCerrar }) {
   const { invitados, colaboradores, ordenFamiliares } = data;
-  const total = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
-  const tentativaCount = total - confirmadosCount;
-
-  // Lista global/Tentativa/Confirmados: mudados de la Portada a la propia
-  // cabecera de esta ventana (antes 3 recuadros en el cuerpo, a petición
-  // del usuario 2026-08-18) -- 2ª línea las etiquetas, 3ª línea los
-  // números, con un fondo resaltado detrás de cada número para que se
-  // lean bien sobre el degradado verde de la cabecera.
-  const resumen = [
-    { label: "Lista global", value: total },
-    { label: "Tentativa", value: tentativaCount },
-    { label: "Confirmados", value: confirmadosCount },
-  ];
 
   return (
-    <VentanaFlotante
-      clave="progreso"
-      titulo="Progreso de recopilación"
-      onCerrar={onCerrar}
-      subtitulo={
-        <div className="flex gap-4 mt-1">
-          {resumen.map((s) => (
-            <div key={s.label} className="text-center">
-              <div
-                className="text-[10px] uppercase"
-                style={{ color: C.goldClaro, opacity: 0.75, fontFamily: "'IBM Plex Mono', monospace" }}
-              >
-                {s.label}
-              </div>
-              <div
-                className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
-                style={{ background: "rgba(239,233,222,0.92)", color: C.ink, fontFamily: "'Fraunces', serif" }}
-              >
-                {s.value}
-              </div>
-            </div>
-          ))}
-        </div>
-      }
-    >
+    <VentanaFlotante clave="progreso" titulo="Progreso de recopilación" onCerrar={onCerrar}>
       {/* Las 3 barras generales (datos, cobro, canciones) en un solo
           recuadro verde/dorado -- mismo lenguaje que el resto de la app
           (Portada.jsx: degradado C.ink + borde/texto en dorado). Dentro,

@@ -348,6 +348,20 @@ export function SeccionInvitados({
     return () => ro.disconnect();
   }, [hayFilas]);
 
+  // Lista global/Tentativa/Confirmados: mudados aquí desde la cabecera
+  // de "Progreso de recopilación" -- con los 6 botones ahora escondidos
+  // en "Acciones" (justo debajo), la cabecera de esta ventana quedó con
+  // sitio libre y encajan mejor aquí, a petición del usuario,
+  // 2026-08-20. Mismo aspecto de siempre (2ª línea la etiqueta, 3ª el
+  // número resaltado sobre el verde).
+  const totalInvitados = invitados.length;
+  const confirmadosCount = invitados.filter((g) => g.confirmado).length;
+  const resumen = [
+    { label: "Lista global", value: totalInvitados },
+    { label: "Tentativa", value: totalInvitados - confirmadosCount },
+    { label: "Confirmados", value: confirmadosCount },
+  ];
+
   // Los 6 botones de la cabecera (Imprimir/Canciones/Alergias/Añadir/
   // Editar/Importar) se esconden en un desplegable ("Acciones"), en vez
   // de ir todos sueltos en una fila -- a petición del usuario,
@@ -593,27 +607,49 @@ export function SeccionInvitados({
           </div>
         }
         extra={
-          // Los 6 botones sueltos (Imprimir/Canciones/Alergias/Añadir/
-          // Editar/Importar) se esconden ahora en un desplegable
-          // ("Acciones"), mismo MenuFlotante que usa el resto de la app
-          // -- a petición del usuario, 2026-08-20. `opcionesMenuInvitados`
-          // se construye más arriba, junto al resto de estado de esta
-          // ventana.
-          <MenuFlotante
-            anchor="bottom-left"
-            opciones={opcionesMenuInvitados}
-            render={({ ref, toggle }) => (
-              <button
-                ref={ref}
-                onClick={toggle}
-                className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-                style={{ border: `1px solid ${C.gold}`, color: C.goldClaro }}
-                title="Imprimir, canciones, alergias, añadir, editar o importar"
-              >
-                <MoreHorizontal size={14} /> Acciones
-              </button>
-            )}
-          />
+          <div className="flex items-center gap-3">
+            {/* Lista global/Tentativa/Confirmados: mudados aquí desde
+                "Progreso de recopilación" -- sitio libre en esta cabecera
+                ahora que los 6 botones caben en un solo "Acciones", a
+                petición del usuario, 2026-08-20. */}
+            {resumen.map((s) => (
+              <div key={s.label} className="text-center">
+                <div
+                  className="text-[10px] uppercase"
+                  style={{ color: C.goldClaro, opacity: 0.75, fontFamily: "'IBM Plex Mono', monospace" }}
+                >
+                  {s.label}
+                </div>
+                <div
+                  className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
+                  style={{ background: "rgba(239,233,222,0.92)", color: C.ink, fontFamily: "'Fraunces', serif" }}
+                >
+                  {s.value}
+                </div>
+              </div>
+            ))}
+            {/* Los 6 botones sueltos (Imprimir/Canciones/Alergias/Añadir/
+                Editar/Importar) se esconden en un desplegable
+                ("Acciones"), mismo MenuFlotante que usa el resto de la
+                app -- a petición del usuario, 2026-08-20.
+                `opcionesMenuInvitados` se construye más arriba, junto al
+                resto de estado de esta ventana. */}
+            <MenuFlotante
+              anchor="bottom-left"
+              opciones={opcionesMenuInvitados}
+              render={({ ref, toggle }) => (
+                <button
+                  ref={ref}
+                  onClick={toggle}
+                  className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
+                  style={{ border: `1px solid ${C.gold}`, color: C.goldClaro }}
+                  title="Imprimir, canciones, alergias, añadir, editar o importar"
+                >
+                  <MoreHorizontal size={14} /> Acciones
+                </button>
+              )}
+            />
+          </div>
         }
       >
         {/* -16px: contrarresta el `p-4` (16px) de arriba del cuerpo de la
@@ -863,12 +899,16 @@ export function SeccionInvitados({
                   <span style={celda(6)}>
                     {g.confirmado ? (
                       datosCompletos(g) ? (
-                        <span className="flex items-center gap-1 text-xs" style={{ color: C.ink }}>
+                        <span className="flex items-center gap-1 text-xs" style={{ color: C.ink, whiteSpace: "nowrap" }}>
                           <Check size={13} /> completos
                         </span>
                       ) : (
-                        <span className="flex items-center gap-1 text-xs" style={{ color: C.wax }}>
-                          <Bell size={13} /> por recopilar
+                        // "sin datos" (antes "por recopilar", que en una
+                        // columna estrecha se partía en dos líneas) -- a
+                        // petición del usuario, 2026-08-20. whiteSpace:
+                        // nowrap para que quede en una sola línea.
+                        <span className="flex items-center gap-1 text-xs" style={{ color: C.wax, whiteSpace: "nowrap" }}>
+                          <Bell size={13} /> sin datos
                         </span>
                       )
                     ) : (
