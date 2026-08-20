@@ -297,7 +297,15 @@ export function SeccionInvitados({
       return String(va).localeCompare(String(vb)) * dir;
     });
 
-  const columnasTabla = "1.2fr 1fr 0.8fr 1fr 0.8fr 0.9fr 1fr 0.9fr auto";
+  // Invitado 1.2fr -> 1.8fr: para que todas las filas tengan la misma
+  // altura hace falta que el nombre quepa en una sola línea -- con
+  // 1.2fr, un "Apellido, Nombre" algo largo se partía en dos líneas y
+  // esa fila salía más alta que el resto (la fila entera se estira a la
+  // altura de su celda más alta). Las demás columnas se reparten el
+  // resto igual que antes (mismos números de fr entre ellas), solo se
+  // reduce su porcentaje relativo del ancho total -- a petición del
+  // usuario, 2026-08-20.
+  const columnasTabla = "1.8fr 1fr 0.8fr 1fr 0.8fr 0.9fr 1fr 0.9fr auto";
   const hayFilas = invitadosOrdenados.length > 0;
 
   // La cabecera de columnas y los filtros viven en la barra verde
