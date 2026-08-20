@@ -171,7 +171,14 @@ export function EncabezadoOrdenable({ columna, orden, onClick, children, claro }
       className="flex items-center justify-center gap-1 w-full"
       style={{
         borderRight: `1px solid ${claro ? "rgba(255,255,255,0.25)" : C.line}`,
-        color: claro ? (activo ? C.paper : C.goldClaro) : activo ? C.ink : C.gold,
+        // En la variante `claro` (barra verde de Invitados), TODAS las
+        // columnas van del mismo dorado -- antes la columna activa
+        // (Invitado, al ser el orden por defecto) se veía en un color
+        // distinto (C.paper) al resto, a petición del usuario,
+        // 2026-08-20. La flecha (▲/▼ vs ⇅) ya distingue cuál está
+        // activa, no hace falta además un color distinto. La variante
+        // normal (fondo claro, p.ej. Avisos) no cambia.
+        color: claro ? C.goldClaro : activo ? C.ink : C.gold,
         // `minWidth: 0`: sin esto, un <button> dentro de una celda de
         // CSS grid NUNCA se encoge por debajo del ancho de su propio
         // contenido (min-width:auto es el valor por defecto en un
