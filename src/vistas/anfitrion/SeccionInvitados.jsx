@@ -297,15 +297,16 @@ export function SeccionInvitados({
       return String(va).localeCompare(String(vb)) * dir;
     });
 
-  // Invitado 1.2fr -> 1.8fr y Zona 0.8fr -> 1.1fr: para que todas las
-  // filas tengan la misma altura hace falta que su contenido quepa en
-  // una sola línea -- la fila entera se estira a la altura de su celda
-  // más alta, así que una columna estrecha con texto que se parte en
-  // dos líneas dejaba esa fila más alta que el resto. Las demás
-  // columnas se reparten el resto igual que antes (mismos números de fr
-  // entre ellas), solo ceden algo de su porcentaje relativo del ancho
-  // total -- a petición del usuario, 2026-08-20.
-  const columnasTabla = "1.8fr 1fr 1.1fr 1fr 0.8fr 0.9fr 1fr 0.9fr auto";
+  // Invitado 1.2fr->1.8fr, Zona 0.8fr->1.1fr, Colaborador 1fr->1.3fr y
+  // Mesa 0.8fr->1.1fr: mismo motivo en las cuatro -- la fila entera se
+  // estira a la altura de su celda más alta, así que una columna
+  // estrecha con texto que no cabe (el nombre del colaborador
+  // seleccionado, "Mesa X (n/cap)") dejaba esa fila más alta que el
+  // resto, y además costaba leerlas. Las demás columnas se reparten el
+  // resto igual que antes (mismos números de fr entre ellas), solo
+  // ceden algo de su porcentaje relativo del ancho total -- a petición
+  // del usuario, 2026-08-20.
+  const columnasTabla = "1.8fr 1fr 1.1fr 1.3fr 1.1fr 0.9fr 1fr 0.9fr auto";
   const hayFilas = invitadosOrdenados.length > 0;
 
   // La cabecera de columnas y los filtros viven en la barra verde
