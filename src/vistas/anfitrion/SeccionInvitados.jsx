@@ -356,10 +356,15 @@ export function SeccionInvitados({
   // número resaltado sobre el verde).
   const totalInvitados = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
+  const edadMedia = edadPromedio(invitadosOrdenados, evento);
   const resumen = [
     { label: "Lista global", value: totalInvitados },
     { label: "Tentativa", value: totalInvitados - confirmadosCount },
     { label: "Confirmados", value: confirmadosCount },
+    // Edad media como recuadro más, en vez del texto suelto que llevaba
+    // antes justo debajo del título -- a petición del usuario,
+    // 2026-08-20.
+    { label: "Edad media", value: edadMedia === null ? "—" : `${edadMedia} años` },
   ];
 
   // Los 6 botones de la cabecera (Imprimir/Canciones/Alergias/Añadir/
@@ -439,13 +444,10 @@ export function SeccionInvitados({
           // interactivos (los botones de ordenar) dentro de la cabecera
           // arrastrable de la ventana, igual que ya exige `extra`.
           <div className="flex flex-col gap-1">
-            <div className="text-xs" style={{ color: C.goldClaro, opacity: 0.85 }}>
-              Edad media:{" "}
-              <strong style={{ fontSize: 15 }}>
-                {edadPromedio(invitadosOrdenados, evento) ?? "—"}
-              </strong>
-              {edadPromedio(invitadosOrdenados, evento) !== null && " años"}
-            </div>
+            {/* La línea de texto suelto "Edad media: X años" que iba
+                aquí se quitó -- ahora es un recuadro más junto a Lista
+                global/Tentativa/Confirmados, arriba en `extra` (a
+                petición del usuario, 2026-08-20). */}
             {/* Sin `minWidth: 780` aquí (a diferencia de la tabla de
                 abajo, que sí lo lleva dentro de su propio contenedor con
                 scroll horizontal propio) -- en móvil vertical, la
