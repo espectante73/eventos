@@ -452,8 +452,11 @@ export function SeccionInvitados({
         // Ancho fijo de vuelta (no ya "ancho total" de pantalla, se
         // deshizo a petición del usuario, 2026-08-18) -- lo bastante
         // ancha para que la cabecera de columnas quepa entera sin scroll
-        // horizontal nada más abrirla.
-        ancho="min(820px, calc(100vw - 48px))"
+        // horizontal nada más abrirla. 820px->940px: con los títulos de
+        // columna más grandes/en negrita (a petición del usuario,
+        // 2026-08-20) ya no cabían, hacía falta más ancho total para
+        // repartir entre las 9 columnas.
+        ancho="min(940px, calc(100vw - 48px))"
         subtitulo={
           // Segunda línea bajo el título: la edad media (número en
           // negrita y 3px más grande que el resto de la línea) y, debajo,
