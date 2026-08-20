@@ -995,11 +995,12 @@ export function SeccionInvitados({
                           <Check size={20} style={{ color: C.ink }} />
                         </span>
                       ) : (
-                        // Solo "NO", mayúscula + cursiva + negrita -- a
-                        // petición del usuario, 2026-08-20 (antes
-                        // "Pendiente" en una insignia con borde).
+                        // Solo "NO", mayúscula + cursiva + negrita,
+                        // centrado en la celda (igual que el check de
+                        // arriba) -- a petición del usuario, 2026-08-20
+                        // (antes "Pendiente" en una insignia con borde).
                         <span
-                          className="text-xs font-bold italic uppercase"
+                          className="flex items-center justify-center w-full text-xs font-bold italic uppercase"
                           style={{ color: C.charcoal, opacity: 0.7 }}
                           title="Se confirma desde la vista del colaborador"
                         >
