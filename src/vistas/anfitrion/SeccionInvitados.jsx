@@ -474,7 +474,13 @@ export function SeccionInvitados({
           // `stopPropagation` en mousedown/touchstart: son controles
           // interactivos (los botones de ordenar) dentro de la cabecera
           // arrastrable de la ventana, igual que ya exige `extra`.
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 mt-3">
+            {/* mt-3: separa la cabecera de columnas de los 4 recuadros
+                informativos de arriba (Previstos/Sin confirmar/
+                Confirmados/Edad media, en `extra`) -- antes quedaba
+                pegada justo debajo, a petición del usuario, 2026-08-20,
+                se baja para acercarla más a los filtros/la lista y
+                diferenciarla mejor de los recuadros. */}
             {/* La línea de texto suelto "Edad media: X años" que iba
                 aquí se quitó -- ahora es un recuadro más junto a Lista
                 global/Tentativa/Confirmados, arriba en `extra` (a
