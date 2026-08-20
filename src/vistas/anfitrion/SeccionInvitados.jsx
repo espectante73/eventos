@@ -987,14 +987,23 @@ export function SeccionInvitados({
                   <span style={celda(7)}>
                     {g.confirmado ? (
                       g.pagado ? (
-                        <Stamp pequeno dorado>Pagado</Stamp>
+                        // Mismo tratamiento que la columna Datos: solo
+                        // el signo, centrado en la celda y más grande,
+                        // sin la palabra "Pagado" -- a petición del
+                        // usuario, 2026-08-20.
+                        <span className="flex items-center justify-center w-full">
+                          <Check size={20} style={{ color: C.ink }} />
+                        </span>
                       ) : (
+                        // Solo "NO", mayúscula + cursiva + negrita -- a
+                        // petición del usuario, 2026-08-20 (antes
+                        // "Pendiente" en una insignia con borde).
                         <span
-                          className="text-xs px-2 py-0.5 rounded"
-                          style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
+                          className="text-xs font-bold italic uppercase"
+                          style={{ color: C.charcoal, opacity: 0.7 }}
                           title="Se confirma desde la vista del colaborador"
                         >
-                          Pendiente
+                          No
                         </span>
                       )
                     ) : (
