@@ -888,9 +888,12 @@ export function SeccionInvitados({
                     <select
                       value={g.colaboradorId || ""}
                       onChange={(e) => asignarColaborador(g.id, e.target.value)}
-                      // Sin borde (a petición del usuario, 2026-08-20) --
-                      // el resto de inputStyle se queda igual.
-                      style={{ ...inputStyle, border: "none", padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0 }}
+                      // Sin borde y sin el fondo blanco de inputStyle --
+                      // transparente, para que se vea el fondo real de
+                      // la celda (que alterna por fila y por columna)
+                      // en vez de una caja blanca encima -- a petición
+                      // del usuario, 2026-08-20.
+                      style={{ ...inputStyle, border: "none", background: "transparent", padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0 }}
                     >
                       <option value="">Sin asignar</option>
                       {colaboradores.map((c) => (
@@ -924,9 +927,13 @@ export function SeccionInvitados({
                       title={g.confirmado ? undefined : "Confirma primero a este invitado para poder asignarle mesa"}
                       style={{
                         ...inputStyle,
-                        // Sin borde (a petición del usuario, 2026-08-20)
-                        // -- el resto de inputStyle se queda igual.
+                        // Sin borde y sin el fondo blanco de inputStyle
+                        // -- transparente, para que se vea el fondo real
+                        // de la celda (que alterna por fila y por
+                        // columna) en vez de una caja blanca encima --
+                        // a petición del usuario, 2026-08-20.
                         border: "none",
+                        background: "transparent",
                         padding: "3px 5px",
                         fontSize: 12,
                         width: "100%",
