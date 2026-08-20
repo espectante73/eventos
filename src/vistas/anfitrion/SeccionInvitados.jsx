@@ -217,7 +217,7 @@ export function SeccionInvitados({
           g.zona || "",
           col ? col.nombre : "",
           g.mesa ?? "",
-          g.confirmado ? "Sí" : "Tentativa",
+          g.confirmado ? "Sí" : "Sin confirmar",
           g.confirmado ? (g.pagado ? "Sí" : "No") : "",
         ];
       });
@@ -589,7 +589,7 @@ export function SeccionInvitados({
                 >
                   <option value="">Todos</option>
                   <option value="confirmado">Confirmado</option>
-                  <option value="tentativa">Tentativa</option>
+                  <option value="tentativa">Sin confirmar</option>
                 </select>
                 <select
                   value={filtros.datos}
@@ -899,7 +899,7 @@ export function SeccionInvitados({
                           className="text-xs px-2 py-0.5 rounded"
                           style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
                         >
-                          Tentativa
+                          Sin confirmar
                         </span>
                       )}
                     </button>
@@ -1093,7 +1093,7 @@ export function SeccionInvitados({
                       <span>{g.zona || "—"}</span>
                       <span>{col ? col.nombre : "—"}</span>
                       <span>{g.mesa ?? "—"}</span>
-                      <span>{g.confirmado ? "Sí" : "Tentativa"}</span>
+                      <span>{g.confirmado ? "Sí" : "Sin confirmar"}</span>
                       <span>{g.confirmado ? (g.pagado ? "Sí" : "No") : "—"}</span>
                     </div>
                   );
