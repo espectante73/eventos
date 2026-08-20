@@ -16,6 +16,7 @@
 // esta misma tabla, así que ese estado también vive en VistaAnfitrion.
 import { useState, useRef, useEffect } from "react";
 import {
+  Check,
   Trash2,
   Music,
   AlertTriangle,
@@ -31,7 +32,7 @@ import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, cal
 import { ordenarPorApellidoNombre } from "../../lib/formato";
 import { descargarCSV } from "../../lib/descargas";
 import { TextInput } from "../../components/Formulario";
-import { Stamp, EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
+import { EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { MenuFlotante } from "../../components/MenuFlotante";
 
@@ -941,12 +942,11 @@ export function SeccionInvitados({
                     </select>
                   </span>
                   {/* Confirmado/Datos/Pagado comparten ahora el mismo
-                      lenguaje visual: SÍ -> sello dorado (Stamp pequeno
-                      dorado, como el "Confirmado" original), NO ->
-                      solo "No" en mayúscula/cursiva/negrita, centrado en
-                      la celda -- a petición del usuario, 2026-08-20
-                      ("usamos ese no para datos y confirmado, y el
-                      check lo sustituimos por el sello confirmado").
+                      lenguaje visual: SÍ -> solo un check (centrado,
+                      grande), NO -> solo "No" en mayúscula/cursiva/
+                      negrita, centrado en la celda -- sin sellos ni
+                      texto de más, a petición del usuario, 2026-08-20
+                      ("solo tengan o check de ok y la palabra NO").
                       El "No" de Datos conserva el color de aviso
                       (C.wax) que ya tenía -- a diferencia de
                       Confirmado/Pagado, que no necesitan llamar la
@@ -957,7 +957,7 @@ export function SeccionInvitados({
                       className="flex items-center justify-center w-full"
                     >
                       {g.confirmado ? (
-                        <Stamp pequeno dorado>Confirmado</Stamp>
+                        <Check size={20} style={{ color: C.ink }} />
                       ) : (
                         <span
                           className="text-xs font-bold italic uppercase"
@@ -971,7 +971,7 @@ export function SeccionInvitados({
                   <span style={celda(6, { justifyContent: "center", textAlign: "center" })}>
                     {g.confirmado ? (
                       datosCompletos(g) ? (
-                        <Stamp pequeno dorado>Completo</Stamp>
+                        <Check size={20} style={{ color: C.ink }} />
                       ) : (
                         <span
                           className="text-xs font-bold italic uppercase"
@@ -989,7 +989,7 @@ export function SeccionInvitados({
                   <span style={celda(7, { justifyContent: "center", textAlign: "center" })}>
                     {g.confirmado ? (
                       g.pagado ? (
-                        <Stamp pequeno dorado>Pagado</Stamp>
+                        <Check size={20} style={{ color: C.ink }} />
                       ) : (
                         <span
                           className="text-xs font-bold italic uppercase"
