@@ -538,7 +538,7 @@ export function SeccionInvitados({
                   Zona
                 </EncabezadoOrdenable>
                 <EncabezadoOrdenable claro columna="colaborador" orden={orden} onClick={cambiarOrden}>
-                  Colaborador
+                  Colab.
                 </EncabezadoOrdenable>
                 <EncabezadoOrdenable claro columna="mesa" orden={orden} onClick={cambiarOrden}>
                   Mesa
