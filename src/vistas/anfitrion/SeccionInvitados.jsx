@@ -512,12 +512,16 @@ export function SeccionInvitados({
                   esta fila y en la de filtros de más abajo -- a petición
                   del usuario, 2026-08-18. */}
               <div
-                className="grid text-xs uppercase text-center"
+                // text-sm + font-bold + más letterSpacing (antes text-xs
+                // normal): para que los títulos de columna resalten más
+                // -- a petición del usuario, 2026-08-20.
+                className="grid text-sm font-bold uppercase text-center"
                 style={{
                   gridTemplateColumns: anchosColumnas ?? columnasTabla,
                   width: anchoTabla ?? undefined,
                   color: C.goldClaro,
                   fontFamily: "'IBM Plex Mono', monospace",
+                  letterSpacing: "0.03em",
                 }}
               >
                 <EncabezadoOrdenable claro columna="invitado" orden={orden} onClick={cambiarOrden}>
@@ -557,7 +561,18 @@ export function SeccionInvitados({
                   con la tabla de más abajo. */}
               <div
                 className="grid pb-1"
-                style={{ gridTemplateColumns: anchosColumnas ?? columnasTabla, width: anchoTabla ?? undefined }}
+                // marginBottom: -12 contrarresta el pb-3 (12px) que
+                // VentanaFlotante.jsx aplica siempre al final de
+                // `subtitulo` -- sin esto quedaba una franja verde
+                // vacía entre los filtros y la lista blanca de abajo,
+                // señalada por el usuario, 2026-08-20 (mismo tipo de
+                // arreglo que el marginTop:-16 ya usado para el hueco
+                // equivalente del lado del cuerpo).
+                style={{
+                  gridTemplateColumns: anchosColumnas ?? columnasTabla,
+                  width: anchoTabla ?? undefined,
+                  marginBottom: -12,
+                }}
               >
                 <TextInput
                   value={filtros.texto}
