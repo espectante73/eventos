@@ -720,8 +720,14 @@ export function SeccionInvitados({
                 background: idx % 2 === 1 ? "rgba(31,58,46,0.07)" : "transparent",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                textAlign: "center",
+                // Datos alineados a la izquierda de su celda, con el
+                // padding de 6px de siempre como margen -- antes
+                // centrados (a petición del usuario, 2026-08-18), ahora
+                // a la izquierda (a petición del usuario, 2026-08-20).
+                // Solo afecta a las filas de datos; la cabecera de
+                // columnas y los filtros se quedan centrados.
+                justifyContent: "flex-start",
+                textAlign: "left",
                 padding: "8px 6px",
                 // Ver el mismo `minWidth: 0` en EncabezadoOrdenable
                 // (Widgets.jsx) -- aquí hace falta por el mismo motivo:
