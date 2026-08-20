@@ -147,9 +147,23 @@ export function SeccionInvitados({
 
   const asignarMesa = (id, mesaValue) => {
     const numero = mesaValue ? Number(mesaValue) : null;
+    const invitadoActual = invitados.find((g) => g.id === id);
+    // Solo se puede asignar mesa a un invitado ya CONFIRMADO -- el
+    // contador de ocupación (ocupacionMesa) solo cuenta confirmados a
+    // propósito (la mesa es sitio real para quien va a venir de
+    // verdad), así que dejar asignar a alguien sin confirmar hacía que
+    // el indicador pareciera "no actualizarse" (en realidad contaba
+    // bien, solo que a ese invitado no lo contaba). El <select> ya va
+    // deshabilitado para invitados sin confirmar (ver más abajo); esto
+    // es la comprobación de refuerzo en el propio guardado. Quitar la
+    // mesa (numero = null) se sigue permitiendo siempre, confirmado o
+    // no -- a petición del usuario, 2026-08-20.
+    if (numero && invitadoActual && !invitadoActual.confirmado) {
+      window.alert("Este invitado todavía no está confirmado -- confírmalo antes de asignarle mesa.");
+      return;
+    }
     if (numero) {
       const mesa = mesas.find((m) => m.numero === numero);
-      const invitadoActual = invitados.find((g) => g.id === id);
       const yaEnEstaMesa = invitadoActual && invitadoActual.mesa === numero;
       if (mesa && !yaEnEstaMesa && ocupacionMesa(numero) >= mesa.capacidad) {
         window.alert(`La mesa ${numero} ya está completa (${mesa.capacidad}/${mesa.capacidad}).`);
@@ -896,7 +910,23 @@ export function SeccionInvitados({
                     <select
                       value={g.mesa || ""}
                       onChange={(e) => asignarMesa(g.id, e.target.value)}
-                      style={{ ...inputStyle, padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0 }}
+                      // Deshabilitado hasta que el invitado esté
+                      // confirmado -- la mesa es sitio real para quien
+                      // va a venir de verdad, y el contador (X/N) solo
+                      // cuenta confirmados; asignar antes de confirmar
+                      // hacía que ese contador pareciera "no
+                      // actualizarse" al añadir gente sin confirmar. A
+                      // petición del usuario, 2026-08-20.
+                      disabled={!g.confirmado}
+                      title={g.confirmado ? undefined : "Confirma primero a este invitado para poder asignarle mesa"}
+                      style={{
+                        ...inputStyle,
+                        padding: "3px 5px",
+                        fontSize: 12,
+                        width: "100%",
+                        minWidth: 0,
+                        opacity: g.confirmado ? 1 : 0.5,
+                      }}
                     >
                       <option value="">Sin mesa</option>
                       {mesas.map((m) => {
