@@ -321,8 +321,9 @@ export function SeccionInvitados({
   // resto igual que antes (mismos números de fr entre ellas), solo
   // ceden algo de su porcentaje relativo del ancho total -- a petición
   // del usuario, 2026-08-20.
-  // Familia 1fr -> 1.3fr: mismo motivo, a petición del usuario, 2026-08-20.
-  const columnasTabla = "1.8fr 1.3fr 1.1fr 1.3fr 1.4fr 0.9fr 1fr 0.9fr auto";
+  // Familia 1fr -> 1.3fr, Confirmado 0.9fr -> 1.2fr: mismo motivo, a
+  // petición del usuario, 2026-08-20.
+  const columnasTabla = "1.8fr 1.3fr 1.1fr 1.3fr 1.4fr 1.2fr 1fr 0.9fr auto";
   const hayFilas = invitadosOrdenados.length > 0;
 
   // La cabecera de columnas y los filtros viven en la barra verde
