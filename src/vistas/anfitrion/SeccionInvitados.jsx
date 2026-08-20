@@ -888,7 +888,9 @@ export function SeccionInvitados({
                     <select
                       value={g.colaboradorId || ""}
                       onChange={(e) => asignarColaborador(g.id, e.target.value)}
-                      style={{ ...inputStyle, padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0 }}
+                      // Sin borde (a petición del usuario, 2026-08-20) --
+                      // el resto de inputStyle se queda igual.
+                      style={{ ...inputStyle, border: "none", padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0 }}
                     >
                       <option value="">Sin asignar</option>
                       {colaboradores.map((c) => (
@@ -922,6 +924,9 @@ export function SeccionInvitados({
                       title={g.confirmado ? undefined : "Confirma primero a este invitado para poder asignarle mesa"}
                       style={{
                         ...inputStyle,
+                        // Sin borde (a petición del usuario, 2026-08-20)
+                        // -- el resto de inputStyle se queda igual.
+                        border: "none",
                         padding: "3px 5px",
                         fontSize: 12,
                         width: "100%",
