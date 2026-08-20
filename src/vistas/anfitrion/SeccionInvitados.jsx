@@ -16,8 +16,6 @@
 // esta misma tabla, así que ese estado también vive en VistaAnfitrion.
 import { useState, useRef, useEffect } from "react";
 import {
-  Check,
-  Bell,
   Trash2,
   Music,
   AlertTriangle,
@@ -942,40 +940,44 @@ export function SeccionInvitados({
                       })}
                     </select>
                   </span>
-                  <span style={celda(5)}>
+                  {/* Confirmado/Datos/Pagado comparten ahora el mismo
+                      lenguaje visual: SÍ -> sello dorado (Stamp pequeno
+                      dorado, como el "Confirmado" original), NO ->
+                      solo "No" en mayúscula/cursiva/negrita, centrado en
+                      la celda -- a petición del usuario, 2026-08-20
+                      ("usamos ese no para datos y confirmado, y el
+                      check lo sustituimos por el sello confirmado").
+                      El "No" de Datos conserva el color de aviso
+                      (C.wax) que ya tenía -- a diferencia de
+                      Confirmado/Pagado, que no necesitan llamar la
+                      atención tanto. */}
+                  <span style={celda(5, { justifyContent: "center", textAlign: "center" })}>
                     <button
                       onClick={() => toggleConfirmar(g.id)}
-                      className="flex items-center gap-1"
+                      className="flex items-center justify-center w-full"
                     >
                       {g.confirmado ? (
                         <Stamp pequeno dorado>Confirmado</Stamp>
                       ) : (
                         <span
-                          className="text-xs px-2 py-0.5 rounded"
-                          style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
+                          className="text-xs font-bold italic uppercase"
+                          style={{ color: C.charcoal, opacity: 0.7 }}
                         >
-                          Sin confirmar
+                          No
                         </span>
                       )}
                     </button>
                   </span>
-                  <span style={celda(6)}>
+                  <span style={celda(6, { justifyContent: "center", textAlign: "center" })}>
                     {g.confirmado ? (
                       datosCompletos(g) ? (
-                        // Sin la palabra "completos" -- solo el signo,
-                        // centrado en la celda (no a la izquierda como
-                        // el resto de columnas) y más grande, a
-                        // petición del usuario, 2026-08-20.
-                        <span className="flex items-center justify-center w-full">
-                          <Check size={20} style={{ color: C.ink }} />
-                        </span>
+                        <Stamp pequeno dorado>Completo</Stamp>
                       ) : (
-                        // "sin datos" (antes "por recopilar", que en una
-                        // columna estrecha se partía en dos líneas) -- a
-                        // petición del usuario, 2026-08-20. whiteSpace:
-                        // nowrap para que quede en una sola línea.
-                        <span className="flex items-center gap-1 text-xs" style={{ color: C.wax, whiteSpace: "nowrap" }}>
-                          <Bell size={13} /> sin datos
+                        <span
+                          className="text-xs font-bold italic uppercase"
+                          style={{ color: C.wax }}
+                        >
+                          No
                         </span>
                       )
                     ) : (
@@ -984,23 +986,13 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  <span style={celda(7)}>
+                  <span style={celda(7, { justifyContent: "center", textAlign: "center" })}>
                     {g.confirmado ? (
                       g.pagado ? (
-                        // Mismo tratamiento que la columna Datos: solo
-                        // el signo, centrado en la celda y más grande,
-                        // sin la palabra "Pagado" -- a petición del
-                        // usuario, 2026-08-20.
-                        <span className="flex items-center justify-center w-full">
-                          <Check size={20} style={{ color: C.ink }} />
-                        </span>
+                        <Stamp pequeno dorado>Pagado</Stamp>
                       ) : (
-                        // Solo "NO", mayúscula + cursiva + negrita,
-                        // centrado en la celda (igual que el check de
-                        // arriba) -- a petición del usuario, 2026-08-20
-                        // (antes "Pendiente" en una insignia con borde).
                         <span
-                          className="flex items-center justify-center w-full text-xs font-bold italic uppercase"
+                          className="text-xs font-bold italic uppercase"
                           style={{ color: C.charcoal, opacity: 0.7 }}
                           title="Se confirma desde la vista del colaborador"
                         >
