@@ -694,3 +694,10 @@ preferirla y hacerlo directamente (como aquí, con `vercel` CLI y la
 Management API de Supabase) en vez de narrar clics; si no queda más
 remedio que guiar por un dashboard, comprobar antes la ruta exacta
 (documentación oficial o búsqueda reciente) en vez de recordarla.
+
+**Fase G, aparcada a petición del usuario.** Evaluada (ver más arriba
+el análisis de coste/beneficio: montar tests de integración de
+login/RLS exige un proyecto de Supabase aparte solo para pruebas) y
+decidido no abordarla ahora — desproporcionada para 10-15 personas,
+con la Fase A todavía pendiente y más urgente de cara a noviembre.
+Se retoma si algún día conviene.
