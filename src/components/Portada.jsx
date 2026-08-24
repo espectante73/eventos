@@ -42,6 +42,7 @@ import { C } from "../theme";
 import { VERSION_APP } from "../constants";
 import { formatearFecha, formatearDiaSemana } from "../lib/formato";
 import { DesplegableSecciones } from "./DesplegableSecciones";
+import { MiCuenta } from "./MiCuenta";
 
 // Ancho máximo de la tarjeta de portada -- generoso para que el póster se
 // lea bien, pero sin llegar a ocupar el ancho completo de una pantalla de
@@ -122,13 +123,23 @@ export function Portada({
           v{VERSION_APP}
         </span>
 
+        {/* "Mi cuenta" (cambiar contraseña/email de acceso sin cerrar
+            sesión) vive junto a "Cerrar sesión" -- las dos comparten la
+            misma condición (solo tiene sentido con una sesión real de
+            Supabase Auth, no con el enlace-token del anfitrión) y así
+            sirve igual para el anfitrión que para cualquier
+            colaborador logueado, sin tocar nada en VistaColaborador.jsx
+            -- a petición del usuario, 2026-08-21 (Fase C). */}
         {onCerrarSesion && (
-          <button
-            onClick={onCerrarSesion}
-            className="boton-3d boton-flotante-imagen cristal-difuminado absolute top-4 right-4 flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
-          >
-            <LogOut size={16} /> Cerrar sesión
-          </button>
+          <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+            <MiCuenta />
+            <button
+              onClick={onCerrarSesion}
+              className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
+            >
+              <LogOut size={16} /> Cerrar sesión
+            </button>
+          </div>
         )}
 
         {/* "A los pies de la pareja": sobre la propia foto, no en la
