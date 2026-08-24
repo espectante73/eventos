@@ -1,22 +1,19 @@
 // Lectura/construcción del enlace mágico (?rol=...) — movida fuera de
 // App.jsx en el reparto del 2026-08-08 (ver CLAUDE.md).
+//
+// buildLink() (construía ese enlace a mano para "Copiar enlace") se
+// retiró el 2026-08-24: llevaba desde la Fase B (2026-08-12, enlace de
+// colaborador retirado a favor del login) sin ninguna llamada real en la
+// app, con su propio test pasando en verde igualmente -- detectado en un
+// examen honesto del código a petición del usuario. Sustituida de
+// verdad por `anfitrion_enviar_invitacion_login` (servidor) +
+// getEmailCrearCuentaFromUrl (de aquí abajo).
 
 export function getRolFromUrl() {
   try {
     return new URLSearchParams(window.location.search).get("rol");
   } catch (_) {
     return null;
-  }
-}
-
-export function buildLink(rolValue, urlPublica) {
-  try {
-    const base = urlPublica && urlPublica.trim() ? urlPublica.trim() : window.location.href;
-    const url = new URL(base);
-    url.searchParams.set("rol", rolValue);
-    return url.toString();
-  } catch (_) {
-    return "";
   }
 }
 

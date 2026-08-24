@@ -17,6 +17,14 @@ export const C = {
   goldClaro: "#D9B778",
   charcoal: "#2B2620",
   line: "#C9BFA9",
+  // Rojo de aviso/peligro y su fondo suave a juego — centralizados el
+  // 2026-08-24 (examen honesto del código, a petición del usuario):
+  // antes cada sitio llevaba su propio "#B00020"/"#FBEAEC" copiado a
+  // mano, y ya había una desviación real sin querer (VentanaMesas.jsx
+  // usaba "#FBEAEA", un carácter distinto, visualmente idéntico) --
+  // prueba de que copiar hexadecimales a mano deriva solo con el tiempo.
+  peligro: "#B00020",
+  avisoFondo: "#FBEAEC",
 };
 
 export const inputStyle = {

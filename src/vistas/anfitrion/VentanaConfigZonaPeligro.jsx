@@ -53,7 +53,7 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
       emailAnfitrion: "",
       plantillaAsignacion:
         "Hola,<br><br>Tienes invitados nuevos asignados.<br>Entra en tu enlace cuando puedas para revisarlos y completar sus datos." +
-        '<p style="color:#B00020;font-weight:700;text-transform:uppercase;font-family:Georgia,serif;margin-top:14px;">' +
+        `<p style="color:${C.peligro};font-weight:700;text-transform:uppercase;font-family:Georgia,serif;margin-top:14px;">` +
         "Si ya has rellenado los datos de los nuevos que adjunto en este email, ignora este aviso." +
         "</p>",
       plantillaDatosCompletados:
@@ -79,7 +79,7 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
       <button
         onClick={borrarTodoElContenido}
         className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-        style={{ background: "#B00020", color: "#fff" }}
+        style={{ background: C.peligro, color: "#fff" }}
       >
         <Trash2 size={14} /> BORRAR TODO
       </button>

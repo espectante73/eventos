@@ -48,6 +48,14 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
   // volver a montar Turnstile cada vez que se cambia de pestaña). El
   // script de index.html es async -- puede no estar listo todavía al
   // primer render, de ahí el sondeo corto.
+  //
+  // La limpieza llama a window.turnstile.remove(...) -- sin esto (fallo
+  // real encontrado en un examen honesto del código, 2026-08-24), React
+  // StrictMode (activo en main.jsx) monta-desmonta-remonta cada efecto a
+  // propósito en `npm run dev`, y como Turnstile pinta su iframe fuera
+  // del control de React, el segundo montaje dejaba DOS widgets
+  // superpuestos sobre el mismo <div> en local. En el build de
+  // producción real (sin StrictMode) esto nunca llegaba a notarse.
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY) return;
     let cancelado = false;
@@ -60,19 +68,24 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
         "error-callback": () => setCaptchaToken(""),
       });
     };
+    let espera;
     if (window.turnstile) {
       montar();
     } else {
-      const espera = setInterval(() => {
+      espera = setInterval(() => {
         if (window.turnstile) {
           clearInterval(espera);
           montar();
         }
       }, 100);
-      return () => clearInterval(espera);
     }
     return () => {
       cancelado = true;
+      if (espera) clearInterval(espera);
+      if (window.turnstile && widgetIdRef.current !== null) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
     };
   }, []);
 

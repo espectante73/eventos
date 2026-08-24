@@ -701,3 +701,65 @@ login/RLS exige un proyecto de Supabase aparte solo para pruebas) y
 decidido no abordarla ahora — desproporcionada para 10-15 personas,
 con la Fase A todavía pendiente y más urgente de cara a noviembre.
 Se retoma si algún día conviene.
+
+## 2026-08-24: examen honesto del código (a petición del usuario) — 5 hallazgos, los 5 arreglados
+
+Petición explícita: "dime el resultado de un examen honrado de la app
+si ves fallos reales o redundancia en la estructura o código muerto".
+Revisión manual (no solo lint — ver el punto 5) de `useLedgerData.js`,
+`App.jsx`, `schema.sql` y una búsqueda de exports nunca importados
+fuera de su propio fichero. Se descartaron dos sospechas tras
+comprobarlas de verdad (quedan aquí para no repetir la misma
+comprobación en el futuro): `anfitrion_guardar_colaboradores` /
+`anfitrion_guardar_invitados` usan `set "columna" = excluded."columna"`
+columna a columna, no una sobrescritura completa de fila — no hay
+riesgo de que un guardado masivo borre una columna nueva que el `insert`
+no mencione explícitamente; y la arquitectura login+token en paralelo
+en `App.jsx`/`useLedgerData.js` cuadra exactamente con lo ya documentado
+más arriba, nada roto ahí.
+
+1. **Código muerto real: `buildLink()` en `lib/url.js`.** Sobrevivía
+   desde la Fase B (2026-08-12, retirada del enlace-token de
+   colaborador) sin ninguna llamada real en la app — sustituida de
+   hecho por `anfitrion_enviar_invitacion_login` +
+   `getEmailCrearCuentaFromUrl`, pero nadie borró la función vieja ni
+   su test (`url.test.js`), que seguía pasando en verde dando una falsa
+   sensación de cobertura real. Eliminada la función y su test.
+2. **Redundancia real de estructura: colores duplicados a mano en vez
+   de usar `theme.js`.** `#B00020` suelto en `App.jsx` (x2),
+   `VistaColaborador.jsx`, `VentanaConfigZonaPeligro.jsx` (x2, una
+   dentro de una plantilla de email) y `useLedgerData.js` (la misma
+   plantilla de email duplicada por segunda vez, detectado de rebote al
+   arreglar esto). `#FBEAEC` suelto en `ColaboradorCard.jsx` y
+   `VentanaAvisos.jsx` (x2), y en `VentanaMesas.jsx` con una desviación
+   real de un carácter (`#FBEAEA`, visualmente idéntico) — prueba de
+   que copiar hexadecimales a mano ya había empezado a desviarse.
+   Centralizados en `theme.js` como `C.peligro` y `C.avisoFondo`; los 9
+   sitios ahora apuntan al mismo token.
+3. **Tres exports que no importaba nadie fuera de su propio fichero:**
+   `ANCHO_MAXIMO_PORTADA`, `CAMPOS_DATOS_INVITADO` (se les quitó
+   `export`, sin más) y `supabaseConfigurado` — este último sí tenía un
+   uso real posible y se le dio: `App.jsx` ahora lo importa y muestra
+   una pantalla clara ("Falta configuración") si `.env`/Vercel se
+   queda sin las claves de Supabase, en vez del único `console.error`
+   de antes (invisible para cualquiera que no abra las herramientas de
+   desarrollador) o un "Abriendo el libro de invitados…" infinito sin
+   ninguna pista real.
+4. **Bug real pero solo en `npm run dev` local, no en producción:** el
+   widget de Turnstile (`VistaLogin.jsx`) se montaba con
+   `window.turnstile.render(...)` pero su `useEffect` de limpieza nunca
+   llamaba a `window.turnstile.remove(...)`. Con `React.StrictMode`
+   activo (`main.jsx`), el doble montaje/desmontaje intencional de
+   React en desarrollo dejaba dos widgets de CAPTCHA superpuestos sobre
+   el mismo `<div>` al probar el login en local (nunca en el build de
+   producción real, donde StrictMode no actúa así). Corregido llamando
+   a `remove()` en la limpieza.
+5. **Por qué nada de esto lo había cazado `npm run lint`:**
+   `"no-unused-vars": "off"` en `.eslintrc.json` — ya sabido de antes
+   (ver `project_eventos_estado` en la memoria de Claude), pero
+   confirma que "lint en verde" nunca ha sido garantía de "sin código
+   muerto", solo de "sin referencias a variables inexistentes"
+   (`no-undef`). Tras limpiar los puntos 1-3, activar la regla de
+   verdad (`"error"`) no generó ni un solo aviso nuevo — se dejó
+   encendida para que un `buildLink()` futuro no pueda volver a
+   colarse sin que lint lo note.

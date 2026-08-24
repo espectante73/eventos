@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabaseClient";
+import { C } from "./theme";
 
 const EVENTO_POR_DEFECTO = {
   nombre: "",
@@ -19,7 +20,7 @@ const EVENTO_POR_DEFECTO = {
   emailAnfitrion: "",
   plantillaAsignacion:
     "Hola,<br><br>Tienes invitados nuevos asignados.<br>Entra en tu enlace cuando puedas para revisarlos y completar sus datos." +
-    '<p style="color:#B00020;font-weight:700;text-transform:uppercase;font-family:Georgia,serif;margin-top:14px;">' +
+    `<p style="color:${C.peligro};font-weight:700;text-transform:uppercase;font-family:Georgia,serif;margin-top:14px;">` +
     "Si ya has rellenado los datos de los nuevos que adjunto en este email, ignora este aviso." +
     "</p>",
   plantillaDatosCompletados:

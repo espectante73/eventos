@@ -15,7 +15,10 @@ export function datosCompletos(g) {
 // Los 6 campos de texto que rellena el colaborador, más la foto familiar
 // (que vive aparte, en fotosFamiliares) = 7 en total. El pago no cuenta
 // aquí — tiene su propia insignia ("Pagado"/"Pendiente de pago") aparte.
-export const CAMPOS_DATOS_INVITADO = [
+// Sin "export": nadie fuera de este fichero lo necesita (comprobado en
+// un examen honesto del código, 2026-08-24) -- TOTAL_DATOS_INVITADO sí
+// se usa fuera y se queda exportado.
+const CAMPOS_DATOS_INVITADO = [
   "anioNacimiento",
   "anioBoda",
   "email",

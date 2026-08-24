@@ -148,7 +148,7 @@ export function VentanaAvisos({
                 <div
                   key={c.id}
                   className="flex items-center justify-between gap-2 px-2 py-1.5 rounded"
-                  style={{ background: "#FBEAEC" }}
+                  style={{ background: C.avisoFondo }}
                 >
                   <span className="text-sm" style={{ color: C.ink }}>
                     {c.nombre}
@@ -306,7 +306,7 @@ export function VentanaAvisos({
                   <div
                     key={f.clave}
                     className="flex items-center justify-between gap-2 px-2 py-1.5 rounded"
-                    style={{ background: "#FBEAEC" }}
+                    style={{ background: C.avisoFondo }}
                   >
                     <span className="text-sm" style={{ color: C.ink }}>
                       Familia {f.apellido}

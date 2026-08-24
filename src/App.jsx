@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { LogOut } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
-import { supabase } from "./supabaseClient";
+import { supabase, supabaseConfigurado } from "./supabaseClient";
 import { getRolFromUrl, getEmailCrearCuentaFromUrl } from "./lib/url";
 import { C } from "./theme";
 import { VistaAnfitrion } from "./vistas/VistaAnfitrion";
@@ -227,6 +227,37 @@ export default function App() {
     };
   }, [urlRol, session]);
 
+  // Antes de esto, solo había un console.error en supabaseClient.js --
+  // invisible para cualquiera que no sepa abrir las herramientas de
+  // desarrollador. Con las claves de .env/Vercel vacías o mal puestas,
+  // la app se quedaba para siempre en "Abriendo el libro de invitados…"
+  // sin ninguna pista real de qué falla. Detectado en un examen honesto
+  // del código, 2026-08-24 (supabaseConfigurado llevaba exportado sin
+  // que nadie lo usara).
+  if (!supabaseConfigurado) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
+      >
+        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+          <h1
+            className="text-xl mb-2"
+            style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}
+          >
+            Falta configuración
+          </h1>
+          <p className="text-sm" style={{ color: C.charcoal, opacity: 0.8 }}>
+            No se ha encontrado la conexión con la base de datos. Si acabas de desplegar esto,
+            revisa que <code>VITE_SUPABASE_URL</code> y <code>VITE_SUPABASE_ANON_KEY</code>{" "}
+            estén rellenas (en Vercel: Settings → Environment Variables). Este mensaje no
+            aparece por un fallo de datos — la app ni siquiera ha podido intentar conectarse.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (authEvent === "PASSWORD_RECOVERY") {
     return <VistaNuevaContrasena onListo={() => setAuthEvent(null)} />;
   }
@@ -350,14 +381,14 @@ export default function App() {
         backgroundImage:
           "repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(31,58,46,0.05) 28px)",
         paddingTop: alturaBanners,
-        border: modoPruebas ? "6px solid #B00020" : "none",
+        border: modoPruebas ? `6px solid ${C.peligro}` : "none",
         boxSizing: "border-box",
       }}
     >
       {modoPruebas && (
         <div
           className="fixed left-0 right-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold"
-          style={{ top: 0, background: "#B00020", color: "#fff", zIndex: 61, boxShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
+          style={{ top: 0, background: C.peligro, color: "#fff", zIndex: 61, boxShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
         >
           🧪 MODO PRUEBAS ACTIVO — todo lo que se haga se restaurará al desactivarlo
         </div>

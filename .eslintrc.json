@@ -10,7 +10,7 @@
   "extends": ["eslint:recommended", "plugin:react/recommended"],
   "settings": { "react": { "version": "detect" } },
   "rules": {
-    "no-unused-vars": "off",
+    "no-unused-vars": "error",
     "react/prop-types": "off",
     "react/no-unescaped-entities": "off",
     "react/display-name": "off",

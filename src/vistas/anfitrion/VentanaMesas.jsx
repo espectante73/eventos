@@ -229,7 +229,7 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
               <div
                 key={i}
                 className="p-2 rounded text-sm"
-                style={{ background: "#FBEAEA", border: `1px solid ${C.wax}`, color: C.charcoal }}
+                style={{ background: C.avisoFondo, border: `1px solid ${C.wax}`, color: C.charcoal }}
               >
                 <strong style={{ color: C.wax }}>Familia {a.grupo}</strong>: {a.motivo}
               </div>

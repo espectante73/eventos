@@ -48,7 +48,10 @@ import { MiCuenta } from "./MiCuenta";
 // lea bien, pero sin llegar a ocupar el ancho completo de una pantalla de
 // escritorio (con una imagen vertical, eso la haría desproporcionadamente
 // alta). En móvil, al ser más ancho que la pantalla, no limita nada real.
-export const ANCHO_MAXIMO_PORTADA = 480;
+// Sin "export": nadie más lo usa (comprobado en un examen honesto del
+// código, 2026-08-24) -- si algún día otro componente necesita este
+// mismo ancho, vuelve a exportarse entonces.
+const ANCHO_MAXIMO_PORTADA = 480;
 
 export function Portada({
   evento,

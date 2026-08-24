@@ -567,7 +567,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   return (
     <div className="space-y-8">
       {bloqueadoEnPruebas && (
-        <div className="p-3 rounded text-sm font-semibold" style={{ background: "#B00020", color: "#fff" }}>
+        <div className="p-3 rounded text-sm font-semibold" style={{ background: C.peligro, color: "#fff" }}>
           🧪 El anfitrión ha activado el Modo Pruebas y te ha dejado fuera por ahora: no podrás
           guardar datos, marcar pagos ni confirmar nada hasta que lo desactive.
         </div>
