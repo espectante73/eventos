@@ -50,6 +50,9 @@ const HISTORIAL_VERSIONES = [
       'Enlace de colaborador viejo abierto sin haber iniciado sesión: pantalla clara de "No tienes acceso" con enlace a iniciar sesión, en vez de una vista técnica confusa que parecía un fallo de la app.',
       'Corrige que la previsualización "Formularios" del anfitrión llevaba rota desde la retirada del enlace-token: ahora reutiliza los datos que el anfitrión ya tiene cargados en vez de intentar una recarga que exigía sesión real de esa otra persona.',
       "Fallo de seguridad encontrado y cerrado en pruebas en vivo: la función que resuelve el rol al iniciar sesión concedía permiso de ejecución a cualquiera por defecto (aunque sin sesión no llegaba a devolver ningún dato real) — corregido revocando ese permiso explícitamente.",
+      "Aviso inmediato si un email no parece válido (falta la arroba, el punto...) en Colaboradores, en tu email de anfitrión y al entrar o crear cuenta — antes solo se notaba cuando dejaba de llegar un aviso, sin saber por qué.",
+      "Nuevo botón \"Mi cuenta\" (junto a \"Cerrar sesión\"): tanto el anfitrión como cualquier colaborador con sesión iniciada pueden cambiar su propia contraseña o su email de acceso sin tener que cerrar sesión ni pasar por \"He olvidado mi contraseña\".",
+      "Si un colaborador cambia su email de acceso desde \"Mi cuenta\", en cuanto lo confirma también pasa a ser el email al que le llegan sus avisos automáticos — antes se quedaban separados sin avisar a nadie del cambio; ahora el anfitrión ve un aviso claro en Colaboradores hasta que lo confirma.",
     ],
   },
   {

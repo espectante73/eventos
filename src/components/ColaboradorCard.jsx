@@ -6,12 +6,12 @@ import { useState } from "react";
 import { Send, Repeat, Trash2, Mail } from "lucide-react";
 import { C, inputStyle } from "../theme";
 import { resolverColaborador, datosCompletos } from "../lib/invitados";
-import { ordenarPorApellidoNombre } from "../lib/formato";
+import { ordenarPorApellidoNombre, formatearFecha } from "../lib/formato";
 import { emailValido } from "../lib/validacion";
 import { Seal, GrupoFamiliarInput } from "./Widgets";
 import { BuscadorInvitado } from "./BuscadorInvitado";
 
-export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin }) {
+export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin, onConfirmarEmailActualizado }) {
   const [relevando, setRelevando] = useState(false);
   const [mostrarAsignados, setMostrarAsignados] = useState(false);
   const [releveInvitadoId, setReleveInvitadoId] = useState("");
@@ -166,6 +166,24 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
           ⚠ No parece un email válido — revísalo antes de que este colaborador se quede sin
           avisos sin que nadie lo note.
         </p>
+      )}
+      {c.emailSincronizadoEn && (
+        <div
+          className="flex items-center justify-between gap-2 mt-2 px-2 py-1 rounded"
+          style={{ background: "#EAF2EC" }}
+        >
+          <span className="text-xs" style={{ color: C.ink }}>
+            ℹ {c.nombre} cambió su email de acceso el {formatearFecha(String(c.emailSincronizadoEn).slice(0, 10))} —
+            los avisos ya le llegan a esta dirección nueva.
+          </span>
+          <button
+            onClick={() => onConfirmarEmailActualizado(c.id)}
+            className="text-xs px-2 py-1 rounded whitespace-nowrap"
+            style={{ border: `1px solid ${C.ink}`, color: C.ink }}
+          >
+            Entendido
+          </button>
+        </div>
       )}
       {resultadoPrueba === "ok" && (
         <p className="text-xs mt-1" style={{ color: C.ink }}>

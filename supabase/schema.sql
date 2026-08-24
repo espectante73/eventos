@@ -1509,3 +1509,65 @@ drop trigger if exists trg_vincular_cuenta_nueva on auth.users;
 create trigger trg_vincular_cuenta_nueva
 after insert on auth.users
 for each row execute function vincular_cuenta_nueva();
+
+-- ============================================================
+-- SINCRONIZAR EMAIL DE ACCESO -> EMAIL DE AVISOS DEL COLABORADOR
+-- (2026-08-24, Fase C ampliada). "Mi cuenta" (MiCuenta.jsx) deja a
+-- cualquier colaborador cambiar el email con el que INICIA SESIÓN. La
+-- primera versión lo dejaba deliberadamente separado de
+-- colaboradores.email (el que usa la app para mandarle avisos
+-- automáticos), para no tocar ese campo sin que el anfitrión se
+-- enterase -- decisión revisada a petición expresa del usuario: separado
+-- resultaba confuso (alguien cambia "su email" y sigue sin recibir
+-- avisos importantes) y añadía un paso manual justo donde el resto del
+-- login busca quitarlos.
+--
+-- Se sincronizan, pero dejando constancia visible para el anfitrión:
+-- "emailSincronizadoEn" se rellena solo aquí, nunca a mano, y
+-- ColaboradorCard.jsx muestra un aviso mientras no sea null.
+--
+-- Se dispara DESPUÉS de que Supabase confirme el cambio de verdad -- si
+-- el proyecto tiene activada la confirmación doble (email antiguo +
+-- nuevo), auth.users.email no cambia hasta que la persona confirma los
+-- dos; el trigger no se adelanta a eso.
+alter table colaboradores add column if not exists "emailSincronizadoEn" timestamptz;
+
+create or replace function sincronizar_email_colaborador()
+returns trigger
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  update colaboradores
+  set "email" = new.email, "emailSincronizadoEn" = now()
+  where "authUserId" = new.id;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_sincronizar_email_colaborador on auth.users;
+create trigger trg_sincronizar_email_colaborador
+after update of email on auth.users
+for each row
+when (old.email is distinct from new.email)
+execute function sincronizar_email_colaborador();
+
+-- El anfitrión confirma que ha visto el aviso ("Entendido" en
+-- ColaboradorCard.jsx) -- solo borra la marca, nunca el email en sí.
+create or replace function anfitrion_confirmar_email_colaborador_actualizado(
+  p_token uuid, p_colaborador_id uuid
+)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  update colaboradores
+  set "emailSincronizadoEn" = null
+  where "id" = p_colaborador_id;
+end;
+$$;
+
+grant execute on function anfitrion_confirmar_email_colaborador_actualizado(uuid, uuid) to anon;

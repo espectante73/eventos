@@ -464,6 +464,34 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
+  // "Entendido" sobre el aviso de email sincronizado (ColaboradorCard):
+  // el propio colaborador cambió su email de acceso desde "Mi cuenta" y
+  // eso actualizó colaboradores.email solo (trigger en schema.sql) --
+  // esto solo borra la marca visible, nunca el email en sí.
+  const confirmarEmailColaboradorActualizado = useCallback(
+    async (colaboradorId) => {
+      if (!esAnfitrion) return false;
+      const anterior = colaboradoresRef.current;
+      const siguiente = anterior.map((c) =>
+        c.id === colaboradorId ? { ...c, emailSincronizadoEn: null } : c
+      );
+      setColaboradores(siguiente);
+      colaboradoresRef.current = siguiente;
+      const { error } = await supabase.rpc("anfitrion_confirmar_email_colaborador_actualizado", {
+        p_token: rol,
+        p_colaborador_id: colaboradorId,
+      });
+      if (error) {
+        avisar("No se pudo confirmar el aviso. Se deshace el cambio en pantalla.", error);
+        setColaboradores(anterior);
+        colaboradoresRef.current = anterior;
+        return false;
+      }
+      return true;
+    },
+    [esAnfitrion, rol]
+  );
+
   // Modo Pruebas: activar guarda una foto completa de los datos
   // operativos; desactivar la restaura entera (reset global, no solo de
   // lo tocado en esta sesión — ver el aviso largo en schema.sql). Se
@@ -759,6 +787,7 @@ export function useLedgerData(rol) {
     confirmarRecogidaColaborador,
     reenviarAcuseColaborador,
     deshacerRecogidaColaborador,
+    confirmarEmailColaboradorActualizado,
     activarModoPruebas,
     desactivarModoPruebas,
   };

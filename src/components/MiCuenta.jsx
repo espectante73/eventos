@@ -7,14 +7,16 @@
 // logueado -- los dos usan la misma sesión de Supabase Auth.
 //
 // El cambio de contraseña no toca ninguna tabla propia (solo
-// supabase.auth.updateUser) -- el de email SÍ merece un aviso aparte:
-// esto cambia el email de ACCESO (para iniciar sesión), no el que usa
-// la app para mandar avisos automáticos a un colaborador
-// (`colaboradores.email`, que sigue editándose solo desde la ventana
-// Colaboradores del anfitrión) -- mezclarlos sin que el anfitrión se
-// entere dejaría los avisos yendo a una dirección que esa persona ya no
-// mira. Se deja dicho en pantalla en vez de intentar sincronizarlos
-// solos con una función nueva sin que el usuario la revise primero.
+// supabase.auth.updateUser). El de email SÍ toca algo más si quien lo
+// cambia es un colaborador: un trigger en la base de datos
+// (sincronizar_email_colaborador, ver schema.sql) actualiza también
+// `colaboradores.email` -- el que usa la app para mandarle avisos
+// automáticos -- en cuanto Supabase confirma el cambio de verdad (no en
+// el momento de pedirlo). Decisión explícita del usuario, 2026-08-24:
+// dejarlos separados resultaba confuso (alguien cambia "su email" y
+// sigue sin recibir avisos importantes). Para que el anfitrión no
+// pierda visibilidad de este cambio, queda constancia visible en la
+// ventana Colaboradores hasta que la confirme.
 import { useState } from "react";
 import { UserCog } from "lucide-react";
 import { C, inputStyle } from "../theme";
@@ -126,9 +128,10 @@ export function MiCuenta() {
               Cambiar mi email de acceso
             </p>
             <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
-              Esto es solo el email con el que INICIAS SESIÓN. Si recibes avisos automáticos
-              como colaborador, esa dirección se edita aparte (pídeselo al anfitrión) — cambiar
-              aquí tu email de acceso no la modifica.
+              Este es tu email de INICIO DE SESIÓN. Si tienes invitados asignados como
+              colaborador, en cuanto confirmes el cambio también pasará a ser el email al
+              que te lleguen los avisos automáticos — el anfitrión verá un aviso de que
+              ha cambiado.
             </p>
             <input
               type="email"
