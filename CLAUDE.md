@@ -617,3 +617,56 @@ un SMTP propio (p.ej. Resend, ya usado para los avisos) en Authentication
 coincide con el dominio real (`https://nexuspoint.rsvp`), el enlace del
 email lleva a una URL que no conecta ("Safari no puede abrir..."). Ya
 corregido, pero a vigilar si se cambia de dominio en el futuro.
+
+## 2026-08-24: Fase C ampliada (sincronizar email de acceso con avisos) y Fase D (CAPTCHA)
+
+**Se revisó la decisión de Fase C.** La primera versión de "Mi cuenta"
+dejaba el email de acceso (login) deliberadamente separado de
+`colaboradores.email` (el de los avisos automáticos), para no tocarlo
+sin que el anfitrión se enterase. El usuario pidió revisarlo: separado
+resultaba confuso (alguien cambia "su email" y sigue sin recibir avisos
+importantes). Ahora se sincronizan de verdad, pero sin perder
+visibilidad: un trigger nuevo sobre `auth.users`
+(`trg_sincronizar_email_colaborador`, disparado tras la confirmación
+real del cambio, no al pedirlo) actualiza `colaboradores.email` y deja
+una marca (`emailSincronizadoEn`); `ColaboradorCard.jsx` muestra un
+aviso con esa fecha hasta que el anfitrión pulsa "Entendido"
+(`anfitrion_confirmar_email_colaborador_actualizado`, nueva RPC que solo
+borra la marca, nunca el email).
+
+**Fase D (endurecer el login), investigada y cerrada con una acción
+concreta.** Se comprobó contra la documentación oficial de Supabase
+(no se había verificado antes, solo asumido):
+- Supabase Auth **no** trae de fábrica ningún bloqueo tras varios
+  intentos fallidos de contraseña en `signInWithPassword` — solo
+  límites de tasa por IP en otros endpoints (renovación de token:
+  1800/hora con ráfagas de 30; verificación: 360/hora; emails: ~2/hora
+  combinado; OTP: 360/hora).
+- Sí ofrece CAPTCHA (hCaptcha o Cloudflare Turnstile) en
+  signup/signin/password-reset, pero apagado por defecto.
+- 2FA (TOTP) está soportado pero exige un flujo de enrolamiento +
+  verificación extra en cada login — descartado por ahora: trabajo real
+  para un beneficio marginal con 10-15 personas de confianza, no un
+  objetivo de alto valor.
+
+**Decisión: activar CAPTCHA (Cloudflare Turnstile), no 2FA.**
+Implementado en `VistaLogin.jsx` (entrar/crear cuenta/recuperar
+contraseña) — el script de Turnstile se carga en `index.html` (fuera
+del árbol de React, `window.turnstile.render(...)` sobre un `<div>`
+propio), el token se manda como `options.captchaToken` a
+`signInWithPassword`/`signUp` y como segundo argumento
+(`{ captchaToken }`, sin envolver en `options`) a
+`resetPasswordForEmail` — firmas distintas entre sí, confirmado contra
+la documentación de supabase-js antes de escribirlo, para no romper el
+login de todo el mundo por un detalle de forma. El token es de un solo
+uso y caduca a los pocos minutos: se resetea el widget
+(`window.turnstile.reset(widgetId)`) tras cada intento, con éxito o sin
+él. Site Key nueva en `.env`/Vercel: `VITE_TURNSTILE_SITE_KEY` (pública,
+sin ella el widget simplemente no se pinta ni se exige — no bloquea
+clones locales sin configurar). La Secret Key va solo en el dashboard de
+Supabase (Authentication → Attack Protection), nunca en el repo.
+
+**Pendiente de un paso manual del usuario** (no se puede hacer desde
+aquí): crear el sitio en Cloudflare Turnstile, poner la Site Key en
+Vercel y la Secret Key en Supabase — hasta entonces el CAPTCHA está en
+el código pero no exigido de verdad por el servidor.

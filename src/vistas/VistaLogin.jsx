@@ -14,12 +14,23 @@
 // con nadie conocido, la cuenta se crea igual pero sin ningún acceso
 // (pantalla "cuenta sin vincular" de App.jsx) — autorregistrarse nunca
 // concede acceso por sí solo.
-import { useState } from "react";
+//
+// CAPTCHA (Cloudflare Turnstile, Fase D, 2026-08-24): Supabase Auth no
+// trae de fábrica ningún bloqueo tras varios intentos fallidos de
+// contraseña -- solo límites de tasa por IP en otros endpoints (emails,
+// renovación de token). Turnstile añade una comprobación real contra
+// scripts automatizados en los tres formularios de este archivo. El
+// widget lo pinta su propio script (cargado en index.html, fuera de
+// React) sobre el <div ref={cajaCaptchaRef}>; si VITE_TURNSTILE_SITE_KEY
+// no está configurada (proyecto clonado en local sin Turnstile todavía),
+// sencillamente no se pinta ni se exige -- no bloquea el login de nadie.
+import { useState, useEffect, useRef } from "react";
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 
 const TITULOS = { entrar: "Entrar", crear: "Crear cuenta", recuperar: "Recuperar contraseña" };
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
   const [modo, setModo] = useState(modoInicial); // "entrar" | "crear" | "recuperar"
@@ -28,6 +39,51 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [aviso, setAviso] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const cajaCaptchaRef = useRef(null);
+  const widgetIdRef = useRef(null);
+
+  // Monta el widget UNA sola vez (no depende de `modo`: el <div> vive
+  // fuera de las tres ramas del formulario, así no hay que desmontar y
+  // volver a montar Turnstile cada vez que se cambia de pestaña). El
+  // script de index.html es async -- puede no estar listo todavía al
+  // primer render, de ahí el sondeo corto.
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY) return;
+    let cancelado = false;
+    const montar = () => {
+      if (cancelado || !window.turnstile || !cajaCaptchaRef.current) return;
+      widgetIdRef.current = window.turnstile.render(cajaCaptchaRef.current, {
+        sitekey: TURNSTILE_SITE_KEY,
+        callback: (token) => setCaptchaToken(token),
+        "expired-callback": () => setCaptchaToken(""),
+        "error-callback": () => setCaptchaToken(""),
+      });
+    };
+    if (window.turnstile) {
+      montar();
+    } else {
+      const espera = setInterval(() => {
+        if (window.turnstile) {
+          clearInterval(espera);
+          montar();
+        }
+      }, 100);
+      return () => clearInterval(espera);
+    }
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  // El token de Turnstile es de un solo uso y caduca a los pocos
+  // minutos -- se pide uno nuevo tras cada intento, con o sin éxito.
+  const reiniciarCaptcha = () => {
+    setCaptchaToken("");
+    if (window.turnstile && widgetIdRef.current !== null) {
+      window.turnstile.reset(widgetIdRef.current);
+    }
+  };
 
   const cambiarModo = (siguiente) => {
     setModo(siguiente);
@@ -40,8 +96,13 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
     setError("");
     setAviso("");
     setCargando(true);
-    const { error: errLogin } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: errLogin } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      ...(TURNSTILE_SITE_KEY ? { options: { captchaToken } } : {}),
+    });
     setCargando(false);
+    reiniciarCaptcha();
     if (errLogin) setError("Email o contraseña incorrectos.");
   };
 
@@ -54,8 +115,13 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
       return;
     }
     setCargando(true);
-    const { data, error: errSignUp } = await supabase.auth.signUp({ email, password });
+    const { data, error: errSignUp } = await supabase.auth.signUp({
+      email,
+      password,
+      ...(TURNSTILE_SITE_KEY ? { options: { captchaToken } } : {}),
+    });
     setCargando(false);
+    reiniciarCaptcha();
     if (errSignUp) {
       setError(
         errSignUp.message.includes("already registered")
@@ -78,8 +144,12 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
     setError("");
     setAviso("");
     setCargando(true);
-    const { error: errReset } = await supabase.auth.resetPasswordForEmail(email);
+    const { error: errReset } = await supabase.auth.resetPasswordForEmail(
+      email,
+      TURNSTILE_SITE_KEY ? { captchaToken } : undefined
+    );
     setCargando(false);
+    reiniciarCaptcha();
     if (errReset) {
       setError("No se pudo enviar el email de recuperación.");
     } else {
@@ -88,6 +158,7 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
   };
 
   const enviar = modo === "entrar" ? entrar : modo === "crear" ? crearCuenta : enviarRecuperacion;
+  const captchaListo = !TURNSTILE_SITE_KEY || Boolean(captchaToken);
 
   return (
     <div
@@ -177,9 +248,14 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
             {aviso}
           </p>
         )}
+        {/* Solo ocupa sitio si hay Site Key configurada -- ver el aviso
+            largo arriba sobre por qué esto no bloquea un local sin
+            Turnstile todavía. */}
+        {TURNSTILE_SITE_KEY && <div ref={cajaCaptchaRef} className="mb-3 flex justify-center" />}
         <button
           type="submit"
-          disabled={cargando}
+          disabled={cargando || !captchaListo}
+          title={captchaListo ? undefined : "Espera a que cargue la comprobación de seguridad"}
           className="boton-3d boton-verde-solido w-full py-2 rounded-full font-medium mb-2"
           style={{ height: 44 }}
         >

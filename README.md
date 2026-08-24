@@ -79,7 +79,13 @@ verdad vive en `src/`.
 4. En **Authentication → URL Configuration**, pon la "Site URL" real de
    tu despliegue (por ejemplo `https://tu-dominio.com`) — los enlaces de
    confirmación/recuperación de email de Supabase apuntan ahí.
-5. Guarda la clave de API de **Resend** en la tabla `config_secretos`
+5. En **Authentication → Attack Protection**, activa "Enable Captcha
+   protection", elige **Turnstile** como proveedor y pega ahí la
+   **Secret Key** de Cloudflare Turnstile (la Site Key, pública, va en
+   tu `.env` como `VITE_TURNSTILE_SITE_KEY` — ver `.env.example`). Sitio
+   nuevo gratis en
+   [dash.cloudflare.com → Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile).
+6. Guarda la clave de API de **Resend** en la tabla `config_secretos`
    (usada por la función SQL `enviar_email` para mandar los avisos
    automáticos) — ver `supabase/schema.sql` para el nombre exacto de la
    fila esperada.
@@ -113,6 +119,12 @@ para cada colaborador:
 - El aislamiento entre colaboradores se hace cumplir **en el propio
   servidor** (las RPC `colaborador_*` filtran siempre por
   `"authUserId" = auth.uid()`), no solo ocultando cosas en pantalla.
+- Los tres formularios de login (entrar, crear cuenta, recuperar
+  contraseña) llevan un **CAPTCHA (Cloudflare Turnstile)** — Supabase
+  Auth no bloquea por sí solo tras varios intentos fallidos de
+  contraseña, así que esto es lo que frena a un script automatizado.
+  Sin `VITE_TURNSTILE_SITE_KEY` configurada no se exige (útil para
+  desarrollo local).
 
 El enlace-token antiguo (`?rol=<secreto>`) sigue existiendo **solo como
 plan B para el anfitrión** — para colaboradores ya no funciona (retirado
@@ -155,8 +167,8 @@ excluyen del volcado a propósito). Requiere el secreto de repositorio
 - ✅ Avisos automáticos por email (Resend) en producción y probados en
   vivo.
 - ✅ Backup diario automático de la base de datos.
+- ✅ CAPTCHA (Turnstile) en los tres formularios de login.
 - ⏳ Pendiente, sin urgencia (ver historial de sesiones en `CLAUDE.md`):
   onboarding del resto de colaboradores a login real, decidir si retirar
-  también el enlace-token del anfitrión, revisar el endurecimiento del
-  login (fuerza bruta / 2FA), y ampliar la batería de tests automáticos
-  al propio flujo de login.
+  también el enlace-token del anfitrión, y ampliar la batería de tests
+  automáticos al propio flujo de login.

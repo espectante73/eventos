@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Libro de invitados</title>
+    <!-- Cloudflare Turnstile (CAPTCHA del login) -- Fase D, 2026-08-24.
+         Se carga aquí (no como import de npm) porque el widget vive
+         fuera del árbol de React: VistaLogin.jsx llama a
+         window.turnstile.render(...) directamente. async+defer para no
+         bloquear el arranque de la app si el script tarda o falla. -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   </head>
   <body>
     <div id="root"></div>

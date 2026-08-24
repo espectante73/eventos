@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "6.2",
+    cambios: [
+      "Si un colaborador cambia su email de acceso, ahora también actualiza el email al que le llegan sus avisos automáticos, sin ningún paso manual — con un aviso claro para el anfitrión en Colaboradores, para no perder de vista el cambio.",
+      "Comprobación de seguridad (CAPTCHA) en los tres formularios de entrada (entrar, crear cuenta, recuperar contraseña) — frena a un script automatizado probando contraseñas al azar, algo que no venía cubierto de fábrica.",
+    ],
+  },
+  {
     version: "6.1",
     cambios: [
       "Login real (email + contraseña) para el anfitrión y para cada colaborador, en paralelo al enlace mágico de siempre — nadie tuvo que cambiar cómo entraba hasta que quiso.",
