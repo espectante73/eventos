@@ -4,9 +4,11 @@
 import { C } from "../../theme";
 import { Field, TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { emailValido } from "../../lib/validacion";
 
 export function VentanaConfigEmailAnfitrion({ data, onCerrar }) {
   const { evento, persistEvento } = data;
+  const email = evento.emailAnfitrion || "";
   return (
     <VentanaFlotante clave="config-email-anfitrion" titulo="Email anfitrión" onCerrar={onCerrar}>
       <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
@@ -15,12 +17,17 @@ export function VentanaConfigEmailAnfitrion({ data, onCerrar }) {
       </p>
       <Field label="Tu email (anfitrión)">
         <TextInput
-          value={evento.emailAnfitrion || ""}
+          value={email}
           onChange={(e) => persistEvento({ ...evento, emailAnfitrion: e.target.value })}
           placeholder="tu@email.com"
           className="w-full"
         />
       </Field>
+      {email && !emailValido(email) && (
+        <p className="text-xs mt-1" style={{ color: C.wax }}>
+          ⚠ No parece un email válido — revísalo, o te quedarás sin avisos sin que nadie lo note.
+        </p>
+      )}
     </VentanaFlotante>
   );
 }

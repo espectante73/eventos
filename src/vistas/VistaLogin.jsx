@@ -17,6 +17,7 @@
 import { useState } from "react";
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
+import { emailValido } from "../lib/validacion";
 
 const TITULOS = { entrar: "Entrar", crear: "Crear cuenta", recuperar: "Recuperar contraseña" };
 
@@ -131,10 +132,25 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
           autoComplete="username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-3"
+          className="w-full mb-1"
           style={{ ...inputStyle, width: "100%", height: 42 }}
           required
         />
+        {/* Mismo criterio de "avisar en el momento" que ya usan
+            Colaboradores y Email anfitrión -- a petición del usuario,
+            2026-08-21 (Fase I). El botón ya bloquea el envío si el
+            navegador considera el campo inválido (type="email"), esto
+            es solo el aviso visible y consistente con el resto de la
+            app, no una segunda validación. mb-2/mb-3 según si se
+            muestra o no, para que el hueco antes del siguiente campo
+            sea el mismo en los dos casos. */}
+        {email && !emailValido(email) ? (
+          <p className="text-xs mb-2" style={{ color: C.wax }}>
+            ⚠ No parece un email válido.
+          </p>
+        ) : (
+          <div className="mb-2" />
+        )}
         {modo !== "recuperar" && (
           <>
             <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>

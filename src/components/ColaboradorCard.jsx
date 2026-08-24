@@ -7,6 +7,7 @@ import { Send, Repeat, Trash2, Mail } from "lucide-react";
 import { C, inputStyle } from "../theme";
 import { resolverColaborador, datosCompletos } from "../lib/invitados";
 import { ordenarPorApellidoNombre } from "../lib/formato";
+import { emailValido } from "../lib/validacion";
 import { Seal, GrupoFamiliarInput } from "./Widgets";
 import { BuscadorInvitado } from "./BuscadorInvitado";
 
@@ -148,7 +149,7 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
             sin email (no recibirá avisos)
           </span>
         )}
-        {c.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email) && (
+        {c.email && emailValido(c.email) && (
           <button
             onClick={probarEmail}
             disabled={probando}
@@ -160,7 +161,7 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
           </button>
         )}
       </div>
-      {c.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email) && (
+      {c.email && !emailValido(c.email) && (
         <p className="text-xs mt-1" style={{ color: C.wax }}>
           ⚠ No parece un email válido — revísalo antes de que este colaborador se quede sin
           avisos sin que nadie lo note.
