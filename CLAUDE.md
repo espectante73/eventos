@@ -666,7 +666,31 @@ sin ella el widget simplemente no se pinta ni se exige — no bloquea
 clones locales sin configurar). La Secret Key va solo en el dashboard de
 Supabase (Authentication → Attack Protection), nunca en el repo.
 
-**Pendiente de un paso manual del usuario** (no se puede hacer desde
-aquí): crear el sitio en Cloudflare Turnstile, poner la Site Key en
-Vercel y la Secret Key en Supabase — hasta entonces el CAPTCHA está en
-el código pero no exigido de verdad por el servidor.
+**Completado y confirmado en producción (mismo día).** El sitio de
+Cloudflare Turnstile lo creó el usuario a mano; la Site Key se añadió a
+Vercel (`VITE_TURNSTILE_SITE_KEY`, los tres entornos) y el proyecto se
+redesplegó, todo ello vía la CLI de `vercel` (login con flujo de
+dispositivo, `vercel link`, `vercel env add`, `vercel redeploy`) en vez
+de guiar al usuario por un dashboard que había cambiado desde lo que yo
+recordaba — la guía inicial por el dashboard le hizo perder el tiempo
+más de una vez (menús de Vercel/Supabase distintos a los descritos),
+lección ya anotada más abajo. La Secret Key se activó en Supabase por
+la **Management API** (`PATCH /v1/projects/{ref}/config/auth`,
+`security_captcha_enabled`/`security_captcha_provider`/
+`security_captcha_secret` — nombres de campo sacados del OpenAPI real
+de `api.supabase.com`, no adivinados) usando un Personal Access Token
+de un solo uso que el usuario revocó justo después. Verificado con un
+`GET` al mismo endpoint (`security_captcha_enabled: true`) y, ya en
+vivo, el usuario confirma ver el check de Turnstile al entrar en
+`nexuspoint.rsvp`.
+
+⚠️ **Lección de esta sesión: no dar por buenas instrucciones de
+memoria sobre la UI de un dashboard externo (Vercel, Supabase,
+Cloudflare...) sin verificarlas antes.** Esas interfaces cambian con
+frecuencia; una instrucción equivocada ahí no rompe código, pero le
+hace perder tiempo real al usuario dando vueltas por menús que no
+coinciden. A partir de ahora: si hay CLI o API oficial disponible,
+preferirla y hacerlo directamente (como aquí, con `vercel` CLI y la
+Management API de Supabase) en vez de narrar clics; si no queda más
+remedio que guiar por un dashboard, comprobar antes la ruta exacta
+(documentación oficial o búsqueda reciente) en vez de recordarla.
