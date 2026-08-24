@@ -42,6 +42,17 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "6.1",
+    cambios: [
+      "Login real (email + contraseña) para el anfitrión y para cada colaborador, en paralelo al enlace mágico de siempre — nadie tuvo que cambiar cómo entraba hasta que quiso.",
+      'Cada colaborador crea su propia cuenta desde "Crear cuenta" usando el email con el que ya estaba dado de alta — se enlaza sola con su ficha, sin ningún paso manual de por medio. Si más adelante cambia de email, basta con actualizarlo en Colaboradores y volver a crear cuenta con el nuevo: se re-enlaza sola otra vez.',
+      "El enlace-token antiguo deja de funcionar para colaboradores (ahora hace falta el login de verdad); el del anfitrión se mantiene como plan B, sin cambios.",
+      'Enlace de colaborador viejo abierto sin haber iniciado sesión: pantalla clara de "No tienes acceso" con enlace a iniciar sesión, en vez de una vista técnica confusa que parecía un fallo de la app.',
+      'Corrige que la previsualización "Formularios" del anfitrión llevaba rota desde la retirada del enlace-token: ahora reutiliza los datos que el anfitrión ya tiene cargados en vez de intentar una recarga que exigía sesión real de esa otra persona.',
+      "Fallo de seguridad encontrado y cerrado en pruebas en vivo: la función que resuelve el rol al iniciar sesión concedía permiso de ejecución a cualquiera por defecto (aunque sin sesión no llegaba a devolver ningún dato real) — corregido revocando ese permiso explícitamente.",
+    ],
+  },
+  {
     version: "6.0",
     cambios: [
       'Mesas: ahora se dibujan redondas con sillas alrededor (su número sigue a la capacidad), la cantidad de mesas es libre (añadir/quitar, sin el límite fijo de 15), y "Vaciar mesa" desasigna a todos sus invitados de golpe sin borrar a nadie.',
