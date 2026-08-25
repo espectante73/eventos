@@ -44,7 +44,10 @@ export function VentanaConfigMusica({ onCerrar }) {
     const { error: errSubida } = await supabase.storage.from(BUCKET).upload(nombreArchivo, archivo);
     setSubiendo(false);
     if (errSubida) {
-      setError("No se pudo subir el archivo. ¿Es un audio válido (mp3, m4a...)?");
+      // Mensaje real de Supabase, no uno genérico -- mismo motivo que en
+      // VentanaConfigDatosEvento.jsx (imagen para WhatsApp), detectado el
+      // mismo día: el bucket llevaba vacío pese a intentos de subida.
+      setError(`No se pudo subir el archivo: ${errSubida.message || errSubida}`);
       return;
     }
     cargar();

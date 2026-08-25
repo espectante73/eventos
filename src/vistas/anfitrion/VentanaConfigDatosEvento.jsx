@@ -45,8 +45,11 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
         .upload(RUTA_OG, blob, { upsert: true, contentType: "image/jpeg" });
       if (error) throw error;
       setVistaPreviaOg(Date.now());
-    } catch (_) {
-      setErrorImagenOg("No se ha podido subir la imagen. Prueba con otra.");
+    } catch (err) {
+      // Mensaje real de Supabase, no uno genérico -- para diagnosticar
+      // sin adivinar (detectado el 2026-08-25: el bucket llevaba vacío
+      // pese a intentos de subida, y el mensaje genérico no decía por qué).
+      setErrorImagenOg(`No se ha podido subir la imagen: ${err?.message || err}`);
     } finally {
       setSubiendoImagenOg(false);
     }
