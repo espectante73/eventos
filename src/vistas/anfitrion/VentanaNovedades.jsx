@@ -184,7 +184,7 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar }) {
 // sin las limitaciones de una ventana flotante dentro de la pestaña. Por
 // eso no lleva cabecera arrastrable ni botón de cerrar propio -- la
 // ventana del sistema operativo ya trae los suyos.
-export function VentanaNovedades({ data }) {
+export function VentanaNovedades({ data, ventana }) {
   const { evento, persistEvento, novedades, persistNovedades, tokenTablon } = data;
   const [copiado, setCopiado] = useState(false);
   // Enlace de INVITACIÓN al grupo (chat.whatsapp.com/XXXX) -- a propósito
@@ -231,28 +231,32 @@ export function VentanaNovedades({ data }) {
   // Ctrl/Cmd+V + Enter de terminarlo, en vez de tener que ir a copiar el
   // enlace a otro sitio primero.
   //
-  // ⚠️ El portapapeles va ANTES que window.open(), no después -- bug
-  // real encontrado en producción el 2026-08-25: al revés, window.open()
-  // le quita el foco a esta pestaña (pasa a la del grupo) ANTES de que
-  // termine la escritura en el portapapeles, y escribir en el
-  // portapapeles sin foco falla en silencio en la mayoría de
-  // navegadores (ninguna alerta, ningún error -- solo se queda tal cual
-  // estuviera antes, así que el usuario pegaba lo último que tuviera
-  // copiado de otra cosa). navigator.clipboard.writeText() se dispara
-  // de forma síncrona dentro del propio clic (aunque devuelva una
-  // promesa) -- llamarla primero, con el foco todavía aquí, y solo
-  // luego abrir la ventana, sigue contando como la misma acción directa
-  // del usuario a efectos de bloqueo de emergentes.
+  // ⚠️ Usa `ventana.navigator`/`ventana.open`, NUNCA los globales
+  // `navigator`/`window` a secas -- segundo bug real encontrado en
+  // producción el 2026-08-25 (el primero, reordenar portapapeles antes
+  // de window.open, no bastó). Este componente vive en una ventana
+  // emergente (ver usePopupWindow.js), pero su CÓDIGO sigue ejecutándose
+  // técnicamente en el realm de JavaScript de la pestaña principal --
+  // ahí es donde se cargó el script. El portapapeles del navegador
+  // comprueba qué ventana tiene el foco de verdad ANTES de dejar
+  // escribir en él; como la que tiene el foco es la emergente pero
+  // `navigator` a secas apunta al `navigator` de la pestaña principal
+  // (no focalizada), el navegador lo rechazaba en silencio -- sin
+  // ninguna alerta, solo dejaba el portapapeles tal cual estuviera
+  // antes. `ventana` (prop, el propio objeto `window` de esa ventana
+  // emergente, expuesto por usePopupWindow.js) sí tiene el foco real, y
+  // su propio `.navigator`/`.open()` funcionan con permisos correctos.
   const copiarYAbrirGrupo = () => {
-    navigator.clipboard.writeText(enlace).then(
+    const ventanaPropia = ventana || window; // por si acaso, nunca debería faltar
+    ventanaPropia.navigator.clipboard.writeText(enlace).then(
       () => {
         setCopiado(true);
         setTimeout(() => setCopiado(false), 2500);
       },
-      () => window.prompt("Copia el enlace manualmente:", enlace)
+      () => ventanaPropia.prompt("Copia el enlace manualmente:", enlace)
     );
     if (evento.enlaceGrupoWhatsapp) {
-      window.open(evento.enlaceGrupoWhatsapp, "_blank", "noopener,noreferrer");
+      ventanaPropia.open(evento.enlaceGrupoWhatsapp, "_blank", "noopener,noreferrer");
     }
   };
 

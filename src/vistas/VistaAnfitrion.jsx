@@ -45,15 +45,18 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
     abrir: abrirNovedades,
     actualizar: actualizarNovedades,
     abierta: novedadesAbierta,
+    ventana: ventanaNovedades,
   } = usePopupWindow({ nombreVentana: "novedades-evento", ancho: 640, alto: 800 });
   // Repinta el contenido de la ventana (root propio, no un createPortal
   // -- ver el porqué en usePopupWindow.js) cada vez que `data` cambie,
   // mientras siga abierta -- así una novedad guardada, o el refresco
   // silencioso de cada minuto, se reflejan ahí sin tener que cerrarla y
-  // volver a abrirla.
+  // volver a abrirla. Se le pasa también `ventana` (el propio objeto
+  // window de esa ventana emergente) -- lo necesita para el portapapeles,
+  // ver el porqué en VentanaNovedades.jsx.
   useEffect(() => {
-    if (novedadesAbierta) actualizarNovedades(<VentanaNovedades data={data} />);
-  }, [novedadesAbierta, actualizarNovedades, data]);
+    if (novedadesAbierta) actualizarNovedades(<VentanaNovedades data={data} ventana={ventanaNovedades} />);
+  }, [novedadesAbierta, actualizarNovedades, data, ventanaNovedades]);
 
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
   // por colaborador — así se sabe exactamente cuáles son los nuevos. Los

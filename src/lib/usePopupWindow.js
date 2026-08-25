@@ -29,6 +29,12 @@ import { createRoot } from "react-dom/client";
 
 export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
   const [abierta, setAbierta] = useState(false);
+  // Además de la ref (para comprobaciones internas de control como
+  // ".closed"), se guarda también en estado -- así el propio objeto
+  // `window` de la ventana emergente se puede pasar como prop al
+  // contenido y usarse desde ahí (ver el porqué en el comentario grande
+  // de "ventana.clipboard" más abajo, en el propio VentanaNovedades.jsx).
+  const [ventana, setVentana] = useState(null);
   const ventanaRef = useRef(null);
   const raizRef = useRef(null);
 
@@ -41,6 +47,7 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
       ventanaRef.current.close();
     }
     ventanaRef.current = null;
+    setVentana(null);
     setAbierta(false);
   }, []);
 
@@ -76,10 +83,12 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
     ventana.addEventListener("beforeunload", () => {
       ventanaRef.current = null;
       raizRef.current = null;
+      setVentana(null);
       setAbierta(false);
     });
 
     ventanaRef.current = ventana;
+    setVentana(ventana);
     setAbierta(true);
     return true;
   }, [nombreVentana, ancho, alto]);
@@ -95,5 +104,5 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
   // sesión), la ventana emergente no debe quedar huérfana por su cuenta.
   useEffect(() => cerrar, [cerrar]);
 
-  return { abrir, cerrar, actualizar, abierta };
+  return { abrir, cerrar, actualizar, abierta, ventana };
 }

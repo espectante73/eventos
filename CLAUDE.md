@@ -1099,3 +1099,39 @@ directa.
 `window.open`/navegación:** el portapapeles siempre primero. Cualquier
 cosa que pueda robar el foco de la pestaña (abrir una ventana, enviar a
 otra URL) debe ir después, nunca antes.
+
+## 2026-08-25 (octava tanda): el reordenado no bastó -- causa raíz de verdad
+
+El reordenado de la tanda anterior no arregló el botón "Enlace" del
+todo: el usuario siguió viendo el permiso de "abrir WhatsApp" del
+navegador y el portapapeles seguía sin escribirse (con el aviso de
+"copia manualmente" apareciendo oculto detrás de la ventana de
+WhatsApp).
+
+**Causa raíz de verdad:** este componente vive dentro de una ventana
+emergente (`window.open`, ver `usePopupWindow.js`), pero su CÓDIGO
+sigue ejecutándose técnicamente en el realm de JavaScript de la
+pestaña principal -- ahí es donde el navegador cargó el script la
+primera vez, y `createRoot()` solo cambia DÓNDE se pintan los nodos,
+no en qué ventana "vive" el código que los genera. El portapapeles del
+navegador exige que la ventana que hace la petición tenga el foco de
+verdad en ese momento; como quien tiene el foco real es la ventana
+emergente pero `navigator`/`window` a secas, dentro de este componente,
+siguen apuntando a los globales de la pestaña principal (NO
+focalizada), el navegador rechazaba la escritura en silencio -- sin
+ningún error, solo dejaba el portapapeles tal cual estuviera antes.
+
+**Arreglo:** `usePopupWindow.js` expone ahora también el propio objeto
+`window` de la ventana emergente (`ventana`, en estado además de en la
+ref de control interno). `VistaAnfitrion.jsx` se lo pasa a
+`VentanaNovedades` como prop, y `copiarYAbrirGrupo` usa
+`ventana.navigator.clipboard`/`ventana.open()`/`ventana.prompt()` en
+vez de los globales `navigator`/`window` a secas.
+
+**Lección para cualquier cosa nueva que se añada dentro de esta ventana
+emergente (o de cualquier otra que se construya así en el futuro) y
+que dependa de "qué ventana tiene el foco" (portapapeles, notificaciones,
+`window.open` en cadena...): usar siempre el objeto `window` de ESA
+ventana, nunca los globales `window`/`navigator`/`document` a secas** --
+aunque el código "viva visualmente" en la ventana emergente, sigue
+ejecutándose en el realm de la pestaña principal.
