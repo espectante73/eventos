@@ -42,6 +42,16 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "6.4",
+    cambios: [
+      'Botón "Novedades" en la portada, tanto para el anfitrión como para cada colaborador — abre el tablón público en un clic y se puede volver atrás sin perder la sesión.',
+      "El tablón público avisa ahora, con un candado, de que el enlace es privado y no debe compartirse fuera del grupo.",
+      "Música ambiental de fondo en el tablón público — se sube desde Configuración → Música ambiental (varias pistas suenan una detrás de otra); un botón flotante la activa (los navegadores no dejan sonar nada solo, hace falta ese primer clic).",
+      'Ventana Novedades: negrita/cursiva/subrayado con botones al escribir, sin tener que teclear etiquetas a mano, y un enlace directo al grupo de WhatsApp para avisar "hay novedades nuevas" sin dejar que 140 personas puedan escribirte directamente a ti.',
+      "Al pegar cualquier enlace de esta web en WhatsApp o Facebook, ahora aparece una miniatura con imagen (antes solo se veía el texto del enlace, sin foto) — la imagen se sube desde Configuración → Datos del evento.",
+    ],
+  },
+  {
     version: "6.3",
     cambios: [
       'Nueva sección "Novedades": un tablón de anuncios público y de solo lectura, con un único enlace que se comparte una vez (por ejemplo en el grupo de WhatsApp de confirmados) — nadie sin el enlace lo encuentra, y quien lo tenga ve fecha/hora/lugar del evento fijos arriba y las novedades debajo, plegadas por secciones para que no se lea como un bloque grande de texto.',

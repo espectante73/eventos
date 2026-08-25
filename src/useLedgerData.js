@@ -153,6 +153,11 @@ export function useLedgerData(rol) {
           { p_colaborador_id: rol }
         );
         if (errInv && mostrarCarga) avisar("No se pudieron cargar tus invitados asignados.", errInv);
+        // "Best effort", igual que en la rama del anfitrión: es solo el
+        // enlace del botón "Novedades" en Portada, no bloquea nada más.
+        const { data: tokenTablonCargado } = await supabase.rpc("colaborador_obtener_token_tablon", {
+          p_colaborador_id: rol,
+        });
 
         if (cancelado) return;
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
@@ -162,6 +167,7 @@ export function useLedgerData(rol) {
         setColaboradores(perfil);
         if (!errInv) setInvitados(misInvitados || []);
         setMesas([]); // La vista de colaborador nunca necesita las mesas.
+        if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
         setEsAnfitrion(false);
         setLoaded(true);
         return;

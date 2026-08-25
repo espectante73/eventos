@@ -4,16 +4,53 @@
 // Un único enlace (?tablon=<token>) se comparte una vez en ese grupo;
 // cualquiera con el enlace ve las novedades publicadas, sin login ni
 // cuenta — a petición del usuario, 2026-08-25.
-import { useState } from "react";
-import { Plus, Trash2, Link as LinkIcon, Check } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, MessageCircle } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
 import { formatearFecha } from "../../lib/formato";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
+// Envuelve la selección actual del textarea con <tag>...</tag> (o la
+// inserta vacía si no hay nada seleccionado) -- mismo criterio de "HTML
+// sencillo" que ya admiten las plantillas de email de Configuración, solo
+// que aquí no hace falta escribir las etiquetas a mano.
+function envolverSeleccion(textarea, valor, tag, onCambio) {
+  const inicio = textarea.selectionStart;
+  const fin = textarea.selectionEnd;
+  const seleccion = valor.slice(inicio, fin);
+  const nuevo = `${valor.slice(0, inicio)}<${tag}>${seleccion}</${tag}>${valor.slice(fin)}`;
+  onCambio(nuevo);
+  // Foco y selección dentro de las etiquetas nuevas, para poder seguir
+  // escribiendo o encadenar otro formato (p.ej. negrita + cursiva).
+  requestAnimationFrame(() => {
+    textarea.focus();
+    const nuevoInicio = inicio + tag.length + 2;
+    textarea.setSelectionRange(nuevoInicio, nuevoInicio + seleccion.length);
+  });
+}
+
 function NovedadCard({ n, onCambiar, onEliminar }) {
   const [titulo, setTitulo] = useState(n.titulo);
   const [cuerpo, setCuerpo] = useState(n.cuerpo);
+  const cuerpoRef = useRef(null);
+
+  // onMouseDown con preventDefault: sin esto, pulsar el botón le quita el
+  // foco al textarea ANTES de que se dispare el click (se pierde la
+  // selección de texto, y el onBlur del textarea dispara un guardado con
+  // el texto todavía sin la etiqueta nueva).
+  const botonFormato = (Icono, tag, etiqueta) => (
+    <button
+      type="button"
+      title={etiqueta}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() => cuerpoRef.current && envolverSeleccion(cuerpoRef.current, cuerpo, tag, setCuerpo)}
+      className="p-1.5 rounded"
+      style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+    >
+      <Icono size={13} />
+    </button>
+  );
 
   return (
     <div className="p-3 rounded space-y-2" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
@@ -30,12 +67,18 @@ function NovedadCard({ n, onCambiar, onEliminar }) {
           <Trash2 size={16} style={{ color: C.wax }} />
         </button>
       </div>
+      <div className="flex items-center gap-1">
+        {botonFormato(Bold, "b", "Negrita")}
+        {botonFormato(Italic, "i", "Cursiva")}
+        {botonFormato(Underline, "u", "Subrayado")}
+      </div>
       <textarea
+        ref={cuerpoRef}
         value={cuerpo}
         onChange={(e) => setCuerpo(e.target.value)}
         onBlur={() => cuerpo !== n.cuerpo && onCambiar({ ...n, cuerpo })}
         rows={3}
-        placeholder="Texto de la novedad — admite HTML sencillo (<b>, <br>)"
+        placeholder="Texto de la novedad — selecciona texto y pulsa un botón de arriba para darle formato"
         className="w-full"
         style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
       />
@@ -57,8 +100,16 @@ function NovedadCard({ n, onCambiar, onEliminar }) {
 }
 
 export function VentanaNovedades({ data, onCerrar }) {
-  const { evento, novedades, persistNovedades, tokenTablon } = data;
+  const { evento, persistEvento, novedades, persistNovedades, tokenTablon } = data;
   const [copiado, setCopiado] = useState(false);
+  // Enlace de INVITACIÓN al grupo (chat.whatsapp.com/XXXX) -- a propósito
+  // no es tu número de teléfono: un botón basado en número abriría un
+  // chat 1 a 1 contigo, y con ~140 confirmados eso te dejaría recibiendo
+  // mensajes directos de todos, anulando la figura del colaborador como
+  // intermediario. Se genera desde la propia WhatsApp: abre el grupo →
+  // Info del grupo → Invitar mediante enlace → copiar enlace.
+  const [enlaceWhatsapp, setEnlaceWhatsapp] = useState(evento.enlaceGrupoWhatsapp || "");
+  useEffect(() => setEnlaceWhatsapp(evento.enlaceGrupoWhatsapp || ""), [evento.enlaceGrupoWhatsapp]);
 
   const enlace =
     tokenTablon && evento.urlPublica
@@ -133,6 +184,46 @@ export function VentanaNovedades({ data, onCerrar }) {
               : "Rellena primero la URL web en Configuración → URL web."}
           </span>
         )}
+      </div>
+
+      <div
+        className="p-2 rounded mb-3"
+        style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
+      >
+        <label className="text-xs block mb-1" style={{ color: C.charcoal, opacity: 0.75 }}>
+          Enlace de invitación al grupo de WhatsApp (WhatsApp → grupo → Info del grupo →
+          Invitar mediante enlace) — para avisar rápido "hay novedades nuevas" sin dejar que
+          te escriban a ti directamente.
+        </label>
+        <div className="flex items-center gap-2">
+          <input
+            value={enlaceWhatsapp}
+            onChange={(e) => setEnlaceWhatsapp(e.target.value)}
+            onBlur={() =>
+              enlaceWhatsapp !== (evento.enlaceGrupoWhatsapp || "") &&
+              persistEvento({ ...evento, enlaceGrupoWhatsapp: enlaceWhatsapp })
+            }
+            placeholder="https://chat.whatsapp.com/XXXXXXXXXXXX"
+            className="flex-1"
+            style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
+          />
+          <a
+            href={evento.enlaceGrupoWhatsapp || undefined}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => !evento.enlaceGrupoWhatsapp && e.preventDefault()}
+            className="text-xs px-2 py-1.5 rounded whitespace-nowrap flex items-center gap-1"
+            style={{
+              background: evento.enlaceGrupoWhatsapp ? "#25D366" : C.line,
+              color: evento.enlaceGrupoWhatsapp ? "#fff" : C.charcoal,
+              opacity: evento.enlaceGrupoWhatsapp ? 1 : 0.6,
+              cursor: evento.enlaceGrupoWhatsapp ? "pointer" : "not-allowed",
+            }}
+            title={evento.enlaceGrupoWhatsapp ? "Abrir el grupo en WhatsApp" : "Pega antes el enlace del grupo"}
+          >
+            <MessageCircle size={13} /> Abrir grupo
+          </a>
+        </div>
       </div>
 
       <button

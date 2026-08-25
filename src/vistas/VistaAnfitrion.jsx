@@ -6,11 +6,13 @@
 // CLAUDE.md, Fase 4).
 import { useState } from "react";
 import { generarInvitacionImagen } from "../lib/imagenInvitacion";
+import { construirEnlaceTablon } from "../lib/url";
 import { C } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
 import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
+import { VentanaConfigMusica } from "./anfitrion/VentanaConfigMusica";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
 import { VentanaConfigPrecios } from "./anfitrion/VentanaConfigPrecios";
@@ -30,7 +32,8 @@ import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 
 export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion }) {
-  const { evento, colaboradores, invitados, persistInvitados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia } = data;
+  const { evento, colaboradores, invitados, persistInvitados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, tokenTablon } = data;
+  const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
 
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
   // por colaborador — así se sabe exactamente cuáles son los nuevos. Los
@@ -240,6 +243,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         onCambiarRol={setRol}
         anfitrionToken={anfitrionToken}
         onCerrarSesion={onCerrarSesion}
+        enlaceTablon={enlaceTablon}
       />
 
       {/* Los 3 recuadros de resumen (Lista global/Tentativa/Confirmados)
@@ -340,6 +344,10 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
 
       {abierto["config-plantillas-email"] && (
         <VentanaConfigPlantillasEmail data={data} onCerrar={() => toggle("config-plantillas-email")} />
+      )}
+
+      {abierto["config-musica"] && (
+        <VentanaConfigMusica onCerrar={() => toggle("config-musica")} />
       )}
 
       {abierto["config-modo-pruebas"] && (

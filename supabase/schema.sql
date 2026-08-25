@@ -1689,3 +1689,122 @@ grant execute on function anfitrion_listar_novedades(uuid) to anon;
 grant execute on function anfitrion_guardar_novedades(uuid, jsonb) to anon;
 grant execute on function tablon_verificar_token(uuid) to anon;
 grant execute on function tablon_listar_novedades(uuid) to anon;
+
+-- ============================================================
+-- 2026-08-25: refuerzos sobre el tablón, a petición del usuario tras ver
+-- el enlace listo para compartir con ~140 personas.
+-- ============================================================
+
+-- Un colaborador logueado también puede ver el enlace del tablón (botón
+-- en Portada.jsx, junto a "Mi cuenta"/"Cerrar sesión") -- mismo patrón de
+-- seguridad que colaborador_mis_invitados: exige sesión real de ESE
+-- colaborador, nunca solo el id suelto.
+create or replace function colaborador_obtener_token_tablon(p_colaborador_id uuid)
+returns uuid
+language sql security definer set search_path = public, pg_temp
+as $$
+  select case
+    when exists (
+      select 1 from colaboradores c
+      where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
+    )
+    then (select "token" from tablon_secreto limit 1)
+    else null
+  end;
+$$;
+grant execute on function colaborador_obtener_token_tablon(uuid) to anon;
+
+-- Enlace de invitación al grupo de WhatsApp (tipo chat.whatsapp.com/XXXX,
+-- se genera desde la propia app de WhatsApp: Grupo → Info del grupo →
+-- Invitar mediante enlace) -- a propósito NO es un número de teléfono: un
+-- botón basado en número abriría un chat 1 a 1 con el anfitrión, lo que
+-- dejaría a 140 personas escribiéndole directamente y anularía la figura
+-- del colaborador como intermediario. Vive en `evento` (columna abierta,
+-- sin sensibilidad real) porque el botón que la usa está en la ventana
+-- Novedades del anfitrión, no en el tablón público.
+alter table evento add column if not exists "enlaceGrupoWhatsapp" text not null default '';
+
+-- ---------- Música ambiental (Supabase Storage) ----------
+-- A diferencia de las imágenes (guardadas como base64 directamente en
+-- columnas de texto -- ver evento.imagen), un archivo de audio pesa
+-- demasiado para eso: guardarlo en una columna que el tablón público
+-- vuelve a pedir cada minuto (mismo refresco que el resto de la app)
+-- descargaría varios MB una y otra vez sin necesidad. Supabase Storage
+-- (incluido gratis en cualquier proyecto) sirve cada archivo desde su
+-- propia URL estable -- el navegador lo cachea solo, no pasa por la
+-- tabla `evento` en absoluto.
+insert into storage.buckets ("id", "name", "public")
+values ('musica-ambiental', 'musica-ambiental', true)
+on conflict ("id") do nothing;
+
+-- Lectura pública (el tablón reproduce sin login) -- subir/borrar solo si
+-- la cuenta con sesión iniciada está en la tabla `anfitriones` (mismo
+-- criterio que mi_rol()). drop+create porque Postgres no admite "create
+-- policy if not exists" -- necesario para que este bloque se pueda
+-- volver a pegar entero sin fallar (mismo criterio que el resto del
+-- archivo).
+drop policy if exists "musica_ambiental_lectura_publica" on storage.objects;
+create policy "musica_ambiental_lectura_publica"
+on storage.objects for select
+to public
+using (bucket_id = 'musica-ambiental');
+
+drop policy if exists "musica_ambiental_solo_anfitrion_escribe" on storage.objects;
+create policy "musica_ambiental_solo_anfitrion_escribe"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'musica-ambiental'
+  and exists (select 1 from anfitriones a where a."authUserId" = auth.uid())
+);
+
+drop policy if exists "musica_ambiental_solo_anfitrion_borra" on storage.objects;
+create policy "musica_ambiental_solo_anfitrion_borra"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'musica-ambiental'
+  and exists (select 1 from anfitriones a where a."authUserId" = auth.uid())
+);
+
+-- ---------- Miniatura para WhatsApp/Facebook (og:image) ----------
+-- Mismo motivo que musica-ambiental: las etiquetas og:image de
+-- index.html son ESTÁTICAS (el rastreador de WhatsApp lee el HTML sin
+-- ejecutar React) y necesitan una URL http real, no el data: URI que usa
+-- evento.imagen. Se sube siempre con el mismo nombre de archivo
+-- ("portada.jpg", ver VentanaConfigDatosEvento.jsx) para que la URL
+-- pública nunca cambie -- solo el archivo detrás.
+insert into storage.buckets ("id", "name", "public")
+values ('og-imagen', 'og-imagen', true)
+on conflict ("id") do nothing;
+
+drop policy if exists "og_imagen_lectura_publica" on storage.objects;
+create policy "og_imagen_lectura_publica"
+on storage.objects for select
+to public
+using (bucket_id = 'og-imagen');
+
+drop policy if exists "og_imagen_solo_anfitrion_sube" on storage.objects;
+create policy "og_imagen_solo_anfitrion_sube"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'og-imagen'
+  and exists (select 1 from anfitriones a where a."authUserId" = auth.uid())
+);
+
+-- También hace falta UPDATE (no solo INSERT): se sube siempre con
+-- upsert:true (mismo nombre de archivo cada vez), y eso internamente
+-- reemplaza el objeto existente en vez de crear uno nuevo.
+drop policy if exists "og_imagen_solo_anfitrion_reemplaza" on storage.objects;
+create policy "og_imagen_solo_anfitrion_reemplaza"
+on storage.objects for update
+to authenticated
+using (
+  bucket_id = 'og-imagen'
+  and exists (select 1 from anfitriones a where a."authUserId" = auth.uid())
+)
+with check (
+  bucket_id = 'og-imagen'
+  and exists (select 1 from anfitriones a where a."authUserId" = auth.uid())
+);

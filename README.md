@@ -142,7 +142,24 @@ escriba el anfitrión (ventana "Novedades"), plegadas por secciones. El
 enlace vive en su propio secreto (`tablon_secreto`, tabla cerrada como
 `anfitrion_secreto`) — nadie sin él lo encuentra, y es el mismo enlace
 para todo el grupo (no uno por persona), así que crece solo con el
-número de confirmados sin que haga falta repartir enlaces nuevos.
+número de confirmados sin que haga falta repartir enlaces nuevos. El
+tablón avisa con un candado de que el enlace es privado y no debe
+reenviarse. Un botón "Novedades" en la portada (visible para el
+anfitrión y para cada colaborador logueado) lleva directo ahí y permite
+volver sin perder la sesión.
+
+Puede sonar **música ambiental** de fondo mientras el tablón está
+abierto (Configuración → Música ambiental, sube uno o varios archivos
+de audio a Supabase Storage). Un botón flotante la activa: los
+navegadores bloquean el audio automático sin que la persona interactúe
+antes con la página, así que nunca suena sola de verdad al cargar.
+
+Al pegar cualquier enlace de esta web en WhatsApp/Facebook aparece una
+miniatura con imagen (etiquetas `og:image` **estáticas** en
+`index.html` — el rastreador no ejecuta React, así que no pueden leer
+datos de la base en tiempo real). La imagen se sube en Configuración →
+Datos del evento, a un segundo bucket de Storage
+(`og-imagen`, nombre de archivo fijo para que la URL nunca cambie).
 
 ## Avisos automáticos por email
 
@@ -180,7 +197,9 @@ excluyen del volcado a propósito). Requiere el secreto de repositorio
   vivo.
 - ✅ Backup diario automático de la base de datos.
 - ✅ CAPTCHA (Turnstile) en los tres formularios de login.
-- ✅ Tablón público de novedades, de solo lectura, sin login.
+- ✅ Tablón público de novedades, de solo lectura, sin login — con
+  aviso de privacidad, música ambiental opcional y acceso directo desde
+  la portada para anfitrión/colaborador.
 - ⏳ Pendiente, sin urgencia (ver historial de sesiones en `CLAUDE.md`):
   onboarding del resto de colaboradores a login real, decidir si retirar
   también el enlace-token del anfitrión, y ampliar la batería de tests

@@ -810,3 +810,115 @@ abierta a todo el mundo a propósito, sin sensibilidad real).
   refresco cada minuto, igual que el resto de la app.
 - `lib/url.js`: `getTokenTablonFromUrl()`, mismo patrón que
   `getRolFromUrl`/`getEmailCrearCuentaFromUrl`.
+
+## 2026-08-25 (mismo día): refuerzos sobre el tablón, tras verlo listo para ~140 personas (v6.4)
+
+**Seguridad del enlace, confirmada (no hizo falta cambiar nada):** las
+dos RPC del lado público (`tablon_verificar_token`,
+`tablon_listar_novedades`) son `language sql`, sólo `select` — no hay
+ningún camino de escritura alcanzable con el token del tablón. La
+única superficie de escritura pública que ya existía en el proyecto
+(la tabla `evento` abierta a `anon`, documentada arriba en el bloque de
+RLS) es anterior a esta función y no cambia por compartir este enlace
+— la clave `anon` ya viajaba dentro del JS compilado desde mucho antes.
+
+**Aviso de privacidad** en `VistaTablon.jsx` ("🔒 Enlace privado — no lo
+compartas fuera del grupo") — a petición del usuario, al caer en la
+cuenta de que compartir este enlace con ~140 personas hacía real el
+riesgo de que alguna lo reenviara sin querer.
+
+**Botón "Novedades" + volver, para anfitrión Y colaborador (no solo el
+anfitrión).** `Portada.jsx` gana `enlaceTablon` (prop ya calculada por
+quien la monta) — como la comparten `VistaAnfitrion.jsx` y
+`VistaColaborador.jsx`, hizo falta que un colaborador *logueado* pueda
+consultar el token del tablón también: `colaborador_obtener_token_tablon`,
+mismo patrón de seguridad que `colaborador_mis_invitados`
+(`"authUserId" = auth.uid()`, nunca solo el id suelto). Fórmula del
+enlace centralizada en `lib/url.js` (`construirEnlaceTablon`) para que
+las dos vistas no puedan desincronizarse copiándola cada una por su
+lado. "Volver" es un `<a href="/">` normal (mismo patrón que "No tienes
+acceso") — con Supabase Auth persistiendo la sesión en el navegador,
+un anfitrión/colaborador con login real vuelve directo a su vista;
+solo un invitado sin cuenta (el caso normal para el tablón) acabaría en
+el login, que es lo esperado.
+
+**Botón de WhatsApp: al GRUPO, no a un chat 1 a 1.** Pedido inicial
+ambiguo ("botón que lo lance al grupo... con mi número de teléfono") —
+aclarado con el usuario: un enlace basado en número de teléfono
+(`wa.me/...`) abre un chat privado, y con ~140 confirmados eso le
+dejaría recibiendo mensajes directos de todos, anulando la figura del
+colaborador como intermediario (motivo explícito del usuario). Se
+implementó con el enlace de INVITACIÓN al grupo
+(`chat.whatsapp.com/XXXX`, se genera desde la propia app de WhatsApp:
+grupo → Info del grupo → Invitar mediante enlace) — campo nuevo
+`evento.enlaceGrupoWhatsapp`, editable directamente en la ventana
+Novedades (no en Configuración: el usuario pidió que viviera ahí,
+junto al propio flujo de publicar). El botón resultante NO está en el
+tablón público — es un atajo para que el propio anfitrión abra su
+grupo y avise "hay novedades nuevas" tras publicar, nunca algo que vea
+un confirmado.
+
+**Música ambiental — primer uso de Supabase Storage en este proyecto.**
+Hasta ahora toda imagen de la app se guarda como base64 en columnas de
+texto (`evento.imagen`, fotos familiares...) porque son pocos KB y no
+compensaba montar Storage solo para eso. Un archivo de audio es
+demasiado pesado para ese mismo truco, sobre todo porque el tablón
+público vuelve a pedir sus datos cada minuto (mismo refresco que el
+resto de la app) — guardar el audio en una columna reenviaría varios MB
+en cada uno de esos refrescos. Se creó el bucket `musica-ambiental`
+(`insert into storage.buckets`, con `public = true` para que el tablón
+reproduzca sin login) con 3 políticas sobre `storage.objects`: lectura
+pública, subida y borrado solo si `auth.uid()` está en la tabla
+`anfitriones` (mismo criterio que `mi_rol()`). `VentanaConfigMusica.jsx`
+(nueva, Configuración → Música ambiental) sube/lista/borra pistas;
+`VistaTablon.jsx` las reproduce en bucle con un botón flotante.
+
+⚠️ **Los navegadores bloquean el audio automático sin interacción
+previa del usuario** — no hay forma de que suene sola de verdad al
+abrir la página. Se resolvió con un botón flotante visible (nunca un
+intento silencioso de `audio.play()` en el `useEffect` inicial, que
+fallaría y podría confundirse con un fallo real) — el primer clic de
+cada visitante activa la música a partir de ahí.
+
+**Formato de texto (negrita/cursiva/subrayado) en Novedades**, pedido
+a mitad de esta misma sesión: en vez de escribir `<b>`/`<i>`/`<u>` a
+mano en el `textarea` (que ya admitía HTML sencillo desde el principio,
+igual que las plantillas de email), 3 botones envuelven la selección
+actual. Gotcha real evitado: los botones llevan
+`onMouseDown={(e) => e.preventDefault()}` — sin eso, pulsarlos le
+quita el foco al `textarea` antes de que el `click` llegue a disparar
+(se pierde la selección de texto, y el `onBlur` del `textarea` guarda
+la versión vieja, sin la etiqueta nueva).
+
+**Miniatura al compartir el enlace (og:image), pedido a mitad de la
+misma sesión ("en el link de WhatsApp me gustaría que se viera una
+imagen del evento").** Limitación real explicada y resuelta: las
+etiquetas `og:image`/`og:title` que lee el rastreador de WhatsApp/
+Facebook son **estáticas** — leen `index.html` tal cual, sin ejecutar
+React, así que no pueden depender de datos de la base en tiempo real
+(y `evento.imagen` tampoco serviría aunque pudieran: es un `data:` URI
+en base64, no una URL http). Solución: segundo bucket de Storage
+(`og-imagen`, mismas 3 políticas que `musica-ambiental`) con un
+**nombre de archivo fijo** (`portada.jpg`, subido siempre con
+`upsert: true`) — la URL pública nunca cambia, así que
+`index.html` puede tenerla escrita de una vez para siempre y aun así
+reflejar la foto más reciente que suba el anfitrión. Nueva sección en
+`VentanaConfigDatosEvento.jsx` para subirla (separada a propósito de
+"Imagen de portada": esa es base64 en `evento.imagen`, para dentro de
+la app; esta es Storage, para fuera).
+
+La URL de Supabase en `index.html` usa la sustitución nativa de Vite
+en HTML (`%VITE_SUPABASE_URL%`, rellenado en el build con el valor real
+de `.env`/Vercel) en vez de escribirla a mano — verificado leyendo
+`dist/index.html` tras `npm run build` para confirmar que Vite la
+sustituye de verdad. Así esta plantilla se puede reutilizar en un
+evento futuro (con su propio proyecto de Supabase) sin tocar
+`index.html`.
+
+⚠️ **Aviso ya dejado por escrito en la propia ventana de Configuración**:
+si el anfitrión reemplaza la foto más tarde, un enlace YA compartido
+antes puede tardar en actualizarse en WhatsApp — cachean la miniatura
+por su cuenta la primera vez que alguien pega el enlace, no en cada
+visita. No hay nada que hacer desde este lado del código si eso pasa
+(haría falta la herramienta de depuración de Meta/Facebook para forzar
+un re-escaneo de esa URL en concreto).

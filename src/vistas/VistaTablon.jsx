@@ -9,12 +9,14 @@
 // hay sesión, nada que resolver — solo un token de solo lectura. App.jsx
 // la monta ANTES de tocar nada de sesión/login en cuanto detecta
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
-import { useState, useEffect, useCallback } from "react";
-import { Calendar, Clock, MapPin, ChevronDown } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause } from "lucide-react";
 import { C } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, formatearDiaSemana } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
+
+const BUCKET_MUSICA = "musica-ambiental";
 
 export function VistaTablon({ token }) {
   // "cargando" | "invalido" | "listo"
@@ -22,6 +24,43 @@ export function VistaTablon({ token }) {
   const [evento, setEvento] = useState(null);
   const [novedades, setNovedades] = useState([]);
   const [abiertas, setAbiertas] = useState(() => new Set());
+
+  // ---------- Música ambiental ----------
+  // Los navegadores bloquean el audio automático hasta que la propia
+  // persona interactúa con la página -- por eso esto nunca sale sola
+  // sola, siempre hace falta el primer clic en el botón de abajo.
+  const [pistas, setPistas] = useState([]);
+  const [sonando, setSonando] = useState(false);
+  const audioRef = useRef(null);
+  const indicePistaRef = useRef(0);
+
+  useEffect(() => {
+    (async () => {
+      const { data: archivos } = await supabase.storage.from(BUCKET_MUSICA).list();
+      const urls = (archivos || [])
+        .filter((f) => f.name && !f.name.startsWith("."))
+        .map((f) => supabase.storage.from(BUCKET_MUSICA).getPublicUrl(f.name).data.publicUrl);
+      setPistas(urls);
+    })();
+  }, []);
+
+  const siguientePista = useCallback(() => {
+    if (pistas.length === 0 || !audioRef.current) return;
+    indicePistaRef.current = (indicePistaRef.current + 1) % pistas.length;
+    audioRef.current.src = pistas[indicePistaRef.current];
+    audioRef.current.play().catch(() => {});
+  }, [pistas]);
+
+  const alternarMusica = () => {
+    if (!audioRef.current || pistas.length === 0) return;
+    if (sonando) {
+      audioRef.current.pause();
+      setSonando(false);
+    } else {
+      if (!audioRef.current.src) audioRef.current.src = pistas[indicePistaRef.current];
+      audioRef.current.play().then(() => setSonando(true)).catch(() => {});
+    }
+  };
 
   const cargar = useCallback(
     async (primeraVez) => {
@@ -103,7 +142,34 @@ export function VistaTablon({ token }) {
 
   return (
     <div className="min-h-screen" style={{ background: C.paper }}>
+      {/* Botón de música flotante: solo aparece si hay al menos una pista
+          subida (Configuración → Música ambiental). El primer clic de
+          cada visitante es obligatorio -- ver el comentario de más arriba
+          sobre el bloqueo de autoplay de los navegadores. */}
+      {pistas.length > 0 && (
+        <>
+          <audio ref={audioRef} onEnded={siguientePista} />
+          <button
+            onClick={alternarMusica}
+            className="fixed bottom-5 right-5 flex items-center justify-center rounded-full boton-3d"
+            style={{ width: 52, height: 52, background: C.ink, color: C.paper, zIndex: 50 }}
+            title={sonando ? "Pausar la música" : "Activar música ambiental"}
+          >
+            {sonando ? <Pause size={20} /> : <Music size={20} />}
+          </button>
+        </>
+      )}
+
       <div className="max-w-2xl mx-auto px-4 py-6">
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <a href="/" className="text-xs underline" style={{ color: C.charcoal, opacity: 0.6 }}>
+            ← Volver a la web
+          </a>
+          <span className="flex items-center gap-1 text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
+            <Lock size={11} /> Enlace privado — no lo compartas fuera del grupo
+          </span>
+        </div>
+
         {evento && (
           <div
             className="rounded-lg px-5 py-5 mb-6"

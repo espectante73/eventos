@@ -22,6 +22,7 @@ import {
   resolverColaborador,
 } from "../lib/invitados";
 import { ordenarPorApellidoNombre } from "../lib/formato";
+import { construirEnlaceTablon } from "../lib/url";
 import { redimensionarImagenArchivo } from "../lib/descargas";
 import { C } from "../theme";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
@@ -445,7 +446,8 @@ function FilaInvitadoColaborador({
 }
 
 export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken, onCerrarSesion }) {
-  const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento, ordenFamiliares } = data;
+  const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento, ordenFamiliares, tokenTablon } = data;
+  const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
   // Pantalla de inicio: la misma Portada que ve el anfitrión (sin sus 3
   // recuadros de estadísticas, que no viven aquí sino en VistaAnfitrion.jsx),
@@ -582,6 +584,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       <Portada
         evento={evento}
         onCerrarSesion={onCerrarSesion}
+        enlaceTablon={enlaceTablon}
         botonExtra={
           <>
             {esAnfitrionOriginal && (

@@ -4,13 +4,53 @@
 import { useState } from "react";
 import { C } from "../../theme";
 import { redimensionarImagenArchivo } from "../../lib/descargas";
+import { supabase } from "../../supabaseClient";
 import { Field, TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
+
+// Miniatura que WhatsApp/Facebook muestran al pegar cualquier enlace de
+// esta web (login, tablón...) -- a petición del usuario, 2026-08-25. Es
+// una imagen APARTE de evento.imagen (que va como base64 en la propia
+// fila de `evento`): las etiquetas og:image de index.html son estáticas
+// (WhatsApp lee el HTML tal cual, sin ejecutar React) y necesitan una URL
+// http de verdad, no un data: URI. Se sube siempre con el MISMO nombre
+// (`og-imagen/portada.jpg`, ver schema.sql) para que la URL nunca cambie
+// -- solo el archivo detrás cambia al volver a subir una foto.
+const BUCKET_OG = "og-imagen";
+const RUTA_OG = "portada.jpg";
 
 export function VentanaConfigDatosEvento({ data, onCerrar }) {
   const { evento, persistEvento } = data;
   const [subiendoImagenPortada, setSubiendoImagenPortada] = useState(false);
   const [errorImagenPortada, setErrorImagenPortada] = useState("");
+  const [subiendoImagenOg, setSubiendoImagenOg] = useState(false);
+  const [errorImagenOg, setErrorImagenOg] = useState("");
+  // Solo para refrescar la miniatura de aquí dentro tras subir una nueva
+  // -- la URL pública real (la que ve WhatsApp) es siempre la misma.
+  const [vistaPreviaOg, setVistaPreviaOg] = useState(() => Date.now());
+
+  const urlPublicaOg = supabase.storage.from(BUCKET_OG).getPublicUrl(RUTA_OG).data.publicUrl;
+
+  const onSeleccionarImagenOg = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    setErrorImagenOg("");
+    setSubiendoImagenOg(true);
+    try {
+      const dataUrl = await redimensionarImagenArchivo(file, 1200, 0.85);
+      const blob = await (await fetch(dataUrl)).blob();
+      const { error } = await supabase.storage
+        .from(BUCKET_OG)
+        .upload(RUTA_OG, blob, { upsert: true, contentType: "image/jpeg" });
+      if (error) throw error;
+      setVistaPreviaOg(Date.now());
+    } catch (_) {
+      setErrorImagenOg("No se ha podido subir la imagen. Prueba con otra.");
+    } finally {
+      setSubiendoImagenOg(false);
+    }
+  };
 
   const onSeleccionarArchivoImagenPortada = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -128,6 +168,50 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
             />
             La imagen ya incluye el título (ocultar el texto superpuesto)
           </label>
+        </div>
+
+        <div style={{ gridColumn: "span 2 / span 2" }}>
+          <Field label="Imagen para compartir en WhatsApp">
+            <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
+              La miniatura que aparece al pegar cualquier enlace de esta web (el del tablón,
+              el de login...) en WhatsApp — sube aquí la misma foto de cabecera si quieres que
+              se vea ahí también.
+            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <img
+                key={vistaPreviaOg}
+                src={`${urlPublicaOg}?v=${vistaPreviaOg}`}
+                alt=""
+                className="rounded object-cover"
+                style={{ width: 60, height: 40, border: `1px solid ${C.line}`, background: C.paperDark }}
+                onError={(e) => {
+                  e.target.style.visibility = "hidden";
+                }}
+              />
+              <label
+                className="text-xs px-2 py-1 rounded cursor-pointer"
+                style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+              >
+                {subiendoImagenOg ? "Subiendo…" : "Subir imagen para WhatsApp"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={onSeleccionarImagenOg}
+                  disabled={subiendoImagenOg}
+                  style={{ display: "none" }}
+                />
+              </label>
+            </div>
+            {errorImagenOg && (
+              <p className="text-xs mt-1" style={{ color: C.wax }}>
+                {errorImagenOg}
+              </p>
+            )}
+            <p className="text-xs mt-1" style={{ color: C.charcoal, opacity: 0.5 }}>
+              Si vuelves a subirla más tarde, un enlace YA compartido antes puede tardar en
+              actualizarse en WhatsApp — cachean la miniatura por su cuenta.
+            </p>
+          </Field>
         </div>
       </div>
     </VentanaFlotante>

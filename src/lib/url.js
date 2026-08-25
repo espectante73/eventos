@@ -40,3 +40,11 @@ export function getTokenTablonFromUrl() {
     return null;
   }
 }
+
+// Misma fórmula usada por VistaAnfitrion.jsx y VistaColaborador.jsx para
+// el botón "Novedades" de Portada.jsx -- centralizada aquí en vez de
+// duplicada en los dos sitios, para que no puedan desincronizarse.
+export function construirEnlaceTablon(urlPublica, token) {
+  if (!token || !urlPublica) return "";
+  return `${urlPublica.replace(/\/$/, "")}?tablon=${token}`;
+}

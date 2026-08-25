@@ -37,7 +37,7 @@
 // se sube en Configuración → Datos del evento), separado por completo
 // de Invitaciones.
 import { useState, useEffect } from "react";
-import { Calendar, Clock, MapPin, Image as ImageIcon, LogOut } from "lucide-react";
+import { Calendar, Clock, MapPin, Image as ImageIcon, LogOut, Megaphone } from "lucide-react";
 import { C } from "../theme";
 import { VERSION_APP } from "../constants";
 import { formatearFecha, formatearDiaSemana } from "../lib/formato";
@@ -62,6 +62,13 @@ export function Portada({
   onCambiarRol,
   anfitrionToken,
   onCerrarSesion,
+  // Enlace COMPLETO al tablón público (?tablon=...), ya calculado por
+  // quien monta Portada (VistaAnfitrion.jsx / VistaColaborador.jsx) a
+  // partir de data.tokenTablon -- Portada no sabe nada de cómo se
+  // construye, solo lo enlaza si existe. undefined/"" = todavía no
+  // disponible (token sin cargar, o falta la URL pública en
+  // Configuración) -- el botón simplemente no aparece.
+  enlaceTablon,
   // `botonExtra`: para cuando esta Portada la usa alguien que NO es el
   // anfitrión editando (p.ej. VistaColaborador.jsx) -- en vez del
   // desplegable "Abrir sección…" (editable+toggle), se puede pasar aquí
@@ -135,6 +142,15 @@ export function Portada({
             -- a petición del usuario, 2026-08-21 (Fase C). */}
         {onCerrarSesion && (
           <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+            {enlaceTablon && (
+              <a
+                href={enlaceTablon}
+                className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
+                title="Abre el tablón público de novedades que ven los confirmados"
+              >
+                <Megaphone size={16} /> Novedades
+              </a>
+            )}
             <MiCuenta />
             <button
               onClick={onCerrarSesion}

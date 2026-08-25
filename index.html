@@ -4,6 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Libro de invitados</title>
+    <!-- Miniatura al compartir cualquier enlace de esta web en WhatsApp/
+         Facebook (og:image) -- a petición del usuario, 2026-08-25.
+         ESTÁTICO a propósito: el rastreador que genera la vista previa
+         lee este HTML tal cual, sin ejecutar React, así que no puede
+         depender de datos de la base (evento.imagen, que además es un
+         data: URI, no una URL http válida para esto). La imagen de
+         verdad vive en Supabase Storage con un nombre de archivo fijo
+         (ver VentanaConfigDatosEvento.jsx / schema.sql) -- se sube desde
+         Configuración → Datos del evento, y como la URL nunca cambia,
+         no hace falta tocar este archivo cada vez que se reemplaza la
+         foto. "%VITE_SUPABASE_URL%" lo rellena Vite solo, en el build,
+         con el valor real de tu .env/Vercel -- no hay ninguna URL fija
+         de un proyecto de Supabase concreto escrita aquí a mano, para
+         que esta plantilla se pueda reutilizar en un evento futuro sin
+         tocar este archivo. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Toda la información del evento" />
+    <meta property="og:description" content="Fecha, hora, lugar y novedades." />
+    <meta property="og:image" content="%VITE_SUPABASE_URL%/storage/v1/object/public/og-imagen/portada.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
     <!-- Cloudflare Turnstile (CAPTCHA del login) -- Fase D, 2026-08-24.
          Se carga aquí (no como import de npm) porque el widget vive
          fuera del árbol de React: VistaLogin.jsx llama a

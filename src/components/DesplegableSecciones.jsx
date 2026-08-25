@@ -35,6 +35,7 @@ import {
   RotateCcw,
   Trash2,
   Megaphone,
+  Music,
 } from "lucide-react";
 import { C } from "../theme";
 import { UserSolido } from "./Widgets";
@@ -69,6 +70,7 @@ const SUBMENU_CONFIGURACION = [
   { id: "config-url-web", etiqueta: "URL web", icono: Globe },
   { id: "config-email-anfitrion", etiqueta: "Email anfitrión", icono: Mail },
   { id: "config-plantillas-email", etiqueta: "Texto emails", icono: FileText },
+  { id: "config-musica", etiqueta: "Música ambiental", icono: Music },
   { id: "config-modo-pruebas", etiqueta: "Modo pruebas", icono: FlaskConical, fondo: C.wax, color: C.paper },
   { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },
   { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2, fondo: "#B00020", color: C.paper },
