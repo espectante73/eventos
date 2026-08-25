@@ -763,3 +763,50 @@ más arriba, nada roto ahí.
    verdad (`"error"`) no generó ni un solo aviso nuevo — se dejó
    encendida para que un `buildLink()` futuro no pueda volver a
    colarse sin que lint lo note.
+
+## 2026-08-25: Tablón público de novedades (v6.3)
+
+Necesidad nueva del usuario: se comunica con los invitados ya
+confirmados por un grupo de WhatsApp "tablón de anuncios" (solo
+lectura para los integrantes), que va creciendo hasta el número final
+de confirmados. Para no saturar ese chat con avisos largos, pidió una
+página de la propia web, pública solo mediante enlace, de solo lectura,
+con una parte plegable por secciones (las novedades) en vez de un
+bloque grande de texto.
+
+**Decisión de acceso (aclarada con el usuario antes de construir):**
+UN enlace único (`?tablon=<token>`) para todo el grupo, no uno por
+persona — se comparte una sola vez en el propio WhatsApp. Mismo
+espíritu de seguridad que el resto de la app: `novedades` es una tabla
+completamente cerrada (como `invitados`/`colaboradores`), y el enlace
+depende de un secreto propio en su propia tabla cerrada
+(`tablon_secreto`) — nunca de una columna en `evento` (que está
+abierta a todo el mundo a propósito, sin sensibilidad real).
+
+**Qué se construyó:**
+- `schema.sql`: tabla `novedades` (titulo, cuerpo con HTML sencillo
+  como las plantillas de email, `publicada`, `creadaEn`), tabla
+  `tablon_secreto` (mismo patrón que `anfitrion_secreto`), y 5 RPC —
+  lado anfitrión: `anfitrion_obtener_token_tablon`,
+  `anfitrion_listar_novedades` (ve borradores también),
+  `anfitrion_guardar_novedades` (mismo patrón `set columna=excluded.
+  columna` que colaboradores/invitados, `creadaEn` nunca se
+  sobreescribe en un `update`); lado público: `tablon_verificar_token`,
+  `tablon_listar_novedades` (solo `publicada = true`).
+- `useLedgerData.js`: `novedades`/`persistNovedades` (mismo patrón
+  optimista de siempre) y `tokenTablon`, cargados solo en la rama
+  anfitrión de `cargarDatos`.
+- `VentanaNovedades.jsx` (nueva ventana del anfitrión, "Abrir
+  sección…"): añadir/editar/borrar novedades, checkbox "Publicada",
+  y el enlace público con botón de copiar.
+- `VistaTablon.jsx` (nueva, pública): deliberadamente **no** usa
+  `useLedgerData` -- no hay rol ni sesión que resolver, solo llama a
+  Supabase directo con el token de la URL. `App.jsx` la monta ANTES de
+  cualquier lógica de sesión/login en cuanto detecta `?tablon=...` en
+  la URL (mismo patrón de "cortar el render pronto" que ya usaba la
+  pantalla de "Falta configuración"). Muestra fecha/hora/lugar fijos
+  arriba (reutiliza `InfoItem` de `Portada.jsx`) y las novedades como
+  acordeón (la más reciente empieza abierta, el resto plegado) con
+  refresco cada minuto, igual que el resto de la app.
+- `lib/url.js`: `getTokenTablonFromUrl()`, mismo patrón que
+  `getRolFromUrl`/`getEmailCrearCuentaFromUrl`.

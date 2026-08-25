@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "6.3",
+    cambios: [
+      'Nueva sección "Novedades": un tablón de anuncios público y de solo lectura, con un único enlace que se comparte una vez (por ejemplo en el grupo de WhatsApp de confirmados) — nadie sin el enlace lo encuentra, y quien lo tenga ve fecha/hora/lugar del evento fijos arriba y las novedades debajo, plegadas por secciones para que no se lea como un bloque grande de texto.',
+      "Pensado para ir creciendo con el número de confirmados sin repartir enlaces nuevos: es el mismo enlace para todo el grupo, no uno por persona.",
+    ],
+  },
+  {
     version: "6.2",
     cambios: [
       "Si un colaborador cambia su email de acceso, ahora también actualiza el email al que le llegan sus avisos automáticos, sin ningún paso manual — con un aviso claro para el anfitrión en Colaboradores, para no perder de vista el cambio.",

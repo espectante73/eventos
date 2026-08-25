@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { LogOut } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase, supabaseConfigurado } from "./supabaseClient";
-import { getRolFromUrl, getEmailCrearCuentaFromUrl } from "./lib/url";
+import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl } from "./lib/url";
 import { C } from "./theme";
 import { VistaAnfitrion } from "./vistas/VistaAnfitrion";
 import { VistaColaborador } from "./vistas/VistaColaborador";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
+import { VistaTablon } from "./vistas/VistaTablon";
 
 // ---------- Red de seguridad ante errores inesperados ----------
 
@@ -68,6 +69,12 @@ export class ErrorBoundary extends React.Component {
 // ---------- App ----------
 
 export default function App() {
+  // ?tablon=<token> -- el tablón público de novedades no tiene rol, ni
+  // sesión, ni nada que resolver -- se comprueba y se corta el render
+  // aquí mismo, ANTES de cualquier hook o lógica de sesión (ver
+  // VistaTablon.jsx). No es una `const` en el orden de hooks -- es una
+  // simple lectura de la URL, igual que urlRol/emailCrearCuenta.
+  const tokenTablon = getTokenTablonFromUrl();
   const urlRol = getRolFromUrl();
   // ?crear=<email> -- enlace enviado por email a un colaborador para que
   // abra el login directo en modo "Crear cuenta" con su email ya relleno
@@ -256,6 +263,15 @@ export default function App() {
         </div>
       </div>
     );
+  }
+
+  // Tablón público (?tablon=...): corta el render aquí, antes de tocar
+  // sesión/login para nada -- un visitante de este enlace no tiene ni
+  // necesita cuenta. Va después de "Falta configuración" (sin Supabase
+  // configurado, tampoco esto podría cargar nada) pero antes de
+  // PASSWORD_RECOVERY y de todo lo demás.
+  if (tokenTablon) {
+    return <VistaTablon token={tokenTablon} />;
   }
 
   if (authEvent === "PASSWORD_RECOVERY") {

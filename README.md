@@ -132,6 +132,18 @@ tras confirmarse en pruebas en vivo que seguía dando acceso sin sesión
 real). Guarda ese enlace en un sitio privado: quien lo tenga, tiene
 acceso total a los datos del evento.
 
+## Tablón público de novedades
+
+Página de solo lectura, **sin login ni cuenta**, en `?tablon=<token>` —
+pensada para compartir UN único enlace en un grupo de WhatsApp "solo
+lectura" con los ya confirmados, en vez de saturarlo con avisos largos.
+Muestra fecha/hora/lugar fijos arriba y, debajo, las novedades que
+escriba el anfitrión (ventana "Novedades"), plegadas por secciones. El
+enlace vive en su propio secreto (`tablon_secreto`, tabla cerrada como
+`anfitrion_secreto`) — nadie sin él lo encuentra, y es el mismo enlace
+para todo el grupo (no uno por persona), así que crece solo con el
+número de confirmados sin que haga falta repartir enlaces nuevos.
+
 ## Avisos automáticos por email
 
 Ya en producción, probado en vivo. Vía **Resend**, disparado desde la
@@ -168,6 +180,7 @@ excluyen del volcado a propósito). Requiere el secreto de repositorio
   vivo.
 - ✅ Backup diario automático de la base de datos.
 - ✅ CAPTCHA (Turnstile) en los tres formularios de login.
+- ✅ Tablón público de novedades, de solo lectura, sin login.
 - ⏳ Pendiente, sin urgencia (ver historial de sesiones en `CLAUDE.md`):
   onboarding del resto de colaboradores a login real, decidir si retirar
   también el enlace-token del anfitrión, y ampliar la batería de tests

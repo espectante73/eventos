@@ -10,6 +10,7 @@ import { C } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
 import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
+import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
 import { VentanaConfigPrecios } from "./anfitrion/VentanaConfigPrecios";
@@ -371,6 +372,11 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
       {/* Versiones */}
       {abierto.versiones && (
         <VentanaVersiones onCerrar={() => toggle("versiones")} />
+      )}
+
+      {/* Novedades (tablón público) */}
+      {abierto.novedades && (
+        <VentanaNovedades data={data} onCerrar={() => toggle("novedades")} />
       )}
 
       {previewInvitacion && (

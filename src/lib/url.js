@@ -28,3 +28,15 @@ export function getEmailCrearCuentaFromUrl() {
     return null;
   }
 }
+
+// ?tablon=<token-del-tablon> — el enlace público de solo lectura que se
+// comparte UNA vez en el grupo de WhatsApp de confirmados (ver
+// VistaTablon.jsx / VentanaNovedades.jsx). A diferencia de ?rol=..., no
+// identifica a nadie: cualquiera con el enlace ve lo mismo.
+export function getTokenTablonFromUrl() {
+  try {
+    return new URLSearchParams(window.location.search).get("tablon");
+  } catch (_) {
+    return null;
+  }
+}

@@ -1571,3 +1571,121 @@ end;
 $$;
 
 grant execute on function anfitrion_confirmar_email_colaborador_actualizado(uuid, uuid) to anon;
+
+-- ============================================================
+-- TABLÓN PÚBLICO DE NOVEDADES (2026-08-25). El anfitrión se comunica con
+-- los invitados ya confirmados por un grupo de WhatsApp "solo lectura"
+-- (tipo tablón de anuncios) que va creciendo hasta el número final de
+-- confirmados. Para no saturar ese chat con avisos largos, esta sección
+-- añade una página pública de solo lectura (sin login, sin cuenta) con
+-- las mismas novedades, agrupadas por secciones plegables -- se comparte
+-- UN enlace único en el propio grupo de WhatsApp (no uno por persona,
+-- a diferencia del enlace-token de colaborador): cualquiera con el
+-- enlace ve el tablón, nadie sin él lo encuentra ni por casualidad.
+--
+-- Mismo patrón de seguridad que el resto de la app: "novedades" es una
+-- tabla completamente cerrada (como invitados/colaboradores), solo
+-- alcanzable a través de las funciones RPC de aquí abajo, y el enlace en
+-- sí depende de un secreto propio en su propia tabla cerrada
+-- ("tablon_secreto"), nunca de una columna en `evento` (que está
+-- abierta a todo el mundo -- ver el bloque de RLS al principio del
+-- archivo).
+-- ============================================================
+create table if not exists novedades (
+  "id"        uuid primary key default gen_random_uuid(),
+  "titulo"    text not null default '',
+  "cuerpo"    text not null default '',
+  -- Permite escribir un borrador sin que se vea todavía en el tablón
+  -- público -- por defecto true (lo normal es escribir y publicar del
+  -- tirón, no dejar pasos a medias).
+  "publicada" boolean not null default true,
+  "creadaEn"  timestamptz not null default now()
+);
+alter table novedades enable row level security;
+revoke all on table novedades from anon, authenticated;
+
+create table if not exists tablon_secreto (
+  "id"    boolean primary key default true check ("id"),
+  "token" uuid not null default gen_random_uuid()
+);
+insert into tablon_secreto ("id") values (true) on conflict do nothing;
+alter table tablon_secreto enable row level security;
+revoke all on table tablon_secreto from anon, authenticated;
+
+-- ---------- Lado anfitrión: escribir novedades y consultar el enlace ----------
+
+create or replace function anfitrion_obtener_token_tablon(p_token uuid)
+returns uuid
+language sql security definer set search_path = public, pg_temp
+as $$
+  select case
+    when p_token = (select "token" from anfitrion_secreto limit 1)
+    then (select "token" from tablon_secreto limit 1)
+    else null
+  end;
+$$;
+
+-- El anfitrión ve TODAS las novedades (publicadas y borradores), para
+-- poder editarlas -- el tablón público (más abajo) solo ve las publicadas.
+create or replace function anfitrion_listar_novedades(p_token uuid)
+returns setof novedades
+language sql security definer set search_path = public, pg_temp
+as $$
+  select n.* from novedades n
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  order by n."creadaEn" desc;
+$$;
+
+create or replace function anfitrion_guardar_novedades(p_token uuid, p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  -- "creadaEn" solo se fija al CREAR (si el cliente no la manda, usa
+  -- now()) -- el "on conflict do update" de abajo no la toca nunca, así
+  -- que editar el texto de una novedad ya existente no cambia su fecha.
+  insert into novedades ("id", "titulo", "cuerpo", "publicada", "creadaEn")
+  select
+    (f->>'id')::uuid, coalesce(f->>'titulo', ''), coalesce(f->>'cuerpo', ''),
+    coalesce((f->>'publicada')::boolean, true),
+    coalesce((f->>'creadaEn')::timestamptz, now())
+  from jsonb_array_elements(p_filas) as f
+  on conflict ("id") do update
+    set "titulo" = excluded."titulo",
+        "cuerpo" = excluded."cuerpo",
+        "publicada" = excluded."publicada";
+
+  delete from novedades n
+  where not exists (
+    select 1 from jsonb_array_elements(p_filas) f
+    where (f->>'id')::uuid = n."id"
+  );
+end;
+$$;
+
+-- ---------- Lado público: el tablón de solo lectura ----------
+
+create or replace function tablon_verificar_token(p_token uuid)
+returns boolean
+language sql security definer set search_path = public, pg_temp
+as $$ select p_token = (select "token" from tablon_secreto limit 1); $$;
+
+create or replace function tablon_listar_novedades(p_token uuid)
+returns setof novedades
+language sql security definer set search_path = public, pg_temp
+as $$
+  select n.* from novedades n
+  where p_token = (select "token" from tablon_secreto limit 1)
+    and n."publicada" = true
+  order by n."creadaEn" desc;
+$$;
+
+grant execute on function anfitrion_obtener_token_tablon(uuid) to anon;
+grant execute on function anfitrion_listar_novedades(uuid) to anon;
+grant execute on function anfitrion_guardar_novedades(uuid, jsonb) to anon;
+grant execute on function tablon_verificar_token(uuid) to anon;
+grant execute on function tablon_listar_novedades(uuid) to anon;

@@ -34,6 +34,7 @@ import {
   FlaskConical,
   RotateCcw,
   Trash2,
+  Megaphone,
 } from "lucide-react";
 import { C } from "../theme";
 import { UserSolido } from "./Widgets";
@@ -50,6 +51,7 @@ const ICONOS_VENTANAS = {
   invitaciones: Mail,
   invitados: List,
   mesas: Utensils,
+  novedades: Megaphone,
   plano: Map,
   progreso: Gauge,
   versiones: History,

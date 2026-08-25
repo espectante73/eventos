@@ -51,6 +51,14 @@ export function useLedgerData(rol) {
   // Orden manual de nombres por familia (para la invitación) — solo lo usa
   // el anfitrión, igual que las mesas.
   const [ordenFamiliares, setOrdenFamiliares] = useState({});
+  // Tablón de novedades (público, de solo lectura) — solo el anfitrión
+  // las carga/edita aquí; el propio tablón público (VistaTablon.jsx) las
+  // lee por su cuenta, sin pasar por este hook (no tiene rol ni sesión).
+  const [novedades, setNovedades] = useState([]);
+  // Token del enlace público del tablón (?tablon=...) — se muestra en
+  // VentanaNovedades.jsx para copiarlo y compartirlo en el grupo de
+  // WhatsApp. null hasta que se cargue (o si falla la carga).
+  const [tokenTablon, setTokenTablon] = useState(null);
 
   // Se mantiene al día para poder comparar "antes/después" dentro de
   // persistInvitados sin depender de closures obsoletas. También sirve
@@ -96,6 +104,11 @@ export function useLedgerData(rol) {
   useEffect(() => {
     gastosRef.current = gastos;
   }, [gastos]);
+
+  const novedadesRef = useRef(novedades);
+  useEffect(() => {
+    novedadesRef.current = novedades;
+  }, [novedades]);
 
   useEffect(() => {
     let cancelado = false;
@@ -202,6 +215,16 @@ export function useLedgerData(rol) {
           { p_token: rol }
         );
         if (errGastos && mostrarCarga) avisar("No se pudo cargar el estado de cuentas.", errGastos);
+        const { data: todasNovedades, error: errNovedades } = await supabase.rpc(
+          "anfitrion_listar_novedades",
+          { p_token: rol }
+        );
+        if (errNovedades && mostrarCarga) avisar("No se pudo cargar el tablón de novedades.", errNovedades);
+        // "Best effort", sin avisar con una alerta si falla: es solo el
+        // enlace a mostrar en la ventana Novedades, no afecta a nada más.
+        const { data: tokenTablonCargado } = await supabase.rpc("anfitrion_obtener_token_tablon", {
+          p_token: rol,
+        });
 
         if (cancelado) return;
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
@@ -213,6 +236,8 @@ export function useLedgerData(rol) {
         if (!errMesas) setMesas(todasMesas || []);
         if (!errAvisos) setAvisosEnviados(avisos || []);
         if (!errGastos) setGastos(todosGastos || []);
+        if (!errNovedades) setNovedades(todasNovedades || []);
+        if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
         setOrdenFamiliares(
           Object.fromEntries(
             (ordenFilas || []).map((r) => [
@@ -461,6 +486,25 @@ export function useLedgerData(rol) {
       );
       if (!errCol) setColaboradores(todosColaboradores || []);
       return true;
+    },
+    [esAnfitrion, rol]
+  );
+
+  const persistNovedades = useCallback(
+    async (next) => {
+      const anterior = novedadesRef.current;
+      setNovedades(next);
+      novedadesRef.current = next;
+      if (!esAnfitrion) return; // El tablón público nunca escribe, solo lee.
+      const { error } = await supabase.rpc("anfitrion_guardar_novedades", {
+        p_token: rol,
+        p_filas: next,
+      });
+      if (error) {
+        avisar("No se pudo guardar el tablón de novedades. Se deshace el cambio en pantalla.", error);
+        setNovedades(anterior);
+        novedadesRef.current = anterior;
+      }
     },
     [esAnfitrion, rol]
   );
@@ -791,5 +835,8 @@ export function useLedgerData(rol) {
     confirmarEmailColaboradorActualizado,
     activarModoPruebas,
     desactivarModoPruebas,
+    novedades,
+    persistNovedades,
+    tokenTablon,
   };
 }
