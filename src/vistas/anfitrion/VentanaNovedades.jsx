@@ -228,18 +228,20 @@ export function VentanaNovedades({ data }) {
                 ? "Cargando el enlace…"
                 : "Rellena primero la URL web en Configuración → URL web"
             }
-            className="boton-3d rounded-full p-1.5"
+            className="boton-3d rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium"
             style={{ color: C.goldClaro, opacity: enlace ? 1 : 0.4 }}
           >
-            {copiado ? <Check size={18} /> : <LinkIcon size={18} />}
+            {copiado ? <Check size={16} /> : <LinkIcon size={16} />}
+            Enlace
           </button>
           <button
             onClick={anadir}
             title="Nueva novedad"
-            className="boton-3d rounded-full p-1.5"
+            className="boton-3d rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium"
             style={{ color: C.goldClaro }}
           >
-            <Plus size={18} />
+            <Plus size={16} />
+            Nueva
           </button>
         </div>
       </div>

@@ -149,7 +149,7 @@ anfitrión y para cada colaborador logueado) lleva directo ahí y permite
 volver sin perder la sesión.
 
 Puede sonar **música ambiental** de fondo mientras el tablón está
-abierto (Configuración → Música ambiental, sube uno o varios archivos
+abierto (Configuración → Fondo musical, sube uno o varios archivos
 de audio a Supabase Storage). Un botón flotante la activa: los
 navegadores bloquean el audio automático sin que la persona interactúe
 antes con la página, así que nunca suena sola de verdad al cargar.

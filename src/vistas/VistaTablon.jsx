@@ -143,7 +143,7 @@ export function VistaTablon({ token }) {
   return (
     <div className="min-h-screen" style={{ background: C.paper }}>
       {/* Botón de música flotante: solo aparece si hay al menos una pista
-          subida (Configuración → Música ambiental). El primer clic de
+          subida (Configuración → Fondo musical). El primer clic de
           cada visitante es obligatorio -- ver el comentario de más arriba
           sobre el bloqueo de autoplay de los navegadores. */}
       {pistas.length > 0 && (
@@ -153,7 +153,7 @@ export function VistaTablon({ token }) {
             onClick={alternarMusica}
             className="fixed bottom-5 right-5 flex items-center justify-center rounded-full boton-3d"
             style={{ width: 52, height: 52, background: C.ink, color: C.paper, zIndex: 50 }}
-            title={sonando ? "Pausar la música" : "Activar música ambiental"}
+            title={sonando ? "Pausar la música" : "Activar fondo musical"}
           >
             {sonando ? <Pause size={20} /> : <Music size={20} />}
           </button>

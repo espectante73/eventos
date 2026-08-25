@@ -60,7 +60,7 @@ export function VentanaConfigMusica({ onCerrar }) {
   };
 
   return (
-    <VentanaFlotante clave="config-musica" titulo="Música ambiental" onCerrar={onCerrar}>
+    <VentanaFlotante clave="config-musica" titulo="Fondo musical" onCerrar={onCerrar}>
       <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
         Suena de fondo mientras alguien tiene abierto el tablón público de novedades (nunca
         en tu propia app de gestión). Con varias pistas subidas, van sonando una detrás de
