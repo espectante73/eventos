@@ -1724,6 +1724,27 @@ grant execute on function colaborador_obtener_token_tablon(uuid) to anon;
 -- Novedades del anfitrión, no en el tablón público.
 alter table evento add column if not exists "enlaceGrupoWhatsapp" text not null default '';
 
+-- Envoltorio SECURITY DEFINER para poder preguntar "¿eres el
+-- anfitrión?" desde una política de Storage -- las políticas de RLS se
+-- evalúan con los permisos de la propia conexión (authenticated), y
+-- `anfitriones` está deliberadamente cerrada a cal y canto (revoke all
+-- from anon, authenticated, más arriba) para que solo se pueda leer
+-- desde dentro de una función con privilegios elevados, nunca por
+-- consulta directa. Sin este envoltorio, cualquier política que
+-- escribiera "exists (select 1 from anfitriones ...)" directamente
+-- fallaba con "permission denied for table anfitriones" -- error real
+-- encontrado en producción el 2026-08-25 al probar la subida de la
+-- imagen de WhatsApp: el bucket llevaba vacío desde que se creó porque
+-- ninguna subida llegaba a pasar la política.
+create or replace function es_anfitrion()
+returns boolean
+language sql security definer set search_path = public, pg_temp
+as $$
+  select exists (select 1 from anfitriones a where a."authUserId" = auth.uid());
+$$;
+revoke execute on function es_anfitrion() from public;
+grant execute on function es_anfitrion() to authenticated;
+
 -- ---------- Música ambiental (Supabase Storage) ----------
 -- A diferencia de las imágenes (guardadas como base64 directamente en
 -- columnas de texto -- ver evento.imagen), un archivo de audio pesa
@@ -1755,7 +1776,7 @@ on storage.objects for insert
 to authenticated
 with check (
   bucket_id = 'musica-ambiental'
-  and exists (select 1 from anfitriones a where a."authUserId" = auth.uid())
+  and es_anfitrion()
 );
 
 drop policy if exists "musica_ambiental_solo_anfitrion_borra" on storage.objects;
@@ -1764,7 +1785,7 @@ on storage.objects for delete
 to authenticated
 using (
   bucket_id = 'musica-ambiental'
-  and exists (select 1 from anfitriones a where a."authUserId" = auth.uid())
+  and es_anfitrion()
 );
 
 -- ---------- Miniatura para WhatsApp/Facebook (og:image) ----------
@@ -1790,7 +1811,7 @@ on storage.objects for insert
 to authenticated
 with check (
   bucket_id = 'og-imagen'
-  and exists (select 1 from anfitriones a where a."authUserId" = auth.uid())
+  and es_anfitrion()
 );
 
 -- También hace falta UPDATE (no solo INSERT): se sube siempre con
@@ -1802,9 +1823,9 @@ on storage.objects for update
 to authenticated
 using (
   bucket_id = 'og-imagen'
-  and exists (select 1 from anfitriones a where a."authUserId" = auth.uid())
+  and es_anfitrion()
 )
 with check (
   bucket_id = 'og-imagen'
-  and exists (select 1 from anfitriones a where a."authUserId" = auth.uid())
+  and es_anfitrion()
 );

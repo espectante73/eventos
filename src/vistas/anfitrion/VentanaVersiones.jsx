@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "6.6",
+    cambios: [
+      "Arreglado de raíz: subir la imagen para WhatsApp o una pista de música ambiental nunca llegaba a funcionar (los dos buckets llevaban vacíos desde que se crearon) — un permiso mal puesto en la base de datos rechazaba la subida en silencio hasta este cambio.",
+    ],
+  },
+  {
     version: "6.5",
     cambios: [
       "Ventana Novedades rediseñada: sin texto explicativo, con \"Nueva novedad\" y \"Copiar enlace\" en la propia cabecera, y el enlace del grupo de WhatsApp en el pie — más limpia, más rápida de usar.",
