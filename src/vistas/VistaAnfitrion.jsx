@@ -4,8 +4,7 @@
 // 2026-08-08 (ver CLAUDE.md) — sigue siendo un único componente grande;
 // dividir su interior es un cambio aparte, deliberadamente pospuesto (ver
 // CLAUDE.md, Fase 4).
-import { useState } from "react";
-import { createPortal } from "react-dom";
+import { useState, useEffect } from "react";
 import { generarInvitacionImagen } from "../lib/imagenInvitacion";
 import { construirEnlaceTablon } from "../lib/url";
 import { usePopupWindow } from "../lib/usePopupWindow";
@@ -42,11 +41,19 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   // forma SÍNCRONA dentro del propio clic del menú; si se llamara más
   // tarde, algunos navegadores la bloquearían por no venir de una acción
   // directa del usuario.
-  const { abrir: abrirNovedades, contenedor: contenedorNovedades } = usePopupWindow({
-    nombreVentana: "novedades-evento",
-    ancho: 640,
-    alto: 800,
-  });
+  const {
+    abrir: abrirNovedades,
+    actualizar: actualizarNovedades,
+    abierta: novedadesAbierta,
+  } = usePopupWindow({ nombreVentana: "novedades-evento", ancho: 640, alto: 800 });
+  // Repinta el contenido de la ventana (root propio, no un createPortal
+  // -- ver el porqué en usePopupWindow.js) cada vez que `data` cambie,
+  // mientras siga abierta -- así una novedad guardada, o el refresco
+  // silencioso de cada minuto, se reflejan ahí sin tener que cerrarla y
+  // volver a abrirla.
+  useEffect(() => {
+    if (novedadesAbierta) actualizarNovedades(<VentanaNovedades data={data} />);
+  }, [novedadesAbierta, actualizarNovedades, data]);
 
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
   // por colaborador — así se sabe exactamente cuáles son los nuevos. Los
@@ -395,12 +402,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
       {abierto.versiones && (
         <VentanaVersiones onCerrar={() => toggle("versiones")} />
       )}
-
-      {/* Novedades: ventana de verdad del sistema operativo, no una
-          VentanaFlotante -- ver el porqué en usePopupWindow.js. El
-          portal se renderiza aquí, pero el <div> de destino vive dentro
-          del document de esa otra ventana. */}
-      {contenedorNovedades && createPortal(<VentanaNovedades data={data} />, contenedorNovedades)}
 
       {previewInvitacion && (
         <ModalFlotante

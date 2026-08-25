@@ -5,7 +5,7 @@
 // cualquiera con el enlace ve las novedades publicadas, sin login ni
 // cuenta — a petición del usuario, 2026-08-25.
 import { useState, useRef, useEffect } from "react";
-import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle } from "lucide-react";
+import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
 import { formatearFecha } from "../../lib/formato";
@@ -55,7 +55,7 @@ function prefijarLineas(textarea, valor, prefijo, onCambio) {
   });
 }
 
-function NovedadCard({ n, onCambiar, onEliminar }) {
+function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar }) {
   const [titulo, setTitulo] = useState(n.titulo);
   const [cuerpo, setCuerpo] = useState(n.cuerpo);
   const cuerpoRef = useRef(null);
@@ -100,8 +100,18 @@ function NovedadCard({ n, onCambiar, onEliminar }) {
   };
 
   return (
-    <div className="p-3 rounded space-y-2" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-      <div className="flex items-start justify-between gap-2">
+    <div className="rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+      <div className="flex items-center gap-2 p-3">
+        <button
+          onClick={onAlternar}
+          title={expandida ? "Plegar" : "Desplegar para editar el texto"}
+          className="p-0.5 flex-shrink-0"
+        >
+          <ChevronDown
+            size={16}
+            style={{ color: C.gold, transform: expandida ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
+          />
+        </button>
         <input
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
@@ -110,49 +120,59 @@ function NovedadCard({ n, onCambiar, onEliminar }) {
           className="flex-1"
           style={{ ...inputStyle, fontFamily: "'Fraunces', serif", fontWeight: 600 }}
         />
-        <button onClick={() => onEliminar(n.id)} title="Eliminar esta novedad" className="p-1">
+        {!n.publicada && (
+          <span
+            className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
+            style={{ background: C.paperDark, color: C.charcoal, opacity: 0.7 }}
+          >
+            Borrador
+          </span>
+        )}
+        <span className="text-xs whitespace-nowrap" style={{ color: C.charcoal, opacity: 0.5 }}>
+          {formatearFecha(String(n.creadaEn).slice(0, 10))}
+        </span>
+        <button onClick={() => onEliminar(n.id)} title="Eliminar esta novedad" className="p-1 flex-shrink-0">
           <Trash2 size={16} style={{ color: C.wax }} />
         </button>
       </div>
-      <div className="flex items-center gap-1">
-        {botonFormato(Bold, "b", "Negrita")}
-        {botonFormato(Italic, "i", "Cursiva")}
-        {botonFormato(Underline, "u", "Subrayado")}
-        <button
-          type="button"
-          title="Viñeta (en la línea actual, o en cada línea seleccionada)"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={anadirVineta}
-          className="p-1.5 rounded"
-          style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-        >
-          <List size={13} />
-        </button>
-      </div>
-      <textarea
-        ref={cuerpoRef}
-        value={cuerpo}
-        onChange={(e) => setCuerpo(e.target.value)}
-        onKeyDown={manejarTeclado}
-        onBlur={() => cuerpo !== n.cuerpo && onCambiar({ ...n, cuerpo })}
-        rows={3}
-        placeholder="Texto de la novedad — Tab sangra, el botón de lista añade viñetas, selecciona texto y usa los botones para darle formato"
-        className="w-full"
-        style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
-      />
-      <div className="flex items-center justify-between">
-        <label className="flex items-center gap-1.5 text-xs" style={{ color: C.charcoal, opacity: 0.75 }}>
-          <input
-            type="checkbox"
-            checked={n.publicada}
-            onChange={(e) => onCambiar({ ...n, publicada: e.target.checked })}
+      {expandida && (
+        <div className="px-3 pb-3 space-y-2" style={{ borderTop: `1px solid ${C.line}` }}>
+          <div className="flex items-center gap-1 pt-2">
+            {botonFormato(Bold, "b", "Negrita")}
+            {botonFormato(Italic, "i", "Cursiva")}
+            {botonFormato(Underline, "u", "Subrayado")}
+            <button
+              type="button"
+              title="Viñeta (en la línea actual, o en cada línea seleccionada)"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={anadirVineta}
+              className="p-1.5 rounded"
+              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+            >
+              <List size={13} />
+            </button>
+          </div>
+          <textarea
+            ref={cuerpoRef}
+            value={cuerpo}
+            onChange={(e) => setCuerpo(e.target.value)}
+            onKeyDown={manejarTeclado}
+            onBlur={() => cuerpo !== n.cuerpo && onCambiar({ ...n, cuerpo })}
+            rows={3}
+            placeholder="Texto de la novedad — Tab sangra, el botón de lista añade viñetas, selecciona texto y usa los botones para darle formato"
+            className="w-full"
+            style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
           />
-          Publicada (visible en el tablón)
-        </label>
-        <span className="text-xs" style={{ color: C.charcoal, opacity: 0.5 }}>
-          {formatearFecha(String(n.creadaEn).slice(0, 10))}
-        </span>
-      </div>
+          <label className="flex items-center gap-1.5 text-xs" style={{ color: C.charcoal, opacity: 0.75 }}>
+            <input
+              type="checkbox"
+              checked={n.publicada}
+              onChange={(e) => onCambiar({ ...n, publicada: e.target.checked })}
+            />
+            Publicada (visible en el tablón)
+          </label>
+        </div>
+      )}
     </div>
   );
 }
@@ -178,11 +198,25 @@ export function VentanaNovedades({ data }) {
 
   const enlace = construirEnlaceTablon(evento.urlPublica, tokenTablon);
 
+  // Plegadas por defecto -- con 5+ novedades ya escritas, tenerlas todas
+  // desplegadas a la vez era un muro de texto imposible de repasar de un
+  // vistazo (mismo problema que se cuidó de evitar en el tablón
+  // público). Una recién creada se despliega sola: hay que escribir en
+  // ella, no tendría sentido que naciera plegada.
+  const [idsExpandidos, setIdsExpandidos] = useState(() => new Set());
+  const alternarExpandida = (id) => {
+    setIdsExpandidos((prev) => {
+      const siguiente = new Set(prev);
+      if (siguiente.has(id)) siguiente.delete(id);
+      else siguiente.add(id);
+      return siguiente;
+    });
+  };
+
   const anadir = () => {
-    persistNovedades([
-      { id: uid(), titulo: "", cuerpo: "", publicada: true, creadaEn: new Date().toISOString() },
-      ...novedades,
-    ]);
+    const nueva = { id: uid(), titulo: "", cuerpo: "", publicada: true, creadaEn: new Date().toISOString() };
+    persistNovedades([nueva, ...novedades]);
+    setIdsExpandidos((prev) => new Set(prev).add(nueva.id));
   };
 
   const cambiar = (siguiente) => {
@@ -248,7 +282,14 @@ export function VentanaNovedades({ data }) {
 
       <div className="p-4 space-y-2" style={{ flex: 1, overflowY: "auto" }}>
         {novedades.map((n) => (
-          <NovedadCard key={n.id} n={n} onCambiar={cambiar} onEliminar={eliminar} />
+          <NovedadCard
+            key={n.id}
+            n={n}
+            onCambiar={cambiar}
+            onEliminar={eliminar}
+            expandida={idsExpandidos.has(n.id)}
+            onAlternar={() => alternarExpandida(n.id)}
+          />
         ))}
         {novedades.length === 0 && (
           <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>

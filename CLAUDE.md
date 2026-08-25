@@ -974,3 +974,40 @@ nunca usado antes aquí. Implementado en `lib/usePopupWindow.js`:
 
 Reordenados también los botones de la portada (Cerrar sesión →
 Novedades → Mi cuenta, de arriba a abajo) a petición del usuario.
+
+## 2026-08-25 (cuarta tanda): bug real de createPortal entre ventanas + plegado en Novedades
+
+**Bug real reportado por el usuario: los botones de la cabecera
+(Enlace/Nueva) de la ventana emergente no respondían.** Causa raíz
+confirmada: la primera versión de `usePopupWindow.js` usaba
+`createPortal` desde el árbol de React de la pestaña principal hacia
+un `<div>` dentro del `document` de la ventana emergente. Esto mueve
+DÓNDE se pintan los nodos, pero React engancha su sistema de eventos
+sintéticos en el contenedor raíz de la pestaña principal (no en
+`document`) -- los clics dentro de la ventana emergente son eventos
+nativos de OTRO `document` por completo, y nunca llegan a burbujear
+hasta ese escuchador. Resultado: los nodos se veían bien, pero ningún
+`onClick` se disparaba nunca.
+
+**Corregido con un `createRoot()` propio** dentro del `document` de la
+ventana emergente (en vez de un portal desde el root principal) --
+`usePopupWindow.js` ahora expone `actualizar(hijos)`, que llama a
+`raiz.render(hijos)` sobre ESE root. `VistaAnfitrion.jsx` la llama
+desde un `useEffect` que depende de `data` (y de si la ventana sigue
+abierta), para que el contenido se mantenga al día con cada refresco
+sin tener que cerrar y volver a abrir la ventana. El estado local de
+React (p.ej. qué novedades están plegadas) sobrevive a estos repintados
+porque siguen siendo el MISMO componente en la MISMA posición del árbol
+-- React reconcilia en vez de desmontar y remontar.
+
+**Plegado por novedad, en las dos ventanas.** El usuario señaló que con
+varias novedades escritas, tenerlas todas desplegadas de golpe (tanto
+en el editor del anfitrión como, potencialmente, en el tablón público)
+sería un muro de texto ilegible. El tablón público (`VistaTablon.jsx`)
+YA tenía este acordeón desde que se construyó (la más reciente empieza
+abierta, el resto plegado) -- se confirmó que seguía funcionando,
+sin necesidad de tocarlo. Lo que sí faltaba era en el propio editor:
+`VentanaNovedades.jsx` ahora pliega cada tarjeta por defecto (mostrando
+solo título, fecha, y una etiqueta "Borrador" si no está publicada),
+con una nueva desplegándose sola al crearla (hay que escribir en ella,
+no tendría sentido que naciera plegada).
