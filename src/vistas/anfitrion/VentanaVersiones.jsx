@@ -49,6 +49,8 @@ const HISTORIAL_VERSIONES = [
       "Reordenados los botones de la portada: Cerrar sesión, Novedades y Mi cuenta, de arriba a abajo.",
       "Arreglado: los botones de la cabecera de Novedades (Enlace/Nueva) no respondían al pulsarlos.",
       "Cada novedad se puede plegar/desplegar por separado (como ya pasaba en el tablón público) — con varias escritas, ya no hace falta ver todo el texto de golpe para encontrar la que buscas.",
+      "Solo una novedad abierta a la vez, en Novedades y en el tablón público — al desplegar una se pliegan las demás solas.",
+      "El botón 'Enlace' de Novedades ahora copia el enlace del tablón Y abre el grupo de WhatsApp en el mismo clic — solo falta pegarlo y darle a enviar (ninguna web puede hacer eso último por ti, WhatsApp no lo permite).",
     ],
   },
   {

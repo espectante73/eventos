@@ -23,7 +23,10 @@ export function VistaTablon({ token }) {
   const [estado, setEstado] = useState("cargando");
   const [evento, setEvento] = useState(null);
   const [novedades, setNovedades] = useState([]);
-  const [abiertas, setAbiertas] = useState(() => new Set());
+  // Solo una novedad abierta a la vez -- a petición del usuario: con 5+
+  // novedades, tenerlas todas desplegadas de golpe (o ir abriendo varias
+  // sin plegar las anteriores) era un muro de texto imposible de leer.
+  const [idAbierto, setIdAbierto] = useState(null);
 
   // ---------- Música ambiental ----------
   // Los navegadores bloquean el audio automático hasta que la propia
@@ -78,7 +81,7 @@ export function VistaTablon({ token }) {
       if (primeraVez && novedadesFilas && novedadesFilas[0]) {
         // La más reciente empieza abierta — el resto, plegado, para que
         // "todo el texto" no se vea como un bloque grande de lectura.
-        setAbiertas(new Set([novedadesFilas[0].id]));
+        setIdAbierto(novedadesFilas[0].id);
       }
       setEstado("listo");
     },
@@ -102,12 +105,7 @@ export function VistaTablon({ token }) {
   }, [cargar]);
 
   const alternar = (id) => {
-    setAbiertas((prev) => {
-      const siguiente = new Set(prev);
-      if (siguiente.has(id)) siguiente.delete(id);
-      else siguiente.add(id);
-      return siguiente;
-    });
+    setIdAbierto((actual) => (actual === id ? null : id));
   };
 
   if (estado === "cargando") {
@@ -202,7 +200,7 @@ export function VistaTablon({ token }) {
 
         <div className="space-y-2">
           {novedades.map((n) => {
-            const abierta = abiertas.has(n.id);
+            const abierta = idAbierto === n.id;
             return (
               <div key={n.id} className="rounded-lg overflow-hidden" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
                 <button

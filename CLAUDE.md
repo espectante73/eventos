@@ -1011,3 +1011,30 @@ sin necesidad de tocarlo. Lo que sí faltaba era en el propio editor:
 solo título, fecha, y una etiqueta "Borrador" si no está publicada),
 con una nueva desplegándose sola al crearla (hay que escribir en ella,
 no tendría sentido que naciera plegada).
+
+## 2026-08-25 (quinta tanda): acordeón de una sola + límite real explicado (WhatsApp)
+
+**"Al desplegar una novedad se plieguen las demás"** — el Set de ids
+plegables (permitía varias abiertas a la vez) se cambió a un único id
+(`idExpandido`/`idAbierto`, `null` si ninguna) tanto en
+`VentanaNovedades.jsx` como en `VistaTablon.jsx` — pedido explícito del
+usuario, aplicado a las dos ventanas por coherencia (era el mismo
+problema de fondo en las dos).
+
+**Botón "Enlace": copiar + abrir grupo, no "enviar".** El usuario pidió
+que el botón copiara el enlace, abriera el grupo, lo pegara y lo
+enviara. Las dos primeras partes son perfectamente posibles y se
+implementaron (`copiarYAbrirGrupo` en `VentanaNovedades.jsx`); las dos
+últimas NO lo son y se explicó por qué en vez de fingir hacerlo o
+callarlo: ninguna página web tiene ninguna vía para escribir dentro del
+cuadro de mensaje de WhatsApp ni pulsar su botón de enviar -- es una
+aplicación de otra empresa, sin ninguna API pública para eso (ni
+`wa.me` ni `chat.whatsapp.com` lo permiten para un grupo ya existente al
+que ya perteneces). El clic queda reducido a "copiar + abrir", dejando
+solo un Ctrl/Cmd+V + Enter manual como paso final -- lo más cerca de la
+petición original que la propia WhatsApp deja llegar desde fuera.
+
+⚠️ Mismo cuidado que en `usePopupWindow.js`: `window.open(enlaceGrupo)`
+se llama ANTES del `.then()` del portapapeles, nunca después -- si se
+abriera tras esperar esa promesa, algunos navegadores ya no lo
+considerarían una acción directa del clic original y lo bloquearían.

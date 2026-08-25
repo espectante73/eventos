@@ -198,25 +198,21 @@ export function VentanaNovedades({ data }) {
 
   const enlace = construirEnlaceTablon(evento.urlPublica, tokenTablon);
 
-  // Plegadas por defecto -- con 5+ novedades ya escritas, tenerlas todas
-  // desplegadas a la vez era un muro de texto imposible de repasar de un
-  // vistazo (mismo problema que se cuidó de evitar en el tablón
-  // público). Una recién creada se despliega sola: hay que escribir en
-  // ella, no tendría sentido que naciera plegada.
-  const [idsExpandidos, setIdsExpandidos] = useState(() => new Set());
+  // Plegadas por defecto, y solo UNA desplegada a la vez -- a petición
+  // del usuario: con 5+ novedades ya escritas, tenerlas todas
+  // desplegadas de golpe era un muro de texto imposible de repasar (y
+  // desplegar una segunda sin plegar la primera solo movía el problema
+  // en vez de resolverlo). Una recién creada se despliega sola, plegando
+  // cualquier otra que estuviera abierta.
+  const [idExpandido, setIdExpandido] = useState(null);
   const alternarExpandida = (id) => {
-    setIdsExpandidos((prev) => {
-      const siguiente = new Set(prev);
-      if (siguiente.has(id)) siguiente.delete(id);
-      else siguiente.add(id);
-      return siguiente;
-    });
+    setIdExpandido((actual) => (actual === id ? null : id));
   };
 
   const anadir = () => {
     const nueva = { id: uid(), titulo: "", cuerpo: "", publicada: true, creadaEn: new Date().toISOString() };
     persistNovedades([nueva, ...novedades]);
-    setIdsExpandidos((prev) => new Set(prev).add(nueva.id));
+    setIdExpandido(nueva.id);
   };
 
   const cambiar = (siguiente) => {
@@ -227,14 +223,29 @@ export function VentanaNovedades({ data }) {
     persistNovedades(novedades.filter((n) => n.id !== id));
   };
 
-  const copiarEnlace = async () => {
-    try {
-      await navigator.clipboard.writeText(enlace);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    } catch (_) {
-      window.prompt("Copia el enlace manualmente:", enlace);
+  // Copia el enlace del tablón Y abre el grupo de WhatsApp en un solo
+  // clic -- a petición del usuario. Techo real que no se puede saltar:
+  // ninguna web (esta ni ninguna otra) puede escribir dentro del cuadro
+  // de mensaje de WhatsApp ni pulsar "Enviar" por ti -- es una app ajena
+  // sin ninguna puerta para eso. Lo máximo posible es dejarte a un
+  // Ctrl/Cmd+V + Enter de terminarlo, en vez de tener que ir a copiar el
+  // enlace a otro sitio primero.
+  //
+  // window.open() va ANTES que el await de portapapeles, no después: si
+  // se abriera tras un await, algunos navegadores (Safari sobre todo) ya
+  // no lo cuentan como una acción directa del usuario y lo bloquean en
+  // silencio.
+  const copiarYAbrirGrupo = () => {
+    if (evento.enlaceGrupoWhatsapp) {
+      window.open(evento.enlaceGrupoWhatsapp, "_blank", "noopener,noreferrer");
     }
+    navigator.clipboard.writeText(enlace).then(
+      () => {
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 2500);
+      },
+      () => window.prompt("Copia el enlace manualmente:", enlace)
+    );
   };
 
   return (
@@ -251,13 +262,15 @@ export function VentanaNovedades({ data }) {
         </h3>
         <div className="flex items-center gap-2">
           <button
-            onClick={copiarEnlace}
+            onClick={copiarYAbrirGrupo}
             disabled={!enlace}
             title={
               enlace
                 ? copiado
-                  ? "¡Copiado!"
-                  : "Copiar el enlace del tablón público"
+                  ? "¡Copiado! Pégalo (Ctrl/Cmd+V) en el grupo y dale a enviar"
+                  : evento.enlaceGrupoWhatsapp
+                  ? "Copia el enlace y abre el grupo de WhatsApp — solo te falta pegarlo y enviarlo"
+                  : "Copia el enlace (pega antes el del grupo, en el pie, para que también lo abra)"
                 : evento.urlPublica
                 ? "Cargando el enlace…"
                 : "Rellena primero la URL web en Configuración → URL web"
@@ -287,7 +300,7 @@ export function VentanaNovedades({ data }) {
             n={n}
             onCambiar={cambiar}
             onEliminar={eliminar}
-            expandida={idsExpandidos.has(n.id)}
+            expandida={idExpandido === n.id}
             onAlternar={() => alternarExpandida(n.id)}
           />
         ))}
