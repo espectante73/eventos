@@ -9,7 +9,7 @@ import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, M
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
 import { formatearFecha } from "../../lib/formato";
-import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { construirEnlaceTablon } from "../../lib/url";
 
 // Envuelve la selección actual del textarea con <tag>...</tag> (o la
 // inserta vacía si no hay nada seleccionado) -- mismo criterio de "HTML
@@ -157,7 +157,14 @@ function NovedadCard({ n, onCambiar, onEliminar }) {
   );
 }
 
-export function VentanaNovedades({ data, onCerrar }) {
+// Contenido de la ventana Novedades -- vive en una ventana de verdad del
+// sistema operativo (window.open, ver lib/usePopupWindow.js), no en una
+// VentanaFlotante normal como el resto de la app: a petición del
+// usuario, 2026-08-25, para poder agrandarla o llevarla a otro monitor
+// sin las limitaciones de una ventana flotante dentro de la pestaña. Por
+// eso no lleva cabecera arrastrable ni botón de cerrar propio -- la
+// ventana del sistema operativo ya trae los suyos.
+export function VentanaNovedades({ data }) {
   const { evento, persistEvento, novedades, persistNovedades, tokenTablon } = data;
   const [copiado, setCopiado] = useState(false);
   // Enlace de INVITACIÓN al grupo (chat.whatsapp.com/XXXX) -- a propósito
@@ -169,10 +176,7 @@ export function VentanaNovedades({ data, onCerrar }) {
   const [enlaceWhatsapp, setEnlaceWhatsapp] = useState(evento.enlaceGrupoWhatsapp || "");
   useEffect(() => setEnlaceWhatsapp(evento.enlaceGrupoWhatsapp || ""), [evento.enlaceGrupoWhatsapp]);
 
-  const enlace =
-    tokenTablon && evento.urlPublica
-      ? `${evento.urlPublica.replace(/\/$/, "")}?tablon=${tokenTablon}`
-      : "";
+  const enlace = construirEnlaceTablon(evento.urlPublica, tokenTablon);
 
   const anadir = () => {
     persistNovedades([
@@ -200,99 +204,47 @@ export function VentanaNovedades({ data, onCerrar }) {
   };
 
   return (
-    <VentanaFlotante clave="novedades" titulo="Novedades" onCerrar={onCerrar}>
-      <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
-        Tablón público de solo lectura para los ya confirmados — compártelo una vez en el
-        grupo de WhatsApp en vez de mandar avisos largos ahí. La fecha/hora/lugar del
-        evento aparecen fijos arriba de las novedades; nadie sin el enlace lo encuentra.
-      </p>
-
+    <div
+      className="flex flex-col"
+      style={{ height: "100%", background: C.paper, fontFamily: "'Inter', sans-serif" }}
+    >
       <div
-        className="flex items-center gap-2 p-2 rounded mb-3"
-        style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
+        className="panel-flotante-cristal flex items-center justify-between px-4 py-3"
+        style={{ flexShrink: 0 }}
       >
-        <LinkIcon size={14} style={{ color: C.gold, flexShrink: 0 }} />
-        {enlace ? (
-          <>
-            <span
-              className="flex-1 text-xs truncate"
-              style={{ color: C.charcoal, fontFamily: "'IBM Plex Mono', monospace" }}
-              title={enlace}
-            >
-              {enlace}
-            </span>
-            <button
-              onClick={copiarEnlace}
-              className="text-xs px-2 py-1 rounded whitespace-nowrap flex items-center gap-1"
-              style={{ background: copiado ? C.ink : "transparent", border: `1px solid ${C.ink}`, color: copiado ? C.paper : C.ink }}
-            >
-              {copiado ? (
-                <>
-                  <Check size={12} /> Copiado
-                </>
-              ) : (
-                "Copiar enlace"
-              )}
-            </button>
-          </>
-        ) : (
-          <span className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
-            {evento.urlPublica
-              ? "Cargando el enlace…"
-              : "Rellena primero la URL web en Configuración → URL web."}
-          </span>
-        )}
-      </div>
-
-      <div
-        className="p-2 rounded mb-3"
-        style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
-      >
-        <label className="text-xs block mb-1" style={{ color: C.charcoal, opacity: 0.75 }}>
-          Enlace de invitación al grupo de WhatsApp (WhatsApp → grupo → Info del grupo →
-          Invitar mediante enlace) — para avisar rápido "hay novedades nuevas" sin dejar que
-          te escriban a ti directamente.
-        </label>
+        <h3 className="text-lg" style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}>
+          Novedades
+        </h3>
         <div className="flex items-center gap-2">
-          <input
-            value={enlaceWhatsapp}
-            onChange={(e) => setEnlaceWhatsapp(e.target.value)}
-            onBlur={() =>
-              enlaceWhatsapp !== (evento.enlaceGrupoWhatsapp || "") &&
-              persistEvento({ ...evento, enlaceGrupoWhatsapp: enlaceWhatsapp })
+          <button
+            onClick={copiarEnlace}
+            disabled={!enlace}
+            title={
+              enlace
+                ? copiado
+                  ? "¡Copiado!"
+                  : "Copiar el enlace del tablón público"
+                : evento.urlPublica
+                ? "Cargando el enlace…"
+                : "Rellena primero la URL web en Configuración → URL web"
             }
-            placeholder="https://chat.whatsapp.com/XXXXXXXXXXXX"
-            className="flex-1"
-            style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
-          />
-          <a
-            href={evento.enlaceGrupoWhatsapp || undefined}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => !evento.enlaceGrupoWhatsapp && e.preventDefault()}
-            className="text-xs px-2 py-1.5 rounded whitespace-nowrap flex items-center gap-1"
-            style={{
-              background: evento.enlaceGrupoWhatsapp ? "#25D366" : C.line,
-              color: evento.enlaceGrupoWhatsapp ? "#fff" : C.charcoal,
-              opacity: evento.enlaceGrupoWhatsapp ? 1 : 0.6,
-              cursor: evento.enlaceGrupoWhatsapp ? "pointer" : "not-allowed",
-            }}
-            title={evento.enlaceGrupoWhatsapp ? "Abrir el grupo en WhatsApp" : "Pega antes el enlace del grupo"}
+            className="boton-3d rounded-full p-1.5"
+            style={{ color: C.goldClaro, opacity: enlace ? 1 : 0.4 }}
           >
-            <MessageCircle size={13} /> Abrir grupo
-          </a>
+            {copiado ? <Check size={18} /> : <LinkIcon size={18} />}
+          </button>
+          <button
+            onClick={anadir}
+            title="Nueva novedad"
+            className="boton-3d rounded-full p-1.5"
+            style={{ color: C.goldClaro }}
+          >
+            <Plus size={18} />
+          </button>
         </div>
       </div>
 
-      <button
-        onClick={anadir}
-        className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium mb-3"
-        style={{ background: C.ink, color: C.paper }}
-      >
-        <Plus size={14} /> Nueva novedad
-      </button>
-
-      <div className="space-y-2">
+      <div className="p-4 space-y-2" style={{ flex: 1, overflowY: "auto" }}>
         {novedades.map((n) => (
           <NovedadCard key={n.id} n={n} onCambiar={cambiar} onEliminar={eliminar} />
         ))}
@@ -302,6 +254,41 @@ export function VentanaNovedades({ data, onCerrar }) {
           </p>
         )}
       </div>
-    </VentanaFlotante>
+
+      <div
+        className="flex items-center gap-2 px-4 py-3"
+        style={{ borderTop: `1px solid ${C.line}`, flexShrink: 0 }}
+      >
+        <MessageCircle size={14} style={{ color: "#25D366", flexShrink: 0 }} />
+        <input
+          value={enlaceWhatsapp}
+          onChange={(e) => setEnlaceWhatsapp(e.target.value)}
+          onBlur={() =>
+            enlaceWhatsapp !== (evento.enlaceGrupoWhatsapp || "") &&
+            persistEvento({ ...evento, enlaceGrupoWhatsapp: enlaceWhatsapp })
+          }
+          placeholder="Enlace de invitación al grupo de WhatsApp"
+          title="WhatsApp → grupo → Info del grupo → Invitar mediante enlace"
+          className="flex-1"
+          style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
+        />
+        <a
+          href={evento.enlaceGrupoWhatsapp || undefined}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(e) => !evento.enlaceGrupoWhatsapp && e.preventDefault()}
+          className="text-xs px-2 py-1.5 rounded whitespace-nowrap flex items-center gap-1"
+          style={{
+            background: evento.enlaceGrupoWhatsapp ? "#25D366" : C.line,
+            color: evento.enlaceGrupoWhatsapp ? "#fff" : C.charcoal,
+            opacity: evento.enlaceGrupoWhatsapp ? 1 : 0.6,
+            cursor: evento.enlaceGrupoWhatsapp ? "pointer" : "not-allowed",
+          }}
+          title={evento.enlaceGrupoWhatsapp ? "Abrir el grupo en WhatsApp" : "Pega antes el enlace del grupo"}
+        >
+          Abrir grupo
+        </a>
+      </div>
+    </div>
   );
 }

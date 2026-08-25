@@ -5,8 +5,10 @@
 // dividir su interior es un cambio aparte, deliberadamente pospuesto (ver
 // CLAUDE.md, Fase 4).
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { generarInvitacionImagen } from "../lib/imagenInvitacion";
 import { construirEnlaceTablon } from "../lib/url";
+import { usePopupWindow } from "../lib/usePopupWindow";
 import { C } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
@@ -34,6 +36,17 @@ import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion }) {
   const { evento, colaboradores, invitados, persistInvitados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, tokenTablon } = data;
   const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
+  // Ventana Novedades: ventana de verdad del sistema operativo, no una
+  // VentanaFlotante -- ver lib/usePopupWindow.js. `abrir` se pasa hasta
+  // DesplegableSecciones.jsx (a través de Portada) para que se llame de
+  // forma SÍNCRONA dentro del propio clic del menú; si se llamara más
+  // tarde, algunos navegadores la bloquearían por no venir de una acción
+  // directa del usuario.
+  const { abrir: abrirNovedades, contenedor: contenedorNovedades } = usePopupWindow({
+    nombreVentana: "novedades-evento",
+    ancho: 640,
+    alto: 800,
+  });
 
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
   // por colaborador — así se sabe exactamente cuáles son los nuevos. Los
@@ -244,6 +257,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         anfitrionToken={anfitrionToken}
         onCerrarSesion={onCerrarSesion}
         enlaceTablon={enlaceTablon}
+        abrirNovedades={abrirNovedades}
       />
 
       {/* Los 3 recuadros de resumen (Lista global/Tentativa/Confirmados)
@@ -382,10 +396,11 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         <VentanaVersiones onCerrar={() => toggle("versiones")} />
       )}
 
-      {/* Novedades (tablón público) */}
-      {abierto.novedades && (
-        <VentanaNovedades data={data} onCerrar={() => toggle("novedades")} />
-      )}
+      {/* Novedades: ventana de verdad del sistema operativo, no una
+          VentanaFlotante -- ver el porqué en usePopupWindow.js. El
+          portal se renderiza aquí, pero el <div> de destino vive dentro
+          del document de esa otra ventana. */}
+      {contenedorNovedades && createPortal(<VentanaNovedades data={data} />, contenedorNovedades)}
 
       {previewInvitacion && (
         <ModalFlotante

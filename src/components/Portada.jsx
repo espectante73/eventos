@@ -69,6 +69,11 @@ export function Portada({
   // disponible (token sin cargar, o falta la URL pública en
   // Configuración) -- el botón simplemente no aparece.
   enlaceTablon,
+  // Abre la ventana Novedades (ventana de verdad del sistema operativo,
+  // no una VentanaFlotante -- ver lib/usePopupWindow.js). Solo lo usa
+  // DesplegableSecciones (menú del anfitrión); VistaColaborador.jsx no
+  // lo pasa, así que ese menú nunca llega a montarse ahí.
+  abrirNovedades,
   // `botonExtra`: para cuando esta Portada la usa alguien que NO es el
   // anfitrión editando (p.ej. VistaColaborador.jsx) -- en vez del
   // desplegable "Abrir sección…" (editable+toggle), se puede pasar aquí
@@ -141,7 +146,15 @@ export function Portada({
             colaborador logueado, sin tocar nada en VistaColaborador.jsx
             -- a petición del usuario, 2026-08-21 (Fase C). */}
         {onCerrarSesion && (
+          // Orden de arriba a abajo a petición del usuario, 2026-08-25:
+          // Cerrar sesión, Novedades, Mi cuenta.
           <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+            <button
+              onClick={onCerrarSesion}
+              className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
+            >
+              <LogOut size={16} /> Cerrar sesión
+            </button>
             {enlaceTablon && (
               <a
                 href={enlaceTablon}
@@ -152,12 +165,6 @@ export function Portada({
               </a>
             )}
             <MiCuenta />
-            <button
-              onClick={onCerrarSesion}
-              className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
-            >
-              <LogOut size={16} /> Cerrar sesión
-            </button>
           </div>
         )}
 
@@ -173,6 +180,7 @@ export function Portada({
             colaboradores={colaboradores || []}
             onCambiarRol={onCambiarRol}
             anfitrionToken={anfitrionToken}
+            abrirNovedades={abrirNovedades}
             posicion={{ bottom: "9%", right: 16 }}
           />
         )}

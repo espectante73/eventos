@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "6.5",
+    cambios: [
+      "Ventana Novedades rediseñada: sin texto explicativo, con \"Nueva novedad\" y \"Copiar enlace\" en la propia cabecera, y el enlace del grupo de WhatsApp en el pie — más limpia, más rápida de usar.",
+      "Novedades se abre ahora en una ventana de verdad, aparte del navegador — se puede agrandar o llevar a otro monitor sin las limitaciones de las demás ventanas de la app.",
+      "Reordenados los botones de la portada: Cerrar sesión, Novedades y Mi cuenta, de arriba a abajo.",
+    ],
+  },
+  {
     version: "6.4",
     cambios: [
       'Botón "Novedades" en la portada, tanto para el anfitrión como para cada colaborador — abre el tablón público en un clic y se puede volver atrás sin perder la sesión.',
