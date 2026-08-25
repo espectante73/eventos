@@ -231,14 +231,19 @@ export function VentanaNovedades({ data }) {
   // Ctrl/Cmd+V + Enter de terminarlo, en vez de tener que ir a copiar el
   // enlace a otro sitio primero.
   //
-  // window.open() va ANTES que el await de portapapeles, no después: si
-  // se abriera tras un await, algunos navegadores (Safari sobre todo) ya
-  // no lo cuentan como una acción directa del usuario y lo bloquean en
-  // silencio.
+  // ⚠️ El portapapeles va ANTES que window.open(), no después -- bug
+  // real encontrado en producción el 2026-08-25: al revés, window.open()
+  // le quita el foco a esta pestaña (pasa a la del grupo) ANTES de que
+  // termine la escritura en el portapapeles, y escribir en el
+  // portapapeles sin foco falla en silencio en la mayoría de
+  // navegadores (ninguna alerta, ningún error -- solo se queda tal cual
+  // estuviera antes, así que el usuario pegaba lo último que tuviera
+  // copiado de otra cosa). navigator.clipboard.writeText() se dispara
+  // de forma síncrona dentro del propio clic (aunque devuelva una
+  // promesa) -- llamarla primero, con el foco todavía aquí, y solo
+  // luego abrir la ventana, sigue contando como la misma acción directa
+  // del usuario a efectos de bloqueo de emergentes.
   const copiarYAbrirGrupo = () => {
-    if (evento.enlaceGrupoWhatsapp) {
-      window.open(evento.enlaceGrupoWhatsapp, "_blank", "noopener,noreferrer");
-    }
     navigator.clipboard.writeText(enlace).then(
       () => {
         setCopiado(true);
@@ -246,6 +251,9 @@ export function VentanaNovedades({ data }) {
       },
       () => window.prompt("Copia el enlace manualmente:", enlace)
     );
+    if (evento.enlaceGrupoWhatsapp) {
+      window.open(evento.enlaceGrupoWhatsapp, "_blank", "noopener,noreferrer");
+    }
   };
 
   return (

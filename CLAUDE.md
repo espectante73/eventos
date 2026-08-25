@@ -1077,3 +1077,25 @@ función `security definer` primero,** exactamente igual que ya se hace
 para las RPC normales, y probar la subida real en vivo antes de darla
 por buena en vez de asumir que "la política parece correcta" a simple
 vista.
+
+## 2026-08-25 (séptima tanda): el botón "Enlace" copiaba lo de antes, no el enlace nuevo
+
+Bug real reportado por el usuario: al pulsar "Enlace" en Novedades y
+pegar después, salía un bloque de SQL que había copiado antes para
+pegarlo en Supabase -- no el enlace del tablón. Causa: `copiarYAbrirGrupo`
+llamaba a `window.open(enlaceGrupo)` ANTES de
+`navigator.clipboard.writeText(enlace)`. `window.open()` le quita el
+foco a la pestaña (pasa a la ventana nueva del grupo) antes de que
+termine de escribirse el portapapeles, y escribir en el portapapeles
+sin foco falla EN SILENCIO en la mayoría de navegadores -- sin ninguna
+alerta ni error, sencillamente no llega a sobrescribir lo que ya
+hubiera copiado antes. Arreglado invirtiendo el orden: el portapapeles
+va primero (con el foco todavía en la pestaña), `window.open()`
+después -- sigue disparándose de forma síncrona dentro del mismo clic,
+así que tampoco lo bloquea ningún navegador por no venir de una acción
+directa.
+
+**Lección para cualquier acción futura que combine portapapeles +
+`window.open`/navegación:** el portapapeles siempre primero. Cualquier
+cosa que pueda robar el foco de la pestaña (abrir una ventana, enviar a
+otra URL) debe ir después, nunca antes.
