@@ -225,7 +225,17 @@ export function VistaTablon({ token }) {
                 {abierta && (
                   <div
                     className="px-4 pt-3 pb-4 text-sm"
-                    style={{ color: C.charcoal, borderTop: `1px solid ${C.line}` }}
+                    style={{
+                      color: C.charcoal,
+                      borderTop: `1px solid ${C.line}`,
+                      // Sin esto, un salto de línea o un tabulador sueltos
+                      // (Enter/Tab en VentanaNovedades) se colapsan como
+                      // cualquier espacio en blanco de HTML normal -- con
+                      // "pre-wrap" se ven de verdad, y el texto sigue
+                      // rompiendo línea solo si no cabe (no queda todo en
+                      // una única línea horizontal interminable).
+                      whiteSpace: "pre-wrap",
+                    }}
                     // El anfitrión es el único que escribe este HTML (admite
                     // <b>/<br> sencillo, mismo criterio que las plantillas de
                     // email en Configuración) -- no es contenido de terceros.

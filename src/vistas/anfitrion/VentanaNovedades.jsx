@@ -5,7 +5,7 @@
 // cualquiera con el enlace ve las novedades publicadas, sin login ni
 // cuenta — a petición del usuario, 2026-08-25.
 import { useState, useRef, useEffect } from "react";
-import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, MessageCircle } from "lucide-react";
+import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
 import { formatearFecha } from "../../lib/formato";
@@ -27,6 +27,31 @@ function envolverSeleccion(textarea, valor, tag, onCambio) {
     textarea.focus();
     const nuevoInicio = inicio + tag.length + 2;
     textarea.setSelectionRange(nuevoInicio, nuevoInicio + seleccion.length);
+  });
+}
+
+// Añade "prefijo" al principio de cada línea tocada por la selección
+// actual (o solo la línea del cursor, si no hay nada seleccionado) --
+// usado para el botón de viñetas. Encuentra los límites de línea a mano
+// (el último "\n" antes del cursor / el primero después) en vez de
+// depender de que la selección ya empiece y acabe justo en un salto de
+// línea, para que funcione igual seleccionando texto a medias.
+function prefijarLineas(textarea, valor, prefijo, onCambio) {
+  const inicio = textarea.selectionStart;
+  const fin = textarea.selectionEnd;
+  const inicioBloque = valor.lastIndexOf("\n", inicio - 1) + 1;
+  const finNewline = valor.indexOf("\n", fin);
+  const finBloque = finNewline === -1 ? valor.length : finNewline;
+  const bloque = valor.slice(inicioBloque, finBloque);
+  const nuevoBloque = bloque
+    .split("\n")
+    .map((linea) => (linea.startsWith(prefijo) ? linea : prefijo + linea))
+    .join("\n");
+  const nuevo = valor.slice(0, inicioBloque) + nuevoBloque + valor.slice(finBloque);
+  onCambio(nuevo);
+  requestAnimationFrame(() => {
+    textarea.focus();
+    textarea.setSelectionRange(inicioBloque, inicioBloque + nuevoBloque.length);
   });
 }
 
@@ -52,6 +77,28 @@ function NovedadCard({ n, onCambiar, onEliminar }) {
     </button>
   );
 
+  const anadirVineta = () => {
+    if (cuerpoRef.current) prefijarLineas(cuerpoRef.current, cuerpo, "• ", setCuerpo);
+  };
+
+  // Tab en un <textarea> normal salta al siguiente campo del formulario
+  // en vez de escribir nada -- hay que interceptarlo a propósito para
+  // que sirva de sangría. Junto con el "white-space: pre-wrap" del
+  // tablón público (VistaTablon.jsx), el tabulador y los saltos de línea
+  // sueltos ya se ven de verdad ahí, no solo aquí mientras se escribe.
+  const manejarTeclado = (e) => {
+    if (e.key !== "Tab") return;
+    e.preventDefault();
+    const ta = e.target;
+    const inicio = ta.selectionStart;
+    const fin = ta.selectionEnd;
+    const nuevo = cuerpo.slice(0, inicio) + "\t" + cuerpo.slice(fin);
+    setCuerpo(nuevo);
+    requestAnimationFrame(() => {
+      ta.setSelectionRange(inicio + 1, inicio + 1);
+    });
+  };
+
   return (
     <div className="p-3 rounded space-y-2" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
       <div className="flex items-start justify-between gap-2">
@@ -71,14 +118,25 @@ function NovedadCard({ n, onCambiar, onEliminar }) {
         {botonFormato(Bold, "b", "Negrita")}
         {botonFormato(Italic, "i", "Cursiva")}
         {botonFormato(Underline, "u", "Subrayado")}
+        <button
+          type="button"
+          title="Viñeta (en la línea actual, o en cada línea seleccionada)"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={anadirVineta}
+          className="p-1.5 rounded"
+          style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+        >
+          <List size={13} />
+        </button>
       </div>
       <textarea
         ref={cuerpoRef}
         value={cuerpo}
         onChange={(e) => setCuerpo(e.target.value)}
+        onKeyDown={manejarTeclado}
         onBlur={() => cuerpo !== n.cuerpo && onCambiar({ ...n, cuerpo })}
         rows={3}
-        placeholder="Texto de la novedad — selecciona texto y pulsa un botón de arriba para darle formato"
+        placeholder="Texto de la novedad — Tab sangra, el botón de lista añade viñetas, selecciona texto y usa los botones para darle formato"
         className="w-full"
         style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
       />

@@ -49,6 +49,7 @@ const HISTORIAL_VERSIONES = [
       "Música ambiental de fondo en el tablón público — se sube desde Configuración → Música ambiental (varias pistas suenan una detrás de otra); un botón flotante la activa (los navegadores no dejan sonar nada solo, hace falta ese primer clic).",
       'Ventana Novedades: negrita/cursiva/subrayado con botones al escribir, sin tener que teclear etiquetas a mano, y un enlace directo al grupo de WhatsApp para avisar "hay novedades nuevas" sin dejar que 140 personas puedan escribirte directamente a ti.',
       "Al pegar cualquier enlace de esta web en WhatsApp o Facebook, ahora aparece una miniatura con imagen (antes solo se veía el texto del enlace, sin foto) — la imagen se sube desde Configuración → Datos del evento.",
+      "Ventana Novedades: Tab para sangrar y un botón de viñetas al escribir, y los saltos de línea normales (Enter) ya se ven de verdad en el tablón público — antes se perdían si no se añadía un salto a mano.",
     ],
   },
   {
