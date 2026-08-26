@@ -12,6 +12,9 @@ import {
   Euro,
   ChevronDown,
   Megaphone,
+  FileText,
+  Calendar,
+  Send,
 } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
@@ -26,6 +29,7 @@ import { ordenarPorApellidoNombre } from "../lib/formato";
 import { construirEnlaceTablon } from "../lib/url";
 import { redimensionarImagenArchivo } from "../lib/descargas";
 import { usePopupWindow } from "../lib/usePopupWindow";
+import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { PERMISOS, tienePermiso } from "../lib/permisos";
 import { C } from "../theme";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
@@ -33,6 +37,9 @@ import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
+import { VentanaConfigPlantillasEmail } from "./anfitrion/VentanaConfigPlantillasEmail";
+import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
+import { VentanaInvitacionesColaborador } from "./VentanaInvitacionesColaborador";
 
 // ---------- Colaborador view ----------
 
@@ -473,6 +480,24 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       actualizarNovedades(<VentanaNovedades data={data} ventana={ventanaNovedades} soloTexto />);
     }
   }, [novedadesAbierta, actualizarNovedades, data, ventanaNovedades]);
+
+  // Resto de permisos extra, mismo espíritu que el de arriba -- estas
+  // tres son ventanas normales (VentanaFlotante dentro de la propia
+  // pestaña, no una emergente): "Editar textos email" y "Editar datos
+  // evento" reutilizan tal cual las ventanas del anfitrión (su
+  // contenido no depende de quién las abra); "Enviar invitaciones" es
+  // una versión deliberadamente más simple de la del anfitrión (ver
+  // VentanaInvitacionesColaborador.jsx) que solo deja mandar a familias
+  // ya confirmadas y pagadas, con una confirmación extra del dinero
+  // antes de cada envío.
+  const puedeEditarEmail = tienePermiso(colaborador, PERMISOS.EMAIL_EDITAR);
+  const puedeEditarDatosEvento = tienePermiso(colaborador, PERMISOS.DATOS_EVENTO_EDITAR);
+  const puedeEnviarInvitaciones = tienePermiso(colaborador, PERMISOS.INVITACIONES_ENVIAR);
+  const [ventanaEmailAbierta, setVentanaEmailAbierta] = useState(false);
+  const [ventanaDatosEventoAbierta, setVentanaDatosEventoAbierta] = useState(false);
+  const [ventanaInvitacionesAbierta, setVentanaInvitacionesAbierta] = useState(false);
+  const motorInvitaciones = useMotorInvitaciones(data);
+
   // Pantalla de inicio: la misma Portada que ve el anfitrión (sin sus 3
   // recuadros de estadísticas, que no viven aquí sino en VistaAnfitrion.jsx),
   // con un único botón "Abrir formulario" en vez del desplegable "Abrir
@@ -646,6 +671,33 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 <Megaphone size={16} /> Editar Novedades
               </button>
             )}
+            {puedeEditarEmail && (
+              <button
+                onClick={() => setVentanaEmailAbierta(true)}
+                className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
+                title="Permiso especial concedido por el anfitrión: editar el texto de los emails"
+              >
+                <FileText size={16} /> Textos email
+              </button>
+            )}
+            {puedeEditarDatosEvento && (
+              <button
+                onClick={() => setVentanaDatosEventoAbierta(true)}
+                className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
+                title="Permiso especial concedido por el anfitrión: editar los datos del evento"
+              >
+                <Calendar size={16} /> Datos evento
+              </button>
+            )}
+            {puedeEnviarInvitaciones && (
+              <button
+                onClick={() => setVentanaInvitacionesAbierta(true)}
+                className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
+                title="Permiso especial concedido por el anfitrión: enviar invitaciones a confirmados y pagados"
+              >
+                <Send size={16} /> Invitaciones
+              </button>
+            )}
             <button
               onClick={() => setFormularioAbierto(true)}
               className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
@@ -656,6 +708,19 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           </>
         }
       />
+
+      {ventanaEmailAbierta && (
+        <VentanaConfigPlantillasEmail data={data} onCerrar={() => setVentanaEmailAbierta(false)} />
+      )}
+      {ventanaDatosEventoAbierta && (
+        <VentanaConfigDatosEvento data={data} onCerrar={() => setVentanaDatosEventoAbierta(false)} />
+      )}
+      {ventanaInvitacionesAbierta && (
+        <VentanaInvitacionesColaborador
+          motor={motorInvitaciones}
+          onCerrar={() => setVentanaInvitacionesAbierta(false)}
+        />
+      )}
 
       {formularioAbierto && (
         <VentanaFlotante

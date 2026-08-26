@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "6.10",
+    cambios: [
+      "Tres permisos nuevos en la ventana Permisos: editar el texto de los emails, editar los datos del evento, y enviar invitaciones — este último solo deja ver y mandar a familias ya confirmadas y con todos los pagos hechos, y pide confirmar aparte que el dinero ya está en tu poder antes de cada envío.",
+    ],
+  },
+  {
     version: "6.9",
     cambios: [
       'Nueva ventana "Permisos": puedes darle a un colaborador concreto acceso a editar el texto de las novedades/FAQ existentes, sin darle acceso a nada más — crear, borrar, publicar, marcar NOVEDADES/FAQ, el enlace del tablón y la configuración de WhatsApp/pregunta de acceso quedan bloqueados para él. Pensada para ir sumando más permisos de este tipo en el futuro.',

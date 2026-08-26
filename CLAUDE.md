@@ -1322,3 +1322,45 @@ función:
   `persistPreguntaTablon` (tanda anterior): esta función también la
   llama código que vive en la ventana emergente, y un `window.alert()`
   a secas apuntaría a la pestaña principal, no a esa ventana.
+
+## 2026-08-25 (decimotercera tanda): tres permisos más (v6.10)
+
+Ampliado el sistema de permisos de la tanda anterior con tres claves
+más en `lib/permisos.js`: `email_editar`, `datos_evento_editar`,
+`invitaciones_enviar`. Confirmado antes de construir (el usuario lo
+describió con dos condiciones a la vez y hacía falta desambiguar): el
+de invitaciones deja ver y enviar SOLO a familias ya confirmadas y
+pagadas, con una pregunta de confirmación del dinero antes de cada
+envío individual (no un paso único por adelantado).
+
+**Refactor real, no solo la funcionalidad nueva:** el "motor de enviar
+la invitación a una familia" (antes vivía inline dentro de
+`VistaAnfitrion.jsx`, compartido con `VentanaAvisos.jsx` mediante
+props) se extrajo a `lib/useMotorInvitaciones.js` -- lo necesitaba
+también `VistaColaborador.jsx` para el nuevo permiso, y así queda en
+un único sitio en vez de tener que decidir cuál de los dos
+componentes "presta" la lógica al otro. `familiasListasParaInvitacion`
+(confirmada + todos los pagos + con mesa) es exactamente el filtro que
+pedía el permiso -- no hizo falta ningún filtro nuevo, solo
+reutilizarlo.
+
+Los dos primeros permisos (`email_editar`, `datos_evento_editar`)
+reutilizan tal cual las ventanas de Configuración del anfitrión
+(`VentanaConfigPlantillasEmail.jsx`, `VentanaConfigDatosEvento.jsx`) --
+su contenido no depende de quién las abra, así que no hizo falta
+duplicarlas ni parametrizarlas. El tercero (`invitaciones_enviar`) SÍ
+tiene una ventana nueva y deliberadamente más simple
+(`VentanaInvitacionesColaborador.jsx`, en `src/vistas/` -- no en
+`anfitrion/`, porque el anfitrión nunca la usa): la versión completa
+del anfitrión tiene además subir la plantilla de imagen, elegir
+carpeta de descarga y reordenar nombres, todo eso sigue siendo
+exclusivo suyo.
+
+**Ninguna de las tres ventanas nuevas es una ventana emergente** (a
+diferencia de Novedades) -- son `VentanaFlotante` normales, dentro de
+la propia pestaña del colaborador, con `useState` locales en vez de
+`usePopupWindow.js`. Evita a propósito reintroducir toda la clase de
+bugs de "ventana equivocada" (portapapeles, `window.alert`...) de las
+tandas anteriores: `window.confirm()` (la pregunta del dinero) funciona
+sin problema aquí porque el código y el usuario comparten de verdad la
+misma ventana del navegador.
