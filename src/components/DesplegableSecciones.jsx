@@ -38,6 +38,7 @@ import {
   Music,
   KeyRound,
   Clock3,
+  LayoutDashboard,
 } from "lucide-react";
 import { C } from "../theme";
 import { UserSolido } from "./Widgets";
@@ -53,6 +54,7 @@ const ICONOS_VENTANAS = {
   cuentas: Wallet,
   invitaciones: Mail,
   invitados: List,
+  logistica: LayoutDashboard,
   mesas: Utensils,
   novedades: Megaphone,
   permisos: KeyRound,

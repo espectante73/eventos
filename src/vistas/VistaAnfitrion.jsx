@@ -17,6 +17,7 @@ import { VentanaPermisos } from "./anfitrion/VentanaPermisos";
 import { VentanaConfigMusica } from "./anfitrion/VentanaConfigMusica";
 import { VentanaConfigCronograma } from "./anfitrion/VentanaConfigCronograma";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
+import { VentanaLogistica } from "./anfitrion/VentanaLogistica";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
 import { VentanaConfigPrecios } from "./anfitrion/VentanaConfigPrecios";
 import { VentanaConfigUrlWeb } from "./anfitrion/VentanaConfigUrlWeb";
@@ -162,6 +163,12 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
       {/* Progreso de recopilación */}
       {abierto.progreso && (
         <VentanaProgreso data={data} onCerrar={() => toggle("progreso")} />
+      )}
+
+      {/* Logística: panel general de solo lectura, aparte de Progreso a
+          propósito (ver comentario en VentanaLogistica.jsx). */}
+      {abierto.logistica && (
+        <VentanaLogistica data={data} onCerrar={() => toggle("logistica")} />
       )}
 
       {/* Colaboradores: "Datos Colab." abre esta ventana; "Formularios" no

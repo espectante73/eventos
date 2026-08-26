@@ -34,6 +34,22 @@ export function formatearDiaSemana(fechaISO) {
   return DIAS_ES[new Date(Date.UTC(anio, mes - 1, dia)).getUTCDay()];
 }
 
+// Días que faltan hasta `fechaISO` (negativo si ya pasó) -- mismo cálculo
+// en UTC que formatearDiaSemana, por el mismo motivo: comparar en hora
+// local podría restar o sumar un día de más según dónde se abra la app.
+// "Hoy" se trunca también a medianoche UTC, así el día del evento en
+// curso da 0, no una fracción.
+export function diasHasta(fechaISO) {
+  if (!fechaISO) return null;
+  const partes = fechaISO.split("-").map((p) => parseInt(p, 10));
+  if (partes.length !== 3 || partes.some((p) => isNaN(p))) return null;
+  const [anio, mes, dia] = partes;
+  const objetivo = Date.UTC(anio, mes - 1, dia);
+  const hoy = new Date();
+  const hoyUTC = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate());
+  return Math.round((objetivo - hoyUTC) / 86400000);
+}
+
 export function ordenarPorApellidoNombre(lista) {
   return lista
     .slice()

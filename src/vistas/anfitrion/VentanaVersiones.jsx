@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "10",
+    cambios: [
+      'Nueva ventana "Logística": panel de solo lectura con el estado general del evento de un vistazo -- cuenta atrás, confirmados/pagados, si el cronograma está subido y a quién es visible, cuántas entradas del tablón/FAQ están publicadas, si hay música ambiental subida, qué colaboradores han terminado lo suyo, y qué permisos tiene concedido cada uno. No añade datos nuevos ni edición -- reúne en un sitio lo que antes había que ir a mirar ventana por ventana.',
+    ],
+  },
+  {
     version: "9",
     cambios: [
       "Cronograma: oculto por defecto. Dos casillas nuevas en Configuración → Cronograma deciden si se enseña a colaboradores y/o a invitados (tablón público) — antes de marcarlas, nadie más que tú lo ve.",
