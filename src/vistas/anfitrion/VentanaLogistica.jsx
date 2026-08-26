@@ -37,9 +37,11 @@ const BUCKET_CRONOGRAMA = "cronograma";
 // desplegar -- plegada por defecto, a petición del usuario. Cada una
 // lleva su propio estado (no "una sola a la vez" como en Novedades/FAQ:
 // aquí son categorías independientes, no un texto largo que abruma si se
-// lee de golpe).
-function Seccion({ icono: Icono, titulo, resumen, children }) {
-  const [abierta, setAbierta] = useState(false);
+// lee de golpe). Excepción: Cronograma nace desplegada
+// (`abiertaPorDefecto`) -- a petición del usuario, para ver la imagen de
+// un vistazo sin tener que abrir nada al entrar en esta ventana.
+function Seccion({ icono: Icono, titulo, resumen, children, abiertaPorDefecto = false }) {
+  const [abierta, setAbierta] = useState(abiertaPorDefecto);
   return (
     <div className="rounded-lg overflow-hidden" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
       <button
@@ -149,6 +151,7 @@ export function VentanaLogistica({ data }) {
         <Seccion
           icono={Clock3}
           titulo="Cronograma"
+          abiertaPorDefecto
           resumen={
             cronogramaSubido === null
               ? "…"
