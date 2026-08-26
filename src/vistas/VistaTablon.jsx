@@ -327,7 +327,7 @@ export function VistaTablon({ token }) {
           className="text-sm uppercase mb-1"
           style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 1 }}
         >
-          Novedades
+          FAQ
         </h2>
         <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.6 }}>
           Información relativa al evento dividida por secciones
