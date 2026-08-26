@@ -17,6 +17,8 @@ import { formatearFecha, formatearDiaSemana } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
 
 const BUCKET_MUSICA = "musica-ambiental";
+const BUCKET_CRONOGRAMA = "cronograma";
+const RUTA_CRONOGRAMA = "cronograma.jpg";
 
 export function VistaTablon({ token }) {
   // "cargando" | "invalido" | "bloqueado" | "listo"
@@ -322,6 +324,22 @@ export function VistaTablon({ token }) {
             </div>
           </div>
         )}
+
+        {/* Cronograma/logística del día -- imagen única que sube el
+            anfitrión desde Configuración → Cronograma (mismo patrón que
+            og-imagen: nombre de archivo fijo, así que este enlace nunca
+            deja de funcionar aunque la reemplace más adelante). Si
+            todavía no ha subido ninguna, el bucket devuelve 404 y la
+            imagen simplemente se oculta -- no hay nada que mostrar en
+            ese caso, ni conviene un aviso de error real. */}
+        <img
+          src={supabase.storage.from(BUCKET_CRONOGRAMA).getPublicUrl(RUTA_CRONOGRAMA).data.publicUrl}
+          alt="Cronograma del día"
+          className="w-full rounded-lg mb-6"
+          onError={(e) => {
+            e.target.style.display = "none";
+          }}
+        />
 
         <h2
           className="text-sm uppercase mb-1"

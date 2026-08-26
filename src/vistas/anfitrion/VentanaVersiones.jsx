@@ -42,7 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
-    version: "6.10",
+    version: "8",
+    cambios: [
+      'Nueva sección "Cronograma" en Configuración: sube (y puede reemplazar cuando quieras) una imagen con el cronograma o la logística del día, que se ve en su propio bloque dentro del tablón público (FAQ).',
+      "Ventana Permisos rediseñada: una sola columna con el checkbox a la derecha (alcance cómodo del pulgar), y cada colaborador plegado por defecto en su propio desplegable — la ventana ocupa mucho menos sitio, sobre todo en móvil.",
+    ],
+  },
+  {
+    version: "7",
     cambios: [
       "Tres permisos nuevos en la ventana Permisos: editar el texto de los emails, editar los datos del evento, y enviar invitaciones — este último solo deja ver y mandar a familias ya confirmadas y con todos los pagos hechos, y pide confirmar aparte que el dinero ya está en tu poder antes de cada envío.",
     ],

@@ -15,6 +15,7 @@ import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaPermisos } from "./anfitrion/VentanaPermisos";
 import { VentanaConfigMusica } from "./anfitrion/VentanaConfigMusica";
+import { VentanaConfigCronograma } from "./anfitrion/VentanaConfigCronograma";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
 import { VentanaConfigPrecios } from "./anfitrion/VentanaConfigPrecios";
@@ -255,6 +256,10 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
 
       {abierto["config-musica"] && (
         <VentanaConfigMusica onCerrar={() => toggle("config-musica")} />
+      )}
+
+      {abierto["config-cronograma"] && (
+        <VentanaConfigCronograma onCerrar={() => toggle("config-cronograma")} />
       )}
 
       {/* Permisos */}

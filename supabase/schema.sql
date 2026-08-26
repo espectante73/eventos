@@ -2006,3 +2006,55 @@ $$;
 grant execute on function colaborador_puede_editar_novedades(uuid) to anon;
 grant execute on function colaborador_listar_novedades(uuid) to anon;
 grant execute on function colaborador_guardar_novedades(uuid, jsonb) to anon;
+
+-- ---------- Cronograma / logística del día (Supabase Storage) ----------
+-- Imagen única que el anfitrión sube y va REEMPLAZANDO según avanza el
+-- proyecto -- mismo patrón que og-imagen (nombre de archivo fijo, para
+-- que la URL pública no cambie nunca, solo el archivo detrás) en vez
+-- de una columna base64 en `evento` (por el mismo motivo que
+-- musica-ambiental: el tablón público la pediría de nuevo en cada
+-- refresco de cada minuto). Se muestra en el tablón público -- a
+-- petición del usuario, 2026-08-25.
+insert into storage.buckets ("id", "name", "public")
+values ('cronograma', 'cronograma', true)
+on conflict ("id") do nothing;
+
+drop policy if exists "cronograma_lectura_publica" on storage.objects;
+create policy "cronograma_lectura_publica"
+on storage.objects for select
+to public
+using (bucket_id = 'cronograma');
+
+drop policy if exists "cronograma_solo_anfitrion_sube" on storage.objects;
+create policy "cronograma_solo_anfitrion_sube"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'cronograma'
+  and es_anfitrion()
+);
+
+-- Hace falta UPDATE además de INSERT: se sube siempre con upsert:true
+-- (mismo nombre de archivo cada vez), y eso reemplaza el objeto
+-- existente en vez de crear uno nuevo.
+drop policy if exists "cronograma_solo_anfitrion_reemplaza" on storage.objects;
+create policy "cronograma_solo_anfitrion_reemplaza"
+on storage.objects for update
+to authenticated
+using (
+  bucket_id = 'cronograma'
+  and es_anfitrion()
+)
+with check (
+  bucket_id = 'cronograma'
+  and es_anfitrion()
+);
+
+drop policy if exists "cronograma_solo_anfitrion_borra" on storage.objects;
+create policy "cronograma_solo_anfitrion_borra"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'cronograma'
+  and es_anfitrion()
+);
