@@ -1189,3 +1189,26 @@ nunca `window.alert()`/`window.confirm()`/`window.prompt()` a secas --
 ni un mensaje de error debe depender de un diálogo nativo del
 navegador, que siempre corre el riesgo de apuntar a la ventana
 equivocada.**
+
+**Tercer bug real de la misma tanda: el propio guardado borraba lo que
+se estaba escribiendo al lado.** El usuario lo describió bien una vez
+se le pidió explicarlo despacio: "el guardado automático nos traiciona,
+al saltar de la ventana pregunta a la de respuesta guarda pero no me
+da tiempo a escribir la respuesta". Causa: `pregunta`/`respuesta`
+(y también `enlaceWhatsapp`, mismo patrón) se inicializaban con
+`useState(prop)` PERO además llevaban un `useEffect` que los
+volvía a copiar cada vez que la prop cambiaba. Secuencia real: se sale
+del campo "pregunta" (onBlur) → se guarda con la `respuesta` de ESE
+momento (la vieja, antes de tocarla) → eso actualiza `data` en el hook
+→ `VistaAnfitrion.jsx` repinta la ventana entera (mismo mecanismo de
+`actualizar()` de siempre) → el `useEffect` de sincronización se
+dispara con la prop ya actualizada → sobrescribe el campo "respuesta"
+justo cuando la persona empezaba a teclear en él. Arreglado quitando
+esos `useEffect` de sincronización sin más: se inicializan una sola
+vez al montar y se guardan al salir del campo (`onBlur`), igual que ya
+hacía `NovedadCard` sin este problema. **Lección para cualquier campo
+de texto nuevo dentro de esta ventana (o de cualquier otra que se
+repinte a sí misma tras guardar): NUNCA "recopiar desde la prop" con un
+`useEffect` en cada cambio -- inicializar solo al montar** (con
+`useState(prop)`, sin más), o el propio guardado puede acabar
+borrando lo que la persona esté escribiendo al lado.

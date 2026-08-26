@@ -4,7 +4,7 @@
 // Un único enlace (?tablon=<token>) se comparte una vez en ese grupo;
 // cualquiera con el enlace ve las novedades publicadas, sin login ni
 // cuenta — a petición del usuario, 2026-08-25.
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown, Lock } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
@@ -193,8 +193,18 @@ export function VentanaNovedades({ data, ventana }) {
   // mensajes directos de todos, anulando la figura del colaborador como
   // intermediario. Se genera desde la propia WhatsApp: abre el grupo →
   // Info del grupo → Invitar mediante enlace → copiar enlace.
+  // Se inicializa UNA sola vez, al montar (useState solo lee su
+  // argumento la primera vez) -- se probó con un useEffect que la
+  // volvía a copiar cada vez que `evento` cambiaba (para reflejar datos
+  // que llegan tarde, la primerísima vez que se abre la ventana), pero
+  // eso mismo la reescribía a mitad de escribir: guardar la pregunta
+  // (más abajo) refresca `data` entero, ese refresco llega aquí como un
+  // `evento`/`preguntaTablon` nuevos, y el useEffect borraba lo que ya
+  // se hubiera tecleado en el campo de al lado antes de darle tiempo a
+  // terminar -- bug real reportado por el usuario, 2026-08-25. Mismo
+  // patrón ya usado sin este problema en NovedadCard (más arriba): solo
+  // se inicializa al montar, se guarda al salir del campo (onBlur).
   const [enlaceWhatsapp, setEnlaceWhatsapp] = useState(evento.enlaceGrupoWhatsapp || "");
-  useEffect(() => setEnlaceWhatsapp(evento.enlaceGrupoWhatsapp || ""), [evento.enlaceGrupoWhatsapp]);
 
   // Pregunta de acceso al tablón (capa extra sobre el enlace en sí) -- a
   // petición del usuario, 2026-08-25: aunque el enlace se reenvíe fuera
@@ -202,10 +212,6 @@ export function VentanaNovedades({ data, ventana }) {
   const [pregunta, setPregunta] = useState(preguntaTablon.pregunta);
   const [respuesta, setRespuesta] = useState(preguntaTablon.respuesta);
   const [errorPregunta, setErrorPregunta] = useState("");
-  useEffect(() => {
-    setPregunta(preguntaTablon.pregunta);
-    setRespuesta(preguntaTablon.respuesta);
-  }, [preguntaTablon]);
   const guardarPregunta = async () => {
     if (pregunta !== preguntaTablon.pregunta || respuesta !== preguntaTablon.respuesta) {
       const ok = await persistPreguntaTablon(pregunta, respuesta);
