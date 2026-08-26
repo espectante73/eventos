@@ -1237,3 +1237,13 @@ no se dispara en cuanto se sale de CUALQUIERA de las dos casillas
 pregunta a medias sin respuesta dejaría el tablón pidiendo algo
 imposible de acertar) o las DOS vacías (para poder quitar la pregunta
 del todo).
+
+## 2026-08-25 (décima tanda): subtítulo + todas plegadas por defecto en el tablón
+
+Dos ajustes pequeños en `VistaTablon.jsx`, a petición del usuario:
+subtítulo "Información relativa al evento dividida por secciones" bajo
+el encabezado "Novedades", y ya no se abre sola la más reciente al
+cargar la página -- todas empiezan plegadas, manteniendo el mismo
+criterio de siempre (como mucho una abierta a la vez). Se aprovechó
+para quitar el parámetro `primeraVez` de `cargarContenido`, que se
+quedó sin ningún uso real tras este cambio.

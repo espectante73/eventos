@@ -85,18 +85,16 @@ export function VistaTablon({ token }) {
   // Carga fecha/hora/lugar + novedades -- solo se llama una vez superada
   // la pregunta de acceso (o si no hay ninguna configurada).
   const cargarContenido = useCallback(
-    async (primeraVez) => {
+    async () => {
       const [{ data: eventoFilas }, { data: novedadesFilas }] = await Promise.all([
         supabase.from("evento").select("*").limit(1),
         supabase.rpc("tablon_listar_novedades", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
       ]);
       setEvento(eventoFilas && eventoFilas[0] ? eventoFilas[0] : null);
       setNovedades(novedadesFilas || []);
-      if (primeraVez && novedadesFilas && novedadesFilas[0]) {
-        // La más reciente empieza abierta — el resto, plegado, para que
-        // "todo el texto" no se vea como un bloque grande de lectura.
-        setIdAbierto(novedadesFilas[0].id);
-      }
+      // Todas plegadas por defecto (ni siquiera la más reciente se abre
+      // sola) -- a petición del usuario, 2026-08-25. Sigue habiendo como
+      // mucho una abierta a la vez (ver `alternar`, más abajo).
       setEstado("listo");
     },
     [token]
@@ -118,7 +116,7 @@ export function VistaTablon({ token }) {
       const { data: preguntaTexto } = await supabase.rpc("tablon_obtener_pregunta", { p_token: token });
       if (cancelado) return;
       if (!preguntaTexto) {
-        cargarContenido(true);
+        cargarContenido();
         return;
       }
       setPregunta(preguntaTexto);
@@ -137,7 +135,7 @@ export function VistaTablon({ token }) {
         if (cancelado) return;
         if (sigueValiendo === true) {
           respuestaVerificadaRef.current = guardada;
-          cargarContenido(true);
+          cargarContenido();
           return;
         }
         try {
@@ -158,9 +156,9 @@ export function VistaTablon({ token }) {
   // de eso no hay nada real que refrescar).
   useEffect(() => {
     if (estado !== "listo") return;
-    const intervalo = setInterval(() => cargarContenido(false), 60 * 1000);
+    const intervalo = setInterval(() => cargarContenido(), 60 * 1000);
     const alVolverVisible = () => {
-      if (document.visibilityState === "visible") cargarContenido(false);
+      if (document.visibilityState === "visible") cargarContenido();
     };
     document.addEventListener("visibilitychange", alVolverVisible);
     return () => {
@@ -189,7 +187,7 @@ export function VistaTablon({ token }) {
       // responder de nuevo la próxima vez.
     }
     respuestaVerificadaRef.current = respuestaEscrita;
-    cargarContenido(true);
+    cargarContenido();
   };
 
   const alternar = (id) => {
@@ -326,11 +324,14 @@ export function VistaTablon({ token }) {
         )}
 
         <h2
-          className="text-sm uppercase mb-2"
+          className="text-sm uppercase mb-1"
           style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 1 }}
         >
           Novedades
         </h2>
+        <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+          Información relativa al evento dividida por secciones
+        </p>
 
         <div className="space-y-2">
           {novedades.map((n) => {
