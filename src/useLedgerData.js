@@ -527,20 +527,31 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
+  // Deliberadamente NO usa avisar() (window.alert): esta función solo la
+  // llama VentanaNovedades.jsx, que vive en una ventana emergente -- un
+  // window.alert() a secas apunta al `window` de la pestaña principal
+  // (mismo problema de fondo que el portapapeles, ver
+  // usePopupWindow.js/CLAUDE.md), y como es una llamada BLOQUEANTE,
+  // aparecía en el sitio equivocado y dejaba la ventana como "colgada"
+  // hasta encontrarla y cerrarla. Devuelve true/false; quien la llama
+  // decide cómo avisar (un mensaje normal en su propia interfaz).
   const persistPreguntaTablon = useCallback(
     async (pregunta, respuesta) => {
       const anterior = preguntaTablon;
       setPreguntaTablon({ pregunta, respuesta });
-      if (!esAnfitrion) return;
+      if (!esAnfitrion) return true;
       const { error } = await supabase.rpc("anfitrion_guardar_pregunta_tablon", {
         p_token: rol,
         p_pregunta: pregunta,
         p_respuesta: respuesta,
       });
       if (error) {
-        avisar("No se pudo guardar la pregunta del tablón. Se deshace el cambio en pantalla.", error);
+        // eslint-disable-next-line no-console
+        console.error("No se pudo guardar la pregunta del tablón.", error);
         setPreguntaTablon(anterior);
+        return false;
       }
+      return true;
     },
     [esAnfitrion, rol, preguntaTablon]
   );

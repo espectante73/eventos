@@ -1169,3 +1169,23 @@ siquiera la fecha del evento.
   a pedir). La respuesta ya verificada viaja en cada refresco periódico
   (la RPC la exige en cada llamada), guardada en un `ref` para no
   disparar re-renders de más.
+
+**Mismo problema de fondo, otra vez: `window.alert()` dentro de la
+ventana emergente.** El usuario reportó que al guardar la pregunta
+saltaba "no se ha podido guardar" y la ventana se quedaba "en bucle",
+sin dejar escribir. Causa: `persistPreguntaTablon` (useLedgerData.js)
+usaba el `avisar()` compartido de siempre, que llama a `window.alert()`
+a secas -- mismo problema que el portapapeles de la tanda anterior:
+el `window` al que apunta es el de la pestaña principal, no el de la
+ventana emergente donde de verdad se estaba escribiendo, y al ser una
+llamada BLOQUEANTE, colgaba la ventana hasta encontrar y cerrar una
+alerta que podía ni siquiera verse bien. Arreglado quitando el
+`window.alert()` de `persistPreguntaTablon` por completo (ahora
+devuelve `true`/`false`, solo hace `console.error` si falla) --
+`VentanaNovedades.jsx` muestra el aviso como texto normal dentro de su
+propia interfaz, sin ningún diálogo nativo de por medio. **Regla ya
+consolidada para cualquier cosa nueva dentro de esta ventana emergente:
+nunca `window.alert()`/`window.confirm()`/`window.prompt()` a secas --
+ni un mensaje de error debe depender de un diálogo nativo del
+navegador, que siempre corre el riesgo de apuntar a la ventana
+equivocada.**

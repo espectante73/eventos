@@ -201,13 +201,15 @@ export function VentanaNovedades({ data, ventana }) {
   // del grupo, sin la respuesta correcta el tablón no enseña nada.
   const [pregunta, setPregunta] = useState(preguntaTablon.pregunta);
   const [respuesta, setRespuesta] = useState(preguntaTablon.respuesta);
+  const [errorPregunta, setErrorPregunta] = useState("");
   useEffect(() => {
     setPregunta(preguntaTablon.pregunta);
     setRespuesta(preguntaTablon.respuesta);
   }, [preguntaTablon]);
-  const guardarPregunta = () => {
+  const guardarPregunta = async () => {
     if (pregunta !== preguntaTablon.pregunta || respuesta !== preguntaTablon.respuesta) {
-      persistPreguntaTablon(pregunta, respuesta);
+      const ok = await persistPreguntaTablon(pregunta, respuesta);
+      setErrorPregunta(ok ? "" : "No se ha podido guardar — vuelve a intentarlo.");
     }
   };
 
@@ -359,6 +361,11 @@ export function VentanaNovedades({ data, ventana }) {
             style={{ ...inputStyle, fontSize: 12, width: 130 }}
           />
         </div>
+        {errorPregunta && (
+          <p className="text-xs" style={{ color: C.wax }}>
+            ⚠ {errorPregunta}
+          </p>
+        )}
         <div className="flex items-center gap-2">
           <MessageCircle size={14} style={{ color: "#25D366", flexShrink: 0 }} />
         <input
