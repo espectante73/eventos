@@ -166,6 +166,18 @@ export function VentanaLogistica({ data }) {
               : cronogramaVisiblePara.length === 0
                 ? "Subida, pero oculta para todo el mundo -- márcalo en Configuración → Cronograma."
                 : `Visible para: ${cronogramaVisiblePara.join(" y ")}.`}
+          {/* La imagen se ve aquí para TI siempre que esté subida, aunque
+              las dos casillas de Configuración → Cronograma estén
+              desmarcadas (esas solo controlan si la ven colaboradores/
+              invitados) -- a petición del usuario: no tenía ningún sitio
+              propio donde revisarla. */}
+          {cronogramaSubido && (
+            <img
+              src={supabase.storage.from(BUCKET_CRONOGRAMA).getPublicUrl("cronograma.jpg").data.publicUrl}
+              alt="Cronograma del día"
+              className="w-full rounded mt-2"
+            />
+          )}
         </Seccion>
 
         <Seccion icono={MessageSquareText} titulo="Tablón / FAQ" resumen={`${novedadesPublicadas.length}/${novedades.length} publicadas`}>

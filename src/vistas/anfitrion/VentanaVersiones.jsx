@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "12",
+    cambios: [
+      "La sección Cronograma de Logística ya enseña la propia imagen (para ti, siempre que esté subida) además del texto de estado -- antes había que ir a Configuración para verla.",
+    ],
+  },
+  {
     version: "11",
     cambios: [
       "Logística pasa a ser una ventana de verdad del sistema operativo (como Novedades), con sus secciones (Cronograma, Tablón/FAQ, Música ambiental, Colaboradores, Permisos) plegables y plegadas por defecto -- deja de parecerse a Progreso.",
