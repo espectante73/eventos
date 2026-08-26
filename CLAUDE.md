@@ -1247,3 +1247,23 @@ cargar la página -- todas empiezan plegadas, manteniendo el mismo
 criterio de siempre (como mucho una abierta a la vez). Se aprovechó
 para quitar el parámetro `primeraVez` de `cargarContenido`, que se
 quedó sin ningún uso real tras este cambio.
+
+## 2026-08-25 (undécima tanda): FAQ vs Novedades como etiqueta, no como secciones separadas (v6.8)
+
+Encabezado renombrado primero a "FAQ" sin más (petición inicial), pero
+el usuario cayó en la cuenta de que en la práctica conviven dos tipos
+de contenido: la mayoría serán preguntas frecuentes de verdad, y los
+avisos de cambios reales ("novedades") ya se anuncian aparte en el
+grupo de WhatsApp -- aquí solo hace falta poder distinguirlos dentro
+del mismo listado. Se descartó la idea inicial de prefijo manual en el
+título ("Novedades: ...") a favor de una etiqueta automática, para no
+depender de que se escriba siempre igual.
+
+`novedades` gana `"esNovedad"` boolean (default `false` -- FAQ es el
+caso mayoritario). `anfitrion_guardar_novedades` actualizada para
+incluirla tanto en el `insert` como en el `on conflict do update`
+(mismo patrón que las demás columnas). Checkbox nuevo en
+`VentanaNovedades.jsx` ("Marcarla como NOVEDADES") + la misma etiqueta
+visual (fondo verde tinta si es NOVEDADES, contorno neutro si es FAQ)
+en el editor y en `VistaTablon.jsx`, delante del título -- se ve igual
+plegada que desplegada.

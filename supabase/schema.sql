@@ -1599,9 +1599,19 @@ create table if not exists novedades (
   -- público -- por defecto true (lo normal es escribir y publicar del
   -- tirón, no dejar pasos a medias).
   "publicada" boolean not null default true,
-  "creadaEn"  timestamptz not null default now()
+  "creadaEn"  timestamptz not null default now(),
+  -- Etiqueta automática en el FAQ público: "NOVEDADES" si está marcada,
+  -- "FAQ" si no -- a petición del usuario, 2026-08-25 (la mayoría de
+  -- entradas serán preguntas frecuentes; los cambios/avisos de verdad
+  -- ya se anuncian aparte en el grupo de WhatsApp, esto solo los marca
+  -- visualmente dentro del mismo listado). Por defecto false (FAQ).
+  "esNovedad" boolean not null default false
 );
 alter table novedades enable row level security;
+-- Por si `novedades` ya existía de una sesión anterior sin esta
+-- columna (el "create table if not exists" de arriba no la añadiría a
+-- una tabla ya creada).
+alter table novedades add column if not exists "esNovedad" boolean not null default false;
 revoke all on table novedades from anon, authenticated;
 
 create table if not exists tablon_secreto (
@@ -1665,16 +1675,18 @@ begin
   -- "creadaEn" solo se fija al CREAR (si el cliente no la manda, usa
   -- now()) -- el "on conflict do update" de abajo no la toca nunca, así
   -- que editar el texto de una novedad ya existente no cambia su fecha.
-  insert into novedades ("id", "titulo", "cuerpo", "publicada", "creadaEn")
+  insert into novedades ("id", "titulo", "cuerpo", "publicada", "creadaEn", "esNovedad")
   select
     (f->>'id')::uuid, coalesce(f->>'titulo', ''), coalesce(f->>'cuerpo', ''),
     coalesce((f->>'publicada')::boolean, true),
-    coalesce((f->>'creadaEn')::timestamptz, now())
+    coalesce((f->>'creadaEn')::timestamptz, now()),
+    coalesce((f->>'esNovedad')::boolean, false)
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update
     set "titulo" = excluded."titulo",
         "cuerpo" = excluded."cuerpo",
-        "publicada" = excluded."publicada";
+        "publicada" = excluded."publicada",
+        "esNovedad" = excluded."esNovedad";
 
   delete from novedades n
   where not exists (

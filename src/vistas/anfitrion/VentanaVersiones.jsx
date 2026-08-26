@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "6.8",
+    cambios: [
+      'El apartado público pasa a llamarse "FAQ" (antes "Novedades") — cada entrada lleva una etiqueta automática, "FAQ" o "NOVEDADES", según la marques en el editor. Pensado para que la mayoría (preguntas frecuentes) convivan con los avisos de cambios de verdad, sin mezclarlos visualmente ni tener que escribir la etiqueta a mano.',
+    ],
+  },
+  {
     version: "6.7",
     cambios: [
       'Capa extra de protección en el tablón público: una pregunta con respuesta (configurable en Novedades, opcional) que hay que responder antes de ver nada — aunque el enlace se reenvíe fuera del grupo, sin la respuesta correcta no se ve ni la fecha del evento. Cada dispositivo la recuerda tras la primera vez, no hace falta responderla cada visita.',

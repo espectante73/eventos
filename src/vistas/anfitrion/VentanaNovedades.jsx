@@ -120,6 +120,16 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar }) {
           className="flex-1"
           style={{ ...inputStyle, fontFamily: "'Fraunces', serif", fontWeight: 600 }}
         />
+        <span
+          className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap font-medium"
+          style={
+            n.esNovedad
+              ? { background: C.ink, color: C.paper }
+              : { border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.7 }
+          }
+        >
+          {n.esNovedad ? "NOVEDADES" : "FAQ"}
+        </span>
         {!n.publicada && (
           <span
             className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
@@ -170,6 +180,14 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar }) {
               onChange={(e) => onCambiar({ ...n, publicada: e.target.checked })}
             />
             Publicada (visible en el tablón)
+          </label>
+          <label className="flex items-center gap-1.5 text-xs" style={{ color: C.charcoal, opacity: 0.75 }}>
+            <input
+              type="checkbox"
+              checked={n.esNovedad}
+              onChange={(e) => onCambiar({ ...n, esNovedad: e.target.checked })}
+            />
+            Marcarla como "NOVEDADES" (si no, se etiqueta "FAQ")
           </label>
         </div>
       )}
@@ -243,7 +261,16 @@ export function VentanaNovedades({ data, ventana }) {
   };
 
   const anadir = () => {
-    const nueva = { id: uid(), titulo: "", cuerpo: "", publicada: true, creadaEn: new Date().toISOString() };
+    const nueva = {
+      id: uid(),
+      titulo: "",
+      cuerpo: "",
+      publicada: true,
+      creadaEn: new Date().toISOString(),
+      // FAQ por defecto -- a petición del usuario, la mayoría de
+      // entradas lo serán; "Novedades" se marca aparte, caso a caso.
+      esNovedad: false,
+    };
     persistNovedades([nueva, ...novedades]);
     setIdExpandido(nueva.id);
   };

@@ -342,8 +342,20 @@ export function VistaTablon({ token }) {
                   onClick={() => alternar(n.id)}
                   className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left"
                 >
-                  <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
-                    {n.titulo || "(sin título)"}
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span
+                      className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap font-medium flex-shrink-0"
+                      style={
+                        n.esNovedad
+                          ? { background: C.ink, color: C.paper }
+                          : { border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.7 }
+                      }
+                    >
+                      {n.esNovedad ? "NOVEDADES" : "FAQ"}
+                    </span>
+                    <span className="truncate" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
+                      {n.titulo || "(sin título)"}
+                    </span>
                   </span>
                   <span className="flex items-center gap-2 flex-shrink-0">
                     <span className="text-xs" style={{ color: C.charcoal, opacity: 0.5 }}>
