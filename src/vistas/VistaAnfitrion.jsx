@@ -259,7 +259,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
       )}
 
       {abierto["config-cronograma"] && (
-        <VentanaConfigCronograma onCerrar={() => toggle("config-cronograma")} />
+        <VentanaConfigCronograma data={data} onCerrar={() => toggle("config-cronograma")} />
       )}
 
       {/* Permisos */}

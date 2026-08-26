@@ -328,18 +328,22 @@ export function VistaTablon({ token }) {
         {/* Cronograma/logística del día -- imagen única que sube el
             anfitrión desde Configuración → Cronograma (mismo patrón que
             og-imagen: nombre de archivo fijo, así que este enlace nunca
-            deja de funcionar aunque la reemplace más adelante). Si
+            deja de funcionar aunque la reemplace más adelante). Oculto
+            por defecto -- solo se ve aquí si el anfitrión ha marcado
+            "Visible para invitados" en esa misma ventana. Si además
             todavía no ha subido ninguna, el bucket devuelve 404 y la
-            imagen simplemente se oculta -- no hay nada que mostrar en
-            ese caso, ni conviene un aviso de error real. */}
-        <img
-          src={supabase.storage.from(BUCKET_CRONOGRAMA).getPublicUrl(RUTA_CRONOGRAMA).data.publicUrl}
-          alt="Cronograma del día"
-          className="w-full rounded-lg mb-6"
-          onError={(e) => {
-            e.target.style.display = "none";
-          }}
-        />
+            imagen se oculta igual -- no hay nada que mostrar en ese
+            caso, ni conviene un aviso de error real. */}
+        {evento?.cronogramaVisibleInvitados && (
+          <img
+            src={supabase.storage.from(BUCKET_CRONOGRAMA).getPublicUrl(RUTA_CRONOGRAMA).data.publicUrl}
+            alt="Cronograma del día"
+            className="w-full rounded-lg mb-6"
+            onError={(e) => {
+              e.target.style.display = "none";
+            }}
+          />
+        )}
 
         <h2
           className="text-sm uppercase mb-1"

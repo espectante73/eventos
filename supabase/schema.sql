@@ -2058,3 +2058,14 @@ using (
   bucket_id = 'cronograma'
   and es_anfitrion()
 );
+
+-- Visibilidad del cronograma: por defecto NO se ve ni en el tablón
+-- público (invitados) ni en la vista de colaborador -- a petición del
+-- usuario, 2026-08-26 ("no quiero que el cronograma sea visible, pero sí
+-- la opción con check, poder elegir quien lo ve"). Dos casillas
+-- independientes, no una sola: el anfitrión puede querer enseñárselo
+-- primero solo a los colaboradores (para repartir tareas del día) antes
+-- de decidir si también se lo enseña a los invitados. Viven en `evento`
+-- (tabla abierta, sin sensibilidad real) igual que "ocultarTituloEnImagen".
+alter table evento add column if not exists "cronogramaVisibleColaboradores" boolean not null default false;
+alter table evento add column if not exists "cronogramaVisibleInvitados" boolean not null default false;

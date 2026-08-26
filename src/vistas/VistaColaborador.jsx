@@ -709,6 +709,21 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         }
       />
 
+      {/* Cronograma/logística del día -- oculto por defecto, solo
+          aparece aquí si el anfitrión ha marcado "Visible para
+          colaboradores" en Configuración → Cronograma. Mismo bucket y
+          nombre de archivo fijo que usa el tablón público. */}
+      {evento.cronogramaVisibleColaboradores && (
+        <img
+          src={supabase.storage.from("cronograma").getPublicUrl("cronograma.jpg").data.publicUrl}
+          alt="Cronograma del día"
+          className="w-full rounded-lg"
+          onError={(e) => {
+            e.target.style.display = "none";
+          }}
+        />
+      )}
+
       {ventanaEmailAbierta && (
         <VentanaConfigPlantillasEmail data={data} onCerrar={() => setVentanaEmailAbierta(false)} />
       )}

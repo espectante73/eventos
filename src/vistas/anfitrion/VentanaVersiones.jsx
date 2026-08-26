@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "9",
+    cambios: [
+      "Cronograma: oculto por defecto. Dos casillas nuevas en Configuración → Cronograma deciden si se enseña a colaboradores y/o a invitados (tablón público) — antes de marcarlas, nadie más que tú lo ve.",
+      "Ventana Permisos, segundo ajuste: en vez de un desplegable por colaborador, ahora se elige a la persona con un <select> y sus permisos quedan siempre visibles debajo, sin nada más que abrir.",
+    ],
+  },
+  {
     version: "8",
     cambios: [
       'Nueva sección "Cronograma" en Configuración: sube (y puede reemplazar cuando quieras) una imagen con el cronograma o la logística del día, que se ve en su propio bloque dentro del tablón público (FAQ).',
