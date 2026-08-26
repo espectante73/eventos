@@ -61,6 +61,20 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
     if (novedadesAbierta) actualizarNovedades(<VentanaNovedades data={data} ventana={ventanaNovedades} />);
   }, [novedadesAbierta, actualizarNovedades, data, ventanaNovedades]);
 
+  // Ventana Logística: mismo patrón que Novedades -- ventana de verdad
+  // del sistema operativo, no una VentanaFlotante, a petición del
+  // usuario (2026-08-26, tras verla cada vez más parecida a Progreso).
+  // No necesita `ventana` (no usa portapapeles/alert/confirm, es de solo
+  // lectura) pero se pasa igual por si algún día hiciera falta.
+  const {
+    abrir: abrirLogistica,
+    actualizar: actualizarLogistica,
+    abierta: logisticaAbierta,
+  } = usePopupWindow({ nombreVentana: "logistica-evento", ancho: 480, alto: 700 });
+  useEffect(() => {
+    if (logisticaAbierta) actualizarLogistica(<VentanaLogistica data={data} />);
+  }, [logisticaAbierta, actualizarLogistica, data]);
+
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
   // por colaborador — así se sabe exactamente cuáles son los nuevos. Los
   // que siguen en tentativa no cuentan: no se nombran en el email al
@@ -153,6 +167,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         onCerrarSesion={onCerrarSesion}
         enlaceTablon={enlaceTablon}
         abrirNovedades={abrirNovedades}
+        abrirLogistica={abrirLogistica}
       />
 
       {/* Los 3 recuadros de resumen (Lista global/Tentativa/Confirmados)
@@ -165,11 +180,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         <VentanaProgreso data={data} onCerrar={() => toggle("progreso")} />
       )}
 
-      {/* Logística: panel general de solo lectura, aparte de Progreso a
-          propósito (ver comentario en VentanaLogistica.jsx). */}
-      {abierto.logistica && (
-        <VentanaLogistica data={data} onCerrar={() => toggle("logistica")} />
-      )}
+      {/* Logística: ventana emergente de verdad (ver arriba), no pasa
+          por `abierto`/`toggle` -- se abre con abrirLogistica. */}
 
       {/* Colaboradores: "Datos Colab." abre esta ventana; "Formularios" no
           abre ninguna — cambia de vista directamente (ver DesplegableSecciones.jsx) */}

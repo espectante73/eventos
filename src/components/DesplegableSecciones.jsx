@@ -97,21 +97,30 @@ export function DesplegableSecciones({
   onCambiarRol,
   anfitrionToken,
   abrirNovedades,
+  abrirLogistica,
   posicion = { bottom: 8, right: 8 },
 }) {
   const opciones = ORDEN_VENTANAS.map((clave) => {
-    // Novedades abre una ventana de verdad del sistema operativo, no una
-    // VentanaFlotante (ver lib/usePopupWindow.js) -- por eso no pasa por
-    // el "toggle(clave)" genérico de las demás, y no lleva el prefijo
-    // "✓ " (no hay ningún estado fiable de "abierta" que reflejar aquí:
-    // la persona puede haberla cerrado a mano con la X del sistema
-    // operativo sin que este menú se entere al momento).
+    // Novedades y Logística abren cada una una ventana de verdad del
+    // sistema operativo, no una VentanaFlotante (ver lib/usePopupWindow.js)
+    // -- por eso no pasan por el "toggle(clave)" genérico de las demás, y
+    // no llevan el prefijo "✓ " (no hay ningún estado fiable de "abierta"
+    // que reflejar aquí: la persona puede haberla cerrado a mano con la X
+    // del sistema operativo sin que este menú se entere al momento).
     if (clave === "novedades") {
       return {
         id: clave,
         etiqueta: ETIQUETAS_VENTANAS[clave],
         icono: ICONOS_VENTANAS[clave],
         onClick: abrirNovedades,
+      };
+    }
+    if (clave === "logistica") {
+      return {
+        id: clave,
+        etiqueta: ETIQUETAS_VENTANAS[clave],
+        icono: ICONOS_VENTANAS[clave],
+        onClick: abrirLogistica,
       };
     }
     if (clave === "colaboradores") {

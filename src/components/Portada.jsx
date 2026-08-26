@@ -74,6 +74,10 @@ export function Portada({
   // DesplegableSecciones (menú del anfitrión); VistaColaborador.jsx no
   // lo pasa, así que ese menú nunca llega a montarse ahí.
   abrirNovedades,
+  // Igual que abrirNovedades pero para la ventana Logística -- también
+  // ventana de verdad del sistema operativo (ver comentario en
+  // VentanaLogistica.jsx), y también exclusiva del menú del anfitrión.
+  abrirLogistica,
   // `botonExtra`: para cuando esta Portada la usa alguien que NO es el
   // anfitrión editando (p.ej. VistaColaborador.jsx) -- en vez del
   // desplegable "Abrir sección…" (editable+toggle), se puede pasar aquí
@@ -181,6 +185,7 @@ export function Portada({
             onCambiarRol={onCambiarRol}
             anfitrionToken={anfitrionToken}
             abrirNovedades={abrirNovedades}
+            abrirLogistica={abrirLogistica}
             posicion={{ bottom: "9%", right: 16 }}
           />
         )}
