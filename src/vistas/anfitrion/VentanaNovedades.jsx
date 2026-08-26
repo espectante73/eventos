@@ -5,7 +5,7 @@
 // cualquiera con el enlace ve las novedades publicadas, sin login ni
 // cuenta — a petición del usuario, 2026-08-25.
 import { useState, useRef, useEffect } from "react";
-import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown, Lock } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
 import { formatearFecha } from "../../lib/formato";
@@ -185,7 +185,7 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar }) {
 // eso no lleva cabecera arrastrable ni botón de cerrar propio -- la
 // ventana del sistema operativo ya trae los suyos.
 export function VentanaNovedades({ data, ventana }) {
-  const { evento, persistEvento, novedades, persistNovedades, tokenTablon } = data;
+  const { evento, persistEvento, novedades, persistNovedades, tokenTablon, preguntaTablon, persistPreguntaTablon } = data;
   const [copiado, setCopiado] = useState(false);
   // Enlace de INVITACIÓN al grupo (chat.whatsapp.com/XXXX) -- a propósito
   // no es tu número de teléfono: un botón basado en número abriría un
@@ -195,6 +195,21 @@ export function VentanaNovedades({ data, ventana }) {
   // Info del grupo → Invitar mediante enlace → copiar enlace.
   const [enlaceWhatsapp, setEnlaceWhatsapp] = useState(evento.enlaceGrupoWhatsapp || "");
   useEffect(() => setEnlaceWhatsapp(evento.enlaceGrupoWhatsapp || ""), [evento.enlaceGrupoWhatsapp]);
+
+  // Pregunta de acceso al tablón (capa extra sobre el enlace en sí) -- a
+  // petición del usuario, 2026-08-25: aunque el enlace se reenvíe fuera
+  // del grupo, sin la respuesta correcta el tablón no enseña nada.
+  const [pregunta, setPregunta] = useState(preguntaTablon.pregunta);
+  const [respuesta, setRespuesta] = useState(preguntaTablon.respuesta);
+  useEffect(() => {
+    setPregunta(preguntaTablon.pregunta);
+    setRespuesta(preguntaTablon.respuesta);
+  }, [preguntaTablon]);
+  const guardarPregunta = () => {
+    if (pregunta !== preguntaTablon.pregunta || respuesta !== preguntaTablon.respuesta) {
+      persistPreguntaTablon(pregunta, respuesta);
+    }
+  };
 
   const enlace = construirEnlaceTablon(evento.urlPublica, tokenTablon);
 
@@ -323,11 +338,29 @@ export function VentanaNovedades({ data, ventana }) {
         )}
       </div>
 
-      <div
-        className="flex items-center gap-2 px-4 py-3"
-        style={{ borderTop: `1px solid ${C.line}`, flexShrink: 0 }}
-      >
-        <MessageCircle size={14} style={{ color: "#25D366", flexShrink: 0 }} />
+      <div className="px-4 py-3 space-y-2" style={{ borderTop: `1px solid ${C.line}`, flexShrink: 0 }}>
+        <div className="flex items-center gap-2">
+          <Lock size={14} style={{ color: C.gold, flexShrink: 0 }} />
+          <input
+            value={pregunta}
+            onChange={(e) => setPregunta(e.target.value)}
+            onBlur={guardarPregunta}
+            placeholder="Pregunta de acceso (opcional)"
+            title="Se le pregunta a quien abra el tablón, antes de dejarle ver nada -- capa extra sobre el enlace en sí"
+            className="flex-1"
+            style={{ ...inputStyle, fontSize: 12 }}
+          />
+          <input
+            value={respuesta}
+            onChange={(e) => setRespuesta(e.target.value)}
+            onBlur={guardarPregunta}
+            placeholder="Respuesta correcta"
+            title="No distingue mayúsculas ni espacios de sobra, pero sí tildes -- usa algo sencillo"
+            style={{ ...inputStyle, fontSize: 12, width: 130 }}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <MessageCircle size={14} style={{ color: "#25D366", flexShrink: 0 }} />
         <input
           value={enlaceWhatsapp}
           onChange={(e) => setEnlaceWhatsapp(e.target.value)}
@@ -356,6 +389,7 @@ export function VentanaNovedades({ data, ventana }) {
         >
           Abrir grupo
         </a>
+        </div>
       </div>
     </div>
   );

@@ -11,7 +11,7 @@
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause } from "lucide-react";
-import { C } from "../theme";
+import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, formatearDiaSemana } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
@@ -19,7 +19,7 @@ import { InfoItem } from "../components/Portada";
 const BUCKET_MUSICA = "musica-ambiental";
 
 export function VistaTablon({ token }) {
-  // "cargando" | "invalido" | "listo"
+  // "cargando" | "invalido" | "bloqueado" | "listo"
   const [estado, setEstado] = useState("cargando");
   const [evento, setEvento] = useState(null);
   const [novedades, setNovedades] = useState([]);
@@ -27,6 +27,23 @@ export function VistaTablon({ token }) {
   // novedades, tenerlas todas desplegadas de golpe (o ir abriendo varias
   // sin plegar las anteriores) era un muro de texto imposible de leer.
   const [idAbierto, setIdAbierto] = useState(null);
+
+  // ---------- Pregunta de acceso (capa extra sobre el enlace en sí) ----------
+  // A petición del usuario, 2026-08-25: aunque el enlace se reenvíe fuera
+  // del grupo, sin la respuesta correcta el tablón no enseña nada -- ni
+  // siquiera la fecha/hora/lugar del evento. La respuesta correcta ya
+  // usada se recuerda en ESTE dispositivo (localStorage), para no tener
+  // que volver a escribirla cada vez que se abre el enlace.
+  const claveLocalStorage = `tablon-respuesta-${token}`;
+  const [pregunta, setPregunta] = useState("");
+  const [respuestaEscrita, setRespuestaEscrita] = useState("");
+  const [errorRespuesta, setErrorRespuesta] = useState("");
+  const [comprobando, setComprobando] = useState(false);
+  // La respuesta YA verificada -- se manda en cada refresco periódico
+  // (tablon_listar_novedades la exige también, no solo el token), pero
+  // vive en un ref (no en estado) porque no hace falta que dispare
+  // ningún re-render por sí sola.
+  const respuestaVerificadaRef = useRef("");
 
   // ---------- Música ambiental ----------
   // Los navegadores bloquean el audio automático hasta que la propia
@@ -65,16 +82,13 @@ export function VistaTablon({ token }) {
     }
   };
 
-  const cargar = useCallback(
+  // Carga fecha/hora/lugar + novedades -- solo se llama una vez superada
+  // la pregunta de acceso (o si no hay ninguna configurada).
+  const cargarContenido = useCallback(
     async (primeraVez) => {
-      const { data: esValido } = await supabase.rpc("tablon_verificar_token", { p_token: token });
-      if (esValido !== true) {
-        if (primeraVez) setEstado("invalido");
-        return;
-      }
       const [{ data: eventoFilas }, { data: novedadesFilas }] = await Promise.all([
         supabase.from("evento").select("*").limit(1),
-        supabase.rpc("tablon_listar_novedades", { p_token: token }),
+        supabase.rpc("tablon_listar_novedades", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
       ]);
       setEvento(eventoFilas && eventoFilas[0] ? eventoFilas[0] : null);
       setNovedades(novedadesFilas || []);
@@ -88,21 +102,95 @@ export function VistaTablon({ token }) {
     [token]
   );
 
+  // Primer arranque: valida el token, mira si hace falta responder a
+  // algo, y si este dispositivo ya tiene una respuesta guardada de una
+  // vez anterior (y sigue siendo válida -- el anfitrión pudo cambiar la
+  // pregunta desde entonces), pasa directo sin volver a preguntar.
   useEffect(() => {
-    cargar(true);
-    // Mismo espíritu que useLedgerData: sin Realtime de verdad, se vuelve
-    // a preguntar sola cada minuto y al volver a esta pestaña, para que
-    // una novedad nueva aparezca sin que nadie tenga que recargar a mano.
-    const intervalo = setInterval(() => cargar(false), 60 * 1000);
+    let cancelado = false;
+    (async () => {
+      const { data: esValido } = await supabase.rpc("tablon_verificar_token", { p_token: token });
+      if (cancelado) return;
+      if (esValido !== true) {
+        setEstado("invalido");
+        return;
+      }
+      const { data: preguntaTexto } = await supabase.rpc("tablon_obtener_pregunta", { p_token: token });
+      if (cancelado) return;
+      if (!preguntaTexto) {
+        cargarContenido(true);
+        return;
+      }
+      setPregunta(preguntaTexto);
+      let guardada = "";
+      try {
+        guardada = window.localStorage.getItem(claveLocalStorage) || "";
+      } catch (_) {
+        // Almacenamiento no disponible (navegación privada estricta...)
+        // -- se pedirá la respuesta cada vez, sin más.
+      }
+      if (guardada) {
+        const { data: sigueValiendo } = await supabase.rpc("tablon_verificar_respuesta", {
+          p_token: token,
+          p_respuesta: guardada,
+        });
+        if (cancelado) return;
+        if (sigueValiendo === true) {
+          respuestaVerificadaRef.current = guardada;
+          cargarContenido(true);
+          return;
+        }
+        try {
+          window.localStorage.removeItem(claveLocalStorage);
+        } catch (_) {
+          // Nada que hacer si tampoco se puede borrar.
+        }
+      }
+      setEstado("bloqueado");
+    })();
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- claveLocalStorage se deriva de `token`, no hace falta repetirlo
+  }, [token, cargarContenido]);
+
+  // Refresco periódico -- solo tiene sentido una vez desbloqueado (antes
+  // de eso no hay nada real que refrescar).
+  useEffect(() => {
+    if (estado !== "listo") return;
+    const intervalo = setInterval(() => cargarContenido(false), 60 * 1000);
     const alVolverVisible = () => {
-      if (document.visibilityState === "visible") cargar(false);
+      if (document.visibilityState === "visible") cargarContenido(false);
     };
     document.addEventListener("visibilitychange", alVolverVisible);
     return () => {
       clearInterval(intervalo);
       document.removeEventListener("visibilitychange", alVolverVisible);
     };
-  }, [cargar]);
+  }, [estado, cargarContenido]);
+
+  const enviarRespuesta = async (e) => {
+    e.preventDefault();
+    setComprobando(true);
+    setErrorRespuesta("");
+    const { data: esCorrecta } = await supabase.rpc("tablon_verificar_respuesta", {
+      p_token: token,
+      p_respuesta: respuestaEscrita,
+    });
+    setComprobando(false);
+    if (esCorrecta !== true) {
+      setErrorRespuesta("Respuesta incorrecta — inténtalo otra vez.");
+      return;
+    }
+    try {
+      window.localStorage.setItem(claveLocalStorage, respuestaEscrita);
+    } catch (_) {
+      // Sin almacenamiento disponible, no pasa nada -- solo tocará
+      // responder de nuevo la próxima vez.
+    }
+    respuestaVerificadaRef.current = respuestaEscrita;
+    cargarContenido(true);
+  };
 
   const alternar = (id) => {
     setIdAbierto((actual) => (actual === id ? null : id));
@@ -134,6 +222,52 @@ export function VistaTablon({ token }) {
             correcto del tablón.
           </p>
         </div>
+      </div>
+    );
+  }
+
+  if (estado === "bloqueado") {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
+      >
+        <form
+          onSubmit={enviarRespuesta}
+          className="max-w-sm w-full p-6 rounded-lg"
+          style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
+        >
+          <div className="flex items-center gap-2 mb-3" style={{ color: C.gold }}>
+            <Lock size={18} />
+            <h1 className="text-lg" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}>
+              Antes de entrar…
+            </h1>
+          </div>
+          <p className="text-sm mb-3" style={{ color: C.charcoal }}>
+            {pregunta}
+          </p>
+          <input
+            autoFocus
+            value={respuestaEscrita}
+            onChange={(e) => setRespuestaEscrita(e.target.value)}
+            className="w-full mb-2"
+            style={{ ...inputStyle, width: "100%", height: 42 }}
+            required
+          />
+          {errorRespuesta && (
+            <p className="text-sm mb-2" style={{ color: C.wax }}>
+              {errorRespuesta}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={comprobando}
+            className="boton-3d boton-verde-solido w-full py-2 rounded-full font-medium"
+            style={{ height: 44 }}
+          >
+            {comprobando ? "Comprobando…" : "Entrar"}
+          </button>
+        </form>
       </div>
     );
   }

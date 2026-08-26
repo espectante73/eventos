@@ -148,6 +148,12 @@ reenviarse. Un botón "Novedades" en la portada (visible para el
 anfitrión y para cada colaborador logueado) lleva directo ahí y permite
 volver sin perder la sesión.
 
+Capa extra opcional: una **pregunta con respuesta** (configurable en
+Novedades) que hay que responder antes de ver nada del tablón, ni
+siquiera la fecha del evento — protege de verdad la propia API, no es
+solo una pantalla decorativa. Cada dispositivo la recuerda tras la
+primera vez.
+
 Puede sonar **música ambiental** de fondo mientras el tablón está
 abierto (Configuración → Fondo musical, sube uno o varios archivos
 de audio a Supabase Storage). Un botón flotante la activa: los

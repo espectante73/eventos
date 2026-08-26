@@ -1606,11 +1606,28 @@ revoke all on table novedades from anon, authenticated;
 
 create table if not exists tablon_secreto (
   "id"    boolean primary key default true check ("id"),
-  "token" uuid not null default gen_random_uuid()
+  "token" uuid not null default gen_random_uuid(),
+  -- Pregunta de acceso (2026-08-25, a petición del usuario): capa extra
+  -- sobre el enlace en sí -- aunque alguien reenvíe el enlace fuera del
+  -- grupo, sin la respuesta correcta no ve nada. "pregunta" es pública
+  -- (hace falta mostrarla en el tablón antes de dejar pasar);
+  -- "respuestaCorrecta" NUNCA sale de esta tabla cerrada -- se compara
+  -- siempre dentro de una función, nunca se lee directamente.
+  -- Comparación sin mayúsculas ni espacios sobrantes (ver las funciones
+  -- de más abajo), pero SÍ sensible a acentos -- elegir una pregunta con
+  -- respuesta sencilla (un número, una palabra sin tilde) evita
+  -- fricciones tontas.
+  "pregunta"          text not null default '',
+  "respuestaCorrecta" text not null default ''
 );
 insert into tablon_secreto ("id") values (true) on conflict do nothing;
 alter table tablon_secreto enable row level security;
 revoke all on table tablon_secreto from anon, authenticated;
+-- Por si `tablon_secreto` ya existía de una sesión anterior sin estas
+-- dos columnas (el "create table if not exists" de arriba no las
+-- añadiría a una tabla ya creada).
+alter table tablon_secreto add column if not exists "pregunta" text not null default '';
+alter table tablon_secreto add column if not exists "respuestaCorrecta" text not null default '';
 
 -- ---------- Lado anfitrión: escribir novedades y consultar el enlace ----------
 
@@ -1667,6 +1684,31 @@ begin
 end;
 $$;
 
+-- El anfitrión consulta y guarda la pregunta de acceso desde la propia
+-- ventana Novedades -- "respuesta" SÍ viaja aquí en texto plano (el
+-- anfitrión necesita poder verla/editarla), a diferencia del tablón
+-- público, donde solo se compara, nunca se devuelve.
+create or replace function anfitrion_obtener_pregunta_tablon(p_token uuid)
+returns table("pregunta" text, "respuesta" text)
+language sql security definer set search_path = public, pg_temp
+as $$
+  select ts."pregunta", ts."respuestaCorrecta"
+  from tablon_secreto ts
+  where p_token = (select "token" from anfitrion_secreto limit 1);
+$$;
+
+create or replace function anfitrion_guardar_pregunta_tablon(p_token uuid, p_pregunta text, p_respuesta text)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+  update tablon_secreto set "pregunta" = p_pregunta, "respuestaCorrecta" = p_respuesta;
+end;
+$$;
+
 -- ---------- Lado público: el tablón de solo lectura ----------
 
 create or replace function tablon_verificar_token(p_token uuid)
@@ -1674,12 +1716,48 @@ returns boolean
 language sql security definer set search_path = public, pg_temp
 as $$ select p_token = (select "token" from tablon_secreto limit 1); $$;
 
-create or replace function tablon_listar_novedades(p_token uuid)
+-- Devuelve el TEXTO de la pregunta (público, hace falta mostrarlo) --
+-- nunca la respuesta correcta. "" si el anfitrión no ha puesto ninguna
+-- pregunta -- el tablón no pide nada en ese caso.
+create or replace function tablon_obtener_pregunta(p_token uuid)
+returns text
+language sql security definer set search_path = public, pg_temp
+as $$
+  select case
+    when p_token = (select "token" from tablon_secreto limit 1)
+    then (select "pregunta" from tablon_secreto limit 1)
+    else null
+  end;
+$$;
+
+-- Compara sin mayúsculas ni espacios sobrantes -- nunca devuelve la
+-- respuesta correcta en sí, solo si coincide o no.
+create or replace function tablon_verificar_respuesta(p_token uuid, p_respuesta text)
+returns boolean
+language sql security definer set search_path = public, pg_temp
+as $$
+  select p_token = (select "token" from tablon_secreto limit 1)
+    and lower(trim(coalesce(p_respuesta, ''))) = lower(trim((select "respuestaCorrecta" from tablon_secreto limit 1)));
+$$;
+
+-- Cambia de 1 a 2 parámetros (se añade p_respuesta) -- hay que borrar la
+-- firma vieja antes, si no create or replace deja las dos funciones a
+-- la vez y cualquier llamada con 1 argumento se vuelve ambigua (misma
+-- lección de siempre, ver CLAUDE.md).
+drop function if exists tablon_listar_novedades(uuid);
+
+-- Exige TAMBIÉN la respuesta correcta, no solo el token -- así alguien
+-- que llamara a esta función directamente (sin pasar por la pantalla de
+-- la pregunta) tampoco obtendría datos reales. Si no hay pregunta
+-- configurada ("respuestaCorrecta" = ''), cualquier respuesta vacía
+-- coincide sola -- el tablón no pide nada en ese caso.
+create or replace function tablon_listar_novedades(p_token uuid, p_respuesta text)
 returns setof novedades
 language sql security definer set search_path = public, pg_temp
 as $$
   select n.* from novedades n
   where p_token = (select "token" from tablon_secreto limit 1)
+    and lower(trim(coalesce(p_respuesta, ''))) = lower(trim((select "respuestaCorrecta" from tablon_secreto limit 1)))
     and n."publicada" = true
   order by n."creadaEn" desc;
 $$;
@@ -1687,8 +1765,12 @@ $$;
 grant execute on function anfitrion_obtener_token_tablon(uuid) to anon;
 grant execute on function anfitrion_listar_novedades(uuid) to anon;
 grant execute on function anfitrion_guardar_novedades(uuid, jsonb) to anon;
+grant execute on function anfitrion_obtener_pregunta_tablon(uuid) to anon;
+grant execute on function anfitrion_guardar_pregunta_tablon(uuid, text, text) to anon;
 grant execute on function tablon_verificar_token(uuid) to anon;
-grant execute on function tablon_listar_novedades(uuid) to anon;
+grant execute on function tablon_obtener_pregunta(uuid) to anon;
+grant execute on function tablon_verificar_respuesta(uuid, text) to anon;
+grant execute on function tablon_listar_novedades(uuid, text) to anon;
 
 -- ============================================================
 -- 2026-08-25: refuerzos sobre el tablón, a petición del usuario tras ver

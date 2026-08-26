@@ -1135,3 +1135,37 @@ que dependa de "qué ventana tiene el foco" (portapapeles, notificaciones,
 ventana, nunca los globales `window`/`navigator`/`document` a secas** --
 aunque el código "viva visualmente" en la ventana emergente, sigue
 ejecutándose en el realm de la pestaña principal.
+
+## 2026-08-25 (novena tanda): pregunta de acceso al tablón (v6.7)
+
+Petición nueva: "añadirle una capa de protección al enlace por
+WhatsApp" -- aclarada como una pregunta con respuesta (no un PIN
+suelto) que hay que responder antes de ver nada del tablón, ni
+siquiera la fecha del evento.
+
+- `tablon_secreto` gana dos columnas: `pregunta` (pública, hay que
+  mostrarla) y `respuestaCorrecta` (nunca sale de la tabla cerrada --
+  se compara siempre dentro de una función, igual que el resto de
+  secretos de la app).
+- `tablon_listar_novedades` cambia de firma (1 → 2 parámetros, con el
+  `drop function` de rigor antes -- misma lección de siempre) para
+  exigir TAMBIÉN la respuesta correcta, no solo el token: así, alguien
+  que llamara a la función directamente sin pasar por la pantalla de la
+  pregunta tampoco obtendría datos reales -- la pregunta protege de
+  verdad la API, no es solo una pantalla decorativa por delante.
+- Comparación case-insensitive y sin espacios de sobra (`lower(trim(...))`
+  en las dos partes) pero SÍ sensible a acentos -- documentado en la UI
+  para que el anfitrión elija una respuesta sencilla.
+- Sin pregunta configurada (`respuestaCorrecta = ''`), cualquier
+  respuesta vacía coincide sola -- el tablón no pide nada en ese caso,
+  ni hace falta que el anfitrión "desactive" nada a propósito.
+- `VentanaNovedades.jsx` gana un campo pregunta+respuesta en el pie,
+  encima del enlace de WhatsApp.
+- `VistaTablon.jsx`: nuevo estado "bloqueado" -- antes de cargar NADA
+  (ni siquiera fecha/hora/lugar), comprueba si hay pregunta configurada
+  y, si la hay, si este dispositivo ya tiene una respuesta guardada en
+  `localStorage` de una vez anterior (y sigue siendo válida -- si el
+  anfitrión cambió la pregunta desde entonces, se descarta y se vuelve
+  a pedir). La respuesta ya verificada viaja en cada refresco periódico
+  (la RPC la exige en cada llamada), guardada en un `ref` para no
+  disparar re-renders de más.

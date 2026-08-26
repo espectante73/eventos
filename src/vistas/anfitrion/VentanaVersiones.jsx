@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "6.7",
+    cambios: [
+      'Capa extra de protección en el tablón público: una pregunta con respuesta (configurable en Novedades, opcional) que hay que responder antes de ver nada — aunque el enlace se reenvíe fuera del grupo, sin la respuesta correcta no se ve ni la fecha del evento. Cada dispositivo la recuerda tras la primera vez, no hace falta responderla cada visita.',
+    ],
+  },
+  {
     version: "6.6",
     cambios: [
       "Arreglado de raíz: subir la imagen para WhatsApp o una pista de música ambiental nunca llegaba a funcionar (los dos buckets llevaban vacíos desde que se crearon) — un permiso mal puesto en la base de datos rechazaba la subida en silencio hasta este cambio.",

@@ -59,6 +59,9 @@ export function useLedgerData(rol) {
   // VentanaNovedades.jsx para copiarlo y compartirlo en el grupo de
   // WhatsApp. null hasta que se cargue (o si falla la carga).
   const [tokenTablon, setTokenTablon] = useState(null);
+  // Pregunta de acceso al tablón público (capa extra sobre el enlace en
+  // sí) -- solo el anfitrión la carga/edita, desde VentanaNovedades.jsx.
+  const [preguntaTablon, setPreguntaTablon] = useState({ pregunta: "", respuesta: "" });
 
   // Se mantiene al día para poder comparar "antes/después" dentro de
   // persistInvitados sin depender de closures obsoletas. También sirve
@@ -231,6 +234,9 @@ export function useLedgerData(rol) {
         const { data: tokenTablonCargado } = await supabase.rpc("anfitrion_obtener_token_tablon", {
           p_token: rol,
         });
+        const { data: preguntaCargada } = await supabase.rpc("anfitrion_obtener_pregunta_tablon", {
+          p_token: rol,
+        });
 
         if (cancelado) return;
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
@@ -244,6 +250,12 @@ export function useLedgerData(rol) {
         if (!errGastos) setGastos(todosGastos || []);
         if (!errNovedades) setNovedades(todasNovedades || []);
         if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
+        if (preguntaCargada && preguntaCargada[0]) {
+          setPreguntaTablon({
+            pregunta: preguntaCargada[0].pregunta || "",
+            respuesta: preguntaCargada[0].respuesta || "",
+          });
+        }
         setOrdenFamiliares(
           Object.fromEntries(
             (ordenFilas || []).map((r) => [
@@ -513,6 +525,24 @@ export function useLedgerData(rol) {
       }
     },
     [esAnfitrion, rol]
+  );
+
+  const persistPreguntaTablon = useCallback(
+    async (pregunta, respuesta) => {
+      const anterior = preguntaTablon;
+      setPreguntaTablon({ pregunta, respuesta });
+      if (!esAnfitrion) return;
+      const { error } = await supabase.rpc("anfitrion_guardar_pregunta_tablon", {
+        p_token: rol,
+        p_pregunta: pregunta,
+        p_respuesta: respuesta,
+      });
+      if (error) {
+        avisar("No se pudo guardar la pregunta del tablón. Se deshace el cambio en pantalla.", error);
+        setPreguntaTablon(anterior);
+      }
+    },
+    [esAnfitrion, rol, preguntaTablon]
   );
 
   // "Entendido" sobre el aviso de email sincronizado (ColaboradorCard):
@@ -844,5 +874,7 @@ export function useLedgerData(rol) {
     novedades,
     persistNovedades,
     tokenTablon,
+    preguntaTablon,
+    persistPreguntaTablon,
   };
 }
