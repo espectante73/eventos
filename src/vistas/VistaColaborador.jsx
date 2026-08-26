@@ -459,6 +459,10 @@ function FilaInvitadoColaborador({
 export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken, onCerrarSesion }) {
   const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento, ordenFamiliares, tokenTablon } = data;
   const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
+  // Cache-busting para la imagen del cronograma -- mismo motivo que en
+  // VistaTablon.jsx: el nombre de archivo es fijo, así que sin esto el
+  // navegador podía seguir enseñando la versión vieja tras un reemplazo.
+  const [cacheBusterCronograma] = useState(() => Date.now());
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
   // Permisos extra (más allá de sus invitados asignados), concedidos por
   // el anfitrión desde la ventana Permisos -- a petición del usuario,
@@ -715,7 +719,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           nombre de archivo fijo que usa el tablón público. */}
       {evento.cronogramaVisibleColaboradores && (
         <img
-          src={supabase.storage.from("cronograma").getPublicUrl("cronograma.jpg").data.publicUrl}
+          src={`${supabase.storage.from("cronograma").getPublicUrl("cronograma.jpg").data.publicUrl}?v=${cacheBusterCronograma}`}
           alt="Cronograma del día"
           className="w-full rounded-lg"
           onError={(e) => {

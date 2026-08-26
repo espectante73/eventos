@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "9.4",
+    cambios: [
+      "Arreglado: al reemplazar la imagen del cronograma, seguía viéndose la anterior (en el tablón público, en la vista de colaborador y en Logística) -- el navegador la tenía cacheada porque el nombre de archivo no cambia nunca. Ahora cada visita fuerza a pedirla de nuevo.",
+    ],
+  },
+  {
     version: "9.3",
     cambios: [
       "La sección Cronograma de Logística nace desplegada por defecto (a diferencia de las demás): la imagen se ve de un vistazo nada más abrir la ventana, sin tener que desplegarla.",

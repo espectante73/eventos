@@ -79,6 +79,10 @@ export function VentanaLogistica({ data }) {
   // VistaTablon.jsx) -- se listan aparte al abrir esta ventana.
   const [pistasMusica, setPistasMusica] = useState(null);
   const [cronogramaSubido, setCronogramaSubido] = useState(null);
+  // Cache-busting para la imagen -- mismo motivo que en VistaTablon.jsx/
+  // VistaColaborador.jsx: el nombre de archivo es fijo, así que sin esto
+  // podía seguir enseñando la versión vieja tras un reemplazo.
+  const [cacheBusterCronograma] = useState(() => Date.now());
 
   useEffect(() => {
     (async () => {
@@ -176,7 +180,7 @@ export function VentanaLogistica({ data }) {
               propio donde revisarla. */}
           {cronogramaSubido && (
             <img
-              src={supabase.storage.from(BUCKET_CRONOGRAMA).getPublicUrl("cronograma.jpg").data.publicUrl}
+              src={`${supabase.storage.from(BUCKET_CRONOGRAMA).getPublicUrl("cronograma.jpg").data.publicUrl}?v=${cacheBusterCronograma}`}
               alt="Cronograma del día"
               className="w-full rounded mt-2"
             />

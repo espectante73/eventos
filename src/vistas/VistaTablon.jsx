@@ -29,6 +29,12 @@ export function VistaTablon({ token }) {
   // novedades, tenerlas todas desplegadas de golpe (o ir abriendo varias
   // sin plegar las anteriores) era un muro de texto imposible de leer.
   const [idAbierto, setIdAbierto] = useState(null);
+  // Cache-busting para la imagen del cronograma: como el nombre de
+  // archivo es fijo (cronograma.jpg, para que este enlace nunca cambie),
+  // el navegador podía seguir enseñando la versión vieja tras un
+  // reemplazo -- a petición del usuario, 2026-08-27. Un valor fijo por
+  // carga de página basta (cada visita nueva pide la imagen de verdad).
+  const [cacheBusterCronograma] = useState(() => Date.now());
 
   // ---------- Pregunta de acceso (capa extra sobre el enlace en sí) ----------
   // A petición del usuario, 2026-08-25: aunque el enlace se reenvíe fuera
@@ -336,7 +342,7 @@ export function VistaTablon({ token }) {
             caso, ni conviene un aviso de error real. */}
         {evento?.cronogramaVisibleInvitados && (
           <img
-            src={supabase.storage.from(BUCKET_CRONOGRAMA).getPublicUrl(RUTA_CRONOGRAMA).data.publicUrl}
+            src={`${supabase.storage.from(BUCKET_CRONOGRAMA).getPublicUrl(RUTA_CRONOGRAMA).data.publicUrl}?v=${cacheBusterCronograma}`}
             alt="Cronograma del día"
             className="w-full rounded-lg mb-6"
             onError={(e) => {
