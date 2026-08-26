@@ -66,18 +66,21 @@ const ICONOS_VENTANAS = {
 // pruebas" y "Borrado total" llevan su propio chip de fondo rojo (letra
 // clara) de distinta intensidad: Borrado total es lo más irreversible
 // de los dos, así que se ve más rojo — a petición del usuario,
-// 2026-08-12.
+// 2026-08-12. Orden alfabético por etiqueta (no por fecha de creación
+// ni por importancia) — a petición del usuario, 2026-08-26: así, al
+// crecer, se sabe siempre dónde buscar algo sin tener que recordar en
+// qué orden se fue añadiendo.
 const SUBMENU_CONFIGURACION = [
-  { id: "config-datos-evento", etiqueta: "Datos evento", icono: Calendar },
-  { id: "config-precios", etiqueta: "Precios", icono: Euro },
-  { id: "config-url-web", etiqueta: "URL web", icono: Globe },
-  { id: "config-email-anfitrion", etiqueta: "Email anfitrión", icono: Mail },
-  { id: "config-plantillas-email", etiqueta: "Texto emails", icono: FileText },
-  { id: "config-musica", etiqueta: "Fondo musical", icono: Music },
-  { id: "config-cronograma", etiqueta: "Cronograma", icono: Clock3 },
-  { id: "config-modo-pruebas", etiqueta: "Modo pruebas", icono: FlaskConical, fondo: C.wax, color: C.paper },
-  { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },
   { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2, fondo: "#B00020", color: C.paper },
+  { id: "config-cronograma", etiqueta: "Cronograma", icono: Clock3 },
+  { id: "config-datos-evento", etiqueta: "Datos evento", icono: Calendar },
+  { id: "config-email-anfitrion", etiqueta: "Email anfitrión", icono: Mail },
+  { id: "config-musica", etiqueta: "Fondo musical", icono: Music },
+  { id: "config-modo-pruebas", etiqueta: "Modo pruebas", icono: FlaskConical, fondo: C.wax, color: C.paper },
+  { id: "config-precios", etiqueta: "Precios", icono: Euro },
+  { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },
+  { id: "config-plantillas-email", etiqueta: "Texto emails", icono: FileText },
+  { id: "config-url-web", etiqueta: "URL web", icono: Globe },
 ];
 
 // `posicion`: dónde flota el botón dentro de su contenedor (por defecto,
