@@ -42,32 +42,32 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
-    version: "13",
+    version: "9.3",
     cambios: [
       "La sección Cronograma de Logística nace desplegada por defecto (a diferencia de las demás): la imagen se ve de un vistazo nada más abrir la ventana, sin tener que desplegarla.",
     ],
   },
   {
-    version: "12",
+    version: "9.2",
     cambios: [
       "La sección Cronograma de Logística ya enseña la propia imagen (para ti, siempre que esté subida) además del texto de estado -- antes había que ir a Configuración para verla.",
     ],
   },
   {
-    version: "11",
+    version: "9.1",
     cambios: [
       "Logística pasa a ser una ventana de verdad del sistema operativo (como Novedades), con sus secciones (Cronograma, Tablón/FAQ, Música ambiental, Colaboradores, Permisos) plegables y plegadas por defecto -- deja de parecerse a Progreso.",
       "La sección de música se etiqueta \"Música ambiental (tablón público)\" y aclara que no es la canción que pide cada invitado para el convite (esa sigue en Progreso) -- para no confundir las dos cosas distintas que comparten la palabra \"música\".",
     ],
   },
   {
-    version: "10",
+    version: "9",
     cambios: [
       'Nueva ventana "Logística": panel de solo lectura con el estado general del evento de un vistazo -- cuenta atrás, confirmados/pagados, si el cronograma está subido y a quién es visible, cuántas entradas del tablón/FAQ están publicadas, si hay música ambiental subida, qué colaboradores han terminado lo suyo, y qué permisos tiene concedido cada uno. No añade datos nuevos ni edición -- reúne en un sitio lo que antes había que ir a mirar ventana por ventana.',
     ],
   },
   {
-    version: "9",
+    version: "8.1",
     cambios: [
       "Cronograma: oculto por defecto. Dos casillas nuevas en Configuración → Cronograma deciden si se enseña a colaboradores y/o a invitados (tablón público) — antes de marcarlas, nadie más que tú lo ve.",
       "Ventana Permisos, segundo ajuste: en vez de un desplegable por colaborador, ahora se elige a la persona con un <select> y sus permisos quedan siempre visibles debajo, sin nada más que abrir.",

@@ -1364,3 +1364,27 @@ bugs de "ventana equivocada" (portapapeles, `window.alert`...) de las
 tandas anteriores: `window.confirm()` (la pregunta del dinero) funciona
 sin problema aquí porque el código y el usuario comparten de verdad la
 misma ventana del navegador.
+
+## 2026-08-26: esquema de versionado corregido (entero.decimal, sin el "6." fijo)
+
+"Versión 6.10 es 7" (petición del usuario) se interpretó primero como
+"a partir de ahora, cada cambio sube un número entero" -- mal: eso
+disparó `VERSION_APP` de 7 a 13 en una sola sesión, un entero por cada
+ajuste pequeño (texto, orden, un detalle visual), cuando la intención
+real era mucho más simple: **dejar de anteponer un "6." fijo a todo**,
+no abandonar los decimales.
+
+**Esquema correcto, confirmado con el usuario:** un número entero por
+cada tema/funcionalidad nueva de verdad (como antes: Cronograma,
+Logística...), y un decimal detrás para cada ajuste posterior sobre ESE
+mismo tema (8, 8.1, 8.2... hasta que llegue el siguiente tema de
+verdad, que pasa a 9). Exactamente el mismo criterio que ya usaba el
+antiguo esquema "6.x" -- solo cambia que el número entero ya no lleva
+un "6." delante fijo.
+
+`HISTORIAL_VERSIONES` (`VentanaVersiones.jsx`) se renumeró para
+reflejar esto: la ventana "Logística" y sus 3 retoques posteriores, que
+habían recibido enteros 10/11/12/13 por error, pasaron a ser 9/9.1/9.2/9.3.
+**Antes de subir `VERSION_APP` en cualquier cambio futuro, preguntarse
+si es un tema nuevo (entero) o un ajuste sobre uno ya en curso
+(decimal) -- nunca subir el entero por defecto.**
