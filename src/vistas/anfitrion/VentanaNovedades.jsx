@@ -212,11 +212,21 @@ export function VentanaNovedades({ data, ventana }) {
   const [pregunta, setPregunta] = useState(preguntaTablon.pregunta);
   const [respuesta, setRespuesta] = useState(preguntaTablon.respuesta);
   const [errorPregunta, setErrorPregunta] = useState("");
+  // Solo guarda cuando las DOS casillas están rellenas (una pregunta a
+  // medias sin respuesta dejaría el tablón pidiendo algo imposible de
+  // acertar), o cuando las dos están vacías (para poder quitar la
+  // pregunta por completo) -- a petición del usuario, 2026-08-25: antes
+  // guardaba en cuanto se salía de CUALQUIERA de las dos casillas, así
+  // que rellenar la pregunta y saltar a la respuesta ya guardaba con la
+  // respuesta todavía vacía.
   const guardarPregunta = async () => {
-    if (pregunta !== preguntaTablon.pregunta || respuesta !== preguntaTablon.respuesta) {
-      const ok = await persistPreguntaTablon(pregunta, respuesta);
-      setErrorPregunta(ok ? "" : "No se ha podido guardar — vuelve a intentarlo.");
-    }
+    const sinCambios = pregunta === preguntaTablon.pregunta && respuesta === preguntaTablon.respuesta;
+    if (sinCambios) return;
+    const lasDosRellenas = pregunta.trim() && respuesta.trim();
+    const lasDosVacias = !pregunta.trim() && !respuesta.trim();
+    if (!lasDosRellenas && !lasDosVacias) return; // a medias -- todavía no
+    const ok = await persistPreguntaTablon(pregunta, respuesta);
+    setErrorPregunta(ok ? "" : "No se ha podido guardar — vuelve a intentarlo.");
   };
 
   const enlace = construirEnlaceTablon(evento.urlPublica, tokenTablon);

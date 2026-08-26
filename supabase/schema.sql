@@ -1705,7 +1705,15 @@ begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
-  update tablon_secreto set "pregunta" = p_pregunta, "respuestaCorrecta" = p_respuesta;
+  -- "where true": este proyecto bloquea cualquier UPDATE/DELETE sin
+  -- WHERE (protección real, no un capricho -- ver la regla ya anotada
+  -- en CLAUDE.md sobre esto mismo). tablon_secreto solo tiene una fila
+  -- de todas formas ("id" boolean primary key), así que si de verdad
+  -- es toda la tabla a propósito. Bug real encontrado en producción el
+  -- 2026-08-25: sin esto, cada guardado fallaba con "UPDATE requires a
+  -- WHERE clause" -- se me olvidó aplicar una regla que ya estaba
+  -- documentada en este mismo archivo.
+  update tablon_secreto set "pregunta" = p_pregunta, "respuestaCorrecta" = p_respuesta where true;
 end;
 $$;
 

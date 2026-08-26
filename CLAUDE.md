@@ -1212,3 +1212,28 @@ repinte a sí misma tras guardar): NUNCA "recopiar desde la prop" con un
 `useEffect` en cada cambio -- inicializar solo al montar** (con
 `useState(prop)`, sin más), o el propio guardado puede acabar
 borrando lo que la persona esté escribiendo al lado.
+
+**Cuarto bug de la misma tanda -- este sí de fondo, no de la ventana
+emergente: `anfitrion_guardar_pregunta_tablon` fallaba SIEMPRE.**
+Confirmado probando la función directamente por `curl` (con un token
+falso, para comprobar solo que existe sin necesitar el de verdad): la
+función SÍ existía (la migración se había pegado bien), así que el
+fallo tenía que estar dentro de su propio cuerpo. Causa: su
+`update tablon_secreto set ...` no llevaba `WHERE` -- y este proyecto
+tiene activada la protección real contra `UPDATE`/`DELETE` sin filtro
+(ver la regla "Supabase exige WHERE en todo UPDATE/DELETE" más arriba
+en este mismo archivo, ya documentada desde el 2026-08-12 por el mismo
+motivo en las funciones de Modo Pruebas) -- se me olvidó aplicarla
+aquí. Arreglado añadiendo `where true` (mismo criterio que el resto de
+funciones de esta app que tocan una tabla entera a propósito).
+**Lección que ya estaba escrita y aun así se repitió: cualquier
+`UPDATE`/`DELETE` nuevo sin una condición real por columna necesita
+`where true` desde el principio, no esperar a que falle en
+producción.**
+
+Aparte, ajuste de comportamiento pedido por el usuario: el guardado ya
+no se dispara en cuanto se sale de CUALQUIERA de las dos casillas
+(pregunta/respuesta) -- solo cuando las DOS están rellenas (una
+pregunta a medias sin respuesta dejaría el tablón pidiendo algo
+imposible de acertar) o las DOS vacías (para poder quitar la pregunta
+del todo).
