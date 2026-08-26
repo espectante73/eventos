@@ -509,15 +509,17 @@ begin
     end if;
   end loop;
 
-  insert into colaboradores ("id", "nombre", "invitadoId", "email")
+  insert into colaboradores ("id", "nombre", "invitadoId", "email", "permisos")
   select
     (f->>'id')::uuid, f->>'nombre', nullif(f->>'invitadoId','')::uuid,
-    coalesce(f->>'email', '')
+    coalesce(f->>'email', ''),
+    coalesce(f->'permisos', '[]'::jsonb)
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update
     set "nombre" = excluded."nombre",
         "invitadoId" = excluded."invitadoId",
-        "email" = excluded."email";
+        "email" = excluded."email",
+        "permisos" = excluded."permisos";
 
   delete from colaboradores c
   where not exists (
@@ -1931,3 +1933,76 @@ with check (
   bucket_id = 'og-imagen'
   and es_anfitrion()
 );
+
+-- ============================================================
+-- 2026-08-25: permisos por colaborador (empezando por poder editar el
+-- texto de Novedades). A petición del usuario: quiere ir dando acceso a
+-- partes concretas de la app a colaboradores concretos, no todo o nada
+-- -- así que esto se diseña desde el principio como una LISTA de claves
+-- de texto libre, no una columna booleana por función. Añadir una zona
+-- nueva en el futuro es solo: 1) una clave nueva aquí abajo (documentada
+-- como comentario), 2) un checkbox más en VentanaPermisos.jsx, 3)
+-- comprobar esa clave donde corresponda en el cliente -- no hace falta
+-- tocar el esquema otra vez.
+--
+-- Claves ya en uso:
+--   "novedades_editar" -- puede abrir la ventana Novedades y editar el
+--                         título/cuerpo de las que ya existen; el resto
+--                         de controles de esa ventana (crear, borrar,
+--                         publicar, marcar NOVEDADES/FAQ, enlace,
+--                         WhatsApp, pregunta de acceso) quedan
+--                         deshabilitados para quien solo tenga esta
+--                         clave y no sea el anfitrión.
+alter table colaboradores add column if not exists "permisos" jsonb not null default '[]'::jsonb;
+
+-- El propio checkbox de VentanaPermisos.jsx impide crear/borrar/publicar
+-- desde la pantalla, pero eso es solo la interfaz -- por si alguien
+-- llamara a estas funciones directamente (sin pasar por ahí), el
+-- permiso real se comprueba aquí también, igual que el resto de la app
+-- nunca se fía solo de lo que oculta o deshabilita el cliente.
+create or replace function colaborador_puede_editar_novedades(p_colaborador_id uuid)
+returns boolean
+language sql security definer set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1 from colaboradores c
+    where c."id" = p_colaborador_id
+      and c."authUserId" = auth.uid()
+      and c."permisos" ? 'novedades_editar'
+  );
+$$;
+
+create or replace function colaborador_listar_novedades(p_colaborador_id uuid)
+returns setof novedades
+language sql security definer set search_path = public, pg_temp
+as $$
+  select n.* from novedades n
+  where colaborador_puede_editar_novedades(p_colaborador_id)
+  order by n."creadaEn" desc;
+$$;
+
+-- A propósito solo actualiza "titulo"/"cuerpo" de filas que YA existen
+-- (por "id") -- nunca inserta, nunca borra, nunca toca
+-- "publicada"/"esNovedad": el permiso es "editar el texto", no
+-- "gestionar el tablón entero". Si el cliente mandara cualquier otro
+-- campo distinto, se ignora sin más.
+create or replace function colaborador_guardar_novedades(p_colaborador_id uuid, p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if not colaborador_puede_editar_novedades(p_colaborador_id) then
+    return;
+  end if;
+
+  update novedades n
+  set "titulo" = coalesce(f->>'titulo', n."titulo"),
+      "cuerpo" = coalesce(f->>'cuerpo', n."cuerpo")
+  from jsonb_array_elements(p_filas) as f
+  where n."id" = (f->>'id')::uuid;
+end;
+$$;
+
+grant execute on function colaborador_puede_editar_novedades(uuid) to anon;
+grant execute on function colaborador_listar_novedades(uuid) to anon;
+grant execute on function colaborador_guardar_novedades(uuid, jsonb) to anon;

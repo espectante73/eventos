@@ -13,6 +13,7 @@ import { ModalFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
 import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
+import { VentanaPermisos } from "./anfitrion/VentanaPermisos";
 import { VentanaConfigMusica } from "./anfitrion/VentanaConfigMusica";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
@@ -372,6 +373,11 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
 
       {abierto["config-musica"] && (
         <VentanaConfigMusica onCerrar={() => toggle("config-musica")} />
+      )}
+
+      {/* Permisos */}
+      {abierto.permisos && (
+        <VentanaPermisos data={data} onCerrar={() => toggle("permisos")} />
       )}
 
       {abierto["config-modo-pruebas"] && (

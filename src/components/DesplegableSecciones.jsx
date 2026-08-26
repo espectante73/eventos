@@ -36,6 +36,7 @@ import {
   Trash2,
   Megaphone,
   Music,
+  KeyRound,
 } from "lucide-react";
 import { C } from "../theme";
 import { UserSolido } from "./Widgets";
@@ -53,6 +54,7 @@ const ICONOS_VENTANAS = {
   invitados: List,
   mesas: Utensils,
   novedades: Megaphone,
+  permisos: KeyRound,
   plano: Map,
   progreso: Gauge,
   versiones: History,

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "6.9",
+    cambios: [
+      'Nueva ventana "Permisos": puedes darle a un colaborador concreto acceso a editar el texto de las novedades/FAQ existentes, sin darle acceso a nada más — crear, borrar, publicar, marcar NOVEDADES/FAQ, el enlace del tablón y la configuración de WhatsApp/pregunta de acceso quedan bloqueados para él. Pensada para ir sumando más permisos de este tipo en el futuro.',
+    ],
+  },
+  {
     version: "6.8",
     cambios: [
       'El apartado público pasa a llamarse "FAQ" (antes "Novedades") — cada entrada lleva una etiqueta automática, "FAQ" o "NOVEDADES", según la marques en el editor. Pensado para que la mayoría (preguntas frecuentes) convivan con los avisos de cambios de verdad, sin mezclarlos visualmente ni tener que escribir la etiqueta a mano.',

@@ -55,7 +55,7 @@ function prefijarLineas(textarea, valor, prefijo, onCambio) {
   });
 }
 
-function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar }) {
+function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloTexto }) {
   const [titulo, setTitulo] = useState(n.titulo);
   const [cuerpo, setCuerpo] = useState(n.cuerpo);
   const cuerpoRef = useRef(null);
@@ -141,7 +141,13 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar }) {
         <span className="text-xs whitespace-nowrap" style={{ color: C.charcoal, opacity: 0.5 }}>
           {formatearFecha(String(n.creadaEn).slice(0, 10))}
         </span>
-        <button onClick={() => onEliminar(n.id)} title="Eliminar esta novedad" className="p-1 flex-shrink-0">
+        <button
+          onClick={() => onEliminar(n.id)}
+          disabled={soloTexto}
+          title={soloTexto ? "No tienes permiso para borrar novedades" : "Eliminar esta novedad"}
+          className="p-1 flex-shrink-0"
+          style={{ opacity: soloTexto ? 0.3 : 1, cursor: soloTexto ? "not-allowed" : "pointer" }}
+        >
           <Trash2 size={16} style={{ color: C.wax }} />
         </button>
       </div>
@@ -173,17 +179,27 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar }) {
             className="w-full"
             style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
           />
-          <label className="flex items-center gap-1.5 text-xs" style={{ color: C.charcoal, opacity: 0.75 }}>
+          <label
+            className="flex items-center gap-1.5 text-xs"
+            style={{ color: C.charcoal, opacity: soloTexto ? 0.35 : 0.75 }}
+            title={soloTexto ? "No tienes permiso para cambiar esto" : undefined}
+          >
             <input
               type="checkbox"
+              disabled={soloTexto}
               checked={n.publicada}
               onChange={(e) => onCambiar({ ...n, publicada: e.target.checked })}
             />
             Publicada (visible en el tablón)
           </label>
-          <label className="flex items-center gap-1.5 text-xs" style={{ color: C.charcoal, opacity: 0.75 }}>
+          <label
+            className="flex items-center gap-1.5 text-xs"
+            style={{ color: C.charcoal, opacity: soloTexto ? 0.35 : 0.75 }}
+            title={soloTexto ? "No tienes permiso para cambiar esto" : undefined}
+          >
             <input
               type="checkbox"
+              disabled={soloTexto}
               checked={n.esNovedad}
               onChange={(e) => onCambiar({ ...n, esNovedad: e.target.checked })}
             />
@@ -202,7 +218,13 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar }) {
 // sin las limitaciones de una ventana flotante dentro de la pestaña. Por
 // eso no lleva cabecera arrastrable ni botón de cerrar propio -- la
 // ventana del sistema operativo ya trae los suyos.
-export function VentanaNovedades({ data, ventana }) {
+// `soloTexto`: true para un colaborador con el permiso
+// PERMISOS.NOVEDADES_EDITAR (nunca para el anfitrión) -- puede editar
+// título/cuerpo de las novedades ya existentes, pero todo lo demás
+// (crear, borrar, publicar, marcar NOVEDADES/FAQ, enlace, WhatsApp,
+// pregunta de acceso) queda deshabilitado y atenuado, a petición del
+// usuario, 2026-08-25.
+export function VentanaNovedades({ data, ventana, soloTexto = false }) {
   const { evento, persistEvento, novedades, persistNovedades, tokenTablon, preguntaTablon, persistPreguntaTablon } = data;
   const [copiado, setCopiado] = useState(false);
   // Enlace de INVITACIÓN al grupo (chat.whatsapp.com/XXXX) -- a propósito
@@ -335,9 +357,11 @@ export function VentanaNovedades({ data, ventana }) {
         <div className="flex items-center gap-2">
           <button
             onClick={copiarYAbrirGrupo}
-            disabled={!enlace}
+            disabled={!enlace || soloTexto}
             title={
-              enlace
+              soloTexto
+                ? "No tienes permiso para esto"
+                : enlace
                 ? copiado
                   ? "¡Copiado! Pégalo (Ctrl/Cmd+V) en el grupo y dale a enviar"
                   : evento.enlaceGrupoWhatsapp
@@ -348,16 +372,17 @@ export function VentanaNovedades({ data, ventana }) {
                 : "Rellena primero la URL web en Configuración → URL web"
             }
             className="boton-3d rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium"
-            style={{ color: C.goldClaro, opacity: enlace ? 1 : 0.4 }}
+            style={{ color: C.goldClaro, opacity: enlace && !soloTexto ? 1 : 0.35 }}
           >
             {copiado ? <Check size={16} /> : <LinkIcon size={16} />}
             Enlace
           </button>
           <button
             onClick={anadir}
-            title="Nueva novedad"
+            disabled={soloTexto}
+            title={soloTexto ? "No tienes permiso para esto" : "Nueva novedad"}
             className="boton-3d rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium"
-            style={{ color: C.goldClaro }}
+            style={{ color: C.goldClaro, opacity: soloTexto ? 0.35 : 1 }}
           >
             <Plus size={16} />
             Nueva
@@ -374,6 +399,7 @@ export function VentanaNovedades({ data, ventana }) {
             onEliminar={eliminar}
             expandida={idExpandido === n.id}
             onAlternar={() => alternarExpandida(n.id)}
+            soloTexto={soloTexto}
           />
         ))}
         {novedades.length === 0 && (
@@ -383,7 +409,15 @@ export function VentanaNovedades({ data, ventana }) {
         )}
       </div>
 
-      <div className="px-4 py-3 space-y-2" style={{ borderTop: `1px solid ${C.line}`, flexShrink: 0 }}>
+      {/* <fieldset disabled> deshabilita de golpe todos los <input>/<button>
+          de dentro -- no afecta al <a> de "Abrir grupo", que se corta a
+          mano con onClick/estilo (los enlaces no forman parte de lo que
+          un fieldset deshabilita). */}
+      <fieldset
+        disabled={soloTexto}
+        className="px-4 py-3 space-y-2"
+        style={{ borderTop: `1px solid ${C.line}`, flexShrink: 0, border: "none", opacity: soloTexto ? 0.4 : 1 }}
+      >
         <div className="flex items-center gap-2">
           <Lock size={14} style={{ color: C.gold, flexShrink: 0 }} />
           <input
@@ -411,36 +445,36 @@ export function VentanaNovedades({ data, ventana }) {
         )}
         <div className="flex items-center gap-2">
           <MessageCircle size={14} style={{ color: "#25D366", flexShrink: 0 }} />
-        <input
-          value={enlaceWhatsapp}
-          onChange={(e) => setEnlaceWhatsapp(e.target.value)}
-          onBlur={() =>
-            enlaceWhatsapp !== (evento.enlaceGrupoWhatsapp || "") &&
-            persistEvento({ ...evento, enlaceGrupoWhatsapp: enlaceWhatsapp })
-          }
-          placeholder="Enlace de invitación al grupo de WhatsApp"
-          title="WhatsApp → grupo → Info del grupo → Invitar mediante enlace"
-          className="flex-1"
-          style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
-        />
-        <a
-          href={evento.enlaceGrupoWhatsapp || undefined}
-          target="_blank"
-          rel="noreferrer"
-          onClick={(e) => !evento.enlaceGrupoWhatsapp && e.preventDefault()}
-          className="text-xs px-2 py-1.5 rounded whitespace-nowrap flex items-center gap-1"
-          style={{
-            background: evento.enlaceGrupoWhatsapp ? "#25D366" : C.line,
-            color: evento.enlaceGrupoWhatsapp ? "#fff" : C.charcoal,
-            opacity: evento.enlaceGrupoWhatsapp ? 1 : 0.6,
-            cursor: evento.enlaceGrupoWhatsapp ? "pointer" : "not-allowed",
-          }}
-          title={evento.enlaceGrupoWhatsapp ? "Abrir el grupo en WhatsApp" : "Pega antes el enlace del grupo"}
-        >
-          Abrir grupo
-        </a>
+          <input
+            value={enlaceWhatsapp}
+            onChange={(e) => setEnlaceWhatsapp(e.target.value)}
+            onBlur={() =>
+              enlaceWhatsapp !== (evento.enlaceGrupoWhatsapp || "") &&
+              persistEvento({ ...evento, enlaceGrupoWhatsapp: enlaceWhatsapp })
+            }
+            placeholder="Enlace de invitación al grupo de WhatsApp"
+            title="WhatsApp → grupo → Info del grupo → Invitar mediante enlace"
+            className="flex-1"
+            style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
+          />
+          <a
+            href={soloTexto ? undefined : evento.enlaceGrupoWhatsapp || undefined}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => (soloTexto || !evento.enlaceGrupoWhatsapp) && e.preventDefault()}
+            className="text-xs px-2 py-1.5 rounded whitespace-nowrap flex items-center gap-1"
+            style={{
+              background: evento.enlaceGrupoWhatsapp ? "#25D366" : C.line,
+              color: evento.enlaceGrupoWhatsapp ? "#fff" : C.charcoal,
+              opacity: evento.enlaceGrupoWhatsapp && !soloTexto ? 1 : 0.6,
+              cursor: evento.enlaceGrupoWhatsapp && !soloTexto ? "pointer" : "not-allowed",
+            }}
+            title={evento.enlaceGrupoWhatsapp ? "Abrir el grupo en WhatsApp" : "Pega antes el enlace del grupo"}
+          >
+            Abrir grupo
+          </a>
         </div>
-      </div>
+      </fieldset>
     </div>
   );
 }

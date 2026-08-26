@@ -1267,3 +1267,58 @@ incluirla tanto en el `insert` como en el `on conflict do update`
 visual (fondo verde tinta si es NOVEDADES, contorno neutro si es FAQ)
 en el editor y en `VistaTablon.jsx`, delante del título -- se ve igual
 plegada que desplegada.
+
+## 2026-08-25 (duodécima tanda): permisos por colaborador (v6.9)
+
+Primera funcionalidad de permisos de la app: el anfitrión puede
+conceder a un colaborador concreto acceso a una zona de la app más
+allá de sus invitados asignados de siempre -- empezando por editar el
+texto de novedades ya existentes. Pedido explícito de que fuera
+extensible ("empezar por..."), así que se diseñó desde el principio
+como una lista de claves de texto libre, no una columna booleana por
+función:
+
+- `colaboradores.permisos` (`jsonb`, array de strings, default `'[]'`).
+  Añadir una zona nueva en el futuro es: una clave nueva en
+  `lib/permisos.js` (+ el comentario correspondiente en `schema.sql`,
+  documentando qué hace esa clave), un checkbox más en
+  `VentanaPermisos.jsx` (que ya recorre `PERMISOS` genéricamente, no
+  hace falta tocar el propio componente), y comprobar esa clave donde
+  corresponda en el cliente.
+- `VentanaPermisos.jsx` (nueva, anfitrión): un colaborador por fila, un
+  checkbox por permiso -- reutiliza `persistColaboradores` de siempre
+  (permisos es solo una columna más de esa misma tabla), sin ninguna
+  RPC nueva de escritura para esto en sí.
+- **Reforzado en el servidor, no solo en la pantalla** (mismo criterio
+  que el resto de la app): `colaborador_puede_editar_novedades()`
+  comprueba `authUserId = auth.uid()` Y que `permisos` contenga la
+  clave -- `colaborador_listar_novedades`/`colaborador_guardar_novedades`
+  la usan por su cuenta. Esta última, a propósito, SOLO actualiza
+  `titulo`/`cuerpo` de filas que YA existen (nunca inserta, nunca
+  borra, nunca toca `publicada`/`esNovedad`) -- el permiso es "editar
+  el texto", no "gestionar el tablón entero", así que aunque alguien
+  llamara a la función directamente sin pasar por la interfaz, no
+  podría hacer más de lo que el permiso dice.
+- `VentanaNovedades.jsx` gana `soloTexto` (prop, nunca para el
+  anfitrión): título/cuerpo y el formato (negrita/cursiva/subrayado/
+  viñeta) siguen activos; crear, borrar, publicar, marcar NOVEDADES/
+  FAQ, el botón de enlace y todo el pie (WhatsApp + pregunta de acceso)
+  quedan deshabilitados y atenuados -- con un `<fieldset disabled>`
+  para el pie entero (deshabilita todos los `<input>` de dentro de
+  golpe; el `<a>` de "Abrir grupo" se corta aparte, un `<fieldset>` no
+  afecta a los enlaces) y `disabled`/opacidad sueltos en los botones y
+  checkboxes del resto.
+- `VistaColaborador.jsx` gana su propia instancia de
+  `usePopupWindow` (nombre de ventana distinto al del anfitrión, por si
+  la misma persona tuviera abiertas a la vez una sesión de cada una en
+  el mismo navegador) y un botón "Editar Novedades" junto a "Abrir
+  formulario", visible solo si `tienePermiso(colaborador,
+  PERMISOS.NOVEDADES_EDITAR)`.
+- `useLedgerData.js`: la rama colaborador de `cargarDatos` carga
+  también `novedades` (vía `colaborador_listar_novedades`) si el perfil
+  trae ese permiso; `persistNovedades` elige la RPC según el rol
+  (`anfitrion_guardar_novedades` / `colaborador_guardar_novedades`) y
+  ya no usa `avisar()` (`window.alert`) -- mismo motivo que
+  `persistPreguntaTablon` (tanda anterior): esta función también la
+  llama código que vive en la ventana emergente, y un `window.alert()`
+  a secas apuntaría a la pestaña principal, no a esa ventana.

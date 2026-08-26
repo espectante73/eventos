@@ -161,6 +161,15 @@ export function useLedgerData(rol) {
         const { data: tokenTablonCargado } = await supabase.rpc("colaborador_obtener_token_tablon", {
           p_colaborador_id: rol,
         });
+        // Permiso especial (ver lib/permisos.js): si este colaborador
+        // puede editar el texto de Novedades, carga también esa lista --
+        // colaborador_listar_novedades vuelve a comprobar el permiso por
+        // su cuenta (no se fía de que el cliente ya lo sepa).
+        const tienePermisoNovedades =
+          perfil[0] && Array.isArray(perfil[0].permisos) && perfil[0].permisos.includes("novedades_editar");
+        const { data: novedadesColaborador } = tienePermisoNovedades
+          ? await supabase.rpc("colaborador_listar_novedades", { p_colaborador_id: rol })
+          : { data: null };
 
         if (cancelado) return;
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
@@ -171,6 +180,7 @@ export function useLedgerData(rol) {
         if (!errInv) setInvitados(misInvitados || []);
         setMesas([]); // La vista de colaborador nunca necesita las mesas.
         if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
+        if (novedadesColaborador) setNovedades(novedadesColaborador);
         setEsAnfitrion(false);
         setLoaded(true);
         return;
@@ -508,21 +518,34 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
+  // Dos caminos según quién llama: el anfitrión gestiona el tablón
+  // entero (crear/borrar/publicar/marcar); un colaborador con el permiso
+  // "novedades_editar" (ver lib/permisos.js) solo puede llegar aquí
+  // desde VentanaNovedades.jsx en modo `soloTexto`, y
+  // colaborador_guardar_novedades solo actualiza título/cuerpo de filas
+  // ya existentes -- vuelve a comprobar el permiso por su cuenta en el
+  // servidor, no se fía de lo que el cliente ya deshabilitó en pantalla.
+  //
+  // Deliberadamente NO usa avisar() (window.alert): esta función la
+  // llama VentanaNovedades.jsx, que vive en una ventana emergente -- ver
+  // el porqué en persistPreguntaTablon(), unas líneas más abajo (mismo
+  // problema, mismo motivo).
   const persistNovedades = useCallback(
     async (next) => {
       const anterior = novedadesRef.current;
       setNovedades(next);
       novedadesRef.current = next;
-      if (!esAnfitrion) return; // El tablón público nunca escribe, solo lee.
-      const { error } = await supabase.rpc("anfitrion_guardar_novedades", {
-        p_token: rol,
-        p_filas: next,
-      });
+      const { error } = esAnfitrion
+        ? await supabase.rpc("anfitrion_guardar_novedades", { p_token: rol, p_filas: next })
+        : await supabase.rpc("colaborador_guardar_novedades", { p_colaborador_id: rol, p_filas: next });
       if (error) {
-        avisar("No se pudo guardar el tablón de novedades. Se deshace el cambio en pantalla.", error);
+        // eslint-disable-next-line no-console
+        console.error("No se pudo guardar el tablón de novedades.", error);
         setNovedades(anterior);
         novedadesRef.current = anterior;
+        return false;
       }
+      return true;
     },
     [esAnfitrion, rol]
   );

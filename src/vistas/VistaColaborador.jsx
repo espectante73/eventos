@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Euro,
   ChevronDown,
+  Megaphone,
 } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
@@ -24,11 +25,14 @@ import {
 import { ordenarPorApellidoNombre } from "../lib/formato";
 import { construirEnlaceTablon } from "../lib/url";
 import { redimensionarImagenArchivo } from "../lib/descargas";
+import { usePopupWindow } from "../lib/usePopupWindow";
+import { PERMISOS, tienePermiso } from "../lib/permisos";
 import { C } from "../theme";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
+import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 
 // ---------- Colaborador view ----------
 
@@ -449,6 +453,26 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento, ordenFamiliares, tokenTablon } = data;
   const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
+  // Permisos extra (más allá de sus invitados asignados), concedidos por
+  // el anfitrión desde la ventana Permisos -- a petición del usuario,
+  // 2026-08-25, empezando por poder editar el texto de Novedades. Mismo
+  // patrón de ventana emergente que usa el anfitrión (ver
+  // VistaAnfitrion.jsx/usePopupWindow.js), pero con nombre de ventana
+  // distinto -- por si la misma persona tuviera abiertas a la vez una
+  // pestaña de anfitrión y otra de colaborador en el mismo navegador, no
+  // deben compartir la misma ventana del sistema operativo.
+  const puedeEditarNovedades = tienePermiso(colaborador, PERMISOS.NOVEDADES_EDITAR);
+  const {
+    abrir: abrirNovedades,
+    actualizar: actualizarNovedades,
+    abierta: novedadesAbierta,
+    ventana: ventanaNovedades,
+  } = usePopupWindow({ nombreVentana: "novedades-evento-colaborador", ancho: 640, alto: 800 });
+  useEffect(() => {
+    if (novedadesAbierta) {
+      actualizarNovedades(<VentanaNovedades data={data} ventana={ventanaNovedades} soloTexto />);
+    }
+  }, [novedadesAbierta, actualizarNovedades, data, ventanaNovedades]);
   // Pantalla de inicio: la misma Portada que ve el anfitrión (sin sus 3
   // recuadros de estadísticas, que no viven aquí sino en VistaAnfitrion.jsx),
   // con un único botón "Abrir formulario" en vez del desplegable "Abrir
@@ -612,6 +636,15 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   </button>
                 )}
               />
+            )}
+            {puedeEditarNovedades && (
+              <button
+                onClick={abrirNovedades}
+                className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
+                title="Permiso especial concedido por el anfitrión: editar el texto de las novedades"
+              >
+                <Megaphone size={16} /> Editar Novedades
+              </button>
             )}
             <button
               onClick={() => setFormularioAbierto(true)}
