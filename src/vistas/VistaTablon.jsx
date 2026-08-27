@@ -310,12 +310,17 @@ export function VistaTablon({ token }) {
               </h1>
             )}
             <div className="flex flex-wrap items-start gap-x-6 gap-y-2">
-              <InfoItem
-                claro
-                icon={Calendar}
-                label="Fecha"
-                value={evento.fecha ? [formatearDiaSemana(evento.fecha), formatearFecha(evento.fecha)] : "—"}
-              />
+              {/* Fecha ocultable temporalmente desde Novedades -- a
+                  petición del usuario, 2026-08-27. Solo afecta a esta
+                  pantalla pública, no a la portada ni a la invitación. */}
+              {!evento.tablonOcultarFecha && (
+                <InfoItem
+                  claro
+                  icon={Calendar}
+                  label="Fecha"
+                  value={evento.fecha ? [formatearDiaSemana(evento.fecha), formatearFecha(evento.fecha)] : "—"}
+                />
+              )}
               <InfoItem claro icon={Clock} label="Hora" value={evento.hora || "—"} />
               <InfoItem claro icon={MapPin} label="Lugar" value={evento.lugar || "—"} />
             </div>

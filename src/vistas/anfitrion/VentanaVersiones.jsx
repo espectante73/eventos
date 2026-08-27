@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "15",
+    cambios: [
+      "Nueva casilla en Novedades: ocultar la fecha del evento en el tablón público, con carácter temporal -- no afecta a la portada, Datos evento ni a la invitación.",
+      "La invitación usa ya la misma letra (sin negrita) en las 3 líneas de familia/mesa/colaborador y en fecha/hora/lugar -- antes eran distintas entre los dos recuadros.",
+    ],
+  },
+  {
     version: "14",
     cambios: [
       'Ventana Invitaciones gana 3 casillas ("Imprimir: Fecha / Hora / Lugar") para poder quitar cualquiera de las tres de la imagen de invitación sin tener que vaciar esos datos en Configuración -- las 3 activas por defecto, la invitación se sigue viendo igual que siempre hasta que desmarques alguna.',

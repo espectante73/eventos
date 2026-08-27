@@ -2174,3 +2174,10 @@ alter table evento add column if not exists "rolesTrabajoResponsables" jsonb not
 alter table evento add column if not exists "imprimirFecha" boolean not null default true;
 alter table evento add column if not exists "imprimirHora" boolean not null default true;
 alter table evento add column if not exists "imprimirLugar" boolean not null default true;
+
+-- ---------- Ocultar la fecha en el tablón público (2026-08-27, misma tarde) ----------
+-- Checkbox en Novedades, con carácter TEMPORAL (p.ej. mientras el
+-- anfitrión no quiere que los ya confirmados vean el día exacto
+-- todavía) -- solo afecta a VistaTablon.jsx, nunca a la portada, a
+-- Datos evento ni a la invitación.
+alter table evento add column if not exists "tablonOcultarFecha" boolean not null default false;

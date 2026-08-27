@@ -216,7 +216,9 @@ export function generarInvitacionImagen(
           // (mismo lineHeight en las 3). "fuenteDetalle"/"tamDetalle"
           // (más grande, solo para la mesa) se retiraron por completo al
           // dejar de usarse en ningún sitio.
-          const fuenteNombres = `bold ${Math.round(W * 0.031)}px 'Fraunces', serif`;
+          // Sin "bold" -- a petición del usuario, 2026-08-27, para que
+          // coincida con la letra normal ya usada en fecha/hora/lugar.
+          const fuenteNombres = `${Math.round(W * 0.031)}px 'Fraunces', serif`;
           const tamNombres = Math.round(W * 0.031);
           const lineHeightNombres = Math.round(W * 0.035);
           const espacioEntreBloques = Math.round(W * 0.02);
@@ -260,14 +262,14 @@ export function generarInvitacionImagen(
           if (nombreColaborador) {
             const etiquetaColaborador = `Colab.: ${nombreColaborador}`;
             let tamColaborador = tamNombres;
-            ctx.font = `bold ${tamColaborador}px 'Fraunces', serif`;
+            ctx.font = `${tamColaborador}px 'Fraunces', serif`;
             while (ctx.measureText(etiquetaColaborador).width > anchoDisponible && tamColaborador > tamNombres * 0.7) {
               tamColaborador -= 1;
-              ctx.font = `bold ${tamColaborador}px 'Fraunces', serif`;
+              ctx.font = `${tamColaborador}px 'Fraunces', serif`;
             }
             bloques.push({
               lineas: [etiquetaColaborador],
-              font: `bold ${tamColaborador}px 'Fraunces', serif`,
+              font: `${tamColaborador}px 'Fraunces', serif`,
               fontSizePx: tamColaborador,
               lineHeight: Math.round(lineHeightNombres * (tamColaborador / tamNombres)),
             });

@@ -459,6 +459,19 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             Abrir grupo
           </a>
         </div>
+        {/* Ocultar solo la fecha en el tablón público -- a petición del
+            usuario, 2026-08-27, con carácter TEMPORAL (p.ej. mientras
+            todavía no quiere que los confirmados sepan el día exacto).
+            No afecta a la fecha en ningún otro sitio (portada,
+            invitación, Datos evento) -- solo a esta pantalla pública. */}
+        <label className="flex items-center gap-2 text-xs" style={{ color: C.charcoal }}>
+          <input
+            type="checkbox"
+            checked={Boolean(evento.tablonOcultarFecha)}
+            onChange={(e) => persistEvento({ ...evento, tablonOcultarFecha: e.target.checked })}
+          />
+          Ocultar la fecha en el tablón público (temporalmente)
+        </label>
       </fieldset>
     </div>
   );
