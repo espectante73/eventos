@@ -96,13 +96,20 @@ export function VentanaLogistica({ data }) {
   const cronogramaVisible = Boolean(evento.cronogramaVisibleColaboradores);
   const cronogramaBloques = Array.isArray(evento.cronogramaBloques) ? evento.cronogramaBloques : [];
   const cronogramaSupervisados = cronogramaBloques.filter((b) => b.supervisado).length;
-  const cronogramaSinAsignar = cronogramaBloques.filter((b) => !Array.isArray(b.asignados) || b.asignados.length === 0);
 
   const colaboradoresConPermisos = colaboradores.filter((c) => Array.isArray(c.permisos) && c.permisos.length > 0);
 
   const conAlgunoAsignado = colaboradores.filter((c) =>
     invitados.some((g) => g.confirmado && resolverColaborador(g, colaboradores)?.id === c.id)
   );
+  // El bloque 0 (Recepción) es automático -- lo cubren los colaboradores
+  // con confirmados a su cargo, sin nada que asignar a mano ahí (ver
+  // VentanaConfigCronograma.jsx). No cuenta como "sin asignar" si ya hay
+  // al menos un colaborador en esa situación.
+  const cronogramaSinAsignar = cronogramaBloques.filter((b, i) => {
+    if (i === 0) return conAlgunoAsignado.length === 0;
+    return !Array.isArray(b.asignados) || b.asignados.length === 0;
+  });
   const detalleColaboradores = conAlgunoAsignado.map((c) => {
     const suyos = invitados.filter((g) => g.confirmado && resolverColaborador(g, colaboradores)?.id === c.id);
     const terminado = suyos.length > 0 && suyos.every((g) => datosCompletos(g) && g.pagado);

@@ -2155,3 +2155,11 @@ where true;
 -- usado entre los invitados, sin ninguna tabla de catálogo aparte).
 alter table invitados add column if not exists "rolesTrabajo" jsonb not null default '[]'::jsonb;
 grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
+
+-- ---------- Responsable de un rol de trabajo (2026-08-27, misma tarde) ----------
+-- Uno solo por rol para TODO el evento, sea cual sea el bloque del
+-- cronograma donde trabaje ese rol -- a petición del usuario: "el
+-- capitán de acomodadores será el mismo durante todo el evento". Mapa
+-- simple { "rol": "idDelInvitado" }, vive en `evento` (tabla abierta)
+-- igual que el resto de datos del evento.
+alter table evento add column if not exists "rolesTrabajoResponsables" jsonb not null default '{}'::jsonb;

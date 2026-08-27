@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "12",
+    cambios: [
+      "Cronograma: el bloque de Recepción ya no se asigna a mano -- lo cubren automáticamente los colaboradores que tienen invitados confirmados a su cargo. En el resto de bloques, ya se puede asignar también a invitados con rol de trabajo, no solo a colaboradores.",
+      "Nuevo: marcar quién es el \"responsable\" de un rol de trabajo (una estrella junto al rol, en el mismo panel de Lista de invitados) -- uno solo por rol, el mismo para todo el evento sea cual sea el bloque.",
+    ],
+  },
+  {
     version: "11",
     cambios: [
       'Nueva figura "rol de trabajo" en la Lista de invitados (icono de etiqueta, junto al de borrar): marca a un invitado como acomodador, fotografía o cualquier otro rol que actúe EL DÍA del evento -- sin darle ningún acceso a la app, es solo una etiqueta para poder asignarlo luego a un bloque del cronograma. Catálogo abierto: escribes el nombre del rol la primera vez, no hace falta tocar código para añadir uno nuevo.',

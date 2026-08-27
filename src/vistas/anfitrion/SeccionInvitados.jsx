@@ -26,6 +26,7 @@ import {
   Printer,
   MoreHorizontal,
   Tag,
+  Star,
 } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
@@ -48,7 +49,7 @@ export function SeccionInvitados({
   setFiltros,
   onCerrar,
 }) {
-  const { evento, colaboradores, invitados, mesas, persistInvitados, avisarColaborador } = data;
+  const { evento, persistEvento, colaboradores, invitados, mesas, persistInvitados, avisarColaborador } = data;
 
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
   const [textoImport, setTextoImport] = useState("");
@@ -243,6 +244,24 @@ export function SeccionInvitados({
     if (!rol) return;
     alternarRolTrabajo(id, rol);
     setNuevoRolTexto("");
+  };
+
+  // Responsable de un rol -- UNO SOLO para todo el evento, sea cual sea
+  // el bloque del cronograma donde trabaje ese rol (a petición del
+  // usuario: "el capitán de acomodadores será el mismo durante todo el
+  // evento"). Vive en evento.rolesTrabajoResponsables ({ rol: invitadoId }),
+  // no en el invitado ni en el bloque -- un único mapa por rol, para
+  // que sirva igual si "acomodador" apareciera en más de un bloque.
+  const responsablesRol = evento.rolesTrabajoResponsables || {};
+  const marcarResponsable = (rol, invitadoId) => {
+    const actual = responsablesRol[rol];
+    const siguientes = { ...responsablesRol };
+    if (actual === invitadoId) {
+      delete siguientes[rol];
+    } else {
+      siguientes[rol] = invitadoId;
+    }
+    persistEvento({ ...evento, rolesTrabajoResponsables: siguientes });
   };
 
   const imprimirPanelActivo = () => {
@@ -1487,18 +1506,30 @@ export function SeccionInvitados({
           <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
             Marca los roles que este invitado desempeña EL DÍA del evento (acomodador,
             fotografía...) -- no da ningún acceso a la app, solo sirve para poder asignarlo a un
-            bloque del cronograma.
+            bloque del cronograma. La estrella marca quién es el responsable de ese rol para
+            todo el evento (uno solo por rol).
           </p>
           {rolesConocidos.length > 0 && (
             <div className="flex flex-col gap-1.5 mb-3">
               {rolesConocidos.map((rol) => {
                 const g = invitados.find((i) => i.id === invitadoRolAbierto);
                 const activo = Array.isArray(g?.rolesTrabajo) && g.rolesTrabajo.includes(rol);
+                const esResponsable = responsablesRol[rol] === invitadoRolAbierto;
                 return (
-                  <label key={rol} className="flex items-center gap-2 text-sm" style={{ color: C.charcoal }}>
-                    <input type="checkbox" checked={activo} onChange={() => alternarRolTrabajo(invitadoRolAbierto, rol)} />
-                    {rol}
-                  </label>
+                  <div key={rol} className="flex items-center justify-between gap-2 text-sm" style={{ color: C.charcoal }}>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" checked={activo} onChange={() => alternarRolTrabajo(invitadoRolAbierto, rol)} />
+                      {rol}
+                    </label>
+                    {activo && (
+                      <button
+                        onClick={() => marcarResponsable(rol, invitadoRolAbierto)}
+                        title={esResponsable ? "Es el responsable de este rol -- pulsa para quitarlo" : "Marcar como responsable de este rol"}
+                      >
+                        <Star size={14} fill={esResponsable ? C.gold : "none"} style={{ color: C.gold }} />
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>

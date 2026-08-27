@@ -16,6 +16,7 @@ import { useState, useEffect } from "react";
 import { Printer } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { generarImagenCronograma, calcularHorasAbsolutas } from "../../lib/cronograma";
+import { resolverColaborador } from "../../lib/invitados";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
 // Todas las horas del día en pasos de 5 minutos, en un único <select> --
@@ -32,8 +33,21 @@ const TODAS_LAS_HORAS = Array.from({ length: 24 * 12 }, (_, i) => {
 });
 
 export function VentanaConfigCronograma({ data, onCerrar }) {
-  const { evento, persistEvento, colaboradores } = data;
+  const { evento, persistEvento, colaboradores, invitados } = data;
   const bloques = Array.isArray(evento.cronogramaBloques) ? evento.cronogramaBloques : [];
+  // "Recepción" -- siempre el primer bloque del día -- la cubren los
+  // propios colaboradores, cada uno recibiendo a sus invitados ya
+  // asignados (dato que ya existe: quién tiene algún confirmado a su
+  // cargo). Automático a propósito, a petición del usuario: no hace
+  // falta "asignar" nada ahí, ya se sabe solo.
+  const colaboradoresConConfirmados = colaboradores.filter((c) =>
+    invitados.some((g) => g.confirmado && resolverColaborador(g, colaboradores)?.id === c.id)
+  );
+  // Invitados con algún rol de trabajo (acomodador, etc.) -- el otro
+  // grupo asignable, además de los colaboradores, a los bloques que NO
+  // son la Recepción.
+  const invitadosConRol = invitados.filter((g) => Array.isArray(g.rolesTrabajo) && g.rolesTrabajo.length > 0);
+  const responsablesRol = evento.rolesTrabajoResponsables || {};
   const horaInicio = evento.cronogramaHoraInicio || "18:00";
   const [imagen, setImagen] = useState("");
   const [seleccionado, setSeleccionado] = useState(0);
@@ -148,32 +162,61 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
             />
           </div>
 
-          {/* Quién atiende este bloque -- por ahora solo colaboradores
-              (puede haber varios a la vez), y si tú ya lo has
-              supervisado. Dos cosas distintas, no una sola: "¿está
-              cubierto?" y "¿lo he comprobado yo?" -- a petición del
-              usuario. */}
+          {/* Quién atiende este bloque. Dos cosas distintas, no una
+              sola: "¿está cubierto?" y "¿lo he comprobado yo?" -- a
+              petición del usuario. El primer bloque (Recepción) es
+              automático: lo cubren los colaboradores con invitados
+              confirmados a su cargo, sin nada que marcar a mano. */}
           <div className="mb-2">
             <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.6 }}>
               Quién lo atiende
             </p>
-            {colaboradores.length === 0 ? (
-              <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.5 }}>
-                Todavía no hay ningún colaborador.
+            {seleccionado === 0 ? (
+              <p className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+                Automático: cada colaborador recibe a sus propios invitados —{" "}
+                {colaboradoresConConfirmados.length === 0
+                  ? "todavía ninguno tiene confirmados."
+                  : colaboradoresConConfirmados.map((c) => c.nombre).join(", ")}
+                .
               </p>
             ) : (
-              <div className="flex flex-wrap gap-x-3 gap-y-1">
-                {colaboradores.map((c) => (
-                  <label key={c.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
-                    <input
-                      type="checkbox"
-                      checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(c.id)}
-                      onChange={() => alternarAsignado(seleccionado, c.id)}
-                    />
-                    {c.nombre}
-                  </label>
-                ))}
-              </div>
+              <>
+                {colaboradores.length === 0 && invitadosConRol.length === 0 ? (
+                  <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.5 }}>
+                    Todavía no hay ningún colaborador ni invitado con rol de trabajo.
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-1">
+                    {colaboradores.map((c) => (
+                      <label key={c.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
+                        <input
+                          type="checkbox"
+                          checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(c.id)}
+                          onChange={() => alternarAsignado(seleccionado, c.id)}
+                        />
+                        {c.nombre}
+                      </label>
+                    ))}
+                    {invitadosConRol.map((g) => (
+                      <label key={g.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
+                        <input
+                          type="checkbox"
+                          checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(g.id)}
+                          onChange={() => alternarAsignado(seleccionado, g.id)}
+                        />
+                        {g.nombre}
+                        <span style={{ opacity: 0.6 }}>
+                          (
+                          {g.rolesTrabajo
+                            .map((r) => (responsablesRol[r] === g.id ? `★ ${r}` : r))
+                            .join(", ")}
+                          )
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
