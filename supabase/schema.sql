@@ -689,7 +689,7 @@ begin
   insert into invitados (
     "id","nombre","apellido","zona","confirmado","colaboradorId",
     "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
-    "cancion","alergias","observaciones","pagado"
+    "cancion","alergias","observaciones","pagado","rolesTrabajo"
   )
   select
     (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
@@ -698,7 +698,8 @@ begin
     f->>'grupoFamiliar', nullif(f->>'mesa','')::integer,
     f->>'anioNacimiento', f->>'anioBoda', f->>'email', f->>'cancion',
     f->>'alergias', f->>'observaciones',
-    coalesce((f->>'pagado')::boolean, false)
+    coalesce((f->>'pagado')::boolean, false),
+    coalesce(f->'rolesTrabajo', '[]'::jsonb)
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update set
     "nombre"=excluded."nombre", "apellido"=excluded."apellido",
@@ -707,7 +708,8 @@ begin
     "mesa"=excluded."mesa", "anioNacimiento"=excluded."anioNacimiento",
     "anioBoda"=excluded."anioBoda", "email"=excluded."email",
     "cancion"=excluded."cancion", "alergias"=excluded."alergias",
-    "observaciones"=excluded."observaciones", "pagado"=excluded."pagado";
+    "observaciones"=excluded."observaciones", "pagado"=excluded."pagado",
+    "rolesTrabajo"=excluded."rolesTrabajo";
 
   delete from invitados g
   where not exists (
@@ -2140,3 +2142,16 @@ update evento set
     {"duracionMin": 15, "texto": "Final"}
   ]'::jsonb
 where true;
+
+-- ---------- "Rol de trabajo" para invitados (2026-08-27) ----------
+-- Distinto de "colaborador" a propósito: un colaborador tiene acceso a
+-- la app (login, permisos, gestiona invitados) porque su trabajo es de
+-- PREPARACIÓN, con antelación. Un "rol de trabajo" (acomodador,
+-- fotografía...) es solo una etiqueta sobre un invitado que además
+-- ACTÚA el día del evento en sí -- sin ningún acceso a la app. Catálogo
+-- ABIERTO a propósito: no hay ninguna lista fija aquí ni en el cliente,
+-- el propio anfitrión escribe el nombre del rol la primera vez que lo
+-- necesita (se calcula qué roles existen mirando los que ya se han
+-- usado entre los invitados, sin ninguna tabla de catálogo aparte).
+alter table invitados add column if not exists "rolesTrabajo" jsonb not null default '[]'::jsonb;
+grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;

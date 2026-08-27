@@ -25,6 +25,7 @@ import {
   Copy,
   Printer,
   MoreHorizontal,
+  Tag,
 } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
@@ -208,6 +209,40 @@ export function SeccionInvitados({
 
   const eliminarInvitado = (id) => {
     persistInvitados(invitados.filter((g) => g.id !== id));
+  };
+
+  // ---------- Rol de trabajo (2026-08-27) ----------
+  // Un invitado que además trabaja EL DÍA del evento (empezando por
+  // "acomodador") -- distinto de "colaborador" a propósito: no da
+  // ningún acceso a la app, es solo una etiqueta para poder asignarlo
+  // a un bloque del cronograma. Catálogo ABIERTO: no hay ninguna lista
+  // fija en el código -- el propio anfitrión escribe el nombre del rol
+  // la primera vez que lo necesita, y a partir de ahí ya aparece como
+  // opción para cualquier otro invitado (se calcula solo, mirando qué
+  // roles ya se han usado -- ninguna tabla ni columna de catálogo
+  // aparte que mantener).
+  const [invitadoRolAbierto, setInvitadoRolAbierto] = useState(null);
+  const [nuevoRolTexto, setNuevoRolTexto] = useState("");
+  const rolesConocidos = [
+    ...new Set(invitados.flatMap((g) => (Array.isArray(g.rolesTrabajo) ? g.rolesTrabajo : []))),
+  ].sort();
+
+  const alternarRolTrabajo = (id, rol) => {
+    persistInvitados(
+      invitados.map((g) => {
+        if (g.id !== id) return g;
+        const actuales = Array.isArray(g.rolesTrabajo) ? g.rolesTrabajo : [];
+        const siguientes = actuales.includes(rol) ? actuales.filter((r) => r !== rol) : [...actuales, rol];
+        return { ...g, rolesTrabajo: siguientes };
+      })
+    );
+  };
+
+  const anadirRolNuevo = (id) => {
+    const rol = nuevoRolTexto.trim();
+    if (!rol) return;
+    alternarRolTrabajo(id, rol);
+    setNuevoRolTexto("");
   };
 
   const imprimirPanelActivo = () => {
@@ -1179,9 +1214,23 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  <button onClick={() => eliminarInvitado(g.id)} style={celda(8)}>
-                    <Trash2 size={14} style={{ color: C.wax }} />
-                  </button>
+                  <span style={{ ...celda(8), gap: 6 }}>
+                    <button
+                      onClick={() => setInvitadoRolAbierto(g.id)}
+                      title="Rol de trabajo el día del evento (acomodador, etc.)"
+                    >
+                      <Tag
+                        size={14}
+                        style={{
+                          color: Array.isArray(g.rolesTrabajo) && g.rolesTrabajo.length > 0 ? C.ink : C.charcoal,
+                          opacity: Array.isArray(g.rolesTrabajo) && g.rolesTrabajo.length > 0 ? 1 : 0.35,
+                        }}
+                      />
+                    </button>
+                    <button onClick={() => eliminarInvitado(g.id)}>
+                      <Trash2 size={14} style={{ color: C.wax }} />
+                    </button>
+                  </span>
                 </div>
               );
             })}
@@ -1423,6 +1472,54 @@ export function SeccionInvitados({
                 )}
               </>
             )}
+          </div>
+        </ModalFlotante>
+      )}
+
+      {invitadoRolAbierto && (
+        <ModalFlotante
+          titulo={`Rol de trabajo: ${invitados.find((g) => g.id === invitadoRolAbierto)?.nombre || ""}`}
+          onCerrar={() => {
+            setInvitadoRolAbierto(null);
+            setNuevoRolTexto("");
+          }}
+        >
+          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
+            Marca los roles que este invitado desempeña EL DÍA del evento (acomodador,
+            fotografía...) -- no da ningún acceso a la app, solo sirve para poder asignarlo a un
+            bloque del cronograma.
+          </p>
+          {rolesConocidos.length > 0 && (
+            <div className="flex flex-col gap-1.5 mb-3">
+              {rolesConocidos.map((rol) => {
+                const g = invitados.find((i) => i.id === invitadoRolAbierto);
+                const activo = Array.isArray(g?.rolesTrabajo) && g.rolesTrabajo.includes(rol);
+                return (
+                  <label key={rol} className="flex items-center gap-2 text-sm" style={{ color: C.charcoal }}>
+                    <input type="checkbox" checked={activo} onChange={() => alternarRolTrabajo(invitadoRolAbierto, rol)} />
+                    {rol}
+                  </label>
+                );
+              })}
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <TextInput
+              value={nuevoRolTexto}
+              onChange={(e) => setNuevoRolTexto(e.target.value)}
+              placeholder="+ nuevo rol (ej. Fotografía)"
+              style={{ width: "100%" }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") anadirRolNuevo(invitadoRolAbierto);
+              }}
+            />
+            <button
+              onClick={() => anadirRolNuevo(invitadoRolAbierto)}
+              className="boton-3d px-3 py-1.5 rounded text-sm font-medium flex-shrink-0"
+              style={{ border: `1px solid ${C.line}`, color: C.ink }}
+            >
+              Añadir
+            </button>
           </div>
         </ModalFlotante>
       )}

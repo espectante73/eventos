@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "11",
+    cambios: [
+      'Nueva figura "rol de trabajo" en la Lista de invitados (icono de etiqueta, junto al de borrar): marca a un invitado como acomodador, fotografía o cualquier otro rol que actúe EL DÍA del evento -- sin darle ningún acceso a la app, es solo una etiqueta para poder asignarlo luego a un bloque del cronograma. Catálogo abierto: escribes el nombre del rol la primera vez, no hace falta tocar código para añadir uno nuevo.',
+    ],
+  },
+  {
     version: "10.5",
     cambios: [
       "Cronograma: cada bloque ya deja elegir qué colaboradores lo atienden (pueden ser varios a la vez) y marcarlo como \"ya lo he supervisado\". Logística resume cuántos bloques están supervisados y avisa si alguno se ha quedado sin nadie asignado.",
