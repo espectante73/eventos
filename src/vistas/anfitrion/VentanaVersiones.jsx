@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "15.1",
+    cambios: [
+      'Etiquetas en negrita ("Barrios:", "Mesa:", "Colab.:") en la invitación, con el resto del texto en letra normal -- "Mesa" gana también los dos puntos que le faltaban. El bloque entero se corre un poco más a la izquierda, y la hora sube ligeramente.',
+    ],
+  },
+  {
     version: "15",
     cambios: [
       "Nueva casilla en Novedades: ocultar la fecha del evento en el tablón público, con carácter temporal -- no afecta a la portada, Datos evento ni a la invitación.",

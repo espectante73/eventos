@@ -98,11 +98,14 @@ export function useMotorInvitaciones(data) {
     const nombres = familia.confirmados.map((m) => m.nombre);
     const cantidad = familia.confirmados.length;
     const mesas = [...new Set(familia.confirmados.map((m) => m.mesa).filter(Boolean))];
+    // "Mesa:"/"Mesas:" con dos puntos -- a petición del usuario,
+    // 2026-08-27, para que coincida con "Barrios:"/"Colab.:" (las 3
+    // etiquetas de la invitación llevan dos puntos por igual).
     const mesaTexto =
       mesas.length === 1
-        ? `Mesa ${mesas[0]} · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`
+        ? `Mesa: ${mesas[0]} · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`
         : mesas.length > 1
-        ? `Mesas ${mesas.join(", ")} · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`
+        ? `Mesas: ${mesas.join(", ")} · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`
         : `${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`;
     // Colaborador de la familia -- será la primera cara amiga que vean
     // al llegar a Recepción, así que la invitación ya se lo dice de

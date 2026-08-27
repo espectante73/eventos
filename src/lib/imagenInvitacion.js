@@ -40,12 +40,6 @@ function dibujarLineaJustificada(ctx, linea, x, y, maxWidth, esUltima) {
   });
 }
 
-function dibujarParrafoJustificado(ctx, lineas, x, y, maxWidth, lineHeight) {
-  lineas.forEach((linea, i) => {
-    dibujarLineaJustificada(ctx, linea, x, y + i * lineHeight, maxWidth, i === lineas.length - 1);
-  });
-}
-
 // Rejilla temporal (cada 5% del ancho/alto) con la fracción escrita en cada
 // línea — sirve para leer directamente en la imagen las coordenadas que hay
 // que darle a las constantes de más abajo, en vez de estimarlas a ojo desde
@@ -179,7 +173,8 @@ export function generarInvitacionImagen(
           if (horaValor) {
             ctx.font = `${tamFecha}px 'Fraunces', serif`;
             ctx.fillStyle = "#1F3A2E";
-            ctx.fillText(horaValor, x, DATOS.yHoraValor * H);
+            // -10 -- a petición del usuario, 2026-08-27: la hora sube un poco.
+            ctx.fillText(horaValor, x, DATOS.yHoraValor * H - 10);
           }
 
           if (lineasLugar.length > 0) {
@@ -205,7 +200,9 @@ export function generarInvitacionImagen(
         const dibujarTextoYResolver = (canvas, ctx) => {
           const W = canvas.width;
           const H = canvas.height;
-          const xIzq = RECUADRO.left * W + (RECUADRO.right - RECUADRO.left) * W * 0.025;
+          // -10 -- a petición del usuario, 2026-08-27: todo el bloque
+          // (familia/mesa/colaborador) corrido un poco más a la izquierda.
+          const xIzq = RECUADRO.left * W + (RECUADRO.right - RECUADRO.left) * W * 0.025 - 10;
           const anchoDisponible = (RECUADRO.right - RECUADRO.left) * W * 0.88;
 
           dibujarDatosGenerales(ctx, W, H);
@@ -216,9 +213,16 @@ export function generarInvitacionImagen(
           // (mismo lineHeight en las 3). "fuenteDetalle"/"tamDetalle"
           // (más grande, solo para la mesa) se retiraron por completo al
           // dejar de usarse en ningún sitio.
-          // Sin "bold" -- a petición del usuario, 2026-08-27, para que
-          // coincida con la letra normal ya usada en fecha/hora/lugar.
+          // Sin "bold" en el texto normal -- a petición del usuario,
+          // 2026-08-27, para que coincida con la letra ya usada en
+          // fecha/hora/lugar. La ETIQUETA inicial de cada línea
+          // ("Barrios:"/"Mesa:"/"Colab.:") sí va en negrita -- pedido
+          // aparte del mismo usuario, mismo día -- solo en la primera
+          // línea de cada bloque (ver dibujarLineaConEtiqueta más abajo);
+          // si el nombre de familia ocupa más de una línea, las
+          // siguientes van todas en letra normal, sin repetir negrita.
           const fuenteNombres = `${Math.round(W * 0.031)}px 'Fraunces', serif`;
+          const fuenteNombresNegrita = `bold ${Math.round(W * 0.031)}px 'Fraunces', serif`;
           const tamNombres = Math.round(W * 0.031);
           const lineHeightNombres = Math.round(W * 0.035);
           const espacioEntreBloques = Math.round(W * 0.02);
@@ -231,6 +235,7 @@ export function generarInvitacionImagen(
           bloques.push({
             lineas: partirLineas(ctx, `${apellidoFamilia}: ${listaConY(nombresMiembros)}`, anchoDisponible),
             font: fuenteNombres,
+            fontBold: fuenteNombresNegrita,
             fontSizePx: tamNombres,
             lineHeight: lineHeightNombres,
           });
@@ -244,6 +249,7 @@ export function generarInvitacionImagen(
             bloques.push({
               lineas: partirLineas(ctx, mesaTexto, anchoDisponible),
               font: fuenteNombres,
+              fontBold: fuenteNombresNegrita,
               fontSizePx: tamNombres,
               lineHeight: lineHeightNombres,
             });
@@ -270,6 +276,7 @@ export function generarInvitacionImagen(
             bloques.push({
               lineas: [etiquetaColaborador],
               font: `${tamColaborador}px 'Fraunces', serif`,
+              fontBold: `bold ${tamColaborador}px 'Fraunces', serif`,
               fontSizePx: tamColaborador,
               lineHeight: Math.round(lineHeightNombres * (tamColaborador / tamNombres)),
             });
@@ -291,10 +298,30 @@ export function generarInvitacionImagen(
           // rectas) sobresalía de las esquinas redondeadas de este
           // recuadro. Solo el texto, directamente sobre el fondo que ya
           // hay.
+          ctx.fillStyle = "#1F3A2E";
           bloques.forEach((b) => {
-            ctx.font = b.font;
-            ctx.fillStyle = "#1F3A2E";
-            dibujarParrafoJustificado(ctx, b.lineas, xIzq, cursorY, anchoDisponible, b.lineHeight);
+            b.lineas.forEach((linea, i) => {
+              const y = cursorY + i * b.lineHeight;
+              // Solo la PRIMERA línea de cada bloque lleva la etiqueta en
+              // negrita ("Barrios:"/"Mesa:"/"Colab.:") -- a petición del
+              // usuario, 2026-08-27. Si el nombre de familia ocupa más de
+              // una línea, las siguientes van todas en letra normal, sin
+              // repetir la negrita.
+              const idxDosPuntos = i === 0 ? linea.indexOf(":") : -1;
+              if (idxDosPuntos !== -1) {
+                const etiqueta = linea.slice(0, idxDosPuntos + 1);
+                const resto = linea.slice(idxDosPuntos + 1);
+                ctx.textAlign = "left";
+                ctx.font = b.fontBold;
+                ctx.fillText(etiqueta, xIzq, y);
+                const anchoEtiqueta = ctx.measureText(etiqueta).width;
+                ctx.font = b.font;
+                ctx.fillText(resto, xIzq + anchoEtiqueta, y);
+              } else {
+                ctx.font = b.font;
+                dibujarLineaJustificada(ctx, linea, xIzq, y, anchoDisponible, i === b.lineas.length - 1);
+              }
+            });
             cursorY += b.lineas.length * b.lineHeight + espacioEntreBloques;
           });
 
