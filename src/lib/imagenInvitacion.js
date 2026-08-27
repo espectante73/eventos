@@ -125,7 +125,7 @@ export function generarInvitacionImagen(
         // reescribe el VALOR de cada campo, sin ningún fondo detrás (ver
         // aviso más arriba sobre el texto de ejemplo quemado).
         const DATOS = {
-          x: 0.16, // columna de texto (a la derecha de los iconos)
+          x: 0.15, // columna de texto (a la derecha de los iconos) -- corrida un poco a la izquierda, 2026-08-27
           yFechaValor: 0.487,
           yDiaSemanaValor: 0.508,
           yHoraValor: 0.58,
@@ -153,10 +153,13 @@ export function generarInvitacionImagen(
           const tamFecha = Math.round(W * 0.028);
           const tamDia = tamFecha;
 
+          // Letra normal (no "bold") en las 4 -- a petición del usuario,
+          // 2026-08-27: se veía "muy gruesa" para el poco espacio de este
+          // recuadro.
           if (fechaValor || diaSemanaValor) {
             ctx.fillStyle = "#1F3A2E";
             if (fechaValor) {
-              ctx.font = `bold ${tamFecha}px 'Fraunces', serif`;
+              ctx.font = `${tamFecha}px 'Fraunces', serif`;
               ctx.fillText(fechaValor, x, DATOS.yFechaValor * H);
             }
             if (diaSemanaValor) {
@@ -166,7 +169,7 @@ export function generarInvitacionImagen(
           }
 
           if (horaValor) {
-            ctx.font = `bold ${tamFecha}px 'Fraunces', serif`;
+            ctx.font = `${tamFecha}px 'Fraunces', serif`;
             ctx.fillStyle = "#1F3A2E";
             ctx.fillText(horaValor, x, DATOS.yHoraValor * H);
           }
@@ -180,9 +183,11 @@ export function generarInvitacionImagen(
             ctx.fillStyle = "#1F3A2E";
             const lineHeight = Math.round(H * 0.024);
             const xLugar = x - 3;
-            let y = DATOS.yLugarValor * H + 3;
+            // Bloque completo (nombre del lugar + dirección) subido 20px --
+            // a petición del usuario, 2026-08-27.
+            let y = DATOS.yLugarValor * H + 3 - 20;
             lineasLugar.forEach((linea, i) => {
-              ctx.font = `bold ${i === 0 ? tamLugarNombre : tamLugar}px 'Fraunces', serif`;
+              ctx.font = `${i === 0 ? tamLugarNombre : tamLugar}px 'Fraunces', serif`;
               ctx.fillText(linea, xLugar, y);
               y += lineHeight;
             });

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "13.5",
+    cambios: [
+      "Ajustes finos de fecha/hora/lugar en la invitación: letra normal (menos gruesa), el bloque de texto un poco más a la izquierda, y el nombre del lugar + dirección subidos 20px.",
+    ],
+  },
+  {
     version: "13.4",
     cambios: [
       "Fecha/hora/lugar en la invitación: se quita el fondo que tapaba el texto de ejemplo (a la espera de una plantilla nueva sin ese texto quemado) y se dejan los iconos originales de la plantilla tal cual, sin sustituirlos.",
