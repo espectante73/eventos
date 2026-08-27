@@ -27,10 +27,10 @@ import { supabase } from "../../supabaseClient";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
 import { diasHasta } from "../../lib/formato";
 import { ETIQUETAS_PERMISOS } from "../../lib/permisos";
+import { generarImagenCronograma } from "../../lib/cronograma";
 import { BarraCompacta } from "../../components/Widgets";
 
 const BUCKET_MUSICA = "musica-ambiental";
-const BUCKET_CRONOGRAMA = "cronograma";
 
 // Una sección plegable: título + resumen corto SIEMPRE visibles (para
 // poder leer el estado sin tener que abrir nada), el detalle solo al
@@ -75,21 +75,15 @@ export function VentanaLogistica({ data }) {
   const { evento, invitados, colaboradores, novedades, preguntaTablon } = data;
   const confirmados = invitados.filter((g) => g.confirmado);
 
-  // Música y cronograma no vienen de useLedgerData (igual que en
-  // VistaTablon.jsx) -- se listan aparte al abrir esta ventana.
+  // La música no viene de useLedgerData (igual que en VistaTablon.jsx) --
+  // se lista aparte al abrir esta ventana. El cronograma ya no hace
+  // falta listarlo: es evento.cronogramaBloques, siempre presente.
   const [pistasMusica, setPistasMusica] = useState(null);
-  const [cronogramaSubido, setCronogramaSubido] = useState(null);
-  // Cache-busting para la imagen -- mismo motivo que en VistaTablon.jsx/
-  // VistaColaborador.jsx: el nombre de archivo es fijo, así que sin esto
-  // podía seguir enseñando la versión vieja tras un reemplazo.
-  const [cacheBusterCronograma] = useState(() => Date.now());
 
   useEffect(() => {
     (async () => {
       const { data: archivosMusica } = await supabase.storage.from(BUCKET_MUSICA).list();
       setPistasMusica((archivosMusica || []).filter((f) => f.name && !f.name.startsWith(".")).length);
-      const { data: archivosCronograma } = await supabase.storage.from(BUCKET_CRONOGRAMA).list();
-      setCronogramaSubido(Boolean((archivosCronograma || []).find((f) => f.name === "cronograma.jpg")));
     })();
   }, []);
 
@@ -156,31 +150,20 @@ export function VentanaLogistica({ data }) {
           icono={Clock3}
           titulo="Cronograma"
           abiertaPorDefecto
-          resumen={
-            cronogramaSubido === null
-              ? "…"
-              : !cronogramaSubido
-                ? "Sin subir"
-                : cronogramaVisiblePara.length === 0
-                  ? "Oculto"
-                  : "Visible"
-          }
+          resumen={cronogramaVisiblePara.length === 0 ? "Oculto" : "Visible"}
         >
-          {cronogramaSubido === null
-            ? "Comprobando…"
-            : !cronogramaSubido
-              ? "Todavía no se ha subido ninguna imagen (Configuración → Cronograma)."
-              : cronogramaVisiblePara.length === 0
-                ? "Subida, pero oculta para todo el mundo -- márcalo en Configuración → Cronograma."
-                : `Visible para: ${cronogramaVisiblePara.join(" y ")}.`}
-          {/* La imagen se ve aquí para TI siempre que esté subida, aunque
-              las dos casillas de Configuración → Cronograma estén
-              desmarcadas (esas solo controlan si la ven colaboradores/
-              invitados) -- a petición del usuario: no tenía ningún sitio
-              propio donde revisarla. */}
-          {cronogramaSubido && (
+          {cronogramaVisiblePara.length === 0
+            ? "Oculto para todo el mundo -- márcalo en Configuración → Cronograma."
+            : `Visible para: ${cronogramaVisiblePara.join(" y ")}.`}
+          {/* La imagen se ve aquí SIEMPRE para ti, aunque las dos
+              casillas de Configuración → Cronograma estén desmarcadas
+              (esas solo controlan si la ven colaboradores/invitados) --
+              a petición del usuario: no tenía ningún sitio propio donde
+              revisarla. Se dibuja sola a partir de evento.cronogramaBloques
+              (ver lib/cronograma.js), ya no es una imagen subida a mano. */}
+          {Array.isArray(evento.cronogramaBloques) && evento.cronogramaBloques.length > 0 && (
             <img
-              src={`${supabase.storage.from(BUCKET_CRONOGRAMA).getPublicUrl("cronograma.jpg").data.publicUrl}?v=${cacheBusterCronograma}`}
+              src={generarImagenCronograma(evento.cronogramaBloques, evento.cronogramaHoraFin || "23:45")}
               alt="Cronograma del día"
               className="w-full rounded mt-2"
             />

@@ -31,6 +31,7 @@ import { redimensionarImagenArchivo } from "../lib/descargas";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso } from "../lib/permisos";
+import { generarImagenCronograma } from "../lib/cronograma";
 import { C } from "../theme";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
@@ -459,10 +460,6 @@ function FilaInvitadoColaborador({
 export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken, onCerrarSesion }) {
   const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento, ordenFamiliares, tokenTablon } = data;
   const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
-  // Cache-busting para la imagen del cronograma -- mismo motivo que en
-  // VistaTablon.jsx: el nombre de archivo es fijo, así que sin esto el
-  // navegador podía seguir enseñando la versión vieja tras un reemplazo.
-  const [cacheBusterCronograma] = useState(() => Date.now());
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
   // Permisos extra (más allá de sus invitados asignados), concedidos por
   // el anfitrión desde la ventana Permisos -- a petición del usuario,
@@ -728,18 +725,15 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         }
       />
 
-      {/* Cronograma/logística del día -- oculto por defecto, solo
-          aparece aquí si el anfitrión ha marcado "Visible para
-          colaboradores" en Configuración → Cronograma. Mismo bucket y
-          nombre de archivo fijo que usa el tablón público. */}
-      {evento.cronogramaVisibleColaboradores && (
+      {/* Cronograma/logística del día -- se dibuja solo a partir de
+          evento.cronogramaBloques (ver lib/cronograma.js). Oculto por
+          defecto, solo aparece aquí si el anfitrión ha marcado "Visible
+          para colaboradores" en Configuración → Cronograma. */}
+      {evento.cronogramaVisibleColaboradores && Array.isArray(evento.cronogramaBloques) && evento.cronogramaBloques.length > 0 && (
         <img
-          src={`${supabase.storage.from("cronograma").getPublicUrl("cronograma.jpg").data.publicUrl}?v=${cacheBusterCronograma}`}
+          src={generarImagenCronograma(evento.cronogramaBloques, evento.cronogramaHoraFin || "23:45")}
           alt="Cronograma del día"
           className="w-full rounded-lg"
-          onError={(e) => {
-            e.target.style.display = "none";
-          }}
         />
       )}
 

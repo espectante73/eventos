@@ -14,11 +14,10 @@ import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause } from "lucide
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, formatearDiaSemana } from "../lib/formato";
+import { generarImagenCronograma } from "../lib/cronograma";
 import { InfoItem } from "../components/Portada";
 
 const BUCKET_MUSICA = "musica-ambiental";
-const BUCKET_CRONOGRAMA = "cronograma";
-const RUTA_CRONOGRAMA = "cronograma.jpg";
 
 export function VistaTablon({ token }) {
   // "cargando" | "invalido" | "bloqueado" | "listo"
@@ -29,13 +28,6 @@ export function VistaTablon({ token }) {
   // novedades, tenerlas todas desplegadas de golpe (o ir abriendo varias
   // sin plegar las anteriores) era un muro de texto imposible de leer.
   const [idAbierto, setIdAbierto] = useState(null);
-  // Cache-busting para la imagen del cronograma: como el nombre de
-  // archivo es fijo (cronograma.jpg, para que este enlace nunca cambie),
-  // el navegador podía seguir enseñando la versión vieja tras un
-  // reemplazo -- a petición del usuario, 2026-08-27. Un valor fijo por
-  // carga de página basta (cada visita nueva pide la imagen de verdad).
-  const [cacheBusterCronograma] = useState(() => Date.now());
-
   // ---------- Pregunta de acceso (capa extra sobre el enlace en sí) ----------
   // A petición del usuario, 2026-08-25: aunque el enlace se reenvíe fuera
   // del grupo, sin la respuesta correcta el tablón no enseña nada -- ni
@@ -331,23 +323,16 @@ export function VistaTablon({ token }) {
           </div>
         )}
 
-        {/* Cronograma/logística del día -- imagen única que sube el
-            anfitrión desde Configuración → Cronograma (mismo patrón que
-            og-imagen: nombre de archivo fijo, así que este enlace nunca
-            deja de funcionar aunque la reemplace más adelante). Oculto
-            por defecto -- solo se ve aquí si el anfitrión ha marcado
-            "Visible para invitados" en esa misma ventana. Si además
-            todavía no ha subido ninguna, el bucket devuelve 404 y la
-            imagen se oculta igual -- no hay nada que mostrar en ese
-            caso, ni conviene un aviso de error real. */}
-        {evento?.cronogramaVisibleInvitados && (
+        {/* Cronograma/logística del día -- se dibuja solo a partir de
+            evento.cronogramaBloques (ver lib/cronograma.js), ya no es
+            una imagen subida a mano. Oculto por defecto -- solo se ve
+            aquí si el anfitrión ha marcado "Visible para invitados" en
+            Configuración → Cronograma. */}
+        {evento?.cronogramaVisibleInvitados && Array.isArray(evento.cronogramaBloques) && evento.cronogramaBloques.length > 0 && (
           <img
-            src={`${supabase.storage.from(BUCKET_CRONOGRAMA).getPublicUrl(RUTA_CRONOGRAMA).data.publicUrl}?v=${cacheBusterCronograma}`}
+            src={generarImagenCronograma(evento.cronogramaBloques, evento.cronogramaHoraFin || "23:45")}
             alt="Cronograma del día"
             className="w-full rounded-lg mb-6"
-            onError={(e) => {
-              e.target.style.display = "none";
-            }}
           />
         )}
 

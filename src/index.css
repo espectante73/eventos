@@ -139,6 +139,15 @@
     width: 100%;
     height: auto;
   }
+
+  #zona-imprimible-cronograma, #zona-imprimible-cronograma * { visibility: visible; }
+  #zona-imprimible-cronograma {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+  }
   @page {
     size: A2 landscape;
     margin: 10mm;

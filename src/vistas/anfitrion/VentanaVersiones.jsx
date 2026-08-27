@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "10",
+    cambios: [
+      'Cronograma reconstruido de cero: ya no se sube una imagen a mano -- se editan los 9 bloques (hora en pasos de 5 minutos + texto) desde Configuración → Cronograma, y la app dibuja sola la imagen: el ancho de cada bloque representa cuánto dura de verdad ese tramo, con la hora marcando el inicio en la esquina superior izquierda. La misma imagen se ve, siempre al día, en Logística, en el tablón público y en la vista de colaborador.',
+      "Botón para imprimir el cronograma, para poder entregarlo en papel a los colaboradores.",
+    ],
+  },
+  {
     version: "9.6",
     cambios: [
       "Textos email (Configuración) gana los mismos botones de negrita/cursiva/subrayado que ya tenía Novedades, en cada una de las 4 plantillas -- ya no hace falta escribir <b>/<i>/<u> a mano ahí tampoco.",

@@ -2069,3 +2069,27 @@ using (
 -- (tabla abierta, sin sensibilidad real) igual que "ocultarTituloEnImagen".
 alter table evento add column if not exists "cronogramaVisibleColaboradores" boolean not null default false;
 alter table evento add column if not exists "cronogramaVisibleInvitados" boolean not null default false;
+
+-- ---------- Cronograma: bloques con hora editable (2026-08-27) ----------
+-- Reemplaza la imagen subida a mano: la imagen ahora se DIBUJA sola (ver
+-- lib/cronograma.js) a partir de estos datos, así que solo hace falta
+-- editar hora/texto aquí y la imagen se regenera siempre al día. El
+-- ancho de cada bloque en el dibujo es proporcional a su duración real
+-- (hasta que empieza el siguiente; el último usa "cronogramaHoraFin"
+-- como cierre) -- diseño validado con el usuario a base de varias
+-- rondas de pruebas visuales antes de construirlo.
+-- Formato de "cronogramaBloques": array de {"hora": "HH:MM", "texto": string},
+-- en el orden real del día. Vive en `evento` (tabla abierta) igual que
+-- el resto de datos del evento -- sin sensibilidad real.
+alter table evento add column if not exists "cronogramaBloques" jsonb not null default '[
+  {"hora": "18:00", "texto": "Recepción"},
+  {"hora": "18:15", "texto": "Cóctel"},
+  {"hora": "18:45", "texto": "Foto 1"},
+  {"hora": "19:00", "texto": "Mesas"},
+  {"hora": "19:15", "texto": "Cena"},
+  {"hora": "20:45", "texto": "Foto 2"},
+  {"hora": "21:00", "texto": "Postre"},
+  {"hora": "21:15", "texto": "Baile"},
+  {"hora": "23:30", "texto": "Final"}
+]'::jsonb;
+alter table evento add column if not exists "cronogramaHoraFin" text not null default '23:45';

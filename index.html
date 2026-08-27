@@ -3,6 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Evita que Safari "detecte" las horas del cronograma (18:00,
+         21:15...) como fechas y les añada su propio menú emergente
+         (Crear evento, Crear recordatorio...) encima de los campos de
+         edición -- a petición del usuario, 2026-08-27. No he podido
+         verlo yo mismo en un navegador real; confirmar tras probarlo. -->
+    <meta name="format-detection" content="date=no, telephone=no, address=no, email=no" />
     <title>Libro de invitados</title>
     <!-- Miniatura al compartir cualquier enlace de esta web en WhatsApp/
          Facebook (og:image) -- a petición del usuario, 2026-08-25.
