@@ -10,25 +10,10 @@ import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
 import { formatearFecha } from "../../lib/formato";
 import { construirEnlaceTablon } from "../../lib/url";
-
-// Envuelve la selección actual del textarea con <tag>...</tag> (o la
-// inserta vacía si no hay nada seleccionado) -- mismo criterio de "HTML
-// sencillo" que ya admiten las plantillas de email de Configuración, solo
-// que aquí no hace falta escribir las etiquetas a mano.
-function envolverSeleccion(textarea, valor, tag, onCambio) {
-  const inicio = textarea.selectionStart;
-  const fin = textarea.selectionEnd;
-  const seleccion = valor.slice(inicio, fin);
-  const nuevo = `${valor.slice(0, inicio)}<${tag}>${seleccion}</${tag}>${valor.slice(fin)}`;
-  onCambio(nuevo);
-  // Foco y selección dentro de las etiquetas nuevas, para poder seguir
-  // escribiendo o encadenar otro formato (p.ej. negrita + cursiva).
-  requestAnimationFrame(() => {
-    textarea.focus();
-    const nuevoInicio = inicio + tag.length + 2;
-    textarea.setSelectionRange(nuevoInicio, nuevoInicio + seleccion.length);
-  });
-}
+// envolverSeleccion vive en su propio módulo desde 2026-08-27 -- se
+// reutiliza también en VentanaConfigPlantillasEmail.jsx (mismos botones
+// de negrita/cursiva/subrayado, a petición del usuario).
+import { envolverSeleccion } from "../../lib/textoEnriquecido";
 
 // Añade "prefijo" al principio de cada línea tocada por la selección
 // actual (o solo la línea del cursor, si no hay nada seleccionado) --

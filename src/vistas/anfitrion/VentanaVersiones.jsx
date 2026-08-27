@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "9.6",
+    cambios: [
+      "Textos email (Configuración) gana los mismos botones de negrita/cursiva/subrayado que ya tenía Novedades, en cada una de las 4 plantillas -- ya no hace falta escribir <b>/<i>/<u> a mano ahí tampoco.",
+    ],
+  },
+  {
     version: "9.5",
     cambios: [
       "El colaborador ve ahora un banner rojo fijo arriba de su vista mientras tenga cualquier permiso de edición concedido (\"Tienes permisos de edición: ...\") -- antes no había ningún aviso, ni email ni dentro de la app, así que solo se enteraba si encontraba el botón nuevo por casualidad.",
