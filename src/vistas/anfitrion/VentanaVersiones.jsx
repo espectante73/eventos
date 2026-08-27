@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "10.2",
+    cambios: [
+      "Arreglado de raíz el menú de Safari sobre las horas del cronograma (\"Crear evento\", \"Abrir calendario\"...): el campo de hora ya no es un <input> de tipo fecha (que Safari trataba como tal, sin la etiqueta que se probó antes) -- ahora son dos desplegables normales (hora / minutos de 5 en 5), que Safari nunca confunde con una fecha.",
+    ],
+  },
+  {
     version: "10.1",
     cambios: [
       "Quitada la opción \"Visible para invitados\" del cronograma -- a petición del usuario: es una herramienta de trabajo para quien organiza el evento, nunca para el invitado que solo viene a disfrutarlo. Solo queda \"Visible para colaboradores\".",

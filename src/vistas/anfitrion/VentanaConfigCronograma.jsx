@@ -14,6 +14,46 @@ import { C, inputStyle } from "../../theme";
 import { generarImagenCronograma } from "../../lib/cronograma";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
+const HORAS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
+const MINUTOS = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"];
+
+// Dos <select> (hora / minutos de 5 en 5) en vez de <input type="time"> --
+// a petición del usuario, 2026-08-27: Safari trata ese tipo de campo como
+// una fecha y le superpone su propio menú ("Crear evento", "Abrir
+// calendario"...), sin flechas visibles para subir/bajar -- la etiqueta
+// "format-detection" en index.html no lo evitaba. Un <select> normal no
+// sufre este problema.
+function SelectorHora({ valor, onCambio }) {
+  const [hora, minuto] = String(valor || "00:00").split(":");
+  return (
+    <div className="flex items-center gap-1" style={{ flexShrink: 0 }}>
+      <select
+        value={hora}
+        onChange={(e) => onCambio(`${e.target.value}:${minuto}`)}
+        style={{ ...inputStyle, width: 62 }}
+      >
+        {HORAS.map((h) => (
+          <option key={h} value={h}>
+            {h}
+          </option>
+        ))}
+      </select>
+      <span style={{ color: C.charcoal }}>:</span>
+      <select
+        value={minuto}
+        onChange={(e) => onCambio(`${hora}:${e.target.value}`)}
+        style={{ ...inputStyle, width: 62 }}
+      >
+        {MINUTOS.map((m) => (
+          <option key={m} value={m}>
+            {m}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export function VentanaConfigCronograma({ data, onCerrar }) {
   const { evento, persistEvento } = data;
   const bloques = Array.isArray(evento.cronogramaBloques) ? evento.cronogramaBloques : [];
@@ -53,14 +93,7 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
       <div className="flex flex-col gap-2 mb-3">
         {bloques.map((b, i) => (
           <div key={i} className="flex items-center gap-2">
-            <input
-              type="time"
-              step="300"
-              value={b.hora}
-              onChange={(e) => cambiarBloque(i, "hora", e.target.value)}
-              style={{ ...inputStyle, width: 110, flexShrink: 0 }}
-              title="Hora de inicio de este bloque, en pasos de 5 minutos"
-            />
+            <SelectorHora valor={b.hora} onCambio={(v) => cambiarBloque(i, "hora", v)} />
             <input
               type="text"
               value={b.texto}
@@ -75,12 +108,9 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
         <label className="text-sm" style={{ color: C.charcoal }}>
           Fin del evento (cierra el último bloque)
         </label>
-        <input
-          type="time"
-          step="300"
-          value={evento.cronogramaHoraFin || ""}
-          onChange={(e) => persistEvento({ ...evento, cronogramaHoraFin: e.target.value })}
-          style={{ ...inputStyle, width: 110 }}
+        <SelectorHora
+          valor={evento.cronogramaHoraFin || "23:45"}
+          onCambio={(v) => persistEvento({ ...evento, cronogramaHoraFin: v })}
         />
       </div>
 
