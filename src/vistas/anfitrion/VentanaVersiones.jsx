@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "13.2",
+    cambios: [
+      "Las 3 líneas de la invitación (familia, mesa, colaborador) usan ya la misma letra y el mismo tamaño, con lo que el espacio entre ellas queda igualado solo. El conjunto sube ligeramente para encajar mejor en el recuadro.",
+    ],
+  },
+  {
     version: "13.1",
     cambios: [
       'Arreglada la línea de colaborador en la invitación (se salía del recuadro): ahora usa la misma letra que la línea 1, dice "Colab." en vez de "Colaborador", y siempre cabe en una sola línea (se encoge un poco si hace falta, nunca salta a una segunda línea).',

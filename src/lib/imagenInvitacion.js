@@ -298,12 +298,15 @@ export function generarInvitacionImagen(
 
           dibujarDatosGenerales(ctx, W, H);
 
+          // Las 3 líneas (nombres, mesa, colaborador) usan ahora la MISMA
+          // letra -- a petición del usuario, 2026-08-27, para que se vean
+          // homogéneas y el espacio entre ellas quede igualado solo
+          // (mismo lineHeight en las 3). "fuenteDetalle"/"tamDetalle"
+          // (más grande, solo para la mesa) se retiraron por completo al
+          // dejar de usarse en ningún sitio.
           const fuenteNombres = `bold ${Math.round(W * 0.031)}px 'Fraunces', serif`;
-          const fuenteDetalle = `bold ${Math.round(W * 0.037)}px 'Fraunces', serif`;
           const tamNombres = Math.round(W * 0.031);
-          const tamDetalle = Math.round(W * 0.037);
           const lineHeightNombres = Math.round(W * 0.035);
-          const lineHeightDetalle = Math.round(W * 0.041);
           const espacioEntreBloques = Math.round(W * 0.02);
 
           // Solo nombre de familia y mesa van en este recuadro — está calibrado
@@ -317,13 +320,18 @@ export function generarInvitacionImagen(
             fontSizePx: tamNombres,
             lineHeight: lineHeightNombres,
           });
+          // Mesa iguala ahora la letra de la línea 1 (fuenteNombres, no
+          // fuenteDetalle) -- a petición del usuario, 2026-08-27: las 3
+          // líneas deben verse del mismo tamaño, y con eso el espacio
+          // entre ellas también queda igualado solo (mismo lineHeight
+          // en las 3, mismo espacioEntreBloques de siempre).
           if (mesaTexto) {
-            ctx.font = fuenteDetalle;
+            ctx.font = fuenteNombres;
             bloques.push({
               lineas: partirLineas(ctx, mesaTexto, anchoDisponible),
-              font: fuenteDetalle,
-              fontSizePx: tamDetalle,
-              lineHeight: lineHeightDetalle,
+              font: fuenteNombres,
+              fontSizePx: tamNombres,
+              lineHeight: lineHeightNombres,
             });
           }
           // Tercera línea, a petición del usuario, 2026-08-27: quién es
@@ -355,8 +363,12 @@ export function generarInvitacionImagen(
 
           // Posición fija según la cuadrícula de calibración: ahí es donde
           // caen las líneas de ejemplo "FARIÑA; Benito y Meritxell" / "Mesa 5;
-          // 2 personas" de la plantilla.
-          let cursorY = 0.845 * H;
+          // 2 personas" de la plantilla. Subida ligeramente (0.840, antes
+          // 0.845) a petición del usuario, 2026-08-27, tras ver las 3
+          // líneas ya con el mismo tamaño -- si sigue sin quedar donde
+          // debería, dime el valor exacto de la cuadrícula (0.83, 0.835...)
+          // y lo ajusto sin tener que adivinar.
+          let cursorY = 0.84 * H;
 
           bloques.forEach((b) => {
             ctx.font = b.font;
