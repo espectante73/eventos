@@ -133,7 +133,14 @@ function cargarIcono(pathsSvg, color) {
   });
 }
 
-export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros, mesaTexto, mostrarCuadricula = false) {
+export function generarInvitacionImagen(
+  evento,
+  apellidoFamilia,
+  nombresMiembros,
+  mesaTexto,
+  mostrarCuadricula = false,
+  nombreColaborador = ""
+) {
   // Los 3 iconos (mismo trazo dorado que el resto del diseño) se cargan
   // antes de dibujar nada -- son imágenes (SVG a data URI) y necesitan su
   // propio onload, igual que la plantilla de fondo.
@@ -314,6 +321,22 @@ export function generarInvitacionImagen(evento, apellidoFamilia, nombresMiembros
             ctx.font = fuenteDetalle;
             bloques.push({
               lineas: partirLineas(ctx, mesaTexto, anchoDisponible),
+              font: fuenteDetalle,
+              fontSizePx: tamDetalle,
+              lineHeight: lineHeightDetalle,
+            });
+          }
+          // Tercera línea, a petición del usuario, 2026-08-27: quién es
+          // su colaborador -- será la primera cara amiga que vea al
+          // llegar a Recepción, así que conviene que lo sepa de
+          // antemano. Mismo estilo que la línea de mesa. Nunca debería
+          // faltar (solo se marca "pagado" desde el propio colaborador
+          // asignado, verificado en el código), pero se omite sin
+          // romper nada si por lo que sea llega vacío.
+          if (nombreColaborador) {
+            ctx.font = fuenteDetalle;
+            bloques.push({
+              lineas: partirLineas(ctx, `Colaborador: ${nombreColaborador}`, anchoDisponible),
               font: fuenteDetalle,
               fontSizePx: tamDetalle,
               lineHeight: lineHeightDetalle,

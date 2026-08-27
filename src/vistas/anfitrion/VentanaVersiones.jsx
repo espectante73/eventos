@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "13",
+    cambios: [
+      'Nueva línea en la imagen de invitación: "Colaborador: [nombre]", justo debajo de la mesa -- así el invitado sabe de antemano quién es la primera cara amiga que verá al llegar a Recepción.',
+    ],
+  },
+  {
     version: "12",
     cambios: [
       "Cronograma: el bloque de Recepción ya no se asigna a mano -- lo cubren automáticamente los colaboradores que tienen invitados confirmados a su cargo. En el resto de bloques, ya se puede asignar también a invitados con rol de trabajo, no solo a colaboradores.",

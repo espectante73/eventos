@@ -9,6 +9,7 @@
 // tener que duplicar el filtro en dos sitios.
 import { useState } from "react";
 import { generarInvitacionImagen } from "./imagenInvitacion";
+import { resolverColaborador } from "./invitados";
 
 export function useMotorInvitaciones(data) {
   const { evento, colaboradores, invitados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia } = data;
@@ -103,7 +104,12 @@ export function useMotorInvitaciones(data) {
         : mesas.length > 1
         ? `Mesas ${mesas.join(", ")} · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`
         : `${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`;
-    return generarInvitacionImagen(evento, familia.apellido, nombres, mesaTexto, mostrarCuadricula);
+    // Colaborador de la familia -- será la primera cara amiga que vean
+    // al llegar a Recepción, así que la invitación ya se lo dice de
+    // antemano. Se toma del primer confirmado (todos los miembros de
+    // una misma familia comparten colaborador en la práctica).
+    const nombreColaborador = resolverColaborador(familia.confirmados[0], colaboradores)?.nombre || "";
+    return generarInvitacionImagen(evento, familia.apellido, nombres, mesaTexto, mostrarCuadricula, nombreColaborador);
   };
 
   const [previewInvitacion, setPreviewInvitacion] = useState(null); // { familia, dataUrl, destinatario } | null
