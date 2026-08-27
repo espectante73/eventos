@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "16",
+    cambios: [
+      'Quien tiene permiso de "editar el texto de Novedades" ya puede marcar también "Publicada (visible en el tablón)" -- editar el texto lleva implícita la opción de publicarlo o no.',
+      "El pie de la ventana Novedades (pregunta de acceso, enlace de WhatsApp, ocultar fecha) pasa a ser exclusivo del administrador -- ni siquiera se muestra a quien solo edita texto -- y queda plegado por defecto.",
+    ],
+  },
+  {
     version: "15.1",
     cambios: [
       'Etiquetas en negrita ("Barrios:", "Mesa:", "Colab.:") en la invitación, con el resto del texto en letra normal -- "Mesa" gana también los dos puntos que le faltaban. El bloque entero se corre un poco más a la izquierda, y la hora sube ligeramente.',

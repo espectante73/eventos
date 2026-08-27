@@ -1949,12 +1949,14 @@ with check (
 --
 -- Claves ya en uso:
 --   "novedades_editar" -- puede abrir la ventana Novedades y editar el
---                         título/cuerpo de las que ya existen; el resto
---                         de controles de esa ventana (crear, borrar,
---                         publicar, marcar NOVEDADES/FAQ, enlace,
---                         WhatsApp, pregunta de acceso) quedan
---                         deshabilitados para quien solo tenga esta
---                         clave y no sea el anfitrión.
+--                         título/cuerpo de las que ya existen, y
+--                         publicarlas o no (implícito en poder editar el
+--                         texto, a petición del usuario, 2026-08-27); el
+--                         resto de controles de esa ventana (crear,
+--                         borrar, marcar NOVEDADES/FAQ, enlace, WhatsApp,
+--                         pregunta de acceso, ocultar fecha en el tablón)
+--                         quedan deshabilitados/ocultos para quien solo
+--                         tenga esta clave y no sea el anfitrión.
 alter table colaboradores add column if not exists "permisos" jsonb not null default '[]'::jsonb;
 
 -- El propio checkbox de VentanaPermisos.jsx impide crear/borrar/publicar
@@ -1983,11 +1985,14 @@ as $$
   order by n."creadaEn" desc;
 $$;
 
--- A propósito solo actualiza "titulo"/"cuerpo" de filas que YA existen
--- (por "id") -- nunca inserta, nunca borra, nunca toca
--- "publicada"/"esNovedad": el permiso es "editar el texto", no
--- "gestionar el tablón entero". Si el cliente mandara cualquier otro
--- campo distinto, se ignora sin más.
+-- A propósito solo actualiza "titulo"/"cuerpo"/"publicada" de filas que
+-- YA existen (por "id") -- nunca inserta, nunca borra, nunca toca
+-- "esNovedad": el permiso es "editar el texto (y publicarlo o no)", no
+-- "gestionar el tablón entero". "publicada" se sumó aquí a petición
+-- explícita del usuario, 2026-08-27: editar el texto lleva implícita la
+-- opción de publicarlo -- antes esta función la ignoraba del todo (el
+-- checkbox del cliente se veía marcado pero no se guardaba de verdad).
+-- Si el cliente mandara cualquier otro campo distinto, se ignora sin más.
 create or replace function colaborador_guardar_novedades(p_colaborador_id uuid, p_filas jsonb)
 returns void
 language plpgsql security definer set search_path = public, pg_temp
@@ -1999,7 +2004,8 @@ begin
 
   update novedades n
   set "titulo" = coalesce(f->>'titulo', n."titulo"),
-      "cuerpo" = coalesce(f->>'cuerpo', n."cuerpo")
+      "cuerpo" = coalesce(f->>'cuerpo', n."cuerpo"),
+      "publicada" = coalesce((f->>'publicada')::boolean, n."publicada")
   from jsonb_array_elements(p_filas) as f
   where n."id" = (f->>'id')::uuid;
 end;

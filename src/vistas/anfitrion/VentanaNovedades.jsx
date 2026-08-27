@@ -164,14 +164,15 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
             className="w-full"
             style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
           />
-          <label
-            className="flex items-center gap-1.5 text-xs"
-            style={{ color: C.charcoal, opacity: soloTexto ? 0.35 : 0.75 }}
-            title={soloTexto ? "No tienes permiso para cambiar esto" : undefined}
-          >
+          {/* A diferencia del resto de controles de esta ventana, "Publicada"
+              SÍ queda accesible para quien solo tiene permiso de editar
+              texto -- a petición del usuario, 2026-08-27: editar el texto
+              lleva implícita la opción de publicarlo o no. Reforzado
+              también en el servidor (colaborador_guardar_novedades ya
+              acepta "publicada", no solo título/cuerpo). */}
+          <label className="flex items-center gap-1.5 text-xs" style={{ color: C.charcoal, opacity: 0.75 }}>
             <input
               type="checkbox"
-              disabled={soloTexto}
               checked={n.publicada}
               onChange={(e) => onCambiar({ ...n, publicada: e.target.checked })}
             />
@@ -212,6 +213,12 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
 export function VentanaNovedades({ data, ventana, soloTexto = false }) {
   const { evento, persistEvento, novedades, persistNovedades, tokenTablon, preguntaTablon, persistPreguntaTablon } = data;
   const [copiado, setCopiado] = useState(false);
+  // Pie plegado por defecto -- a petición del usuario, 2026-08-27, para
+  // no tener siempre a la vista la pregunta de acceso/WhatsApp/ocultar
+  // fecha. Y ni siquiera se muestra si soloTexto: es exclusivo del
+  // administrador (quien solo edita texto ya tiene su propio acceso al
+  // check de "Publicada", más arriba, sin necesitar nada de este pie).
+  const [pieAbierto, setPieAbierto] = useState(false);
   // Enlace de INVITACIÓN al grupo (chat.whatsapp.com/XXXX) -- a propósito
   // no es tu número de teléfono: un botón basado en número abriría un
   // chat 1 a 1 contigo, y con ~140 confirmados eso te dejaría recibiendo
@@ -394,17 +401,28 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
         )}
       </div>
 
-      {/* <fieldset disabled> deshabilita de golpe todos los <input>/<button>
-          de dentro -- no afecta al <a> de "Abrir grupo", que se corta a
-          mano con onClick/estilo (los enlaces no forman parte de lo que
-          un fieldset deshabilita). */}
-      <fieldset
-        disabled={soloTexto}
-        className="px-4 py-3 space-y-2"
-        style={{ borderTop: `1px solid ${C.line}`, flexShrink: 0, border: "none", opacity: soloTexto ? 0.4 : 1 }}
-      >
-        <div className="flex items-center gap-2">
-          <Lock size={14} style={{ color: C.gold, flexShrink: 0 }} />
+      {/* Pie exclusivo del administrador -- a petición del usuario,
+          2026-08-27: quien solo tiene permiso de editar texto ya tiene su
+          propio acceso al check de "Publicada" (más arriba, en cada
+          novedad); no necesita ver ni la pregunta de acceso, ni el
+          enlace de WhatsApp, ni "ocultar fecha" -- así que ni siquiera se
+          muestra para él, en vez de solo deshabilitarlo. Plegado por
+          defecto para el administrador (menos ocupado en pantalla al
+          entrar). */}
+      {!soloTexto && (
+        <>
+          <button
+            onClick={() => setPieAbierto((a) => !a)}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs w-full"
+            style={{ color: C.charcoal, opacity: 0.7, flexShrink: 0, borderTop: `1px solid ${C.line}` }}
+          >
+            <ChevronDown size={14} style={{ transform: pieAbierto ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+            Grupo de WhatsApp y pregunta de acceso
+          </button>
+          {pieAbierto && (
+            <div className="px-4 py-3 space-y-2" style={{ flexShrink: 0 }}>
+              <div className="flex items-center gap-2">
+                <Lock size={14} style={{ color: C.gold, flexShrink: 0 }} />
           <input
             value={pregunta}
             onChange={(e) => setPregunta(e.target.value)}
@@ -443,36 +461,40 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
           />
           <a
-            href={soloTexto ? undefined : evento.enlaceGrupoWhatsapp || undefined}
+            href={evento.enlaceGrupoWhatsapp || undefined}
             target="_blank"
             rel="noreferrer"
-            onClick={(e) => (soloTexto || !evento.enlaceGrupoWhatsapp) && e.preventDefault()}
+            onClick={(e) => !evento.enlaceGrupoWhatsapp && e.preventDefault()}
             className="text-xs px-2 py-1.5 rounded whitespace-nowrap flex items-center gap-1"
             style={{
               background: evento.enlaceGrupoWhatsapp ? "#25D366" : C.line,
               color: evento.enlaceGrupoWhatsapp ? "#fff" : C.charcoal,
-              opacity: evento.enlaceGrupoWhatsapp && !soloTexto ? 1 : 0.6,
-              cursor: evento.enlaceGrupoWhatsapp && !soloTexto ? "pointer" : "not-allowed",
+              opacity: evento.enlaceGrupoWhatsapp ? 1 : 0.6,
+              cursor: evento.enlaceGrupoWhatsapp ? "pointer" : "not-allowed",
             }}
             title={evento.enlaceGrupoWhatsapp ? "Abrir el grupo en WhatsApp" : "Pega antes el enlace del grupo"}
           >
             Abrir grupo
           </a>
         </div>
-        {/* Ocultar solo la fecha en el tablón público -- a petición del
-            usuario, 2026-08-27, con carácter TEMPORAL (p.ej. mientras
-            todavía no quiere que los confirmados sepan el día exacto).
-            No afecta a la fecha en ningún otro sitio (portada,
-            invitación, Datos evento) -- solo a esta pantalla pública. */}
-        <label className="flex items-center gap-2 text-xs" style={{ color: C.charcoal }}>
-          <input
-            type="checkbox"
-            checked={Boolean(evento.tablonOcultarFecha)}
-            onChange={(e) => persistEvento({ ...evento, tablonOcultarFecha: e.target.checked })}
-          />
-          Ocultar la fecha en el tablón público (temporalmente)
-        </label>
-      </fieldset>
+              {/* Ocultar solo la fecha en el tablón público -- a petición
+                  del usuario, 2026-08-27, con carácter TEMPORAL (p.ej.
+                  mientras todavía no quiere que los confirmados sepan el
+                  día exacto). No afecta a la fecha en ningún otro sitio
+                  (portada, invitación, Datos evento) -- solo a esta
+                  pantalla pública. */}
+              <label className="flex items-center gap-2 text-xs" style={{ color: C.charcoal }}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(evento.tablonOcultarFecha)}
+                  onChange={(e) => persistEvento({ ...evento, tablonOcultarFecha: e.target.checked })}
+                />
+                Ocultar la fecha en el tablón público (temporalmente)
+              </label>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
