@@ -94,6 +94,9 @@ export function VentanaLogistica({ data }) {
   // (herramienta de trabajo de quien organiza, no para quien solo viene
   // a disfrutar), a petición explícita del usuario, 2026-08-27.
   const cronogramaVisible = Boolean(evento.cronogramaVisibleColaboradores);
+  const cronogramaBloques = Array.isArray(evento.cronogramaBloques) ? evento.cronogramaBloques : [];
+  const cronogramaSupervisados = cronogramaBloques.filter((b) => b.supervisado).length;
+  const cronogramaSinAsignar = cronogramaBloques.filter((b) => !Array.isArray(b.asignados) || b.asignados.length === 0);
 
   const colaboradoresConPermisos = colaboradores.filter((c) => Array.isArray(c.permisos) && c.permisos.length > 0);
 
@@ -150,11 +153,15 @@ export function VentanaLogistica({ data }) {
           icono={Clock3}
           titulo="Cronograma"
           abiertaPorDefecto
-          resumen={cronogramaVisible ? "Visible para colaboradores" : "Oculto"}
+          resumen={`${cronogramaSupervisados}/${cronogramaBloques.length} supervisados`}
         >
           {cronogramaVisible
             ? "Visible para colaboradores."
             : "Oculto -- márcalo en Configuración → Cronograma si quieres que lo vean."}
+          {" "}
+          {cronogramaSinAsignar.length === 0
+            ? "Todos los bloques tienen a alguien asignado."
+            : `Sin nadie asignado: ${cronogramaSinAsignar.map((b) => b.texto).join(", ")}.`}
           {/* La imagen se ve aquí SIEMPRE para ti, aunque la casilla de
               Configuración → Cronograma esté desmarcada (esa solo
               controla si la ven los colaboradores) -- a petición del

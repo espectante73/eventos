@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "10.5",
+    cambios: [
+      "Cronograma: cada bloque ya deja elegir qué colaboradores lo atienden (pueden ser varios a la vez) y marcarlo como \"ya lo he supervisado\". Logística resume cuántos bloques están supervisados y avisa si alguno se ha quedado sin nadie asignado.",
+    ],
+  },
+  {
     version: "10.4",
     cambios: [
       "Cronograma: cada bloque ya no se edita con una hora exacta -- se le dan los minutos que dura, y la hora de inicio de ese bloque (y de todos los que van después) se calcula sola a partir de la hora de inicio del cronograma. Cambiar la duración de un bloque desplaza automáticamente todos los siguientes, sin tocarlos a mano.",

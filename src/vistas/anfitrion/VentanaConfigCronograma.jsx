@@ -32,7 +32,7 @@ const TODAS_LAS_HORAS = Array.from({ length: 24 * 12 }, (_, i) => {
 });
 
 export function VentanaConfigCronograma({ data, onCerrar }) {
-  const { evento, persistEvento } = data;
+  const { evento, persistEvento, colaboradores } = data;
   const bloques = Array.isArray(evento.cronogramaBloques) ? evento.cronogramaBloques : [];
   const horaInicio = evento.cronogramaHoraInicio || "18:00";
   const [imagen, setImagen] = useState("");
@@ -49,6 +49,20 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
   const cambiarBloque = (indice, campo, valor) => {
     const siguiente = bloques.map((b, i) => (i === indice ? { ...b, [campo]: valor } : b));
     persistEvento({ ...evento, cronogramaBloques: siguiente });
+  };
+
+  // "asignados": ids de colaboradores que atienden este bloque -- puede
+  // haber varios a la vez (a petición del usuario: "diferentes bloques
+  // tendrán diferentes personas asignadas, algunos incluirán una sola y
+  // otros varias"). Por ahora solo colaboradores -- cuando exista el
+  // "rol de trabajo" de invitados (acomodador, etc.), este mismo array
+  // también podrá incluirlos, sin cambiar la forma del dato.
+  const alternarAsignado = (indice, colaboradorId) => {
+    const actuales = Array.isArray(bloques[indice]?.asignados) ? bloques[indice].asignados : [];
+    const siguientes = actuales.includes(colaboradorId)
+      ? actuales.filter((id) => id !== colaboradorId)
+      : [...actuales, colaboradorId];
+    cambiarBloque(indice, "asignados", siguientes);
   };
 
   const imprimir = () => {
@@ -133,6 +147,44 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
               style={{ ...inputStyle, width: "100%" }}
             />
           </div>
+
+          {/* Quién atiende este bloque -- por ahora solo colaboradores
+              (puede haber varios a la vez), y si tú ya lo has
+              supervisado. Dos cosas distintas, no una sola: "¿está
+              cubierto?" y "¿lo he comprobado yo?" -- a petición del
+              usuario. */}
+          <div className="mb-2">
+            <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.6 }}>
+              Quién lo atiende
+            </p>
+            {colaboradores.length === 0 ? (
+              <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.5 }}>
+                Todavía no hay ningún colaborador.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                {colaboradores.map((c) => (
+                  <label key={c.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
+                    <input
+                      type="checkbox"
+                      checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(c.id)}
+                      onChange={() => alternarAsignado(seleccionado, c.id)}
+                    />
+                    {c.nombre}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <label className="flex items-center gap-2 text-sm mb-4" style={{ color: C.charcoal }}>
+            <input
+              type="checkbox"
+              checked={Boolean(bloqueActual.supervisado)}
+              onChange={(e) => cambiarBloque(seleccionado, "supervisado", e.target.checked)}
+            />
+            Ya lo he supervisado
+          </label>
         </>
       )}
 
