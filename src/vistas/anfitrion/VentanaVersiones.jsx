@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "10.4",
+    cambios: [
+      "Cronograma: cada bloque ya no se edita con una hora exacta -- se le dan los minutos que dura, y la hora de inicio de ese bloque (y de todos los que van después) se calcula sola a partir de la hora de inicio del cronograma. Cambiar la duración de un bloque desplaza automáticamente todos los siguientes, sin tocarlos a mano.",
+    ],
+  },
+  {
     version: "10.3",
     cambios: [
       "Configuración → Cronograma, mucho más compacta: en vez de ver los 9 bloques a la vez, se elige uno con un desplegable (mismo criterio que Permisos) y solo se edita ese. La hora pasa a ser un único desplegable con todos los horarios en pasos de 5 minutos, en vez de dos relojes separados.",

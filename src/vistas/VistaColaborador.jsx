@@ -731,7 +731,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           para colaboradores" en Configuración → Cronograma. */}
       {evento.cronogramaVisibleColaboradores && Array.isArray(evento.cronogramaBloques) && evento.cronogramaBloques.length > 0 && (
         <img
-          src={generarImagenCronograma(evento.cronogramaBloques, evento.cronogramaHoraFin || "23:45")}
+          src={generarImagenCronograma(evento.cronogramaHoraInicio || "18:00", evento.cronogramaBloques)}
           alt="Cronograma del día"
           className="w-full rounded-lg"
         />

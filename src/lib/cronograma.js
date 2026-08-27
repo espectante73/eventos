@@ -1,13 +1,20 @@
-// Cronograma del día del evento: cálculo de duraciones reales a partir de
-// las horas de cada bloque, y el dibujo de la imagen final sobre
-// <canvas> -- sustituye a la imagen que antes subía el anfitrión a mano
-// (Configuración → Cronograma). Diseño validado con el usuario a base de
-// varias rondas de pruebas visuales antes de construirlo, 2026-08-27:
-// ancho de cada bloque proporcional a su duración real (no un tamaño
-// fijo), altura homogénea en todas las filas, hora en la esquina
+// Cronograma del día del evento: cálculo de las horas absolutas a partir
+// de una hora de inicio + la duración (en minutos) de cada bloque, y el
+// dibujo de la imagen final sobre <canvas> -- sustituye a la imagen que
+// antes subía el anfitrión a mano (Configuración → Cronograma). Diseño
+// validado con el usuario a base de varias rondas de pruebas visuales
+// antes de construirlo, 2026-08-27: ancho de cada bloque proporcional a
+// su duración, altura homogénea en todas las filas, hora en la esquina
 // superior izquierda (marca el INICIO del tramo), etiqueta centrada de
 // verdad, chevron abierto (no un triángulo relleno) cerca del borde
 // derecho.
+//
+// Segundo ajuste, mismo día: en vez de escribir la hora exacta de cada
+// bloque a mano (y tener que recalcular todas las siguientes si cambia
+// una), cada bloque solo guarda cuántos MINUTOS dura -- la hora de cada
+// uno se calcula sola sumando las duraciones anteriores a la hora de
+// inicio del cronograma. Cambiar un solo bloque desplaza automáticamente
+// todos los que van después, sin tocarlos a mano.
 import { C } from "../theme";
 
 // Agrupación en filas -- fija a propósito (la interfaz de edición tiene
@@ -15,36 +22,26 @@ import { C } from "../theme";
 // la imagen original que sirvió de referencia.
 const FILAS = [4, 3, 2];
 
-function aMinutosBase(hora) {
-  const [h, m] = String(hora || "0:00").split(":").map(Number);
-  return (h || 0) * 60 + (m || 0);
+function sumarMinutos(horaBase, minutos) {
+  const [h, m] = String(horaBase || "0:00").split(":").map(Number);
+  let total = ((h || 0) * 60 + (m || 0) + minutos) % (24 * 60);
+  if (total < 0) total += 24 * 60;
+  const hh = Math.floor(total / 60);
+  const mm = total % 60;
+  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
-// Límites (en minutos, ya con el salto de medianoche resuelto) de cada
-// bloque -- length = bloques.length + 1, el último es "horaFin". Un
-// límite "cruza medianoche" respecto al anterior si su hora en bruto no
-// es mayor -- se le suma un día entero para que seguir restando dé
-// siempre una duración positiva.
-export function calcularLimites(bloques, horaFin) {
-  const horas = [...bloques.map((b) => b.hora), horaFin];
-  const limites = [];
-  let offset = 0;
-  horas.forEach((hora, i) => {
-    let v = aMinutosBase(hora) + offset;
-    if (i > 0 && v <= limites[i - 1]) {
-      offset += 24 * 60;
-      v = aMinutosBase(hora) + offset;
-    }
-    limites.push(v);
+// Hora absoluta de INICIO de cada bloque -- nunca se escribe a mano, se
+// calcula sola sumando las duraciones de todos los bloques anteriores a
+// la hora de inicio del cronograma entero.
+export function calcularHorasAbsolutas(horaInicio, bloques) {
+  const horas = [];
+  let acumulado = 0;
+  bloques.forEach((b) => {
+    horas.push(sumarMinutos(horaInicio, acumulado));
+    acumulado += Number(b.duracionMin) || 0;
   });
-  return limites;
-}
-
-// Duración real de cada bloque, en minutos -- hasta que empieza el
-// siguiente (el último, hasta "horaFin").
-export function calcularDuraciones(bloques, horaFin) {
-  const limites = calcularLimites(bloques, horaFin);
-  return bloques.map((_, i) => limites[i + 1] - limites[i]);
+  return horas;
 }
 
 function redondeado(ctx, x, y, w, h, r) {
@@ -125,23 +122,27 @@ function dibujarBloque(ctx, x, y, w, h, hora, lineasTexto) {
 // Devuelve un data URL (PNG) con el cronograma dibujado -- síncrono, sin
 // depender de ninguna fuente externa (usa la fuente del sistema, no
 // Fraunces/IBM Plex, para no tener que precargar nada).
-export function generarImagenCronograma(bloques, horaFin) {
-  const duraciones = calcularDuraciones(bloques, horaFin);
-  const conDuracion = bloques.map((b, i) => ({ ...b, duracion: Math.max(1, duraciones[i]) }));
+export function generarImagenCronograma(horaInicio, bloques) {
+  const horas = calcularHorasAbsolutas(horaInicio, bloques);
+  const conDatos = bloques.map((b, i) => ({
+    ...b,
+    hora: horas[i],
+    duracion: Math.max(1, Number(b.duracionMin) || 1),
+  }));
 
   // Agrupación en filas defensiva: si algún día hay un número de bloques
   // distinto de 9, se reparte en filas de 4 en vez de fallar.
   const filas = [];
   let cursor = 0;
-  const patron = conDuracion.length === FILAS.reduce((s, n) => s + n, 0) ? FILAS : null;
+  const patron = conDatos.length === FILAS.reduce((s, n) => s + n, 0) ? FILAS : null;
   if (patron) {
     patron.forEach((n) => {
-      filas.push(conDuracion.slice(cursor, cursor + n));
+      filas.push(conDatos.slice(cursor, cursor + n));
       cursor += n;
     });
   } else {
-    while (cursor < conDuracion.length) {
-      filas.push(conDuracion.slice(cursor, cursor + 4));
+    while (cursor < conDatos.length) {
+      filas.push(conDatos.slice(cursor, cursor + 4));
       cursor += 4;
     }
   }

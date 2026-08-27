@@ -2093,3 +2093,50 @@ alter table evento add column if not exists "cronogramaBloques" jsonb not null d
   {"hora": "23:30", "texto": "Final"}
 ]'::jsonb;
 alter table evento add column if not exists "cronogramaHoraFin" text not null default '23:45';
+
+-- ---------- Cronograma: minutos en vez de hora exacta (2026-08-27, misma tarde) ----------
+-- Segundo ajuste: en vez de escribir la hora exacta de cada bloque (y
+-- recalcular a mano todas las siguientes si cambia una), cada bloque
+-- ahora solo dice cuántos MINUTOS dura -- la hora de cada uno se calcula
+-- sola sumando los minutos anteriores a "cronogramaHoraInicio" (ver
+-- lib/cronograma.js, calcularHorasAbsolutas). "cronogramaHoraFin" queda
+-- sin uso (el último bloque ya lleva su propia duración) -- no se borra,
+-- inofensivo.
+alter table evento add column if not exists "cronogramaHoraInicio" text not null default '18:00';
+
+-- Nuevo formato por defecto para instalaciones futuras de esta misma
+-- plantilla (otro evento reutilizando este esquema desde cero) -- un
+-- "alter column ... set default" no toca ninguna fila ya existente.
+alter table evento alter column "cronogramaBloques" set default '[
+  {"duracionMin": 15, "texto": "Recepción"},
+  {"duracionMin": 30, "texto": "Cóctel"},
+  {"duracionMin": 15, "texto": "Foto 1"},
+  {"duracionMin": 15, "texto": "Mesas"},
+  {"duracionMin": 90, "texto": "Cena"},
+  {"duracionMin": 15, "texto": "Foto 2"},
+  {"duracionMin": 15, "texto": "Postre"},
+  {"duracionMin": 135, "texto": "Baile"},
+  {"duracionMin": 15, "texto": "Final"}
+]'::jsonb;
+
+-- Migración de la fila real ya existente: convierte lo que ya hay (formato
+-- viejo "hora") al formato nuevo ("duracionMin"), con los MISMOS horarios
+-- de referencia que se han usado toda esta sesión para probarlo (18:00,
+-- 18:15... hasta el cierre a las 23:45) -- si ya habías cambiado algún
+-- bloque de verdad antes de este punto, dilo y se ajusta a mano; si no,
+-- este `update` deja las horas resultantes exactamente igual que
+-- estaban, solo expresadas como minutos.
+update evento set
+  "cronogramaHoraInicio" = '18:00',
+  "cronogramaBloques" = '[
+    {"duracionMin": 15, "texto": "Recepción"},
+    {"duracionMin": 30, "texto": "Cóctel"},
+    {"duracionMin": 15, "texto": "Foto 1"},
+    {"duracionMin": 15, "texto": "Mesas"},
+    {"duracionMin": 90, "texto": "Cena"},
+    {"duracionMin": 15, "texto": "Foto 2"},
+    {"duracionMin": 15, "texto": "Postre"},
+    {"duracionMin": 135, "texto": "Baile"},
+    {"duracionMin": 15, "texto": "Final"}
+  ]'::jsonb
+where true;
