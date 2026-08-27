@@ -329,17 +329,27 @@ export function generarInvitacionImagen(
           // Tercera línea, a petición del usuario, 2026-08-27: quién es
           // su colaborador -- será la primera cara amiga que vea al
           // llegar a Recepción, así que conviene que lo sepa de
-          // antemano. Mismo estilo que la línea de mesa. Nunca debería
-          // faltar (solo se marca "pagado" desde el propio colaborador
-          // asignado, verificado en el código), pero se omite sin
-          // romper nada si por lo que sea llega vacío.
+          // antemano. Corregido tras verla en una invitación real
+          // (2026-08-27, misma tarde): se salía del recuadro y usaba una
+          // letra distinta a la línea 1 -- ahora usa la MISMA letra que
+          // la línea 1 (fuenteNombres, no fuenteDetalle), "Colab." en
+          // vez de "Colaborador" para ahorrar sitio, y NUNCA se parte en
+          // dos líneas -- si no cabe en una a ese tamaño, se encoge la
+          // letra (nunca por debajo del 70% del tamaño de partida) en
+          // vez de dejar que salte de línea o se salga del recuadro.
           if (nombreColaborador) {
-            ctx.font = fuenteDetalle;
+            const etiquetaColaborador = `Colab.: ${nombreColaborador}`;
+            let tamColaborador = tamNombres;
+            ctx.font = `bold ${tamColaborador}px 'Fraunces', serif`;
+            while (ctx.measureText(etiquetaColaborador).width > anchoDisponible && tamColaborador > tamNombres * 0.7) {
+              tamColaborador -= 1;
+              ctx.font = `bold ${tamColaborador}px 'Fraunces', serif`;
+            }
             bloques.push({
-              lineas: partirLineas(ctx, `Colaborador: ${nombreColaborador}`, anchoDisponible),
-              font: fuenteDetalle,
-              fontSizePx: tamDetalle,
-              lineHeight: lineHeightDetalle,
+              lineas: [etiquetaColaborador],
+              font: `bold ${tamColaborador}px 'Fraunces', serif`,
+              fontSizePx: tamColaborador,
+              lineHeight: Math.round(lineHeightNombres * (tamColaborador / tamNombres)),
             });
           }
 

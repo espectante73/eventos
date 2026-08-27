@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "13.1",
+    cambios: [
+      'Arreglada la línea de colaborador en la invitación (se salía del recuadro): ahora usa la misma letra que la línea 1, dice "Colab." en vez de "Colaborador", y siempre cabe en una sola línea (se encoge un poco si hace falta, nunca salta a una segunda línea).',
+    ],
+  },
+  {
     version: "13",
     cambios: [
       'Nueva línea en la imagen de invitación: "Colaborador: [nombre]", justo debajo de la mesa -- así el invitado sabe de antemano quién es la primera cara amiga que verá al llegar a Recepción.',
