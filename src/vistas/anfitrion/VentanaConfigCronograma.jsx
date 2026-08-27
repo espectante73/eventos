@@ -99,13 +99,14 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
         </>
       )}
 
-      {/* Nadie la ve por defecto -- a petición del usuario, para poder
-          revisarla con calma antes de decidir a quién enseñársela.
-          Dos casillas independientes: puede interesar enseñársela
-          primero solo a los colaboradores (para repartir tareas del
-          día) sin decidir todavía si también se la enseña a los
-          invitados. */}
-      <div className="pt-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${C.line}` }}>
+      {/* Solo colaboradores -- el cronograma es una herramienta de
+          trabajo para quien organiza el evento, nunca para el invitado
+          que solo viene a disfrutarlo. Se quitó la casilla de
+          "invitados" (tablón público) a petición explícita del usuario,
+          2026-08-27, tras aclarar que esa nunca debía existir. Nadie la
+          ve por defecto -- para poder revisarla con calma antes de
+          decidir. */}
+      <div className="pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
         <label className="flex items-center gap-2 text-sm" style={{ color: C.charcoal }}>
           <input
             type="checkbox"
@@ -113,14 +114,6 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
             onChange={(e) => persistEvento({ ...evento, cronogramaVisibleColaboradores: e.target.checked })}
           />
           Visible para colaboradores
-        </label>
-        <label className="flex items-center gap-2 text-sm" style={{ color: C.charcoal }}>
-          <input
-            type="checkbox"
-            checked={Boolean(evento.cronogramaVisibleInvitados)}
-            onChange={(e) => persistEvento({ ...evento, cronogramaVisibleInvitados: e.target.checked })}
-          />
-          Visible para invitados (tablón público)
         </label>
       </div>
     </VentanaFlotante>

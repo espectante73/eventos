@@ -90,10 +90,10 @@ export function VentanaLogistica({ data }) {
   const dias = diasHasta(evento.fecha);
   const novedadesPublicadas = novedades.filter((n) => n.publicada);
 
-  const cronogramaVisiblePara = [
-    evento.cronogramaVisibleColaboradores && "colaboradores",
-    evento.cronogramaVisibleInvitados && "invitados",
-  ].filter(Boolean);
+  // Solo colaboradores -- el cronograma nunca se enseña a invitados
+  // (herramienta de trabajo de quien organiza, no para quien solo viene
+  // a disfrutar), a petición explícita del usuario, 2026-08-27.
+  const cronogramaVisible = Boolean(evento.cronogramaVisibleColaboradores);
 
   const colaboradoresConPermisos = colaboradores.filter((c) => Array.isArray(c.permisos) && c.permisos.length > 0);
 
@@ -150,17 +150,17 @@ export function VentanaLogistica({ data }) {
           icono={Clock3}
           titulo="Cronograma"
           abiertaPorDefecto
-          resumen={cronogramaVisiblePara.length === 0 ? "Oculto" : "Visible"}
+          resumen={cronogramaVisible ? "Visible para colaboradores" : "Oculto"}
         >
-          {cronogramaVisiblePara.length === 0
-            ? "Oculto para todo el mundo -- márcalo en Configuración → Cronograma."
-            : `Visible para: ${cronogramaVisiblePara.join(" y ")}.`}
-          {/* La imagen se ve aquí SIEMPRE para ti, aunque las dos
-              casillas de Configuración → Cronograma estén desmarcadas
-              (esas solo controlan si la ven colaboradores/invitados) --
-              a petición del usuario: no tenía ningún sitio propio donde
-              revisarla. Se dibuja sola a partir de evento.cronogramaBloques
-              (ver lib/cronograma.js), ya no es una imagen subida a mano. */}
+          {cronogramaVisible
+            ? "Visible para colaboradores."
+            : "Oculto -- márcalo en Configuración → Cronograma si quieres que lo vean."}
+          {/* La imagen se ve aquí SIEMPRE para ti, aunque la casilla de
+              Configuración → Cronograma esté desmarcada (esa solo
+              controla si la ven los colaboradores) -- a petición del
+              usuario: no tenía ningún sitio propio donde revisarla. Se
+              dibuja sola a partir de evento.cronogramaBloques (ver
+              lib/cronograma.js), ya no es una imagen subida a mano. */}
           {Array.isArray(evento.cronogramaBloques) && evento.cronogramaBloques.length > 0 && (
             <img
               src={generarImagenCronograma(evento.cronogramaBloques, evento.cronogramaHoraFin || "23:45")}

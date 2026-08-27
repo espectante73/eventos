@@ -14,7 +14,6 @@ import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause } from "lucide
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, formatearDiaSemana } from "../lib/formato";
-import { generarImagenCronograma } from "../lib/cronograma";
 import { InfoItem } from "../components/Portada";
 
 const BUCKET_MUSICA = "musica-ambiental";
@@ -321,19 +320,6 @@ export function VistaTablon({ token }) {
               <InfoItem claro icon={MapPin} label="Lugar" value={evento.lugar || "—"} />
             </div>
           </div>
-        )}
-
-        {/* Cronograma/logística del día -- se dibuja solo a partir de
-            evento.cronogramaBloques (ver lib/cronograma.js), ya no es
-            una imagen subida a mano. Oculto por defecto -- solo se ve
-            aquí si el anfitrión ha marcado "Visible para invitados" en
-            Configuración → Cronograma. */}
-        {evento?.cronogramaVisibleInvitados && Array.isArray(evento.cronogramaBloques) && evento.cronogramaBloques.length > 0 && (
-          <img
-            src={generarImagenCronograma(evento.cronogramaBloques, evento.cronogramaHoraFin || "23:45")}
-            alt="Cronograma del día"
-            className="w-full rounded-lg mb-6"
-          />
         )}
 
         <h2

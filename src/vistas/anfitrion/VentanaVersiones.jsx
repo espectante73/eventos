@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "10.1",
+    cambios: [
+      "Quitada la opción \"Visible para invitados\" del cronograma -- a petición del usuario: es una herramienta de trabajo para quien organiza el evento, nunca para el invitado que solo viene a disfrutarlo. Solo queda \"Visible para colaboradores\".",
+    ],
+  },
+  {
     version: "10",
     cambios: [
       'Cronograma reconstruido de cero: ya no se sube una imagen a mano -- se editan los 9 bloques (hora en pasos de 5 minutos + texto) desde Configuración → Cronograma, y la app dibuja sola la imagen: el ancho de cada bloque representa cuánto dura de verdad ese tramo, con la hora marcando el inicio en la esquina superior izquierda. La misma imagen se ve, siempre al día, en Logística, en el tablón público y en la vista de colaborador.',
