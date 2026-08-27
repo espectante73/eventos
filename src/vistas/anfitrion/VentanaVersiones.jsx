@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "13.4",
+    cambios: [
+      "Fecha/hora/lugar en la invitación: se quita el fondo que tapaba el texto de ejemplo (a la espera de una plantilla nueva sin ese texto quemado) y se dejan los iconos originales de la plantilla tal cual, sin sustituirlos.",
+    ],
+  },
+  {
     version: "13.3",
     cambios: [
       "Quitado el fondo sombreado detrás de las 3 líneas de familia/mesa/colaborador en la invitación -- sobresalía de las esquinas redondeadas del propio recuadro (que ya tiene su fondo crema). Ahora el texto va directamente sobre ese fondo.",

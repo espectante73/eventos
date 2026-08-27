@@ -88,26 +88,6 @@ function dibujarCuadriculaCalibracion(ctx, W, H) {
   ctx.restore();
 }
 
-// Los mismos 3 iconos que usa la app en su propia página de inicio
-// (Portada.jsx: Calendar/Clock/MapPin de lucide-react) -- paths SVG
-// copiados tal cual de lucide-react para que se vean idénticos, en vez de
-// los iconos que trae quemados la plantilla de fondo.
-const ICONOS_SVG = {
-  fecha: '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
-  hora: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
-  lugar: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
-};
-
-function cargarIcono(pathsSvg, color) {
-  return new Promise((resolve) => {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${pathsSvg}</svg>`;
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-  });
-}
-
 export function generarInvitacionImagen(
   evento,
   apellidoFamilia,
@@ -116,16 +96,8 @@ export function generarInvitacionImagen(
   mostrarCuadricula = false,
   nombreColaborador = ""
 ) {
-  // Los 3 iconos (mismo trazo dorado que el resto del diseño) se cargan
-  // antes de dibujar nada -- son imágenes (SVG a data URI) y necesitan su
-  // propio onload, igual que la plantilla de fondo.
-  return Promise.all([
-    cargarIcono(ICONOS_SVG.fecha, "#B08D57"),
-    cargarIcono(ICONOS_SVG.hora, "#B08D57"),
-    cargarIcono(ICONOS_SVG.lugar, "#B08D57"),
-  ]).then(
-    ([iconoFecha, iconoHora, iconoLugar]) =>
-      new Promise((resolve) => {
+  return (
+    new Promise((resolve) => {
         // Las dos zonas de abajo se midieron 2026-08-17 con cuadrícula de
         // coordenadas sobre la plantilla real (confirmada contra una captura
         // en vivo de la app con la cuadrícula activada: coinciden). AMBAS son
@@ -134,68 +106,34 @@ export function generarInvitacionImagen(
         // "Mesa 5; 2 personas", "13 de noviembre de 2026", "18:30 h",
         // "Icod de los Vinos, Tenerife"...) que hay que tapar línea a línea al
         // escribir los datos reales encima.
+        //
+        // 2026-08-27: a petición del usuario, la zona de fecha/hora/lugar deja
+        // de taparse (sin fondo) -- sabiendo que la plantilla ACTUAL todavía
+        // trae esos valores de ejemplo quemados; el usuario va a subir una
+        // plantilla nueva sin ese texto de ejemplo, y prueba mientras tanto
+        // con la actual. Si se ve el texto viejo asomando, es justo ese
+        // motivo, no un bug nuevo. Los iconos se dejan tal cual los trae la
+        // plantilla (los originales, sin sustituirlos ni taparlos).
 
         // Recuadro de familia/mesa (abajo a la derecha).
         const RECUADRO = { left: 0.505, right: 0.965, top: 0.797, bottom: 0.925 };
 
         // Recuadro de fecha/hora/lugar (izquierda). Las etiquetas ("FECHA",
-        // "HORA", "LUGAR") son fijas y no se tocan -- solo se sombrea y
-        // reescribe el VALOR de cada campo. Los iconos, en cambio, si se
-        // redibujan (ver ICONOS más abajo): la plantilla trae unos iconos
-        // quemados y el usuario pidió sustituirlos por los mismos que usa
-        // la propia app (Calendar/Clock/MapPin de lucide-react).
+        // "HORA", "LUGAR") y los iconos son fijos y no se tocan -- a
+        // petición del usuario, 2026-08-27, se dejan los iconos ORIGINALES
+        // de la plantilla tal cual, sin sustituirlos ni taparlos. Solo se
+        // reescribe el VALOR de cada campo, sin ningún fondo detrás (ver
+        // aviso más arriba sobre el texto de ejemplo quemado).
         const DATOS = {
           x: 0.16, // columna de texto (a la derecha de los iconos)
-          anchoTexto: 0.26, // ancho de columna dentro del recuadro (hasta su borde derecho)
-          yFechaZonaInicio: 0.468,
-          yFechaZonaFin: 0.521,
           yFechaValor: 0.487,
           yDiaSemanaValor: 0.508,
-          yHoraZonaInicio: 0.562,
-          yHoraZonaFin: 0.607,
           yHoraValor: 0.58,
-          yLugarZonaInicio: 0.64,
-          yLugarZonaFin: 0.7,
           yLugarValor: 0.65,
-        };
-
-        // Posición e icono de cada fila, en columna con el texto. Centro Y
-        // aproximado de cada etiqueta (FECHA/HORA/LUGAR) medido sobre la
-        // plantilla real, para que el icono nuevo quede a la misma altura
-        // que el que sustituye.
-        // x/tam recalibrados: la versión anterior (x=0.048, tam=0.075) hacía
-        // que el parche de fondo se saliera por la izquierda del recuadro
-        // real (que empieza en x=0.045) -- con tam más grande, el margen del
-        // parche (tam*0.35) por sí solo ya superaba ese borde. Ahora el
-        // icono es más pequeño y el parche va ceñido a su propio tamaño
-        // (no al tamaño del icono viejo que tapa), así que cabe con margen
-        // dentro del recuadro en vez de sobresalir.
-        const ICONOS = {
-          x: 0.08,
-          tam: 0.06,
-          fecha: { y: 0.465, img: iconoFecha },
-          hora: { y: 0.56, img: iconoHora },
-          lugar: { y: 0.635, img: iconoLugar },
-        };
-
-        const dibujarIcono = (ctx, W, H, def) => {
-          if (!def.img) return;
-          const tam = ICONOS.tam * W;
-          const xIcono = ICONOS.x * W;
-          const yCentro = def.y * H;
-          const margen = tam * 0.12;
-          // Parche ceñido al propio icono nuevo (más pequeño que antes),
-          // no al icono viejo que tapa -- ya no se sale del recuadro.
-          ctx.fillStyle = "#F5F0E6";
-          ctx.fillRect(xIcono - margen, yCentro - tam / 2 - margen, tam + margen * 2, tam + margen * 2);
-          ctx.drawImage(def.img, xIcono, yCentro - tam / 2, tam, tam);
         };
 
         const dibujarDatosGenerales = (ctx, W, H) => {
           const x = DATOS.x * W - 4;
-          const anchoTexto = DATOS.anchoTexto * W;
-          const padX = W * 0.032;
-
           const fechaValor = evento.fecha ? formatearFecha(evento.fecha) : "";
           const diaSemanaValor = evento.fecha ? formatearDiaSemana(evento.fecha) : "";
           const horaValor = evento.hora ? `${evento.hora} h` : "";
@@ -212,16 +150,10 @@ export function generarInvitacionImagen(
           ctx.textAlign = "left";
           ctx.textBaseline = "alphabetic";
 
-          const tapZona = (zonaInicio, zonaFin) => {
-            ctx.fillStyle = "#F5F0E6";
-            ctx.fillRect(x - padX, zonaInicio * H, anchoTexto + padX * 2 - 15, (zonaFin - zonaInicio) * H);
-          };
-
           const tamFecha = Math.round(W * 0.028);
           const tamDia = tamFecha;
 
           if (fechaValor || diaSemanaValor) {
-            tapZona(DATOS.yFechaZonaInicio, DATOS.yFechaZonaFin);
             ctx.fillStyle = "#1F3A2E";
             if (fechaValor) {
               ctx.font = `bold ${tamFecha}px 'Fraunces', serif`;
@@ -231,22 +163,15 @@ export function generarInvitacionImagen(
               ctx.font = `italic ${tamDia}px 'Fraunces', serif`;
               ctx.fillText(diaSemanaValor, x, DATOS.yDiaSemanaValor * H);
             }
-            // El icono se dibuja el último, encima del sombreado de texto,
-            // para quedar siempre en primer plano (antes el sombreado podía
-            // pintar por encima de una esquina del icono).
-            dibujarIcono(ctx, W, H, ICONOS.fecha);
           }
 
           if (horaValor) {
-            tapZona(DATOS.yHoraZonaInicio, DATOS.yHoraZonaFin);
             ctx.font = `bold ${tamFecha}px 'Fraunces', serif`;
             ctx.fillStyle = "#1F3A2E";
             ctx.fillText(horaValor, x, DATOS.yHoraValor * H);
-            dibujarIcono(ctx, W, H, ICONOS.hora);
           }
 
           if (lineasLugar.length > 0) {
-            tapZona(DATOS.yLugarZonaInicio, DATOS.yLugarZonaFin);
             const tamLugar = Math.round(W * 0.022);
             // El nombre del lugar (primera línea, p.ej. "Rte. El Rincón")
             // va más grande que el resto de la dirección -- pedido
@@ -261,7 +186,6 @@ export function generarInvitacionImagen(
               ctx.fillText(linea, xLugar, y);
               y += lineHeight;
             });
-            dibujarIcono(ctx, W, H, ICONOS.lugar);
           }
         };
 
