@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "9.5",
+    cambios: [
+      "El colaborador ve ahora un banner rojo fijo arriba de su vista mientras tenga cualquier permiso de edición concedido (\"Tienes permisos de edición: ...\") -- antes no había ningún aviso, ni email ni dentro de la app, así que solo se enteraba si encontraba el botón nuevo por casualidad.",
+    ],
+  },
+  {
     version: "9.4",
     cambios: [
       "Arreglado: al reemplazar la imagen del cronograma, seguía viéndose la anterior (en el tablón público, en la vista de colaborador y en Logística) -- el navegador la tenía cacheada porque el nombre de archivo no cambia nunca. Ahora cada visita fuerza a pedirla de nuevo.",

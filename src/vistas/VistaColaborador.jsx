@@ -30,7 +30,7 @@ import { construirEnlaceTablon } from "../lib/url";
 import { redimensionarImagenArchivo } from "../lib/descargas";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
-import { PERMISOS, tienePermiso } from "../lib/permisos";
+import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso } from "../lib/permisos";
 import { C } from "../theme";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
@@ -619,12 +619,27 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // invitado?") confundiría más de lo que explica.
   const bloqueadoEnPruebas = Boolean(evento.modoPruebasActivo) && colaborador.habilitadoEnPruebas === false;
 
+  // Aviso permanente (no un aviso puntual de "algo nuevo") mientras el
+  // colaborador tenga CUALQUIER permiso extra concedido -- a petición del
+  // usuario, 2026-08-27: hasta ahora un permiso nuevo no generaba ningún
+  // aviso real (ni email ni nada dentro de la app), así que la única
+  // forma de enterarse era encontrarse el botón nuevo por casualidad. Se
+  // recalcula solo de `colaborador.permisos` (mismo criterio que el resto
+  // de la app: nunca una bandera fija que haya que acordarse de apagar) --
+  // desaparece solo si el anfitrión le quita el permiso.
+  const permisosActivos = Array.isArray(colaborador?.permisos) ? colaborador.permisos : [];
+
   return (
     <div className="space-y-8">
       {bloqueadoEnPruebas && (
         <div className="p-3 rounded text-sm font-semibold" style={{ background: C.peligro, color: "#fff" }}>
           🧪 El anfitrión ha activado el Modo Pruebas y te ha dejado fuera por ahora: no podrás
           guardar datos, marcar pagos ni confirmar nada hasta que lo desactive.
+        </div>
+      )}
+      {permisosActivos.length > 0 && (
+        <div className="p-3 rounded text-sm font-semibold" style={{ background: C.peligro, color: "#fff" }}>
+          🔑 Tienes permisos de edición: {permisosActivos.map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ")}.
         </div>
       )}
       {/* Misma Portada que ve el anfitrión (imagen + franja fecha/hora/
