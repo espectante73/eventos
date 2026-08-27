@@ -213,6 +213,41 @@ export function VentanaInvitaciones({
           )}
         </div>
 
+        {/* Qué se imprime en la imagen -- a petición del usuario,
+            2026-08-27: poder quitar fecha/hora/lugar sueltos sin tener que
+            vaciar esos campos en Datos del evento (que también los usa la
+            portada y el tablón público). Por defecto los 3 activos --
+            "!== false" en vez de comprobar solo el booleano, para que una
+            fila de evento sin este dato todavía (antes de pegar el SQL)
+            se comporte igual que hoy: mostrando los 3. */}
+        <div className="mb-4 flex items-center gap-4 flex-wrap text-xs" style={{ color: C.charcoal }}>
+          <span style={{ opacity: 0.6 }}>Imprimir:</span>
+          <label className="flex items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={evento.imprimirFecha !== false}
+              onChange={(e) => persistEvento({ ...evento, imprimirFecha: e.target.checked })}
+            />
+            Fecha
+          </label>
+          <label className="flex items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={evento.imprimirHora !== false}
+              onChange={(e) => persistEvento({ ...evento, imprimirHora: e.target.checked })}
+            />
+            Hora
+          </label>
+          <label className="flex items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={evento.imprimirLugar !== false}
+              onChange={(e) => persistEvento({ ...evento, imprimirLugar: e.target.checked })}
+            />
+            Lugar
+          </label>
+        </div>
+
         <label
           className="mb-4 flex items-center gap-2 text-xs p-2 rounded cursor-pointer"
           style={{ background: modoCalibracion ? "#FDECF3" : C.paperDark, border: `1px dashed ${C.line}` }}

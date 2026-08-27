@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "14",
+    cambios: [
+      'Ventana Invitaciones gana 3 casillas ("Imprimir: Fecha / Hora / Lugar") para poder quitar cualquiera de las tres de la imagen de invitación sin tener que vaciar esos datos en Configuración -- las 3 activas por defecto, la invitación se sigue viendo igual que siempre hasta que desmarques alguna.',
+    ],
+  },
+  {
     version: "13.5",
     cambios: [
       "Ajustes finos de fecha/hora/lugar en la invitación: letra normal (menos gruesa), el bloque de texto un poco más a la izquierda, y el nombre del lugar + dirección subidos 20px.",

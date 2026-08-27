@@ -134,18 +134,26 @@ export function generarInvitacionImagen(
 
         const dibujarDatosGenerales = (ctx, W, H) => {
           const x = DATOS.x * W - 4;
-          const fechaValor = evento.fecha ? formatearFecha(evento.fecha) : "";
-          const diaSemanaValor = evento.fecha ? formatearDiaSemana(evento.fecha) : "";
-          const horaValor = evento.hora ? `${evento.hora} h` : "";
+          // Cada uno se puede desactivar por separado desde la ventana
+          // Invitaciones ("Imprimir: Fecha/Hora/Lugar") -- a petición del
+          // usuario, 2026-08-27. "!== false" para que, antes de pegar el
+          // SQL nuevo (evento sin este dato todavía), se comporte igual
+          // que siempre: mostrando los 3.
+          const fechaValor = evento.fecha && evento.imprimirFecha !== false ? formatearFecha(evento.fecha) : "";
+          const diaSemanaValor =
+            evento.fecha && evento.imprimirFecha !== false ? formatearDiaSemana(evento.fecha) : "";
+          const horaValor = evento.hora && evento.imprimirHora !== false ? `${evento.hora} h` : "";
           // Líneas explícitas en vez de partir por ancho: 1) nombre del lugar,
           // 2) cada tramo de la dirección separado por coma en su propia línea
           // (p.ej. "Ctra. el Amparo 190" / "38430 Icod de los Vinos") -- así
           // coincide con el salto de línea real de la dirección en vez de con
           // donde el texto justo deja de caber en el ancho disponible.
-          const lineasLugar = [
-            evento.lugar,
-            ...(evento.direccion ? evento.direccion.split(",").map((s) => s.trim()) : []),
-          ].filter(Boolean);
+          const lineasLugar =
+            evento.imprimirLugar === false
+              ? []
+              : [evento.lugar, ...(evento.direccion ? evento.direccion.split(",").map((s) => s.trim()) : [])].filter(
+                  Boolean
+                );
 
           ctx.textAlign = "left";
           ctx.textBaseline = "alphabetic";

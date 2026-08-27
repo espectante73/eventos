@@ -2163,3 +2163,14 @@ grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
 -- simple { "rol": "idDelInvitado" }, vive en `evento` (tabla abierta)
 -- igual que el resto de datos del evento.
 alter table evento add column if not exists "rolesTrabajoResponsables" jsonb not null default '{}'::jsonb;
+
+-- ---------- Qué se imprime en la invitación (2026-08-27, misma tarde) ----------
+-- Tres casillas independientes en la ventana Invitaciones para poder
+-- quitar fecha/hora/lugar de la IMAGEN sin tener que vaciar esos campos
+-- en Datos del evento (que también los usa la portada y el tablón
+-- público) -- a petición del usuario. Default true: hasta que el
+-- anfitrión desmarque algo, la invitación se ve exactamente igual que
+-- antes de este cambio.
+alter table evento add column if not exists "imprimirFecha" boolean not null default true;
+alter table evento add column if not exists "imprimirHora" boolean not null default true;
+alter table evento add column if not exists "imprimirLugar" boolean not null default true;
