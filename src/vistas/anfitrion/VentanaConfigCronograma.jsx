@@ -8,56 +8,37 @@
 // antes de construirlo: ancho de cada bloque proporcional a su duración
 // real, altura homogénea, hora arriba-izquierda, etiqueta centrada,
 // chevron abierto.
+//
+// Segundo ajuste, mismo día: el primer diseño mostraba los 9 bloques a
+// la vez (9 filas x 2 relojes cada una) -- demasiado espacio para lo que
+// pide el criterio de siempre de esta app ("pulgar derecho", ahorrar
+// espacio, evitar amontonar secciones, ver VentanaPermisos.jsx). Ahora
+// se elige el bloque con un <select> (mismo patrón que el selector de
+// colaborador en Permisos) y solo se edita ESE, y la hora es un único
+// <select> con todos los horarios en pasos de 5 minutos (no dos relojes
+// hora/minuto por separado).
 import { useState, useEffect } from "react";
 import { Printer } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { generarImagenCronograma } from "../../lib/cronograma";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
-const HORAS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0"));
-const MINUTOS = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"];
-
-// Dos <select> (hora / minutos de 5 en 5) en vez de <input type="time"> --
-// a petición del usuario, 2026-08-27: Safari trata ese tipo de campo como
-// una fecha y le superpone su propio menú ("Crear evento", "Abrir
-// calendario"...), sin flechas visibles para subir/bajar -- la etiqueta
-// "format-detection" en index.html no lo evitaba. Un <select> normal no
-// sufre este problema.
-function SelectorHora({ valor, onCambio }) {
-  const [hora, minuto] = String(valor || "00:00").split(":");
-  return (
-    <div className="flex items-center gap-1" style={{ flexShrink: 0 }}>
-      <select
-        value={hora}
-        onChange={(e) => onCambio(`${e.target.value}:${minuto}`)}
-        style={{ ...inputStyle, width: 62 }}
-      >
-        {HORAS.map((h) => (
-          <option key={h} value={h}>
-            {h}
-          </option>
-        ))}
-      </select>
-      <span style={{ color: C.charcoal }}>:</span>
-      <select
-        value={minuto}
-        onChange={(e) => onCambio(`${hora}:${e.target.value}`)}
-        style={{ ...inputStyle, width: 62 }}
-      >
-        {MINUTOS.map((m) => (
-          <option key={m} value={m}>
-            {m}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
+// Todos los horarios del día en pasos de 5 minutos, en un único <select>
+// -- a petición del usuario ("un único reloj, no dos relojes
+// distintos"). Un <select> normal, nunca un <input type="time">: ese
+// tipo de campo es justo el que Safari trataba como una fecha de
+// verdad y le superponía su propio menú (Crear evento, etc.).
+const TODAS_LAS_HORAS = Array.from({ length: 24 * 12 }, (_, i) => {
+  const h = Math.floor(i / 12);
+  const m = (i % 12) * 5;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+});
 
 export function VentanaConfigCronograma({ data, onCerrar }) {
   const { evento, persistEvento } = data;
   const bloques = Array.isArray(evento.cronogramaBloques) ? evento.cronogramaBloques : [];
   const [imagen, setImagen] = useState("");
+  const [seleccionado, setSeleccionado] = useState(0);
 
   // Se regenera sola cada vez que cambia algún dato -- no hace falta
   // ningún botón de "actualizar imagen".
@@ -82,36 +63,71 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
     }, 60);
   };
 
+  const bloqueActual = bloques[seleccionado];
+
   return (
-    <VentanaFlotante clave="config-cronograma" titulo="Cronograma" onCerrar={onCerrar} ancho={520}>
+    <VentanaFlotante clave="config-cronograma" titulo="Cronograma" onCerrar={onCerrar} ancho={420}>
       <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
-        Los horarios y nombres de cada bloque, en orden. La imagen de abajo se dibuja sola a
-        partir de estos datos — el ancho de cada bloque representa cuánto dura de verdad, hasta
-        que empieza el siguiente.
+        Elige un bloque, y edita su hora y su texto. La imagen de abajo se dibuja sola -- el
+        ancho de cada bloque representa cuánto dura de verdad, hasta que empieza el siguiente.
       </p>
 
-      <div className="flex flex-col gap-2 mb-3">
-        {bloques.map((b, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <SelectorHora valor={b.hora} onCambio={(v) => cambiarBloque(i, "hora", v)} />
-            <input
-              type="text"
-              value={b.texto}
-              onChange={(e) => cambiarBloque(i, "texto", e.target.value)}
-              style={{ ...inputStyle, width: "100%" }}
-            />
-          </div>
-        ))}
+      {/* Etiqueta a la izquierda, <select> a la derecha -- mismo criterio
+          "pulgar derecho" que el resto de la app (ver VentanaPermisos.jsx). */}
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <span className="text-sm" style={{ color: C.charcoal, opacity: 0.8 }}>
+          Bloque
+        </span>
+        <select
+          value={seleccionado}
+          onChange={(e) => setSeleccionado(Number(e.target.value))}
+          style={{ ...inputStyle, height: 42 }}
+        >
+          {bloques.map((b, i) => (
+            <option key={i} value={i}>
+              {b.texto || `Bloque ${i + 1}`}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="flex items-center gap-2 mb-4 pt-2" style={{ borderTop: `1px solid ${C.line}` }}>
-        <label className="text-sm" style={{ color: C.charcoal }}>
-          Fin del evento (cierra el último bloque)
-        </label>
-        <SelectorHora
-          valor={evento.cronogramaHoraFin || "23:45"}
-          onCambio={(v) => persistEvento({ ...evento, cronogramaHoraFin: v })}
-        />
+      {bloqueActual && (
+        <div className="flex items-center gap-2 mb-4">
+          <select
+            value={bloqueActual.hora}
+            onChange={(e) => cambiarBloque(seleccionado, "hora", e.target.value)}
+            style={{ ...inputStyle, width: 90, flexShrink: 0 }}
+          >
+            {TODAS_LAS_HORAS.map((h) => (
+              <option key={h} value={h}>
+                {h}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={bloqueActual.texto}
+            onChange={(e) => cambiarBloque(seleccionado, "texto", e.target.value)}
+            style={{ ...inputStyle, width: "100%" }}
+          />
+        </div>
+      )}
+
+      <div className="flex items-center justify-between gap-3 mb-4 pt-2" style={{ borderTop: `1px solid ${C.line}` }}>
+        <span className="text-sm" style={{ color: C.charcoal, opacity: 0.8 }}>
+          Fin del evento
+        </span>
+        <select
+          value={evento.cronogramaHoraFin || "23:45"}
+          onChange={(e) => persistEvento({ ...evento, cronogramaHoraFin: e.target.value })}
+          style={{ ...inputStyle, width: 90 }}
+        >
+          {TODAS_LAS_HORAS.map((h) => (
+            <option key={h} value={h}>
+              {h}
+            </option>
+          ))}
+        </select>
       </div>
 
       {imagen && (
@@ -131,11 +147,8 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
 
       {/* Solo colaboradores -- el cronograma es una herramienta de
           trabajo para quien organiza el evento, nunca para el invitado
-          que solo viene a disfrutarlo. Se quitó la casilla de
-          "invitados" (tablón público) a petición explícita del usuario,
-          2026-08-27, tras aclarar que esa nunca debía existir. Nadie la
-          ve por defecto -- para poder revisarla con calma antes de
-          decidir. */}
+          que solo viene a disfrutarlo. Nadie la ve por defecto -- para
+          poder revisarla con calma antes de decidir. */}
       <div className="pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
         <label className="flex items-center gap-2 text-sm" style={{ color: C.charcoal }}>
           <input

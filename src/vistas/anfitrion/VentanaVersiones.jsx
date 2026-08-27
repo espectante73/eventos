@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "10.3",
+    cambios: [
+      "Configuración → Cronograma, mucho más compacta: en vez de ver los 9 bloques a la vez, se elige uno con un desplegable (mismo criterio que Permisos) y solo se edita ese. La hora pasa a ser un único desplegable con todos los horarios en pasos de 5 minutos, en vez de dos relojes separados.",
+    ],
+  },
+  {
     version: "10.2",
     cambios: [
       "Arreglado de raíz el menú de Safari sobre las horas del cronograma (\"Crear evento\", \"Abrir calendario\"...): el campo de hora ya no es un <input> de tipo fecha (que Safari trataba como tal, sin la etiqueta que se probó antes) -- ahora son dos desplegables normales (hora / minutos de 5 en 5), que Safari nunca confunde con una fecha.",
