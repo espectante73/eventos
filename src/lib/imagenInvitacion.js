@@ -4,21 +4,6 @@
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { formatearFecha, formatearDiaSemana, listaConY } from "./formato";
 
-// Sombreado ajustado a una línea de texto -- nunca un recuadro grande. El
-// ancho SIEMPRE es el de la columna disponible (no el del texto medido):
-// la plantilla ya trae un valor de ejemplo quemado en esa misma línea (p.ej.
-// "Benito y Meritxell"), y si el texto nuevo es más corto que el viejo, un
-// sombreado ajustado solo al texto nuevo deja un trozo del viejo asomando
-// por el lado. Con el ancho de columna completo eso no puede pasar, y aun
-// así solo se sombrea esa línea -- no el recuadro entero.
-function resaltarLinea(ctx, x, yBase, anchoColumna, fontSizePx, colorFondo) {
-  const padX = fontSizePx * 0.6;
-  const arriba = fontSizePx * 1.4;
-  const abajo = fontSizePx * 1.0;
-  ctx.fillStyle = colorFondo;
-  ctx.fillRect(x - padX, yBase - arriba, anchoColumna + padX * 2, arriba + abajo);
-}
-
 function partirLineas(ctx, texto, maxWidth) {
   const palabras = texto.split(" ");
   let linea = "";
@@ -59,16 +44,6 @@ function dibujarParrafoJustificado(ctx, lineas, x, y, maxWidth, lineHeight) {
   lineas.forEach((linea, i) => {
     dibujarLineaJustificada(ctx, linea, x, y + i * lineHeight, maxWidth, i === lineas.length - 1);
   });
-}
-
-// Igual que dibujarParrafoJustificado, pero primero sombrea cada línea (al
-// ancho de columna completo -- ver resaltarLinea) antes de escribir encima.
-function dibujarParrafoConSombra(ctx, lineas, x, y, maxWidth, lineHeight, fontSizePx, colorFondo, colorTexto) {
-  lineas.forEach((linea, i) => {
-    resaltarLinea(ctx, x, y + i * lineHeight, maxWidth, fontSizePx, colorFondo);
-  });
-  ctx.fillStyle = colorTexto;
-  dibujarParrafoJustificado(ctx, lineas, x, y, maxWidth, lineHeight);
 }
 
 // Rejilla temporal (cada 5% del ancho/alto) con la fracción escrita en cada
@@ -370,9 +345,17 @@ export function generarInvitacionImagen(
           // y lo ajusto sin tener que adivinar.
           let cursorY = 0.84 * H;
 
+          // Sin sombreado de fondo por línea -- a petición del usuario,
+          // 2026-08-27: este recuadro (familia/mesa/colaborador) ya tiene
+          // su propio fondo crema de la propia plantilla; el rectángulo de
+          // resaltado (pensado para texto sobre la FOTO, con esquinas
+          // rectas) sobresalía de las esquinas redondeadas de este
+          // recuadro. Solo el texto, directamente sobre el fondo que ya
+          // hay.
           bloques.forEach((b) => {
             ctx.font = b.font;
-            dibujarParrafoConSombra(ctx, b.lineas, xIzq, cursorY, anchoDisponible, b.lineHeight, b.fontSizePx, "#EFE3CE", "#1F3A2E");
+            ctx.fillStyle = "#1F3A2E";
+            dibujarParrafoJustificado(ctx, b.lineas, xIzq, cursorY, anchoDisponible, b.lineHeight);
             cursorY += b.lineas.length * b.lineHeight + espacioEntreBloques;
           });
 

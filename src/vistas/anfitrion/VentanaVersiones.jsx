@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "13.3",
+    cambios: [
+      "Quitado el fondo sombreado detrás de las 3 líneas de familia/mesa/colaborador en la invitación -- sobresalía de las esquinas redondeadas del propio recuadro (que ya tiene su fondo crema). Ahora el texto va directamente sobre ese fondo.",
+    ],
+  },
+  {
     version: "13.2",
     cambios: [
       "Las 3 líneas de la invitación (familia, mesa, colaborador) usan ya la misma letra y el mismo tamaño, con lo que el espacio entre ellas queda igualado solo. El conjunto sube ligeramente para encajar mejor en el recuadro.",
