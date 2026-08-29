@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "18.2",
+    cambios: [
+      'Contorno dorado (igual que la letra) en "Cerrar sesión", "Abrir sección…" y cada fila de los menús desplegables -- antes era blanco translúcido.',
+    ],
+  },
+  {
     version: "18.1",
     cambios: [
       "Aviso fijo en la pantalla de acceso al tablón: el apellido tiene que ser el familiar de la invitación, no cualquier otro apellido que la persona pueda tener.",
