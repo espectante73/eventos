@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "19.1",
+    cambios: [
+      '"Cerrar sesión" y "Novedades", dentro de Mi cuenta, cambian del verde plano de antes al mismo estilo que el resto de botones de la app (degradado + contorno dorado), y de un ancho estirado a su ancho justo -- filosofía de la app: todo lo más compacto posible.',
+    ],
+  },
+  {
     version: "19",
     cambios: [
       'La cabecera de la Portada queda con un único botón visible ("Mi cuenta") -- "Cerrar sesión" y el enlace a "Novedades" ahora viven dentro de ese mismo modal, como dos botones del mismo ancho exacto, en vez de ir apilados aparte.',

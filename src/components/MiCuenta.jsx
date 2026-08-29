@@ -98,17 +98,19 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon }) {
       {abierta && (
         <ModalFlotante titulo="Mi cuenta" onCerrar={cerrar}>
           {/* Antes eran botones sueltos en la cabecera de Portada.jsx --
-              ahora viven aquí dentro, a petición del usuario. `flex:1`
-              en los dos para que midan exactamente lo mismo el uno que
-              el otro, sin importar que "Cerrar sesión" tenga más letras
-              que "Novedades". */}
+              ahora viven aquí dentro, a petición del usuario. Mismo
+              estilo que el resto de botones/filas de menú de la app
+              (.boton-3d .boton-flotante-imagen: degradado verde,
+              contorno dorado) en vez de un verde plano inventado para
+              este modal -- filosofía de la app: todo lo más compacto
+              posible para móvil, cada fila a su ancho justo, no
+              estiradas a lo ancho con flex:1. */}
           {(onCerrarSesion || enlaceTablon) && (
-            <div className="flex items-stretch gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
+            <div className="flex flex-col items-start gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
               {onCerrarSesion && (
                 <button
                   onClick={onCerrarSesion}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
-                  style={{ background: C.ink, color: C.paper }}
+                  className="boton-3d boton-flotante-imagen flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
                 >
                   <LogOut size={15} /> Cerrar sesión
                 </button>
@@ -116,8 +118,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon }) {
               {enlaceTablon && (
                 <a
                   href={enlaceTablon}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
-                  style={{ background: C.ink, color: C.paper }}
+                  className="boton-3d boton-flotante-imagen flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
                   title="Abre el tablón público de novedades que ven los confirmados"
                 >
                   <Megaphone size={15} /> Novedades
