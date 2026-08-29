@@ -15,6 +15,7 @@ import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, formatearDiaSemana } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
+import { uid } from "../lib/id";
 
 const BUCKET_MUSICA = "musica-ambiental";
 
@@ -34,8 +35,20 @@ export function VistaTablon({ token }) {
   // usada se recuerda en ESTE dispositivo (localStorage), para no tener
   // que volver a escribirla cada vez que se abre el enlace.
   const claveLocalStorage = `tablon-respuesta-${token}`;
-  const [pregunta, setPregunta] = useState("");
+  // Texto fijo desde 2026-08-29: la pregunta ya no es un secreto
+  // configurable con una respuesta arbitraria -- siempre pide el mismo
+  // dato (nombre y apellido), comprobado en servidor contra los
+  // invitados confirmados (ver tablon_verificar_respuesta en
+  // schema.sql). El anfitrión puede seguir retocando el REDACTADO desde
+  // Novedades (persistPreguntaTablon), así que igualmente se carga.
+  const [pregunta, setPregunta] = useState("Nombre y apellido tal como en tu invitación");
   const [respuestaEscrita, setRespuestaEscrita] = useState("");
+  // Identifica este NAVEGADOR (no a la persona) de forma estable, para
+  // poder avisar al anfitrión si el mismo nombre entra desde muchos
+  // dispositivos distintos (ver tablon_accesos en schema.sql) -- nunca
+  // se usa para identificar a nadie, solo para contar cuántos
+  // dispositivos distintos comparten un mismo nombre.
+  const dispositivoIdRef = useRef("");
   const [errorRespuesta, setErrorRespuesta] = useState("");
   const [comprobando, setComprobando] = useState(false);
   // La respuesta YA verificada -- se manda en cada refresco periódico
@@ -81,13 +94,17 @@ export function VistaTablon({ token }) {
     }
   };
 
-  // Carga fecha/hora/lugar + novedades -- solo se llama una vez superada
-  // la pregunta de acceso (o si no hay ninguna configurada).
+  // Carga fecha/hora/lugar + novedades -- solo se llama una vez superado
+  // el acceso por nombre.
   const cargarContenido = useCallback(
     async () => {
       const [{ data: eventoFilas }, { data: novedadesFilas }] = await Promise.all([
         supabase.from("evento").select("*").limit(1),
-        supabase.rpc("tablon_listar_novedades", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
+        supabase.rpc("tablon_listar_novedades", {
+          p_token: token,
+          p_respuesta: respuestaVerificadaRef.current,
+          p_dispositivo_id: dispositivoIdRef.current,
+        }),
       ]);
       setEvento(eventoFilas && eventoFilas[0] ? eventoFilas[0] : null);
       setNovedades(novedadesFilas || []);
@@ -99,10 +116,13 @@ export function VistaTablon({ token }) {
     [token]
   );
 
-  // Primer arranque: valida el token, mira si hace falta responder a
-  // algo, y si este dispositivo ya tiene una respuesta guardada de una
-  // vez anterior (y sigue siendo válida -- el anfitrión pudo cambiar la
-  // pregunta desde entonces), pasa directo sin volver a preguntar.
+  // Primer arranque: valida el token, genera (o recupera) el id de este
+  // dispositivo, y mira si ya hay un nombre guardado de una vez anterior
+  // (y sigue siendo válido -- por si el anfitrión quitó a esa persona de
+  // confirmados desde entonces), para pasar directo sin volver a
+  // preguntar. El acceso por nombre es SIEMPRE obligatorio desde
+  // 2026-08-29 -- ya no existe un modo "sin pregunta configurada" que
+  // deje pasar directo.
   useEffect(() => {
     let cancelado = false;
     (async () => {
@@ -112,13 +132,22 @@ export function VistaTablon({ token }) {
         setEstado("invalido");
         return;
       }
+      try {
+        const claveDispositivo = "tablon-dispositivo-id";
+        let idGuardado = window.localStorage.getItem(claveDispositivo);
+        if (!idGuardado) {
+          idGuardado = uid();
+          window.localStorage.setItem(claveDispositivo, idGuardado);
+        }
+        dispositivoIdRef.current = idGuardado;
+      } catch (_) {
+        // Sin almacenamiento disponible, cada visita cuenta como un
+        // dispositivo "nuevo" para el aviso de accesos sospechosos --
+        // no afecta a si se puede entrar o no.
+      }
       const { data: preguntaTexto } = await supabase.rpc("tablon_obtener_pregunta", { p_token: token });
       if (cancelado) return;
-      if (!preguntaTexto) {
-        cargarContenido();
-        return;
-      }
-      setPregunta(preguntaTexto);
+      if (preguntaTexto) setPregunta(preguntaTexto);
       let guardada = "";
       try {
         guardada = window.localStorage.getItem(claveLocalStorage) || "";
@@ -247,6 +276,7 @@ export function VistaTablon({ token }) {
             autoFocus
             value={respuestaEscrita}
             onChange={(e) => setRespuestaEscrita(e.target.value)}
+            placeholder="Ej.: Apellido Nombre"
             className="w-full mb-2"
             style={{ ...inputStyle, width: "100%", height: 42 }}
             required

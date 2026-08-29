@@ -27,6 +27,7 @@ import {
   MoreHorizontal,
   Tag,
   Star,
+  ShieldOff,
 } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
@@ -237,6 +238,14 @@ export function SeccionInvitados({
         return { ...g, rolesTrabajo: siguientes };
       })
     );
+  };
+
+  // Excluir del acceso al tablón público (2026-08-29): nombres que
+  // nunca deben servir como respuesta válida, aunque el invitado esté
+  // confirmado -- empezando por el propio anfitrión, cuyo nombre es
+  // información pública (ver schema.sql, "excluidoTablon").
+  const alternarExcluidoTablon = (id) => {
+    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, excluidoTablon: !g.excluidoTablon } : g)));
   };
 
   const anadirRolNuevo = (id) => {
@@ -1243,6 +1252,22 @@ export function SeccionInvitados({
                         style={{
                           color: Array.isArray(g.rolesTrabajo) && g.rolesTrabajo.length > 0 ? C.ink : C.charcoal,
                           opacity: Array.isArray(g.rolesTrabajo) && g.rolesTrabajo.length > 0 ? 1 : 0.35,
+                        }}
+                      />
+                    </button>
+                    <button
+                      onClick={() => alternarExcluidoTablon(g.id)}
+                      title={
+                        g.excluidoTablon
+                          ? "Excluido del acceso al tablón — su nombre nunca sirve como respuesta válida"
+                          : "Excluir del acceso al tablón (nombre de conocimiento público, p.ej. el anfitrión)"
+                      }
+                    >
+                      <ShieldOff
+                        size={14}
+                        style={{
+                          color: g.excluidoTablon ? C.peligro : C.charcoal,
+                          opacity: g.excluidoTablon ? 1 : 0.35,
                         }}
                       />
                     </button>

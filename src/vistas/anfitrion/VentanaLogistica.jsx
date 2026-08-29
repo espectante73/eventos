@@ -72,7 +72,7 @@ function Seccion({ icono: Icono, titulo, resumen, children, abiertaPorDefecto = 
 }
 
 export function VentanaLogistica({ data }) {
-  const { evento, invitados, colaboradores, novedades, preguntaTablon } = data;
+  const { evento, invitados, colaboradores, novedades, accesosTablonSospechosos } = data;
   const confirmados = invitados.filter((g) => g.confirmado);
 
   // La música no viene de useLedgerData (igual que en VistaTablon.jsx) --
@@ -192,7 +192,9 @@ export function VentanaLogistica({ data }) {
         <Seccion icono={MessageSquareText} titulo="Tablón / FAQ" resumen={`${novedadesPublicadas.length}/${novedades.length} publicadas`}>
           <p>{novedadesPublicadas.length} de {novedades.length} entradas están publicadas (el resto son borradores).</p>
           <p className="mt-1">
-            {preguntaTablon?.pregunta ? "Tiene pregunta de acceso configurada." : "Sin pregunta de acceso -- cualquiera con el enlace entra directo."}
+            Acceso protegido por nombre (solo confirmados).
+            {accesosTablonSospechosos.length > 0 &&
+              ` ⚠ ${accesosTablonSospechosos.length} nombre(s) usados desde varios dispositivos.`}
           </p>
         </Seccion>
 

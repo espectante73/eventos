@@ -5,7 +5,7 @@
 // cualquiera con el enlace ve las novedades publicadas, sin login ni
 // cuenta — a petición del usuario, 2026-08-25.
 import { useState, useRef } from "react";
-import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown, Lock } from "lucide-react";
+import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown, Lock, Undo2, AlertTriangle } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
 import { formatearFecha } from "../../lib/formato";
@@ -14,6 +14,11 @@ import { construirEnlaceTablon } from "../../lib/url";
 // reutiliza también en VentanaConfigPlantillasEmail.jsx (mismos botones
 // de negrita/cursiva/subrayado, a petición del usuario).
 import { envolverSeleccion } from "../../lib/textoEnriquecido";
+// "Deshacer" en vivo (antes de guardar) + historial guardado en
+// servidor (después de guardar) -- a petición del usuario, 2026-08-29.
+// Ver los comentarios de cada módulo para la diferencia entre los dos.
+import { useDeshacer } from "../../lib/useDeshacer";
+import { BotonHistorial } from "../../components/HistorialTexto";
 
 // Añade "prefijo" al principio de cada línea tocada por la selección
 // actual (o solo la línea del cursor, si no hay nada seleccionado) --
@@ -40,9 +45,12 @@ function prefijarLineas(textarea, valor, prefijo, onCambio) {
   });
 }
 
-function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloTexto }) {
+function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloTexto, obtenerHistorialTexto }) {
   const [titulo, setTitulo] = useState(n.titulo);
-  const [cuerpo, setCuerpo] = useState(n.cuerpo);
+  // useDeshacer sustituye al simple useState de antes: mismo valor
+  // controlado (`cuerpo`), pero guarda "fotos" para poder volver atrás
+  // con el botón Deshacer sin tocar el servidor -- ver lib/useDeshacer.js.
+  const { valor: cuerpo, cambiar: setCuerpo, deshacer, puedeDeshacer, fijarValor: fijarCuerpo } = useDeshacer(n.cuerpo);
   const cuerpoRef = useRef(null);
 
   // onMouseDown con preventDefault: sin esto, pulsar el botón le quita el
@@ -152,6 +160,27 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
             >
               <List size={13} />
             </button>
+            <div style={{ width: 1, alignSelf: "stretch", background: C.line }} />
+            <button
+              type="button"
+              title="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={deshacer}
+              disabled={!puedeDeshacer}
+              className="p-1.5 rounded"
+              style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: puedeDeshacer ? 1 : 0.35 }}
+            >
+              <Undo2 size={13} />
+            </button>
+            {!soloTexto && (
+              <BotonHistorial
+                obtenerHistorial={() => obtenerHistorialTexto("novedad", n.id, "cuerpo")}
+                onRestaurar={(valorAnterior) => {
+                  fijarCuerpo(valorAnterior);
+                  onCambiar({ ...n, cuerpo: valorAnterior });
+                }}
+              />
+            )}
           </div>
           <textarea
             ref={cuerpoRef}
@@ -211,7 +240,17 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
 // pregunta de acceso) queda deshabilitado y atenuado, a petición del
 // usuario, 2026-08-25.
 export function VentanaNovedades({ data, ventana, soloTexto = false }) {
-  const { evento, persistEvento, novedades, persistNovedades, tokenTablon, preguntaTablon, persistPreguntaTablon } = data;
+  const {
+    evento,
+    persistEvento,
+    novedades,
+    persistNovedades,
+    tokenTablon,
+    preguntaTablon,
+    persistPreguntaTablon,
+    obtenerHistorialTexto,
+    accesosTablonSospechosos,
+  } = data;
   const [copiado, setCopiado] = useState(false);
   // Pie plegado por defecto -- a petición del usuario, 2026-08-27, para
   // no tener siempre a la vista la pregunta de acceso/WhatsApp/ocultar
@@ -238,26 +277,15 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
   // se inicializa al montar, se guarda al salir del campo (onBlur).
   const [enlaceWhatsapp, setEnlaceWhatsapp] = useState(evento.enlaceGrupoWhatsapp || "");
 
-  // Pregunta de acceso al tablón (capa extra sobre el enlace en sí) -- a
-  // petición del usuario, 2026-08-25: aunque el enlace se reenvíe fuera
-  // del grupo, sin la respuesta correcta el tablón no enseña nada.
-  const [pregunta, setPregunta] = useState(preguntaTablon.pregunta);
-  const [respuesta, setRespuesta] = useState(preguntaTablon.respuesta);
+  // Texto de acceso al tablón -- desde 2026-08-29 ya no hay una
+  // "respuesta correcta" que editar aquí: el acceso se comprueba contra
+  // los invitados confirmados (ver schema.sql). Este campo es solo el
+  // REDACTADO que ve la persona antes de entrar.
+  const [pregunta, setPregunta] = useState(preguntaTablon);
   const [errorPregunta, setErrorPregunta] = useState("");
-  // Solo guarda cuando las DOS casillas están rellenas (una pregunta a
-  // medias sin respuesta dejaría el tablón pidiendo algo imposible de
-  // acertar), o cuando las dos están vacías (para poder quitar la
-  // pregunta por completo) -- a petición del usuario, 2026-08-25: antes
-  // guardaba en cuanto se salía de CUALQUIERA de las dos casillas, así
-  // que rellenar la pregunta y saltar a la respuesta ya guardaba con la
-  // respuesta todavía vacía.
   const guardarPregunta = async () => {
-    const sinCambios = pregunta === preguntaTablon.pregunta && respuesta === preguntaTablon.respuesta;
-    if (sinCambios) return;
-    const lasDosRellenas = pregunta.trim() && respuesta.trim();
-    const lasDosVacias = !pregunta.trim() && !respuesta.trim();
-    if (!lasDosRellenas && !lasDosVacias) return; // a medias -- todavía no
-    const ok = await persistPreguntaTablon(pregunta, respuesta);
+    if (pregunta === preguntaTablon) return;
+    const ok = await persistPreguntaTablon(pregunta);
     setErrorPregunta(ok ? "" : "No se ha podido guardar — vuelve a intentarlo.");
   };
 
@@ -392,6 +420,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             expandida={idExpandido === n.id}
             onAlternar={() => alternarExpandida(n.id)}
             soloTexto={soloTexto}
+            obtenerHistorialTexto={obtenerHistorialTexto}
           />
         ))}
         {novedades.length === 0 && (
@@ -427,24 +456,29 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             value={pregunta}
             onChange={(e) => setPregunta(e.target.value)}
             onBlur={guardarPregunta}
-            placeholder="Pregunta de acceso (opcional)"
-            title="Se le pregunta a quien abra el tablón, antes de dejarle ver nada -- capa extra sobre el enlace en sí"
+            placeholder="Texto que ve la persona antes de entrar"
+            title="El acceso en sí ya no depende de esto -- solo comprueba nombre y apellido contra los confirmados. Esto es solo el redactado que ve la persona."
             className="flex-1"
             style={{ ...inputStyle, fontSize: 12 }}
-          />
-          <input
-            value={respuesta}
-            onChange={(e) => setRespuesta(e.target.value)}
-            onBlur={guardarPregunta}
-            placeholder="Respuesta correcta"
-            title="No distingue mayúsculas ni espacios de sobra, pero sí tildes -- usa algo sencillo"
-            style={{ ...inputStyle, fontSize: 12, width: 130 }}
           />
         </div>
         {errorPregunta && (
           <p className="text-xs" style={{ color: C.wax }}>
             ⚠ {errorPregunta}
           </p>
+        )}
+        {accesosTablonSospechosos.length > 0 && (
+          <div className="flex items-start gap-2 p-2 rounded text-xs" style={{ background: C.avisoFondo, color: C.peligro }}>
+            <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <p className="font-medium">Nombres usados desde varios dispositivos:</p>
+              {accesosTablonSospechosos.map((a) => (
+                <p key={a.nombreNormalizado}>
+                  "{a.nombreNormalizado}" — {a.numDispositivos} dispositivos distintos
+                </p>
+              ))}
+            </div>
+          </div>
         )}
         <div className="flex items-center gap-2">
           <MessageCircle size={14} style={{ color: "#25D366", flexShrink: 0 }} />

@@ -2187,3 +2187,318 @@ alter table evento add column if not exists "imprimirLugar" boolean not null def
 -- todavía) -- solo afecta a VistaTablon.jsx, nunca a la portada, a
 -- Datos evento ni a la invitación.
 alter table evento add column if not exists "tablonOcultarFecha" boolean not null default false;
+
+-- ============================================================
+-- 2026-08-29: acceso al tablón por NOMBRE en vez de pregunta de sí/no
+-- (a petición del usuario, tras razonar sobre la seguridad del enlace
+-- público con ~140 personas) + historial de guardado y "deshacer en
+-- vivo" para los 2 textos largos reales de la app (cuerpo de una
+-- novedad, plantillas de email).
+-- ============================================================
+
+-- ---------- Acceso al tablón por nombre ----------
+-- Sustituye del todo la pregunta de sí/no de antes (2026-08-25): ahora
+-- la "respuesta correcta" ya no es un secreto fijo compartido -- es
+-- "¿existe un invitado CONFIRMADO con este nombre?". "pregunta" sigue
+-- siendo el texto editable que ve la persona (se actualiza aquí abajo
+-- al nuevo redactado); "respuestaCorrecta" queda sin uso a partir de
+-- ahora (no se borra la columna, igual que "cronogramaHoraFin" en su
+-- momento -- inofensiva, ver más arriba en este archivo).
+update tablon_secreto set "pregunta" = 'Nombre y apellido tal como en tu invitación' where true;
+
+-- Instalada igual que pg_net más arriba en este archivo -- necesaria
+-- para poder ignorar tildes al comparar nombres (José/Jose deben
+-- validar igual, la gente escribe rápido desde el móvil).
+create extension if not exists unaccent;
+
+-- Nombres que NUNCA deben servir como respuesta válida, aunque consten
+-- como confirmados -- empezando por el propio anfitrión (y su pareja,
+-- si también está en la lista): su nombre es información pública
+-- (cualquiera que sepa que se casan podría "adivinarlo" sin haber sido
+-- invitado). Marcar/desmarcar desde Lista de invitados.
+alter table invitados add column if not exists "excluidoTablon" boolean not null default false;
+
+-- Quita comas y espacios de sobra (los trata como un único separador),
+-- pasa a minúsculas y quita tildes -- misma normalización tanto para lo
+-- que escribe la persona como para "apellido + nombre" sacado de la
+-- base de datos. "search_path" incluye "extensions" además de "public"
+-- porque Supabase puede instalar unaccent() en cualquiera de los dos
+-- según la versión del proyecto.
+create or replace function normalizar_nombre_tablon(p_texto text)
+returns text
+language sql immutable set search_path = public, extensions, pg_temp
+as $$
+  select trim(lower(unaccent(regexp_replace(coalesce(p_texto, ''), '[,\s]+', ' ', 'g'))));
+$$;
+
+-- Registro de accesos válidos -- una fila por cada pareja (nombre,
+-- dispositivo) que haya entrado alguna vez, no una fila por refresco:
+-- "on conflict...do update" de más abajo solo actualiza la fecha. Así
+-- "cuántos dispositivos distintos han usado este nombre" es un simple
+-- recuento de filas, sin que la tabla crezca sin límite.
+create table if not exists tablon_accesos (
+  "id"                uuid primary key default gen_random_uuid(),
+  "nombreNormalizado" text not null,
+  "dispositivoId"     text not null,
+  "creadoEn"          timestamptz not null default now(),
+  "actualizadoEn"     timestamptz not null default now(),
+  unique ("nombreNormalizado", "dispositivoId")
+);
+alter table tablon_accesos enable row level security;
+revoke all on table tablon_accesos from anon, authenticated;
+
+-- Sustituye la comparación contra "respuestaCorrecta" (ya no se usa)
+-- por "¿hay algún confirmado, no excluido, con este nombre?". El orden
+-- pedido por el usuario es "Apellido Nombre" (mismo orden que ya
+-- muestra la Lista de invitados) -- coma y tildes no cuentan.
+create or replace function tablon_verificar_respuesta(p_token uuid, p_respuesta text)
+returns boolean
+language sql security definer set search_path = public, extensions, pg_temp
+as $$
+  select p_token = (select "token" from tablon_secreto limit 1)
+    and exists (
+      select 1 from invitados i
+      where i."confirmado" = true
+        and i."excluidoTablon" = false
+        and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)
+    );
+$$;
+
+-- Cambia de 2 a 3 parámetros (se añade p_dispositivo_id, para el
+-- registro de accesos de más abajo) -- hay que borrar la firma vieja
+-- antes (misma lección de siempre, ver CLAUDE.md).
+drop function if exists tablon_listar_novedades(uuid, text);
+
+-- Registra el acceso (si es válido) y devuelve las novedades publicadas
+-- -- unificado en una sola función porque el cliente ya llama a esta en
+-- cada refresco periódico (cada minuto), es el sitio natural para
+-- anotar "este dispositivo sigue usando este nombre" sin añadir una
+-- llamada aparte.
+create or replace function tablon_listar_novedades(p_token uuid, p_respuesta text, p_dispositivo_id text)
+returns setof novedades
+language plpgsql security definer set search_path = public, extensions, pg_temp
+as $$
+declare
+  v_valido boolean;
+begin
+  v_valido := tablon_verificar_respuesta(p_token, p_respuesta);
+  if v_valido then
+    insert into tablon_accesos ("nombreNormalizado", "dispositivoId")
+    values (normalizar_nombre_tablon(p_respuesta), coalesce(nullif(p_dispositivo_id, ''), 'desconocido'))
+    on conflict ("nombreNormalizado", "dispositivoId") do update set "actualizadoEn" = now();
+  end if;
+
+  return query
+  select n.* from novedades n
+  where v_valido and n."publicada" = true
+  order by n."creadaEn" desc;
+end;
+$$;
+
+-- El nombre de cada colaborador/confirmado ya no es un secreto de un
+-- solo uso -- si se filtra, cualquier número de dispositivos distintos
+-- podría entrar con él. En vez de bloquear a nadie automáticamente
+-- (mucha fricción real: una familia con varios móviles, alguien que
+-- borra el navegador...), el anfitrión ve aquí qué nombres se han usado
+-- desde MÁS DE UN dispositivo, como señal de alarma.
+create or replace function anfitrion_listar_accesos_tablon_sospechosos(p_token uuid)
+returns table("nombreNormalizado" text, "numDispositivos" bigint, "ultimoAcceso" timestamptz)
+language sql security definer set search_path = public, pg_temp
+as $$
+  select ta."nombreNormalizado", count(*), max(ta."actualizadoEn")
+  from tablon_accesos ta
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  group by ta."nombreNormalizado"
+  having count(*) > 1
+  order by max(ta."actualizadoEn") desc;
+$$;
+grant execute on function anfitrion_listar_accesos_tablon_sospechosos(uuid) to anon;
+
+-- La pregunta/respuesta editable de antes (anfitrion_obtener_pregunta_
+-- tablon devolvía las dos, anfitrion_guardar_pregunta_tablon aceptaba
+-- las dos) ya no tiene sentido con este mecanismo -- solo queda
+-- "pregunta" (el texto que ve la persona, por si se quiere retocar el
+-- redactado). Cambian de forma (columna "respuesta" fuera, parámetro
+-- "p_respuesta" fuera) -- hay que borrar las firmas viejas primero.
+drop function if exists anfitrion_obtener_pregunta_tablon(uuid);
+drop function if exists anfitrion_guardar_pregunta_tablon(uuid, text, text);
+
+create or replace function anfitrion_obtener_pregunta_tablon(p_token uuid)
+returns text
+language sql security definer set search_path = public, pg_temp
+as $$
+  select "pregunta" from tablon_secreto
+  where p_token = (select "token" from anfitrion_secreto limit 1);
+$$;
+
+create or replace function anfitrion_guardar_pregunta_tablon(p_token uuid, p_pregunta text)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+  update tablon_secreto set "pregunta" = p_pregunta where true;
+end;
+$$;
+
+grant execute on function anfitrion_obtener_pregunta_tablon(uuid) to anon;
+grant execute on function anfitrion_guardar_pregunta_tablon(uuid, text) to anon;
+grant execute on function tablon_listar_novedades(uuid, text, text) to anon;
+
+-- Vuelve a guardar "anfitrion_guardar_invitados" completa solo para
+-- añadir la columna nueva "excluidoTablon" al insert/update masivo de
+-- siempre -- mismo cuerpo que la versión de más arriba en este
+-- archivo, con esa única columna de más.
+create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  insert into invitados (
+    "id","nombre","apellido","zona","confirmado","colaboradorId",
+    "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
+    "cancion","alergias","observaciones","pagado","rolesTrabajo","excluidoTablon"
+  )
+  select
+    (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
+    coalesce((f->>'confirmado')::boolean, false),
+    nullif(f->>'colaboradorId','')::uuid,
+    f->>'grupoFamiliar', nullif(f->>'mesa','')::integer,
+    f->>'anioNacimiento', f->>'anioBoda', f->>'email', f->>'cancion',
+    f->>'alergias', f->>'observaciones',
+    coalesce((f->>'pagado')::boolean, false),
+    coalesce(f->'rolesTrabajo', '[]'::jsonb),
+    coalesce((f->>'excluidoTablon')::boolean, false)
+  from jsonb_array_elements(p_filas) as f
+  on conflict ("id") do update set
+    "nombre"=excluded."nombre", "apellido"=excluded."apellido",
+    "zona"=excluded."zona", "confirmado"=excluded."confirmado",
+    "colaboradorId"=excluded."colaboradorId", "grupoFamiliar"=excluded."grupoFamiliar",
+    "mesa"=excluded."mesa", "anioNacimiento"=excluded."anioNacimiento",
+    "anioBoda"=excluded."anioBoda", "email"=excluded."email",
+    "cancion"=excluded."cancion", "alergias"=excluded."alergias",
+    "observaciones"=excluded."observaciones", "pagado"=excluded."pagado",
+    "rolesTrabajo"=excluded."rolesTrabajo", "excluidoTablon"=excluded."excluidoTablon";
+
+  delete from invitados g
+  where not exists (
+    select 1 from jsonb_array_elements(p_filas) f
+    where (f->>'id')::uuid = g."id"
+  );
+end;
+$$;
+
+-- ---------- Historial de guardado + "deshacer" (Novedades, Plantillas de email) ----------
+-- Solo para el anfitrión (ver "soloTexto" en VentanaNovedades.jsx) y
+-- solo para los 2 textos largos reales de la app -- ver
+-- lib/useDeshacer.js para el "deshacer en vivo" (antes de guardar,
+-- nunca toca el servidor) y components/HistorialTexto.jsx para la
+-- pantalla de "versiones anteriores" que lee esto.
+--
+-- "origen" + "refId" + "campo" identifican de qué texto es cada
+-- versión ("novedad"+id de la novedad+"cuerpo", o "plantilla"+null+el
+-- nombre de la columna en `evento`). Alimentada por triggers (más
+-- abajo) -- ninguna función de guardado necesita tocar esto a mano,
+-- mismo patrón ya usado en la app para "avisoPendiente"/
+-- "invitacionEnviada" (ver CLAUDE.md).
+create table if not exists historial_texto (
+  "id"            uuid primary key default gen_random_uuid(),
+  "origen"        text not null,
+  "refId"         uuid null,
+  "campo"         text not null,
+  "valorAnterior" text not null,
+  "guardadoEn"    timestamptz not null default now()
+);
+alter table historial_texto enable row level security;
+revoke all on table historial_texto from anon, authenticated;
+
+-- Guarda una versión y poda las más viejas -- como mucho 10 por cada
+-- (origen, refId, campo). "coalesce(refId, '00…')" porque las
+-- plantillas de email no tienen fila propia (refId null) y NULL no es
+-- igual a NULL al agrupar/comparar en SQL.
+create or replace function registrar_historial_texto(p_origen text, p_ref_id uuid, p_campo text, p_valor_anterior text)
+returns void
+language plpgsql
+as $$
+begin
+  insert into historial_texto ("origen", "refId", "campo", "valorAnterior")
+  values (p_origen, p_ref_id, p_campo, p_valor_anterior);
+
+  delete from historial_texto
+  where id in (
+    select id from (
+      select id, row_number() over (
+        partition by origen, coalesce("refId", '00000000-0000-0000-0000-000000000000'::uuid), campo
+        order by "guardadoEn" desc
+      ) as rn
+      from historial_texto
+      where origen = p_origen
+        and coalesce("refId", '00000000-0000-0000-0000-000000000000'::uuid) = coalesce(p_ref_id, '00000000-0000-0000-0000-000000000000'::uuid)
+        and campo = p_campo
+    ) t where rn > 10
+  );
+end;
+$$;
+
+create or replace function trg_historial_novedad_cuerpo()
+returns trigger
+language plpgsql
+as $$
+begin
+  if old."cuerpo" is distinct from new."cuerpo" then
+    perform registrar_historial_texto('novedad', old."id", 'cuerpo', old."cuerpo");
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists trg_historial_novedad_cuerpo on novedades;
+create trigger trg_historial_novedad_cuerpo
+after update of "cuerpo" on novedades
+for each row execute function trg_historial_novedad_cuerpo();
+
+create or replace function trg_historial_plantillas_email()
+returns trigger
+language plpgsql
+as $$
+begin
+  if old."plantillaAsignacion" is distinct from new."plantillaAsignacion" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaAsignacion', old."plantillaAsignacion");
+  end if;
+  if old."plantillaDatosCompletados" is distinct from new."plantillaDatosCompletados" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaDatosCompletados', old."plantillaDatosCompletados");
+  end if;
+  if old."plantillaPagoRegistrado" is distinct from new."plantillaPagoRegistrado" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaPagoRegistrado', old."plantillaPagoRegistrado");
+  end if;
+  if old."plantillaInvitacionFamilia" is distinct from new."plantillaInvitacionFamilia" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaInvitacionFamilia', old."plantillaInvitacionFamilia");
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists trg_historial_plantillas_email on evento;
+create trigger trg_historial_plantillas_email
+after update on evento
+for each row execute function trg_historial_plantillas_email();
+
+-- Últimas 10 versiones de un texto concreto -- "p_ref_id" null para
+-- las plantillas de email (no tienen fila propia).
+create or replace function anfitrion_listar_historial_texto(p_token uuid, p_origen text, p_ref_id uuid, p_campo text)
+returns setof historial_texto
+language sql security definer set search_path = public, pg_temp
+as $$
+  select h.* from historial_texto h
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+    and h."origen" = p_origen
+    and coalesce(h."refId", '00000000-0000-0000-0000-000000000000'::uuid) = coalesce(p_ref_id, '00000000-0000-0000-0000-000000000000'::uuid)
+    and h."campo" = p_campo
+  order by h."guardadoEn" desc
+  limit 10;
+$$;
+grant execute on function anfitrion_listar_historial_texto(uuid, text, uuid, text) to anon;

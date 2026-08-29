@@ -61,7 +61,14 @@ export function useLedgerData(rol) {
   const [tokenTablon, setTokenTablon] = useState(null);
   // Pregunta de acceso al tablón público (capa extra sobre el enlace en
   // sí) -- solo el anfitrión la carga/edita, desde VentanaNovedades.jsx.
-  const [preguntaTablon, setPreguntaTablon] = useState({ pregunta: "", respuesta: "" });
+  // Texto suelto: desde 2026-08-29 el acceso se comprueba por nombre
+  // contra los invitados confirmados, no contra una respuesta fija --
+  // "pregunta" ya solo es el redactado que ve la persona.
+  const [preguntaTablon, setPreguntaTablon] = useState("");
+  // Nombres del tablón que han entrado desde más de un dispositivo
+  // distinto -- señal de alarma (ver schema.sql, 2026-08-29), nunca
+  // bloquea a nadie. Solo lo carga el anfitrión.
+  const [accesosTablonSospechosos, setAccesosTablonSospechosos] = useState([]);
 
   // Se mantiene al día para poder comparar "antes/después" dentro de
   // persistInvitados sin depender de closures obsoletas. También sirve
@@ -247,6 +254,14 @@ export function useLedgerData(rol) {
         const { data: preguntaCargada } = await supabase.rpc("anfitrion_obtener_pregunta_tablon", {
           p_token: rol,
         });
+        // Accesos al tablón desde más de un dispositivo con el mismo
+        // nombre -- señal de alarma, nunca bloquea a nadie (ver
+        // schema.sql, 2026-08-29). "Best effort": si falla, no hace
+        // falta avisar con una alerta, no es una función crítica.
+        const { data: accesosCargados } = await supabase.rpc(
+          "anfitrion_listar_accesos_tablon_sospechosos",
+          { p_token: rol }
+        );
 
         if (cancelado) return;
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
@@ -260,12 +275,12 @@ export function useLedgerData(rol) {
         if (!errGastos) setGastos(todosGastos || []);
         if (!errNovedades) setNovedades(todasNovedades || []);
         if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
-        if (preguntaCargada && preguntaCargada[0]) {
-          setPreguntaTablon({
-            pregunta: preguntaCargada[0].pregunta || "",
-            respuesta: preguntaCargada[0].respuesta || "",
-          });
-        }
+        // Ahora es un texto suelto (ya no {pregunta, respuesta} -- la
+        // "respuesta correcta" fija desapareció, ver schema.sql
+        // 2026-08-29: el acceso se comprueba contra los invitados
+        // confirmados, no contra un secreto compartido).
+        setPreguntaTablon(preguntaCargada || "");
+        setAccesosTablonSospechosos(accesosCargados || []);
         setOrdenFamiliares(
           Object.fromEntries(
             (ordenFilas || []).map((r) => [
@@ -559,14 +574,13 @@ export function useLedgerData(rol) {
   // hasta encontrarla y cerrarla. Devuelve true/false; quien la llama
   // decide cómo avisar (un mensaje normal en su propia interfaz).
   const persistPreguntaTablon = useCallback(
-    async (pregunta, respuesta) => {
+    async (pregunta) => {
       const anterior = preguntaTablon;
-      setPreguntaTablon({ pregunta, respuesta });
+      setPreguntaTablon(pregunta);
       if (!esAnfitrion) return true;
       const { error } = await supabase.rpc("anfitrion_guardar_pregunta_tablon", {
         p_token: rol,
         p_pregunta: pregunta,
-        p_respuesta: respuesta,
       });
       if (error) {
         // eslint-disable-next-line no-console
@@ -577,6 +591,30 @@ export function useLedgerData(rol) {
       return true;
     },
     [esAnfitrion, rol, preguntaTablon]
+  );
+
+  // Últimas versiones guardadas de un texto largo (cuerpo de una
+  // novedad, o una plantilla de email) -- solo lectura, nunca escribe
+  // nada por sí sola (restaurar una versión reutiliza el guardado
+  // normal de siempre, ver HistorialTexto.jsx). Solo tiene datos reales
+  // para el anfitrión -- si la llama un colaborador, el token no
+  // coincide con ningún anfitrión y la RPC devuelve una lista vacía.
+  const obtenerHistorialTexto = useCallback(
+    async (origen, refId, campo) => {
+      const { data, error } = await supabase.rpc("anfitrion_listar_historial_texto", {
+        p_token: rol,
+        p_origen: origen,
+        p_ref_id: refId,
+        p_campo: campo,
+      });
+      if (error) {
+        // eslint-disable-next-line no-console
+        console.error("No se pudo cargar el historial de este texto.", error);
+        return [];
+      }
+      return data || [];
+    },
+    [rol]
   );
 
   // "Entendido" sobre el aviso de email sincronizado (ColaboradorCard):
@@ -910,5 +948,7 @@ export function useLedgerData(rol) {
     tokenTablon,
     preguntaTablon,
     persistPreguntaTablon,
+    accesosTablonSospechosos,
+    obtenerHistorialTexto,
   };
 }

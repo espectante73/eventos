@@ -42,6 +42,22 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "18",
+    cambios: [
+      'Botón "Deshacer" (vuelve a como estaba antes de tu último cambio, sin necesidad de guardar) en el cuerpo de cada novedad y en las plantillas de email.',
+      'Historial de guardado en esos mismos dos textos: "Ver versiones anteriores" guarda las últimas 10 versiones de cada uno y deja restaurar cualquiera.',
+      "Las plantillas de email ahora guardan al salir del campo, no en cada pulsación (necesario para que Deshacer y el historial tengan sentido).",
+    ],
+  },
+  {
+    version: "17",
+    cambios: [
+      'El acceso al tablón público deja de depender de una pregunta de sí/no compartida: ahora pide "Nombre y apellido tal como en tu invitación" y se comprueba contra los invitados confirmados de verdad (sin tildes ni mayúsculas, coma opcional).',
+      "El propio anfitrión (información pública, cualquiera sabe que se casa) puede excluirse -- y excluir a quien haga falta -- de servir como respuesta válida, desde Lista de invitados.",
+      "Si el mismo nombre entra desde varios dispositivos distintos, aparece como aviso en Novedades y en Logística -- nunca bloquea a nadie automáticamente.",
+    ],
+  },
+  {
     version: "16.3",
     cambios: [
       "Cronograma pasa a ser una ventana de verdad del sistema operativo (como Novedades y Logística), independiente del navegador -- se abre desde Configuración → Cronograma.",
