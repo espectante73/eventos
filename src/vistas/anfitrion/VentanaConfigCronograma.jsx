@@ -94,13 +94,16 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
 
   return (
     <VentanaFlotante clave="config-cronograma" titulo="Cronograma" onCerrar={onCerrar} ancho={420}>
-      <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
-        Cada bloque dice cuántos minutos dura, no una hora exacta -- la hora de cada uno se
-        calcula sola (la imagen de abajo la enseña). Si cambias la duración de uno, todos los
-        que van después se desplazan solos.
-      </p>
-
-      <div className="flex items-center justify-between gap-3 mb-3">
+      {/* Compacto a propósito -- a petición del usuario, 2026-08-29: la
+          ventana tenía mucho texto de sobra y el nombre de cada bloque
+          salía DUPLICADO (una vez en el <select>, otra en el campo de
+          renombrar justo debajo) empujando la imagen muy abajo. Ahora:
+          sin párrafo explicativo, "Inicio" en una sola línea, y el
+          nombre del bloque aparece una sola vez (en el <select>, que ya
+          sirve para elegir Y para leer cuál es) con los minutos justo al
+          lado en la misma fila -- renombrar un bloque ya no se hace
+          desde aquí. */}
+      <div className="flex items-center justify-between gap-3 mb-2">
         <span className="text-sm" style={{ color: C.charcoal, opacity: 0.8 }}>
           Inicio del cronograma
         </span>
@@ -117,51 +120,38 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
         </select>
       </div>
 
-      {/* Etiqueta a la izquierda, <select> a la derecha -- mismo criterio
-          "pulgar derecho" que el resto de la app (ver VentanaPermisos.jsx). */}
-      <div className="flex items-center justify-between gap-3 mb-2">
-        <span className="text-sm" style={{ color: C.charcoal, opacity: 0.8 }}>
-          Bloque
-        </span>
+      <div className="flex items-center gap-2 mb-4">
         <select
           value={seleccionado}
           onChange={(e) => setSeleccionado(Number(e.target.value))}
-          style={{ ...inputStyle, height: 42 }}
+          style={{ ...inputStyle, height: 42, width: "100%" }}
         >
           {bloques.map((b, i) => (
             <option key={i} value={i}>
-              {b.texto || `Bloque ${i + 1}`}
+              {b.texto || `Bloque ${i + 1}`} · {horasAbsolutas[i]}
             </option>
           ))}
         </select>
-      </div>
-
-      {bloqueActual && (
-        <>
-          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.6 }}>
-            Empieza a las <b style={{ color: C.ink }}>{horasAbsolutas[seleccionado]}</b>
-          </p>
-          <div className="flex items-center gap-2 mb-4">
+        {bloqueActual && (
+          <>
             <input
               type="number"
               min={0}
               step={5}
               value={bloqueActual.duracionMin ?? 0}
               onChange={(e) => cambiarBloque(seleccionado, "duracionMin", Number(e.target.value))}
-              style={{ ...inputStyle, width: 80, flexShrink: 0 }}
+              style={{ ...inputStyle, width: 70, flexShrink: 0 }}
               title="Cuántos minutos dura este bloque"
             />
             <span className="text-sm" style={{ color: C.charcoal, opacity: 0.7, flexShrink: 0 }}>
               min
             </span>
-            <input
-              type="text"
-              value={bloqueActual.texto}
-              onChange={(e) => cambiarBloque(seleccionado, "texto", e.target.value)}
-              style={{ ...inputStyle, width: "100%" }}
-            />
-          </div>
+          </>
+        )}
+      </div>
 
+      {bloqueActual && (
+        <>
           {/* Quién atiende este bloque. Dos cosas distintas, no una
               sola: "¿está cubierto?" y "¿lo he comprobado yo?" -- a
               petición del usuario. El primer bloque (Recepción) es

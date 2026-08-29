@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "16.1",
+    cambios: [
+      "Configuración → Cronograma, mucho más compacta: sin el párrafo explicativo de arriba, el nombre de cada bloque ya no sale duplicado (antes se veía una vez en el desplegable y otra vez en un campo para renombrar) y los minutos van justo al lado del desplegable, en la misma línea. La imagen queda mucho más arriba.",
+    ],
+  },
+  {
     version: "16",
     cambios: [
       'Quien tiene permiso de "editar el texto de Novedades" ya puede marcar también "Publicada (visible en el tablón)" -- editar el texto lleva implícita la opción de publicarlo o no.',
