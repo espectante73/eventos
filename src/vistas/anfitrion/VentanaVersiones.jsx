@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "18.3",
+    cambios: [
+      "El contorno dorado de los botones baja de intensidad (más suave) para que resalten más el icono y la letra de dentro.",
+    ],
+  },
+  {
     version: "18.2",
     cambios: [
       'Contorno dorado (igual que la letra) en "Cerrar sesión", "Abrir sección…" y cada fila de los menús desplegables -- antes era blanco translúcido.',
