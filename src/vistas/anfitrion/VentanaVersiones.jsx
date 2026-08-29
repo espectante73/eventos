@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "19",
+    cambios: [
+      'La cabecera de la Portada queda con un único botón visible ("Mi cuenta") -- "Cerrar sesión" y el enlace a "Novedades" ahora viven dentro de ese mismo modal, como dos botones del mismo ancho exacto, en vez de ir apilados aparte.',
+    ],
+  },
+  {
     version: "18.3",
     cambios: [
       "El contorno dorado de los botones baja de intensidad (más suave) para que resalten más el icono y la letra de dentro.",

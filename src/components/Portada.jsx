@@ -37,7 +37,7 @@
 // se sube en Configuración → Datos del evento), separado por completo
 // de Invitaciones.
 import { useState, useEffect } from "react";
-import { Calendar, Clock, MapPin, Image as ImageIcon, LogOut, Megaphone } from "lucide-react";
+import { Calendar, Clock, MapPin, Image as ImageIcon } from "lucide-react";
 import { C } from "../theme";
 import { VERSION_APP } from "../constants";
 import { formatearFecha, formatearDiaSemana } from "../lib/formato";
@@ -145,33 +145,18 @@ export function Portada({
           v{VERSION_APP}
         </span>
 
-        {/* "Mi cuenta" (cambiar contraseña/email de acceso sin cerrar
-            sesión) vive junto a "Cerrar sesión" -- las dos comparten la
-            misma condición (solo tiene sentido con una sesión real de
-            Supabase Auth, no con el enlace-token del anfitrión) y así
-            sirve igual para el anfitrión que para cualquier
-            colaborador logueado, sin tocar nada en VistaColaborador.jsx
-            -- a petición del usuario, 2026-08-21 (Fase C). */}
+        {/* Cabecera reducida a un único botón visible ("Mi cuenta") -- a
+            petición del usuario, 2026-08-29: "Cerrar sesión" y el enlace
+            a "Novedades" (antes botones sueltos aquí, cada vez más
+            apretados) ahora viven DENTRO del modal de Mi cuenta, pasados
+            como props. Mismo condicional que antes (solo tiene sentido
+            con una sesión real de Supabase Auth, no con el enlace-token
+            del anfitrión) -- sirve igual para el anfitrión que para
+            cualquier colaborador logueado, sin tocar nada en
+            VistaColaborador.jsx (Fase C, 2026-08-21). */}
         {onCerrarSesion && (
-          // Orden de arriba a abajo a petición del usuario, 2026-08-25:
-          // Cerrar sesión, Novedades, Mi cuenta.
-          <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
-            <button
-              onClick={onCerrarSesion}
-              className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
-            >
-              <LogOut size={16} /> Cerrar sesión
-            </button>
-            {enlaceTablon && (
-              <a
-                href={enlaceTablon}
-                className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
-                title="Abre el tablón público de novedades que ven los confirmados"
-              >
-                <Megaphone size={16} /> Novedades
-              </a>
-            )}
-            <MiCuenta />
+          <div className="absolute top-4 right-4">
+            <MiCuenta onCerrarSesion={onCerrarSesion} enlaceTablon={enlaceTablon} />
           </div>
         )}
 

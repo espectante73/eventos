@@ -18,13 +18,17 @@
 // pierda visibilidad de este cambio, queda constancia visible en la
 // ventana Colaboradores hasta que la confirme.
 import { useState } from "react";
-import { UserCog } from "lucide-react";
+import { UserCog, LogOut, Megaphone } from "lucide-react";
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
 
-export function MiCuenta() {
+// `onCerrarSesion`/`enlaceTablon`: antes eran botones sueltos junto a
+// este en la cabecera de Portada.jsx -- a petición del usuario,
+// 2026-08-29, se "esconden" aquí dentro para dejar un único botón
+// visible arriba. Mismas acciones de siempre, solo cambia dónde viven.
+export function MiCuenta({ onCerrarSesion, enlaceTablon }) {
   const [abierta, setAbierta] = useState(false);
   const [nuevaContrasena, setNuevaContrasena] = useState("");
   const [nuevoEmail, setNuevoEmail] = useState("");
@@ -93,6 +97,35 @@ export function MiCuenta() {
 
       {abierta && (
         <ModalFlotante titulo="Mi cuenta" onCerrar={cerrar}>
+          {/* Antes eran botones sueltos en la cabecera de Portada.jsx --
+              ahora viven aquí dentro, a petición del usuario. `flex:1`
+              en los dos para que midan exactamente lo mismo el uno que
+              el otro, sin importar que "Cerrar sesión" tenga más letras
+              que "Novedades". */}
+          {(onCerrarSesion || enlaceTablon) && (
+            <div className="flex items-stretch gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
+              {onCerrarSesion && (
+                <button
+                  onClick={onCerrarSesion}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
+                  style={{ background: C.ink, color: C.paper }}
+                >
+                  <LogOut size={15} /> Cerrar sesión
+                </button>
+              )}
+              {enlaceTablon && (
+                <a
+                  href={enlaceTablon}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
+                  style={{ background: C.ink, color: C.paper }}
+                  title="Abre el tablón público de novedades que ven los confirmados"
+                >
+                  <Megaphone size={15} /> Novedades
+                </a>
+              )}
+            </div>
+          )}
+
           <form onSubmit={cambiarContrasena} className="mb-6">
             <p className="text-sm font-medium mb-2" style={{ color: C.ink, fontFamily: "'Fraunces', serif" }}>
               Cambiar mi contraseña
