@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "16.3",
+    cambios: [
+      "Cronograma pasa a ser una ventana de verdad del sistema operativo (como Novedades y Logística), independiente del navegador -- se abre desde Configuración → Cronograma.",
+    ],
+  },
+  {
     version: "16.2",
     cambios: [
       '"Quién lo atiende" (Cronograma) ya se pliega por defecto -- primero eliges Interno (colaboradores/invitados con rol) o Externo, y si es Externo, si es "del local" o "contratado" (para bloques como la Cena, que cubre el propio restaurante, o el Baile, con un DJ contratado).',

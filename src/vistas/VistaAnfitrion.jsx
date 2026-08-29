@@ -75,6 +75,20 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
     if (logisticaAbierta) actualizarLogistica(<VentanaLogistica data={data} />);
   }, [logisticaAbierta, actualizarLogistica, data]);
 
+  // Ventana Cronograma: mismo patrón, a petición del usuario, 2026-08-29
+  // ("independiente al navegador"). Sí necesita `ventana` -- "Imprimir"
+  // usa ventana.print(), nunca window.print() a secas (ver
+  // VentanaConfigCronograma.jsx).
+  const {
+    abrir: abrirCronograma,
+    actualizar: actualizarCronograma,
+    abierta: cronogramaAbierta,
+    ventana: ventanaCronograma,
+  } = usePopupWindow({ nombreVentana: "cronograma-evento", ancho: 480, alto: 800 });
+  useEffect(() => {
+    if (cronogramaAbierta) actualizarCronograma(<VentanaConfigCronograma data={data} ventana={ventanaCronograma} />);
+  }, [cronogramaAbierta, actualizarCronograma, data, ventanaCronograma]);
+
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
   // por colaborador — así se sabe exactamente cuáles son los nuevos. Los
   // que siguen en tentativa no cuentan: no se nombran en el email al
@@ -168,6 +182,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         enlaceTablon={enlaceTablon}
         abrirNovedades={abrirNovedades}
         abrirLogistica={abrirLogistica}
+        abrirCronograma={abrirCronograma}
       />
 
       {/* Los 3 recuadros de resumen (Lista global/Tentativa/Confirmados)
@@ -277,9 +292,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         <VentanaConfigMusica onCerrar={() => toggle("config-musica")} />
       )}
 
-      {abierto["config-cronograma"] && (
-        <VentanaConfigCronograma data={data} onCerrar={() => toggle("config-cronograma")} />
-      )}
+      {/* Cronograma: ventana emergente de verdad (ver arriba), no pasa
+          por `abierto`/`toggle` -- se abre con abrirCronograma. */}
 
       {/* Permisos */}
       {abierto.permisos && (

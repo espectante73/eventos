@@ -78,6 +78,9 @@ export function Portada({
   // ventana de verdad del sistema operativo (ver comentario en
   // VentanaLogistica.jsx), y también exclusiva del menú del anfitrión.
   abrirLogistica,
+  // Igual que las dos anteriores, para la ventana Cronograma (dentro
+  // del submenú Configuración) -- a petición del usuario, 2026-08-29.
+  abrirCronograma,
   // `botonExtra`: para cuando esta Portada la usa alguien que NO es el
   // anfitrión editando (p.ej. VistaColaborador.jsx) -- en vez del
   // desplegable "Abrir sección…" (editable+toggle), se puede pasar aquí
@@ -186,6 +189,7 @@ export function Portada({
             anfitrionToken={anfitrionToken}
             abrirNovedades={abrirNovedades}
             abrirLogistica={abrirLogistica}
+            abrirCronograma={abrirCronograma}
             posicion={{ bottom: "9%", right: 16 }}
           />
         )}

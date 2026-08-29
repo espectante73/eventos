@@ -1,5 +1,5 @@
-// Sub-ventana de Configuración: cronograma/logística del día. Reemplaza
-// por completo a la subida manual de imagen (versión anterior) -- a
+// Ventana "Cronograma": cronograma/logística del día. Reemplaza por
+// completo a la subida manual de imagen (versión anterior) -- a
 // petición del usuario, 2026-08-27: en vez de editar una foto en otra
 // aplicación cada vez que cambia un horario, aquí se editan los 9
 // bloques y la app dibuja sola la imagen a partir de esos datos (ver
@@ -12,12 +12,20 @@
 // de inicio del cronograma entero ("cronogramaHoraInicio"). La propia
 // imagen de abajo (que ya se regenera sola) es la que enseña las horas
 // resultantes de cada bloque, sin tener que ir mirando bloque a bloque.
+//
+// 2026-08-29: pasa a ser una ventana de verdad del sistema operativo
+// (igual que Novedades/Logística, ver lib/usePopupWindow.js), no ya una
+// VentanaFlotante dentro de Configuración -- a petición del usuario.
+// Por eso recibe `ventana` (el propio objeto window de esa ventana
+// emergente): "Imprimir" usa `ventana.print()`, nunca `window.print()`
+// a secas -- el código sigue ejecutándose en el realm de la pestaña
+// principal aunque se vea dentro de la ventana emergente (mismo motivo
+// ya documentado para el portapapeles de Novedades).
 import { useState, useEffect } from "react";
 import { Printer, ChevronDown } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { generarImagenCronograma, calcularHorasAbsolutas } from "../../lib/cronograma";
 import { resolverColaborador } from "../../lib/invitados";
-import { VentanaFlotante } from "../../components/VentanaFlotante";
 
 // Todas las horas del día en pasos de 5 minutos, en un único <select> --
 // a petición del usuario ("un único reloj, no dos relojes distintos").
@@ -32,7 +40,7 @@ const TODAS_LAS_HORAS = Array.from({ length: 24 * 12 }, (_, i) => {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 });
 
-export function VentanaConfigCronograma({ data, onCerrar }) {
+export function VentanaConfigCronograma({ data, ventana }) {
   const { evento, persistEvento, colaboradores, invitados } = data;
   const bloques = Array.isArray(evento.cronogramaBloques) ? evento.cronogramaBloques : [];
   // "Recepción" -- siempre el primer bloque del día -- la cubren los
@@ -88,7 +96,9 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
   const imprimir = () => {
     setTimeout(() => {
       try {
-        window.print();
+        // ventana.print(), NUNCA window.print() a secas -- ver el
+        // comentario de cabecera de este archivo.
+        ventana?.print();
       } catch (_) {
         // Bloqueado por el navegador: se puede usar Cmd/Ctrl+P a mano.
       }
@@ -135,7 +145,13 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
   );
 
   return (
-    <VentanaFlotante clave="config-cronograma" titulo="Cronograma" onCerrar={onCerrar} ancho={420}>
+    <div className="flex flex-col" style={{ height: "100%", background: C.paper, fontFamily: "'Inter', sans-serif" }}>
+      <div className="panel-flotante-cristal px-4 py-3" style={{ flexShrink: 0 }}>
+        <h3 className="text-lg" style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}>
+          Cronograma
+        </h3>
+      </div>
+      <div className="p-4" style={{ flex: 1, overflowY: "auto" }}>
       {/* Compacto a propósito -- a petición del usuario, 2026-08-29: la
           ventana tenía mucho texto de sobra y el nombre de cada bloque
           salía DUPLICADO (una vez en el <select>, otra en el campo de
@@ -346,6 +362,7 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
           Visible para colaboradores
         </label>
       </div>
-    </VentanaFlotante>
+      </div>
+    </div>
   );
 }
