@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "16.2",
+    cambios: [
+      '"Quién lo atiende" (Cronograma) ya se pliega por defecto -- primero eliges Interno (colaboradores/invitados con rol) o Externo, y si es Externo, si es "del local" o "contratado" (para bloques como la Cena, que cubre el propio restaurante, o el Baile, con un DJ contratado).',
+    ],
+  },
+  {
     version: "16.1",
     cambios: [
       "Configuración → Cronograma, mucho más compacta: sin el párrafo explicativo de arriba, el nombre de cada bloque ya no sale duplicado (antes se veía una vez en el desplegable y otra vez en un campo para renombrar) y los minutos van justo al lado del desplegable, en la misma línea. La imagen queda mucho más arriba.",

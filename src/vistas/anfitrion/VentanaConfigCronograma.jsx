@@ -13,7 +13,7 @@
 // imagen de abajo (que ya se regenera sola) es la que enseña las horas
 // resultantes de cada bloque, sin tener que ir mirando bloque a bloque.
 import { useState, useEffect } from "react";
-import { Printer } from "lucide-react";
+import { Printer, ChevronDown } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { generarImagenCronograma, calcularHorasAbsolutas } from "../../lib/cronograma";
 import { resolverColaborador } from "../../lib/invitados";
@@ -51,6 +51,12 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
   const horaInicio = evento.cronogramaHoraInicio || "18:00";
   const [imagen, setImagen] = useState("");
   const [seleccionado, setSeleccionado] = useState(0);
+  // "Quién lo atiende" plegado por defecto -- a petición del usuario,
+  // 2026-08-29. Se repliega solo al cambiar de bloque, para que cada
+  // bloque nuevo empiece siempre plegado (no arrastra el "abierto" del
+  // bloque anterior).
+  const [atiendeAbierto, setAtiendeAbierto] = useState(false);
+  useEffect(() => setAtiendeAbierto(false), [seleccionado]);
 
   // Se regenera sola cada vez que cambia algún dato -- no hace falta
   // ningún botón de "actualizar imagen".
@@ -91,6 +97,42 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
 
   const bloqueActual = bloques[seleccionado];
   const horasAbsolutas = calcularHorasAbsolutas(horaInicio, bloques);
+
+  // Resumen de una línea para el desplegable plegado -- a petición del
+  // usuario, 2026-08-29: no hace falta ver el detalle de "quién lo
+  // atiende" hasta que se despliega a propósito.
+  const resumenAtiende = (() => {
+    if (!bloqueActual) return "";
+    if (seleccionado === 0) return "Automático (colaboradores)";
+    if (bloqueActual.tipoAtiende === "interno") {
+      const n = Array.isArray(bloqueActual.asignados) ? bloqueActual.asignados.length : 0;
+      return n > 0 ? `Interno (${n})` : "Interno -- nadie elegido todavía";
+    }
+    if (bloqueActual.tipoAtiende === "externo") {
+      return bloqueActual.tipoExterno === "contratado"
+        ? "Externo: contratado"
+        : bloqueActual.tipoExterno === "local"
+        ? "Externo: del local"
+        : "Externo -- falta elegir cuál";
+    }
+    return "Sin definir";
+  })();
+
+  // Botón de opción simple (Interno/Externo, Del local/Contratado) --
+  // resaltado si es la opción activa.
+  const BotonOpcion = ({ activo, onClick, children }) => (
+    <button
+      onClick={onClick}
+      className="px-3 py-1.5 rounded text-sm"
+      style={{
+        border: `1px solid ${activo ? C.ink : C.line}`,
+        background: activo ? C.ink : "transparent",
+        color: activo ? C.paper : C.charcoal,
+      }}
+    >
+      {children}
+    </button>
+  );
 
   return (
     <VentanaFlotante clave="config-cronograma" titulo="Cronograma" onCerrar={onCerrar} ancho={420}>
@@ -152,61 +194,115 @@ export function VentanaConfigCronograma({ data, onCerrar }) {
 
       {bloqueActual && (
         <>
-          {/* Quién atiende este bloque. Dos cosas distintas, no una
-              sola: "¿está cubierto?" y "¿lo he comprobado yo?" -- a
-              petición del usuario. El primer bloque (Recepción) es
+          {/* Quién atiende este bloque -- plegado por defecto, a
+              petición del usuario, 2026-08-29. Dos cosas distintas
+              aparte, no una sola: "¿está cubierto?" y "¿lo he
+              comprobado yo?". El primer bloque (Recepción) es
               automático: lo cubren los colaboradores con invitados
-              confirmados a su cargo, sin nada que marcar a mano. */}
-          <div className="mb-2">
-            <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.6 }}>
-              Quién lo atiende
-            </p>
-            {seleccionado === 0 ? (
-              <p className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-                Automático: cada colaborador recibe a sus propios invitados —{" "}
-                {colaboradoresConConfirmados.length === 0
-                  ? "todavía ninguno tiene confirmados."
-                  : colaboradoresConConfirmados.map((c) => c.nombre).join(", ")}
-                .
-              </p>
-            ) : (
-              <>
-                {colaboradores.length === 0 && invitadosConRol.length === 0 ? (
-                  <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.5 }}>
-                    Todavía no hay ningún colaborador ni invitado con rol de trabajo.
+              confirmados a su cargo, sin nada que marcar a mano ni
+              elegir interno/externo. Para el resto, primero se elige
+              Interno (colaboradores/invitados con rol) o Externo (del
+              local o contratado -- gente ajena a la lista de
+              invitados, como el equipo del restaurante en la Cena o un
+              DJ contratado en el Baile). */}
+          <div className="mb-2 rounded" style={{ border: `1px solid ${C.line}` }}>
+            <button
+              onClick={() => setAtiendeAbierto((a) => !a)}
+              className="w-full flex items-center justify-between gap-2 px-2 py-2 text-sm"
+              style={{ color: C.charcoal }}
+            >
+              <span>¿Quién lo atiende?</span>
+              <span className="flex items-center gap-1.5" style={{ opacity: 0.7 }}>
+                <span className="text-xs">{resumenAtiende}</span>
+                <ChevronDown
+                  size={14}
+                  style={{ transform: atiendeAbierto ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
+                />
+              </span>
+            </button>
+            {atiendeAbierto && (
+              <div className="px-2 pb-2">
+                {seleccionado === 0 ? (
+                  <p className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+                    Automático: cada colaborador recibe a sus propios invitados —{" "}
+                    {colaboradoresConConfirmados.length === 0
+                      ? "todavía ninguno tiene confirmados."
+                      : colaboradoresConConfirmados.map((c) => c.nombre).join(", ")}
+                    .
                   </p>
                 ) : (
-                  <div className="flex flex-col gap-1">
-                    {colaboradores.map((c) => (
-                      <label key={c.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
-                        <input
-                          type="checkbox"
-                          checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(c.id)}
-                          onChange={() => alternarAsignado(seleccionado, c.id)}
-                        />
-                        {c.nombre}
-                      </label>
-                    ))}
-                    {invitadosConRol.map((g) => (
-                      <label key={g.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
-                        <input
-                          type="checkbox"
-                          checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(g.id)}
-                          onChange={() => alternarAsignado(seleccionado, g.id)}
-                        />
-                        {g.nombre}
-                        <span style={{ opacity: 0.6 }}>
-                          (
-                          {g.rolesTrabajo
-                            .map((r) => (responsablesRol[r] === g.id ? `★ ${r}` : r))
-                            .join(", ")}
-                          )
-                        </span>
-                      </label>
-                    ))}
-                  </div>
+                  <>
+                    <div className="flex items-center gap-2 mb-2">
+                      <BotonOpcion
+                        activo={bloqueActual.tipoAtiende === "interno"}
+                        onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "interno")}
+                      >
+                        Interno
+                      </BotonOpcion>
+                      <BotonOpcion
+                        activo={bloqueActual.tipoAtiende === "externo"}
+                        onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "externo")}
+                      >
+                        Externo
+                      </BotonOpcion>
+                    </div>
+
+                    {bloqueActual.tipoAtiende === "interno" &&
+                      (colaboradores.length === 0 && invitadosConRol.length === 0 ? (
+                        <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.5 }}>
+                          Todavía no hay ningún colaborador ni invitado con rol de trabajo.
+                        </p>
+                      ) : (
+                        <div className="flex flex-col gap-1">
+                          {colaboradores.map((c) => (
+                            <label key={c.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
+                              <input
+                                type="checkbox"
+                                checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(c.id)}
+                                onChange={() => alternarAsignado(seleccionado, c.id)}
+                              />
+                              {c.nombre}
+                            </label>
+                          ))}
+                          {invitadosConRol.map((g) => (
+                            <label key={g.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
+                              <input
+                                type="checkbox"
+                                checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(g.id)}
+                                onChange={() => alternarAsignado(seleccionado, g.id)}
+                              />
+                              {g.nombre}
+                              <span style={{ opacity: 0.6 }}>
+                                (
+                                {g.rolesTrabajo
+                                  .map((r) => (responsablesRol[r] === g.id ? `★ ${r}` : r))
+                                  .join(", ")}
+                                )
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      ))}
+
+                    {bloqueActual.tipoAtiende === "externo" && (
+                      <div className="flex items-center gap-2">
+                        <BotonOpcion
+                          activo={bloqueActual.tipoExterno === "local"}
+                          onClick={() => cambiarBloque(seleccionado, "tipoExterno", "local")}
+                        >
+                          Del local
+                        </BotonOpcion>
+                        <BotonOpcion
+                          activo={bloqueActual.tipoExterno === "contratado"}
+                          onClick={() => cambiarBloque(seleccionado, "tipoExterno", "contratado")}
+                        >
+                          Contratado
+                        </BotonOpcion>
+                      </div>
+                    )}
+                  </>
                 )}
-              </>
+              </div>
             )}
           </div>
 

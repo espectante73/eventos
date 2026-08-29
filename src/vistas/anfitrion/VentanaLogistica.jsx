@@ -105,9 +105,14 @@ export function VentanaLogistica({ data }) {
   // El bloque 0 (Recepción) es automático -- lo cubren los colaboradores
   // con confirmados a su cargo, sin nada que asignar a mano ahí (ver
   // VentanaConfigCronograma.jsx). No cuenta como "sin asignar" si ya hay
-  // al menos un colaborador en esa situación.
+  // al menos un colaborador en esa situación. Para el resto: "cubierto"
+  // significa Interno con alguien elegido, o Externo con "del local" o
+  // "contratado" ya marcado -- a petición del usuario, 2026-08-29
+  // (Externo no lleva gente de la lista de invitados, así que no tiene
+  // sentido pedir "asignados" para darlo por cubierto).
   const cronogramaSinAsignar = cronogramaBloques.filter((b, i) => {
     if (i === 0) return conAlgunoAsignado.length === 0;
+    if (b.tipoAtiende === "externo") return !b.tipoExterno;
     return !Array.isArray(b.asignados) || b.asignados.length === 0;
   });
   const detalleColaboradores = conAlgunoAsignado.map((c) => {
