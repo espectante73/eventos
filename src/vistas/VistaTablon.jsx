@@ -277,10 +277,19 @@ export function VistaTablon({ token }) {
             value={respuestaEscrita}
             onChange={(e) => setRespuestaEscrita(e.target.value)}
             placeholder="Ej.: Apellido Nombre"
-            className="w-full mb-2"
+            className="w-full"
             style={{ ...inputStyle, width: "100%", height: 42 }}
             required
           />
+          {/* Aclaración fija, aparte del texto editable de arriba (que el
+              anfitrión puede retocar) -- a petición del usuario,
+              2026-08-29: el apellido tiene que ser el FAMILIAR (el que
+              consta en la invitación), no cualquier otro apellido que la
+              persona pueda tener -- si no, no coincidirá nunca con lo
+              guardado en la lista de invitados. */}
+          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+            El apellido debe ser el familiar de tu invitación (el mismo con el que te invitamos), no otro apellido que tengas.
+          </p>
           {errorRespuesta && (
             <p className="text-sm mb-2" style={{ color: C.wax }}>
               {errorRespuesta}

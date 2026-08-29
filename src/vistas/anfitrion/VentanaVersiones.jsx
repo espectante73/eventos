@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "18.1",
+    cambios: [
+      "Aviso fijo en la pantalla de acceso al tablón: el apellido tiene que ser el familiar de la invitación, no cualquier otro apellido que la persona pueda tener.",
+    ],
+  },
+  {
     version: "18",
     cambios: [
       'Botón "Deshacer" (vuelve a como estaba antes de tu último cambio, sin necesidad de guardar) en el cuerpo de cada novedad y en las plantillas de email.',
