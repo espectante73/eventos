@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "19.2",
+    cambios: [
+      "Corregido: imprimir la Lista de invitados solo sacaba lo que se veía en pantalla en ese momento, no la lista entera -- la zona de impresión no escapaba del scroll de la ventana.",
+    ],
+  },
+  {
     version: "19.1",
     cambios: [
       '"Cerrar sesión" y "Novedades", dentro de Mi cuenta, cambian del verde plano de antes al mismo estilo que el resto de botones de la app (degradado + contorno dorado), y de un ancho estirado a su ancho justo -- filosofía de la app: todo lo más compacto posible.',

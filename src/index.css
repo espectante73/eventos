@@ -136,7 +136,21 @@
 @media print {
   body * { visibility: hidden; }
   #zona-imprimible, #zona-imprimible * { visibility: visible; }
-  #zona-imprimible { position: absolute; left: 0; top: 0; width: 100%; }
+  #zona-imprimible {
+    /* "fixed" (no "absolute"): esta zona vive dentro del cuerpo con
+       scroll de un ModalFlotante (overflow-y: auto) -- con "absolute"
+       se quedaba recortada a lo que hubiera scrolleado a la vista en
+       ese momento, así que al imprimir la Lista de invitados solo
+       salía lo visible en pantalla, no la lista entera. Mismo arreglo
+       ya aplicado en #zona-imprimible-plano/-cronograma, aquí se nos
+       había quedado sin hacer -- bug real reportado por el usuario,
+       2026-08-29. */
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+  }
 
   #zona-imprimible-plano, #zona-imprimible-plano * { visibility: visible; }
   #zona-imprimible-plano {
