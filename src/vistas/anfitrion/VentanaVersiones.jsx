@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "19.4",
+    cambios: [
+      'Al crear una entrada nueva en Novedades, ahora nace como borrador (sin "Publicada" marcada) y con la etiqueta "NOVEDADES" ya puesta -- antes nacía publicada y como FAQ.',
+    ],
+  },
+  {
     version: "19.3",
     cambios: [
       "Corregido de verdad (el intento anterior, v19.2, no bastó): imprimir la Lista de invitados solo sacaba una página (hasta donde cupiera), no la lista entera -- el modal que la contiene ya no se imprime con su recorte de pantalla, así que ahora pagina en tantas hojas como haga falta.",

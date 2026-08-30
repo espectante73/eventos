@@ -307,11 +307,15 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
       id: uid(),
       titulo: "",
       cuerpo: "",
-      publicada: true,
+      // Nace como BORRADOR (no publicada) -- a petición del usuario,
+      // 2026-08-30: escribir tranquilo y publicar a propósito cuando
+      // esté lista, en vez de que aparezca en el tablón público desde
+      // la primera letra.
+      publicada: false,
       creadaEn: new Date().toISOString(),
-      // FAQ por defecto -- a petición del usuario, la mayoría de
-      // entradas lo serán; "Novedades" se marca aparte, caso a caso.
-      esNovedad: false,
+      // NOVEDADES por defecto -- a petición del usuario, 2026-08-30
+      // (antes era FAQ): invierte el criterio de la v6.8.
+      esNovedad: true,
     };
     persistNovedades([nueva, ...novedades]);
     setIdExpandido(nueva.id);
