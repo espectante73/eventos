@@ -26,12 +26,21 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center p-4"
+      // "modal-flotante-fondo"/"-caja"/"-cuerpo": sin efecto en pantalla
+      // (son ganchos vacíos), solo existen para poder neutralizar estas
+      // tres cajas durante la impresión -- ver @media print en
+      // index.css. Necesario porque este modal se usa también para
+      // imprimir listas potencialmente largas (Lista de invitados): sin
+      // esto, el "position: fixed"/"overflow-y: auto" de aquí abajo
+      // recortaba la impresión a una sola página. Bug real reportado
+      // por el usuario, 2026-08-29 (ver también el comentario de
+      // #zona-imprimible en index.css).
+      className="fixed inset-0 flex items-center justify-center p-4 modal-flotante-fondo"
       style={{ background: "rgba(31,25,15,0.55)", zIndex }}
       onClick={onCerrar}
     >
       <div
-        className="rounded-lg w-full flex flex-col"
+        className="rounded-lg w-full flex flex-col modal-flotante-caja"
         style={{
           background: C.paper,
           border: `1px solid ${C.line}`,
@@ -55,7 +64,7 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
             <X size={18} />
           </button>
         </div>
-        <div className="p-4" style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain" }}>
+        <div className="p-4 modal-flotante-cuerpo" style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain" }}>
           {children}
         </div>
         {acciones && (

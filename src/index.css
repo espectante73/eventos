@@ -136,21 +136,35 @@
 @media print {
   body * { visibility: hidden; }
   #zona-imprimible, #zona-imprimible * { visibility: visible; }
-  #zona-imprimible {
-    /* "fixed" (no "absolute"): esta zona vive dentro del cuerpo con
-       scroll de un ModalFlotante (overflow-y: auto) -- con "absolute"
-       se quedaba recortada a lo que hubiera scrolleado a la vista en
-       ese momento, así que al imprimir la Lista de invitados solo
-       salía lo visible en pantalla, no la lista entera. Mismo arreglo
-       ya aplicado en #zona-imprimible-plano/-cronograma, aquí se nos
-       había quedado sin hacer -- bug real reportado por el usuario,
-       2026-08-29. */
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: auto;
-  }
+  /* Historial de este bloque (bug real, 2026-08-29): primero llevaba
+     "position: absolute" -- quedaba recortado a lo que hubiera
+     scrolleado a la vista en el cuerpo con scroll del ModalFlotante
+     (.modal-flotante-cuerpo, overflow-y: auto). Se probó
+     "position: fixed" (mismo truco que #zona-imprimible-plano/
+     -cronograma) pensando que "escapaba" del recorte -- SÍ escapa del
+     scroll, pero un elemento "fixed" en impresión se queda confinado
+     a UNA sola página (no pagina el contenido que no cabe), así que
+     con una lista larga (140 invitados) seguía cortando justo donde
+     acababa esa primera página. Los otros dos zona-imprimible-* nunca
+     lo sufrieron porque su contenido siempre cupo en una página.
+     Arreglo de verdad: dejar esta zona en flujo normal
+     ("position: static", el valor por defecto) y en vez de "escapar"
+     del padre, neutralizar el propio padre que recortaba/limitaba la
+     altura -- ver .modal-flotante-* más abajo. Así el contenido fluye
+     y pagina de verdad en tantas hojas como haga falta. */
+  #zona-imprimible { position: static; width: 100%; }
+
+  /* Las tres cajas de ModalFlotante.jsx que envuelven #zona-imprimible
+     cuando se imprime algo desde un modal (Lista de invitados, Plano,
+     Cronograma...): en pantalla necesitan "fixed"/"overflow-y: auto"/
+     una altura máxima para comportarse como un modal normal, pero
+     imprimir eso tal cual confina el contenido a una pantalla. Estas
+     tres clases no hacen nada en pantalla (sin reglas fuera de
+     @media print) -- solo neutralizan esas tres restricciones a la
+     hora de imprimir. */
+  .modal-flotante-fondo { position: static !important; }
+  .modal-flotante-caja { max-height: none !important; }
+  .modal-flotante-cuerpo { overflow: visible !important; flex: none !important; }
 
   #zona-imprimible-plano, #zona-imprimible-plano * { visibility: visible; }
   #zona-imprimible-plano {

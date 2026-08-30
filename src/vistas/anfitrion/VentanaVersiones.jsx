@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "19.3",
+    cambios: [
+      "Corregido de verdad (el intento anterior, v19.2, no bastó): imprimir la Lista de invitados solo sacaba una página (hasta donde cupiera), no la lista entera -- el modal que la contiene ya no se imprime con su recorte de pantalla, así que ahora pagina en tantas hojas como haga falta.",
+    ],
+  },
+  {
     version: "19.2",
     cambios: [
       "Corregido: imprimir la Lista de invitados solo sacaba lo que se veía en pantalla en ese momento, no la lista entera -- la zona de impresión no escapaba del scroll de la ventana.",
