@@ -59,6 +59,20 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
     const ventana = window.open("", nombreVentana, `width=${ancho},height=${alto}`);
     if (!ventana) return false; // bloqueada por el navegador
 
+    // ⚠️ La etiqueta "viewport" hay que ponerla A MANO aquí: esta
+    // ventana arranca con un <head> completamente vacío y NO hereda la
+    // de index.html. Sin ella, un móvil dibuja la página como si la
+    // pantalla midiera ~980px y luego la encoge entera para que quepa
+    // -- resultado: todo se ve diminuto, "como la versión de
+    // escritorio", por muy grandes que sean los botones en el código.
+    // Bug real reportado por el usuario el 2026-08-31 probando el mando
+    // de Música del evento en el móvil; afecta por igual a Novedades,
+    // Logística y Cronograma abiertas desde un teléfono.
+    const metaViewport = ventana.document.createElement("meta");
+    metaViewport.name = "viewport";
+    metaViewport.content = "width=device-width, initial-scale=1";
+    ventana.document.head.appendChild(metaViewport);
+
     // Copia las hojas de estilo ya cargadas (Tailwind + index.css,
     // compiladas por Vite en un único <link>, más cualquier <style> que
     // hubiera inyectado el propio navegador) -- sin esto, el contenido

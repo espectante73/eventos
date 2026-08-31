@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.3",
+    cambios: [
+      "Corregido: las ventanas emergentes (Música, Novedades, Logística, Cronograma) se veían diminutas al abrirlas desde el móvil, como si fueran la versión de escritorio. Les faltaba la etiqueta que le dice al teléfono que la página es para su pantalla.",
+      "Mirar un bloque ya no corta la música: ahora \"el bloque que miras\" y \"el bloque que suena\" son cosas distintas. Puedes repasar los demás bloques con la música puesta, y volver al que sonaba sin que empiece desde cero.",
+      "El bloque que está sonando se marca con un ecualizador animado, y si estás mirando otro aparece una barra que recuerda qué suena, con un toque para volver a él.",
+    ],
+  },
+  {
     version: "20.2",
     cambios: [
       "Música del evento ahora tiene DOS formatos según el papel de cada aparato, en vez de uno solo para todo: el móvil (mando) va en una columna y con todo grande para el pulgar; el Mac (reproductor) pasa a puesto de control en dos columnas, más denso y con la lista completa de pistas a la vista para cargarlas de una sentada.",

@@ -79,7 +79,15 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // suena. Cualquier otro dispositivo que abra esta ventana se queda
   // como mando (no emite sonido, solo manda órdenes).
   const [rol, setRol] = useState("sin-definir");
+  // DOS conceptos distintos, y confundirlos fue un bug real (2026-08-31):
+  // `seleccionado` es el bloque que estás MIRANDO (para comprobar que
+  // tiene pista, ver su hora...), y `bloqueSonando` es el que de verdad
+  // está cargado en el reproductor. Antes eran el mismo, así que tocar
+  // otro bloque para echarle un vistazo cortaba la música, y volver al
+  // que sonaba lo hacía empezar desde cero. Ahora mirar no toca el
+  // sonido: solo el botón de play cambia lo que suena.
   const [seleccionado, setSeleccionado] = useState(0);
+  const [bloqueSonando, setBloqueSonando] = useState(null);
   const [sonando, setSonando] = useState(false);
   const [volumen, setVolumen] = useState(70);
   const [silenciado, setSilenciado] = useState(false);
@@ -101,6 +109,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
 
   const esReproductor = rol === "reproductor";
   const pistaActual = pistas[seleccionado];
+  // ¿Estoy mirando justo el bloque que está sonando? De eso depende que
+  // la barra de progreso muestre algo real y que el botón grande pause
+  // en vez de arrancar otra pista.
+  const mirandoElQueSuena = bloqueSonando != null && seleccionado === bloqueSonando;
 
   // Reloj en vivo: refresca cada 15s (suficiente para un indicador que
   // se mide en minutos, y no repinta la ventana sin parar).
@@ -178,28 +190,39 @@ export function VentanaMusicaEvento({ data, ventana }) {
     setPosicion(audio.currentTime);
   }, []);
 
-  // Cambiar de bloque: suena la cortinilla y entra la pista nueva. Es
-  // el gesto con más riesgo de todo el invento (cambiar la fuente de un
+  // Solo MIRAR otro bloque: no toca el sonido en absoluto. Lo que esté
+  // sonando sigue sonando, en su mismo minuto.
+  const verBloque = useCallback((indice) => {
+    setSeleccionado(indice);
+    setAviso("");
+  }, []);
+
+  // Poner a sonar un bloque: suena la cortinilla y entra su pista. Es el
+  // gesto con más riesgo de todo el invento (cambiar la fuente de un
   // <audio> ya desbloqueado) -- por eso el paso 1 existe: para probarlo
-  // de verdad, no para suponerlo.
-  const irABloque = useCallback(
-    (indice, arrancar = true) => {
-      setSeleccionado(indice);
+  // de verdad, no para suponerlo. Si ese bloque YA es el que suena, no
+  // se recarga nada (eso lo reiniciaría desde cero, que era justo el
+  // fallo que reportó el usuario).
+  const reproducirBloque = useCallback(
+    (indice) => {
       setAviso("");
       const audio = audioRef.current;
       const siguiente = pistas[indice];
-      if (!audio || !siguiente) {
-        setSonando(false);
+      if (!audio || !siguiente) return;
+
+      if (bloqueSonando === indice && audio.src) {
+        audio
+          .play()
+          .then(() => setSonando(true))
+          .catch(() => setAviso("El navegador no ha dejado reanudar. Pulsa play aquí en el Mac."));
         return;
       }
+
       sonarCortinilla();
       audio.src = siguiente.url;
       audio.volume = porcentajeAVolumen(silenciado ? 0 : volumen);
       setPosicion(0);
-      if (!arrancar) {
-        setSonando(false);
-        return;
-      }
+      setBloqueSonando(indice);
       audio
         .play()
         .then(() => setSonando(true))
@@ -208,7 +231,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
           setAviso("El navegador ha bloqueado el cambio de pista. Pulsa play aquí en el Mac.");
         });
     },
-    [pistas, silenciado, volumen, sonarCortinilla]
+    [pistas, silenciado, volumen, sonarCortinilla, bloqueSonando]
   );
 
   // ---------- Canal de mando ----------
@@ -222,14 +245,21 @@ export function VentanaMusicaEvento({ data, ventana }) {
       const { accion, valor } = payload || {};
       if (accion === "play") reproducir();
       else if (accion === "pausa") pausar();
-      else if (accion === "alternar") (sonando ? pausar : reproducir)();
-      else if (accion === "bloque") irABloque(valor);
+      else if (accion === "alternar") {
+        // El botón grande hace lo que toca según lo que estés mirando:
+        // si miras el bloque que ya suena, pausa/reanuda sin reiniciar;
+        // si miras otro, lo pone a sonar (con su cortinilla).
+        if (valor != null && valor !== bloqueSonando) reproducirBloque(valor);
+        else if (sonando) pausar();
+        else reproducirBloque(valor ?? bloqueSonando ?? 0);
+      } else if (accion === "bloque") verBloque(valor);
+      else if (accion === "reproducirBloque") reproducirBloque(valor);
       else if (accion === "saltar") saltarSegundos(valor);
       else if (accion === "volumen") aplicarVolumen(valor);
       else if (accion === "silencio") alternarSilencio();
       else if (accion === "cortinilla") sonarCortinilla();
     },
-    [esReproductor, sonando, reproducir, pausar, irABloque, saltarSegundos, aplicarVolumen, alternarSilencio, sonarCortinilla]
+    [esReproductor, sonando, bloqueSonando, reproducir, pausar, verBloque, reproducirBloque, saltarSegundos, aplicarVolumen, alternarSilencio, sonarCortinilla]
   );
 
   // El mando pinta lo que de verdad está haciendo el Mac, no lo que
@@ -239,6 +269,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
       if (esReproductor) return; // el reproductor es la fuente, no escucha
       if (!estado) return;
       setSeleccionado(estado.bloque ?? 0);
+      setBloqueSonando(estado.bloqueSonando ?? null);
       setSonando(Boolean(estado.sonando));
       setVolumen(estado.volumen ?? 70);
       setSilenciado(Boolean(estado.silenciado));
@@ -261,6 +292,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
     if (!esReproductor) return;
     enviarEstado({
       bloque: seleccionado,
+      bloqueSonando,
       sonando,
       volumen,
       silenciado,
@@ -270,7 +302,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
       // locales del Mac, no significan nada en otro aparato.
       pistas: Object.fromEntries(Object.entries(pistas).map(([i, p]) => [i, { nombre: p.nombre }])),
     });
-  }, [esReproductor, seleccionado, sonando, volumen, silenciado, posicion, duracion, pistas, enviarEstado]);
+  }, [esReproductor, seleccionado, bloqueSonando, sonando, volumen, silenciado, posicion, duracion, pistas, enviarEstado]);
 
   useEffect(() => {
     publicarEstado();
@@ -381,8 +413,29 @@ export function VentanaMusicaEvento({ data, ventana }) {
             >
               {horas[i]}
             </span>
-            {pistas[i] && (
-              <span className="absolute rounded-full" style={{ top: 8, right: 9, width: 8, height: 8, background: esActual ? C.goldClaro : C.gold }} title="Tiene pista" />
+            {/* Ecualizador animado = "este bloque es el que está
+                sonando ahora", aunque estés mirando otro. A petición del
+                usuario (2026-08-31). Si el bloque solo tiene pista
+                cargada pero no suena, basta con el punto de siempre. */}
+            {i === bloqueSonando && sonando ? (
+              <span className="absolute flex items-end gap-0.5" style={{ top: 8, right: 9, height: 12 }} title="Sonando ahora">
+                {[0, 1, 2].map((barra) => (
+                  <span
+                    key={barra}
+                    className="ecualizador-barra rounded-sm"
+                    style={{
+                      width: 3,
+                      height: 12,
+                      background: esActual ? C.goldClaro : C.gold,
+                      animationDelay: `${barra * 0.18}s`,
+                    }}
+                  />
+                ))}
+              </span>
+            ) : (
+              pistas[i] && (
+                <span className="absolute rounded-full" style={{ top: 8, right: 9, width: 8, height: 8, background: esActual ? C.goldClaro : C.gold }} title="Tiene pista" />
+              )
             )}
             <span className="text-center" style={{ fontSize: M.nombre, fontWeight: 800, lineHeight: 1.15, color: esActual ? C.goldClaro : C.charcoal }}>
               {b.texto || `Bloque ${i + 1}`}
@@ -419,15 +472,22 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <Music size={18} style={{ color: C.gold, flexShrink: 0 }} />
             <span className="flex-1 truncate" style={{ color: C.charcoal, fontSize: M.texto }}>{pistaActual.nombre}</span>
           </div>
+          {/* La barra solo dice la verdad del bloque que suena. Si estás
+              mirando otro, se queda a cero en vez de mentir con el
+              minuto de una pista que no es esa. */}
           <div className="rounded-full mb-2" style={{ height: esMovil ? 9 : 7, background: C.line }}>
             <div
               className="rounded-full"
-              style={{ height: esMovil ? 9 : 7, width: `${duracion ? Math.min(100, (posicion / duracion) * 100) : 0}%`, background: `linear-gradient(90deg, ${C.gold}, ${C.goldClaro})` }}
+              style={{
+                height: esMovil ? 9 : 7,
+                width: mirandoElQueSuena && duracion ? `${Math.min(100, (posicion / duracion) * 100)}%` : 0,
+                background: `linear-gradient(90deg, ${C.gold}, ${C.goldClaro})`,
+              }}
             />
           </div>
           <div className="flex justify-between mb-5" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: M.texto, color: "#6b6355" }}>
-            <span>{formatearTiempo(posicion)}</span>
-            <span>{formatearTiempo(duracion)}</span>
+            <span>{mirandoElQueSuena ? formatearTiempo(posicion) : "—"}</span>
+            <span>{mirandoElQueSuena ? formatearTiempo(duracion) : "sin sonar"}</span>
           </div>
 
           <div className="flex items-center justify-center gap-5">
@@ -439,8 +499,19 @@ export function VentanaMusicaEvento({ data, ventana }) {
               <ChevronsLeft size={esMovil ? 24 : 20} />
               <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#8a8171" }}>{salto}s</span>
             </button>
-            <button onClick={hacer("alternar")} className="boton-3d boton-verde-solido rounded-full flex items-center justify-center" style={{ width: M.play, height: M.play }}>
-              {sonando ? <Pause size={M.playIcono} fill={C.goldClaro} /> : <Play size={M.playIcono} fill={C.goldClaro} style={{ marginLeft: 5 }} />}
+            {/* El icono dice lo que va a pasar: si miras el bloque que
+                suena, pausa; si miras otro, lo pone a sonar (play). */}
+            <button
+              onClick={hacer("alternar", seleccionado)}
+              className="boton-3d boton-verde-solido rounded-full flex items-center justify-center"
+              style={{ width: M.play, height: M.play }}
+              title={mirandoElQueSuena ? (sonando ? "Pausar" : "Reanudar") : `Poner "${bloques[seleccionado]?.texto || ""}"`}
+            >
+              {mirandoElQueSuena && sonando ? (
+                <Pause size={M.playIcono} fill={C.goldClaro} />
+              ) : (
+                <Play size={M.playIcono} fill={C.goldClaro} style={{ marginLeft: 5 }} />
+              )}
             </button>
             <button
               onClick={hacer("saltar", salto)}
@@ -481,6 +552,32 @@ export function VentanaMusicaEvento({ data, ventana }) {
       )}
     </div>
   );
+
+  // Recordatorio permanente de qué suena cuando estás mirando otro
+  // bloque -- sin esto es fácil perder de vista qué está puesto.
+  const avisoOtroSonando =
+    bloqueSonando != null && !mirandoElQueSuena ? (
+      <button
+        onClick={() => verBloque(bloqueSonando)}
+        className="w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5"
+        style={{ background: "rgba(36,64,47,0.08)", border: "1px solid rgba(36,64,47,0.25)", color: C.ink, fontSize: M.texto }}
+      >
+        <span className="flex items-end gap-0.5" style={{ height: 13 }}>
+          {[0, 1, 2].map((barra) => (
+            <span
+              key={barra}
+              className={sonando ? "ecualizador-barra rounded-sm" : "rounded-sm"}
+              style={{ width: 3, height: 13, background: C.ink, opacity: sonando ? 1 : 0.4, animationDelay: `${barra * 0.18}s` }}
+            />
+          ))}
+        </span>
+        <span className="flex-1 text-left truncate">
+          {sonando ? "Sonando ahora: " : "En pausa: "}
+          <strong>{bloques[bloqueSonando]?.texto || `Bloque ${bloqueSonando + 1}`}</strong>
+        </span>
+        <span style={{ opacity: 0.6, fontSize: M.texto - 1 }}>Ir</span>
+      </button>
+    ) : null;
 
   const controlVolumen = (
     <div className="rounded-2xl p-4" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
@@ -637,6 +734,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
         {rol === "mando" && (
           <div className="space-y-4" style={{ maxWidth: M.ancho, margin: "0 auto" }}>
             {cuadriculaBloques}
+            {avisoOtroSonando}
             {relojEstado}
             {reproductor}
             {controlVolumen}
@@ -652,6 +750,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <div className="flex flex-wrap gap-4 items-start">
               <div className="space-y-4" style={{ flex: "1 1 300px", minWidth: 280 }}>
                 {cuadriculaBloques}
+                {avisoOtroSonando}
                 {relojEstado}
               </div>
               <div className="space-y-4" style={{ flex: "1 1 320px", minWidth: 300 }}>
