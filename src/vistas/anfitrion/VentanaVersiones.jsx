@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.4",
+    cambios: [
+      "Las pistas y la cortinilla ya no se pierden al recargar: quedan guardadas dentro del navegador del ordenador que suena. Se eligen una vez y siguen ahí aunque cierres el navegador o reinicies el Mac.",
+      "Como no se descargan de internet, la noche del evento la música no depende del wifi del local.",
+      "Corregido: el mando no veía las pistas cargadas en el ordenador. El Mac ahora repite su estado cada 3 segundos y el mando lo pide nada más conectarse, así que ya da igual en qué orden se abran las dos ventanas.",
+      "Si el mando todavía no ha recibido nada del ordenador, lo dice claramente en vez de mostrar una pantalla vacía que parece rota.",
+    ],
+  },
+  {
     version: "20.3",
     cambios: [
       "Corregido: las ventanas emergentes (Música, Novedades, Logística, Cronograma) se veían diminutas al abrirlas desde el móvil, como si fueran la versión de escritorio. Les faltaba la etiqueta que le dice al teléfono que la página es para su pantalla.",

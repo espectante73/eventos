@@ -49,6 +49,7 @@ import { C } from "../../theme";
 import { calcularHorasAbsolutas } from "../../lib/cronograma";
 import { useMandoMusica } from "../../lib/useMandoMusica";
 import { porcentajeAVolumen, ajustarPorcentaje, PASO_VOLUMEN } from "../../lib/volumen";
+import { guardarPista, leerTodasLasPistas } from "../../lib/almacenPistas";
 
 // Opciones del desplegable de salto, en segundos -- a petición del
 // usuario: al menos tres, no un salto fijo.
@@ -95,10 +96,11 @@ export function VentanaMusicaEvento({ data, ventana }) {
   const [posicion, setPosicion] = useState(0);
   const [duracion, setDuracion] = useState(0);
   const [salto, setSalto] = useState(30);
-  // { [indiceBloque]: { nombre, url } } -- en el paso 1 las pistas viven
-  // solo en memoria (se eligen cada vez que se abre la ventana). El
-  // guardado permanente dentro del navegador es el paso 3.
+  // { [indiceBloque]: { nombre, url } }. Las URLs son temporales (se
+  // crean al abrir la ventana), pero los archivos en sí viven guardados
+  // dentro del navegador -- ver lib/almacenPistas.js.
   const [pistas, setPistas] = useState({});
+  const [cargandoPistas, setCargandoPistas] = useState(true);
   const [cortinilla, setCortinilla] = useState(null);
   const [ahora, setAhora] = useState(() => new Date());
   const [aviso, setAviso] = useState("");
@@ -106,6 +108,12 @@ export function VentanaMusicaEvento({ data, ventana }) {
   const audioRef = useRef(null);
   const cortinillaRef = useRef(null);
   const wakeLockRef = useRef(null);
+  // publicarEstado se define más abajo (necesita el canal, que a su vez
+  // necesita este manejador) -- esta ref rompe ese círculo.
+  const publicarEstadoRef = useRef(null);
+  // ¿Ha llegado ya alguna noticia del ordenador? Solo para que el mando
+  // pueda decir "esperando" en vez de mentir con una pantalla vacía.
+  const [recibidoEstado, setRecibidoEstado] = useState(false);
 
   const esReproductor = rol === "reproductor";
   const pistaActual = pistas[seleccionado];
@@ -113,6 +121,47 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // la barra de progreso muestre algo real y que el botón grande pause
   // en vez de arrancar otra pista.
   const mirandoElQueSuena = bloqueSonando != null && seleccionado === bloqueSonando;
+
+  // ---------- Recuperar las pistas ya guardadas ----------
+  // Al abrir la ventana se leen del almacén del navegador y se les crea
+  // una URL reproducible. Las URLs se liberan al cerrar, pero los
+  // archivos siguen guardados: la próxima vez vuelven a aparecer solas,
+  // sin tener que elegirlas de nuevo.
+  useEffect(() => {
+    let cancelado = false;
+    const urlsCreadas = [];
+    // La ventana emergente tiene su propio URL/createObjectURL; usarlo
+    // ata la vida del enlace a ESA ventana, que es justo lo que
+    // queremos. Si todavía no está lista, sirve el de la pestaña.
+    const fabricaUrl = ventana?.URL || URL;
+
+    leerTodasLasPistas()
+      .then((guardadas) => {
+        if (cancelado) return;
+        const recuperadas = {};
+        let cortinillaGuardada = null;
+        for (const [clave, valor] of Object.entries(guardadas)) {
+          if (!valor?.datos) continue;
+          const url = fabricaUrl.createObjectURL(valor.datos);
+          urlsCreadas.push(url);
+          if (clave === "cortinilla") cortinillaGuardada = { nombre: valor.nombre, url };
+          else recuperadas[clave] = { nombre: valor.nombre, url };
+        }
+        setPistas(recuperadas);
+        if (cortinillaGuardada) setCortinilla(cortinillaGuardada);
+        setCargandoPistas(false);
+      })
+      .catch(() => {
+        if (cancelado) return;
+        setCargandoPistas(false);
+        setAviso("No se han podido recuperar las pistas guardadas en este navegador.");
+      });
+
+    return () => {
+      cancelado = true;
+      for (const url of urlsCreadas) fabricaUrl.revokeObjectURL(url);
+    };
+  }, [ventana]);
 
   // Reloj en vivo: refresca cada 15s (suficiente para un indicador que
   // se mide en minutos, y no repinta la ventana sin parar).
@@ -252,6 +301,11 @@ export function VentanaMusicaEvento({ data, ventana }) {
         if (valor != null && valor !== bloqueSonando) reproducirBloque(valor);
         else if (sonando) pausar();
         else reproducirBloque(valor ?? bloqueSonando ?? 0);
+      } else if (accion === "pedirEstado") {
+        // Un mando acaba de conectarse y no sabe nada: estos mensajes no
+        // se guardan en ningún sitio, así que quien llega tarde no
+        // recibe lo ya anunciado. Se le contesta con la foto completa.
+        publicarEstadoRef.current?.();
       } else if (accion === "bloque") verBloque(valor);
       else if (accion === "reproducirBloque") reproducirBloque(valor);
       else if (accion === "saltar") saltarSegundos(valor);
@@ -268,6 +322,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
     (estado) => {
       if (esReproductor) return; // el reproductor es la fuente, no escucha
       if (!estado) return;
+      setRecibidoEstado(true);
       setSeleccionado(estado.bloque ?? 0);
       setBloqueSonando(estado.bloqueSonando ?? null);
       setSonando(Boolean(estado.sonando));
@@ -305,8 +360,28 @@ export function VentanaMusicaEvento({ data, ventana }) {
   }, [esReproductor, seleccionado, bloqueSonando, sonando, volumen, silenciado, posicion, duracion, pistas, enviarEstado]);
 
   useEffect(() => {
+    publicarEstadoRef.current = publicarEstado;
     publicarEstado();
   }, [publicarEstado]);
+
+  // Latido: el reproductor repite su estado cada 3 segundos, suene o no.
+  // Es la red de seguridad del problema de fondo -- estos mensajes no se
+  // guardan, así que un mando que se conecte tarde (o que se quede sin
+  // cobertura un rato y vuelva) no recibiría nada nunca. Con esto, como
+  // mucho tarda 3 segundos en enterarse de todo, sin depender de que
+  // alguien toque algo en el Mac.
+  useEffect(() => {
+    if (!esReproductor) return;
+    const id = setInterval(() => publicarEstadoRef.current?.(), 3000);
+    return () => clearInterval(id);
+  }, [esReproductor]);
+
+  // Y el mando, en cuanto se conecta, pide la foto completa en vez de
+  // esperar al siguiente latido -- así aparece todo al instante.
+  useEffect(() => {
+    if (esReproductor || !conectado) return;
+    enviarOrden("pedirEstado");
+  }, [esReproductor, conectado, enviarOrden]);
 
   useEffect(() => {
     if (!esReproductor || !sonando) return;
@@ -354,12 +429,19 @@ export function VentanaMusicaEvento({ data, ventana }) {
     }
   };
 
+  // Elegir un archivo lo guarda TAMBIÉN en el navegador, no solo en
+  // memoria -- así sigue ahí la próxima vez que se abra la ventana, sin
+  // tener que buscarlo otra vez en el disco.
   const elegirArchivo = (indice) => (e) => {
     const archivo = e.target.files?.[0];
     if (!archivo) return;
-    const url = URL.createObjectURL(archivo);
+    const url = (ventana?.URL || URL).createObjectURL(archivo);
     if (indice === "cortinilla") setCortinilla({ nombre: archivo.name, url });
     else setPistas((previas) => ({ ...previas, [indice]: { nombre: archivo.name, url } }));
+    setAviso("");
+    guardarPista(indice, archivo).catch(() =>
+      setAviso(`"${archivo.name}" suena ahora, pero no se ha podido guardar para la próxima vez (¿espacio del navegador?).`)
+    );
   };
 
   // Un gesto en la interfaz: si este aparato es el que suena, lo hace;
@@ -642,8 +724,13 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // pistas se cargan una vez en el ordenador que suena.
   const gestionPistas = (
     <div className="rounded-2xl p-4" style={{ background: C.paperDark, border: `1px solid ${C.line}` }}>
-      <p className="font-medium mb-2.5" style={{ color: C.charcoal, fontSize: M.texto }}>
+      <p className="font-medium" style={{ color: C.charcoal, fontSize: M.texto }}>
         Pistas por bloque
+      </p>
+      <p className="mb-2.5" style={{ color: C.charcoal, opacity: 0.6, fontSize: M.texto - 1 }}>
+        {cargandoPistas
+          ? "Recuperando las pistas guardadas…"
+          : "Se quedan guardadas en este ordenador: no hay que volver a elegirlas."}
       </p>
       <div className="space-y-1.5" style={{ maxHeight: 260, overflowY: "auto" }}>
         {bloques.map((b, i) => (
@@ -733,6 +820,20 @@ export function VentanaMusicaEvento({ data, ventana }) {
             archivos -- solo lo que se toca en directo. */}
         {rol === "mando" && (
           <div className="space-y-4" style={{ maxWidth: M.ancho, margin: "0 auto" }}>
+            {/* Sin noticias del ordenador todavía: mejor decirlo que
+                enseñar una pantalla vacía que parece rota. */}
+            {!recibidoEstado && (
+              <div
+                className="flex items-center gap-3 rounded-xl px-4 py-3"
+                style={{ background: C.avisoFondo, color: C.peligro, fontSize: M.texto }}
+              >
+                <WifiOff size={18} style={{ flexShrink: 0 }} />
+                <span>
+                  Esperando al ordenador… Comprueba que la ventana "Música del evento" está abierta en el Mac y marcada
+                  como el aparato que reproduce.
+                </span>
+              </div>
+            )}
             {cuadriculaBloques}
             {avisoOtroSonando}
             {relojEstado}
