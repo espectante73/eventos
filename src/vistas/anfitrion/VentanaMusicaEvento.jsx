@@ -44,6 +44,7 @@ import {
   ChevronsRight,
   Wifi,
   WifiOff,
+  X,
 } from "lucide-react";
 import { C } from "../../theme";
 import { calcularHorasAbsolutas } from "../../lib/cronograma";
@@ -104,6 +105,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
   const [cortinilla, setCortinilla] = useState(null);
   const [ahora, setAhora] = useState(() => new Date());
   const [aviso, setAviso] = useState("");
+  // Confirmación de cierre. Se hace con UI propia, NUNCA con
+  // ventana.confirm(): un diálogo nativo dentro de una ventana
+  // emergente ya nos dio problemas reales (ver la regla en CLAUDE.md).
+  const [confirmandoCierre, setConfirmandoCierre] = useState(false);
 
   const audioRef = useRef(null);
   const cortinillaRef = useRef(null);
@@ -542,6 +547,14 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // de elegir aparato (la primera) es común y grande en los dos sitios,
   // porque son solo dos botones.
   const esMovil = rol === "mando";
+  // Fondo verde esmeralda claro SOLO en el mando -- a petición del
+  // usuario (2026-08-31): sobre el crema de siempre, los botones
+  // blancos apenas se distinguían del fondo. Con el verde claro, tanto
+  // los bloques blancos como el seleccionado (verde oscuro) resaltan de
+  // verdad, que es lo que hace falta para acertar de un vistazo en
+  // penumbra. El Mac se queda con el crema del resto de la app: ahí se
+  // mira de cerca y con luz.
+  const fondoVentana = esMovil ? "#D2E7DB" : C.paper;
   const M = esMovil
     ? { base: 16, bloque: 92, nombre: 19, hora: 13, play: 96, playIcono: 38, saltoAncho: 74, saltoAlto: 66, silencio: 56, botonVol: 54, reloj: 21, titulo: 20, texto: 15, ancho: 560 }
     : { base: 14, bloque: 72, nombre: 16, hora: 12, play: 66, playIcono: 26, saltoAncho: 58, saltoAlto: 52, silencio: 44, botonVol: 42, reloj: 18, titulo: 18, texto: 13, ancho: 900 };
@@ -879,7 +892,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
   ) : null;
 
   return (
-    <div className="flex flex-col" style={{ height: "100%", background: C.paper, fontFamily: "'Inter', sans-serif", fontSize: M.base }}>
+    <div className="flex flex-col" style={{ height: "100%", background: fondoVentana, fontFamily: "'Inter', sans-serif", fontSize: M.base }}>
       <audio ref={audioRef} onEnded={() => setSonando(false)} onLoadedMetadata={(e) => setDuracion(e.target.duration || 0)} />
       <audio ref={cortinillaRef} src={cortinilla?.url} />
 
@@ -887,11 +900,56 @@ export function VentanaMusicaEvento({ data, ventana }) {
         <h3 className="flex items-center gap-2" style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700, fontSize: M.titulo }}>
           <Music size={M.titulo + 1} /> Música del evento
         </h3>
-        <span className="flex items-center gap-2" style={{ color: C.goldClaro, opacity: 0.8 }} title={conectado ? "Conectado" : "Sin conexión"}>
-          {conectado ? <Wifi size={17} /> : <WifiOff size={17} />}
-          {rol === "sin-definir" ? null : esReproductor ? <Speaker size={17} /> : <Smartphone size={17} />}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-2" style={{ color: C.goldClaro, opacity: 0.8 }} title={conectado ? "Conectado" : "Sin conexión"}>
+            {conectado ? <Wifi size={17} /> : <WifiOff size={17} />}
+            {rol === "sin-definir" ? null : esReproductor ? <Speaker size={17} /> : <Smartphone size={17} />}
+          </span>
+          {/* Cerrar dentro de la cabecera -- a petición del usuario: en
+              el móvil la ventana se abre como pestaña y no tiene una X
+              propia a mano. Nunca cierra a la primera: siempre pasa por
+              el aviso de abajo. */}
+          <button
+            onClick={() => setConfirmandoCierre(true)}
+            className="boton-3d rounded-full flex items-center justify-center"
+            style={{ width: 38, height: 38, color: C.goldClaro, flexShrink: 0 }}
+            title="Cerrar esta ventana"
+          >
+            <X size={20} />
+          </button>
+        </div>
       </div>
+
+      {/* Aviso de cierre: dice qué se pierde exactamente en cada caso,
+          que no es lo mismo cerrar el que suena que cerrar el mando. */}
+      {confirmandoCierre && (
+        <div className="px-4 py-3" style={{ flexShrink: 0, background: C.avisoFondo, borderBottom: `1px solid ${C.line}` }}>
+          <p className="flex items-start gap-2 mb-3" style={{ color: C.peligro, fontSize: M.texto }}>
+            <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>
+              {esReproductor
+                ? "Si cierras esta ventana, LA MÚSICA DEJARÁ DE SONAR y el mando se quedará sin nada que controlar."
+                : "Si cierras el mando, la música sigue sonando en el ordenador, pero dejarás de poder controlarla desde aquí."}
+            </span>
+          </p>
+          <div className="flex gap-2.5">
+            <button
+              onClick={() => setConfirmandoCierre(false)}
+              className="boton-3d boton-verde-solido rounded-xl flex-1 font-medium"
+              style={{ minHeight: 50, fontSize: M.texto }}
+            >
+              Seguir aquí
+            </button>
+            <button
+              onClick={() => (ventana || window).close()}
+              className="boton-3d rounded-xl flex-1 font-medium"
+              style={{ minHeight: 50, fontSize: M.texto, background: C.peligro, color: C.paper }}
+            >
+              Cerrar de todos modos
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="px-4 py-4" style={{ flex: 1, overflowY: "auto" }}>
         {/* 1) Elegir aparato: idéntica en los dos sitios, solo dos
