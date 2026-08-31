@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.6",
+    cambios: [
+      "Los botones de volumen − y + ahora repiten al mantenerlos pulsados: un toque suelto da un paso, y si lo dejas apretado sigue subiendo o bajando solo, paso a paso. Antes había que dar un toque por cada 2%.",
+    ],
+  },
+  {
     version: "20.5",
     cambios: [
       "El bloque que está sonando ahora late despacio con un halo dorado, para distinguirlo de un vistazo aunque estés mirando otro. Antes solo lo marcaba un ecualizador diminuto en una esquina que apenas se veía.",

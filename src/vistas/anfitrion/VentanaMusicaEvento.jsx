@@ -111,6 +111,18 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // publicarEstado se define más abajo (necesita el canal, que a su vez
   // necesita este manejador) -- esta ref rompe ese círculo.
   const publicarEstadoRef = useRef(null);
+  // Volumen en curso, para la repetición al mantener pulsado: el
+  // temporizador no puede leer el `volumen` del estado (se quedaría
+  // congelado en el valor de cuando empezó la pulsación).
+  const volumenRef = useRef(70);
+  // Mientras se mantiene pulsado, el mando ignora el volumen que le
+  // anuncia el Mac -- si no, el latido de cada 3s le daría un tirón
+  // hacia atrás justo mientras estás ajustando.
+  const ajustandoVolumenRef = useRef(false);
+  const repeticionRef = useRef({ espera: null, ciclo: null });
+  // Igual que publicarEstadoRef: el canal se crea más abajo, pero la
+  // repetición de volumen (definida antes) necesita poder mandar.
+  const enviarOrdenRef = useRef(null);
   // ¿Ha llegado ya alguna noticia del ordenador? Solo para que el mando
   // pueda decir "esperando" en vez de mentir con una pantalla vacía.
   const [recibidoEstado, setRecibidoEstado] = useState(false);
@@ -198,6 +210,54 @@ export function VentanaMusicaEvento({ data, ventana }) {
     setSilenciado(false);
     if (audioRef.current) audioRef.current.volume = porcentajeAVolumen(porcentaje);
   }, []);
+
+  // ---------- Subir/bajar volumen manteniendo pulsado ----------
+  // A petición del usuario (2026-08-31): con pasos del 2%, ir de 80 a 40
+  // exigía 20 toques. Ahora un toque suelto da un paso, y si se mantiene
+  // pulsado sigue avanzando solo, paso a paso.
+  useEffect(() => {
+    volumenRef.current = volumen;
+  }, [volumen]);
+
+  const darPasoVolumen = useCallback(
+    (direccion) => {
+      const siguiente = ajustarPorcentaje(volumenRef.current, direccion);
+      if (siguiente === volumenRef.current) return; // ya está en el tope
+      volumenRef.current = siguiente;
+      if (esReproductor) {
+        aplicarVolumen(siguiente);
+      } else {
+        setVolumen(siguiente);
+        setSilenciado(false);
+        enviarOrdenRef.current?.("volumen", siguiente);
+      }
+    },
+    [esReproductor, aplicarVolumen]
+  );
+
+  const pararRepeticion = useCallback(() => {
+    clearTimeout(repeticionRef.current.espera);
+    clearInterval(repeticionRef.current.ciclo);
+    repeticionRef.current = { espera: null, ciclo: null };
+    ajustandoVolumenRef.current = false;
+  }, []);
+
+  // Primer paso al instante, y si se sigue pulsando (400ms), arranca la
+  // repetición cada 120ms -- lo bastante rápido para recorrer la escala
+  // sin que se escape de las manos.
+  const empezarRepeticion = useCallback(
+    (direccion) => {
+      pararRepeticion();
+      ajustandoVolumenRef.current = true;
+      darPasoVolumen(direccion);
+      repeticionRef.current.espera = setTimeout(() => {
+        repeticionRef.current.ciclo = setInterval(() => darPasoVolumen(direccion), 120);
+      }, 400);
+    },
+    [darPasoVolumen, pararRepeticion]
+  );
+
+  useEffect(() => pararRepeticion, [pararRepeticion]);
 
   const alternarSilencio = useCallback(() => {
     setSilenciado((estabaSilenciado) => {
@@ -326,8 +386,13 @@ export function VentanaMusicaEvento({ data, ventana }) {
       setSeleccionado(estado.bloque ?? 0);
       setBloqueSonando(estado.bloqueSonando ?? null);
       setSonando(Boolean(estado.sonando));
-      setVolumen(estado.volumen ?? 70);
-      setSilenciado(Boolean(estado.silenciado));
+      // Mientras se mantiene pulsado −/+, el volumen que manda el Mac se
+      // ignora: si no, el latido de cada 3s daría un tirón hacia atrás
+      // justo mientras estás ajustando.
+      if (!ajustandoVolumenRef.current) {
+        setVolumen(estado.volumen ?? 70);
+        setSilenciado(Boolean(estado.silenciado));
+      }
       setPosicion(estado.posicion ?? 0);
       setDuracion(estado.duracion ?? 0);
       setPistas(estado.pistas || {});
@@ -358,6 +423,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
       pistas: Object.fromEntries(Object.entries(pistas).map(([i, p]) => [i, { nombre: p.nombre }])),
     });
   }, [esReproductor, seleccionado, bloqueSonando, sonando, volumen, silenciado, posicion, duracion, pistas, enviarEstado]);
+
+  useEffect(() => {
+    enviarOrdenRef.current = enviarOrden;
+  }, [enviarOrden]);
 
   useEffect(() => {
     publicarEstadoRef.current = publicarEstado;
@@ -714,22 +783,37 @@ export function VentanaMusicaEvento({ data, ventana }) {
         </span>
       </div>
       <div className="flex items-center gap-2.5">
-        <button
-          onClick={() => (esReproductor ? aplicarVolumen(ajustarPorcentaje(volumen, -1)) : enviarOrden("volumen", ajustarPorcentaje(volumen, -1)))}
-          className="boton-3d rounded-xl flex-1 font-bold"
-          style={{ minHeight: M.botonVol, fontSize: esMovil ? 24 : 19, background: C.paperDark, color: C.charcoal }}
-          title={`Bajar ${PASO_VOLUMEN}%`}
-        >
-          −
-        </button>
-        <button
-          onClick={() => (esReproductor ? aplicarVolumen(ajustarPorcentaje(volumen, 1)) : enviarOrden("volumen", ajustarPorcentaje(volumen, 1)))}
-          className="boton-3d rounded-xl flex-1 font-bold"
-          style={{ minHeight: M.botonVol, fontSize: esMovil ? 24 : 19, background: C.paperDark, color: C.charcoal }}
-          title={`Subir ${PASO_VOLUMEN}%`}
-        >
-          +
-        </button>
+        {/* Eventos de puntero (no onClick): sirven igual para ratón y
+            para dedo, y hacen falta para saber cuándo se SUELTA. Un
+            toque suelto da un paso; mantener pulsado sigue avanzando.
+            `touchAction`/`userSelect` evitan que el móvil interprete la
+            pulsación larga como "seleccionar texto" o menú contextual. */}
+        {[-1, 1].map((direccion) => (
+          <button
+            key={direccion}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              empezarRepeticion(direccion);
+            }}
+            onPointerUp={pararRepeticion}
+            onPointerLeave={pararRepeticion}
+            onPointerCancel={pararRepeticion}
+            onContextMenu={(e) => e.preventDefault()}
+            className="boton-3d rounded-xl flex-1 font-bold"
+            style={{
+              minHeight: M.botonVol,
+              fontSize: esMovil ? 24 : 19,
+              background: C.paperDark,
+              color: C.charcoal,
+              touchAction: "manipulation",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+            }}
+            title={`${direccion < 0 ? "Bajar" : "Subir"} ${PASO_VOLUMEN}% (mantén pulsado para seguir)`}
+          >
+            {direccion < 0 ? "−" : "+"}
+          </button>
+        ))}
         {cortinilla && (
           <button
             onClick={hacer("cortinilla")}
