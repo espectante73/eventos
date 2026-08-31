@@ -448,8 +448,15 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // si es un mando, lo manda por el canal. Así los botones son los
   // mismos en los dos sitios, sin duplicar la pantalla.
   const hacer = (accion, valor) => () => {
-    if (esReproductor) alRecibirOrden({ accion, valor });
-    else enviarOrden(accion, valor);
+    if (esReproductor) {
+      alRecibirOrden({ accion, valor });
+      return;
+    }
+    // Adelanto local: el mando cambia su vista al instante, sin esperar
+    // a que el Mac conteste. Sin esto, tocar un bloque tardaba en
+    // responder lo que durase la ida y vuelta.
+    if (accion === "bloque") setSeleccionado(valor);
+    enviarOrden(accion, valor);
   };
 
   const coloresEstado = {
@@ -474,19 +481,24 @@ export function VentanaMusicaEvento({ data, ventana }) {
     <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
       {bloques.map((b, i) => {
         const esActual = i === seleccionado;
+        const suenaAqui = i === bloqueSonando;
         const yaPaso = minutosDesdeMedianoche(horas[i]) < ahora.getHours() * 60 + ahora.getMinutes();
         return (
           <button
             key={i}
             onClick={hacer("bloque", i)}
-            className="relative rounded-xl flex items-center justify-center p-2"
+            className={`relative rounded-xl flex flex-col items-center justify-center gap-1.5 p-2${suenaAqui ? " bloque-sonando" : ""}`}
             style={{
               aspectRatio: "1 / 1",
               minHeight: M.bloque,
               background: esActual ? "linear-gradient(180deg, #24402F, #12201A)" : "#fff",
               border: `1px solid ${esActual ? "rgba(255,255,255,0.25)" : C.line}`,
-              opacity: !esActual && yaPaso ? 0.45 : 1,
-              boxShadow: esActual ? "inset 0 1px 0 rgba(255,255,255,.22), 0 4px 10px rgba(31,25,15,.28)" : "none",
+              // Un bloque que suena nunca se atenúa, aunque su hora ya
+              // haya pasado -- es lo más importante de la pantalla.
+              opacity: !esActual && yaPaso && !suenaAqui ? 0.45 : 1,
+              ...(suenaAqui
+                ? {}
+                : { boxShadow: esActual ? "inset 0 1px 0 rgba(255,255,255,.22), 0 4px 10px rgba(31,25,15,.28)" : "none" }),
             }}
           >
             <span
@@ -495,33 +507,38 @@ export function VentanaMusicaEvento({ data, ventana }) {
             >
               {horas[i]}
             </span>
-            {/* Ecualizador animado = "este bloque es el que está
-                sonando ahora", aunque estés mirando otro. A petición del
-                usuario (2026-08-31). Si el bloque solo tiene pista
-                cargada pero no suena, basta con el punto de siempre. */}
-            {i === bloqueSonando && sonando ? (
-              <span className="absolute flex items-end gap-0.5" style={{ top: 8, right: 9, height: 12 }} title="Sonando ahora">
-                {[0, 1, 2].map((barra) => (
-                  <span
-                    key={barra}
-                    className="ecualizador-barra rounded-sm"
-                    style={{
-                      width: 3,
-                      height: 12,
-                      background: esActual ? C.goldClaro : C.gold,
-                      animationDelay: `${barra * 0.18}s`,
-                    }}
-                  />
-                ))}
-              </span>
-            ) : (
-              pistas[i] && (
-                <span className="absolute rounded-full" style={{ top: 8, right: 9, width: 8, height: 8, background: esActual ? C.goldClaro : C.gold }} title="Tiene pista" />
-              )
+            {/* El punto pequeño solo dice "tiene pista cargada". Cuando
+                además está sonando, ese aviso lo da el ecualizador
+                grande de debajo del nombre, así que el punto sobra. */}
+            {pistas[i] && !suenaAqui && (
+              <span className="absolute rounded-full" style={{ top: 8, right: 9, width: 8, height: 8, background: esActual ? C.goldClaro : C.gold }} title="Tiene pista" />
             )}
             <span className="text-center" style={{ fontSize: M.nombre, fontWeight: 800, lineHeight: 1.15, color: esActual ? C.goldClaro : C.charcoal }}>
               {b.texto || `Bloque ${i + 1}`}
             </span>
+            {/* Ecualizador DEBAJO del nombre y centrado, al doble de
+                tamaño -- a petición del usuario: en la esquina y
+                diminuto no se veía. Si está en pausa, las barras se
+                quedan quietas (sin animación) pero siguen ahí. */}
+            {suenaAqui && (
+              <span className="flex items-end justify-center gap-1" style={{ height: 22 }} title={sonando ? "Sonando ahora" : "En pausa"}>
+                {[0, 1, 2, 3].map((barra) => (
+                  <span
+                    key={barra}
+                    className={sonando ? "ecualizador-barra rounded-sm" : "rounded-sm"}
+                    style={{
+                      width: 5,
+                      height: 22,
+                      background: esActual ? C.goldClaro : C.gold,
+                      opacity: sonando ? 1 : 0.4,
+                      transform: sonando ? undefined : "scaleY(0.45)",
+                      transformOrigin: "bottom center",
+                      animationDelay: `${barra * 0.16}s`,
+                    }}
+                  />
+                ))}
+              </span>
+            )}
           </button>
         );
       })}
@@ -637,10 +654,16 @@ export function VentanaMusicaEvento({ data, ventana }) {
 
   // Recordatorio permanente de qué suena cuando estás mirando otro
   // bloque -- sin esto es fácil perder de vista qué está puesto.
+  //
+  // ⚠️ "Ir" manda la orden como cualquier otro cambio de bloque (hacer),
+  // NO cambia solo la vista local: en el mando, el latido del Mac (cada
+  // 3s) sobrescribía la selección y la vista se volvía sola al bloque
+  // anterior al segundo -- bug real reportado por el usuario,
+  // 2026-08-31.
   const avisoOtroSonando =
     bloqueSonando != null && !mirandoElQueSuena ? (
       <button
-        onClick={() => verBloque(bloqueSonando)}
+        onClick={hacer("bloque", bloqueSonando)}
         className="w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5"
         style={{ background: "rgba(36,64,47,0.08)", border: "1px solid rgba(36,64,47,0.25)", color: C.ink, fontSize: M.texto }}
       >

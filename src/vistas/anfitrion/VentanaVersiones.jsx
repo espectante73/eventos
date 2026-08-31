@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.5",
+    cambios: [
+      "El bloque que está sonando ahora late despacio con un halo dorado, para distinguirlo de un vistazo aunque estés mirando otro. Antes solo lo marcaba un ecualizador diminuto en una esquina que apenas se veía.",
+      "El ecualizador pasa a estar debajo del nombre del bloque, centrado y al doble de tamaño.",
+      'Corregido: al pulsar "Ir" en la barra de «Sonando ahora», la vista volvía sola al bloque anterior al segundo. Ahora se queda donde le dices.',
+    ],
+  },
+  {
     version: "20.4",
     cambios: [
       "Las pistas y la cortinilla ya no se pierden al recargar: quedan guardadas dentro del navegador del ordenador que suena. Se eligen una vez y siguen ahí aunque cierres el navegador o reinicies el Mac.",
