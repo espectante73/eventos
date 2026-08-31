@@ -44,7 +44,6 @@ import {
   ChevronsRight,
   Wifi,
   WifiOff,
-  X,
 } from "lucide-react";
 import { C } from "../../theme";
 import { calcularHorasAbsolutas } from "../../lib/cronograma";
@@ -109,10 +108,6 @@ export function VentanaMusicaEvento({ data, ventana }) {
   const [cortinilla, setCortinilla] = useState(null);
   const [ahora, setAhora] = useState(() => new Date());
   const [aviso, setAviso] = useState("");
-  // Confirmación de cierre. Se hace con UI propia, NUNCA con
-  // ventana.confirm(): un diálogo nativo dentro de una ventana
-  // emergente ya nos dio problemas reales (ver la regla en CLAUDE.md).
-  const [confirmandoCierre, setConfirmandoCierre] = useState(false);
 
   const audioRef = useRef(null);
   const cortinillaRef = useRef(null);
@@ -491,6 +486,30 @@ export function VentanaMusicaEvento({ data, ventana }) {
       wakeLockRef.current = null;
     };
   }, [esReproductor, sonando, ventana]);
+
+  // ---------- Aviso al cerrar la ventana ----------
+  // Antes había una X propia en la cabecera con su aviso, pero eso
+  // dejaba DOS botones de cerrar (el del sistema operativo va aparte, y
+  // no se puede quitar desde una página web). A petición del usuario
+  // (2026-08-31) se quitó el nuestro y el aviso pasa aquí: el navegador
+  // pregunta antes de cerrar de verdad.
+  //
+  // Solo cuando hay algo que perder -- es decir, cuando este aparato es
+  // el que suena y hay música puesta. Un mando se cierra sin preguntar
+  // nada: la música sigue en el ordenador igualmente.
+  //
+  // Ojo: el texto lo pone el navegador, no nosotros (hace años que no
+  // dejan personalizarlo, para que nadie escriba mensajes engañosos).
+  // Lo único que podemos decidir es SI pregunta o no.
+  useEffect(() => {
+    if (!ventana || !esReproductor || bloqueSonando == null) return;
+    const avisarAntesDeCerrar = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    ventana.addEventListener("beforeunload", avisarAntesDeCerrar);
+    return () => ventana.removeEventListener("beforeunload", avisarAntesDeCerrar);
+  }, [ventana, esReproductor, bloqueSonando]);
 
   // ---------- El primer clic: declara el aparato Y desbloquea el audio ----------
   const declararReproductor = () => {
@@ -933,50 +952,16 @@ export function VentanaMusicaEvento({ data, ventana }) {
         <h3 className="flex items-center gap-2" style={{ fontFamily: "'Fraunces', serif", color: P.oro, fontWeight: 700, fontSize: M.titulo }}>
           <Music size={M.titulo + 1} /> Música del evento
         </h3>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-2" style={{ color: P.oro, opacity: 0.8 }} title={conectado ? "Conectado" : "Sin conexión"}>
-            {conectado ? <Wifi size={17} /> : <WifiOff size={17} />}
-            {rol === "sin-definir" ? null : esReproductor ? <Speaker size={17} /> : <Smartphone size={17} />}
-          </span>
-          <button
-            onClick={() => setConfirmandoCierre(true)}
-            className="boton-3d rounded-full flex items-center justify-center"
-            style={{ width: 38, height: 38, color: P.oro, flexShrink: 0 }}
-            title="Cerrar esta ventana"
-          >
-            <X size={20} />
-          </button>
-        </div>
+        {/* Sin X propia: la ventana ya trae la del sistema operativo
+            (en macOS, arriba a la izquierda) y tener dos confundía -- a
+            petición del usuario, 2026-08-31. El aviso de "ojo, que se
+            para la música" no se pierde: pasa a engancharse al cierre
+            real de la ventana (ver el efecto de beforeunload). */}
+        <span className="flex items-center gap-2" style={{ color: P.oro, opacity: 0.8 }} title={conectado ? "Conectado" : "Sin conexión"}>
+          {conectado ? <Wifi size={17} /> : <WifiOff size={17} />}
+          {rol === "sin-definir" ? null : esReproductor ? <Speaker size={17} /> : <Smartphone size={17} />}
+        </span>
       </div>
-
-      {confirmandoCierre && (
-        <div className="px-4 py-3" style={{ flexShrink: 0, background: "rgba(228,120,130,0.14)", borderBottom: `1px solid rgba(228,120,130,0.4)` }}>
-          <p className="flex items-start gap-2 mb-3" style={{ color: "#F0A4AC", fontSize: M.texto }}>
-            <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 1 }} />
-            <span>
-              {esReproductor
-                ? "Si cierras esta ventana, LA MÚSICA DEJARÁ DE SONAR y el mando se quedará sin nada que controlar."
-                : "Si cierras el mando, la música sigue sonando en el ordenador, pero dejarás de poder controlarla desde aquí."}
-            </span>
-          </p>
-          <div className="flex gap-2.5">
-            <button
-              onClick={() => setConfirmandoCierre(false)}
-              className="boton-3d rounded-xl flex-1 font-medium"
-              style={{ minHeight: 50, fontSize: M.texto, background: P.oroRelleno, color: P.oscuro }}
-            >
-              Seguir aquí
-            </button>
-            <button
-              onClick={() => (ventana || window).close()}
-              className="boton-3d rounded-xl flex-1 font-medium"
-              style={{ minHeight: 50, fontSize: M.texto, background: C.peligro, color: P.texto }}
-            >
-              Cerrar de todos modos
-            </button>
-          </div>
-        </div>
-      )}
 
       <div className="px-4 py-4" style={{ flex: 1, overflowY: "auto" }}>
         {rol === "sin-definir" && (

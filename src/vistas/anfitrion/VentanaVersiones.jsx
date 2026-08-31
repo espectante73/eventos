@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.11",
+    cambios: [
+      "Música del evento se queda con un solo botón de cerrar: se quita el que puse en la cabecera, porque la ventana ya trae el suyo del sistema operativo (y ese no se puede quitar desde una página web).",
+      "El aviso no se pierde: ahora el navegador pregunta al cerrar la ventana del ordenador si hay música puesta. Cerrar el mando no pregunta nada — la música sigue sonando igual.",
+    ],
+  },
+  {
     version: "20.10",
     cambios: [
       'Música del evento, más minimalista: las tarjetas pierden los contornos (sobre el fondo oscuro ya se distinguen solas), el nombre del archivo pasa a segundo plano y las flechas de salto se quedan limpias.',
