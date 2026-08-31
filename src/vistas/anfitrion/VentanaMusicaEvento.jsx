@@ -35,10 +35,6 @@ import {
   Upload,
   Smartphone,
   Speaker,
-  Clock,
-  AlertTriangle,
-  CheckCircle2,
-  Hourglass,
   Radio,
   ChevronsLeft,
   ChevronsRight,
@@ -557,45 +553,59 @@ export function VentanaMusicaEvento({ data, ventana }) {
   };
 
 
-  // ---------- Paleta propia de esta ventana ----------
-  // Verde profundo con dorado, en vez del crema del resto de la app --
-  // a petición del usuario (2026-08-31): el verde claro anterior le
-  // pareció "muy pobre" y pedía más contraste. Aquí encaja: es la única
-  // pantalla que se usa a oscuras y de un vistazo rápido, y es el mismo
-  // lenguaje fuerte que ya usan las cabeceras y los botones flotantes.
-  // MISMA apariencia en el Mac y en el móvil (también a petición suya);
-  // lo único que sigue cambiando entre los dos son los TAMAÑOS y el
-  // reparto en columnas, no los colores.
+  // ---------- Paleta y sistema visual de esta ventana ----------
+  // Repaso de pulido (2026-08-31): el usuario no sabía señalar qué
+  // fallaba, solo que "no parece profesional". Diagnóstico: (1) todo
+  // pesaba lo mismo, sin jerarquía; (2) tres elementos dorados macizos
+  // compitiendo entre sí; (3) tarjetas planas, sin el relieve que sí
+  // tiene el resto de la app; (4) todo en negrita 800, sin escala.
+  //
+  // Reglas que se siguen a partir de aquí:
+  // - UN solo dorado macizo en pantalla: el botón de play. Es la única
+  //   acción irreversible del momento; todo lo demás lo acompaña.
+  // - Tres niveles de peso: acción (play) > navegación (bloques) >
+  //   información (reloj, nombre de pista).
+  // - Radios y sombras constantes, no uno distinto por caja.
   const P = {
-    fondo: "linear-gradient(160deg, #1F3A2E 0%, #101C15 100%)",
-    panel: "rgba(255, 255, 255, 0.06)",
-    panelBorde: "rgba(217, 183, 120, 0.28)",
-    texto: "#EFE9DE",
-    tenue: "rgba(239, 233, 222, 0.6)",
+    fondo: "linear-gradient(160deg, #22402F 0%, #0E1A13 100%)",
+    panel: "rgba(255, 255, 255, 0.055)",
+    panelVivo: "rgba(255, 255, 255, 0.11)",
+    linea: "rgba(217, 183, 120, 0.18)",
+    texto: "#F2EDE3",
+    tenue: "rgba(242, 237, 227, 0.52)",
     oro: C.goldClaro,
-    oroRelleno: "linear-gradient(180deg, #E4C88A, #B08D57)",
+    oroRelleno: "linear-gradient(180deg, #E8CE94, #C29A5E)",
     oscuro: "#12201A",
   };
+  // Relieve común: un filo claro arriba y sombra suave debajo. Es el
+  // mismo lenguaje de .boton-3d, traducido a fondo oscuro.
+  const RELIEVE = "inset 0 1px 0 rgba(255,255,255,0.07), 0 10px 26px rgba(0,0,0,0.32)";
+  const SUAVE = "all .18s ease";
 
   const esMovil = rol === "mando";
   const M = esMovil
-    ? { base: 16, bloque: 92, nombre: 19, hora: 13, play: 96, playIcono: 38, saltoAncho: 74, saltoAlto: 66, silencio: 56, botonVol: 54, reloj: 21, titulo: 20, texto: 15, ancho: 560 }
-    : { base: 14, bloque: 72, nombre: 16, hora: 12, play: 66, playIcono: 26, saltoAncho: 58, saltoAlto: 52, silencio: 44, botonVol: 42, reloj: 18, titulo: 18, texto: 13, ancho: 900 };
+    ? { base: 16, bloque: 90, nombre: 18, hora: 11, play: 88, playIcono: 34, saltoAncho: 64, saltoAlto: 58, silencio: 50, botonVol: 50, reloj: 26, titulo: 19, texto: 14, etiqueta: 11, ancho: 520 }
+    : { base: 14, bloque: 72, nombre: 15, hora: 10, play: 66, playIcono: 26, saltoAncho: 54, saltoAlto: 50, silencio: 42, botonVol: 42, reloj: 22, titulo: 17, texto: 13, etiqueta: 10, ancho: 900 };
+
+  const tarjeta = { background: P.panel, borderRadius: 18, boxShadow: RELIEVE };
+  // Etiquetas pequeñas en versalitas: dan aire de instrumento sin
+  // gritar. Siempre el mismo tratamiento, nunca frases sueltas.
+  const etiqueta = {
+    fontSize: M.etiqueta,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    color: P.tenue,
+    fontWeight: 600,
+  };
 
   const coloresEstado = {
-    enHora: { fondo: "rgba(120, 190, 140, 0.16)", borde: "rgba(120, 190, 140, 0.5)", texto: "#9FD9B4", Icono: CheckCircle2 },
-    retraso: { fondo: "rgba(228, 120, 130, 0.16)", borde: "rgba(228, 120, 130, 0.5)", texto: "#F0A4AC", Icono: AlertTriangle },
-    antes: { fondo: "rgba(239, 233, 222, 0.1)", borde: "rgba(239, 233, 222, 0.3)", texto: P.tenue, Icono: Hourglass },
+    enHora: { punto: "#7FC99A", texto: "En hora" },
+    retraso: { punto: "#E88C97", texto: estadoReloj.texto },
+    antes: { punto: "rgba(242,237,227,0.45)", texto: estadoReloj.texto },
   }[estadoReloj.tipo];
 
-  // Minimalismo (2026-08-31, a petición del usuario: "menos es más"):
-  // las tarjetas se distinguen por su fondo translúcido, sin contorno.
-  // Sobre el verde profundo ya se leen solas, y quitar las líneas deja
-  // la pantalla mucho más tranquila.
-  const tarjeta = { background: P.panel };
-
   const cuadriculaBloques = (
-    <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+    <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
       {bloques.map((b, i) => {
         const esActual = i === seleccionado;
         const suenaAqui = i === bloqueSonando;
@@ -604,42 +614,48 @@ export function VentanaMusicaEvento({ data, ventana }) {
           <button
             key={i}
             onClick={hacer("bloque", i)}
-            className={`relative rounded-xl flex flex-col items-center justify-center gap-1.5 p-2${suenaAqui ? " bloque-sonando" : ""}`}
+            className={`relative flex flex-col items-center justify-center gap-1 p-2${suenaAqui ? " bloque-sonando" : ""}`}
             style={{
               aspectRatio: "1 / 1",
               minHeight: M.bloque,
-              // Seleccionado = dorado relleno sobre fondo oscuro: es el
-              // máximo contraste posible dentro de la paleta.
-              background: esActual ? P.oroRelleno : P.panel,
-              border: `1px solid ${esActual ? P.oro : P.panelBorde}`,
-              opacity: !esActual && yaPaso && !suenaAqui ? 0.45 : 1,
-              ...(suenaAqui || esActual ? {} : { boxShadow: "none" }),
+              borderRadius: 14,
+              transition: SUAVE,
+              // El seleccionado NO va dorado macizo: eso se reserva al
+              // botón de play. Aquí basta con un panel más vivo y el
+              // contorno dorado -- se distingue igual y deja de competir.
+              background: esActual ? P.panelVivo : P.panel,
+              border: `1px solid ${esActual ? P.oro : "transparent"}`,
+              boxShadow: esActual ? "inset 0 1px 0 rgba(255,255,255,0.12)" : "none",
+              opacity: !esActual && yaPaso && !suenaAqui ? 0.4 : 1,
             }}
           >
             <span
-              className="absolute font-semibold"
-              style={{ top: 7, left: 9, fontFamily: "'IBM Plex Mono', monospace", fontSize: M.hora, color: esActual ? "rgba(18,32,26,.7)" : P.tenue }}
+              className="absolute"
+              style={{ top: 8, left: 9, fontFamily: "'IBM Plex Mono', monospace", fontSize: M.hora, color: P.tenue, fontVariantNumeric: "tabular-nums" }}
             >
               {horas[i]}
             </span>
             {pistas[i] && !suenaAqui && (
-              <span className="absolute rounded-full" style={{ top: 8, right: 9, width: 8, height: 8, background: esActual ? P.oscuro : P.oro }} title="Tiene pista" />
+              <span className="absolute rounded-full" style={{ top: 9, right: 9, width: 6, height: 6, background: P.oro, opacity: 0.75 }} title="Tiene pista" />
             )}
-            <span className="text-center" style={{ fontSize: M.nombre, fontWeight: 800, lineHeight: 1.15, color: esActual ? P.oscuro : P.texto }}>
+            <span
+              className="text-center"
+              style={{ fontSize: M.nombre, fontWeight: 600, lineHeight: 1.15, letterSpacing: "-0.01em", color: esActual ? P.texto : "rgba(242,237,227,0.82)" }}
+            >
               {b.texto || `Bloque ${i + 1}`}
             </span>
             {suenaAqui && (
-              <span className="flex items-end justify-center gap-1" style={{ height: 22 }} title={sonando ? "Sonando ahora" : "En pausa"}>
+              <span className="flex items-end justify-center gap-1" style={{ height: 14 }} title={sonando ? "Sonando ahora" : "En pausa"}>
                 {[0, 1, 2, 3].map((barra) => (
                   <span
                     key={barra}
                     className={sonando ? "ecualizador-barra rounded-sm" : "rounded-sm"}
                     style={{
-                      width: 5,
-                      height: 22,
-                      background: esActual ? P.oscuro : P.oro,
-                      opacity: sonando ? 1 : 0.45,
-                      transform: sonando ? undefined : "scaleY(0.45)",
+                      width: 3,
+                      height: 14,
+                      background: P.oro,
+                      opacity: sonando ? 0.95 : 0.4,
+                      transform: sonando ? undefined : "scaleY(0.4)",
                       transformOrigin: "bottom center",
                       animationDelay: `${barra * 0.16}s`,
                     }}
@@ -653,81 +669,91 @@ export function VentanaMusicaEvento({ data, ventana }) {
     </div>
   );
 
+  // Reloj: una sola tarjeta que se explica sola, en vez de una caja más
+  // una frase suelta debajo (eso era lo que se veía sin terminar).
   const relojEstado = (
-    <div>
-      <div className="flex items-center justify-between rounded-xl px-4" style={{ ...tarjeta, minHeight: esMovil ? 58 : 48 }}>
-        <span className="flex items-center gap-2.5">
-          <Clock size={esMovil ? 20 : 17} style={{ color: P.oro }} />
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: M.reloj, color: P.texto }}>
-            {String(ahora.getHours()).padStart(2, "0")}:{String(ahora.getMinutes()).padStart(2, "0")}
-          </span>
-        </span>
-        <span className="flex items-center gap-2 rounded-full px-3.5 py-2" style={{ background: coloresEstado.fondo, border: `1px solid ${coloresEstado.borde}` }}>
-          <coloresEstado.Icono size={esMovil ? 17 : 15} style={{ color: coloresEstado.texto }} />
-          <span className="font-bold" style={{ color: coloresEstado.texto, fontSize: M.texto }}>{estadoReloj.texto}</span>
-        </span>
+    <div className="flex items-center justify-between px-4 py-3" style={tarjeta}>
+      <div>
+        <p style={etiqueta}>Ahora</p>
+        <p style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 600, fontSize: M.reloj, color: P.texto, lineHeight: 1.1, fontVariantNumeric: "tabular-nums" }}>
+          {String(ahora.getHours()).padStart(2, "0")}:{String(ahora.getMinutes()).padStart(2, "0")}
+        </p>
       </div>
-      <p className="mt-1.5 px-1" style={{ color: P.tenue, fontSize: M.texto - 1 }}>{estadoReloj.detalle}</p>
+      <div className="text-right min-w-0 pl-3">
+        <p className="flex items-center justify-end gap-2" style={{ fontSize: M.texto, color: P.texto, fontWeight: 500 }}>
+          <span className="rounded-full" style={{ width: 7, height: 7, background: coloresEstado.punto, flexShrink: 0 }} />
+          {coloresEstado.texto}
+        </p>
+        <p className="truncate" style={{ fontSize: M.texto - 1, color: P.tenue }}>{estadoReloj.detalle}</p>
+      </div>
     </div>
   );
 
   const reproductor = (
-    <div className="rounded-2xl p-4" style={tarjeta}>
+    <div className="px-4 pt-4 pb-5" style={tarjeta}>
       {pistaActual ? (
         <>
-          <p className="truncate mb-4" style={{ color: P.tenue, fontSize: M.texto - 1 }}>
+          <p style={etiqueta}>{bloques[seleccionado]?.texto || `Bloque ${seleccionado + 1}`}</p>
+          <p className="truncate mt-0.5 mb-4" style={{ color: P.tenue, fontSize: M.texto - 1 }}>
             {pistaActual.nombre}
           </p>
-          <div className="rounded-full mb-2" style={{ height: esMovil ? 9 : 7, background: "rgba(255,255,255,0.12)" }}>
+
+          <div className="rounded-full mb-2" style={{ height: 5, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
             <div
               className="rounded-full"
               style={{
-                height: esMovil ? 9 : 7,
+                height: 5,
                 width: mirandoElQueSuena && duracion ? `${Math.min(100, (posicion / duracion) * 100)}%` : 0,
-                background: P.oroRelleno,
+                background: P.oro,
+                transition: "width .9s linear",
               }}
             />
           </div>
-          <div className="flex justify-between mb-5" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: M.texto, color: P.tenue }}>
+          <div
+            className="flex justify-between mb-5"
+            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: M.texto - 1, color: P.tenue, fontVariantNumeric: "tabular-nums" }}
+          >
             <span>{mirandoElQueSuena ? formatearTiempo(posicion) : "—"}</span>
             <span>{mirandoElQueSuena ? formatearTiempo(duracion) : "sin sonar"}</span>
           </div>
 
-          <div className="flex items-center justify-center gap-5">
+          <div className="flex items-center justify-center gap-4">
             <button
               onClick={hacer("saltar", -salto)}
-              className="boton-3d rounded-2xl flex flex-col items-center justify-center gap-0.5"
-              style={{ width: M.saltoAncho, height: M.saltoAlto, background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }}
+              className="flex items-center justify-center"
+              style={{ width: M.saltoAncho, height: M.saltoAlto, borderRadius: 14, background: P.panelVivo, color: P.texto, transition: SUAVE }}
             >
-              <ChevronsLeft size={esMovil ? 26 : 22} />
+              <ChevronsLeft size={esMovil ? 24 : 20} />
             </button>
-            {/* Botón principal en dorado relleno: sobre el verde
-                profundo es lo que más canta de la pantalla, que es
-                justo lo que tiene que ser. */}
+            {/* EL único dorado macizo de la pantalla. */}
             <button
               onClick={hacer("alternar", seleccionado)}
-              className="boton-3d rounded-full flex items-center justify-center"
-              style={{ width: M.play, height: M.play, background: P.oroRelleno, border: `1px solid ${P.oro}` }}
+              className="rounded-full flex items-center justify-center"
+              style={{
+                width: M.play,
+                height: M.play,
+                background: P.oroRelleno,
+                boxShadow: "0 8px 22px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.35)",
+                transition: SUAVE,
+              }}
               title={mirandoElQueSuena ? (sonando ? "Pausar" : "Reanudar") : `Poner "${bloques[seleccionado]?.texto || ""}"`}
             >
               {mirandoElQueSuena && sonando ? (
                 <Pause size={M.playIcono} fill={P.oscuro} color={P.oscuro} />
               ) : (
-                <Play size={M.playIcono} fill={P.oscuro} color={P.oscuro} style={{ marginLeft: 5 }} />
+                <Play size={M.playIcono} fill={P.oscuro} color={P.oscuro} style={{ marginLeft: 4 }} />
               )}
             </button>
             <button
               onClick={hacer("saltar", salto)}
-              className="boton-3d rounded-2xl flex flex-col items-center justify-center gap-0.5"
-              style={{ width: M.saltoAncho, height: M.saltoAlto, background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }}
+              className="flex items-center justify-center"
+              style={{ width: M.saltoAncho, height: M.saltoAlto, borderRadius: 14, background: P.panelVivo, color: P.texto, transition: SUAVE }}
             >
-              <ChevronsRight size={esMovil ? 26 : 22} />
+              <ChevronsRight size={esMovil ? 24 : 20} />
             </button>
           </div>
 
-          {/* Escondido tras un chip discreto: en uso normal no estorba,
-              y está a un toque cuando hace falta. */}
-          <div className="flex justify-center mt-4" style={{ minHeight: esMovil ? 40 : 34 }}>
+          <div className="flex justify-center mt-4" style={{ minHeight: esMovil ? 38 : 32 }}>
             {saltoAbierto ? (
               <div className="flex gap-2">
                 {SALTOS.map((s) => (
@@ -737,14 +763,14 @@ export function VentanaMusicaEvento({ data, ventana }) {
                       setSalto(s);
                       setSaltoAbierto(false);
                     }}
-                    className="rounded-full font-semibold"
+                    className="rounded-full"
                     style={{
-                      minWidth: esMovil ? 64 : 56,
-                      minHeight: esMovil ? 40 : 34,
+                      minWidth: esMovil ? 62 : 54,
+                      minHeight: esMovil ? 38 : 32,
                       fontSize: M.texto,
-                      ...(s === salto
-                        ? { background: P.oro, color: P.oscuro }
-                        : { background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }),
+                      fontWeight: 600,
+                      transition: SUAVE,
+                      ...(s === salto ? { background: P.oro, color: P.oscuro } : { background: P.panelVivo, color: P.texto }),
                     }}
                   >
                     {s < 60 ? `${s}s` : "1min"}
@@ -755,17 +781,17 @@ export function VentanaMusicaEvento({ data, ventana }) {
               <button
                 onClick={() => setSaltoAbierto(true)}
                 className="rounded-full px-4"
-                style={{ minHeight: esMovil ? 40 : 34, fontSize: M.texto - 1, color: P.tenue, letterSpacing: "0.03em" }}
+                style={{ minHeight: esMovil ? 38 : 32, ...etiqueta, transition: SUAVE }}
                 title="Cambiar cuánto salta"
               >
-                ± {salto < 60 ? `${salto}s` : "1min"}
+                ± {salto < 60 ? `${salto}s` : "1 min"}
               </button>
             )}
           </div>
         </>
       ) : (
-        <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <Music size={28} style={{ color: P.tenue }} />
+        <div className="flex flex-col items-center gap-2.5 py-7 text-center">
+          <Music size={26} style={{ color: P.tenue }} />
           <p style={{ color: P.tenue, fontSize: M.texto }}>
             {esReproductor ? "Este bloque no tiene pista todavía" : "Este bloque no tiene pista (se eligen en el Mac)"}
           </p>
@@ -782,20 +808,27 @@ export function VentanaMusicaEvento({ data, ventana }) {
     bloqueSonando != null && !mirandoElQueSuena ? (
       <button
         onClick={hacer("bloque", bloqueSonando)}
-        className={`w-full flex items-center gap-3 rounded-2xl px-4${sonando ? " bloque-sonando" : ""}`}
-        style={{ minHeight: esMovil ? 72 : 60, background: P.oroRelleno, border: `1.5px solid ${P.oro}`, color: P.oscuro }}
+        className="w-full flex items-center gap-3 px-4"
+        style={{
+          minHeight: esMovil ? 62 : 54,
+          borderRadius: 14,
+          background: P.panelVivo,
+          border: `1px solid ${P.oro}`,
+          color: P.texto,
+          transition: SUAVE,
+        }}
       >
-        <span className="flex items-end gap-1" style={{ height: 26, flexShrink: 0 }}>
+        <span className="flex items-end gap-1" style={{ height: 18, flexShrink: 0 }}>
           {[0, 1, 2, 3].map((barra) => (
             <span
               key={barra}
               className={sonando ? "ecualizador-barra rounded-sm" : "rounded-sm"}
               style={{
-                width: 5,
-                height: 26,
-                background: P.oscuro,
-                opacity: sonando ? 1 : 0.45,
-                transform: sonando ? undefined : "scaleY(0.45)",
+                width: 3,
+                height: 18,
+                background: P.oro,
+                opacity: sonando ? 0.95 : 0.4,
+                transform: sonando ? undefined : "scaleY(0.4)",
                 transformOrigin: "bottom center",
                 animationDelay: `${barra * 0.16}s`,
               }}
@@ -803,59 +836,54 @@ export function VentanaMusicaEvento({ data, ventana }) {
           ))}
         </span>
         <span className="flex-1 text-left min-w-0">
-          <span className="block" style={{ fontSize: M.texto - 1, opacity: 0.7, letterSpacing: "0.04em" }}>
-            {sonando ? "SONANDO AHORA" : "EN PAUSA"}
-          </span>
-          <span className="block truncate" style={{ fontSize: M.nombre, fontWeight: 800, lineHeight: 1.15 }}>
+          <span className="block" style={etiqueta}>{sonando ? "Sonando ahora" : "En pausa"}</span>
+          <span className="block truncate" style={{ fontSize: M.nombre - 1, fontWeight: 600, lineHeight: 1.2 }}>
             {bloques[bloqueSonando]?.texto || `Bloque ${bloqueSonando + 1}`}
           </span>
         </span>
-        <span
-          className="rounded-full px-3.5 flex items-center"
-          style={{ background: P.oscuro, color: P.oro, fontWeight: 700, fontSize: M.texto, minHeight: 38, flexShrink: 0 }}
-        >
-          Ir
-        </span>
+        <span style={{ ...etiqueta, color: P.oro, flexShrink: 0 }}>Ir</span>
       </button>
     ) : null;
 
   const controlVolumen = (
-    <div className="rounded-2xl p-4" style={tarjeta}>
-      <div className="flex items-center gap-3 mb-3">
-        <button
-          onClick={hacer("silencio")}
-          className="boton-3d rounded-full flex items-center justify-center"
-          style={{
-            width: M.silencio,
-            height: M.silencio,
-            background: silenciado ? C.wax : P.panel,
-            border: `1px solid ${silenciado ? C.wax : P.panelBorde}`,
-            color: silenciado ? P.texto : P.oro,
-            flexShrink: 0,
-          }}
-          title={silenciado ? "Quitar el silencio" : "Silenciar"}
-        >
-          {silenciado ? <VolumeX size={esMovil ? 24 : 19} /> : <Volume2 size={esMovil ? 24 : 19} />}
-        </button>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          step={PASO_VOLUMEN}
-          value={silenciado ? 0 : volumen}
-          onChange={(e) => {
-            const v = Number(e.target.value);
-            if (esReproductor) aplicarVolumen(v);
-            else enviarOrden("volumen", v);
-          }}
-          className="flex-1"
-          style={{ accentColor: C.gold, height: esMovil ? 34 : 24 }}
-        />
-        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: M.texto + 2, fontWeight: 700, color: P.texto, width: 52, textAlign: "right", flexShrink: 0 }}>
+    <div className="px-4 py-4" style={tarjeta}>
+      <div className="flex items-center justify-between mb-3">
+        <p style={etiqueta}>Volumen</p>
+        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: M.texto + 1, fontWeight: 600, color: P.texto, fontVariantNumeric: "tabular-nums" }}>
           {silenciado ? "—" : `${volumen}%`}
         </span>
       </div>
-      <div className="flex items-center gap-2.5">
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step={PASO_VOLUMEN}
+        value={silenciado ? 0 : volumen}
+        onChange={(e) => {
+          const v = Number(e.target.value);
+          if (esReproductor) aplicarVolumen(v);
+          else enviarOrden("volumen", v);
+        }}
+        className="w-full mb-3"
+        style={{ accentColor: C.gold, height: esMovil ? 30 : 22 }}
+      />
+      <div className="flex items-center gap-2">
+        <button
+          onClick={hacer("silencio")}
+          className="flex items-center justify-center"
+          style={{
+            width: M.silencio,
+            height: M.botonVol,
+            borderRadius: 14,
+            background: silenciado ? C.wax : P.panelVivo,
+            color: silenciado ? P.texto : P.oro,
+            flexShrink: 0,
+            transition: SUAVE,
+          }}
+          title={silenciado ? "Quitar el silencio" : "Silenciar"}
+        >
+          {silenciado ? <VolumeX size={esMovil ? 22 : 18} /> : <Volume2 size={esMovil ? 22 : 18} />}
+        </button>
         {[-1, 1].map((direccion) => (
           <button
             key={direccion}
@@ -867,16 +895,18 @@ export function VentanaMusicaEvento({ data, ventana }) {
             onPointerLeave={pararRepeticion}
             onPointerCancel={pararRepeticion}
             onContextMenu={(e) => e.preventDefault()}
-            className="boton-3d rounded-xl flex-1 font-bold"
+            className="flex-1"
             style={{
               minHeight: M.botonVol,
-              fontSize: esMovil ? 24 : 19,
-              background: P.panel,
-              border: `1px solid ${P.panelBorde}`,
-              color: P.oro,
+              borderRadius: 14,
+              fontSize: esMovil ? 22 : 18,
+              fontWeight: 600,
+              background: P.panelVivo,
+              color: P.texto,
               touchAction: "manipulation",
               userSelect: "none",
               WebkitUserSelect: "none",
+              transition: SUAVE,
             }}
             title={`${direccion < 0 ? "Bajar" : "Subir"} ${PASO_VOLUMEN}% (mantén pulsado para seguir)`}
           >
@@ -886,10 +916,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
         {cortinilla && (
           <button
             onClick={hacer("cortinilla")}
-            className="boton-3d rounded-xl flex items-center justify-center gap-2 font-medium"
-            style={{ minHeight: M.botonVol, flex: 1.4, fontSize: M.texto, background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }}
+            className="flex items-center justify-center gap-2"
+            style={{ minHeight: M.botonVol, flex: 1.5, borderRadius: 14, fontSize: M.texto, background: P.panelVivo, color: P.texto, transition: SUAVE }}
           >
-            <Radio size={esMovil ? 18 : 15} /> Cortinilla
+            <Radio size={esMovil ? 17 : 15} /> Cortinilla
           </button>
         )}
       </div>
@@ -897,38 +927,40 @@ export function VentanaMusicaEvento({ data, ventana }) {
   );
 
   const gestionPistas = (
-    <div className="rounded-2xl p-4" style={tarjeta}>
-      <p className="font-medium" style={{ color: P.texto, fontSize: M.texto }}>
-        Pistas por bloque
+    <div className="px-4 py-4" style={tarjeta}>
+      <p style={etiqueta}>Pistas por bloque</p>
+      <p className="mb-3 mt-0.5" style={{ color: P.tenue, fontSize: M.texto - 1 }}>
+        {cargandoPistas ? "Recuperando las pistas guardadas…" : "Se quedan guardadas en este ordenador."}
       </p>
-      <p className="mb-2.5" style={{ color: P.tenue, fontSize: M.texto - 1 }}>
-        {cargandoPistas ? "Recuperando las pistas guardadas…" : "Se quedan guardadas en este ordenador: no hay que volver a elegirlas."}
-      </p>
-      <div className="space-y-1.5" style={{ maxHeight: 260, overflowY: "auto" }}>
+      <div style={{ maxHeight: 250, overflowY: "auto" }}>
         {bloques.map((b, i) => (
           <label
             key={i}
-            className="flex items-center gap-2.5 cursor-pointer rounded-lg px-3 py-2"
+            className="flex items-center gap-3 cursor-pointer px-3"
             style={{
-              background: i === seleccionado ? "rgba(255,255,255,0.08)" : "transparent",
-              border: `1px solid ${i === seleccionado ? P.panelBorde : "transparent"}`,
+              minHeight: 40,
+              borderRadius: 10,
+              background: i === seleccionado ? P.panelVivo : "transparent",
               fontSize: M.texto,
               color: P.texto,
+              transition: SUAVE,
             }}
           >
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: P.tenue, width: 38, flexShrink: 0 }}>{horas[i]}</span>
-            <span className="font-semibold" style={{ width: 82, flexShrink: 0 }}>{b.texto || `Bloque ${i + 1}`}</span>
-            <span className="flex-1 truncate" style={{ opacity: pistas[i] ? 0.85 : 0.45 }}>
-              {pistas[i] ? pistas[i].nombre : "— sin pista —"}
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: P.tenue, width: 36, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
+              {horas[i]}
             </span>
-            <Upload size={15} style={{ color: P.oro, flexShrink: 0 }} />
+            <span style={{ width: 78, flexShrink: 0, fontWeight: 500 }}>{b.texto || `Bloque ${i + 1}`}</span>
+            <span className="flex-1 truncate" style={{ color: pistas[i] ? P.texto : P.tenue }}>
+              {pistas[i] ? pistas[i].nombre : "sin pista"}
+            </span>
+            <Upload size={15} style={{ color: P.oro, flexShrink: 0, opacity: 0.8 }} />
             <input type="file" accept="audio/*" onChange={elegirArchivo(i)} style={{ display: "none" }} />
           </label>
         ))}
       </div>
       <label
-        className="flex items-center gap-2.5 cursor-pointer rounded-xl px-4 mt-3"
-        style={{ background: P.panel, border: `1px dashed ${P.panelBorde}`, color: P.texto, minHeight: 46, fontSize: M.texto }}
+        className="flex items-center gap-2.5 cursor-pointer px-4 mt-3"
+        style={{ background: P.panelVivo, borderRadius: 14, color: P.texto, minHeight: 46, fontSize: M.texto, transition: SUAVE }}
       >
         <Radio size={17} style={{ flexShrink: 0, color: P.oro }} />
         <span className="truncate">{cortinilla ? `Cortinilla: ${cortinilla.nombre}` : "Elegir cortinilla de transición"}</span>
@@ -938,91 +970,97 @@ export function VentanaMusicaEvento({ data, ventana }) {
   );
 
   const avisoVisible = aviso ? (
-    <p className="rounded-xl p-3.5" style={{ background: "rgba(228,120,130,0.16)", border: "1px solid rgba(228,120,130,0.45)", color: "#F0A4AC", fontSize: M.texto }}>
-      ⚠ {aviso}
+    <p className="px-4 py-3" style={{ borderRadius: 14, background: "rgba(228,120,130,0.14)", color: "#F0A4AC", fontSize: M.texto }}>
+      {aviso}
     </p>
   ) : null;
 
   return (
-    <div className="flex flex-col" style={{ height: "100%", background: P.fondo, fontFamily: "'Inter', sans-serif", fontSize: M.base }}>
+    <div className="flex flex-col" style={{ height: "100%", background: P.fondo, fontFamily: "'Inter', sans-serif", fontSize: M.base, color: P.texto }}>
       <audio ref={audioRef} onEnded={() => setSonando(false)} onLoadedMetadata={(e) => setDuracion(e.target.duration || 0)} />
       <audio ref={cortinillaRef} src={cortinilla?.url} />
 
-      <div className="panel-flotante-cristal flex items-center justify-between px-4 py-3" style={{ flexShrink: 0 }}>
-        <h3 className="flex items-center gap-2" style={{ fontFamily: "'Fraunces', serif", color: P.oro, fontWeight: 700, fontSize: M.titulo }}>
-          <Music size={M.titulo + 1} /> Música del evento
+      {/* Cabecera plana y discreta: en un instrumento, el título no
+          compite con los mandos. */}
+      <div
+        className="flex items-center justify-between px-4"
+        style={{ flexShrink: 0, minHeight: 54, borderBottom: `1px solid ${P.linea}` }}
+      >
+        <h3 style={{ fontFamily: "'Fraunces', serif", color: P.texto, fontWeight: 600, fontSize: M.titulo, letterSpacing: "-0.01em" }}>
+          Música del evento
         </h3>
-        {/* Sin X propia: la ventana ya trae la del sistema operativo
-            (en macOS, arriba a la izquierda) y tener dos confundía -- a
-            petición del usuario, 2026-08-31. El aviso de "ojo, que se
-            para la música" no se pierde: pasa a engancharse al cierre
-            real de la ventana (ver el efecto de beforeunload). */}
-        <span className="flex items-center gap-2" style={{ color: P.oro, opacity: 0.8 }} title={conectado ? "Conectado" : "Sin conexión"}>
-          {conectado ? <Wifi size={17} /> : <WifiOff size={17} />}
-          {rol === "sin-definir" ? null : esReproductor ? <Speaker size={17} /> : <Smartphone size={17} />}
+        <span className="flex items-center gap-2" style={{ color: P.tenue }} title={conectado ? "Conectado" : "Sin conexión"}>
+          {conectado ? <Wifi size={16} /> : <WifiOff size={16} />}
+          {rol === "sin-definir" ? null : esReproductor ? <Speaker size={16} /> : <Smartphone size={16} />}
         </span>
       </div>
 
       <div className="px-4 py-4" style={{ flex: 1, overflowY: "auto" }}>
         {rol === "sin-definir" && (
-          <div className="rounded-2xl p-6 flex flex-col items-center gap-4 text-center" style={{ ...tarjeta, maxWidth: 460, margin: "0 auto" }}>
-            <Speaker size={38} style={{ color: P.oro }} />
-            <p style={{ color: P.texto, fontSize: 17 }}>¿Qué papel tiene este aparato?</p>
+          <div className="flex flex-col gap-3" style={{ maxWidth: 420, margin: "0 auto" }}>
+            <p className="text-center mb-1" style={{ color: P.tenue, fontSize: M.texto }}>
+              ¿Qué papel tiene este aparato?
+            </p>
             <button
               onClick={declararReproductor}
-              className="boton-3d rounded-2xl font-medium w-full flex flex-col items-center justify-center gap-1"
-              style={{ minHeight: 88, background: P.oroRelleno, color: P.oscuro }}
+              className="flex flex-col items-center justify-center gap-1 px-4"
+              style={{ minHeight: 92, borderRadius: 18, background: P.oroRelleno, color: P.oscuro, boxShadow: RELIEVE, transition: SUAVE }}
             >
-              <span className="flex items-center gap-2" style={{ fontSize: 17, fontWeight: 700 }}>
+              <span className="flex items-center gap-2" style={{ fontSize: 17, fontWeight: 600 }}>
                 <Speaker size={20} /> Este reproduce el sonido
               </span>
-              <span style={{ fontSize: 13, opacity: 0.75 }}>El ordenador conectado a los altavoces</span>
+              <span style={{ fontSize: 13, opacity: 0.7 }}>El ordenador conectado a los altavoces</span>
             </button>
             <button
               onClick={() => setRol("mando")}
-              className="boton-3d rounded-2xl font-medium w-full flex flex-col items-center justify-center gap-1"
-              style={{ minHeight: 88, background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }}
+              className="flex flex-col items-center justify-center gap-1 px-4"
+              style={{ minHeight: 92, borderRadius: 18, background: P.panel, color: P.texto, boxShadow: RELIEVE, transition: SUAVE }}
             >
-              <span className="flex items-center gap-2" style={{ fontSize: 17 }}>
+              <span className="flex items-center gap-2" style={{ fontSize: 17, fontWeight: 600 }}>
                 <Smartphone size={20} /> Mando a distancia
               </span>
-              <span style={{ fontSize: 13, opacity: 0.7 }}>Controla el sonido sin tocar el ordenador</span>
+              <span style={{ fontSize: 13, color: P.tenue }}>Controla el sonido sin tocar el ordenador</span>
             </button>
           </div>
         )}
 
+        {/* Ritmo de separación: los bloques y "sonando ahora" van juntos
+            (son lo mismo: navegación), y el resto respira más. */}
         {rol === "mando" && (
-          <div className="space-y-4" style={{ maxWidth: M.ancho, margin: "0 auto" }}>
+          <div style={{ maxWidth: M.ancho, margin: "0 auto" }}>
             {!recibidoEstado && (
               <div
-                className="flex items-center gap-3 rounded-xl px-4 py-3"
-                style={{ background: "rgba(228,120,130,0.16)", border: "1px solid rgba(228,120,130,0.45)", color: "#F0A4AC", fontSize: M.texto }}
+                className="flex items-center gap-3 px-4 py-3 mb-4"
+                style={{ borderRadius: 14, background: "rgba(228,120,130,0.14)", color: "#F0A4AC", fontSize: M.texto }}
               >
                 <WifiOff size={18} style={{ flexShrink: 0 }} />
-                <span>
-                  Esperando al ordenador… Comprueba que la ventana "Música del evento" está abierta en el Mac y marcada
-                  como el aparato que reproduce.
-                </span>
+                <span>Esperando al ordenador… Abre "Música del evento" en el Mac y márcalo como el aparato que reproduce.</span>
               </div>
             )}
-            {cuadriculaBloques}
-            {avisoOtroSonando}
-            {relojEstado}
-            {reproductor}
-            {controlVolumen}
-            {avisoVisible}
+            <div className="flex flex-col gap-2">
+              {cuadriculaBloques}
+              {avisoOtroSonando}
+            </div>
+            <div className="flex flex-col gap-3 mt-5">
+              {relojEstado}
+              {reproductor}
+              {controlVolumen}
+              {avisoVisible}
+            </div>
           </div>
         )}
 
         {rol === "reproductor" && (
           <div style={{ maxWidth: M.ancho, margin: "0 auto" }}>
             <div className="flex flex-wrap gap-4 items-start">
-              <div className="space-y-4" style={{ flex: "1 1 300px", minWidth: 280 }}>
-                {cuadriculaBloques}
-                {avisoOtroSonando}
-                {relojEstado}
+              <div style={{ flex: "1 1 300px", minWidth: 280 }}>
+                <div className="flex flex-col gap-2">
+                  {cuadriculaBloques}
+                  {avisoOtroSonando}
+                </div>
+                <div className="mt-5">{relojEstado}</div>
               </div>
-              <div className="space-y-4" style={{ flex: "1 1 320px", minWidth: 300 }}>
+              <div className="flex flex-col gap-3" style={{ flex: "1 1 320px", minWidth: 300 }}>
                 {reproductor}
                 {controlVolumen}
                 {avisoVisible}

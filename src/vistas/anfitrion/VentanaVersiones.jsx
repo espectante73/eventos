@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.12",
+    cambios: [
+      "Repaso a fondo del acabado de Música del evento: ahora solo el botón de play va en dorado macizo. El bloque seleccionado y la barra de «sonando ahora» pasan a un tratamiento más discreto — antes había tres cosas doradas compitiendo y ninguna destacaba de verdad.",
+      "Las tarjetas ganan relieve (filo de luz arriba y sombra suave debajo, como el resto de la app) en vez de ser rectángulos planos, y todas comparten el mismo redondeo.",
+      "Tipografía con escala real: rótulos pequeños en versalitas, nombres de bloque en peso medio en vez de negrita máxima, y las cifras alineadas para que no bailen al cambiar.",
+      "El reloj deja de ser una caja con una frase suelta debajo y pasa a explicarse solo, con la hora a un lado y el estado al otro.",
+    ],
+  },
+  {
     version: "20.11",
     cambios: [
       "Música del evento se queda con un solo botón de cerrar: se quita el que puse en la cabecera, porque la ventana ya trae el suyo del sistema operativo (y ese no se puede quitar desde una página web).",
