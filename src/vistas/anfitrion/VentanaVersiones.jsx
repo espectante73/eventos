@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.1",
+    cambios: [
+      'Música del evento, rehecha a tamaño de uso real: la primera versión salió con medidas de escritorio (letra diminuta, botones de volumen del tamaño de una letra). Ahora nada que se toque baja de 44px y ningún texto baja de 13px -- pensada para usarse de pie, en penumbra y con una sola mano.',
+      "Los saltos (10s/30s/1min) pasan a estar siempre a la vista, en vez de escondidos tras un enlace minúsculo. Botones de volumen −/+ grandes y a lo ancho.",
+    ],
+  },
+  {
     version: "20",
     cambios: [
       'Nueva ventana "Música del evento" (menú principal, junto a Novedades y Logística): una pista por cada bloque del cronograma, con los 9 botones, el reloj de estado y el reproductor.',

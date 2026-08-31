@@ -87,7 +87,6 @@ export function VentanaMusicaEvento({ data, ventana }) {
   const [posicion, setPosicion] = useState(0);
   const [duracion, setDuracion] = useState(0);
   const [salto, setSalto] = useState(30);
-  const [saltoAbierto, setSaltoAbierto] = useState(false);
   // { [indiceBloque]: { nombre, url } } -- en el paso 1 las pistas viven
   // solo en memoria (se eligen cada vez que se abre la ventana). El
   // guardado permanente dentro del navegador es el paso 3.
@@ -345,50 +344,63 @@ export function VentanaMusicaEvento({ data, ventana }) {
     antes: { fondo: "rgba(138,129,113,0.15)", borde: "rgba(138,129,113,0.35)", texto: "#6b6355", Icono: Hourglass },
   }[estadoReloj.tipo];
 
+
   return (
-    <div className="flex flex-col" style={{ height: "100%", background: C.paper, fontFamily: "'Inter', sans-serif" }}>
+    <div
+      className="flex flex-col"
+      style={{ height: "100%", background: C.paper, fontFamily: "'Inter', sans-serif", fontSize: 16 }}
+    >
       <audio ref={audioRef} onEnded={() => setSonando(false)} onLoadedMetadata={(e) => setDuracion(e.target.duration || 0)} />
       <audio ref={cortinillaRef} src={cortinilla?.url} />
 
       <div className="panel-flotante-cristal flex items-center justify-between px-4 py-3" style={{ flexShrink: 0 }}>
-        <h3 className="text-lg flex items-center gap-2" style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}>
-          <Music size={19} /> Música del evento
+        <h3 className="flex items-center gap-2" style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700, fontSize: 20 }}>
+          <Music size={21} /> Música del evento
         </h3>
         <span
-          className="flex items-center gap-1.5 text-xs"
-          style={{ color: C.goldClaro, opacity: 0.75 }}
+          className="flex items-center gap-2"
+          style={{ color: C.goldClaro, opacity: 0.8 }}
           title={conectado ? "Conectado con los demás dispositivos" : "Sin conexión con el mando"}
         >
-          {conectado ? <Wifi size={14} /> : <WifiOff size={14} />}
-          {esReproductor ? <Speaker size={14} /> : <Smartphone size={14} />}
+          {conectado ? <Wifi size={17} /> : <WifiOff size={17} />}
+          {esReproductor ? <Speaker size={17} /> : <Smartphone size={17} />}
         </span>
       </div>
 
-      <div className="p-4 space-y-4" style={{ flex: 1, overflowY: "auto" }}>
-        {/* Antes de nada: quién suena. Este botón es también el que
-            desbloquea el audio del navegador (ver cabecera). */}
+      {/* Todo el contenido se dimensiona para usarse DE PIE, en penumbra
+          y con una sola mano -- nada por debajo de 44px de alto en algo
+          que haya que tocar, y ningún texto por debajo de 13px. La
+          primera versión se hizo con medidas de escritorio y el usuario
+          la rechazó con razón (2026-08-31): "botones tan pequeños como
+          el tamaño de una sola letra". */}
+      <div className="px-4 py-4 space-y-4" style={{ flex: 1, overflowY: "auto", maxWidth: 560, width: "100%", margin: "0 auto" }}>
         {rol === "sin-definir" && (
           <div
-            className="rounded-2xl p-4 flex flex-col items-center gap-3 text-center"
+            className="rounded-2xl p-5 flex flex-col items-center gap-4 text-center"
             style={{ background: C.paperDark, border: `1.5px dashed ${C.line}` }}
           >
-            <Speaker size={26} style={{ color: C.gold }} />
-            <p className="text-sm" style={{ color: C.charcoal }}>
-              ¿Es este el ordenador conectado a los altavoces?
-            </p>
-            <button onClick={declararReproductor} className="boton-3d boton-verde-solido px-4 py-2.5 rounded-full text-sm font-medium">
+            <Speaker size={34} style={{ color: C.gold }} />
+            <p style={{ color: C.charcoal, fontSize: 16 }}>¿Es este el ordenador conectado a los altavoces?</p>
+            <button
+              onClick={declararReproductor}
+              className="boton-3d boton-verde-solido rounded-full font-medium w-full"
+              style={{ fontSize: 16, minHeight: 56 }}
+            >
               Sí, este dispositivo reproduce el sonido
             </button>
-            <button onClick={() => setRol("mando")} className="text-xs underline" style={{ color: C.charcoal, opacity: 0.7 }}>
-              No, usar este aparato como mando a distancia
+            <button
+              onClick={() => setRol("mando")}
+              className="rounded-full font-medium w-full"
+              style={{ fontSize: 15, minHeight: 52, background: "#fff", border: `1px solid ${C.line}`, color: C.charcoal }}
+            >
+              No — usar como mando a distancia
             </button>
           </div>
         )}
 
         {rol !== "sin-definir" && (
           <>
-            {/* Los 9 bloques, mismo texto y hora que el Cronograma */}
-            <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+            <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
               {bloques.map((b, i) => {
                 const esActual = i === seleccionado;
                 const yaPaso = minutosDesdeMedianoche(horas[i]) < ahora.getHours() * 60 + ahora.getMinutes();
@@ -396,9 +408,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
                   <button
                     key={i}
                     onClick={hacer("bloque", i)}
-                    className="relative rounded-xl flex items-center justify-center p-1.5"
+                    className="relative rounded-xl flex items-center justify-center p-2"
                     style={{
                       aspectRatio: "1 / 1",
+                      minHeight: 92,
                       background: esActual ? "linear-gradient(180deg, #24402F, #12201A)" : "#fff",
                       border: `1px solid ${esActual ? "rgba(255,255,255,0.25)" : C.line}`,
                       opacity: !esActual && yaPaso ? 0.45 : 1,
@@ -406,21 +419,21 @@ export function VentanaMusicaEvento({ data, ventana }) {
                     }}
                   >
                     <span
-                      className="absolute font-medium"
-                      style={{ top: 6, left: 8, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: esActual ? "rgba(217,183,120,.85)" : "#8a8171" }}
+                      className="absolute font-semibold"
+                      style={{ top: 7, left: 9, fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, color: esActual ? "rgba(217,183,120,.85)" : "#8a8171" }}
                     >
                       {horas[i]}
                     </span>
                     {pistas[i] && (
                       <span
                         className="absolute rounded-full"
-                        style={{ top: 7, right: 8, width: 6, height: 6, background: esActual ? C.goldClaro : C.gold }}
+                        style={{ top: 8, right: 9, width: 8, height: 8, background: esActual ? C.goldClaro : C.gold }}
                         title="Tiene pista"
                       />
                     )}
                     <span
                       className="text-center"
-                      style={{ fontSize: 17, fontWeight: 800, lineHeight: 1.15, color: esActual ? C.goldClaro : C.charcoal }}
+                      style={{ fontSize: 19, fontWeight: 800, lineHeight: 1.15, color: esActual ? C.goldClaro : C.charcoal }}
                     >
                       {b.texto || `Bloque ${i + 1}`}
                     </span>
@@ -429,103 +442,111 @@ export function VentanaMusicaEvento({ data, ventana }) {
               })}
             </div>
 
-            {/* Reloj en vivo + UN indicador que cambia según el momento */}
             <div>
-              <div className="flex items-center justify-between rounded-xl px-3.5 py-2.5" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-                <span className="flex items-center gap-2">
-                  <Clock size={17} style={{ color: C.charcoal }} />
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 16, color: C.charcoal }}>
+              <div className="flex items-center justify-between rounded-xl px-4" style={{ background: "#fff", border: `1px solid ${C.line}`, minHeight: 58 }}>
+                <span className="flex items-center gap-2.5">
+                  <Clock size={20} style={{ color: C.charcoal }} />
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: 21, color: C.charcoal }}>
                     {String(ahora.getHours()).padStart(2, "0")}:{String(ahora.getMinutes()).padStart(2, "0")}
                   </span>
                 </span>
                 <span
-                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1"
+                  className="flex items-center gap-2 rounded-full px-3.5 py-2"
                   style={{ background: coloresEstado.fondo, border: `1px solid ${coloresEstado.borde}` }}
                 >
-                  <coloresEstado.Icono size={14} style={{ color: coloresEstado.texto }} />
-                  <span className="text-xs font-bold" style={{ color: coloresEstado.texto }}>{estadoReloj.texto}</span>
+                  <coloresEstado.Icono size={17} style={{ color: coloresEstado.texto }} />
+                  <span className="font-bold" style={{ color: coloresEstado.texto, fontSize: 14 }}>{estadoReloj.texto}</span>
                 </span>
               </div>
-              <p className="text-xs mt-1 px-0.5" style={{ color: C.charcoal, opacity: 0.6 }}>{estadoReloj.detalle}</p>
+              <p className="mt-1.5 px-1" style={{ color: C.charcoal, opacity: 0.65, fontSize: 13 }}>{estadoReloj.detalle}</p>
             </div>
 
-            {/* Pista del bloque elegido */}
             <div className="rounded-2xl p-4" style={{ background: C.paperDark, border: `1px solid ${C.line}` }}>
               {pistaActual ? (
                 <>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Music size={15} style={{ color: C.gold, flexShrink: 0 }} />
-                    <span className="flex-1 text-xs truncate" style={{ color: C.charcoal }}>{pistaActual.nombre}</span>
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <Music size={18} style={{ color: C.gold, flexShrink: 0 }} />
+                    <span className="flex-1 truncate" style={{ color: C.charcoal, fontSize: 14 }}>{pistaActual.nombre}</span>
                   </div>
-                  <div className="rounded-full mb-1.5" style={{ height: 6, background: C.line }}>
+                  <div className="rounded-full mb-2" style={{ height: 9, background: C.line }}>
                     <div
                       className="rounded-full"
-                      style={{ height: 6, width: `${duracion ? Math.min(100, (posicion / duracion) * 100) : 0}%`, background: `linear-gradient(90deg, ${C.gold}, ${C.goldClaro})` }}
+                      style={{ height: 9, width: `${duracion ? Math.min(100, (posicion / duracion) * 100) : 0}%`, background: `linear-gradient(90deg, ${C.gold}, ${C.goldClaro})` }}
                     />
                   </div>
-                  <div className="flex justify-between mb-4" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#6b6355" }}>
+                  <div className="flex justify-between mb-5" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, color: "#6b6355" }}>
                     <span>{formatearTiempo(posicion)}</span>
                     <span>{formatearTiempo(duracion)}</span>
                   </div>
 
-                  <div className="flex items-center justify-center gap-4">
-                    <button onClick={hacer("saltar", -salto)} className="boton-3d rounded-xl flex flex-col items-center justify-center" style={{ width: 52, height: 46, background: "#fff", border: `1px solid ${C.line}`, color: C.charcoal }}>
-                      <ChevronsLeft size={17} />
-                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "#8a8171" }}>{salto}s</span>
+                  <div className="flex items-center justify-center gap-5">
+                    <button
+                      onClick={hacer("saltar", -salto)}
+                      className="boton-3d rounded-2xl flex flex-col items-center justify-center gap-0.5"
+                      style={{ width: 74, height: 66, background: "#fff", border: `1px solid ${C.line}`, color: C.charcoal }}
+                    >
+                      <ChevronsLeft size={24} />
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#8a8171" }}>{salto}s</span>
                     </button>
                     <button
                       onClick={hacer("alternar")}
                       className="boton-3d boton-verde-solido rounded-full flex items-center justify-center"
-                      style={{ width: 72, height: 72 }}
+                      style={{ width: 96, height: 96 }}
                     >
-                      {sonando ? <Pause size={26} fill={C.goldClaro} /> : <Play size={26} fill={C.goldClaro} style={{ marginLeft: 3 }} />}
+                      {sonando ? <Pause size={38} fill={C.goldClaro} /> : <Play size={38} fill={C.goldClaro} style={{ marginLeft: 5 }} />}
                     </button>
-                    <button onClick={hacer("saltar", salto)} className="boton-3d rounded-xl flex flex-col items-center justify-center" style={{ width: 52, height: 46, background: "#fff", border: `1px solid ${C.line}`, color: C.charcoal }}>
-                      <ChevronsRight size={17} />
-                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: "#8a8171" }}>{salto}s</span>
+                    <button
+                      onClick={hacer("saltar", salto)}
+                      className="boton-3d rounded-2xl flex flex-col items-center justify-center gap-0.5"
+                      style={{ width: 74, height: 66, background: "#fff", border: `1px solid ${C.line}`, color: C.charcoal }}
+                    >
+                      <ChevronsRight size={24} />
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#8a8171" }}>{salto}s</span>
                     </button>
                   </div>
 
-                  <button onClick={() => setSaltoAbierto((a) => !a)} className="text-xs mt-3 mx-auto block underline" style={{ color: C.charcoal, opacity: 0.6 }}>
-                    Salto: {salto}s
-                  </button>
-                  {saltoAbierto && (
-                    <div className="flex justify-center gap-2 mt-2">
-                      {SALTOS.map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => {
-                            setSalto(s);
-                            setSaltoAbierto(false);
-                          }}
-                          className="rounded-lg px-3 py-1.5 text-xs font-medium"
-                          style={
-                            s === salto
-                              ? { background: C.ink, color: C.paper }
-                              : { background: "#fff", border: `1px solid ${C.line}`, color: C.charcoal }
-                          }
-                        >
-                          {s < 60 ? `${s} s` : "1 min"}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {/* Los saltos, siempre a la vista: antes estaban detrás
+                      de un enlace minúsculo, imposible de acertar. */}
+                  <div className="flex items-center justify-center gap-2 mt-5">
+                    <span style={{ fontSize: 13, color: C.charcoal, opacity: 0.6 }}>Salto</span>
+                    {SALTOS.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setSalto(s)}
+                        className="rounded-xl font-semibold"
+                        style={{
+                          minWidth: 62,
+                          minHeight: 46,
+                          fontSize: 15,
+                          ...(s === salto
+                            ? { background: C.ink, color: C.paper }
+                            : { background: "#fff", border: `1px solid ${C.line}`, color: C.charcoal }),
+                        }}
+                      >
+                        {s < 60 ? `${s} s` : "1 min"}
+                      </button>
+                    ))}
+                  </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center gap-2 py-4 text-center">
-                  <Music size={22} style={{ color: "#8a8171" }} />
-                  <p className="text-xs" style={{ color: "#6b6355" }}>
+                <div className="flex flex-col items-center gap-3 py-6 text-center">
+                  <Music size={28} style={{ color: "#8a8171" }} />
+                  <p style={{ color: "#6b6355", fontSize: 15 }}>
                     {esReproductor ? "Este bloque no tiene pista todavía" : "Este bloque no tiene pista (se eligen en el Mac)"}
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Volumen: pasos cortos y curva ajustada al oído (lib/volumen.js) */}
-            <div className="rounded-2xl p-3.5" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-              <div className="flex items-center gap-3">
-                <button onClick={hacer("silencio")} className="boton-3d rounded-full p-2" style={{ background: silenciado ? C.wax : C.ink, color: C.paper }} title={silenciado ? "Quitar el silencio" : "Silenciar"}>
-                  {silenciado ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            <div className="rounded-2xl p-4" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+              <div className="flex items-center gap-3 mb-3">
+                <button
+                  onClick={hacer("silencio")}
+                  className="boton-3d rounded-full flex items-center justify-center"
+                  style={{ width: 56, height: 56, background: silenciado ? C.wax : C.ink, color: C.paper, flexShrink: 0 }}
+                  title={silenciado ? "Quitar el silencio" : "Silenciar"}
+                >
+                  {silenciado ? <VolumeX size={24} /> : <Volume2 size={24} />}
                 </button>
                 <input
                   type="range"
@@ -539,49 +560,67 @@ export function VentanaMusicaEvento({ data, ventana }) {
                     else enviarOrden("volumen", v);
                   }}
                   className="flex-1"
-                  style={{ accentColor: C.ink }}
+                  style={{ accentColor: C.ink, height: 34 }}
                 />
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: C.charcoal, width: 34, textAlign: "right" }}>
+                <span
+                  style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 17, fontWeight: 700, color: C.charcoal, width: 52, textAlign: "right", flexShrink: 0 }}
+                >
                   {silenciado ? "—" : `${volumen}%`}
                 </span>
               </div>
-              <div className="flex items-center justify-between mt-2">
-                <div className="flex gap-1.5">
-                  <button onClick={() => (esReproductor ? aplicarVolumen(ajustarPorcentaje(volumen, -1)) : enviarOrden("volumen", ajustarPorcentaje(volumen, -1)))} className="rounded-lg px-2.5 py-1 text-xs font-bold" style={{ background: C.paperDark, color: C.charcoal }}>
-                    −
-                  </button>
-                  <button onClick={() => (esReproductor ? aplicarVolumen(ajustarPorcentaje(volumen, 1)) : enviarOrden("volumen", ajustarPorcentaje(volumen, 1)))} className="rounded-lg px-2.5 py-1 text-xs font-bold" style={{ background: C.paperDark, color: C.charcoal }}>
-                    +
-                  </button>
-                </div>
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={() => (esReproductor ? aplicarVolumen(ajustarPorcentaje(volumen, -1)) : enviarOrden("volumen", ajustarPorcentaje(volumen, -1)))}
+                  className="boton-3d rounded-xl flex-1 font-bold"
+                  style={{ minHeight: 54, fontSize: 24, background: C.paperDark, color: C.charcoal }}
+                  title={`Bajar ${PASO_VOLUMEN}%`}
+                >
+                  −
+                </button>
+                <button
+                  onClick={() => (esReproductor ? aplicarVolumen(ajustarPorcentaje(volumen, 1)) : enviarOrden("volumen", ajustarPorcentaje(volumen, 1)))}
+                  className="boton-3d rounded-xl flex-1 font-bold"
+                  style={{ minHeight: 54, fontSize: 24, background: C.paperDark, color: C.charcoal }}
+                  title={`Subir ${PASO_VOLUMEN}%`}
+                >
+                  +
+                </button>
                 {cortinilla && (
-                  <button onClick={hacer("cortinilla")} className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium" style={{ background: C.paperDark, color: C.charcoal }}>
-                    <Radio size={13} /> Cortinilla
+                  <button
+                    onClick={hacer("cortinilla")}
+                    className="boton-3d rounded-xl flex items-center justify-center gap-2 font-medium"
+                    style={{ minHeight: 54, flex: 1.4, fontSize: 15, background: C.paperDark, color: C.charcoal }}
+                  >
+                    <Radio size={18} /> Cortinilla
                   </button>
                 )}
               </div>
             </div>
 
             {aviso && (
-              <p className="text-xs rounded-lg p-2.5" style={{ background: C.avisoFondo, color: C.peligro }}>
+              <p className="rounded-xl p-3.5" style={{ background: C.avisoFondo, color: C.peligro, fontSize: 14 }}>
                 ⚠ {aviso}
               </p>
             )}
 
-            {/* Elegir archivos: solo en el aparato que suena. En el paso 3
-                pasarán a guardarse dentro del navegador; por ahora se
-                eligen cada vez que se abre la ventana. */}
             {esReproductor && (
-              <div className="rounded-2xl p-3.5 space-y-2" style={{ background: C.paperDark, border: `1px solid ${C.line}` }}>
-                <p className="text-xs font-medium" style={{ color: C.charcoal }}>
+              <div className="rounded-2xl p-4 space-y-2.5" style={{ background: C.paperDark, border: `1px solid ${C.line}` }}>
+                <p className="font-medium" style={{ color: C.charcoal, fontSize: 14 }}>
                   Pista para "{bloques[seleccionado]?.texto || `Bloque ${seleccionado + 1}`}"
                 </p>
-                <label className="flex items-center gap-2 text-xs cursor-pointer rounded-lg px-3 py-2" style={{ background: "#fff", border: `1px dashed ${C.line}`, color: C.charcoal }}>
-                  <Upload size={14} /> {pistaActual ? "Cambiar archivo" : "Elegir archivo de audio"}
+                <label
+                  className="flex items-center gap-2.5 cursor-pointer rounded-xl px-4"
+                  style={{ background: "#fff", border: `1px dashed ${C.line}`, color: C.charcoal, minHeight: 54, fontSize: 15 }}
+                >
+                  <Upload size={19} /> {pistaActual ? "Cambiar archivo" : "Elegir archivo de audio"}
                   <input type="file" accept="audio/*" onChange={elegirArchivo(seleccionado)} style={{ display: "none" }} />
                 </label>
-                <label className="flex items-center gap-2 text-xs cursor-pointer rounded-lg px-3 py-2" style={{ background: "#fff", border: `1px dashed ${C.line}`, color: C.charcoal }}>
-                  <Radio size={14} /> {cortinilla ? `Cortinilla: ${cortinilla.nombre}` : "Elegir cortinilla de transición"}
+                <label
+                  className="flex items-center gap-2.5 cursor-pointer rounded-xl px-4"
+                  style={{ background: "#fff", border: `1px dashed ${C.line}`, color: C.charcoal, minHeight: 54, fontSize: 15 }}
+                >
+                  <Radio size={19} />
+                  <span className="truncate">{cortinilla ? `Cortinilla: ${cortinilla.nombre}` : "Elegir cortinilla de transición"}</span>
                   <input type="file" accept="audio/*" onChange={elegirArchivo("cortinilla")} style={{ display: "none" }} />
                 </label>
               </div>
