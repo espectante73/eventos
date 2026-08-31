@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.9",
+    cambios: [
+      "Música del evento estrena look: fondo verde profundo con dorado, en vez del verde claro pálido de antes. Es la única pantalla que se usa a oscuras y de un vistazo rápido, así que ahora el bloque seleccionado va en dorado macizo y el botón de play también — resaltan muchísimo más.",
+      "Mismo aspecto en el ordenador y en el móvil: lo único que sigue cambiando entre los dos son los tamaños y el reparto en columnas, no los colores.",
+    ],
+  },
+  {
     version: "20.8",
     cambios: [
       'La barra de "Sonando ahora" (debajo de los 9 bloques) pasa a ser protagonista cuando miras otro bloque: fondo verde oscuro con letra dorada, el nombre en grande, ecualizador al doble, el mismo latido que el bloque, y el "Ir" como botón dorado de verdad.',

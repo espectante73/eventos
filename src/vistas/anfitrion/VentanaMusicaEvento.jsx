@@ -533,31 +533,39 @@ export function VentanaMusicaEvento({ data, ventana }) {
     enviarOrden(accion, valor);
   };
 
-  const coloresEstado = {
-    enHora: { fondo: "rgba(36,64,47,0.1)", borde: "rgba(36,64,47,0.3)", texto: C.ink, Icono: CheckCircle2 },
-    retraso: { fondo: "rgba(140,47,57,0.1)", borde: "rgba(140,47,57,0.3)", texto: C.wax, Icono: AlertTriangle },
-    antes: { fondo: "rgba(138,129,113,0.15)", borde: "rgba(138,129,113,0.35)", texto: "#6b6355", Icono: Hourglass },
-  }[estadoReloj.tipo];
 
-  // ---------- Dos formatos, no uno ----------
-  // A petición del usuario (2026-08-31), y es de sentido común: el Mac
-  // está apoyado en una mesa, con pantalla grande y ratón -- ahí caben
-  // más cosas a la vez y no hace falta que todo sea enorme. El móvil va
-  // en la mano, de pie y en penumbra: ahí manda el pulgar. La pantalla
-  // de elegir aparato (la primera) es común y grande en los dos sitios,
-  // porque son solo dos botones.
+  // ---------- Paleta propia de esta ventana ----------
+  // Verde profundo con dorado, en vez del crema del resto de la app --
+  // a petición del usuario (2026-08-31): el verde claro anterior le
+  // pareció "muy pobre" y pedía más contraste. Aquí encaja: es la única
+  // pantalla que se usa a oscuras y de un vistazo rápido, y es el mismo
+  // lenguaje fuerte que ya usan las cabeceras y los botones flotantes.
+  // MISMA apariencia en el Mac y en el móvil (también a petición suya);
+  // lo único que sigue cambiando entre los dos son los TAMAÑOS y el
+  // reparto en columnas, no los colores.
+  const P = {
+    fondo: "linear-gradient(160deg, #1F3A2E 0%, #101C15 100%)",
+    panel: "rgba(255, 255, 255, 0.06)",
+    panelBorde: "rgba(217, 183, 120, 0.28)",
+    texto: "#EFE9DE",
+    tenue: "rgba(239, 233, 222, 0.6)",
+    oro: C.goldClaro,
+    oroRelleno: "linear-gradient(180deg, #E4C88A, #B08D57)",
+    oscuro: "#12201A",
+  };
+
   const esMovil = rol === "mando";
-  // Fondo verde esmeralda claro SOLO en el mando -- a petición del
-  // usuario (2026-08-31): sobre el crema de siempre, los botones
-  // blancos apenas se distinguían del fondo. Con el verde claro, tanto
-  // los bloques blancos como el seleccionado (verde oscuro) resaltan de
-  // verdad, que es lo que hace falta para acertar de un vistazo en
-  // penumbra. El Mac se queda con el crema del resto de la app: ahí se
-  // mira de cerca y con luz.
-  const fondoVentana = esMovil ? "#D2E7DB" : C.paper;
   const M = esMovil
     ? { base: 16, bloque: 92, nombre: 19, hora: 13, play: 96, playIcono: 38, saltoAncho: 74, saltoAlto: 66, silencio: 56, botonVol: 54, reloj: 21, titulo: 20, texto: 15, ancho: 560 }
     : { base: 14, bloque: 72, nombre: 16, hora: 12, play: 66, playIcono: 26, saltoAncho: 58, saltoAlto: 52, silencio: 44, botonVol: 42, reloj: 18, titulo: 18, texto: 13, ancho: 900 };
+
+  const coloresEstado = {
+    enHora: { fondo: "rgba(120, 190, 140, 0.16)", borde: "rgba(120, 190, 140, 0.5)", texto: "#9FD9B4", Icono: CheckCircle2 },
+    retraso: { fondo: "rgba(228, 120, 130, 0.16)", borde: "rgba(228, 120, 130, 0.5)", texto: "#F0A4AC", Icono: AlertTriangle },
+    antes: { fondo: "rgba(239, 233, 222, 0.1)", borde: "rgba(239, 233, 222, 0.3)", texto: P.tenue, Icono: Hourglass },
+  }[estadoReloj.tipo];
+
+  const tarjeta = { background: P.panel, border: `1px solid ${P.panelBorde}` };
 
   const cuadriculaBloques = (
     <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
@@ -573,35 +581,26 @@ export function VentanaMusicaEvento({ data, ventana }) {
             style={{
               aspectRatio: "1 / 1",
               minHeight: M.bloque,
-              background: esActual ? "linear-gradient(180deg, #24402F, #12201A)" : "#fff",
-              border: `1px solid ${esActual ? "rgba(255,255,255,0.25)" : C.line}`,
-              // Un bloque que suena nunca se atenúa, aunque su hora ya
-              // haya pasado -- es lo más importante de la pantalla.
+              // Seleccionado = dorado relleno sobre fondo oscuro: es el
+              // máximo contraste posible dentro de la paleta.
+              background: esActual ? P.oroRelleno : P.panel,
+              border: `1px solid ${esActual ? P.oro : P.panelBorde}`,
               opacity: !esActual && yaPaso && !suenaAqui ? 0.45 : 1,
-              ...(suenaAqui
-                ? {}
-                : { boxShadow: esActual ? "inset 0 1px 0 rgba(255,255,255,.22), 0 4px 10px rgba(31,25,15,.28)" : "none" }),
+              ...(suenaAqui || esActual ? {} : { boxShadow: "none" }),
             }}
           >
             <span
               className="absolute font-semibold"
-              style={{ top: 7, left: 9, fontFamily: "'IBM Plex Mono', monospace", fontSize: M.hora, color: esActual ? "rgba(217,183,120,.85)" : "#8a8171" }}
+              style={{ top: 7, left: 9, fontFamily: "'IBM Plex Mono', monospace", fontSize: M.hora, color: esActual ? "rgba(18,32,26,.7)" : P.tenue }}
             >
               {horas[i]}
             </span>
-            {/* El punto pequeño solo dice "tiene pista cargada". Cuando
-                además está sonando, ese aviso lo da el ecualizador
-                grande de debajo del nombre, así que el punto sobra. */}
             {pistas[i] && !suenaAqui && (
-              <span className="absolute rounded-full" style={{ top: 8, right: 9, width: 8, height: 8, background: esActual ? C.goldClaro : C.gold }} title="Tiene pista" />
+              <span className="absolute rounded-full" style={{ top: 8, right: 9, width: 8, height: 8, background: esActual ? P.oscuro : P.oro }} title="Tiene pista" />
             )}
-            <span className="text-center" style={{ fontSize: M.nombre, fontWeight: 800, lineHeight: 1.15, color: esActual ? C.goldClaro : C.charcoal }}>
+            <span className="text-center" style={{ fontSize: M.nombre, fontWeight: 800, lineHeight: 1.15, color: esActual ? P.oscuro : P.texto }}>
               {b.texto || `Bloque ${i + 1}`}
             </span>
-            {/* Ecualizador DEBAJO del nombre y centrado, al doble de
-                tamaño -- a petición del usuario: en la esquina y
-                diminuto no se veía. Si está en pausa, las barras se
-                quedan quietas (sin animación) pero siguen ahí. */}
             {suenaAqui && (
               <span className="flex items-end justify-center gap-1" style={{ height: 22 }} title={sonando ? "Sonando ahora" : "En pausa"}>
                 {[0, 1, 2, 3].map((barra) => (
@@ -611,8 +610,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
                     style={{
                       width: 5,
                       height: 22,
-                      background: esActual ? C.goldClaro : C.gold,
-                      opacity: sonando ? 1 : 0.4,
+                      background: esActual ? P.oscuro : P.oro,
+                      opacity: sonando ? 1 : 0.45,
                       transform: sonando ? undefined : "scaleY(0.45)",
                       transformOrigin: "bottom center",
                       animationDelay: `${barra * 0.16}s`,
@@ -629,10 +628,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
 
   const relojEstado = (
     <div>
-      <div className="flex items-center justify-between rounded-xl px-4" style={{ background: "#fff", border: `1px solid ${C.line}`, minHeight: esMovil ? 58 : 48 }}>
+      <div className="flex items-center justify-between rounded-xl px-4" style={{ ...tarjeta, minHeight: esMovil ? 58 : 48 }}>
         <span className="flex items-center gap-2.5">
-          <Clock size={esMovil ? 20 : 17} style={{ color: C.charcoal }} />
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: M.reloj, color: C.charcoal }}>
+          <Clock size={esMovil ? 20 : 17} style={{ color: P.oro }} />
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, fontSize: M.reloj, color: P.texto }}>
             {String(ahora.getHours()).padStart(2, "0")}:{String(ahora.getMinutes()).padStart(2, "0")}
           </span>
         </span>
@@ -641,32 +640,29 @@ export function VentanaMusicaEvento({ data, ventana }) {
           <span className="font-bold" style={{ color: coloresEstado.texto, fontSize: M.texto }}>{estadoReloj.texto}</span>
         </span>
       </div>
-      <p className="mt-1.5 px-1" style={{ color: C.charcoal, opacity: 0.65, fontSize: M.texto - 1 }}>{estadoReloj.detalle}</p>
+      <p className="mt-1.5 px-1" style={{ color: P.tenue, fontSize: M.texto - 1 }}>{estadoReloj.detalle}</p>
     </div>
   );
 
   const reproductor = (
-    <div className="rounded-2xl p-4" style={{ background: C.paperDark, border: `1px solid ${C.line}` }}>
+    <div className="rounded-2xl p-4" style={tarjeta}>
       {pistaActual ? (
         <>
           <div className="flex items-center gap-2.5 mb-4">
-            <Music size={18} style={{ color: C.gold, flexShrink: 0 }} />
-            <span className="flex-1 truncate" style={{ color: C.charcoal, fontSize: M.texto }}>{pistaActual.nombre}</span>
+            <Music size={18} style={{ color: P.oro, flexShrink: 0 }} />
+            <span className="flex-1 truncate" style={{ color: P.texto, fontSize: M.texto }}>{pistaActual.nombre}</span>
           </div>
-          {/* La barra solo dice la verdad del bloque que suena. Si estás
-              mirando otro, se queda a cero en vez de mentir con el
-              minuto de una pista que no es esa. */}
-          <div className="rounded-full mb-2" style={{ height: esMovil ? 9 : 7, background: C.line }}>
+          <div className="rounded-full mb-2" style={{ height: esMovil ? 9 : 7, background: "rgba(255,255,255,0.12)" }}>
             <div
               className="rounded-full"
               style={{
                 height: esMovil ? 9 : 7,
                 width: mirandoElQueSuena && duracion ? `${Math.min(100, (posicion / duracion) * 100)}%` : 0,
-                background: `linear-gradient(90deg, ${C.gold}, ${C.goldClaro})`,
+                background: P.oroRelleno,
               }}
             />
           </div>
-          <div className="flex justify-between mb-5" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: M.texto, color: "#6b6355" }}>
+          <div className="flex justify-between mb-5" style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: M.texto, color: P.tenue }}>
             <span>{mirandoElQueSuena ? formatearTiempo(posicion) : "—"}</span>
             <span>{mirandoElQueSuena ? formatearTiempo(duracion) : "sin sonar"}</span>
           </div>
@@ -675,37 +671,38 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <button
               onClick={hacer("saltar", -salto)}
               className="boton-3d rounded-2xl flex flex-col items-center justify-center gap-0.5"
-              style={{ width: M.saltoAncho, height: M.saltoAlto, background: "#fff", border: `1px solid ${C.line}`, color: C.charcoal }}
+              style={{ width: M.saltoAncho, height: M.saltoAlto, background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }}
             >
               <ChevronsLeft size={esMovil ? 24 : 20} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#8a8171" }}>{salto}s</span>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: P.tenue }}>{salto}s</span>
             </button>
-            {/* El icono dice lo que va a pasar: si miras el bloque que
-                suena, pausa; si miras otro, lo pone a sonar (play). */}
+            {/* Botón principal en dorado relleno: sobre el verde
+                profundo es lo que más canta de la pantalla, que es
+                justo lo que tiene que ser. */}
             <button
               onClick={hacer("alternar", seleccionado)}
-              className="boton-3d boton-verde-solido rounded-full flex items-center justify-center"
-              style={{ width: M.play, height: M.play }}
+              className="boton-3d rounded-full flex items-center justify-center"
+              style={{ width: M.play, height: M.play, background: P.oroRelleno, border: `1px solid ${P.oro}` }}
               title={mirandoElQueSuena ? (sonando ? "Pausar" : "Reanudar") : `Poner "${bloques[seleccionado]?.texto || ""}"`}
             >
               {mirandoElQueSuena && sonando ? (
-                <Pause size={M.playIcono} fill={C.goldClaro} />
+                <Pause size={M.playIcono} fill={P.oscuro} color={P.oscuro} />
               ) : (
-                <Play size={M.playIcono} fill={C.goldClaro} style={{ marginLeft: 5 }} />
+                <Play size={M.playIcono} fill={P.oscuro} color={P.oscuro} style={{ marginLeft: 5 }} />
               )}
             </button>
             <button
               onClick={hacer("saltar", salto)}
               className="boton-3d rounded-2xl flex flex-col items-center justify-center gap-0.5"
-              style={{ width: M.saltoAncho, height: M.saltoAlto, background: "#fff", border: `1px solid ${C.line}`, color: C.charcoal }}
+              style={{ width: M.saltoAncho, height: M.saltoAlto, background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }}
             >
               <ChevronsRight size={esMovil ? 24 : 20} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: "#8a8171" }}>{salto}s</span>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: P.tenue }}>{salto}s</span>
             </button>
           </div>
 
           <div className="flex items-center justify-center gap-2 mt-5">
-            <span style={{ fontSize: M.texto - 1, color: C.charcoal, opacity: 0.6 }}>Salto</span>
+            <span style={{ fontSize: M.texto - 1, color: P.tenue }}>Salto</span>
             {SALTOS.map((s) => (
               <button
                 key={s}
@@ -715,7 +712,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
                   minWidth: esMovil ? 62 : 54,
                   minHeight: esMovil ? 46 : 38,
                   fontSize: M.texto,
-                  ...(s === salto ? { background: C.ink, color: C.paper } : { background: "#fff", border: `1px solid ${C.line}`, color: C.charcoal }),
+                  ...(s === salto
+                    ? { background: P.oro, color: P.oscuro }
+                    : { background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }),
                 }}
               >
                 {s < 60 ? `${s} s` : "1 min"}
@@ -725,8 +724,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
         </>
       ) : (
         <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <Music size={28} style={{ color: "#8a8171" }} />
-          <p style={{ color: "#6b6355", fontSize: M.texto }}>
+          <Music size={28} style={{ color: P.tenue }} />
+          <p style={{ color: P.tenue, fontSize: M.texto }}>
             {esReproductor ? "Este bloque no tiene pista todavía" : "Este bloque no tiene pista (se eligen en el Mac)"}
           </p>
         </div>
@@ -734,25 +733,16 @@ export function VentanaMusicaEvento({ data, ventana }) {
     </div>
   );
 
-  // Recordatorio permanente de qué suena cuando estás mirando otro
-  // bloque -- sin esto es fácil perder de vista qué está puesto.
-  //
   // ⚠️ "Ir" manda la orden como cualquier otro cambio de bloque (hacer),
   // NO cambia solo la vista local: en el mando, el latido del Mac (cada
   // 3s) sobrescribía la selección y la vista se volvía sola al bloque
-  // anterior al segundo -- bug real reportado por el usuario,
-  // 2026-08-31.
+  // anterior al segundo -- bug real reportado por el usuario, 2026-08-31.
   const avisoOtroSonando =
     bloqueSonando != null && !mirandoElQueSuena ? (
       <button
         onClick={hacer("bloque", bloqueSonando)}
         className={`w-full flex items-center gap-3 rounded-2xl px-4${sonando ? " bloque-sonando" : ""}`}
-        style={{
-          minHeight: esMovil ? 72 : 60,
-          background: "linear-gradient(180deg, #24402F, #12201A)",
-          border: `1.5px solid ${C.goldClaro}`,
-          color: C.goldClaro,
-        }}
+        style={{ minHeight: esMovil ? 72 : 60, background: P.oroRelleno, border: `1.5px solid ${P.oro}`, color: P.oscuro }}
       >
         <span className="flex items-end gap-1" style={{ height: 26, flexShrink: 0 }}>
           {[0, 1, 2, 3].map((barra) => (
@@ -762,8 +752,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
               style={{
                 width: 5,
                 height: 26,
-                background: C.goldClaro,
-                opacity: sonando ? 1 : 0.4,
+                background: P.oscuro,
+                opacity: sonando ? 1 : 0.45,
                 transform: sonando ? undefined : "scaleY(0.45)",
                 transformOrigin: "bottom center",
                 animationDelay: `${barra * 0.16}s`,
@@ -772,7 +762,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
           ))}
         </span>
         <span className="flex-1 text-left min-w-0">
-          <span className="block" style={{ fontSize: M.texto - 1, opacity: 0.75, letterSpacing: "0.04em" }}>
+          <span className="block" style={{ fontSize: M.texto - 1, opacity: 0.7, letterSpacing: "0.04em" }}>
             {sonando ? "SONANDO AHORA" : "EN PAUSA"}
           </span>
           <span className="block truncate" style={{ fontSize: M.nombre, fontWeight: 800, lineHeight: 1.15 }}>
@@ -781,7 +771,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
         </span>
         <span
           className="rounded-full px-3.5 flex items-center"
-          style={{ background: C.goldClaro, color: "#12201A", fontWeight: 700, fontSize: M.texto, minHeight: 38, flexShrink: 0 }}
+          style={{ background: P.oscuro, color: P.oro, fontWeight: 700, fontSize: M.texto, minHeight: 38, flexShrink: 0 }}
         >
           Ir
         </span>
@@ -789,12 +779,19 @@ export function VentanaMusicaEvento({ data, ventana }) {
     ) : null;
 
   const controlVolumen = (
-    <div className="rounded-2xl p-4" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+    <div className="rounded-2xl p-4" style={tarjeta}>
       <div className="flex items-center gap-3 mb-3">
         <button
           onClick={hacer("silencio")}
           className="boton-3d rounded-full flex items-center justify-center"
-          style={{ width: M.silencio, height: M.silencio, background: silenciado ? C.wax : C.ink, color: C.paper, flexShrink: 0 }}
+          style={{
+            width: M.silencio,
+            height: M.silencio,
+            background: silenciado ? C.wax : P.panel,
+            border: `1px solid ${silenciado ? C.wax : P.panelBorde}`,
+            color: silenciado ? P.texto : P.oro,
+            flexShrink: 0,
+          }}
           title={silenciado ? "Quitar el silencio" : "Silenciar"}
         >
           {silenciado ? <VolumeX size={esMovil ? 24 : 19} /> : <Volume2 size={esMovil ? 24 : 19} />}
@@ -811,18 +808,13 @@ export function VentanaMusicaEvento({ data, ventana }) {
             else enviarOrden("volumen", v);
           }}
           className="flex-1"
-          style={{ accentColor: C.ink, height: esMovil ? 34 : 24 }}
+          style={{ accentColor: C.gold, height: esMovil ? 34 : 24 }}
         />
-        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: M.texto + 2, fontWeight: 700, color: C.charcoal, width: 52, textAlign: "right", flexShrink: 0 }}>
+        <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: M.texto + 2, fontWeight: 700, color: P.texto, width: 52, textAlign: "right", flexShrink: 0 }}>
           {silenciado ? "—" : `${volumen}%`}
         </span>
       </div>
       <div className="flex items-center gap-2.5">
-        {/* Eventos de puntero (no onClick): sirven igual para ratón y
-            para dedo, y hacen falta para saber cuándo se SUELTA. Un
-            toque suelto da un paso; mantener pulsado sigue avanzando.
-            `touchAction`/`userSelect` evitan que el móvil interprete la
-            pulsación larga como "seleccionar texto" o menú contextual. */}
         {[-1, 1].map((direccion) => (
           <button
             key={direccion}
@@ -838,8 +830,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
             style={{
               minHeight: M.botonVol,
               fontSize: esMovil ? 24 : 19,
-              background: C.paperDark,
-              color: C.charcoal,
+              background: P.panel,
+              border: `1px solid ${P.panelBorde}`,
+              color: P.oro,
               touchAction: "manipulation",
               userSelect: "none",
               WebkitUserSelect: "none",
@@ -853,7 +846,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
           <button
             onClick={hacer("cortinilla")}
             className="boton-3d rounded-xl flex items-center justify-center gap-2 font-medium"
-            style={{ minHeight: M.botonVol, flex: 1.4, fontSize: M.texto, background: C.paperDark, color: C.charcoal }}
+            style={{ minHeight: M.botonVol, flex: 1.4, fontSize: M.texto, background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }}
           >
             <Radio size={esMovil ? 18 : 15} /> Cortinilla
           </button>
@@ -862,17 +855,13 @@ export function VentanaMusicaEvento({ data, ventana }) {
     </div>
   );
 
-  // Gestión de archivos: SOLO en el Mac. En el móvil no aparece -- las
-  // pistas se cargan una vez en el ordenador que suena.
   const gestionPistas = (
-    <div className="rounded-2xl p-4" style={{ background: C.paperDark, border: `1px solid ${C.line}` }}>
-      <p className="font-medium" style={{ color: C.charcoal, fontSize: M.texto }}>
+    <div className="rounded-2xl p-4" style={tarjeta}>
+      <p className="font-medium" style={{ color: P.texto, fontSize: M.texto }}>
         Pistas por bloque
       </p>
-      <p className="mb-2.5" style={{ color: C.charcoal, opacity: 0.6, fontSize: M.texto - 1 }}>
-        {cargandoPistas
-          ? "Recuperando las pistas guardadas…"
-          : "Se quedan guardadas en este ordenador: no hay que volver a elegirlas."}
+      <p className="mb-2.5" style={{ color: P.tenue, fontSize: M.texto - 1 }}>
+        {cargandoPistas ? "Recuperando las pistas guardadas…" : "Se quedan guardadas en este ordenador: no hay que volver a elegirlas."}
       </p>
       <div className="space-y-1.5" style={{ maxHeight: 260, overflowY: "auto" }}>
         {bloques.map((b, i) => (
@@ -880,27 +869,27 @@ export function VentanaMusicaEvento({ data, ventana }) {
             key={i}
             className="flex items-center gap-2.5 cursor-pointer rounded-lg px-3 py-2"
             style={{
-              background: i === seleccionado ? "#fff" : "transparent",
-              border: `1px solid ${i === seleccionado ? C.gold : "transparent"}`,
+              background: i === seleccionado ? "rgba(255,255,255,0.08)" : "transparent",
+              border: `1px solid ${i === seleccionado ? P.panelBorde : "transparent"}`,
               fontSize: M.texto,
-              color: C.charcoal,
+              color: P.texto,
             }}
           >
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8a8171", width: 38, flexShrink: 0 }}>{horas[i]}</span>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: P.tenue, width: 38, flexShrink: 0 }}>{horas[i]}</span>
             <span className="font-semibold" style={{ width: 82, flexShrink: 0 }}>{b.texto || `Bloque ${i + 1}`}</span>
             <span className="flex-1 truncate" style={{ opacity: pistas[i] ? 0.85 : 0.45 }}>
               {pistas[i] ? pistas[i].nombre : "— sin pista —"}
             </span>
-            <Upload size={15} style={{ color: C.gold, flexShrink: 0 }} />
+            <Upload size={15} style={{ color: P.oro, flexShrink: 0 }} />
             <input type="file" accept="audio/*" onChange={elegirArchivo(i)} style={{ display: "none" }} />
           </label>
         ))}
       </div>
       <label
         className="flex items-center gap-2.5 cursor-pointer rounded-xl px-4 mt-3"
-        style={{ background: "#fff", border: `1px dashed ${C.line}`, color: C.charcoal, minHeight: 46, fontSize: M.texto }}
+        style={{ background: P.panel, border: `1px dashed ${P.panelBorde}`, color: P.texto, minHeight: 46, fontSize: M.texto }}
       >
-        <Radio size={17} style={{ flexShrink: 0 }} />
+        <Radio size={17} style={{ flexShrink: 0, color: P.oro }} />
         <span className="truncate">{cortinilla ? `Cortinilla: ${cortinilla.nombre}` : "Elegir cortinilla de transición"}</span>
         <input type="file" accept="audio/*" onChange={elegirArchivo("cortinilla")} style={{ display: "none" }} />
       </label>
@@ -908,33 +897,29 @@ export function VentanaMusicaEvento({ data, ventana }) {
   );
 
   const avisoVisible = aviso ? (
-    <p className="rounded-xl p-3.5" style={{ background: C.avisoFondo, color: C.peligro, fontSize: M.texto }}>
+    <p className="rounded-xl p-3.5" style={{ background: "rgba(228,120,130,0.16)", border: "1px solid rgba(228,120,130,0.45)", color: "#F0A4AC", fontSize: M.texto }}>
       ⚠ {aviso}
     </p>
   ) : null;
 
   return (
-    <div className="flex flex-col" style={{ height: "100%", background: fondoVentana, fontFamily: "'Inter', sans-serif", fontSize: M.base }}>
+    <div className="flex flex-col" style={{ height: "100%", background: P.fondo, fontFamily: "'Inter', sans-serif", fontSize: M.base }}>
       <audio ref={audioRef} onEnded={() => setSonando(false)} onLoadedMetadata={(e) => setDuracion(e.target.duration || 0)} />
       <audio ref={cortinillaRef} src={cortinilla?.url} />
 
       <div className="panel-flotante-cristal flex items-center justify-between px-4 py-3" style={{ flexShrink: 0 }}>
-        <h3 className="flex items-center gap-2" style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700, fontSize: M.titulo }}>
+        <h3 className="flex items-center gap-2" style={{ fontFamily: "'Fraunces', serif", color: P.oro, fontWeight: 700, fontSize: M.titulo }}>
           <Music size={M.titulo + 1} /> Música del evento
         </h3>
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-2" style={{ color: C.goldClaro, opacity: 0.8 }} title={conectado ? "Conectado" : "Sin conexión"}>
+          <span className="flex items-center gap-2" style={{ color: P.oro, opacity: 0.8 }} title={conectado ? "Conectado" : "Sin conexión"}>
             {conectado ? <Wifi size={17} /> : <WifiOff size={17} />}
             {rol === "sin-definir" ? null : esReproductor ? <Speaker size={17} /> : <Smartphone size={17} />}
           </span>
-          {/* Cerrar dentro de la cabecera -- a petición del usuario: en
-              el móvil la ventana se abre como pestaña y no tiene una X
-              propia a mano. Nunca cierra a la primera: siempre pasa por
-              el aviso de abajo. */}
           <button
             onClick={() => setConfirmandoCierre(true)}
             className="boton-3d rounded-full flex items-center justify-center"
-            style={{ width: 38, height: 38, color: C.goldClaro, flexShrink: 0 }}
+            style={{ width: 38, height: 38, color: P.oro, flexShrink: 0 }}
             title="Cerrar esta ventana"
           >
             <X size={20} />
@@ -942,11 +927,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
         </div>
       </div>
 
-      {/* Aviso de cierre: dice qué se pierde exactamente en cada caso,
-          que no es lo mismo cerrar el que suena que cerrar el mando. */}
       {confirmandoCierre && (
-        <div className="px-4 py-3" style={{ flexShrink: 0, background: C.avisoFondo, borderBottom: `1px solid ${C.line}` }}>
-          <p className="flex items-start gap-2 mb-3" style={{ color: C.peligro, fontSize: M.texto }}>
+        <div className="px-4 py-3" style={{ flexShrink: 0, background: "rgba(228,120,130,0.14)", borderBottom: `1px solid rgba(228,120,130,0.4)` }}>
+          <p className="flex items-start gap-2 mb-3" style={{ color: "#F0A4AC", fontSize: M.texto }}>
             <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 1 }} />
             <span>
               {esReproductor
@@ -957,15 +940,15 @@ export function VentanaMusicaEvento({ data, ventana }) {
           <div className="flex gap-2.5">
             <button
               onClick={() => setConfirmandoCierre(false)}
-              className="boton-3d boton-verde-solido rounded-xl flex-1 font-medium"
-              style={{ minHeight: 50, fontSize: M.texto }}
+              className="boton-3d rounded-xl flex-1 font-medium"
+              style={{ minHeight: 50, fontSize: M.texto, background: P.oroRelleno, color: P.oscuro }}
             >
               Seguir aquí
             </button>
             <button
               onClick={() => (ventana || window).close()}
               className="boton-3d rounded-xl flex-1 font-medium"
-              style={{ minHeight: 50, fontSize: M.texto, background: C.peligro, color: C.paper }}
+              style={{ minHeight: 50, fontSize: M.texto, background: C.peligro, color: P.texto }}
             >
               Cerrar de todos modos
             </button>
@@ -974,18 +957,16 @@ export function VentanaMusicaEvento({ data, ventana }) {
       )}
 
       <div className="px-4 py-4" style={{ flex: 1, overflowY: "auto" }}>
-        {/* 1) Elegir aparato: idéntica en los dos sitios, solo dos
-            botones grandes -- se acierta igual con el ratón que con el
-            pulgar, sin tener que adivinar nada. */}
         {rol === "sin-definir" && (
-          <div
-            className="rounded-2xl p-6 flex flex-col items-center gap-4 text-center"
-            style={{ background: C.paperDark, border: `1.5px dashed ${C.line}`, maxWidth: 460, margin: "0 auto" }}
-          >
-            <Speaker size={38} style={{ color: C.gold }} />
-            <p style={{ color: C.charcoal, fontSize: 17 }}>¿Qué papel tiene este aparato?</p>
-            <button onClick={declararReproductor} className="boton-3d boton-verde-solido rounded-2xl font-medium w-full flex flex-col items-center justify-center gap-1" style={{ minHeight: 88 }}>
-              <span className="flex items-center gap-2" style={{ fontSize: 17 }}>
+          <div className="rounded-2xl p-6 flex flex-col items-center gap-4 text-center" style={{ ...tarjeta, maxWidth: 460, margin: "0 auto" }}>
+            <Speaker size={38} style={{ color: P.oro }} />
+            <p style={{ color: P.texto, fontSize: 17 }}>¿Qué papel tiene este aparato?</p>
+            <button
+              onClick={declararReproductor}
+              className="boton-3d rounded-2xl font-medium w-full flex flex-col items-center justify-center gap-1"
+              style={{ minHeight: 88, background: P.oroRelleno, color: P.oscuro }}
+            >
+              <span className="flex items-center gap-2" style={{ fontSize: 17, fontWeight: 700 }}>
                 <Speaker size={20} /> Este reproduce el sonido
               </span>
               <span style={{ fontSize: 13, opacity: 0.75 }}>El ordenador conectado a los altavoces</span>
@@ -993,7 +974,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <button
               onClick={() => setRol("mando")}
               className="boton-3d rounded-2xl font-medium w-full flex flex-col items-center justify-center gap-1"
-              style={{ minHeight: 88, background: "#fff", border: `1px solid ${C.line}`, color: C.charcoal }}
+              style={{ minHeight: 88, background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }}
             >
               <span className="flex items-center gap-2" style={{ fontSize: 17 }}>
                 <Smartphone size={20} /> Mando a distancia
@@ -1003,16 +984,12 @@ export function VentanaMusicaEvento({ data, ventana }) {
           </div>
         )}
 
-        {/* 2) Mando (móvil): una columna, todo grande, sin gestión de
-            archivos -- solo lo que se toca en directo. */}
         {rol === "mando" && (
           <div className="space-y-4" style={{ maxWidth: M.ancho, margin: "0 auto" }}>
-            {/* Sin noticias del ordenador todavía: mejor decirlo que
-                enseñar una pantalla vacía que parece rota. */}
             {!recibidoEstado && (
               <div
                 className="flex items-center gap-3 rounded-xl px-4 py-3"
-                style={{ background: C.avisoFondo, color: C.peligro, fontSize: M.texto }}
+                style={{ background: "rgba(228,120,130,0.16)", border: "1px solid rgba(228,120,130,0.45)", color: "#F0A4AC", fontSize: M.texto }}
               >
                 <WifiOff size={18} style={{ flexShrink: 0 }} />
                 <span>
@@ -1030,9 +1007,6 @@ export function VentanaMusicaEvento({ data, ventana }) {
           </div>
         )}
 
-        {/* 3) Reproductor (escritorio): dos columnas, más denso, y con
-            la lista completa de pistas a la vista para cargarlas de una
-            sentada antes de que empiece la boda. */}
         {rol === "reproductor" && (
           <div style={{ maxWidth: M.ancho, margin: "0 auto" }}>
             <div className="flex flex-wrap gap-4 items-start">
