@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.2",
+    cambios: [
+      "Música del evento ahora tiene DOS formatos según el papel de cada aparato, en vez de uno solo para todo: el móvil (mando) va en una columna y con todo grande para el pulgar; el Mac (reproductor) pasa a puesto de control en dos columnas, más denso y con la lista completa de pistas a la vista para cargarlas de una sentada.",
+      "La pantalla de elegir aparato es común a los dos: solo dos botones grandes, se acierta igual con el ratón que con el dedo.",
+      "La gestión de archivos desaparece del móvil — las pistas se cargan en el ordenador que suena, que es donde tiene sentido.",
+    ],
+  },
+  {
     version: "20.1",
     cambios: [
       'Música del evento, rehecha a tamaño de uso real: la primera versión salió con medidas de escritorio (letra diminuta, botones de volumen del tamaño de una letra). Ahora nada que se toque baja de 44px y ningún texto baja de 13px -- pensada para usarse de pie, en penumbra y con una sola mano.',

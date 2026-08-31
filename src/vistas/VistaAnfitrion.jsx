@@ -100,7 +100,11 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
     actualizar: actualizarMusicaEvento,
     abierta: musicaEventoAbierta,
     ventana: ventanaMusicaEvento,
-  } = usePopupWindow({ nombreVentana: "musica-evento", ancho: 460, alto: 860 });
+    // Ancha a propósito: en el Mac esta ventana es un puesto de control
+    // de dos columnas (bloques a un lado, reproductor y pistas al otro).
+    // En el móvil da igual -- ahí se abre como pestaña a pantalla
+    // completa y el contenido se centra solo.
+  } = usePopupWindow({ nombreVentana: "musica-evento", ancho: 940, alto: 800 });
   useEffect(() => {
     if (musicaEventoAbierta) actualizarMusicaEvento(<VentanaMusicaEvento data={data} ventana={ventanaMusicaEvento} />);
   }, [musicaEventoAbierta, actualizarMusicaEvento, data, ventanaMusicaEvento]);
