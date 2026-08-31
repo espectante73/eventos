@@ -16,6 +16,7 @@ import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaPermisos } from "./anfitrion/VentanaPermisos";
 import { VentanaConfigMusica } from "./anfitrion/VentanaConfigMusica";
 import { VentanaConfigCronograma } from "./anfitrion/VentanaConfigCronograma";
+import { VentanaMusicaEvento } from "./anfitrion/VentanaMusicaEvento";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaLogistica } from "./anfitrion/VentanaLogistica";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
@@ -88,6 +89,21 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   useEffect(() => {
     if (cronogramaAbierta) actualizarCronograma(<VentanaConfigCronograma data={data} ventana={ventanaCronograma} />);
   }, [cronogramaAbierta, actualizarCronograma, data, ventanaCronograma]);
+
+  // Ventana "Música del evento" (2026-08-31): mismo patrón de ventana de
+  // verdad, y aquí es especialmente importante -- va a estar abierta
+  // toda la noche sonando por los altavoces, así que conviene poder
+  // moverla a otra pantalla y dejarla en paz. Necesita `ventana` para
+  // el Wake Lock (ventana.navigator, nunca navigator a secas).
+  const {
+    abrir: abrirMusicaEvento,
+    actualizar: actualizarMusicaEvento,
+    abierta: musicaEventoAbierta,
+    ventana: ventanaMusicaEvento,
+  } = usePopupWindow({ nombreVentana: "musica-evento", ancho: 460, alto: 860 });
+  useEffect(() => {
+    if (musicaEventoAbierta) actualizarMusicaEvento(<VentanaMusicaEvento data={data} ventana={ventanaMusicaEvento} />);
+  }, [musicaEventoAbierta, actualizarMusicaEvento, data, ventanaMusicaEvento]);
 
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
   // por colaborador — así se sabe exactamente cuáles son los nuevos. Los
@@ -183,6 +199,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         abrirNovedades={abrirNovedades}
         abrirLogistica={abrirLogistica}
         abrirCronograma={abrirCronograma}
+        abrirMusicaEvento={abrirMusicaEvento}
       />
 
       {/* Los 3 recuadros de resumen (Lista global/Tentativa/Confirmados)

@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20",
+    cambios: [
+      'Nueva ventana "Música del evento" (menú principal, junto a Novedades y Logística): una pista por cada bloque del cronograma, con los 9 botones, el reloj de estado y el reproductor.',
+      "Mando a distancia desde el móvil: el Mac se declara como el aparato que suena (ese primer clic desbloquea el audio del navegador) y desde cualquier otro dispositivo se controla play/pausa, cambio de bloque, saltos y volumen sin acercarse al Mac.",
+      "Control de volumen con pasos cortos y curva ajustada al oído, para que no haya subidas bruscas. Con botón de silencio rápido y cortinilla de transición entre bloques.",
+      "PASO 1 de 4: falta probar el mando en vivo (Mac + móvil), guardar las pistas dentro del navegador y poder delegar el mando en un colaborador.",
+    ],
+  },
+  {
     version: "19.4",
     cambios: [
       'Al crear una entrada nueva en Novedades, ahora nace como borrador (sin "Publicada" marcada) y con la etiqueta "NOVEDADES" ya puesta -- antes nacía publicada y como FAQ.',

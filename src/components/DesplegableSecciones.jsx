@@ -56,6 +56,7 @@ const ICONOS_VENTANAS = {
   invitados: List,
   logistica: LayoutDashboard,
   mesas: Utensils,
+  musicaEvento: Music,
   novedades: Megaphone,
   permisos: KeyRound,
   plano: Map,
@@ -99,6 +100,7 @@ export function DesplegableSecciones({
   abrirNovedades,
   abrirLogistica,
   abrirCronograma,
+  abrirMusicaEvento,
   posicion = { bottom: 8, right: 8 },
 }) {
   const opciones = ORDEN_VENTANAS.map((clave) => {
@@ -122,6 +124,14 @@ export function DesplegableSecciones({
         etiqueta: ETIQUETAS_VENTANAS[clave],
         icono: ICONOS_VENTANAS[clave],
         onClick: abrirLogistica,
+      };
+    }
+    if (clave === "musicaEvento") {
+      return {
+        id: clave,
+        etiqueta: ETIQUETAS_VENTANAS[clave],
+        icono: ICONOS_VENTANAS[clave],
+        onClick: abrirMusicaEvento,
       };
     }
     if (clave === "colaboradores") {

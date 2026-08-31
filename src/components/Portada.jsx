@@ -81,6 +81,11 @@ export function Portada({
   // Igual que las dos anteriores, para la ventana Cronograma (dentro
   // del submenú Configuración) -- a petición del usuario, 2026-08-29.
   abrirCronograma,
+  // Igual, para "Música del evento" -- esta sí de nivel principal en el
+  // menú (no dentro de Configuración): es una herramienta de uso EN
+  // DIRECTO durante el evento, no un ajuste previo, así que tiene que
+  // encontrarse rápido esa noche (decidido con el usuario, 2026-08-30).
+  abrirMusicaEvento,
   // `botonExtra`: para cuando esta Portada la usa alguien que NO es el
   // anfitrión editando (p.ej. VistaColaborador.jsx) -- en vez del
   // desplegable "Abrir sección…" (editable+toggle), se puede pasar aquí
@@ -175,6 +180,7 @@ export function Portada({
             abrirNovedades={abrirNovedades}
             abrirLogistica={abrirLogistica}
             abrirCronograma={abrirCronograma}
+            abrirMusicaEvento={abrirMusicaEvento}
             posicion={{ bottom: "9%", right: 16 }}
           />
         )}

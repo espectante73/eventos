@@ -100,6 +100,7 @@ export const ORDEN_VENTANAS = [
   "invitados",
   "logistica",
   "mesas",
+  "musicaEvento",
   "novedades",
   "permisos",
   "plano",
@@ -127,6 +128,7 @@ export const ETIQUETAS_VENTANAS = {
   novedades: "Novedades",
   permisos: "Permisos",
   logistica: "Logística",
+  musicaEvento: "Música",
 };
 
 // Ventana flotante independiente y no bloqueante: a diferencia de
