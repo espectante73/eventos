@@ -746,23 +746,45 @@ export function VentanaMusicaEvento({ data, ventana }) {
     bloqueSonando != null && !mirandoElQueSuena ? (
       <button
         onClick={hacer("bloque", bloqueSonando)}
-        className="w-full flex items-center gap-2.5 rounded-xl px-3.5 py-2.5"
-        style={{ background: "rgba(36,64,47,0.08)", border: "1px solid rgba(36,64,47,0.25)", color: C.ink, fontSize: M.texto }}
+        className={`w-full flex items-center gap-3 rounded-2xl px-4${sonando ? " bloque-sonando" : ""}`}
+        style={{
+          minHeight: esMovil ? 72 : 60,
+          background: "linear-gradient(180deg, #24402F, #12201A)",
+          border: `1.5px solid ${C.goldClaro}`,
+          color: C.goldClaro,
+        }}
       >
-        <span className="flex items-end gap-0.5" style={{ height: 13 }}>
-          {[0, 1, 2].map((barra) => (
+        <span className="flex items-end gap-1" style={{ height: 26, flexShrink: 0 }}>
+          {[0, 1, 2, 3].map((barra) => (
             <span
               key={barra}
               className={sonando ? "ecualizador-barra rounded-sm" : "rounded-sm"}
-              style={{ width: 3, height: 13, background: C.ink, opacity: sonando ? 1 : 0.4, animationDelay: `${barra * 0.18}s` }}
+              style={{
+                width: 5,
+                height: 26,
+                background: C.goldClaro,
+                opacity: sonando ? 1 : 0.4,
+                transform: sonando ? undefined : "scaleY(0.45)",
+                transformOrigin: "bottom center",
+                animationDelay: `${barra * 0.16}s`,
+              }}
             />
           ))}
         </span>
-        <span className="flex-1 text-left truncate">
-          {sonando ? "Sonando ahora: " : "En pausa: "}
-          <strong>{bloques[bloqueSonando]?.texto || `Bloque ${bloqueSonando + 1}`}</strong>
+        <span className="flex-1 text-left min-w-0">
+          <span className="block" style={{ fontSize: M.texto - 1, opacity: 0.75, letterSpacing: "0.04em" }}>
+            {sonando ? "SONANDO AHORA" : "EN PAUSA"}
+          </span>
+          <span className="block truncate" style={{ fontSize: M.nombre, fontWeight: 800, lineHeight: 1.15 }}>
+            {bloques[bloqueSonando]?.texto || `Bloque ${bloqueSonando + 1}`}
+          </span>
         </span>
-        <span style={{ opacity: 0.6, fontSize: M.texto - 1 }}>Ir</span>
+        <span
+          className="rounded-full px-3.5 flex items-center"
+          style={{ background: C.goldClaro, color: "#12201A", fontWeight: 700, fontSize: M.texto, minHeight: 38, flexShrink: 0 }}
+        >
+          Ir
+        </span>
       </button>
     ) : null;
 

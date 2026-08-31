@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.8",
+    cambios: [
+      'La barra de "Sonando ahora" (debajo de los 9 bloques) pasa a ser protagonista cuando miras otro bloque: fondo verde oscuro con letra dorada, el nombre en grande, ecualizador al doble, el mismo latido que el bloque, y el "Ir" como botón dorado de verdad.',
+    ],
+  },
+  {
     version: "20.7",
     cambios: [
       "El mando pasa a fondo verde esmeralda claro: sobre el crema de antes, los botones blancos apenas se distinguían. El ordenador se queda con el crema del resto de la app.",
