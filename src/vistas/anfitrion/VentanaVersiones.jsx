@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.10",
+    cambios: [
+      'Música del evento, más minimalista: las tarjetas pierden los contornos (sobre el fondo oscuro ya se distinguen solas), el nombre del archivo pasa a segundo plano y las flechas de salto se quedan limpias.',
+      'Las opciones de salto (10s / 30s / 1min) dejan de ocupar sitio siempre: ahora hay un chip discreto que dice cuánto salta, y al tocarlo aparecen las tres. Eliges y se vuelven a esconder.',
+    ],
+  },
+  {
     version: "20.9",
     cambios: [
       "Música del evento estrena look: fondo verde profundo con dorado, en vez del verde claro pálido de antes. Es la única pantalla que se usa a oscuras y de un vistazo rápido, así que ahora el bloque seleccionado va en dorado macizo y el botón de play también — resaltan muchísimo más.",

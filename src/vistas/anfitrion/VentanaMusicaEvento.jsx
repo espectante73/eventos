@@ -97,6 +97,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
   const [posicion, setPosicion] = useState(0);
   const [duracion, setDuracion] = useState(0);
   const [salto, setSalto] = useState(30);
+  // Las tres opciones de salto (10/30/60) están escondidas tras un chip
+  // -- a petición del usuario, 2026-08-31: "menos es más", pero de fácil
+  // acceso. Un toque las abre, otro toque elige y se vuelven a cerrar.
+  const [saltoAbierto, setSaltoAbierto] = useState(false);
   // { [indiceBloque]: { nombre, url } }. Las URLs son temporales (se
   // crean al abrir la ventana), pero los archivos en sí viven guardados
   // dentro del navegador -- ver lib/almacenPistas.js.
@@ -565,7 +569,11 @@ export function VentanaMusicaEvento({ data, ventana }) {
     antes: { fondo: "rgba(239, 233, 222, 0.1)", borde: "rgba(239, 233, 222, 0.3)", texto: P.tenue, Icono: Hourglass },
   }[estadoReloj.tipo];
 
-  const tarjeta = { background: P.panel, border: `1px solid ${P.panelBorde}` };
+  // Minimalismo (2026-08-31, a petición del usuario: "menos es más"):
+  // las tarjetas se distinguen por su fondo translúcido, sin contorno.
+  // Sobre el verde profundo ya se leen solas, y quitar las líneas deja
+  // la pantalla mucho más tranquila.
+  const tarjeta = { background: P.panel };
 
   const cuadriculaBloques = (
     <div className="grid gap-2.5" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
@@ -648,10 +656,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
     <div className="rounded-2xl p-4" style={tarjeta}>
       {pistaActual ? (
         <>
-          <div className="flex items-center gap-2.5 mb-4">
-            <Music size={18} style={{ color: P.oro, flexShrink: 0 }} />
-            <span className="flex-1 truncate" style={{ color: P.texto, fontSize: M.texto }}>{pistaActual.nombre}</span>
-          </div>
+          <p className="truncate mb-4" style={{ color: P.tenue, fontSize: M.texto - 1 }}>
+            {pistaActual.nombre}
+          </p>
           <div className="rounded-full mb-2" style={{ height: esMovil ? 9 : 7, background: "rgba(255,255,255,0.12)" }}>
             <div
               className="rounded-full"
@@ -673,8 +680,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
               className="boton-3d rounded-2xl flex flex-col items-center justify-center gap-0.5"
               style={{ width: M.saltoAncho, height: M.saltoAlto, background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }}
             >
-              <ChevronsLeft size={esMovil ? 24 : 20} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: P.tenue }}>{salto}s</span>
+              <ChevronsLeft size={esMovil ? 26 : 22} />
             </button>
             {/* Botón principal en dorado relleno: sobre el verde
                 profundo es lo que más canta de la pantalla, que es
@@ -696,30 +702,46 @@ export function VentanaMusicaEvento({ data, ventana }) {
               className="boton-3d rounded-2xl flex flex-col items-center justify-center gap-0.5"
               style={{ width: M.saltoAncho, height: M.saltoAlto, background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }}
             >
-              <ChevronsRight size={esMovil ? 24 : 20} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: P.tenue }}>{salto}s</span>
+              <ChevronsRight size={esMovil ? 26 : 22} />
             </button>
           </div>
 
-          <div className="flex items-center justify-center gap-2 mt-5">
-            <span style={{ fontSize: M.texto - 1, color: P.tenue }}>Salto</span>
-            {SALTOS.map((s) => (
+          {/* Escondido tras un chip discreto: en uso normal no estorba,
+              y está a un toque cuando hace falta. */}
+          <div className="flex justify-center mt-4" style={{ minHeight: esMovil ? 40 : 34 }}>
+            {saltoAbierto ? (
+              <div className="flex gap-2">
+                {SALTOS.map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => {
+                      setSalto(s);
+                      setSaltoAbierto(false);
+                    }}
+                    className="rounded-full font-semibold"
+                    style={{
+                      minWidth: esMovil ? 64 : 56,
+                      minHeight: esMovil ? 40 : 34,
+                      fontSize: M.texto,
+                      ...(s === salto
+                        ? { background: P.oro, color: P.oscuro }
+                        : { background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }),
+                    }}
+                  >
+                    {s < 60 ? `${s}s` : "1min"}
+                  </button>
+                ))}
+              </div>
+            ) : (
               <button
-                key={s}
-                onClick={() => setSalto(s)}
-                className="rounded-xl font-semibold"
-                style={{
-                  minWidth: esMovil ? 62 : 54,
-                  minHeight: esMovil ? 46 : 38,
-                  fontSize: M.texto,
-                  ...(s === salto
-                    ? { background: P.oro, color: P.oscuro }
-                    : { background: P.panel, border: `1px solid ${P.panelBorde}`, color: P.texto }),
-                }}
+                onClick={() => setSaltoAbierto(true)}
+                className="rounded-full px-4"
+                style={{ minHeight: esMovil ? 40 : 34, fontSize: M.texto - 1, color: P.tenue, letterSpacing: "0.03em" }}
+                title="Cambiar cuánto salta"
               >
-                {s < 60 ? `${s} s` : "1 min"}
+                ± {salto < 60 ? `${salto}s` : "1min"}
               </button>
-            ))}
+            )}
           </div>
         </>
       ) : (
