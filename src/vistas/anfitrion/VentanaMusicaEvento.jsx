@@ -547,7 +547,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
     [esReproductor]
   );
 
-  const { conectado, estadoCanal, hayReproductor, hayMando, enviarOrden, enviarEstado } = useMandoMusica({
+  const { conectado, estadoCanal, detalleCanal, hayReproductor, hayMando, enviarOrden, enviarEstado } = useMandoMusica({
     onOrden: alRecibirOrden,
     onEstado: alRecibirEstado,
     rol,
@@ -1613,7 +1613,15 @@ export function VentanaMusicaEvento({ data, ventana }) {
         <strong style={{ fontWeight: 600 }}>{infoCanal.texto}.</strong>{" "}
         {esReproductor
           ? "La música no se ve afectada: suena desde el archivo guardado en este ordenador, sin pasar por internet. Lo que no funcionará hasta que conecte es controlarla desde el móvil."
-          : "Hasta que conecte, este mando no puede dar órdenes al ordenador."}
+          : "Hasta que conecte, este mando no puede dar órdenes al ordenador."}{" "}
+        Se reintenta solo cada pocos segundos.
+        {/* El motivo exacto, tal cual lo da el navegador: sin esto, un
+            fallo de canal solo se puede diagnosticar a ciegas. */}
+        {detalleCanal ? (
+          <em style={{ display: "block", marginTop: 4, opacity: 0.85, fontStyle: "normal", fontSize: M.texto - 2 }}>
+            Detalle: {detalleCanal}
+          </em>
+        ) : null}
       </span>
     </div>
   ) : rol !== "sin-definir" && !estaElOtro ? (

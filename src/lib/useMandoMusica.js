@@ -24,6 +24,11 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 
 const NOMBRE_CANAL = "musica-evento";
+const ESPERA_REINTENTO = 4000;
+// Si en este tiempo no ha llegado nada del otro aparato Y el canal no
+// está unido, se da por caído. 12s da margen de sobra: el reproductor
+// anuncia su estado cada 3.
+const SILENCIO_SOSPECHOSO = 12000;
 
 // Identidad de este aparato dentro del canal. Se calcula una sola vez
 // por carga de página: si cambiara, cada repintado se contaría como un
@@ -45,19 +50,19 @@ export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
   const canalRef = useRef(null);
   const reintentoRef = useRef(null);
   const [conectado, setConectado] = useState(false);
-  // Qué está haciendo el canal, en palabras, para poder DECIRLO en vez
-  // de un simple icono tachado.
+  // Estado crudo del canal ("SUBSCRIBED", "CHANNEL_ERROR"...) y el texto
+  // del error si lo hay: se enseñan tal cual en la ventana. El icono
+  // tachado a secas ya nos costó dos rondas de diagnóstico a ciegas.
   const [estadoCanal, setEstadoCanal] = useState("CONECTANDO");
+  const [detalleCanal, setDetalleCanal] = useState("");
   // Cuándo llegó el último mensaje del otro aparato. Es la prueba más
   // sólida de que el canal funciona: si algo ha llegado hace tres
   // segundos, está conectado, se diga lo que se diga por otro lado.
   const ultimoMensajeRef = useRef(0);
-  // Qué OTROS aparatos hay ahora mismo en el canal, por su papel
-  // ("reproductor" / "mando"). Esto es lo que de verdad quiere saber
-  // quien mira el icono de wifi: no si mi navegador ha enganchado con
-  // Supabase (eso pasa aunque esté yo solo), sino si el otro aparato
-  // está ahí. Confundir las dos cosas fue un problema real: el Mac
-  // decía "conectado" sin haber abierto el mando siquiera.
+  // Qué OTROS aparatos hay ahora mismo en el canal, por su papel. Esto
+  // es lo que de verdad quiere saber quien mira el icono de wifi: no si
+  // mi navegador ha enganchado con Supabase (eso pasa aunque esté yo
+  // solo), sino si el otro aparato está ahí.
   const [otrosAparatos, setOtrosAparatos] = useState([]);
   const rolRef = useRef(rol);
   rolRef.current = rol;
@@ -76,111 +81,131 @@ export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
   }, [onEstado]);
 
   useEffect(() => {
-    // ⚠️ TODO el montaje del canal va dentro de un try. `subscribe()`
-    // llama por dentro a `socket.connect()`, que LANZA de verdad si el
-    // navegador no puede abrir el WebSocket ("WebSocket not available")
-    // o si falta la clave. Al ocurrir dentro de un efecto, ese error
-    // sube hasta React y tumba la ventana entera -- y esta ventana tiene
-    // que seguir funcionando sin canal: la música se reproduce en local,
-    // el mando es un extra. Nunca dejar que una llamada de Realtime
-    // quede fuera de un try aquí dentro.
-    let canal;
-    try {
-      canal = supabase.channel(NOMBRE_CANAL, {
-        config: { broadcast: { self: false } },
-      });
+    let vivo = true;
 
-      canal.on("presence", { event: "sync" }, () => {
-        const presentes = canal.presenceState();
-        setOtrosAparatos(
-          Object.entries(presentes)
-            .filter(([clave]) => clave !== ID_APARATO)
-            .flatMap(([, apariciones]) => apariciones.map((a) => a.rol))
-            .filter(Boolean)
-        );
-      });
-
-      canal.on("broadcast", { event: "orden" }, ({ payload }) => {
-        ultimoMensajeRef.current = Date.now();
-        onOrdenRef.current?.(payload);
-      });
-      canal.on("broadcast", { event: "estado" }, ({ payload }) => {
-        ultimoMensajeRef.current = Date.now();
-        onEstadoRef.current?.(payload);
-      });
-
-      // Se pasa SIEMPRE el mismo manejador al resuscribir: `subscribe()`
-      // solo registra los avisos de error y cierre si se le da uno, así
-      // que un reintento sin él dejaría el canal mudo para siempre.
-      const avisarEstado = (estado) => {
-        setEstadoCanal(estado);
-        // Anunciarse en cuanto el canal está listo. Sin este `track`, el
-        // otro aparato no sabe que existo.
-        if (estado === "SUBSCRIBED") anunciarse(canal, rolRef.current);
-        // Un canal caído no se recupera solo. Sin este reintento, si la
-        // conexión falla una vez (wifi del local, suspensión del Mac...)
-        // el mando se queda muerto para el resto de la noche.
-        if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT" || estado === "CLOSED") {
-          clearTimeout(reintentoRef.current);
-          reintentoRef.current = setTimeout(() => {
-            setEstadoCanal("REINTENTANDO");
-            try {
-              canal.subscribe(avisarEstado);
-            } catch {
-              setEstadoCanal("CHANNEL_ERROR");
-            }
-          }, 4000);
+    // ⚠️ Reconectar es CREAR UN CANAL NUEVO, no volver a suscribir el
+    // viejo. Fallo real del 2026-09-01: el Mac se quedaba clavado en
+    // "el canal no conecta" mientras el móvil iba fino. Motivo: la
+    // reconexión llamaba otra vez a `canal.subscribe()`, y por dentro
+    // esa función no hace ABSOLUTAMENTE NADA si el canal no está
+    // cerrado (todo su cuerpo va dentro de un `if (isClosed())`) --
+    // así que un canal en estado "errored" nunca se recuperaba y nadie
+    // volvía a avisar de nada. Se tira el canal y se levanta otro.
+    const programarReintento = () => {
+      if (!vivo || reintentoRef.current) return;
+      reintentoRef.current = setTimeout(() => {
+        reintentoRef.current = null;
+        if (!vivo) return;
+        setEstadoCanal("REINTENTANDO");
+        const viejo = canalRef.current;
+        canalRef.current = null;
+        try {
+          if (viejo) supabase.removeChannel(viejo);
+        } catch {
+          // Da igual por qué no se pudo soltar: lo importante es el
+          // canal nuevo que viene detrás.
         }
-      };
-      canal.subscribe(avisarEstado);
-      canalRef.current = canal;
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("No se ha podido abrir el canal del mando:", error);
-      setEstadoCanal("CHANNEL_ERROR");
-      return undefined;
+        montar();
+      }, ESPERA_REINTENTO);
+    };
+
+    // ⚠️ TODO el montaje va dentro de un try. `subscribe()` llama por
+    // dentro a `socket.connect()`, que LANZA de verdad si el navegador
+    // no puede abrir el WebSocket ("WebSocket not available"). Al
+    // ocurrir dentro de un efecto, ese error sube hasta React y tumba la
+    // ventana entera -- y esta ventana tiene que seguir funcionando sin
+    // canal: la música se reproduce en local, el mando es un extra.
+    function montar() {
+      if (!vivo) return;
+      try {
+        const canal = supabase.channel(NOMBRE_CANAL, {
+          config: { broadcast: { self: false } },
+        });
+
+        canal.on("presence", { event: "sync" }, () => {
+          const presentes = canal.presenceState();
+          setOtrosAparatos(
+            Object.entries(presentes)
+              .filter(([clave]) => clave !== ID_APARATO)
+              .flatMap(([, apariciones]) => apariciones.map((a) => a.rol))
+              .filter(Boolean)
+          );
+        });
+
+        canal.on("broadcast", { event: "orden" }, ({ payload }) => {
+          ultimoMensajeRef.current = Date.now();
+          onOrdenRef.current?.(payload);
+        });
+        canal.on("broadcast", { event: "estado" }, ({ payload }) => {
+          ultimoMensajeRef.current = Date.now();
+          onEstadoRef.current?.(payload);
+        });
+
+        canal.subscribe((estado, error) => {
+          setEstadoCanal(estado);
+          setDetalleCanal(error?.message || "");
+          // Anunciarse en cuanto el canal está listo. Sin este `track`,
+          // el otro aparato no sabe que existo.
+          if (estado === "SUBSCRIBED") anunciarse(canal, rolRef.current);
+          if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT" || estado === "CLOSED") programarReintento();
+        });
+        canalRef.current = canal;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("No se ha podido abrir el canal del mando:", error);
+        setEstadoCanal("CHANNEL_ERROR");
+        setDetalleCanal(error?.message || "");
+        programarReintento();
+      }
     }
 
-    // ⚠️ El indicador NO puede depender solo del aviso de arriba, y esto
-    // es un bug real (2026-09-01): el usuario tenía el mando gobernando
-    // el Mac de verdad y la ventana seguía diciendo "conectando" en los
-    // dos aparatos. Motivo: ese aviso se dispara UNA vez, y solo si al
-    // suscribirse el canal estaba cerrado -- si el aviso no llega o
-    // llega a destiempo, el estado se queda congelado aunque el canal
-    // esté trabajando. Así que cada 2 segundos se mira la realidad: el
-    // estado interno del propio canal ("joined") y si ha llegado algún
-    // mensaje hace poco. Cualquiera de las dos cosas es prueba de que
-    // funciona, y manda sobre lo que dijera el aviso.
+    montar();
+
+    // El indicador NO puede depender solo del aviso de `subscribe()`:
+    // ese aviso se dispara UNA vez, y solo si al suscribirse el canal
+    // estaba cerrado. Cada 2 segundos se mira la realidad -- el estado
+    // interno del canal y si ha llegado algo hace poco -- y si lleva un
+    // buen rato mudo se levanta un canal nuevo. Los setState con el
+    // mismo valor no repintan, así que este latido no cuesta nada.
     const vigilante = setInterval(() => {
       const unido = canalRef.current?.state === "joined";
-      const recibiendoAhora = Date.now() - ultimoMensajeRef.current < 12000;
-      const vivo = unido || recibiendoAhora;
-      setConectado(vivo);
-      // Los setState con el mismo valor no repintan nada (React los
-      // descarta), así que este latido de 2s no cuesta repintados.
-      if (vivo) setEstadoCanal("SUBSCRIBED");
-      else if (canalRef.current?.state === "errored") setEstadoCanal("CHANNEL_ERROR");
+      const recibiendoAhora = Date.now() - ultimoMensajeRef.current < SILENCIO_SOSPECHOSO;
+      const vivoElCanal = unido || recibiendoAhora;
+      setConectado(vivoElCanal);
+      if (vivoElCanal) {
+        setEstadoCanal("SUBSCRIBED");
+        setDetalleCanal("");
+      } else {
+        if (canalRef.current?.state === "errored") setEstadoCanal("CHANNEL_ERROR");
+        programarReintento();
+      }
     }, 2000);
 
+    // ⚠️ `document`/`window` a secas SÍ es lo correcto aquí, aunque este
+    // hook lo use una ventana emergente: el WebSocket vive en el realm
+    // de la pestaña principal, que es justo la que el navegador puede
+    // congelar cuando queda por detrás. Al volver a primer plano (o al
+    // recuperar la red) se comprueba enseguida en vez de esperar al
+    // siguiente ciclo. Es lo que le pasaba al Mac mientras el móvil,
+    // en primer plano, seguía fino.
+    const alDespertar = () => {
+      if (canalRef.current?.state !== "joined") programarReintento();
+    };
+    document.addEventListener("visibilitychange", alDespertar);
+    window.addEventListener("online", alDespertar);
+    window.addEventListener("focus", alDespertar);
+
     return () => {
+      vivo = false;
       clearTimeout(reintentoRef.current);
+      reintentoRef.current = null;
       clearInterval(vigilante);
-      supabase.removeChannel(canal);
+      document.removeEventListener("visibilitychange", alDespertar);
+      window.removeEventListener("online", alDespertar);
+      window.removeEventListener("focus", alDespertar);
+      if (canalRef.current) supabase.removeChannel(canalRef.current);
       canalRef.current = null;
     };
-  }, []);
-
-  // `accion` es una cadena corta ("play", "pausa", "bloque", "saltar",
-  // "volumen", "silencio", "cortinilla") y `valor` lo que necesite esa
-  // acción (el número de bloque, los segundos a saltar...). Se ignora
-  // en silencio si el canal todavía no está listo -- es un mando: más
-  // vale que un toque se pierda a que la app reviente en plena boda.
-  const enviarOrden = useCallback((accion, valor) => {
-    try {
-      canalRef.current?.send({ type: "broadcast", event: "orden", payload: { accion, valor } });
-    } catch {
-      // Un toque perdido es preferible a la app reventando en plena boda.
-    }
   }, []);
 
   // Cuando este aparato deja de estar "sin definir" y se declara
@@ -189,6 +214,19 @@ export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
   useEffect(() => {
     if (canalRef.current?.state === "joined") anunciarse(canalRef.current, rol);
   }, [rol]);
+
+  // `accion` es una cadena corta ("play", "pausa", "bloque", "saltar",
+  // "volumen", "silencio", "cortinilla") y `valor` lo que necesite esa
+  // acción. Se ignora en silencio si el canal todavía no está listo --
+  // es un mando: más vale que un toque se pierda a que la app reviente
+  // en plena boda.
+  const enviarOrden = useCallback((accion, valor) => {
+    try {
+      canalRef.current?.send({ type: "broadcast", event: "orden", payload: { accion, valor } });
+    } catch {
+      // Un toque perdido es preferible a la app reventando en plena boda.
+    }
+  }, []);
 
   const enviarEstado = useCallback((estado) => {
     try {
@@ -202,6 +240,7 @@ export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
   return {
     conectado,
     estadoCanal,
+    detalleCanal,
     // "Está el otro" es lo que se muestra en la cabecera; `conectado`
     // (canal enganchado) se queda para el diagnóstico de por qué no.
     hayReproductor: otrosAparatos.includes("reproductor"),

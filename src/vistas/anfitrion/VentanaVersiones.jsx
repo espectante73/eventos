@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.27",
+    cambios: [
+      "Arreglado el ordenador quedándose clavado en \"el canal del mando no conecta\" mientras el móvil iba fino. La reconexión no reconectaba nada: volvía a suscribir el MISMO canal, y esa llamada no hace absolutamente nada si el canal no está cerrado del todo. Ahora se tira el canal roto y se levanta uno nuevo.",
+      "Además se reconecta al volver a primer plano o al recuperar la red. Esa era la causa de fondo: la conexión vive en la pestaña principal, y el navegador la congela cuando queda por detrás de la ventana de música — por eso le pasaba al ordenador y no al móvil, que estaba siempre en primer plano.",
+      "Si el canal sigue mudo más de doce segundos, se levanta uno nuevo por su cuenta, sin esperar a que nadie avise.",
+      "El aviso muestra ahora el motivo exacto que da el navegador, para no tener que diagnosticar a ciegas.",
+    ],
+  },
+  {
     version: "20.26",
     cambios: [
       "Cada bloque recuerda dónde se quedó. Si estás en Recepción y saltas a Cóctel, Recepción no vuelve a empezar cuando la retomes: sigue exactamente donde la interrumpiste, con su cortinilla de entrada igual.",
