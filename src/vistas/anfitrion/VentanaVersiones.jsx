@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.25",
+    cambios: [
+      "En el móvil, Música del evento ya no intenta abrirse como ventana aparte: se abre a pantalla completa dentro de la propia página. Pulsar \"Música\" en el móvil no hacía absolutamente nada — sin aviso ni error — porque Safari en iOS trae activado de fábrica el bloqueo de ventanas emergentes. El mando a distancia vive en el móvil, así que no puede depender de un permiso del navegador.",
+      "En el ordenador sigue abriéndose en su ventana aparte, como hasta ahora; si el navegador la bloqueara, cae también en la pantalla completa dentro de la página en vez de quedarse en nada.",
+    ],
+  },
+  {
     version: "20.24",
     cambios: [
       "La ventana de música ya no se cae entera si el canal del mando no puede abrirse. Al suscribirse, Supabase puede lanzar un error de verdad (por ejemplo si el navegador no consigue abrir la conexión), y ese error subía hasta React y tumbaba la ventana — cuando lo cierto es que la música no depende de eso: suena desde el archivo guardado en el ordenador. Ahora un fallo del canal se queda en un aviso y la ventana funciona igual.",

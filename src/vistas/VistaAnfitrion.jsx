@@ -4,7 +4,8 @@
 // 2026-08-08 (ver CLAUDE.md) — sigue siendo un único componente grande;
 // dividir su interior es un cambio aparte, deliberadamente pospuesto (ver
 // CLAUDE.md, Fase 4).
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { X } from "lucide-react";
 import { construirEnlaceTablon } from "../lib/url";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
@@ -98,15 +99,29 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   // moverla a otra pantalla y dejarla en paz. Necesita `ventana` para
   // el Wake Lock (ventana.navigator, nunca navigator a secas).
   const {
-    abrir: abrirMusicaEvento,
+    abrir: abrirMusicaPopup,
     actualizar: actualizarMusicaEvento,
     abierta: musicaEventoAbierta,
     ventana: ventanaMusicaEvento,
     // Ancha a propósito: en el Mac esta ventana es un puesto de control
     // de dos columnas (bloques a un lado, reproductor y pistas al otro).
-    // En el móvil da igual -- ahí se abre como pestaña a pantalla
-    // completa y el contenido se centra solo.
   } = usePopupWindow({ nombreVentana: "musica-evento", ancho: 940, alto: 800 });
+
+  // En el móvil, la música NO se abre como ventana aparte. Dos motivos,
+  // los dos comprobados en vivo (2026-09-01): Safari en iOS trae el
+  // bloqueo de ventanas emergentes activado de fábrica, así que pulsar
+  // "Música" no hacía absolutamente nada -- sin aviso, sin error, sin
+  // nada; y aunque se permita, ahí una "ventana" es otra pestaña a
+  // pantalla completa, que no aporta nada frente a mostrarla en la
+  // misma página. El mando a distancia vive en el móvil: no puede
+  // depender de un permiso del navegador.
+  const [musicaEnPagina, setMusicaEnPagina] = useState(false);
+  const abrirMusicaEvento = useCallback(() => {
+    const esPantallaPequena = window.innerWidth < 820;
+    // `abrirMusicaPopup()` devuelve false si el navegador la bloqueó:
+    // ese caso también cae aquí, en vez de quedarse en nada.
+    if (esPantallaPequena || !abrirMusicaPopup()) setMusicaEnPagina(true);
+  }, [abrirMusicaPopup]);
   useEffect(() => {
     // Con su propio Error Boundary: si algo revienta ahí dentro, esta
     // ventana es un root de React aparte (createRoot en el documento de
@@ -423,6 +438,34 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         </ModalFlotante>
       )}
 
+      {/* Música del evento DENTRO de la página: el camino del móvil (y
+          el de reserva si el navegador bloquea las ventanas emergentes).
+          Ocupa la pantalla entera porque es un mando a distancia: se usa
+          de pie, con una mano y sin mirar mucho. Lleva su propio Error
+          Boundary igual que la versión en ventana aparte. */}
+      {musicaEnPagina && (
+        <div className="fixed inset-0 flex flex-col" style={{ zIndex: 2000, background: C.ink }}>
+          <div
+            className="flex items-center justify-between px-3"
+            style={{ minHeight: 44, flexShrink: 0, background: C.ink, color: C.goldClaro }}
+          >
+            <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 600 }}>Música del evento</span>
+            <button
+              onClick={() => setMusicaEnPagina(false)}
+              className="flex items-center justify-center"
+              style={{ width: 40, height: 40, borderRadius: 10, color: C.goldClaro }}
+              title="Cerrar"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <ErrorBoundary alReiniciar={() => guardarAspecto(ASPECTO_POR_DEFECTO)}>
+              <VentanaMusicaEvento data={data} ventana={window} />
+            </ErrorBoundary>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
