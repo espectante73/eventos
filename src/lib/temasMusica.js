@@ -106,6 +106,12 @@ export const CLAVE_FONDO_PROPIO = "fondo-propio";
 export const PANELES = ["bloques", "reproductor", "volumen", "pistas"];
 export const ASPECTO_POR_DEFECTO = {
   tema: TEMA_POR_DEFECTO,
+  // ¿Está puesta la imagen de fondo propia? Es una opción MÁS del
+  // catálogo de acabados, no un ajuste aparte: el usuario subió una
+  // imagen y esperaba verla ahí para poder elegirla (2026-09-01). El
+  // acabado sigue mandando en los colores del texto y los paneles --
+  // una foto no puede decidir si el texto va claro u oscuro.
+  fondoPropioActivo: false,
   disposicion: "horizontal",
   orden: PANELES,
 };
@@ -126,6 +132,7 @@ export function leerAspecto() {
       : PANELES;
     return {
       tema: TEMAS_MUSICA[guardado.tema] ? guardado.tema : TEMA_POR_DEFECTO,
+      fondoPropioActivo: guardado.fondoPropioActivo === true,
       disposicion: guardado.disposicion === "vertical" ? "vertical" : "horizontal",
       orden,
     };

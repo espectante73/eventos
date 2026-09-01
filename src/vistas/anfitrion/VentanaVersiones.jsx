@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.20",
+    cambios: [
+      "Arreglada la imagen de fondo propia: subirla parecía no hacer nada. Eran dos cosas a la vez — el velo que se le ponía encima era tan opaco (85%) que tapaba la foto casi por completo, y además no aparecía por ningún sitio para poder elegirla.",
+      "Ahora la imagen es una casilla MÁS del catálogo de acabados, con su miniatura de verdad: se toca para ponerla y se vuelve a tocar para quitarla, como los otros cuatro. Al subir una se pone sola.",
+      "El velo es mucho más liviano y se abre por el centro: carga arriba y abajo, donde están la cabecera y los mandos, y deja ver la foto en medio. Con foto puesta, los paneles pasan a ser opacos para que los mandos no cambien de color según la zona de la imagen que les toque debajo.",
+    ],
+  },
+  {
     version: "20.19",
     cambios: [
       "El volumen queda en DOS filas, no en tres: arriba la barra con el botón de silenciar pegado a su izquierda, y debajo los dos botones grandes de Bajar y Subir con el porcentaje en medio, como el visor de un equipo.",

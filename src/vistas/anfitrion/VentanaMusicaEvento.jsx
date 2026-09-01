@@ -643,6 +643,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
     if (!archivo) return;
     const url = (ventana?.URL || URL).createObjectURL(archivo);
     setFondoPropio({ nombre: archivo.name, url });
+    // Se pone de fondo en el acto: quien elige una imagen quiere verla,
+    // no tener que ir a activarla en otro sitio.
+    cambiarAspecto({ fondoPropioActivo: true });
     setAviso("");
     guardarPista(CLAVE_FONDO_PROPIO, archivo).catch(() =>
       setAviso("El fondo se ve ahora, pero no se ha podido guardar para la próxima vez.")
@@ -651,6 +654,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
 
   const quitarFondoPropio = () => {
     setFondoPropio(null);
+    cambiarAspecto({ fondoPropioActivo: false });
     borrarPista(CLAVE_FONDO_PROPIO).catch(() => {});
   };
 
@@ -695,19 +699,28 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // sigue siendo el mismo objeto de metal en los cuatro: banda más
   // clara arriba (donde da la luz) y oscurecido hacia abajo.
   const T = TEMAS_MUSICA[aspecto.tema] || TEMAS_MUSICA.anodizado;
+  // La foto solo se pinta si está ELEGIDA en el catálogo de acabados.
+  // Antes bastaba con haberla subido, y eso era medio problema; el otro
+  // medio era el velo, tan opaco (0.72-0.86) que tapaba la foto casi
+  // por completo -- de ahí que subirla pareciera no hacer nada
+  // (2026-09-01). Ahora el velo es mucho más liviano y se abre en el
+  // centro: carga arriba y abajo, donde están la cabecera y los mandos,
+  // y deja ver la foto en medio.
+  const conFoto = !!fondoPropio && aspecto.fondoPropioActivo;
+  const VELO_FOTO = T.claro
+    ? "linear-gradient(178deg, rgba(255,252,244,0.66) 0%, rgba(255,252,244,0.34) 45%, rgba(222,210,184,0.72) 100%)"
+    : "linear-gradient(178deg, rgba(10,18,14,0.62) 0%, rgba(10,18,14,0.30) 45%, rgba(5,10,8,0.72) 100%)";
   const P = {
-    // Con imagen propia, el degradado del tema se convierte en un velo
-    // por encima de la foto: sin él, cualquier foto con zonas claras y
-    // oscuras dejaría media pantalla ilegible.
-    fondo: fondoPropio
-      ? `${T.claro ? "linear-gradient(178deg, rgba(255,253,247,0.82), rgba(232,222,200,0.86))" : "linear-gradient(178deg, rgba(12,22,17,0.72), rgba(8,14,11,0.86))"}, url("${fondoPropio.url}") center / cover no-repeat`
-      : T.fondo,
+    fondo: conFoto ? `${VELO_FOTO}, url("${fondoPropio.url}") center / cover no-repeat` : T.fondo,
     // Los paneles NO son un velo sobre el fondo: cada tema trae su
     // propio color y su propio borde (ver lib/temasMusica.js), porque
     // con un velo genérico un panel sobre champán y el champán eran
     // casi el mismo color y no se veía dónde empezaba el mando.
-    panel: T.panel,
-    panelVivo: T.panelVivo,
+    // Sobre una foto, un panel translúcido deja de contrastar: enseña
+    // la foto en vez del chasis, y cada zona de la imagen le cambia el
+    // color. Con foto puesta, los paneles se vuelven opacos.
+    panel: conFoto ? (T.claro ? "rgba(255, 253, 247, 0.88)" : "rgba(14, 22, 18, 0.66)") : T.panel,
+    panelVivo: conFoto ? (T.claro ? "rgba(255, 255, 255, 0.97)" : "rgba(32, 45, 37, 0.85)") : T.panelVivo,
     bordePanel: T.bordePanel,
     linea: T.linea,
     texto: T.texto,
@@ -1158,7 +1171,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
         </button>
       </div>
 
-      <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(74px, 1fr))" }}>
+      <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(74px, 1fr))" }}>
         {Object.entries(TEMAS_MUSICA).map(([clave, t]) => (
           <button
             key={clave}
@@ -1179,25 +1192,59 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <span className="truncate w-full text-center" style={{ fontSize: 10.5, fontWeight: 600 }}>{t.nombre}</span>
           </button>
         ))}
-      </div>
 
-      <div className="flex items-center gap-2 mb-3">
-        <label className="flex items-center gap-2 cursor-pointer px-3 flex-1 min-w-0" style={{ background: P.panelVivo, borderRadius: 12, minHeight: 44, fontSize: M.texto, transition: SUAVE }}>
-          <ImagePlus size={16} style={{ flexShrink: 0, color: P.oro }} />
-          <span className="truncate">{fondoPropio ? fondoPropio.nombre : "Poner una imagen de fondo"}</span>
-          <input type="file" accept="image/*" onChange={elegirFondo} style={{ display: "none" }} />
-        </label>
-        {fondoPropio && (
-          <button onClick={quitarFondoPropio} className="flex items-center justify-center" style={{ width: 44, height: 44, borderRadius: 12, ...tecla(false), color: P.texto, flexShrink: 0 }} title="Quitar la imagen de fondo">
-            <Trash2 size={16} />
+        {/* La imagen propia es una casilla MÁS de esta misma rejilla, con
+            su miniatura de verdad: es lo que el usuario esperaba
+            encontrar tras subirla. Si todavía no hay ninguna, la casilla
+            es el propio botón de subir. */}
+        {fondoPropio ? (
+          <button
+            onClick={() => cambiarAspecto({ fondoPropioActivo: !aspecto.fondoPropioActivo })}
+            className="flex flex-col items-center justify-end gap-1 pb-1.5 px-1"
+            style={{
+              minHeight: 62,
+              borderRadius: 12,
+              background: `linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.55)), url("${fondoPropio.url}") center / cover no-repeat`,
+              border: `1px solid ${aspecto.fondoPropioActivo ? P.oro : "transparent"}`,
+              boxShadow: RELIEVE,
+              color: "#F2EDE3",
+              transition: SUAVE,
+            }}
+            title={aspecto.fondoPropioActivo ? `Quitar "${fondoPropio.nombre}" del fondo` : `Poner "${fondoPropio.nombre}" de fondo`}
+          >
+            {aspecto.fondoPropioActivo ? <Check size={14} style={{ color: "#F0DDA9" }} /> : <span style={{ height: 14 }} />}
+            <span className="truncate w-full text-center" style={{ fontSize: 10.5, fontWeight: 600 }}>Mi imagen</span>
           </button>
+        ) : (
+          <label
+            className="flex flex-col items-center justify-center gap-1 cursor-pointer px-1"
+            style={{ minHeight: 62, borderRadius: 12, ...tecla(false), color: P.tenue, transition: SUAVE }}
+            title="Poner una imagen de fondo"
+          >
+            <ImagePlus size={17} style={{ color: P.oro }} />
+            <span style={{ fontSize: 10.5, fontWeight: 600 }}>Mi imagen</span>
+            <input type="file" accept="image/*" onChange={elegirFondo} style={{ display: "none" }} />
+          </label>
         )}
       </div>
+
       {fondoPropio && (
-        <p className="mb-3" style={{ fontSize: M.texto - 2, color: P.tenue }}>
-          La imagen va bajo un velo del acabado elegido, para que los botones sigan leyéndose.
-        </p>
+        <div className="flex items-center gap-2 mb-3">
+          <label className="flex items-center gap-2 cursor-pointer px-3 flex-1 min-w-0" style={{ background: P.panelVivo, borderRadius: 12, minHeight: 40, fontSize: M.texto - 1, transition: SUAVE }}>
+            <ImagePlus size={15} style={{ flexShrink: 0, color: P.oro }} />
+            <span className="truncate">{fondoPropio.nombre}</span>
+            <input type="file" accept="image/*" onChange={elegirFondo} style={{ display: "none" }} />
+          </label>
+          <button onClick={quitarFondoPropio} className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, ...tecla(false), color: P.texto, flexShrink: 0 }} title="Borrar la imagen">
+            <Trash2 size={15} />
+          </button>
+        </div>
       )}
+      <p className="mb-3" style={{ fontSize: M.texto - 2, color: P.tenue }}>
+        {aspecto.fondoPropioActivo
+          ? "Los colores del texto y los mandos siguen saliendo del acabado elegido: tócalos para ajustar la foto a claro u oscuro."
+          : "Toca un acabado para cambiar el chasis entero. Tu imagen, si la pones, va bajo un velo suave para que los mandos se sigan leyendo."}
+      </p>
 
       <span style={{ ...etiqueta, display: "block", marginBottom: 8 }}>Colocación</span>
       <div className="flex flex-wrap items-center gap-2">
