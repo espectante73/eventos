@@ -55,12 +55,12 @@ import {
 import { calcularHorasAbsolutas } from "../../lib/cronograma";
 import { useMandoMusica } from "../../lib/useMandoMusica";
 import { porcentajeAVolumen, ajustarPorcentaje, PASO_VOLUMEN } from "../../lib/volumen";
-import { guardarPista, borrarPista, leerTodasLasPistas } from "../../lib/almacenPistas";
+import { guardarPista, leerTodasLasPistas } from "../../lib/almacenPistas";
+import { leerFondo, subirFondo, borrarFondo, nombreParaMostrar } from "../../lib/fondoMusica";
 import {
   TEMAS_MUSICA,
   PANELES,
   ASPECTO_POR_DEFECTO,
-  CLAVE_FONDO_PROPIO,
   leerAspecto,
   guardarAspecto,
 } from "../../lib/temasMusica";
@@ -166,9 +166,11 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // una vez y no vuelve a verlo.
   const [organizando, setOrganizando] = useState(false);
   const [arrastrado, setArrastrado] = useState(null);
-  // Imagen de fondo propia: { nombre, url }. Vive en el mismo almacén
-  // que las pistas (IndexedDB) porque una foto no cabe en localStorage.
+  // Imagen de fondo propia: { nombre, url }. Vive en Supabase Storage,
+  // no en el navegador: si no, solo existiría en el aparato donde se
+  // subió -- ver lib/fondoMusica.js.
   const [fondoPropio, setFondoPropio] = useState(null);
+  const [subiendoFondo, setSubiendoFondo] = useState(false);
 
   const audioRef = useRef(null);
   const cortinillaRef = useRef(null);
@@ -217,21 +219,20 @@ export function VentanaMusicaEvento({ data, ventana }) {
         if (cancelado) return;
         const recuperadas = {};
         let cortinillaGuardada = null;
-        let fondoGuardado = null;
         for (const [clave, valor] of Object.entries(guardadas)) {
           if (!valor?.datos) continue;
           const url = fabricaUrl.createObjectURL(valor.datos);
           urlsCreadas.push(url);
-          // Las tres claves con nombre propio se sacan aquí: si no, el
-          // resto del bucle las metería en `pistas` como si fueran
-          // bloques, y el contador "3/9" de la lista contaría de más.
+          // "cortinilla" tiene nombre propio; el resto son bloques. Se
+          // descarta "fondo-propio", que es basura de la v20.16-20.20,
+          // cuando el fondo se guardaba aquí: sin esta línea contaría
+          // como un bloque más en el "3/9" de la lista de pistas.
           if (clave === "cortinilla") cortinillaGuardada = { nombre: valor.nombre, url };
-          else if (clave === CLAVE_FONDO_PROPIO) fondoGuardado = { nombre: valor.nombre, url };
+          else if (clave === "fondo-propio") continue;
           else recuperadas[clave] = { nombre: valor.nombre, url };
         }
         setPistas(recuperadas);
         if (cortinillaGuardada) setCortinilla(cortinillaGuardada);
-        if (fondoGuardado) setFondoPropio(fondoGuardado);
         setCargandoPistas(false);
       })
       .catch(() => {
@@ -245,6 +246,24 @@ export function VentanaMusicaEvento({ data, ventana }) {
       for (const url of urlsCreadas) fabricaUrl.revokeObjectURL(url);
     };
   }, [ventana]);
+
+  // El fondo se pide a Storage al abrir la ventana, en los DOS aparatos:
+  // es lo que hace que la imagen subida en el Mac aparezca también en el
+  // móvil (antes vivía en IndexedDB y por eso no aparecía).
+  useEffect(() => {
+    let cancelado = false;
+    leerFondo()
+      .then((fondo) => {
+        if (!cancelado) setFondoPropio(fondo);
+      })
+      .catch(() => {
+        // Un fondo que no carga no es motivo para dar la lata en plena
+        // boda: la ventana se queda con el acabado elegido y ya está.
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   // Reloj en vivo: refresca cada 15s (suficiente para un indicador que
   // se mide en minutos, y no repinta la ventana sin parar).
@@ -641,21 +660,28 @@ export function VentanaMusicaEvento({ data, ventana }) {
   const elegirFondo = (e) => {
     const archivo = e.target.files?.[0];
     if (!archivo) return;
-    const url = (ventana?.URL || URL).createObjectURL(archivo);
-    setFondoPropio({ nombre: archivo.name, url });
-    // Se pone de fondo en el acto: quien elige una imagen quiere verla,
-    // no tener que ir a activarla en otro sitio.
-    cambiarAspecto({ fondoPropioActivo: true });
+    setSubiendoFondo(true);
     setAviso("");
-    guardarPista(CLAVE_FONDO_PROPIO, archivo).catch(() =>
-      setAviso("El fondo se ve ahora, pero no se ha podido guardar para la próxima vez.")
-    );
+    subirFondo(archivo)
+      .then((fondo) => {
+        setFondoPropio(fondo);
+        // Se pone de fondo en el acto: quien elige una imagen quiere
+        // verla, no tener que ir a activarla en otro sitio.
+        cambiarAspecto({ fondoPropioActivo: true });
+      })
+      .catch((error) =>
+        setAviso(
+          `No se ha podido subir la imagen de fondo: ${error.message || error}. ` +
+            "Si dice que no existe el almacén, falta ejecutar el bloque de SQL de 'musica-fondo'."
+        )
+      )
+      .finally(() => setSubiendoFondo(false));
   };
 
   const quitarFondoPropio = () => {
     setFondoPropio(null);
     cambiarAspecto({ fondoPropioActivo: false });
-    borrarPista(CLAVE_FONDO_PROPIO).catch(() => {});
+    borrarFondo().catch(() => {});
   };
 
   // Un gesto en la interfaz: si este aparato es el que suena, lo hace;
@@ -707,9 +733,26 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // centro: carga arriba y abajo, donde están la cabecera y los mandos,
   // y deja ver la foto en medio.
   const conFoto = !!fondoPropio && aspecto.fondoPropioActivo;
-  const VELO_FOTO = T.claro
-    ? "linear-gradient(178deg, rgba(255,252,244,0.66) 0%, rgba(255,252,244,0.34) 45%, rgba(222,210,184,0.72) 100%)"
-    : "linear-gradient(178deg, rgba(10,18,14,0.62) 0%, rgba(10,18,14,0.30) 45%, rgba(5,10,8,0.72) 100%)";
+  // Con foto puesta manda ELLA, no el acabado: el usuario quería que su
+  // imagen vistiera la app entera (2026-09-01), no que se combinara con
+  // otro acabado por debajo. Lo único que hay que decirle a la ventana
+  // es si esa imagen es clara u oscura, para poner el texto y los
+  // mandos del color contrario.
+  const claro = conFoto ? !!aspecto.imagenClara : T.claro;
+  const FOTO = conFoto ? `url("${fondoPropio.url}") center / cover no-repeat` : "";
+  const VELO_FOTO = claro
+    ? "linear-gradient(178deg, rgba(255,252,244,0.60) 0%, rgba(255,252,244,0.28) 45%, rgba(222,210,184,0.66) 100%)"
+    : "linear-gradient(178deg, rgba(10,18,14,0.58) 0%, rgba(10,18,14,0.26) 45%, rgba(5,10,8,0.68) 100%)";
+  // La MISMA foto viste también los paneles y las teclas, con su propio
+  // velo: así toda la ventana parece tallada en ese material, en vez de
+  // ser una foto de fondo con botones de otro color encima.
+  const materialPanel = conFoto
+    ? `${claro ? "linear-gradient(180deg, rgba(255,253,247,0.72), rgba(246,240,228,0.60))" : "linear-gradient(180deg, rgba(10,16,13,0.62), rgba(6,11,9,0.74))"}, ${FOTO}`
+    : null;
+  const materialTecla = (activa) =>
+    claro
+      ? `linear-gradient(180deg, rgba(255,255,255,${activa ? 0.86 : 0.74}) 0%, rgba(255,255,255,${activa ? 0.5 : 0.4}) 48%, rgba(90,74,44,0.18) 100%), ${FOTO}`
+      : `linear-gradient(180deg, rgba(255,255,255,${activa ? 0.3 : 0.2}) 0%, rgba(0,0,0,${activa ? 0.24 : 0.34}) 48%, rgba(0,0,0,0.5) 100%), ${FOTO}`;
   const P = {
     fondo: conFoto ? `${VELO_FOTO}, url("${fondoPropio.url}") center / cover no-repeat` : T.fondo,
     // Los paneles NO son un velo sobre el fondo: cada tema trae su
@@ -719,12 +762,12 @@ export function VentanaMusicaEvento({ data, ventana }) {
     // Sobre una foto, un panel translúcido deja de contrastar: enseña
     // la foto en vez del chasis, y cada zona de la imagen le cambia el
     // color. Con foto puesta, los paneles se vuelven opacos.
-    panel: conFoto ? (T.claro ? "rgba(255, 253, 247, 0.88)" : "rgba(14, 22, 18, 0.66)") : T.panel,
-    panelVivo: conFoto ? (T.claro ? "rgba(255, 255, 255, 0.97)" : "rgba(32, 45, 37, 0.85)") : T.panelVivo,
-    bordePanel: T.bordePanel,
+    panel: conFoto ? materialPanel : T.panel,
+    panelVivo: conFoto ? (claro ? "rgba(255, 255, 255, 0.94)" : "rgba(32, 45, 37, 0.88)") : T.panelVivo,
+    bordePanel: conFoto ? (claro ? "rgba(90, 74, 44, 0.38)" : "rgba(255, 255, 255, 0.22)") : T.bordePanel,
     linea: T.linea,
-    texto: T.texto,
-    tenue: T.tenue,
+    texto: conFoto ? (claro ? "#20262C" : "#F4F1EA") : T.texto,
+    tenue: conFoto ? (claro ? "rgba(32, 38, 44, 0.66)" : "rgba(244, 241, 234, 0.66)") : T.tenue,
     oro: T.oro,
     // Latón pulido, no amarillo plano: claro arriba, quiebro a medio
     // camino y oscuro abajo -- ese quiebro es lo que el ojo lee como
@@ -733,7 +776,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
     mando: T.mando,
     oscuro: T.oscuro,
   };
-  const RELIEVE = T.claro
+  const RELIEVE = claro
     ? "inset 0 1px 0 rgba(255,255,255,0.55), 0 8px 20px rgba(90,74,44,0.18)"
     : "inset 0 1px 0 rgba(255,255,255,0.07), 0 10px 26px rgba(0,0,0,0.32)";
   const SUAVE = "all .18s ease";
@@ -744,23 +787,27 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // inferior. Eso es literalmente un bisel, y es lo que separa "botón
   // de metal" de "rectángulo de color".
   const tecla = (activa) =>
-    T.claro
+    claro
       ? {
           // Sobre chasis claro, una tecla se ve porque es MÁS blanca
           // que el fondo y lleva su propio canto marcado -- al revés
           // que sobre metal oscuro, donde se ve porque es más clara.
-          background: activa
-            ? "linear-gradient(180deg, #FFFFFF 0%, #F6F1E6 48%, #D8CDB6 100%)"
-            : "linear-gradient(180deg, #FDFBF6 0%, #EDE7DA 48%, #CFC5AE 100%)",
+          background: conFoto
+            ? materialTecla(activa)
+            : activa
+              ? "linear-gradient(180deg, #FFFFFF 0%, #F6F1E6 48%, #D8CDB6 100%)"
+              : "linear-gradient(180deg, #FDFBF6 0%, #EDE7DA 48%, #CFC5AE 100%)",
           boxShadow: activa
             ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -2px 4px rgba(90,74,44,0.28), 0 6px 14px rgba(70,58,36,0.30)"
             : "inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -2px 3px rgba(90,74,44,0.2), 0 4px 10px rgba(70,58,36,0.22)",
           border: `1px solid ${activa ? T.oro : T.bordePanel}`,
         }
       : {
-          background: activa
-            ? "linear-gradient(180deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.17) 45%, rgba(0,0,0,0.14) 100%)"
-            : "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.09) 45%, rgba(0,0,0,0.18) 100%)",
+          background: conFoto
+            ? materialTecla(activa)
+            : activa
+              ? "linear-gradient(180deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.17) 45%, rgba(0,0,0,0.14) 100%)"
+              : "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.09) 45%, rgba(0,0,0,0.18) 100%)",
           boxShadow: activa
             ? "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -2px 3px rgba(0,0,0,0.42), 0 6px 16px rgba(0,0,0,0.5)"
             : "inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -2px 3px rgba(0,0,0,0.36), 0 4px 12px rgba(0,0,0,0.4)",
@@ -771,8 +818,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // visor de un equipo. Sombra hacia DENTRO y un filo claro abajo (la
   // luz que rebota en el borde inferior del hueco).
   const hueco = {
-    background: T.claro ? "rgba(120,96,56,0.16)" : "rgba(0,0,0,0.28)",
-    boxShadow: T.claro
+    background: claro ? "rgba(120,96,56,0.16)" : "rgba(0,0,0,0.28)",
+    boxShadow: claro
       ? "inset 0 2px 4px rgba(120,96,56,0.32), inset 0 -1px 0 rgba(255,255,255,0.7)"
       : "inset 0 2px 5px rgba(0,0,0,0.5), inset 0 -1px 0 rgba(255,255,255,0.07)",
   };
@@ -796,7 +843,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
 
   // Los tres colores del reloj tienen versión clara y oscura: el verde
   // menta que se lee sobre verde anodizado desaparece sobre champán.
-  const colorEstado = (T.claro
+  const colorEstado = (claro
     ? { enHora: "#2E7D4F", retraso: "#B3303E", antes: "rgba(46,38,24,0.45)" }
     : { enHora: "#7FC99A", retraso: "#E88C97", antes: "rgba(242,237,227,0.45)" })[estadoReloj.tipo];
 
@@ -843,7 +890,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
               ...tecla(esActual),
               // El bloque ya pasado se atenúa, pero menos sobre chasis
               // claro: ahí un 0.4 lo dejaba casi borrado del todo.
-              opacity: !esActual && yaPaso && !suenaAqui ? (T.claro ? 0.55 : 0.4) : 1,
+              opacity: !esActual && yaPaso && !suenaAqui ? (claro ? 0.55 : 0.4) : 1,
             }}
           >
             <span className="absolute" style={{ top: 7, left: 8, ...cifra, fontSize: M.hora, color: P.tenue }}>
@@ -1172,31 +1219,37 @@ export function VentanaMusicaEvento({ data, ventana }) {
       </div>
 
       <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(74px, 1fr))" }}>
-        {Object.entries(TEMAS_MUSICA).map(([clave, t]) => (
-          <button
-            key={clave}
-            onClick={() => cambiarAspecto({ tema: clave })}
-            className="flex flex-col items-center justify-end gap-1 pb-1.5 px-1"
-            style={{
-              minHeight: 62,
-              borderRadius: 12,
-              background: t.fondo,
-              border: `1px solid ${clave === aspecto.tema ? P.oro : "transparent"}`,
-              boxShadow: RELIEVE,
-              color: t.texto,
-              transition: SUAVE,
-            }}
-            title={t.nombre}
-          >
-            {clave === aspecto.tema ? <Check size={14} style={{ color: t.oro }} /> : <span style={{ height: 14 }} />}
-            <span className="truncate w-full text-center" style={{ fontSize: 10.5, fontWeight: 600 }}>{t.nombre}</span>
-          </button>
-        ))}
+        {Object.entries(TEMAS_MUSICA).map(([clave, t]) => {
+          // Con la foto puesta, el acabado NO se pinta: marcarlo como
+          // elegido haría creer que se están combinando los dos, que es
+          // justo la confusión que hubo.
+          const elegido = !conFoto && clave === aspecto.tema;
+          return (
+            <button
+              key={clave}
+              onClick={() => cambiarAspecto({ tema: clave, fondoPropioActivo: false })}
+              className="flex flex-col items-center justify-end gap-1 pb-1.5 px-1"
+              style={{
+                minHeight: 62,
+                borderRadius: 12,
+                background: t.fondo,
+                border: `1px solid ${elegido ? P.oro : "transparent"}`,
+                boxShadow: RELIEVE,
+                color: t.texto,
+                transition: SUAVE,
+              }}
+              title={t.nombre}
+            >
+              {elegido ? <Check size={14} style={{ color: t.oro }} /> : <span style={{ height: 14 }} />}
+              <span className="truncate w-full text-center" style={{ fontSize: 10.5, fontWeight: 600 }}>{t.nombre}</span>
+            </button>
+          );
+        })}
 
         {/* La imagen propia es una casilla MÁS de esta misma rejilla, con
-            su miniatura de verdad: es lo que el usuario esperaba
-            encontrar tras subirla. Si todavía no hay ninguna, la casilla
-            es el propio botón de subir. */}
+            su miniatura y CON SU NOMBRE (el que le puso el usuario, no
+            un genérico "Mi imagen"). Si todavía no hay ninguna, la
+            casilla es el propio botón de subir. */}
         {fondoPropio ? (
           <button
             onClick={() => cambiarAspecto({ fondoPropioActivo: !aspecto.fondoPropioActivo })}
@@ -1204,36 +1257,68 @@ export function VentanaMusicaEvento({ data, ventana }) {
             style={{
               minHeight: 62,
               borderRadius: 12,
-              background: `linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.55)), url("${fondoPropio.url}") center / cover no-repeat`,
-              border: `1px solid ${aspecto.fondoPropioActivo ? P.oro : "transparent"}`,
+              background: `linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.52)), url("${fondoPropio.url}") center / cover no-repeat`,
+              border: `1px solid ${conFoto ? P.oro : "transparent"}`,
               boxShadow: RELIEVE,
               color: "#F2EDE3",
               transition: SUAVE,
             }}
-            title={aspecto.fondoPropioActivo ? `Quitar "${fondoPropio.nombre}" del fondo` : `Poner "${fondoPropio.nombre}" de fondo`}
+            title={conFoto ? `Quitar "${nombreParaMostrar(fondoPropio.nombre)}"` : `Vestir la ventana con "${nombreParaMostrar(fondoPropio.nombre)}"`}
           >
-            {aspecto.fondoPropioActivo ? <Check size={14} style={{ color: "#F0DDA9" }} /> : <span style={{ height: 14 }} />}
-            <span className="truncate w-full text-center" style={{ fontSize: 10.5, fontWeight: 600 }}>Mi imagen</span>
+            {conFoto ? <Check size={14} style={{ color: "#F0DDA9" }} /> : <span style={{ height: 14 }} />}
+            <span className="truncate w-full text-center" style={{ fontSize: 10.5, fontWeight: 600 }}>
+              {nombreParaMostrar(fondoPropio.nombre)}
+            </span>
           </button>
         ) : (
           <label
             className="flex flex-col items-center justify-center gap-1 cursor-pointer px-1"
             style={{ minHeight: 62, borderRadius: 12, ...tecla(false), color: P.tenue, transition: SUAVE }}
-            title="Poner una imagen de fondo"
+            title="Vestir la ventana con una imagen tuya"
           >
             <ImagePlus size={17} style={{ color: P.oro }} />
-            <span style={{ fontSize: 10.5, fontWeight: 600 }}>Mi imagen</span>
-            <input type="file" accept="image/*" onChange={elegirFondo} style={{ display: "none" }} />
+            <span className="truncate w-full text-center" style={{ fontSize: 10.5, fontWeight: 600 }}>
+              {subiendoFondo ? "Subiendo…" : "Mi imagen"}
+            </span>
+            <input type="file" accept="image/*" onChange={elegirFondo} style={{ display: "none" }} disabled={subiendoFondo} />
           </label>
         )}
       </div>
+
+      {/* Con la imagen puesta, lo único que hay que decidir es si es
+          clara u oscura: de eso depende que el texto y los mandos vayan
+          en oscuro o en claro por encima. Una foto no puede decidirlo
+          sola. */}
+      {conFoto && (
+        <div className="flex items-center gap-2 mb-3">
+          {[
+            { valor: false, texto: "Imagen oscura" },
+            { valor: true, texto: "Imagen clara" },
+          ].map((opcion) => (
+            <button
+              key={String(opcion.valor)}
+              onClick={() => cambiarAspecto({ imagenClara: opcion.valor })}
+              className="flex-1 rounded-full px-3"
+              style={{
+                minHeight: 40,
+                fontSize: M.texto - 1,
+                fontWeight: 600,
+                transition: SUAVE,
+                ...(!!aspecto.imagenClara === opcion.valor ? { background: P.oro, color: P.oscuro } : { ...tecla(false), color: P.texto }),
+              }}
+            >
+              {opcion.texto}
+            </button>
+          ))}
+        </div>
+      )}
 
       {fondoPropio && (
         <div className="flex items-center gap-2 mb-3">
           <label className="flex items-center gap-2 cursor-pointer px-3 flex-1 min-w-0" style={{ background: P.panelVivo, borderRadius: 12, minHeight: 40, fontSize: M.texto - 1, transition: SUAVE }}>
             <ImagePlus size={15} style={{ flexShrink: 0, color: P.oro }} />
-            <span className="truncate">{fondoPropio.nombre}</span>
-            <input type="file" accept="image/*" onChange={elegirFondo} style={{ display: "none" }} />
+            <span className="truncate">{subiendoFondo ? "Subiendo…" : "Cambiar la imagen"}</span>
+            <input type="file" accept="image/*" onChange={elegirFondo} style={{ display: "none" }} disabled={subiendoFondo} />
           </label>
           <button onClick={quitarFondoPropio} className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, ...tecla(false), color: P.texto, flexShrink: 0 }} title="Borrar la imagen">
             <Trash2 size={15} />
@@ -1241,9 +1326,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
         </div>
       )}
       <p className="mb-3" style={{ fontSize: M.texto - 2, color: P.tenue }}>
-        {aspecto.fondoPropioActivo
-          ? "Los colores del texto y los mandos siguen saliendo del acabado elegido: tócalos para ajustar la foto a claro u oscuro."
-          : "Toca un acabado para cambiar el chasis entero. Tu imagen, si la pones, va bajo un velo suave para que los mandos se sigan leyendo."}
+        {conFoto
+          ? "Tu imagen viste la ventana entera: fondo, paneles y teclas."
+          : "Tu imagen se guarda en la nube, así que se ve igual en el ordenador y en el móvil."}
       </p>
 
       <span style={{ ...etiqueta, display: "block", marginBottom: 8 }}>Colocación</span>
@@ -1336,7 +1421,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
   };
 
   const avisoVisible = aviso ? (
-    <p className="px-4 py-3" style={{ borderRadius: 14, background: "rgba(228,120,130,0.14)", color: T.claro ? "#8E2530" : "#F0A4AC", fontSize: M.texto }}>
+    <p className="px-4 py-3" style={{ borderRadius: 14, background: "rgba(228,120,130,0.14)", color: claro ? "#8E2530" : "#F0A4AC", fontSize: M.texto }}>
       {aviso}
     </p>
   ) : null;
@@ -1353,7 +1438,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
         style={{
           borderRadius: 14,
           background: infoCanal.grave ? "rgba(228,120,130,0.14)" : P.panelVivo,
-          color: infoCanal.grave ? (T.claro ? "#8E2530" : "#F0A4AC") : P.tenue,
+          color: infoCanal.grave ? (claro ? "#8E2530" : "#F0A4AC") : P.tenue,
           fontSize: M.texto,
         }}
       >
@@ -1398,8 +1483,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
         // El latido del bloque que suena vive en index.css (una
         // animación no se puede escribir en línea), así que su color
         // viaja hasta allí como variable CSS.
-        "--oro-latido": T.claro ? "rgba(122, 92, 36, 0.75)" : "rgba(217, 183, 120, 0.85)",
-        "--oro-latido-tenue": T.claro ? "rgba(122, 92, 36, 0.2)" : "rgba(217, 183, 120, 0.22)",
+        "--oro-latido": claro ? "rgba(122, 92, 36, 0.75)" : "rgba(217, 183, 120, 0.85)",
+        "--oro-latido-tenue": claro ? "rgba(122, 92, 36, 0.2)" : "rgba(217, 183, 120, 0.22)",
         "--oro-borde": T.oro,
       }}
     >
@@ -1429,7 +1514,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
         <span className="flex items-center gap-2" style={{ flexShrink: 0 }}>
           <span
             className="flex items-center"
-            style={{ color: conectado ? P.oro : infoCanal.grave ? (T.claro ? "#B3303E" : "#E88C97") : P.tenue }}
+            style={{ color: conectado ? P.oro : infoCanal.grave ? (claro ? "#B3303E" : "#E88C97") : P.tenue }}
             title={infoCanal.texto}
           >
             {conectado ? <Wifi size={16} /> : <WifiOff size={16} />}
@@ -1494,7 +1579,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
                 {!esReproductor && !recibidoEstado && (
                   <div
                     className="flex items-center gap-3 px-4 py-3"
-                    style={{ borderRadius: 14, background: "rgba(228,120,130,0.14)", color: T.claro ? "#8E2530" : "#F0A4AC", fontSize: M.texto }}
+                    style={{ borderRadius: 14, background: "rgba(228,120,130,0.14)", color: claro ? "#8E2530" : "#F0A4AC", fontSize: M.texto }}
                   >
                     <WifiOff size={18} style={{ flexShrink: 0 }} />
                     <span>Esperando al ordenador… Abre "Música del evento" en el Mac y márcalo como el aparato que reproduce.</span>

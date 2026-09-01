@@ -5,7 +5,7 @@ describe("leerAspecto", () => {
   beforeEach(() => localStorage.clear());
 
   it("devuelve el aspecto de fábrica cuando no hay nada guardado", () => {
-    expect(leerAspecto()).toEqual({ tema: TEMA_POR_DEFECTO, fondoPropioActivo: false, disposicion: "horizontal", orden: PANELES });
+    expect(leerAspecto()).toEqual({ tema: TEMA_POR_DEFECTO, fondoPropioActivo: false, imagenClara: false, disposicion: "horizontal", orden: PANELES });
   });
 
   it("conserva lo guardado", () => {
@@ -13,6 +13,7 @@ describe("leerAspecto", () => {
     expect(leerAspecto()).toEqual({
       tema: "champan",
       fondoPropioActivo: true,
+      imagenClara: false,
       disposicion: "vertical",
       orden: ["volumen", "bloques", "reproductor", "pistas"],
     });

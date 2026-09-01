@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.21",
+    cambios: [
+      "La imagen de fondo pasa a guardarse en la nube, no en el navegador: por eso la que se subía en el Mac no aparecía en el móvil (lo que se guarda en un aparato no existe para el otro). Ahora se sube una vez y se ve en los dos. ⚠️ Necesita ejecutar antes el bloque de SQL del almacén 'musica-fondo'.",
+      "La imagen viste la ventana ENTERA — fondo, paneles y teclas —, no solo el fondo. Y deja de combinarse con un acabado por debajo: si pones tu imagen, manda ella.",
+      "Con la imagen puesta aparecen dos botones, Imagen oscura / Imagen clara, que es lo único que hay que decidir: de eso depende que el texto y los mandos vayan en claro o en oscuro por encima.",
+      "La casilla de la imagen muestra el NOMBRE que le pusiste al archivo, en vez de un genérico \"Mi imagen\".",
+    ],
+  },
+  {
     version: "20.20",
     cambios: [
       "Arreglada la imagen de fondo propia: subirla parecía no hacer nada. Eran dos cosas a la vez — el velo que se le ponía encima era tan opaco (85%) que tapaba la foto casi por completo, y además no aparecía por ningún sitio para poder elegirla.",

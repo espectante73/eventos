@@ -2502,3 +2502,57 @@ as $$
   limit 10;
 $$;
 grant execute on function anfitrion_listar_historial_texto(uuid, text, uuid, text) to anon;
+
+-- ---------- Imagen de fondo de "Música del evento" (2026-09-01) ----------
+-- Mismo motivo que musica-ambiental y og-imagen, pero por un fallo
+-- concreto: el fondo se guardaba en IndexedDB (como las pistas) y por
+-- eso solo existía en el aparato donde se subió -- el usuario lo subió
+-- en el Mac y en el móvil no aparecía. IndexedDB pertenece al navegador
+-- de cada aparato; Storage lo sirve a todos.
+--
+-- A diferencia de og-imagen, aquí el nombre de archivo NO es fijo: se
+-- conserva el que le puso el usuario (saneado, ver lib/fondoMusica.js)
+-- para poder mostrarlo en el catálogo de acabados. Solo hay un fondo a
+-- la vez: subir uno nuevo borra el anterior desde el cliente.
+insert into storage.buckets ("id", "name", "public")
+values ('musica-fondo', 'musica-fondo', true)
+on conflict ("id") do nothing;
+
+drop policy if exists "musica_fondo_lectura_publica" on storage.objects;
+create policy "musica_fondo_lectura_publica"
+on storage.objects for select
+to public
+using (bucket_id = 'musica-fondo');
+
+drop policy if exists "musica_fondo_solo_anfitrion_sube" on storage.objects;
+create policy "musica_fondo_solo_anfitrion_sube"
+on storage.objects for insert
+to authenticated
+with check (
+  bucket_id = 'musica-fondo'
+  and es_anfitrion()
+);
+
+-- UPDATE además de INSERT: se sube con upsert:true, y eso reemplaza el
+-- objeto existente cuando el nombre coincide (mismo caso que og-imagen).
+drop policy if exists "musica_fondo_solo_anfitrion_reemplaza" on storage.objects;
+create policy "musica_fondo_solo_anfitrion_reemplaza"
+on storage.objects for update
+to authenticated
+using (
+  bucket_id = 'musica-fondo'
+  and es_anfitrion()
+)
+with check (
+  bucket_id = 'musica-fondo'
+  and es_anfitrion()
+);
+
+drop policy if exists "musica_fondo_solo_anfitrion_borra" on storage.objects;
+create policy "musica_fondo_solo_anfitrion_borra"
+on storage.objects for delete
+to authenticated
+using (
+  bucket_id = 'musica-fondo'
+  and es_anfitrion()
+);

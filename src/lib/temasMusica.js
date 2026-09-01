@@ -112,6 +112,11 @@ export const ASPECTO_POR_DEFECTO = {
   // acabado sigue mandando en los colores del texto y los paneles --
   // una foto no puede decidir si el texto va claro u oscuro.
   fondoPropioActivo: false,
+  // ¿La imagen es clara (metal pulido, mármol...) u oscura? Decide si
+  // el texto y los mandos van oscuros o claros ENCIMA de ella. Una foto
+  // no puede decidirlo sola, y el acabado tampoco vale para esto: si
+  // pones tu imagen, el acabado deja de pintarse.
+  imagenClara: false,
   disposicion: "horizontal",
   orden: PANELES,
 };
@@ -133,6 +138,7 @@ export function leerAspecto() {
     return {
       tema: TEMAS_MUSICA[guardado.tema] ? guardado.tema : TEMA_POR_DEFECTO,
       fondoPropioActivo: guardado.fondoPropioActivo === true,
+      imagenClara: guardado.imagenClara === true,
       disposicion: guardado.disposicion === "vertical" ? "vertical" : "horizontal",
       orden,
     };
