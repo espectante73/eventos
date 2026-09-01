@@ -32,6 +32,8 @@ export class ErrorBoundary extends React.Component {
     console.error("Error inesperado capturado por ErrorBoundary:", error, info);
   }
 
+  reintentar = () => this.setState({ error: null });
+
   render() {
     if (!this.state.error) return this.props.children;
     return (
@@ -49,29 +51,59 @@ export class ErrorBoundary extends React.Component {
           >
             Algo ha fallado
           </h1>
-          <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: 0.8 }}>
+          <p className="text-sm mb-3" style={{ color: C.charcoal, opacity: 0.8 }}>
             Ha ocurrido un error inesperado y esta pantalla no se puede seguir mostrando.
-            Tus datos están a salvo en la base de datos — nada de esto los afecta. Prueba a
-            recargar la página.
+            Tus datos están a salvo en la base de datos — nada de esto los afecta.
+          </p>
+          {/* El mensaje real, a la vista. Sin esto, el único sitio donde
+              se puede leer es la consola del navegador -- imposible en un
+              móvil, y justo donde más falta hace para poder contar qué ha
+              pasado. */}
+          <p
+            className="text-xs mb-4 px-3 py-2 rounded text-left"
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              background: C.paper,
+              color: C.charcoal,
+              border: `1px solid ${C.line}`,
+              wordBreak: "break-word",
+            }}
+          >
+            {String(this.state.error?.message || this.state.error)}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
+            {/* ⚠️ En una ventana emergente NUNCA hay que recargar: se
+                abrió con window.open() sin dirección, así que recargarla
+                deja una página en blanco de verdad, sin nada que la
+                vuelva a pintar. Ahí lo que sirve es reintentar (volver a
+                montar el contenido) o cerrarla y abrirla desde el menú. */}
             <button
-              onClick={() => (this.props.ventana || window).location.reload()}
+              onClick={this.props.ventana ? this.reintentar : () => window.location.reload()}
               className="px-4 py-2 rounded text-sm font-medium"
               style={{ background: C.ink, color: C.paper }}
             >
-              Recargar la página
+              {this.props.ventana ? "Reintentar" : "Recargar la página"}
             </button>
             {this.props.alReiniciar && (
               <button
                 onClick={() => {
                   this.props.alReiniciar();
-                  (this.props.ventana || window).location.reload();
+                  if (this.props.ventana) this.reintentar();
+                  else window.location.reload();
                 }}
                 className="px-4 py-2 rounded text-sm font-medium"
                 style={{ background: "#fff", color: C.ink, border: `1px solid ${C.line}` }}
               >
                 Restablecer el aspecto
+              </button>
+            )}
+            {this.props.ventana && (
+              <button
+                onClick={() => this.props.ventana.close()}
+                className="px-4 py-2 rounded text-sm font-medium"
+                style={{ background: "#fff", color: C.ink, border: `1px solid ${C.line}` }}
+              >
+                Cerrar la ventana
               </button>
             )}
           </div>

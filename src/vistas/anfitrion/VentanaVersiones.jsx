@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.24",
+    cambios: [
+      "La ventana de música ya no se cae entera si el canal del mando no puede abrirse. Al suscribirse, Supabase puede lanzar un error de verdad (por ejemplo si el navegador no consigue abrir la conexión), y ese error subía hasta React y tumbaba la ventana — cuando lo cierto es que la música no depende de eso: suena desde el archivo guardado en el ordenador. Ahora un fallo del canal se queda en un aviso y la ventana funciona igual.",
+      "Ningún envío ni aviso del mando puede ya tumbar la ventana: todas las llamadas al canal están protegidas.",
+      "Cuando algo falla dentro de una ventana emergente, el aviso muestra el MENSAJE del error (antes solo se podía leer en la consola del navegador — imposible desde un móvil) y los botones son los que sirven ahí: Reintentar, Restablecer el aspecto y Cerrar la ventana. \"Recargar\" se ha quitado en ese caso: una ventana emergente se abre sin dirección, así que recargarla la dejaba en blanco de verdad.",
+    ],
+  },
+  {
     version: "20.23",
     cambios: [
       "Arreglada la ventana en blanco al volver a abrir Música del evento con una imagen de fondo puesta. La foto se estaba pintando por separado en cada pieza (el chasis, cada panel y cada una de las teclas): el navegador tenía que decodificar la misma imagen quince veces antes de mostrar nada, y con un PNG pesado se atragantaba. Ahora se pinta UNA vez en el chasis y las piezas son translúcidas — se ve igual, y arranca al instante.",

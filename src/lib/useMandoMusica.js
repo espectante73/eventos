@@ -30,6 +30,17 @@ const NOMBRE_CANAL = "musica-evento";
 // aparato distinto en la lista de presentes.
 const ID_APARATO = Math.random().toString(36).slice(2);
 
+// Anunciar el papel de este aparato. Envuelto en try como el resto de
+// llamadas a Realtime: nada de esto puede tumbar la ventana.
+function anunciarse(canal, rol) {
+  try {
+    canal?.track({ rol: rol || "sin-definir" });
+  } catch {
+    // Sin presencia, la cabecera dirá "falta el otro aparato". El mando
+    // sigue funcionando: la presencia solo sirve para informar.
+  }
+}
+
 export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
   const canalRef = useRef(null);
   const reintentoRef = useRef(null);
@@ -65,50 +76,70 @@ export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
   }, [onEstado]);
 
   useEffect(() => {
-    const canal = supabase.channel(NOMBRE_CANAL, {
-      config: { broadcast: { self: false } },
-    });
+    // ⚠️ TODO el montaje del canal va dentro de un try. `subscribe()`
+    // llama por dentro a `socket.connect()`, que LANZA de verdad si el
+    // navegador no puede abrir el WebSocket ("WebSocket not available")
+    // o si falta la clave. Al ocurrir dentro de un efecto, ese error
+    // sube hasta React y tumba la ventana entera -- y esta ventana tiene
+    // que seguir funcionando sin canal: la música se reproduce en local,
+    // el mando es un extra. Nunca dejar que una llamada de Realtime
+    // quede fuera de un try aquí dentro.
+    let canal;
+    try {
+      canal = supabase.channel(NOMBRE_CANAL, {
+        config: { broadcast: { self: false } },
+      });
 
-    canal.on("presence", { event: "sync" }, () => {
-      const presentes = canal.presenceState();
-      setOtrosAparatos(
-        Object.entries(presentes)
-          .filter(([clave]) => clave !== ID_APARATO)
-          .flatMap(([, apariciones]) => apariciones.map((a) => a.rol))
-          .filter(Boolean)
-      );
-    });
+      canal.on("presence", { event: "sync" }, () => {
+        const presentes = canal.presenceState();
+        setOtrosAparatos(
+          Object.entries(presentes)
+            .filter(([clave]) => clave !== ID_APARATO)
+            .flatMap(([, apariciones]) => apariciones.map((a) => a.rol))
+            .filter(Boolean)
+        );
+      });
 
-    canal.on("broadcast", { event: "orden" }, ({ payload }) => {
-      ultimoMensajeRef.current = Date.now();
-      onOrdenRef.current?.(payload);
-    });
-    canal.on("broadcast", { event: "estado" }, ({ payload }) => {
-      ultimoMensajeRef.current = Date.now();
-      onEstadoRef.current?.(payload);
-    });
+      canal.on("broadcast", { event: "orden" }, ({ payload }) => {
+        ultimoMensajeRef.current = Date.now();
+        onOrdenRef.current?.(payload);
+      });
+      canal.on("broadcast", { event: "estado" }, ({ payload }) => {
+        ultimoMensajeRef.current = Date.now();
+        onEstadoRef.current?.(payload);
+      });
 
-    // Se pasa SIEMPRE el mismo manejador al resuscribir: `subscribe()`
-    // solo registra los avisos de error y cierre si se le da uno, así
-    // que un reintento sin él dejaría el canal mudo para siempre.
-    const avisarEstado = (estado) => {
-      setEstadoCanal(estado);
-      // Anunciarse en cuanto el canal está listo. Sin este `track`, el
-      // otro aparato no sabe que existo.
-      if (estado === "SUBSCRIBED") canal.track({ rol: rolRef.current || "sin-definir" });
-      // Un canal caído no se recupera solo. Sin este reintento, si la
-      // conexión falla una vez (wifi del local, suspensión del Mac...)
-      // el mando se queda muerto para el resto de la noche.
-      if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT" || estado === "CLOSED") {
-        clearTimeout(reintentoRef.current);
-        reintentoRef.current = setTimeout(() => {
-          setEstadoCanal("REINTENTANDO");
-          canal.subscribe(avisarEstado);
-        }, 4000);
-      }
-    };
-    canal.subscribe(avisarEstado);
-    canalRef.current = canal;
+      // Se pasa SIEMPRE el mismo manejador al resuscribir: `subscribe()`
+      // solo registra los avisos de error y cierre si se le da uno, así
+      // que un reintento sin él dejaría el canal mudo para siempre.
+      const avisarEstado = (estado) => {
+        setEstadoCanal(estado);
+        // Anunciarse en cuanto el canal está listo. Sin este `track`, el
+        // otro aparato no sabe que existo.
+        if (estado === "SUBSCRIBED") anunciarse(canal, rolRef.current);
+        // Un canal caído no se recupera solo. Sin este reintento, si la
+        // conexión falla una vez (wifi del local, suspensión del Mac...)
+        // el mando se queda muerto para el resto de la noche.
+        if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT" || estado === "CLOSED") {
+          clearTimeout(reintentoRef.current);
+          reintentoRef.current = setTimeout(() => {
+            setEstadoCanal("REINTENTANDO");
+            try {
+              canal.subscribe(avisarEstado);
+            } catch {
+              setEstadoCanal("CHANNEL_ERROR");
+            }
+          }, 4000);
+        }
+      };
+      canal.subscribe(avisarEstado);
+      canalRef.current = canal;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("No se ha podido abrir el canal del mando:", error);
+      setEstadoCanal("CHANNEL_ERROR");
+      return undefined;
+    }
 
     // ⚠️ El indicador NO puede depender solo del aviso de arriba, y esto
     // es un bug real (2026-09-01): el usuario tenía el mando gobernando
@@ -145,26 +176,27 @@ export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
   // en silencio si el canal todavía no está listo -- es un mando: más
   // vale que un toque se pierda a que la app reviente en plena boda.
   const enviarOrden = useCallback((accion, valor) => {
-    canalRef.current?.send({
-      type: "broadcast",
-      event: "orden",
-      payload: { accion, valor },
-    });
+    try {
+      canalRef.current?.send({ type: "broadcast", event: "orden", payload: { accion, valor } });
+    } catch {
+      // Un toque perdido es preferible a la app reventando en plena boda.
+    }
   }, []);
 
   // Cuando este aparato deja de estar "sin definir" y se declara
   // reproductor o mando, hay que volver a anunciarlo: el otro extremo
   // pinta su aviso a partir de ese papel.
   useEffect(() => {
-    if (canalRef.current?.state === "joined") canalRef.current.track({ rol: rol || "sin-definir" });
+    if (canalRef.current?.state === "joined") anunciarse(canalRef.current, rol);
   }, [rol]);
 
   const enviarEstado = useCallback((estado) => {
-    canalRef.current?.send({
-      type: "broadcast",
-      event: "estado",
-      payload: estado,
-    });
+    try {
+      canalRef.current?.send({ type: "broadcast", event: "estado", payload: estado });
+    } catch {
+      // Igual que enviarOrden: informar del estado nunca puede tumbar
+      // la ventana que está sonando.
+    }
   }, []);
 
   return {
