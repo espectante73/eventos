@@ -29,14 +29,13 @@ export function useMandoMusica({ onOrden, onEstado } = {}) {
   const canalRef = useRef(null);
   const reintentoRef = useRef(null);
   const [conectado, setConectado] = useState(false);
-  // Estado crudo del canal, tal cual lo devuelve Supabase
-  // ("SUBSCRIBED", "CHANNEL_ERROR", "TIMED_OUT", "CLOSED"). Se expone
-  // para poder DECIR qué pasa en vez de un simple tachado -- el usuario
-  // vio el icono tachado mientras la música sonaba y, con razón, no
-  // entendía por qué (2026-09-01). La música suena en local desde el
-  // archivo guardado, así que puede ir perfecta con el canal caído:
-  // son dos cosas independientes, y conviene que la pantalla lo diga.
+  // Qué está haciendo el canal, en palabras, para poder DECIRLO en vez
+  // de un simple icono tachado.
   const [estadoCanal, setEstadoCanal] = useState("CONECTANDO");
+  // Cuándo llegó el último mensaje del otro aparato. Es la prueba más
+  // sólida de que el canal funciona: si algo ha llegado hace tres
+  // segundos, está conectado, se diga lo que se diga por otro lado.
+  const ultimoMensajeRef = useRef(0);
 
   // Los dos callbacks viven en refs y NO en las dependencias del efecto
   // de abajo a propósito: si estuvieran, cada repintado del componente
@@ -57,30 +56,57 @@ export function useMandoMusica({ onOrden, onEstado } = {}) {
     });
 
     canal.on("broadcast", { event: "orden" }, ({ payload }) => {
+      ultimoMensajeRef.current = Date.now();
       onOrdenRef.current?.(payload);
     });
     canal.on("broadcast", { event: "estado" }, ({ payload }) => {
+      ultimoMensajeRef.current = Date.now();
       onEstadoRef.current?.(payload);
     });
 
-    canal.subscribe((estado) => {
+    // Se pasa SIEMPRE el mismo manejador al resuscribir: `subscribe()`
+    // solo registra los avisos de error y cierre si se le da uno, así
+    // que un reintento sin él dejaría el canal mudo para siempre.
+    const avisarEstado = (estado) => {
       setEstadoCanal(estado);
-      setConectado(estado === "SUBSCRIBED");
       // Un canal caído no se recupera solo. Sin este reintento, si la
       // conexión falla una vez (wifi del local, suspensión del Mac...)
       // el mando se queda muerto para el resto de la noche.
-      if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT") {
+      if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT" || estado === "CLOSED") {
         clearTimeout(reintentoRef.current);
         reintentoRef.current = setTimeout(() => {
           setEstadoCanal("REINTENTANDO");
-          canal.subscribe();
+          canal.subscribe(avisarEstado);
         }, 4000);
       }
-    });
+    };
+    canal.subscribe(avisarEstado);
     canalRef.current = canal;
+
+    // ⚠️ El indicador NO puede depender solo del aviso de arriba, y esto
+    // es un bug real (2026-09-01): el usuario tenía el mando gobernando
+    // el Mac de verdad y la ventana seguía diciendo "conectando" en los
+    // dos aparatos. Motivo: ese aviso se dispara UNA vez, y solo si al
+    // suscribirse el canal estaba cerrado -- si el aviso no llega o
+    // llega a destiempo, el estado se queda congelado aunque el canal
+    // esté trabajando. Así que cada 2 segundos se mira la realidad: el
+    // estado interno del propio canal ("joined") y si ha llegado algún
+    // mensaje hace poco. Cualquiera de las dos cosas es prueba de que
+    // funciona, y manda sobre lo que dijera el aviso.
+    const vigilante = setInterval(() => {
+      const unido = canalRef.current?.state === "joined";
+      const recibiendoAhora = Date.now() - ultimoMensajeRef.current < 12000;
+      const vivo = unido || recibiendoAhora;
+      setConectado(vivo);
+      // Los setState con el mismo valor no repintan nada (React los
+      // descarta), así que este latido de 2s no cuesta repintados.
+      if (vivo) setEstadoCanal("SUBSCRIBED");
+      else if (canalRef.current?.state === "errored") setEstadoCanal("CHANNEL_ERROR");
+    }, 2000);
 
     return () => {
       clearTimeout(reintentoRef.current);
+      clearInterval(vigilante);
       supabase.removeChannel(canal);
       canalRef.current = null;
     };

@@ -55,28 +55,6 @@ export const TEMAS_MUSICA = {
     linea: "rgba(120, 92, 40, 0.34)",
     claro: true,
   },
-  acero: {
-    nombre: "Acero pulido",
-    // Metal pulido de verdad, no un gris plano: la primera capa son
-    // microlíneas verticales (el cepillado) y la segunda el degradado
-    // curvo de la pieza, con un reflejo claro arriba, la zona de sombra
-    // a dos tercios y el rebote de luz en el canto de abajo.
-    fondo:
-      "repeating-linear-gradient(90deg, rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 1px, rgba(40,48,56,0.07) 2px, rgba(40,48,56,0.03) 4px), linear-gradient(178deg, #EDEFF1 0%, #C8CDD3 34%, #99A1A9 72%, #C4CAD0 100%)",
-    panel: "rgba(255, 255, 255, 0.72)",
-    panelVivo: "rgba(255, 255, 255, 0.94)",
-    bordePanel: "rgba(56, 66, 76, 0.30)",
-    texto: "#20262C",
-    tenue: "rgba(32, 38, 44, 0.62)",
-    // El latón se queda aunque el chasis sea acero: es lo que mantiene
-    // el aire de la fiesta y no un electrodoméstico.
-    oro: "#8A6A32",
-    oroRelleno: "linear-gradient(180deg, #F6E7BF 0%, #DCBE85 45%, #A07C42 100%)",
-    mando: "radial-gradient(circle at 34% 26%, #FFF7E2 0%, #EAD3A0 34%, #C79F63 68%, #8F6E3C 100%)",
-    oscuro: "#2A2016",
-    linea: "rgba(56, 66, 76, 0.30)",
-    claro: true,
-  },
   grafito: {
     nombre: "Grafito",
     fondo: "linear-gradient(178deg, #34383B 0%, #202325 42%, #0D0F10 100%)",
@@ -115,6 +93,11 @@ export const CLAVE_TEMA = "musica-evento-tema";
 // almacén que las pistas (lib/almacenPistas.js) -- una imagen puede
 // pesar megas, así que no cabe en localStorage.
 export const CLAVE_FONDO_PROPIO = "fondo-propio";
+// Se probó un quinto acabado, "Acero pulido", dibujado con CSS
+// (microlíneas verticales + degradado). Retirado el 2026-09-01: de
+// cerca no parecía acero, solo rayas verticales. Un metal convincente
+// necesita una FOTO de metal, no un degradado -- y para eso ya está la
+// imagen de fondo propia. No volver a intentarlo con CSS.
 
 // Distribución de los paneles en la ventana. "vertical" = todo en una
 // columna (lo que pidió el usuario para tener la ventana estrecha a un

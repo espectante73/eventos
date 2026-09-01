@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.18",
+    cambios: [
+      "Arreglado de verdad el wifi tachado: el mando podía estar gobernando el ordenador y la ventana seguía diciendo \"conectando\" en los dos aparatos. El aviso de Supabase en el que se apoyaba llega UNA sola vez y podía no llegar nunca; ahora, cada 2 segundos, se mira la realidad — si el canal está unido o si acaba de llegar un mensaje del otro aparato, está conectado, y punto.",
+      "Si el canal se cae, el reintento vuelve a registrar el aviso de errores (antes se reconectaba mudo y ya no informaba de nada más).",
+      "Retirado el acabado \"Acero pulido\": dibujado con CSS no parecía acero, solo rayas verticales. Un metal convincente pide una foto de metal, y para eso ya está la opción de poner una imagen de fondo propia.",
+    ],
+  },
+  {
     version: "20.17",
     cambios: [
       "Mucho más contraste entre el chasis y los mandos, en los cinco acabados: los paneles dejan de ser un velo translúcido sobre el fondo (sobre champán eran casi el mismo color) y pasan a tener color y borde propios, y las teclas ganan canto marcado.",
