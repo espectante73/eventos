@@ -218,22 +218,26 @@
    con un ecualizador diminuto en una esquina y no se veía. Contorno
    dorado fijo + halo que entra y sale, lento (2,4s) para que acompañe
    sin agobiar en una fiesta. */
+/* El color sale de --oro-latido, que pone la propia ventana según el
+   acabado elegido (v20.17): el dorado claro que brilla sobre verde
+   anodizado se pierde del todo sobre champán o acero pulido. El valor
+   de reserva es el de siempre, por si alguien usa la clase sin fijarlo. */
 @keyframes latido-bloque {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(217, 183, 120, 0.15), inset 0 0 0 rgba(217, 183, 120, 0);
+    box-shadow: 0 0 0 0 var(--oro-latido-tenue, rgba(217, 183, 120, 0.15)), inset 0 0 0 rgba(217, 183, 120, 0);
   }
   50% {
-    box-shadow: 0 0 16px 3px rgba(217, 183, 120, 0.85), inset 0 0 14px rgba(217, 183, 120, 0.3);
+    box-shadow: 0 0 16px 3px var(--oro-latido, rgba(217, 183, 120, 0.85)), inset 0 0 14px var(--oro-latido-tenue, rgba(217, 183, 120, 0.3));
   }
 }
 .bloque-sonando {
-  border-color: #D9B778 !important;
+  border-color: var(--oro-borde, #D9B778) !important;
   animation: latido-bloque 2.4s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .bloque-sonando {
     animation: none;
-    box-shadow: 0 0 0 2px rgba(217, 183, 120, 0.8);
+    box-shadow: 0 0 0 2px var(--oro-latido, rgba(217, 183, 120, 0.8));
   }
 }
 

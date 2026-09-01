@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.17",
+    cambios: [
+      "Mucho más contraste entre el chasis y los mandos, en los cinco acabados: los paneles dejan de ser un velo translúcido sobre el fondo (sobre champán eran casi el mismo color) y pasan a tener color y borde propios, y las teclas ganan canto marcado.",
+      "Acabado nuevo: Acero pulido — metal cepillado de verdad, con microlíneas y reflejo curvo, manteniendo el latón de los mandos para no perder el aire de la fiesta.",
+      "El volumen pasa de una fila apretada a tres: silenciar arriba, la barra con el porcentaje en grande en el medio, y abajo dos botones anchos de Bajar y Subir (que siguen repitiendo si se mantienen pulsados).",
+      "El latido del bloque que suena cambia de color según el acabado: el dorado claro se perdía por completo sobre champán o acero.",
+    ],
+  },
+  {
     version: "20.16",
     cambios: [
       "Música del evento se puede personalizar: botón de paleta en la cabecera con cuatro acabados (Verde anodizado, Champán, Grafito y Marfil). Cada uno cambia la paleta ENTERA, no solo el fondo — sobre champán o marfil, el texto y los mandos se oscurecen solos para seguir leyéndose.",

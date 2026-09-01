@@ -52,7 +52,6 @@ import {
   Check,
   RotateCcw,
 } from "lucide-react";
-import { C } from "../../theme";
 import { calcularHorasAbsolutas } from "../../lib/cronograma";
 import { useMandoMusica } from "../../lib/useMandoMusica";
 import { porcentajeAVolumen, ajustarPorcentaje, PASO_VOLUMEN } from "../../lib/volumen";
@@ -696,10 +695,6 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // sigue siendo el mismo objeto de metal en los cuatro: banda más
   // clara arriba (donde da la luz) y oscurecido hacia abajo.
   const T = TEMAS_MUSICA[aspecto.tema] || TEMAS_MUSICA.anodizado;
-  // Sobre metal claro el filo de luz casi no se ve y manda la sombra;
-  // sobre metal oscuro pasa justo lo contrario. De ahí que los brillos
-  // y los velos se inviertan según el tema.
-  const velo = (opacidad) => (T.claro ? `rgba(0, 0, 0, ${opacidad})` : `rgba(255, 255, 255, ${opacidad})`);
   const P = {
     // Con imagen propia, el degradado del tema se convierte en un velo
     // por encima de la foto: sin él, cualquier foto con zonas claras y
@@ -707,8 +702,13 @@ export function VentanaMusicaEvento({ data, ventana }) {
     fondo: fondoPropio
       ? `${T.claro ? "linear-gradient(178deg, rgba(255,253,247,0.82), rgba(232,222,200,0.86))" : "linear-gradient(178deg, rgba(12,22,17,0.72), rgba(8,14,11,0.86))"}, url("${fondoPropio.url}") center / cover no-repeat`
       : T.fondo,
-    panel: velo(T.claro ? 0.05 : 0.055),
-    panelVivo: velo(T.claro ? 0.09 : 0.11),
+    // Los paneles NO son un velo sobre el fondo: cada tema trae su
+    // propio color y su propio borde (ver lib/temasMusica.js), porque
+    // con un velo genérico un panel sobre champán y el champán eran
+    // casi el mismo color y no se veía dónde empezaba el mando.
+    panel: T.panel,
+    panelVivo: T.panelVivo,
+    bordePanel: T.bordePanel,
     linea: T.linea,
     texto: T.texto,
     tenue: T.tenue,
@@ -733,21 +733,27 @@ export function VentanaMusicaEvento({ data, ventana }) {
   const tecla = (activa) =>
     T.claro
       ? {
+          // Sobre chasis claro, una tecla se ve porque es MÁS blanca
+          // que el fondo y lleva su propio canto marcado -- al revés
+          // que sobre metal oscuro, donde se ve porque es más clara.
           background: activa
-            ? "linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,251,240,0.7) 45%, rgba(150,124,80,0.16) 100%)"
-            : "linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,252,244,0.45) 45%, rgba(150,124,80,0.14) 100%)",
+            ? "linear-gradient(180deg, #FFFFFF 0%, #F6F1E6 48%, #D8CDB6 100%)"
+            : "linear-gradient(180deg, #FDFBF6 0%, #EDE7DA 48%, #CFC5AE 100%)",
           boxShadow: activa
-            ? "inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -2px 3px rgba(120,96,56,0.28), 0 6px 14px rgba(120,96,56,0.24)"
-            : "inset 0 1px 0 rgba(255,255,255,0.8), inset 0 -2px 3px rgba(120,96,56,0.2), 0 4px 10px rgba(120,96,56,0.18)",
+            ? "inset 0 1px 0 rgba(255,255,255,1), inset 0 -2px 4px rgba(90,74,44,0.28), 0 6px 14px rgba(70,58,36,0.30)"
+            : "inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -2px 3px rgba(90,74,44,0.2), 0 4px 10px rgba(70,58,36,0.22)",
+          border: `1px solid ${activa ? T.oro : T.bordePanel}`,
         }
       : {
           background: activa
-            ? "linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.09) 45%, rgba(0,0,0,0.10) 100%)"
-            : "linear-gradient(180deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.04) 45%, rgba(0,0,0,0.13) 100%)",
+            ? "linear-gradient(180deg, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.17) 45%, rgba(0,0,0,0.14) 100%)"
+            : "linear-gradient(180deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.09) 45%, rgba(0,0,0,0.18) 100%)",
           boxShadow: activa
-            ? "inset 0 1px 0 rgba(255,255,255,0.42), inset 0 -2px 3px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.45)"
-            : "inset 0 1px 0 rgba(255,255,255,0.24), inset 0 -2px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.34)",
+            ? "inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -2px 3px rgba(0,0,0,0.42), 0 6px 16px rgba(0,0,0,0.5)"
+            : "inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -2px 3px rgba(0,0,0,0.36), 0 4px 12px rgba(0,0,0,0.4)",
+          border: `1px solid ${activa ? T.oro : "rgba(255,255,255,0.14)"}`,
         };
+
   // HUECO: lo contrario -- una zona rehundida en el chasis, como el
   // visor de un equipo. Sombra hacia DENTRO y un filo claro abajo (la
   // luz que rebota en el borde inferior del hueco).
@@ -763,7 +769,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
     ? { base: 16, bloque: 78, nombre: 17, hora: 11, play: 76, playIcono: 30, salto: 56, silencio: 48, reloj: 17, titulo: 17, texto: 14, etiqueta: 10.5, ancho: 520 }
     : { base: 14, bloque: 70, nombre: 15, hora: 10, play: 64, playIcono: 26, salto: 50, silencio: 44, reloj: 16, titulo: 16, texto: 13, etiqueta: 10, ancho: 900 };
 
-  const tarjeta = { background: P.panel, borderRadius: 18, boxShadow: RELIEVE };
+  // El borde es la mitad del contraste: sin él, un panel claro sobre un
+  // fondo claro se difumina y no se ve dónde acaba la pieza.
+  const tarjeta = { background: P.panel, borderRadius: 18, boxShadow: RELIEVE, border: `1px solid ${P.bordePanel}` };
   const etiqueta = {
     fontSize: M.etiqueta,
     letterSpacing: "0.12em",
@@ -820,8 +828,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
               borderRadius: 14,
               transition: SUAVE,
               ...tecla(esActual),
-              border: `1px solid ${esActual ? P.oro : "rgba(255,255,255,0.09)"}`,
-              opacity: !esActual && yaPaso && !suenaAqui ? 0.4 : 1,
+              // El bloque ya pasado se atenúa, pero menos sobre chasis
+              // claro: ahí un 0.4 lo dejaba casi borrado del todo.
+              opacity: !esActual && yaPaso && !suenaAqui ? (T.claro ? 0.55 : 0.4) : 1,
             }}
           >
             <span className="absolute" style={{ top: 7, left: 8, ...cifra, fontSize: M.hora, color: P.tenue }}>
@@ -832,7 +841,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
             )}
             <span
               className="text-center"
-              style={{ fontSize: M.nombre, fontWeight: 600, lineHeight: 1.12, letterSpacing: "-0.01em", color: esActual ? P.texto : "rgba(242,237,227,0.82)" }}
+              style={{ fontSize: M.nombre, fontWeight: 600, lineHeight: 1.12, letterSpacing: "-0.01em", color: esActual ? P.texto : P.tenue }}
             >
               {b.texto || `Bloque ${i + 1}`}
             </span>
@@ -996,75 +1005,85 @@ export function VentanaMusicaEvento({ data, ventana }) {
     </div>
   );
 
-  // UNA sola fila: silencio, barra, porcentaje, menos y más. Antes eran
-  // tres filas apiladas (rótulo / barra / botones) para lo mismo.
+  // Volumen en TRES filas, a petición del usuario (2026-09-01): el
+  // silencio arriba con su rótulo, la barra con el porcentaje en el
+  // medio, y abajo los dos botones de subir y bajar ocupando media
+  // anchura cada uno. Antes iba todo apretado en una sola fila, con los
+  // botones del tamaño de una letra -- justo lo que ya había señalado
+  // como poco práctico la primera vez que lo probó.
   const controlVolumen = (
-    <div className="flex items-center gap-2 px-3" style={{ ...tarjeta, minHeight: M.silencio + 16 }}>
+    <div className="flex flex-col gap-2.5 px-3 py-3" style={tarjeta}>
       <button
         onClick={hacer("silencio")}
-        className="flex items-center justify-center"
+        className="w-full flex items-center gap-2.5 px-3"
         style={{
-          width: M.silencio,
-          height: M.silencio,
+          minHeight: M.silencio,
           borderRadius: 14,
           ...tecla(false),
-          ...(silenciado ? { background: "linear-gradient(180deg, #A63B45, #7E2630)" } : {}),
-          color: silenciado ? P.texto : P.oro,
-          flexShrink: 0,
+          ...(silenciado
+            ? { background: "linear-gradient(180deg, #A63B45, #7E2630)", border: "1px solid rgba(255,255,255,0.22)" }
+            : {}),
+          color: silenciado ? "#F2EDE3" : P.texto,
           transition: SUAVE,
         }}
         title={silenciado ? "Quitar el silencio" : "Silenciar"}
       >
-        {silenciado ? <VolumeX size={esMovil ? 21 : 18} /> : <Volume2 size={esMovil ? 21 : 18} />}
+        {silenciado ? <VolumeX size={esMovil ? 21 : 18} /> : <Volume2 size={esMovil ? 21 : 18} style={{ color: P.oro }} />}
+        <span style={{ fontSize: M.texto, fontWeight: 600 }}>{silenciado ? "Silenciado — tocar para volver" : "Silenciar"}</span>
       </button>
-      <input
-        type="range"
-        min="0"
-        max="100"
-        step={PASO_VOLUMEN}
-        value={silenciado ? 0 : volumen}
-        onChange={(e) => {
-          const v = Number(e.target.value);
-          if (esReproductor) aplicarVolumen(v);
-          else enviarOrden("volumen", v);
-        }}
-        className="flex-1 min-w-0"
-        style={{ accentColor: C.gold, height: 28 }}
-      />
-      <span style={{ ...cifra, fontSize: M.texto, fontWeight: 600, color: P.tenue, width: 40, textAlign: "right", flexShrink: 0 }}>
-        {silenciado ? "—" : `${volumen}%`}
-      </span>
-      {[-1, 1].map((direccion) => (
-        <button
-          key={direccion}
-          onPointerDown={(e) => {
-            e.preventDefault();
-            empezarRepeticion(direccion);
+
+      <div className="flex items-center gap-3 px-1">
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step={PASO_VOLUMEN}
+          value={silenciado ? 0 : volumen}
+          onChange={(e) => {
+            const v = Number(e.target.value);
+            if (esReproductor) aplicarVolumen(v);
+            else enviarOrden("volumen", v);
           }}
-          onPointerUp={pararRepeticion}
-          onPointerLeave={pararRepeticion}
-          onPointerCancel={pararRepeticion}
-          onContextMenu={(e) => e.preventDefault()}
-          className="flex items-center justify-center"
-          style={{
-            width: M.silencio,
-            height: M.silencio,
-            borderRadius: 14,
-            fontSize: esMovil ? 21 : 18,
-            fontWeight: 600,
-            ...tecla(false),
-            color: P.texto,
-            flexShrink: 0,
-            touchAction: "manipulation",
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            transition: SUAVE,
-          }}
-          title={`${direccion < 0 ? "Bajar" : "Subir"} ${PASO_VOLUMEN}% (mantén pulsado para seguir)`}
-        >
-          {direccion < 0 ? "−" : "+"}
-        </button>
-      ))}
+          className="flex-1 min-w-0"
+          style={{ accentColor: P.oro, height: 30 }}
+        />
+        <span style={{ ...cifra, fontSize: M.texto + 3, fontWeight: 600, color: P.texto, width: 52, textAlign: "right", flexShrink: 0 }}>
+          {silenciado ? "—" : `${volumen}%`}
+        </span>
+      </div>
+
+      <div className="flex items-stretch gap-2.5">
+        {[-1, 1].map((direccion) => (
+          <button
+            key={direccion}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              empezarRepeticion(direccion);
+            }}
+            onPointerUp={pararRepeticion}
+            onPointerLeave={pararRepeticion}
+            onPointerCancel={pararRepeticion}
+            onContextMenu={(e) => e.preventDefault()}
+            className="flex-1 flex items-center justify-center gap-2"
+            style={{
+              minHeight: M.silencio + 8,
+              borderRadius: 14,
+              fontSize: esMovil ? 26 : 22,
+              fontWeight: 600,
+              ...tecla(false),
+              color: P.texto,
+              touchAction: "manipulation",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+              transition: SUAVE,
+            }}
+            title={`${direccion < 0 ? "Bajar" : "Subir"} ${PASO_VOLUMEN}% (mantén pulsado para seguir)`}
+          >
+            {direccion < 0 ? "−" : "+"}
+            <span style={{ ...etiqueta, color: P.tenue }}>{direccion < 0 ? "Bajar" : "Subir"}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 
@@ -1132,7 +1151,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
         </button>
       </div>
 
-      <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+      <div className="grid gap-2 mb-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(74px, 1fr))" }}>
         {Object.entries(TEMAS_MUSICA).map(([clave, t]) => (
           <button
             key={clave}
@@ -1316,7 +1335,19 @@ export function VentanaMusicaEvento({ data, ventana }) {
   return (
     <div
       className="flex flex-col metal-cepillado"
-      style={{ height: "100%", background: P.fondo, fontFamily: "'Inter', sans-serif", fontSize: M.base, color: P.texto }}
+      style={{
+        height: "100%",
+        background: P.fondo,
+        fontFamily: "'Inter', sans-serif",
+        fontSize: M.base,
+        color: P.texto,
+        // El latido del bloque que suena vive en index.css (una
+        // animación no se puede escribir en línea), así que su color
+        // viaja hasta allí como variable CSS.
+        "--oro-latido": T.claro ? "rgba(122, 92, 36, 0.75)" : "rgba(217, 183, 120, 0.85)",
+        "--oro-latido-tenue": T.claro ? "rgba(122, 92, 36, 0.2)" : "rgba(217, 183, 120, 0.22)",
+        "--oro-borde": T.oro,
+      }}
     >
       <audio ref={audioRef} onEnded={() => setSonando(false)} onLoadedMetadata={(e) => setDuracion(e.target.duration || 0)} />
       <audio ref={cortinillaRef} src={cortinilla?.url} />
