@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.14",
+    cambios: [
+      "Los 9 bloques dejan de ser cuadrados y pasan a rectángulos, quitándoles solo un poco de altura. Ganan relieve de verdad (también los no seleccionados, que antes iban planos y parecían recuadros pintados en vez de botones) y algo más de separación entre ellos.",
+    ],
+  },
+  {
     version: "20.13",
     cambios: [
       "Música del evento, más compacta: en el móvil ya no hace falta hacer scroll para llegar al volumen ni al play — todo lo que se toca en directo cabe en una pantalla.",

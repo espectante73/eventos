@@ -629,7 +629,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
   );
 
   const cuadriculaBloques = (
-    <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+    <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
       {bloques.map((b, i) => {
         const esActual = i === seleccionado;
         const suenaAqui = i === bloqueSonando;
@@ -640,13 +640,23 @@ export function VentanaMusicaEvento({ data, ventana }) {
             onClick={hacer("bloque", i)}
             className={`relative flex flex-col items-center justify-center gap-1 p-2${suenaAqui ? " bloque-sonando" : ""}`}
             style={{
-              aspectRatio: "1 / 1",
+              // Rectángulo suave, no cuadrado: se le quita poca altura
+              // (0.82 del ancho) -- a petición del usuario, 2026-09-01.
+              // De paso el conjunto ocupa menos alto sin encoger la
+              // letra ni perder superficie donde tocar.
+              aspectRatio: "1 / 0.82",
               minHeight: M.bloque,
               borderRadius: 14,
               transition: SUAVE,
               background: esActual ? P.panelVivo : P.panel,
-              border: `1px solid ${esActual ? P.oro : "transparent"}`,
-              boxShadow: esActual ? "inset 0 1px 0 rgba(255,255,255,0.12)" : "none",
+              border: `1px solid ${esActual ? P.oro : "rgba(255,255,255,0.06)"}`,
+              // Relieve de verdad, también sin seleccionar: filo de luz
+              // arriba y sombra proyectada debajo. Antes los no
+              // seleccionados iban planos ("boxShadow: none") y por eso
+              // parecían recuadros pintados, no botones.
+              boxShadow: esActual
+                ? "inset 0 1px 0 rgba(255,255,255,0.16), 0 6px 16px rgba(0,0,0,0.4)"
+                : "inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 12px rgba(0,0,0,0.28)",
               opacity: !esActual && yaPaso && !suenaAqui ? 0.4 : 1,
             }}
           >
