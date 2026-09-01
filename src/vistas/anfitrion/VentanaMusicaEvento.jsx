@@ -578,18 +578,45 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // - Tres niveles de peso: acción > navegación > información.
   // - Radios y sombras constantes; nada que se toque baja de 44px.
   const P = {
-    fondo: "linear-gradient(160deg, #22402F 0%, #0E1A13 100%)",
+    // Chasis de aluminio anodizado verde: el degradado ya no es plano de
+    // arriba abajo, lleva una banda algo más clara arriba (donde daría
+    // la luz) y se oscurece hacia abajo, como una pieza curva.
+    fondo: "linear-gradient(178deg, #2A4A37 0%, #1D3628 38%, #0F1C15 100%)",
     panel: "rgba(255, 255, 255, 0.055)",
     panelVivo: "rgba(255, 255, 255, 0.11)",
     linea: "rgba(217, 183, 120, 0.18)",
     texto: "#F2EDE3",
     tenue: "rgba(242, 237, 227, 0.52)",
     oro: C.goldClaro,
-    oroRelleno: "linear-gradient(180deg, #E8CE94, #C29A5E)",
+    // Latón pulido, no amarillo plano: claro arriba, quiebro a medio
+    // camino y oscuro abajo -- ese quiebro es lo que el ojo lee como
+    // "reflejo sobre metal".
+    oroRelleno: "linear-gradient(180deg, #F0DDA9 0%, #D9B778 42%, #A87F4A 100%)",
     oscuro: "#12201A",
   };
   const RELIEVE = "inset 0 1px 0 rgba(255,255,255,0.07), 0 10px 26px rgba(0,0,0,0.32)";
   const SUAVE = "all .18s ease";
+
+  // ---------- Materiales ----------
+  // TECLA: pieza que sobresale. Degradado propio (claro arriba, oscuro
+  // abajo) + filo de luz en el borde superior y filo oscuro en el
+  // inferior. Eso es literalmente un bisel, y es lo que separa "botón
+  // de metal" de "rectángulo de color".
+  const tecla = (activa) => ({
+    background: activa
+      ? "linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.09) 45%, rgba(0,0,0,0.10) 100%)"
+      : "linear-gradient(180deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.04) 45%, rgba(0,0,0,0.13) 100%)",
+    boxShadow: activa
+      ? "inset 0 1px 0 rgba(255,255,255,0.42), inset 0 -2px 3px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.45)"
+      : "inset 0 1px 0 rgba(255,255,255,0.24), inset 0 -2px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.34)",
+  });
+  // HUECO: lo contrario -- una zona rehundida en el chasis, como el
+  // visor de un equipo. Sombra hacia DENTRO y un filo claro abajo (la
+  // luz que rebota en el borde inferior del hueco).
+  const hueco = {
+    background: "rgba(0,0,0,0.28)",
+    boxShadow: "inset 0 2px 5px rgba(0,0,0,0.5), inset 0 -1px 0 rgba(255,255,255,0.07)",
+  };
 
   const esMovil = rol === "mando";
   const M = esMovil
@@ -648,15 +675,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
               minHeight: M.bloque,
               borderRadius: 14,
               transition: SUAVE,
-              background: esActual ? P.panelVivo : P.panel,
-              border: `1px solid ${esActual ? P.oro : "rgba(255,255,255,0.06)"}`,
-              // Relieve de verdad, también sin seleccionar: filo de luz
-              // arriba y sombra proyectada debajo. Antes los no
-              // seleccionados iban planos ("boxShadow: none") y por eso
-              // parecían recuadros pintados, no botones.
-              boxShadow: esActual
-                ? "inset 0 1px 0 rgba(255,255,255,0.16), 0 6px 16px rgba(0,0,0,0.4)"
-                : "inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 12px rgba(0,0,0,0.28)",
+              ...tecla(esActual),
+              border: `1px solid ${esActual ? P.oro : "rgba(255,255,255,0.09)"}`,
               opacity: !esActual && yaPaso && !suenaAqui ? 0.4 : 1,
             }}
           >
@@ -714,13 +734,16 @@ export function VentanaMusicaEvento({ data, ventana }) {
             </span>
           </div>
 
-          <div className="rounded-full mb-4" style={{ height: 5, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
+          {/* Visor rehundido, como el display de un equipo de audio: la
+              barra va DENTRO del hueco, no pintada encima. */}
+          <div className="rounded-full mb-4" style={{ ...hueco, height: 7, overflow: "hidden", padding: 1 }}>
             <div
               className="rounded-full"
               style={{
                 height: 5,
                 width: mirandoElQueSuena && duracion ? `${Math.min(100, (posicion / duracion) * 100)}%` : 0,
-                background: P.oro,
+                background: "linear-gradient(180deg, #F0DDA9, #C29A5E)",
+                boxShadow: "0 0 6px rgba(217,183,120,0.5)",
                 transition: "width .9s linear",
               }}
             />
@@ -733,7 +756,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
               <button
                 onClick={hacer("saltar", -salto)}
                 className="flex items-center justify-center"
-                style={{ width: M.salto, height: M.salto, borderRadius: 14, background: P.panelVivo, color: P.texto, transition: SUAVE }}
+                style={{ width: M.salto, height: M.salto, borderRadius: 14, ...tecla(false), color: P.texto, transition: SUAVE }}
               >
                 <ChevronsLeft size={esMovil ? 22 : 19} />
               </button>
@@ -743,8 +766,14 @@ export function VentanaMusicaEvento({ data, ventana }) {
                 style={{
                   width: M.play,
                   height: M.play,
-                  background: P.oroRelleno,
-                  boxShadow: "0 8px 22px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.35)",
+                  // Mando de latón torneado: el reflejo no está centrado
+                  // sino arriba a la izquierda (de donde viene la luz en
+                  // todo el resto de la pantalla), y el aro fino claro
+                  // remata el canto de la pieza.
+                  background: "radial-gradient(circle at 34% 26%, #F7E9C4 0%, #E2C489 34%, #C29A5E 68%, #96703E 100%)",
+                  border: "1px solid rgba(255,240,205,0.55)",
+                  boxShadow:
+                    "inset 0 2px 3px rgba(255,255,255,0.5), inset 0 -3px 5px rgba(0,0,0,0.32), 0 8px 20px rgba(0,0,0,0.45)",
                   transition: SUAVE,
                 }}
                 title={mirandoElQueSuena ? (sonando ? "Pausar" : "Reanudar") : `Poner "${bloques[seleccionado]?.texto || ""}"`}
@@ -758,7 +787,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
               <button
                 onClick={hacer("saltar", salto)}
                 className="flex items-center justify-center"
-                style={{ width: M.salto, height: M.salto, borderRadius: 14, background: P.panelVivo, color: P.texto, transition: SUAVE }}
+                style={{ width: M.salto, height: M.salto, borderRadius: 14, ...tecla(false), color: P.texto, transition: SUAVE }}
               >
                 <ChevronsRight size={esMovil ? 22 : 19} />
               </button>
@@ -834,7 +863,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
           width: M.silencio,
           height: M.silencio,
           borderRadius: 14,
-          background: silenciado ? C.wax : P.panelVivo,
+          ...tecla(false),
+          ...(silenciado ? { background: "linear-gradient(180deg, #A63B45, #7E2630)" } : {}),
           color: silenciado ? P.texto : P.oro,
           flexShrink: 0,
           transition: SUAVE,
@@ -878,7 +908,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
             borderRadius: 14,
             fontSize: esMovil ? 21 : 18,
             fontWeight: 600,
-            background: P.panelVivo,
+            ...tecla(false),
             color: P.texto,
             flexShrink: 0,
             touchAction: "manipulation",
@@ -955,7 +985,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
   ) : null;
 
   return (
-    <div className="flex flex-col" style={{ height: "100%", background: P.fondo, fontFamily: "'Inter', sans-serif", fontSize: M.base, color: P.texto }}>
+    <div
+      className="flex flex-col metal-cepillado"
+      style={{ height: "100%", background: P.fondo, fontFamily: "'Inter', sans-serif", fontSize: M.base, color: P.texto }}
+    >
       <audio ref={audioRef} onEnded={() => setSonando(false)} onLoadedMetadata={(e) => setDuracion(e.target.duration || 0)} />
       <audio ref={cortinillaRef} src={cortinilla?.url} />
 

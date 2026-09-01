@@ -236,3 +236,23 @@
     box-shadow: 0 0 0 2px rgba(217, 183, 120, 0.8);
   }
 }
+
+/* ---------- Acabado metálico de "Música del evento" (2026-09-01) ----------
+   A petición del usuario: "un aire más metálico, como un reproductor de
+   música real", sin perder los colores de la fiesta. Referencia:
+   ALUMINIO ANODIZADO VERDE con mandos de LATÓN -- un material que existe
+   de verdad en equipos de audio, así que el verde deja de leerse como
+   pintura plana y pasa a leerse como metal teñido.
+
+   .metal-cepillado: microlíneas verticales muy tenues sobre el chasis.
+   A simple vista no se ven como rayas; lo que hacen es quitarle al
+   fondo el aspecto de "color plano de pantalla". */
+.metal-cepillado {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.016) 0px,
+    rgba(255, 255, 255, 0.016) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}

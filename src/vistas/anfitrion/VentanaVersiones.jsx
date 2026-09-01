@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.15",
+    cambios: [
+      "Música del evento estrena acabado metálico, con la idea de un equipo de audio real: aluminio anodizado verde con mandos de latón. Mantiene los colores de la fiesta — el verde deja de parecer pintura plana y pasa a parecer metal teñido.",
+      "Los 9 bloques y las teclas de salto y volumen son ahora piezas con bisel: filo de luz arriba, filo oscuro abajo y sombra proyectada.",
+      "La barra de progreso pasa a estar HUNDIDA en el chasis, como el visor de un equipo, en vez de pintada por encima.",
+      "El botón de play es un mando de latón torneado, con el reflejo arriba a la izquierda y aro fino en el canto.",
+    ],
+  },
+  {
     version: "20.14",
     cambios: [
       "Los 9 bloques dejan de ser cuadrados y pasan a rectángulos, quitándoles solo un poco de altura. Ganan relieve de verdad (también los no seleccionados, que antes iban planos y parecían recuadros pintados en vez de botones) y algo más de separación entre ellos.",
