@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { porcentajeAVolumen, volumenAPorcentaje, ajustarPorcentaje, PASO_VOLUMEN } from "./volumen";
+import { porcentajeAVolumen, volumenAPorcentaje, ajustarPorcentaje, PASO_VOLUMEN, duracionCruce, CRUCE_POR_DEFECTO, CRUCE_MINIMO, CRUCE_MAXIMO } from "./volumen";
 
 describe("porcentajeAVolumen", () => {
   it("los extremos son exactos", () => {
@@ -43,5 +43,24 @@ describe("ajustarPorcentaje", () => {
   it("se frena en los topes en vez de pasarse", () => {
     expect(ajustarPorcentaje(100, 1)).toBe(100);
     expect(ajustarPorcentaje(0, -1)).toBe(0);
+  });
+});
+
+describe("duracionCruce", () => {
+  it("usa el valor medio cuando no hay cortinilla que medir", () => {
+    expect(duracionCruce(undefined)).toBe(CRUCE_POR_DEFECTO);
+    expect(duracionCruce(NaN)).toBe(CRUCE_POR_DEFECTO);
+    expect(duracionCruce(Infinity)).toBe(CRUCE_POR_DEFECTO);
+    expect(duracionCruce(0)).toBe(CRUCE_POR_DEFECTO);
+  });
+
+  it("se ajusta a la cortinilla para que quepa entera", () => {
+    expect(duracionCruce(3)).toBe(3000);
+    expect(duracionCruce(4.5)).toBe(4500);
+  });
+
+  it("no baja de minimo ni pasa de maximo", () => {
+    expect(duracionCruce(0.4)).toBe(CRUCE_MINIMO);
+    expect(duracionCruce(20)).toBe(CRUCE_MAXIMO);
   });
 });

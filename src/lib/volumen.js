@@ -35,3 +35,24 @@ export function ajustarPorcentaje(porcentaje, pasos) {
   const siguiente = (Number(porcentaje) || 0) + pasos * PASO_VOLUMEN;
   return Math.min(100, Math.max(0, siguiente));
 }
+
+// ---------- Fundido cruzado entre bloques ----------
+// Cuánto dura el solape de dos pistas al cambiar de bloque. Se ajusta a
+// la cortinilla si la hay: la idea es que la cortinilla quepa ENTERA
+// dentro del cruce, que para eso está -- antes la pista se cortaba en
+// seco y la cortinilla entraba sobre un silencio, que era justo la
+// pausa incómoda que se quería evitar (2026-09-01).
+//
+// Topes: por debajo de 1,5s el cruce no se percibe como tal, y por
+// encima de 6s las dos pistas conviven demasiado tiempo y se emborrona
+// todo. Sin cortinilla (o con una duración que el navegador todavía no
+// sabe: `undefined`, NaN, Infinity) se usa un valor medio.
+export const CRUCE_POR_DEFECTO = 2500;
+export const CRUCE_MINIMO = 1500;
+export const CRUCE_MAXIMO = 6000;
+
+export function duracionCruce(segundosCortinilla) {
+  const ms = Number(segundosCortinilla) * 1000;
+  if (!Number.isFinite(ms) || ms <= 0) return CRUCE_POR_DEFECTO;
+  return Math.min(CRUCE_MAXIMO, Math.max(CRUCE_MINIMO, ms));
+}

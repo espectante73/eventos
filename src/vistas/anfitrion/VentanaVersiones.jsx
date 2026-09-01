@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.28",
+    cambios: [
+      "La cortinilla ya hace su trabajo: al cambiar de bloque, el anterior NO se corta en seco. Las dos pistas se solapan — la que sale se va apagando mientras la que entra sube — y la cortinilla suena por encima de las dos. Se acabó el silencio incómodo en cada transición.",
+      "El cruce dura lo que dure la cortinilla (entre segundo y medio y seis segundos), para que quepa entera dentro del solape.",
+      "Si tocas el volumen o silencias en mitad de un cruce, el cruce lo respeta en vez de pelearse contigo. Y si pulsas pausa, el que salía se calla ya.",
+      "Sigue sin reiniciarse nada: el bloque que dejas se queda anotado en el segundo en que lo dejaste, no en el que acaba el cruce.",
+    ],
+  },
+  {
     version: "20.27",
     cambios: [
       "Arreglado el ordenador quedándose clavado en \"el canal del mando no conecta\" mientras el móvil iba fino. La reconexión no reconectaba nada: volvía a suscribir el MISMO canal, y esa llamada no hace absolutamente nada si el canal no está cerrado del todo. Ahora se tira el canal roto y se levanta uno nuevo.",

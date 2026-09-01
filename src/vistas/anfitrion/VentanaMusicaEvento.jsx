@@ -22,9 +22,17 @@
 // audio de la noche (pista + cortinilla), no solo el primero, para
 // dejar el permiso "en el banco" desde el minuto uno.
 //
-// Y se usa SIEMPRE el mismo elemento <audio> durante toda la noche,
-// cambiándole solo la fuente al pasar de bloque -- nunca se crea uno
-// nuevo, porque el permiso concedido se queda pegado al elemento.
+// Hay DOS elementos <audio> de pista, fijos toda la noche, que se van
+// turnando -- nunca se crea ninguno sobre la marcha, porque el permiso
+// concedido en ese primer clic se queda pegado al elemento (por eso el
+// clic los "toca" a los dos, y también a la cortinilla).
+//
+// Son dos y no uno porque un mismo <audio> no puede solaparse consigo
+// mismo: al cambiarle la fuente, lo que sonaba se corta en seco. Eso
+// dejaba un silencio en cada cambio de bloque que la cortinilla no
+// llegaba a tapar (reportado el 2026-09-01). Con dos, el que sale se va
+// apagando mientras el que entra sube, y la cortinilla suena por encima
+// de los dos.
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   Music,
@@ -54,7 +62,7 @@ import {
 } from "lucide-react";
 import { calcularHorasAbsolutas } from "../../lib/cronograma";
 import { useMandoMusica } from "../../lib/useMandoMusica";
-import { porcentajeAVolumen, ajustarPorcentaje, PASO_VOLUMEN } from "../../lib/volumen";
+import { porcentajeAVolumen, ajustarPorcentaje, duracionCruce, PASO_VOLUMEN } from "../../lib/volumen";
 import { guardarPista, leerTodasLasPistas } from "../../lib/almacenPistas";
 import { leerFondo, subirFondo, borrarFondo, nombreParaMostrar, PESO_EXCESIVO } from "../../lib/fondoMusica";
 import {
@@ -186,8 +194,24 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // igual.
   const [fondoListo, setFondoListo] = useState(false);
 
+  // DOS elementos de pista, no uno. Un mismo <audio> no puede solaparse
+  // consigo mismo: al cambiarle la fuente, lo que sonaba se corta en
+  // seco -- justo el silencio incómodo que la cortinilla venía a tapar y
+  // no tapaba (2026-09-01). Con dos, el que sale se va bajando mientras
+  // el que entra sube, y la cortinilla suena por encima de los dos.
+  const audioUnoRef = useRef(null);
+  const audioDosRef = useRef(null);
+  // Apunta SIEMPRE al elemento que manda ahora mismo. El resto del
+  // código (reproducir, pausar, saltar, la barra de progreso...) sigue
+  // usando `audioRef.current` sin enterarse de que hay dos.
   const audioRef = useRef(null);
   const cortinillaRef = useRef(null);
+  // Fundido en curso: { temporizador, saliente }. Se guarda para poder
+  // cortarlo en seco si llega otro cambio de bloque encima.
+  const fundidoRef = useRef(null);
+  // `pausar` está definida más arriba que el motor del fundido y
+  // necesita poder cortarlo: misma solución que publicarEstadoRef.
+  const cortarFundidoRef = useRef(null);
   const wakeLockRef = useRef(null);
   // publicarEstado se define más abajo (necesita el canal, que a su vez
   // necesita este manejador) -- esta ref rompe ese círculo.
@@ -196,6 +220,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // temporizador no puede leer el `volumen` del estado (se quedaría
   // congelado en el valor de cuando empezó la pulsación).
   const volumenRef = useRef(70);
+  // Mismo motivo que volumenRef: el fundido cruzado corre en un
+  // temporizador y necesita leer el silencio actual, no el de cuando
+  // empezó el cruce.
+  const silenciadoRef = useRef(false);
   // Mientras se mantiene pulsado, el mando ignora el volumen que le
   // anuncia el Mac -- si no, el latido de cada 3s le daría un tirón
   // hacia atrás justo mientras estás ajustando.
@@ -336,7 +364,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
   const aplicarVolumen = useCallback((porcentaje) => {
     setVolumen(porcentaje);
     setSilenciado(false);
-    if (audioRef.current) audioRef.current.volume = porcentajeAVolumen(porcentaje);
+    // Durante un cruce no se toca el volumen a mano: el propio fundido
+    // lee el valor nuevo en su siguiente paso y lo respeta.
+    if (!fundidoRef.current && audioRef.current) audioRef.current.volume = porcentajeAVolumen(porcentaje);
   }, []);
 
   // ---------- Subir/bajar volumen manteniendo pulsado ----------
@@ -346,6 +376,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
   useEffect(() => {
     volumenRef.current = volumen;
   }, [volumen]);
+  useEffect(() => {
+    silenciadoRef.current = silenciado;
+  }, [silenciado]);
 
   const darPasoVolumen = useCallback(
     (direccion) => {
@@ -426,6 +459,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
 
   const pausar = useCallback(() => {
     anotarPosicion(bloqueSonando);
+    // Si se pausa en mitad de un cruce, el que salía se calla ya: dejar
+    // dos pistas apagándose solas después de pulsar pausa sería raro.
+    cortarFundidoRef.current?.();
     audioRef.current?.pause();
     setSonando(false);
   }, [anotarPosicion, bloqueSonando]);
@@ -444,6 +480,47 @@ export function VentanaMusicaEvento({ data, ventana }) {
     setAviso("");
   }, []);
 
+  // ---------- Fundido cruzado ----------
+  // Cuánto dura el solape: lo que dure la cortinilla, con topes (ver
+  // duracionCruce en lib/volumen.js).
+  const duracionFundido = useCallback(() => duracionCruce(cortinillaRef.current?.duration), []);
+
+  // Termina de golpe el fundido que hubiera: el que salía se calla y el
+  // que entra se queda a su volumen. Se llama antes de empezar otro y
+  // antes de cualquier gesto que mande sobre el sonido (pausa, volumen).
+  const cortarFundido = useCallback(() => {
+    const fundido = fundidoRef.current;
+    if (!fundido) return;
+    clearInterval(fundido.temporizador);
+    fundido.saliente.pause();
+    fundidoRef.current = null;
+    const entrante = audioRef.current;
+    if (entrante) entrante.volume = porcentajeAVolumen(silenciadoRef.current ? 0 : volumenRef.current);
+  }, []);
+
+  cortarFundidoRef.current = cortarFundido;
+
+  const empezarFundido = useCallback(
+    (saliente, entrante) => {
+      cortarFundido();
+      const total = duracionFundido();
+      const paso = 60;
+      const empezado = Date.now();
+      // El volumen objetivo se lee en CADA paso, no se calcula una vez:
+      // así, si alguien toca el volumen (o silencia) en mitad del cruce,
+      // el fundido lo respeta en vez de pelearse con él.
+      const temporizador = setInterval(() => {
+        const avance = Math.min(1, (Date.now() - empezado) / total);
+        const objetivo = silenciadoRef.current ? 0 : volumenRef.current;
+        saliente.volume = porcentajeAVolumen(objetivo * (1 - avance));
+        entrante.volume = porcentajeAVolumen(objetivo * avance);
+        if (avance >= 1) cortarFundido();
+      }, paso);
+      fundidoRef.current = { temporizador, saliente };
+    },
+    [cortarFundido, duracionFundido]
+  );
+
   // Poner a sonar un bloque: suena la cortinilla y entra su pista. Es el
   // gesto con más riesgo de todo el invento (cambiar la fuente de un
   // <audio> ya desbloqueado) -- por eso el paso 1 existe: para probarlo
@@ -453,12 +530,14 @@ export function VentanaMusicaEvento({ data, ventana }) {
   const reproducirBloque = useCallback(
     (indice) => {
       setAviso("");
-      const audio = audioRef.current;
+      const actual = audioRef.current;
       const siguiente = pistas[indice];
-      if (!audio || !siguiente) return;
+      if (!siguiente) return;
 
-      if (bloqueSonando === indice && audio.src) {
-        audio
+      // Ese bloque YA es el que suena: solo reanudar, sin recargar nada
+      // (recargar lo devolvería al principio, que fue un fallo real).
+      if (bloqueSonando === indice && actual?.src) {
+        actual
           .play()
           .then(() => setSonando(true))
           .catch(() => setAviso("El navegador no ha dejado reanudar. Pulsa play aquí en el Mac."));
@@ -466,28 +545,46 @@ export function VentanaMusicaEvento({ data, ventana }) {
       }
 
       // El bloque que estaba sonando se queda anotado donde iba, para
-      // poder retomarlo más tarde sin volver a empezar.
+      // poder retomarlo más tarde sin volver a empezar. Se anota AHORA,
+      // en el momento del gesto, no al acabar el fundido: el cruce es
+      // decoración, lo que el usuario dejó a medias es este segundo.
       anotarPosicion(bloqueSonando);
+      cortarFundido();
+
+      // El elemento que entra es el que NO está sonando.
+      const entrante = actual === audioUnoRef.current ? audioDosRef.current : audioUnoRef.current;
+      if (!entrante) return;
 
       sonarCortinilla();
-      audio.src = siguiente.url;
-      audio.volume = porcentajeAVolumen(silenciado ? 0 : volumen);
+      entrante.src = siguiente.url;
+      // Empieza mudo si hay algo con lo que cruzarse; si no hay nada
+      // sonando, entra directamente a su volumen (nadie quiere esperar
+      // dos segundos a que suba la primera pista de la noche).
+      const hayQueCruzar = Boolean(actual && !actual.paused);
+      entrante.volume = hayQueCruzar ? 0 : porcentajeAVolumen(silenciado ? 0 : volumen);
+
       // Si este bloque ya se había escuchado a medias, se retoma ahí. El
       // salto real se hace al cargar los metadatos (más abajo, en
       // onLoadedMetadata): antes de eso el navegador ignora currentTime.
       const guardada = posicionesRef.current[indice] || 0;
       reanudarEnRef.current = guardada;
+      audioRef.current = entrante;
       setPosicion(guardada);
       setBloqueSonando(indice);
-      audio
+      entrante
         .play()
-        .then(() => setSonando(true))
+        .then(() => {
+          setSonando(true);
+          // El anterior NO se para aquí: se va apagando mientras este
+          // sube, y la cortinilla suena por encima de los dos.
+          if (hayQueCruzar) empezarFundido(actual, entrante);
+        })
         .catch(() => {
           setSonando(false);
           setAviso("El navegador ha bloqueado el cambio de pista. Pulsa play aquí en el Mac.");
         });
     },
-    [pistas, silenciado, volumen, sonarCortinilla, bloqueSonando, anotarPosicion]
+    [pistas, silenciado, volumen, sonarCortinilla, bloqueSonando, anotarPosicion, cortarFundido, empezarFundido]
   );
 
   // ---------- Canal de mando ----------
@@ -667,7 +764,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
     setAviso("");
     // Se "tocan" los dos elementos dentro del propio gesto real, para
     // que el navegador les conceda permiso a los dos de una vez.
-    for (const ref of [audioRef, cortinillaRef]) {
+    // Los TRES: las dos pistas que se turnan y la cortinilla.
+    for (const ref of [audioUnoRef, audioDosRef, cortinillaRef]) {
       const el = ref.current;
       if (!el) continue;
       el.volume = porcentajeAVolumen(volumen);
@@ -1671,25 +1769,38 @@ export function VentanaMusicaEvento({ data, ventana }) {
         "--oro-borde": T.oro,
       }}
     >
-      <audio
-        ref={audioRef}
-        onEnded={() => {
-          setSonando(false);
-          // Una pista terminada NO se retoma por la mitad: se borra su
-          // marca para que la próxima vez arranque desde el principio.
-          if (bloqueSonando != null) setPosiciones((previas) => ({ ...previas, [bloqueSonando]: 0 }));
-        }}
-        onLoadedMetadata={(e) => {
-          setDuracion(e.target.duration || 0);
-          // Aquí es donde se retoma de verdad el bloque interrumpido:
-          // hasta que no hay metadatos, fijar currentTime no hace nada.
-          if (reanudarEnRef.current > 0) {
-            e.target.currentTime = Math.min(reanudarEnRef.current, (e.target.duration || 0) - 1);
-            setPosicion(e.target.currentTime);
-          }
-          reanudarEnRef.current = 0;
-        }}
-      />
+      {/* Las DOS pistas que se turnan (ver el fundido cruzado más
+          arriba) y la cortinilla. Los manejadores comprueban que el
+          evento venga del elemento que manda ahora: mientras dura el
+          cruce, el que se está apagando sigue lanzando los suyos y no
+          debe tocar nada. */}
+      {[audioUnoRef, audioDosRef].map((refPista, indice) => (
+        <audio
+          key={indice}
+          ref={(el) => {
+            refPista.current = el;
+            if (el && !audioRef.current) audioRef.current = el;
+          }}
+          onEnded={(e) => {
+            if (e.target !== audioRef.current) return;
+            setSonando(false);
+            // Una pista terminada NO se retoma por la mitad: se borra su
+            // marca para que la próxima vez arranque desde el principio.
+            if (bloqueSonando != null) setPosiciones((previas) => ({ ...previas, [bloqueSonando]: 0 }));
+          }}
+          onLoadedMetadata={(e) => {
+            if (e.target !== audioRef.current) return;
+            setDuracion(e.target.duration || 0);
+            // Aquí es donde se retoma de verdad el bloque interrumpido:
+            // hasta que no hay metadatos, fijar currentTime no hace nada.
+            if (reanudarEnRef.current > 0) {
+              e.target.currentTime = Math.min(reanudarEnRef.current, (e.target.duration || 0) - 1);
+              setPosicion(e.target.currentTime);
+            }
+            reanudarEnRef.current = 0;
+          }}
+        />
+      ))}
       <audio ref={cortinillaRef} src={cortinilla?.url} />
 
       {/* Cabecera con el RELOJ dentro: la hora y el retraso ya no
