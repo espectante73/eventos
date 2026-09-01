@@ -27,7 +27,16 @@ const NOMBRE_CANAL = "musica-evento";
 
 export function useMandoMusica({ onOrden, onEstado } = {}) {
   const canalRef = useRef(null);
+  const reintentoRef = useRef(null);
   const [conectado, setConectado] = useState(false);
+  // Estado crudo del canal, tal cual lo devuelve Supabase
+  // ("SUBSCRIBED", "CHANNEL_ERROR", "TIMED_OUT", "CLOSED"). Se expone
+  // para poder DECIR qué pasa en vez de un simple tachado -- el usuario
+  // vio el icono tachado mientras la música sonaba y, con razón, no
+  // entendía por qué (2026-09-01). La música suena en local desde el
+  // archivo guardado, así que puede ir perfecta con el canal caído:
+  // son dos cosas independientes, y conviene que la pantalla lo diga.
+  const [estadoCanal, setEstadoCanal] = useState("CONECTANDO");
 
   // Los dos callbacks viven en refs y NO en las dependencias del efecto
   // de abajo a propósito: si estuvieran, cada repintado del componente
@@ -55,11 +64,23 @@ export function useMandoMusica({ onOrden, onEstado } = {}) {
     });
 
     canal.subscribe((estado) => {
+      setEstadoCanal(estado);
       setConectado(estado === "SUBSCRIBED");
+      // Un canal caído no se recupera solo. Sin este reintento, si la
+      // conexión falla una vez (wifi del local, suspensión del Mac...)
+      // el mando se queda muerto para el resto de la noche.
+      if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT") {
+        clearTimeout(reintentoRef.current);
+        reintentoRef.current = setTimeout(() => {
+          setEstadoCanal("REINTENTANDO");
+          canal.subscribe();
+        }, 4000);
+      }
     });
     canalRef.current = canal;
 
     return () => {
+      clearTimeout(reintentoRef.current);
       supabase.removeChannel(canal);
       canalRef.current = null;
     };
@@ -86,5 +107,5 @@ export function useMandoMusica({ onOrden, onEstado } = {}) {
     });
   }, []);
 
-  return { conectado, enviarOrden, enviarEstado };
+  return { conectado, estadoCanal, enviarOrden, enviarEstado };
 }

@@ -42,6 +42,17 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.16",
+    cambios: [
+      "Música del evento se puede personalizar: botón de paleta en la cabecera con cuatro acabados (Verde anodizado, Champán, Grafito y Marfil). Cada uno cambia la paleta ENTERA, no solo el fondo — sobre champán o marfil, el texto y los mandos se oscurecen solos para seguir leyéndose.",
+      "También se puede poner una imagen propia de fondo, que se guarda dentro del navegador. Va bajo un velo del acabado elegido, para que ninguna foto deje media pantalla ilegible.",
+      "Los paneles (bloques, reproducción, volumen y pistas) se pueden colocar en el orden que se quiera, con \"Mover paneles\": arrastrando en el ordenador o con las flechas (el único camino en el móvil, donde el arrastre del navegador no existe).",
+      "En el ordenador se elige además entre colocarlos en horizontal (la ventana abierta del todo en el MacBook: los cuatro paneles en fila) o en vertical (una sola columna estrecha a un lado de la pantalla).",
+      "El icono de wifi tachado ya explica QUÉ pasa: si el canal del mando no conecta, aparece un aviso que dice el motivo y aclara que la música no se ve afectada — suena desde el archivo guardado en el ordenador, sin pasar por internet. Lo que no funciona hasta que conecte es el mando del móvil.",
+      "Si el canal se cae, ahora se reintenta solo cada 4 segundos, en vez de quedarse muerto el resto de la noche.",
+    ],
+  },
+  {
     version: "20.15",
     cambios: [
       "Música del evento estrena acabado metálico, con la idea de un equipo de audio real: aluminio anodizado verde con mandos de latón. Mantiene los colores de la fiesta — el verde deja de parecer pintura plana y pasa a parecer metal teñido.",
