@@ -1005,34 +1005,65 @@ export function VentanaMusicaEvento({ data, ventana }) {
     </div>
   );
 
-  // Volumen en TRES filas, a petición del usuario (2026-09-01): el
-  // silencio arriba con su rótulo, la barra con el porcentaje en el
-  // medio, y abajo los dos botones de subir y bajar ocupando media
-  // anchura cada uno. Antes iba todo apretado en una sola fila, con los
-  // botones del tamaño de una letra -- justo lo que ya había señalado
-  // como poco práctico la primera vez que lo probó.
-  const controlVolumen = (
-    <div className="flex flex-col gap-2.5 px-3 py-3" style={tarjeta}>
-      <button
-        onClick={hacer("silencio")}
-        className="w-full flex items-center gap-2.5 px-3"
-        style={{
-          minHeight: M.silencio,
-          borderRadius: 14,
-          ...tecla(false),
-          ...(silenciado
-            ? { background: "linear-gradient(180deg, #A63B45, #7E2630)", border: "1px solid rgba(255,255,255,0.22)" }
-            : {}),
-          color: silenciado ? "#F2EDE3" : P.texto,
-          transition: SUAVE,
-        }}
-        title={silenciado ? "Quitar el silencio" : "Silenciar"}
-      >
-        {silenciado ? <VolumeX size={esMovil ? 21 : 18} /> : <Volume2 size={esMovil ? 21 : 18} style={{ color: P.oro }} />}
-        <span style={{ fontSize: M.texto, fontWeight: 600 }}>{silenciado ? "Silenciado — tocar para volver" : "Silenciar"}</span>
-      </button>
+  // Bajar (-1) y Subir (+1). Mantener pulsado sigue repitiendo paso a
+  // paso: es lo que evita la subida brusca de volumen.
+  const botonVolumen = (direccion) => (
+    <button
+      onPointerDown={(e) => {
+        e.preventDefault();
+        empezarRepeticion(direccion);
+      }}
+      onPointerUp={pararRepeticion}
+      onPointerLeave={pararRepeticion}
+      onPointerCancel={pararRepeticion}
+      onContextMenu={(e) => e.preventDefault()}
+      className="flex-1 flex flex-col items-center justify-center"
+      style={{
+        minHeight: M.play - 4,
+        borderRadius: 14,
+        ...tecla(false),
+        color: P.texto,
+        touchAction: "manipulation",
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        transition: SUAVE,
+      }}
+      title={`${direccion < 0 ? "Bajar" : "Subir"} ${PASO_VOLUMEN}% (mantén pulsado para seguir)`}
+    >
+      <span style={{ fontSize: esMovil ? 26 : 22, fontWeight: 600, lineHeight: 1 }}>{direccion < 0 ? "−" : "+"}</span>
+      <span style={{ ...etiqueta, color: P.tenue }}>{direccion < 0 ? "Bajar" : "Subir"}</span>
+    </button>
+  );
 
-      <div className="flex items-center gap-3 px-1">
+  // Volumen en DOS filas, con la misma altura que el reproductor de al
+  // lado -- así los dos paneles quedan a la par, colocados en horizontal
+  // o en vertical (petición del usuario, 2026-09-01):
+  //   1. Silenciar pegado a la izquierda de la barra, como antes.
+  //   2. Bajar y Subir, grandes, con el porcentaje en medio.
+  // De ahí que la fila de abajo mida `M.play - 4`: es lo que hace falta
+  // para igualar el alto del botón de play y su fila.
+  const controlVolumen = (
+    <div className="flex flex-col gap-3 px-3 py-3" style={tarjeta}>
+      <div className="flex items-center gap-2.5">
+        <button
+          onClick={hacer("silencio")}
+          className="flex items-center justify-center"
+          style={{
+            width: M.silencio,
+            height: M.silencio,
+            borderRadius: 14,
+            ...tecla(false),
+            ...(silenciado
+              ? { background: "linear-gradient(180deg, #A63B45, #7E2630)", border: "1px solid rgba(255,255,255,0.22)" }
+              : {}),
+            color: silenciado ? "#F2EDE3" : P.oro,
+            flexShrink: 0,
+            transition: SUAVE,
+          }}
+          title={silenciado ? "Quitar el silencio" : "Silenciar"}
+        >
+          {silenciado ? <VolumeX size={esMovil ? 21 : 18} /> : <Volume2 size={esMovil ? 21 : 18} />}
+        </button>
         <input
           type="range"
           min="0"
@@ -1047,42 +1078,18 @@ export function VentanaMusicaEvento({ data, ventana }) {
           className="flex-1 min-w-0"
           style={{ accentColor: P.oro, height: 30 }}
         />
-        <span style={{ ...cifra, fontSize: M.texto + 3, fontWeight: 600, color: P.texto, width: 52, textAlign: "right", flexShrink: 0 }}>
-          {silenciado ? "—" : `${volumen}%`}
-        </span>
       </div>
 
       <div className="flex items-stretch gap-2.5">
-        {[-1, 1].map((direccion) => (
-          <button
-            key={direccion}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              empezarRepeticion(direccion);
-            }}
-            onPointerUp={pararRepeticion}
-            onPointerLeave={pararRepeticion}
-            onPointerCancel={pararRepeticion}
-            onContextMenu={(e) => e.preventDefault()}
-            className="flex-1 flex items-center justify-center gap-2"
-            style={{
-              minHeight: M.silencio + 8,
-              borderRadius: 14,
-              fontSize: esMovil ? 26 : 22,
-              fontWeight: 600,
-              ...tecla(false),
-              color: P.texto,
-              touchAction: "manipulation",
-              userSelect: "none",
-              WebkitUserSelect: "none",
-              transition: SUAVE,
-            }}
-            title={`${direccion < 0 ? "Bajar" : "Subir"} ${PASO_VOLUMEN}% (mantén pulsado para seguir)`}
-          >
-            {direccion < 0 ? "−" : "+"}
-            <span style={{ ...etiqueta, color: P.tenue }}>{direccion < 0 ? "Bajar" : "Subir"}</span>
-          </button>
-        ))}
+        {botonVolumen(-1)}
+        {/* El porcentaje va entre los dos botones, como el visor de un
+            equipo: es el único sitio donde no le roba altura a nada. */}
+        <div className="flex items-center justify-center rounded-xl" style={{ ...hueco, width: esMovil ? 84 : 76, flexShrink: 0 }}>
+          <span style={{ ...cifra, fontSize: M.texto + 5, fontWeight: 600, color: silenciado ? P.tenue : P.texto }}>
+            {silenciado ? "—" : `${volumen}%`}
+          </span>
+        </div>
+        {botonVolumen(1)}
       </div>
     </div>
   );

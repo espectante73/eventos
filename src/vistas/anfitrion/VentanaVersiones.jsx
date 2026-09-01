@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.19",
+    cambios: [
+      "El volumen queda en DOS filas, no en tres: arriba la barra con el botón de silenciar pegado a su izquierda, y debajo los dos botones grandes de Bajar y Subir con el porcentaje en medio, como el visor de un equipo.",
+      "Esa sección tiene ahora exactamente la misma altura que el reproductor, así que los dos paneles quedan a la par tanto en horizontal como en vertical.",
+    ],
+  },
+  {
     version: "20.18",
     cambios: [
       "Arreglado de verdad el wifi tachado: el mando podía estar gobernando el ordenador y la ventana seguía diciendo \"conectando\" en los dos aparatos. El aviso de Supabase en el que se apoyaba llega UNA sola vez y podía no llegar nunca; ahora, cada 2 segundos, se mira la realidad — si el canal está unido o si acaba de llegar un mensaje del otro aparato, está conectado, y punto.",
