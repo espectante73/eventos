@@ -435,6 +435,12 @@ export function VentanaMusicaEvento({ data, ventana }) {
 
   const sonarCortinilla = useCallback(() => {
     if (!cortinillaRef.current || !cortinilla) return;
+    // La cortinilla sigue al volumen general. Antes se quedaba con el
+    // que hubiera en el primer clic de la noche y no se movía de ahí:
+    // bajar la música al 30% dejaba la cortinilla atronando al 70, y
+    // silenciar no la callaba. Va un punto por debajo de la música
+    // porque suena ENCIMA de dos pistas a la vez.
+    cortinillaRef.current.volume = porcentajeAVolumen(silenciadoRef.current ? 0 : volumenRef.current * 0.85);
     cortinillaRef.current.currentTime = 0;
     cortinillaRef.current.play().catch(() => {});
   }, [cortinilla]);

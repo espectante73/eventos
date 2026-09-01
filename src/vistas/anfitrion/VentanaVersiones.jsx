@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.28.1",
+    cambios: [
+      "La cortinilla sigue ahora al volumen general. Antes se quedaba con el volumen que hubiera en el primer clic de la noche: bajar la música al 30% la dejaba atronando al 70, y silenciar no la callaba. Suena un punto por debajo de la música, porque va encima de dos pistas a la vez.",
+    ],
+  },
+  {
     version: "20.28",
     cambios: [
       "La cortinilla ya hace su trabajo: al cambiar de bloque, el anterior NO se corta en seco. Las dos pistas se solapan — la que sale se va apagando mientras la que entra sube — y la cortinilla suena por encima de las dos. Se acabó el silencio incómodo en cada transición.",
