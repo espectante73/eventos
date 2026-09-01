@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.22",
+    cambios: [
+      "El icono de wifi cambia de significado: antes decía si ESTE navegador había enganchado con el servidor, cosa que pasa aunque estés solo — por eso el ordenador se declaraba conectado sin haber abierto siquiera el mando. Ahora dice si está el OTRO aparato, que es lo que importa: tachado (sin canal), tenue (canal listo, falta el otro) o dorado (los dos enlazados).",
+      "Con el canal listo pero sin el otro aparato, sale un aviso tranquilo que dice qué falta por hacer, en vez de una alarma roja.",
+      "Subir un fondo ya no se puede quedar colgado: la imagen se reduce a 1920px ANTES de subirla (una captura o una foto del carrete puede pesar 20 MB, y eso era lo que colgaba la ventana), la subida se rinde sola a los 45 segundos con un mensaje claro, y mientras tanto hay un botón \"Dejarlo\" para recuperar el control.",
+      "Elegir dos veces seguidas el mismo archivo ya funciona (antes el segundo intento no hacía nada y parecía otro cuelgue).",
+    ],
+  },
+  {
     version: "20.21",
     cambios: [
       "La imagen de fondo pasa a guardarse en la nube, no en el navegador: por eso la que se subía en el Mac no aparecía en el móvil (lo que se guarda en un aparato no existe para el otro). Ahora se sube una vez y se ve en los dos. ⚠️ Necesita ejecutar antes el bloque de SQL del almacén 'musica-fondo'.",

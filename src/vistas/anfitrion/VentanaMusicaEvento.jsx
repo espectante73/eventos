@@ -190,9 +190,6 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // Igual que publicarEstadoRef: el canal se crea más abajo, pero la
   // repetición de volumen (definida antes) necesita poder mandar.
   const enviarOrdenRef = useRef(null);
-  // ¿Ha llegado ya alguna noticia del ordenador? Solo para que el mando
-  // pueda decir "esperando" en vez de mentir con una pantalla vacía.
-  const [recibidoEstado, setRecibidoEstado] = useState(false);
 
   const esReproductor = rol === "reproductor";
   const pistaActual = pistas[seleccionado];
@@ -472,7 +469,6 @@ export function VentanaMusicaEvento({ data, ventana }) {
     (estado) => {
       if (esReproductor) return; // el reproductor es la fuente, no escucha
       if (!estado) return;
-      setRecibidoEstado(true);
       setSeleccionado(estado.bloque ?? 0);
       setBloqueSonando(estado.bloqueSonando ?? null);
       setSonando(Boolean(estado.sonando));
@@ -490,10 +486,14 @@ export function VentanaMusicaEvento({ data, ventana }) {
     [esReproductor]
   );
 
-  const { conectado, estadoCanal, enviarOrden, enviarEstado } = useMandoMusica({
+  const { conectado, estadoCanal, hayReproductor, hayMando, enviarOrden, enviarEstado } = useMandoMusica({
     onOrden: alRecibirOrden,
     onEstado: alRecibirEstado,
+    rol,
   });
+  // El aparato que le falta a este para poder trabajar: el mando espera
+  // al ordenador y el ordenador espera al mando.
+  const estaElOtro = esReproductor ? hayMando : hayReproductor;
 
   // El reproductor informa de su estado: al cambiar algo relevante, y
   // además cada 2s mientras suena (para que la barra de progreso del
@@ -657,25 +657,50 @@ export function VentanaMusicaEvento({ data, ventana }) {
     setArrastrado(null);
   };
 
+  // Cada intento de subida lleva su propia ficha. Si se abandona (botón
+  // "Dejarlo"), la ficha cambia y la respuesta que llegue tarde se
+  // descarta: sin esto, una subida abandonada podía volver a los diez
+  // minutos y cambiar el fondo sola.
+  const intentoFondoRef = useRef(0);
+
   const elegirFondo = (e) => {
     const archivo = e.target.files?.[0];
+    // El <input file> conserva el archivo elegido: sin vaciarlo, elegir
+    // dos veces el mismo no dispara ningún cambio y parece que se ha
+    // colgado otra vez.
+    e.target.value = "";
     if (!archivo) return;
+    const intento = ++intentoFondoRef.current;
     setSubiendoFondo(true);
     setAviso("");
-    subirFondo(archivo)
+    subirFondo(archivo, ventana || undefined)
       .then((fondo) => {
+        if (intento !== intentoFondoRef.current) return;
         setFondoPropio(fondo);
         // Se pone de fondo en el acto: quien elige una imagen quiere
         // verla, no tener que ir a activarla en otro sitio.
         cambiarAspecto({ fondoPropioActivo: true });
       })
-      .catch((error) =>
+      .catch((error) => {
+        if (intento !== intentoFondoRef.current) return;
         setAviso(
-          `No se ha podido subir la imagen de fondo: ${error.message || error}. ` +
-            "Si dice que no existe el almacén, falta ejecutar el bloque de SQL de 'musica-fondo'."
-        )
-      )
-      .finally(() => setSubiendoFondo(false));
+          `No se ha podido poner la imagen: ${error?.message || error}` +
+            (String(error?.message || "").toLowerCase().includes("bucket")
+              ? " — falta ejecutar en Supabase el bloque de SQL del almacén 'musica-fondo'."
+              : "")
+        );
+      })
+      .finally(() => {
+        if (intento === intentoFondoRef.current) setSubiendoFondo(false);
+      });
+  };
+
+  // No cancela la petición (Supabase no lo permite), pero devuelve la
+  // ventana a un estado usable en vez de dejarla colgada en "subiendo".
+  const dejarDeSubirFondo = () => {
+    intentoFondoRef.current += 1;
+    setSubiendoFondo(false);
+    setAviso("Subida abandonada. Puedes volver a intentarlo o seguir con un acabado normal.");
   };
 
   const quitarFondoPropio = () => {
@@ -1313,7 +1338,17 @@ export function VentanaMusicaEvento({ data, ventana }) {
         </div>
       )}
 
-      {fondoPropio && (
+      {subiendoFondo && (
+        <div className="flex items-center gap-2 mb-3 px-3" style={{ background: P.panelVivo, borderRadius: 12, minHeight: 44 }}>
+          <ImagePlus size={15} style={{ flexShrink: 0, color: P.oro }} />
+          <span className="flex-1 truncate" style={{ fontSize: M.texto - 1 }}>Subiendo la imagen…</span>
+          <button onClick={dejarDeSubirFondo} className="rounded-full px-3" style={{ minHeight: 32, ...etiqueta, color: P.texto, ...tecla(false) }}>
+            Dejarlo
+          </button>
+        </div>
+      )}
+
+      {fondoPropio && !subiendoFondo && (
         <div className="flex items-center gap-2 mb-3">
           <label className="flex items-center gap-2 cursor-pointer px-3 flex-1 min-w-0" style={{ background: P.panelVivo, borderRadius: 12, minHeight: 40, fontSize: M.texto - 1, transition: SUAVE }}>
             <ImagePlus size={15} style={{ flexShrink: 0, color: P.oro }} />
@@ -1426,31 +1461,41 @@ export function VentanaMusicaEvento({ data, ventana }) {
     </p>
   ) : null;
 
-  // Qué está haciendo de verdad el canal del mando. Solo aparece
-  // cuando NO está conectado -- y dice también lo que no es evidente:
-  // que la música sigue sonando igual, porque sale del archivo
-  // guardado en este ordenador y no pasa por internet.
+  // DOS cosas distintas, y confundirlas fue el problema: que este
+  // navegador haya enganchado con Supabase (`conectado`) no significa
+  // que el otro aparato esté ahí. El Mac decía "conectado" sin haberse
+  // abierto siquiera el mando. Ahora la cabecera informa de lo segundo,
+  // que es lo que de verdad importa, y lo primero solo sale para
+  // explicar POR QUÉ no hay conexión cuando falla.
   const infoCanal = ESTADOS_CANAL[estadoCanal] || { texto: `Canal del mando: ${estadoCanal}`, grave: true };
-  const avisoCanal =
-    conectado ? null : (
-      <div
-        className="flex items-start gap-3 px-4 py-3"
-        style={{
-          borderRadius: 14,
-          background: infoCanal.grave ? "rgba(228,120,130,0.14)" : P.panelVivo,
-          color: infoCanal.grave ? (claro ? "#8E2530" : "#F0A4AC") : P.tenue,
-          fontSize: M.texto,
-        }}
-      >
-        <WifiOff size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-        <span>
-          <strong style={{ fontWeight: 600 }}>{infoCanal.texto}.</strong>{" "}
-          {esReproductor
-            ? "La música no se ve afectada: suena desde el archivo guardado en este ordenador, sin pasar por internet. Lo que no funcionará hasta que conecte es controlarla desde el móvil."
-            : "Hasta que conecte, este mando no puede dar órdenes al ordenador."}
-        </span>
-      </div>
-    );
+  const avisoCanal = !conectado ? (
+    <div
+      className="flex items-start gap-3 px-4 py-3"
+      style={{
+        borderRadius: 14,
+        background: infoCanal.grave ? "rgba(228,120,130,0.14)" : P.panelVivo,
+        color: infoCanal.grave ? (claro ? "#8E2530" : "#F0A4AC") : P.tenue,
+        fontSize: M.texto,
+      }}
+    >
+      <WifiOff size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+      <span>
+        <strong style={{ fontWeight: 600 }}>{infoCanal.texto}.</strong>{" "}
+        {esReproductor
+          ? "La música no se ve afectada: suena desde el archivo guardado en este ordenador, sin pasar por internet. Lo que no funcionará hasta que conecte es controlarla desde el móvil."
+          : "Hasta que conecte, este mando no puede dar órdenes al ordenador."}
+      </span>
+    </div>
+  ) : rol !== "sin-definir" && !estaElOtro ? (
+    <div className="flex items-start gap-3 px-4 py-3" style={{ borderRadius: 14, background: P.panelVivo, color: P.tenue, fontSize: M.texto }}>
+      {esReproductor ? <Smartphone size={18} style={{ flexShrink: 0, marginTop: 2 }} /> : <Speaker size={18} style={{ flexShrink: 0, marginTop: 2 }} />}
+      <span>
+        {esReproductor
+          ? "Canal listo, pero el mando todavía no está. Abre \"Música del evento\" en el móvil y elige Mando a distancia."
+          : "Canal listo, pero el ordenador todavía no está. Ábrelo en el Mac y márcalo como el aparato que reproduce."}
+      </span>
+    </div>
+  ) : null;
 
   // Los cuatro paneles reordenables. "pistas" solo existe en el
   // ordenador: en el móvil no se eligen archivos (la lección de la
@@ -1512,10 +1557,20 @@ export function VentanaMusicaEvento({ data, ventana }) {
           </div>
         )}
         <span className="flex items-center gap-2" style={{ flexShrink: 0 }}>
+          {/* Tres estados, no dos: sin canal (tachado), canal listo pero
+              solo (tenue) y los dos aparatos enlazados (dorado). */}
           <span
             className="flex items-center"
-            style={{ color: conectado ? P.oro : infoCanal.grave ? (claro ? "#B3303E" : "#E88C97") : P.tenue }}
-            title={infoCanal.texto}
+            style={{ color: !conectado ? (claro ? "#B3303E" : "#E88C97") : estaElOtro ? P.oro : P.tenue }}
+            title={
+              !conectado
+                ? infoCanal.texto
+                : estaElOtro
+                  ? esReproductor
+                    ? "Mando conectado"
+                    : "Ordenador conectado"
+                  : "Canal listo, falta el otro aparato"
+            }
           >
             {conectado ? <Wifi size={16} /> : <WifiOff size={16} />}
           </span>
@@ -1572,19 +1627,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
             {/* El panel de aspecto y los avisos van SIEMPRE los primeros
                 y ocupan la fila entera: no son paneles reordenables, son
                 cosas que hay que ver antes de tocar nada. */}
-            {(panelAspecto || avisoCanal || (!esReproductor && !recibidoEstado) || avisoVisible) && (
+            {(panelAspecto || avisoCanal || avisoVisible) && (
               <div className="w-full flex flex-col gap-2.5" style={{ marginBottom: enHorizontal ? 0 : -4 }}>
                 {panelAspecto}
                 {avisoCanal}
-                {!esReproductor && !recibidoEstado && (
-                  <div
-                    className="flex items-center gap-3 px-4 py-3"
-                    style={{ borderRadius: 14, background: "rgba(228,120,130,0.14)", color: claro ? "#8E2530" : "#F0A4AC", fontSize: M.texto }}
-                  >
-                    <WifiOff size={18} style={{ flexShrink: 0 }} />
-                    <span>Esperando al ordenador… Abre "Música del evento" en el Mac y márcalo como el aparato que reproduce.</span>
-                  </div>
-                )}
                 {avisoVisible}
               </div>
             )}

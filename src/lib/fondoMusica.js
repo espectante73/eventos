@@ -49,16 +49,76 @@ export async function leerFondo() {
   return conUrl(archivos[archivos.length - 1].name);
 }
 
-export async function subirFondo(archivo) {
+// Una foto del carrete o una captura de pantalla puede pesar 15-20 MB,
+// y subir eso por el wifi de un local es justo lo que dejó la ventana
+// colgada "subiendo" sin fin (2026-09-01). Antes de subir nada se
+// reduce a 1920px de lado mayor y se reencoda: el fondo de una ventana
+// no necesita más, y así lo que viaja son unos cientos de KB.
+export const LADO_MAXIMO = 1920;
+const PESO_SIN_TOCAR = 1.5 * 1024 * 1024;
+const ESPERA_MAXIMA = 45000;
+
+function conTiempoLimite(promesa, mensaje) {
+  // ⚠️ Esto no CANCELA la subida (supabase-js no admite una señal de
+  // aborto), pero devuelve el control a la ventana: sin ello, una
+  // subida que nunca contesta deja la pantalla bloqueada para siempre,
+  // sin botón al que agarrarse.
+  return Promise.race([
+    promesa,
+    new Promise((_, rechazar) => setTimeout(() => rechazar(new Error(mensaje)), ESPERA_MAXIMA)),
+  ]);
+}
+
+async function decodificar(archivo, ventana) {
+  if (ventana.createImageBitmap) return ventana.createImageBitmap(archivo);
+  // Safari viejo: se decodifica con un <img> y una URL temporal.
+  const url = ventana.URL.createObjectURL(archivo);
+  try {
+    return await new Promise((resolver, rechazar) => {
+      const imagen = new ventana.Image();
+      imagen.onload = () => resolver(imagen);
+      imagen.onerror = () => rechazar(new Error("No se ha podido leer la imagen."));
+      imagen.src = url;
+    });
+  } finally {
+    ventana.URL.revokeObjectURL(url);
+  }
+}
+
+export async function prepararImagen(archivo, ventana = globalThis) {
+  if (!archivo.type?.startsWith("image/")) throw new Error("Eso no parece una imagen.");
+  const imagen = await decodificar(archivo, ventana);
+  const lado = Math.max(imagen.width, imagen.height);
+  if (lado <= LADO_MAXIMO && archivo.size <= PESO_SIN_TOCAR) return archivo;
+
+  const escala = Math.min(1, LADO_MAXIMO / lado);
+  const lienzo = ventana.document.createElement("canvas");
+  lienzo.width = Math.round(imagen.width * escala);
+  lienzo.height = Math.round(imagen.height * escala);
+  lienzo.getContext("2d").drawImage(imagen, 0, 0, lienzo.width, lienzo.height);
+  const blob = await new Promise((resolver) => lienzo.toBlob(resolver, "image/jpeg", 0.85));
+  if (!blob) return archivo;
+  const nombre = archivo.name.replace(/\.[^.]+$/, "") + ".jpg";
+  return new ventana.File([blob], nombre, { type: "image/jpeg" });
+}
+
+export async function subirFondo(archivoOriginal, ventana = globalThis) {
+  const archivo = await prepararImagen(archivoOriginal, ventana);
   const nombre = sanearNombre(archivo.name) || "fondo.jpg";
   // Se borra lo que hubiera ANTES de subir: si el nombre nuevo coincide
   // con el viejo, `upsert` lo reemplaza igual; si no coincide, sin este
   // borrado se quedarían dos y el catálogo mostraría el que no es.
-  const { data: previos } = await supabase.storage.from(BUCKET).list();
+  const { data: previos } = await conTiempoLimite(
+    supabase.storage.from(BUCKET).list(),
+    "El almacén no contesta. Revisa la conexión e inténtalo otra vez."
+  );
   const sobrantes = (previos || []).map((f) => f.name).filter((n) => n !== MARCADOR && n !== nombre);
   if (sobrantes.length) await supabase.storage.from(BUCKET).remove(sobrantes);
 
-  const { error } = await supabase.storage.from(BUCKET).upload(nombre, archivo, { upsert: true, cacheControl: "3600" });
+  const { error } = await conTiempoLimite(
+    supabase.storage.from(BUCKET).upload(nombre, archivo, { upsert: true, cacheControl: "3600" }),
+    "La imagen está tardando demasiado en subir. Inténtalo otra vez o prueba con una más pequeña."
+  );
   if (error) throw error;
   return conUrl(nombre);
 }

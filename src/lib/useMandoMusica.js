@@ -25,7 +25,12 @@ import { supabase } from "../supabaseClient";
 
 const NOMBRE_CANAL = "musica-evento";
 
-export function useMandoMusica({ onOrden, onEstado } = {}) {
+// Identidad de este aparato dentro del canal. Se calcula una sola vez
+// por carga de página: si cambiara, cada repintado se contaría como un
+// aparato distinto en la lista de presentes.
+const ID_APARATO = Math.random().toString(36).slice(2);
+
+export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
   const canalRef = useRef(null);
   const reintentoRef = useRef(null);
   const [conectado, setConectado] = useState(false);
@@ -36,6 +41,15 @@ export function useMandoMusica({ onOrden, onEstado } = {}) {
   // sólida de que el canal funciona: si algo ha llegado hace tres
   // segundos, está conectado, se diga lo que se diga por otro lado.
   const ultimoMensajeRef = useRef(0);
+  // Qué OTROS aparatos hay ahora mismo en el canal, por su papel
+  // ("reproductor" / "mando"). Esto es lo que de verdad quiere saber
+  // quien mira el icono de wifi: no si mi navegador ha enganchado con
+  // Supabase (eso pasa aunque esté yo solo), sino si el otro aparato
+  // está ahí. Confundir las dos cosas fue un problema real: el Mac
+  // decía "conectado" sin haber abierto el mando siquiera.
+  const [otrosAparatos, setOtrosAparatos] = useState([]);
+  const rolRef = useRef(rol);
+  rolRef.current = rol;
 
   // Los dos callbacks viven en refs y NO en las dependencias del efecto
   // de abajo a propósito: si estuvieran, cada repintado del componente
@@ -55,6 +69,16 @@ export function useMandoMusica({ onOrden, onEstado } = {}) {
       config: { broadcast: { self: false } },
     });
 
+    canal.on("presence", { event: "sync" }, () => {
+      const presentes = canal.presenceState();
+      setOtrosAparatos(
+        Object.entries(presentes)
+          .filter(([clave]) => clave !== ID_APARATO)
+          .flatMap(([, apariciones]) => apariciones.map((a) => a.rol))
+          .filter(Boolean)
+      );
+    });
+
     canal.on("broadcast", { event: "orden" }, ({ payload }) => {
       ultimoMensajeRef.current = Date.now();
       onOrdenRef.current?.(payload);
@@ -69,6 +93,9 @@ export function useMandoMusica({ onOrden, onEstado } = {}) {
     // que un reintento sin él dejaría el canal mudo para siempre.
     const avisarEstado = (estado) => {
       setEstadoCanal(estado);
+      // Anunciarse en cuanto el canal está listo. Sin este `track`, el
+      // otro aparato no sabe que existo.
+      if (estado === "SUBSCRIBED") canal.track({ rol: rolRef.current || "sin-definir" });
       // Un canal caído no se recupera solo. Sin este reintento, si la
       // conexión falla una vez (wifi del local, suspensión del Mac...)
       // el mando se queda muerto para el resto de la noche.
@@ -125,6 +152,13 @@ export function useMandoMusica({ onOrden, onEstado } = {}) {
     });
   }, []);
 
+  // Cuando este aparato deja de estar "sin definir" y se declara
+  // reproductor o mando, hay que volver a anunciarlo: el otro extremo
+  // pinta su aviso a partir de ese papel.
+  useEffect(() => {
+    if (canalRef.current?.state === "joined") canalRef.current.track({ rol: rol || "sin-definir" });
+  }, [rol]);
+
   const enviarEstado = useCallback((estado) => {
     canalRef.current?.send({
       type: "broadcast",
@@ -133,5 +167,14 @@ export function useMandoMusica({ onOrden, onEstado } = {}) {
     });
   }, []);
 
-  return { conectado, estadoCanal, enviarOrden, enviarEstado };
+  return {
+    conectado,
+    estadoCanal,
+    // "Está el otro" es lo que se muestra en la cabecera; `conectado`
+    // (canal enganchado) se queda para el diagnóstico de por qué no.
+    hayReproductor: otrosAparatos.includes("reproductor"),
+    hayMando: otrosAparatos.includes("mando"),
+    enviarOrden,
+    enviarEstado,
+  };
 }
