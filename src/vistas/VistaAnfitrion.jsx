@@ -117,10 +117,18 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   // depender de un permiso del navegador.
   const [musicaEnPagina, setMusicaEnPagina] = useState(false);
   const abrirMusicaEvento = useCallback(() => {
-    const esPantallaPequena = window.innerWidth < 820;
-    // `abrirMusicaPopup()` devuelve false si el navegador la bloqueó:
-    // ese caso también cae aquí, en vez de quedarse en nada.
-    if (esPantallaPequena || !abrirMusicaPopup()) setMusicaEnPagina(true);
+    // ⚠️ La pregunta es qué APARATO es, no cuánto mide la ventana. El
+    // primer intento miraba `innerWidth < 820` y se llevó por delante el
+    // caso normal del Mac: con el navegador a media pantalla, el
+    // ordenador también daba menos de 820 y perdía su ventana aparte
+    // (2026-09-01, reportado al momento). `pointer: coarse` + `hover:
+    // none` es cierto en un móvil o tablet y falso en un portátil, mida
+    // lo que mida la ventana.
+    const esTactil = window.matchMedia?.("(pointer: coarse) and (hover: none)").matches;
+    // `abrirMusicaPopup()` devuelve false si el navegador la bloqueó
+    // (Safari en iOS lo hace de fábrica): ese caso también cae aquí, en
+    // vez de quedarse en nada.
+    if (esTactil || !abrirMusicaPopup()) setMusicaEnPagina(true);
   }, [abrirMusicaPopup]);
   useEffect(() => {
     // Con su propio Error Boundary: si algo revienta ahí dentro, esta

@@ -137,6 +137,12 @@ export function VentanaMusicaEvento({ data, ventana }) {
   const [silenciado, setSilenciado] = useState(false);
   const [volumenPrevio, setVolumenPrevio] = useState(70);
   const [posicion, setPosicion] = useState(0);
+  // Dónde se quedó cada bloque, en segundos: { [indiceBloque]: 128 }.
+  // Petición del usuario (2026-09-01): si estoy en Recepción y salto a
+  // Cóctel, Recepción NO vuelve a empezar cuando la retome -- sigue
+  // donde la dejé. Sin esto, cambiar de bloque y volver era empezar la
+  // pista de cero, que en una boda es justo lo que no quieres.
+  const [posiciones, setPosiciones] = useState({});
   const [duracion, setDuracion] = useState(0);
   const [salto, setSalto] = useState(30);
   // Las tres opciones de salto (10/30/60) están escondidas tras un chip
@@ -195,6 +201,14 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // hacia atrás justo mientras estás ajustando.
   const ajustandoVolumenRef = useRef(false);
   const repeticionRef = useRef({ espera: null, ciclo: null });
+  // Copia viva de `posiciones` para poder leerla dentro de callbacks sin
+  // arrastrarla como dependencia (y sin leer un valor congelado).
+  const posicionesRef = useRef({});
+  posicionesRef.current = posiciones;
+  // Segundo al que hay que saltar en cuanto la pista nueva tenga sus
+  // metadatos. No se puede fijar `currentTime` antes: el navegador
+  // todavía no sabe cuánto dura y lo descarta sin avisar.
+  const reanudarEnRef = useRef(0);
   // Igual que publicarEstadoRef: el canal se crea más abajo, pero la
   // repetición de volumen (definida antes) necesita poder mandar.
   const enviarOrdenRef = useRef(null);
@@ -401,10 +415,20 @@ export function VentanaMusicaEvento({ data, ventana }) {
       .catch(() => setAviso("El navegador no ha dejado sonar. Pulsa play aquí en el Mac una vez."));
   }, []);
 
+  // Guarda dónde va el bloque que suena ahora mismo. Se llama siempre
+  // ANTES de cambiar de pista o de pausar.
+  const anotarPosicion = useCallback((indice) => {
+    const audio = audioRef.current;
+    if (audio == null || indice == null) return;
+    const segundos = audio.currentTime || 0;
+    setPosiciones((previas) => ({ ...previas, [indice]: segundos }));
+  }, []);
+
   const pausar = useCallback(() => {
+    anotarPosicion(bloqueSonando);
     audioRef.current?.pause();
     setSonando(false);
-  }, []);
+  }, [anotarPosicion, bloqueSonando]);
 
   const saltarSegundos = useCallback((segundos) => {
     const audio = audioRef.current;
@@ -441,10 +465,19 @@ export function VentanaMusicaEvento({ data, ventana }) {
         return;
       }
 
+      // El bloque que estaba sonando se queda anotado donde iba, para
+      // poder retomarlo más tarde sin volver a empezar.
+      anotarPosicion(bloqueSonando);
+
       sonarCortinilla();
       audio.src = siguiente.url;
       audio.volume = porcentajeAVolumen(silenciado ? 0 : volumen);
-      setPosicion(0);
+      // Si este bloque ya se había escuchado a medias, se retoma ahí. El
+      // salto real se hace al cargar los metadatos (más abajo, en
+      // onLoadedMetadata): antes de eso el navegador ignora currentTime.
+      const guardada = posicionesRef.current[indice] || 0;
+      reanudarEnRef.current = guardada;
+      setPosicion(guardada);
       setBloqueSonando(indice);
       audio
         .play()
@@ -454,7 +487,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
           setAviso("El navegador ha bloqueado el cambio de pista. Pulsa play aquí en el Mac.");
         });
     },
-    [pistas, silenciado, volumen, sonarCortinilla, bloqueSonando]
+    [pistas, silenciado, volumen, sonarCortinilla, bloqueSonando, anotarPosicion]
   );
 
   // ---------- Canal de mando ----------
@@ -509,6 +542,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
       setPosicion(estado.posicion ?? 0);
       setDuracion(estado.duracion ?? 0);
       setPistas(estado.pistas || {});
+      setPosiciones(estado.posiciones || {});
     },
     [esReproductor]
   );
@@ -535,11 +569,14 @@ export function VentanaMusicaEvento({ data, ventana }) {
       silenciado,
       posicion,
       duracion,
+      // Redondeadas: al mando le sobra el segundo exacto, y así el
+      // mensaje del latido se queda en unos pocos bytes.
+      posiciones: Object.fromEntries(Object.entries(posiciones).map(([i, seg]) => [i, Math.round(seg)])),
       // Solo los nombres, nunca las URLs: son direcciones de memoria
       // locales del Mac, no significan nada en otro aparato.
       pistas: Object.fromEntries(Object.entries(pistas).map(([i, p]) => [i, { nombre: p.nombre }])),
     });
-  }, [esReproductor, seleccionado, bloqueSonando, sonando, volumen, silenciado, posicion, duracion, pistas, enviarEstado]);
+  }, [esReproductor, seleccionado, bloqueSonando, sonando, volumen, silenciado, posicion, duracion, posiciones, pistas, enviarEstado]);
 
   useEffect(() => {
     enviarOrdenRef.current = enviarOrden;
@@ -980,8 +1017,23 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <span className="absolute" style={{ top: 7, left: 8, ...cifra, fontSize: M.hora, color: P.tenue }}>
               {horas[i]}
             </span>
+            {/* Arriba a la derecha, dos avisos distintos en el mismo
+                sitio: el punto tenue dice "tiene pista", y el punto con
+                aro dice "lo dejaste a medias, seguirá donde estaba". */}
             {pistas[i] && !suenaAqui && (
-              <span className="absolute rounded-full" style={{ top: 8, right: 8, width: 6, height: 6, background: P.oro, opacity: 0.75 }} title="Tiene pista" />
+              <span
+                className="absolute rounded-full"
+                style={{
+                  top: 8,
+                  right: 8,
+                  width: 6,
+                  height: 6,
+                  background: P.oro,
+                  opacity: posiciones[i] > 3 ? 1 : 0.75,
+                  boxShadow: posiciones[i] > 3 ? `0 0 0 3px ${claro ? "rgba(122,92,36,0.28)" : "rgba(217,183,120,0.3)"}` : "none",
+                }}
+                title={posiciones[i] > 3 ? `Pausado en ${formatearTiempo(posiciones[i])} — seguirá desde ahí` : "Tiene pista"}
+              />
             )}
             <span
               className="text-center"
@@ -1027,7 +1079,11 @@ export function VentanaMusicaEvento({ data, ventana }) {
               {bloques[seleccionado]?.texto || `Bloque ${seleccionado + 1}`}
             </span>
             <span style={{ ...cifra, fontSize: M.texto - 1, color: P.tenue, flexShrink: 0 }}>
-              {mirandoElQueSuena ? `${formatearTiempo(posicion)} / ${formatearTiempo(duracion)}` : "sin sonar"}
+              {mirandoElQueSuena
+                ? `${formatearTiempo(posicion)} / ${formatearTiempo(duracion)}`
+                : posiciones[seleccionado] > 3
+                  ? `pausado en ${formatearTiempo(posiciones[seleccionado])}`
+                  : "sin sonar"}
             </span>
           </div>
 
@@ -1607,7 +1663,25 @@ export function VentanaMusicaEvento({ data, ventana }) {
         "--oro-borde": T.oro,
       }}
     >
-      <audio ref={audioRef} onEnded={() => setSonando(false)} onLoadedMetadata={(e) => setDuracion(e.target.duration || 0)} />
+      <audio
+        ref={audioRef}
+        onEnded={() => {
+          setSonando(false);
+          // Una pista terminada NO se retoma por la mitad: se borra su
+          // marca para que la próxima vez arranque desde el principio.
+          if (bloqueSonando != null) setPosiciones((previas) => ({ ...previas, [bloqueSonando]: 0 }));
+        }}
+        onLoadedMetadata={(e) => {
+          setDuracion(e.target.duration || 0);
+          // Aquí es donde se retoma de verdad el bloque interrumpido:
+          // hasta que no hay metadatos, fijar currentTime no hace nada.
+          if (reanudarEnRef.current > 0) {
+            e.target.currentTime = Math.min(reanudarEnRef.current, (e.target.duration || 0) - 1);
+            setPosicion(e.target.currentTime);
+          }
+          reanudarEnRef.current = 0;
+        }}
+      />
       <audio ref={cortinillaRef} src={cortinilla?.url} />
 
       {/* Cabecera con el RELOJ dentro: la hora y el retraso ya no

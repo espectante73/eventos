@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.26",
+    cambios: [
+      "Cada bloque recuerda dónde se quedó. Si estás en Recepción y saltas a Cóctel, Recepción no vuelve a empezar cuando la retomes: sigue exactamente donde la interrumpiste, con su cortinilla de entrada igual.",
+      "Los bloques dejados a medias se marcan con el puntito dorado rodeado de un halo (arriba a la derecha del botón), y al mirarlos se lee \"pausado en 4:12\" en vez de \"sin sonar\". Una pista que termina sola no deja marca: la próxima vez arranca desde el principio.",
+      "El móvil ve esas marcas igual que el ordenador — viajan con el resto del estado.",
+      "Corregido: el ordenador había perdido su ventana independiente si el navegador no estaba a pantalla completa. Se decidía por el ancho de la ventana, y ahora se decide por el aparato (táctil o no), que es lo que se quería desde el principio: ventana aparte en el Mac, pantalla completa dentro de la página solo en móvil o tablet.",
+    ],
+  },
+  {
     version: "20.25",
     cambios: [
       "En el móvil, Música del evento ya no intenta abrirse como ventana aparte: se abre a pantalla completa dentro de la propia página. Pulsar \"Música\" en el móvil no hacía absolutamente nada — sin aviso ni error — porque Safari en iOS trae activado de fábrica el bloqueo de ventanas emergentes. El mando a distancia vive en el móvil, así que no puede depender de un permiso del navegador.",
