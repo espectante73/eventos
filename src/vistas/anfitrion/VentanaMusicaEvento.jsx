@@ -56,7 +56,7 @@ import { calcularHorasAbsolutas } from "../../lib/cronograma";
 import { useMandoMusica } from "../../lib/useMandoMusica";
 import { porcentajeAVolumen, ajustarPorcentaje, PASO_VOLUMEN } from "../../lib/volumen";
 import { guardarPista, leerTodasLasPistas } from "../../lib/almacenPistas";
-import { leerFondo, subirFondo, borrarFondo, nombreParaMostrar } from "../../lib/fondoMusica";
+import { leerFondo, subirFondo, borrarFondo, nombreParaMostrar, PESO_EXCESIVO } from "../../lib/fondoMusica";
 import {
   TEMAS_MUSICA,
   PANELES,
@@ -171,6 +171,14 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // subió -- ver lib/fondoMusica.js.
   const [fondoPropio, setFondoPropio] = useState(null);
   const [subiendoFondo, setSubiendoFondo] = useState(false);
+  // La foto NO se pinta hasta que el navegador la tiene descargada y
+  // decodificada. Bug real (2026-09-01): al volver a abrir la ventana
+  // con un PNG pesado de fondo, se quedaba en blanco -- el navegador se
+  // atragantaba pintando esa imagen antes de mostrar nada. Ahora la
+  // ventana aparece con su acabado normal y la foto entra cuando está
+  // lista; si no llega a cargar, no entra nunca y la ventana funciona
+  // igual.
+  const [fondoListo, setFondoListo] = useState(false);
 
   const audioRef = useRef(null);
   const cortinillaRef = useRef(null);
@@ -261,6 +269,25 @@ export function VentanaMusicaEvento({ data, ventana }) {
       cancelado = true;
     };
   }, []);
+
+  useEffect(() => {
+    setFondoListo(false);
+    if (!fondoPropio?.url) return undefined;
+    let cancelado = false;
+    const imagen = new (ventana?.Image || Image)();
+    imagen.onload = () => {
+      if (!cancelado) setFondoListo(true);
+    };
+    imagen.onerror = () => {
+      if (!cancelado) setAviso("La imagen de fondo no se ha podido cargar. La ventana sigue con el acabado elegido.");
+    };
+    imagen.src = fondoPropio.url;
+    return () => {
+      cancelado = true;
+      imagen.onload = null;
+      imagen.onerror = null;
+    };
+  }, [fondoPropio, ventana]);
 
   // Reloj en vivo: refresca cada 15s (suficiente para un indicador que
   // se mide en minutos, y no repinta la ventana sin parar).
@@ -695,6 +722,31 @@ export function VentanaMusicaEvento({ data, ventana }) {
       });
   };
 
+  // Para una imagen subida ANTES de que la app las redujera al subir
+  // (o subida desde otro sitio): se descarga, se reduce y se vuelve a
+  // subir, sin tener que buscar el archivo original.
+  const optimizarFondo = () => {
+    if (!fondoPropio) return;
+    const intento = ++intentoFondoRef.current;
+    setSubiendoFondo(true);
+    setAviso("");
+    fetch(fondoPropio.url)
+      .then((r) => r.blob())
+      .then((blob) => new (ventana?.File || File)([blob], fondoPropio.nombre, { type: blob.type }))
+      .then((archivo) => subirFondo(archivo, ventana || undefined))
+      .then((fondo) => {
+        if (intento !== intentoFondoRef.current) return;
+        setFondoPropio(fondo);
+      })
+      .catch((error) => {
+        if (intento !== intentoFondoRef.current) return;
+        setAviso(`No se ha podido optimizar la imagen: ${error?.message || error}`);
+      })
+      .finally(() => {
+        if (intento === intentoFondoRef.current) setSubiendoFondo(false);
+      });
+  };
+
   // No cancela la petición (Supabase no lo permite), pero devuelve la
   // ventana a un estado usable en vez de dejarla colgada en "subiendo".
   const dejarDeSubirFondo = () => {
@@ -757,27 +809,34 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // (2026-09-01). Ahora el velo es mucho más liviano y se abre en el
   // centro: carga arriba y abajo, donde están la cabecera y los mandos,
   // y deja ver la foto en medio.
-  const conFoto = !!fondoPropio && aspecto.fondoPropioActivo;
+  const conFoto = !!fondoPropio && fondoListo && aspecto.fondoPropioActivo;
   // Con foto puesta manda ELLA, no el acabado: el usuario quería que su
   // imagen vistiera la app entera (2026-09-01), no que se combinara con
   // otro acabado por debajo. Lo único que hay que decirle a la ventana
   // es si esa imagen es clara u oscura, para poner el texto y los
   // mandos del color contrario.
   const claro = conFoto ? !!aspecto.imagenClara : T.claro;
-  const FOTO = conFoto ? `url("${fondoPropio.url}") center / cover no-repeat` : "";
   const VELO_FOTO = claro
     ? "linear-gradient(178deg, rgba(255,252,244,0.60) 0%, rgba(255,252,244,0.28) 45%, rgba(222,210,184,0.66) 100%)"
     : "linear-gradient(178deg, rgba(10,18,14,0.58) 0%, rgba(10,18,14,0.26) 45%, rgba(5,10,8,0.68) 100%)";
-  // La MISMA foto viste también los paneles y las teclas, con su propio
-  // velo: así toda la ventana parece tallada en ese material, en vez de
-  // ser una foto de fondo con botones de otro color encima.
+  // ⚠️ La foto se pinta UNA sola vez, en el chasis, y los paneles y las
+  // teclas se quedan TRANSLÚCIDOS para que se vea a través de ellos.
+  // Antes cada pieza llevaba su propia copia (`url(...)` en el panel, en
+  // cada una de las 9 teclas, en los botones de volumen...): el
+  // navegador tenía que decodificar y reescalar la misma imagen quince
+  // veces, y con un PNG pesado eso dejaba la ventana en blanco al
+  // abrirla. Además, así el relieve y los bordes son lo que separa una
+  // pieza de otra -- que es justo el aspecto de estar tallado en la
+  // misma plancha.
   const materialPanel = conFoto
-    ? `${claro ? "linear-gradient(180deg, rgba(255,253,247,0.72), rgba(246,240,228,0.60))" : "linear-gradient(180deg, rgba(10,16,13,0.62), rgba(6,11,9,0.74))"}, ${FOTO}`
+    ? claro
+      ? "linear-gradient(180deg, rgba(255,253,247,0.62), rgba(246,240,228,0.50))"
+      : "linear-gradient(180deg, rgba(10,16,13,0.55), rgba(6,11,9,0.68))"
     : null;
   const materialTecla = (activa) =>
     claro
-      ? `linear-gradient(180deg, rgba(255,255,255,${activa ? 0.86 : 0.74}) 0%, rgba(255,255,255,${activa ? 0.5 : 0.4}) 48%, rgba(90,74,44,0.18) 100%), ${FOTO}`
-      : `linear-gradient(180deg, rgba(255,255,255,${activa ? 0.3 : 0.2}) 0%, rgba(0,0,0,${activa ? 0.24 : 0.34}) 48%, rgba(0,0,0,0.5) 100%), ${FOTO}`;
+      ? `linear-gradient(180deg, rgba(255,255,255,${activa ? 0.80 : 0.66}) 0%, rgba(255,255,255,${activa ? 0.46 : 0.34}) 48%, rgba(90,74,44,0.20) 100%)`
+      : `linear-gradient(180deg, rgba(255,255,255,${activa ? 0.28 : 0.18}) 0%, rgba(0,0,0,${activa ? 0.26 : 0.36}) 48%, rgba(0,0,0,0.52) 100%)`;
   const P = {
     fondo: conFoto ? `${VELO_FOTO}, url("${fondoPropio.url}") center / cover no-repeat` : T.fondo,
     // Los paneles NO son un velo sobre el fondo: cada tema trae su
@@ -1348,6 +1407,18 @@ export function VentanaMusicaEvento({ data, ventana }) {
         </div>
       )}
 
+      {fondoPropio && !subiendoFondo && fondoPropio.peso > PESO_EXCESIVO && (
+        <div className="flex items-start gap-2 px-3 py-2.5 mb-3" style={{ borderRadius: 12, background: "rgba(228,120,130,0.14)", color: claro ? "#8E2530" : "#F0A4AC", fontSize: M.texto - 1 }}>
+          <span className="flex-1">
+            Esta imagen pesa {(fondoPropio.peso / (1024 * 1024)).toFixed(1)} MB: tarda en pintarse y puede dejar la ventana en
+            blanco un rato al abrirla, sobre todo en el móvil.
+          </span>
+          <button onClick={optimizarFondo} className="rounded-full px-3" style={{ minHeight: 32, ...etiqueta, color: P.texto, ...tecla(false), flexShrink: 0 }}>
+            Optimizar
+          </button>
+        </div>
+      )}
+
       {fondoPropio && !subiendoFondo && (
         <div className="flex items-center gap-2 mb-3">
           <label className="flex items-center gap-2 cursor-pointer px-3 flex-1 min-w-0" style={{ background: P.panelVivo, borderRadius: 12, minHeight: 40, fontSize: M.texto - 1, transition: SUAVE }}>
@@ -1359,6 +1430,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <Trash2 size={15} />
           </button>
         </div>
+      )}
+      {fondoPropio && aspecto.fondoPropioActivo && !fondoListo && !subiendoFondo && (
+        <p className="mb-3" style={{ fontSize: M.texto - 2, color: P.tenue }}>Cargando tu imagen…</p>
       )}
       <p className="mb-3" style={{ fontSize: M.texto - 2, color: P.tenue }}>
         {conFoto

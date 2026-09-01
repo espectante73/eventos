@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.23",
+    cambios: [
+      "Arreglada la ventana en blanco al volver a abrir Música del evento con una imagen de fondo puesta. La foto se estaba pintando por separado en cada pieza (el chasis, cada panel y cada una de las teclas): el navegador tenía que decodificar la misma imagen quince veces antes de mostrar nada, y con un PNG pesado se atragantaba. Ahora se pinta UNA vez en el chasis y las piezas son translúcidas — se ve igual, y arranca al instante.",
+      "La ventana ya no espera a la foto para abrirse: aparece con su acabado y la imagen entra cuando está descargada. Si no llega a cargar, la ventana funciona igual y lo dice.",
+      "Si la imagen que hay subida pesa de más, sale un aviso con su tamaño real y un botón Optimizar que la reduce sin tener que buscar el archivo original.",
+      "Música del evento tiene ahora su propia red de seguridad: si algo falla dentro de esa ventana ya no se queda en blanco sin explicación — muestra el aviso, un botón para recargarla (esa ventana, no la principal) y otro para devolver el aspecto a como venía de fábrica.",
+    ],
+  },
+  {
     version: "20.22",
     cambios: [
       "El icono de wifi cambia de significado: antes decía si ESTE navegador había enganchado con el servidor, cosa que pasa aunque estés solo — por eso el ordenador se declaraba conectado sin haber abierto siquiera el mando. Ahora dice si está el OTRO aparato, que es lo que importa: tachado (sin canal), tenue (canal listo, falta el otro) o dorado (los dos enlazados).",

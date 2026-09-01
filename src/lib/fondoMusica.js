@@ -35,9 +35,15 @@ export function nombreParaMostrar(nombreArchivo) {
   return nombreArchivo.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
 }
 
-function conUrl(nombre) {
-  return { nombre, url: supabase.storage.from(BUCKET).getPublicUrl(nombre).data.publicUrl };
+function conUrl(nombre, peso = 0) {
+  return { nombre, peso, url: supabase.storage.from(BUCKET).getPublicUrl(nombre).data.publicUrl };
 }
+
+// Por encima de esto, la imagen es un problema y no un adorno: pinta
+// lenta, se descarga en cada aparato y en el móvil puede tumbar la
+// ventana. Las que sube la app ya salen muy por debajo (se reducen
+// antes), pero una subida anterior a ese arreglo sigue ahí.
+export const PESO_EXCESIVO = 3 * 1024 * 1024;
 
 // null si no hay ninguna (o si el bucket todavía no existe: el fondo es
 // un adorno, nunca debe romper la ventana de música).
@@ -46,7 +52,8 @@ export async function leerFondo() {
   if (error || !data) return null;
   const archivos = data.filter((f) => f.name !== MARCADOR);
   if (!archivos.length) return null;
-  return conUrl(archivos[archivos.length - 1].name);
+  const archivo = archivos[archivos.length - 1];
+  return conUrl(archivo.name, archivo.metadata?.size || 0);
 }
 
 // Una foto del carrete o una captura de pantalla puede pesar 15-20 MB,

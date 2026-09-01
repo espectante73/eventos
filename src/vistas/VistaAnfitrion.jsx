@@ -17,6 +17,8 @@ import { VentanaPermisos } from "./anfitrion/VentanaPermisos";
 import { VentanaConfigMusica } from "./anfitrion/VentanaConfigMusica";
 import { VentanaConfigCronograma } from "./anfitrion/VentanaConfigCronograma";
 import { VentanaMusicaEvento } from "./anfitrion/VentanaMusicaEvento";
+import { guardarAspecto, ASPECTO_POR_DEFECTO } from "../lib/temasMusica";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaLogistica } from "./anfitrion/VentanaLogistica";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
@@ -106,7 +108,18 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
     // completa y el contenido se centra solo.
   } = usePopupWindow({ nombreVentana: "musica-evento", ancho: 940, alto: 800 });
   useEffect(() => {
-    if (musicaEventoAbierta) actualizarMusicaEvento(<VentanaMusicaEvento data={data} ventana={ventanaMusicaEvento} />);
+    // Con su propio Error Boundary: si algo revienta ahí dentro, esta
+    // ventana es un root de React aparte (createRoot en el documento de
+    // la emergente), así que el de la pestaña principal no la cubre --
+    // se quedaría en blanco sin decir nada. El botón de rescate devuelve
+    // el aspecto a como venía de fábrica, que es de lo poco que se puede
+    // dejar en mal estado desde aquí.
+    if (musicaEventoAbierta)
+      actualizarMusicaEvento(
+        <ErrorBoundary ventana={ventanaMusicaEvento} alReiniciar={() => guardarAspecto(ASPECTO_POR_DEFECTO)}>
+          <VentanaMusicaEvento data={data} ventana={ventanaMusicaEvento} />
+        </ErrorBoundary>
+      );
   }, [musicaEventoAbierta, actualizarMusicaEvento, data, ventanaMusicaEvento]);
 
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no

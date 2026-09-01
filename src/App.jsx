@@ -12,59 +12,9 @@ import { VistaTablon } from "./vistas/VistaTablon";
 
 // ---------- Red de seguridad ante errores inesperados ----------
 
-// Un Error Boundary tiene que ser una clase (React todavía no ofrece el
-// equivalente con hooks) — es el único mecanismo que puede capturar un
-// error de renderizado en cualquier parte del árbol y mostrar algo en vez
-// de dejar la pantalla completamente en blanco sin explicación.
-export class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { error: null };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { error };
-  }
-
-  componentDidCatch(error, info) {
-    // eslint-disable-next-line no-console
-    console.error("Error inesperado capturado por ErrorBoundary:", error, info);
-  }
-
-  render() {
-    if (!this.state.error) return this.props.children;
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center px-4"
-        style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
-      >
-        <div
-          className="max-w-md w-full p-6 rounded-lg text-center"
-          style={{ background: "#fff", border: `1px solid ${C.line}` }}
-        >
-          <h1
-            className="text-xl mb-2"
-            style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}
-          >
-            Algo ha fallado
-          </h1>
-          <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: 0.8 }}>
-            Ha ocurrido un error inesperado y esta pantalla no se puede seguir mostrando.
-            Tus datos están a salvo en la base de datos — nada de esto los afecta. Prueba a
-            recargar la página.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 rounded text-sm font-medium"
-            style={{ background: C.ink, color: C.paper }}
-          >
-            Recargar la página
-          </button>
-        </div>
-      </div>
-    );
-  }
-}
+// El Error Boundary vive en components/ErrorBoundary.jsx; se reexporta
+// aquí porque main.jsx lo importa de este módulo desde el principio.
+export { ErrorBoundary } from "./components/ErrorBoundary";
 
 // ---------- App ----------
 
