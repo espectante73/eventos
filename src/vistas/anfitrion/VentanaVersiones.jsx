@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "20.13",
+    cambios: [
+      "Música del evento, más compacta: en el móvil ya no hace falta hacer scroll para llegar al volumen ni al play — todo lo que se toca en directo cabe en una pantalla.",
+      "El reloj y el estado (en hora / con retraso) se meten en la cabecera, donde no roban altura. El volumen pasa de tres filas a una sola: silencio, barra, porcentaje y los botones − y +.",
+      "En el reproductor, el nombre del bloque y los tiempos comparten línea, y el ajuste de salto sube junto a los botones en vez de ocupar una fila para él solo.",
+      "En el ordenador, la lista de pistas por bloque nace plegada (con un contador del tipo 3/9): se usa una vez antes de la boda, no en directo.",
+    ],
+  },
+  {
     version: "20.12",
     cambios: [
       "Repaso a fondo del acabado de Música del evento: ahora solo el botón de play va en dorado macizo. El bloque seleccionado y la barra de «sonando ahora» pasan a un tratamiento más discreto — antes había tres cosas doradas compitiendo y ninguna destacaba de verdad.",
