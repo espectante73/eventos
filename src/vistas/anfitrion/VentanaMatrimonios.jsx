@@ -9,12 +9,21 @@
 // No guarda nada: se lee entera de la Lista de invitados. La marca O/A
 // de cada persona y el año de boda se ponen allí (y el año de boda lo
 // suele rellenar el propio colaborador en su formulario).
-import { AlertTriangle } from "lucide-react";
 import { C } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { matrimoniosDeInvitados, anioDelEvento } from "../../lib/matrimonios";
 
-const COLUMNAS = "1.1fr 1.2fr 1.2fr 0.9fr 0.7fr 0.9fr";
+// Mismo aspecto que la Lista de invitados, a petición del usuario
+// (2026-09-03): cabecera verde con la letra dorada en monoespaciada,
+// recuadro tenue alternando por columna, y filas cebra. Aquí las
+// anchuras son fijas (no hace falta el medidor de la Lista, que existe
+// allí porque sus celdas llevan campos de texto y desplegables).
+const COLUMNAS = "1.1fr 1.1fr 1.1fr 0.9fr 0.6fr 0.9fr 0.7fr";
+const CABECERAS = ["Familia", "Esposo", "Esposa", "Zona", "Boda", "Aniversario", "Confirm."];
+// Recuadro tenue alternando por columna: blanco al 7% sobre el verde de
+// la cabecera, y verde al 7% sobre el blanco de las filas.
+const tintaCabecera = (i) => (i % 2 === 1 ? "rgba(255,255,255,0.07)" : "transparent");
+const tintaCelda = (i) => (i % 2 === 1 ? "rgba(31,58,46,0.07)" : "transparent");
 
 export function VentanaMatrimonios({ data, onCerrar }) {
   const { invitados, evento } = data;
@@ -40,6 +49,13 @@ export function VentanaMatrimonios({ data, onCerrar }) {
     </div>
   );
 
+  const celda = (i, extra) => ({
+    background: tintaCelda(i),
+    padding: "6px 8px",
+    minWidth: 0,
+    ...extra,
+  });
+
   return (
     <VentanaFlotante
       clave="matrimonios"
@@ -50,53 +66,43 @@ export function VentanaMatrimonios({ data, onCerrar }) {
         <div className="flex items-center gap-3 rounded px-2 py-1" style={{ border: `1px solid ${C.gold}` }}>
           {cifra("Matrimonios", matrimonios.length)}
           {cifra("Los dos confirmados", confirmados)}
+          {/* El aviso de los años de boda que faltan era un bloque rojo
+              aparte; como cifra encaja mejor con el resto y no repite lo
+              que ya se ve solo en la columna vacía. */}
+          {sinAnioBoda > 0 && cifra("Sin año de boda", sinAnioBoda)}
         </div>
       }
     >
       <p className="text-sm mb-3" style={{ color: C.charcoal, opacity: 0.8 }}>
         Sale de la Lista de invitados: un <strong>O</strong> (esposo) y una <strong>A</strong> (esposa) dentro de la misma
-        familia forman un matrimonio. Los años del aniversario son los que cumplen{" "}
+        familia forman un matrimonio. El aniversario son los años que cumplen{" "}
         {anioEvento ? `en ${anioEvento}, el año del evento` : "el año del evento"}.
       </p>
 
-      {sinAnioBoda > 0 && (
-        <p
-          className="text-sm mb-3 px-3 py-2 rounded flex items-start gap-2"
-          style={{ background: C.avisoFondo, color: C.peligro }}
-        >
-          <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
-          <span>
-            {sinAnioBoda === 1 ? "A un matrimonio le falta" : `A ${sinAnioBoda} matrimonios les falta`} el año de boda, así
-            que no se les puede calcular el aniversario. Lo rellena el colaborador en el formulario del invitado, o se
-            puede poner a mano desde Datos Colab.
-          </span>
-        </p>
-      )}
-
       <div className="overflow-x-auto">
-        <div style={{ minWidth: 700 }}>
+        <div style={{ minWidth: 720 }}>
           <div
-            className="grid px-2 py-1.5 text-xs font-bold uppercase rounded-t"
+            className="grid text-xs font-bold uppercase text-center"
             style={{
               gridTemplateColumns: COLUMNAS,
               background: C.ink,
               color: C.goldClaro,
               fontFamily: "'IBM Plex Mono', monospace",
               letterSpacing: "0.03em",
+              borderRadius: "6px 6px 0 0",
             }}
           >
-            <span>Familia</span>
-            <span>Esposo</span>
-            <span>Esposa</span>
-            <span>Zona</span>
-            <span>Boda</span>
-            <span>Aniversario</span>
+            {CABECERAS.map((titulo, i) => (
+              <span key={titulo} style={{ background: tintaCabecera(i), padding: "6px 8px" }}>
+                {titulo}
+              </span>
+            ))}
           </div>
 
           {matrimonios.map((m, i) => (
             <div
               key={m.clave}
-              className="grid px-2 py-1.5 text-sm items-center"
+              className="grid text-sm items-center"
               style={{
                 gridTemplateColumns: COLUMNAS,
                 background: i % 2 ? C.paperDark : "#fff",
@@ -104,30 +110,33 @@ export function VentanaMatrimonios({ data, onCerrar }) {
                 fontFamily: "'Inter', sans-serif",
               }}
             >
-              <span className="truncate" style={{ fontWeight: 600 }}>
+              <span className="truncate" style={celda(0, { fontWeight: 600 })}>
                 {m.familia || "—"}
               </span>
-              <span className="truncate">{m.esposo.nombre}</span>
-              <span className="truncate">{m.esposa.nombre}</span>
-              <span className="truncate">{m.zona || "—"}</span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{m.anioBoda || "—"}</span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
-                {m.aniversario === null ? (
-                  <span style={{ color: C.peligro }}>falta el año</span>
-                ) : (
-                  `${m.aniversario} años`
-                )}
-                {!m.confirmados && (
-                  <span className="ml-2 text-xs" style={{ opacity: 0.7 }} title="Falta confirmar a uno de los dos">
-                    sin confirmar
-                  </span>
-                )}
+              <span className="truncate" style={celda(1)}>
+                {m.esposo.nombre}
               </span>
+              <span className="truncate" style={celda(2)}>
+                {m.esposa.nombre}
+              </span>
+              <span className="truncate" style={celda(3)}>
+                {m.zona || "—"}
+              </span>
+              <span style={celda(4, { fontFamily: "'IBM Plex Mono', monospace", textAlign: "center" })}>
+                {m.anioBoda || "—"}
+              </span>
+              {/* Sin año de boda no se pinta NADA: que el dato falta ya
+                  se ve en la columna de al lado -- a petición del
+                  usuario, que la versión anterior avisaba dos veces. */}
+              <span style={celda(5, { fontFamily: "'IBM Plex Mono', monospace", textAlign: "center" })}>
+                {m.aniversario === null ? "" : `${m.aniversario} años`}
+              </span>
+              <span style={celda(6, { textAlign: "center" })}>{m.confirmados ? "Sí" : "—"}</span>
             </div>
           ))}
 
           {matrimonios.length === 0 && (
-            <p className="text-sm italic p-3" style={{ color: C.charcoal, opacity: 0.6 }}>
+            <p className="text-sm italic p-3" style={{ color: C.charcoal, opacity: 0.6, background: "#fff" }}>
               Todavía no hay ningún matrimonio marcado. En la Lista de invitados, entra en "Editar" y marca a cada
               cónyuge con O (esposo) o A (esposa).
             </p>

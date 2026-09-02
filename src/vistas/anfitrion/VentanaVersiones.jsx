@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.2",
+    cambios: [
+      "La ventana Matrimonios se viste igual que la Lista de invitados: cabecera verde con la letra dorada, recuadro tenue alternando por columna y filas cebra. Gana además una columna Confirm., para ver de un vistazo si vienen los dos.",
+      "Si a una pareja le falta el año de boda, la columna Aniversario se queda vacía sin más: que el dato no está ya se ve en la columna de al lado. El aviso rojo que había se convierte en una cifra más de la cabecera (\"Sin año de boda\"), junto al total de matrimonios.",
+    ],
+  },
+  {
     version: "21.1",
     cambios: [
       "La columna O/A gana su filtro, como el resto: Todos, Cónyuges (los marcados con cualquiera de las dos), O, A y Sin marcar — este último para repasar de un vistazo a quién falta por marcar.",
