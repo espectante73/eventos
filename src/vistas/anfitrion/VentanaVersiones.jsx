@@ -44,6 +44,7 @@ const HISTORIAL_VERSIONES = [
   {
     version: "21.1",
     cambios: [
+      "La columna O/A gana su filtro, como el resto: Todos, Cónyuges (los marcados con cualquiera de las dos), O, A y Sin marcar — este último para repasar de un vistazo a quién falta por marcar.",
       "En la columna O/A ya se ve la letra: la flecha del desplegable se comía el ancho entero de una columna estrecha a propósito. Se quita la flecha (sigue abriéndose igual al tocarlo) y la letra queda centrada, en dorado, sobre un recuadro suave que indica que se puede tocar.",
     ],
   },

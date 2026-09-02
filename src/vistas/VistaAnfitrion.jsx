@@ -163,6 +163,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   const [filtros, setFiltros] = useState({
     texto: "",
     grupoFamiliar: "",
+    // "" | "conyuges" | "esposo" | "esposa" | "sin" -- columna O/A.
+    conyuge: "",
     zona: "",
     colaboradorId: "",
     mesa: "",

@@ -339,6 +339,10 @@ export function SeccionInvitados({
         if (!texto.includes(t)) return false;
       }
       if (filtros.grupoFamiliar && g.grupoFamiliar !== filtros.grupoFamiliar) return false;
+      if (filtros.conyuge === "conyuges" && !g.conyuge) return false;
+      if (filtros.conyuge === "sin" && g.conyuge) return false;
+      if ((filtros.conyuge === CONYUGE.ESPOSO || filtros.conyuge === CONYUGE.ESPOSA) && g.conyuge !== filtros.conyuge)
+        return false;
       if (filtros.zona && g.zona !== filtros.zona) return false;
       if (filtros.colaboradorId) {
         const col = resolverColaborador(g, colaboradores);
@@ -743,11 +747,39 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                {/* La columna O/A no lleva filtro: se marca y se lee, y
-                    para verlos juntos ya está la ventana Matrimonios.
-                    La celda existe igualmente para que la rejilla siga
-                    cuadrando columna a columna con la tabla. */}
-                <span style={{ background: tintaColumnaCabecera(2), borderRadius: "0 0 6px 6px" }} />
+                <span style={{ background: tintaColumnaCabecera(2), borderRadius: "0 0 6px 6px" }}>
+                  <select
+                    value={filtros.conyuge}
+                    onChange={(e) => setFiltros({ ...filtros, conyuge: e.target.value })}
+                    style={{
+                      ...inputStyle,
+                      border: "none",
+                      background: "transparent",
+                      color: C.goldClaro,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      padding: "2px 0",
+                      fontSize: 12,
+                      width: "100%",
+                      minWidth: 0,
+                      // Misma razón que en la celda de datos: la flecha
+                      // no cabe en una columna tan estrecha.
+                      appearance: "none",
+                      WebkitAppearance: "none",
+                      MozAppearance: "none",
+                      textAlign: "center",
+                      textAlignLast: "center",
+                      cursor: "pointer",
+                      boxSizing: "border-box",
+                    }}
+                    title="Filtrar por cónyuge"
+                  >
+                    <option value="">Todos</option>
+                    <option value="conyuges">Cónyuges</option>
+                    <option value={CONYUGE.ESPOSO}>O</option>
+                    <option value={CONYUGE.ESPOSA}>A</option>
+                    <option value="sin">Sin marcar</option>
+                  </select>
+                </span>
                 <span style={{ background: tintaColumnaCabecera(3), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.zona}
