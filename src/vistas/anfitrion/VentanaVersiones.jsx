@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.1",
+    cambios: [
+      "En la columna O/A ya se ve la letra: la flecha del desplegable se comía el ancho entero de una columna estrecha a propósito. Se quita la flecha (sigue abriéndose igual al tocarlo) y la letra queda centrada, en dorado, sobre un recuadro suave que indica que se puede tocar.",
+    ],
+  },
+  {
     version: "21",
     cambios: [
       "Matrimonios. La Lista de invitados gana una columna O/A: se marca a cada cónyuge con O (esposO) o A (esposA), y un esposo + una esposa de la misma familia forman un matrimonio. Arriba, junto a Previstos y Confirmados, sale el total de matrimonios.",

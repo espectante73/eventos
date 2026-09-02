@@ -1140,12 +1140,26 @@ export function SeccionInvitados({
                         style={{
                           ...inputStyle,
                           border: "none",
-                          background: "transparent",
+                          // ⚠️ Sin la flecha del <select>: esta columna es
+                          // estrecha a propósito y la flecha se comía el
+                          // ancho entero, dejando la letra fuera de la
+                          // vista (2026-09-03). Sigue siendo un
+                          // desplegable normal, solo que se ve la letra.
+                          appearance: "none",
+                          WebkitAppearance: "none",
+                          MozAppearance: "none",
+                          background: "rgba(31,58,46,0.06)",
+                          borderRadius: 4,
                           padding: "2px 0",
-                          fontSize: 12,
+                          fontSize: 13,
+                          fontWeight: 700,
+                          fontFamily: "'IBM Plex Mono', monospace",
+                          color: C.gold,
                           width: "100%",
                           minWidth: 0,
                           textAlign: "center",
+                          textAlignLast: "center",
+                          cursor: "pointer",
                           boxSizing: "border-box",
                         }}
                         title="Marcar como esposo (O) o esposa (A)"
