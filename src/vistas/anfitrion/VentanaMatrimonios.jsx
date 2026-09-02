@@ -11,7 +11,7 @@
 // suele rellenar el propio colaborador en su formulario).
 import { C } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
-import { matrimoniosDeInvitados, anioDelEvento } from "../../lib/matrimonios";
+import { matrimoniosDeInvitados } from "../../lib/matrimonios";
 
 // Mismo aspecto que la Lista de invitados, a petición del usuario
 // (2026-09-03): cabecera verde con la letra dorada en monoespaciada,
@@ -28,7 +28,6 @@ const tintaCelda = (i) => (i % 2 === 1 ? "rgba(31,58,46,0.07)" : "transparent");
 export function VentanaMatrimonios({ data, onCerrar }) {
   const { invitados, evento } = data;
   const matrimonios = matrimoniosDeInvitados(invitados, evento.fecha);
-  const anioEvento = anioDelEvento(evento.fecha);
   const sinAnioBoda = matrimonios.filter((m) => m.aniversario === null).length;
   const confirmados = matrimonios.filter((m) => m.confirmados).length;
 
@@ -74,9 +73,7 @@ export function VentanaMatrimonios({ data, onCerrar }) {
       }
     >
       <p className="text-sm mb-3" style={{ color: C.charcoal, opacity: 0.8 }}>
-        Sale de la Lista de invitados: un <strong>O</strong> (esposo) y una <strong>A</strong> (esposa) dentro de la misma
-        familia forman un matrimonio. El aniversario son los años que cumplen{" "}
-        {anioEvento ? `en ${anioEvento}, el año del evento` : "el año del evento"}.
+        O (esposo), A (esposa). El aniversario que cumplen en el año del evento.
       </p>
 
       <div className="overflow-x-auto">

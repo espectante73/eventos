@@ -44,6 +44,7 @@ const HISTORIAL_VERSIONES = [
   {
     version: "21.2",
     cambios: [
+      "Texto de la ventana Matrimonios reducido a lo imprescindible: \"O (esposo), A (esposa). El aniversario que cumplen en el año del evento.\"",
       "La ventana Matrimonios se viste igual que la Lista de invitados: cabecera verde con la letra dorada, recuadro tenue alternando por columna y filas cebra. Gana además una columna Confirm., para ver de un vistazo si vienen los dos.",
       "Si a una pareja le falta el año de boda, la columna Aniversario se queda vacía sin más: que el dato no está ya se ve en la columna de al lado. El aviso rojo que había se convierte en una cifra más de la cabecera (\"Sin año de boda\"), junto al total de matrimonios.",
     ],
