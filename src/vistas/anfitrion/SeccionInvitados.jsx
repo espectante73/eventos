@@ -33,6 +33,8 @@ import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio } from "../../lib/invitados";
 import { ordenarPorApellidoNombre } from "../../lib/formato";
+import { CONYUGE, LETRA_CONYUGE, NOMBRE_CONYUGE } from "../../lib/conyuge";
+import { contarMatrimonios } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
 import { TextInput } from "../../components/Formulario";
 import { EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
@@ -98,6 +100,7 @@ export function SeccionInvitados({
         mesa: null,
         anioNacimiento: "",
         anioBoda: "",
+        conyuge: "",
         email: "",
         cancion: "",
         alergias: "",
@@ -147,6 +150,11 @@ export function SeccionInvitados({
     persistInvitados(invitados.map((g) => (g.id === id ? { ...g, zona } : g)));
   };
 
+  // "esposo" | "esposa" | "" -- ver lib/conyuge.js y lib/matrimonios.js.
+  const asignarConyuge = (id, conyuge) => {
+    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, conyuge } : g)));
+  };
+
   const asignarMesa = (id, mesaValue) => {
     const numero = mesaValue ? Number(mesaValue) : null;
     const invitadoActual = invitados.find((g) => g.id === id);
@@ -191,6 +199,7 @@ export function SeccionInvitados({
       mesa: null,
       anioNacimiento: "",
       anioBoda: "",
+      conyuge: "",
       email: "",
       cancion: "",
       alergias: "",
@@ -353,6 +362,10 @@ export function SeccionInvitados({
             return (g.grupoFamiliar || g.apellido || "").toLowerCase();
           case "zona":
             return (g.zona || "").toLowerCase();
+          // Los cónyuges arriba y juntos por familia: es como se
+          // repasan cuando lo que buscas son los matrimonios.
+          case "conyuge":
+            return `${g.conyuge ? "0" : "1"}${(g.grupoFamiliar || g.apellido || "").toLowerCase()}${g.conyuge || ""}`;
           case "colaborador":
             return (resolverColaborador(g, colaboradores)?.nombre || "").toLowerCase();
           case "mesa":
@@ -386,7 +399,7 @@ export function SeccionInvitados({
   // Familia 1fr -> 1.3fr, Confirmado 0.9fr -> 1.2fr, Colaborador
   // 1.3fr -> 1.8fr (mismo ancho que Invitado): mismo motivo, a
   // petición del usuario, 2026-08-20.
-  const columnasTabla = "1.8fr 1.3fr 1.1fr 1.8fr 1.4fr 1.2fr 1fr 0.9fr auto";
+  const columnasTabla = "1.8fr 1.3fr 0.7fr 1.1fr 1.8fr 1.4fr 1.2fr 1fr 0.9fr auto";
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
@@ -472,6 +485,9 @@ export function SeccionInvitados({
     // antes justo debajo del título -- a petición del usuario,
     // 2026-08-20.
     { label: "Edad media", value: edadMedia === null ? "—" : `${edadMedia} años` },
+    // Matrimonios: un esposO + una esposA dentro del mismo grupo
+    // familiar (2026-09-03). Ver lib/matrimonios.js.
+    { label: "Matrimonios", value: contarMatrimonios(invitados) },
   ];
 
   // Los 6 botones de la cabecera (Imprimir/Canciones/Alergias/Añadir/
@@ -613,37 +629,46 @@ export function SeccionInvitados({
                     Familia
                   </EncabezadoOrdenable>
                 </span>
+                {/* Cónyuge: O = esposO, A = esposA (2026-09-03). Sirve
+                    para contar los matrimonios y para la ventana
+                    "Matrimonios" -- cada pareja tiene su foto de boda y
+                    se les hará otra en el evento. */}
                 <span style={{ background: tintaColumnaCabecera(2), borderRadius: "6px 6px 0 0" }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="conyuge" orden={orden} onClick={cambiarOrden}>
+                    O/A
+                  </EncabezadoOrdenable>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(3), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="zona" orden={orden} onClick={cambiarOrden}>
                     Zona
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(3), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="colaborador" orden={orden} onClick={cambiarOrden}>
                     Colaborador
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="mesa" orden={orden} onClick={cambiarOrden}>
                     Mesa
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="confirmado" orden={orden} onClick={cambiarOrden}>
                     Confirm.
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="datos" orden={orden} onClick={cambiarOrden}>
                     Datos
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="pagado" orden={orden} onClick={cambiarOrden}>
                     Pagado
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "6px 6px 0 0" }}></span>
+                <span style={{ background: tintaColumnaCabecera(9), borderRadius: "6px 6px 0 0" }}></span>
               </div>
               {/* Fila de filtros, subida aquí junto a la cabecera de
                   columnas (antes vivía sola en la caja blanca) -- a
@@ -718,7 +743,12 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(2), borderRadius: "0 0 6px 6px" }}>
+                {/* La columna O/A no lleva filtro: se marca y se lee, y
+                    para verlos juntos ya está la ventana Matrimonios.
+                    La celda existe igualmente para que la rejilla siga
+                    cuadrando columna a columna con la tabla. */}
+                <span style={{ background: tintaColumnaCabecera(2), borderRadius: "0 0 6px 6px" }} />
+                <span style={{ background: tintaColumnaCabecera(3), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.zona}
                     onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
@@ -743,7 +773,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(3), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.colaboradorId}
                     onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
@@ -768,7 +798,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.mesa}
                     onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
@@ -793,7 +823,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.confirmado}
                     onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
@@ -815,7 +845,7 @@ export function SeccionInvitados({
                     <option value="tentativa">Sin confirmar</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.datos}
                     onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
@@ -837,7 +867,7 @@ export function SeccionInvitados({
                     <option value="pendiente">Por recopilar</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.pagado}
                     onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
@@ -859,7 +889,7 @@ export function SeccionInvitados({
                     <option value="pendiente">Pendiente</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "0 0 6px 6px" }} />
+                <span style={{ background: tintaColumnaCabecera(9), borderRadius: "0 0 6px 6px" }} />
               </div>
             </div>
           </div>
@@ -875,7 +905,7 @@ export function SeccionInvitados({
                 Confirmados+Edad media por otro) -- a petición del
                 usuario, para diferenciarlos visualmente como dos
                 bloques en vez de 4 sueltos. */}
-            {[resumen.slice(0, 2), resumen.slice(2, 4)].map((grupo, i) => (
+            {[resumen.slice(0, 2), resumen.slice(2, 4), resumen.slice(4)].map((grupo, i) => (
               <div
                 key={i}
                 className="flex items-center gap-3 rounded px-2 py-1"
@@ -1099,7 +1129,43 @@ export function SeccionInvitados({
                       g.grupoFamiliar || g.apellido || "—"
                     )}
                   </span>
-                  <span style={celda(2)}>
+                  {/* O = esposO, A = esposA. En modo edición es un
+                      desplegable de tres opciones; fuera de él, solo la
+                      letra en dorado (o un guion). */}
+                  <span style={celda(2, { justifyContent: "center", textAlign: "center" })}>
+                    {modoEdicion ? (
+                      <select
+                        value={g.conyuge || ""}
+                        onChange={(e) => asignarConyuge(g.id, e.target.value)}
+                        style={{
+                          ...inputStyle,
+                          border: "none",
+                          background: "transparent",
+                          padding: "2px 0",
+                          fontSize: 12,
+                          width: "100%",
+                          minWidth: 0,
+                          textAlign: "center",
+                          boxSizing: "border-box",
+                        }}
+                        title="Marcar como esposo (O) o esposa (A)"
+                      >
+                        <option value="">—</option>
+                        <option value={CONYUGE.ESPOSO}>O</option>
+                        <option value={CONYUGE.ESPOSA}>A</option>
+                      </select>
+                    ) : g.conyuge ? (
+                      <span
+                        style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700 }}
+                        title={NOMBRE_CONYUGE[g.conyuge]}
+                      >
+                        {LETRA_CONYUGE[g.conyuge]}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </span>
+                  <span style={celda(3)}>
                     {modoEdicion ? (
                       <GrupoFamiliarInput
                         value={g.zona ?? ""}
@@ -1109,7 +1175,7 @@ export function SeccionInvitados({
                       g.zona || "—"
                     )}
                   </span>
-                  <span className="text-xs gap-1" style={celda(3)}>
+                  <span className="text-xs gap-1" style={celda(4)}>
                     <select
                       value={g.colaboradorId || ""}
                       onChange={(e) => asignarColaborador(g.id, e.target.value)}
@@ -1137,7 +1203,7 @@ export function SeccionInvitados({
                         </span>
                       )}
                   </span>
-                  <span className="text-xs" style={celda(4)}>
+                  <span className="text-xs" style={celda(5)}>
                     <select
                       value={g.mesa || ""}
                       onChange={(e) => asignarMesa(g.id, e.target.value)}
@@ -1188,7 +1254,7 @@ export function SeccionInvitados({
                       (C.wax) que ya tenía -- a diferencia de
                       Confirmado/Pagado, que no necesitan llamar la
                       atención tanto. */}
-                  <span style={celda(5, { justifyContent: "center", textAlign: "center" })}>
+                  <span style={celda(6, { justifyContent: "center", textAlign: "center" })}>
                     <button
                       onClick={() => toggleConfirmar(g.id)}
                       className="flex items-center justify-center w-full"
@@ -1205,7 +1271,7 @@ export function SeccionInvitados({
                       )}
                     </button>
                   </span>
-                  <span style={celda(6, { justifyContent: "center", textAlign: "center" })}>
+                  <span style={celda(7, { justifyContent: "center", textAlign: "center" })}>
                     {g.confirmado ? (
                       datosCompletos(g) ? (
                         <Check size={20} style={{ color: C.ink }} />
@@ -1223,7 +1289,7 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  <span style={celda(7, { justifyContent: "center", textAlign: "center" })}>
+                  <span style={celda(8, { justifyContent: "center", textAlign: "center" })}>
                     {g.confirmado ? (
                       g.pagado ? (
                         <Check size={20} style={{ color: C.ink }} />
@@ -1242,7 +1308,7 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  <span style={{ ...celda(8), gap: 6 }}>
+                  <span style={{ ...celda(9), gap: 6 }}>
                     <button
                       onClick={() => setInvitadoRolAbierto(g.id)}
                       title="Rol de trabajo el día del evento (acomodador, etc.)"

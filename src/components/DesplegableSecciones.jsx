@@ -13,6 +13,7 @@
 //   su formulario (sustituye a la barra ancha de arriba que existía
 //   antes en App.jsx, ahora eliminada — reparto del 2026-08-09).
 import {
+  Heart,
   Bell,
   Users,
   Settings,
@@ -55,6 +56,7 @@ const ICONOS_VENTANAS = {
   invitaciones: Mail,
   invitados: List,
   logistica: LayoutDashboard,
+  matrimonios: Heart,
   mesas: Utensils,
   musicaEvento: Music,
   novedades: Megaphone,

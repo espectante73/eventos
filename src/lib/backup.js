@@ -29,6 +29,7 @@ export function exportarTodo({ evento, mesas, fotosFamiliares, colaboradores, in
         mesa: g.mesa || null,
         anioNacimiento: g.anioNacimiento || "",
         anioBoda: g.anioBoda || "",
+        conyuge: g.conyuge || "",
         email: g.email || "",
         cancion: g.cancion || "",
         alergias: g.alergias || "",

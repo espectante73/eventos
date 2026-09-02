@@ -2556,3 +2556,68 @@ using (
   bucket_id = 'musica-fondo'
   and es_anfitrion()
 );
+
+-- ---------- Cónyuges y matrimonios (2026-09-03) ----------
+-- Necesidad real: identificar a los matrimonios de la lista. Cada
+-- pareja ya tiene su foto de boda y está previsto hacerles otra el día
+-- del evento, con el sello de los años que cumplen (ver "Las bodas de
+-- todos"). El año de boda ya existía ("anioBoda", lo rellena el
+-- colaborador en su formulario); lo que faltaba era saber QUIÉN forma
+-- pareja con quién.
+--
+-- '' | 'esposo' | 'esposa'. La pareja NO se guarda como un enlace de
+-- uno a otro: se deduce juntando al esposo con la esposa del mismo
+-- grupo familiar (ver lib/matrimonios.js, donde está razonado el
+-- porqué y sus límites). Así solo hay un dato por persona, sin nada que
+-- pueda quedar descuadrado entre las dos filas.
+alter table invitados add column if not exists "conyuge" text not null default '';
+
+-- Vuelve a guardar "anfitrion_guardar_invitados" completa solo para
+-- añadir "conyuge" al insert/update masivo -- mismo cuerpo que la
+-- versión anterior, con esa única columna de más. Sin esto, marcar a
+-- alguien como esposo/esposa se perdería en el siguiente guardado.
+create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  insert into invitados (
+    "id","nombre","apellido","zona","confirmado","colaboradorId",
+    "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
+    "cancion","alergias","observaciones","pagado","rolesTrabajo",
+    "excluidoTablon","conyuge"
+  )
+  select
+    (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
+    coalesce((f->>'confirmado')::boolean, false),
+    nullif(f->>'colaboradorId','')::uuid,
+    f->>'grupoFamiliar', nullif(f->>'mesa','')::integer,
+    f->>'anioNacimiento', f->>'anioBoda', f->>'email', f->>'cancion',
+    f->>'alergias', f->>'observaciones',
+    coalesce((f->>'pagado')::boolean, false),
+    coalesce(f->'rolesTrabajo', '[]'::jsonb),
+    coalesce((f->>'excluidoTablon')::boolean, false),
+    coalesce(f->>'conyuge', '')
+  from jsonb_array_elements(p_filas) as f
+  on conflict ("id") do update set
+    "nombre"=excluded."nombre", "apellido"=excluded."apellido",
+    "zona"=excluded."zona", "confirmado"=excluded."confirmado",
+    "colaboradorId"=excluded."colaboradorId", "grupoFamiliar"=excluded."grupoFamiliar",
+    "mesa"=excluded."mesa", "anioNacimiento"=excluded."anioNacimiento",
+    "anioBoda"=excluded."anioBoda", "email"=excluded."email",
+    "cancion"=excluded."cancion", "alergias"=excluded."alergias",
+    "observaciones"=excluded."observaciones", "pagado"=excluded."pagado",
+    "rolesTrabajo"=excluded."rolesTrabajo", "excluidoTablon"=excluded."excluidoTablon",
+    "conyuge"=excluded."conyuge";
+
+  delete from invitados g
+  where not exists (
+    select 1 from jsonb_array_elements(p_filas) f
+    where (f->>'id')::uuid = g."id"
+  );
+end;
+$$;

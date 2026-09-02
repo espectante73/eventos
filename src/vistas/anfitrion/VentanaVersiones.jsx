@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21",
+    cambios: [
+      "Matrimonios. La Lista de invitados gana una columna O/A: se marca a cada cónyuge con O (esposO) o A (esposA), y un esposo + una esposa de la misma familia forman un matrimonio. Arriba, junto a Previstos y Confirmados, sale el total de matrimonios.",
+      "Ventana nueva \"Matrimonios\" (en Abrir sección…): cada pareja con su familia, sus dos nombres, su zona, el año de boda y los años que cumplen EL DÍA DEL EVENTO — el número que va en el sello de cada foto. Avisa de a cuántas parejas les falta el año de boda.",
+      "El año de boda ya existía y lo rellena el colaborador en su formulario, así que no hay nada nuevo que pedirle a nadie.",
+      "⚠️ Necesita ejecutar antes el bloque de SQL de la columna \"conyuge\".",
+    ],
+  },
+  {
     version: "20.28.1",
     cambios: [
       "La cortinilla sigue ahora al volumen general. Antes se quedaba con el volumen que hubiera en el primer clic de la noche: bajar la música al 30% la dejaba atronando al 70, y silenciar no la callaba. Suena un punto por debajo de la música, porque va encima de dos pistas a la vez.",
