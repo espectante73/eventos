@@ -1294,7 +1294,14 @@ export function SeccionInvitados({
                 barra verde de la ventana (subtitulo, más arriba) -- a
                 petición del usuario, 2026-08-18. Aquí solo quedan las
                 filas de datos. */}
-            <div style={{ maxHeight: "50vh", overflowY: "auto" }}>
+            {/* El tope de media pantalla tiene sentido dentro de la
+                página (la ventana flotante convive con lo que hay
+                detrás), pero NO en una ventana propia del sistema: allí
+                dejaba un tercio de la ventana vacío debajo de la lista
+                -- señalado por el usuario, 2026-09-05. En ese modo la
+                lista crece todo lo que haga falta y quien desplaza es
+                el cuerpo de la ventana. */}
+            <div style={{ maxHeight: fijo ? "none" : "50vh", overflowY: fijo ? "visible" : "auto" }}>
             {invitadosOrdenados.map((g, i) => {
               // Zebra por FILA, de vuelta a como estaba (blanco/paperDark
               // en el propio fondo de la fila) -- el sombreado por
