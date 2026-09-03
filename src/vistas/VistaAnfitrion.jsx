@@ -21,7 +21,6 @@ import { VentanaMusicaEvento } from "./anfitrion/VentanaMusicaEvento";
 import { guardarAspecto, ASPECTO_POR_DEFECTO } from "../lib/temasMusica";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
-import { VentanaLogistica } from "./anfitrion/VentanaLogistica";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
 import { VentanaConfigPrecios } from "./anfitrion/VentanaConfigPrecios";
 import { VentanaConfigUrlWeb } from "./anfitrion/VentanaConfigUrlWeb";
@@ -64,20 +63,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   useEffect(() => {
     if (novedadesAbierta) actualizarNovedades(<VentanaNovedades data={data} ventana={ventanaNovedades} />);
   }, [novedadesAbierta, actualizarNovedades, data, ventanaNovedades]);
-
-  // Ventana Logística: mismo patrón que Novedades -- ventana de verdad
-  // del sistema operativo, no una VentanaFlotante, a petición del
-  // usuario (2026-08-26, tras verla cada vez más parecida a Progreso).
-  // No necesita `ventana` (no usa portapapeles/alert/confirm, es de solo
-  // lectura) pero se pasa igual por si algún día hiciera falta.
-  const {
-    abrir: abrirLogistica,
-    actualizar: actualizarLogistica,
-    abierta: logisticaAbierta,
-  } = usePopupWindow({ nombreVentana: "logistica-evento", ancho: 480, alto: 700 });
-  useEffect(() => {
-    if (logisticaAbierta) actualizarLogistica(<VentanaLogistica data={data} />);
-  }, [logisticaAbierta, actualizarLogistica, data]);
 
   // Ventana Cronograma: mismo patrón, a petición del usuario, 2026-08-29
   // ("independiente al navegador"). Sí necesita `ventana` -- "Imprimir"
@@ -287,7 +272,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         onCerrarSesion={onCerrarSesion}
         enlaceTablon={enlaceTablon}
         abrirNovedades={abrirNovedades}
-        abrirLogistica={abrirLogistica}
         abrirCronograma={abrirCronograma}
         abrirMusicaEvento={abrirMusicaEvento}
         abrirInvitados={abrirInvitados}
@@ -302,9 +286,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
       {abierto.progreso && (
         <VentanaProgreso data={data} onCerrar={() => toggle("progreso")} />
       )}
-
-      {/* Logística: ventana emergente de verdad (ver arriba), no pasa
-          por `abierto`/`toggle` -- se abre con abrirLogistica. */}
 
       {/* Colaboradores: "Datos Colab." abre esta ventana; "Formularios" no
           abre ninguna — cambia de vista directamente (ver DesplegableSecciones.jsx) */}

@@ -76,8 +76,6 @@ export function Portada({
   abrirNovedades,
   // Igual que abrirNovedades pero para la ventana Logística -- también
   // ventana de verdad del sistema operativo (ver comentario en
-  // VentanaLogistica.jsx), y también exclusiva del menú del anfitrión.
-  abrirLogistica,
   // Igual que las dos anteriores, para la ventana Cronograma (dentro
   // del submenú Configuración) -- a petición del usuario, 2026-08-29.
   abrirCronograma,
@@ -179,7 +177,6 @@ export function Portada({
             onCambiarRol={onCambiarRol}
             anfitrionToken={anfitrionToken}
             abrirNovedades={abrirNovedades}
-            abrirLogistica={abrirLogistica}
             abrirCronograma={abrirCronograma}
             abrirMusicaEvento={abrirMusicaEvento}
             abrirInvitados={abrirInvitados}

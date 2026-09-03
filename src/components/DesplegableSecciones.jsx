@@ -38,7 +38,6 @@ import {
   Music,
   KeyRound,
   Clock3,
-  LayoutDashboard,
 } from "lucide-react";
 import { C } from "../theme";
 import { UserSolido } from "./Widgets";
@@ -54,7 +53,6 @@ const ICONOS_VENTANAS = {
   cuentas: Wallet,
   invitaciones: Mail,
   invitados: List,
-  logistica: LayoutDashboard,
   mesas: Utensils,
   musicaEvento: Music,
   novedades: Megaphone,
@@ -98,7 +96,6 @@ export function DesplegableSecciones({
   onCambiarRol,
   anfitrionToken,
   abrirNovedades,
-  abrirLogistica,
   abrirCronograma,
   abrirMusicaEvento,
   abrirInvitados,
@@ -117,14 +114,6 @@ export function DesplegableSecciones({
         etiqueta: ETIQUETAS_VENTANAS[clave],
         icono: ICONOS_VENTANAS[clave],
         onClick: abrirNovedades,
-      };
-    }
-    if (clave === "logistica") {
-      return {
-        id: clave,
-        etiqueta: ETIQUETAS_VENTANAS[clave],
-        icono: ICONOS_VENTANAS[clave],
-        onClick: abrirLogistica,
       };
     }
     // La Lista de invitados abre en su propia ventana del sistema

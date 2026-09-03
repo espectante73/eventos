@@ -28,6 +28,7 @@ export function VentanaPermisos({ data, onCerrar }) {
   const [seleccionadoId, setSeleccionadoId] = useState(colaboradores[0]?.id ?? null);
   const colaborador = colaboradores.find((c) => c.id === seleccionadoId) || null;
   const permisos = Array.isArray(colaborador?.permisos) ? colaborador.permisos : [];
+  const colaboradoresConPermisos = colaboradores.filter((c) => Array.isArray(c.permisos) && c.permisos.length > 0);
 
   const alternarPermiso = (clave) => {
     persistColaboradores(
@@ -93,6 +94,27 @@ export function VentanaPermisos({ data, onCerrar }) {
               </label>
             ))}
           </div>
+
+          {/* Resumen de solo lectura de TODOS los colaboradores con algún
+              permiso, no solo el elegido arriba -- venía de la ventana
+              "Logística" (retirada el 2026-09-05 por quedarse sin
+              utilidad real; esto era lo único de ella que el usuario
+              quería conservar, y encaja aquí de forma natural). */}
+          {colaboradoresConPermisos.length > 0 && (
+            <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
+              <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
+                Permisos concedidos
+              </p>
+              <div className="flex flex-col gap-1.5">
+                {colaboradoresConPermisos.map((c) => (
+                  <div key={c.id} className="text-sm" style={{ color: C.charcoal }}>
+                    <span style={{ fontWeight: 600 }}>{c.nombre}:</span>{" "}
+                    {c.permisos.map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ")}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
     </VentanaFlotante>
