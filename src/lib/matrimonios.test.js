@@ -143,3 +143,27 @@ describe("hijos", () => {
     expect(conyugesSueltos(lista)).toHaveLength(0);
   });
 });
+
+// P (padre/madre sin su cónyuge) y S (suelto) no forman matrimonio: a
+// efectos de contar parejas dan igual, aunque a efectos de mesa sean
+// opuestos (uno va con sus hijos, el otro cabe en cualquier hueco).
+describe("padres solos y sueltos", () => {
+  it("ni cuentan como matrimonio ni salen como marca suelta", () => {
+    const lista = [
+      persona({ nombre: "Marta", rolFamiliar: ROL_FAMILIAR.PADRE }),
+      persona({ nombre: "Iván", rolFamiliar: ROL_FAMILIAR.HIJO }),
+      persona({ nombre: "Rosa", apellido: "Pérez", grupoFamiliar: "Pérez", rolFamiliar: ROL_FAMILIAR.SUELTO }),
+    ];
+    expect(matrimoniosDeInvitados(lista, "2026-11-13")).toHaveLength(0);
+    expect(conyugesSueltos(lista)).toHaveLength(0);
+  });
+
+  it("un matrimonio de verdad sigue contando junto a ellos", () => {
+    const lista = [
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
+      persona({ nombre: "Marta", apellido: "García", grupoFamiliar: "García 04", rolFamiliar: ROL_FAMILIAR.PADRE }),
+    ];
+    expect(contarMatrimonios(lista)).toBe(1);
+  });
+});

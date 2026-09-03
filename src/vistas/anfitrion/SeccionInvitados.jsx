@@ -342,8 +342,8 @@ export function SeccionInvitados({
       if (filtros.grupoFamiliar && g.grupoFamiliar !== filtros.grupoFamiliar) return false;
       // "matrimonio" = los dos cónyuges (O y A), sin los hijos: el
       // filtro se llama "Mat." y tiene que enseñar exactamente eso.
-      // "sin" = unidad suelta (soltero, o el único miembro de un
-      // matrimonio que asiste, a quien no se marca).
+      // "sin" = SIN REVISAR (el vacío ya no significa "suelto": para
+      // eso está la S, que dice que esa fila ya se ha mirado).
       if (
         filtros.rolFamiliar === "matrimonio" &&
         g.rolFamiliar !== ROL_FAMILIAR.ESPOSO &&
@@ -351,10 +351,7 @@ export function SeccionInvitados({
       )
         return false;
       if (filtros.rolFamiliar === "sin" && g.rolFamiliar) return false;
-      if (
-        [ROL_FAMILIAR.ESPOSO, ROL_FAMILIAR.ESPOSA, ROL_FAMILIAR.HIJO].includes(filtros.rolFamiliar) &&
-        g.rolFamiliar !== filtros.rolFamiliar
-      )
+      if (Object.values(ROL_FAMILIAR).includes(filtros.rolFamiliar) && g.rolFamiliar !== filtros.rolFamiliar)
         return false;
       if (filtros.zona && g.zona !== filtros.zona) return false;
       if (filtros.anioBoda === "con" && !g.anioBoda) return false;
@@ -503,6 +500,7 @@ export function SeccionInvitados({
     const anio = parseInt(g.anioBoda, 10);
     return anioEvento && Number.isFinite(anio) && anio > 1900 ? anioEvento - anio : null;
   };
+  const sinRevisar = invitados.filter((g) => !g.rolFamiliar).length;
   const totalInvitados = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
   const edadMedia = edadPromedio(invitadosOrdenados, evento);
@@ -526,6 +524,9 @@ export function SeccionInvitados({
     // Solo aparece si hay algo que corregir: en cuanto está todo
     // emparejado, deja de ocupar sitio.
     ...(idsSueltos.size ? [{ label: "Sin pareja", value: idsSueltos.size, alerta: true }] : []),
+    // Cuánto queda por repasar: es lo que hace útil que el vacío
+    // signifique "sin revisar" y no "suelto". Desaparece al terminar.
+    ...(sinRevisar ? [{ label: "Sin revisar", value: sinRevisar }] : []),
   ];
 
   // Los 6 botones de la cabecera (Imprimir/Canciones/Alergias/Añadir/
@@ -674,7 +675,7 @@ export function SeccionInvitados({
                     se les hará otra en el evento. */}
                 <span style={{ background: tintaColumnaCabecera(2), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="rolFamiliar" orden={orden} onClick={cambiarOrden}>
-                    O/A/H
+                    Rol
                   </EncabezadoOrdenable>
                 </span>
                 {/* Año de boda y los años que cumplen EN EL AÑO DEL
@@ -824,7 +825,9 @@ export function SeccionInvitados({
                     <option value={ROL_FAMILIAR.ESPOSO}>O</option>
                     <option value={ROL_FAMILIAR.ESPOSA}>A</option>
                     <option value={ROL_FAMILIAR.HIJO}>H</option>
-                    <option value="sin">Sueltos</option>
+                    <option value={ROL_FAMILIAR.PADRE}>P</option>
+                    <option value={ROL_FAMILIAR.SUELTO}>S</option>
+                    <option value="sin">Sin revisar</option>
                   </select>
                 </span>
                 <span style={{ background: tintaColumnaCabecera(3), borderRadius: "0 0 6px 6px" }}>
@@ -1268,12 +1271,14 @@ export function SeccionInvitados({
                           cursor: "pointer",
                           boxSizing: "border-box",
                         }}
-                        title="Papel en la familia: O esposo, A esposa, H hijo. En blanco = unidad suelta"
+                        title="Papel en la familia: O esposo, A esposa, H hijo, P padre/madre sin su cónyuge, S suelto. En blanco = sin revisar"
                       >
                         <option value="">—</option>
                         <option value={ROL_FAMILIAR.ESPOSO}>O</option>
                         <option value={ROL_FAMILIAR.ESPOSA}>A</option>
                         <option value={ROL_FAMILIAR.HIJO}>H</option>
+                        <option value={ROL_FAMILIAR.PADRE}>P</option>
+                        <option value={ROL_FAMILIAR.SUELTO}>S</option>
                       </select>
                     ) : g.rolFamiliar ? (
                       <span

@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.6",
+    cambios: [
+      "Dos letras más, y la razón es la mesa, no el recuento: P = padre o madre que viene SIN su cónyuge (madre soltera, o el cónyuge se puso malo y el resto de la familia sí viene) — no forma matrimonio, pero hay que sentarlo con sus hijos. S = suelto de verdad: no hay a quién vincularlo, cabe en cualquier hueco que quede libre.",
+      "El guion deja de significar dos cosas a la vez. Antes era \"unidad suelta\" Y \"todavía no lo he mirado\"; ahora significa solo SIN REVISAR, y quien está revisado y no encaja en ninguna familia lleva su S.",
+      "Con eso aparece el contador \"Sin revisar\", que dice cuánto queda por repasar de los ~140 invitados y desaparece al llegar a cero. El filtro pasa a: Todos, Mat., O, A, H, P, S y Sin revisar.",
+      "La columna pasa a llamarse \"Rol\", que ya no cabía como O/A/H.",
+    ],
+  },
+  {
     version: "21.5",
     cambios: [
       "En el filtro O/A/H, \"En familia\" pasa a llamarse \"Mat.\" y enseña exactamente eso: los dos cónyuges, sin los hijos.",
