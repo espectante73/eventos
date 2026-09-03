@@ -74,6 +74,10 @@ export function SeccionInvitados({
   const filaEjemploRef = useRef(null);
   const [anchoTabla, setAnchoTabla] = useState(null);
   const [mostrarRevision, setMostrarRevision] = useState(false);
+  // La cabecera de columnas y los filtros viven en la barra verde de la
+  // ventana, fuera del marco con scroll de la tabla: esta ref los
+  // desplaza a la vez que ella.
+  const cabeceraRef = useRef(null);
   const [anchosColumnas, setAnchosColumnas] = useState(null);
 
   const cambiarOrden = (columna) => {
@@ -614,14 +618,14 @@ export function SeccionInvitados({
         clave="invitados"
         titulo="Lista de invitados"
         onCerrar={intentarCerrarInvitados}
-        // Ancho fijo de vuelta (no ya "ancho total" de pantalla, se
-        // deshizo a petición del usuario, 2026-08-18) -- lo bastante
-        // ancha para que la cabecera de columnas quepa entera sin scroll
-        // horizontal nada más abrirla. 820px->940px: con los títulos de
-        // columna más grandes/en negrita (a petición del usuario,
-        // 2026-08-20) ya no cabían, hacía falta más ancho total para
-        // repartir entre las 9 columnas.
-        ancho="min(940px, calc(100vw - 48px))"
+        // Lo bastante ancha para que las columnas Y sus filtros quepan
+        // ENTEROS nada más abrirla, sin desplazamiento lateral: es una
+        // ventana que se mira de un vistazo. 940px -> 1260px porque la
+        // tabla pasó de 9 a 11 columnas y su ancho mínimo subió a 1180
+        // (v21.7): la cabecera se salía por fuera del marco y parecía
+        // sin terminar -- señalado por el usuario, 2026-09-04.
+        // 1180 de tabla + 32 de padding del cuerpo + margen.
+        ancho="min(1260px, calc(100vw - 48px))"
         subtitulo={
           // Segunda línea bajo el título: la edad media (número en
           // negrita y 3px más grande que el resto de la línea) y, debajo,
@@ -663,9 +667,17 @@ export function SeccionInvitados({
                 con la tabla en horizontal/escritorio (ahí la ventana ya
                 es más ancha que 780 de sobra) -- a petición del usuario,
                 2026-08-18. */}
+            {/* ⚠️ `overflow: hidden` + `ref`: si la ventana se estrecha
+                (pantalla pequeña, o redimensionada a mano) la cabecera y
+                los filtros ya NO se salen fuera del marco -- se recortan
+                aquí y se desplazan a la vez que la tabla, sincronizados
+                desde el `onScroll` del cuerpo (ver `cabeceraRef` más
+                abajo). Antes se salían literalmente por fuera de la
+                ventana y daba la impresión de estar mal terminado. */}
             <div
+              ref={cabeceraRef}
               className="rounded"
-              style={{ border: "1px solid transparent" }}
+              style={{ border: "1px solid transparent", overflow: "hidden" }}
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
             >
@@ -1191,6 +1203,13 @@ export function SeccionInvitados({
         <div
           className="rounded overflow-x-auto"
           style={{ border: `1px solid ${C.line}`, background: "#fff" }}
+          // La cabecera verde y los filtros viven fuera de este marco
+          // (en la barra de la ventana), así que hay que moverlos a
+          // mano para que sigan cuadrando columna a columna al
+          // desplazarse en horizontal.
+          onScroll={(e) => {
+            if (cabeceraRef.current) cabeceraRef.current.scrollLeft = e.currentTarget.scrollLeft;
+          }}
         >
           <div ref={tablaRef} style={{ minWidth: 1180 }}>
             {/* La cabecera de columnas Y la fila de filtros

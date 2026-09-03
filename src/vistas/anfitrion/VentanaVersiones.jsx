@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.12",
+    cambios: [
+      "La Lista de invitados abre ya lo bastante ancha para ver las once columnas con sus filtros de un vistazo, sin desplazar nada. Se había quedado estrecha al pasar de nueve a once columnas.",
+      "Y si la ventana se estrecha (pantalla pequeña o redimensionada a mano), la cabecera y los filtros dejan de salirse por fuera del marco: se recortan dentro y se desplazan a la vez que la tabla, cuadrando siempre columna a columna. Eso era lo que daba impresión de estar sin terminar.",
+    ],
+  },
+  {
     version: "21.11",
     cambios: [
       "La Revisión avisa de los menores sentados sin ningún adulto DE SU FAMILIA en su mesa. Es la comprobación que más se notará cuando los colaboradores empiecen a rellenar las edades de verdad, y solo se puede hacer cruzando tres cosas a la vez: la edad, la mesa y la familia.",
