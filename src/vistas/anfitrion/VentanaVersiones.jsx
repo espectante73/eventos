@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "22.4",
+    cambios: [
+      "El filtro de Zona muestra ya cuántos invitados hay en cada una, igual que ya hacía el filtro de Rol.",
+    ],
+  },
+  {
     version: "22.3",
     cambios: [
       "La cabecera con los filtros queda inmóvil de verdad al bajar por la lista: se ve siempre en qué columna estás trabajando. Estaba puesta como pegajosa desde la versión anterior, pero quien desplazaba era el cuerpo de la ventana, no la tabla, así que se iba hacia arriba con las filas. Ahora desplaza la tabla y la cabecera se queda.",

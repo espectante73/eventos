@@ -339,6 +339,13 @@ export function SeccionInvitados({
   };
 
   const zonasUnicas = [...new Set(invitados.map((g) => g.zona).filter(Boolean))].sort();
+  // El "numerito" ya existe en el filtro de Rol; se aplica igual aquí,
+  // a petición del usuario (2026-09-05).
+  const porZona = invitados.reduce((cuenta, g) => {
+    const clave = g.zona || "sin";
+    cuenta[clave] = (cuenta[clave] || 0) + 1;
+    return cuenta;
+  }, {});
   const gruposFamiliaresUnicos = [
     ...new Set(invitados.map((g) => g.grupoFamiliar).filter(Boolean)),
   ].sort();
@@ -858,7 +865,7 @@ export function SeccionInvitados({
                     <option value="">Todas</option>
                     {zonasUnicas.map((z) => (
                       <option key={z} value={z}>
-                        {z}
+                        {z} ({porZona[z] || 0})
                       </option>
                     ))}
                   </select>
