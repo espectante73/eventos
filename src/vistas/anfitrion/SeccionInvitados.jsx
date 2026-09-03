@@ -40,6 +40,8 @@ import { TextInput } from "../../components/Formulario";
 import { EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { MenuFlotante } from "../../components/MenuFlotante";
+import { InformeInvitados } from "../../components/InformeInvitados";
+import { revisarInvitados } from "../../lib/revisionInvitados";
 
 export function SeccionInvitados({
   data,
@@ -500,6 +502,18 @@ export function SeccionInvitados({
     const anio = parseInt(g.anioBoda, 10);
     return anioEvento && Number.isFinite(anio) && anio > 1900 ? anioEvento - anio : null;
   };
+  // Informe de revisión: solo lee, no toca nada. Ver
+  // lib/revisionInvitados.js para lo que comprueba y por qué.
+  const hallazgos = revisarInvitados(invitados, evento);
+  // El "numerito" que pidió el usuario, pero dentro del propio filtro:
+  // así se ven los cinco papeles a la vez, en vez de tener que filtrar
+  // uno por uno para saber cuántos hay de cada.
+  const porRol = invitados.reduce((cuenta, g) => {
+    const clave = g.rolFamiliar || "sin";
+    cuenta[clave] = (cuenta[clave] || 0) + 1;
+    return cuenta;
+  }, {});
+  const conCuenta = (texto, clave) => `${texto} (${porRol[clave] || 0})`;
   const sinRevisar = invitados.filter((g) => !g.rolFamiliar).length;
   const totalInvitados = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
@@ -527,6 +541,10 @@ export function SeccionInvitados({
     // Cuánto queda por repasar: es lo que hace útil que el vacío
     // signifique "sin revisar" y no "suelto". Desaparece al terminar.
     ...(sinRevisar ? [{ label: "Sin revisar", value: sinRevisar }] : []),
+    // Solo con algún filtro puesto: si no, repetiría "Previstos".
+    ...(invitadosOrdenados.length !== totalInvitados
+      ? [{ label: "Mostrando", value: `${invitadosOrdenados.length}/${totalInvitados}` }]
+      : []),
   ];
 
   // Los 6 botones de la cabecera (Imprimir/Canciones/Alergias/Añadir/
@@ -820,14 +838,16 @@ export function SeccionInvitados({
                     }}
                     title="Filtrar por papel en la familia"
                   >
-                    <option value="">Todos</option>
-                    <option value="matrimonio">Mat.</option>
-                    <option value={ROL_FAMILIAR.ESPOSO}>O</option>
-                    <option value={ROL_FAMILIAR.ESPOSA}>A</option>
-                    <option value={ROL_FAMILIAR.HIJO}>H</option>
-                    <option value={ROL_FAMILIAR.PADRE}>P</option>
-                    <option value={ROL_FAMILIAR.SUELTO}>S</option>
-                    <option value="sin">Sin revisar</option>
+                    <option value="">Todos ({invitados.length})</option>
+                    <option value="matrimonio">
+                      Mat. ({(porRol[ROL_FAMILIAR.ESPOSO] || 0) + (porRol[ROL_FAMILIAR.ESPOSA] || 0)})
+                    </option>
+                    <option value={ROL_FAMILIAR.ESPOSO}>{conCuenta("O", ROL_FAMILIAR.ESPOSO)}</option>
+                    <option value={ROL_FAMILIAR.ESPOSA}>{conCuenta("A", ROL_FAMILIAR.ESPOSA)}</option>
+                    <option value={ROL_FAMILIAR.HIJO}>{conCuenta("H", ROL_FAMILIAR.HIJO)}</option>
+                    <option value={ROL_FAMILIAR.PADRE}>{conCuenta("P", ROL_FAMILIAR.PADRE)}</option>
+                    <option value={ROL_FAMILIAR.SUELTO}>{conCuenta("S", ROL_FAMILIAR.SUELTO)}</option>
+                    <option value="sin">{conCuenta("Sin revisar", "sin")}</option>
                   </select>
                 </span>
                 <span style={{ background: tintaColumnaCabecera(3), borderRadius: "0 0 6px 6px" }}>
@@ -1070,6 +1090,12 @@ export function SeccionInvitados({
             dentro. Solo se toca el margen SUPERIOR: los laterales y el
             inferior se quedan con el padding normal del cuerpo. */}
         <div style={{ marginTop: -16 }}>
+        {/* Lo primero al abrir la ventana: si algo no cuadra, que se vea
+            antes que la propia lista. Tocar un nombre lo busca abajo. */}
+        <InformeInvitados
+          hallazgos={hallazgos}
+          onBuscar={(g) => setFiltros({ ...filtros, texto: `${g.nombre} ${g.apellido}` })}
+        />
         {mostrarAnadir && (
         <div className="flex flex-wrap gap-2 mb-3">
           <TextInput

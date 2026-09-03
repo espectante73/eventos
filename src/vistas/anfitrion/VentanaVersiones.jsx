@@ -42,6 +42,16 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.8",
+    cambios: [
+      "Informe de revisión en la Lista de invitados, plegado arriba del todo: cuando todo cuadra es una línea que lo dice, y cuando no, señala qué falla. Solo lee — no toca ni cambia nada.",
+      "Busca lo que la lista no puede ver mirando una fila sola, porque hay que cruzar familias enteras: hijos sin ningún adulto en su grupo, una P que viene sin hijos (sería S), una S metida en un grupo con más gente, dos esposos o dos esposas bajo el mismo apellido (falta numerar la familia), gente sin grupo familiar, y cónyuges marcados sin su pareja.",
+      "Separa lo que está MAL de lo que solo está PENDIENTE (sin revisar, sin mesa, datos incompletos, sin pagar, matrimonios sin año de boda), para que el aviso no canse y se acabe ignorando.",
+      "Cada hallazgo trae los nombres: al tocar uno, se busca en la lista de abajo. El informe señala; la lista sigue siendo donde se corrige.",
+      "El filtro de Rol enseña ahora cuántos hay de cada uno: O (48), A (48), H (22)… y \"Mostrando 12/138\" aparece arriba en cuanto hay algún filtro puesto.",
+    ],
+  },
+  {
     version: "21.7",
     cambios: [
       "Todas las filas de la Lista de invitados tienen ya la MISMA altura y una sola línea de texto. Un nombre largo deja de partirse en dos líneas: la hoja es más ancha (con desplazamiento lateral) y, si aun así no cabe, se recorta con puntos suspensivos — pero la fila no crece.",
