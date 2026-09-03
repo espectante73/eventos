@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "22.1",
+    cambios: [
+      "Arreglada la lista en su ventana aparte, que se veía con una sola columna ocupándolo todo. La tabla mide el ancho de cada columna al abrirse, y en la ventana nueva esa medida se tomaba ANTES de que llegaran los estilos: medía una fila que todavía no era una rejilla y se quedaba con esa medida rota para siempre (el ancho total no cambiaba después, así que nada la corregía).",
+      "Ahora se vuelve a medir cuando la ventana termina de cargar, cuando están listas las fuentes y en cuanto la fila cambia de tamaño. Y sobre todo: una medida solo se aplica si es creíble — tantas columnas como hay y ninguna aplastada. Si no lo es, se descarta y la tabla se queda con su reparto normal, que se ve bien.",
+    ],
+  },
+  {
     version: "22",
     cambios: [
       "La Lista de invitados sale del navegador: se abre en su propia ventana del sistema, como Novedades, Logística y Música. Se puede llevar a otra pantalla y hacerla tan grande como haga falta — es la ventana que más se mira y la que más columnas tiene.",

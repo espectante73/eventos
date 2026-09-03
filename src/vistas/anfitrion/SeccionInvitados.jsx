@@ -486,22 +486,58 @@ export function SeccionInvitados({
   useEffect(() => {
     const el = tablaRef.current;
     if (!el) return;
+    const columnasEsperadas = columnasTabla.split(" ").length;
     const medir = () => {
-      setAnchoTabla(el.clientWidth);
+      if (el.clientWidth > 0) setAnchoTabla(el.clientWidth);
       const fila = filaEjemploRef.current;
-      if (fila) {
-        setAnchosColumnas(
-          Array.from(fila.children)
-            .map((celda) => `${celda.getBoundingClientRect().width}px`)
-            .join(" ")
-        );
-      }
+      if (!fila) return;
+      const anchos = Array.from(fila.children).map((celda) => celda.getBoundingClientRect().width);
+      // ⚠️ Una medida solo se aplica si es CREÍBLE: tantas columnas como
+      // las que hay y ninguna aplastada. Si no lo es (la fila todavía no
+      // es una rejilla porque los estilos no han llegado), se descarta y
+      // la tabla se queda con su reparto en fracciones, que se ve bien.
+      // Sin esta comprobación, una sola medida mala al abrir la ventana
+      // dejaba la primera columna ocupándolo todo y las demás invisibles.
+      const creible = anchos.length === columnasEsperadas && anchos.every((a) => a > 4);
+      setAnchosColumnas(creible ? anchos.map((a) => `${a}px`).join(" ") : null);
     };
     medir();
+
+    // ⚠️ Observar SOLO la tabla no basta, y es un bug real: en una
+    // ventana de verdad del sistema (usePopupWindow.js) las hojas de
+    // estilo se copian y tardan un instante en aplicarse, así que la
+    // primera medida se toma sobre una fila TODAVÍA SIN REJILLA. Sale
+    // una anchura por columna disparatada -- la primera se lo comía
+    // todo y el resto desaparecía -- y ahí se quedaba: el ancho total
+    // de la tabla no cambia al aplicarse el CSS (lo fija su minWidth),
+    // así que el observador nunca se volvía a disparar.
+    //
+    // Por eso se observa también la FILA y su primera celda, que sí
+    // cambian de tamaño en cuanto la rejilla entra, y se vuelve a medir
+    // cuando la ventana termina de cargar y cuando están listas las
+    // fuentes (que también mueven anchuras).
     const ro = new ResizeObserver(medir);
     ro.observe(el);
-    return () => ro.disconnect();
-  }, [hayFilas]);
+    const fila = filaEjemploRef.current;
+    if (fila) {
+      ro.observe(fila);
+      if (fila.children[0]) ro.observe(fila.children[0]);
+    }
+
+    const doc = ventana?.document || document;
+    const win = ventana || window;
+    win.addEventListener("load", medir);
+    doc.fonts?.ready?.then(medir).catch(() => {});
+    // Red de seguridad para el caso raro en que nada de lo anterior se
+    // dispare (estilos ya cacheados, sin fuentes que esperar...).
+    const tardio = setTimeout(medir, 400);
+
+    return () => {
+      ro.disconnect();
+      win.removeEventListener("load", medir);
+      clearTimeout(tardio);
+    };
+  }, [hayFilas, ventana]);
 
   // Lista global/Tentativa/Confirmados: mudados aquí desde la cabecera
   // de "Progreso de recopilación" -- con los 6 botones ahora escondidos
