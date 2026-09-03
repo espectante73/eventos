@@ -346,6 +346,16 @@ export function SeccionInvitados({
     cuenta[clave] = (cuenta[clave] || 0) + 1;
     return cuenta;
   }, {});
+  // Mismo "numerito" que Zona/Rol, aplicado a Colaborador (2026-09-05):
+  // cuántos invitados tiene asignados cada uno, y aparte los que están
+  // sin asignar (calculado con `resolverColaborador`, que es lo mismo
+  // que usa el propio filtro para decidir a quién pertenece cada uno).
+  const porColaborador = invitados.reduce((cuenta, g) => {
+    const col = resolverColaborador(g, colaboradores);
+    const clave = col ? col.id : "sin";
+    cuenta[clave] = (cuenta[clave] || 0) + 1;
+    return cuenta;
+  }, {});
   const gruposFamiliaresUnicos = [
     ...new Set(invitados.map((g) => g.grupoFamiliar).filter(Boolean)),
   ].sort();
@@ -890,10 +900,10 @@ export function SeccionInvitados({
                     }}
                   >
                     <option value="">Todos</option>
-                    <option value="sin">Sin asignar</option>
+                    <option value="sin">Sin asignar ({porColaborador.sin || 0})</option>
                     {colaboradores.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.nombre}
+                        {c.nombre} ({porColaborador[c.id] || 0})
                       </option>
                     ))}
                   </select>
