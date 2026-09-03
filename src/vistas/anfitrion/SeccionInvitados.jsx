@@ -34,7 +34,7 @@ import { uid } from "../../lib/id";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio } from "../../lib/invitados";
 import { ordenarPorApellidoNombre } from "../../lib/formato";
 import { CONYUGE, LETRA_CONYUGE, NOMBRE_CONYUGE } from "../../lib/conyuge";
-import { contarMatrimonios } from "../../lib/matrimonios";
+import { contarMatrimonios, conyugesSueltos } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
 import { TextInput } from "../../components/Formulario";
 import { EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
@@ -472,6 +472,11 @@ export function SeccionInvitados({
   // sitio libre y encajan mejor aquí, a petición del usuario,
   // 2026-08-20. Mismo aspecto de siempre (2ª línea la etiqueta, 3ª el
   // número resaltado sobre el verde).
+  // Marcados con O o A que se han quedado sin su pareja: con la regla
+  // de que los matrimonios vienen los dos, eso es SIEMPRE un despiste
+  // al marcar, así que se señala en la propia fila -- que es donde se
+  // marca y donde se puede corregir al momento (2026-09-04).
+  const idsSueltos = new Set(conyugesSueltos(invitados).map((g) => g.id));
   const totalInvitados = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
   const edadMedia = edadPromedio(invitadosOrdenados, evento);
@@ -492,6 +497,9 @@ export function SeccionInvitados({
     // Matrimonios: un esposO + una esposA dentro del mismo grupo
     // familiar (2026-09-03). Ver lib/matrimonios.js.
     { label: "Matrimonios", value: contarMatrimonios(invitados) },
+    // Solo aparece si hay algo que corregir: en cuanto está todo
+    // emparejado, deja de ocupar sitio.
+    ...(idsSueltos.size ? [{ label: "Sin pareja", value: idsSueltos.size, alerta: true }] : []),
   ];
 
   // Los 6 botones de la cabecera (Imprimir/Canciones/Alergias/Añadir/
@@ -953,7 +961,11 @@ export function SeccionInvitados({
                     </div>
                     <div
                       className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
-                      style={{ background: "rgba(239,233,222,0.92)", color: C.ink, fontFamily: "'Fraunces', serif" }}
+                      style={{
+                        background: s.alerta ? C.avisoFondo : "rgba(239,233,222,0.92)",
+                        color: s.alerta ? C.peligro : C.ink,
+                        fontFamily: "'Fraunces', serif",
+                      }}
                     >
                       {s.value}
                     </div>
@@ -1180,13 +1192,13 @@ export function SeccionInvitados({
                           appearance: "none",
                           WebkitAppearance: "none",
                           MozAppearance: "none",
-                          background: "rgba(31,58,46,0.06)",
+                          background: idsSueltos.has(g.id) ? C.avisoFondo : "rgba(31,58,46,0.06)",
                           borderRadius: 4,
                           padding: "2px 0",
                           fontSize: 13,
                           fontWeight: 700,
                           fontFamily: "'IBM Plex Mono', monospace",
-                          color: C.gold,
+                          color: idsSueltos.has(g.id) ? C.peligro : C.gold,
                           width: "100%",
                           minWidth: 0,
                           textAlign: "center",
@@ -1202,10 +1214,21 @@ export function SeccionInvitados({
                       </select>
                     ) : g.conyuge ? (
                       <span
-                        style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700 }}
-                        title={NOMBRE_CONYUGE[g.conyuge]}
+                        className="rounded px-1.5"
+                        style={{
+                          color: idsSueltos.has(g.id) ? C.peligro : C.gold,
+                          background: idsSueltos.has(g.id) ? C.avisoFondo : "transparent",
+                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontWeight: 700,
+                        }}
+                        title={
+                          idsSueltos.has(g.id)
+                            ? `${NOMBRE_CONYUGE[g.conyuge]} sin pareja: falta marcar al otro cónyuge de esta familia (o sobra esta marca)`
+                            : NOMBRE_CONYUGE[g.conyuge]
+                        }
                       >
                         {LETRA_CONYUGE[g.conyuge]}
+                        {idsSueltos.has(g.id) ? "!" : ""}
                       </span>
                     ) : (
                       "—"

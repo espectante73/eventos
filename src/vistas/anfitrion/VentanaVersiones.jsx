@@ -44,6 +44,7 @@ const HISTORIAL_VERSIONES = [
   {
     version: "21.3",
     cambios: [
+      "El aviso de \"marca sin pareja\" salta también en la propia Lista de invitados, que es donde se marca: la letra sale en rojo con un \"!\" y, arriba, aparece la cifra \"Sin pareja\" (solo mientras haya algo que corregir).",
       "Regla del evento: los matrimonios vienen siempre los dos, así que si solo asiste uno de los cónyuges NO se le marca. Con esa regla, una marca suelta deja de ser un caso válido y pasa a ser un despiste que hay que cazar.",
       "La ventana Matrimonios lo señala: cifra \"Sin pareja\" arriba y, al pie, los nombres concretos de quienes están marcados sin su cónyuge — para ir a la lista y arreglarlo. Antes se ignoraban en silencio y esa pareja simplemente no aparecía.",
     ],
