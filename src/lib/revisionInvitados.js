@@ -16,17 +16,34 @@ import { ROL_FAMILIAR } from "./rolFamiliar";
 import { calcularEdad } from "./invitados";
 import { conyugesSueltos, matrimoniosDeInvitados } from "./matrimonios";
 
-// Quién necesita a un adulto suyo al lado en la mesa. Se usan 18 y no
-// los tramos de precio del evento (`edadNinoDesde`/`edadNinoHasta`) a
-// propósito: esos tramos dicen quién PAGA y cuánto, que es otra cosa --
-// un chaval de 12 paga como adulto y sigue sin poder quedarse solo en
-// una mesa de desconocidos.
+// Quién necesita a un adulto suyo al lado en la mesa.
+//
+// ⚠️ REGLA DEL EVENTO, confirmada por el usuario el 2026-09-04: en esta
+// boda NO habrá mesa de niños. Todos los menores se sientan con sus
+// padres, y solo los mayores de edad pueden sentarse en otra mesa. Por
+// eso esta comprobación es estricta a propósito y no admite
+// excepciones: un menor lejos de los suyos SIEMPRE es un error, nunca
+// una mesa de niños montada aposta. Si en un evento futuro sí la
+// hubiera, esto habría que replantearlo, no silenciarlo.
+//
+// Y por eso el corte son 18 años exactos, que es justo la frontera que
+// puso el usuario. No se usan los tramos de precio
+// (`edadNinoDesde`/`edadNinoHasta`) porque esos dicen quién PAGA y
+// cuánto, que es otra cosa: un chaval de 12 paga como adulto y sigue
+// sin poder quedarse solo en una mesa de desconocidos.
 const EDAD_MENOR = 18;
 
 // Un adulto es quien tiene 18 o más. A quien no ha dado su año de
 // nacimiento todavía se le cuenta como adulto SI lleva un papel de
 // adulto (O, A, P o S): en plena recogida de datos falta media lista, y
 // un informe que se dispara con cada hueco acaba ignorándose.
+//
+// Esta indulgencia es TRANSITORIA por diseño, no un agujero: el año de
+// nacimiento es uno de los dos datos obligatorios del formulario (con
+// las alergias, ver datosCompletos en lib/invitados.js), así que un
+// invitado no cuenta como completo hasta que está. Cuando la recogida
+// termine no quedará ni una edad sin saber, y esta rama dejará de
+// usarse sola.
 function esAdulto(g, evento) {
   const edad = calcularEdad(g.anioNacimiento, evento);
   if (edad !== null) return edad >= EDAD_MENOR;
