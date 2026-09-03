@@ -1142,7 +1142,7 @@ export function SeccionInvitados({
           className="rounded overflow-x-auto"
           style={{ border: `1px solid ${C.line}`, background: "#fff" }}
         >
-          <div ref={tablaRef} style={{ minWidth: 780 }}>
+          <div ref={tablaRef} style={{ minWidth: 1180 }}>
             {/* La cabecera de columnas Y la fila de filtros
                 (Invitado/Familia/... y sus buscadores) viven ahora en la
                 barra verde de la ventana (subtitulo, más arriba) -- a
@@ -1174,7 +1174,10 @@ export function SeccionInvitados({
                 // columnas y los filtros se quedan centrados.
                 justifyContent: "flex-start",
                 textAlign: "left",
-                padding: "8px 6px",
+                padding: "0 6px",
+                // Altura FIJA e idéntica en todas las filas: el texto va
+                // en una sola línea (ver .fila-una-linea en index.css).
+                height: 38,
                 // Ver el mismo `minWidth: 0` en EncabezadoOrdenable
                 // (Widgets.jsx) -- aquí hace falta por el mismo motivo:
                 // sin él, un nombre largo o el texto de un <select>
@@ -1189,7 +1192,7 @@ export function SeccionInvitados({
                 <div
                   key={g.id}
                   ref={i === 0 ? filaEjemploRef : undefined}
-                  className="grid text-sm"
+                  className="grid text-sm fila-una-linea"
                   style={{
                     gridTemplateColumns: anchosColumnas ?? columnasTabla,
                     background: i % 2 ? C.paperDark : "#fff",
@@ -1629,7 +1632,7 @@ export function SeccionInvitados({
                   return (
                     <div
                       key={g.id}
-                      className="grid px-2 py-1.5 text-sm"
+                      className="grid px-2 py-1.5 text-sm fila-una-linea"
                       style={{
                         gridTemplateColumns: "1.3fr 1fr 0.8fr 0.8fr 1fr 0.6fr 0.9fr 0.8fr",
                         background: i % 2 ? C.paperDark : "#fff",

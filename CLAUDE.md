@@ -1456,3 +1456,24 @@ Al valorar una vista nueva, separar lo que de verdad solo puede vivir
 fuera de la lista (un cálculo que no cabe como columna, una unidad
 distinta —parejas en vez de personas—) de lo que es mera presentación.
 Si al quitar lo duplicado no queda casi nada, no se construye.
+
+### Tablas: una sola línea por fila, todas de la misma altura
+
+Petición del usuario repetida tres veces (la última el 2026-09-04, ya
+molesto: "quiero que todo, toda la lista, tenga el mismo aspecto"). En
+la Lista de invitados —y en cualquier tabla que se construya— **ninguna
+fila puede partir su texto en dos líneas ni crecer más que las demás**.
+Si un nombre no cabe: la hoja se hace más ancha (la tabla ya lleva
+scroll horizontal) o el texto se recorta con puntos suspensivos, pero la
+fila NO crece.
+
+Implementado con `.fila-una-linea` en `index.css` + `height` fija en las
+celdas (`celda()` en SeccionInvitados.jsx). Va como clase CSS y no en
+estilos en línea a propósito: el recorte con puntos suspensivos no
+funciona sobre un contenedor flex, hay que alcanzar a los hijos de cada
+celda.
+
+⚠️ **Al añadir una columna nueva**, subir también el `minWidth` del
+contenedor de la tabla (`tablaRef`): si las columnas se ahogan, el texto
+se recorta antes de tiempo y la tabla se vuelve ilegible aunque
+técnicamente cumpla la regla.

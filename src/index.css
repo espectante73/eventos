@@ -260,3 +260,27 @@
     transparent 3px
   );
 }
+
+/* Filas de una sola línea (Lista de invitados y cualquier tabla futura).
+   PETICIÓN REPETIDA DEL USUARIO -- la ha hecho tres veces (la última el
+   2026-09-04): todas las filas con la MISMA altura y el texto en UNA
+   sola línea, nunca partido en dos. Si un nombre no cabe, la hoja se
+   hace más ancha (la tabla ya lleva scroll horizontal) o se recorta con
+   puntos suspensivos, pero la fila no crece.
+
+   Va como clase y no en línea porque hay que alcanzar a los HIJOS de
+   cada celda: el recorte con puntos suspensivos no funciona sobre un
+   contenedor flex, tiene que aplicarse al elemento que contiene el
+   texto. */
+.fila-una-linea > * {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fila-una-linea > * > span,
+.fila-una-linea > * > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

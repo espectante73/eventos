@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.7",
+    cambios: [
+      "Todas las filas de la Lista de invitados tienen ya la MISMA altura y una sola línea de texto. Un nombre largo deja de partirse en dos líneas: la hoja es más ancha (con desplazamiento lateral) y, si aun así no cabe, se recorta con puntos suspensivos — pero la fila no crece.",
+      "Queda como norma de la app, escrita en el propio proyecto: cualquier tabla nueva nace así.",
+    ],
+  },
+  {
     version: "21.6",
     cambios: [
       "Dos letras más, y la razón es la mesa, no el recuento: P = padre o madre que viene SIN su cónyuge (madre soltera, o el cónyuge se puso malo y el resto de la familia sí viene) — no forma matrimonio, pero hay que sentarlo con sus hijos. S = suelto de verdad: no hay a quién vincularlo, cabe en cualquier hueco que quede libre.",
