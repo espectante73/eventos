@@ -84,6 +84,35 @@ export function matrimoniosDeInvitados(invitados, fechaEvento) {
   return matrimonios.sort((a, b) => a.familia.localeCompare(b.familia, "es"));
 }
 
+// Personas marcadas con O o A que se han quedado sin pareja dentro de
+// su familia. REGLA DEL EVENTO, fijada por el usuario el 2026-09-04:
+// los matrimonios vienen siempre los dos, así que si solo asiste uno de
+// los cónyuges NO se le marca. Por tanto una marca suelta ya no es un
+// caso válido que ignorar en silencio -- es una marca a medias (falta
+// la pareja, o la familia está mal puesta) y hay que enseñarla para
+// poder corregirla.
+export function conyugesSueltos(invitados) {
+  const porFamilia = new Map();
+  for (const g of invitados || []) {
+    if (g?.conyuge !== CONYUGE.ESPOSO && g?.conyuge !== CONYUGE.ESPOSA) continue;
+    const clave = claveFamilia(g);
+    if (!porFamilia.has(clave)) porFamilia.set(clave, { esposos: [], esposas: [] });
+    const familia = porFamilia.get(clave);
+    if (g.conyuge === CONYUGE.ESPOSO) familia.esposos.push(g);
+    else familia.esposas.push(g);
+  }
+
+  const sueltos = [];
+  for (const { esposos, esposas } of porFamilia.values()) {
+    // Los que sobran del lado más largo: los primeros ya forman pareja.
+    const parejas = Math.min(esposos.length, esposas.length);
+    sueltos.push(...esposos.slice(parejas), ...esposas.slice(parejas));
+  }
+  return sueltos.sort((a, b) =>
+    `${a.apellido} ${a.nombre}`.localeCompare(`${b.apellido} ${b.nombre}`, "es")
+  );
+}
+
 export function contarMatrimonios(invitados) {
   return matrimoniosDeInvitados(invitados, "").length;
 }

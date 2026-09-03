@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.3",
+    cambios: [
+      "Regla del evento: los matrimonios vienen siempre los dos, así que si solo asiste uno de los cónyuges NO se le marca. Con esa regla, una marca suelta deja de ser un caso válido y pasa a ser un despiste que hay que cazar.",
+      "La ventana Matrimonios lo señala: cifra \"Sin pareja\" arriba y, al pie, los nombres concretos de quienes están marcados sin su cónyuge — para ir a la lista y arreglarlo. Antes se ignoraban en silencio y esa pareja simplemente no aparecía.",
+    ],
+  },
+  {
     version: "21.2",
     cambios: [
       "Texto de la ventana Matrimonios reducido a lo imprescindible: \"O (esposo), A (esposa). El aniversario que cumplen en el año del evento.\"",

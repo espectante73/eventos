@@ -11,7 +11,8 @@
 // suele rellenar el propio colaborador en su formulario).
 import { C } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
-import { matrimoniosDeInvitados } from "../../lib/matrimonios";
+import { matrimoniosDeInvitados, conyugesSueltos } from "../../lib/matrimonios";
+import { LETRA_CONYUGE } from "../../lib/conyuge";
 
 // Mismo aspecto que la Lista de invitados, a petición del usuario
 // (2026-09-03): cabecera verde con la letra dorada en monoespaciada,
@@ -29,6 +30,9 @@ export function VentanaMatrimonios({ data, onCerrar }) {
   const { invitados, evento } = data;
   const matrimonios = matrimoniosDeInvitados(invitados, evento.fecha);
   const sinAnioBoda = matrimonios.filter((m) => m.aniversario === null).length;
+  // Los matrimonios vienen siempre los dos: si solo asiste uno, no se
+  // marca. Así que una marca suelta es un despiste, y se enseña.
+  const sueltos = conyugesSueltos(invitados);
   const confirmados = matrimonios.filter((m) => m.confirmados).length;
 
   const cifra = (etiqueta, valor) => (
@@ -69,6 +73,7 @@ export function VentanaMatrimonios({ data, onCerrar }) {
               aparte; como cifra encaja mejor con el resto y no repite lo
               que ya se ve solo en la columna vacía. */}
           {sinAnioBoda > 0 && cifra("Sin año de boda", sinAnioBoda)}
+          {sueltos.length > 0 && cifra("Sin pareja", sueltos.length)}
         </div>
       }
     >
@@ -131,6 +136,19 @@ export function VentanaMatrimonios({ data, onCerrar }) {
               <span style={celda(6, { textAlign: "center" })}>{m.confirmados ? "Sí" : "—"}</span>
             </div>
           ))}
+
+          {sueltos.length > 0 && (
+            <p
+              className="text-sm mt-3 px-3 py-2 rounded"
+              style={{ background: C.avisoFondo, color: C.peligro }}
+            >
+              <strong style={{ fontWeight: 600 }}>
+                {sueltos.length === 1 ? "Hay 1 marca sin pareja" : `Hay ${sueltos.length} marcas sin pareja`}:
+              </strong>{" "}
+              {sueltos.map((g) => `${g.apellido}, ${g.nombre} (${LETRA_CONYUGE[g.conyuge]})`).join(" · ")}. Como los
+              matrimonios vienen los dos, falta marcar al otro cónyuge o esa marca sobra.
+            </p>
+          )}
 
           {matrimonios.length === 0 && (
             <p className="text-sm italic p-3" style={{ color: C.charcoal, opacity: 0.6, background: "#fff" }}>

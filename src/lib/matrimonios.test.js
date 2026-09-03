@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { matrimoniosDeInvitados, contarMatrimonios, anioDelEvento } from "./matrimonios";
+import { matrimoniosDeInvitados, contarMatrimonios, conyugesSueltos, anioDelEvento } from "./matrimonios";
 import { CONYUGE } from "./conyuge";
 
 const persona = (extra) => ({
@@ -88,5 +88,44 @@ describe("matrimoniosDeInvitados", () => {
       persona({ nombre: "Rosa", apellido: "Pérez", grupoFamiliar: "Pérez", conyuge: CONYUGE.ESPOSA }),
     ];
     expect(contarMatrimonios(lista)).toBe(2);
+  });
+});
+
+describe("conyugesSueltos", () => {
+  const suelto = (extra) => persona(extra);
+
+  it("no señala a nadie cuando todos tienen pareja", () => {
+    const lista = [
+      suelto({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
+      suelto({ nombre: "Ana", conyuge: CONYUGE.ESPOSA }),
+    ];
+    expect(conyugesSueltos(lista)).toHaveLength(0);
+  });
+
+  // El caso que de verdad importa: se marcó al esposo y se olvidó la
+  // esposa. Antes se ignoraba en silencio y el matrimonio no aparecía.
+  it("señala al que se quedó sin pareja en su familia", () => {
+    const lista = [
+      suelto({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
+      suelto({ nombre: "Ana" }),
+    ];
+    expect(conyugesSueltos(lista).map((g) => g.nombre)).toEqual(["Benito"]);
+  });
+
+  it("señala solo al que sobra cuando hay más de un lado", () => {
+    const lista = [
+      suelto({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
+      suelto({ nombre: "Ana", conyuge: CONYUGE.ESPOSA }),
+      suelto({ nombre: "Rosa", conyuge: CONYUGE.ESPOSA }),
+    ];
+    expect(conyugesSueltos(lista).map((g) => g.nombre)).toEqual(["Rosa"]);
+  });
+
+  it("no cruza familias distintas", () => {
+    const lista = [
+      suelto({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
+      suelto({ nombre: "Rosa", apellido: "Pérez", grupoFamiliar: "Pérez", conyuge: CONYUGE.ESPOSA }),
+    ];
+    expect(conyugesSueltos(lista)).toHaveLength(2);
   });
 });
