@@ -44,11 +44,28 @@ const ANCHO_PANEL = 158;
 // de la lista — quedaban fuera de la ventana sin forma de llegar a
 // ellas). `ancladoY` es el borde fijo del panel (de dónde "cuelga");
 // `creceHaciaArriba` indica hacia qué lado se extiende el resto.
-function alturaMaximaDisponible(ancladoY, creceHaciaArriba) {
+// ⚠️ De qué VENTANA es este menú. Fallo real (2026-09-05): al llevar la
+// Lista de invitados a una ventana propia del sistema, el botón
+// "Acciones" dejó de hacer nada -- el panel se pintaba con un portal a
+// `document.body`, y ese `document` es el de la PESTAÑA PRINCIPAL, no el
+// de la ventana emergente, así que aparecía en la otra ventana, detrás.
+// Igual con `window.innerWidth/innerHeight` (medidas de la pantalla
+// equivocada) y con los escuchadores para cerrar al tocar fuera.
+//
+// En vez de pasar la ventana como prop por toda la app, se deduce del
+// propio nodo al que se ancla el menú: `ownerDocument` siempre es el
+// documento donde ESE nodo vive. Así funciona en cualquier ventana sin
+// que quien lo use tenga que enterarse.
+function realmDe(nodo) {
+  const doc = nodo?.ownerDocument || document;
+  return { doc, win: doc.defaultView || window };
+}
+
+function alturaMaximaDisponible(ancladoY, creceHaciaArriba, win = window) {
   const disponible = creceHaciaArriba
     ? ancladoY - MARGEN_BORDE
-    : window.innerHeight - ancladoY - MARGEN_BORDE;
-  return Math.max(ALTO_MINIMO, Math.min(disponible, window.innerHeight * 0.6));
+    : win.innerHeight - ancladoY - MARGEN_BORDE;
+  return Math.max(ALTO_MINIMO, Math.min(disponible, win.innerHeight * 0.6));
 }
 
 // Corrección de última hora: la posición de apertura (arriba en
@@ -63,11 +80,12 @@ function useMantenerDentroDePantalla(activo, ref, pos, setPos) {
   useLayoutEffect(() => {
     if (!activo || !pos || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
+    const { win } = realmDe(ref.current);
     if (pos.right !== undefined && rect.left < MARGEN_BORDE) {
       const ajuste = MARGEN_BORDE - rect.left;
       setPos((p) => (p ? { ...p, right: p.right - ajuste } : p));
-    } else if (pos.left !== undefined && rect.right > window.innerWidth - MARGEN_BORDE) {
-      const ajuste = rect.right - (window.innerWidth - MARGEN_BORDE);
+    } else if (pos.left !== undefined && rect.right > win.innerWidth - MARGEN_BORDE) {
+      const ajuste = rect.right - (win.innerWidth - MARGEN_BORDE);
       setPos((p) => (p ? { ...p, left: p.left - ajuste } : p));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,10 +117,11 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
 
   const abrirSubmenu = () => {
     const r = filaRef.current.getBoundingClientRect();
+    const { win } = realmDe(filaRef.current);
     setPos({
       top: r.top,
-      right: window.innerWidth - r.left + 4,
-      maxHeight: alturaMaximaDisponible(r.top, false), // crece hacia abajo desde r.top
+      right: win.innerWidth - r.left + 4,
+      maxHeight: alturaMaximaDisponible(r.top, false, win), // crece hacia abajo desde r.top
     });
     onAbrir();
   };
@@ -124,11 +143,12 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
       if (filaRef.current?.contains(e.target) || e.target.closest?.("[data-menu-panel]")) return;
       onCerrarPropio();
     };
-    document.addEventListener("mousedown", cerrarSiFuera);
-    document.addEventListener("touchstart", cerrarSiFuera);
+    const { doc } = realmDe(filaRef.current);
+    doc.addEventListener("mousedown", cerrarSiFuera);
+    doc.addEventListener("touchstart", cerrarSiFuera);
     return () => {
-      document.removeEventListener("mousedown", cerrarSiFuera);
-      document.removeEventListener("touchstart", cerrarSiFuera);
+      doc.removeEventListener("mousedown", cerrarSiFuera);
+      doc.removeEventListener("touchstart", cerrarSiFuera);
     };
   }, [abierto, onCerrarPropio]);
 
@@ -205,7 +225,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
                 />
               ))}
             </div>,
-            document.body
+            realmDe(filaRef.current).doc.body
           )}
       </div>
     );
@@ -267,26 +287,27 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
 
   const abrir = () => {
     const r = botonRef.current.getBoundingClientRect();
+    const { win } = realmDe(botonRef.current);
     if (anchor === "right") {
       // Cuelga del borde superior del botón y crece hacia arriba.
       setPos({
-        bottom: window.innerHeight - r.top + 4,
-        right: window.innerWidth - r.right,
-        maxHeight: alturaMaximaDisponible(r.top, true),
+        bottom: win.innerHeight - r.top + 4,
+        right: win.innerWidth - r.right,
+        maxHeight: alturaMaximaDisponible(r.top, true, win),
       });
     } else if (anchor === "left") {
       // Cuelga del borde superior del botón y crece hacia abajo.
       setPos({
         top: r.top,
-        right: window.innerWidth - r.left + 4,
-        maxHeight: alturaMaximaDisponible(r.top, false),
+        right: win.innerWidth - r.left + 4,
+        maxHeight: alturaMaximaDisponible(r.top, false, win),
       });
     } else {
       // "bottom-left": cuelga del borde inferior del botón y crece hacia abajo.
       setPos({
         top: r.bottom + 4,
         left: r.left,
-        maxHeight: alturaMaximaDisponible(r.bottom, false),
+        maxHeight: alturaMaximaDisponible(r.bottom, false, win),
       });
     }
     setOpen(true);
@@ -316,13 +337,14 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
     const onKey = (e) => {
       if (e.key === "Escape") setOpen(false);
     };
-    document.addEventListener("mousedown", cerrarSiFuera);
-    document.addEventListener("touchstart", cerrarSiFuera);
-    window.addEventListener("keydown", onKey);
+    const { doc, win } = realmDe(botonRef.current);
+    doc.addEventListener("mousedown", cerrarSiFuera);
+    doc.addEventListener("touchstart", cerrarSiFuera);
+    win.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", cerrarSiFuera);
-      document.removeEventListener("touchstart", cerrarSiFuera);
-      window.removeEventListener("keydown", onKey);
+      doc.removeEventListener("mousedown", cerrarSiFuera);
+      doc.removeEventListener("touchstart", cerrarSiFuera);
+      win.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
@@ -362,7 +384,7 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
               />
             ))}
           </div>,
-          document.body
+          realmDe(botonRef.current).doc.body
         )}
     </>
   );
