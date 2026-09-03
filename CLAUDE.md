@@ -1429,3 +1429,30 @@ Cuando se aborde:
 ⚠️ No hacerlo a medias ni con prisa: este archivo es lo único que
 permite reconstruir la base desde cero (el backup diario guarda los
 datos, ver más arriba).
+
+### La Lista de invitados es la raíz: una vista que solo reordena es un duplicado
+
+Decidido el 2026-09-04, a raíz de un caso real. Toda la app depende de
+la Lista de invitados: es donde se editan los datos y de donde leen las
+demás secciones. Por eso es la que tiene que estar mejor acabada y la
+que más opciones debe tener.
+
+**Antes de construir una ventana nueva que muestre invitados**,
+comprobar si no es la misma información reordenada. Si lo es, la
+funcionalidad va DENTRO de la lista (una columna, un filtro, un
+contador), no en una ventana aparte.
+
+El caso que lo motivó: la ventana "Matrimonios" (construida el
+2026-09-03) acabó mostrando lo que la lista ya mostraba —nombres, zona,
+confirmados, el contador de matrimonios y el aviso de marcas sueltas— y
+encima no permitía editar, porque los datos se editan en la lista. No
+fue una decisión: se duplicó solo, en dos días seguidos. Se retiró la
+ventana entera y su único dato propio (año de boda + los años que
+cumplen el día del evento) pasó a ser una columna con su filtro, en la
+lista (v21.5). Filtrando por "O" se obtiene una fila por pareja, que era
+justo para lo que servía la ventana.
+
+Al valorar una vista nueva, separar lo que de verdad solo puede vivir
+fuera de la lista (un cálculo que no cabe como columna, una unidad
+distinta —parejas en vez de personas—) de lo que es mera presentación.
+Si al quitar lo duplicado no queda casi nada, no se construye.
