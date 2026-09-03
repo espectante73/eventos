@@ -76,7 +76,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, onCerrar }
         mesa: null,
         anioNacimiento: "",
         anioBoda: "",
-        conyuge: "",
+        rolFamiliar: "",
         email: "",
         cancion: "",
         alergias: "",

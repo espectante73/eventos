@@ -1388,3 +1388,44 @@ habían recibido enteros 10/11/12/13 por error, pasaron a ser 9/9.1/9.2/9.3.
 **Antes de subir `VERSION_APP` en cualquier cambio futuro, preguntarse
 si es un tema nuevo (entero) o un ajuste sobre uno ya en curso
 (decimal) -- nunca subir el entero por defecto.**
+
+## Pendiente: depurar el `schema.sql` acumulado (anotado el 2026-09-04)
+
+Petición del usuario, tras varias sesiones seguidas añadiendo bloques
+nuevos encima de los ya existentes. Conviene separar dos cosas que no
+son lo mismo:
+
+**En la base de datos NO se está acumulando código muerto** por este
+motivo. `create or replace function` sustituye la función: solo queda
+viva la última versión. La única forma de dejar basura real ahí es
+cambiar el número o el tipo de los parámetros sin el `drop function`
+previo (ver la regla ya documentada más arriba, que ya rompió la app
+tres veces) — eso sí deja dos funciones coexistiendo. Para comprobarlo
+de verdad, en vez de suponerlo, sirve la consulta de `pg_proc` que ya
+está documentada en la sección de esa regla.
+
+**Lo que sí se acumula es el propio `supabase/schema.sql`**, que hace
+tiempo dejó de ser un esquema y es un registro cronológico: hay 3
+definiciones completas de `anfitrion_guardar_invitados` (la original, la
+de `excluidoTablon` y la de `rolFamiliar`), varias de
+`tablon_listar_novedades`, y columnas que se crean en un `create table`
+y se renombran 2.000 líneas más abajo. Ejecutado de arriba abajo el
+resultado final es correcto (gana la última), así que **no está roto**
+— es un problema de mantenimiento, no de funcionamiento: cuesta saber
+qué está vivo, y es fácil copiar la versión equivocada al hacer un
+cambio.
+
+Cuando se aborde:
+1. Comprobar primero en la base real qué firmas existen de verdad
+   (consulta de `pg_proc`), y borrar las duplicadas que hayan quedado de
+   cambios de firma antiguos.
+2. Consolidar el archivo: una sola definición por función y por tabla,
+   con las columnas ya en su `create table`, dejando el histórico en el
+   propio git (que para eso está) en vez de dentro del archivo.
+3. Verificarlo pegando el archivo consolidado en un proyecto de Supabase
+   VACÍO y comparando el esquema resultante con el real, antes de
+   sustituir nada.
+
+⚠️ No hacerlo a medias ni con prisa: este archivo es lo único que
+permite reconstruir la base desde cero (el backup diario guarda los
+datos, ver más arriba).

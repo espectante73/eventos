@@ -2621,3 +2621,74 @@ begin
   );
 end;
 $$;
+
+-- ---------- "conyuge" pasa a "rolFamiliar" (2026-09-04) ----------
+-- El campo nació el 2026-09-03 con dos valores (esposo/esposa). Al día
+-- siguiente el usuario añadió "hijo": un hijo no es un cónyuge, así que
+-- el nombre pasaba a mentir y se renombra la columna entera en vez de
+-- dejarlo mal puesto. Valores: '' | 'esposo' | 'esposa' | 'hijo'.
+--
+-- El vacío NO significa "sin rellenar": significa UNIDAD SUELTA (alguien
+-- soltero, o el único miembro de un matrimonio que asiste). Los
+-- matrimonios vienen siempre los dos, así que a un cónyuge que viene
+-- solo no se le marca -- ver lib/rolFamiliar.js y lib/matrimonios.js.
+--
+-- El `do` es para que este bloque se pueda pegar tantas veces como haga
+-- falta: renombra solo si la columna vieja sigue existiendo.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'invitados' and column_name = 'conyuge'
+  ) then
+    alter table invitados rename column "conyuge" to "rolFamiliar";
+  end if;
+end $$;
+
+alter table invitados add column if not exists "rolFamiliar" text not null default '';
+
+create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  insert into invitados (
+    "id","nombre","apellido","zona","confirmado","colaboradorId",
+    "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
+    "cancion","alergias","observaciones","pagado","rolesTrabajo",
+    "excluidoTablon","rolFamiliar"
+  )
+  select
+    (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
+    coalesce((f->>'confirmado')::boolean, false),
+    nullif(f->>'colaboradorId','')::uuid,
+    f->>'grupoFamiliar', nullif(f->>'mesa','')::integer,
+    f->>'anioNacimiento', f->>'anioBoda', f->>'email', f->>'cancion',
+    f->>'alergias', f->>'observaciones',
+    coalesce((f->>'pagado')::boolean, false),
+    coalesce(f->'rolesTrabajo', '[]'::jsonb),
+    coalesce((f->>'excluidoTablon')::boolean, false),
+    coalesce(f->>'rolFamiliar', '')
+  from jsonb_array_elements(p_filas) as f
+  on conflict ("id") do update set
+    "nombre"=excluded."nombre", "apellido"=excluded."apellido",
+    "zona"=excluded."zona", "confirmado"=excluded."confirmado",
+    "colaboradorId"=excluded."colaboradorId", "grupoFamiliar"=excluded."grupoFamiliar",
+    "mesa"=excluded."mesa", "anioNacimiento"=excluded."anioNacimiento",
+    "anioBoda"=excluded."anioBoda", "email"=excluded."email",
+    "cancion"=excluded."cancion", "alergias"=excluded."alergias",
+    "observaciones"=excluded."observaciones", "pagado"=excluded."pagado",
+    "rolesTrabajo"=excluded."rolesTrabajo", "excluidoTablon"=excluded."excluidoTablon",
+    "rolFamiliar"=excluded."rolFamiliar";
+
+  delete from invitados g
+  where not exists (
+    select 1 from jsonb_array_elements(p_filas) f
+    where (f->>'id')::uuid = g."id"
+  );
+end;
+$$;

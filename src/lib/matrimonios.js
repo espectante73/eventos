@@ -15,7 +15,7 @@
 // matrimonios en una familia, matrimonios del mismo sexo, un cónyuge
 // cuya pareja no está invitada), lo que toca es un emparejado
 // explícito, no parchear esta función.
-import { CONYUGE } from "./conyuge";
+import { ROL_FAMILIAR } from "./rolFamiliar";
 
 // La familia se identifica igual que en el resto de la app:
 // `grupoFamiliar` y, si está vacío, el apellido.
@@ -44,11 +44,11 @@ export function matrimoniosDeInvitados(invitados, fechaEvento) {
   const porFamilia = new Map();
 
   for (const g of invitados || []) {
-    if (g?.conyuge !== CONYUGE.ESPOSO && g?.conyuge !== CONYUGE.ESPOSA) continue;
+    if (g?.rolFamiliar !== ROL_FAMILIAR.ESPOSO && g?.rolFamiliar !== ROL_FAMILIAR.ESPOSA) continue;
     const clave = claveFamilia(g);
     if (!porFamilia.has(clave)) porFamilia.set(clave, { esposos: [], esposas: [] });
     const familia = porFamilia.get(clave);
-    if (g.conyuge === CONYUGE.ESPOSO) familia.esposos.push(g);
+    if (g.rolFamiliar === ROL_FAMILIAR.ESPOSO) familia.esposos.push(g);
     else familia.esposas.push(g);
   }
 
@@ -94,11 +94,11 @@ export function matrimoniosDeInvitados(invitados, fechaEvento) {
 export function conyugesSueltos(invitados) {
   const porFamilia = new Map();
   for (const g of invitados || []) {
-    if (g?.conyuge !== CONYUGE.ESPOSO && g?.conyuge !== CONYUGE.ESPOSA) continue;
+    if (g?.rolFamiliar !== ROL_FAMILIAR.ESPOSO && g?.rolFamiliar !== ROL_FAMILIAR.ESPOSA) continue;
     const clave = claveFamilia(g);
     if (!porFamilia.has(clave)) porFamilia.set(clave, { esposos: [], esposas: [] });
     const familia = porFamilia.get(clave);
-    if (g.conyuge === CONYUGE.ESPOSO) familia.esposos.push(g);
+    if (g.rolFamiliar === ROL_FAMILIAR.ESPOSO) familia.esposos.push(g);
     else familia.esposas.push(g);
   }
 

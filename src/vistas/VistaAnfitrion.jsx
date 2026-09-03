@@ -163,8 +163,9 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   const [filtros, setFiltros] = useState({
     texto: "",
     grupoFamiliar: "",
-    // "" | "conyuges" | "esposo" | "esposa" | "sin" -- columna O/A.
-    conyuge: "",
+    // "" | "familia" | "esposo" | "esposa" | "hijo" | "sin" -- columna
+    // O/A/H (ver lib/rolFamiliar.js).
+    rolFamiliar: "",
     zona: "",
     colaboradorId: "",
     mesa: "",

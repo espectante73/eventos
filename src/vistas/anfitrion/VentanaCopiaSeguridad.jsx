@@ -59,7 +59,7 @@ export function VentanaCopiaSeguridad({ data, onCerrar }) {
         mesa: null,
         anioNacimiento: "",
         anioBoda: "",
-        conyuge: "",
+        rolFamiliar: "",
         email: "",
         cancion: "",
         alergias: "",
@@ -84,7 +84,9 @@ export function VentanaCopiaSeguridad({ data, onCerrar }) {
       mesa: r.mesa || null,
       anioNacimiento: r.anioNacimiento || "",
       anioBoda: r.anioBoda || "",
-      conyuge: r.conyuge || "",
+      // Una copia hecha antes del 2026-09-04 trae "conyuge": se
+      // acepta igual, para no perder lo ya marcado al restaurarla.
+      rolFamiliar: r.rolFamiliar || r.conyuge || "",
       email: r.email || "",
       cancion: r.cancion || "",
       alergias: r.alergias || "",

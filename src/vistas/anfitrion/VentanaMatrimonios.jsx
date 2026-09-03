@@ -12,7 +12,7 @@
 import { C } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { matrimoniosDeInvitados, conyugesSueltos } from "../../lib/matrimonios";
-import { LETRA_CONYUGE } from "../../lib/conyuge";
+import { LETRA_ROL } from "../../lib/rolFamiliar";
 
 // Mismo aspecto que la Lista de invitados, a petición del usuario
 // (2026-09-03): cabecera verde con la letra dorada en monoespaciada,
@@ -145,7 +145,7 @@ export function VentanaMatrimonios({ data, onCerrar }) {
               <strong style={{ fontWeight: 600 }}>
                 {sueltos.length === 1 ? "Hay 1 marca sin pareja" : `Hay ${sueltos.length} marcas sin pareja`}:
               </strong>{" "}
-              {sueltos.map((g) => `${g.apellido}, ${g.nombre} (${LETRA_CONYUGE[g.conyuge]})`).join(" · ")}. Como los
+              {sueltos.map((g) => `${g.apellido}, ${g.nombre} (${LETRA_ROL[g.rolFamiliar]})`).join(" · ")}. Como los
               matrimonios vienen los dos, falta marcar al otro cónyuge o esa marca sobra.
             </p>
           )}

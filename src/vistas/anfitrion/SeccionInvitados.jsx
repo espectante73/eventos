@@ -33,7 +33,7 @@ import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio } from "../../lib/invitados";
 import { ordenarPorApellidoNombre } from "../../lib/formato";
-import { CONYUGE, LETRA_CONYUGE, NOMBRE_CONYUGE } from "../../lib/conyuge";
+import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
 import { TextInput } from "../../components/Formulario";
@@ -100,7 +100,7 @@ export function SeccionInvitados({
         mesa: null,
         anioNacimiento: "",
         anioBoda: "",
-        conyuge: "",
+        rolFamiliar: "",
         email: "",
         cancion: "",
         alergias: "",
@@ -150,9 +150,10 @@ export function SeccionInvitados({
     persistInvitados(invitados.map((g) => (g.id === id ? { ...g, zona } : g)));
   };
 
-  // "esposo" | "esposa" | "" -- ver lib/conyuge.js y lib/matrimonios.js.
-  const asignarConyuge = (id, conyuge) => {
-    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, conyuge } : g)));
+  // "esposo" | "esposa" | "hijo" | "" (unidad suelta) -- ver
+  // lib/rolFamiliar.js y lib/matrimonios.js.
+  const asignarRolFamiliar = (id, rolFamiliar) => {
+    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, rolFamiliar } : g)));
   };
 
   const asignarMesa = (id, mesaValue) => {
@@ -199,7 +200,7 @@ export function SeccionInvitados({
       mesa: null,
       anioNacimiento: "",
       anioBoda: "",
-      conyuge: "",
+      rolFamiliar: "",
       email: "",
       cancion: "",
       alergias: "",
@@ -339,9 +340,14 @@ export function SeccionInvitados({
         if (!texto.includes(t)) return false;
       }
       if (filtros.grupoFamiliar && g.grupoFamiliar !== filtros.grupoFamiliar) return false;
-      if (filtros.conyuge === "conyuges" && !g.conyuge) return false;
-      if (filtros.conyuge === "sin" && g.conyuge) return false;
-      if ((filtros.conyuge === CONYUGE.ESPOSO || filtros.conyuge === CONYUGE.ESPOSA) && g.conyuge !== filtros.conyuge)
+      // "familia" = con cualquier papel marcado; "sin" = unidad suelta
+      // (soltero, o el único miembro de un matrimonio que asiste).
+      if (filtros.rolFamiliar === "familia" && !g.rolFamiliar) return false;
+      if (filtros.rolFamiliar === "sin" && g.rolFamiliar) return false;
+      if (
+        [ROL_FAMILIAR.ESPOSO, ROL_FAMILIAR.ESPOSA, ROL_FAMILIAR.HIJO].includes(filtros.rolFamiliar) &&
+        g.rolFamiliar !== filtros.rolFamiliar
+      )
         return false;
       if (filtros.zona && g.zona !== filtros.zona) return false;
       if (filtros.colaboradorId) {
@@ -368,8 +374,8 @@ export function SeccionInvitados({
             return (g.zona || "").toLowerCase();
           // Los cónyuges arriba y juntos por familia: es como se
           // repasan cuando lo que buscas son los matrimonios.
-          case "conyuge":
-            return `${g.conyuge ? "0" : "1"}${(g.grupoFamiliar || g.apellido || "").toLowerCase()}${g.conyuge || ""}`;
+          case "rolFamiliar":
+            return `${g.rolFamiliar ? "0" : "1"}${(g.grupoFamiliar || g.apellido || "").toLowerCase()}${g.rolFamiliar || ""}`;
           case "colaborador":
             return (resolverColaborador(g, colaboradores)?.nombre || "").toLowerCase();
           case "mesa":
@@ -641,13 +647,14 @@ export function SeccionInvitados({
                     Familia
                   </EncabezadoOrdenable>
                 </span>
-                {/* Cónyuge: O = esposO, A = esposA (2026-09-03). Sirve
+                {/* Papel en la familia: O esposo, A esposa, H hijo, y en
+                    blanco una unidad suelta (2026-09-04). Sirve
                     para contar los matrimonios y para la ventana
                     "Matrimonios" -- cada pareja tiene su foto de boda y
                     se les hará otra en el evento. */}
                 <span style={{ background: tintaColumnaCabecera(2), borderRadius: "6px 6px 0 0" }}>
-                  <EncabezadoOrdenable claro sinDivisor columna="conyuge" orden={orden} onClick={cambiarOrden}>
-                    O/A
+                  <EncabezadoOrdenable claro sinDivisor columna="rolFamiliar" orden={orden} onClick={cambiarOrden}>
+                    O/A/H
                   </EncabezadoOrdenable>
                 </span>
                 <span style={{ background: tintaColumnaCabecera(3), borderRadius: "6px 6px 0 0" }}>
@@ -757,8 +764,8 @@ export function SeccionInvitados({
                 </span>
                 <span style={{ background: tintaColumnaCabecera(2), borderRadius: "0 0 6px 6px" }}>
                   <select
-                    value={filtros.conyuge}
-                    onChange={(e) => setFiltros({ ...filtros, conyuge: e.target.value })}
+                    value={filtros.rolFamiliar}
+                    onChange={(e) => setFiltros({ ...filtros, rolFamiliar: e.target.value })}
                     style={{
                       ...inputStyle,
                       border: "none",
@@ -779,13 +786,14 @@ export function SeccionInvitados({
                       cursor: "pointer",
                       boxSizing: "border-box",
                     }}
-                    title="Filtrar por cónyuge"
+                    title="Filtrar por papel en la familia"
                   >
                     <option value="">Todos</option>
-                    <option value="conyuges">Cónyuges</option>
-                    <option value={CONYUGE.ESPOSO}>O</option>
-                    <option value={CONYUGE.ESPOSA}>A</option>
-                    <option value="sin">Sin marcar</option>
+                    <option value="familia">En familia</option>
+                    <option value={ROL_FAMILIAR.ESPOSO}>O</option>
+                    <option value={ROL_FAMILIAR.ESPOSA}>A</option>
+                    <option value={ROL_FAMILIAR.HIJO}>H</option>
+                    <option value="sin">Sueltos</option>
                   </select>
                 </span>
                 <span style={{ background: tintaColumnaCabecera(3), borderRadius: "0 0 6px 6px" }}>
@@ -1179,8 +1187,8 @@ export function SeccionInvitados({
                   <span style={celda(2, { justifyContent: "center", textAlign: "center" })}>
                     {modoEdicion ? (
                       <select
-                        value={g.conyuge || ""}
-                        onChange={(e) => asignarConyuge(g.id, e.target.value)}
+                        value={g.rolFamiliar || ""}
+                        onChange={(e) => asignarRolFamiliar(g.id, e.target.value)}
                         style={{
                           ...inputStyle,
                           border: "none",
@@ -1206,13 +1214,14 @@ export function SeccionInvitados({
                           cursor: "pointer",
                           boxSizing: "border-box",
                         }}
-                        title="Marcar como esposo (O) o esposa (A)"
+                        title="Papel en la familia: O esposo, A esposa, H hijo. En blanco = unidad suelta"
                       >
                         <option value="">—</option>
-                        <option value={CONYUGE.ESPOSO}>O</option>
-                        <option value={CONYUGE.ESPOSA}>A</option>
+                        <option value={ROL_FAMILIAR.ESPOSO}>O</option>
+                        <option value={ROL_FAMILIAR.ESPOSA}>A</option>
+                        <option value={ROL_FAMILIAR.HIJO}>H</option>
                       </select>
-                    ) : g.conyuge ? (
+                    ) : g.rolFamiliar ? (
                       <span
                         className="rounded px-1.5"
                         style={{
@@ -1223,11 +1232,11 @@ export function SeccionInvitados({
                         }}
                         title={
                           idsSueltos.has(g.id)
-                            ? `${NOMBRE_CONYUGE[g.conyuge]} sin pareja: falta marcar al otro cónyuge de esta familia (o sobra esta marca)`
-                            : NOMBRE_CONYUGE[g.conyuge]
+                            ? `${NOMBRE_ROL[g.rolFamiliar]} sin pareja: falta marcar al otro cónyuge de esta familia (o sobra esta marca)`
+                            : NOMBRE_ROL[g.rolFamiliar]
                         }
                       >
-                        {LETRA_CONYUGE[g.conyuge]}
+                        {LETRA_ROL[g.rolFamiliar]}
                         {idsSueltos.has(g.id) ? "!" : ""}
                       </span>
                     ) : (

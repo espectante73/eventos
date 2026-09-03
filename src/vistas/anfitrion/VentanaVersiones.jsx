@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.4",
+    cambios: [
+      "La marca de la familia gana la H de hijo: O esposo, A esposa, H hijo. Y dejarla en blanco pasa a significar algo — unidad suelta: alguien soltero, o el único miembro de un matrimonio que asiste (a esos no se les marca).",
+      "El filtro de esa columna se adapta: Todos, En familia, O, A, H y Sueltos.",
+      "El campo se llamaba \"cónyuge\" y con la H pasaba a mentir (un hijo no es un cónyuge), así que se ha renombrado entero a \"papel en la familia\". Una copia de seguridad hecha antes de hoy se restaura igual, sin perder lo ya marcado.",
+      "⚠️ Necesita ejecutar antes el bloque de SQL del renombrado.",
+    ],
+  },
+  {
     version: "21.3",
     cambios: [
       "El aviso de \"marca sin pareja\" salta también en la propia Lista de invitados, que es donde se marca: la letra sale en rojo con un \"!\" y, arriba, aparece la cifra \"Sin pareja\" (solo mientras haya algo que corregir).",

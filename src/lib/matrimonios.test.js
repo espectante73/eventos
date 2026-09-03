@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { matrimoniosDeInvitados, contarMatrimonios, conyugesSueltos, anioDelEvento } from "./matrimonios";
-import { CONYUGE } from "./conyuge";
+import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const persona = (extra) => ({
   nombre: "X",
@@ -9,7 +9,7 @@ const persona = (extra) => ({
   zona: "Tenerife",
   anioBoda: "",
   confirmado: true,
-  conyuge: "",
+  rolFamiliar: "",
   ...extra,
 });
 
@@ -26,8 +26,8 @@ describe("anioDelEvento", () => {
 describe("matrimoniosDeInvitados", () => {
   it("empareja al esposo con la esposa de la misma familia", () => {
     const lista = [
-      persona({ nombre: "Benito", conyuge: CONYUGE.ESPOSO, anioBoda: "2001" }),
-      persona({ nombre: "Ana", conyuge: CONYUGE.ESPOSA }),
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO, anioBoda: "2001" }),
+      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
       persona({ nombre: "Lucía" }),
     ];
     const [m] = matrimoniosDeInvitados(lista, "2026-11-13");
@@ -42,50 +42,50 @@ describe("matrimoniosDeInvitados", () => {
   // haberlo puesto solo uno de los dos: vale el que esté.
   it("toma el año de boda de cualquiera de los dos", () => {
     const lista = [
-      persona({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
-      persona({ nombre: "Ana", conyuge: CONYUGE.ESPOSA, anioBoda: "1998" }),
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA, anioBoda: "1998" }),
     ];
     expect(matrimoniosDeInvitados(lista, "2026-11-13")[0].aniversario).toBe(28);
   });
 
   it("sin año de boda no inventa aniversario", () => {
     const lista = [
-      persona({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
-      persona({ nombre: "Ana", conyuge: CONYUGE.ESPOSA }),
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
     ];
     expect(matrimoniosDeInvitados(lista, "2026-11-13")[0].aniversario).toBe(null);
   });
 
   it("no cuenta a un cónyuge suelto ni cruza familias distintas", () => {
     const lista = [
-      persona({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
-      persona({ nombre: "Rosa", apellido: "Pérez", grupoFamiliar: "Pérez", conyuge: CONYUGE.ESPOSA }),
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ nombre: "Rosa", apellido: "Pérez", grupoFamiliar: "Pérez", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
     ];
     expect(matrimoniosDeInvitados(lista, "2026-11-13")).toHaveLength(0);
   });
 
   it("cae en el apellido cuando no hay grupo familiar", () => {
     const lista = [
-      persona({ nombre: "Benito", grupoFamiliar: "", conyuge: CONYUGE.ESPOSO }),
-      persona({ nombre: "Ana", grupoFamiliar: "", conyuge: CONYUGE.ESPOSA }),
+      persona({ nombre: "Benito", grupoFamiliar: "", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ nombre: "Ana", grupoFamiliar: "", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
     ];
     expect(matrimoniosDeInvitados(lista, "2026-11-13")).toHaveLength(1);
   });
 
   it("marca como no confirmado el matrimonio al que le falta uno", () => {
     const lista = [
-      persona({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
-      persona({ nombre: "Ana", conyuge: CONYUGE.ESPOSA, confirmado: false }),
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA, confirmado: false }),
     ];
     expect(matrimoniosDeInvitados(lista, "2026-11-13")[0].confirmados).toBe(false);
   });
 
   it("cuenta cada familia con su pareja", () => {
     const lista = [
-      persona({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
-      persona({ nombre: "Ana", conyuge: CONYUGE.ESPOSA }),
-      persona({ nombre: "Juan", apellido: "Pérez", grupoFamiliar: "Pérez", conyuge: CONYUGE.ESPOSO }),
-      persona({ nombre: "Rosa", apellido: "Pérez", grupoFamiliar: "Pérez", conyuge: CONYUGE.ESPOSA }),
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
+      persona({ nombre: "Juan", apellido: "Pérez", grupoFamiliar: "Pérez", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ nombre: "Rosa", apellido: "Pérez", grupoFamiliar: "Pérez", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
     ];
     expect(contarMatrimonios(lista)).toBe(2);
   });
@@ -96,8 +96,8 @@ describe("conyugesSueltos", () => {
 
   it("no señala a nadie cuando todos tienen pareja", () => {
     const lista = [
-      suelto({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
-      suelto({ nombre: "Ana", conyuge: CONYUGE.ESPOSA }),
+      suelto({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      suelto({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
     ];
     expect(conyugesSueltos(lista)).toHaveLength(0);
   });
@@ -106,7 +106,7 @@ describe("conyugesSueltos", () => {
   // esposa. Antes se ignoraba en silencio y el matrimonio no aparecía.
   it("señala al que se quedó sin pareja en su familia", () => {
     const lista = [
-      suelto({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
+      suelto({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
       suelto({ nombre: "Ana" }),
     ];
     expect(conyugesSueltos(lista).map((g) => g.nombre)).toEqual(["Benito"]);
@@ -114,18 +114,32 @@ describe("conyugesSueltos", () => {
 
   it("señala solo al que sobra cuando hay más de un lado", () => {
     const lista = [
-      suelto({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
-      suelto({ nombre: "Ana", conyuge: CONYUGE.ESPOSA }),
-      suelto({ nombre: "Rosa", conyuge: CONYUGE.ESPOSA }),
+      suelto({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      suelto({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
+      suelto({ nombre: "Rosa", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
     ];
     expect(conyugesSueltos(lista).map((g) => g.nombre)).toEqual(["Rosa"]);
   });
 
   it("no cruza familias distintas", () => {
     const lista = [
-      suelto({ nombre: "Benito", conyuge: CONYUGE.ESPOSO }),
-      suelto({ nombre: "Rosa", apellido: "Pérez", grupoFamiliar: "Pérez", conyuge: CONYUGE.ESPOSA }),
+      suelto({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      suelto({ nombre: "Rosa", apellido: "Pérez", grupoFamiliar: "Pérez", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
     ];
     expect(conyugesSueltos(lista)).toHaveLength(2);
+  });
+});
+
+// La H no participa en los matrimonios: un hijo marcado no puede
+// emparejarse con nadie ni contar como marca suelta.
+describe("hijos", () => {
+  it("los hijos no forman pareja ni salen como sueltos", () => {
+    const lista = [
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
+      persona({ nombre: "Lucía", rolFamiliar: ROL_FAMILIAR.HIJO }),
+    ];
+    expect(matrimoniosDeInvitados(lista, "2026-11-13")).toHaveLength(1);
+    expect(conyugesSueltos(lista)).toHaveLength(0);
   });
 });
