@@ -18,9 +18,45 @@
 // derecho" ya aplicado al resto de la app (botones flotantes, Modo
 // Pruebas).
 import { useState } from "react";
+import { ChevronDown, KeyRound } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { PERMISOS, ETIQUETAS_PERMISOS } from "../../lib/permisos";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
+
+// Misma pieza plegable que traía la ventana Logística (retirada el
+// 2026-09-05) para este mismo resumen -- se recrea aquí, plegada por
+// defecto, a petición del usuario: quiere poder ignorarla de un vistazo
+// sin que ocupe sitio, igual que antes.
+function SeccionPlegable({ icono: Icono, titulo, resumen, children }) {
+  const [abierta, setAbierta] = useState(false);
+  return (
+    <div className="rounded-lg overflow-hidden mt-4" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+      <button
+        onClick={() => setAbierta((a) => !a)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left"
+      >
+        <span className="flex items-center gap-2 text-sm min-w-0" style={{ color: C.ink, fontWeight: 600 }}>
+          <Icono size={15} style={{ color: C.gold, flexShrink: 0 }} />
+          <span className="truncate">{titulo}</span>
+        </span>
+        <span className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+            {resumen}
+          </span>
+          <ChevronDown
+            size={15}
+            style={{ color: C.gold, transform: abierta ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
+          />
+        </span>
+      </button>
+      {abierta && (
+        <div className="px-3 pb-3 pt-1 text-xs" style={{ borderTop: `1px solid ${C.line}`, color: C.charcoal }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function VentanaPermisos({ data, onCerrar }) {
   const { colaboradores, persistColaboradores } = data;
@@ -101,10 +137,7 @@ export function VentanaPermisos({ data, onCerrar }) {
               utilidad real; esto era lo único de ella que el usuario
               quería conservar, y encaja aquí de forma natural). */}
           {colaboradoresConPermisos.length > 0 && (
-            <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
-              <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
-                Permisos concedidos
-              </p>
+            <SeccionPlegable icono={KeyRound} titulo="Permisos concedidos" resumen={`${colaboradoresConPermisos.length} colaborador(es)`}>
               <div className="flex flex-col gap-1.5">
                 {colaboradoresConPermisos.map((c) => (
                   <div key={c.id} className="text-sm" style={{ color: C.charcoal }}>
@@ -113,7 +146,7 @@ export function VentanaPermisos({ data, onCerrar }) {
                   </div>
                 ))}
               </div>
-            </div>
+            </SeccionPlegable>
           )}
         </>
       )}
