@@ -431,6 +431,13 @@ export function SeccionInvitados({
   // Familia 1fr -> 1.3fr, Confirmado 0.9fr -> 1.2fr, Colaborador
   // 1.3fr -> 1.8fr (mismo ancho que Invitado): mismo motivo, a
   // petición del usuario, 2026-08-20.
+  // Definición de columnas ÚNICA: la comparten la cabecera, los filtros
+  // y las filas, que desde la v22.2 viven dentro del mismo contenedor
+  // (ver `cabeceraTabla`). Antes había que medir en píxeles para que dos
+  // rejillas separadas coincidieran -- el navegador redondea las
+  // fracciones `fr` de forma independiente en cada una, así que a partir
+  // de la 2ª o 3ª columna se descuadraban solas. Siendo una sola pieza,
+  // ese problema no puede existir.
   const columnasTabla = "1.6fr 1.1fr 0.5fr 0.8fr 0.9fr 1.5fr 1.1fr 1fr 0.8fr 0.8fr auto";
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
@@ -445,52 +452,6 @@ export function SeccionInvitados({
   // 2026-08-20.
   const tintaColumnaCabecera = (idx) => (idx % 2 === 1 ? "rgba(255,255,255,0.07)" : "transparent");
 
-  // La cabecera de columnas y los filtros viven en la barra verde
-  // (subtitulo) y las filas de datos en la caja blanca del cuerpo -- dos
-  // ramas de DOM totalmente separadas dentro de VentanaFlotante, cada
-  // una con su propia cuadrícula CSS Grid. Medir solo el ANCHO TOTAL
-  // (ronda anterior, `anchoTabla`) no bastaba: aunque el ancho total
-  // coincidiera al milímetro y minWidth:0 impidiera que el contenido
-  // ensanchara una columna de más, CADA cuadrícula sigue calculando sus
-  // propias fronteras internas a partir de `columnasTabla` (fracciones
-  // `fr`) por su cuenta -- y el navegador redondea esas fracciones a
-  // píxeles enteros de forma INDEPENDIENTE en cada cuadrícula, columna a
-  // columna según va avanzando. Con anchos casi iguales pero no
-  // idénticos al milésima, ese redondeo puede tomar una decisión
-  // distinta en una cuadrícula que en otra a partir de la 2ª o 3ª
-  // columna -- de ahí que el usuario viera la 1ª columna bien y el resto
-  // descuadrándose progresivamente.
-  //
-  // Arreglo definitivo: en vez de que cada cuadrícula calcule sus
-  // columnas por su cuenta, se MIDEN los anchos reales en px de las 9
-  // columnas de UNA fila de datos ya renderizada (`filaEjemploRef`) y se
-  // congelan como una lista de píxeles concretos (`anchosColumnas`,
-  // p.ej. "182px 152px 121px..."), que sustituye a `columnasTabla` en
-  // las TRES cuadrículas por igual -- todas usan literalmente los mismos
-  // números ya redondeados, no fracciones que cada una redondea a su
-  // manera. Con ResizeObserver sobre la tabla para volver a medir si la
-  // ventana cambia de tamaño, y `hayFilas` en las dependencias para
-  // volver a medir en cuanto exista ya una fila real de la que copiar
-  // (si los invitados tardan en llegar tras abrir la ventana, la primera
-  // pasada no tiene ninguna fila de la que medir todavía).
-  // (Aquí vivía el medidor de anchos de columna: 45 líneas de
-  // ResizeObserver, remedidas al cargar la ventana, al estar listas las
-  // fuentes y con dos temporizadores de seguridad, más una validación
-  // de "¿esta medida es creíble?". Todo eso existía solo para que la
-  // cabecera, que estaba en OTRO sitio del documento, coincidiera con
-  // las filas. Al unirlas en una sola rejilla dejó de hacer falta:
-  // cuadran porque son la misma pieza, no porque alguien las mida.)
-
-  // Lista global/Tentativa/Confirmados: mudados aquí desde la cabecera
-  // de "Progreso de recopilación" -- con los 6 botones ahora escondidos
-  // en "Acciones" (justo debajo), la cabecera de esta ventana quedó con
-  // sitio libre y encajan mejor aquí, a petición del usuario,
-  // 2026-08-20. Mismo aspecto de siempre (2ª línea la etiqueta, 3ª el
-  // número resaltado sobre el verde).
-  // Marcados con O o A que se han quedado sin su pareja: con la regla
-  // de que los matrimonios vienen los dos, eso es SIEMPRE un despiste
-  // al marcar, así que se señala en la propia fila -- que es donde se
-  // marca y donde se puede corregir al momento (2026-09-04).
   const idsSueltos = new Set(conyugesSueltos(invitados).map((g) => g.id));
   // Los años que cumplen EL DÍA DEL EVENTO, no hoy: es el número que va
   // en el sello de la foto de cada pareja.
