@@ -364,7 +364,8 @@ export function SeccionInvitados({
         const col = resolverColaborador(g, colaboradores);
         if (!col || col.id !== filtros.colaboradorId) return false;
       }
-      if (filtros.mesa && String(g.mesa || "") !== filtros.mesa) return false;
+      if (filtros.mesa === "sin" && g.mesa) return false;
+      if (filtros.mesa && filtros.mesa !== "sin" && String(g.mesa || "") !== filtros.mesa) return false;
       if (filtros.confirmado === "confirmado" && !g.confirmado) return false;
       if (filtros.confirmado === "tentativa" && g.confirmado) return false;
       if (filtros.datos === "completo" && !(g.confirmado && datosCompletos(g))) return false;
@@ -957,6 +958,10 @@ export function SeccionInvitados({
                     }}
                   >
                     <option value="">Todas</option>
+                    {/* "Sin mesa" vive aquí, en el filtro, y no en el
+                        informe de revisión: la lista es la raíz y esto
+                        se puede mirar columna a columna. */}
+                    <option value="sin">Sin mesa</option>
                     {mesas.map((m) => (
                       <option key={m.numero} value={String(m.numero)}>
                         {m.numero}

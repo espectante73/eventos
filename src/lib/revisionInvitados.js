@@ -13,7 +13,6 @@
 // Cada hallazgo devuelve las personas afectadas para poder saltar a
 // ellas en la propia lista, que sigue siendo donde se corrige.
 import { ROL_FAMILIAR } from "./rolFamiliar";
-import { datosCompletos } from "./invitados";
 import { conyugesSueltos, matrimoniosDeInvitados } from "./matrimonios";
 
 function claveFamilia(g) {
@@ -40,18 +39,6 @@ function hallazgo(clave, titulo, ayuda, personas, tipo = "error") {
 export function revisarInvitados(invitados = [], evento = {}) {
   const grupos = agruparPorFamilia(invitados);
   const hallazgos = [];
-
-  const sinRevisar = invitados.filter((g) => !g.rolFamiliar);
-  if (sinRevisar.length)
-    hallazgos.push(
-      hallazgo(
-        "sinRevisar",
-        "Sin revisar",
-        "Todavía no tienen puesto su papel en la familia. En blanco no significa suelto: para eso está la S.",
-        sinRevisar,
-        "pendiente"
-      )
-    );
 
   const sueltos = conyugesSueltos(invitados);
   if (sueltos.length)
@@ -154,21 +141,12 @@ export function revisarInvitados(invitados = [], evento = {}) {
       )
     );
 
-  const confirmados = invitados.filter((g) => g.confirmado);
-
-  const sinMesa = confirmados.filter((g) => !g.mesa);
-  if (sinMesa.length)
-    hallazgos.push(hallazgo("confirmadoSinMesa", "Confirmados sin mesa", "Ya han dicho que vienen y no tienen sitio asignado.", sinMesa, "pendiente"));
-
-  const sinDatos = confirmados.filter((g) => !datosCompletos(g));
-  if (sinDatos.length)
-    hallazgos.push(
-      hallazgo("confirmadoSinDatos", "Confirmados con datos incompletos", "Les falta el año de nacimiento o la respuesta de alergias.", sinDatos, "pendiente")
-    );
-
-  const sinPagar = confirmados.filter((g) => !g.pagado);
-  if (sinPagar.length)
-    hallazgos.push(hallazgo("confirmadoSinPagar", "Confirmados sin pagar", "", sinPagar, "pendiente"));
-
+  // ⚠️ Aquí NO se comprueban los datos incompletos, ni quién no ha
+  // pagado, ni quién está sin revisar, ni quién no tiene mesa: todo eso
+  // ya son columnas de la lista, con su filtro y su cifra en la
+  // cabecera. Estuvieron un rato y el usuario los quitó por duplicados
+  // (2026-09-04), con razón. Este informe se queda SOLO con lo que
+  // obliga a cruzar filas entre sí, que es lo que la lista no puede
+  // enseñar por muchas columnas que tenga.
   return hallazgos;
 }

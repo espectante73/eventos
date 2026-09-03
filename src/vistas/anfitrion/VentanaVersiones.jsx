@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.10",
+    cambios: [
+      "La Revisión deja de repetir lo que la lista ya enseña columna a columna: fuera los datos incompletos, quién no ha pagado, quién no tiene mesa y quién está sin revisar. Todo eso son columnas con su filtro y su cifra arriba.",
+      "El informe se queda solo con lo que obliga a cruzar filas entre sí — lo que ninguna columna puede enseñar por sí sola: hijos sin adulto, P sin hijos, S acompañada, dos cónyuges del mismo tipo en un grupo, gente sin familia y matrimonios sin año de boda.",
+      "Y lo único que faltaba para poder mirarlo en la lista se ha añadido allí: el filtro de Mesa gana la opción \"Sin mesa\".",
+    ],
+  },
+  {
     version: "21.9",
     cambios: [
       "La Revisión deja de ocupar sitio arriba de la lista: se abre desde Acciones → Revisión. Si hay algo mal, la propia entrada del menú lo dice con su número en rojo — un informe escondido que no avisa es un informe que nadie mira.",

@@ -62,14 +62,20 @@ describe("revisarInvitados", () => {
     expect(claves(revisarInvitados(lista, {}))).toContain("dobleConyuge");
   });
 
-  it("separa lo que está mal de lo que solo está pendiente", () => {
+  // Lo que ya es una columna de la lista (datos, pago, mesa, sin
+  // revisar) NO entra aquí: se quitó por duplicado. El informe se queda
+  // solo con lo que obliga a cruzar filas entre sí.
+  it("no repite lo que la lista ya enseña columna a columna", () => {
     const lista = [
-      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO, mesa: null }),
-      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA, mesa: null }),
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO, mesa: null, pagado: false, alergias: "" }),
+      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA, mesa: null, pagado: false, alergias: "" }),
+      persona({ nombre: "Nadie", apellido: "Solo", grupoFamiliar: "Solo 01", rolFamiliar: "" }),
     ];
-    const hallazgos = revisarInvitados(lista, { fecha: "2026-11-13" });
-    expect(buscar(hallazgos, "confirmadoSinMesa").tipo).toBe("pendiente");
-    expect(buscar(hallazgos, "confirmadoSinMesa").personas).toHaveLength(2);
+    const encontradas = claves(revisarInvitados(lista, { fecha: "2026-11-13" }));
+    expect(encontradas).not.toContain("confirmadoSinMesa");
+    expect(encontradas).not.toContain("confirmadoSinPagar");
+    expect(encontradas).not.toContain("confirmadoSinDatos");
+    expect(encontradas).not.toContain("sinRevisar");
   });
 
   it("cuenta como pendiente el matrimonio sin año de boda, una vez por pareja", () => {
@@ -79,10 +85,5 @@ describe("revisarInvitados", () => {
     ];
     const h = buscar(revisarInvitados(lista, { fecha: "2026-11-13" }), "matrimonioSinAnioBoda");
     expect(h.personas).toHaveLength(1);
-  });
-
-  it("no da por revisado a quien tiene el rol en blanco", () => {
-    const lista = [persona({ nombre: "Nadie", rolFamiliar: "" })];
-    expect(claves(revisarInvitados(lista, {}))).toContain("sinRevisar");
   });
 });
