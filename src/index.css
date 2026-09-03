@@ -177,6 +177,12 @@
     position: static !important;
   }
 
+  /* Lo que no se imprime tiene que DESAPARECER de la maquetación, no
+     solo volverse invisible: `visibility: hidden` conserva el hueco, y
+     una lista de 140 filas detrás del modal se llevaba cinco páginas y
+     media en blanco antes de que empezara lo impreso. */
+  .oculto-al-imprimir { display: none !important; }
+
   .modal-flotante-fondo { position: static !important; }
   .modal-flotante-caja { max-height: none !important; }
   .modal-flotante-cuerpo { overflow: visible !important; flex: none !important; }

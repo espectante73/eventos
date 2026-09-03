@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "22.3",
+    cambios: [
+      "La cabecera con los filtros queda inmóvil de verdad al bajar por la lista: se ve siempre en qué columna estás trabajando. Estaba puesta como pegajosa desde la versión anterior, pero quien desplazaba era el cuerpo de la ventana, no la tabla, así que se iba hacia arriba con las filas. Ahora desplaza la tabla y la cabecera se queda.",
+      "Imprimir deja de gastar el doble de papel. Salían cinco páginas y media en blanco antes de empezar: la lista de detrás se volvía invisible, pero seguía OCUPANDO su sitio — y 140 filas ocupan eso. Ahora desaparece de la maquetación mientras se imprime, así que el papel empieza donde tiene que empezar.",
+    ],
+  },
+  {
     version: "22.2",
     cambios: [
       "La lista pasa a ser UNA SOLA PIEZA. Hasta ahora los encabezados y los filtros vivían en la barra verde de la ventana y las filas en la caja de abajo: dos sitios distintos que se hacían coincidir midiendo en píxeles el ancho de cada columna y copiándoselo al otro. Ahora comparten el mismo contenedor y la misma rejilla: cuadran porque son lo mismo, no porque alguien los mida.",

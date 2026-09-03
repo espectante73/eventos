@@ -984,6 +984,14 @@ export function SeccionInvitados({
   return (
     <>
 
+      {/* ⚠️ Al imprimir desde el modal, la lista de detrás sigue
+          OCUPANDO SITIO: la regla de impresión la vuelve invisible
+          (`visibility: hidden`), pero eso no quita el hueco -- 140 filas
+          de hueco, que son las cinco páginas y media en blanco que salían
+          antes de empezar a imprimir de verdad (visto por el usuario,
+          2026-09-05). Con `display: none` desaparece de la maquetación y
+          el papel empieza donde tiene que empezar. */}
+      <div className={panelFlotante ? "oculto-al-imprimir" : undefined}>
       <VentanaFlotante
         clave="invitados"
         titulo="Lista de invitados"
@@ -1067,7 +1075,17 @@ export function SeccionInvitados({
             que el resto de la ventana (C.paper) y sin ningún elemento
             dentro. Solo se toca el margen SUPERIOR: los laterales y el
             inferior se quedan con el padding normal del cuerpo. */}
-        <div style={{ marginTop: -16 }}>
+        <div
+          style={{
+            marginTop: -16,
+            // En ventana propia, esta columna reparte el alto: lo que no
+            // ocupan los avisos y los formularios se lo lleva la tabla,
+            // que pasa a ser QUIEN DESPLAZA. Sin esto, quien desplazaba
+            // era el cuerpo de la ventana y la cabecera pegajosa se iba
+            // hacia arriba con la lista (2026-09-05).
+            ...(fijo ? { flex: 1, minHeight: 0, display: "flex", flexDirection: "column" } : {}),
+          }}
+        >
         {/* Se abre desde "Acciones" → Revisión; no está siempre a la
             vista. Tocar un nombre lo busca en la lista de abajo. */}
         {aviso && (
@@ -1551,6 +1569,7 @@ export function SeccionInvitados({
         </div>
         </div>
       </VentanaFlotante>
+      </div>
 
       {mostrarResumenAsignacion && (
         <ModalFlotante

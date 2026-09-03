@@ -299,7 +299,17 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       {/* La clase no pinta nada en pantalla: sirve para que index.css
           pueda quitarle el scroll y el flex al imprimir, igual que hace
           con .modal-flotante-cuerpo. */}
-      <div className="ventana-cuerpo p-4" style={{ flex: 1, overflowY: "auto" }}>
+      {/* En modo fijo el cuerpo NO desplaza: reparte el alto y deja que
+          desplace quien tenga dentro (la tabla de invitados), que es lo
+          que permite dejar su cabecera inmóvil. */}
+      <div
+        className="ventana-cuerpo p-4"
+        style={
+          fijo
+            ? { flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
+            : { flex: 1, overflowY: "auto" }
+        }
+      >
         {children}
       </div>
       {acciones && (
