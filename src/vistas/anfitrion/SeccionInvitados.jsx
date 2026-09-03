@@ -374,7 +374,9 @@ export function SeccionInvitados({
       if (filtros.zona && g.zona !== filtros.zona) return false;
       if (filtros.anioBoda === "con" && !g.anioBoda) return false;
       if (filtros.anioBoda === "sin" && g.anioBoda) return false;
-      if (filtros.colaboradorId) {
+      if (filtros.colaboradorId === "sin") {
+        if (resolverColaborador(g, colaboradores)) return false;
+      } else if (filtros.colaboradorId) {
         const col = resolverColaborador(g, colaboradores);
         if (!col || col.id !== filtros.colaboradorId) return false;
       }
@@ -888,6 +890,7 @@ export function SeccionInvitados({
                     }}
                   >
                     <option value="">Todos</option>
+                    <option value="sin">Sin asignar</option>
                     {colaboradores.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.nombre}

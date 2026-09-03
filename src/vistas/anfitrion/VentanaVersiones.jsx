@@ -44,6 +44,7 @@ const HISTORIAL_VERSIONES = [
   {
     version: "22.4",
     cambios: [
+      "El filtro de Colaborador gana la opción \"Sin asignar\", para ver de un vistazo a quién todavía no le corresponde nadie.",
       "El filtro de Zona muestra ya cuántos invitados hay en cada una, igual que ya hacía el filtro de Rol.",
     ],
   },
