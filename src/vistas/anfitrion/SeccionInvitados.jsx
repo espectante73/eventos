@@ -14,7 +14,7 @@
 // `filtros`/`setFiltros` igual: el botón "Editar asignación" de la
 // ventana Avisos necesita poder rellenar el filtro de colaborador de
 // esta misma tabla, así que ese estado también vive en VistaAnfitrion.
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import {
   Check,
   Trash2,
@@ -76,20 +76,11 @@ export function SeccionInvitados({
   // ventana. Al cerrarla, si queda alguien pendiente, se pregunta.
   const [mostrarResumenAsignacion, setMostrarResumenAsignacion] = useState(false);
   const [enviandoAvisosAsignacion, setEnviandoAvisosAsignacion] = useState(false);
-
-  const tablaRef = useRef(null);
-  const filaEjemploRef = useRef(null);
-  const [anchoTabla, setAnchoTabla] = useState(null);
   const [mostrarRevision, setMostrarRevision] = useState(false);
   // Avisos de la propia interfaz, NUNCA `window.alert`: dentro de una
   // ventana emergente ese diálogo sale en la pestaña principal (o no
   // sale) y además bloquea. Ya nos costó una ronda de bugs en Novedades.
   const [aviso, setAviso] = useState("");
-  // La cabecera de columnas y los filtros viven en la barra verde de la
-  // ventana, fuera del marco con scroll de la tabla: esta ref los
-  // desplaza a la vez que ella.
-  const cabeceraRef = useRef(null);
-  const [anchosColumnas, setAnchosColumnas] = useState(null);
 
   const cambiarOrden = (columna) => {
     setOrden((o) =>
@@ -453,7 +444,6 @@ export function SeccionInvitados({
   // recuadro que "incluye nombre y filtro" -- a petición del usuario,
   // 2026-08-20.
   const tintaColumnaCabecera = (idx) => (idx % 2 === 1 ? "rgba(255,255,255,0.07)" : "transparent");
-  const hayFilas = invitadosOrdenados.length > 0;
 
   // La cabecera de columnas y los filtros viven en la barra verde
   // (subtitulo) y las filas de datos en la caja blanca del cuerpo -- dos
@@ -483,76 +473,13 @@ export function SeccionInvitados({
   // volver a medir en cuanto exista ya una fila real de la que copiar
   // (si los invitados tardan en llegar tras abrir la ventana, la primera
   // pasada no tiene ninguna fila de la que medir todavía).
-  useEffect(() => {
-    const el = tablaRef.current;
-    if (!el) return;
-    const columnasEsperadas = columnasTabla.split(" ").length;
-    const medir = () => {
-      if (el.clientWidth > 0) setAnchoTabla(el.clientWidth);
-      const fila = filaEjemploRef.current;
-      if (!fila) return;
-      const anchos = Array.from(fila.children).map((celda) => celda.getBoundingClientRect().width);
-      // ⚠️ Una medida solo se aplica si es CREÍBLE, y hacen falta las
-      // TRES comprobaciones. Motivo, aprendido a base de dos rondas de
-      // fallo real al llevar la lista a una ventana del sistema: allí
-      // las hojas de estilo se copian y tardan un instante, así que se
-      // llegaba a medir una fila que todavía NO era una rejilla. Y como
-      // cada celda lleva `display: flex` en su estilo en línea, sin
-      // rejilla cada una se comporta como un bloque y ocupa el ancho
-      // ENTERO de la ventana: once columnas de 1240px cada una, media
-      // hora de scroll para ver la lista. Las medidas eran "creíbles"
-      // por número y por no estar aplastadas -- lo que las delata es
-      // que sumadas no caben en la fila.
-      const anchoFila = fila.getBoundingClientRect().width;
-      const suma = anchos.reduce((total, a) => total + a, 0);
-      const esRejilla = (ventana || window).getComputedStyle(fila).display === "grid";
-      const creible =
-        esRejilla &&
-        anchos.length === columnasEsperadas &&
-        anchos.every((a) => a > 4) &&
-        anchoFila > 0 &&
-        suma <= anchoFila * 1.05;
-      setAnchosColumnas(creible ? anchos.map((a) => `${a}px`).join(" ") : null);
-    };
-    medir();
-
-    // ⚠️ Observar SOLO la tabla no basta, y es un bug real: en una
-    // ventana de verdad del sistema (usePopupWindow.js) las hojas de
-    // estilo se copian y tardan un instante en aplicarse, así que la
-    // primera medida se toma sobre una fila TODAVÍA SIN REJILLA. Sale
-    // una anchura por columna disparatada -- la primera se lo comía
-    // todo y el resto desaparecía -- y ahí se quedaba: el ancho total
-    // de la tabla no cambia al aplicarse el CSS (lo fija su minWidth),
-    // así que el observador nunca se volvía a disparar.
-    //
-    // Por eso se observa también la FILA y su primera celda, que sí
-    // cambian de tamaño en cuanto la rejilla entra, y se vuelve a medir
-    // cuando la ventana termina de cargar y cuando están listas las
-    // fuentes (que también mueven anchuras).
-    const ro = new ResizeObserver(medir);
-    ro.observe(el);
-    const fila = filaEjemploRef.current;
-    if (fila) {
-      ro.observe(fila);
-      if (fila.children[0]) ro.observe(fila.children[0]);
-    }
-
-    const doc = ventana?.document || document;
-    const win = ventana || window;
-    win.addEventListener("load", medir);
-    doc.fonts?.ready?.then(medir).catch(() => {});
-    // Red de seguridad para el caso raro en que nada de lo anterior se
-    // dispare (estilos ya cacheados, sin fuentes que esperar...).
-    // Dos, a distinta distancia: la hoja de estilos de una ventana
-    // recién abierta puede tardar más de lo que parece.
-    const tardios = [setTimeout(medir, 400), setTimeout(medir, 1500)];
-
-    return () => {
-      ro.disconnect();
-      win.removeEventListener("load", medir);
-      tardios.forEach(clearTimeout);
-    };
-  }, [hayFilas, ventana]);
+  // (Aquí vivía el medidor de anchos de columna: 45 líneas de
+  // ResizeObserver, remedidas al cargar la ventana, al estar listas las
+  // fuentes y con dos temporizadores de seguridad, más una validación
+  // de "¿esta medida es creíble?". Todo eso existía solo para que la
+  // cabecera, que estaba en OTRO sitio del documento, coincidiera con
+  // las filas. Al unirlas en una sola rejilla dejó de hacer falta:
+  // cuadran porque son la misma pieza, no porque alguien las mida.)
 
   // Lista global/Tentativa/Confirmados: mudados aquí desde la cabecera
   // de "Progreso de recopilación" -- con los 6 botones ahora escondidos
@@ -675,42 +602,33 @@ export function SeccionInvitados({
     },
   ];
 
-  return (
-    <>
-      <VentanaFlotante
-        clave="invitados"
-        titulo="Lista de invitados"
-        fijo={fijo}
-        onCerrar={intentarCerrarInvitados}
-        // Lo bastante ancha para que las columnas Y sus filtros quepan
-        // ENTEROS nada más abrirla, sin desplazamiento lateral: es una
-        // ventana que se mira de un vistazo. 940px -> 1260px porque la
-        // tabla pasó de 9 a 11 columnas y su ancho mínimo subió a 1180
-        // (v21.7): la cabecera se salía por fuera del marco y parecía
-        // sin terminar -- señalado por el usuario, 2026-09-04.
-        // 1180 de tabla + 32 de padding del cuerpo + margen.
-        ancho="min(1260px, calc(100vw - 48px))"
-        subtitulo={
-          // Segunda línea bajo el título: la edad media (número en
-          // negrita y 3px más grande que el resto de la línea) y, debajo,
-          // la cabecera de columnas de la tabla (Invitado/Familia/...) --
-          // de vuelta a la barra verde (a petición del usuario,
-          // 2026-08-18: la quería ahí, no en la caja blanca).
-          //
-          // El ancho de las dos rejillas de aquí abajo (cabecera de
-          // columnas y filtros) YA NO se deja "a fórmula" (%, bordes,
-          // paddings calculados a mano) -- después de varias rondas en
-          // las que seguía sin coincidir de verdad con la tabla del
-          // cuerpo (redondeos, la barra de scroll de overflow-x-auto,
-          // redimensionar la ventana a mano...), se mide el ancho REAL
-          // de la tabla con un ResizeObserver (`tablaRef`/`anchoTabla`,
-          // más arriba) y se aplica tal cual como `width` en px a las dos
-          // -- así coinciden siempre de verdad, no "deberían coincidir
-          // según el cálculo".
-          // `stopPropagation` en mousedown/touchstart: son controles
-          // interactivos (los botones de ordenar) dentro de la cabecera
-          // arrastrable de la ventana, igual que ya exige `extra`.
-          <div className="flex flex-col gap-1 mt-3">
+  // ---------- Cabecera de columnas + filtros ----------
+  // ⚠️ Viven DENTRO del mismo contenedor que las filas, compartiendo la
+  // MISMA definición de rejilla (`columnasTabla`). No es un detalle: son
+  // una sola pieza, y por eso cuadran por construcción.
+  //
+  // Hasta la v22.1 vivían en la barra verde de la ventana, o sea en OTRO
+  // sitio del documento, y se hacían coincidir midiendo en píxeles el
+  // ancho de cada columna abajo para copiárselo arriba. De ahí salieron,
+  // uno detrás de otro: la cabecera saliéndose del marco, una sola
+  // columna ocupándolo todo, dos columnas gigantes, los filtros
+  // recortados por abajo. Todos el mismo fallo -- una medida tomada en
+  // mal momento. El usuario lo vio antes que yo: "en realidad la lista
+  // debería ser todo una sola pieza".
+  //
+  // `sticky`: se quedan pegados arriba al desplazar la lista, así que se
+  // siguen viendo como la cabecera de siempre.
+  const cabeceraTabla = (
+    <div
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 2,
+        background: C.ink,
+        borderBottom: `1px solid ${C.gold}`,
+      }}
+    >
+<div className="flex flex-col gap-1">
             {/* mt-3: separa la cabecera de columnas de los 4 recuadros
                 informativos de arriba (Previstos/Sin confirmar/
                 Confirmados/Edad media, en `extra`) -- antes quedaba
@@ -731,24 +649,7 @@ export function SeccionInvitados({
                 con la tabla en horizontal/escritorio (ahí la ventana ya
                 es más ancha que 780 de sobra) -- a petición del usuario,
                 2026-08-18. */}
-            {/* ⚠️ `overflow: hidden` + `ref`: si la ventana se estrecha
-                (pantalla pequeña, o redimensionada a mano) la cabecera y
-                los filtros ya NO se salen fuera del marco -- se recortan
-                aquí y se desplazan a la vez que la tabla, sincronizados
-                desde el `onScroll` del cuerpo (ver `cabeceraRef` más
-                abajo). Antes se salían literalmente por fuera de la
-                ventana y daba la impresión de estar mal terminado. */}
-            <div
-              ref={cabeceraRef}
-              className="rounded"
-              // paddingBottom: el recorte es para que no se salga por
-              // los LADOS, pero recorta en las cuatro direcciones y le
-              // estaba cortando el pie a la fila de filtros (el campo
-              // "Buscar..." salía partido, visto en captura 2026-09-05).
-              style={{ border: "1px solid transparent", overflow: "hidden", paddingBottom: 6 }}
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-            >
+            <div className="rounded" onMouseDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
               {/* Sin `px-3` aquí (a diferencia de como estaba antes): esos
                   12px a cada lado encogían el ancho de ESTE grid 24px por
                   debajo del de las filas de datos (que no llevan ningún
@@ -765,8 +666,7 @@ export function SeccionInvitados({
                 // -- a petición del usuario, 2026-08-20.
                 className="grid text-sm font-bold uppercase text-center"
                 style={{
-                  gridTemplateColumns: anchosColumnas ?? columnasTabla,
-                  width: anchoTabla ?? undefined,
+                  gridTemplateColumns: columnasTabla,
                   color: C.goldClaro,
                   fontFamily: "'IBM Plex Mono', monospace",
                   letterSpacing: "0.03em",
@@ -854,9 +754,7 @@ export function SeccionInvitados({
                 // arreglo que el marginTop:-16 ya usado para el hueco
                 // equivalente del lado del cuerpo).
                 style={{
-                  gridTemplateColumns: anchosColumnas ?? columnasTabla,
-                  width: anchoTabla ?? undefined,
-                  marginBottom: -12,
+                  gridTemplateColumns: columnasTabla,
                 }}
               >
                 {/* Cada celda de filtro va envuelta en el mismo recuadro
@@ -1119,7 +1017,25 @@ export function SeccionInvitados({
               </div>
             </div>
           </div>
-        }
+    </div>
+  );
+
+  return (
+    <>
+
+      <VentanaFlotante
+        clave="invitados"
+        titulo="Lista de invitados"
+        fijo={fijo}
+        onCerrar={intentarCerrarInvitados}
+        // Lo bastante ancha para que las columnas Y sus filtros quepan
+        // ENTEROS nada más abrirla, sin desplazamiento lateral: es una
+        // ventana que se mira de un vistazo. 940px -> 1260px porque la
+        // tabla pasó de 9 a 11 columnas y su ancho mínimo subió a 1180
+        // (v21.7): la cabecera se salía por fuera del marco y parecía
+        // sin terminar -- señalado por el usuario, 2026-09-04.
+        // 1180 de tabla + 32 de padding del cuerpo + margen.
+        ancho="min(1260px, calc(100vw - 48px))"
         extra={
           <div className="flex items-center gap-2">
             {/* Previstos/Sin confirmar/Confirmados/Edad media: mudados
@@ -1282,14 +1198,16 @@ export function SeccionInvitados({
         )}
 
         <div
-          className="rounded overflow-x-auto"
-          style={{ border: `1px solid ${C.line}`, background: "#fff" }}
-          // La cabecera verde y los filtros viven fuera de este marco
-          // (en la barra de la ventana), así que hay que moverlos a
-          // mano para que sigan cuadrando columna a columna al
-          // desplazarse en horizontal.
-          onScroll={(e) => {
-            if (cabeceraRef.current) cabeceraRef.current.scrollLeft = e.currentTarget.scrollLeft;
+          className="rounded"
+          style={{
+            border: `1px solid ${C.line}`,
+            background: "#fff",
+            // Este contenedor es el que desplaza, en los dos ejes: por
+            // eso la cabecera pegajosa de dentro funciona. En ventana
+            // propia ocupa todo el alto que quede; dentro de la página
+            // se queda en media pantalla, para no comerse el resto.
+            overflow: "auto",
+            ...(fijo ? { flex: 1, minHeight: 0 } : { maxHeight: "50vh" }),
           }}
         >
           {/* 1180 -> 1080: Safari no da siempre el ancho pedido a una
@@ -1297,20 +1215,14 @@ export function SeccionInvitados({
               columna de acciones (captura del usuario, 2026-09-05). Con
               1080 entran las once; si alguna queda justa, el texto se
               recorta con puntos suspensivos, que es la regla de la casa. */}
-          <div ref={tablaRef} style={{ minWidth: 1080 }}>
+          <div style={{ minWidth: 1080 }}>
+            {cabeceraTabla}
             {/* La cabecera de columnas Y la fila de filtros
                 (Invitado/Familia/... y sus buscadores) viven ahora en la
                 barra verde de la ventana (subtitulo, más arriba) -- a
                 petición del usuario, 2026-08-18. Aquí solo quedan las
                 filas de datos. */}
-            {/* El tope de media pantalla tiene sentido dentro de la
-                página (la ventana flotante convive con lo que hay
-                detrás), pero NO en una ventana propia del sistema: allí
-                dejaba un tercio de la ventana vacío debajo de la lista
-                -- señalado por el usuario, 2026-09-05. En ese modo la
-                lista crece todo lo que haga falta y quien desplaza es
-                el cuerpo de la ventana. */}
-            <div style={{ maxHeight: fijo ? "none" : "50vh", overflowY: fijo ? "visible" : "auto" }}>
+            <div>
             {invitadosOrdenados.map((g, i) => {
               // Zebra por FILA, de vuelta a como estaba (blanco/paperDark
               // en el propio fondo de la fila) -- el sombreado por
@@ -1353,10 +1265,9 @@ export function SeccionInvitados({
               return (
                 <div
                   key={g.id}
-                  ref={i === 0 ? filaEjemploRef : undefined}
                   className="grid text-sm fila-una-linea"
                   style={{
-                    gridTemplateColumns: anchosColumnas ?? columnasTabla,
+                    gridTemplateColumns: columnasTabla,
                     background: i % 2 ? C.paperDark : "#fff",
                     fontFamily: "'Inter', sans-serif",
                     color: C.charcoal,

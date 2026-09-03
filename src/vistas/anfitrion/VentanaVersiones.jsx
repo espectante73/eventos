@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "22.2",
+    cambios: [
+      "La lista pasa a ser UNA SOLA PIEZA. Hasta ahora los encabezados y los filtros vivían en la barra verde de la ventana y las filas en la caja de abajo: dos sitios distintos que se hacían coincidir midiendo en píxeles el ancho de cada columna y copiándoselo al otro. Ahora comparten el mismo contenedor y la misma rejilla: cuadran porque son lo mismo, no porque alguien los mida.",
+      "Los encabezados y filtros se quedan pegados arriba al desplazar la lista, con el mismo aspecto verde de siempre.",
+      "Desaparecen 45 líneas de medición (con sus vigilantes, sus temporizadores de seguridad y su validación de \"¿es creíble esta medida?\") y la sincronización manual del desplazamiento lateral. Con ellas desaparece la causa de los cuatro fallos de estos días: cabecera fuera del marco, una sola columna, dos columnas gigantes y filtros recortados.",
+      "La idea fue del usuario: \"en realidad la lista debería ser todo una sola pieza\".",
+    ],
+  },
+  {
     version: "22.1",
     cambios: [
       "Arreglado el botón Acciones, que dejó de responder en la ventana independiente: su menú se dibujaba en la pestaña principal en vez de en la ventana nueva, así que se abría detrás, invisible. Ahora cualquier menú de la app deduce en qué ventana vive a partir del propio botón que lo abre, sin que haya que decírselo — vale para esta ventana y para las que vengan.",
