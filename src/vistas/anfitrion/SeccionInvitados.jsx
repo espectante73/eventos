@@ -438,7 +438,16 @@ export function SeccionInvitados({
   // fracciones `fr` de forma independiente en cada una, así que a partir
   // de la 2ª o 3ª columna se descuadraban solas. Siendo una sola pieza,
   // ese problema no puede existir.
-  const columnasTabla = "1.6fr 1.1fr 0.5fr 0.8fr 0.9fr 1.5fr 1.1fr 1fr 0.8fr 0.8fr auto";
+  // ⚠️ La última columna (los tres iconos de acción) mide 92px FIJOS, no
+  // "auto". Con "auto" el navegador la ajusta a su contenido, y ese
+  // contenido es distinto en cada rejilla: tres botones en las filas y
+  // nada en la cabecera y en los filtros. Así que cada una le daba una
+  // anchura distinta, el sobrante se repartía distinto entre las `fr`, y
+  // las columnas se iban descuadrando cada vez más hacia la derecha --
+  // lo vio el usuario el 2026-09-05 y dio con la causa: "tienen tres
+  // iconos al final que no tienen encabezado, están ocupando espacio del
+  // resto". Con una medida fija, las tres rejillas parten de lo mismo.
+  const columnasTabla = "1.6fr 1.1fr 0.5fr 0.8fr 0.9fr 1.5fr 1.1fr 1fr 0.8fr 0.8fr 92px";
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
