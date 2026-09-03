@@ -85,6 +85,10 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
     ventana.document.body.style.height = "100vh";
 
     const div = ventana.document.createElement("div");
+    // La clase la usa index.css para poder neutralizar esta altura al
+    // IMPRIMIR: un contenedor de altura fija confina la impresión a una
+    // sola página (el bug de "solo imprime hasta la letra G", 2026-08-29).
+    div.className = "raiz-ventana-emergente";
     div.style.height = "100%";
     ventana.document.body.appendChild(div);
     raizRef.current = createRoot(div);

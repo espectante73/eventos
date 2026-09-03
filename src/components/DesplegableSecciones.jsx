@@ -101,6 +101,7 @@ export function DesplegableSecciones({
   abrirLogistica,
   abrirCronograma,
   abrirMusicaEvento,
+  abrirInvitados,
   posicion = { bottom: 8, right: 8 },
 }) {
   const opciones = ORDEN_VENTANAS.map((clave) => {
@@ -124,6 +125,19 @@ export function DesplegableSecciones({
         etiqueta: ETIQUETAS_VENTANAS[clave],
         icono: ICONOS_VENTANAS[clave],
         onClick: abrirLogistica,
+      };
+    }
+    // La Lista de invitados abre en su propia ventana del sistema
+    // (o dentro de la página en un aparato táctil): mismo caso que
+    // Novedades, Logística y Música -- no pasa por el `toggle` genérico
+    // y no lleva el "✓ " (no hay estado fiable de "sigue abierta": se
+    // puede cerrar con la X del sistema sin que este menú se entere).
+    if (clave === "invitados") {
+      return {
+        id: clave,
+        etiqueta: ETIQUETAS_VENTANAS[clave],
+        icono: ICONOS_VENTANAS[clave],
+        onClick: abrirInvitados,
       };
     }
     if (clave === "musicaEvento") {

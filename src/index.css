@@ -162,6 +162,21 @@
      tres clases no hacen nada en pantalla (sin reglas fuera de
      @media print) -- solo neutralizan esas tres restricciones a la
      hora de imprimir. */
+  /* Mismo problema que .modal-flotante-*, una capa más afuera: cuando
+     una sección vive en una ventana de verdad del sistema operativo
+     (usePopupWindow.js), entre el papel y el contenido hay un <body>
+     con altura fija, el div raíz de esa ventana y el cuerpo con scroll
+     de la propia sección. Cualquiera de los tres confina la impresión a
+     una sola página, que es exactamente el bug que ya costó dos rondas
+     con la lista de invitados. Aquí se neutralizan los tres. */
+  body, .raiz-ventana-emergente, .ventana-fija, .ventana-cuerpo {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    flex: none !important;
+    position: static !important;
+  }
+
   .modal-flotante-fondo { position: static !important; }
   .modal-flotante-caja { max-height: none !important; }
   .modal-flotante-cuerpo { overflow: visible !important; flex: none !important; }

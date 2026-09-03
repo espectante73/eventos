@@ -42,6 +42,16 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "22",
+    cambios: [
+      "La Lista de invitados sale del navegador: se abre en su propia ventana del sistema, como Novedades, Logística y Música. Se puede llevar a otra pantalla y hacerla tan grande como haga falta — es la ventana que más se mira y la que más columnas tiene.",
+      "Dentro de esa ventana no hay marco flotante ni segunda X: el marco, el tamaño y el cierre los pone el sistema operativo. Todo lo demás (título, cifras, cabecera y filtros) se ve exactamente igual.",
+      "Los dos avisos de mesa (invitado sin confirmar, mesa completa) dejan de ser diálogos del navegador y pasan a ser un aviso dentro de la propia ventana: un diálogo nativo desde una ventana emergente sale en la pestaña equivocada y encima bloquea.",
+      "Imprimir sigue funcionando desde ahí: entre el papel y la lista había tres contenedores de altura fija que confinaban la impresión a una sola página — el mismo fallo que costó dos rondas en agosto. Quedan neutralizados los tres.",
+      "En el móvil no cambia nada: allí sigue abriéndose dentro de la página, porque una ventana aparte es otra pestaña y Safari las bloquea de fábrica.",
+    ],
+  },
+  {
     version: "21.12",
     cambios: [
       "La Lista de invitados abre ya lo bastante ancha para ver las once columnas con sus filtros de un vistazo, sin desplazar nada. Se había quedado estrecha al pasar de nueve a once columnas.",

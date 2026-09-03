@@ -143,7 +143,16 @@ export const ETIQUETAS_VENTANAS = {
 // `subtitulo`: contenido opcional bajo el título, dentro de la propia
 // cabecera (p.ej. VentanaProgreso.jsx: una fila de etiquetas + otra de
 // números resaltados) -- a petición del usuario, 2026-08-18.
-export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo }) {
+// `fijo`: la ventana ocupa TODO su contenedor y deja de ser flotante --
+// sin arrastrar, sin redimensionar, sin z-index y sin su X. Es el modo
+// que se usa cuando ya vive dentro de una ventana de verdad del sistema
+// operativo (usePopupWindow.js): ahí el marco, el tamaño y el cierre los
+// pone el sistema, y una ventana flotante DENTRO de otra ventana sería
+// un marco dentro de un marco, con dos botones de cerrar (el lío que ya
+// tuvimos en Música del evento). Todo lo demás -- título, `extra`,
+// `subtitulo`, `acciones` -- se pinta igual, así que la sección no se
+// entera de en cuál de los dos modos está.
+export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo, fijo }) {
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
   // "left" fijo (no en cascada como antes): todas las ventanas nacen
   // alineadas al mismo borde izquierdo, a petición del usuario -- el
@@ -220,26 +229,26 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
   return (
     <div
       ref={ventanaRef}
-      className="fixed rounded-lg flex flex-col"
-      onMouseDownCapture={traerAlFrente}
-      onTouchStartCapture={traerAlFrente}
+      className={fijo ? "ventana-fija flex flex-col" : "fixed rounded-lg flex flex-col"}
+      onMouseDownCapture={fijo ? undefined : traerAlFrente}
+      onTouchStartCapture={fijo ? undefined : traerAlFrente}
       style={{
         background: C.paper,
-        border: `1px solid ${C.line}`,
+        border: fijo ? "none" : `1px solid ${C.line}`,
         // calc(100vw - 48px) (no 2rem/32px): con "left" ahora fijo en
         // 16px, esto deja un margen visible mayor a la derecha (32px) --
         // ventana claramente más estrecha que la pantalla, no pegada de
         // borde a borde, a petición del usuario.
-        width: tam ? tam.width : ancho || "min(620px, calc(100vw - 48px))",
-        height: tam ? tam.height : undefined,
+        width: fijo ? "100%" : tam ? tam.width : ancho || "min(620px, calc(100vw - 48px))",
+        height: fijo ? "100%" : tam ? tam.height : undefined,
         // 88vh (no 80vh): más aprovechado en una pantalla vertical de
         // móvil -- mismo valor que ya usa ModalFlotante, antes iban
         // distintos sin motivo real.
-        maxHeight: tam ? undefined : "88vh",
-        boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
-        top: pos.top,
-        left: pos.left,
-        zIndex,
+        maxHeight: fijo ? "100%" : tam ? undefined : "88vh",
+        boxShadow: fijo ? "none" : "0 8px 30px rgba(0,0,0,0.35)",
+        top: fijo ? undefined : pos.top,
+        left: fijo ? undefined : pos.left,
+        zIndex: fijo ? undefined : zIndex,
         // Sin esto, un dedo arrastrando sobre el cuerpo de la ventana (no
         // la cabecera) podía "encadenar" el gesto de scroll hacia lo que
         // hay detrás en cuanto el contenido interno no tenía más recorrido
@@ -249,10 +258,10 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       }}
     >
       <div
-        className="panel-flotante-cristal rounded-t-lg cursor-move select-none"
+        className={fijo ? "panel-flotante-cristal select-none" : "panel-flotante-cristal rounded-t-lg cursor-move select-none"}
         style={{ touchAction: "none" }}
-        onMouseDown={iniciarArrastre}
-        onTouchStart={iniciarArrastre}
+        onMouseDown={fijo ? undefined : iniciarArrastre}
+        onTouchStart={fijo ? undefined : iniciarArrastre}
       >
         <div className="flex items-start justify-between px-4 py-3">
           <h3
@@ -267,9 +276,14 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
             onTouchStart={(e) => e.stopPropagation()}
           >
             {extra}
-            <button onClick={onCerrar} title="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
-              <X size={18} />
-            </button>
+            {/* En modo fijo cierra la ventana del sistema operativo, no
+                este panel: poner aquí una X propia dejaría dos botones
+                de cerrar, uno al lado del otro. */}
+            {!fijo && (
+              <button onClick={onCerrar} title="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
+                <X size={18} />
+              </button>
+            )}
           </div>
         </div>
         {/* `subtitulo` en su propia fila, a ANCHO COMPLETO de la cabecera
@@ -282,7 +296,10 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
             botones de la derecha -- a petición del usuario, 2026-08-18. */}
         {subtitulo && <div className="px-4 pb-3 -mt-1">{subtitulo}</div>}
       </div>
-      <div className="p-4" style={{ flex: 1, overflowY: "auto" }}>
+      {/* La clase no pinta nada en pantalla: sirve para que index.css
+          pueda quitarle el scroll y el flex al imprimir, igual que hace
+          con .modal-flotante-cuerpo. */}
+      <div className="ventana-cuerpo p-4" style={{ flex: 1, overflowY: "auto" }}>
         {children}
       </div>
       {acciones && (
@@ -293,6 +310,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
           {acciones}
         </div>
       )}
+      {!fijo && (
       <div
         onMouseDown={iniciarRedimension}
         onTouchStart={iniciarRedimension}
@@ -304,6 +322,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
           <path d="M14 2 L2 14 M14 7 L7 14 M14 12 L12 14" stroke={C.line} strokeWidth="1.5" />
         </svg>
       </div>
+      )}
     </div>
   );
 }

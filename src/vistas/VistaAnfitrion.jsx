@@ -115,6 +115,20 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   // pantalla completa, que no aporta nada frente a mostrarla en la
   // misma página. El mando a distancia vive en el móvil: no puede
   // depender de un permiso del navegador.
+  // La Lista de invitados también sale del navegador: es la ventana más
+  // importante de la app y se quiere lo más grande posible, con las
+  // columnas y sus filtros de un vistazo (petición del usuario,
+  // 2026-09-04). Misma decisión que Música: en un aparato táctil no se
+  // intenta -- allí una "ventana" es otra pestaña y encima Safari las
+  // bloquea de fábrica -- y ahí se queda como ventana flotante dentro
+  // de la página, que es como ha funcionado hasta hoy.
+  const {
+    abrir: abrirInvitadosPopup,
+    actualizar: actualizarInvitados,
+    abierta: invitadosEnVentana,
+    ventana: ventanaInvitados,
+  } = usePopupWindow({ nombreVentana: "lista-invitados", ancho: 1280, alto: 900 });
+
   const [musicaEnPagina, setMusicaEnPagina] = useState(false);
   const abrirMusicaEvento = useCallback(() => {
     // ⚠️ La pregunta es qué APARATO es, no cuánto mide la ventana. El
@@ -144,6 +158,31 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         </ErrorBoundary>
       );
   }, [musicaEventoAbierta, actualizarMusicaEvento, data, ventanaMusicaEvento]);
+
+  // Se repinta con cada refresco de datos, igual que Música: la ventana
+  // es un root de React aparte y no se entera sola de que `data` cambió.
+  // Con su Error Boundary propio: el de la pestaña principal no cubre
+  // ese root, y sin él un fallo ahí dentro sería una ventana en blanco.
+  useEffect(() => {
+    if (!invitadosEnVentana) return;
+    actualizarInvitados(
+      <ErrorBoundary ventana={ventanaInvitados}>
+        <SeccionInvitados
+          data={data}
+          asignarColaborador={asignarColaborador}
+          ocupacionMesa={ocupacionMesa}
+          panelFlotante={panelFlotante}
+          setPanelFlotante={setPanelFlotante}
+          colaboradoresPendientes={colaboradoresPendientes}
+          filtros={filtros}
+          setFiltros={setFiltros}
+          onCerrar={() => ventanaInvitados?.close()}
+          ventana={ventanaInvitados}
+          fijo
+        />
+      </ErrorBoundary>
+    );
+  });
 
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
   // por colaborador — así se sabe exactamente cuáles son los nuevos. Los
@@ -191,6 +230,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   const ocupacionMesa = (numero) =>
     invitados.filter((g) => g.mesa === numero && g.confirmado).length;
 
+  const esAparatoTactil = () => window.matchMedia?.("(pointer: coarse) and (hover: none)").matches;
+
   const [abierto, setAbierto] = useState({
     copiaSeguridad: false,
     progreso: false,
@@ -204,6 +245,10 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
     avisos: false,
   });
   const toggle = (clave) => setAbierto((a) => ({ ...a, [clave]: !a[clave] }));
+
+  const abrirInvitados = useCallback(() => {
+    if (esAparatoTactil() || !abrirInvitadosPopup()) toggle("invitados");
+  }, [abrirInvitadosPopup]);
   // null | "tabla" | "canciones" | "alergias" | "avisosMesas" — controla la
   // ventana flotante; independiente de qué secciones estén plegadas.
   const [panelFlotante, setPanelFlotante] = useState(null);
@@ -245,6 +290,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         abrirLogistica={abrirLogistica}
         abrirCronograma={abrirCronograma}
         abrirMusicaEvento={abrirMusicaEvento}
+        abrirInvitados={abrirInvitados}
       />
 
       {/* Los 3 recuadros de resumen (Lista global/Tentativa/Confirmados)
@@ -286,7 +332,9 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         <VentanaPlano data={data} ocupacionMesa={ocupacionMesa} onCerrar={() => toggle("plano")} />
       )}
 
-      {/* Lista de invitados */}
+      {/* Lista de invitados, en la página (móvil, o si el navegador
+          bloqueara la ventana). En el ordenador vive en su propia
+          ventana del sistema, ver `contenidoInvitados` más arriba. */}
       {abierto.invitados && (
         <SeccionInvitados
           data={data}

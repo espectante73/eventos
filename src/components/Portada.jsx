@@ -86,6 +86,7 @@ export function Portada({
   // DIRECTO durante el evento, no un ajuste previo, así que tiene que
   // encontrarse rápido esa noche (decidido con el usuario, 2026-08-30).
   abrirMusicaEvento,
+  abrirInvitados,
   // `botonExtra`: para cuando esta Portada la usa alguien que NO es el
   // anfitrión editando (p.ej. VistaColaborador.jsx) -- en vez del
   // desplegable "Abrir sección…" (editable+toggle), se puede pasar aquí
@@ -181,6 +182,7 @@ export function Portada({
             abrirLogistica={abrirLogistica}
             abrirCronograma={abrirCronograma}
             abrirMusicaEvento={abrirMusicaEvento}
+            abrirInvitados={abrirInvitados}
             posicion={{ bottom: "9%", right: 16 }}
           />
         )}

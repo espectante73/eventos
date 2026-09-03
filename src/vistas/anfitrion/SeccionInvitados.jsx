@@ -54,6 +54,13 @@ export function SeccionInvitados({
   filtros,
   setFiltros,
   onCerrar,
+  // Presentes solo cuando esta sección vive en una ventana de verdad
+  // del sistema operativo (usePopupWindow.js): `ventana` es el objeto
+  // window de ESA ventana y `fijo` quita el marco flotante, que ahí lo
+  // pone el sistema. Ver la regla de CLAUDE.md sobre no usar nunca
+  // `window`/`document`/`alert` a secas dentro de una emergente.
+  ventana,
+  fijo,
 }) {
   const { evento, persistEvento, colaboradores, invitados, mesas, persistInvitados, avisarColaborador } = data;
 
@@ -74,6 +81,10 @@ export function SeccionInvitados({
   const filaEjemploRef = useRef(null);
   const [anchoTabla, setAnchoTabla] = useState(null);
   const [mostrarRevision, setMostrarRevision] = useState(false);
+  // Avisos de la propia interfaz, NUNCA `window.alert`: dentro de una
+  // ventana emergente ese diálogo sale en la pestaña principal (o no
+  // sale) y además bloquea. Ya nos costó una ronda de bugs en Novedades.
+  const [aviso, setAviso] = useState("");
   // La cabecera de columnas y los filtros viven en la barra verde de la
   // ventana, fuera del marco con scroll de la tabla: esta ref los
   // desplaza a la vez que ella.
@@ -165,6 +176,7 @@ export function SeccionInvitados({
   };
 
   const asignarMesa = (id, mesaValue) => {
+    setAviso("");
     const numero = mesaValue ? Number(mesaValue) : null;
     const invitadoActual = invitados.find((g) => g.id === id);
     // Solo se puede asignar mesa a un invitado ya CONFIRMADO -- el
@@ -178,14 +190,14 @@ export function SeccionInvitados({
     // mesa (numero = null) se sigue permitiendo siempre, confirmado o
     // no -- a petición del usuario, 2026-08-20.
     if (numero && invitadoActual && !invitadoActual.confirmado) {
-      window.alert("Este invitado todavía no está confirmado -- confírmalo antes de asignarle mesa.");
+      setAviso("Este invitado todavía no está confirmado: confírmalo antes de asignarle mesa.");
       return;
     }
     if (numero) {
       const mesa = mesas.find((m) => m.numero === numero);
       const yaEnEstaMesa = invitadoActual && invitadoActual.mesa === numero;
       if (mesa && !yaEnEstaMesa && ocupacionMesa(numero) >= mesa.capacidad) {
-        window.alert(`La mesa ${numero} ya está completa (${mesa.capacidad}/${mesa.capacidad}).`);
+        setAviso(`La mesa ${numero} ya está completa (${mesa.capacidad}/${mesa.capacidad}).`);
         return;
       }
     }
@@ -294,7 +306,7 @@ export function SeccionInvitados({
   const imprimirPanelActivo = () => {
     setTimeout(() => {
       try {
-        window.print();
+        (ventana || window).print();
       } catch (_) {
         // Bloqueado por el navegador: el usuario puede usar Cmd/Ctrl+P a mano.
       }
@@ -617,6 +629,7 @@ export function SeccionInvitados({
       <VentanaFlotante
         clave="invitados"
         titulo="Lista de invitados"
+        fijo={fijo}
         onCerrar={intentarCerrarInvitados}
         // Lo bastante ancha para que las columnas Y sus filtros quepan
         // ENTEROS nada más abrirla, sin desplazamiento lateral: es una
@@ -1125,6 +1138,19 @@ export function SeccionInvitados({
         <div style={{ marginTop: -16 }}>
         {/* Se abre desde "Acciones" → Revisión; no está siempre a la
             vista. Tocar un nombre lo busca en la lista de abajo. */}
+        {aviso && (
+          <p
+            className="rounded px-3 py-2 mb-3 text-sm flex items-start gap-2"
+            style={{ background: C.avisoFondo, color: C.peligro }}
+          >
+            <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+            <span className="flex-1">{aviso}</span>
+            <button onClick={() => setAviso("")} style={{ textDecoration: "underline" }}>
+              Cerrar
+            </button>
+          </p>
+        )}
+
         {mostrarRevision && (
           <InformeInvitados
             hallazgos={hallazgos}
