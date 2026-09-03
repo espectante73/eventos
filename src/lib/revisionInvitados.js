@@ -13,7 +13,25 @@
 // Cada hallazgo devuelve las personas afectadas para poder saltar a
 // ellas en la propia lista, que sigue siendo donde se corrige.
 import { ROL_FAMILIAR } from "./rolFamiliar";
+import { calcularEdad } from "./invitados";
 import { conyugesSueltos, matrimoniosDeInvitados } from "./matrimonios";
+
+// Quién necesita a un adulto suyo al lado en la mesa. Se usan 18 y no
+// los tramos de precio del evento (`edadNinoDesde`/`edadNinoHasta`) a
+// propósito: esos tramos dicen quién PAGA y cuánto, que es otra cosa --
+// un chaval de 12 paga como adulto y sigue sin poder quedarse solo en
+// una mesa de desconocidos.
+const EDAD_MENOR = 18;
+
+// Un adulto es quien tiene 18 o más. A quien no ha dado su año de
+// nacimiento todavía se le cuenta como adulto SI lleva un papel de
+// adulto (O, A, P o S): en plena recogida de datos falta media lista, y
+// un informe que se dispara con cada hueco acaba ignorándose.
+function esAdulto(g, evento) {
+  const edad = calcularEdad(g.anioNacimiento, evento);
+  if (edad !== null) return edad >= EDAD_MENOR;
+  return [ROL_FAMILIAR.ESPOSO, ROL_FAMILIAR.ESPOSA, ROL_FAMILIAR.PADRE, ROL_FAMILIAR.SUELTO].includes(g.rolFamiliar);
+}
 
 function claveFamilia(g) {
   return String(g.grupoFamiliar || g.apellido || "").trim().toLowerCase();
@@ -124,6 +142,33 @@ export function revisarInvitados(invitados = [], evento = {}) {
         "Sin grupo familiar ni apellido",
         "Se quedan fuera del reparto de mesas y de las invitaciones por familia.",
         sinGrupo
+      )
+    );
+
+  // Menores sentados sin ningún adulto DE SU FAMILIA en su mesa. Es la
+  // comprobación que más se va a notar cuando los colaboradores
+  // empiecen a rellenar las edades de verdad, y solo se puede hacer
+  // cruzando tres cosas a la vez (edad, mesa y familia) -- ninguna
+  // columna de la lista lo enseña. Idea del usuario, 2026-09-04.
+  const menoresSolos = invitados.filter((g) => {
+    if (!g.mesa) return false; // sin mesa ya lo dice el filtro "Sin mesa"
+    const edad = calcularEdad(g.anioNacimiento, evento);
+    if (edad === null || edad >= EDAD_MENOR) return false;
+    return !invitados.some(
+      (otro) =>
+        otro.id !== g.id &&
+        otro.mesa === g.mesa &&
+        claveFamilia(otro) === claveFamilia(g) &&
+        esAdulto(otro, evento)
+    );
+  });
+  if (menoresSolos.length)
+    hallazgos.push(
+      hallazgo(
+        "menorSinAdultoEnMesa",
+        "Menores sin un adulto suyo en la mesa",
+        "Tienen menos de 18 años y en su mesa no se sienta ningún adulto de su familia.",
+        menoresSolos
       )
     );
 

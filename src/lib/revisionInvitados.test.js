@@ -87,3 +87,48 @@ describe("revisarInvitados", () => {
     expect(h.personas).toHaveLength(1);
   });
 });
+
+// La app ya calcula la edad para los precios; ese mismo dato sirve para
+// ver si un menor se ha quedado sentado sin nadie suyo al lado.
+describe("menores en la mesa", () => {
+  const evento = { fecha: "2026-11-13" };
+
+  it("avisa del menor cuya familia no se sienta con él", () => {
+    const lista = [
+      persona({ nombre: "Lucía", anioNacimiento: "2016", rolFamiliar: ROL_FAMILIAR.HIJO, mesa: 5 }),
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO, mesa: 3 }),
+      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA, mesa: 3 }),
+    ];
+    const h = buscar(revisarInvitados(lista, evento), "menorSinAdultoEnMesa");
+    expect(h.personas.map((g) => g.nombre)).toEqual(["Lucía"]);
+  });
+
+  it("no avisa si un adulto de su familia está en su mesa", () => {
+    const lista = [
+      persona({ nombre: "Lucía", anioNacimiento: "2016", rolFamiliar: ROL_FAMILIAR.HIJO, mesa: 3 }),
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO, mesa: 3 }),
+      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA, mesa: 3 }),
+    ];
+    expect(claves(revisarInvitados(lista, evento))).not.toContain("menorSinAdultoEnMesa");
+  });
+
+  // Un adulto de OTRA familia no vale: el aviso es "no tiene a los
+  // suyos al lado", no "está rodeado de adultos".
+  it("un adulto de otra familia no cuenta", () => {
+    const lista = [
+      persona({ nombre: "Lucía", anioNacimiento: "2016", rolFamiliar: ROL_FAMILIAR.HIJO, mesa: 3 }),
+      persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO, mesa: 3 }),
+      persona({ nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA, mesa: 3 }),
+      // Iván se sienta con los Fariña, que son adultos pero no son los
+      // suyos: sus padres no están en esa mesa.
+      persona({ nombre: "Iván", apellido: "Pérez", grupoFamiliar: "Pérez 01", anioNacimiento: "2018", rolFamiliar: ROL_FAMILIAR.HIJO, mesa: 3 }),
+    ];
+    const h = buscar(revisarInvitados(lista, evento), "menorSinAdultoEnMesa");
+    expect(h.personas.map((g) => g.nombre)).toEqual(["Iván"]);
+  });
+
+  it("no avisa de un menor que todavía no tiene mesa", () => {
+    const lista = [persona({ nombre: "Lucía", anioNacimiento: "2016", rolFamiliar: ROL_FAMILIAR.HIJO, mesa: null })];
+    expect(claves(revisarInvitados(lista, evento))).not.toContain("menorSinAdultoEnMesa");
+  });
+});

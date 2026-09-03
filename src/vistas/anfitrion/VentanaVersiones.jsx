@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.11",
+    cambios: [
+      "La Revisión avisa de los menores sentados sin ningún adulto DE SU FAMILIA en su mesa. Es la comprobación que más se notará cuando los colaboradores empiecen a rellenar las edades de verdad, y solo se puede hacer cruzando tres cosas a la vez: la edad, la mesa y la familia.",
+      "Un adulto de otra familia en esa mesa no vale: el aviso es \"no tiene a los suyos al lado\", no \"está rodeado de adultos\".",
+      "Usa 18 años, no los tramos de precio del evento: esos dicen quién paga y cuánto, que es otra cosa — un chaval de 12 paga como adulto y sigue sin poder quedarse solo en una mesa de desconocidos.",
+      "A quien todavía no ha dado su año de nacimiento se le cuenta como adulto si lleva papel de adulto (O, A, P o S), para que el aviso no se dispare con cada hueco mientras se recogen los datos.",
+    ],
+  },
+  {
     version: "21.10",
     cambios: [
       "La Revisión deja de repetir lo que la lista ya enseña columna a columna: fuera los datos incompletos, quién no ha pagado, quién no tiene mesa y quién está sin revisar. Todo eso son columnas con su filtro y su cifra arriba.",
