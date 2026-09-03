@@ -492,13 +492,26 @@ export function SeccionInvitados({
       const fila = filaEjemploRef.current;
       if (!fila) return;
       const anchos = Array.from(fila.children).map((celda) => celda.getBoundingClientRect().width);
-      // ⚠️ Una medida solo se aplica si es CREÍBLE: tantas columnas como
-      // las que hay y ninguna aplastada. Si no lo es (la fila todavía no
-      // es una rejilla porque los estilos no han llegado), se descarta y
-      // la tabla se queda con su reparto en fracciones, que se ve bien.
-      // Sin esta comprobación, una sola medida mala al abrir la ventana
-      // dejaba la primera columna ocupándolo todo y las demás invisibles.
-      const creible = anchos.length === columnasEsperadas && anchos.every((a) => a > 4);
+      // ⚠️ Una medida solo se aplica si es CREÍBLE, y hacen falta las
+      // TRES comprobaciones. Motivo, aprendido a base de dos rondas de
+      // fallo real al llevar la lista a una ventana del sistema: allí
+      // las hojas de estilo se copian y tardan un instante, así que se
+      // llegaba a medir una fila que todavía NO era una rejilla. Y como
+      // cada celda lleva `display: flex` en su estilo en línea, sin
+      // rejilla cada una se comporta como un bloque y ocupa el ancho
+      // ENTERO de la ventana: once columnas de 1240px cada una, media
+      // hora de scroll para ver la lista. Las medidas eran "creíbles"
+      // por número y por no estar aplastadas -- lo que las delata es
+      // que sumadas no caben en la fila.
+      const anchoFila = fila.getBoundingClientRect().width;
+      const suma = anchos.reduce((total, a) => total + a, 0);
+      const esRejilla = (ventana || window).getComputedStyle(fila).display === "grid";
+      const creible =
+        esRejilla &&
+        anchos.length === columnasEsperadas &&
+        anchos.every((a) => a > 4) &&
+        anchoFila > 0 &&
+        suma <= anchoFila * 1.05;
       setAnchosColumnas(creible ? anchos.map((a) => `${a}px`).join(" ") : null);
     };
     medir();
@@ -530,12 +543,14 @@ export function SeccionInvitados({
     doc.fonts?.ready?.then(medir).catch(() => {});
     // Red de seguridad para el caso raro en que nada de lo anterior se
     // dispare (estilos ya cacheados, sin fuentes que esperar...).
-    const tardio = setTimeout(medir, 400);
+    // Dos, a distinta distancia: la hoja de estilos de una ventana
+    // recién abierta puede tardar más de lo que parece.
+    const tardios = [setTimeout(medir, 400), setTimeout(medir, 1500)];
 
     return () => {
       ro.disconnect();
       win.removeEventListener("load", medir);
-      clearTimeout(tardio);
+      tardios.forEach(clearTimeout);
     };
   }, [hayFilas, ventana]);
 

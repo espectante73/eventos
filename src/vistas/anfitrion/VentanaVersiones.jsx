@@ -44,6 +44,7 @@ const HISTORIAL_VERSIONES = [
   {
     version: "22.1",
     cambios: [
+      "Segunda vuelta del mismo fallo: se llegaban a ver dos columnas gigantes en vez de once. Cada celda lleva \"display: flex\" en su propio estilo, así que mientras no hay rejilla cada una ocupa el ancho ENTERO de la ventana — y esas medidas parecían buenas (once, ninguna aplastada). Ahora una medida solo vale si la fila ya es una rejilla de verdad y si las once columnas, sumadas, caben dentro de ella.",
       "Arreglada la lista en su ventana aparte, que se veía con una sola columna ocupándolo todo. La tabla mide el ancho de cada columna al abrirse, y en la ventana nueva esa medida se tomaba ANTES de que llegaran los estilos: medía una fila que todavía no era una rejilla y se quedaba con esa medida rota para siempre (el ancho total no cambiaba después, así que nada la corregía).",
       "Ahora se vuelve a medir cuando la ventana termina de cargar, cuando están listas las fuentes y en cuanto la fila cambia de tamaño. Y sobre todo: una medida solo se aplica si es creíble — tantas columnas como hay y ninguna aplastada. Si no lo es, se descarta y la tabla se queda con su reparto normal, que se ve bien.",
     ],
