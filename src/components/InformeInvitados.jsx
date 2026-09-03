@@ -9,8 +9,10 @@ import { useState } from "react";
 import { ChevronDown, AlertTriangle, CircleCheck, Clock } from "lucide-react";
 import { C } from "../theme";
 
-export function InformeInvitados({ hallazgos, onBuscar }) {
-  const [abierto, setAbierto] = useState(false);
+export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
+  // Nace ABIERTO: se llega hasta aquí desde "Acciones" → Revisión, así
+  // que quien lo abre quiere verlo ya, no volver a desplegarlo.
+  const [abierto, setAbierto] = useState(true);
   const errores = hallazgos.filter((h) => h.tipo === "error");
   const pendientes = hallazgos.filter((h) => h.tipo === "pendiente");
   const todoBien = hallazgos.length === 0;
@@ -47,6 +49,15 @@ export function InformeInvitados({ hallazgos, onBuscar }) {
           style={{ transform: abierto ? "rotate(180deg)" : "none", transition: "transform .15s ease", flexShrink: 0 }}
         />
       </button>
+
+      {abierto && todoBien && (
+        <p className="px-3 pb-3 text-sm" style={{ color: C.charcoal, opacity: 0.7 }}>
+          No hay incoherencias ni nada pendiente en la lista.{" "}
+          <button onClick={onCerrar} style={{ textDecoration: "underline" }}>
+            Cerrar
+          </button>
+        </p>
+      )}
 
       {abierto && !todoBien && (
         <div className="px-3 pb-3 space-y-2">
@@ -108,6 +119,13 @@ export function InformeInvitados({ hallazgos, onBuscar }) {
               </div>
             </div>
           ))}
+          <button
+            onClick={onCerrar}
+            className="text-xs rounded px-2 py-1"
+            style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+          >
+            Cerrar la revisión
+          </button>
         </div>
       )}
     </div>

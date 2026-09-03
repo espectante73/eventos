@@ -28,6 +28,7 @@ import {
   Tag,
   Star,
   ShieldOff,
+  ClipboardCheck,
 } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
@@ -72,6 +73,7 @@ export function SeccionInvitados({
   const tablaRef = useRef(null);
   const filaEjemploRef = useRef(null);
   const [anchoTabla, setAnchoTabla] = useState(null);
+  const [mostrarRevision, setMostrarRevision] = useState(false);
   const [anchosColumnas, setAnchosColumnas] = useState(null);
 
   const cambiarOrden = (columna) => {
@@ -508,6 +510,7 @@ export function SeccionInvitados({
   // El "numerito" que pidió el usuario, pero dentro del propio filtro:
   // así se ven los cinco papeles a la vez, en vez de tener que filtrar
   // uno por uno para saber cuántos hay de cada.
+  const totalMatrimonios = contarMatrimonios(invitados);
   const porRol = invitados.reduce((cuenta, g) => {
     const clave = g.rolFamiliar || "sin";
     cuenta[clave] = (cuenta[clave] || 0) + 1;
@@ -534,7 +537,7 @@ export function SeccionInvitados({
     { label: "Edad media", value: edadMedia === null ? "—" : `${edadMedia} años` },
     // Matrimonios: un esposO + una esposA dentro del mismo grupo
     // familiar (2026-09-03). Ver lib/matrimonios.js.
-    { label: "Matrimonios", value: contarMatrimonios(invitados) },
+    { label: "Matrimonios", value: totalMatrimonios },
     // Solo aparece si hay algo que corregir: en cuanto está todo
     // emparejado, deja de ocupar sitio.
     ...(idsSueltos.size ? [{ label: "Sin pareja", value: idsSueltos.size, alerta: true }] : []),
@@ -557,7 +560,19 @@ export function SeccionInvitados({
   // mismo convenio ya usado en DesplegableSecciones.jsx para señalar
   // "esto ya está abierto". Alergias conserva su fondo propio (la única
   // que avisa de algo), igual que llevaba suelta.
+  const erroresRevision = hallazgos.filter((h) => h.tipo === "error").length;
   const opcionesMenuInvitados = [
+    {
+      id: "revision",
+      // Escondido aquí a petición del usuario (2026-09-04): arriba de la
+      // lista ocupaba sitio siempre. El número va en la etiqueta para
+      // que un fallo se vea sin tener que abrir el menú -- si no, un
+      // informe escondido es un informe que nadie mira.
+      etiqueta: (mostrarRevision ? "✓ " : "") + "Revisión" + (erroresRevision ? ` (${erroresRevision})` : ""),
+      icono: ClipboardCheck,
+      ...(erroresRevision ? { fondo: C.peligro, color: "#fff" } : {}),
+      onClick: () => setMostrarRevision((v) => !v),
+    },
     ...(invitados.length > 0
       ? [
           { id: "imprimir", etiqueta: "Imprimir", icono: Printer, onClick: () => setPanelFlotante("tabla") },
@@ -838,10 +853,11 @@ export function SeccionInvitados({
                     }}
                     title="Filtrar por papel en la familia"
                   >
-                    <option value="">Todos ({invitados.length})</option>
-                    <option value="matrimonio">
-                      Mat. ({(porRol[ROL_FAMILIAR.ESPOSO] || 0) + (porRol[ROL_FAMILIAR.ESPOSA] || 0)})
-                    </option>
+                    <option value="">Todos</option>
+                    {/* PAREJAS, no personas: 48 matrimonios, aunque al
+                        elegirlo se vean sus 96 filas. Poner 96 aquí era
+                        contar cónyuges y llamarlos matrimonios. */}
+                    <option value="matrimonio">Mat. ({totalMatrimonios})</option>
                     <option value={ROL_FAMILIAR.ESPOSO}>{conCuenta("O", ROL_FAMILIAR.ESPOSO)}</option>
                     <option value={ROL_FAMILIAR.ESPOSA}>{conCuenta("A", ROL_FAMILIAR.ESPOSA)}</option>
                     <option value={ROL_FAMILIAR.HIJO}>{conCuenta("H", ROL_FAMILIAR.HIJO)}</option>
@@ -1090,12 +1106,15 @@ export function SeccionInvitados({
             dentro. Solo se toca el margen SUPERIOR: los laterales y el
             inferior se quedan con el padding normal del cuerpo. */}
         <div style={{ marginTop: -16 }}>
-        {/* Lo primero al abrir la ventana: si algo no cuadra, que se vea
-            antes que la propia lista. Tocar un nombre lo busca abajo. */}
-        <InformeInvitados
-          hallazgos={hallazgos}
-          onBuscar={(g) => setFiltros({ ...filtros, texto: `${g.nombre} ${g.apellido}` })}
-        />
+        {/* Se abre desde "Acciones" → Revisión; no está siempre a la
+            vista. Tocar un nombre lo busca en la lista de abajo. */}
+        {mostrarRevision && (
+          <InformeInvitados
+            hallazgos={hallazgos}
+            onBuscar={(g) => setFiltros({ ...filtros, texto: `${g.nombre} ${g.apellido}` })}
+            onCerrar={() => setMostrarRevision(false)}
+          />
+        )}
         {mostrarAnadir && (
         <div className="flex flex-wrap gap-2 mb-3">
           <TextInput

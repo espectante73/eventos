@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.9",
+    cambios: [
+      "La Revisión deja de ocupar sitio arriba de la lista: se abre desde Acciones → Revisión. Si hay algo mal, la propia entrada del menú lo dice con su número en rojo — un informe escondido que no avisa es un informe que nadie mira.",
+      "El filtro de Rol ya no repite el total en \"Todos\" (ese número ya está arriba, en Previstos).",
+      "Corregido \"Mat.\": ponía 96, que son los cónyuges (48 + 48), no los matrimonios. Ahora pone 48, que es lo que hay.",
+    ],
+  },
+  {
     version: "21.8",
     cambios: [
       "Informe de revisión en la Lista de invitados, plegado arriba del todo: cuando todo cuadra es una línea que lo dice, y cuando no, señala qué falla. Solo lee — no toca ni cambia nada.",
