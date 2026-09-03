@@ -440,7 +440,7 @@ export function SeccionInvitados({
   // Familia 1fr -> 1.3fr, Confirmado 0.9fr -> 1.2fr, Colaborador
   // 1.3fr -> 1.8fr (mismo ancho que Invitado): mismo motivo, a
   // petición del usuario, 2026-08-20.
-  const columnasTabla = "1.7fr 1.2fr 0.6fr 0.9fr 1fr 1.6fr 1.2fr 1.1fr 0.9fr 0.8fr auto";
+  const columnasTabla = "1.6fr 1.1fr 0.5fr 0.8fr 0.9fr 1.5fr 1.1fr 1fr 0.8fr 0.8fr auto";
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
@@ -741,7 +741,11 @@ export function SeccionInvitados({
             <div
               ref={cabeceraRef}
               className="rounded"
-              style={{ border: "1px solid transparent", overflow: "hidden" }}
+              // paddingBottom: el recorte es para que no se salga por
+              // los LADOS, pero recorta en las cuatro direcciones y le
+              // estaba cortando el pie a la fila de filtros (el campo
+              // "Buscar..." salía partido, visto en captura 2026-09-05).
+              style={{ border: "1px solid transparent", overflow: "hidden", paddingBottom: 6 }}
               onMouseDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
             >
@@ -1288,7 +1292,12 @@ export function SeccionInvitados({
             if (cabeceraRef.current) cabeceraRef.current.scrollLeft = e.currentTarget.scrollLeft;
           }}
         >
-          <div ref={tablaRef} style={{ minWidth: 1180 }}>
+          {/* 1180 -> 1080: Safari no da siempre el ancho pedido a una
+              ventana nueva, y con 1180 se quedaban fuera "Pagado" y la
+              columna de acciones (captura del usuario, 2026-09-05). Con
+              1080 entran las once; si alguna queda justa, el texto se
+              recorta con puntos suspensivos, que es la regla de la casa. */}
+          <div ref={tablaRef} style={{ minWidth: 1080 }}>
             {/* La cabecera de columnas Y la fila de filtros
                 (Invitado/Familia/... y sus buscadores) viven ahora en la
                 barra verde de la ventana (subtitulo, más arriba) -- a
