@@ -13,7 +13,6 @@ import { C } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
 import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
-import { VentanaMatrimonios } from "./anfitrion/VentanaMatrimonios";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaPermisos } from "./anfitrion/VentanaPermisos";
 import { VentanaConfigMusica } from "./anfitrion/VentanaConfigMusica";
@@ -163,9 +162,11 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   const [filtros, setFiltros] = useState({
     texto: "",
     grupoFamiliar: "",
-    // "" | "familia" | "esposo" | "esposa" | "hijo" | "sin" -- columna
+    // "" | "matrimonio" | "esposo" | "esposa" | "hijo" | "sin" -- columna
     // O/A/H (ver lib/rolFamiliar.js).
     rolFamiliar: "",
+    // "" | "con" | "sin" -- columna Boda.
+    anioBoda: "",
     zona: "",
     colaboradorId: "",
     mesa: "",
@@ -201,7 +202,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
     cuentas: false,
     versiones: false,
     avisos: false,
-    matrimonios: false,
   });
   const toggle = (clave) => setAbierto((a) => ({ ...a, [clave]: !a[clave] }));
   // null | "tabla" | "canciones" | "alergias" | "avisosMesas" — controla la
@@ -392,12 +392,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
       {/* Versiones */}
       {abierto.versiones && (
         <VentanaVersiones onCerrar={() => toggle("versiones")} />
-      )}
-
-      {/* Matrimonios: se lee entera de la Lista de invitados, no guarda
-          nada propio -- por eso solo necesita `data`. */}
-      {abierto.matrimonios && (
-        <VentanaMatrimonios data={data} onCerrar={() => toggle("matrimonios")} />
       )}
 
       {previewInvitacion && (

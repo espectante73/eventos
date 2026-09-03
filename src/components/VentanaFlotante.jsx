@@ -99,7 +99,6 @@ export const ORDEN_VENTANAS = [
   "invitaciones",
   "invitados",
   "logistica",
-  "matrimonios",
   "mesas",
   "musicaEvento",
   "novedades",
@@ -129,7 +128,6 @@ export const ETIQUETAS_VENTANAS = {
   novedades: "Novedades",
   permisos: "Permisos",
   logistica: "Logística",
-  matrimonios: "Matrimonios",
   musicaEvento: "Música",
 };
 

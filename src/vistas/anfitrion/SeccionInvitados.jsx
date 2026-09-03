@@ -34,7 +34,7 @@ import { uid } from "../../lib/id";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio } from "../../lib/invitados";
 import { ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
-import { contarMatrimonios, conyugesSueltos } from "../../lib/matrimonios";
+import { contarMatrimonios, conyugesSueltos, anioDelEvento } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
 import { TextInput } from "../../components/Formulario";
 import { EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
@@ -340,9 +340,16 @@ export function SeccionInvitados({
         if (!texto.includes(t)) return false;
       }
       if (filtros.grupoFamiliar && g.grupoFamiliar !== filtros.grupoFamiliar) return false;
-      // "familia" = con cualquier papel marcado; "sin" = unidad suelta
-      // (soltero, o el único miembro de un matrimonio que asiste).
-      if (filtros.rolFamiliar === "familia" && !g.rolFamiliar) return false;
+      // "matrimonio" = los dos cónyuges (O y A), sin los hijos: el
+      // filtro se llama "Mat." y tiene que enseñar exactamente eso.
+      // "sin" = unidad suelta (soltero, o el único miembro de un
+      // matrimonio que asiste, a quien no se marca).
+      if (
+        filtros.rolFamiliar === "matrimonio" &&
+        g.rolFamiliar !== ROL_FAMILIAR.ESPOSO &&
+        g.rolFamiliar !== ROL_FAMILIAR.ESPOSA
+      )
+        return false;
       if (filtros.rolFamiliar === "sin" && g.rolFamiliar) return false;
       if (
         [ROL_FAMILIAR.ESPOSO, ROL_FAMILIAR.ESPOSA, ROL_FAMILIAR.HIJO].includes(filtros.rolFamiliar) &&
@@ -350,6 +357,8 @@ export function SeccionInvitados({
       )
         return false;
       if (filtros.zona && g.zona !== filtros.zona) return false;
+      if (filtros.anioBoda === "con" && !g.anioBoda) return false;
+      if (filtros.anioBoda === "sin" && g.anioBoda) return false;
       if (filtros.colaboradorId) {
         const col = resolverColaborador(g, colaboradores);
         if (!col || col.id !== filtros.colaboradorId) return false;
@@ -372,6 +381,10 @@ export function SeccionInvitados({
             return (g.grupoFamiliar || g.apellido || "").toLowerCase();
           case "zona":
             return (g.zona || "").toLowerCase();
+          // Sin año, al final: lo que se busca al ordenar por aquí son
+          // los que sí lo tienen.
+          case "anioBoda":
+            return parseInt(g.anioBoda, 10) || 9999;
           // Los cónyuges arriba y juntos por familia: es como se
           // repasan cuando lo que buscas son los matrimonios.
           case "rolFamiliar":
@@ -409,7 +422,7 @@ export function SeccionInvitados({
   // Familia 1fr -> 1.3fr, Confirmado 0.9fr -> 1.2fr, Colaborador
   // 1.3fr -> 1.8fr (mismo ancho que Invitado): mismo motivo, a
   // petición del usuario, 2026-08-20.
-  const columnasTabla = "1.8fr 1.3fr 0.7fr 1.1fr 1.8fr 1.4fr 1.2fr 1fr 0.9fr auto";
+  const columnasTabla = "1.7fr 1.2fr 0.6fr 0.9fr 1fr 1.6fr 1.2fr 1.1fr 0.9fr 0.8fr auto";
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
@@ -483,6 +496,13 @@ export function SeccionInvitados({
   // al marcar, así que se señala en la propia fila -- que es donde se
   // marca y donde se puede corregir al momento (2026-09-04).
   const idsSueltos = new Set(conyugesSueltos(invitados).map((g) => g.id));
+  // Los años que cumplen EL DÍA DEL EVENTO, no hoy: es el número que va
+  // en el sello de la foto de cada pareja.
+  const anioEvento = anioDelEvento(evento.fecha);
+  const aniversarioDe = (g) => {
+    const anio = parseInt(g.anioBoda, 10);
+    return anioEvento && Number.isFinite(anio) && anio > 1900 ? anioEvento - anio : null;
+  };
   const totalInvitados = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
   const edadMedia = edadPromedio(invitadosOrdenados, evento);
@@ -657,37 +677,48 @@ export function SeccionInvitados({
                     O/A/H
                   </EncabezadoOrdenable>
                 </span>
+                {/* Año de boda y los años que cumplen EN EL AÑO DEL
+                    EVENTO -- el número del sello de "Las bodas de
+                    todos". Vive aquí, y no en una ventana aparte, desde
+                    que se quitó la de Matrimonios: filtrando por O sale
+                    una fila por pareja, que es justo esa lista
+                    (2026-09-04). */}
                 <span style={{ background: tintaColumnaCabecera(3), borderRadius: "6px 6px 0 0" }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="anioBoda" orden={orden} onClick={cambiarOrden}>
+                    Boda
+                  </EncabezadoOrdenable>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="zona" orden={orden} onClick={cambiarOrden}>
                     Zona
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="colaborador" orden={orden} onClick={cambiarOrden}>
                     Colaborador
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="mesa" orden={orden} onClick={cambiarOrden}>
                     Mesa
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="confirmado" orden={orden} onClick={cambiarOrden}>
                     Confirm.
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="datos" orden={orden} onClick={cambiarOrden}>
                     Datos
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(9), borderRadius: "6px 6px 0 0" }}>
                   <EncabezadoOrdenable claro sinDivisor columna="pagado" orden={orden} onClick={cambiarOrden}>
                     Pagado
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(9), borderRadius: "6px 6px 0 0" }}></span>
+                <span style={{ background: tintaColumnaCabecera(10), borderRadius: "6px 6px 0 0" }}></span>
               </div>
               {/* Fila de filtros, subida aquí junto a la cabecera de
                   columnas (antes vivía sola en la caja blanca) -- a
@@ -789,7 +820,7 @@ export function SeccionInvitados({
                     title="Filtrar por papel en la familia"
                   >
                     <option value="">Todos</option>
-                    <option value="familia">En familia</option>
+                    <option value="matrimonio">Mat.</option>
                     <option value={ROL_FAMILIAR.ESPOSO}>O</option>
                     <option value={ROL_FAMILIAR.ESPOSA}>A</option>
                     <option value={ROL_FAMILIAR.HIJO}>H</option>
@@ -797,6 +828,29 @@ export function SeccionInvitados({
                   </select>
                 </span>
                 <span style={{ background: tintaColumnaCabecera(3), borderRadius: "0 0 6px 6px" }}>
+                  <select
+                    value={filtros.anioBoda}
+                    onChange={(e) => setFiltros({ ...filtros, anioBoda: e.target.value })}
+                    style={{
+                      ...inputStyle,
+                      border: "none",
+                      background: "transparent",
+                      color: C.goldClaro,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      padding: "2px 4px",
+                      fontSize: 12,
+                      width: "100%",
+                      minWidth: 0,
+                      boxSizing: "border-box",
+                    }}
+                    title="Filtrar por año de boda"
+                  >
+                    <option value="">Todos</option>
+                    <option value="con">Con año</option>
+                    <option value="sin">Sin año</option>
+                  </select>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.zona}
                     onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
@@ -821,7 +875,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.colaboradorId}
                     onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
@@ -846,7 +900,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.mesa}
                     onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
@@ -871,7 +925,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.confirmado}
                     onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
@@ -893,7 +947,7 @@ export function SeccionInvitados({
                     <option value="tentativa">Sin confirmar</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.datos}
                     onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
@@ -915,7 +969,7 @@ export function SeccionInvitados({
                     <option value="pendiente">Por recopilar</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(9), borderRadius: "0 0 6px 6px" }}>
                   <select
                     value={filtros.pagado}
                     onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
@@ -937,7 +991,7 @@ export function SeccionInvitados({
                     <option value="pendiente">Pendiente</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(9), borderRadius: "0 0 6px 6px" }} />
+                <span style={{ background: tintaColumnaCabecera(10), borderRadius: "0 0 6px 6px" }} />
               </div>
             </div>
           </div>
@@ -1243,7 +1297,25 @@ export function SeccionInvitados({
                       "—"
                     )}
                   </span>
-                  <span style={celda(3)}>
+                  {/* "2001 · 25": el año de boda y los años que cumplen
+                      el día del evento. El año lo rellena el colaborador
+                      en su formulario; aquí solo se lee. */}
+                  <span style={celda(3, { justifyContent: "center", textAlign: "center" })}>
+                    {g.anioBoda ? (
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}>
+                        {g.anioBoda}
+                        {aniversarioDe(g) !== null && (
+                          <>
+                            {" · "}
+                            <strong style={{ color: C.gold, fontWeight: 700 }}>{aniversarioDe(g)}</strong>
+                          </>
+                        )}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </span>
+                  <span style={celda(4)}>
                     {modoEdicion ? (
                       <GrupoFamiliarInput
                         value={g.zona ?? ""}
@@ -1253,7 +1325,7 @@ export function SeccionInvitados({
                       g.zona || "—"
                     )}
                   </span>
-                  <span className="text-xs gap-1" style={celda(4)}>
+                  <span className="text-xs gap-1" style={celda(5)}>
                     <select
                       value={g.colaboradorId || ""}
                       onChange={(e) => asignarColaborador(g.id, e.target.value)}
@@ -1281,7 +1353,7 @@ export function SeccionInvitados({
                         </span>
                       )}
                   </span>
-                  <span className="text-xs" style={celda(5)}>
+                  <span className="text-xs" style={celda(6)}>
                     <select
                       value={g.mesa || ""}
                       onChange={(e) => asignarMesa(g.id, e.target.value)}
@@ -1332,7 +1404,7 @@ export function SeccionInvitados({
                       (C.wax) que ya tenía -- a diferencia de
                       Confirmado/Pagado, que no necesitan llamar la
                       atención tanto. */}
-                  <span style={celda(6, { justifyContent: "center", textAlign: "center" })}>
+                  <span style={celda(7, { justifyContent: "center", textAlign: "center" })}>
                     <button
                       onClick={() => toggleConfirmar(g.id)}
                       className="flex items-center justify-center w-full"
@@ -1349,7 +1421,7 @@ export function SeccionInvitados({
                       )}
                     </button>
                   </span>
-                  <span style={celda(7, { justifyContent: "center", textAlign: "center" })}>
+                  <span style={celda(8, { justifyContent: "center", textAlign: "center" })}>
                     {g.confirmado ? (
                       datosCompletos(g) ? (
                         <Check size={20} style={{ color: C.ink }} />
@@ -1367,7 +1439,7 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  <span style={celda(8, { justifyContent: "center", textAlign: "center" })}>
+                  <span style={celda(9, { justifyContent: "center", textAlign: "center" })}>
                     {g.confirmado ? (
                       g.pagado ? (
                         <Check size={20} style={{ color: C.ink }} />
@@ -1386,7 +1458,7 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  <span style={{ ...celda(9), gap: 6 }}>
+                  <span style={{ ...celda(10), gap: 6 }}>
                     <button
                       onClick={() => setInvitadoRolAbierto(g.id)}
                       title="Rol de trabajo el día del evento (acomodador, etc.)"
@@ -1532,7 +1604,7 @@ export function SeccionInvitados({
                 <div
                   className="grid text-xs uppercase px-2 py-2"
                   style={{
-                    gridTemplateColumns: "1.3fr 1fr 0.8fr 1fr 0.7fr 0.9fr 0.9fr",
+                    gridTemplateColumns: "1.3fr 1fr 0.8fr 0.8fr 1fr 0.6fr 0.9fr 0.8fr",
                     color: C.gold,
                     fontFamily: "'IBM Plex Mono', monospace",
                     borderBottom: `1px solid ${C.line}`,
@@ -1541,6 +1613,7 @@ export function SeccionInvitados({
                   <span>Invitado</span>
                   <span>Familia</span>
                   <span>Zona</span>
+                  <span>Boda</span>
                   <span>Colaborador</span>
                   <span>Mesa</span>
                   <span>Confirmado</span>
@@ -1553,7 +1626,7 @@ export function SeccionInvitados({
                       key={g.id}
                       className="grid px-2 py-1.5 text-sm"
                       style={{
-                        gridTemplateColumns: "1.3fr 1fr 0.8fr 1fr 0.7fr 0.9fr 0.9fr",
+                        gridTemplateColumns: "1.3fr 1fr 0.8fr 0.8fr 1fr 0.6fr 0.9fr 0.8fr",
                         background: i % 2 ? C.paperDark : "#fff",
                         color: C.charcoal,
                       }}
@@ -1563,6 +1636,13 @@ export function SeccionInvitados({
                       </span>
                       <span>{g.grupoFamiliar || g.apellido || "—"}</span>
                       <span>{g.zona || "—"}</span>
+                      {/* Con el filtro puesto en "O" esta lista impresa
+                          es, fila a fila, la de las parejas con sus
+                          años -- para eso se quitó la ventana aparte. */}
+                      <span>
+                        {g.anioBoda || "—"}
+                        {aniversarioDe(g) !== null && ` · ${aniversarioDe(g)}`}
+                      </span>
                       <span>{col ? col.nombre : "—"}</span>
                       <span>{g.mesa ?? "—"}</span>
                       <span>{g.confirmado ? "Sí" : "Sin confirmar"}</span>

@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "21.5",
+    cambios: [
+      "En el filtro O/A/H, \"En familia\" pasa a llamarse \"Mat.\" y enseña exactamente eso: los dos cónyuges, sin los hijos.",
+      "Fuera la ventana Matrimonios: mostraba lo que la Lista de invitados ya enseña (nombres, zona, confirmados, el contador y el aviso de sin pareja) y encima no dejaba editar, cuando la raíz de todo es la propia lista. Dos sitios para lo mismo.",
+      "Lo único que solo estaba allí se muda a la lista: columna \"Boda\" con el año y los años que cumplen el día del evento (\"2001 · 25\"), con su filtro (Con año / Sin año) y ordenable.",
+      "Con eso, filtrar por O da una fila por pareja: la lista de las 70 parejas, filtrable e imprimible, en el sitio donde ya se trabaja. La columna sale también al imprimir.",
+    ],
+  },
+  {
     version: "21.4",
     cambios: [
       "La marca de la familia gana la H de hijo: O esposo, A esposa, H hijo. Y dejarla en blanco pasa a significar algo — unidad suelta: alguien soltero, o el único miembro de un matrimonio que asiste (a esos no se les marca).",
