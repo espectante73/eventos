@@ -1,19 +1,23 @@
-// Sub-ventana de Configuración: música ambiental del tablón público
-// (VistaTablon.jsx) — a petición del usuario, 2026-08-25. A diferencia de
-// las imágenes de la app (guardadas como base64 en columnas de texto), un
-// archivo de audio pesa demasiado para eso y el tablón lo volvería a
-// pedir cada minuto sin necesidad — se sube a Supabase Storage (bucket
-// "musica-ambiental", ver schema.sql), que le da una URL propia que el
-// navegador cachea solo.
+// Contenido del gestor de música ambiental del tablón público -- movido
+// aquí desde su propia ventana de Configuración ("Fondo musical",
+// VentanaConfigMusica.jsx) el 2026-09-05, a petición del usuario: era un
+// botón de segundo nivel que solo abría para tocar algo de Novedades (el
+// tablón público), así que encaja mejor como una fila plegable más en el
+// pie de esa ventana -- mismo sitio donde ya viven el WhatsApp y la
+// pregunta de acceso -- que como una entrada propia del menú "Abrir
+// sección...".
+//
+// Sin `VentanaFlotante` propia: aquí es solo el CONTENIDO, para que
+// pueda vivir dentro del plegable de VentanaNovedades.jsx. La lógica de
+// Storage es exactamente la misma que tenía la ventana.
 import { useState, useEffect, useCallback } from "react";
 import { Upload, Trash2, Music } from "lucide-react";
-import { C } from "../../theme";
-import { supabase } from "../../supabaseClient";
-import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { C } from "../theme";
+import { supabase } from "../supabaseClient";
 
 const BUCKET = "musica-ambiental";
 
-export function VentanaConfigMusica({ onCerrar }) {
+export function FondoMusicalTablon() {
   const [pistas, setPistas] = useState(null); // null = cargando todavía
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState("");
@@ -44,9 +48,6 @@ export function VentanaConfigMusica({ onCerrar }) {
     const { error: errSubida } = await supabase.storage.from(BUCKET).upload(nombreArchivo, archivo);
     setSubiendo(false);
     if (errSubida) {
-      // Mensaje real de Supabase, no uno genérico -- mismo motivo que en
-      // VentanaConfigDatosEvento.jsx (imagen para WhatsApp), detectado el
-      // mismo día: el bucket llevaba vacío pese a intentos de subida.
       setError(`No se pudo subir el archivo: ${errSubida.message || errSubida}`);
       return;
     }
@@ -63,19 +64,18 @@ export function VentanaConfigMusica({ onCerrar }) {
   };
 
   return (
-    <VentanaFlotante clave="config-musica" titulo="Fondo musical" onCerrar={onCerrar}>
-      <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
-        Suena de fondo mientras alguien tiene abierto el tablón público de novedades (nunca
-        en tu propia app de gestión). Con varias pistas subidas, van sonando una detrás de
-        otra. El primer clic de cada visitante debe activarla a propósito (los navegadores
-        bloquean el sonido automático sin que nadie haya interactuado con la página todavía).
+    <div>
+      <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
+        Suena de fondo mientras alguien tiene abierto el tablón público (nunca en tu propia
+        app de gestión). Con varias pistas, van sonando una detrás de otra. El primer clic de
+        cada visitante debe activarla a propósito.
       </p>
 
       <label
-        className="flex items-center justify-center gap-2 px-3 py-2 rounded text-sm font-medium mb-3 cursor-pointer"
+        className="flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-medium mb-2 cursor-pointer"
         style={{ background: C.ink, color: C.paper, opacity: subiendo ? 0.6 : 1 }}
       >
-        <Upload size={14} />
+        <Upload size={13} />
         {subiendo ? "Subiendo…" : "Subir archivo de audio"}
         <input type="file" accept="audio/*" onChange={subir} disabled={subiendo} className="hidden" />
       </label>
@@ -87,13 +87,13 @@ export function VentanaConfigMusica({ onCerrar }) {
       )}
 
       {pistas === null ? (
-        <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.6 }}>
           Cargando…
         </p>
       ) : pistas.length === 0 ? (
-        <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-          Todavía no hay ninguna pista subida — el tablón no sonará hasta que subas al
-          menos una.
+        <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+          Todavía no hay ninguna pista subida — el tablón no sonará hasta que subas al menos
+          una.
         </p>
       ) : (
         <div className="space-y-1.5">
@@ -114,6 +114,6 @@ export function VentanaConfigMusica({ onCerrar }) {
           ))}
         </div>
       )}
-    </VentanaFlotante>
+    </div>
   );
 }

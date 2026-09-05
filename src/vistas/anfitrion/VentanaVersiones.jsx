@@ -48,6 +48,7 @@ const HISTORIAL_VERSIONES = [
       "El filtro de Zona muestra ya cuántos invitados hay en cada una, igual que ya hacía el filtro de Rol.",
       "Y el de Colaborador también: cuántos invitados tiene asignados cada uno, de un vistazo, sin tener que filtrar uno a uno.",
       "Se retira la ventana \"Logística\": había dejado de aportar nada que no se viera ya en otro sitio de la app. Lo único que sí se seguía consultando — el resumen de qué colaborador tiene qué permiso — se muda a la propia ventana de Permisos, donde encaja de forma natural, plegado por defecto igual que estaba allí.",
+      "Simplificado el menú \"Abrir sección…\": \"Fondo musical\" (dentro de Configuración) se retira como botón propio — solo servía para tocar un ajuste del tablón público — y su gestor de pistas pasa a ser una fila plegable más en el pie de Novedades, junto al WhatsApp y la pregunta de acceso, que son ajustes del mismo tablón.",
     ],
   },
   {

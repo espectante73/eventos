@@ -76,7 +76,6 @@ const SUBMENU_CONFIGURACION = [
   { id: "config-cronograma", etiqueta: "Cronograma", icono: Clock3 },
   { id: "config-datos-evento", etiqueta: "Datos evento", icono: Calendar },
   { id: "config-email-anfitrion", etiqueta: "Email anfitrión", icono: Mail },
-  { id: "config-musica", etiqueta: "Fondo musical", icono: Music },
   { id: "config-modo-pruebas", etiqueta: "Modo pruebas", icono: FlaskConical, fondo: C.wax, color: C.paper },
   { id: "config-precios", etiqueta: "Precios", icono: Euro },
   { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },

@@ -5,7 +5,7 @@
 // cualquiera con el enlace ve las novedades publicadas, sin login ni
 // cuenta — a petición del usuario, 2026-08-25.
 import { useState, useRef } from "react";
-import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown, Lock, Undo2, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown, Lock, Undo2, AlertTriangle, Music } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
 import { formatearFecha } from "../../lib/formato";
@@ -19,6 +19,7 @@ import { envolverSeleccion } from "../../lib/textoEnriquecido";
 // Ver los comentarios de cada módulo para la diferencia entre los dos.
 import { useDeshacer } from "../../lib/useDeshacer";
 import { BotonHistorial } from "../../components/HistorialTexto";
+import { FondoMusicalTablon } from "../../components/FondoMusicalTablon";
 
 // Añade "prefijo" al principio de cada línea tocada por la selección
 // actual (o solo la línea del cursor, si no hay nada seleccionado) --
@@ -258,6 +259,13 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
   // administrador (quien solo edita texto ya tiene su propio acceso al
   // check de "Publicada", más arriba, sin necesitar nada de este pie).
   const [pieAbierto, setPieAbierto] = useState(false);
+  // Segunda fila plegable del pie, independiente de la anterior -- a
+  // petición del usuario, 2026-09-05: la música de fondo del tablón
+  // vivía en su propio botón de Configuración ("Fondo musical") solo
+  // por historia, no porque tuviera que ser su propia ventana. Es un
+  // ajuste del tablón público, así que encaja aquí, junto al WhatsApp y
+  // la pregunta de acceso, que son ajustes del mismo tablón.
+  const [musicaAbierta, setMusicaAbierta] = useState(false);
   // Enlace de INVITACIÓN al grupo (chat.whatsapp.com/XXXX) -- a propósito
   // no es tu número de teléfono: un botón basado en número abriría un
   // chat 1 a 1 contigo, y con ~140 confirmados eso te dejaría recibiendo
@@ -529,6 +537,24 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
                 />
                 Ocultar la fecha en el tablón público (temporalmente)
               </label>
+            </div>
+          )}
+
+          {/* Segunda fila plegable, propia (no dentro de la anterior): es
+              otro tipo de ajuste -- archivos, no texto -- y así se puede
+              tener una abierta sin la otra. */}
+          <button
+            onClick={() => setMusicaAbierta((a) => !a)}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs w-full"
+            style={{ color: C.charcoal, opacity: 0.7, flexShrink: 0, borderTop: `1px solid ${C.line}` }}
+          >
+            <ChevronDown size={14} style={{ transform: musicaAbierta ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
+            <Music size={13} style={{ flexShrink: 0 }} />
+            Música de fondo del tablón
+          </button>
+          {musicaAbierta && (
+            <div className="px-4 py-3" style={{ flexShrink: 0 }}>
+              <FondoMusicalTablon />
             </div>
           )}
         </>

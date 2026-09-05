@@ -15,7 +15,6 @@ import { Portada } from "../components/Portada";
 import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaPermisos } from "./anfitrion/VentanaPermisos";
-import { VentanaConfigMusica } from "./anfitrion/VentanaConfigMusica";
 import { VentanaConfigCronograma } from "./anfitrion/VentanaConfigCronograma";
 import { VentanaMusicaEvento } from "./anfitrion/VentanaMusicaEvento";
 import { guardarAspecto, ASPECTO_POR_DEFECTO } from "../lib/temasMusica";
@@ -379,9 +378,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         <VentanaConfigPlantillasEmail data={data} onCerrar={() => toggle("config-plantillas-email")} />
       )}
 
-      {abierto["config-musica"] && (
-        <VentanaConfigMusica onCerrar={() => toggle("config-musica")} />
-      )}
 
       {/* Cronograma: ventana emergente de verdad (ver arriba), no pasa
           por `abierto`/`toggle` -- se abre con abrirCronograma. */}
