@@ -100,8 +100,6 @@ export const ORDEN_VENTANAS = [
   "mesas",
   "musicaEvento",
   "novedades",
-  "progreso",
-  "versiones",
 ];
 
 // Etiquetas cortas (una palabra donde sea posible) -- son solo las del

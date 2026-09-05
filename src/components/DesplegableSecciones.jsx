@@ -54,8 +54,6 @@ const ICONOS_VENTANAS = {
   musicaEvento: Music,
   novedades: Megaphone,
   permisos: KeyRound,
-  progreso: Gauge,
-  versiones: History,
 };
 
 // Submenú de "Configuración": cada parte se abre en su propia ventana,
@@ -74,8 +72,10 @@ const SUBMENU_CONFIGURACION = [
   { id: "config-datos-evento", etiqueta: "Datos evento", icono: Calendar },
   { id: "config-modo-pruebas", etiqueta: "Modo pruebas", icono: FlaskConical, fondo: C.wax, color: C.paper },
   { id: "permisos", etiqueta: "Permisos", icono: KeyRound },
+  { id: "progreso", etiqueta: "Progreso", icono: Gauge },
   { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },
   { id: "config-plantillas-email", etiqueta: "Texto emails", icono: FileText },
+  { id: "versiones", etiqueta: "Versiones", icono: History },
 ];
 
 // `posicion`: dónde flota el botón dentro de su contenedor (por defecto,

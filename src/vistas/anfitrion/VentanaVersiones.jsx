@@ -52,7 +52,7 @@ const HISTORIAL_VERSIONES = [
       "Y tres botones más de Configuración desaparecen del menú: Precios, Email anfitrión y URL web pasan a ser secciones plegadas dentro de Datos del evento, que es lo que son — datos del evento. Configuración baja de diez entradas a seis.",
       "Datos del evento gana además su propia sección plegada para las dos imágenes (portada y WhatsApp), que eran lo que más espacio ocupaba nada más abrirla. Cada sección plegada muestra su valor actual al lado del título, así que no hay que abrirlas para saber cómo están.",
       "El Plano de mesas deja de ser una ventana aparte y pasa a ser una sección plegada dentro de Mesas: es la misma información desde otra perspectiva — el plano no tiene datos propios, solo coloca en el espacio las mesas que se crean ahí (de hecho ya avisaba de \"créalas primero en Mesas\").",
-      "Permisos y Backup bajan al segundo nivel, dentro de Configuración, que es lo que son. El menú principal pasa de catorce entradas a once.",
+      "Permisos, Backup, Progreso y Versiones bajan al segundo nivel, dentro de Configuración. El menú principal pasa de catorce entradas a nueve: solo lo que se usa a diario.",
     ],
   },
   {
