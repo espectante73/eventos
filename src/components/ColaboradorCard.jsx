@@ -13,7 +13,12 @@ import { BuscadorInvitado } from "./BuscadorInvitado";
 
 export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin, onConfirmarEmailActualizado, onAvisar }) {
   const [relevando, setRelevando] = useState(false);
-  const [mostrarAsignados, setMostrarAsignados] = useState(false);
+  // Plegada por defecto: fuera solo el nombre, cuántos lleva y los
+  // iconos de acción. Todo lo demás (email, avisos, invitados
+  // asignados) se despliega al tocar el nombre -- a petición del
+  // usuario, 2026-09-06: con doce colaboradores, doce tarjetas
+  // desplegadas eran una ventana interminable.
+  const [abierta, setAbierta] = useState(false);
   const [releveInvitadoId, setReleveInvitadoId] = useState("");
   const [probando, setProbando] = useState(false);
   const [resultadoPrueba, setResultadoPrueba] = useState(""); // "" | "ok" | "error"
@@ -100,15 +105,24 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
     >
       <div className="flex items-center justify-between">
         <button
-          onClick={() => setMostrarAsignados((v) => !v)}
+          onClick={() => setAbierta((v) => !v)}
           className="text-left flex-1"
         >
           <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
             {c.nombre}
           </div>
           <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-            {asignados.length} asignado{asignados.length !== 1 && "s"}{" "}
-            {mostrarAsignados ? "▲" : "▼"}
+            {asignados.length} asignado{asignados.length !== 1 && "s"}
+            {/* Con la tarjeta plegada, el botón "Avisar ahora" queda
+                dentro: este aviso tiene que verse FUERA, o habría que ir
+                abriendo una por una para saber a quién falta avisar. */}
+            {pendientesAviso.length > 0 && (
+              <span style={{ color: C.wax, fontWeight: 600 }}>
+                {" · "}
+                {pendientesAviso.length} sin avisar
+              </span>
+            )}{" "}
+            {abierta ? "▲" : "▼"}
           </div>
         </button>
         <div className="flex items-center gap-3">
@@ -133,6 +147,8 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
         </div>
       </div>
 
+      {abierta && (
+        <>
       <div className="flex items-center gap-2 mt-2">
         <Mail size={13} style={{ color: C.gold }} />
         <div className="flex-1">
@@ -231,9 +247,10 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
           ⚠ No se pudo enviar la invitación de acceso. Mira "Avisos enviados" o los logs de Resend.
         </p>
       )}
+        </>
+      )}
 
-
-      {mostrarAsignados && (
+      {abierta && (
         <div className="mt-3 space-y-1.5" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 8 }}>
           {asignados.length === 0 && (
             <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.6 }}>
