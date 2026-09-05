@@ -141,100 +141,139 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
           Se descarga automáticamente una copia de seguridad de todo el evento antes de
           ejecutar nada, y hay que escribir "REINICIAR" para confirmar.
         </p>
+        {/* TODAS las opciones dentro de desplegables, ninguna suelta --
+            a petición del usuario, 2026-09-05. Antes las seis categorías
+            eran seis botones sueltos y "Reiniciar avisos" un séptimo
+            botón aparte, al pie: siete cosas rojas a la vista de golpe
+            en la ventana más peligrosa de la app. Ahora se elige QUÉ
+            reiniciar, luego A QUIÉN, y hay un solo botón de acción. */}
         <div className="flex flex-wrap items-end gap-2 mb-2">
-          <Field label="Colaborador">
+          <Field label="Qué reiniciar">
             <select
-              value={rColaborador}
-              onChange={(e) => {
-                setRColaborador(e.target.value);
-                setRAlcance("todos");
-                setRFamiliaClave("");
-                setRInvitadoId("");
-              }}
-              style={{ ...inputStyle, minWidth: 200 }}
+              value={rCategoria}
+              onChange={(e) => setRCategoria(e.target.value)}
+              style={{ ...inputStyle, minWidth: 220 }}
             >
-              <option value="">Todos los colaboradores</option>
-              {colaboradores.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Alcance">
-            <select
-              value={rAlcance}
-              onChange={(e) => {
-                setRAlcance(e.target.value);
-                setRFamiliaClave("");
-                setRInvitadoId("");
-              }}
-              style={{ ...inputStyle, minWidth: 180 }}
-            >
-              <option value="todos">Todos sus invitados</option>
-              <option value="familia">Una familia en concreto</option>
-              <option value="invitado">Un invitado en concreto</option>
-            </select>
-          </Field>
-          {rAlcance === "familia" && (
-            <Field label="Familia">
-              <select
-                value={rFamiliaClave}
-                onChange={(e) => setRFamiliaClave(e.target.value)}
-                style={{ ...inputStyle, minWidth: 200 }}
-              >
-                <option value="">Elige una familia…</option>
-                {familiasParaReset.map((f) => (
-                  <option key={f.clave} value={f.clave}>
-                    {f.etiqueta}
+              <option value="">Elige qué reiniciar…</option>
+              {Object.entries(CATEGORIAS_RESET)
+                .filter(([, cfg]) => !cfg.familiar || rAlcance !== "invitado")
+                .map(([clave, cfg]) => (
+                  <option key={clave} value={clave}>
+                    {cfg.titulo}
                   </option>
                 ))}
-              </select>
-            </Field>
-          )}
-          {rAlcance === "invitado" && (
-            <Field label="Invitado">
-              <select
-                value={rInvitadoId}
-                onChange={(e) => setRInvitadoId(e.target.value)}
-                style={{ ...inputStyle, minWidth: 220 }}
-              >
-                <option value="">Elige un invitado…</option>
-                {ordenarPorApellidoNombre(
-                  invitadosParaReset.filter((g) => g.confirmado)
-                ).map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.apellido}, {g.nombre}
-                  </option>
-                ))}
-              </select>
-            </Field>
+              {/* Va en el mismo desplegable aunque no dependa de
+                  colaborador ni alcance: para quien lo usa es otra cosa
+                  más que se puede reiniciar, no una función aparte. */}
+              <option value="avisos">Avisos (historial de emails)</option>
+            </select>
+          </Field>
+
+          {rCategoria !== "avisos" && (
+            <>
+              <Field label="Colaborador">
+                <select
+                  value={rColaborador}
+                  onChange={(e) => {
+                    setRColaborador(e.target.value);
+                    setRAlcance("todos");
+                    setRFamiliaClave("");
+                    setRInvitadoId("");
+                  }}
+                  style={{ ...inputStyle, minWidth: 200 }}
+                >
+                  <option value="">Todos los colaboradores</option>
+                  {colaboradores.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Alcance">
+                <select
+                  value={rAlcance}
+                  onChange={(e) => {
+                    setRAlcance(e.target.value);
+                    setRFamiliaClave("");
+                    setRInvitadoId("");
+                    // "Foto familiar" e "Invitación" son datos POR FAMILIA:
+                    // no aplican al elegir un invitado suelto, así que
+                    // desaparecen de la lista -- y hay que soltar la
+                    // elección, o el desplegable se queda en blanco
+                    // mostrando algo que ya no está.
+                    if (e.target.value === "invitado" && CATEGORIAS_RESET[rCategoria]?.familiar) {
+                      setRCategoria("");
+                    }
+                  }}
+                  style={{ ...inputStyle, minWidth: 180 }}
+                >
+                  <option value="todos">Todos sus invitados</option>
+                  <option value="familia">Una familia en concreto</option>
+                  <option value="invitado">Un invitado en concreto</option>
+                </select>
+              </Field>
+              {rAlcance === "familia" && (
+                <Field label="Familia">
+                  <select
+                    value={rFamiliaClave}
+                    onChange={(e) => setRFamiliaClave(e.target.value)}
+                    style={{ ...inputStyle, minWidth: 200 }}
+                  >
+                    <option value="">Elige una familia…</option>
+                    {familiasParaReset.map((f) => (
+                      <option key={f.clave} value={f.clave}>
+                        {f.etiqueta}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+              {rAlcance === "invitado" && (
+                <Field label="Invitado">
+                  <select
+                    value={rInvitadoId}
+                    onChange={(e) => setRInvitadoId(e.target.value)}
+                    style={{ ...inputStyle, minWidth: 220 }}
+                  >
+                    <option value="">Elige un invitado…</option>
+                    {ordenarPorApellidoNombre(
+                      invitadosParaReset.filter((g) => g.confirmado)
+                    ).map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.apellido}, {g.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+            </>
           )}
         </div>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {Object.entries(CATEGORIAS_RESET)
-            .filter(([, cfg]) => !cfg.familiar || rAlcance !== "invitado")
-            .map(([clave, cfg]) => (
-              <button
-                key={clave}
-                onClick={() => {
-                  setRCategoria(clave);
-                  setRMostrarConfirmar(true);
-                  setRPalabra("");
-                }}
-                disabled={invitadoIdsParaReset.length === 0}
-                className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-                style={{
-                  border: `1px solid ${C.wax}`,
-                  color: invitadoIdsParaReset.length === 0 ? C.line : C.wax,
-                }}
-              >
-                <Repeat size={14} /> {cfg.titulo}
-              </button>
-            ))}
-        </div>
+
+        <button
+          onClick={() => {
+            if (rCategoria === "avisos") {
+              setReinicioAvisosPendiente(true);
+              return;
+            }
+            setRMostrarConfirmar(true);
+            setRPalabra("");
+          }}
+          disabled={!rCategoria || (rCategoria !== "avisos" && invitadoIdsParaReset.length === 0)}
+          className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium mb-2"
+          style={{
+            border: `1px solid ${C.wax}`,
+            color: !rCategoria || (rCategoria !== "avisos" && invitadoIdsParaReset.length === 0) ? C.line : C.wax,
+          }}
+        >
+          <Repeat size={14} /> Reiniciar
+        </button>
+
         <p className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
-          {rAlcance === "invitado"
+          {rCategoria === "avisos"
+            ? "Vacía el historial de emails enviados. No depende de colaborador ni de alcance."
+            : rAlcance === "invitado"
             ? rInvitadoId
               ? "Afecta a 1 invitado."
               : "Elige un invitado arriba."
@@ -244,18 +283,9 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
               : "Elige una familia arriba."
             : `Afecta a ${invitadoIdsParaReset.length} invitado(s).`}
         </p>
-        <div className="mt-3 pt-3" style={{ borderTop: `1px dashed ${C.line}` }}>
-          <button
-            onClick={() => setReinicioAvisosPendiente(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-            style={{ border: `1px solid ${C.wax}`, color: C.wax }}
-          >
-            <Repeat size={14} /> Reiniciar avisos (historial de emails)
-          </button>
-        </div>
       </VentanaFlotante>
 
-      {rMostrarConfirmar && rCategoria && (
+      {rMostrarConfirmar && CATEGORIAS_RESET[rCategoria] && (
         <ModalFlotante
           titulo={CATEGORIAS_RESET[rCategoria].titulo}
           onCerrar={() => {

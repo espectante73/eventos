@@ -53,6 +53,7 @@ const HISTORIAL_VERSIONES = [
       "Datos del evento gana además su propia sección plegada para las dos imágenes (portada y WhatsApp), que eran lo que más espacio ocupaba nada más abrirla. Cada sección plegada muestra su valor actual al lado del título, así que no hay que abrirlas para saber cómo están.",
       "El Plano de mesas deja de ser una ventana aparte y pasa a ser una sección plegada dentro de Mesas: es la misma información desde otra perspectiva — el plano no tiene datos propios, solo coloca en el espacio las mesas que se crean ahí (de hecho ya avisaba de \"créalas primero en Mesas\").",
       "Permisos, Backup, Progreso y Versiones bajan al segundo nivel, dentro de Configuración. El menú principal pasa de catorce entradas a nueve: solo lo que se usa a diario.",
+      "Reinicios: todas las opciones pasan a estar dentro de desplegables, ninguna suelta. Antes eran seis botones rojos a la vista de golpe más un séptimo al pie — en la ventana más peligrosa de la app. Ahora se elige qué reiniciar, luego a quién, y hay un único botón de acción.",
     ],
   },
   {
