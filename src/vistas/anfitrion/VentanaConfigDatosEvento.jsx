@@ -2,11 +2,14 @@
 // imagen de portada del evento. Extraída de VistaAnfitrion.jsx en el
 // reparto del 2026-08-08 (Fase 4, Ronda 2).
 import { useState } from "react";
-import { C } from "../../theme";
+import { Image as ImageIcon, Euro, Mail, Globe } from "lucide-react";
+import { C, inputStyle } from "../../theme";
 import { redimensionarImagenArchivo } from "../../lib/descargas";
 import { supabase } from "../../supabaseClient";
 import { Field, TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { SeccionPlegable } from "../../components/SeccionPlegable";
+import { emailValido } from "../../lib/validacion";
 
 // Miniatura que WhatsApp/Facebook muestran al pegar cualquier enlace de
 // esta web (login, tablón...) -- a petición del usuario, 2026-08-25. Es
@@ -18,6 +21,48 @@ import { VentanaFlotante } from "../../components/VentanaFlotante";
 // -- solo el archivo detrás cambia al volver a subir una foto.
 const BUCKET_OG = "og-imagen";
 const RUTA_OG = "portada.jpg";
+
+// Los dos grupos de precios, tal cual venían de la ventana "Precios"
+// (retirada el 2026-09-05 y fundida aquí): dos números grandes centrados
+// sobre fondo verde, un grupo para los importes y otro para el tramo de
+// edad que decide cuál se aplica.
+function GrupoPrecio({ titulo, etiquetaA, valorA, onCambiarA, etiquetaB, valorB, onCambiarB, moneda }) {
+  return (
+    <div className="rounded-lg p-3" style={{ background: C.ink }}>
+      {titulo && (
+        <div
+          className="text-center text-sm mb-1"
+          style={{ color: C.paper, textDecoration: "underline", textUnderlineOffset: 3 }}
+        >
+          {titulo}
+        </div>
+      )}
+      <div
+        className="flex items-center justify-center gap-4 text-xs uppercase mb-2"
+        style={{ color: C.paper, opacity: 0.85, letterSpacing: "0.06em" }}
+      >
+        <span>{etiquetaA}</span>
+        <span style={{ opacity: 0.5 }}>--</span>
+        <span>{etiquetaB}</span>
+      </div>
+      <div className="flex items-center justify-center gap-4">
+        {[
+          { valor: valorA, onCambiar: onCambiarA },
+          { valor: valorB, onCambiar: onCambiarB },
+        ].map(({ valor, onCambiar }, i) => (
+          <div key={i} className="flex items-center gap-1">
+            <input
+              value={valor}
+              onChange={onCambiar}
+              style={{ ...inputStyle, width: moneda ? 56 : 72, textAlign: "center", fontSize: 22, fontWeight: 700 }}
+            />
+            {moneda && <span style={{ color: C.paper, fontSize: 20, fontWeight: 700 }}>€</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function VentanaConfigDatosEvento({ data, onCerrar }) {
   const { evento, persistEvento } = data;
@@ -122,7 +167,21 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
             placeholder="Calle, número, municipio"
           />
         </Field>
-        <div style={{ gridColumn: "span 2 / span 2" }}>
+      </div>
+
+      {/* Todo lo que sigue estaba antes suelto (las dos imágenes) o en su
+          propia ventana del menú (Precios, Email anfitrión, URL web).
+          Se juntan aquí, plegadas por defecto: son ajustes del evento que
+          se tocan una vez y no hay que tener ocupando pantalla -- misma
+          idea que ya se aplicó al pie de Novedades (2026-09-05). El
+          `resumen` de cada una deja ver el valor actual sin desplegar. */}
+      <div className="flex flex-col gap-2" style={{ maxWidth: 500 }}>
+        <SeccionPlegable
+          icono={ImageIcon}
+          titulo="Imágenes"
+          resumen={evento.imagen && evento.imagen !== "/cabecera-defecto.jpg" ? "portada propia" : "portada por defecto"}
+        >
+        <div>
           <Field label="Imagen de portada">
             <div className="flex items-center gap-2 flex-wrap">
               {evento.imagen && (
@@ -173,7 +232,7 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
           </label>
         </div>
 
-        <div style={{ gridColumn: "span 2 / span 2" }}>
+        <div>
           <Field label="Imagen para compartir en WhatsApp">
             <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
               La miniatura que aparece al pegar cualquier enlace de esta web (el del tablón,
@@ -216,6 +275,73 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
             </p>
           </Field>
         </div>
+        </SeccionPlegable>
+
+        <SeccionPlegable
+          icono={Euro}
+          titulo="Precios"
+          resumen={`${evento.precioAdulto || "—"} € adulto · ${evento.precioNino || "—"} € niño`}
+        >
+          <div className="space-y-3 pt-1">
+            <GrupoPrecio
+              moneda
+              etiquetaA="Adulto"
+              valorA={evento.precioAdulto}
+              onCambiarA={(e) => persistEvento({ ...evento, precioAdulto: e.target.value })}
+              etiquetaB="Niño"
+              valorB={evento.precioNino}
+              onCambiarB={(e) => persistEvento({ ...evento, precioNino: e.target.value })}
+            />
+            <GrupoPrecio
+              titulo="Edad niño"
+              etiquetaA="Desde"
+              valorA={evento.edadNinoDesde}
+              onCambiarA={(e) => persistEvento({ ...evento, edadNinoDesde: e.target.value })}
+              etiquetaB="Hasta"
+              valorB={evento.edadNinoHasta}
+              onCambiarB={(e) => persistEvento({ ...evento, edadNinoHasta: e.target.value })}
+            />
+          </div>
+        </SeccionPlegable>
+
+        <SeccionPlegable
+          icono={Mail}
+          titulo="Email del anfitrión"
+          resumen={evento.emailAnfitrion || "sin configurar"}
+        >
+          <p className="text-xs mb-2 pt-1" style={{ color: C.charcoal, opacity: 0.75 }}>
+            Tu email, para recibir avisos automáticos cuando un colaborador complete todos los
+            datos o todos los pagos de sus invitados asignados.
+          </p>
+          <Field label="Tu email (anfitrión)">
+            <TextInput
+              value={evento.emailAnfitrion || ""}
+              onChange={(e) => persistEvento({ ...evento, emailAnfitrion: e.target.value })}
+              placeholder="tu@email.com"
+              className="w-full"
+            />
+          </Field>
+          {evento.emailAnfitrion && !emailValido(evento.emailAnfitrion) && (
+            <p className="text-xs mt-1" style={{ color: C.wax }}>
+              ⚠ No parece un email válido — revísalo, o te quedarás sin avisos sin que nadie lo note.
+            </p>
+          )}
+        </SeccionPlegable>
+
+        <SeccionPlegable icono={Globe} titulo="URL de la web" resumen={evento.urlPublica || "sin configurar"}>
+          <p className="text-xs mb-2 pt-1" style={{ color: C.charcoal, opacity: 0.75 }}>
+            <strong>Importante:</strong> la URL de tu web ya publicada. Sin este dato, los enlaces
+            que copies para cada colaborador no apuntarán al sitio correcto.
+          </p>
+          <Field label="URL de la web">
+            <TextInput
+              value={evento.urlPublica}
+              onChange={(e) => persistEvento({ ...evento, urlPublica: e.target.value })}
+              placeholder="https://tu-boda.vercel.app"
+              className="w-full"
+            />
+          </Field>
+        </SeccionPlegable>
       </div>
     </VentanaFlotante>
   );

@@ -136,8 +136,8 @@ export const ETIQUETAS_VENTANAS = {
 // Configuración...), donde puede interesar ver más de una a la vez.
 // `ancho`: ancho inicial opcional (antes de que se redimensione a mano),
 // para ventanas con muy poco contenido donde los 620px por defecto
-// dejarían un hueco vacío enorme (p.ej. Precios, que son solo 4 campos
-// de 1-2 cifras) — ver VentanaConfigPrecios.jsx.
+// dejarían un hueco vacío enorme (p.ej. Permisos), o al revés, para las
+// que necesitan mucho más (la Lista de invitados y sus once columnas).
 // `subtitulo`: contenido opcional bajo el título, dentro de la propia
 // cabecera (p.ej. VentanaProgreso.jsx: una fila de etiquetas + otra de
 // números resaltados) -- a petición del usuario, 2026-08-18.

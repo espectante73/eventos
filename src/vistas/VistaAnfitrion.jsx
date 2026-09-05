@@ -21,9 +21,6 @@ import { guardarAspecto, ASPECTO_POR_DEFECTO } from "../lib/temasMusica";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
-import { VentanaConfigPrecios } from "./anfitrion/VentanaConfigPrecios";
-import { VentanaConfigUrlWeb } from "./anfitrion/VentanaConfigUrlWeb";
-import { VentanaConfigEmailAnfitrion } from "./anfitrion/VentanaConfigEmailAnfitrion";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
 import { VentanaConfigPlantillasEmail } from "./anfitrion/VentanaConfigPlantillasEmail";
 import { VentanaConfigModoPruebas } from "./anfitrion/VentanaConfigModoPruebas";
@@ -360,18 +357,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
           submenú "Configuración" de "Abrir sección…" (ver DesplegableSecciones.jsx) */}
       {abierto["config-datos-evento"] && (
         <VentanaConfigDatosEvento data={data} onCerrar={() => toggle("config-datos-evento")} />
-      )}
-
-      {abierto["config-precios"] && (
-        <VentanaConfigPrecios data={data} onCerrar={() => toggle("config-precios")} />
-      )}
-
-      {abierto["config-url-web"] && (
-        <VentanaConfigUrlWeb data={data} onCerrar={() => toggle("config-url-web")} />
-      )}
-
-      {abierto["config-email-anfitrion"] && (
-        <VentanaConfigEmailAnfitrion data={data} onCerrar={() => toggle("config-email-anfitrion")} />
       )}
 
       {abierto["config-plantillas-email"] && (

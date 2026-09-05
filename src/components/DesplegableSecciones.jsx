@@ -28,8 +28,6 @@ import {
   Eye,
   User,
   Calendar,
-  Euro,
-  Globe,
   FileText,
   FlaskConical,
   RotateCcw,
@@ -75,12 +73,9 @@ const SUBMENU_CONFIGURACION = [
   { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2, fondo: "#B00020", color: C.paper },
   { id: "config-cronograma", etiqueta: "Cronograma", icono: Clock3 },
   { id: "config-datos-evento", etiqueta: "Datos evento", icono: Calendar },
-  { id: "config-email-anfitrion", etiqueta: "Email anfitrión", icono: Mail },
   { id: "config-modo-pruebas", etiqueta: "Modo pruebas", icono: FlaskConical, fondo: C.wax, color: C.paper },
-  { id: "config-precios", etiqueta: "Precios", icono: Euro },
   { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },
   { id: "config-plantillas-email", etiqueta: "Texto emails", icono: FileText },
-  { id: "config-url-web", etiqueta: "URL web", icono: Globe },
 ];
 
 // `posicion`: dónde flota el botón dentro de su contenedor (por defecto,

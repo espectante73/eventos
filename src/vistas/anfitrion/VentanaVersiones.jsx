@@ -49,6 +49,8 @@ const HISTORIAL_VERSIONES = [
       "Y el de Colaborador también: cuántos invitados tiene asignados cada uno, de un vistazo, sin tener que filtrar uno a uno.",
       "Se retira la ventana \"Logística\": había dejado de aportar nada que no se viera ya en otro sitio de la app. Lo único que sí se seguía consultando — el resumen de qué colaborador tiene qué permiso — se muda a la propia ventana de Permisos, donde encaja de forma natural, plegado por defecto igual que estaba allí.",
       "Simplificado el menú \"Abrir sección…\": \"Fondo musical\" (dentro de Configuración) se retira como botón propio — solo servía para tocar un ajuste del tablón público — y su gestor de pistas pasa a ser una fila plegable más en el pie de Novedades, junto al WhatsApp y la pregunta de acceso, que son ajustes del mismo tablón.",
+      "Y tres botones más de Configuración desaparecen del menú: Precios, Email anfitrión y URL web pasan a ser secciones plegadas dentro de Datos del evento, que es lo que son — datos del evento. Configuración baja de diez entradas a seis.",
+      "Datos del evento gana además su propia sección plegada para las dos imágenes (portada y WhatsApp), que eran lo que más espacio ocupaba nada más abrirla. Cada sección plegada muestra su valor actual al lado del título, así que no hay que abrirlas para saber cómo están.",
     ],
   },
   {
