@@ -91,7 +91,6 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
 let contadorZIndexVentanas = 50;
 
 export const ORDEN_VENTANAS = [
-  "avisos",
   "colaboradores",
   "configuracion",
   "cuentas",
@@ -119,7 +118,6 @@ export const ETIQUETAS_VENTANAS = {
   cuentas: "Cuentas",
   copiaSeguridad: "Backup",
   configuracion: "Configuración",
-  avisos: "Avisos",
   versiones: "Versiones",
   novedades: "Novedades",
   permisos: "Permisos",

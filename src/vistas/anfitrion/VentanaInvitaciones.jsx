@@ -164,6 +164,48 @@ export function VentanaInvitaciones({
         }`}
         onCerrar={onCerrar}
       >
+        {/* Las tres cifras venían de la ventana "Avisos" (retirada el
+            2026-09-05): su bloque "Invitaciones a familias" repetía la
+            lista que esta ventana ya tenía, así que se descartó entero
+            salvo estos contadores, que aquí sí faltaban. */}
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          {[
+            {
+              etiqueta: "Pendientes",
+              valor: familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada).length,
+              alerta: true,
+            },
+            {
+              etiqueta: "Enviadas",
+              valor: familiasListasParaInvitacion.filter((f) => f.invitacionEnviada).length,
+              alerta: false,
+            },
+            {
+              etiqueta: "Sin email",
+              valor: familiasListasParaInvitacion.filter(
+                (f) => !f.invitacionEnviada && !destinatarioConEmail(f)?.email
+              ).length,
+              alerta: true,
+            },
+          ].map((cifra) => (
+            <div key={cifra.etiqueta} className="text-center p-2 rounded" style={{ background: C.paperDark }}>
+              <div
+                style={{
+                  fontFamily: "'Fraunces', serif",
+                  color: cifra.alerta && cifra.valor > 0 ? C.wax : C.ink,
+                  fontWeight: 700,
+                  fontSize: 18,
+                }}
+              >
+                {cifra.valor}
+              </div>
+              <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+                {cifra.etiqueta}
+              </div>
+            </div>
+          ))}
+        </div>
+
         <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
           Solo aparecen aquí las familias en las que <strong>todos</strong> sus confirmados
           ya han pagado. Genera la imagen (con el apellido familiar y los nombres de los

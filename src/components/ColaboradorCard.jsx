@@ -11,7 +11,7 @@ import { emailValido } from "../lib/validacion";
 import { Seal, GrupoFamiliarInput } from "./Widgets";
 import { BuscadorInvitado } from "./BuscadorInvitado";
 
-export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin, onConfirmarEmailActualizado }) {
+export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin, onConfirmarEmailActualizado, onAvisar }) {
   const [relevando, setRelevando] = useState(false);
   const [mostrarAsignados, setMostrarAsignados] = useState(false);
   const [releveInvitadoId, setReleveInvitadoId] = useState("");
@@ -166,6 +166,32 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
           ⚠ No parece un email válido — revísalo antes de que este colaborador se quede sin
           avisos sin que nadie lo note.
         </p>
+      )}
+
+      {/* "Avisar ahora" vivía en la ventana Avisos, en una lista aparte de
+          "pendientes de avisar" -- pero esta tarjeta YA calculaba esos
+          mismos pendientes (`pendientesAviso`, arriba) y ya tiene el email
+          con su botón "Probar". Faltaba justo el botón. Se trae aquí, que
+          es donde estás mirando cuando decides avisarle (2026-09-05). */}
+      {pendientesAviso.length > 0 && (
+        <div
+          className="flex items-center justify-between gap-2 mt-2 px-2 py-1.5 rounded"
+          style={{ background: C.avisoFondo }}
+        >
+          <span className="text-xs" style={{ color: C.ink }}>
+            {pendientesAviso.length} invitado{pendientesAviso.length !== 1 && "s"} nuevo
+            {pendientesAviso.length !== 1 && "s"} sin avisar
+          </span>
+          <button
+            onClick={() => onAvisar(c)}
+            disabled={!c.email}
+            className="text-xs px-2 py-1 rounded font-medium whitespace-nowrap"
+            style={{ background: c.email ? C.wax : C.line, color: c.email ? "#fff" : C.charcoal }}
+            title={c.email ? "Ver el email y enviarlo" : "Añade primero un email"}
+          >
+            Avisar ahora
+          </button>
+        </div>
       )}
       {c.emailSincronizadoEn && (
         <div

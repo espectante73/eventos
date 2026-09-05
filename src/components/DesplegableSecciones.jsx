@@ -13,7 +13,6 @@
 //   su formulario (sustituye a la barra ancha de arriba que existía
 //   antes en App.jsx, ahora eliminada — reparto del 2026-08-09).
 import {
-  Bell,
   Users,
   Settings,
   Save,
@@ -43,7 +42,6 @@ import { MenuFlotante } from "./MenuFlotante";
 
 // Un icono por sección, para ubicarla de un vistazo en la lista.
 const ICONOS_VENTANAS = {
-  avisos: Bell,
   colaboradores: Users,
   configuracion: Settings,
   copiaSeguridad: Save,

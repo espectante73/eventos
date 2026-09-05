@@ -1,5 +1,5 @@
 // Vista completa del anfitrión: todas las ventanas de gestión (Colaboradores,
-// Mesas, Avisos, Estado de cuentas, Configuración, Invitaciones,
+// Mesas, Estado de cuentas, Configuración, Invitaciones,
 // Zona de Reinicio...). Movida tal cual desde App.jsx en el reparto del
 // 2026-08-08 (ver CLAUDE.md) — sigue siendo un único componente grande;
 // dividir su interior es un cambio aparte, deliberadamente pospuesto (ver
@@ -29,7 +29,6 @@ import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
 import { VentanaColaboradoresDatos } from "./anfitrion/VentanaColaboradoresDatos";
 import { VentanaMesas } from "./anfitrion/VentanaMesas";
 import { VentanaCuentas } from "./anfitrion/VentanaCuentas";
-import { VentanaAvisos } from "./anfitrion/VentanaAvisos";
 import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 
@@ -176,8 +175,9 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   );
 
   // Vive aquí (no en SeccionInvitados) porque el botón "Editar asignación"
-  // de la ventana Avisos también necesita poder rellenar el filtro de
-  // colaborador de esta tabla.
+  // de la vista previa del aviso (ahora en Datos de colaboradores)
+  // también necesita poder rellenar el filtro de colaborador de esta
+  // tabla.
   const [filtros, setFiltros] = useState({
     texto: "",
     grupoFamiliar: "",
@@ -221,7 +221,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
     invitaciones: false,
     cuentas: false,
     versiones: false,
-    avisos: false,
   });
   const toggle = (clave) => setAbierto((a) => ({ ...a, [clave]: !a[clave] }));
 
@@ -287,6 +286,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         <VentanaColaboradoresDatos
           data={data}
           asignarColaborador={asignarColaborador}
+          setFiltros={setFiltros}
+          setAbierto={setAbierto}
           onCerrar={() => toggle("colaboradores-datos")}
         />
       )}
@@ -375,21 +376,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
 
       {abierto["config-zona-peligro"] && (
         <VentanaConfigZonaPeligro data={data} onCerrar={() => toggle("config-zona-peligro")} />
-      )}
-
-      {/* Avisos */}
-      {abierto.avisos && (
-        <VentanaAvisos
-          data={data}
-          familiasListasParaInvitacion={familiasListasParaInvitacion}
-          destinatarioConEmail={destinatarioConEmail}
-          descargando={descargando}
-          abrirPreviewInvitacion={abrirPreviewInvitacion}
-          colaboradoresPendientes={colaboradoresPendientes}
-          setFiltros={setFiltros}
-          setAbierto={setAbierto}
-          onCerrar={() => toggle("avisos")}
-        />
       )}
 
       {/* Versiones */}
