@@ -232,17 +232,6 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
         </p>
       )}
 
-      {pendientesAviso.length > 0 && (
-        <div
-          className="flex items-center gap-2 mt-2 px-2 py-1 rounded"
-          style={{ background: C.avisoFondo }}
-        >
-          <span className="text-xs" style={{ color: C.wax }}>
-            ⚠ {pendientesAviso.length} pendiente{pendientesAviso.length === 1 ? "" : "s"} de avisar
-            — avisa desde la ventana "Avisos".
-          </span>
-        </div>
-      )}
 
       {mostrarAsignados && (
         <div className="mt-3 space-y-1.5" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 8 }}>

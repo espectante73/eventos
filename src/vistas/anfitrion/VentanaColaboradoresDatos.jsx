@@ -169,25 +169,36 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
   return (
     <>
     <VentanaFlotante clave="colaboradores-datos" titulo="Datos de colaboradores" onCerrar={onCerrar}>
-      <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
-        Los colaboradores son también invitados del evento: búscalo por apellido o
-        nombre entre los ya añadidos a la lista. Si aún no está en la lista, añádelo
-        primero abajo en "Lista de invitados".
-      </p>
-      <div className="flex flex-wrap gap-2 mb-3">
-        <BuscadorInvitado
-          invitados={invitadosDisponiblesParaColaborador}
-          invitadoId={nuevoColab.invitadoId}
-          onSeleccionar={(id) => setNuevoColab({ ...nuevoColab, invitadoId: id })}
-          placeholder="Buscar invitado para hacerlo colaborador..."
-        />
-        <button
-          onClick={agregarColaborador}
-          className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-          style={{ background: C.ink, color: C.paper }}
+      {/* Añadir uno nuevo va plegado: se hace unas pocas veces y ocupaba
+          media ventana con su explicación -- lo que se mira a diario son
+          las tarjetas de abajo (2026-09-06). */}
+      <div className="mb-3">
+        <SeccionPlegable
+          icono={Plus}
+          titulo="Añadir colaborador"
+          resumen={`${colaboradores.length} en total`}
         >
-          <Plus size={14} /> Añadir
-        </button>
+          <p className="text-xs mb-2 pt-1" style={{ color: C.charcoal, opacity: 0.7 }}>
+            Los colaboradores son también invitados del evento: búscalo por apellido o nombre
+            entre los ya añadidos a la lista. Si aún no está, añádelo primero en la Lista de
+            invitados.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <BuscadorInvitado
+              invitados={invitadosDisponiblesParaColaborador}
+              invitadoId={nuevoColab.invitadoId}
+              onSeleccionar={(id) => setNuevoColab({ ...nuevoColab, invitadoId: id })}
+              placeholder="Buscar invitado para hacerlo colaborador..."
+            />
+            <button
+              onClick={agregarColaborador}
+              className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
+              style={{ background: C.ink, color: C.paper }}
+            >
+              <Plus size={14} /> Añadir
+            </button>
+          </div>
+        </SeccionPlegable>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-3">
