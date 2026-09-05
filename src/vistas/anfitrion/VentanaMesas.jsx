@@ -154,12 +154,14 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
   return (
     <>
       <VentanaFlotante clave="mesas" titulo="Mesas" onCerrar={onCerrar}>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-            Define primero cuántos comensales caben en cada mesa. Luego puedes generar una
-            distribución preliminar (respetando el grupo familiar) y ajustarla a mano.
+        {/* Texto en su propia línea y los botones debajo, alineados al
+            borde izquierdo -- a petición del usuario, 2026-09-05: antes
+            iban a la derecha del párrafo, en la misma fila. */}
+        <div className="mb-3">
+          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
+            Define cuántas mesas y cuántos comensales por mesa.
           </p>
-          <div className="flex items-center gap-2 ml-3">
+          <div className="flex items-center gap-2 flex-wrap">
             {avisosMesas.length > 0 && (
               <button
                 onClick={() => setPanelFlotante("avisosMesas")}
