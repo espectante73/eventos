@@ -21,7 +21,6 @@ import {
   Mail,
   List,
   Utensils,
-  Map,
   Gauge,
   History,
   UserCog,
@@ -55,7 +54,6 @@ const ICONOS_VENTANAS = {
   musicaEvento: Music,
   novedades: Megaphone,
   permisos: KeyRound,
-  plano: Map,
   progreso: Gauge,
   versiones: History,
 };
@@ -70,10 +68,12 @@ const ICONOS_VENTANAS = {
 // crecer, se sabe siempre dónde buscar algo sin tener que recordar en
 // qué orden se fue añadiendo.
 const SUBMENU_CONFIGURACION = [
+  { id: "copiaSeguridad", etiqueta: "Backup", icono: Save },
   { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2, fondo: "#B00020", color: C.paper },
   { id: "config-cronograma", etiqueta: "Cronograma", icono: Clock3 },
   { id: "config-datos-evento", etiqueta: "Datos evento", icono: Calendar },
   { id: "config-modo-pruebas", etiqueta: "Modo pruebas", icono: FlaskConical, fondo: C.wax, color: C.paper },
+  { id: "permisos", etiqueta: "Permisos", icono: KeyRound },
   { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },
   { id: "config-plantillas-email", etiqueta: "Texto emails", icono: FileText },
 ];

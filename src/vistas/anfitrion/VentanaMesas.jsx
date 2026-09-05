@@ -10,11 +10,13 @@
 // "tabla"/"canciones"/"alergias"-, así que llegan como props en vez de
 // definirse dentro.
 import { useState } from "react";
-import { AlertTriangle, Plus } from "lucide-react";
+import { AlertTriangle, Plus, Map } from "lucide-react";
 import { C } from "../../theme";
 import { tieneAlergiaReal } from "../../lib/invitados";
 import { MesaRedonda } from "../../components/Mesas";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
+import { SeccionPlegable } from "../../components/SeccionPlegable";
+import { PlanoMesas } from "../../components/PlanoMesas";
 
 export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlotante, onCerrar }) {
   const { mesas, invitados, persistMesas, persistInvitados } = data;
@@ -209,6 +211,21 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
               Todavía no hay mesas — pulsa "Añadir mesa" para crear la primera.
             </p>
           )}
+        </div>
+
+        {/* El plano es la MISMA información desde otra perspectiva: no
+            tiene datos propios, solo coloca en el espacio las mesas que
+            se crean aquí arriba. Lo señaló el usuario (2026-09-05) y por
+            eso deja de ser una entrada propia del menú. Plegado por
+            defecto: se coloca una vez y se imprime, no se mira a diario. */}
+        <div className="mt-3">
+          <SeccionPlegable
+            icono={Map}
+            titulo="Plano de mesas"
+            resumen={mesas.length ? `${mesas.length} mesa(s) · imprimible en A2` : "sin mesas todavía"}
+          >
+            <PlanoMesas data={data} ocupacionMesa={ocupacionMesa} />
+          </SeccionPlegable>
         </div>
       </VentanaFlotante>
 

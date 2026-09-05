@@ -1,5 +1,5 @@
 // Vista completa del anfitrión: todas las ventanas de gestión (Colaboradores,
-// Mesas, Plano, Avisos, Estado de cuentas, Configuración, Invitaciones,
+// Mesas, Avisos, Estado de cuentas, Configuración, Invitaciones,
 // Zona de Reinicio...). Movida tal cual desde App.jsx en el reparto del
 // 2026-08-08 (ver CLAUDE.md) — sigue siendo un único componente grande;
 // dividir su interior es un cambio aparte, deliberadamente pospuesto (ver
@@ -28,7 +28,6 @@ import { VentanaConfigZonaReinicio } from "./anfitrion/VentanaConfigZonaReinicio
 import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
 import { VentanaColaboradoresDatos } from "./anfitrion/VentanaColaboradoresDatos";
 import { VentanaMesas } from "./anfitrion/VentanaMesas";
-import { VentanaPlano } from "./anfitrion/VentanaPlano";
 import { VentanaCuentas } from "./anfitrion/VentanaCuentas";
 import { VentanaAvisos } from "./anfitrion/VentanaAvisos";
 import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
@@ -218,7 +217,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
     progreso: false,
     "colaboradores-datos": false,
     mesas: false,
-    plano: false,
     invitados: false,
     invitaciones: false,
     cuentas: false,
@@ -302,11 +300,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
           setPanelFlotante={setPanelFlotante}
           onCerrar={() => toggle("mesas")}
         />
-      )}
-
-      {/* Plano de mesas */}
-      {abierto.plano && (
-        <VentanaPlano data={data} ocupacionMesa={ocupacionMesa} onCerrar={() => toggle("plano")} />
       )}
 
       {/* Lista de invitados, en la página (móvil, o si el navegador

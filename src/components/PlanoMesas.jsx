@@ -1,15 +1,17 @@
-// Ventana "Plano de mesas": lienzo donde cada mesa se arrastra a su
-// posición real, pensado para imprimir en A2. Extraída de
-// VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4, Ronda 4).
+// Plano de mesas: lienzo donde cada mesa se arrastra a su posición real,
+// pensado para imprimir en A2.
 //
-// `ocupacionMesa` no vive aquí: la usan también la ventana Mesas y la
-// tabla principal de invitados, así que sigue en VistaAnfitrion y llega
-// como prop.
+// Vivía en su propia ventana del menú (VentanaPlano.jsx) hasta el
+// 2026-09-05, cuando el usuario señaló lo evidente: "Mesas y plano
+// gestionan lo mismo desde diferentes perspectivas". Es cierto -- este
+// lienzo no tiene datos propios, solo coloca las mesas que se crean en
+// la ventana Mesas (y de hecho ya decía "créalas primero en Mesas"). Así
+// que pasa a ser una sección plegable dentro de ella, en vez de una
+// entrada más del menú.
 import { useRef } from "react";
 import { Printer } from "lucide-react";
-import { C } from "../../theme";
-import { MesaPlano } from "../../components/Mesas";
-import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { C } from "../theme";
+import { MesaPlano } from "./Mesas";
 
 // Posición por defecto en rejilla para las mesas que todavía no se han
 // arrastrado a mano en el plano (posX/posY a null).
@@ -24,7 +26,7 @@ function posicionPorDefecto(indice, total) {
   };
 }
 
-export function VentanaPlano({ data, ocupacionMesa, onCerrar }) {
+export function PlanoMesas({ data, ocupacionMesa }) {
   const { mesas, persistMesas } = data;
   const lienzoPlanoRef = useRef(null);
 
@@ -35,7 +37,7 @@ export function VentanaPlano({ data, ocupacionMesa, onCerrar }) {
   };
 
   return (
-    <VentanaFlotante clave="plano" titulo="Plano de mesas" onCerrar={onCerrar}>
+    <div className="pt-1">
       <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
         Arrastra cada mesa a la posición que quieras para representar cómo queda en el local.
         La posición se guarda sola. Para imprimirlo en A2, pulsa "Imprimir" y elige el tamaño
@@ -93,6 +95,6 @@ export function VentanaPlano({ data, ocupacionMesa, onCerrar }) {
           Todavía no hay mesas — créalas primero en "Mesas".
         </p>
       )}
-    </VentanaFlotante>
+    </div>
   );
 }

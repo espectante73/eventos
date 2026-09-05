@@ -94,15 +94,12 @@ export const ORDEN_VENTANAS = [
   "avisos",
   "colaboradores",
   "configuracion",
-  "copiaSeguridad",
   "cuentas",
   "invitaciones",
   "invitados",
   "mesas",
   "musicaEvento",
   "novedades",
-  "permisos",
-  "plano",
   "progreso",
   "versiones",
 ];
@@ -110,13 +107,15 @@ export const ORDEN_VENTANAS = [
 // Etiquetas cortas (una palabra donde sea posible) -- son solo las del
 // menú "Abrir sección..." (DesplegableSecciones.jsx); el título completo
 // de cada ventana ya abierta se define aparte, en su propio fichero
-// (p.ej. VentanaVersiones.jsx sigue titulándose "Versiones", pero
-// VentanaPlano.jsx sigue titulándose "Plano de mesas" tal cual).
+// (p.ej. VentanaVersiones.jsx sigue titulándose "Versiones").
+//
+// Incluye también las que ya NO son entradas de primer nivel pero
+// siguen abriéndose como ventana desde el submenú de Configuración
+// (Permisos, Backup): la etiqueta se usa igual al pintarlas.
 export const ETIQUETAS_VENTANAS = {
   progreso: "Progreso",
   colaboradores: "Colaboradores",
   mesas: "Mesas",
-  plano: "Plano",
   invitaciones: "Invitaciones",
   invitados: "Invitados",
   cuentas: "Cuentas",

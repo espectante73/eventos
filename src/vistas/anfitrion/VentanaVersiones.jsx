@@ -51,6 +51,8 @@ const HISTORIAL_VERSIONES = [
       "Simplificado el menú \"Abrir sección…\": \"Fondo musical\" (dentro de Configuración) se retira como botón propio — solo servía para tocar un ajuste del tablón público — y su gestor de pistas pasa a ser una fila plegable más en el pie de Novedades, junto al WhatsApp y la pregunta de acceso, que son ajustes del mismo tablón.",
       "Y tres botones más de Configuración desaparecen del menú: Precios, Email anfitrión y URL web pasan a ser secciones plegadas dentro de Datos del evento, que es lo que son — datos del evento. Configuración baja de diez entradas a seis.",
       "Datos del evento gana además su propia sección plegada para las dos imágenes (portada y WhatsApp), que eran lo que más espacio ocupaba nada más abrirla. Cada sección plegada muestra su valor actual al lado del título, así que no hay que abrirlas para saber cómo están.",
+      "El Plano de mesas deja de ser una ventana aparte y pasa a ser una sección plegada dentro de Mesas: es la misma información desde otra perspectiva — el plano no tiene datos propios, solo coloca en el espacio las mesas que se crean ahí (de hecho ya avisaba de \"créalas primero en Mesas\").",
+      "Permisos y Backup bajan al segundo nivel, dentro de Configuración, que es lo que son. El menú principal pasa de catorce entradas a once.",
     ],
   },
   {
