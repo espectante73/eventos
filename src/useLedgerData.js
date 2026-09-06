@@ -723,14 +723,31 @@ export function useLedgerData(rol) {
       if (!cambiado) return;
 
       const previo = anteriorPorId[cambiado.id];
-      const soloCambioPagado =
-        previo && previo.pagado !== cambiado.pagado
-          ? Object.keys(cambiado).every(
-              (k) => k === "pagado" || cambiado[k] === previo[k]
-            )
+      // Un solo campo cambiado tiene su propia RPC, más estrecha que el
+      // guardado general: así el colaborador puede marcar pago o
+      // asistencia sin que la función de guardar datos tenga que
+      // aceptar cambios en columnas que no le tocan.
+      const soloCambio = (campo) =>
+        previo && previo[campo] !== cambiado[campo]
+          ? Object.keys(cambiado).every((k) => k === campo || cambiado[k] === previo[k])
           : false;
+      const soloCambioPagado = soloCambio("pagado");
+      const soloCambioPresente = soloCambio("presente");
 
-      if (soloCambioPagado) {
+      if (soloCambioPresente) {
+        // Asistencia el día del evento: ver colaborador_marcar_presente
+        // en schema.sql.
+        const { data, error } = await supabase.rpc("colaborador_marcar_presente", {
+          p_colaborador_id: rol,
+          p_invitado_id: cambiado.id,
+          p_presente: cambiado.presente,
+        });
+        if (error || !data || data.length === 0) {
+          avisar("No se pudo marcar la asistencia (¿sigue asignado a ti este invitado?). Se deshace el cambio en pantalla.", error);
+          setInvitados(anterior);
+          invitadosRef.current = anterior;
+        }
+      } else if (soloCambioPagado) {
         const { data, error } = await supabase.rpc("colaborador_marcar_pagado", {
           p_colaborador_id: rol,
           p_invitado_id: cambiado.id,

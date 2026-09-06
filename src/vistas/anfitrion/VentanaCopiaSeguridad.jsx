@@ -65,6 +65,7 @@ export function VentanaCopiaSeguridad({ data, onCerrar }) {
         alergias: "",
         observaciones: "",
         pagado: false,
+        presente: false,
       }));
       persistInvitados([...invitados, ...nuevos]);
       setTextoRestaurar("");
@@ -92,6 +93,7 @@ export function VentanaCopiaSeguridad({ data, onCerrar }) {
       alergias: r.alergias || "",
       observaciones: r.observaciones || "",
       pagado: Boolean(r.pagado),
+      presente: Boolean(r.presente),
       _colaboradorNombreTmp: r.colaboradorNombre || "",
     }));
 

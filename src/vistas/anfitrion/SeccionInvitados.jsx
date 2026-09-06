@@ -116,6 +116,7 @@ export function SeccionInvitados({
         alergias: "",
         observaciones: "",
         pagado: false,
+        presente: false,
       },
     ]);
     setNuevoInvitado({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
@@ -396,6 +397,8 @@ export function SeccionInvitados({
       if (filtros.confirmado === "tentativa" && g.confirmado) return false;
       if (filtros.datos === "completo" && !(g.confirmado && datosCompletos(g))) return false;
       if (filtros.datos === "pendiente" && (!g.confirmado || datosCompletos(g))) return false;
+      if (filtros.presente === "si" && !g.presente) return false;
+      if (filtros.presente === "no" && g.presente) return false;
       if (filtros.pagado === "pagado" && !g.pagado) return false;
       if (filtros.pagado === "pendiente" && g.pagado) return false;
       return true;
@@ -427,6 +430,8 @@ export function SeccionInvitados({
             return g.confirmado && datosCompletos(g) ? 2 : g.confirmado ? 1 : 0;
           case "pagado":
             return g.pagado ? 1 : 0;
+          case "presente":
+            return g.presente ? 1 : 0;
           default:
             return `${(g.apellido || "").toLowerCase()} ${(g.nombre || "").toLowerCase()}`;
         }
@@ -466,7 +471,7 @@ export function SeccionInvitados({
   // lo vio el usuario el 2026-09-05 y dio con la causa: "tienen tres
   // iconos al final que no tienen encabezado, están ocupando espacio del
   // resto". Con una medida fija, las tres rejillas parten de lo mismo.
-  const columnasTabla = "1.6fr 1.1fr 0.5fr 0.8fr 0.9fr 1.5fr 1.1fr 1fr 0.8fr 0.8fr 92px";
+  const columnasTabla = "1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.75fr 0.75fr 0.7fr 92px";
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
@@ -502,6 +507,7 @@ export function SeccionInvitados({
   }, {});
   const conCuenta = (texto, clave) => `${texto} (${porRol[clave] || 0})`;
   const sinRevisar = invitados.filter((g) => !g.rolFamiliar).length;
+  const totalPresentes = invitados.filter((g) => g.presente).length;
   const totalInvitados = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
   const edadMedia = edadPromedio(invitadosOrdenados, evento);
@@ -522,6 +528,9 @@ export function SeccionInvitados({
     // Matrimonios: un esposO + una esposA dentro del mismo grupo
     // familiar (2026-09-03). Ver lib/matrimonios.js.
     { label: "Matrimonios", value: totalMatrimonios },
+    // Solo el día del evento tiene sentido, así que aparece en cuanto
+    // llega el primero y no antes.
+    ...(totalPresentes ? [{ label: "Ya están", value: `${totalPresentes}/${confirmadosCount}` }] : []),
     // Solo aparece si hay algo que corregir: en cuanto está todo
     // emparejado, deja de ocupar sitio.
     ...(idsSueltos.size ? [{ label: "Sin pareja", value: idsSueltos.size, alerta: true }] : []),
@@ -722,7 +731,17 @@ export function SeccionInvitados({
                     Pagado
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(10), borderRadius: "6px 6px 0 0" }}></span>
+                {/* Asistencia del día del evento: la marcan los
+                    colaboradores desde su formulario, según va llegando
+                    su gente (2026-09-06). Aquí es de solo lectura -- el
+                    recuento y el filtro son lo que de verdad hace falta
+                    desde este lado. */}
+                <span style={{ background: tintaColumnaCabecera(10), borderRadius: "6px 6px 0 0" }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="presente" orden={orden} onClick={cambiarOrden}>
+                    Llegó
+                  </EncabezadoOrdenable>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(11), borderRadius: "6px 6px 0 0" }}></span>
               </div>
               {/* Fila de filtros, subida aquí junto a la cabecera de
                   columnas (antes vivía sola en la caja blanca) -- a
@@ -1003,7 +1022,30 @@ export function SeccionInvitados({
                     <option value="pendiente">Pendiente</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(10), borderRadius: "0 0 6px 6px" }} />
+                <span style={{ background: tintaColumnaCabecera(10), borderRadius: "0 0 6px 6px" }}>
+                  <select
+                    value={filtros.presente}
+                    onChange={(e) => setFiltros({ ...filtros, presente: e.target.value })}
+                    style={{
+                      ...inputStyle,
+                      border: "none",
+                      background: "transparent",
+                      color: C.goldClaro,
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      padding: "2px 4px",
+                      fontSize: 12,
+                      width: "100%",
+                      minWidth: 0,
+                      boxSizing: "border-box",
+                    }}
+                    title="Quién ha llegado al evento"
+                  >
+                    <option value="">Todos</option>
+                    <option value="si">Ya está ({totalPresentes})</option>
+                    <option value="no">Falta ({confirmadosCount - totalPresentes})</option>
+                  </select>
+                </span>
+                <span style={{ background: tintaColumnaCabecera(11), borderRadius: "0 0 6px 6px" }} />
               </div>
             </div>
           </div>
@@ -1547,7 +1589,14 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  <span style={{ ...celda(10), gap: 6 }}>
+                  <span style={celda(10, { justifyContent: "center", textAlign: "center" })}>
+                    {g.presente ? (
+                      <Check size={20} style={{ color: C.ink }} />
+                    ) : (
+                      <span className="text-xs" style={{ opacity: 0.4 }}>—</span>
+                    )}
+                  </span>
+                  <span style={{ ...celda(11), gap: 6 }}>
                     <button
                       onClick={() => setInvitadoRolAbierto(g.id)}
                       title="Rol de trabajo el día del evento (acomodador, etc.)"

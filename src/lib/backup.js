@@ -35,6 +35,7 @@ export function exportarTodo({ evento, mesas, fotosFamiliares, colaboradores, in
         alergias: g.alergias || "",
         observaciones: g.observaciones || "",
         pagado: Boolean(g.pagado),
+        presente: Boolean(g.presente),
       };
     }),
   };

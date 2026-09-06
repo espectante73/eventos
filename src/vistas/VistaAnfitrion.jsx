@@ -191,6 +191,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
     confirmado: "",
     datos: "",
     pagado: "",
+    // "" | "si" | "no" -- columna "Llegó" (asistencia del día).
+    presente: "",
   });
 
   // ---------- Estado de cuentas (gastos) ----------

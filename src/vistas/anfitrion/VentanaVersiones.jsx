@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "23",
+    cambios: [
+      "Control de llegada el día del evento. Cada colaborador ve un check redondo al final de la fila de cada uno de sus invitados, sin desplegar el formulario: lo pulsa según van llegando, con una confirmación por medio (\"¿Confirmas que Fulano ya está aquí?\") — las filas van juntas y un dedo puede marcar al de al lado.",
+      "El nombre del invitado se corre un poco a la izquierda para dejarle sitio al check en el extremo derecho.",
+      "En la Lista de invitados aparece la columna \"Llegó\" con su filtro (Ya está / Falta, con sus cantidades) y, en cuanto llega el primero, el contador \"Ya están 12/130\" arriba junto al resto de cifras. Filtrando por \"Falta\" sale la lista de quién no ha aparecido.",
+      "⚠️ Necesita ejecutar antes el bloque de SQL de la columna \"presente\".",
+    ],
+  },
+  {
     version: "22.5",
     cambios: [
       "\"Texto emails\" deja de ser un botón de Configuración: las cuatro plantillas se mudan al final de Datos del evento, cada una en su propia sección plegada, con un vistazo de su contenido al lado del título. Así todo el texto editable de la app queda concentrado en un solo sitio.",

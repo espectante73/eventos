@@ -374,6 +374,7 @@ function FilaInvitadoColaborador({
   fotoFamiliar,
   onCambiarFotoFamiliar,
   onMarcarPagado,
+  onMarcarPresente,
   evento,
   fotosFamiliares,
   colaboradorVinculado,
@@ -396,6 +397,20 @@ function FilaInvitadoColaborador({
       : `¿Marcar a ${nombreCompleto} como pagado?`;
     if (window.confirm(mensaje)) {
       onMarcarPagado(g.id, !g.pagado);
+    }
+  };
+
+  // Asistencia el día del evento (2026-09-06). Con confirmación, por el
+  // mismo motivo que el pago: las filas van muy juntas y un dedo puede
+  // marcar al de al lado -- y aquí el error es peor, porque el anfitrión
+  // estaría contando como presente a alguien que no ha llegado.
+  const confirmarPresente = () => {
+    const nombreCompleto = `${g.nombre} ${g.apellido}`.trim();
+    const mensaje = g.presente
+      ? `¿Quitar la llegada de ${nombreCompleto}?`
+      : `¿Confirmas que ${nombreCompleto} ya está aquí?`;
+    if (window.confirm(mensaje)) {
+      onMarcarPresente(g.id, !g.presente);
     }
   };
 
@@ -436,6 +451,24 @@ function FilaInvitadoColaborador({
           <span className="text-xs" style={{ color: C.gold }}>
             {abierto ? "▾" : "▸"}
           </span>
+        </button>
+        {/* El check de llegada, en el extremo derecho de la fila (el
+            nombre se corre un poco a la izquierda para dejarle sitio) --
+            así se marca sin desplegar el formulario, que es como se va a
+            usar el día del evento: de pie, recibiendo gente. */}
+        <button
+          onClick={confirmarPresente}
+          title={g.presente ? `${g.nombre} ya está — toca para quitarlo` : `Marcar que ${g.nombre} ha llegado`}
+          className="flex items-center justify-center rounded-full flex-shrink-0"
+          style={{
+            width: 32,
+            height: 32,
+            border: `2px solid ${g.presente ? C.ink : C.line}`,
+            background: g.presente ? C.ink : "transparent",
+            color: g.presente ? C.paper : C.line,
+          }}
+        >
+          <Check size={18} strokeWidth={3} />
         </button>
       </div>
       {abierto && (
@@ -550,6 +583,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
 
   const marcarPagado = (id, pagado) => {
     persistInvitados(invitados.map((g) => (g.id === id ? { ...g, pagado } : g)));
+  };
+
+  const marcarPresente = (id, presente) => {
+    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, presente } : g)));
   };
 
   const toggleAbierto = (g) =>
@@ -848,6 +885,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
                   onCambiarFotoFamiliar={cambiarFotoFamiliar}
                   onMarcarPagado={marcarPagado}
+                  onMarcarPresente={marcarPresente}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
@@ -874,6 +912,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
                   onCambiarFotoFamiliar={cambiarFotoFamiliar}
                   onMarcarPagado={marcarPagado}
+                  onMarcarPresente={marcarPresente}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}

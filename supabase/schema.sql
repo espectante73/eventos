@@ -2692,3 +2692,102 @@ begin
   );
 end;
 $$;
+
+-- ---------- Asistencia el día del evento (2026-09-06) ----------
+-- Necesidad del usuario: el día de la boda, cada colaborador recibe a
+-- sus invitados y va marcando quién ha llegado de verdad, desde su
+-- propio formulario, sin desplegar nada. El anfitrión ve el recuento y
+-- la lista de quién está y quién falta.
+--
+-- Una columna booleana, no una tabla de "registros de entrada": lo que
+-- hace falta saber es SI está, no cuántas veces se marcó. Y así se
+-- puede desmarcar sin dejar rastro raro si alguien se equivoca de fila
+-- (que con las filas juntas y un pulgar, va a pasar).
+alter table invitados add column if not exists "presente" boolean not null default false;
+
+-- Mismo patrón exacto que colaborador_marcar_pagado: pasa por
+-- colaborador_puede_actuar() (que ya comprueba authUserId = auth.uid()
+-- y el bloqueo de Modo Pruebas) y solo toca invitados que sean SUYOS --
+-- el `and "colaboradorId" = p_colaborador_id` del update es lo que
+-- impide marcar a un invitado de otro aunque se llame a la función a
+-- mano con un id cualquiera.
+--
+-- `set_config('eventos.recalculo_aviso_activo', 'off')`: igual que en
+-- marcar_pagado, para que el trigger de avisos no le "avise" al
+-- colaborador de su propio gesto (ver la regla en CLAUDE.md).
+create or replace function colaborador_marcar_presente(
+  p_colaborador_id uuid, p_invitado_id uuid, p_presente boolean
+)
+returns setof invitados
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  actualizado invitados;
+begin
+  if not colaborador_puede_actuar(p_colaborador_id) then
+    return;
+  end if;
+
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
+  update invitados set "presente" = p_presente
+  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+  returning * into actualizado;
+
+  if not found then
+    return;
+  end if;
+
+  return next actualizado;
+end;
+$$;
+
+grant execute on function colaborador_marcar_presente(uuid, uuid, boolean) to anon;
+
+-- Y "presente" al guardado masivo del anfitrión, o se perdería en cuanto
+-- él tocara cualquier otra cosa de la lista.
+create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  insert into invitados (
+    "id","nombre","apellido","zona","confirmado","colaboradorId",
+    "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
+    "cancion","alergias","observaciones","pagado","rolesTrabajo",
+    "excluidoTablon","rolFamiliar","presente"
+  )
+  select
+    (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
+    coalesce((f->>'confirmado')::boolean, false),
+    nullif(f->>'colaboradorId','')::uuid,
+    f->>'grupoFamiliar', nullif(f->>'mesa','')::integer,
+    f->>'anioNacimiento', f->>'anioBoda', f->>'email', f->>'cancion',
+    f->>'alergias', f->>'observaciones',
+    coalesce((f->>'pagado')::boolean, false),
+    coalesce(f->'rolesTrabajo', '[]'::jsonb),
+    coalesce((f->>'excluidoTablon')::boolean, false),
+    coalesce(f->>'rolFamiliar', ''),
+    coalesce((f->>'presente')::boolean, false)
+  from jsonb_array_elements(p_filas) as f
+  on conflict ("id") do update set
+    "nombre"=excluded."nombre", "apellido"=excluded."apellido",
+    "zona"=excluded."zona", "confirmado"=excluded."confirmado",
+    "colaboradorId"=excluded."colaboradorId", "grupoFamiliar"=excluded."grupoFamiliar",
+    "mesa"=excluded."mesa", "anioNacimiento"=excluded."anioNacimiento",
+    "anioBoda"=excluded."anioBoda", "email"=excluded."email",
+    "cancion"=excluded."cancion", "alergias"=excluded."alergias",
+    "observaciones"=excluded."observaciones", "pagado"=excluded."pagado",
+    "rolesTrabajo"=excluded."rolesTrabajo", "excluidoTablon"=excluded."excluidoTablon",
+    "rolFamiliar"=excluded."rolFamiliar", "presente"=excluded."presente";
+
+  delete from invitados g
+  where not exists (
+    select 1 from jsonb_array_elements(p_filas) f
+    where (f->>'id')::uuid = g."id"
+  );
+end;
+$$;
