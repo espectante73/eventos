@@ -2854,3 +2854,249 @@ begin
   return next actualizado;
 end;
 $$;
+
+-- ============================================================
+-- 2026-09-06 (v24): CERRAR A ESCRITURA LAS 4 TABLAS QUE ESTABAN
+-- ABIERTAS A `anon` (evento, mesas, fotos_familiares,
+-- orden_familias).
+--
+-- Se comprobó EN VIVO contra el proyecto real, sin ninguna
+-- credencial: con la clave publicable (que viaja dentro del JS
+-- compilado, y eso es correcto y esperado) cualquiera podía leer
+-- `evento` entera y también ESCRIBIR en ella -- un `PATCH` anónimo
+-- devolvía 204, no 403.
+--
+-- Por qué importaba de verdad: `evento` guarda las PLANTILLAS de
+-- los emails automáticos. Reescribirlas desde fuera equivale a
+-- decidir el texto de los correos que la propia app manda, con el
+-- remitente legítimo del anfitrión, a todos los invitados.
+--
+-- Por qué pasó: la política original ("anon_full_access ... for all
+-- using (true) with check (true)", más arriba en este archivo) se
+-- escribió cuando estas tablas solo tenían mesas y orden -- "datos
+-- sin sensibilidad real", decía el comentario, y era cierto
+-- ENTONCES. Después se le añadieron 13 columnas a `evento` (las
+-- plantillas de email, el email del anfitrión, el cronograma, el
+-- cierre de llegadas...). El comentario se quedó igual mientras el
+-- riesgo crecía por debajo.
+--
+-- La lectura sigue abierta a propósito: el tablón público
+-- (VistaTablon.jsx) lee `evento` sin sesión ninguna, y las fotos y
+-- las mesas no dicen nada que no vea ya cualquier invitado. Lo que
+-- se cierra es ESCRIBIR, que pasa a las 4 funciones de abajo --
+-- mismo patrón que `invitados` y `colaboradores` desde el principio.
+-- ============================================================
+
+-- ---------- Ayudante genérico de permisos por colaborador ----------
+-- Ya existía `colaborador_puede_editar_novedades(uuid)`, atada a una
+-- clave concreta y al id que mande el cliente. Esta es la versión
+-- general (la clave como parámetro) y además NO se fía de ningún id
+-- que venga de fuera: resuelve el colaborador por `auth.uid()`, que
+-- es lo único que el navegador no puede falsificar.
+create or replace function colaborador_tiene_permiso(p_clave text)
+returns boolean
+language sql security definer set search_path = public, pg_temp
+as $$
+  select exists (
+    select 1 from colaboradores c
+    where c."authUserId" = auth.uid()
+      and c."permisos" ? p_clave
+  );
+$$;
+revoke execute on function colaborador_tiene_permiso(text) from public;
+grant execute on function colaborador_tiene_permiso(text) to authenticated;
+
+-- ---------- evento ----------
+-- Dos niveles de acceso a propósito:
+--   * El anfitrión (token) escribe cualquier columna.
+--   * Un colaborador con "datos_evento_editar" escribe SOLO las
+--     columnas de la ventana que se le abre (Datos del evento, con
+--     las plantillas de email dentro). Sin esa lista blanca, ese
+--     permiso le dejaría también abrir el control de llegadas
+--     ("asistenciaAbierta"), activar el Modo Pruebas o cambiar la
+--     visibilidad del cronograma -- cosas que no están en su
+--     ventana y que nadie ha querido concederle.
+--
+-- El SET se construye a partir de las columnas REALES de la tabla
+-- (pg_attribute) en vez de escribirlas a mano una a una: `evento` ya
+-- va por 37 columnas y crece cada pocas sesiones -- una lista fija
+-- aquí se quedaría desactualizada al primer `alter table` y el
+-- guardado empezaría a perder campos en silencio. Los nombres salen
+-- del catálogo de Postgres y van con %I; el valor viaja como
+-- parámetro ($1), nunca concatenado -- no hay forma de inyectar nada.
+drop function if exists guardar_evento(text, jsonb);
+create or replace function guardar_evento(p_token uuid, p_fila jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  v_es_anfitrion boolean;
+  v_claves text[];
+  v_sets text;
+  -- Exactamente los campos que edita VentanaConfigDatosEvento.jsx
+  -- (incluido PlantillasEmail.jsx, que vive dentro desde el
+  -- 2026-09-06). Al añadir un campo a esa ventana, añadirlo aquí.
+  v_permitidas text[] := array[
+    'nombre', 'fecha', 'hora', 'lugar', 'direccion', 'imagen',
+    'ocultarTituloEnImagen', 'emailAnfitrion', 'urlPublica',
+    'precioAdulto', 'precioNino', 'edadNinoDesde', 'edadNinoHasta',
+    'plantillaAsignacion', 'plantillaDatosCompletados',
+    'plantillaPagoRegistrado', 'plantillaInvitacionFamilia'
+  ];
+begin
+  v_es_anfitrion := p_token is not null
+    and p_token = (select "token" from anfitrion_secreto limit 1);
+
+  if not v_es_anfitrion and not colaborador_tiene_permiso('datos_evento_editar') then
+    raise exception 'No autorizado para editar los datos del evento';
+  end if;
+
+  select array_agg(a.attname::text) into v_claves
+  from pg_attribute a
+  where a.attrelid = 'public.evento'::regclass
+    and a.attnum > 0
+    and not a.attisdropped
+    and a.attname <> 'id'
+    and p_fila ? a.attname::text
+    and (v_es_anfitrion or a.attname::text = any(v_permitidas));
+
+  if v_claves is null then
+    return;
+  end if;
+
+  select string_agg(
+           format('%I = ($1->>%L)::%s', a.attname, a.attname,
+                  format_type(a.atttypid, a.atttypmod)),
+           ', ')
+    into v_sets
+  from pg_attribute a
+  where a.attrelid = 'public.evento'::regclass
+    and a.attnum > 0
+    and not a.attisdropped
+    and a.attname::text = any(v_claves);
+
+  execute format('update evento set %s where "id" = true', v_sets) using p_fila;
+end;
+$$;
+revoke execute on function guardar_evento(uuid, jsonb) from public;
+grant execute on function guardar_evento(uuid, jsonb) to anon, authenticated;
+
+-- ---------- mesas ----------
+-- Solo el anfitrión: ningún colaborador toca mesas en toda la app.
+-- Semántica de "reemplazar la lista entera" (borra las que ya no
+-- están, inserta/actualiza el resto) -- es lo que hacía el cliente
+-- en dos pasos, ahora en uno solo y dentro de una transacción, así
+-- que ya no puede quedarse a medias como avisaba el comentario de
+-- persistMesas.
+drop function if exists anfitrion_guardar_mesas(text, jsonb);
+create or replace function anfitrion_guardar_mesas(p_token uuid, p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    raise exception 'Token no válido';
+  end if;
+
+  delete from mesas
+  where "numero" not in (
+    select (v->>'numero')::int from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
+  );
+
+  insert into mesas ("numero", "capacidad", "posX", "posY")
+  select (v->>'numero')::int,
+         coalesce((v->>'capacidad')::int, 10),
+         (v->>'posX')::numeric,
+         (v->>'posY')::numeric
+  from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
+  on conflict ("numero") do update set
+    "capacidad" = excluded."capacidad",
+    "posX"      = excluded."posX",
+    "posY"      = excluded."posY";
+end;
+$$;
+revoke execute on function anfitrion_guardar_mesas(uuid, jsonb) from public;
+grant execute on function anfitrion_guardar_mesas(uuid, jsonb) to anon, authenticated;
+
+-- ---------- fotos_familiares ----------
+-- El anfitrión, o CUALQUIER colaborador con sesión real: subir la
+-- foto de su familia es parte del trabajo normal de un colaborador
+-- (VistaColaborador.jsx), no hace falta ningún permiso especial.
+-- Solo inserta/actualiza, nunca borra -- igual que hacía el cliente.
+drop function if exists guardar_fotos_familiares(text, jsonb);
+create or replace function guardar_fotos_familiares(p_token uuid, p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1)
+     and not exists (select 1 from colaboradores c where c."authUserId" = auth.uid())
+  then
+    raise exception 'No autorizado para guardar fotos familiares';
+  end if;
+
+  insert into fotos_familiares ("grupoFamiliar", "url")
+  select v->>'grupoFamiliar', coalesce(v->>'url', '')
+  from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
+  where coalesce(v->>'grupoFamiliar', '') <> ''
+  on conflict ("grupoFamiliar") do update set "url" = excluded."url";
+end;
+$$;
+revoke execute on function guardar_fotos_familiares(uuid, jsonb) from public;
+grant execute on function guardar_fotos_familiares(uuid, jsonb) to anon, authenticated;
+
+-- ---------- orden_familias ----------
+-- El anfitrión, o un colaborador con "invitaciones_enviar" (marcar
+-- una familia como ya invitada es justo el efecto de ese permiso,
+-- ver lib/useMotorInvitaciones.js).
+drop function if exists guardar_orden_familias(text, jsonb);
+create or replace function guardar_orden_familias(p_token uuid, p_filas jsonb)
+returns void
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1)
+     and not colaborador_tiene_permiso('invitaciones_enviar')
+  then
+    raise exception 'No autorizado para guardar el orden de las familias';
+  end if;
+
+  insert into orden_familias ("grupoFamiliar", "orden", "invitacionEnviada", "invitacionEnviadaEn")
+  select v->>'grupoFamiliar',
+         coalesce(
+           (select array_agg(x) from jsonb_array_elements_text(v->'orden') x),
+           '{}'::text[]
+         ),
+         coalesce((v->>'invitacionEnviada')::boolean, false),
+         (v->>'invitacionEnviadaEn')::timestamptz
+  from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
+  where coalesce(v->>'grupoFamiliar', '') <> ''
+  on conflict ("grupoFamiliar") do update set
+    "orden"               = excluded."orden",
+    "invitacionEnviada"   = excluded."invitacionEnviada",
+    "invitacionEnviadaEn" = excluded."invitacionEnviadaEn";
+end;
+$$;
+revoke execute on function guardar_orden_familias(uuid, jsonb) from public;
+grant execute on function guardar_orden_familias(uuid, jsonb) to anon, authenticated;
+
+-- ---------- Y AHORA SÍ: cerrar la puerta ----------
+-- Cinturón: la política deja de ser "for all" y pasa a ser solo
+-- lectura. Tirantes: se quitan además los permisos de tabla que
+-- Supabase concede por defecto (mismo doble cierre que ya tenían
+-- `invitados` y `colaboradores`) -- con que falte uno de los dos,
+-- la puerta sigue abierta.
+drop policy if exists "anon_full_access" on evento;
+drop policy if exists "anon_full_access" on mesas;
+drop policy if exists "anon_full_access" on fotos_familiares;
+drop policy if exists "anon_full_access" on orden_familias;
+
+create policy "lectura_publica" on evento           for select using (true);
+create policy "lectura_publica" on mesas            for select using (true);
+create policy "lectura_publica" on fotos_familiares for select using (true);
+create policy "lectura_publica" on orden_familias   for select using (true);
+
+revoke insert, update, delete, truncate on table evento           from anon, authenticated;
+revoke insert, update, delete, truncate on table mesas            from anon, authenticated;
+revoke insert, update, delete, truncate on table fotos_familiares from anon, authenticated;
+revoke insert, update, delete, truncate on table orden_familias   from anon, authenticated;

@@ -42,6 +42,17 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "24",
+    cambios: [
+      "Agujero de seguridad real, encontrado y cerrado. Cuatro tablas (datos del evento, mesas, fotos familiares y orden de las familias) estaban abiertas a ESCRITURA para cualquiera de internet, sin contraseña ninguna. Comprobado en vivo contra la web real: un cambio anónimo era aceptado por el servidor.",
+      "Lo grave: los textos de los emails automáticos viven en la tabla del evento. Reescribirlos desde fuera equivalía a decidir el contenido de los correos que la propia app envía, con el remitente legítimo del anfitrión, a todos los invitados.",
+      "Por qué pasó: cuando se abrieron, esas tablas solo tenían las mesas y poco más — \"datos sin sensibilidad real\", y era cierto entonces. Después se le fueron añadiendo trece columnas al evento (plantillas de email, email del anfitrión, cronograma, cierre de llegadas) sin revisar esa decisión.",
+      "Ahora se pueden LEER (el tablón público las necesita) pero solo se pueden escribir a través de funciones que comprueban quién eres — el mismo cierre que ya tenían la lista de invitados y la de colaboradores desde el principio.",
+      "Un colaborador con permiso para editar los datos del evento solo puede tocar los campos de SU ventana. Antes ese permiso le habría dejado también abrir el control de llegadas o activar el Modo Pruebas.",
+      "De paso, guardar las mesas dejó de poder quedarse a medias: era un borrado y un guardado por separado, ahora es una sola operación que o entra entera o no entra.",
+    ],
+  },
+  {
     version: "23",
     cambios: [
       "Candado del control de llegadas, en Datos de colaboradores: un botón \"Llegadas: abiertas / cerradas\" en la misma línea que \"Añadir colaborador\". Con el marcado cerrado, ningún colaborador puede marcar a nadie — así no se ensucia el recuento marcando gente semanas antes para probar. Nace cerrado.",

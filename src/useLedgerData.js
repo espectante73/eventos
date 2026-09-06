@@ -382,49 +382,32 @@ export function useLedgerData(rol) {
     const anterior = eventoRef.current;
     setEvento(next);
     eventoRef.current = next;
-    const { error } = await supabase.from("evento").update(next).eq("id", true);
+    const { error } = await supabase.rpc("guardar_evento", { p_token: rol, p_fila: next });
     if (error) {
       avisar("No se pudo guardar la configuración del evento. Se deshace el cambio en pantalla.", error);
       setEvento(anterior);
       eventoRef.current = anterior;
     }
-  }, []);
+  }, [rol]);
 
+  // Antes eran dos llamadas seguidas (borrar las quitadas + guardar el
+  // resto), que podían quedarse a medias si fallaba la segunda. Ahora es
+  // una sola función que reemplaza la lista entera dentro de una
+  // transacción: o se guarda todo o no se guarda nada.
   const persistMesas = useCallback(async (next) => {
     const anterior = mesasRef.current;
     setMesas(next);
     mesasRef.current = next;
-
-    const numerosNuevos = new Set(next.map((m) => m.numero));
-    const numerosBorrados = anterior
-      .filter((m) => !numerosNuevos.has(m.numero))
-      .map((m) => m.numero);
-    let huboError = false;
-    if (numerosBorrados.length > 0) {
-      const { error: errBorrar } = await supabase
-        .from("mesas")
-        .delete()
-        .in("numero", numerosBorrados);
-      if (errBorrar) {
-        avisar("No se pudieron eliminar las mesas quitadas.", errBorrar);
-        huboError = true;
-      }
-    }
-    if (next.length > 0) {
-      const { error } = await supabase.from("mesas").upsert(next);
-      if (error) {
-        avisar("No se pudieron guardar las mesas.", error);
-        huboError = true;
-      }
-    }
-    // Si algo falló a mitad, la pantalla no puede seguir mostrando el
-    // cambio como si se hubiera guardado entero — se deshace por completo
-    // y se recarga desde la base de datos la próxima vez que haga falta.
-    if (huboError) {
+    const { error } = await supabase.rpc("anfitrion_guardar_mesas", {
+      p_token: rol,
+      p_filas: next,
+    });
+    if (error) {
+      avisar("No se pudieron guardar las mesas. Se deshace el cambio en pantalla.", error);
       setMesas(anterior);
       mesasRef.current = anterior;
     }
-  }, []);
+  }, [rol]);
 
   const persistFotosFamiliares = useCallback(async (next) => {
     const anterior = fotosFamiliaresRef.current;
@@ -435,13 +418,16 @@ export function useLedgerData(rol) {
       url,
     }));
     if (filas.length === 0) return;
-    const { error } = await supabase.from("fotos_familiares").upsert(filas);
+    const { error } = await supabase.rpc("guardar_fotos_familiares", {
+      p_token: rol,
+      p_filas: filas,
+    });
     if (error) {
       avisar("No se pudo guardar la foto familiar. Se deshace el cambio en pantalla.", error);
       setFotosFamiliares(anterior);
       fotosFamiliaresRef.current = anterior;
     }
-  }, []);
+  }, [rol]);
 
   const persistOrdenFamiliares = useCallback(async (next) => {
     const anterior = ordenFamiliaresRef.current;
@@ -454,13 +440,16 @@ export function useLedgerData(rol) {
       invitacionEnviadaEn: datos.invitacionEnviadaEn || null,
     }));
     if (filas.length === 0) return;
-    const { error } = await supabase.from("orden_familias").upsert(filas);
+    const { error } = await supabase.rpc("guardar_orden_familias", {
+      p_token: rol,
+      p_filas: filas,
+    });
     if (error) {
       avisar("No se pudo guardar el orden de la familia. Se deshace el cambio en pantalla.", error);
       setOrdenFamiliares(anterior);
       ordenFamiliaresRef.current = anterior;
     }
-  }, []);
+  }, [rol]);
 
   const persistColaboradores = useCallback(
     async (next) => {
