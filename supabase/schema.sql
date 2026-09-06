@@ -2791,3 +2791,66 @@ begin
   );
 end;
 $$;
+
+-- ---------- Candado del control de llegadas (2026-09-06) ----------
+-- Dos salvaguardas que pidió el usuario sobre la asistencia:
+--
+-- 1. No se puede marcar como presente a quien no tenga los datos
+--    obligatorios completos y no haya pagado. El motivo es real: si
+--    alguien llega y todavía debe dinero o le faltan datos, marcarlo
+--    como que ya está lo saca de las listas de pendientes y el asunto se
+--    pierde justo el día en que hay que resolverlo.
+-- 2. Un interruptor de anfitrión para abrir y cerrar el marcado. Sin él,
+--    cualquier colaborador podría ir marcando gente semanas antes "para
+--    probar", y el día del evento el recuento arrancaría sucio.
+--
+-- ⚠️ Las dos comprobaciones van EN EL SERVIDOR, no solo en la pantalla:
+-- la pantalla desactiva el botón, pero esto es lo que de verdad lo
+-- impide si alguien llama a la función por su cuenta.
+--
+-- Desmarcar (p_presente = false) NUNCA se bloquea: si se marca a alguien
+-- por error hay que poder deshacerlo, aunque el marcado esté cerrado.
+alter table evento add column if not exists "asistenciaAbierta" boolean not null default false;
+
+create or replace function colaborador_marcar_presente(
+  p_colaborador_id uuid, p_invitado_id uuid, p_presente boolean
+)
+returns setof invitados
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  actualizado invitados;
+begin
+  if not colaborador_puede_actuar(p_colaborador_id) then
+    return;
+  end if;
+
+  if p_presente then
+    if not coalesce((select "asistenciaAbierta" from evento limit 1), false) then
+      return;
+    end if;
+
+    -- Datos obligatorios (año de nacimiento y alergias, los mismos dos
+    -- de siempre -- ver datosCompletos en lib/invitados.js) y pago hecho.
+    perform 1 from invitados
+    where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+      and coalesce("anioNacimiento", '') <> ''
+      and coalesce("alergias", '') <> ''
+      and "pagado" = true;
+    if not found then
+      return;
+    end if;
+  end if;
+
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
+  update invitados set "presente" = p_presente
+  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+  returning * into actualizado;
+
+  if not found then
+    return;
+  end if;
+
+  return next actualizado;
+end;
+$$;

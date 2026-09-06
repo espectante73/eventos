@@ -15,7 +15,7 @@
 // historial viven ahora aquí; lo de invitaciones se quedó donde ya
 // estaba y Avisos desapareció del menú.
 import { useState } from "react";
-import { Plus, Mail } from "lucide-react";
+import { Plus, Mail, DoorOpen, DoorClosed } from "lucide-react";
 import { C } from "../../theme";
 import { uid } from "../../lib/id";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
@@ -34,6 +34,7 @@ const ETIQUETA_TIPO_AVISO = {
 export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros, setAbierto, onCerrar }) {
   const {
     evento,
+    persistEvento,
     colaboradores,
     invitados,
     avisosEnviados,
@@ -172,7 +173,13 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
       {/* Añadir uno nuevo va plegado: se hace unas pocas veces y ocupaba
           media ventana con su explicación -- lo que se mira a diario son
           las tarjetas de abajo (2026-09-06). */}
-      <div className="mb-3">
+      {/* Dos botones en la misma línea: añadir colaborador y el candado
+          del control de llegadas. El candado vive AQUÍ, y no en
+          Configuración, porque gobierna lo que pueden hacer los
+          colaboradores -- que es de lo que trata esta ventana (decisión
+          del usuario, 2026-09-06). */}
+      <div className="flex items-stretch gap-2 mb-3">
+        <div className="flex-1 min-w-0">
         <SeccionPlegable
           icono={Plus}
           titulo="Añadir colaborador"
@@ -199,6 +206,25 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
             </button>
           </div>
         </SeccionPlegable>
+        </div>
+
+        <button
+          onClick={() => persistEvento({ ...evento, asistenciaAbierta: !evento.asistenciaAbierta })}
+          className="flex items-center gap-2 px-3 rounded-lg text-sm font-medium whitespace-nowrap"
+          style={{
+            border: `1px solid ${evento.asistenciaAbierta ? C.ink : C.line}`,
+            background: evento.asistenciaAbierta ? C.ink : "#fff",
+            color: evento.asistenciaAbierta ? C.paper : C.charcoal,
+          }}
+          title={
+            evento.asistenciaAbierta
+              ? "Los colaboradores pueden marcar quién ha llegado. Toca para cerrarlo."
+              : "Los colaboradores NO pueden marcar llegadas. Toca para abrirlo el día del evento."
+          }
+        >
+          {evento.asistenciaAbierta ? <DoorOpen size={16} /> : <DoorClosed size={16} />}
+          Llegadas: {evento.asistenciaAbierta ? "abiertas" : "cerradas"}
+        </button>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-3">

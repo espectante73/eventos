@@ -1148,6 +1148,25 @@ export function SeccionInvitados({
                 >
                   {asistenciaEnVivo ? "En vivo" : "Sin canal"}
                 </span>
+                {/* Si el marcado está cerrado, nadie puede marcar nada:
+                    tiene que decirse aquí, donde se mira el recuento, y
+                    no dejar que parezca que "no llega nadie". Se abre en
+                    Colaboradores. */}
+                {!evento.asistenciaAbierta && (
+                  <span
+                    className="rounded px-1.5 py-0.5 text-[9px] uppercase self-center whitespace-nowrap"
+                    style={{
+                      background: C.peligro,
+                      color: "#fff",
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontWeight: 700,
+                      letterSpacing: "0.04em",
+                    }}
+                    title="Los colaboradores no pueden marcar llegadas. Se abre en Colaboradores → Datos Colab."
+                  >
+                    Marcado cerrado
+                  </span>
+                )}
               </div>
             )}
 

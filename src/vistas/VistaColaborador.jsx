@@ -404,8 +404,28 @@ function FilaInvitadoColaborador({
   // mismo motivo que el pago: las filas van muy juntas y un dedo puede
   // marcar al de al lado -- y aquí el error es peor, porque el anfitrión
   // estaría contando como presente a alguien que no ha llegado.
+  // Dos candados, los mismos que comprueba el servidor en
+  // colaborador_marcar_presente: el anfitrión tiene que haber abierto el
+  // marcado, y el invitado tiene que estar en regla (datos completos y
+  // pagado). Aquí solo se desactiva el botón y se explica el motivo --
+  // lo que de verdad lo impide es la comprobación del servidor.
+  //
+  // Desmarcar nunca se bloquea: un error hay que poder deshacerlo,
+  // incluso con el marcado ya cerrado.
+  const marcadoAbierto = Boolean(evento.asistenciaAbierta);
+  const puedeTocarLlegada = g.presente || (marcadoAbierto && datosCompletos(g) && g.pagado);
+  const motivoBloqueo = !marcadoAbierto
+    ? "el anfitrión todavía no ha abierto el control de llegadas"
+    : !datosCompletos(g)
+    ? "le faltan datos obligatorios (año de nacimiento y alergias)"
+    : "todavía no ha pagado";
+
   const confirmarPresente = () => {
     const nombreCompleto = `${g.nombre} ${g.apellido}`.trim();
+    if (!puedeTocarLlegada) {
+      window.alert(`No se puede marcar la llegada de ${nombreCompleto}: ${motivoBloqueo}.`);
+      return;
+    }
     const mensaje = g.presente
       ? `¿Quitar la llegada de ${nombreCompleto}?`
       : `¿Confirmas que ${nombreCompleto} ya está aquí?`;
@@ -458,7 +478,13 @@ function FilaInvitadoColaborador({
             usar el día del evento: de pie, recibiendo gente. */}
         <button
           onClick={confirmarPresente}
-          title={g.presente ? `${g.nombre} ya está — toca para quitarlo` : `Marcar que ${g.nombre} ha llegado`}
+          title={
+            g.presente
+              ? `${g.nombre} ya está — toca para quitarlo`
+              : puedeTocarLlegada
+                ? `Marcar que ${g.nombre} ha llegado`
+                : `No se puede: ${motivoBloqueo}`
+          }
           className="flex items-center justify-center rounded-full flex-shrink-0"
           style={{
             width: 32,
@@ -466,6 +492,8 @@ function FilaInvitadoColaborador({
             border: `2px solid ${g.presente ? C.ink : C.line}`,
             background: g.presente ? C.ink : "transparent",
             color: g.presente ? C.paper : C.line,
+            opacity: puedeTocarLlegada ? 1 : 0.3,
+            cursor: puedeTocarLlegada ? "pointer" : "not-allowed",
           }}
         >
           <Check size={18} strokeWidth={3} />
