@@ -508,6 +508,13 @@ export function SeccionInvitados({
   const conCuenta = (texto, clave) => `${texto} (${porRol[clave] || 0})`;
   const sinRevisar = invitados.filter((g) => !g.rolFamiliar).length;
   const totalPresentes = invitados.filter((g) => g.presente).length;
+  // El marcador de llegada solo tiene sentido EL DÍA del evento: se
+  // enseña ese día (aunque no haya llegado nadie todavía, que es justo
+  // cuando se empieza a mirar) y, fuera de esa fecha, únicamente si hay
+  // alguien marcado -- para poder probarlo antes sin que el resto del
+  // año sea ruido en la cabecera.
+  const hoyEsElEvento = evento.fecha === new Date().toISOString().slice(0, 10);
+  const mostrarLlegada = hoyEsElEvento || totalPresentes > 0;
   const totalInvitados = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
   const edadMedia = edadPromedio(invitadosOrdenados, evento);
@@ -528,9 +535,6 @@ export function SeccionInvitados({
     // Matrimonios: un esposO + una esposA dentro del mismo grupo
     // familiar (2026-09-03). Ver lib/matrimonios.js.
     { label: "Matrimonios", value: totalMatrimonios },
-    // Solo el día del evento tiene sentido, así que aparece en cuanto
-    // llega el primero y no antes.
-    ...(totalPresentes ? [{ label: "Ya están", value: `${totalPresentes}/${confirmadosCount}` }] : []),
     // Solo aparece si hay algo que corregir: en cuanto está todo
     // emparejado, deja de ocupar sitio.
     ...(idsSueltos.size ? [{ label: "Sin pareja", value: idsSueltos.size, alerta: true }] : []),
@@ -1087,6 +1091,45 @@ export function SeccionInvitados({
                 Confirmados+Edad media por otro) -- a petición del
                 usuario, para diferenciarlos visualmente como dos
                 bloques en vez de 4 sueltos. */}
+            {/* Marcador de llegada: recuadro propio y con el número
+                grande, para verlo de un vistazo desde lejos mientras
+                entra la gente -- a petición del usuario, 2026-09-06. Va
+                el primero de la fila y solo aparece el día del evento
+                (o si ya hay alguien marcado). */}
+            {mostrarLlegada && (
+              <div
+                className="flex items-center gap-4 rounded px-3 py-1"
+                style={{ border: `2px solid ${C.goldClaro}`, background: "rgba(0,0,0,0.12)" }}
+              >
+                {[
+                  { etiqueta: "Ya están", valor: totalPresentes, color: C.ink },
+                  { etiqueta: "Faltan", valor: Math.max(0, confirmadosCount - totalPresentes), color: C.peligro },
+                ].map((m) => (
+                  <div key={m.etiqueta} className="text-center">
+                    <div
+                      className="text-[10px] uppercase"
+                      style={{ color: C.goldClaro, opacity: 0.85, fontFamily: "'IBM Plex Mono', monospace" }}
+                    >
+                      {m.etiqueta}
+                    </div>
+                    <div
+                      className="rounded px-2 inline-block"
+                      style={{
+                        background: "rgba(239,233,222,0.95)",
+                        color: m.color,
+                        fontFamily: "'Fraunces', serif",
+                        fontWeight: 700,
+                        fontSize: 26,
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      {m.valor}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {[resumen.slice(0, 2), resumen.slice(2, 4), resumen.slice(4)].map((grupo, i) => (
               <div
                 key={i}

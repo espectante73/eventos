@@ -46,6 +46,7 @@ const HISTORIAL_VERSIONES = [
     cambios: [
       "Control de llegada el día del evento. Cada colaborador ve un check redondo al final de la fila de cada uno de sus invitados, sin desplegar el formulario: lo pulsa según van llegando, con una confirmación por medio (\"¿Confirmas que Fulano ya está aquí?\") — las filas van juntas y un dedo puede marcar al de al lado.",
       "El nombre del invitado se corre un poco a la izquierda para dejarle sitio al check en el extremo derecho.",
+      "Marcador de llegada en la cabecera de la Lista de invitados: recuadro propio con dos números grandes, YA ESTÁN y FALTAN, para verlo de un vistazo desde lejos mientras entra la gente. Aparece solo el día del evento (o antes, si ya hay alguien marcado, para poder probarlo).",
       "En la Lista de invitados aparece la columna \"Llegó\" con su filtro (Ya está / Falta, con sus cantidades) y, en cuanto llega el primero, el contador \"Ya están 12/130\" arriba junto al resto de cifras. Filtrando por \"Falta\" sale la lista de quién no ha aparecido.",
       "⚠️ Necesita ejecutar antes el bloque de SQL de la columna \"presente\".",
     ],
