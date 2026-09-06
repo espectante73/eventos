@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabaseClient";
+import { useCanalAsistencia } from "./lib/useCanalAsistencia";
 import { C } from "./theme";
 
 const EVENTO_POR_DEFECTO = {
@@ -81,6 +82,20 @@ export function useLedgerData(rol) {
   useEffect(() => {
     invitadosRef.current = invitados;
   }, [invitados]);
+
+  // Llegadas del día del evento, en vivo: el resto de la app se entera
+  // de los cambios preguntando cada minuto, pero aquí eso se nota
+  // demasiado (marcas en el móvil y el recuento del anfitrión no se
+  // mueve). Ver lib/useCanalAsistencia.js -- solo corrige ESE campo del
+  // invitado que llega en el mensaje; el refresco periódico sigue
+  // siendo la fuente de verdad.
+  const { avisarLlegada } = useCanalAsistencia((id, presente) => {
+    setInvitados((previos) => {
+      const siguientes = previos.map((g) => (g.id === id ? { ...g, presente } : g));
+      invitadosRef.current = siguientes;
+      return siguientes;
+    });
+  });
 
   // Igual que invitadosRef, pero para mesas — hace falta para saber qué
   // números de mesa se han quitado y borrarlos también en Supabase (un
@@ -746,6 +761,11 @@ export function useLedgerData(rol) {
           avisar("No se pudo marcar la asistencia (¿sigue asignado a ti este invitado?). Se deshace el cambio en pantalla.", error);
           setInvitados(anterior);
           invitadosRef.current = anterior;
+        } else {
+          // Solo DESPUÉS de que el servidor lo acepte: avisar antes
+          // pintaría en la pantalla del anfitrión una llegada que
+          // podría no haberse guardado.
+          avisarLlegada(cambiado.id, cambiado.presente);
         }
       } else if (soloCambioPagado) {
         const { data, error } = await supabase.rpc("colaborador_marcar_pagado", {
@@ -771,7 +791,7 @@ export function useLedgerData(rol) {
         }
       }
     },
-    [esAnfitrion, rol]
+    [esAnfitrion, rol, avisarLlegada]
   );
 
   const avisarColaborador = useCallback(

@@ -44,6 +44,7 @@ const HISTORIAL_VERSIONES = [
   {
     version: "23",
     cambios: [
+      "Las llegadas se ven al instante, sin esperar. Toda la app se entera de los cambios preguntando cada minuto, y aquí eso se notaba demasiado: marcabas a alguien en el móvil y el recuento tardaba casi un minuto en moverse. Ahora usa el mismo canal en vivo que el mando de la música, así que el número cambia en el momento — y si un aviso se pierde, el refresco de siempre lo corrige.",
       "Control de llegada el día del evento. Cada colaborador ve un check redondo al final de la fila de cada uno de sus invitados, sin desplegar el formulario: lo pulsa según van llegando, con una confirmación por medio (\"¿Confirmas que Fulano ya está aquí?\") — las filas van juntas y un dedo puede marcar al de al lado.",
       "El nombre del invitado se corre un poco a la izquierda para dejarle sitio al check en el extremo derecho.",
       "Marcador de llegada en la cabecera de la Lista de invitados: recuadro propio con dos números grandes, YA ESTÁN y FALTAN, para verlo de un vistazo desde lejos mientras entra la gente. Aparece solo el día del evento (o antes, si ya hay alguien marcado, para poder probarlo).",
