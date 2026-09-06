@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "24.2",
+    cambios: [
+      "Retirado el último enlace con contraseña dentro. Los enlaces del tipo \"...?rol=XXXX\" ya no dan acceso a nadie. El de colaborador se había retirado en agosto; el del anfitrión seguía vivo \"como plan B\", y ese era justo el que abría toda la app.",
+      "El motivo: una contraseña metida en una dirección web se queda en el historial del navegador, en cualquier captura de pantalla y en cualquier correo que se reenvíe. Con login real, CAPTCHA y recuperación por email ya montados, ese plan B costaba más de lo que daba.",
+      "Quien pulse un enlace viejo no se queda mirando una pantalla rara: se le explica que se retiró por seguridad y se le lleva al inicio de sesión.",
+      "Y un comando nuevo para el mantenimiento, \"npm run auditar\": se pone en la piel de un desconocido y comprueba 18 cosas contra la base de datos real — que las tablas públicas se leen pero no se escriben, y que las cerradas no se leen siquiera. No modifica nada.",
+    ],
+  },
+  {
     version: "24",
     cambios: [
       "Agujero de seguridad real, encontrado y cerrado. Cuatro tablas (datos del evento, mesas, fotos familiares y orden de las familias) estaban abiertas a ESCRITURA para cualquiera de internet, sin contraseña ninguna. Comprobado en vivo contra la web real: un cambio anónimo era aceptado por el servidor.",

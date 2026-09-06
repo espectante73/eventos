@@ -23,9 +23,20 @@ export default function App() {
   // sesión, ni nada que resolver -- se comprueba y se corta el render
   // aquí mismo, ANTES de cualquier hook o lógica de sesión (ver
   // VistaTablon.jsx). No es una `const` en el orden de hooks -- es una
-  // simple lectura de la URL, igual que urlRol/emailCrearCuenta.
+  // simple lectura de la URL, igual que emailCrearCuenta.
   const tokenTablon = getTokenTablonFromUrl();
-  const urlRol = getRolFromUrl();
+  // ?rol=<token> YA NO DA ACCESO A NADIE (2026-09-06, v24.2). Era el
+  // último resto del enlace-token: el de colaborador se retiró en agosto,
+  // pero el del anfitrión se dejó vivo "como plan B". Un token dentro de
+  // una dirección web queda en el historial del navegador, en cualquier
+  // captura y en cualquier correo reenviado -- y ese token concreto es la
+  // llave de TODA la app. El plan B costaba más de lo que daba: hoy hay
+  // login real con CAPTCHA y recuperación de contraseña por email.
+  //
+  // Se sigue leyendo la URL, pero solo para reconocer un enlace viejo y
+  // explicarlo, en vez de soltarle el login a secas a quien pulse algo
+  // que le funcionó durante meses.
+  const enlaceRolObsoleto = Boolean(getRolFromUrl());
   // ?crear=<email> -- enlace enviado por email a un colaborador para que
   // abra el login directo en modo "Crear cuenta" con su email ya relleno
   // (ver ColaboradorCard.jsx / anfitrion_enviar_invitacion_login).
@@ -35,7 +46,7 @@ export default function App() {
   // después (que cambia sin tocar la URL cuando el anfitrión previsualiza
   // la vista de un colaborador desde las pestañas de abajo).
   const [esAnfitrionOriginal, setEsAnfitrionOriginal] = useState(null);
-  const [rol, setRol] = useState(urlRol || null);
+  const [rol, setRol] = useState(null);
   const data = useLedgerData(rol);
   // Previsualización "Formularios" (anfitrión viendo la pantalla de un
   // colaborador): id del colaborador previsualizado, o null si se está
@@ -58,13 +69,11 @@ export default function App() {
     setVistaPrevia(destino === anfitrionToken ? null : destino);
   };
   // El token del anfitrión, estable aunque `rol` cambie al previsualizar un
-  // colaborador desde el selector de abajo — con el enlace-token viejo es
-  // simplemente `urlRol` (nunca cambia), pero con login no hay ningún
-  // `?rol=...` en la URL, así que hace falta guardarlo aparte la primera
-  // vez que mi_rol() lo resuelve (ver el efecto más abajo). Sin esto, volver
+  // colaborador desde el selector de abajo. Lo resuelve mi_rol() la primera
+  // vez (ver el efecto más abajo) y se guarda aquí aparte: sin esto, volver
   // a elegir "Anfitrión" tras previsualizar a un colaborador dejaría `rol`
-  // en null para cualquiera que haya entrado por login.
-  const [anfitrionToken, setAnfitrionToken] = useState(urlRol || null);
+  // en null. Nunca sale de la URL — el ?rol= se retiró (v24.2).
+  const [anfitrionToken, setAnfitrionToken] = useState(null);
 
   // ---------- Login real (Supabase Auth) ----------
   // Capa añadida SOBRE el modelo de enlace-token existente, sin tocar
@@ -164,25 +173,14 @@ export default function App() {
     };
   }, []);
 
+  // Sin sesión no hay ningún rol que resolver. Antes, aquí se verificaba
+  // contra el servidor el token que viniera en la URL; al retirarse ese
+  // camino no queda nada que comprobar -- quien no ha iniciado sesión no
+  // es el anfitrión, y punto.
   useEffect(() => {
-    let cancelado = false;
-    // Esperando a saber si hay sesión, o ya hay una sesión real de verdad:
-    // en ambos casos manda el efecto de mi_rol() de arriba, no este.
     if (session === undefined || session) return;
-    (async () => {
-      if (!urlRol) {
-        setEsAnfitrionOriginal(false);
-        return;
-      }
-      const { data: esValido } = await supabase.rpc("anfitrion_verificar_token", {
-        p_token: urlRol,
-      });
-      if (!cancelado) setEsAnfitrionOriginal(esValido === true);
-    })();
-    return () => {
-      cancelado = true;
-    };
-  }, [urlRol, session]);
+    setEsAnfitrionOriginal(false);
+  }, [session]);
 
   // Antes de esto, solo había un console.error en supabaseClient.js --
   // invisible para cualquiera que no sepa abrir las herramientas de
@@ -239,7 +237,48 @@ export default function App() {
     );
   }
 
-  if (session === null && !urlRol) {
+  // Enlace antiguo (?rol=...) sin sesión: ya no da acceso a nadie -- ni a
+  // colaboradores (retirado en agosto) ni al anfitrión (retirado hoy). Se
+  // le explica en vez de soltarle el login a secas: cuando un colaborador
+  // probó un enlace viejo en agosto, describió lo que vio como "una vista
+  // de colaborador sin datos", no como un bloqueo -- lo leyó como un fallo
+  // de la app, no como seguridad funcionando.
+  //
+  // Va DELANTE del login y del guardián de carga, o nunca se llegaría a
+  // ver. Y solo con `session === null`: quien tenga sesión real y además
+  // arrastre un `?rol=` suelto en la URL entra con normalidad, porque
+  // mi_rol() ya le ha resuelto el acceso por su cuenta.
+  if (session === null && enlaceRolObsoleto) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
+      >
+        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+          <h1
+            className="text-xl mb-2"
+            style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}
+          >
+            No tienes acceso
+          </h1>
+          <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: 0.8 }}>
+            Este enlace ya no funciona. Los enlaces directos se han retirado por seguridad:
+            llevaban la contraseña dentro de la propia dirección web. Inicia sesión con tu cuenta
+            para entrar, o pide al anfitrión que te vincule una si todavía no tienes.
+          </p>
+          <a
+            href="/"
+            className="inline-block px-4 py-2 rounded text-sm font-medium"
+            style={{ background: C.ink, color: C.paper }}
+          >
+            Ir al inicio de sesión
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (session === null && !enlaceRolObsoleto) {
     return (
       <VistaLogin
         modoInicial={emailCrearCuenta ? "crear" : "entrar"}
@@ -290,47 +329,6 @@ export default function App() {
     );
   }
 
-  // Enlace antiguo de colaborador (?rol=...) sin sesión real: desde que se
-  // retiró el enlace-token de colaborador (Fase B, 2026-08-12), este caso
-  // YA NUNCA resuelve a datos de verdad -- antes se colaba hasta el hueco
-  // de "Este enlace no es válido..." al final del render, con una franja
-  // técnica ("Vista fija de enlace · rol no encontrado") por encima. Un
-  // colaborador probando ese enlace viejo lo describió como "una vista de
-  // colaborador sin datos", no como un aviso de acceso denegado -- podía
-  // confundirse con un fallo de la app en vez de con un bloqueo de
-  // seguridad correcto. Pantalla dedicada y clara en su lugar, ANTES de
-  // llegar al resto del render. `session === null` (no solo `!esAnfitrionOriginal`)
-  // para no afectar a un colaborador con sesión real que además tenga un
-  // `?rol=...` suelto en la URL (mi_rol() ya resuelve su acceso aparte).
-  if (session === null && !esAnfitrionOriginal && urlRol) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center px-4"
-        style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
-      >
-        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-          <h1
-            className="text-xl mb-2"
-            style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}
-          >
-            No tienes acceso
-          </h1>
-          <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: 0.8 }}>
-            Este enlace ya no funciona — los enlaces directos de colaborador se retiraron a favor
-            del login real. Inicia sesión con tu cuenta para entrar, o pide al anfitrión que te
-            vincule una si todavía no tienes.
-          </p>
-          <a
-            href="/"
-            className="inline-block px-4 py-2 rounded text-sm font-medium"
-            style={{ background: C.ink, color: C.paper }}
-          >
-            Ir al inicio de sesión
-          </a>
-        </div>
-      </div>
-    );
-  }
 
   // Visible para CUALQUIER rol (evento es de acceso abierto) — no solo el
   // anfitrión: si un colaborador entra mientras está activo, también debe
