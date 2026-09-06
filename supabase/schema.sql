@@ -498,7 +498,7 @@ begin
               when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
               else
                 '<div style="margin-top:18px;"><a href="' ||
-                (select "urlPublica" from evento limit 1) || '?rol=' || r.colaborador_id::text ||
+                (select "urlPublica" from evento limit 1) ||
                 '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
                 'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
                 'font-weight:600;font-family:sans-serif;">Abrir formulario</a></div>'
@@ -572,7 +572,7 @@ begin
       when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
       else
         '<div style="margin-top:18px;"><a href="' ||
-        (select "urlPublica" from evento limit 1) || '?rol=' || p_colaborador_id::text ||
+        (select "urlPublica" from evento limit 1) ||
         '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
         'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
         'font-weight:600;font-family:sans-serif;">Abrir formulario</a></div>'
