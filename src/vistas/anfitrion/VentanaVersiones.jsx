@@ -44,6 +44,7 @@ const HISTORIAL_VERSIONES = [
   {
     version: "23",
     cambios: [
+      "EL DÍA DEL EVENTO la app se refresca cada 8 segundos en vez de cada minuto. El canal en vivo es lo que da la respuesta instantánea, pero no puede ser lo único de lo que dependa el recuento de llegadas: un WebSocket se cae, el navegador congela la pestaña que queda por detrás y el wifi de un local hace lo que quiere. Así, aunque el canal muera del todo, lo peor que pasa es esperar ocho segundos. El resto del año se queda en un minuto.",
       "Y la causa de que aun así no llegara al otro dispositivo: la conexión en vivo vive en la pestaña principal del navegador, y esa pestaña se congela cuando queda por detrás — por ejemplo mientras miras la Lista de invitados en su ventana aparte. Congelada, no llega ningún aviso y solo queda el refresco de cada minuto. Es exactamente lo que le pasaba al mando de la música. Ahora se reconecta al volver al frente, al recuperar la red, y sola cada dos segundos si se ha caído.",
       "El marcador de llegadas lleva un puntito de estado: verde si el canal en vivo está enganchado (las llegadas aparecen al instante) y rojo si no (tardarán hasta un minuto, por el refresco normal). Sin ese indicador no hay forma de distinguir \"no llega el aviso\" de \"el canal no está conectado\".",
       "Corregido el caso en que emisor y receptor son la misma sesión del navegador — el anfitrión previsualizando el formulario de un colaborador, o la Lista de invitados en su ventana aparte, que comparte cliente con la pestaña principal. Ahí el aviso no llegaba.",

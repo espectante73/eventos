@@ -78,6 +78,14 @@ export function useLedgerData(rol) {
   // (para que la pantalla responda al instante), así que si la escritura
   // real falla, hay que deshacer ese cambio optimista o la pantalla se
   // queda mintiendo (muestra el dato nuevo aunque nunca se guardó).
+  // La fecha del evento, para que el refresco periódico sepa si hoy es
+  // el día sin tener que depender del objeto `evento` (si lo tuviera en
+  // las dependencias, cada carga reiniciaría el temporizador).
+  const fechaEventoRef = useRef("");
+  useEffect(() => {
+    fechaEventoRef.current = evento?.fecha || "";
+  }, [evento?.fecha]);
+
   const invitadosRef = useRef(invitados);
   useEffect(() => {
     invitadosRef.current = invitados;
@@ -334,7 +342,30 @@ export function useLedgerData(rol) {
     // real primero, ver CLAUDE.md), pero evita tener que recargar sin
     // parar: se vuelve a preguntar sola cada minuto, y también al volver
     // a esta pestaña tras estar en otra.
-    const intervalo = setInterval(() => cargarDatos(false), 60 * 1000);
+    // ⚠️ EL DÍA DEL EVENTO se pregunta cada 8 segundos, no cada minuto.
+    // No es un capricho: ese día las llegadas se marcan desde varios
+    // aparatos a la vez y el anfitrión mira el recuento en vivo. El
+    // canal de Realtime (lib/useCanalAsistencia.js) es lo que da la
+    // respuesta instantánea, pero NO puede ser lo único: un WebSocket se
+    // cae, el navegador congela la pestaña que queda por detrás, el wifi
+    // del local hace lo que quiere. Con esto, el peor caso pasa de un
+    // minuto a ocho segundos aunque el canal esté muerto del todo.
+    //
+    // El resto del año no hay ninguna prisa, así que se queda en un
+    // minuto y no se castiga la base de datos sin motivo.
+    // Se reprograma en cada vuelta en vez de un setInterval fijo: cuando
+    // este efecto arranca todavía no se han cargado los datos, así que
+    // la fecha del evento aún no se sabe -- con un intervalo fijo, el
+    // día de la boda se habría quedado en el ritmo lento para siempre.
+    let temporizador = null;
+    const proximaVuelta = () => {
+      const esHoyElEvento = fechaEventoRef.current === new Date().toISOString().slice(0, 10);
+      temporizador = setTimeout(async () => {
+        await cargarDatos(false);
+        if (!cancelado) proximaVuelta();
+      }, esHoyElEvento ? 8 * 1000 : 60 * 1000);
+    };
+    proximaVuelta();
     const alVolverVisible = () => {
       if (document.visibilityState === "visible") cargarDatos(false);
     };
@@ -342,7 +373,7 @@ export function useLedgerData(rol) {
 
     return () => {
       cancelado = true;
-      clearInterval(intervalo);
+      clearTimeout(temporizador);
       document.removeEventListener("visibilitychange", alVolverVisible);
     };
   }, [rol]);
