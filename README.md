@@ -13,13 +13,6 @@ desplegada en **Vercel**, con avisos automáticos por email vía
 > gotchas conocidos** vive en [`CLAUDE.md`](./CLAUDE.md) — consúltalo
 > antes de tocar nada que suene a "esto ya se intentó una vez".
 
-## El boceto (`app-eventos-v2.jsx`)
-
-Ese archivo suelto en la raíz del repo **no se usa para la web real** — es
-una copia autocontenida pensada para pegarse en un Artifact de Claude.ai y
-seguir probando ideas de lógica/UX rápidamente, sin montar nada. La web de
-verdad vive en `src/`.
-
 ## Cómo está organizado `src/`
 
 - `App.jsx` — cascarón: decide qué rol/vista mostrar y reparte lo que de
