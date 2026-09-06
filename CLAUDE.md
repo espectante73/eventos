@@ -339,9 +339,11 @@ misma pestaña ("Untitled query" reutilizada de una vez anterior) — al
 pulsar "Run" se re-ejecutó también un `create or replace function
 enviar_email(...)` viejo de 6 parámetros que quedaba ahí debajo, y volvió
 a dejar las dos versiones a la vez. Para pedirle al usuario que ejecute
-SQL nuevo: decirle explícitamente que **borre todo el contenido del
-editor primero** y pegue solo el bloque nuevo, en vez de asumir que la
-pestaña está vacía. Para diagnosticar "function is not unique" con
+SQL nuevo: decirle que abra una **pestaña nueva** del editor y
+pegue ahí. Una pestaña nueva nace vacía siempre — el usuario lo señaló
+el 2026-09-06, harto de leer "borra todo el contenido" en cada tanda. El
+aviso de borrar solo tiene sentido si se REUTILIZA una pestaña ya usada,
+que es justo lo que pasó aquel día. Para diagnosticar "function is not unique" con
 certeza, esta consulta lista las firmas reales que existen de verdad en
 la base de datos (más fiable que mirar el código fuente, que solo dice
 lo que *debería* haber):
@@ -1477,3 +1479,87 @@ celda.
 contenedor de la tabla (`tablaRef`): si las columnas se ahogan, el texto
 se recorta antes de tiempo y la tabla se vuelve ilegible aunque
 técnicamente cumpla la regla.
+
+## 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
+
+Salió de una pregunta del usuario ("¿qué peligros hay en que el
+repositorio sea público?"). Al auditarlo apareció algo bastante peor que
+el repositorio: **cuatro tablas estaban abiertas a ESCRITURA para
+cualquiera de internet** — `evento`, `mesas`, `fotos_familiares` y
+`orden_familias`, con la política `anon_full_access ... for all using
+(true) with check (true)` y los permisos de tabla por defecto intactos.
+
+**Comprobado en vivo, no deducido del código.** Con la clave publicable
+sacada del JS compilado de `nexuspoint.rsvp` (que es pública por diseño;
+eso no es el fallo), un `PATCH` anónimo sobre `evento` devolvía `204`,
+no `403`. La prueba se hizo filtrando a una fila inexistente
+(`?id=eq.false`) para confirmar el permiso sin modificar ni un byte real
+— merece la pena repetir ese truco cada vez que haya que verificar
+permisos contra la base de producción.
+
+**Por qué era grave, y no un detalle:** `evento` guarda las PLANTILLAS
+de los emails automáticos. Reescribirlas desde fuera equivale a decidir
+el texto de los correos que la propia app manda, con el remitente
+legítimo del anfitrión, a los ~140 invitados. El resto (fecha, lugar,
+precios, fotos familiares, borrar las mesas, borrar la fila de `evento`
+entera) viene detrás.
+
+**Por qué pasó, que es lo que hay que recordar:** la decisión original
+era CORRECTA cuando se tomó. El comentario decía "datos sin sensibilidad
+real" y esas tablas solo tenían las mesas y el orden de las familias.
+Después se le añadieron 13 columnas a `evento` — plantillas de email,
+email del anfitrión, cronograma, `asistenciaAbierta`,
+`modoPruebasActivo` — sin volver a mirar aquella decisión. **El
+comentario se quedó igual mientras el riesgo crecía por debajo.**
+
+⚠️ **Regla nueva: al añadir una columna a una tabla abierta a `anon`,
+releer la política de esa tabla en el mismo cambio.** No basta con que
+la decisión fuera buena el día que se tomó.
+
+**Cómo quedó:** la lectura sigue abierta (el tablón público la
+necesita); escribir pasa por 4 funciones nuevas — `guardar_evento`,
+`anfitrion_guardar_mesas`, `guardar_fotos_familiares`,
+`guardar_orden_familias` — con el mismo doble cierre que ya tenían
+`invitados` y `colaboradores`: política `for select` + `revoke insert,
+update, delete, truncate`. Con una sola de las dos capas, la puerta
+sigue entornada.
+
+Detalles que conviene no perder:
+
+- **`colaborador_tiene_permiso(text)`**: versión genérica de
+  `colaborador_puede_editar_novedades(uuid)`. Resuelve el colaborador
+  por `auth.uid()` y NO acepta ningún id que venga del cliente. Usar
+  esta para cualquier permiso nuevo.
+- **`guardar_evento` aplica lista blanca de columnas a los
+  colaboradores.** Sin ella, el permiso `datos_evento_editar` habría
+  dejado a un colaborador abrir el control de llegadas
+  (`asistenciaAbierta`) o activar el Modo Pruebas — columnas que no
+  están en su ventana y que nadie quiso concederle. ⚠️ Al añadir un
+  campo a `VentanaConfigDatosEvento.jsx`, añadirlo también a
+  `v_permitidas` dentro de la función, o ese campo dejará de guardarse
+  para los colaboradores en silencio (el resto de la fila sí se guarda).
+- **El `SET` de `guardar_evento` se construye desde `pg_attribute`**, no
+  con una lista de columnas escrita a mano. `evento` ya va por 37
+  columnas y crece cada pocas sesiones: una lista fija se habría
+  desactualizado al primer `alter table`, perdiendo campos sin avisar.
+  Los nombres salen del catálogo y van con `%I`; el valor viaja como
+  parámetro (`$1`), nunca concatenado.
+- **`persistMesas` dejó de ser `delete` + `upsert` en dos llamadas.** Es
+  una sola función transaccional, así que ya no puede quedarse a medias
+  — el comentario que avisaba de eso en `useLedgerData.js` desapareció
+  porque el problema desapareció.
+
+⚠️ **El fallo que se coló y por qué:** las 4 funciones se escribieron con
+`p_token text`, pero `anfitrion_secreto.token` es `uuid` y todas las
+funciones anteriores declaran `p_token uuid`. Falló al primer intento
+(`42883: operator does not exist: text = uuid`) y hubo que rehacerlas
+con el `drop function` de rigor. Lo cazó una llamada de prueba con token
+falso contra la base real, antes de subir el código — **no la revisión
+del código, que dio la firma por buena**. Sin Postgres local ni
+credenciales de escritura, esa llamada anónima es la única red que hay:
+hacerla siempre antes de desplegar el cliente.
+
+**Orden de despliegue, importante si se repite algo así:** crear las
+funciones primero (el código viejo sigue funcionando, no cambia ningún
+permiso), desplegar el cliente después, y cerrar los permisos al final.
+Al revés hay una ventana en la que nadie puede guardar nada.
