@@ -44,6 +44,7 @@ const HISTORIAL_VERSIONES = [
   {
     version: "23",
     cambios: [
+      "Y la causa de que aun así no llegara al otro dispositivo: la conexión en vivo vive en la pestaña principal del navegador, y esa pestaña se congela cuando queda por detrás — por ejemplo mientras miras la Lista de invitados en su ventana aparte. Congelada, no llega ningún aviso y solo queda el refresco de cada minuto. Es exactamente lo que le pasaba al mando de la música. Ahora se reconecta al volver al frente, al recuperar la red, y sola cada dos segundos si se ha caído.",
       "El marcador de llegadas lleva un puntito de estado: verde si el canal en vivo está enganchado (las llegadas aparecen al instante) y rojo si no (tardarán hasta un minuto, por el refresco normal). Sin ese indicador no hay forma de distinguir \"no llega el aviso\" de \"el canal no está conectado\".",
       "Corregido el caso en que emisor y receptor son la misma sesión del navegador — el anfitrión previsualizando el formulario de un colaborador, o la Lista de invitados en su ventana aparte, que comparte cliente con la pestaña principal. Ahí el aviso no llegaba.",
       "Las llegadas se ven al instante, sin esperar. Toda la app se entera de los cambios preguntando cada minuto, y aquí eso se notaba demasiado: marcabas a alguien en el móvil y el recuento tardaba casi un minuto en moverse. Ahora usa el mismo canal en vivo que el mando de la música, así que el número cambia en el momento — y si un aviso se pierde, el refresco de siempre lo corrige.",

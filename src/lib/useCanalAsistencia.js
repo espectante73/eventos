@@ -40,11 +40,15 @@ export function useCanalAsistencia(onLlegada) {
   }, [onLlegada]);
 
   useEffect(() => {
+    let vivo = true;
+
     // Todo dentro de un try: `subscribe()` llama por dentro a
     // `socket.connect()`, que LANZA si el navegador no puede abrir el
     // WebSocket -- y un fallo del canal no puede tumbar la app entera.
     // Sin canal, el refresco de cada minuto sigue funcionando.
-    try {
+    function montar() {
+      if (!vivo) return;
+      try {
       // ⚠️ `self: true`, al revés que en la música. Allí el que manda no
       // debe oírse a sí mismo (el reproductor se contestaría solo). Aquí
       // el emisor y el receptor pueden ser LA MISMA sesión del navegador
@@ -59,21 +63,57 @@ export function useCanalAsistencia(onLlegada) {
       });
       canal.subscribe();
       canalRef.current = canal;
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("No se pudo abrir el canal de asistencia:", error);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("No se pudo abrir el canal de asistencia:", error);
+      }
     }
+
+    montar();
+
+    // ⚠️ Reconectar es CREAR UN CANAL NUEVO, no volver a suscribir el
+    // viejo: `subscribe()` no hace nada si el canal no está cerrado del
+    // todo. Misma lección (y mismo arreglo) que en useMandoMusica.js.
+    const rehacer = () => {
+      if (!vivo || canalRef.current?.state === "joined") return;
+      const viejo = canalRef.current;
+      canalRef.current = null;
+      try {
+        if (viejo) supabase.removeChannel(viejo);
+      } catch {
+        // Da igual por qué no se pudo soltar: lo que importa es el nuevo.
+      }
+      montar();
+    };
 
     // Se mira el estado REAL del canal cada 2s, no el aviso de
     // `subscribe()`: ese llega una sola vez y puede no llegar nunca --
     // lección aprendida con el mando de la música, que se quedaba
     // diciendo "conectando" con el canal funcionando.
     const vigilante = setInterval(() => {
-      setConectado(canalRef.current?.state === "joined");
+      const unido = canalRef.current?.state === "joined";
+      setConectado(unido);
+      if (!unido) rehacer();
     }, 2000);
 
+    // ⚠️ La causa más probable de "no me llega nada al Mac": el
+    // WebSocket vive en la PESTAÑA principal, y el navegador la congela
+    // cuando queda por detrás -- por ejemplo mientras se mira la Lista
+    // de invitados en su ventana aparte. Congelada la pestaña, no llega
+    // ningún aviso y solo queda el refresco de cada minuto. Es
+    // exactamente lo que le pasaba al mando de la música. Al volver al
+    // frente (o al recuperar la red) se comprueba y se rehace enseguida.
+    const alDespertar = () => rehacer();
+    document.addEventListener("visibilitychange", alDespertar);
+    window.addEventListener("focus", alDespertar);
+    window.addEventListener("online", alDespertar);
+
     return () => {
+      vivo = false;
       clearInterval(vigilante);
+      document.removeEventListener("visibilitychange", alDespertar);
+      window.removeEventListener("focus", alDespertar);
+      window.removeEventListener("online", alDespertar);
       if (canalRef.current) supabase.removeChannel(canalRef.current);
       canalRef.current = null;
     };
