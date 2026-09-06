@@ -1127,24 +1127,27 @@ export function SeccionInvitados({
                     </div>
                   </div>
                 ))}
-                {/* Igual que el wifi del mando de la música: si el canal
-                    en vivo no está enganchado, las llegadas tardarán
-                    hasta un minuto en verse (el refresco normal), y hay
-                    que poder saberlo sin adivinarlo. */}
+                {/* En PALABRAS, no un puntito con su tooltip: si esto
+                    tarda, lo primero que hay que poder decir es si el
+                    canal estaba enganchado o no, sin tener que pasar el
+                    ratón por encima ni suponerlo. */}
                 <span
+                  className="rounded px-1.5 py-0.5 text-[9px] uppercase self-center whitespace-nowrap"
+                  style={{
+                    background: asistenciaEnVivo ? "#7FC99A" : C.peligro,
+                    color: asistenciaEnVivo ? C.ink : "#fff",
+                    fontFamily: "'IBM Plex Mono', monospace",
+                    fontWeight: 700,
+                    letterSpacing: "0.04em",
+                  }}
                   title={
                     asistenciaEnVivo
-                      ? "En vivo: las llegadas aparecen al instante"
-                      : "Sin canal en vivo: las llegadas tardarán hasta un minuto en verse"
+                      ? "Canal en vivo enganchado: las llegadas aparecen al instante"
+                      : "Sin canal en vivo: las llegadas tardarán hasta un minuto (refresco normal)"
                   }
-                  className="rounded-full flex-shrink-0"
-                  style={{
-                    width: 8,
-                    height: 8,
-                    alignSelf: "center",
-                    background: asistenciaEnVivo ? "#7FC99A" : C.peligro,
-                  }}
-                />
+                >
+                  {asistenciaEnVivo ? "En vivo" : "Sin canal"}
+                </span>
               </div>
             )}
 

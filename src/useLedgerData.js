@@ -704,11 +704,24 @@ export function useLedgerData(rol) {
       invitadosRef.current = next;
 
       if (esAnfitrion) {
+        // Llegadas que cambian en ESTE guardado: hay que avisarlas por el
+        // canal igual que hace el colaborador. Faltaba, y era un agujero
+        // real (2026-09-06): si quien marca es el anfitrión -- desde la
+        // previsualización de "Formularios", que corre con SU sesión y
+        // por tanto entra por esta rama, no por la del colaborador -- no
+        // se mandaba ningún aviso y el resto de aparatos se enteraban en
+        // el refresco de cada minuto.
+        const presenciaPorId = Object.fromEntries(anterior.map((g) => [g.id, Boolean(g.presente)]));
+        const llegadasCambiadas = next.filter(
+          (g) => g.id in presenciaPorId && presenciaPorId[g.id] !== Boolean(g.presente)
+        );
+
         const { error } = await supabase.rpc("anfitrion_guardar_invitados", {
           p_token: rol,
           p_filas: next,
         });
         if (error) avisar("No se pudieron guardar los invitados.", error);
+        else llegadasCambiadas.forEach((g) => avisarLlegada(g.id, Boolean(g.presente)));
         // Una reasignación marca "avisoPendiente" en el propio invitado, en
         // el servidor — recargamos para que se vea al momento. Si el guardado
         // falló y esta recarga también falla, no hay verdad del servidor que
