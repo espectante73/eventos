@@ -89,7 +89,7 @@ export function useLedgerData(rol) {
   // mueve). Ver lib/useCanalAsistencia.js -- solo corrige ESE campo del
   // invitado que llega en el mensaje; el refresco periódico sigue
   // siendo la fuente de verdad.
-  const { avisarLlegada } = useCanalAsistencia((id, presente) => {
+  const { avisarLlegada, conectado: asistenciaEnVivo } = useCanalAsistencia((id, presente) => {
     setInvitados((previos) => {
       const siguientes = previos.map((g) => (g.id === id ? { ...g, presente } : g));
       invitadosRef.current = siguientes;
@@ -954,6 +954,9 @@ export function useLedgerData(rol) {
     evento,
     colaboradores,
     invitados,
+    // Si el canal en vivo de llegadas está enganchado (ver
+    // lib/useCanalAsistencia.js) -- se enseña en el marcador del día.
+    asistenciaEnVivo,
     mesas,
     fotosFamiliares,
     loaded,

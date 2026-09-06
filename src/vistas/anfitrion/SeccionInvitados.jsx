@@ -62,7 +62,7 @@ export function SeccionInvitados({
   ventana,
   fijo,
 }) {
-  const { evento, persistEvento, colaboradores, invitados, mesas, persistInvitados, avisarColaborador } = data;
+  const { evento, persistEvento, colaboradores, invitados, mesas, persistInvitados, avisarColaborador, asistenciaEnVivo } = data;
 
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
   const [textoImport, setTextoImport] = useState("");
@@ -1127,6 +1127,24 @@ export function SeccionInvitados({
                     </div>
                   </div>
                 ))}
+                {/* Igual que el wifi del mando de la música: si el canal
+                    en vivo no está enganchado, las llegadas tardarán
+                    hasta un minuto en verse (el refresco normal), y hay
+                    que poder saberlo sin adivinarlo. */}
+                <span
+                  title={
+                    asistenciaEnVivo
+                      ? "En vivo: las llegadas aparecen al instante"
+                      : "Sin canal en vivo: las llegadas tardarán hasta un minuto en verse"
+                  }
+                  className="rounded-full flex-shrink-0"
+                  style={{
+                    width: 8,
+                    height: 8,
+                    alignSelf: "center",
+                    background: asistenciaEnVivo ? "#7FC99A" : C.peligro,
+                  }}
+                />
               </div>
             )}
 

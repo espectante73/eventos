@@ -44,6 +44,8 @@ const HISTORIAL_VERSIONES = [
   {
     version: "23",
     cambios: [
+      "El marcador de llegadas lleva un puntito de estado: verde si el canal en vivo está enganchado (las llegadas aparecen al instante) y rojo si no (tardarán hasta un minuto, por el refresco normal). Sin ese indicador no hay forma de distinguir \"no llega el aviso\" de \"el canal no está conectado\".",
+      "Corregido el caso en que emisor y receptor son la misma sesión del navegador — el anfitrión previsualizando el formulario de un colaborador, o la Lista de invitados en su ventana aparte, que comparte cliente con la pestaña principal. Ahí el aviso no llegaba.",
       "Las llegadas se ven al instante, sin esperar. Toda la app se entera de los cambios preguntando cada minuto, y aquí eso se notaba demasiado: marcabas a alguien en el móvil y el recuento tardaba casi un minuto en moverse. Ahora usa el mismo canal en vivo que el mando de la música, así que el número cambia en el momento — y si un aviso se pierde, el refresco de siempre lo corrige.",
       "Control de llegada el día del evento. Cada colaborador ve un check redondo al final de la fila de cada uno de sus invitados, sin desplegar el formulario: lo pulsa según van llegando, con una confirmación por medio (\"¿Confirmas que Fulano ya está aquí?\") — las filas van juntas y un dedo puede marcar al de al lado.",
       "El nombre del invitado se corre un poco a la izquierda para dejarle sitio al check en el extremo derecho.",
