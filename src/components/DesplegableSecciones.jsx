@@ -26,7 +26,6 @@ import {
   Eye,
   User,
   Calendar,
-  FileText,
   FlaskConical,
   RotateCcw,
   Trash2,
@@ -72,7 +71,6 @@ const SUBMENU_CONFIGURACION = [
   { id: "permisos", etiqueta: "Permisos", icono: KeyRound },
   { id: "progreso", etiqueta: "Progreso", icono: Gauge },
   { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },
-  { id: "config-plantillas-email", etiqueta: "Texto emails", icono: FileText },
   { id: "versiones", etiqueta: "Versiones", icono: History },
 ];
 

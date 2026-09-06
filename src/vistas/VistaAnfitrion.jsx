@@ -22,7 +22,6 @@ import { ErrorBoundary } from "../components/ErrorBoundary";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
-import { VentanaConfigPlantillasEmail } from "./anfitrion/VentanaConfigPlantillasEmail";
 import { VentanaConfigModoPruebas } from "./anfitrion/VentanaConfigModoPruebas";
 import { VentanaConfigZonaReinicio } from "./anfitrion/VentanaConfigZonaReinicio";
 import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
@@ -351,10 +350,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
           submenú "Configuración" de "Abrir sección…" (ver DesplegableSecciones.jsx) */}
       {abierto["config-datos-evento"] && (
         <VentanaConfigDatosEvento data={data} onCerrar={() => toggle("config-datos-evento")} />
-      )}
-
-      {abierto["config-plantillas-email"] && (
-        <VentanaConfigPlantillasEmail data={data} onCerrar={() => toggle("config-plantillas-email")} />
       )}
 
 

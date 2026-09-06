@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "22.5",
+    cambios: [
+      "\"Texto emails\" deja de ser un botón de Configuración: las cuatro plantillas se mudan al final de Datos del evento, cada una en su propia sección plegada, con un vistazo de su contenido al lado del título. Así todo el texto editable de la app queda concentrado en un solo sitio.",
+      "Con eso, el permiso \"Editar el texto de los emails\" desaparece: quien puede editar Datos del evento edita ya todo su contenido, textos incluidos. El permiso pasa a llamarse \"Editar los datos del evento (textos de email incluidos)\".",
+      "⚠️ Si algún colaborador tenía concedido solo el permiso de textos, ahora se queda sin nada — hay que marcarle \"Editar los datos del evento\" en Permisos si se le quiere mantener el acceso.",
+      "Configuración baja a nueve entradas.",
+    ],
+  },
+  {
     version: "22.4",
     cambios: [
       "El filtro de Colaborador gana la opción \"Sin asignar\", para ver de un vistazo a quién todavía no le corresponde nadie.",

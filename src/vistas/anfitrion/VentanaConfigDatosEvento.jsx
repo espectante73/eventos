@@ -9,6 +9,7 @@ import { supabase } from "../../supabaseClient";
 import { Field, TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
+import { PlantillasEmail } from "../../components/PlantillasEmail";
 import { emailValido } from "../../lib/validacion";
 
 // Miniatura que WhatsApp/Facebook muestran al pegar cualquier enlace de
@@ -342,6 +343,12 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
             />
           </Field>
         </SeccionPlegable>
+
+        {/* Las cuatro plantillas de email, cada una plegada -- venían de
+            su propio botón en Configuración ("Texto emails"), retirado el
+            2026-09-06: es texto del evento, y así todo el texto editable
+            de la app queda concentrado aquí. */}
+        <PlantillasEmail data={data} />
       </div>
     </VentanaFlotante>
   );

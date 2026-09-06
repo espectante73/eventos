@@ -12,7 +12,6 @@ import {
   Euro,
   ChevronDown,
   Megaphone,
-  FileText,
   Calendar,
   Send,
 } from "lucide-react";
@@ -38,7 +37,6 @@ import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
-import { VentanaConfigPlantillasEmail } from "./anfitrion/VentanaConfigPlantillasEmail";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
 import { VentanaInvitacionesColaborador } from "./VentanaInvitacionesColaborador";
 
@@ -491,10 +489,8 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // VentanaInvitacionesColaborador.jsx) que solo deja mandar a familias
   // ya confirmadas y pagadas, con una confirmación extra del dinero
   // antes de cada envío.
-  const puedeEditarEmail = tienePermiso(colaborador, PERMISOS.EMAIL_EDITAR);
   const puedeEditarDatosEvento = tienePermiso(colaborador, PERMISOS.DATOS_EVENTO_EDITAR);
   const puedeEnviarInvitaciones = tienePermiso(colaborador, PERMISOS.INVITACIONES_ENVIAR);
-  const [ventanaEmailAbierta, setVentanaEmailAbierta] = useState(false);
   const [ventanaDatosEventoAbierta, setVentanaDatosEventoAbierta] = useState(false);
   const [ventanaInvitacionesAbierta, setVentanaInvitacionesAbierta] = useState(false);
   const motorInvitaciones = useMotorInvitaciones(data);
@@ -687,20 +683,11 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 <Megaphone size={16} /> Editar Novedades
               </button>
             )}
-            {puedeEditarEmail && (
-              <button
-                onClick={() => setVentanaEmailAbierta(true)}
-                className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
-                title="Permiso especial concedido por el anfitrión: editar el texto de los emails"
-              >
-                <FileText size={16} /> Textos email
-              </button>
-            )}
             {puedeEditarDatosEvento && (
               <button
                 onClick={() => setVentanaDatosEventoAbierta(true)}
                 className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
-                title="Permiso especial concedido por el anfitrión: editar los datos del evento"
+                title="Permiso especial concedido por el anfitrión: editar los datos del evento, textos de email incluidos"
               >
                 <Calendar size={16} /> Datos evento
               </button>
@@ -737,9 +724,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         />
       )}
 
-      {ventanaEmailAbierta && (
-        <VentanaConfigPlantillasEmail data={data} onCerrar={() => setVentanaEmailAbierta(false)} />
-      )}
       {ventanaDatosEventoAbierta && (
         <VentanaConfigDatosEvento data={data} onCerrar={() => setVentanaDatosEventoAbierta(false)} />
       )}
