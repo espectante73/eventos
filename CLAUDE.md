@@ -547,7 +547,8 @@ además `"authUserId" = auth.uid()`: sin sesión real (el caso del enlace
 viejo), `auth.uid()` es `null` y no coincide con nada, así que esas
 funciones dejan de devolver datos — el enlace-token de colaborador ya
 NO funciona, solo el login. El enlace del **anfitrión** no se tocó
-(sigue siendo válido a propósito, como plan B) — su seguridad nunca
+(entonces se dejó válido a propósito, como plan B — ⚠️ RETIRADO el
+2026-09-06, ver v24.2 al final de este archivo) — su seguridad nunca
 dependió de estas 6 funciones. Ver Fase B en
 `.claude/plans/mejoras-pendientes-login-y-solidez.md` para la decisión
 pendiente que queda (qué hacer con el enlace del anfitrión).
@@ -1563,3 +1564,46 @@ hacerla siempre antes de desplegar el cliente.
 funciones primero (el código viejo sigue funcionando, no cambia ningún
 permiso), desplegar el cliente después, y cerrar los permisos al final.
 Al revés hay una ventana en la que nadie puede guardar nada.
+
+## 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
+
+Cierre del último resto del enlace-token. El de colaborador murió en
+agosto (Fase B); el del **anfitrión** seguía vivo "como plan B" y era
+justamente el que abre la app entera.
+
+**Por qué se retiró:** un token dentro de una URL no caduca nunca, no
+pide contraseña ni CAPTCHA, no se puede revocar a medias, y se filtra
+pasivamente (historial del navegador, capturas, correos reenviados).
+Con login real + Turnstile + recuperación por email ya montados, ese
+plan B costaba más de lo que daba.
+
+**Cómo quedó:** `rol` y `anfitrionToken` solo salen de `mi_rol()`.
+`getRolFromUrl()` se sigue llamando, pero SOLO para reconocer un enlace
+viejo y mostrar la pantalla "No tienes acceso" — nunca como credencial.
+Esa pantalla se movió DELANTE del login y del guardián de carga, o no
+llegaría a verse. Se quitó también `anfitrion_verificar_token` de
+App.jsx (ya no hay token de URL que verificar); sigue en uso desde
+`useLedgerData.js` para elegir rama anfitrión/colaborador.
+
+**De rebote:** los emails automáticos a colaboradores llevaban meses
+mandando un botón "Abrir formulario" que apuntaba a
+`urlPublica?rol=<id>` — muerto desde agosto, llevaba a la pantalla de
+acceso denegado. Corregido en `anfitrion_avisar_colaborador` y
+`anfitrion_guardar_colaboradores`: ahora apuntan a `urlPublica` a secas.
+
+**Token rotado** (`update anfitrion_secreto set "token" =
+gen_random_uuid() where true;`) el 2026-09-07, porque el viejo había
+estado meses viajando en URLs y no hay forma de saber si se copió.
+Transparente para el usuario: `mi_rol()` lee el token fresco de
+`anfitrion_secreto` en cada llamada, así que nadie pierde el acceso.
+Verificado por el usuario: entrar, editar, guardar, cerrar y volver a
+abrir.
+
+⚠️ **PENDIENTE, y es la contrapartida de todo esto:** al no haber ya
+enlace de emergencia, la única vía de recuperación del anfitrión es el
+correo de "recuperar contraseña" de Supabase Auth — que en el plan
+gratuito tiene un límite de envío bajo y **ya falló una vez** ("email
+rate limit exceeded", agosto). Configurar SMTP propio con Resend
+(Authentication → Settings → SMTP) es lo que convierte esto en seguro Y
+sin riesgo de quedarse fuera. La cuenta y la clave de Resend ya existen
+y funcionan para los avisos.
