@@ -164,7 +164,17 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
     setCargando(false);
     reiniciarCaptcha();
     if (errReset) {
-      setError("No se pudo enviar el email de recuperación.");
+      // El motivo real, no un "no se pudo" a secas: el 2026-09-07 el
+      // usuario recibió el correo PERO vio este aviso de error, y sin el
+      // mensaje de Supabase no había forma de saber por qué. Mismo
+      // criterio que ya se aplicó a las subidas a Storage en agosto
+      // (ver CLAUDE.md, sexta tanda del 2026-08-25): un error genérico
+      // esconde la causa justo cuando más falta hace.
+      // eslint-disable-next-line no-console
+      console.error("resetPasswordForEmail devolvió error:", errReset);
+      setError(
+        `No se pudo enviar el email de recuperación: ${errReset.message || JSON.stringify(errReset)}`
+      );
     } else {
       setAviso("Si ese email tiene una cuenta, te hemos enviado un enlace para crear una contraseña nueva.");
     }
