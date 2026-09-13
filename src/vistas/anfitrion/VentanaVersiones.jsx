@@ -42,6 +42,16 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "24.5",
+    cambios: [
+      "La copia de seguridad ya guarda TODO. Antes guardaba cinco de las doce tablas: se dejaba fuera el tablón, las cuentas, el orden de las familias y el historial de avisos.",
+      "Eso afectaba a los cuatro avisos de \"he guardado una copia\" que salen antes de borrar: Borrado total, desactivar Modo pruebas y los dos reinicios. Los cuatro decían la verdad a medias; ahora la dicen entera.",
+      "Por qué pasaba: la copia pedía los datos uno a uno, y esa lista estaba escrita a mano en los cinco sitios que la usan. Añadir una tabla obligaba a tocar seis archivos, así que nadie lo hacía nunca. Ahora recibe todo de golpe y guarda lo que encuentre.",
+      "A partir de ahora, cualquier tabla nueva entra sola en la copia. Hay un test que se pone rojo si alguien vuelve a escribir la lista a mano.",
+      "Y guarda los identificadores y los permisos, que antes se perdían. El secreto del tablón se queda fuera a propósito: no debe viajar en un archivo descargado.",
+    ],
+  },
+  {
     version: "24.4",
     cambios: [
       "Quitado el botón \"Restaurar todo\" de Copia de seguridad. Era una trampa: parecía una red de seguridad y no lo era.",

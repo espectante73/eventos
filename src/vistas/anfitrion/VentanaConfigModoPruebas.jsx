@@ -15,10 +15,7 @@ import { VentanaFlotante } from "../../components/VentanaFlotante";
 export function VentanaConfigModoPruebas({ data, onCerrar }) {
   const {
     evento,
-    mesas,
-    fotosFamiliares,
     colaboradores,
-    invitados,
     activarModoPruebas,
     desactivarModoPruebas,
   } = data;
@@ -67,7 +64,7 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
     // de la foto que ya guarda el propio Modo Pruebas al activarse --
     // por si alguien más (un colaborador real) tocó algo de verdad
     // mientras estaba activo y ese cambio también se va a perder.
-    const datosBackup = JSON.parse(exportarTodo({ evento, mesas, fotosFamiliares, colaboradores, invitados }));
+    const datosBackup = JSON.parse(exportarTodo(data));
     const restaurado = await desactivarModoPruebas();
     if (restaurado) {
       descargarJSON(`backup-antes-de-desactivar-modo-pruebas-${Date.now()}.json`, datosBackup);

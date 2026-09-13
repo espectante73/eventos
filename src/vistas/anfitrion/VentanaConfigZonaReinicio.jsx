@@ -52,9 +52,6 @@ const CATEGORIAS_RESET = {
 
 export function VentanaConfigZonaReinicio({ data, onCerrar }) {
   const {
-    evento,
-    mesas,
-    fotosFamiliares,
     colaboradores,
     invitados,
     resetearPorInvitados,
@@ -104,7 +101,7 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
     // <a download> puede navegar la pestaña en vez de descargar sin más;
     // si eso pasara antes del await de abajo, el reinicio ni se llegaría
     // a intentar (visto en pruebas reales: en el móvil no se aplicaba).
-    const datosBackup = JSON.parse(exportarTodo({ evento, mesas, fotosFamiliares, colaboradores, invitados }));
+    const datosBackup = JSON.parse(exportarTodo(data));
     await resetearPorInvitados(invitadoIdsParaReset, rCategoria);
     descargarJSON(`backup-antes-de-reiniciar-${rCategoria}-${Date.now()}.json`, datosBackup);
     setREjecutando(false);
@@ -123,7 +120,7 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
     setReiniciandoAvisos(true);
     // Mismo motivo que en confirmarResetPorInvitados: capturar antes,
     // descargar después de que la acción real ya haya terminado.
-    const datosBackup = JSON.parse(exportarTodo({ evento, mesas, fotosFamiliares, colaboradores, invitados }));
+    const datosBackup = JSON.parse(exportarTodo(data));
     await resetearAvisos();
     descargarJSON(`backup-antes-de-reiniciar-avisos-${Date.now()}.json`, datosBackup);
     setReiniciandoAvisos(false);

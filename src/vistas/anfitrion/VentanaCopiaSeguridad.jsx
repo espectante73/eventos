@@ -31,7 +31,6 @@ import { exportarTodo } from "../../lib/backup";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
 export function VentanaCopiaSeguridad({ data, onCerrar }) {
-  const { evento, mesas, fotosFamiliares, colaboradores, invitados } = data;
   const [mostrarExportar, setMostrarExportar] = useState(false);
 
   return (
@@ -63,7 +62,7 @@ export function VentanaCopiaSeguridad({ data, onCerrar }) {
           </p>
           <textarea
             readOnly
-            value={exportarTodo({ evento, mesas, fotosFamiliares, colaboradores, invitados })}
+            value={exportarTodo(data)}
             onFocus={(e) => e.target.select()}
             rows={8}
             className="w-full"

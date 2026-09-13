@@ -10,11 +10,6 @@ import { VentanaFlotante } from "../../components/VentanaFlotante";
 
 export function VentanaConfigZonaPeligro({ data, onCerrar }) {
   const {
-    evento,
-    mesas,
-    fotosFamiliares,
-    colaboradores,
-    invitados,
     persistEvento,
     persistColaboradores,
     persistInvitados,
@@ -34,7 +29,7 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
     // blob: puede navegar la propia pestaña en vez de descargar sin más;
     // si eso pasara antes de esta llamada, la página se recargaría y el
     // borrado ni siquiera llegaría a intentarse.
-    const datosBackup = JSON.parse(exportarTodo({ evento, mesas, fotosFamiliares, colaboradores, invitados }));
+    const datosBackup = JSON.parse(exportarTodo(data));
     persistEvento({
       nombre: "",
       fecha: "",
