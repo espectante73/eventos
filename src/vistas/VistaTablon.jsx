@@ -329,13 +329,27 @@ export function VistaTablon({ token }) {
       )}
 
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between gap-2 mb-4">
+        {/* Aviso de no reenviar. Era una línea gris discreta al lado del
+            "Volver" -- pasó a banner rojo a lo ancho el 2026-09-13, al ir
+            a repartir el enlace a los ~140 confirmados: con esa cantidad
+            de gente, que alguien lo reenvíe sin pensar deja de ser una
+            posibilidad remota. Va lo primero de todo, antes incluso del
+            nombre del evento. */}
+        <div
+          className="flex items-start gap-2 rounded-lg px-4 py-3 mb-4"
+          style={{ background: C.peligro, color: "#fff" }}
+        >
+          <Lock size={15} style={{ flexShrink: 0, marginTop: 2 }} />
+          <p className="text-sm" style={{ fontWeight: 500, lineHeight: 1.45 }}>
+            Este enlace es exclusivo para ti como invitado confirmado. No lo compartas con nadie,
+            ya que todos los invitados confirmados tienen acceso a él.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 mb-4">
           <a href="/" className="text-xs underline" style={{ color: C.charcoal, opacity: 0.6 }}>
             ← Volver a la web
           </a>
-          <span className="flex items-center gap-1 text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
-            <Lock size={11} /> Enlace privado — no lo compartas fuera del grupo
-          </span>
         </div>
 
         {evento && (

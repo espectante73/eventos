@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "25",
+    cambios: [
+      "Banner rojo a lo ancho en el tablón, lo primero que se ve: \"Este enlace es exclusivo para ti como invitado confirmado. No lo compartas con nadie, ya que todos los invitados confirmados tienen acceso a él.\"",
+      "Sustituye al aviso gris discreto que había al lado de \"Volver\". Con el enlace repartiéndose a los confirmados, que alguien lo reenvíe sin pensar deja de ser una posibilidad remota.",
+    ],
+  },
+  {
     version: "24.5",
     cambios: [
       "La copia de seguridad ya guarda TODO. Antes guardaba cinco de las doce tablas: se dejaba fuera el tablón, las cuentas, el orden de las familias y el historial de avisos.",
