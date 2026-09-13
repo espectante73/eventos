@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "25.1",
+    cambios: [
+      "El aviso del tablón, más directo y con la letra más grande: \"NO COMPARTAS ESTE ENLACE\" en negrita arriba, y debajo la explicación.",
+      "Y ahora se ve también ANTES de entrar, en la pantalla de la pregunta — que es justo el momento en que alguien podría estar a punto de reenviarlo.",
+      "El aviso está escrito una sola vez aunque aparezca en dos sitios: cambiar el texto en el futuro no puede dejar una de las dos pantallas con la versión vieja.",
+    ],
+  },
+  {
     version: "25",
     cambios: [
       "Banner rojo a lo ancho en el tablón, lo primero que se ve: \"Este enlace es exclusivo para ti como invitado confirmado. No lo compartas con nadie, ya que todos los invitados confirmados tienen acceso a él.\"",

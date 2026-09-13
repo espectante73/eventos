@@ -19,6 +19,32 @@ import { uid } from "../lib/id";
 
 const BUCKET_MUSICA = "musica-ambiental";
 
+// Aviso de no reenviar. Existía desde agosto como una línea gris al lado
+// de "Volver"; pasó a banner rojo el 2026-09-13, al ir a repartir el
+// enlace a los ~140 confirmados. Se muestra en DOS sitios -- la pantalla
+// de la pregunta y el tablón ya abierto -- así que vive aquí una sola
+// vez: retocar el texto en un sitio y olvidar el otro es justo el fallo
+// que esto evita.
+function AvisoNoCompartir() {
+  return (
+    <div
+      className="flex items-start gap-2.5 rounded-lg px-4 py-3.5"
+      style={{ background: C.peligro, color: "#fff" }}
+    >
+      <Lock size={17} style={{ flexShrink: 0, marginTop: 3 }} />
+      <div>
+        <p className="text-base" style={{ fontWeight: 700, letterSpacing: "0.01em" }}>
+          NO COMPARTAS ESTE ENLACE.
+        </p>
+        <p className="text-base mt-1.5" style={{ lineHeight: 1.45 }}>
+          Este es un enlace exclusivo para los invitados confirmados que tienen acceso a él a
+          través del grupo de WhatsApp.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function VistaTablon({ token }) {
   // "cargando" | "invalido" | "bloqueado" | "listo"
   const [estado, setEstado] = useState("cargando");
@@ -258,9 +284,13 @@ export function VistaTablon({ token }) {
         className="min-h-screen flex items-center justify-center px-4"
         style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
       >
+        <div className="max-w-sm w-full">
+        <div className="mb-4">
+          <AvisoNoCompartir />
+        </div>
         <form
           onSubmit={enviarRespuesta}
-          className="max-w-sm w-full p-6 rounded-lg"
+          className="w-full p-6 rounded-lg"
           style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
         >
           <div className="flex items-center gap-2 mb-3" style={{ color: C.gold }}>
@@ -304,6 +334,7 @@ export function VistaTablon({ token }) {
             {comprobando ? "Comprobando…" : "Entrar"}
           </button>
         </form>
+        </div>
       </div>
     );
   }
@@ -329,21 +360,8 @@ export function VistaTablon({ token }) {
       )}
 
       <div className="max-w-2xl mx-auto px-4 py-6">
-        {/* Aviso de no reenviar. Era una línea gris discreta al lado del
-            "Volver" -- pasó a banner rojo a lo ancho el 2026-09-13, al ir
-            a repartir el enlace a los ~140 confirmados: con esa cantidad
-            de gente, que alguien lo reenvíe sin pensar deja de ser una
-            posibilidad remota. Va lo primero de todo, antes incluso del
-            nombre del evento. */}
-        <div
-          className="flex items-start gap-2 rounded-lg px-4 py-3 mb-4"
-          style={{ background: C.peligro, color: "#fff" }}
-        >
-          <Lock size={15} style={{ flexShrink: 0, marginTop: 2 }} />
-          <p className="text-sm" style={{ fontWeight: 500, lineHeight: 1.45 }}>
-            Este enlace es exclusivo para ti como invitado confirmado. No lo compartas con nadie,
-            ya que todos los invitados confirmados tienen acceso a él.
-          </p>
+        <div className="mb-4">
+          <AvisoNoCompartir />
         </div>
 
         <div className="flex items-center gap-2 mb-4">
