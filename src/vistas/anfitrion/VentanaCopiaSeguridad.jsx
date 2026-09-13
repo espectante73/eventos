@@ -1,142 +1,50 @@
-// Ventana "Copia de seguridad": exportar todo a texto, o restaurarlo desde
-// un texto pegado (admite también el formato antiguo de solo invitados).
+// Ventana "Copia de seguridad": exporta a texto una foto de los datos.
 // Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4,
 // Ronda 1). `exportarTodo` vive aparte, en lib/backup.js, porque BORRAR
-// TODO y los reinicios (todavía en VistaAnfitrion.jsx) también la usan
-// para su copia de seguridad automática antes de la acción destructiva.
+// TODO, Modo Pruebas y los reinicios también la usan para su copia
+// automática antes de la acción destructiva.
+//
+// ⚠️ RESTAURAR SE RETIRÓ el 2026-09-13 (v24.4). Existía desde la época
+// en que la app era un artefacto sin base de datos: republicar borraba
+// todo, y pegar aquí el texto era la única forma de recuperarlo. Hoy hay
+// base de datos real y un volcado diario automático, así que ese camino
+// no solo sobraba -- se había vuelto peligroso:
+//
+// - `exportarTodo` guarda 5 de las 12 tablas. Se dejaba fuera el tablón,
+//   las cuentas, el orden de las familias y los avisos enviados.
+// - De cada colaborador solo guardaba nombre y email: NI su cuenta de
+//   acceso (`authUserId`) NI sus permisos. Restaurar dejaba a los doce
+//   colaboradores sin poder entrar.
+// - Regeneraba todos los ids y volvía a enlazar a las personas
+//   comparando nombres escritos -- un apellido distinto y el invitado se
+//   quedaba huérfano.
+//
+// Recuperar de verdad es una emergencia rara y toca hacerlo desde el
+// volcado diario (.github/workflows/backup.yml), que sí está completo.
+// Si algún día se quiere volver a tener un "restaurar" aquí dentro,
+// primero hay que arreglar `exportarTodo` para que guarde la caja
+// entera y conserve los ids -- ver el análisis en CLAUDE.md.
 import { useState } from "react";
-import { Copy, Repeat } from "lucide-react";
+import { Copy } from "lucide-react";
 import { C, inputStyle } from "../../theme";
-import { uid } from "../../lib/id";
-import { parseImport } from "../../lib/invitados";
 import { exportarTodo } from "../../lib/backup";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
 export function VentanaCopiaSeguridad({ data, onCerrar }) {
-  const {
-    evento,
-    mesas,
-    fotosFamiliares,
-    colaboradores,
-    invitados,
-    persistEvento,
-    persistMesas,
-    persistFotosFamiliares,
-    persistColaboradores,
-    persistInvitados,
-  } = data;
-
+  const { evento, mesas, fotosFamiliares, colaboradores, invitados } = data;
   const [mostrarExportar, setMostrarExportar] = useState(false);
-  const [mostrarRestaurar, setMostrarRestaurar] = useState(false);
-  const [textoRestaurar, setTextoRestaurar] = useState("");
-
-  const restaurarTodo = () => {
-    let datos;
-    try {
-      datos = JSON.parse(textoRestaurar);
-    } catch (_) {
-      // No es JSON: puede ser el formato antiguo de "solo invitados" (separado
-      // por tabulaciones). Lo intentamos como alternativa antes de rendirnos.
-      const filas = parseImport(textoRestaurar, colaboradores);
-      if (filas.length === 0) {
-        window.alert(
-          "No he podido leer ese texto. Pega el contenido que generó \"Exportar todo\" (o, si es una copia antigua de solo invitados, en el formato Grupo familiar, Apellido, Nombre, Colaborador, Zona)."
-        );
-        return;
-      }
-      const ok = window.confirm(
-        `Esto es un formato antiguo: solo recuperaré los ${filas.length} invitados (nombre, apellido, zona, grupo familiar y colaborador si coincide el nombre). El evento, las mesas y los datos de colaborador/año/email/etc. de cada invitado NO se restauran con este formato. ¿Continuar?`
-      );
-      if (!ok) return;
-      const nuevos = filas.map((r) => ({
-        id: uid(),
-        nombre: r.nombre,
-        apellido: r.apellido,
-        zona: r.zona,
-        confirmado: false,
-        colaboradorId: r.colaboradorId,
-        grupoFamiliar: r.grupoFamiliar,
-        mesa: null,
-        anioNacimiento: "",
-        anioBoda: "",
-        rolFamiliar: "",
-        email: "",
-        cancion: "",
-        alergias: "",
-        observaciones: "",
-        pagado: false,
-        presente: false,
-      }));
-      persistInvitados([...invitados, ...nuevos]);
-      setTextoRestaurar("");
-      setMostrarRestaurar(false);
-      return;
-    }
-
-    // 1) Invitados primero, con ids nuevos (los antiguos ya no sirven).
-    const nuevosInvitados = (datos.invitados || []).map((r) => ({
-      id: uid(),
-      nombre: r.nombre || "",
-      apellido: r.apellido || "",
-      zona: r.zona || "",
-      confirmado: Boolean(r.confirmado),
-      colaboradorId: null,
-      grupoFamiliar: r.grupoFamiliar || r.apellido || "",
-      mesa: r.mesa || null,
-      anioNacimiento: r.anioNacimiento || "",
-      anioBoda: r.anioBoda || "",
-      // Una copia hecha antes del 2026-09-04 trae "conyuge": se
-      // acepta igual, para no perder lo ya marcado al restaurarla.
-      rolFamiliar: r.rolFamiliar || r.conyuge || "",
-      email: r.email || "",
-      cancion: r.cancion || "",
-      alergias: r.alergias || "",
-      observaciones: r.observaciones || "",
-      pagado: Boolean(r.pagado),
-      presente: Boolean(r.presente),
-      _colaboradorNombreTmp: r.colaboradorNombre || "",
-    }));
-
-    // 2) Colaboradores, enlazados al invitado que coincide en apellido y nombre.
-    const nuevosColaboradores = (datos.colaboradores || []).map((c) => {
-      const [ap, no] = (c.nombre || "").split(",").map((s) => s.trim());
-      const match = nuevosInvitados.find((g) => g.apellido === ap && g.nombre === no);
-      return {
-        id: uid(),
-        nombre: c.nombre || "",
-        invitadoId: match ? match.id : null,
-        email: c.email || "",
-      };
-    });
-
-    // 3) Resolver el colaborador asignado a cada invitado, y limpiar el campo temporal.
-    const invitadosFinal = nuevosInvitados.map((g) => {
-      const { _colaboradorNombreTmp, ...resto } = g;
-      if (_colaboradorNombreTmp) {
-        const col = nuevosColaboradores.find((c) => c.nombre === _colaboradorNombreTmp);
-        resto.colaboradorId = col ? col.id : null;
-      }
-      return resto;
-    });
-
-    const eventoRestaurado = datos.evento || evento;
-    if (!eventoRestaurado.imagen) eventoRestaurado.imagen = "/cabecera-defecto.jpg";
-    if (!eventoRestaurado.imagenInvitacion) eventoRestaurado.imagenInvitacion = "/invitacion-defecto.jpg";
-    persistEvento(eventoRestaurado);
-    if (datos.mesas) persistMesas(datos.mesas);
-    if (datos.fotosFamiliares) persistFotosFamiliares(datos.fotosFamiliares);
-    persistColaboradores(nuevosColaboradores);
-    persistInvitados(invitadosFinal);
-    setTextoRestaurar("");
-    setMostrarRestaurar(false);
-  };
 
   return (
     <VentanaFlotante clave="copiaSeguridad" titulo="Copia de seguridad" onCerrar={onCerrar}>
       <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
-        Antes de pedir más cambios y volver a publicar el artefacto, exporta todo (evento,
-        colaboradores, mesas e invitados) y guárdalo en una nota. Tras publicar la nueva
-        versión, pega ese mismo texto aquí para recuperarlo todo de una vez.
+        La copia de seguridad de verdad se hace sola: cada día se guarda un volcado completo
+        de la base de datos. Esto de aquí es solo una foto de mano, por si quieres llevarte el
+        estado actual a un archivo antes de tocar algo.
+      </p>
+      <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
+        No hay botón de restaurar a propósito: esta foto no guarda las cuentas ni los permisos
+        de los colaboradores, así que recuperarla dejaría a todos sin poder entrar. Si algún día
+        hace falta recuperar de verdad, se hace desde el volcado diario.
       </p>
       <div className="flex flex-wrap gap-2 mb-3">
         <button
@@ -145,13 +53,6 @@ export function VentanaCopiaSeguridad({ data, onCerrar }) {
           style={{ border: `1px solid ${C.gold}`, color: C.gold }}
         >
           <Copy size={14} /> Exportar todo
-        </button>
-        <button
-          onClick={() => setMostrarRestaurar((v) => !v)}
-          className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-          style={{ border: `1px solid ${C.ink}`, color: C.ink }}
-        >
-          <Repeat size={14} /> Restaurar todo
         </button>
       </div>
 
@@ -168,28 +69,6 @@ export function VentanaCopiaSeguridad({ data, onCerrar }) {
             className="w-full"
             style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
           />
-        </div>
-      )}
-
-      {mostrarRestaurar && (
-        <div>
-          <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.75 }}>
-            Pega aquí el texto que generó "Exportar todo" en una versión anterior.
-          </p>
-          <textarea
-            value={textoRestaurar}
-            onChange={(e) => setTextoRestaurar(e.target.value)}
-            rows={8}
-            className="w-full mb-2"
-            style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
-          />
-          <button
-            onClick={restaurarTodo}
-            className="px-3 py-1.5 rounded text-sm font-medium"
-            style={{ background: C.ink, color: C.paper }}
-          >
-            Restaurar
-          </button>
         </div>
       )}
     </VentanaFlotante>

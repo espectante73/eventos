@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "24.4",
+    cambios: [
+      "Quitado el botón \"Restaurar todo\" de Copia de seguridad. Era una trampa: parecía una red de seguridad y no lo era.",
+      "Lo que guardaba esa copia son 5 de las 12 tablas. Se dejaba fuera el tablón, las cuentas, el orden de las familias y los avisos enviados. Y de cada colaborador solo el nombre y el correo — ni su cuenta de acceso ni sus permisos: restaurarla habría dejado a los doce colaboradores sin poder entrar.",
+      "Venía de la época en que la app vivía dentro de un chat y republicar borraba todo; entonces era la única forma de recuperar. Hoy hay base de datos de verdad y un volcado completo cada día.",
+      "El botón de exportar se queda: sigue sirviendo como foto de mano antes de tocar algo.",
+    ],
+  },
+  {
     version: "24.2",
     cambios: [
       "Retirado el último enlace con contraseña dentro. Los enlaces del tipo \"...?rol=XXXX\" ya no dan acceso a nadie. El de colaborador se había retirado en agosto; el del anfitrión seguía vivo \"como plan B\", y ese era justo el que abría toda la app.",
