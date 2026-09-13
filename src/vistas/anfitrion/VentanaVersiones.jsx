@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "25.2",
+    cambios: [
+      "El aviso del tablón, dos puntos más grande todavía (de 16 a 18).",
+    ],
+  },
+  {
     version: "25.1",
     cambios: [
       "El aviso del tablón, más directo y con la letra más grande: \"NO COMPARTAS ESTE ENLACE\" en negrita arriba, y debajo la explicación.",

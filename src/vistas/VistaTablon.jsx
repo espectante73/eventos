@@ -31,12 +31,12 @@ function AvisoNoCompartir() {
       className="flex items-start gap-2.5 rounded-lg px-4 py-3.5"
       style={{ background: C.peligro, color: "#fff" }}
     >
-      <Lock size={17} style={{ flexShrink: 0, marginTop: 3 }} />
+      <Lock size={19} style={{ flexShrink: 0, marginTop: 4 }} />
       <div>
-        <p className="text-base" style={{ fontWeight: 700, letterSpacing: "0.01em" }}>
+        <p className="text-lg" style={{ fontWeight: 700, letterSpacing: "0.01em" }}>
           NO COMPARTAS ESTE ENLACE.
         </p>
-        <p className="text-base mt-1.5" style={{ lineHeight: 1.45 }}>
+        <p className="text-lg mt-1.5" style={{ lineHeight: 1.45 }}>
           Este es un enlace exclusivo para los invitados confirmados que tienen acceso a él a
           través del grupo de WhatsApp.
         </p>
