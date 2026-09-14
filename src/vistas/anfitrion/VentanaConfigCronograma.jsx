@@ -22,7 +22,7 @@
 // principal aunque se vea dentro de la ventana emergente (mismo motivo
 // ya documentado para el portapapeles de Novedades).
 import { useState, useEffect } from "react";
-import { Printer, ChevronDown } from "lucide-react";
+import { Printer, ChevronDown, Plus, Trash2 } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { generarImagenCronograma, calcularHorasAbsolutas } from "../../lib/cronograma";
 import { resolverColaborador } from "../../lib/invitados";
@@ -64,7 +64,14 @@ export function VentanaConfigCronograma({ data, ventana }) {
   // bloque nuevo empiece siempre plegado (no arrastra el "abierto" del
   // bloque anterior).
   const [atiendeAbierto, setAtiendeAbierto] = useState(false);
-  useEffect(() => setAtiendeAbierto(false), [seleccionado]);
+  // Confirmación de "quitar" en dos toques, dentro de la propia ventana:
+  // esta ventana es una ventana de verdad del sistema y window.confirm()
+  // apuntaría a la pestaña equivocada (ver la cabecera de este archivo).
+  const [confirmandoQuitar, setConfirmandoQuitar] = useState(false);
+  useEffect(() => {
+    setAtiendeAbierto(false);
+    setConfirmandoQuitar(false);
+  }, [seleccionado]);
 
   // Se regenera sola cada vez que cambia algún dato -- no hace falta
   // ningún botón de "actualizar imagen".
@@ -85,6 +92,30 @@ export function VentanaConfigCronograma({ data, ventana }) {
   // otros varias"). Por ahora solo colaboradores -- cuando exista el
   // "rol de trabajo" de invitados (acomodador, etc.), este mismo array
   // también podrá incluirlos, sin cambiar la forma del dato.
+  // Añadir y quitar bloques (2026-09-14). Antes los nueve bloques venían
+  // fijos del esquema y cambiarlos exigía tocar el código -- justo lo que
+  // el usuario pidió evitar. El bloque nuevo entra DETRÁS del que está
+  // seleccionado (no al final): al montar un cronograma se piensa
+  // "después de la cena va X", no "al final de todo va X".
+  const anadirBloque = () => {
+    const nuevo = { texto: "Bloque nuevo", duracionMin: 15 };
+    const posicion = bloques.length ? seleccionado + 1 : 0;
+    const siguiente = [...bloques.slice(0, posicion), nuevo, ...bloques.slice(posicion)];
+    persistEvento({ ...evento, cronogramaBloques: siguiente });
+    setSeleccionado(posicion);
+    setConfirmandoQuitar(false);
+  };
+
+  // Nunca se queda sin ninguno: con la lista vacía no habría nada que
+  // editar ni que dibujar en la imagen.
+  const quitarBloque = () => {
+    if (bloques.length <= 1) return;
+    const siguiente = bloques.filter((_, i) => i !== seleccionado);
+    persistEvento({ ...evento, cronogramaBloques: siguiente });
+    setSeleccionado((i) => Math.max(0, Math.min(i, siguiente.length - 1)));
+    setConfirmandoQuitar(false);
+  };
+
   const alternarAsignado = (indice, colaboradorId) => {
     const actuales = Array.isArray(bloques[indice]?.asignados) ? bloques[indice].asignados : [];
     const siguientes = actuales.includes(colaboradorId)
@@ -178,7 +209,7 @@ export function VentanaConfigCronograma({ data, ventana }) {
         </select>
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-2">
         <select
           value={seleccionado}
           onChange={(e) => setSeleccionado(Number(e.target.value))}
@@ -190,23 +221,83 @@ export function VentanaConfigCronograma({ data, ventana }) {
             </option>
           ))}
         </select>
-        {bloqueActual && (
-          <>
-            <input
-              type="number"
-              min={0}
-              step={5}
-              value={bloqueActual.duracionMin ?? 0}
-              onChange={(e) => cambiarBloque(seleccionado, "duracionMin", Number(e.target.value))}
-              style={{ ...inputStyle, width: 70, flexShrink: 0 }}
-              title="Cuántos minutos dura este bloque"
-            />
-            <span className="text-sm" style={{ color: C.charcoal, opacity: 0.7, flexShrink: 0 }}>
-              min
-            </span>
-          </>
-        )}
+        <button
+          onClick={anadirBloque}
+          className="flex items-center gap-1 px-3 rounded text-sm font-medium flex-shrink-0"
+          style={{ height: 42, background: C.ink, color: C.paper }}
+          title="Añadir un bloque detrás del que estás viendo"
+        >
+          <Plus size={15} /> Añadir
+        </button>
+        <button
+          onClick={() => setConfirmandoQuitar(true)}
+          disabled={bloques.length <= 1}
+          className="flex items-center justify-center rounded flex-shrink-0"
+          style={{
+            height: 42,
+            width: 42,
+            border: `1px solid ${bloques.length <= 1 ? C.line : C.peligro}`,
+            color: bloques.length <= 1 ? C.line : C.peligro,
+          }}
+          title={bloques.length <= 1 ? "Tiene que quedar al menos un bloque" : "Quitar este bloque"}
+        >
+          <Trash2 size={16} />
+        </button>
       </div>
+
+      {confirmandoQuitar && bloqueActual && (
+        <div
+          className="flex items-center gap-2 rounded px-3 py-2 mb-2"
+          style={{ background: C.avisoFondo, border: `1px solid ${C.peligro}` }}
+        >
+          <p className="text-xs flex-1" style={{ color: C.peligro }}>
+            ¿Quitar «{bloqueActual.texto || `Bloque ${seleccionado + 1}`}»? Se pierde también quién
+            lo atendía.
+          </p>
+          <button
+            onClick={quitarBloque}
+            className="text-xs px-2 py-1 rounded font-medium"
+            style={{ background: C.peligro, color: "#fff" }}
+          >
+            Quitar
+          </button>
+          <button
+            onClick={() => setConfirmandoQuitar(false)}
+            className="text-xs px-2 py-1 rounded font-medium"
+            style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
+
+      {/* El nombre vuelve a ser editable (2026-09-14). Se había quitado el
+          2026-08-29 para no repetirlo (ya salía en el <select>), pero
+          desde que se pueden añadir bloques hace falta: un bloque nuevo
+          nace como "Bloque nuevo" y sin esto no habría forma de
+          rebautizarlo. */}
+      {bloqueActual && (
+        <div className="flex items-center gap-2 mb-4">
+          <input
+            value={bloqueActual.texto || ""}
+            onChange={(e) => cambiarBloque(seleccionado, "texto", e.target.value)}
+            placeholder="Nombre del bloque"
+            style={{ ...inputStyle, height: 42, width: "100%" }}
+          />
+          <input
+            type="number"
+            min={0}
+            step={5}
+            value={bloqueActual.duracionMin ?? 0}
+            onChange={(e) => cambiarBloque(seleccionado, "duracionMin", Number(e.target.value))}
+            style={{ ...inputStyle, width: 70, flexShrink: 0, height: 42 }}
+            title="Cuántos minutos dura este bloque"
+          />
+          <span className="text-sm flex-shrink-0" style={{ color: C.charcoal, opacity: 0.7 }}>
+            min
+          </span>
+        </div>
+      )}
 
       {bloqueActual && (
         <>

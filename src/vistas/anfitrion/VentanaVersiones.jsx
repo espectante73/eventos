@@ -42,6 +42,16 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27",
+    cambios: [
+      "El cronograma ya se monta entero desde la app: puedes añadir bloques y quitarlos. Hasta ahora eran nueve fijos y cambiarlos exigía tocar el código.",
+      "El bloque nuevo entra DETRÁS del que estés viendo, no al final: al montar un cronograma se piensa \"después de la cena va esto\".",
+      "Y vuelve a poder renombrarse un bloque. Se había quitado en agosto para ahorrar espacio, pero sin eso un bloque nuevo se quedaría llamándose \"Bloque nuevo\" para siempre.",
+      "Quitar pide confirmación dentro de la propia ventana y avisa de que se pierde también quién lo atendía. Siempre queda al menos un bloque.",
+      "La imagen que se imprime y la que ven los invitados se ajustan solas al número de bloques que haya.",
+    ],
+  },
+  {
     version: "26.2",
     cambios: [
       "\"Sin revisar\" pasa a llamarse \"Sin rol\" en la columna Rol: dice mejor lo que falta. Cambiado en los tres sitios donde salía — el filtro, el contador de al lado y la ayuda de la columna — para que no digan cosas distintas.",
