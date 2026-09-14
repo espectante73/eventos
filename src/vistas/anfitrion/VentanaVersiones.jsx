@@ -42,6 +42,16 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "26.1",
+    cambios: [
+      "Ya no se puede asignar colaborador a alguien que no tenga rol familiar. Si lo intentas, sale un aviso rojo explicando por qué y no se asigna.",
+      "El motivo: desde la versión anterior el formulario depende del rol. Un matrimonio asignado sin rol se quedaría sin poder dar su año ni su foto de boda, y nadie se enteraría.",
+      "Funciona en los dos sitios donde se asigna: la Lista de invitados y las tarjetas de Datos Colab.",
+      "Quitar la asignación nunca se bloquea: deshacer siempre tiene que poder hacerse.",
+      "Y en Revisión hay un aviso nuevo, \"Asignados a un colaborador sin rol familiar\", para encontrar los que ya estuvieran así de antes — a esos el guardián no llega.",
+    ],
+  },
+  {
     version: "26",
     cambios: [
       "El formulario de cada invitado se adapta a quién es. Ya no se le pide a todo el mundo lo mismo.",

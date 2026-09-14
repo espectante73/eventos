@@ -132,3 +132,25 @@ describe("menores en la mesa", () => {
     expect(claves(revisarInvitados(lista, evento))).not.toContain("menorSinAdultoEnMesa");
   });
 });
+
+describe("asignados sin rol familiar", () => {
+  const claves = (hs) => hs.map((h) => h.clave);
+
+  it("avisa de quien tiene colaborador pero no tiene rol", () => {
+    const lista = [
+      { id: "1", nombre: "Ana", apellido: "Ruiz", grupoFamiliar: "Ruiz", colaboradorId: "c1", rolFamiliar: "" },
+    ];
+    expect(claves(revisarInvitados(lista, { fecha: "2026-11-13" }))).toContain("asignadoSinRolFamiliar");
+  });
+
+  it("no avisa si tiene rol, ni si todavía no tiene colaborador", () => {
+    const conRol = [
+      { id: "1", nombre: "Ana", apellido: "Ruiz", grupoFamiliar: "Ruiz", colaboradorId: "c1", rolFamiliar: "suelto" },
+    ];
+    const sinColaborador = [
+      { id: "2", nombre: "Luis", apellido: "Paz", grupoFamiliar: "Paz", colaboradorId: null, rolFamiliar: "" },
+    ];
+    expect(claves(revisarInvitados(conRol, { fecha: "2026-11-13" }))).not.toContain("asignadoSinRolFamiliar");
+    expect(claves(revisarInvitados(sinColaborador, { fecha: "2026-11-13" }))).not.toContain("asignadoSinRolFamiliar");
+  });
+});

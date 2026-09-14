@@ -201,11 +201,30 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   // (parsePrecio), nunca en cada pulsación. Convertirlo a número al momento
   // borraba la coma decimal a medio escribir (9,18 acababa siendo 918).
 
+  // Devuelve null si se ha asignado, o el motivo (texto) si se ha
+  // rechazado. Quien la llama enseña ese motivo donde toque -- NUNCA con
+  // window.alert(): la Lista de invitados vive en una ventana aparte y un
+  // diálogo nativo apuntaría a la pestaña equivocada (ver CLAUDE.md).
+  //
+  // El rol familiar es obligatorio ANTES de asignar colaborador
+  // (2026-09-14, a petición del usuario). Motivo: desde v26 el
+  // formulario del colaborador se adapta al rol -- sin rol no se le
+  // piden el año ni la foto de boda, así que un matrimonio asignado sin
+  // rol se quedaría sin poder dar esos datos y nadie se enteraría. Este
+  // guardián es lo que garantiza que no se escape ninguno.
+  //
+  // QUITAR la asignación nunca se bloquea: deshacer siempre tiene que
+  // poder hacerse, igual que desmarcar una llegada.
   const asignarColaborador = (id, colaboradorId) => {
     const nuevoId = colaboradorId || null;
+    const invitado = invitados.find((g) => g.id === id);
+    if (nuevoId && invitado && !invitado.rolFamiliar) {
+      return `${invitado.nombre} ${invitado.apellido} todavía no tiene rol familiar. Ponle su rol (O, A, H, P o S) antes de asignarle colaborador: el formulario que verá el colaborador depende de ese rol.`;
+    }
     persistInvitados(
       invitados.map((g) => (g.id === id ? { ...g, colaboradorId: nuevoId } : g))
     );
+    return null;
   };
 
   const ocupacionMesa = (numero) =>

@@ -189,6 +189,22 @@ export function revisarInvitados(invitados = [], evento = {}) {
       )
     );
 
+  // Asignados a un colaborador pero sin rol familiar. Desde el
+  // 2026-09-14 la app impide crear casos nuevos (ver asignarColaborador
+  // en VistaAnfitrion.jsx), pero los que ya existían de antes hay que
+  // poder encontrarlos: el formulario que ve el colaborador depende del
+  // rol, así que sin rol no se les pide ni el año ni la foto de boda.
+  const asignadosSinRol = invitados.filter((g) => g.colaboradorId && !g.rolFamiliar);
+  if (asignadosSinRol.length)
+    hallazgos.push(
+      hallazgo(
+        "asignadoSinRolFamiliar",
+        "Asignados a un colaborador sin rol familiar",
+        "El formulario que ve el colaborador depende del rol: sin marcarlo, a un matrimonio no se le pedirá el año ni la foto de boda. Ponles su rol (O, A, H, P o S).",
+        asignadosSinRol
+      )
+    );
+
   const matrimoniosSinBoda = matrimoniosDeInvitados(invitados, evento.fecha)
     .filter((m) => m.aniversario === null)
     .map((m) => m.esposo);

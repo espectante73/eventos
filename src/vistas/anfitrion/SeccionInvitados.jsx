@@ -620,6 +620,11 @@ export function SeccionInvitados({
   //
   // `sticky`: se quedan pegados arriba al desplazar la lista, así que se
   // siguen viendo como la cabecera de siempre.
+  // Motivo por el que se ha rechazado una asignación de colaborador
+  // (falta el rol familiar). Se enseña aquí dentro, no con un diálogo
+  // del navegador: esta lista vive en una ventana aparte.
+  const [avisoAsignacion, setAvisoAsignacion] = useState("");
+
   const cabeceraTabla = (
     <div
       style={{
@@ -1330,6 +1335,24 @@ export function SeccionInvitados({
           </div>
         )}
 
+        {avisoAsignacion && (
+          <div
+            className="flex items-start gap-2 rounded px-3 py-2 mb-2"
+            style={{ background: C.avisoFondo, border: `1px solid ${C.peligro}` }}
+          >
+            <p className="text-xs flex-1" style={{ color: C.peligro }}>
+              {avisoAsignacion}
+            </p>
+            <button
+              onClick={() => setAvisoAsignacion("")}
+              className="text-xs font-medium"
+              style={{ color: C.peligro }}
+            >
+              Entendido
+            </button>
+          </div>
+        )}
+
         <div
           className="rounded"
           style={{
@@ -1542,7 +1565,7 @@ export function SeccionInvitados({
                   <span className="text-xs gap-1" style={celda(5)}>
                     <select
                       value={g.colaboradorId || ""}
-                      onChange={(e) => asignarColaborador(g.id, e.target.value)}
+                      onChange={(e) => setAvisoAsignacion(asignarColaborador(g.id, e.target.value) || "")}
                       // Sin borde y sin el fondo blanco de inputStyle --
                       // transparente, para que se vea el fondo real de
                       // la celda (que alterna por fila y por columna)

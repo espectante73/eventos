@@ -24,6 +24,10 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
   const [resultadoPrueba, setResultadoPrueba] = useState(""); // "" | "ok" | "error"
   const [enviandoInvitacion, setEnviandoInvitacion] = useState(false);
   const [resultadoInvitacion, setResultadoInvitacion] = useState(""); // "" | "ok" | "error"
+  // Motivo si se rechaza una reasignación por faltarle el rol familiar
+  // al invitado (ver asignarColaborador en VistaAnfitrion.jsx). Texto
+  // dentro de la tarjeta, nunca un diálogo del navegador.
+  const [avisoAsignacion, setAvisoAsignacion] = useState("");
 
   const probarEmail = async () => {
     setProbando(true);
@@ -250,6 +254,24 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
         </>
       )}
 
+      {abierta && avisoAsignacion && (
+        <div
+          className="flex items-start gap-2 rounded px-2 py-1.5 mt-2"
+          style={{ background: C.avisoFondo, border: `1px solid ${C.peligro}` }}
+        >
+          <p className="text-xs flex-1" style={{ color: C.peligro }}>
+            {avisoAsignacion}
+          </p>
+          <button
+            onClick={() => setAvisoAsignacion("")}
+            className="text-xs font-medium"
+            style={{ color: C.peligro }}
+          >
+            Entendido
+          </button>
+        </div>
+      )}
+
       {abierta && (
         <div className="mt-3 space-y-1.5" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 8 }}>
           {asignados.length === 0 && (
@@ -267,7 +289,7 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
               </span>
               <select
                 value={g.colaboradorId || ""}
-                onChange={(e) => onAsignarColaborador(g.id, e.target.value)}
+                onChange={(e) => setAvisoAsignacion(onAsignarColaborador(g.id, e.target.value) || "")}
                 style={{ ...inputStyle, padding: "2px 4px", fontSize: 11 }}
               >
                 <option value="">Sin asignar</option>
