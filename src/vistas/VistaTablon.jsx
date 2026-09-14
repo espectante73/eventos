@@ -413,13 +413,29 @@ export function VistaTablon({ token }) {
             const abierta = idAbierto === n.id;
             return (
               <div key={n.id} className="rounded-lg overflow-hidden" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+                {/* La etiqueta se va a la derecha, donde estaba la
+                    fecha, y la fecha baja dentro del apartado abierto --
+                    a petición del usuario, 2026-09-14. Motivo: con la
+                    etiqueta, la fecha y la flecha compitiendo por el
+                    ancho de la misma línea, a quien tiene la letra del
+                    móvil aumentada el título le salía cortado. Así el
+                    título se queda con toda la línea y puede partirse en
+                    dos si hace falta. (La regla de "una sola línea por
+                    fila" es para las tablas del anfitrión, no para algo
+                    que leen 58 personas en el móvil.) */}
                 <button
                   onClick={() => alternar(n.id)}
-                  className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left"
+                  className="w-full flex items-start justify-between gap-2 px-4 py-3 text-left"
                 >
-                  <span className="flex items-center gap-2 min-w-0">
+                  <span
+                    className="min-w-0 flex-1"
+                    style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600, lineHeight: 1.3 }}
+                  >
+                    {n.titulo || "(sin título)"}
+                  </span>
+                  <span className="flex items-center gap-2 flex-shrink-0">
                     <span
-                      className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap font-medium flex-shrink-0"
+                      className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap font-medium"
                       style={
                         n.esNovedad
                           ? { background: C.ink, color: C.paper }
@@ -428,14 +444,6 @@ export function VistaTablon({ token }) {
                     >
                       {n.esNovedad ? "NOVEDADES" : "FAQ"}
                     </span>
-                    <span className="truncate" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
-                      {n.titulo || "(sin título)"}
-                    </span>
-                  </span>
-                  <span className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-xs" style={{ color: C.charcoal, opacity: 0.5 }}>
-                      {formatearFecha(String(n.creadaEn).slice(0, 10))}
-                    </span>
                     <ChevronDown
                       size={16}
                       style={{ color: C.gold, transform: abierta ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
@@ -443,11 +451,17 @@ export function VistaTablon({ token }) {
                   </span>
                 </button>
                 {abierta && (
+                  <div style={{ borderTop: `1px solid ${C.line}` }}>
+                    <p className="px-4 pt-2.5 text-xs" style={{ color: C.charcoal, opacity: 0.5 }}>
+                      {formatearFecha(String(n.creadaEn).slice(0, 10))}
+                    </p>
+                  </div>
+                )}
+                {abierta && (
                   <div
-                    className="px-4 pt-3 pb-4 text-sm"
+                    className="px-4 pt-2 pb-4 text-sm"
                     style={{
                       color: C.charcoal,
-                      borderTop: `1px solid ${C.line}`,
                       // Sin esto, un salto de línea o un tabulador sueltos
                       // (Enter/Tab en VentanaNovedades) se colapsan como
                       // cualquier espacio en blanco de HTML normal -- con

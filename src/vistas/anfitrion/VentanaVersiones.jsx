@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.2",
+    cambios: [
+      "Arreglado en el tablón: a los invitados con la letra del móvil aumentada se les cortaba el título de cada apartado.",
+      "La etiqueta FAQ / NOVEDADES se va a la derecha, donde estaba la fecha, y la fecha baja dentro del apartado al abrirlo. Así el título se queda con la línea entera y puede ocupar dos si hace falta.",
+    ],
+  },
+  {
     version: "27.1",
     cambios: [
       "La imagen del cronograma pasa a tres bloques por fila. Antes la primera fila metía cuatro y el texto se quedaba estrecho.",
