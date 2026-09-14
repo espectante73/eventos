@@ -17,10 +17,14 @@
 // todos los que van después, sin tocarlos a mano.
 import { C } from "../theme";
 
-// Agrupación en filas -- fija a propósito (la interfaz de edición tiene
-// siempre 9 bloques, nunca se añaden ni se quitan desde ahí) igual que
-// la imagen original que sirvió de referencia.
-const FILAS = [4, 3, 2];
+// Cuántos bloques caben en cada fila de la imagen. Antes era un patrón
+// fijo [4, 3, 2], copiado de la imagen original de referencia, y valía
+// porque los bloques eran siempre nueve. Desde v27 se pueden añadir y
+// quitar desde la app, así que el patrón fijo dejó de tener sentido: se
+// reparte siempre igual, sea cual sea el número. Tres por fila a
+// petición del usuario (2026-09-14) -- con cuatro, el texto de cada
+// bloque se quedaba estrecho.
+const BLOQUES_POR_FILA = 3;
 
 function sumarMinutos(horaBase, minutos) {
   const [h, m] = String(horaBase || "0:00").split(":").map(Number);
@@ -130,21 +134,9 @@ export function generarImagenCronograma(horaInicio, bloques) {
     duracion: Math.max(1, Number(b.duracionMin) || 1),
   }));
 
-  // Agrupación en filas defensiva: si algún día hay un número de bloques
-  // distinto de 9, se reparte en filas de 4 en vez de fallar.
   const filas = [];
-  let cursor = 0;
-  const patron = conDatos.length === FILAS.reduce((s, n) => s + n, 0) ? FILAS : null;
-  if (patron) {
-    patron.forEach((n) => {
-      filas.push(conDatos.slice(cursor, cursor + n));
-      cursor += n;
-    });
-  } else {
-    while (cursor < conDatos.length) {
-      filas.push(conDatos.slice(cursor, cursor + 4));
-      cursor += 4;
-    }
+  for (let cursor = 0; cursor < conDatos.length; cursor += BLOQUES_POR_FILA) {
+    filas.push(conDatos.slice(cursor, cursor + BLOQUES_POR_FILA));
   }
 
   const alto = MARGEN * 2 + filas.length * ALTURA_FILA + (filas.length - 1) * GAP;

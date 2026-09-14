@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.1",
+    cambios: [
+      "La imagen del cronograma pasa a tres bloques por fila. Antes la primera fila metía cuatro y el texto se quedaba estrecho.",
+      "Se aplica siempre, tenga los bloques que tenga: desaparece el reparto fijo 4-3-2 que venía de cuando eran nueve y no se podían cambiar.",
+    ],
+  },
+  {
     version: "27",
     cambios: [
       "El cronograma ya se monta entero desde la app: puedes añadir bloques y quitarlos. Hasta ahora eran nueve fijos y cambiarlos exigía tocar el código.",
