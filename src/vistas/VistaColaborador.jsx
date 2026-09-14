@@ -20,7 +20,9 @@ import { MenuFlotante } from "../components/MenuFlotante";
 import {
   datosCompletos,
   contarDatosRellenados,
-  TOTAL_DATOS_INVITADO,
+  totalDatosInvitado,
+  pideDatosDeBoda,
+  esMenorDeEdad,
   importeEsperadoInvitado,
   resolverColaborador,
 } from "../lib/invitados";
@@ -53,6 +55,7 @@ const ETIQUETAS_CAMPOS_INVITADO = {
 
 function FormularioDatos({
   invitado,
+  evento,
   onGuardar,
   fotoFamiliar,
   onCambiarFotoFamiliar,
@@ -184,7 +187,7 @@ function FormularioDatos({
             {form.apellido}, {form.nombre}
           </span>
           <span className="text-xs" style={{ color: C.goldClaro, opacity: 0.75 }}>
-            datos {contarDatosRellenados(form, foto)} de {TOTAL_DATOS_INVITADO}
+            datos {contarDatosRellenados(form, foto, evento)} de {totalDatosInvitado(form, evento)}
           </span>
           <span
             className="text-xs px-2 py-0.5 rounded"
@@ -229,6 +232,18 @@ function FormularioDatos({
               Se edita en Colaboradores, no aquí.
             </span>
           </div>
+        ) : esMenorDeEdad(form, evento) ? (
+          <div>
+            <div
+              className="w-full px-2 py-1.5 rounded text-sm"
+              style={{ background: C.paperDark, color: C.charcoal, opacity: 0.7 }}
+            >
+              {form.email || "—"}
+            </div>
+            <span className="text-xs italic" style={{ color: C.goldClaro, opacity: 0.7 }}>
+              Solo pedimos email a mayores de edad.
+            </span>
+          </div>
         ) : (
           <TextInput
             value={form.email}
@@ -251,6 +266,8 @@ function FormularioDatos({
               style={{ width: 90 }}
             />
           </Field>
+          {pideDatosDeBoda(form) ? (
+            <>
           <Field label="Año boda">
             <TextInput
               value={form.anioBoda}
@@ -304,6 +321,24 @@ function FormularioDatos({
               </p>
             )}
           </Field>
+            </>
+          ) : (
+            /* Ni esposo ni esposa: el año de boda y la foto de boda no
+               aplican. Se deja el hueco con el motivo, en vez de que el
+               campo desaparezca sin explicación -- si no, parece que
+               falta algo o que la app se ha roto. */
+            <Field label="Boda">
+              <div
+                className="px-2 py-1.5 rounded text-sm"
+                style={{ background: C.paperDark, color: C.charcoal, opacity: 0.7 }}
+              >
+                No aplica
+              </div>
+              <span className="text-xs italic" style={{ color: C.goldClaro, opacity: 0.7 }}>
+                El año y la foto de boda solo se piden a quien viene con su pareja.
+              </span>
+            </Field>
+          )}
         </div>
       </div>
       <Field label="Canción">
@@ -453,11 +488,11 @@ function FilaInvitadoColaborador({
         )}
         {datosCompletos(g) ? (
           <span className="flex items-center gap-1 text-xs" style={{ color: C.ink, opacity: 0.7 }}>
-            <Check size={12} /> datos {contarDatosRellenados(g, fotoFamiliar)} de {TOTAL_DATOS_INVITADO}
+            <Check size={12} /> datos {contarDatosRellenados(g, fotoFamiliar, evento)} de {totalDatosInvitado(g, evento)}
           </span>
         ) : (
           <span className="flex items-center gap-1 text-xs" style={{ color: C.wax }}>
-            <Bell size={12} /> datos {contarDatosRellenados(g, fotoFamiliar)} de {TOTAL_DATOS_INVITADO}
+            <Bell size={12} /> datos {contarDatosRellenados(g, fotoFamiliar, evento)} de {totalDatosInvitado(g, evento)}
           </span>
         )}
         <button
@@ -503,6 +538,7 @@ function FilaInvitadoColaborador({
         <div className="p-3 pt-0">
           <FormularioDatos
             invitado={g}
+            evento={evento}
             onGuardar={onGuardar}
             fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
             onCambiarFotoFamiliar={onCambiarFotoFamiliar}

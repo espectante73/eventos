@@ -2,6 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   datosCompletos,
   contarDatosRellenados,
+  totalDatosInvitado,
+  pideDatosDeBoda,
+  esMenorDeEdad,
+  pideEmail,
   tieneAlergiaReal,
   calcularEdad,
   edadPromedio,
@@ -32,13 +36,15 @@ describe("tieneAlergiaReal", () => {
 });
 
 describe("contarDatosRellenados", () => {
-  it("cuenta los 6 campos de texto no vacíos, más 1 si hay foto", () => {
+  const casado = { rolFamiliar: "esposo" };
+
+  it("cuenta solo los campos no vacíos, sin espacios en blanco", () => {
     expect(contarDatosRellenados({}, false)).toBe(0);
     expect(contarDatosRellenados({ anioNacimiento: "1990" }, false)).toBe(1);
-    expect(contarDatosRellenados({}, true)).toBe(1);
     expect(
       contarDatosRellenados(
         {
+          ...casado,
           anioNacimiento: "1990",
           anioBoda: "",
           email: "a@a.com",
@@ -49,6 +55,14 @@ describe("contarDatosRellenados", () => {
         true
       )
     ).toBe(4);
+  });
+
+  // Cambio de comportamiento del 2026-09-14: la foto es la foto DE BODA,
+  // así que solo suma a quien se le pide (esposo/esposa). Antes sumaba a
+  // cualquiera, incluido un hijo de 8 años.
+  it("la foto solo cuenta si a esa persona se le pide foto de boda", () => {
+    expect(contarDatosRellenados({}, true)).toBe(0);
+    expect(contarDatosRellenados(casado, true)).toBe(1);
   });
 });
 
@@ -141,5 +155,59 @@ describe("parseImport", () => {
     const texto = ",Ruiz,Pedro,ana pérez,";
     const filas = parseImport(texto, colaboradores);
     expect(filas[0].colaboradorId).toBe("c1");
+  });
+});
+
+// ---------- Qué se le pide a cada persona (2026-09-14) ----------
+describe("pideDatosDeBoda", () => {
+  it("solo se lo pide a esposo y esposa", () => {
+    expect(pideDatosDeBoda({ rolFamiliar: "esposo" })).toBe(true);
+    expect(pideDatosDeBoda({ rolFamiliar: "esposa" })).toBe(true);
+    expect(pideDatosDeBoda({ rolFamiliar: "hijo" })).toBe(false);
+    expect(pideDatosDeBoda({ rolFamiliar: "padre" })).toBe(false);
+    expect(pideDatosDeBoda({ rolFamiliar: "suelto" })).toBe(false);
+  });
+
+  it("sin rol marcado tampoco se pide: el anfitrión aún no lo ha revisado", () => {
+    expect(pideDatosDeBoda({ rolFamiliar: "" })).toBe(false);
+    expect(pideDatosDeBoda({})).toBe(false);
+  });
+});
+
+describe("esMenorDeEdad / pideEmail", () => {
+  const evento = { fecha: "2026-11-13" };
+
+  it("usa la edad que tendrá el día del evento", () => {
+    expect(esMenorDeEdad({ anioNacimiento: "2010" }, evento)).toBe(true); // 16
+    expect(esMenorDeEdad({ anioNacimiento: "2008" }, evento)).toBe(false); // 18
+    expect(esMenorDeEdad({ anioNacimiento: "1990" }, evento)).toBe(false);
+  });
+
+  it("los 18 justos ya son mayoría de edad", () => {
+    expect(pideEmail({ anioNacimiento: "2008" }, evento)).toBe(true);
+    expect(pideEmail({ anioNacimiento: "2009" }, evento)).toBe(false);
+  });
+
+  // Importante: si bloqueara el email por no saber la edad, el
+  // colaborador se lo encontraría cerrado ANTES de poder escribir el año.
+  it("sin año de nacimiento no se le trata como menor", () => {
+    expect(esMenorDeEdad({ anioNacimiento: "" }, evento)).toBe(false);
+    expect(pideEmail({}, evento)).toBe(true);
+  });
+});
+
+describe("totalDatosInvitado", () => {
+  const evento = { fecha: "2026-11-13" };
+
+  it("a un esposo adulto se le piden los 7 de siempre", () => {
+    expect(totalDatosInvitado({ rolFamiliar: "esposo", anioNacimiento: "1990" }, evento)).toBe(7);
+  });
+
+  it("a un hijo menor se le piden 4: sin año de boda, sin foto y sin email", () => {
+    expect(totalDatosInvitado({ rolFamiliar: "hijo", anioNacimiento: "2015" }, evento)).toBe(4);
+  });
+
+  it("a un suelto adulto se le piden 5: sin año de boda y sin foto", () => {
+    expect(totalDatosInvitado({ rolFamiliar: "suelto", anioNacimiento: "1990" }, evento)).toBe(5);
   });
 });

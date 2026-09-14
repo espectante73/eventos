@@ -42,6 +42,16 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "26",
+    cambios: [
+      "El formulario de cada invitado se adapta a quién es. Ya no se le pide a todo el mundo lo mismo.",
+      "Año de boda y foto de boda: solo a quien viene con su pareja (rol O o A). A un hijo, a un padre sin cónyuge o a alguien suelto ya no se le piden — en su lugar aparece \"No aplica\" con el motivo, para que no parezca que falta algo.",
+      "Email: en cuanto se escribe el año de nacimiento, si esa persona es menor el día del evento, el campo se atenúa. Solo recogemos email de mayores de edad.",
+      "Y el contador de \"datos N de M\" cuenta ahora solo lo que de verdad se le pide a esa persona. Antes un hijo se quedaba en \"5 de 7\" para siempre y parecía que faltaba algo.",
+      "Sin año de nacimiento el email NO se bloquea: si no, el colaborador se lo encontraría cerrado justo antes de poder escribir la edad.",
+    ],
+  },
+  {
     version: "25.2",
     cambios: [
       "El aviso del tablón, dos puntos más grande todavía (de 16 a 18).",

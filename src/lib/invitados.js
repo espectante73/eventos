@@ -3,6 +3,7 @@
 // invitados. Sin JSX, sin estado — movida fuera de App.jsx en el reparto
 // del 2026-08-08 (ver CLAUDE.md).
 import { parsePrecio } from "./formato";
+import { ROL_FAMILIAR } from "./rolFamiliar";
 
 export function datosCompletos(g) {
   // Únicos datos obligatorios: año de nacimiento y alergias (aunque la
@@ -13,11 +14,8 @@ export function datosCompletos(g) {
 }
 
 // Los 6 campos de texto que rellena el colaborador, más la foto familiar
-// (que vive aparte, en fotosFamiliares) = 7 en total. El pago no cuenta
-// aquí — tiene su propia insignia ("Pagado"/"Pendiente de pago") aparte.
-// Sin "export": nadie fuera de este fichero lo necesita (comprobado en
-// un examen honesto del código, 2026-08-24) -- TOTAL_DATOS_INVITADO sí
-// se usa fuera y se queda exportado.
+// (que vive aparte, en fotosFamiliares). El pago no cuenta aquí — tiene
+// su propia insignia ("Pagado"/"Pendiente de pago") aparte.
 const CAMPOS_DATOS_INVITADO = [
   "anioNacimiento",
   "anioBoda",
@@ -26,11 +24,63 @@ const CAMPOS_DATOS_INVITADO = [
   "alergias",
   "observaciones",
 ];
-export const TOTAL_DATOS_INVITADO = CAMPOS_DATOS_INVITADO.length + 1;
 
-export function contarDatosRellenados(g, foto) {
-  const rellenos = CAMPOS_DATOS_INVITADO.filter((c) => (g[c] || "").trim() !== "").length;
-  return rellenos + (foto ? 1 : 0);
+// ---------- Qué se le pide a cada persona (2026-09-14) ----------
+// Hasta ahora se le pedía lo mismo a todo el mundo, y había dos casos en
+// los que eso no tiene ningún sentido: el año de boda y la foto de boda
+// de un hijo de 8 años, y el email de un menor. A petición del usuario,
+// el formulario del colaborador se adapta al rol familiar y a la edad.
+//
+// Vive aquí, en funciones puras, y no dentro del componente: el
+// formulario las usa para atenuar campos, y el contador de "datos N de
+// M" las usa para no exigir lo que no se está pidiendo. Si estuvieran
+// escritas en el componente, el contador y los campos se desincronizarían
+// al primer retoque (misma regla de "una sola pieza" de CLAUDE.md).
+
+export const EDAD_ADULTO = 18;
+
+// Año de boda y foto de boda: solo a quien viene con su cónyuge (O y A).
+// Todos los demás roles quedan fuera a propósito, decidido con el usuario
+// el 2026-09-14: "todos los que no tengan ni A ni O, no le pediremos la
+// foto ni su año de boda". Eso incluye el rol VACÍO (sin revisar): hasta
+// que el anfitrión no marca el rol, no se piden esos dos datos.
+export function pideDatosDeBoda(g) {
+  return g?.rolFamiliar === ROL_FAMILIAR.ESPOSO || g?.rolFamiliar === ROL_FAMILIAR.ESPOSA;
+}
+
+// Menor a fecha del evento (calcularEdad ya usa evento.fecha como
+// referencia). Sin año de nacimiento la edad es desconocida: NO se le
+// trata como menor, o el email quedaría bloqueado justo antes de que el
+// colaborador rellene la edad.
+export function esMenorDeEdad(g, evento) {
+  const edad = calcularEdad(g?.anioNacimiento, evento);
+  return edad !== null && edad < EDAD_ADULTO;
+}
+
+// Email solo de mayores de edad, a petición del usuario.
+export function pideEmail(g, evento) {
+  return !esMenorDeEdad(g, evento);
+}
+
+// Los campos de texto que SÍ se le piden a esta persona en concreto.
+export function camposQueAplican(g, evento) {
+  return CAMPOS_DATOS_INVITADO.filter((campo) => {
+    if (campo === "anioBoda") return pideDatosDeBoda(g);
+    if (campo === "email") return pideEmail(g, evento);
+    return true;
+  });
+}
+
+// El "de M" del contador, ajustado a esta persona: si no se le pide el
+// año de boda ni la foto, un hijo se quedaría en "5 de 7" para siempre y
+// parecería que falta algo cuando no falta nada.
+export function totalDatosInvitado(g, evento) {
+  return camposQueAplican(g, evento).length + (pideDatosDeBoda(g) ? 1 : 0);
+}
+
+export function contarDatosRellenados(g, foto, evento) {
+  const rellenos = camposQueAplican(g, evento).filter((c) => (g[c] || "").trim() !== "").length;
+  return rellenos + (pideDatosDeBoda(g) && foto ? 1 : 0);
 }
 
 export function tieneAlergiaReal(g) {
