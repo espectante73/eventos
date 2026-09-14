@@ -539,8 +539,10 @@ export function SeccionInvitados({
     // emparejado, deja de ocupar sitio.
     ...(idsSueltos.size ? [{ label: "Sin pareja", value: idsSueltos.size, alerta: true }] : []),
     // Cuánto queda por repasar: es lo que hace útil que el vacío
-    // signifique "sin revisar" y no "suelto". Desaparece al terminar.
-    ...(sinRevisar ? [{ label: "Sin revisar", value: sinRevisar }] : []),
+    // signifique "sin rol" y no "suelto" (la etiqueta pasó de "Sin
+    // revisar" a "Sin rol" el 2026-09-14, a petición del usuario: dice
+    // mejor lo que falta). Desaparece al terminar.
+    ...(sinRevisar ? [{ label: "Sin rol", value: sinRevisar }] : []),
     // Solo con algún filtro puesto: si no, repetiría "Previstos".
     ...(invitadosOrdenados.length !== totalInvitados
       ? [{ label: "Mostrando", value: `${invitadosOrdenados.length}/${totalInvitados}` }]
@@ -859,7 +861,7 @@ export function SeccionInvitados({
                     <option value={ROL_FAMILIAR.HIJO}>{conCuenta("H", ROL_FAMILIAR.HIJO)}</option>
                     <option value={ROL_FAMILIAR.PADRE}>{conCuenta("P", ROL_FAMILIAR.PADRE)}</option>
                     <option value={ROL_FAMILIAR.SUELTO}>{conCuenta("S", ROL_FAMILIAR.SUELTO)}</option>
-                    <option value="sin">{conCuenta("Sin revisar", "sin")}</option>
+                    <option value="sin">{conCuenta("Sin rol", "sin")}</option>
                   </select>
                 </span>
                 <span style={{ background: tintaColumnaCabecera(3), borderRadius: "0 0 6px 6px" }}>
@@ -1503,7 +1505,7 @@ export function SeccionInvitados({
                           cursor: "pointer",
                           boxSizing: "border-box",
                         }}
-                        title="Papel en la familia: O esposo, A esposa, H hijo, P padre/madre sin su cónyuge, S suelto. En blanco = sin revisar"
+                        title="Papel en la familia: O esposo, A esposa, H hijo, P padre/madre sin su cónyuge, S suelto. En blanco = sin rol"
                       >
                         <option value="">—</option>
                         <option value={ROL_FAMILIAR.ESPOSO}>O</option>

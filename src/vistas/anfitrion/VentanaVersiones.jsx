@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "26.2",
+    cambios: [
+      "\"Sin revisar\" pasa a llamarse \"Sin rol\" en la columna Rol: dice mejor lo que falta. Cambiado en los tres sitios donde salía — el filtro, el contador de al lado y la ayuda de la columna — para que no digan cosas distintas.",
+    ],
+  },
+  {
     version: "26.1",
     cambios: [
       "Ya no se puede asignar colaborador a alguien que no tenga rol familiar. Si lo intentas, sale un aviso rojo explicando por qué y no se asigna.",
