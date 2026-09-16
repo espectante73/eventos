@@ -1392,6 +1392,32 @@ habían recibido enteros 10/11/12/13 por error, pasaron a ser 9/9.1/9.2/9.3.
 si es un tema nuevo (entero) o un ajuste sobre uno ya en curso
 (decimal) -- nunca subir el entero por defecto.**
 
+## El plano de la app no se regenera solo: hay un test que vigila (2026-09-16)
+
+`docs/mapa-de-la-aplicacion.png` se dibuja ejecutando a mano
+`node scripts/dibujar-mapa.mjs`. No hay ni script de npm ni workflow que
+lo haga: `canvas` es una dependencia nativa que está fuera de
+`package.json` a propósito (si estuviera, Vercel intentaría compilarla en
+cada despliegue). Eso se queda como está.
+
+El problema no era regenerarlo, era **no enterarse de que hacía falta**.
+El script lleva las secciones escritas a mano (`nivel1` y `config`), y
+esa copia ya se desfasó una vez: el primer nivel pasó de 14 entradas a 8
+y el plano siguió enseñando las 14 durante semanas.
+
+`scripts/dibujar-mapa.test.js` compara esas dos listas con las de verdad
+-- `ORDEN_VENTANAS` + `ETIQUETAS_VENTANAS` (`VentanaFlotante.jsx`) y
+`SUBMENU_CONFIGURACION` (`DesplegableSecciones.jsx`, exportado para
+esto). Si alguien añade, quita o renombra una sección y no toca el
+script, `npm test` se pone rojo. Comprobado a propósito renombrando
+"Mesas" en el script: falla, y con el nombre bueno pasa.
+
+El test NO comprueba que la imagen esté regenerada, solo que las listas
+coinciden. Cuando se ponga en rojo: arreglar el script y luego
+`npm i -D canvas --no-save && node scripts/dibujar-mapa.mjs`.
+
+No lleva subida de `VERSION_APP`: en la pantalla no cambia nada.
+
 ## `schema.sql` reescrito desde cero (2026-09-16)
 
 Hecho. El archivo pasó de 3.114 líneas a ~1.860 y dejó de ser un

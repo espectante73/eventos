@@ -62,7 +62,10 @@ const ICONOS_VENTANAS = {
 // ni por importancia) — a petición del usuario, 2026-08-26: así, al
 // crecer, se sabe siempre dónde buscar algo sin tener que recordar en
 // qué orden se fue añadiendo.
-const SUBMENU_CONFIGURACION = [
+// Se exporta para que scripts/dibujar-mapa.test.js pueda comprobar que el
+// plano de la aplicación (docs/mapa-de-la-aplicacion.png) sigue listando
+// las mismas secciones que el menú real.
+export const SUBMENU_CONFIGURACION = [
   { id: "copiaSeguridad", etiqueta: "Backup", icono: Save },
   { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2, fondo: "#B00020", color: C.paper },
   { id: "config-cronograma", etiqueta: "Cronograma", icono: Clock3 },
