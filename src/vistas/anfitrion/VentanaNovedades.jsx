@@ -5,6 +5,7 @@
 // cualquiera con el enlace ve las novedades publicadas, sin login ni
 // cuenta — a petición del usuario, 2026-08-25.
 import { useState, useRef } from "react";
+import { useAltoAutomatico } from "../../lib/useAltoAutomatico";
 import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown, Lock, Undo2, AlertTriangle, Music } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
@@ -53,6 +54,7 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
   // con el botón Deshacer sin tocar el servidor -- ver lib/useDeshacer.js.
   const { valor: cuerpo, cambiar: setCuerpo, deshacer, puedeDeshacer, fijarValor: fijarCuerpo } = useDeshacer(n.cuerpo);
   const cuerpoRef = useRef(null);
+  useAltoAutomatico(cuerpoRef, cuerpo);
 
   // onMouseDown con preventDefault: sin esto, pulsar el botón le quita el
   // foco al textarea ANTES de que se dispare el click (se pierde la
@@ -192,7 +194,15 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
             rows={3}
             placeholder="Texto de la novedad — Tab sangra, el botón de lista añade viñetas, selecciona texto y usa los botones para darle formato"
             className="w-full"
-            style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
+            style={{
+              ...inputStyle,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 12,
+              // Crece solo (useAltoAutomatico): ni barra interna ni
+              // esquina de arrastre, que en el móvil no existe.
+              overflow: "hidden",
+              resize: "none",
+            }}
           />
           {/* A diferencia del resto de controles de esta ventana, "Publicada"
               SÍ queda accesible para quien solo tiene permiso de editar
@@ -504,7 +514,15 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             placeholder="Enlace de invitación al grupo de WhatsApp"
             title="WhatsApp → grupo → Info del grupo → Invitar mediante enlace"
             className="flex-1"
-            style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
+            style={{
+              ...inputStyle,
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: 12,
+              // Crece solo (useAltoAutomatico): ni barra interna ni
+              // esquina de arrastre, que en el móvil no existe.
+              overflow: "hidden",
+              resize: "none",
+            }}
           />
           <a
             href={evento.enlaceGrupoWhatsapp || undefined}

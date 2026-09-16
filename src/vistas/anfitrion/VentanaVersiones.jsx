@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.12",
+    cambios: [
+      "Al editar una novedad desde el móvil solo se veían tres líneas y no había forma de estirar el recuadro. Ahora se abre ya con el alto del texto que haya escrito, y crece según escribes.",
+      "En el Mac no se notaba porque ahí se podía arrastrar la esquina; en el móvil esa esquina no existe.",
+      "Lo mismo en los textos de los emails, que tenían el mismo recuadro de tres líneas.",
+    ],
+  },
+  {
     version: "27.11",
     cambios: [
       "Armonía visual en la ventana de música: el panel de Reproducción acaba justo donde acaba la segunda fila de bloques, y el de Volumen donde acaba la última. Antes quedaban descuadrados por unos píxeles.",

@@ -12,6 +12,7 @@
 // entera, que es otro permiso distinto. Por eso el contenido vive aquí,
 // compartido, en vez de duplicarse en los dos sitios.
 import { useRef } from "react";
+import { useAltoAutomatico } from "../lib/useAltoAutomatico";
 import { Bold, Italic, Underline, Undo2, Mail } from "lucide-react";
 import { C, inputStyle } from "../theme";
 import { Field } from "./Formulario";
@@ -67,6 +68,7 @@ function resumenDe(texto) {
 function PlantillaEditable({ label, valor, onCambio, campo, obtenerHistorialTexto }) {
   const { valor: texto, cambiar: setTexto, deshacer, puedeDeshacer, fijarValor: fijarTexto } = useDeshacer(valor || "");
   const ref = useRef(null);
+  useAltoAutomatico(ref, texto);
 
   // onMouseDown con preventDefault: sin esto, pulsar el botón le quita el
   // foco al textarea ANTES de que se dispare el click (se pierde la
@@ -117,7 +119,13 @@ function PlantillaEditable({ label, valor, onCambio, campo, obtenerHistorialText
         onBlur={() => texto !== (valor || "") && onCambio(texto)}
         rows={3}
         className="w-full"
-        style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}
+        style={{
+          ...inputStyle,
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: 11,
+          overflow: "hidden",
+          resize: "none",
+        }}
       />
     </Field>
   );
