@@ -1463,37 +1463,41 @@ export function VentanaMusicaEvento({ data, ventana }) {
 
       {/* Cuánto destaca la cortinilla sobre la música. Solo en el
           reproductor: es un ajuste de una vez, de oído, y el número se
-          guarda en el evento para poder consultarlo desde fuera. */}
+          guarda en el evento para poder consultarlo desde fuera.
+          Mismas columnas que la fila de arriba (botones al ancho que
+          sobre, visor de 76/84 en medio) para que los +/- y las cifras
+          queden en la misma vertical -- a petición del usuario. */}
       {esReproductor && cortinilla && (
-        <div className="flex items-center gap-2.5">
-          <span style={{ fontSize: M.texto - 2, color: P.tenue, flex: 1, minWidth: 0 }}>
-            Cortinilla sobre la música
-          </span>
-          <button
-            onClick={() => cambiarRealce(-5)}
-            className="flex items-center justify-center rounded-xl"
-            style={{ ...tecla(false), width: 40, height: 34, color: P.oro, flexShrink: 0 }}
-            title="Que destaque menos"
-          >
-            −
-          </button>
-          <div
-            className="flex items-center justify-center rounded-xl"
-            style={{ ...hueco, width: 62, height: 34, flexShrink: 0 }}
-          >
-            <span style={{ ...cifra, fontSize: M.texto + 1, fontWeight: 600, color: P.texto }}>
-              {realceCortinilla > 0 ? `+${realceCortinilla}` : realceCortinilla}
-            </span>
+        <>
+          <div style={{ height: 1, background: P.linea }} />
+          <span style={etiqueta}>Cortinilla sobre la música</span>
+          <div className="flex items-stretch gap-2.5">
+            <button
+              onClick={() => cambiarRealce(-5)}
+              className="flex-1 flex items-center justify-center"
+              style={{ minHeight: 40, borderRadius: 14, ...tecla(false), color: P.texto, transition: SUAVE }}
+              title="Que destaque menos"
+            >
+              <span style={{ fontSize: esMovil ? 22 : 19, fontWeight: 600, lineHeight: 1 }}>−</span>
+            </button>
+            <div
+              className="flex items-center justify-center rounded-xl"
+              style={{ ...hueco, width: esMovil ? 84 : 76, flexShrink: 0 }}
+            >
+              <span style={{ ...cifra, fontSize: M.texto + 1, fontWeight: 600, color: P.texto }}>
+                {realceCortinilla > 0 ? `+${realceCortinilla}` : realceCortinilla}
+              </span>
+            </div>
+            <button
+              onClick={() => cambiarRealce(5)}
+              className="flex-1 flex items-center justify-center"
+              style={{ minHeight: 40, borderRadius: 14, ...tecla(false), color: P.texto, transition: SUAVE }}
+              title="Que destaque más"
+            >
+              <span style={{ fontSize: esMovil ? 22 : 19, fontWeight: 600, lineHeight: 1 }}>+</span>
+            </button>
           </div>
-          <button
-            onClick={() => cambiarRealce(5)}
-            className="flex items-center justify-center rounded-xl"
-            style={{ ...tecla(false), width: 40, height: 34, color: P.oro, flexShrink: 0 }}
-            title="Que destaque más"
-          >
-            +
-          </button>
-        </div>
+        </>
       )}
     </div>
   );
