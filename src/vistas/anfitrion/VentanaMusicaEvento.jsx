@@ -33,7 +33,7 @@
 // llegaba a tapar (reportado el 2026-09-01). Con dos, el que sale se va
 // apagando mientras el que entra sube, y la cortinilla suena por encima
 // de los dos.
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { Fragment, useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   Music,
   Play,
@@ -135,6 +135,17 @@ export function VentanaMusicaEvento({ data, ventana }) {
     ? Number(evento.cortinillaRealce)
     : 15;
   const realceRef = useRef(realceCortinilla);
+  // ---------- Armonía visual entre los paneles de la derecha ----------
+  // Los bloques son una rejilla de 3 columnas con alto proporcional al
+  // ancho (aspectRatio), así que la altura de una fila NO se puede
+  // escribir en CSS: depende de lo ancha que esté la ventana. Se mide en
+  // vivo, y con eso el panel de Reproducción acaba justo donde acaba la
+  // SEGUNDA fila de bloques y el de Volumen donde acaba la última --
+  // petición del usuario (2026-09-16, con captura y dos rayas rojas
+  // marcando que no cuadraban). Sin medir no hay forma de acertar.
+  const rejillaRef = useRef(null);
+  const panelesRef = useRef({});
+  const [alturasPanel, setAlturasPanel] = useState({});
   useEffect(() => {
     realceRef.current = realceCortinilla;
   }, [realceCortinilla]);
@@ -1158,7 +1169,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
   );
 
   const cuadriculaBloques = (
-    <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+    <div ref={rejillaRef} className="grid gap-3" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
       {bloques.map((b, i) => {
         const esActual = i === seleccionado;
         const suenaAqui = i === bloqueSonando;
@@ -1238,7 +1249,12 @@ export function VentanaMusicaEvento({ data, ventana }) {
     ) : null;
 
   const reproductor = (
-    <div className="px-4 pt-3 pb-4" style={tarjeta}>
+    // Mismo motivo que en controlVolumen: llena la altura que le mida el
+    // efecto de armonía visual, y centra su contenido dentro.
+    <div
+      className="px-4 pt-3 pb-4 flex flex-col justify-center"
+      style={{ ...tarjeta, height: "100%" }}
+    >
       {pistaActual ? (
         <>
           {/* Nombre del bloque y tiempos en la MISMA línea: antes eran
@@ -1412,7 +1428,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // De ahí que la fila de abajo mida `M.play - 4`: es lo que hace falta
   // para igualar el alto del botón de play y su fila.
   const controlVolumen = (
-    <div className="flex flex-col gap-3 px-3 py-3" style={tarjeta}>
+    // height 100%: cuando el panel recibe una altura medida (ver el
+    // efecto de armonía visual), el contenido tiene que llenarla. Sin
+    // altura asignada, el 100% se resuelve como "lo que ocupe".
+    <div className="flex flex-col gap-3 px-3 py-3" style={{ ...tarjeta, height: "100%" }}>
       <div className="flex items-center gap-2.5">
         <button
           onClick={hacer("silencio")}
@@ -1755,7 +1774,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // limpia que antes -- se reordena una vez y no se vuelve a ver.
   const conAsa = (clave, contenido) => {
     const posicion = aspecto.orden.indexOf(clave);
-    if (!organizando) return <div key={clave}>{contenido}</div>;
+    if (!organizando) return <div key={clave} style={{ height: "100%" }}>{contenido}</div>;
     return (
       <div
         key={clave}
@@ -1848,6 +1867,48 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // Los cuatro paneles reordenables. "pistas" solo existe en el
   // ordenador: en el móvil no se eligen archivos (la lección de la
   // primera prueba fue justo esa, que el mando no gestiona ficheros).
+  const panelesVisibles = aspecto.orden.filter((clave) => (clave === "pistas" ? esReproductor : PANELES.includes(clave)));
+
+  // Mide y reparte. Se vuelve a medir con cada cambio de tamaño de la
+  // ventana (ResizeObserver) y cuando cambia el número de bloques.
+  const enHorizontalAhora = esReproductor && aspecto.disposicion === "horizontal";
+  useEffect(() => {
+    const rejilla = rejillaRef.current;
+    if (!enHorizontalAhora || !rejilla) {
+      setAlturasPanel((previas) => (Object.keys(previas).length ? {} : previas));
+      return;
+    }
+    const GAP = 12; // gap-3 de Tailwind
+    const medir = () => {
+      const filas = Math.max(1, Math.ceil(bloques.length / 3));
+      const caja = rejilla.getBoundingClientRect();
+      if (!caja.height) return;
+      const altoFila = (caja.height - (filas - 1) * GAP) / filas;
+      // Dónde tiene que acabar cada panel, en coordenadas de pantalla.
+      const finales = {
+        reproductor: caja.top + Math.min(filas, 2) * altoFila + Math.min(filas - 1, 1) * GAP,
+        volumen: caja.bottom,
+      };
+      const siguientes = {};
+      for (const [clave, abajo] of Object.entries(finales)) {
+        const nodo = panelesRef.current[clave];
+        if (!nodo) continue;
+        const alto = Math.round(abajo - nodo.getBoundingClientRect().top);
+        if (alto > 80) siguientes[clave] = alto;
+      }
+      setAlturasPanel((previas) => {
+        const igual =
+          Object.keys(siguientes).length === Object.keys(previas).length &&
+          Object.entries(siguientes).every(([k, v]) => previas[k] === v);
+        return igual ? previas : siguientes;
+      });
+    };
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(rejilla);
+    return () => observador.disconnect();
+  }, [enHorizontalAhora, bloques.length, panelesVisibles.join("|")]);
+
   const contenidoPanel = {
     bloques: (
       <div className="flex flex-col gap-2.5">
@@ -1859,10 +1920,9 @@ export function VentanaMusicaEvento({ data, ventana }) {
     volumen: controlVolumen,
     pistas: gestionPistas,
   };
-  const panelesVisibles = aspecto.orden.filter((clave) => (clave === "pistas" ? esReproductor : PANELES.includes(clave)));
   // El móvil va siempre en vertical: la colocación en horizontal es
   // para la ventana abierta del todo en el MacBook Air de 13".
-  const enHorizontal = esReproductor && aspecto.disposicion === "horizontal";
+  const enHorizontal = enHorizontalAhora;
 
   return (
     <div
@@ -2014,15 +2074,37 @@ export function VentanaMusicaEvento({ data, ventana }) {
               </div>
             )}
 
-            {panelesVisibles.map((clave) =>
-              enHorizontal ? (
-                <div key={clave} style={{ flex: `1 1 ${ANCHO_MINIMO_PANEL[clave]}px`, minWidth: ANCHO_MINIMO_PANEL[clave] }}>
+            {panelesVisibles.map((clave) => (
+              <Fragment key={clave}>
+                {/* Raya fina que separa los mandos de la sección de
+                    pistas, con margen a los lados para que no toque los
+                    bordes de la ventana -- a petición del usuario. Va
+                    a ancho completo, así que además obliga a que
+                    "Pistas por bloque" caiga a su propia fila. */}
+                {clave === "pistas" && (
+                  <div className="w-full" style={{ marginTop: 14, marginBottom: 14, paddingLeft: 24, paddingRight: 24 }}>
+                    <div style={{ height: 1, background: P.linea }} />
+                  </div>
+                )}
+                {
+                enHorizontal ? (
+                <div
+                  ref={(nodo) => {
+                    panelesRef.current[clave] = nodo;
+                  }}
+                  style={{
+                    flex: `1 1 ${ANCHO_MINIMO_PANEL[clave]}px`,
+                    minWidth: ANCHO_MINIMO_PANEL[clave],
+                    ...(alturasPanel[clave] ? { height: alturasPanel[clave] } : {}),
+                  }}
+                >
                   {conAsa(clave, contenidoPanel[clave])}
                 </div>
               ) : (
                 conAsa(clave, contenidoPanel[clave])
-              )
-            )}
+              )}
+              </Fragment>
+            ))}
           </div>
         )}
       </div>

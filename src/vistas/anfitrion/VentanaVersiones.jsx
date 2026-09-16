@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.11",
+    cambios: [
+      "Armonía visual en la ventana de música: el panel de Reproducción acaba justo donde acaba la segunda fila de bloques, y el de Volumen donde acaba la última. Antes quedaban descuadrados por unos píxeles.",
+      "El alto de un bloque depende de lo ancha que esté la ventana, así que no se puede dejar escrito: se mide en vivo y se recalcula al cambiar el tamaño.",
+      "Y una raya fina, con margen a los lados, separa los tres mandos de la sección \"Pistas por bloque\", con aire entre las dos.",
+    ],
+  },
+  {
     version: "27.10",
     cambios: [
       "Detalles del control de la cortinilla: el texto centrado en vez de pegado a la izquierda, y la raya de separación con más aire a ambos lados.",
