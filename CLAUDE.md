@@ -1392,46 +1392,59 @@ habían recibido enteros 10/11/12/13 por error, pasaron a ser 9/9.1/9.2/9.3.
 si es un tema nuevo (entero) o un ajuste sobre uno ya en curso
 (decimal) -- nunca subir el entero por defecto.**
 
-## Pendiente: depurar el `schema.sql` acumulado (anotado el 2026-09-04)
+## `schema.sql` reescrito desde cero (2026-09-16)
 
-Petición del usuario, tras varias sesiones seguidas añadiendo bloques
-nuevos encima de los ya existentes. Conviene separar dos cosas que no
-son lo mismo:
+Hecho. El archivo pasó de 3.114 líneas a ~1.860 y dejó de ser un
+registro cronológico: **cada tabla y cada función aparecen una sola
+vez**, en su sitio, con las columnas ya dentro de su `create table`.
+El histórico está en git, que para eso está.
 
-**En la base de datos NO se está acumulando código muerto** por este
-motivo. `create or replace function` sustituye la función: solo queda
-viva la última versión. La única forma de dejar basura real ahí es
-cambiar el número o el tipo de los parámetros sin el `drop function`
-previo (ver la regla ya documentada más arriba, que ya rompió la app
-tres veces) — eso sí deja dos funciones coexistiendo. Para comprobarlo
-de verdad, en vez de suponerlo, sirve la consulta de `pg_proc` que ya
-está documentada en la sección de esa regla.
+**De dónde salió**: del `pg_dump` nocturno de la base real
+(`.github/workflows/backup.yml` -> paquete `backup-base-de-datos`), no
+del archivo anterior. Es la única fuente fiable de qué hay vivo de
+verdad. Inventario resultante: 16 tablas, 60 funciones, 6 triggers,
+18 políticas (4 en `public`, 14 en `storage`), 4 cubos de Storage.
+Se verificó objeto a objeto que el archivo nuevo contiene todo el
+inventario del dump, exactamente una vez cada cosa.
 
-**Lo que sí se acumula es el propio `supabase/schema.sql`**, que hace
-tiempo dejó de ser un esquema y es un registro cronológico: hay 3
-definiciones completas de `anfitrion_guardar_invitados` (la original, la
-de `excluidoTablon` y la de `rolFamiliar`), varias de
-`tablon_listar_novedades`, y columnas que se crean en un `create table`
-y se renombran 2.000 líneas más abajo. Ejecutado de arriba abajo el
-resultado final es correcto (gana la última), así que **no está roto**
-— es un problema de mantenimiento, no de funcionamiento: cuesta saber
-qué está vivo, y es fácil copiar la versión equivocada al hacer un
-cambio.
+**Lo que se tiró a propósito**: los `update ... where true` de un solo
+uso que se habían ido quedando dentro (el que fijaba
+`cronogramaHoraInicio` y `cronogramaBloques`, el que reescribía la
+pregunta del tablón, la reclasificación de `avisos_enviados`). Eran
+migraciones puntuales ya aplicadas; ejecutadas otra vez pisan datos
+reales. Un esquema no debe contener nada que se ejecute una sola vez.
 
-Cuando se aborde:
-1. Comprobar primero en la base real qué firmas existen de verdad
-   (consulta de `pg_proc`), y borrar las duplicadas que hayan quedado de
-   cambios de firma antiguos.
-2. Consolidar el archivo: una sola definición por función y por tabla,
-   con las columnas ya en su `create table`, dejando el histórico en el
-   propio git (que para eso está) en vez de dentro del archivo.
-3. Verificarlo pegando el archivo consolidado en un proyecto de Supabase
-   VACÍO y comparando el esquema resultante con el real, antes de
-   sustituir nada.
+**Dos divergencias encontradas al comparar** (el archivo nuevo ya lleva
+la versión correcta; la base real necesita la migración de abajo):
 
-⚠️ No hacerlo a medias ni con prisa: este archivo es lo único que
-permite reconstruir la base desde cero (el backup diario guarda los
-datos, ver más arriba).
+1. **`evento."cortinillaRealce"` no existe en la base real.** El
+   `alter table` estaba en la última línea del archivo viejo pero nunca
+   se ejecutó. Consecuencia real: `guardar_evento` solo escribe
+   columnas que existen (las descubre por `pg_attribute`), así que el
+   realce de la cortinilla se ajusta en la sesión pero **no se guarda**
+   -- al recargar vuelve a 15. `VentanaMusicaEvento.jsx` lo persiste
+   desde `cambiarRealce`.
+2. **`mesas_numero_check` sigue siendo `numero >= 1 and numero <= 15`**
+   en la base real, aunque el archivo viejo decía "sin límite fijo de
+   15". Hoy hay 9 mesas, así que no ha dado la cara todavía: la mesa 16
+   fallaría.
+
+Migración pendiente de ejecutar en el SQL Editor de Supabase:
+
+```sql
+alter table evento add column if not exists "cortinillaRealce" integer not null default 15;
+alter table mesas drop constraint if exists mesas_numero_check;
+alter table mesas add constraint mesas_numero_check check ("numero" >= 1);
+```
+
+**Queda por hacer**: pegar el archivo entero en un proyecto de Supabase
+VACÍO y comparar el esquema resultante con el real, antes de darlo por
+bueno del todo. Aquí no hay Postgres local ni Docker para validarlo.
+
+⚠️ Regla que sustituye a la de antes: **no se añade nada al final de
+`schema.sql`**. Si cambia una función, se cambia en su sitio. Si cambia
+una columna, se cambia dentro de su `create table` y se anota aquí la
+migración que hay que ejecutar en la base real.
 
 ### La Lista de invitados es la raíz: una vista que solo reordena es un duplicado
 

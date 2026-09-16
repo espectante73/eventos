@@ -1,400 +1,463 @@
 -- ============================================================
--- Esquema de la app de eventos (Supabase / Postgres)
+-- BASE DE DATOS DE LA APLICACIÓN DE LA BODA
+-- ============================================================
+-- Reescrito el 16 de septiembre de 2026 a partir de la copia de
+-- seguridad nocturna de la base real (pg_dump del 2026-09-16).
 --
--- Cómo usarlo: pega TODO este archivo en el editor SQL de tu
--- proyecto de Supabase (Database > SQL Editor > New query) y
--- ejecútalo una sola vez. Es seguro volver a ejecutarlo si algo
--- falla a medias, salvo la línea "insert into evento" (fallará
--- la segunda vez porque ya existe la fila — no pasa nada, ignórala).
+-- QUÉ ES ESTE ARCHIVO
+-- El plano de la base de datos. Ejecutándolo de arriba abajo en un
+-- proyecto de Supabase vacío se reconstruye la aplicación entera:
+-- tablas, funciones, avisos automáticos, permisos y carpetas de
+-- archivos. No trae ningún dato: ni invitados, ni fotos, ni claves.
 --
--- Nombres de columna en camelCase (a propósito): así el objeto
--- de JavaScript de la app y la fila de la base de datos usan
--- literalmente las mismas claves, sin tener que traducir entre
--- "grupoFamiliar" y "grupo_familiar" en ningún sitio del código.
--- ============================================================
+-- CÓMO ESTÁ ORDENADO
+--   1. Extensiones
+--   2. Tablas
+--   3. Claves primarias, únicas y foráneas
+--   4. Funciones (ayudantes, anfitrión, colaboradores, tablón)
+--   5. Avisos automáticos (triggers)
+--   6. Permisos de lectura y escritura (RLS)
+--   7. Carpetas de archivos (Storage)
+--   8. Filas iniciales
+--
+-- LA REGLA DE ORO
+-- Cada tabla y cada función aparecen UNA SOLA VEZ. La versión
+-- anterior de este archivo era un diario: se iba apuntando cada
+-- cambio al final, y había funciones repetidas hasta cinco veces.
+-- Funcionaba (mandaba la última), pero al ir a tocar algo era fácil
+-- copiar la copia vieja. Si hay que cambiar una función, se cambia
+-- aquí, en su sitio, y no se añade nada al final.
+--
+-- SI CAMBIAS LOS PARÁMETROS DE UNA FUNCIÓN
+-- Hay que borrar antes la versión antigua con su firma completa
+-- (drop function if exists nombre(tipos...)). Si no, conviven las
+-- dos y PostgreSQL responde «function is not unique». Esto ya rompió
+-- el botón «Avisar ahora» una vez.
+--
+-- POR QUÉ HAY «where true» POR TODAS PARTES
+-- Supabase obliga a poner una condición en cada update y cada delete,
+-- para que nadie se lleve una tabla entera por delante sin querer.
+
 
 -- ============================================================
--- 1. INVITADOS (la FK hacia colaboradores se añade después, para
---    resolver la referencia circular entre las dos tablas)
+-- 1. EXTENSIONES
 -- ============================================================
-create table invitados (
-  "id"              uuid primary key default gen_random_uuid(),
-  "nombre"          text not null default '',
-  "apellido"        text not null default '',
-  "zona"            text not null default '',
-  "confirmado"      boolean not null default false,
-  "colaboradorId"   uuid null,
-  "grupoFamiliar"   text not null default '',
-  "mesa"            integer null,
-  "anioNacimiento"  text not null default '',
-  "anioBoda"        text not null default '',
-  "email"           text not null default '',
-  "cancion"         text not null default '',
-  "alergias"        text not null default '',
-  "observaciones"   text not null default '',
-  "pagado"          boolean not null default false,
-  -- Se marca al asignarle (o reasignarle) un colaborador, y se limpia al
-  -- avisar de verdad a ese colaborador — así se sabe exactamente cuáles
-  -- son "los invitados nuevos" de cada aviso, no solo un sí/no genérico.
-  "avisoPendiente"  boolean not null default false
+-- pg_net: permite que la base de datos llame por su cuenta a la API
+-- de Resend para mandar los emails.
+-- unaccent: quita los acentos, para poder comparar nombres escritos
+-- de cualquier manera en el control del tablón.
+
+create extension if not exists pg_net with schema public;
+create extension if not exists unaccent with schema public;
+
+
+-- ============================================================
+-- 2. TABLAS
+-- ============================================================
+
+-- Los datos de la boda: nombre, fecha, lugar, precios, imágenes y
+-- plantillas de email. Una sola fila, con id = true.
+CREATE TABLE public.evento (
+    id boolean DEFAULT true NOT NULL,
+    nombre text DEFAULT ''::text NOT NULL,
+    fecha text DEFAULT ''::text NOT NULL,
+    hora text DEFAULT ''::text NOT NULL,
+    precio text DEFAULT ''::text NOT NULL,
+    imagen text DEFAULT '/cabecera-defecto.jpg'::text NOT NULL,
+    "imagenInvitacion" text DEFAULT '/invitacion-defecto.jpg'::text NOT NULL,
+    lugar text DEFAULT ''::text NOT NULL,
+    direccion text DEFAULT ''::text NOT NULL,
+    "precioAdulto" text DEFAULT ''::text NOT NULL,
+    "precioNino" text DEFAULT ''::text NOT NULL,
+    "edadNinoDesde" text DEFAULT '2'::text NOT NULL,
+    "edadNinoHasta" text DEFAULT '12'::text NOT NULL,
+    "urlPublica" text DEFAULT ''::text NOT NULL,
+    "ocultarTituloEnImagen" boolean DEFAULT true NOT NULL,
+    "emailAnfitrion" text DEFAULT ''::text NOT NULL,
+    "plantillaAsignacion" text DEFAULT 'Hola,<br><br>Se te ha asignado <b>{invitado}</b> como invitado.<br>Entra en tu enlace cuando puedas para completar sus datos.'::text NOT NULL,
+    "plantillaDatosCompletados" text DEFAULT 'Hola,<br><br><b>{colaborador}</b> ha completado los datos de <b>{invitado}</b>.'::text NOT NULL,
+    "plantillaPagoRegistrado" text DEFAULT 'Hola,<br><br><b>{colaborador}</b> ha marcado como pagado a <b>{invitado}</b>.'::text NOT NULL,
+    "plantillaInvitacionFamilia" text DEFAULT 'Hola,<br><br>Aquí tienes tu invitación. ¡Os esperamos con muchas ganas!'::text NOT NULL,
+    "modoPruebasActivo" boolean DEFAULT false NOT NULL,
+    "enlaceGrupoWhatsapp" text DEFAULT ''::text NOT NULL,
+    "cronogramaBloques" jsonb DEFAULT '[{"texto": "Recepción", "duracionMin": 15}, {"texto": "Cóctel", "duracionMin": 30}, {"texto": "Foto 1", "duracionMin": 15}, {"texto": "Mesas", "duracionMin": 15}, {"texto": "Cena", "duracionMin": 90}, {"texto": "Foto 2", "duracionMin": 15}, {"texto": "Postre", "duracionMin": 15}, {"texto": "Baile", "duracionMin": 135}, {"texto": "Final", "duracionMin": 15}]'::jsonb NOT NULL,
+    "cronogramaHoraFin" text DEFAULT '23:45'::text NOT NULL,
+    "cronogramaHoraInicio" text DEFAULT '18:00'::text NOT NULL,
+    "rolesTrabajoResponsables" jsonb DEFAULT '{}'::jsonb NOT NULL,
+    "imprimirFecha" boolean DEFAULT true NOT NULL,
+    "imprimirHora" boolean DEFAULT true NOT NULL,
+    "imprimirLugar" boolean DEFAULT true NOT NULL,
+    "tablonOcultarFecha" boolean DEFAULT false NOT NULL,
+    "asistenciaAbierta" boolean DEFAULT false NOT NULL,
+    -- Cuánto suena la cortinilla por encima de la música, en puntos.
+    -- La app la guarda desde la ventana de Música del evento.
+    "cortinillaRealce" integer DEFAULT 15 NOT NULL,
+    CONSTRAINT evento_id_check CHECK (id)
 );
 
--- ============================================================
--- 2. COLABORADORES
--- ============================================================
-create table colaboradores (
-  "id"          uuid primary key default gen_random_uuid(),
-  "nombre"      text not null default '',
-  "invitadoId"  uuid null references invitados("id") on delete set null,
-  "email"       text not null default ''
+-- La lista de invitados. Es la raíz de la aplicación: todo lo demás
+-- cuelga de aquí.
+CREATE TABLE public.invitados (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    nombre text DEFAULT ''::text NOT NULL,
+    apellido text DEFAULT ''::text NOT NULL,
+    zona text DEFAULT ''::text NOT NULL,
+    confirmado boolean DEFAULT false NOT NULL,
+    "colaboradorId" uuid,
+    "grupoFamiliar" text DEFAULT ''::text NOT NULL,
+    mesa integer,
+    "anioNacimiento" text DEFAULT ''::text NOT NULL,
+    "anioBoda" text DEFAULT ''::text NOT NULL,
+    email text DEFAULT ''::text NOT NULL,
+    cancion text DEFAULT ''::text NOT NULL,
+    alergias text DEFAULT ''::text NOT NULL,
+    observaciones text DEFAULT ''::text NOT NULL,
+    pagado boolean DEFAULT false NOT NULL,
+    "avisoPendiente" boolean DEFAULT false NOT NULL,
+    "rolesTrabajo" jsonb DEFAULT '[]'::jsonb NOT NULL,
+    "excluidoTablon" boolean DEFAULT false NOT NULL,
+    "rolFamiliar" text DEFAULT ''::text NOT NULL,
+    presente boolean DEFAULT false NOT NULL
 );
 
-alter table invitados
-  add constraint invitados_colaborador_fk
-  foreign key ("colaboradorId") references colaboradores("id") on delete set null;
-
--- ============================================================
--- 3. MESAS (1 a 15, número fijo)
--- ============================================================
--- Cantidad de mesas libre (se añaden/quitan una a una desde la app) — sin
--- límite fijo de 15 como en versiones anteriores.
-create table mesas (
-  "numero"     integer primary key check ("numero" > 0),
-  "capacidad"  integer not null default 10 check ("capacidad" >= 0),
-  -- Posición en el plano de mesas (0-100, % del ancho/alto del lienzo).
-  -- null = todavía no se ha colocado a mano, usa una rejilla por defecto.
-  "posX"       numeric null,
-  "posY"       numeric null
+-- Quién ayuda a recoger datos y qué permisos tiene cada uno.
+CREATE TABLE public.colaboradores (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    nombre text DEFAULT ''::text NOT NULL,
+    "invitadoId" uuid,
+    email text DEFAULT ''::text NOT NULL,
+    "authUserId" uuid,
+    "dineroRecogidoEn" timestamp with time zone,
+    "dineroRecogidoImporte" numeric,
+    "habilitadoEnPruebas" boolean DEFAULT true NOT NULL,
+    "emailSincronizadoEn" timestamp with time zone,
+    permisos jsonb DEFAULT '[]'::jsonb NOT NULL
 );
 
-alter table invitados
-  add constraint invitados_mesa_fk
-  foreign key ("mesa") references mesas("numero") on delete set null;
-
--- ============================================================
--- 4. FOTOS FAMILIARES (diccionario: grupoFamiliar -> url)
--- ============================================================
-create table fotos_familiares (
-  "grupoFamiliar"  text primary key,
-  "url"            text not null default ''
+-- Las mesas del banquete y su posición en el plano.
+CREATE TABLE public.mesas (
+    numero integer NOT NULL,
+    capacidad integer DEFAULT 10 NOT NULL,
+    "posX" numeric,
+    "posY" numeric,
+    CONSTRAINT mesas_capacidad_check CHECK ((capacidad >= 0)),
+    -- Antes había un tope de 15 mesas. Se quitó en la app hace tiempo,
+    -- pero el tope seguía puesto en la base: la mesa 16 habría dado error.
+    CONSTRAINT mesas_numero_check CHECK ((numero >= 1))
 );
 
--- ============================================================
--- 4b. ORDEN Y ESTADO DE ENVÍO POR FAMILIA (diccionario: grupoFamiliar ->
---     array de ids de invitados en el orden elegido a mano por el
---     anfitrión — para poner al esposo primero, etc., en la
---     invitación — y si ya se le envió la invitación por email o no.
---     Si una familia no tiene fila aquí, se usa el orden por defecto
---     y se considera que no se le ha enviado nada todavía.
--- ============================================================
-create table orden_familias (
-  "grupoFamiliar"        text primary key,
-  "orden"                text[] not null default '{}',
-  "invitacionEnviada"    boolean not null default false,
-  "invitacionEnviadaEn"  timestamptz
+-- Orden de los invitados dentro de cada familia y si ya se les mandó
+-- la invitación.
+CREATE TABLE public.orden_familias (
+    "grupoFamiliar" text NOT NULL,
+    orden text[] DEFAULT '{}'::text[] NOT NULL,
+    "invitacionEnviada" boolean DEFAULT false NOT NULL,
+    "invitacionEnviadaEn" timestamp with time zone
 );
 
--- ============================================================
--- 4b. TRIGGERS: "avisoPendiente" e "invitacionEnviada" dejan de ser
---     banderas que cada función RPC tiene que acordarse de actualizar a
---     mano (y por eso se desincronizaban entre sí) — pasan a recalcularse
---     solas dentro de la propia base de datos en cuanto cambia algo
---     relevante. Las RPC ya NO necesitan tocar estas columnas ellas
---     mismas salvo para el único gesto deliberado de cada una: "ya avisé"
---     (avisoPendiente = false) o el reinicio explícito para pruebas.
--- ============================================================
+-- Una foto por familia, guardada como texto (base64).
+CREATE TABLE public.fotos_familiares (
+    "grupoFamiliar" text NOT NULL,
+    url text DEFAULT ''::text NOT NULL
+);
 
--- Se dispara con cualquier alta o cambio en invitados. Si se desasigna
--- del colaborador, no hay a quién avisar → false. Si sigue asignado y
--- confirmado, y cambió algo que le importa al colaborador (asignación,
--- confirmación, datos, pago o mesa), pasa a pendiente — sea la primera
--- vez (alta nueva) o la enésima (un reinicio de pruebas, una edición
--- real, lo que sea). El único sitio que lo pone en false a propósito es
--- anfitrion_avisar_colaborador, cuando de verdad ya se avisó.
-create or replace function trg_recalcular_aviso_pendiente()
-returns trigger
-language plpgsql
-as $$
+-- El tablón de novedades que ven los invitados.
+CREATE TABLE public.novedades (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    titulo text DEFAULT ''::text NOT NULL,
+    cuerpo text DEFAULT ''::text NOT NULL,
+    publicada boolean DEFAULT true NOT NULL,
+    "creadaEn" timestamp with time zone DEFAULT now() NOT NULL,
+    "esNovedad" boolean DEFAULT false NOT NULL
+);
+
+-- Los gastos del evento.
+CREATE TABLE public.gastos (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    concepto text DEFAULT ''::text NOT NULL,
+    categoria text DEFAULT ''::text NOT NULL,
+    importe text DEFAULT ''::text NOT NULL,
+    pagado boolean DEFAULT false NOT NULL
+);
+
+-- Registro de cada email enviado: a quién, cuándo y si salió bien.
+CREATE TABLE public.avisos_enviados (
+    id bigint NOT NULL,
+    destinatario text NOT NULL,
+    asunto text NOT NULL,
+    "creadoEn" timestamp with time zone DEFAULT now() NOT NULL,
+    tipo text DEFAULT 'asignados'::text NOT NULL,
+    exito boolean,
+    "requestId" bigint
+);
+
+ALTER TABLE public.avisos_enviados ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.avisos_enviados_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+-- Copia del texto anterior cada vez que se guarda una novedad o una
+-- plantilla de email. Es lo que permite deshacer.
+CREATE TABLE public.historial_texto (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    origen text NOT NULL,
+    "refId" uuid,
+    campo text NOT NULL,
+    "valorAnterior" text NOT NULL,
+    "guardadoEn" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- Las cuentas de acceso que mandan (los novios).
+CREATE TABLE public.anfitriones (
+    "authUserId" uuid NOT NULL
+);
+
+-- La llave maestra del anfitrión. Una sola fila.
+CREATE TABLE public.anfitrion_secreto (
+    id boolean DEFAULT true NOT NULL,
+    token uuid DEFAULT gen_random_uuid() NOT NULL,
+    CONSTRAINT anfitrion_secreto_id_check CHECK (id)
+);
+
+-- Claves de servicios externos (Resend). Una sola fila.
+-- Nunca sale en las copias de seguridad.
+CREATE TABLE public.config_secretos (
+    id boolean DEFAULT true NOT NULL,
+    "resendApiKey" text DEFAULT ''::text NOT NULL,
+    "emailRemitente" text DEFAULT 'onboarding@resend.dev'::text NOT NULL,
+    "emailRemitenteFamilia" text DEFAULT 'onboarding@resend.dev'::text NOT NULL,
+    CONSTRAINT config_secretos_id_check CHECK (id)
+);
+
+-- La llave del tablón público y la pregunta de control. Una sola fila.
+CREATE TABLE public.tablon_secreto (
+    id boolean DEFAULT true NOT NULL,
+    token uuid DEFAULT gen_random_uuid() NOT NULL,
+    pregunta text DEFAULT ''::text NOT NULL,
+    "respuestaCorrecta" text DEFAULT ''::text NOT NULL,
+    CONSTRAINT tablon_secreto_id_check CHECK (id)
+);
+
+-- Quién ha entrado al tablón y desde qué dispositivo, para detectar
+-- accesos raros.
+CREATE TABLE public.tablon_accesos (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    "nombreNormalizado" text NOT NULL,
+    "dispositivoId" text NOT NULL,
+    "creadoEn" timestamp with time zone DEFAULT now() NOT NULL,
+    "actualizadoEn" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- Foto de los datos antes de activar el modo pruebas, para poder
+-- volver atrás.
+CREATE TABLE public.modo_pruebas_snapshot (
+    id boolean DEFAULT true NOT NULL,
+    datos jsonb NOT NULL,
+    "creadoEn" timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT modo_pruebas_snapshot_id_check CHECK (id)
+);
+
+
+
+-- ============================================================
+-- 3. CLAVES PRIMARIAS, ÚNICAS Y FORÁNEAS
+-- ============================================================
+-- Las claves primarias dicen qué identifica a cada fila. Las
+-- foráneas atan unas tablas con otras: si borras una mesa, los
+-- invitados que estaban en ella se quedan sin mesa, no se borran.
+
+ALTER TABLE ONLY public.anfitrion_secreto
+    ADD CONSTRAINT anfitrion_secreto_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.anfitriones
+    ADD CONSTRAINT anfitriones_pkey PRIMARY KEY ("authUserId");
+
+ALTER TABLE ONLY public.avisos_enviados
+    ADD CONSTRAINT avisos_enviados_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.colaboradores
+    ADD CONSTRAINT colaboradores_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.config_secretos
+    ADD CONSTRAINT config_secretos_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.evento
+    ADD CONSTRAINT evento_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.fotos_familiares
+    ADD CONSTRAINT fotos_familiares_pkey PRIMARY KEY ("grupoFamiliar");
+
+ALTER TABLE ONLY public.gastos
+    ADD CONSTRAINT gastos_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.historial_texto
+    ADD CONSTRAINT historial_texto_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.invitados
+    ADD CONSTRAINT invitados_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.mesas
+    ADD CONSTRAINT mesas_pkey PRIMARY KEY (numero);
+
+ALTER TABLE ONLY public.modo_pruebas_snapshot
+    ADD CONSTRAINT modo_pruebas_snapshot_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.novedades
+    ADD CONSTRAINT novedades_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.orden_familias
+    ADD CONSTRAINT orden_familias_pkey PRIMARY KEY ("grupoFamiliar");
+
+ALTER TABLE ONLY public.tablon_accesos
+    ADD CONSTRAINT "tablon_accesos_nombreNormalizado_dispositivoId_key" UNIQUE ("nombreNormalizado", "dispositivoId");
+
+ALTER TABLE ONLY public.tablon_accesos
+    ADD CONSTRAINT tablon_accesos_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.tablon_secreto
+    ADD CONSTRAINT tablon_secreto_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.anfitriones
+    ADD CONSTRAINT "anfitriones_authUserId_fkey" FOREIGN KEY ("authUserId") REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY public.colaboradores
+    ADD CONSTRAINT "colaboradores_authUserId_fkey" FOREIGN KEY ("authUserId") REFERENCES auth.users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.colaboradores
+    ADD CONSTRAINT "colaboradores_invitadoId_fkey" FOREIGN KEY ("invitadoId") REFERENCES public.invitados(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.invitados
+    ADD CONSTRAINT invitados_colaborador_fk FOREIGN KEY ("colaboradorId") REFERENCES public.colaboradores(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY public.invitados
+    ADD CONSTRAINT invitados_mesa_fk FOREIGN KEY (mesa) REFERENCES public.mesas(numero) ON DELETE SET NULL;
+
+
+
+-- ============================================================
+-- 4. FUNCIONES
+-- ============================================================
+-- Todas son SECURITY DEFINER: se ejecutan con permisos elevados y
+-- comprueban ellas mismas quién llama. Es lo que permite que las
+-- tablas estén cerradas a cal y canto (sección 6) y la aplicación
+-- siga funcionando: nadie toca una tabla directamente, todo pasa
+-- por aquí.
+
+
+-- ------------------------------------------------------------
+-- Ayudantes: quién eres y qué puedes hacer
+-- ------------------------------------------------------------
+
+-- ¿La cuenta conectada es de un anfitrión (los novios)?
+CREATE FUNCTION public.es_anfitrion() RETURNS boolean
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select exists (select 1 from anfitriones a where a."authUserId" = auth.uid());
+$$;
+
+-- Devuelve el papel de quien está conectado: anfitrión, colaborador o nadie.
+CREATE FUNCTION public.mi_rol() RETURNS TABLE(rol text, token uuid)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
 begin
-  -- Vía de escape para las funciones del propio colaborador (rellenar
-  -- datos, marcar pago): su cambio no debe generarle un aviso a sí mismo.
-  if coalesce(current_setting('eventos.recalculo_aviso_activo', true), 'on') = 'off' then
-    return new;
+  if exists (select 1 from anfitriones a where a."authUserId" = auth.uid()) then
+    return query select 'anfitrion'::text, s."token" from anfitrion_secreto s limit 1;
+    return;
   end if;
 
-  if new."colaboradorId" is null then
-    new."avisoPendiente" := false;
-  elsif TG_OP = 'INSERT' then
-    new."avisoPendiente" := new."confirmado";
-  elsif new."confirmado" and (
-    new."colaboradorId" is distinct from old."colaboradorId" or
-    new."confirmado" is distinct from old."confirmado" or
-    new."anioNacimiento" is distinct from old."anioNacimiento" or
-    new."anioBoda" is distinct from old."anioBoda" or
-    new."email" is distinct from old."email" or
-    new."cancion" is distinct from old."cancion" or
-    new."alergias" is distinct from old."alergias" or
-    new."observaciones" is distinct from old."observaciones" or
-    new."pagado" is distinct from old."pagado" or
-    new."mesa" is distinct from old."mesa"
-  ) then
-    new."avisoPendiente" := true;
-  end if;
-  return new;
+  return query
+    select 'colaborador'::text, c."id"
+    from colaboradores c
+    where c."authUserId" = auth.uid()
+    limit 1;
 end;
 $$;
 
-drop trigger if exists invitados_recalcular_aviso on invitados;
-create trigger invitados_recalcular_aviso
-before insert or update on invitados
-for each row execute function trg_recalcular_aviso_pendiente();
-
--- Si una familia ya tiene la invitación marcada como enviada y luego
--- cambia algo que puede afectar a quién debería salir en ella (se
--- confirma un nuevo miembro, paga, se le asigna mesa, o cambia de
--- familia), se invalida el envío anterior — vuelve a aparecer en
--- "pendientes" en vez de darse por hecha para siempre con datos vejos.
--- Es intencionadamente un poco "generoso" invalidando: preferible
--- reaparecer en pendientes alguna vez de más que perder en silencio a
--- alguien que se sumó después de enviada la invitación.
-create or replace function trg_invalidar_invitacion_familia()
-returns trigger
-language plpgsql
-as $$
-declare
-  clave text;
-  clave_anterior text;
-begin
-  clave := coalesce(nullif(new."grupoFamiliar", ''), new."apellido");
-  update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null
-  where "grupoFamiliar" = clave and "invitacionEnviada" = true;
-
-  if TG_OP = 'UPDATE' then
-    clave_anterior := coalesce(nullif(old."grupoFamiliar", ''), old."apellido");
-    if clave_anterior is distinct from clave then
-      update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null
-      where "grupoFamiliar" = clave_anterior and "invitacionEnviada" = true;
-    end if;
-  end if;
-
-  return new;
-end;
+-- Quita acentos, mayúsculas y espacios sobrantes para poder comparar nombres.
+CREATE FUNCTION public.normalizar_nombre_tablon(p_texto text) RETURNS text
+    LANGUAGE sql IMMUTABLE
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+  select trim(lower(unaccent(regexp_replace(coalesce(p_texto, ''), '[,\s]+', ' ', 'g'))));
 $$;
 
-drop trigger if exists invitados_invalidar_invitacion on invitados;
-create trigger invitados_invalidar_invitacion
-after insert or update of "confirmado", "pagado", "mesa", "grupoFamiliar", "apellido" on invitados
-for each row execute function trg_invalidar_invitacion_familia();
+-- ¿La llave que trae el navegador es la del anfitrión?
+CREATE FUNCTION public.anfitrion_verificar_token(p_token uuid) RETURNS boolean
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$ select p_token = (select "token" from anfitrion_secreto limit 1); $$;
 
--- ============================================================
--- 5. EVENTO (una única fila, forzado con un truco de PK booleana)
--- ============================================================
-create table evento (
-  "id"                      boolean primary key default true check ("id"),
-  "nombre"                  text not null default '',
-  "fecha"                   text not null default '',
-  "hora"                    text not null default '',
-  "precio"                  text not null default '',   -- campo antiguo sin uso hoy, se mantiene por compatibilidad
-  "imagen"                  text not null default '/cabecera-defecto.jpg',
-  "imagenInvitacion"        text not null default '/invitacion-defecto.jpg',
-  "lugar"                   text not null default '',
-  "direccion"               text not null default '',
-  "precioAdulto"            text not null default '',
-  "precioNino"              text not null default '',
-  "edadNinoDesde"           text not null default '2',
-  "edadNinoHasta"           text not null default '12',
-  "urlPublica"              text not null default '',
-  "ocultarTituloEnImagen"   boolean not null default true,
-  "emailAnfitrion"          text not null default '',
-  -- Plantillas de los avisos automáticos por email. {colaborador} y
-  -- {invitado} se sustituyen por los nombres reales al enviar — así el
-  -- anfitrión puede cambiar el texto desde Configuración sin tocar código.
-  "plantillaAsignacion"        text not null default 'Hola,<br><br>Tienes invitados nuevos asignados.<br>Entra en tu enlace cuando puedas para revisarlos y completar sus datos.',
-  "plantillaDatosCompletados"  text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado los datos de todos sus invitados asignados.',
-  "plantillaPagoRegistrado"    text not null default 'Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.',
-  "plantillaInvitacionFamilia" text not null default 'Hola,<br><br>Aquí tienes tu invitación. ¡Os esperamos con muchas ganas!'
-);
-insert into evento ("id") values (true);
+-- ¿La llave que trae el navegador es la del tablón?
+CREATE FUNCTION public.tablon_verificar_token(p_token uuid) RETURNS boolean
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$ select p_token = (select "token" from tablon_secreto limit 1); $$;
 
--- ============================================================
--- 6. SECRETO DEL ANFITRIÓN (tabla completamente cerrada — el
---    código que hace de "contraseña" para el modo Anfitrión).
---    Importante: esto NO puede vivir como columna de `evento`,
---    porque esa tabla está abierta a todo el mundo (ver abajo).
--- ============================================================
-create table anfitrion_secreto (
-  "id"     boolean primary key default true check ("id"),
-  "token"  uuid not null default gen_random_uuid()
-);
-insert into anfitrion_secreto ("id") values (true);
-alter table anfitrion_secreto enable row level security;
-revoke all on table anfitrion_secreto from anon, authenticated;
--- Sin ninguna política de acceso = nadie puede leerla directamente.
+-- ¿El colaborador conectado tiene este permiso concreto?
+CREATE FUNCTION public.colaborador_tiene_permiso(p_clave text) RETURNS boolean
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select exists (
+    select 1 from colaboradores c
+    where c."authUserId" = auth.uid()
+      and c."permisos" ? p_clave
+  );
+$$;
 
--- ============================================================
--- 7. CONFIG SECRETA DE EMAILS (clave de Resend y remitente).
---    Misma idea que anfitrion_secreto: tabla completamente
---    cerrada, solo legible desde dentro de enviar_email().
--- ============================================================
-create table config_secretos (
-  "id"                      boolean primary key default true check ("id"),
-  "resendApiKey"            text not null default '',
-  -- Remitente por defecto: avisos internos (colaborador/anfitrión).
-  "emailRemitente"          text not null default 'onboarding@resend.dev',
-  -- Remitente específico para el email de invitación a la familia
-  -- (distinto del anterior, para que el invitado vea un remitente
-  -- pensado para él, no uno "interno" de gestión).
-  "emailRemitenteFamilia"   text not null default 'onboarding@resend.dev'
-);
-insert into config_secretos ("id") values (true);
-alter table config_secretos enable row level security;
-revoke all on table config_secretos from anon, authenticated;
+-- ¿Este colaborador puede tocar datos ahora mismo?
+CREATE FUNCTION public.colaborador_puede_actuar(p_colaborador_id uuid) RETURNS boolean
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select exists (
+    select 1 from colaboradores c
+    where c."id" = p_colaborador_id
+      and c."authUserId" = auth.uid()
+      and (
+        not coalesce((select "modoPruebasActivo" from evento limit 1), false)
+        or c."habilitadoEnPruebas"
+      )
+  );
+$$;
 
--- ============================================================
--- 8. REGISTRO DE AVISOS ENVIADOS (para el panel "Avisos" del
---    anfitrión). Se rellena solo, desde dentro de enviar_email().
--- ============================================================
-create table avisos_enviados (
-  "id"           bigint generated always as identity primary key,
-  "destinatario" text not null,
-  "asunto"       text not null,
-  -- 'asignados' (aviso de invitados nuevos/cambiados, y prueba), 'datos'
-  -- (aviso de datos/pagos completados) o 'invitacion' (a una familia) —
-  -- para poder filtrar el historial por tipo en la app.
-  "tipo"         text not null default 'asignados',
-  -- null = todavía sin confirmar (o pg_net nunca llegó a tener respuesta
-  -- dentro de la ventana que comprueba anfitrion_actualizar_estado_avisos).
-  -- true = Resend respondió aceptándolo. false = Resend lo rechazó de
-  -- entrada (clave inválida, remitente mal configurado...).
-  "exito"        boolean,
-  -- Id que devuelve net.http_post() al encolar la petición (no la
-  -- respuesta en sí) — sirve para poder preguntar MÁS TARDE, en otra
-  -- transacción, si ya hay respuesta. Ver enviar_email() y
-  -- anfitrion_actualizar_estado_avisos() más abajo.
-  "requestId"    bigint,
-  "creadoEn"     timestamptz not null default now()
-);
-alter table avisos_enviados enable row level security;
-revoke all on table avisos_enviados from anon, authenticated;
-alter table avisos_enviados add column if not exists "requestId" bigint;
+-- ¿Este colaborador puede escribir en el tablón de novedades?
+CREATE FUNCTION public.colaborador_puede_editar_novedades(p_colaborador_id uuid) RETURNS boolean
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select exists (
+    select 1 from colaboradores c
+    where c."id" = p_colaborador_id
+      and c."authUserId" = auth.uid()
+      and c."permisos" ? 'novedades_editar'
+  );
+$$;
 
--- Migración de una sola vez (segura de repetir): reclasifica cualquier
--- fila que se guardara con el esquema de tipos antiguo ('colaborador' /
--- 'familia', dos tipos) al nuevo de tres, usando el asunto fijo de cada
--- email para saber cuál era.
-update avisos_enviados set "tipo" = case
-  when "asunto" in ('Datos completados', 'Pagos completos') then 'datos'
-  when "asunto" = 'Tus invitados asignados' or "asunto" = 'Email de prueba' then 'asignados'
-  when "tipo" = 'familia' then 'invitacion'
-  else "tipo"
-end
-where "tipo" in ('colaborador', 'familia');
 
--- ============================================================
--- 9. GASTOS (Estado de cuentas — solo el anfitrión, nunca los
---    colaboradores). Igual de cerrada que invitados/colaboradores:
---    solo alcanzable a través de las funciones RPC de más abajo.
--- ============================================================
-create table gastos (
-  "id"         uuid primary key default gen_random_uuid(),
-  "concepto"   text not null default '',
-  "categoria"  text not null default '',
-  -- Texto, no numeric: igual que precioAdulto/precioNino del evento — se
-  -- guarda tal cual se escribe (admite coma decimal) y solo se convierte a
-  -- número al sumar, nunca al guardar cada pulsación.
-  "importe"    text not null default '',
-  "pagado"     boolean not null default false
-);
-alter table gastos enable row level security;
-revoke all on table gastos from anon, authenticated;
+-- ------------------------------------------------------------
+-- Correo e historial
+-- ------------------------------------------------------------
 
--- ============================================================
--- RLS: activada en las 10 tablas. evento/mesas/fotos_familiares/
--- orden_familias quedan abiertas (datos sin sensibilidad real).
--- invitados, colaboradores, anfitrion_secreto, config_secretos,
--- avisos_enviados y gastos NO tienen ninguna política — solo se
--- pueden tocar a través de las funciones de más abajo.
--- ============================================================
-alter table evento             enable row level security;
-alter table mesas              enable row level security;
-alter table fotos_familiares   enable row level security;
-alter table orden_familias     enable row level security;
-alter table invitados          enable row level security;
-alter table colaboradores      enable row level security;
-
-create policy "anon_full_access" on evento             for all using (true) with check (true);
-create policy "anon_full_access" on mesas              for all using (true) with check (true);
-create policy "anon_full_access" on fotos_familiares   for all using (true) with check (true);
-create policy "anon_full_access" on orden_familias     for all using (true) with check (true);
-
--- Cinturón y tirantes: quitamos también los permisos de tabla que
--- Supabase concede por defecto, para que no exista ningún camino
--- directo a estas dos tablas salvo por las funciones RPC.
-revoke all on table invitados     from anon, authenticated;
-revoke all on table colaboradores from anon, authenticated;
-
--- ============================================================
--- ENVÍO DE EMAILS (Resend), disparado desde las funciones de
--- guardado de más abajo cuando ocurre algo relevante. Nunca se
--- llama desde el navegador — la clave de Resend nunca sale del
--- servidor.
--- ============================================================
-create extension if not exists pg_net;
-
-drop function if exists enviar_email(text, text, text);
-
--- "p_adjunto_*" son opcionales — se usan para adjuntar la imagen de la
--- invitación (ver anfitrion_enviar_invitacion_familia). El resto de
--- avisos de la app los deja vacíos, sin cambiar nada en su llamada.
--- Cambia de 5 a 6 parámetros (se añade p_remitente) — hace falta borrar
--- la versión de 5 antes, si no create or replace deja las DOS funciones
--- a la vez (misma lección que la vez anterior que se tocó esta función).
-drop function if exists enviar_email(text, text, text, text, text);
-
--- Cambia de 6 a 7 parámetros (se añade p_tipo) — MISMA lección otra vez:
--- sin este drop, quedan las dos versiones a la vez y cualquier llamada
--- con menos de 6 argumentos (la inmensa mayoría de las llamadas de la
--- app) se vuelve ambigua para Postgres ("function is not unique") y
--- falla — esto es justo lo que rompió "Avisar ahora" el 2026-08-06.
-drop function if exists enviar_email(text, text, text, text, text, text);
-
-create or replace function enviar_email(
-  p_para text, p_asunto text, p_html text,
-  p_adjunto_nombre text default null, p_adjunto_base64 text default null,
-  -- Remitente concreto a usar; si se deja null, se usa el remitente por
-  -- defecto (avisos internos). El email a la familia pasa el suyo propio.
-  p_remitente text default null,
-  -- Tres tipos, para el filtro del historial en la app: 'asignados' (aviso
-  -- al colaborador de invitados nuevos/cambiados, y el email de prueba),
-  -- 'datos' (aviso al anfitrión de que un colaborador completó datos o
-  -- pagos) e 'invitacion' (la invitación final a una familia).
-  p_tipo text default 'asignados'
-)
-returns void
-language plpgsql security definer set search_path = public, net, pg_temp
-as $$
+-- Manda un email a través de Resend y lo apunta en avisos_enviados.
+CREATE FUNCTION public.enviar_email(p_para text, p_asunto text, p_html text, p_adjunto_nombre text DEFAULT NULL::text, p_adjunto_base64 text DEFAULT NULL::text, p_remitente text DEFAULT NULL::text, p_tipo text DEFAULT 'asignados'::text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'net', 'pg_temp'
+    AS $$
 declare
   v_id bigint;
   v_request_id bigint;
 begin
   if p_para is null or trim(p_para) = '' then
-    return; -- sin email no hay a quién avisar
+    return;
   end if;
 
-  -- IMPORTANTE (episodio del 2026-08-08): NO esperar aquí la respuesta de
-  -- Resend de forma bloqueante (net.http_collect_response con async :=
-  -- false). Se probó y provocó "canceling statement due to statement
-  -- timeout" — Postgres cancela la transacción ENTERA si tarda más de lo
-  -- permitido, y eso deshace también el propio net.http_post: el email
-  -- deja de enviarse de verdad, no solo de confirmarse. net.http_post es
-  -- "dispara y olvida" a propósito.
-  --
-  -- Lo que SÍ es seguro hacer aquí: net.http_post() devuelve al momento
-  -- (sin esperar nada) un "requestId" que solo sirve para poder mirar la
-  -- respuesta MÁS TARDE, en otra transacción aparte. Guardarlo no es lo
-  -- mismo que esperar la respuesta — es dejar la miga de pan para que
-  -- anfitrion_actualizar_estado_avisos() la siga después, sin bloquear
-  -- nunca el envío en sí. Ver esa función más abajo.
   insert into avisos_enviados ("destinatario", "asunto", "tipo")
   values (p_para, p_asunto, p_tipo)
   returning "id" into v_id;
@@ -427,39 +490,422 @@ begin
 end;
 $$;
 
--- ============================================================
--- RPCs — lado anfitrión. Exigen p_token, comprobado en el propio
--- SQL contra anfitrion_secreto — sin el token correcto, no
--- devuelven ni graban nada. Así la web pública, sin el enlace
--- secreto del anfitrión, no expone datos ni por la propia API.
--- ============================================================
-create or replace function anfitrion_verificar_token(p_token uuid)
-returns boolean
-language sql security definer set search_path = public, pg_temp
-as $$ select p_token = (select "token" from anfitrion_secreto limit 1); $$;
+-- Guarda el texto anterior antes de pisarlo, para poder deshacer.
+CREATE FUNCTION public.registrar_historial_texto(p_origen text, p_ref_id uuid, p_campo text, p_valor_anterior text) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+begin
+  insert into historial_texto ("origen", "refId", "campo", "valorAnterior")
+  values (p_origen, p_ref_id, p_campo, p_valor_anterior);
 
-create or replace function anfitrion_listar_colaboradores(p_token uuid)
-returns setof colaboradores
-language sql security definer set search_path = public, pg_temp
-as $$
-  select c.* from colaboradores c
-  where p_token = (select "token" from anfitrion_secreto limit 1)
-  order by c."nombre";
+  delete from historial_texto
+  where id in (
+    select id from (
+      select id, row_number() over (
+        partition by origen, coalesce("refId", '00000000-0000-0000-0000-000000000000'::uuid), campo
+        order by "guardadoEn" desc
+      ) as rn
+      from historial_texto
+      where origen = p_origen
+        and coalesce("refId", '00000000-0000-0000-0000-000000000000'::uuid) = coalesce(p_ref_id, '00000000-0000-0000-0000-000000000000'::uuid)
+        and campo = p_campo
+    ) t where rn > 10
+  );
+end;
 $$;
 
-create or replace function anfitrion_listar_invitados(p_token uuid)
-returns setof invitados
-language sql security definer set search_path = public, pg_temp
-as $$
-  select i.* from invitados i
-  where p_token = (select "token" from anfitrion_secreto limit 1)
-  order by i."apellido", i."nombre";
+
+-- ------------------------------------------------------------
+-- Datos compartidos del evento
+-- ------------------------------------------------------------
+
+-- Guarda los datos de la boda (nombre, fecha, lugar, precios, plantillas).
+CREATE FUNCTION public.guardar_evento(p_token uuid, p_fila jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $_$
+declare
+  v_es_anfitrion boolean;
+  v_claves text[];
+  v_sets text;
+  v_permitidas text[] := array[
+    'nombre', 'fecha', 'hora', 'lugar', 'direccion', 'imagen',
+    'ocultarTituloEnImagen', 'emailAnfitrion', 'urlPublica',
+    'precioAdulto', 'precioNino', 'edadNinoDesde', 'edadNinoHasta',
+    'plantillaAsignacion', 'plantillaDatosCompletados',
+    'plantillaPagoRegistrado', 'plantillaInvitacionFamilia'
+  ];
+begin
+  v_es_anfitrion := p_token is not null
+    and p_token = (select "token" from anfitrion_secreto limit 1);
+
+  if not v_es_anfitrion and not colaborador_tiene_permiso('datos_evento_editar') then
+    raise exception 'No autorizado para editar los datos del evento';
+  end if;
+
+  select array_agg(a.attname::text) into v_claves
+  from pg_attribute a
+  where a.attrelid = 'public.evento'::regclass
+    and a.attnum > 0
+    and not a.attisdropped
+    and a.attname <> 'id'
+    and p_fila ? a.attname::text
+    and (v_es_anfitrion or a.attname::text = any(v_permitidas));
+
+  if v_claves is null then
+    return;
+  end if;
+
+  select string_agg(
+           format('%I = ($1->>%L)::%s', a.attname, a.attname,
+                  format_type(a.atttypid, a.atttypmod)),
+           ', ')
+    into v_sets
+  from pg_attribute a
+  where a.attrelid = 'public.evento'::regclass
+    and a.attnum > 0
+    and not a.attisdropped
+    and a.attname::text = any(v_claves);
+
+  execute format('update evento set %s where "id" = true', v_sets) using p_fila;
+end;
+$_$;
+
+-- Guarda las fotos de familia.
+CREATE FUNCTION public.guardar_fotos_familiares(p_token uuid, p_filas jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1)
+     and not exists (select 1 from colaboradores c where c."authUserId" = auth.uid())
+  then
+    raise exception 'No autorizado para guardar fotos familiares';
+  end if;
+
+  insert into fotos_familiares ("grupoFamiliar", "url")
+  select v->>'grupoFamiliar', coalesce(v->>'url', '')
+  from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
+  where coalesce(v->>'grupoFamiliar', '') <> ''
+  on conflict ("grupoFamiliar") do update set "url" = excluded."url";
+end;
 $$;
 
-create or replace function anfitrion_guardar_colaboradores(p_token uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
+-- Guarda el orden de los invitados dentro de cada familia.
+CREATE FUNCTION public.guardar_orden_familias(p_token uuid, p_filas jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1)
+     and not colaborador_tiene_permiso('invitaciones_enviar')
+  then
+    raise exception 'No autorizado para guardar el orden de las familias';
+  end if;
+
+  insert into orden_familias ("grupoFamiliar", "orden", "invitacionEnviada", "invitacionEnviadaEn")
+  select v->>'grupoFamiliar',
+         coalesce(
+           (select array_agg(x) from jsonb_array_elements_text(v->'orden') x),
+           '{}'::text[]
+         ),
+         coalesce((v->>'invitacionEnviada')::boolean, false),
+         (v->>'invitacionEnviadaEn')::timestamptz
+  from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
+  where coalesce(v->>'grupoFamiliar', '') <> ''
+  on conflict ("grupoFamiliar") do update set
+    "orden"               = excluded."orden",
+    "invitacionEnviada"   = excluded."invitacionEnviada",
+    "invitacionEnviadaEn" = excluded."invitacionEnviadaEn";
+end;
+$$;
+
+
+-- ------------------------------------------------------------
+-- El anfitrión (los novios)
+-- ------------------------------------------------------------
+
+-- Hace una foto de los datos y entra en modo pruebas.
+CREATE FUNCTION public.anfitrion_activar_modo_pruebas(p_token uuid, p_colaborador_ids_habilitados uuid[]) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_datos jsonb;
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  select jsonb_build_object(
+    'evento', (select to_jsonb(e) from evento e limit 1),
+    'colaboradores', (select coalesce(jsonb_agg(c), '[]'::jsonb) from colaboradores c),
+    'invitados', (select coalesce(jsonb_agg(i), '[]'::jsonb) from invitados i),
+    'mesas', (select coalesce(jsonb_agg(m), '[]'::jsonb) from mesas m),
+    'gastos', (select coalesce(jsonb_agg(g), '[]'::jsonb) from gastos g),
+    'ordenFamilias', (select coalesce(jsonb_agg(o), '[]'::jsonb) from orden_familias o),
+    'fotosFamiliares', (select coalesce(jsonb_agg(f), '[]'::jsonb) from fotos_familiares f),
+    'avisosEnviados', (select coalesce(jsonb_agg(a), '[]'::jsonb) from avisos_enviados a)
+  ) into v_datos;
+
+  insert into modo_pruebas_snapshot ("id", "datos", "creadoEn")
+  values (true, v_datos, now())
+  on conflict ("id") do update set "datos" = excluded."datos", "creadoEn" = excluded."creadoEn";
+
+  update colaboradores set "habilitadoEnPruebas" = ("id" = any(p_colaborador_ids_habilitados)) where true;
+  update evento set "modoPruebasActivo" = true where true;
+end;
+$$;
+
+-- Recalcula qué invitados tienen aviso pendiente.
+CREATE FUNCTION public.anfitrion_actualizar_estado_avisos(p_token uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'net', 'pg_temp'
+    AS $$
+declare
+  fila record;
+  v_resultado net.http_response_result;
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  for fila in
+    select "id", "requestId" from avisos_enviados
+    where "requestId" is not null
+      and "exito" is null
+      and "creadoEn" > now() - interval '1 hour'
+  loop
+    begin
+      v_resultado := net.http_collect_response(fila."requestId", async := true);
+      if v_resultado.status = 'SUCCESS' then
+        update avisos_enviados
+        set "exito" = ((v_resultado.response).status_code between 200 and 299)
+        where "id" = fila."id";
+      elsif v_resultado.status = 'ERROR' then
+        update avisos_enviados set "exito" = false where "id" = fila."id";
+      end if;
+    exception when others then
+      null;
+    end;
+  end loop;
+end;
+$$;
+
+-- Manda a un colaborador el aviso de los invitados que se le han asignado.
+CREATE FUNCTION public.anfitrion_avisar_colaborador(p_token uuid, p_colaborador_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  lista_invitados text;
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  select string_agg(
+    '<li>' || coalesce("nombre", '') || ' ' || coalesce("apellido", '') || '</li>',
+    '' order by "apellido", "nombre"
+  )
+  into lista_invitados
+  from invitados
+  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true and "confirmado" = true;
+
+  perform enviar_email(
+    (select "email" from colaboradores where "id" = p_colaborador_id),
+    'Tus invitados asignados',
+    replace(
+      (select "plantillaAsignacion" from evento limit 1),
+      '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
+    ) ||
+    case
+      when lista_invitados is not null then '<ul>' || lista_invitados || '</ul>'
+      else ''
+    end ||
+    case
+      when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
+      else
+        '<div style="margin-top:18px;"><a href="' ||
+        (select "urlPublica" from evento limit 1) || '?rol=' || p_colaborador_id::text ||
+        '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
+        'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
+        'font-weight:600;font-family:sans-serif;">Abrir formulario</a></div>'
+    end ||
+    '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
+  );
+
+  update invitados set "avisoPendiente" = false
+  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true and "confirmado" = true;
+end;
+$$;
+
+-- Da por buena la nueva dirección de correo de un colaborador.
+CREATE FUNCTION public.anfitrion_confirmar_email_colaborador_actualizado(p_token uuid, p_colaborador_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  update colaboradores
+  set "emailSincronizadoEn" = null
+  where "id" = p_colaborador_id;
+end;
+$$;
+
+-- Cierra la recogida de datos de un colaborador y le manda el acuse.
+CREATE FUNCTION public.anfitrion_confirmar_recogida_colaborador(p_token uuid, p_colaborador_id uuid, p_importe numeric, p_email text, p_asunto text, p_html text, p_adjunto_nombre text, p_adjunto_base64 text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  update colaboradores
+  set "dineroRecogidoEn" = now(), "dineroRecogidoImporte" = p_importe
+  where "id" = p_colaborador_id;
+
+  perform enviar_email(p_email, p_asunto, p_html, p_adjunto_nombre, p_adjunto_base64, null, 'asignados');
+end;
+$$;
+
+-- Sale del modo pruebas y devuelve los datos a como estaban.
+CREATE FUNCTION public.anfitrion_desactivar_modo_pruebas(p_token uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_datos jsonb;
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  select "datos" into v_datos from modo_pruebas_snapshot where "id" = true;
+  if v_datos is null then
+    update evento set "modoPruebasActivo" = false where true;
+    return;
+  end if;
+
+  delete from invitados where true;
+  delete from colaboradores where true;
+  delete from mesas where true;
+  delete from gastos where true;
+  delete from orden_familias where true;
+  delete from fotos_familiares where true;
+  delete from avisos_enviados where true;
+  delete from evento where true;
+
+  insert into invitados
+  select * from jsonb_populate_recordset(
+    null::invitados,
+    (select coalesce(jsonb_agg(elem - 'colaboradorId'), '[]'::jsonb)
+     from jsonb_array_elements(v_datos->'invitados') elem)
+  );
+
+  insert into colaboradores
+  select * from jsonb_populate_recordset(null::colaboradores, v_datos->'colaboradores');
+
+  update invitados i set "colaboradorId" = (elem->>'colaboradorId')::uuid
+  from jsonb_array_elements(v_datos->'invitados') elem
+  where (elem->>'id')::uuid = i."id" and elem->>'colaboradorId' is not null;
+
+  insert into mesas select * from jsonb_populate_recordset(null::mesas, v_datos->'mesas');
+  insert into gastos select * from jsonb_populate_recordset(null::gastos, v_datos->'gastos');
+  insert into orden_familias
+  select * from jsonb_populate_recordset(null::orden_familias, v_datos->'ordenFamilias');
+  insert into fotos_familiares
+  select * from jsonb_populate_recordset(null::fotos_familiares, v_datos->'fotosFamiliares');
+  insert into avisos_enviados overriding system value
+  select * from jsonb_populate_recordset(null::avisos_enviados, v_datos->'avisosEnviados');
+
+  insert into evento select * from jsonb_populate_record(null::evento, v_datos->'evento');
+
+  delete from modo_pruebas_snapshot where true;
+end;
+$$;
+
+-- Deshace ese cierre y vuelve a dejar la recogida abierta.
+CREATE FUNCTION public.anfitrion_deshacer_recogida_colaborador(p_token uuid, p_colaborador_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  update colaboradores
+  set "dineroRecogidoEn" = null, "dineroRecogidoImporte" = null
+  where "id" = p_colaborador_id;
+end;
+$$;
+
+-- Envía la invitación a una familia.
+CREATE FUNCTION public.anfitrion_enviar_invitacion_familia(p_token uuid, p_email text, p_asunto text, p_html text, p_imagen_base64 text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  perform enviar_email(
+    p_email, p_asunto, p_html, 'invitacion.png', p_imagen_base64,
+    (select "emailRemitenteFamilia" from config_secretos limit 1),
+    'invitacion'
+  );
+end;
+$$;
+
+-- Envía a un colaborador el enlace para crear su cuenta de acceso.
+CREATE FUNCTION public.anfitrion_enviar_invitacion_login(p_token uuid, p_colaborador_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_email text;
+  v_nombre text;
+  v_enlace text;
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  select "email", "nombre" into v_email, v_nombre from colaboradores where "id" = p_colaborador_id;
+  if v_email is null or trim(v_email) = '' then
+    return;
+  end if;
+
+  v_enlace := coalesce((select "urlPublica" from evento limit 1), '')
+    || '?crear=' || replace(v_email, '+', '%2B');
+
+  perform enviar_email(
+    v_email,
+    'Tu acceso para colaborar',
+    'Hola ' || coalesce(nullif(v_nombre, ''), '') || ',<br><br>' ||
+    'Ya puedes crear tu cuenta para gestionar tus invitados asignados. ' ||
+    'Pulsa el botón y elige tu contraseña:' ||
+    '<div style="margin-top:18px;"><a href="' || v_enlace ||
+    '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
+    'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
+    'font-weight:600;font-family:sans-serif;">Crear mi cuenta</a></div>' ||
+    '<br><small>Si el botón no funciona, copia este enlace: ' || v_enlace || '</small>'
+  );
+end;
+$$;
+
+-- Guarda la lista de colaboradores y sus permisos.
+CREATE FUNCTION public.anfitrion_guardar_colaboradores(p_token uuid, p_filas jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
 declare
   r record;
   resumen text;
@@ -498,7 +944,7 @@ begin
               when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
               else
                 '<div style="margin-top:18px;"><a href="' ||
-                (select "urlPublica" from evento limit 1) ||
+                (select "urlPublica" from evento limit 1) || '?rol=' || r.colaborador_id::text ||
                 '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
                 'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
                 'font-weight:600;font-family:sans-serif;">Abrir formulario</a></div>'
@@ -529,473 +975,11 @@ begin
 end;
 $$;
 
--- Aviso explícito: el anfitrión lo confirma él mismo (tras revisar el
--- resumen de cambios al cerrar la tabla), en vez de dispararse solo por
--- cada asignación suelta — evita el aluvión de emails a los colaboradores.
---
--- Solo se avisa (y solo se lista) de los invitados YA CONFIRMADOS: a los
--- que siguen en tentativa no se les nombra en el email, para no generar
--- sospechas sobre la organización del evento antes de que esté decidido
--- si van o no. Su "avisoPendiente" se queda tal cual (sin tocar) — si más
--- adelante se confirman, entran solos en la siguiente tanda de aviso.
-create or replace function anfitrion_avisar_colaborador(p_token uuid, p_colaborador_id uuid)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-declare
-  lista_invitados text;
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  select string_agg(
-    '<li>' || coalesce("nombre", '') || ' ' || coalesce("apellido", '') || '</li>',
-    '' order by "apellido", "nombre"
-  )
-  into lista_invitados
-  from invitados
-  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true and "confirmado" = true;
-
-  perform enviar_email(
-    (select "email" from colaboradores where "id" = p_colaborador_id),
-    'Tus invitados asignados',
-    replace(
-      (select "plantillaAsignacion" from evento limit 1),
-      '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
-    ) ||
-    case
-      when lista_invitados is not null then '<ul>' || lista_invitados || '</ul>'
-      else ''
-    end ||
-    case
-      when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
-      else
-        '<div style="margin-top:18px;"><a href="' ||
-        (select "urlPublica" from evento limit 1) ||
-        '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
-        'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
-        'font-weight:600;font-family:sans-serif;">Abrir formulario</a></div>'
-    end ||
-    '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
-  );
-
-  update invitados set "avisoPendiente" = false
-  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true and "confirmado" = true;
-end;
-$$;
-
--- Prueba puntual, a demanda del anfitrión, de que el email de un
--- colaborador es correcto y llega de verdad — pensado para usarse justo
--- después de escribir o corregir ese email, en vez de descubrir un fallo
--- días después porque nunca le llegó ningún aviso real.
-create or replace function anfitrion_probar_email_colaborador(p_token uuid, p_colaborador_id uuid)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  perform enviar_email(
-    (select "email" from colaboradores where "id" = p_colaborador_id),
-    'Email de prueba',
-    'Hola,<br><br>Esto es un email de prueba para confirmar que esta dirección está bien escrita ' ||
-    'y te llegan los avisos de la app de invitados del evento.<br><br>' ||
-    'Si has recibido esto, todo funciona correctamente — no hace falta que respondas.'
-  );
-end;
-$$;
-
--- Sustituye al antiguo "Copiar enlace" de ColaboradorCard.jsx: en vez de
--- que el anfitrión copie el enlace-token a mano y lo pegue donde quiera,
--- este manda directamente por email un enlace a la pantalla de login con
--- "Crear cuenta" ya abierta y el email del colaborador ya relleno
--- (?crear=<email>, ver App.jsx / VistaLogin.jsx). El '+' se escapa a mano
--- porque URLSearchParams (que lo lee en el navegador) trata un '+' suelto
--- como un espacio -- sin este replace, un email con '+' llegaría mal leído.
-create or replace function anfitrion_enviar_invitacion_login(p_token uuid, p_colaborador_id uuid)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-declare
-  v_email text;
-  v_nombre text;
-  v_enlace text;
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  select "email", "nombre" into v_email, v_nombre from colaboradores where "id" = p_colaborador_id;
-  if v_email is null or trim(v_email) = '' then
-    return; -- sin email no hay a quién enviarlo
-  end if;
-
-  v_enlace := coalesce((select "urlPublica" from evento limit 1), '')
-    || '?crear=' || replace(v_email, '+', '%2B');
-
-  perform enviar_email(
-    v_email,
-    'Tu acceso para colaborar',
-    'Hola ' || coalesce(nullif(v_nombre, ''), '') || ',<br><br>' ||
-    'Ya puedes crear tu cuenta para gestionar tus invitados asignados. ' ||
-    'Pulsa el botón y elige tu contraseña:' ||
-    '<div style="margin-top:18px;"><a href="' || v_enlace ||
-    '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
-    'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
-    'font-weight:600;font-family:sans-serif;">Crear mi cuenta</a></div>' ||
-    '<br><small>Si el botón no funciona, copia este enlace: ' || v_enlace || '</small>'
-  );
-end;
-$$;
-
--- Envía la invitación (imagen generada en el navegador) por email a una
--- familia. El destinatario y el texto los decide el anfitrión al
--- confirmar en la vista previa — aquí solo se comprueba el token y se
--- reenvía a enviar_email() con el adjunto.
-create or replace function anfitrion_enviar_invitacion_familia(
-  p_token uuid, p_email text, p_asunto text, p_html text, p_imagen_base64 text
-)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  perform enviar_email(
-    p_email, p_asunto, p_html, 'invitacion.png', p_imagen_base64,
-    (select "emailRemitenteFamilia" from config_secretos limit 1),
-    'invitacion'
-  );
-end;
-$$;
-
-create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  -- "avisoPendiente" ya no se calcula aquí a mano — lo recalcula solo el
-  -- trigger invitados_recalcular_aviso en cuanto cambia algo relevante
-  -- (asignación, confirmación, datos, pago o mesa).
-  insert into invitados (
-    "id","nombre","apellido","zona","confirmado","colaboradorId",
-    "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
-    "cancion","alergias","observaciones","pagado","rolesTrabajo"
-  )
-  select
-    (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
-    coalesce((f->>'confirmado')::boolean, false),
-    nullif(f->>'colaboradorId','')::uuid,
-    f->>'grupoFamiliar', nullif(f->>'mesa','')::integer,
-    f->>'anioNacimiento', f->>'anioBoda', f->>'email', f->>'cancion',
-    f->>'alergias', f->>'observaciones',
-    coalesce((f->>'pagado')::boolean, false),
-    coalesce(f->'rolesTrabajo', '[]'::jsonb)
-  from jsonb_array_elements(p_filas) as f
-  on conflict ("id") do update set
-    "nombre"=excluded."nombre", "apellido"=excluded."apellido",
-    "zona"=excluded."zona", "confirmado"=excluded."confirmado",
-    "colaboradorId"=excluded."colaboradorId", "grupoFamiliar"=excluded."grupoFamiliar",
-    "mesa"=excluded."mesa", "anioNacimiento"=excluded."anioNacimiento",
-    "anioBoda"=excluded."anioBoda", "email"=excluded."email",
-    "cancion"=excluded."cancion", "alergias"=excluded."alergias",
-    "observaciones"=excluded."observaciones", "pagado"=excluded."pagado",
-    "rolesTrabajo"=excluded."rolesTrabajo";
-
-  delete from invitados g
-  where not exists (
-    select 1 from jsonb_array_elements(p_filas) f
-    where (f->>'id')::uuid = g."id"
-  );
-end;
-$$;
-
--- ============================================================
--- RPCs — lado colaborador (comprueban de verdad la propiedad del
--- invitado dentro del propio SQL, no solo en el navegador).
---
--- 2026-08-12: se retira el enlace-token para colaboradores (Fase B del
--- plan de login, ver .claude/plans/mejoras-pendientes-login-y-solidez.md
--- -- detectado en pruebas en vivo que un colaborador seguía pudiendo
--- entrar con su enlace ?rol=... antiguo aunque ya tuviera cuenta). Las
--- 6 funciones de aquí abajo exigen ahora, ADEMÁS de p_colaborador_id,
--- que auth.uid() (la sesión real de quien llama) sea justo el
--- authUserId enlazado a ese colaborador -- p_colaborador_id deja de
--- bastar por sí solo. El enlace-token del ANFITRIÓN no se toca (sigue
--- siendo válido como plan B, a propósito).
-create or replace function colaborador_mi_perfil(p_colaborador_id uuid)
-returns setof colaboradores
-language sql security definer set search_path = public, pg_temp
-as $$
-  select * from colaboradores
-  where "id" = p_colaborador_id and "authUserId" = auth.uid();
-$$;
-
--- 2026-08-12: deja de devolver los invitados en TENTATIVA -- son
--- información confidencial de la organización (candidatos que el
--- anfitrión aún no ha decidido confirmar) y solo el anfitrión debe
--- poder verlos. Antes solo se ocultaban en algunos sitios de la
--- pantalla del colaborador (p.ej. el email de aviso ya los excluía),
--- pero esta misma RPC seguía mandándolos al navegador igualmente, y
--- una parte de la pantalla llegó a mostrar cuántos había ("N en
--- tentativa"). Con "confirmado" = true en el propio WHERE, ni siquiera
--- llegan al navegador del colaborador -- no es solo ocultarlos, es no
--- enviarlos.
--- 2026-08-12: NO usa colaborador_puede_actuar() a propósito -- igual que
--- colaborador_mi_perfil, esto es solo LECTURA. El bloqueo del Modo
--- Pruebas (habilitadoEnPruebas) debe impedir guardar/marcar/confirmar,
--- nunca ocultar al colaborador su propia lista de invitados asignados
--- (eso rompía además la propia utilidad del Modo Pruebas: no se podía
--- ni probar cómo se veía la pantalla del colaborador).
-create or replace function colaborador_mis_invitados(p_colaborador_id uuid)
-returns setof invitados
-language sql security definer set search_path = public, pg_temp
-as $$
-  select i.* from invitados i
-  where i."colaboradorId" = p_colaborador_id
-    and i."confirmado" = true
-    and exists (
-      select 1 from colaboradores c
-      where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
-    );
-$$;
-
--- Solo puede tocar estos 6 campos, y solo si el invitado es
--- realmente suyo — el resto de columnas de p_cambios, si vinieran,
--- se ignoran sin más.
--- "set_config(..., true)" desactiva el trigger de avisoPendiente solo
--- para esta transacción: cuando el propio colaborador rellena sus datos
--- no hay que "avisarle" de su propio cambio (eso generaría un falso
--- pendiente cada vez que hace su trabajo normal) — avisoPendiente solo
--- debe reaccionar a cambios que vengan del lado del anfitrión.
-create or replace function colaborador_guardar_invitado(
-  p_colaborador_id uuid, p_invitado_id uuid, p_cambios jsonb
-)
-returns setof invitados
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if not colaborador_puede_actuar(p_colaborador_id) then
-    return;
-  end if;
-
-  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
-  return query
-  update invitados set
-    "anioNacimiento" = coalesce(p_cambios->>'anioNacimiento', "anioNacimiento"),
-    "anioBoda"       = coalesce(p_cambios->>'anioBoda', "anioBoda"),
-    "email"          = coalesce(p_cambios->>'email', "email"),
-    "cancion"        = coalesce(p_cambios->>'cancion', "cancion"),
-    "alergias"       = coalesce(p_cambios->>'alergias', "alergias"),
-    "observaciones"  = coalesce(p_cambios->>'observaciones', "observaciones")
-  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
-  returning *;
-end;
-$$;
-
--- No se puede marcar como pagado (p_pagado = true) si al invitado le
--- faltan sus datos obligatorios (año de nacimiento y alergias) — quitar
--- el pago (p_pagado = false) sigue permitido siempre. Mismo motivo que
--- arriba para desactivar el trigger: es el propio colaborador actuando.
-create or replace function colaborador_marcar_pagado(
-  p_colaborador_id uuid, p_invitado_id uuid, p_pagado boolean
-)
-returns setof invitados
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-declare
-  actualizado invitados;
-begin
-  if not colaborador_puede_actuar(p_colaborador_id) then
-    return;
-  end if;
-
-  if p_pagado then
-    perform 1 from invitados
-    where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
-      and coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> '';
-    if not found then
-      return;
-    end if;
-  end if;
-
-  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
-  update invitados set "pagado" = p_pagado
-  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
-  returning * into actualizado;
-
-  if not found then
-    return;
-  end if;
-
-  return next actualizado;
-end;
-$$;
-
--- Avisos por confirmación explícita del colaborador (no automáticos): al
--- pulsar "He terminado", la app comprueba de verdad el estado en el
--- servidor antes de avisar al anfitrión — así nunca se manda un aviso
--- fuera de sitio, ni se repite por cada cambio suelto durante el trabajo.
-create or replace function colaborador_confirmar_datos_completos(p_colaborador_id uuid)
-returns boolean
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-declare
-  total integer;
-  completos integer;
-begin
-  if not colaborador_puede_actuar(p_colaborador_id) then
-    return false;
-  end if;
-
-  -- Solo se cuentan los invitados YA CONFIRMADOS de este colaborador — los
-  -- que sigan en tentativa no bloquean el aviso: si más adelante se
-  -- confirman, forman su propia tanda nueva (ver anfitrion_guardar_invitados
-  -- y anfitrion_avisar_colaborador). Antes exigía cero tentativas en total,
-  -- pero eso impedía avisar de un lote ya completo solo porque hubiera
-  -- otro invitado todavía por confirmar sin relación con ese lote.
-  select count(*), count(*) filter (
-    where coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> ''
-  )
-  into total, completos
-  from invitados
-  where "colaboradorId" = p_colaborador_id and "confirmado" = true;
-
-  if total > 0 and total = completos then
-    perform enviar_email(
-      (select "emailAnfitrion" from evento limit 1),
-      'Datos completados',
-      replace(
-        (select "plantillaDatosCompletados" from evento limit 1),
-        '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
-      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>',
-      p_tipo := 'datos'
-    );
-    return true;
-  end if;
-  return false;
-end;
-$$;
-
-create or replace function colaborador_confirmar_pagos_completos(p_colaborador_id uuid)
-returns boolean
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-declare
-  total integer;
-  pagados integer;
-begin
-  if not colaborador_puede_actuar(p_colaborador_id) then
-    return false;
-  end if;
-
-  -- Mismo criterio que colaborador_confirmar_datos_completos: solo cuentan
-  -- los ya confirmados, la tentativa no bloquea.
-  select count(*), count(*) filter (where "pagado")
-  into total, pagados
-  from invitados
-  where "colaboradorId" = p_colaborador_id and "confirmado" = true;
-
-  if total > 0 and total = pagados then
-    perform enviar_email(
-      (select "emailAnfitrion" from evento limit 1),
-      'Pagos completos',
-      replace(
-        (select "plantillaPagoRegistrado" from evento limit 1),
-        '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
-      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>',
-      p_tipo := 'datos'
-    );
-    return true;
-  end if;
-  return false;
-end;
-$$;
-
-create or replace function anfitrion_listar_avisos_enviados(p_token uuid)
-returns setof avisos_enviados
-language sql security definer set search_path = public, pg_temp
-as $$
-  select * from avisos_enviados
-  where p_token = (select "token" from anfitrion_secreto limit 1)
-  order by "creadoEn" desc
-  limit 200;
-$$;
-
--- Comprobación NO bloqueante de si Resend ya respondió a los envíos
--- recientes — separada a propósito de enviar_email() (ver el episodio del
--- 2026-08-08 documentado ahí). Se llama aparte, en su propia transacción,
--- típicamente desde el refresco automático de cada minuto de la app.
-create or replace function anfitrion_actualizar_estado_avisos(p_token uuid)
-returns void
-language plpgsql security definer set search_path = public, net, pg_temp
-as $$
-declare
-  fila record;
-  v_resultado net.http_response_result;
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  -- Solo los recientes y aún sin confirmar: pasada una hora, si pg_net
-  -- todavía no tiene respuesta, ya no la va a tener — se queda en "sin
-  -- confirmar" para siempre y repasarlo más no serviría de nada.
-  for fila in
-    select "id", "requestId" from avisos_enviados
-    where "requestId" is not null
-      and "exito" is null
-      and "creadoEn" > now() - interval '1 hour'
-  loop
-    begin
-      -- async := true es la clave: mira si la respuesta YA está lista y,
-      -- si no, lo dice (status 'PENDING') y sigue al momento con el
-      -- siguiente aviso — nunca espera, nunca puede agotar el tiempo
-      -- máximo de la consulta. Es justo lo que enviar_email() no puede
-      -- permitirse hacer dentro de su propia transacción.
-      v_resultado := net.http_collect_response(fila."requestId", async := true);
-      if v_resultado.status = 'SUCCESS' then
-        update avisos_enviados
-        set "exito" = ((v_resultado.response).status_code between 200 and 299)
-        where "id" = fila."id";
-      elsif v_resultado.status = 'ERROR' then
-        update avisos_enviados set "exito" = false where "id" = fila."id";
-      end if;
-      -- status 'PENDING': todavía no hay respuesta — se deja tal cual,
-      -- para que la próxima llamada (dentro de un minuto) vuelva a mirar.
-    exception when others then
-      null; -- un aviso problemático no debe impedir comprobar el resto.
-    end;
-  end loop;
-end;
-$$;
-
--- ============================================================
--- ESTADO DE CUENTAS (gastos) — mismo patrón que colaboradores:
--- upsert por id + borra los que ya no estén en la lista.
--- ============================================================
-create or replace function anfitrion_listar_gastos(p_token uuid)
-returns setof gastos
-language sql security definer set search_path = public, pg_temp
-as $$
-  select * from gastos
-  where p_token = (select "token" from anfitrion_secreto limit 1)
-  order by "categoria", "concepto";
-$$;
-
-create or replace function anfitrion_guardar_gastos(p_token uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
+-- Guarda la lista de gastos.
+CREATE FUNCTION public.anfitrion_guardar_gastos(p_token uuid, p_filas jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
 begin
   if p_token <> (select "token" from anfitrion_secreto limit 1) then
     return;
@@ -1023,1732 +1007,11 @@ begin
 end;
 $$;
 
--- ============================================================
--- RECOGIDA DE DINERO DE CADA COLABORADOR (2026-08-12): registro,
--- aparte de "invitado pagó a su colaborador" (invitados.pagado), de
--- "colaborador entregó lo recaudado al anfitrión" -- un evento propio,
--- con su fecha e importe congelados en el momento de confirmarlo (no
--- recalculado después, para que el acuse ya enviado siga siendo fiel a
--- lo que de verdad se entregó ese día). El acuse (desglose por invitado,
--- total, fecha, firma) se construye en el navegador (ya tiene los
--- nombres cargados) y se manda por email al propio colaborador -- mismo
--- patrón que anfitrion_enviar_invitacion_familia: el HTML llega ya
--- hecho, aquí solo se reenvía a enviar_email() y se deja constancia.
--- ============================================================
-alter table colaboradores add column if not exists "dineroRecogidoEn" timestamptz;
-alter table colaboradores add column if not exists "dineroRecogidoImporte" numeric;
-
--- 2026-08-12: se añade el adjunto (imagen del acuse, ver
--- lib/acuseImagen.js) -- el desglose por invitado pasa del cuerpo del
--- email a un documento adjunto. Cambia de 6 a 8 parámetros: hay que
--- borrar la firma vieja de 6 antes (esta función sí llegó a
--- desplegarse) o quedan las dos coexistiendo y cualquier llamada se
--- vuelve ambigua (mismo gotcha de siempre, ver CLAUDE.md).
-drop function if exists anfitrion_confirmar_recogida_colaborador(uuid, uuid, numeric, text, text, text);
-
-create or replace function anfitrion_confirmar_recogida_colaborador(
-  p_token uuid, p_colaborador_id uuid, p_importe numeric,
-  p_email text, p_asunto text, p_html text,
-  p_adjunto_nombre text, p_adjunto_base64 text
-)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  update colaboradores
-  set "dineroRecogidoEn" = now(), "dineroRecogidoImporte" = p_importe
-  where "id" = p_colaborador_id;
-
-  -- enviar_email ya no hace nada si p_email viene vacío (ver su propio
-  -- guard) -- no hace falta comprobarlo aquí también.
-  perform enviar_email(p_email, p_asunto, p_html, p_adjunto_nombre, p_adjunto_base64, null, 'asignados');
-end;
-$$;
-
--- Reenviar el mismo acuse sin volver a "confirmar" (no toca la fecha ni
--- el importe ya registrados) -- para cuando el colaborador dice que no
--- le llegó o lo perdió. También la usa "Probar acuse" (envía sin
--- confirmar ni registrar nada).
-drop function if exists anfitrion_reenviar_acuse_colaborador(uuid, text, text, text);
-
-create or replace function anfitrion_reenviar_acuse_colaborador(
-  p_token uuid, p_email text, p_asunto text, p_html text,
-  p_adjunto_nombre text, p_adjunto_base64 text
-)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  perform enviar_email(p_email, p_asunto, p_html, p_adjunto_nombre, p_adjunto_base64, null, 'asignados');
-end;
-$$;
-
--- Deshacer una recogida marcada por error -- no borra ningún dato de
--- invitados ni pagos, solo el registro de la entrega en sí (mismo
--- espíritu que la Zona de Reinicio: nunca borra invitados/colaboradores).
-create or replace function anfitrion_deshacer_recogida_colaborador(
-  p_token uuid, p_colaborador_id uuid
-)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  update colaboradores
-  set "dineroRecogidoEn" = null, "dineroRecogidoImporte" = null
-  where "id" = p_colaborador_id;
-end;
-$$;
-
--- ============================================================
--- MODO PRUEBAS (2026-08-12): probar la app con datos reales sabiendo
--- que se puede volver todo atrás de un golpe. Activar guarda una foto
--- completa de los datos operativos (evento, colaboradores, invitados,
--- mesas, gastos, orden de familias, fotos familiares, avisos enviados
--- -- NUNCA anfitrion_secreto ni config_secretos, esas son credenciales,
--- no datos del evento). Desactivar restaura esa foto entera: deshace
--- TODO lo hecho mientras estuvo activo, no solo lo de la propia
--- sesión -- es un reset global, no selectivo.
---
--- ⚠️ Aviso real, no solo teórico: como esto es una app compartida en
--- vivo con colaboradores reales, si alguien más edita datos reales
--- MIENTRAS el modo pruebas está activo, esos cambios también se
--- pierden al desactivarlo -- la restauración no distingue "cambios de
--- prueba" de "cambios reales", vuelve TODO al estado exacto de cuando
--- se activó. Por eso "evento.modoPruebasActivo" es una columna abierta
--- (visible para cualquier rol, no solo el anfitrión): la propia app
--- avisa en rojo a cualquiera que la abra mientras está activo.
--- ============================================================
-alter table evento add column if not exists "modoPruebasActivo" boolean not null default false;
-
--- Selección de colaboradores habilitados DURANTE el Modo Pruebas: al
--- activarlo, el anfitrión elige a quién se le sigue dejando actuar como
--- colaborador (guardar datos, marcar pagos, confirmar...) mientras dura
--- la prueba -- por defecto true (nadie queda bloqueado si nunca se ha
--- tocado esta selección, p.ej. datos antiguos restaurados de un
--- snapshot previo a este cambio). Los 5 gestos reales de colaborador
--- (mi_perfil queda aparte, ver más abajo) pasan todos por
--- colaborador_puede_actuar() para no repetir esta condición 5 veces.
-alter table colaboradores add column if not exists "habilitadoEnPruebas" boolean not null default true;
-
--- colaborador_mi_perfil NO usa esta función a propósito: un colaborador
--- deshabilitado durante el Modo Pruebas debe poder seguir viendo su
--- propio perfil (para que la app le explique que está bloqueado en vez
--- de fallar en seco) -- solo se bloquean sus gestos, no la lectura de
--- quién es.
-create or replace function colaborador_puede_actuar(p_colaborador_id uuid)
-returns boolean
-language sql security definer set search_path = public, pg_temp
-as $$
-  select exists (
-    select 1 from colaboradores c
-    where c."id" = p_colaborador_id
-      and c."authUserId" = auth.uid()
-      and (
-        not coalesce((select "modoPruebasActivo" from evento limit 1), false)
-        or c."habilitadoEnPruebas"
-      )
-  );
-$$;
-
-create table if not exists modo_pruebas_snapshot (
-  "id"       boolean primary key default true check ("id"),
-  "datos"    jsonb not null,
-  "creadoEn" timestamptz not null default now()
-);
-alter table modo_pruebas_snapshot enable row level security;
-revoke all on table modo_pruebas_snapshot from anon, authenticated;
-
--- 2026-08-12: gana un segundo parámetro, p_colaborador_ids_habilitados --
--- la lista de colaboradores a los que se les sigue dejando actuar
--- (guardar datos, marcar pagos, confirmar) mientras dura la prueba. El
--- resto queda bloqueado por colaborador_puede_actuar() sin necesidad de
--- tocar su cuenta ni desasignarle nada. Cambia el número de parámetros
--- -- hace falta el drop de la firma vieja (ver regla en CLAUDE.md).
-drop function if exists anfitrion_activar_modo_pruebas(uuid);
-
-create or replace function anfitrion_activar_modo_pruebas(
-  p_token uuid, p_colaborador_ids_habilitados uuid[]
-)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-declare
-  v_datos jsonb;
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  -- La foto se toma ANTES de marcar modoPruebasActivo = true (y ANTES de
-  -- tocar habilitadoEnPruebas), para que quede guardado el estado
-  -- "normal" -- al restaurar, ambas cosas vuelven solas, sin necesidad
-  -- de tratarlas como caso especial aparte.
-  select jsonb_build_object(
-    'evento', (select to_jsonb(e) from evento e limit 1),
-    'colaboradores', (select coalesce(jsonb_agg(c), '[]'::jsonb) from colaboradores c),
-    'invitados', (select coalesce(jsonb_agg(i), '[]'::jsonb) from invitados i),
-    'mesas', (select coalesce(jsonb_agg(m), '[]'::jsonb) from mesas m),
-    'gastos', (select coalesce(jsonb_agg(g), '[]'::jsonb) from gastos g),
-    'ordenFamilias', (select coalesce(jsonb_agg(o), '[]'::jsonb) from orden_familias o),
-    'fotosFamiliares', (select coalesce(jsonb_agg(f), '[]'::jsonb) from fotos_familiares f),
-    'avisosEnviados', (select coalesce(jsonb_agg(a), '[]'::jsonb) from avisos_enviados a)
-  ) into v_datos;
-
-  insert into modo_pruebas_snapshot ("id", "datos", "creadoEn")
-  values (true, v_datos, now())
-  on conflict ("id") do update set "datos" = excluded."datos", "creadoEn" = excluded."creadoEn";
-
-  -- "where true": Supabase exige WHERE en todo UPDATE/DELETE -- estos
-  -- dos son intencionalmente sobre toda la tabla (1-N filas reales, muy
-  -- pocas), no un descuido.
-  update colaboradores set "habilitadoEnPruebas" = ("id" = any(p_colaborador_ids_habilitados)) where true;
-  update evento set "modoPruebasActivo" = true where true;
-end;
-$$;
-
-create or replace function anfitrion_desactivar_modo_pruebas(p_token uuid)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-declare
-  v_datos jsonb;
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  select "datos" into v_datos from modo_pruebas_snapshot where "id" = true;
-  if v_datos is null then
-    -- No hay foto guardada (nunca se activó de verdad) -- no hay nada
-    -- que restaurar, solo se asegura que la bandera quede apagada.
-    update evento set "modoPruebasActivo" = false where true;
-    return;
-  end if;
-
-  -- "where true" en los 8 delete: Supabase exige WHERE en todo
-  -- UPDATE/DELETE -- aquí el vaciado total es intencional (se
-  -- repueblan enteras justo debajo, desde la foto guardada).
-  delete from invitados where true;
-  delete from colaboradores where true;
-  delete from mesas where true;
-  delete from gastos where true;
-  delete from orden_familias where true;
-  delete from fotos_familiares where true;
-  delete from avisos_enviados where true;
-  delete from evento where true;
-
-  -- invitados y colaboradores se referencian el uno al otro (FK
-  -- circular, ver el comentario de invitados_colaborador_fk más arriba)
-  -- -- no se pueden insertar ambos de golpe con esas columnas puestas.
-  -- Se insertan los invitados primero SIN colaboradorId (colaboradores
-  -- todavía no existen), luego los colaboradores (invitados ya
-  -- existen, esa FK sí cuadra), y por último se rellena
-  -- invitados.colaboradorId ahora que colaboradores ya existen.
-  insert into invitados
-  select * from jsonb_populate_recordset(
-    null::invitados,
-    (select coalesce(jsonb_agg(elem - 'colaboradorId'), '[]'::jsonb)
-     from jsonb_array_elements(v_datos->'invitados') elem)
-  );
-
-  insert into colaboradores
-  select * from jsonb_populate_recordset(null::colaboradores, v_datos->'colaboradores');
-
-  update invitados i set "colaboradorId" = (elem->>'colaboradorId')::uuid
-  from jsonb_array_elements(v_datos->'invitados') elem
-  where (elem->>'id')::uuid = i."id" and elem->>'colaboradorId' is not null;
-
-  insert into mesas select * from jsonb_populate_recordset(null::mesas, v_datos->'mesas');
-  insert into gastos select * from jsonb_populate_recordset(null::gastos, v_datos->'gastos');
-  insert into orden_familias
-  select * from jsonb_populate_recordset(null::orden_familias, v_datos->'ordenFamilias');
-  insert into fotos_familiares
-  select * from jsonb_populate_recordset(null::fotos_familiares, v_datos->'fotosFamiliares');
-  -- avisos_enviados.id es "generated always as identity" -- sin
-  -- OVERRIDING SYSTEM VALUE, Postgres rechaza los ids explícitos del
-  -- snapshot e intentaría generar unos nuevos.
-  insert into avisos_enviados overriding system value
-  select * from jsonb_populate_recordset(null::avisos_enviados, v_datos->'avisosEnviados');
-
-  insert into evento select * from jsonb_populate_record(null::evento, v_datos->'evento');
-
-  delete from modo_pruebas_snapshot where true;
-end;
-$$;
-
-grant execute on function anfitrion_activar_modo_pruebas(uuid, uuid[]) to anon;
-grant execute on function anfitrion_desactivar_modo_pruebas(uuid) to anon;
-
--- ============================================================
--- ZONA DE REINICIO ("botón nuclear"): pone a cero campos concretos
--- sin borrar nunca al invitado ni al colaborador en sí. Pensado para
--- poder reutilizar la app en otro evento, o limpiar datos de pruebas
--- antes del real.
--- ============================================================
--- Borra el historial (para poder repetir pruebas) Y vuelve a marcar como
--- pendientes a todos los invitados que ya tienen colaborador asignado —
--- si no, cualquier otro reinicio que ya hubiera limpiado "avisoPendiente"
--- (datos/pago/mesa/asignación, ver anfitrion_resetear_por_invitados) deja
--- sin ningún botón con el que volver a probar el envío real, aunque el
--- colaborador tenga un email perfectamente válido.
-create or replace function anfitrion_resetear_avisos(p_token uuid)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token <> (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-  delete from avisos_enviados where true;
-  update invitados set "avisoPendiente" = true where "colaboradorId" is not null;
-end;
-$$;
-
--- Reinicio "por invitados": el conjunto exacto de invitados afectados
--- (todos los de un colaborador, una familia, o uno solo) se calcula en la
--- propia app y se manda aquí ya resuelto como lista de ids — así no hace
--- falta duplicar en SQL la lógica de "clave de familia" (grupoFamiliar,
--- con reserva a apellido) que ya usa el frontend en varios sitios.
--- Categorías a nivel de invitado (datos/pago/mesa/asignación) limpian
--- también el aviso pendiente: si lo que se resetea era de prueba, el
--- aviso que generó también lo era.
-create or replace function anfitrion_resetear_por_invitados(
-  p_token uuid,
-  p_invitado_ids uuid[],
-  p_categoria text
-)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token <> (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  -- "avisoPendiente" ya no se fija aquí a mano en ninguna categoría — lo
-  -- recalcula solo el trigger invitados_recalcular_aviso al ver cambiar
-  -- estos mismos campos (y sí distingue confirmado/tentativa él solo,
-  -- cosa que este código ya no necesita saber).
-  if p_categoria = 'datos' then
-    update invitados set
-      "anioNacimiento" = '', "anioBoda" = '', "email" = '',
-      "cancion" = '', "alergias" = '', "observaciones" = ''
-    where "id" = any(p_invitado_ids);
-  elsif p_categoria = 'pago' then
-    update invitados set "pagado" = false
-    where "id" = any(p_invitado_ids);
-  elsif p_categoria = 'mesa' then
-    update invitados set "mesa" = null
-    where "id" = any(p_invitado_ids);
-  elsif p_categoria = 'asignacion' then
-    update invitados set "colaboradorId" = null
-    where "id" = any(p_invitado_ids);
-  elsif p_categoria = 'foto' then
-    delete from fotos_familiares where "grupoFamiliar" in (
-      select distinct coalesce(nullif("grupoFamiliar", ''), "apellido")
-      from invitados where "id" = any(p_invitado_ids)
-    );
-  elsif p_categoria = 'invitacion' then
-    update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null
-    where "grupoFamiliar" in (
-      select distinct coalesce(nullif("grupoFamiliar", ''), "apellido")
-      from invitados where "id" = any(p_invitado_ids)
-    );
-  end if;
-end;
-$$;
-
--- Permisos de ejecución (los permisos de tabla siguen revocados,
--- solo estas funciones son alcanzables):
-grant execute on function anfitrion_verificar_token(uuid) to anon;
-grant execute on function anfitrion_listar_colaboradores(uuid) to anon;
-grant execute on function anfitrion_listar_invitados(uuid) to anon;
-grant execute on function anfitrion_guardar_colaboradores(uuid, jsonb) to anon;
-grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
-grant execute on function anfitrion_avisar_colaborador(uuid, uuid) to anon;
-grant execute on function anfitrion_probar_email_colaborador(uuid, uuid) to anon;
-grant execute on function anfitrion_enviar_invitacion_login(uuid, uuid) to anon;
-grant execute on function anfitrion_enviar_invitacion_familia(uuid, text, text, text, text) to anon;
-grant execute on function anfitrion_listar_avisos_enviados(uuid) to anon;
-grant execute on function anfitrion_actualizar_estado_avisos(uuid) to anon;
-grant execute on function anfitrion_resetear_avisos(uuid) to anon;
-grant execute on function anfitrion_resetear_por_invitados(uuid, uuid[], text) to anon;
-grant execute on function anfitrion_listar_gastos(uuid) to anon;
-grant execute on function anfitrion_guardar_gastos(uuid, jsonb) to anon;
-grant execute on function anfitrion_confirmar_recogida_colaborador(uuid, uuid, numeric, text, text, text, text, text) to anon;
-grant execute on function anfitrion_reenviar_acuse_colaborador(uuid, text, text, text, text, text) to anon;
-grant execute on function anfitrion_deshacer_recogida_colaborador(uuid, uuid) to anon;
-grant execute on function colaborador_mi_perfil(uuid) to anon;
-grant execute on function colaborador_mis_invitados(uuid) to anon;
-grant execute on function colaborador_guardar_invitado(uuid, uuid, jsonb) to anon;
-grant execute on function colaborador_marcar_pagado(uuid, uuid, boolean) to anon;
-grant execute on function colaborador_confirmar_datos_completos(uuid) to anon;
-grant execute on function colaborador_confirmar_pagos_completos(uuid) to anon;
-
--- ============================================================
--- LOGIN REAL (Supabase Auth) — capa añadida SOBRE el modelo de
--- enlace-token de arriba, sin tocar ninguna de las RPC anteriores.
--- En vez de reescribir cada función de anfitrión/colaborador para leer
--- auth.uid() (arriesgado: son ~20 funciones ya probadas en producción),
--- se añade una única función nueva, mi_rol(), que traduce "quién ha
--- iniciado sesión" al mismo p_token / p_colaborador_id de siempre. El
--- resto de la app sigue funcionando exactamente igual por dentro — solo
--- cambia CÓMO llega ese token al navegador (login en vez de URL).
--- Ver .claude/plans/login-supabase-auth.md para el plan completo.
---
--- Esta sección SÍ se puede volver a ejecutar sola sin repetir todo el
--- archivo: usa "if not exists" / "create or replace" en todo.
--- ============================================================
-
--- Enlaza cada colaborador con su cuenta real de Supabase Auth. Sigue
--- existiendo el "id" de siempre como clave primaria — deja de viajar en
--- la URL como secreto, pero la RPC colaborador_* que ya existen lo siguen
--- recibiendo igual (mi_rol() se lo entrega a la app, la app se lo pasa a
--- esas RPC exactamente como hacía con el token del enlace).
-alter table colaboradores add column if not exists "authUserId" uuid references auth.users("id") on delete set null;
-
--- Cuentas autorizadas como anfitrión (normalmente una sola fila). Tabla
--- completamente cerrada, misma idea que anfitrion_secreto: solo legible
--- desde dentro de mi_rol().
-create table if not exists anfitriones (
-  "authUserId" uuid primary key references auth.users("id") on delete cascade
-);
-alter table anfitriones enable row level security;
-revoke all on table anfitriones from anon, authenticated;
-
--- Se llama sin argumentos: usa auth.uid() (el usuario de la sesión activa
--- que Supabase ya valida solo antes de llegar aquí). Devuelve una fila si
--- esa cuenta está vinculada como anfitrión o como colaborador, ninguna si
--- no está vinculada a nada todavía.
-create or replace function mi_rol()
-returns table("rol" text, "token" uuid)
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  -- "token" a secas es ambiguo aquí: coincide con el nombre de la columna
-  -- de salida de la propia función (returns table(..., "token" uuid)) y
-  -- con la columna "token" de anfitrion_secreto -- hay que cualificar de
-  -- cuál se habla con el alias "s".
-  if exists (select 1 from anfitriones a where a."authUserId" = auth.uid()) then
-    return query select 'anfitrion'::text, s."token" from anfitrion_secreto s limit 1;
-    return;
-  end if;
-
-  return query
-    select 'colaborador'::text, c."id"
-    from colaboradores c
-    where c."authUserId" = auth.uid()
-    limit 1;
-end;
-$$;
-
--- A diferencia de las RPC de arriba, esta NO se concede a "anon": sin
--- sesión iniciada, auth.uid() es null y no encontraría ninguna fila de
--- todas formas, pero cerrarla del todo a quien no ha iniciado sesión es
--- más explícito.
--- ⚠️ Postgres concede EXECUTE a PUBLIC (todo el mundo, incluido "anon")
--- por defecto al crear cualquier función nueva -- hay que revocarlo antes
--- de conceder solo a "authenticated", o el "grant" de abajo no cierra
--- nada de verdad (detectado el 2026-08-09 con una prueba en vivo: sin
--- este revoke, mi_rol() respondía 200 OK con datos aunque la llamada
--- viniera sin sesión). Mismo gotcha a vigilar en cualquier función nueva
--- que dependa de auth.uid() para su seguridad.
-revoke execute on function mi_rol() from public;
-grant execute on function mi_rol() to authenticated;
-
--- ============================================================
--- AUTORREGISTRO: en vez de que el anfitrión tenga que crear a mano la
--- cuenta de Auth de cada colaborador (Authentication > Users, uno a uno,
--- copiando el UID a mano), cada persona crea su PROPIA cuenta desde la
--- pantalla de login ("Crear cuenta") usando el email con el que YA está
--- registrada -- el mismo que se usa para los avisos automáticos.
---
--- Este trigger se dispara solo, dentro de la propia base de datos, en
--- cuanto se crea una fila nueva en auth.users (o sea, en cuanto alguien
--- termina de crear su cuenta). Si el email coincide con el del anfitrión
--- (evento.emailAnfitrion) o con el de un colaborador ya existente, la
--- enlaza automáticamente -- exactamente lo mismo que hacíamos a mano con
--- el "update colaboradores set authUserId = ...". Si el email no
--- coincide con nadie conocido, no pasa nada: esa cuenta simplemente no
--- queda enlazada a ningún acceso (pantalla "cuenta sin vincular").
--- ============================================================
-create or replace function vincular_cuenta_nueva()
-returns trigger
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if lower(new.email) = lower((select "emailAnfitrion" from evento limit 1)) then
-    insert into anfitriones ("authUserId") values (new.id)
-    on conflict do nothing;
-  else
-    -- Sin la condición "and authUserId is null": si un colaborador cambia
-    -- de email (el anfitrión lo actualiza en Colaboradores) y se registra
-    -- de nuevo con el email nuevo, la cuenta nueva TOMA el relevo aunque
-    -- ya hubiera una cuenta vieja enlazada -- sin tener que desvincularla
-    -- a mano con un update aparte primero. La cuenta vieja de Auth queda
-    -- huérfana (sin acceso, inofensiva) hasta que alguien la borre a mano
-    -- desde el panel si quiere limpiarla; no hace falta limpiarla para
-    -- que esto funcione.
-    update colaboradores
-    set "authUserId" = new.id
-    where lower("email") = lower(new.email);
-  end if;
-  return new;
-end;
-$$;
-
-drop trigger if exists trg_vincular_cuenta_nueva on auth.users;
-create trigger trg_vincular_cuenta_nueva
-after insert on auth.users
-for each row execute function vincular_cuenta_nueva();
-
--- ============================================================
--- SINCRONIZAR EMAIL DE ACCESO -> EMAIL DE AVISOS DEL COLABORADOR
--- (2026-08-24, Fase C ampliada). "Mi cuenta" (MiCuenta.jsx) deja a
--- cualquier colaborador cambiar el email con el que INICIA SESIÓN. La
--- primera versión lo dejaba deliberadamente separado de
--- colaboradores.email (el que usa la app para mandarle avisos
--- automáticos), para no tocar ese campo sin que el anfitrión se
--- enterase -- decisión revisada a petición expresa del usuario: separado
--- resultaba confuso (alguien cambia "su email" y sigue sin recibir
--- avisos importantes) y añadía un paso manual justo donde el resto del
--- login busca quitarlos.
---
--- Se sincronizan, pero dejando constancia visible para el anfitrión:
--- "emailSincronizadoEn" se rellena solo aquí, nunca a mano, y
--- ColaboradorCard.jsx muestra un aviso mientras no sea null.
---
--- Se dispara DESPUÉS de que Supabase confirme el cambio de verdad -- si
--- el proyecto tiene activada la confirmación doble (email antiguo +
--- nuevo), auth.users.email no cambia hasta que la persona confirma los
--- dos; el trigger no se adelanta a eso.
-alter table colaboradores add column if not exists "emailSincronizadoEn" timestamptz;
-
-create or replace function sincronizar_email_colaborador()
-returns trigger
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  update colaboradores
-  set "email" = new.email, "emailSincronizadoEn" = now()
-  where "authUserId" = new.id;
-  return new;
-end;
-$$;
-
-drop trigger if exists trg_sincronizar_email_colaborador on auth.users;
-create trigger trg_sincronizar_email_colaborador
-after update of email on auth.users
-for each row
-when (old.email is distinct from new.email)
-execute function sincronizar_email_colaborador();
-
--- El anfitrión confirma que ha visto el aviso ("Entendido" en
--- ColaboradorCard.jsx) -- solo borra la marca, nunca el email en sí.
-create or replace function anfitrion_confirmar_email_colaborador_actualizado(
-  p_token uuid, p_colaborador_id uuid
-)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  update colaboradores
-  set "emailSincronizadoEn" = null
-  where "id" = p_colaborador_id;
-end;
-$$;
-
-grant execute on function anfitrion_confirmar_email_colaborador_actualizado(uuid, uuid) to anon;
-
--- ============================================================
--- TABLÓN PÚBLICO DE NOVEDADES (2026-08-25). El anfitrión se comunica con
--- los invitados ya confirmados por un grupo de WhatsApp "solo lectura"
--- (tipo tablón de anuncios) que va creciendo hasta el número final de
--- confirmados. Para no saturar ese chat con avisos largos, esta sección
--- añade una página pública de solo lectura (sin login, sin cuenta) con
--- las mismas novedades, agrupadas por secciones plegables -- se comparte
--- UN enlace único en el propio grupo de WhatsApp (no uno por persona,
--- a diferencia del enlace-token de colaborador): cualquiera con el
--- enlace ve el tablón, nadie sin él lo encuentra ni por casualidad.
---
--- Mismo patrón de seguridad que el resto de la app: "novedades" es una
--- tabla completamente cerrada (como invitados/colaboradores), solo
--- alcanzable a través de las funciones RPC de aquí abajo, y el enlace en
--- sí depende de un secreto propio en su propia tabla cerrada
--- ("tablon_secreto"), nunca de una columna en `evento` (que está
--- abierta a todo el mundo -- ver el bloque de RLS al principio del
--- archivo).
--- ============================================================
-create table if not exists novedades (
-  "id"        uuid primary key default gen_random_uuid(),
-  "titulo"    text not null default '',
-  "cuerpo"    text not null default '',
-  -- Permite escribir un borrador sin que se vea todavía en el tablón
-  -- público -- por defecto true (lo normal es escribir y publicar del
-  -- tirón, no dejar pasos a medias).
-  "publicada" boolean not null default true,
-  "creadaEn"  timestamptz not null default now(),
-  -- Etiqueta automática en el FAQ público: "NOVEDADES" si está marcada,
-  -- "FAQ" si no -- a petición del usuario, 2026-08-25 (la mayoría de
-  -- entradas serán preguntas frecuentes; los cambios/avisos de verdad
-  -- ya se anuncian aparte en el grupo de WhatsApp, esto solo los marca
-  -- visualmente dentro del mismo listado). Por defecto false (FAQ).
-  "esNovedad" boolean not null default false
-);
-alter table novedades enable row level security;
--- Por si `novedades` ya existía de una sesión anterior sin esta
--- columna (el "create table if not exists" de arriba no la añadiría a
--- una tabla ya creada).
-alter table novedades add column if not exists "esNovedad" boolean not null default false;
-revoke all on table novedades from anon, authenticated;
-
-create table if not exists tablon_secreto (
-  "id"    boolean primary key default true check ("id"),
-  "token" uuid not null default gen_random_uuid(),
-  -- Pregunta de acceso (2026-08-25, a petición del usuario): capa extra
-  -- sobre el enlace en sí -- aunque alguien reenvíe el enlace fuera del
-  -- grupo, sin la respuesta correcta no ve nada. "pregunta" es pública
-  -- (hace falta mostrarla en el tablón antes de dejar pasar);
-  -- "respuestaCorrecta" NUNCA sale de esta tabla cerrada -- se compara
-  -- siempre dentro de una función, nunca se lee directamente.
-  -- Comparación sin mayúsculas ni espacios sobrantes (ver las funciones
-  -- de más abajo), pero SÍ sensible a acentos -- elegir una pregunta con
-  -- respuesta sencilla (un número, una palabra sin tilde) evita
-  -- fricciones tontas.
-  "pregunta"          text not null default '',
-  "respuestaCorrecta" text not null default ''
-);
-insert into tablon_secreto ("id") values (true) on conflict do nothing;
-alter table tablon_secreto enable row level security;
-revoke all on table tablon_secreto from anon, authenticated;
--- Por si `tablon_secreto` ya existía de una sesión anterior sin estas
--- dos columnas (el "create table if not exists" de arriba no las
--- añadiría a una tabla ya creada).
-alter table tablon_secreto add column if not exists "pregunta" text not null default '';
-alter table tablon_secreto add column if not exists "respuestaCorrecta" text not null default '';
-
--- ---------- Lado anfitrión: escribir novedades y consultar el enlace ----------
-
-create or replace function anfitrion_obtener_token_tablon(p_token uuid)
-returns uuid
-language sql security definer set search_path = public, pg_temp
-as $$
-  select case
-    when p_token = (select "token" from anfitrion_secreto limit 1)
-    then (select "token" from tablon_secreto limit 1)
-    else null
-  end;
-$$;
-
--- El anfitrión ve TODAS las novedades (publicadas y borradores), para
--- poder editarlas -- el tablón público (más abajo) solo ve las publicadas.
-create or replace function anfitrion_listar_novedades(p_token uuid)
-returns setof novedades
-language sql security definer set search_path = public, pg_temp
-as $$
-  select n.* from novedades n
-  where p_token = (select "token" from anfitrion_secreto limit 1)
-  order by n."creadaEn" desc;
-$$;
-
-create or replace function anfitrion_guardar_novedades(p_token uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  -- "creadaEn" solo se fija al CREAR (si el cliente no la manda, usa
-  -- now()) -- el "on conflict do update" de abajo no la toca nunca, así
-  -- que editar el texto de una novedad ya existente no cambia su fecha.
-  insert into novedades ("id", "titulo", "cuerpo", "publicada", "creadaEn", "esNovedad")
-  select
-    (f->>'id')::uuid, coalesce(f->>'titulo', ''), coalesce(f->>'cuerpo', ''),
-    coalesce((f->>'publicada')::boolean, true),
-    coalesce((f->>'creadaEn')::timestamptz, now()),
-    coalesce((f->>'esNovedad')::boolean, false)
-  from jsonb_array_elements(p_filas) as f
-  on conflict ("id") do update
-    set "titulo" = excluded."titulo",
-        "cuerpo" = excluded."cuerpo",
-        "publicada" = excluded."publicada",
-        "esNovedad" = excluded."esNovedad";
-
-  delete from novedades n
-  where not exists (
-    select 1 from jsonb_array_elements(p_filas) f
-    where (f->>'id')::uuid = n."id"
-  );
-end;
-$$;
-
--- El anfitrión consulta y guarda la pregunta de acceso desde la propia
--- ventana Novedades -- "respuesta" SÍ viaja aquí en texto plano (el
--- anfitrión necesita poder verla/editarla), a diferencia del tablón
--- público, donde solo se compara, nunca se devuelve.
-create or replace function anfitrion_obtener_pregunta_tablon(p_token uuid)
-returns table("pregunta" text, "respuesta" text)
-language sql security definer set search_path = public, pg_temp
-as $$
-  select ts."pregunta", ts."respuestaCorrecta"
-  from tablon_secreto ts
-  where p_token = (select "token" from anfitrion_secreto limit 1);
-$$;
-
-create or replace function anfitrion_guardar_pregunta_tablon(p_token uuid, p_pregunta text, p_respuesta text)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-  -- "where true": este proyecto bloquea cualquier UPDATE/DELETE sin
-  -- WHERE (protección real, no un capricho -- ver la regla ya anotada
-  -- en CLAUDE.md sobre esto mismo). tablon_secreto solo tiene una fila
-  -- de todas formas ("id" boolean primary key), así que si de verdad
-  -- es toda la tabla a propósito. Bug real encontrado en producción el
-  -- 2026-08-25: sin esto, cada guardado fallaba con "UPDATE requires a
-  -- WHERE clause" -- se me olvidó aplicar una regla que ya estaba
-  -- documentada en este mismo archivo.
-  update tablon_secreto set "pregunta" = p_pregunta, "respuestaCorrecta" = p_respuesta where true;
-end;
-$$;
-
--- ---------- Lado público: el tablón de solo lectura ----------
-
-create or replace function tablon_verificar_token(p_token uuid)
-returns boolean
-language sql security definer set search_path = public, pg_temp
-as $$ select p_token = (select "token" from tablon_secreto limit 1); $$;
-
--- Devuelve el TEXTO de la pregunta (público, hace falta mostrarlo) --
--- nunca la respuesta correcta. "" si el anfitrión no ha puesto ninguna
--- pregunta -- el tablón no pide nada en ese caso.
-create or replace function tablon_obtener_pregunta(p_token uuid)
-returns text
-language sql security definer set search_path = public, pg_temp
-as $$
-  select case
-    when p_token = (select "token" from tablon_secreto limit 1)
-    then (select "pregunta" from tablon_secreto limit 1)
-    else null
-  end;
-$$;
-
--- Compara sin mayúsculas ni espacios sobrantes -- nunca devuelve la
--- respuesta correcta en sí, solo si coincide o no.
-create or replace function tablon_verificar_respuesta(p_token uuid, p_respuesta text)
-returns boolean
-language sql security definer set search_path = public, pg_temp
-as $$
-  select p_token = (select "token" from tablon_secreto limit 1)
-    and lower(trim(coalesce(p_respuesta, ''))) = lower(trim((select "respuestaCorrecta" from tablon_secreto limit 1)));
-$$;
-
--- Cambia de 1 a 2 parámetros (se añade p_respuesta) -- hay que borrar la
--- firma vieja antes, si no create or replace deja las dos funciones a
--- la vez y cualquier llamada con 1 argumento se vuelve ambigua (misma
--- lección de siempre, ver CLAUDE.md).
-drop function if exists tablon_listar_novedades(uuid);
-
--- Exige TAMBIÉN la respuesta correcta, no solo el token -- así alguien
--- que llamara a esta función directamente (sin pasar por la pantalla de
--- la pregunta) tampoco obtendría datos reales. Si no hay pregunta
--- configurada ("respuestaCorrecta" = ''), cualquier respuesta vacía
--- coincide sola -- el tablón no pide nada en ese caso.
-create or replace function tablon_listar_novedades(p_token uuid, p_respuesta text)
-returns setof novedades
-language sql security definer set search_path = public, pg_temp
-as $$
-  select n.* from novedades n
-  where p_token = (select "token" from tablon_secreto limit 1)
-    and lower(trim(coalesce(p_respuesta, ''))) = lower(trim((select "respuestaCorrecta" from tablon_secreto limit 1)))
-    and n."publicada" = true
-  order by n."creadaEn" desc;
-$$;
-
-grant execute on function anfitrion_obtener_token_tablon(uuid) to anon;
-grant execute on function anfitrion_listar_novedades(uuid) to anon;
-grant execute on function anfitrion_guardar_novedades(uuid, jsonb) to anon;
-grant execute on function anfitrion_obtener_pregunta_tablon(uuid) to anon;
-grant execute on function anfitrion_guardar_pregunta_tablon(uuid, text, text) to anon;
-grant execute on function tablon_verificar_token(uuid) to anon;
-grant execute on function tablon_obtener_pregunta(uuid) to anon;
-grant execute on function tablon_verificar_respuesta(uuid, text) to anon;
-grant execute on function tablon_listar_novedades(uuid, text) to anon;
-
--- ============================================================
--- 2026-08-25: refuerzos sobre el tablón, a petición del usuario tras ver
--- el enlace listo para compartir con ~140 personas.
--- ============================================================
-
--- Un colaborador logueado también puede ver el enlace del tablón (botón
--- en Portada.jsx, junto a "Mi cuenta"/"Cerrar sesión") -- mismo patrón de
--- seguridad que colaborador_mis_invitados: exige sesión real de ESE
--- colaborador, nunca solo el id suelto.
-create or replace function colaborador_obtener_token_tablon(p_colaborador_id uuid)
-returns uuid
-language sql security definer set search_path = public, pg_temp
-as $$
-  select case
-    when exists (
-      select 1 from colaboradores c
-      where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
-    )
-    then (select "token" from tablon_secreto limit 1)
-    else null
-  end;
-$$;
-grant execute on function colaborador_obtener_token_tablon(uuid) to anon;
-
--- Enlace de invitación al grupo de WhatsApp (tipo chat.whatsapp.com/XXXX,
--- se genera desde la propia app de WhatsApp: Grupo → Info del grupo →
--- Invitar mediante enlace) -- a propósito NO es un número de teléfono: un
--- botón basado en número abriría un chat 1 a 1 con el anfitrión, lo que
--- dejaría a 140 personas escribiéndole directamente y anularía la figura
--- del colaborador como intermediario. Vive en `evento` (columna abierta,
--- sin sensibilidad real) porque el botón que la usa está en la ventana
--- Novedades del anfitrión, no en el tablón público.
-alter table evento add column if not exists "enlaceGrupoWhatsapp" text not null default '';
-
--- Envoltorio SECURITY DEFINER para poder preguntar "¿eres el
--- anfitrión?" desde una política de Storage -- las políticas de RLS se
--- evalúan con los permisos de la propia conexión (authenticated), y
--- `anfitriones` está deliberadamente cerrada a cal y canto (revoke all
--- from anon, authenticated, más arriba) para que solo se pueda leer
--- desde dentro de una función con privilegios elevados, nunca por
--- consulta directa. Sin este envoltorio, cualquier política que
--- escribiera "exists (select 1 from anfitriones ...)" directamente
--- fallaba con "permission denied for table anfitriones" -- error real
--- encontrado en producción el 2026-08-25 al probar la subida de la
--- imagen de WhatsApp: el bucket llevaba vacío desde que se creó porque
--- ninguna subida llegaba a pasar la política.
-create or replace function es_anfitrion()
-returns boolean
-language sql security definer set search_path = public, pg_temp
-as $$
-  select exists (select 1 from anfitriones a where a."authUserId" = auth.uid());
-$$;
-revoke execute on function es_anfitrion() from public;
-grant execute on function es_anfitrion() to authenticated;
-
--- ---------- Música ambiental (Supabase Storage) ----------
--- A diferencia de las imágenes (guardadas como base64 directamente en
--- columnas de texto -- ver evento.imagen), un archivo de audio pesa
--- demasiado para eso: guardarlo en una columna que el tablón público
--- vuelve a pedir cada minuto (mismo refresco que el resto de la app)
--- descargaría varios MB una y otra vez sin necesidad. Supabase Storage
--- (incluido gratis en cualquier proyecto) sirve cada archivo desde su
--- propia URL estable -- el navegador lo cachea solo, no pasa por la
--- tabla `evento` en absoluto.
-insert into storage.buckets ("id", "name", "public")
-values ('musica-ambiental', 'musica-ambiental', true)
-on conflict ("id") do nothing;
-
--- Lectura pública (el tablón reproduce sin login) -- subir/borrar solo si
--- la cuenta con sesión iniciada está en la tabla `anfitriones` (mismo
--- criterio que mi_rol()). drop+create porque Postgres no admite "create
--- policy if not exists" -- necesario para que este bloque se pueda
--- volver a pegar entero sin fallar (mismo criterio que el resto del
--- archivo).
-drop policy if exists "musica_ambiental_lectura_publica" on storage.objects;
-create policy "musica_ambiental_lectura_publica"
-on storage.objects for select
-to public
-using (bucket_id = 'musica-ambiental');
-
-drop policy if exists "musica_ambiental_solo_anfitrion_escribe" on storage.objects;
-create policy "musica_ambiental_solo_anfitrion_escribe"
-on storage.objects for insert
-to authenticated
-with check (
-  bucket_id = 'musica-ambiental'
-  and es_anfitrion()
-);
-
-drop policy if exists "musica_ambiental_solo_anfitrion_borra" on storage.objects;
-create policy "musica_ambiental_solo_anfitrion_borra"
-on storage.objects for delete
-to authenticated
-using (
-  bucket_id = 'musica-ambiental'
-  and es_anfitrion()
-);
-
--- ---------- Miniatura para WhatsApp/Facebook (og:image) ----------
--- Mismo motivo que musica-ambiental: las etiquetas og:image de
--- index.html son ESTÁTICAS (el rastreador de WhatsApp lee el HTML sin
--- ejecutar React) y necesitan una URL http real, no el data: URI que usa
--- evento.imagen. Se sube siempre con el mismo nombre de archivo
--- ("portada.jpg", ver VentanaConfigDatosEvento.jsx) para que la URL
--- pública nunca cambie -- solo el archivo detrás.
-insert into storage.buckets ("id", "name", "public")
-values ('og-imagen', 'og-imagen', true)
-on conflict ("id") do nothing;
-
-drop policy if exists "og_imagen_lectura_publica" on storage.objects;
-create policy "og_imagen_lectura_publica"
-on storage.objects for select
-to public
-using (bucket_id = 'og-imagen');
-
-drop policy if exists "og_imagen_solo_anfitrion_sube" on storage.objects;
-create policy "og_imagen_solo_anfitrion_sube"
-on storage.objects for insert
-to authenticated
-with check (
-  bucket_id = 'og-imagen'
-  and es_anfitrion()
-);
-
--- También hace falta UPDATE (no solo INSERT): se sube siempre con
--- upsert:true (mismo nombre de archivo cada vez), y eso internamente
--- reemplaza el objeto existente en vez de crear uno nuevo.
-drop policy if exists "og_imagen_solo_anfitrion_reemplaza" on storage.objects;
-create policy "og_imagen_solo_anfitrion_reemplaza"
-on storage.objects for update
-to authenticated
-using (
-  bucket_id = 'og-imagen'
-  and es_anfitrion()
-)
-with check (
-  bucket_id = 'og-imagen'
-  and es_anfitrion()
-);
-
--- ============================================================
--- 2026-08-25: permisos por colaborador (empezando por poder editar el
--- texto de Novedades). A petición del usuario: quiere ir dando acceso a
--- partes concretas de la app a colaboradores concretos, no todo o nada
--- -- así que esto se diseña desde el principio como una LISTA de claves
--- de texto libre, no una columna booleana por función. Añadir una zona
--- nueva en el futuro es solo: 1) una clave nueva aquí abajo (documentada
--- como comentario), 2) un checkbox más en VentanaPermisos.jsx, 3)
--- comprobar esa clave donde corresponda en el cliente -- no hace falta
--- tocar el esquema otra vez.
---
--- Claves ya en uso:
---   "novedades_editar" -- puede abrir la ventana Novedades y editar el
---                         título/cuerpo de las que ya existen, y
---                         publicarlas o no (implícito en poder editar el
---                         texto, a petición del usuario, 2026-08-27); el
---                         resto de controles de esa ventana (crear,
---                         borrar, marcar NOVEDADES/FAQ, enlace, WhatsApp,
---                         pregunta de acceso, ocultar fecha en el tablón)
---                         quedan deshabilitados/ocultos para quien solo
---                         tenga esta clave y no sea el anfitrión.
-alter table colaboradores add column if not exists "permisos" jsonb not null default '[]'::jsonb;
-
--- El propio checkbox de VentanaPermisos.jsx impide crear/borrar/publicar
--- desde la pantalla, pero eso es solo la interfaz -- por si alguien
--- llamara a estas funciones directamente (sin pasar por ahí), el
--- permiso real se comprueba aquí también, igual que el resto de la app
--- nunca se fía solo de lo que oculta o deshabilita el cliente.
-create or replace function colaborador_puede_editar_novedades(p_colaborador_id uuid)
-returns boolean
-language sql security definer set search_path = public, pg_temp
-as $$
-  select exists (
-    select 1 from colaboradores c
-    where c."id" = p_colaborador_id
-      and c."authUserId" = auth.uid()
-      and c."permisos" ? 'novedades_editar'
-  );
-$$;
-
-create or replace function colaborador_listar_novedades(p_colaborador_id uuid)
-returns setof novedades
-language sql security definer set search_path = public, pg_temp
-as $$
-  select n.* from novedades n
-  where colaborador_puede_editar_novedades(p_colaborador_id)
-  order by n."creadaEn" desc;
-$$;
-
--- A propósito solo actualiza "titulo"/"cuerpo"/"publicada" de filas que
--- YA existen (por "id") -- nunca inserta, nunca borra, nunca toca
--- "esNovedad": el permiso es "editar el texto (y publicarlo o no)", no
--- "gestionar el tablón entero". "publicada" se sumó aquí a petición
--- explícita del usuario, 2026-08-27: editar el texto lleva implícita la
--- opción de publicarlo -- antes esta función la ignoraba del todo (el
--- checkbox del cliente se veía marcado pero no se guardaba de verdad).
--- Si el cliente mandara cualquier otro campo distinto, se ignora sin más.
-create or replace function colaborador_guardar_novedades(p_colaborador_id uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if not colaborador_puede_editar_novedades(p_colaborador_id) then
-    return;
-  end if;
-
-  update novedades n
-  set "titulo" = coalesce(f->>'titulo', n."titulo"),
-      "cuerpo" = coalesce(f->>'cuerpo', n."cuerpo"),
-      "publicada" = coalesce((f->>'publicada')::boolean, n."publicada")
-  from jsonb_array_elements(p_filas) as f
-  where n."id" = (f->>'id')::uuid;
-end;
-$$;
-
-grant execute on function colaborador_puede_editar_novedades(uuid) to anon;
-grant execute on function colaborador_listar_novedades(uuid) to anon;
-grant execute on function colaborador_guardar_novedades(uuid, jsonb) to anon;
-
--- ---------- Cronograma / logística del día (Supabase Storage) ----------
--- Imagen única que el anfitrión sube y va REEMPLAZANDO según avanza el
--- proyecto -- mismo patrón que og-imagen (nombre de archivo fijo, para
--- que la URL pública no cambie nunca, solo el archivo detrás) en vez
--- de una columna base64 en `evento` (por el mismo motivo que
--- musica-ambiental: el tablón público la pediría de nuevo en cada
--- refresco de cada minuto). Se muestra en el tablón público -- a
--- petición del usuario, 2026-08-25.
-insert into storage.buckets ("id", "name", "public")
-values ('cronograma', 'cronograma', true)
-on conflict ("id") do nothing;
-
-drop policy if exists "cronograma_lectura_publica" on storage.objects;
-create policy "cronograma_lectura_publica"
-on storage.objects for select
-to public
-using (bucket_id = 'cronograma');
-
-drop policy if exists "cronograma_solo_anfitrion_sube" on storage.objects;
-create policy "cronograma_solo_anfitrion_sube"
-on storage.objects for insert
-to authenticated
-with check (
-  bucket_id = 'cronograma'
-  and es_anfitrion()
-);
-
--- Hace falta UPDATE además de INSERT: se sube siempre con upsert:true
--- (mismo nombre de archivo cada vez), y eso reemplaza el objeto
--- existente en vez de crear uno nuevo.
-drop policy if exists "cronograma_solo_anfitrion_reemplaza" on storage.objects;
-create policy "cronograma_solo_anfitrion_reemplaza"
-on storage.objects for update
-to authenticated
-using (
-  bucket_id = 'cronograma'
-  and es_anfitrion()
-)
-with check (
-  bucket_id = 'cronograma'
-  and es_anfitrion()
-);
-
-drop policy if exists "cronograma_solo_anfitrion_borra" on storage.objects;
-create policy "cronograma_solo_anfitrion_borra"
-on storage.objects for delete
-to authenticated
-using (
-  bucket_id = 'cronograma'
-  and es_anfitrion()
-);
-
--- Visibilidad del cronograma: por defecto NO se ve ni en el tablón
--- público (invitados) ni en la vista de colaborador -- a petición del
--- usuario, 2026-08-26 ("no quiero que el cronograma sea visible, pero sí
--- la opción con check, poder elegir quien lo ve"). Dos casillas
--- independientes, no una sola: el anfitrión puede querer enseñárselo
--- primero solo a los colaboradores (para repartir tareas del día) antes
--- de decidir si también se lo enseña a los invitados. Viven en `evento`
--- (tabla abierta, sin sensibilidad real) igual que "ocultarTituloEnImagen".
-alter table evento add column if not exists "cronogramaVisibleColaboradores" boolean not null default false;
-alter table evento add column if not exists "cronogramaVisibleInvitados" boolean not null default false;
-
--- ---------- Cronograma: bloques con hora editable (2026-08-27) ----------
--- Reemplaza la imagen subida a mano: la imagen ahora se DIBUJA sola (ver
--- lib/cronograma.js) a partir de estos datos, así que solo hace falta
--- editar hora/texto aquí y la imagen se regenera siempre al día. El
--- ancho de cada bloque en el dibujo es proporcional a su duración real
--- (hasta que empieza el siguiente; el último usa "cronogramaHoraFin"
--- como cierre) -- diseño validado con el usuario a base de varias
--- rondas de pruebas visuales antes de construirlo.
--- Formato de "cronogramaBloques": array de {"hora": "HH:MM", "texto": string},
--- en el orden real del día. Vive en `evento` (tabla abierta) igual que
--- el resto de datos del evento -- sin sensibilidad real.
-alter table evento add column if not exists "cronogramaBloques" jsonb not null default '[
-  {"hora": "18:00", "texto": "Recepción"},
-  {"hora": "18:15", "texto": "Cóctel"},
-  {"hora": "18:45", "texto": "Foto 1"},
-  {"hora": "19:00", "texto": "Mesas"},
-  {"hora": "19:15", "texto": "Cena"},
-  {"hora": "20:45", "texto": "Foto 2"},
-  {"hora": "21:00", "texto": "Postre"},
-  {"hora": "21:15", "texto": "Baile"},
-  {"hora": "23:30", "texto": "Final"}
-]'::jsonb;
-alter table evento add column if not exists "cronogramaHoraFin" text not null default '23:45';
-
--- ---------- Cronograma: minutos en vez de hora exacta (2026-08-27, misma tarde) ----------
--- Segundo ajuste: en vez de escribir la hora exacta de cada bloque (y
--- recalcular a mano todas las siguientes si cambia una), cada bloque
--- ahora solo dice cuántos MINUTOS dura -- la hora de cada uno se calcula
--- sola sumando los minutos anteriores a "cronogramaHoraInicio" (ver
--- lib/cronograma.js, calcularHorasAbsolutas). "cronogramaHoraFin" queda
--- sin uso (el último bloque ya lleva su propia duración) -- no se borra,
--- inofensivo.
-alter table evento add column if not exists "cronogramaHoraInicio" text not null default '18:00';
-
--- Nuevo formato por defecto para instalaciones futuras de esta misma
--- plantilla (otro evento reutilizando este esquema desde cero) -- un
--- "alter column ... set default" no toca ninguna fila ya existente.
-alter table evento alter column "cronogramaBloques" set default '[
-  {"duracionMin": 15, "texto": "Recepción"},
-  {"duracionMin": 30, "texto": "Cóctel"},
-  {"duracionMin": 15, "texto": "Foto 1"},
-  {"duracionMin": 15, "texto": "Mesas"},
-  {"duracionMin": 90, "texto": "Cena"},
-  {"duracionMin": 15, "texto": "Foto 2"},
-  {"duracionMin": 15, "texto": "Postre"},
-  {"duracionMin": 135, "texto": "Baile"},
-  {"duracionMin": 15, "texto": "Final"}
-]'::jsonb;
-
--- Migración de la fila real ya existente: convierte lo que ya hay (formato
--- viejo "hora") al formato nuevo ("duracionMin"), con los MISMOS horarios
--- de referencia que se han usado toda esta sesión para probarlo (18:00,
--- 18:15... hasta el cierre a las 23:45) -- si ya habías cambiado algún
--- bloque de verdad antes de este punto, dilo y se ajusta a mano; si no,
--- este `update` deja las horas resultantes exactamente igual que
--- estaban, solo expresadas como minutos.
-update evento set
-  "cronogramaHoraInicio" = '18:00',
-  "cronogramaBloques" = '[
-    {"duracionMin": 15, "texto": "Recepción"},
-    {"duracionMin": 30, "texto": "Cóctel"},
-    {"duracionMin": 15, "texto": "Foto 1"},
-    {"duracionMin": 15, "texto": "Mesas"},
-    {"duracionMin": 90, "texto": "Cena"},
-    {"duracionMin": 15, "texto": "Foto 2"},
-    {"duracionMin": 15, "texto": "Postre"},
-    {"duracionMin": 135, "texto": "Baile"},
-    {"duracionMin": 15, "texto": "Final"}
-  ]'::jsonb
-where true;
-
--- ---------- "Rol de trabajo" para invitados (2026-08-27) ----------
--- Distinto de "colaborador" a propósito: un colaborador tiene acceso a
--- la app (login, permisos, gestiona invitados) porque su trabajo es de
--- PREPARACIÓN, con antelación. Un "rol de trabajo" (acomodador,
--- fotografía...) es solo una etiqueta sobre un invitado que además
--- ACTÚA el día del evento en sí -- sin ningún acceso a la app. Catálogo
--- ABIERTO a propósito: no hay ninguna lista fija aquí ni en el cliente,
--- el propio anfitrión escribe el nombre del rol la primera vez que lo
--- necesita (se calcula qué roles existen mirando los que ya se han
--- usado entre los invitados, sin ninguna tabla de catálogo aparte).
-alter table invitados add column if not exists "rolesTrabajo" jsonb not null default '[]'::jsonb;
-grant execute on function anfitrion_guardar_invitados(uuid, jsonb) to anon;
-
--- ---------- Responsable de un rol de trabajo (2026-08-27, misma tarde) ----------
--- Uno solo por rol para TODO el evento, sea cual sea el bloque del
--- cronograma donde trabaje ese rol -- a petición del usuario: "el
--- capitán de acomodadores será el mismo durante todo el evento". Mapa
--- simple { "rol": "idDelInvitado" }, vive en `evento` (tabla abierta)
--- igual que el resto de datos del evento.
-alter table evento add column if not exists "rolesTrabajoResponsables" jsonb not null default '{}'::jsonb;
-
--- ---------- Qué se imprime en la invitación (2026-08-27, misma tarde) ----------
--- Tres casillas independientes en la ventana Invitaciones para poder
--- quitar fecha/hora/lugar de la IMAGEN sin tener que vaciar esos campos
--- en Datos del evento (que también los usa la portada y el tablón
--- público) -- a petición del usuario. Default true: hasta que el
--- anfitrión desmarque algo, la invitación se ve exactamente igual que
--- antes de este cambio.
-alter table evento add column if not exists "imprimirFecha" boolean not null default true;
-alter table evento add column if not exists "imprimirHora" boolean not null default true;
-alter table evento add column if not exists "imprimirLugar" boolean not null default true;
-
--- ---------- Ocultar la fecha en el tablón público (2026-08-27, misma tarde) ----------
--- Checkbox en Novedades, con carácter TEMPORAL (p.ej. mientras el
--- anfitrión no quiere que los ya confirmados vean el día exacto
--- todavía) -- solo afecta a VistaTablon.jsx, nunca a la portada, a
--- Datos evento ni a la invitación.
-alter table evento add column if not exists "tablonOcultarFecha" boolean not null default false;
-
--- ============================================================
--- 2026-08-29: acceso al tablón por NOMBRE en vez de pregunta de sí/no
--- (a petición del usuario, tras razonar sobre la seguridad del enlace
--- público con ~140 personas) + historial de guardado y "deshacer en
--- vivo" para los 2 textos largos reales de la app (cuerpo de una
--- novedad, plantillas de email).
--- ============================================================
-
--- ---------- Acceso al tablón por nombre ----------
--- Sustituye del todo la pregunta de sí/no de antes (2026-08-25): ahora
--- la "respuesta correcta" ya no es un secreto fijo compartido -- es
--- "¿existe un invitado CONFIRMADO con este nombre?". "pregunta" sigue
--- siendo el texto editable que ve la persona (se actualiza aquí abajo
--- al nuevo redactado); "respuestaCorrecta" queda sin uso a partir de
--- ahora (no se borra la columna, igual que "cronogramaHoraFin" en su
--- momento -- inofensiva, ver más arriba en este archivo).
-update tablon_secreto set "pregunta" = 'Nombre y apellido tal como en tu invitación' where true;
-
--- Instalada igual que pg_net más arriba en este archivo -- necesaria
--- para poder ignorar tildes al comparar nombres (José/Jose deben
--- validar igual, la gente escribe rápido desde el móvil).
-create extension if not exists unaccent;
-
--- Nombres que NUNCA deben servir como respuesta válida, aunque consten
--- como confirmados -- empezando por el propio anfitrión (y su pareja,
--- si también está en la lista): su nombre es información pública
--- (cualquiera que sepa que se casan podría "adivinarlo" sin haber sido
--- invitado). Marcar/desmarcar desde Lista de invitados.
-alter table invitados add column if not exists "excluidoTablon" boolean not null default false;
-
--- Quita comas y espacios de sobra (los trata como un único separador),
--- pasa a minúsculas y quita tildes -- misma normalización tanto para lo
--- que escribe la persona como para "apellido + nombre" sacado de la
--- base de datos. "search_path" incluye "extensions" además de "public"
--- porque Supabase puede instalar unaccent() en cualquiera de los dos
--- según la versión del proyecto.
-create or replace function normalizar_nombre_tablon(p_texto text)
-returns text
-language sql immutable set search_path = public, extensions, pg_temp
-as $$
-  select trim(lower(unaccent(regexp_replace(coalesce(p_texto, ''), '[,\s]+', ' ', 'g'))));
-$$;
-
--- Registro de accesos válidos -- una fila por cada pareja (nombre,
--- dispositivo) que haya entrado alguna vez, no una fila por refresco:
--- "on conflict...do update" de más abajo solo actualiza la fecha. Así
--- "cuántos dispositivos distintos han usado este nombre" es un simple
--- recuento de filas, sin que la tabla crezca sin límite.
-create table if not exists tablon_accesos (
-  "id"                uuid primary key default gen_random_uuid(),
-  "nombreNormalizado" text not null,
-  "dispositivoId"     text not null,
-  "creadoEn"          timestamptz not null default now(),
-  "actualizadoEn"     timestamptz not null default now(),
-  unique ("nombreNormalizado", "dispositivoId")
-);
-alter table tablon_accesos enable row level security;
-revoke all on table tablon_accesos from anon, authenticated;
-
--- Sustituye la comparación contra "respuestaCorrecta" (ya no se usa)
--- por "¿hay algún confirmado, no excluido, con este nombre?". El orden
--- pedido por el usuario es "Apellido Nombre" (mismo orden que ya
--- muestra la Lista de invitados) -- coma y tildes no cuentan.
-create or replace function tablon_verificar_respuesta(p_token uuid, p_respuesta text)
-returns boolean
-language sql security definer set search_path = public, extensions, pg_temp
-as $$
-  select p_token = (select "token" from tablon_secreto limit 1)
-    and exists (
-      select 1 from invitados i
-      where i."confirmado" = true
-        and i."excluidoTablon" = false
-        and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)
-    );
-$$;
-
--- Cambia de 2 a 3 parámetros (se añade p_dispositivo_id, para el
--- registro de accesos de más abajo) -- hay que borrar la firma vieja
--- antes (misma lección de siempre, ver CLAUDE.md).
-drop function if exists tablon_listar_novedades(uuid, text);
-
--- Registra el acceso (si es válido) y devuelve las novedades publicadas
--- -- unificado en una sola función porque el cliente ya llama a esta en
--- cada refresco periódico (cada minuto), es el sitio natural para
--- anotar "este dispositivo sigue usando este nombre" sin añadir una
--- llamada aparte.
-create or replace function tablon_listar_novedades(p_token uuid, p_respuesta text, p_dispositivo_id text)
-returns setof novedades
-language plpgsql security definer set search_path = public, extensions, pg_temp
-as $$
-declare
-  v_valido boolean;
-begin
-  v_valido := tablon_verificar_respuesta(p_token, p_respuesta);
-  if v_valido then
-    insert into tablon_accesos ("nombreNormalizado", "dispositivoId")
-    values (normalizar_nombre_tablon(p_respuesta), coalesce(nullif(p_dispositivo_id, ''), 'desconocido'))
-    on conflict ("nombreNormalizado", "dispositivoId") do update set "actualizadoEn" = now();
-  end if;
-
-  return query
-  select n.* from novedades n
-  where v_valido and n."publicada" = true
-  order by n."creadaEn" desc;
-end;
-$$;
-
--- El nombre de cada colaborador/confirmado ya no es un secreto de un
--- solo uso -- si se filtra, cualquier número de dispositivos distintos
--- podría entrar con él. En vez de bloquear a nadie automáticamente
--- (mucha fricción real: una familia con varios móviles, alguien que
--- borra el navegador...), el anfitrión ve aquí qué nombres se han usado
--- desde MÁS DE UN dispositivo, como señal de alarma.
-create or replace function anfitrion_listar_accesos_tablon_sospechosos(p_token uuid)
-returns table("nombreNormalizado" text, "numDispositivos" bigint, "ultimoAcceso" timestamptz)
-language sql security definer set search_path = public, pg_temp
-as $$
-  select ta."nombreNormalizado", count(*), max(ta."actualizadoEn")
-  from tablon_accesos ta
-  where p_token = (select "token" from anfitrion_secreto limit 1)
-  group by ta."nombreNormalizado"
-  having count(*) > 1
-  order by max(ta."actualizadoEn") desc;
-$$;
-grant execute on function anfitrion_listar_accesos_tablon_sospechosos(uuid) to anon;
-
--- La pregunta/respuesta editable de antes (anfitrion_obtener_pregunta_
--- tablon devolvía las dos, anfitrion_guardar_pregunta_tablon aceptaba
--- las dos) ya no tiene sentido con este mecanismo -- solo queda
--- "pregunta" (el texto que ve la persona, por si se quiere retocar el
--- redactado). Cambian de forma (columna "respuesta" fuera, parámetro
--- "p_respuesta" fuera) -- hay que borrar las firmas viejas primero.
-drop function if exists anfitrion_obtener_pregunta_tablon(uuid);
-drop function if exists anfitrion_guardar_pregunta_tablon(uuid, text, text);
-
-create or replace function anfitrion_obtener_pregunta_tablon(p_token uuid)
-returns text
-language sql security definer set search_path = public, pg_temp
-as $$
-  select "pregunta" from tablon_secreto
-  where p_token = (select "token" from anfitrion_secreto limit 1);
-$$;
-
-create or replace function anfitrion_guardar_pregunta_tablon(p_token uuid, p_pregunta text)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-  update tablon_secreto set "pregunta" = p_pregunta where true;
-end;
-$$;
-
-grant execute on function anfitrion_obtener_pregunta_tablon(uuid) to anon;
-grant execute on function anfitrion_guardar_pregunta_tablon(uuid, text) to anon;
-grant execute on function tablon_listar_novedades(uuid, text, text) to anon;
-
--- Vuelve a guardar "anfitrion_guardar_invitados" completa solo para
--- añadir la columna nueva "excluidoTablon" al insert/update masivo de
--- siempre -- mismo cuerpo que la versión de más arriba en este
--- archivo, con esa única columna de más.
-create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  insert into invitados (
-    "id","nombre","apellido","zona","confirmado","colaboradorId",
-    "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
-    "cancion","alergias","observaciones","pagado","rolesTrabajo","excluidoTablon"
-  )
-  select
-    (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
-    coalesce((f->>'confirmado')::boolean, false),
-    nullif(f->>'colaboradorId','')::uuid,
-    f->>'grupoFamiliar', nullif(f->>'mesa','')::integer,
-    f->>'anioNacimiento', f->>'anioBoda', f->>'email', f->>'cancion',
-    f->>'alergias', f->>'observaciones',
-    coalesce((f->>'pagado')::boolean, false),
-    coalesce(f->'rolesTrabajo', '[]'::jsonb),
-    coalesce((f->>'excluidoTablon')::boolean, false)
-  from jsonb_array_elements(p_filas) as f
-  on conflict ("id") do update set
-    "nombre"=excluded."nombre", "apellido"=excluded."apellido",
-    "zona"=excluded."zona", "confirmado"=excluded."confirmado",
-    "colaboradorId"=excluded."colaboradorId", "grupoFamiliar"=excluded."grupoFamiliar",
-    "mesa"=excluded."mesa", "anioNacimiento"=excluded."anioNacimiento",
-    "anioBoda"=excluded."anioBoda", "email"=excluded."email",
-    "cancion"=excluded."cancion", "alergias"=excluded."alergias",
-    "observaciones"=excluded."observaciones", "pagado"=excluded."pagado",
-    "rolesTrabajo"=excluded."rolesTrabajo", "excluidoTablon"=excluded."excluidoTablon";
-
-  delete from invitados g
-  where not exists (
-    select 1 from jsonb_array_elements(p_filas) f
-    where (f->>'id')::uuid = g."id"
-  );
-end;
-$$;
-
--- ---------- Historial de guardado + "deshacer" (Novedades, Plantillas de email) ----------
--- Solo para el anfitrión (ver "soloTexto" en VentanaNovedades.jsx) y
--- solo para los 2 textos largos reales de la app -- ver
--- lib/useDeshacer.js para el "deshacer en vivo" (antes de guardar,
--- nunca toca el servidor) y components/HistorialTexto.jsx para la
--- pantalla de "versiones anteriores" que lee esto.
---
--- "origen" + "refId" + "campo" identifican de qué texto es cada
--- versión ("novedad"+id de la novedad+"cuerpo", o "plantilla"+null+el
--- nombre de la columna en `evento`). Alimentada por triggers (más
--- abajo) -- ninguna función de guardado necesita tocar esto a mano,
--- mismo patrón ya usado en la app para "avisoPendiente"/
--- "invitacionEnviada" (ver CLAUDE.md).
-create table if not exists historial_texto (
-  "id"            uuid primary key default gen_random_uuid(),
-  "origen"        text not null,
-  "refId"         uuid null,
-  "campo"         text not null,
-  "valorAnterior" text not null,
-  "guardadoEn"    timestamptz not null default now()
-);
-alter table historial_texto enable row level security;
-revoke all on table historial_texto from anon, authenticated;
-
--- Guarda una versión y poda las más viejas -- como mucho 10 por cada
--- (origen, refId, campo). "coalesce(refId, '00…')" porque las
--- plantillas de email no tienen fila propia (refId null) y NULL no es
--- igual a NULL al agrupar/comparar en SQL.
-create or replace function registrar_historial_texto(p_origen text, p_ref_id uuid, p_campo text, p_valor_anterior text)
-returns void
-language plpgsql
-as $$
-begin
-  insert into historial_texto ("origen", "refId", "campo", "valorAnterior")
-  values (p_origen, p_ref_id, p_campo, p_valor_anterior);
-
-  delete from historial_texto
-  where id in (
-    select id from (
-      select id, row_number() over (
-        partition by origen, coalesce("refId", '00000000-0000-0000-0000-000000000000'::uuid), campo
-        order by "guardadoEn" desc
-      ) as rn
-      from historial_texto
-      where origen = p_origen
-        and coalesce("refId", '00000000-0000-0000-0000-000000000000'::uuid) = coalesce(p_ref_id, '00000000-0000-0000-0000-000000000000'::uuid)
-        and campo = p_campo
-    ) t where rn > 10
-  );
-end;
-$$;
-
-create or replace function trg_historial_novedad_cuerpo()
-returns trigger
-language plpgsql
-as $$
-begin
-  if old."cuerpo" is distinct from new."cuerpo" then
-    perform registrar_historial_texto('novedad', old."id", 'cuerpo', old."cuerpo");
-  end if;
-  return new;
-end;
-$$;
-drop trigger if exists trg_historial_novedad_cuerpo on novedades;
-create trigger trg_historial_novedad_cuerpo
-after update of "cuerpo" on novedades
-for each row execute function trg_historial_novedad_cuerpo();
-
-create or replace function trg_historial_plantillas_email()
-returns trigger
-language plpgsql
-as $$
-begin
-  if old."plantillaAsignacion" is distinct from new."plantillaAsignacion" then
-    perform registrar_historial_texto('plantilla', null, 'plantillaAsignacion', old."plantillaAsignacion");
-  end if;
-  if old."plantillaDatosCompletados" is distinct from new."plantillaDatosCompletados" then
-    perform registrar_historial_texto('plantilla', null, 'plantillaDatosCompletados', old."plantillaDatosCompletados");
-  end if;
-  if old."plantillaPagoRegistrado" is distinct from new."plantillaPagoRegistrado" then
-    perform registrar_historial_texto('plantilla', null, 'plantillaPagoRegistrado', old."plantillaPagoRegistrado");
-  end if;
-  if old."plantillaInvitacionFamilia" is distinct from new."plantillaInvitacionFamilia" then
-    perform registrar_historial_texto('plantilla', null, 'plantillaInvitacionFamilia', old."plantillaInvitacionFamilia");
-  end if;
-  return new;
-end;
-$$;
-drop trigger if exists trg_historial_plantillas_email on evento;
-create trigger trg_historial_plantillas_email
-after update on evento
-for each row execute function trg_historial_plantillas_email();
-
--- Últimas 10 versiones de un texto concreto -- "p_ref_id" null para
--- las plantillas de email (no tienen fila propia).
-create or replace function anfitrion_listar_historial_texto(p_token uuid, p_origen text, p_ref_id uuid, p_campo text)
-returns setof historial_texto
-language sql security definer set search_path = public, pg_temp
-as $$
-  select h.* from historial_texto h
-  where p_token = (select "token" from anfitrion_secreto limit 1)
-    and h."origen" = p_origen
-    and coalesce(h."refId", '00000000-0000-0000-0000-000000000000'::uuid) = coalesce(p_ref_id, '00000000-0000-0000-0000-000000000000'::uuid)
-    and h."campo" = p_campo
-  order by h."guardadoEn" desc
-  limit 10;
-$$;
-grant execute on function anfitrion_listar_historial_texto(uuid, text, uuid, text) to anon;
-
--- ---------- Imagen de fondo de "Música del evento" (2026-09-01) ----------
--- Mismo motivo que musica-ambiental y og-imagen, pero por un fallo
--- concreto: el fondo se guardaba en IndexedDB (como las pistas) y por
--- eso solo existía en el aparato donde se subió -- el usuario lo subió
--- en el Mac y en el móvil no aparecía. IndexedDB pertenece al navegador
--- de cada aparato; Storage lo sirve a todos.
---
--- A diferencia de og-imagen, aquí el nombre de archivo NO es fijo: se
--- conserva el que le puso el usuario (saneado, ver lib/fondoMusica.js)
--- para poder mostrarlo en el catálogo de acabados. Solo hay un fondo a
--- la vez: subir uno nuevo borra el anterior desde el cliente.
-insert into storage.buckets ("id", "name", "public")
-values ('musica-fondo', 'musica-fondo', true)
-on conflict ("id") do nothing;
-
-drop policy if exists "musica_fondo_lectura_publica" on storage.objects;
-create policy "musica_fondo_lectura_publica"
-on storage.objects for select
-to public
-using (bucket_id = 'musica-fondo');
-
-drop policy if exists "musica_fondo_solo_anfitrion_sube" on storage.objects;
-create policy "musica_fondo_solo_anfitrion_sube"
-on storage.objects for insert
-to authenticated
-with check (
-  bucket_id = 'musica-fondo'
-  and es_anfitrion()
-);
-
--- UPDATE además de INSERT: se sube con upsert:true, y eso reemplaza el
--- objeto existente cuando el nombre coincide (mismo caso que og-imagen).
-drop policy if exists "musica_fondo_solo_anfitrion_reemplaza" on storage.objects;
-create policy "musica_fondo_solo_anfitrion_reemplaza"
-on storage.objects for update
-to authenticated
-using (
-  bucket_id = 'musica-fondo'
-  and es_anfitrion()
-)
-with check (
-  bucket_id = 'musica-fondo'
-  and es_anfitrion()
-);
-
-drop policy if exists "musica_fondo_solo_anfitrion_borra" on storage.objects;
-create policy "musica_fondo_solo_anfitrion_borra"
-on storage.objects for delete
-to authenticated
-using (
-  bucket_id = 'musica-fondo'
-  and es_anfitrion()
-);
-
--- ---------- Cónyuges y matrimonios (2026-09-03) ----------
--- Necesidad real: identificar a los matrimonios de la lista. Cada
--- pareja ya tiene su foto de boda y está previsto hacerles otra el día
--- del evento, con el sello de los años que cumplen (ver "Las bodas de
--- todos"). El año de boda ya existía ("anioBoda", lo rellena el
--- colaborador en su formulario); lo que faltaba era saber QUIÉN forma
--- pareja con quién.
---
--- '' | 'esposo' | 'esposa'. La pareja NO se guarda como un enlace de
--- uno a otro: se deduce juntando al esposo con la esposa del mismo
--- grupo familiar (ver lib/matrimonios.js, donde está razonado el
--- porqué y sus límites). Así solo hay un dato por persona, sin nada que
--- pueda quedar descuadrado entre las dos filas.
-alter table invitados add column if not exists "conyuge" text not null default '';
-
--- Vuelve a guardar "anfitrion_guardar_invitados" completa solo para
--- añadir "conyuge" al insert/update masivo -- mismo cuerpo que la
--- versión anterior, con esa única columna de más. Sin esto, marcar a
--- alguien como esposo/esposa se perdería en el siguiente guardado.
-create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  insert into invitados (
-    "id","nombre","apellido","zona","confirmado","colaboradorId",
-    "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
-    "cancion","alergias","observaciones","pagado","rolesTrabajo",
-    "excluidoTablon","conyuge"
-  )
-  select
-    (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
-    coalesce((f->>'confirmado')::boolean, false),
-    nullif(f->>'colaboradorId','')::uuid,
-    f->>'grupoFamiliar', nullif(f->>'mesa','')::integer,
-    f->>'anioNacimiento', f->>'anioBoda', f->>'email', f->>'cancion',
-    f->>'alergias', f->>'observaciones',
-    coalesce((f->>'pagado')::boolean, false),
-    coalesce(f->'rolesTrabajo', '[]'::jsonb),
-    coalesce((f->>'excluidoTablon')::boolean, false),
-    coalesce(f->>'conyuge', '')
-  from jsonb_array_elements(p_filas) as f
-  on conflict ("id") do update set
-    "nombre"=excluded."nombre", "apellido"=excluded."apellido",
-    "zona"=excluded."zona", "confirmado"=excluded."confirmado",
-    "colaboradorId"=excluded."colaboradorId", "grupoFamiliar"=excluded."grupoFamiliar",
-    "mesa"=excluded."mesa", "anioNacimiento"=excluded."anioNacimiento",
-    "anioBoda"=excluded."anioBoda", "email"=excluded."email",
-    "cancion"=excluded."cancion", "alergias"=excluded."alergias",
-    "observaciones"=excluded."observaciones", "pagado"=excluded."pagado",
-    "rolesTrabajo"=excluded."rolesTrabajo", "excluidoTablon"=excluded."excluidoTablon",
-    "conyuge"=excluded."conyuge";
-
-  delete from invitados g
-  where not exists (
-    select 1 from jsonb_array_elements(p_filas) f
-    where (f->>'id')::uuid = g."id"
-  );
-end;
-$$;
-
--- ---------- "conyuge" pasa a "rolFamiliar" (2026-09-04) ----------
--- El campo nació el 2026-09-03 con dos valores (esposo/esposa). Al día
--- siguiente el usuario añadió "hijo": un hijo no es un cónyuge, así que
--- el nombre pasaba a mentir y se renombra la columna entera en vez de
--- dejarlo mal puesto. Valores: '' | 'esposo' | 'esposa' | 'hijo'.
---
--- El vacío NO significa "sin rellenar": significa UNIDAD SUELTA (alguien
--- soltero, o el único miembro de un matrimonio que asiste). Los
--- matrimonios vienen siempre los dos, así que a un cónyuge que viene
--- solo no se le marca -- ver lib/rolFamiliar.js y lib/matrimonios.js.
---
--- El `do` es para que este bloque se pueda pegar tantas veces como haga
--- falta: renombra solo si la columna vieja sigue existiendo.
-do $$
-begin
-  if exists (
-    select 1 from information_schema.columns
-    where table_schema = 'public' and table_name = 'invitados' and column_name = 'conyuge'
-  ) then
-    alter table invitados rename column "conyuge" to "rolFamiliar";
-  end if;
-end $$;
-
-alter table invitados add column if not exists "rolFamiliar" text not null default '';
-
-create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    return;
-  end if;
-
-  insert into invitados (
-    "id","nombre","apellido","zona","confirmado","colaboradorId",
-    "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
-    "cancion","alergias","observaciones","pagado","rolesTrabajo",
-    "excluidoTablon","rolFamiliar"
-  )
-  select
-    (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
-    coalesce((f->>'confirmado')::boolean, false),
-    nullif(f->>'colaboradorId','')::uuid,
-    f->>'grupoFamiliar', nullif(f->>'mesa','')::integer,
-    f->>'anioNacimiento', f->>'anioBoda', f->>'email', f->>'cancion',
-    f->>'alergias', f->>'observaciones',
-    coalesce((f->>'pagado')::boolean, false),
-    coalesce(f->'rolesTrabajo', '[]'::jsonb),
-    coalesce((f->>'excluidoTablon')::boolean, false),
-    coalesce(f->>'rolFamiliar', '')
-  from jsonb_array_elements(p_filas) as f
-  on conflict ("id") do update set
-    "nombre"=excluded."nombre", "apellido"=excluded."apellido",
-    "zona"=excluded."zona", "confirmado"=excluded."confirmado",
-    "colaboradorId"=excluded."colaboradorId", "grupoFamiliar"=excluded."grupoFamiliar",
-    "mesa"=excluded."mesa", "anioNacimiento"=excluded."anioNacimiento",
-    "anioBoda"=excluded."anioBoda", "email"=excluded."email",
-    "cancion"=excluded."cancion", "alergias"=excluded."alergias",
-    "observaciones"=excluded."observaciones", "pagado"=excluded."pagado",
-    "rolesTrabajo"=excluded."rolesTrabajo", "excluidoTablon"=excluded."excluidoTablon",
-    "rolFamiliar"=excluded."rolFamiliar";
-
-  delete from invitados g
-  where not exists (
-    select 1 from jsonb_array_elements(p_filas) f
-    where (f->>'id')::uuid = g."id"
-  );
-end;
-$$;
-
--- ---------- Asistencia el día del evento (2026-09-06) ----------
--- Necesidad del usuario: el día de la boda, cada colaborador recibe a
--- sus invitados y va marcando quién ha llegado de verdad, desde su
--- propio formulario, sin desplegar nada. El anfitrión ve el recuento y
--- la lista de quién está y quién falta.
---
--- Una columna booleana, no una tabla de "registros de entrada": lo que
--- hace falta saber es SI está, no cuántas veces se marcó. Y así se
--- puede desmarcar sin dejar rastro raro si alguien se equivoca de fila
--- (que con las filas juntas y un pulgar, va a pasar).
-alter table invitados add column if not exists "presente" boolean not null default false;
-
--- Mismo patrón exacto que colaborador_marcar_pagado: pasa por
--- colaborador_puede_actuar() (que ya comprueba authUserId = auth.uid()
--- y el bloqueo de Modo Pruebas) y solo toca invitados que sean SUYOS --
--- el `and "colaboradorId" = p_colaborador_id` del update es lo que
--- impide marcar a un invitado de otro aunque se llame a la función a
--- mano con un id cualquiera.
---
--- `set_config('eventos.recalculo_aviso_activo', 'off')`: igual que en
--- marcar_pagado, para que el trigger de avisos no le "avise" al
--- colaborador de su propio gesto (ver la regla en CLAUDE.md).
-create or replace function colaborador_marcar_presente(
-  p_colaborador_id uuid, p_invitado_id uuid, p_presente boolean
-)
-returns setof invitados
-language plpgsql security definer set search_path = public, pg_temp
-as $$
-declare
-  actualizado invitados;
-begin
-  if not colaborador_puede_actuar(p_colaborador_id) then
-    return;
-  end if;
-
-  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
-  update invitados set "presente" = p_presente
-  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
-  returning * into actualizado;
-
-  if not found then
-    return;
-  end if;
-
-  return next actualizado;
-end;
-$$;
-
-grant execute on function colaborador_marcar_presente(uuid, uuid, boolean) to anon;
-
--- Y "presente" al guardado masivo del anfitrión, o se perdería en cuanto
--- él tocara cualquier otra cosa de la lista.
-create or replace function anfitrion_guardar_invitados(p_token uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
+-- Guarda la lista de invitados. Es la función más usada de toda la app.
+CREATE FUNCTION public.anfitrion_guardar_invitados(p_token uuid, p_filas jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
@@ -2792,32 +1055,435 @@ begin
 end;
 $$;
 
--- ---------- Candado del control de llegadas (2026-09-06) ----------
--- Dos salvaguardas que pidió el usuario sobre la asistencia:
---
--- 1. No se puede marcar como presente a quien no tenga los datos
---    obligatorios completos y no haya pagado. El motivo es real: si
---    alguien llega y todavía debe dinero o le faltan datos, marcarlo
---    como que ya está lo saca de las listas de pendientes y el asunto se
---    pierde justo el día en que hay que resolverlo.
--- 2. Un interruptor de anfitrión para abrir y cerrar el marcado. Sin él,
---    cualquier colaborador podría ir marcando gente semanas antes "para
---    probar", y el día del evento el recuento arrancaría sucio.
---
--- ⚠️ Las dos comprobaciones van EN EL SERVIDOR, no solo en la pantalla:
--- la pantalla desactiva el botón, pero esto es lo que de verdad lo
--- impide si alguien llama a la función por su cuenta.
---
--- Desmarcar (p_presente = false) NUNCA se bloquea: si se marca a alguien
--- por error hay que poder deshacerlo, aunque el marcado esté cerrado.
-alter table evento add column if not exists "asistenciaAbierta" boolean not null default false;
+-- Guarda las mesas y su posición en el plano.
+CREATE FUNCTION public.anfitrion_guardar_mesas(p_token uuid, p_filas jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    raise exception 'Token no válido';
+  end if;
 
-create or replace function colaborador_marcar_presente(
-  p_colaborador_id uuid, p_invitado_id uuid, p_presente boolean
-)
-returns setof invitados
-language plpgsql security definer set search_path = public, pg_temp
-as $$
+  delete from mesas
+  where "numero" not in (
+    select (v->>'numero')::int from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
+  );
+
+  insert into mesas ("numero", "capacidad", "posX", "posY")
+  select (v->>'numero')::int,
+         coalesce((v->>'capacidad')::int, 10),
+         (v->>'posX')::numeric,
+         (v->>'posY')::numeric
+  from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
+  on conflict ("numero") do update set
+    "capacidad" = excluded."capacidad",
+    "posX"      = excluded."posX",
+    "posY"      = excluded."posY";
+end;
+$$;
+
+-- Guarda las novedades del tablón.
+CREATE FUNCTION public.anfitrion_guardar_novedades(p_token uuid, p_filas jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  insert into novedades ("id", "titulo", "cuerpo", "publicada", "creadaEn", "esNovedad")
+  select
+    (f->>'id')::uuid, coalesce(f->>'titulo', ''), coalesce(f->>'cuerpo', ''),
+    coalesce((f->>'publicada')::boolean, true),
+    coalesce((f->>'creadaEn')::timestamptz, now()),
+    coalesce((f->>'esNovedad')::boolean, false)
+  from jsonb_array_elements(p_filas) as f
+  on conflict ("id") do update
+    set "titulo" = excluded."titulo",
+        "cuerpo" = excluded."cuerpo",
+        "publicada" = excluded."publicada",
+        "esNovedad" = excluded."esNovedad";
+
+  delete from novedades n
+  where not exists (
+    select 1 from jsonb_array_elements(p_filas) f
+    where (f->>'id')::uuid = n."id"
+  );
+end;
+$$;
+
+-- Guarda la pregunta de control del tablón y su respuesta.
+CREATE FUNCTION public.anfitrion_guardar_pregunta_tablon(p_token uuid, p_pregunta text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+  update tablon_secreto set "pregunta" = p_pregunta where true;
+end;
+$$;
+
+-- Lista los intentos raros de entrar al tablón.
+CREATE FUNCTION public.anfitrion_listar_accesos_tablon_sospechosos(p_token uuid) RETURNS TABLE("nombreNormalizado" text, "numDispositivos" bigint, "ultimoAcceso" timestamp with time zone)
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select ta."nombreNormalizado", count(*), max(ta."actualizadoEn")
+  from tablon_accesos ta
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  group by ta."nombreNormalizado"
+  having count(*) > 1
+  order by max(ta."actualizadoEn") desc;
+$$;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+-- Lista los emails enviados y si salieron bien.
+CREATE FUNCTION public.anfitrion_listar_avisos_enviados(p_token uuid) RETURNS SETOF public.avisos_enviados
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select * from avisos_enviados
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  order by "creadoEn" desc
+  limit 200;
+$$;
+
+-- Lista los colaboradores.
+CREATE FUNCTION public.anfitrion_listar_colaboradores(p_token uuid) RETURNS SETOF public.colaboradores
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select c.* from colaboradores c
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  order by c."nombre";
+$$;
+
+-- Lista los gastos.
+CREATE FUNCTION public.anfitrion_listar_gastos(p_token uuid) RETURNS SETOF public.gastos
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select * from gastos
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  order by "categoria", "concepto";
+$$;
+
+-- Lista las versiones anteriores de un texto, para deshacer.
+CREATE FUNCTION public.anfitrion_listar_historial_texto(p_token uuid, p_origen text, p_ref_id uuid, p_campo text) RETURNS SETOF public.historial_texto
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select h.* from historial_texto h
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+    and h."origen" = p_origen
+    and coalesce(h."refId", '00000000-0000-0000-0000-000000000000'::uuid) = coalesce(p_ref_id, '00000000-0000-0000-0000-000000000000'::uuid)
+    and h."campo" = p_campo
+  order by h."guardadoEn" desc
+  limit 10;
+$$;
+
+-- Lista los invitados.
+CREATE FUNCTION public.anfitrion_listar_invitados(p_token uuid) RETURNS SETOF public.invitados
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select i.* from invitados i
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  order by i."apellido", i."nombre";
+$$;
+
+-- Lista las novedades.
+CREATE FUNCTION public.anfitrion_listar_novedades(p_token uuid) RETURNS SETOF public.novedades
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select n.* from novedades n
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  order by n."creadaEn" desc;
+$$;
+
+-- Lee la pregunta de control del tablón.
+CREATE FUNCTION public.anfitrion_obtener_pregunta_tablon(p_token uuid) RETURNS text
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select "pregunta" from tablon_secreto
+  where p_token = (select "token" from anfitrion_secreto limit 1);
+$$;
+
+-- Lee la llave del tablón (la del enlace que se manda por WhatsApp).
+CREATE FUNCTION public.anfitrion_obtener_token_tablon(p_token uuid) RETURNS uuid
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select case
+    when p_token = (select "token" from anfitrion_secreto limit 1)
+    then (select "token" from tablon_secreto limit 1)
+    else null
+  end;
+$$;
+
+-- Envía un correo de prueba para comprobar que la dirección funciona.
+CREATE FUNCTION public.anfitrion_probar_email_colaborador(p_token uuid, p_colaborador_id uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  perform enviar_email(
+    (select "email" from colaboradores where "id" = p_colaborador_id),
+    'Email de prueba',
+    'Hola,<br><br>Esto es un email de prueba para confirmar que esta dirección está bien escrita ' ||
+    'y te llegan los avisos de la app de invitados del evento.<br><br>' ||
+    'Si has recibido esto, todo funciona correctamente — no hace falta que respondas.'
+  );
+end;
+$$;
+
+-- Vuelve a enviar el acuse de recibo a un colaborador.
+CREATE FUNCTION public.anfitrion_reenviar_acuse_colaborador(p_token uuid, p_email text, p_asunto text, p_html text, p_adjunto_nombre text, p_adjunto_base64 text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  perform enviar_email(p_email, p_asunto, p_html, p_adjunto_nombre, p_adjunto_base64, null, 'asignados');
+end;
+$$;
+
+-- Marca todos los avisos como no enviados.
+CREATE FUNCTION public.anfitrion_resetear_avisos(p_token uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token <> (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+  delete from avisos_enviados where true;
+  update invitados set "avisoPendiente" = true where "colaboradorId" is not null;
+end;
+$$;
+
+-- Quita asignaciones o campos de unos invitados concretos. Nunca borra invitados.
+CREATE FUNCTION public.anfitrion_resetear_por_invitados(p_token uuid, p_invitado_ids uuid[], p_categoria text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token <> (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  if p_categoria = 'datos' then
+    update invitados set
+      "anioNacimiento" = '', "anioBoda" = '', "email" = '',
+      "cancion" = '', "alergias" = '', "observaciones" = ''
+    where "id" = any(p_invitado_ids);
+  elsif p_categoria = 'pago' then
+    update invitados set "pagado" = false
+    where "id" = any(p_invitado_ids);
+  elsif p_categoria = 'mesa' then
+    update invitados set "mesa" = null
+    where "id" = any(p_invitado_ids);
+  elsif p_categoria = 'asignacion' then
+    update invitados set "colaboradorId" = null
+    where "id" = any(p_invitado_ids);
+  elsif p_categoria = 'foto' then
+    delete from fotos_familiares where "grupoFamiliar" in (
+      select distinct coalesce(nullif("grupoFamiliar", ''), "apellido")
+      from invitados where "id" = any(p_invitado_ids)
+    );
+  elsif p_categoria = 'invitacion' then
+    update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null
+    where "grupoFamiliar" in (
+      select distinct coalesce(nullif("grupoFamiliar", ''), "apellido")
+      from invitados where "id" = any(p_invitado_ids)
+    );
+  end if;
+end;
+$$;
+
+
+-- ------------------------------------------------------------
+-- Los colaboradores
+-- ------------------------------------------------------------
+
+-- El colaborador da por terminada su recogida de datos.
+CREATE FUNCTION public.colaborador_confirmar_datos_completos(p_colaborador_id uuid) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  total integer;
+  completos integer;
+begin
+  if not colaborador_puede_actuar(p_colaborador_id) then
+    return false;
+  end if;
+
+  select count(*), count(*) filter (
+    where coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> ''
+  )
+  into total, completos
+  from invitados
+  where "colaboradorId" = p_colaborador_id and "confirmado" = true;
+
+  if total > 0 and total = completos then
+    perform enviar_email(
+      (select "emailAnfitrion" from evento limit 1),
+      'Datos completados',
+      replace(
+        (select "plantillaDatosCompletados" from evento limit 1),
+        '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
+      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>',
+      p_tipo := 'datos'
+    );
+    return true;
+  end if;
+  return false;
+end;
+$$;
+
+-- El colaborador da por terminados sus cobros.
+CREATE FUNCTION public.colaborador_confirmar_pagos_completos(p_colaborador_id uuid) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  total integer;
+  pagados integer;
+begin
+  if not colaborador_puede_actuar(p_colaborador_id) then
+    return false;
+  end if;
+
+  select count(*), count(*) filter (where "pagado")
+  into total, pagados
+  from invitados
+  where "colaboradorId" = p_colaborador_id and "confirmado" = true;
+
+  if total > 0 and total = pagados then
+    perform enviar_email(
+      (select "emailAnfitrion" from evento limit 1),
+      'Pagos completos',
+      replace(
+        (select "plantillaPagoRegistrado" from evento limit 1),
+        '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
+      ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>',
+      p_tipo := 'datos'
+    );
+    return true;
+  end if;
+  return false;
+end;
+$$;
+
+-- El colaborador guarda los datos de uno de sus invitados.
+CREATE FUNCTION public.colaborador_guardar_invitado(p_colaborador_id uuid, p_invitado_id uuid, p_cambios jsonb) RETURNS SETOF public.invitados
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if not colaborador_puede_actuar(p_colaborador_id) then
+    return;
+  end if;
+
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
+  return query
+  update invitados set
+    "anioNacimiento" = coalesce(p_cambios->>'anioNacimiento', "anioNacimiento"),
+    "anioBoda"       = coalesce(p_cambios->>'anioBoda', "anioBoda"),
+    "email"          = coalesce(p_cambios->>'email', "email"),
+    "cancion"        = coalesce(p_cambios->>'cancion', "cancion"),
+    "alergias"       = coalesce(p_cambios->>'alergias', "alergias"),
+    "observaciones"  = coalesce(p_cambios->>'observaciones', "observaciones")
+  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+  returning *;
+end;
+$$;
+
+-- El colaborador escribe en el tablón de novedades, si tiene permiso.
+CREATE FUNCTION public.colaborador_guardar_novedades(p_colaborador_id uuid, p_filas jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if not colaborador_puede_editar_novedades(p_colaborador_id) then
+    return;
+  end if;
+
+  update novedades n
+  set "titulo" = coalesce(f->>'titulo', n."titulo"),
+      "cuerpo" = coalesce(f->>'cuerpo', n."cuerpo"),
+      "publicada" = coalesce((f->>'publicada')::boolean, n."publicada")
+  from jsonb_array_elements(p_filas) as f
+  where n."id" = (f->>'id')::uuid;
+end;
+$$;
+
+-- El colaborador ve las novedades.
+CREATE FUNCTION public.colaborador_listar_novedades(p_colaborador_id uuid) RETURNS SETOF public.novedades
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select n.* from novedades n
+  where colaborador_puede_editar_novedades(p_colaborador_id)
+  order by n."creadaEn" desc;
+$$;
+
+-- El colaborador marca a un invitado como pagado.
+CREATE FUNCTION public.colaborador_marcar_pagado(p_colaborador_id uuid, p_invitado_id uuid, p_pagado boolean) RETURNS SETOF public.invitados
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  actualizado invitados;
+begin
+  if not colaborador_puede_actuar(p_colaborador_id) then
+    return;
+  end if;
+
+  if p_pagado then
+    perform 1 from invitados
+    where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+      and coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> '';
+    if not found then
+      return;
+    end if;
+  end if;
+
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
+  update invitados set "pagado" = p_pagado
+  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+  returning * into actualizado;
+
+  if not found then
+    return;
+  end if;
+
+  return next actualizado;
+end;
+$$;
+
+-- El colaborador marca a un invitado como presente el día de la boda.
+CREATE FUNCTION public.colaborador_marcar_presente(p_colaborador_id uuid, p_invitado_id uuid, p_presente boolean) RETURNS SETOF public.invitados
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
 declare
   actualizado invitados;
 begin
@@ -2830,8 +1496,6 @@ begin
       return;
     end if;
 
-    -- Datos obligatorios (año de nacimiento y alergias, los mismos dos
-    -- de siempre -- ver datosCompletos en lib/invitados.js) y pago hecho.
     perform 1 from invitados
     where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
       and coalesce("anioNacimiento", '') <> ''
@@ -2855,260 +1519,341 @@ begin
 end;
 $$;
 
--- ============================================================
--- 2026-09-06 (v24): CERRAR A ESCRITURA LAS 4 TABLAS QUE ESTABAN
--- ABIERTAS A `anon` (evento, mesas, fotos_familiares,
--- orden_familias).
---
--- Se comprobó EN VIVO contra el proyecto real, sin ninguna
--- credencial: con la clave publicable (que viaja dentro del JS
--- compilado, y eso es correcto y esperado) cualquiera podía leer
--- `evento` entera y también ESCRIBIR en ella -- un `PATCH` anónimo
--- devolvía 204, no 403.
---
--- Por qué importaba de verdad: `evento` guarda las PLANTILLAS de
--- los emails automáticos. Reescribirlas desde fuera equivale a
--- decidir el texto de los correos que la propia app manda, con el
--- remitente legítimo del anfitrión, a todos los invitados.
---
--- Por qué pasó: la política original ("anon_full_access ... for all
--- using (true) with check (true)", más arriba en este archivo) se
--- escribió cuando estas tablas solo tenían mesas y orden -- "datos
--- sin sensibilidad real", decía el comentario, y era cierto
--- ENTONCES. Después se le añadieron 13 columnas a `evento` (las
--- plantillas de email, el email del anfitrión, el cronograma, el
--- cierre de llegadas...). El comentario se quedó igual mientras el
--- riesgo crecía por debajo.
---
--- La lectura sigue abierta a propósito: el tablón público
--- (VistaTablon.jsx) lee `evento` sin sesión ninguna, y las fotos y
--- las mesas no dicen nada que no vea ya cualquier invitado. Lo que
--- se cierra es ESCRIBIR, que pasa a las 4 funciones de abajo --
--- mismo patrón que `invitados` y `colaboradores` desde el principio.
--- ============================================================
+-- El colaborador ve su propia ficha y sus permisos.
+CREATE FUNCTION public.colaborador_mi_perfil(p_colaborador_id uuid) RETURNS SETOF public.colaboradores
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$ select * from colaboradores where "id" = p_colaborador_id; $$;
 
--- ---------- Ayudante genérico de permisos por colaborador ----------
--- Ya existía `colaborador_puede_editar_novedades(uuid)`, atada a una
--- clave concreta y al id que mande el cliente. Esta es la versión
--- general (la clave como parámetro) y además NO se fía de ningún id
--- que venga de fuera: resuelve el colaborador por `auth.uid()`, que
--- es lo único que el navegador no puede falsificar.
-create or replace function colaborador_tiene_permiso(p_clave text)
-returns boolean
-language sql security definer set search_path = public, pg_temp
-as $$
-  select exists (
-    select 1 from colaboradores c
-    where c."authUserId" = auth.uid()
-      and c."permisos" ? p_clave
-  );
+-- El colaborador ve solo los invitados que le tocan.
+CREATE FUNCTION public.colaborador_mis_invitados(p_colaborador_id uuid) RETURNS SETOF public.invitados
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select i.* from invitados i
+  where i."colaboradorId" = p_colaborador_id
+    and i."confirmado" = true
+    and exists (
+      select 1 from colaboradores c
+      where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
+    );
 $$;
-revoke execute on function colaborador_tiene_permiso(text) from public;
-grant execute on function colaborador_tiene_permiso(text) to authenticated;
 
--- ---------- evento ----------
--- Dos niveles de acceso a propósito:
---   * El anfitrión (token) escribe cualquier columna.
---   * Un colaborador con "datos_evento_editar" escribe SOLO las
---     columnas de la ventana que se le abre (Datos del evento, con
---     las plantillas de email dentro). Sin esa lista blanca, ese
---     permiso le dejaría también abrir el control de llegadas
---     ("asistenciaAbierta"), activar el Modo Pruebas o cambiar la
---     visibilidad del cronograma -- cosas que no están en su
---     ventana y que nadie ha querido concederle.
---
--- El SET se construye a partir de las columnas REALES de la tabla
--- (pg_attribute) en vez de escribirlas a mano una a una: `evento` ya
--- va por 37 columnas y crece cada pocas sesiones -- una lista fija
--- aquí se quedaría desactualizada al primer `alter table` y el
--- guardado empezaría a perder campos en silencio. Los nombres salen
--- del catálogo de Postgres y van con %I; el valor viaja como
--- parámetro ($1), nunca concatenado -- no hay forma de inyectar nada.
-drop function if exists guardar_evento(text, jsonb);
-create or replace function guardar_evento(p_token uuid, p_fila jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
+-- El colaborador lee la llave del tablón para poder compartir el enlace.
+CREATE FUNCTION public.colaborador_obtener_token_tablon(p_colaborador_id uuid) RETURNS uuid
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select case
+    when exists (
+      select 1 from colaboradores c
+      where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
+    )
+    then (select "token" from tablon_secreto limit 1)
+    else null
+  end;
+$$;
+
+
+-- ------------------------------------------------------------
+-- El tablón público
+-- ------------------------------------------------------------
+
+-- Devuelve las novedades publicadas a quien ha pasado el control.
+CREATE FUNCTION public.tablon_listar_novedades(p_token uuid, p_respuesta text, p_dispositivo_id text) RETURNS SETOF public.novedades
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
 declare
-  v_es_anfitrion boolean;
-  v_claves text[];
-  v_sets text;
-  -- Exactamente los campos que edita VentanaConfigDatosEvento.jsx
-  -- (incluido PlantillasEmail.jsx, que vive dentro desde el
-  -- 2026-09-06). Al añadir un campo a esa ventana, añadirlo aquí.
-  v_permitidas text[] := array[
-    'nombre', 'fecha', 'hora', 'lugar', 'direccion', 'imagen',
-    'ocultarTituloEnImagen', 'emailAnfitrion', 'urlPublica',
-    'precioAdulto', 'precioNino', 'edadNinoDesde', 'edadNinoHasta',
-    'plantillaAsignacion', 'plantillaDatosCompletados',
-    'plantillaPagoRegistrado', 'plantillaInvitacionFamilia'
-  ];
+  v_valido boolean;
 begin
-  v_es_anfitrion := p_token is not null
-    and p_token = (select "token" from anfitrion_secreto limit 1);
-
-  if not v_es_anfitrion and not colaborador_tiene_permiso('datos_evento_editar') then
-    raise exception 'No autorizado para editar los datos del evento';
+  v_valido := tablon_verificar_respuesta(p_token, p_respuesta);
+  if v_valido then
+    insert into tablon_accesos ("nombreNormalizado", "dispositivoId")
+    values (normalizar_nombre_tablon(p_respuesta), coalesce(nullif(p_dispositivo_id, ''), 'desconocido'))
+    on conflict ("nombreNormalizado", "dispositivoId") do update set "actualizadoEn" = now();
   end if;
 
-  select array_agg(a.attname::text) into v_claves
-  from pg_attribute a
-  where a.attrelid = 'public.evento'::regclass
-    and a.attnum > 0
-    and not a.attisdropped
-    and a.attname <> 'id'
-    and p_fila ? a.attname::text
-    and (v_es_anfitrion or a.attname::text = any(v_permitidas));
-
-  if v_claves is null then
-    return;
-  end if;
-
-  select string_agg(
-           format('%I = ($1->>%L)::%s', a.attname, a.attname,
-                  format_type(a.atttypid, a.atttypmod)),
-           ', ')
-    into v_sets
-  from pg_attribute a
-  where a.attrelid = 'public.evento'::regclass
-    and a.attnum > 0
-    and not a.attisdropped
-    and a.attname::text = any(v_claves);
-
-  execute format('update evento set %s where "id" = true', v_sets) using p_fila;
+  return query
+  select n.* from novedades n
+  where v_valido and n."publicada" = true
+  order by n."creadaEn" desc;
 end;
 $$;
-revoke execute on function guardar_evento(uuid, jsonb) from public;
-grant execute on function guardar_evento(uuid, jsonb) to anon, authenticated;
 
--- ---------- mesas ----------
--- Solo el anfitrión: ningún colaborador toca mesas en toda la app.
--- Semántica de "reemplazar la lista entera" (borra las que ya no
--- están, inserta/actualiza el resto) -- es lo que hacía el cliente
--- en dos pasos, ahora en uno solo y dentro de una transacción, así
--- que ya no puede quedarse a medias como avisaba el comentario de
--- persistMesas.
-drop function if exists anfitrion_guardar_mesas(text, jsonb);
-create or replace function anfitrion_guardar_mesas(p_token uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
+-- Devuelve la pregunta de control a quien abre el tablón.
+CREATE FUNCTION public.tablon_obtener_pregunta(p_token uuid) RETURNS text
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select case
+    when p_token = (select "token" from tablon_secreto limit 1)
+    then (select "pregunta" from tablon_secreto limit 1)
+    else null
+  end;
+$$;
+
+-- Comprueba el nombre y apellido contra la lista de confirmados.
+CREATE FUNCTION public.tablon_verificar_respuesta(p_token uuid, p_respuesta text) RETURNS boolean
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+  select p_token = (select "token" from tablon_secreto limit 1)
+    and exists (
+      select 1 from invitados i
+      where i."confirmado" = true
+        and i."excluidoTablon" = false
+        and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)
+    );
+$$;
+
+
+-- ------------------------------------------------------------
+-- Funciones que disparan los avisos automáticos (triggers)
+-- ------------------------------------------------------------
+
+-- Si un colaborador cambia su email de acceso, lo copia a su ficha.
+CREATE FUNCTION public.sincronizar_email_colaborador() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
 begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
-    raise exception 'Token no válido';
-  end if;
-
-  delete from mesas
-  where "numero" not in (
-    select (v->>'numero')::int from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
-  );
-
-  insert into mesas ("numero", "capacidad", "posX", "posY")
-  select (v->>'numero')::int,
-         coalesce((v->>'capacidad')::int, 10),
-         (v->>'posX')::numeric,
-         (v->>'posY')::numeric
-  from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
-  on conflict ("numero") do update set
-    "capacidad" = excluded."capacidad",
-    "posX"      = excluded."posX",
-    "posY"      = excluded."posY";
+  update colaboradores
+  set "email" = new.email, "emailSincronizadoEn" = now()
+  where "authUserId" = new.id;
+  return new;
 end;
 $$;
-revoke execute on function anfitrion_guardar_mesas(uuid, jsonb) from public;
-grant execute on function anfitrion_guardar_mesas(uuid, jsonb) to anon, authenticated;
 
--- ---------- fotos_familiares ----------
--- El anfitrión, o CUALQUIER colaborador con sesión real: subir la
--- foto de su familia es parte del trabajo normal de un colaborador
--- (VistaColaborador.jsx), no hace falta ningún permiso especial.
--- Solo inserta/actualiza, nunca borra -- igual que hacía el cliente.
-drop function if exists guardar_fotos_familiares(text, jsonb);
-create or replace function guardar_fotos_familiares(p_token uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
+-- Cuando alguien se registra, le engancha su ficha de colaborador.
+CREATE FUNCTION public.vincular_cuenta_nueva() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
 begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1)
-     and not exists (select 1 from colaboradores c where c."authUserId" = auth.uid())
-  then
-    raise exception 'No autorizado para guardar fotos familiares';
+  if lower(new.email) = lower((select "emailAnfitrion" from evento limit 1)) then
+    insert into anfitriones ("authUserId") values (new.id)
+    on conflict do nothing;
+  else
+    update colaboradores
+    set "authUserId" = new.id
+    where lower("email") = lower(new.email);
   end if;
-
-  insert into fotos_familiares ("grupoFamiliar", "url")
-  select v->>'grupoFamiliar', coalesce(v->>'url', '')
-  from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
-  where coalesce(v->>'grupoFamiliar', '') <> ''
-  on conflict ("grupoFamiliar") do update set "url" = excluded."url";
+  return new;
 end;
 $$;
-revoke execute on function guardar_fotos_familiares(uuid, jsonb) from public;
-grant execute on function guardar_fotos_familiares(uuid, jsonb) to anon, authenticated;
 
--- ---------- orden_familias ----------
--- El anfitrión, o un colaborador con "invitaciones_enviar" (marcar
--- una familia como ya invitada es justo el efecto de ese permiso,
--- ver lib/useMotorInvitaciones.js).
-drop function if exists guardar_orden_familias(text, jsonb);
-create or replace function guardar_orden_familias(p_token uuid, p_filas jsonb)
-returns void
-language plpgsql security definer set search_path = public, pg_temp
-as $$
+-- Recalcula si un invitado tiene un aviso pendiente de enviar.
+CREATE FUNCTION public.trg_recalcular_aviso_pendiente() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
 begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1)
-     and not colaborador_tiene_permiso('invitaciones_enviar')
-  then
-    raise exception 'No autorizado para guardar el orden de las familias';
+  -- Vía de escape para las funciones del propio colaborador (rellenar
+  -- datos, marcar pago): su cambio no debe generarle un aviso a sí mismo.
+  if coalesce(current_setting('eventos.recalculo_aviso_activo', true), 'on') = 'off' then
+    return new;
   end if;
 
-  insert into orden_familias ("grupoFamiliar", "orden", "invitacionEnviada", "invitacionEnviadaEn")
-  select v->>'grupoFamiliar',
-         coalesce(
-           (select array_agg(x) from jsonb_array_elements_text(v->'orden') x),
-           '{}'::text[]
-         ),
-         coalesce((v->>'invitacionEnviada')::boolean, false),
-         (v->>'invitacionEnviadaEn')::timestamptz
-  from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
-  where coalesce(v->>'grupoFamiliar', '') <> ''
-  on conflict ("grupoFamiliar") do update set
-    "orden"               = excluded."orden",
-    "invitacionEnviada"   = excluded."invitacionEnviada",
-    "invitacionEnviadaEn" = excluded."invitacionEnviadaEn";
+  if new."colaboradorId" is null then
+    new."avisoPendiente" := false;
+  elsif TG_OP = 'INSERT' then
+    new."avisoPendiente" := new."confirmado";
+  elsif new."confirmado" and (
+    new."colaboradorId" is distinct from old."colaboradorId" or
+    new."confirmado" is distinct from old."confirmado" or
+    new."anioNacimiento" is distinct from old."anioNacimiento" or
+    new."anioBoda" is distinct from old."anioBoda" or
+    new."email" is distinct from old."email" or
+    new."cancion" is distinct from old."cancion" or
+    new."alergias" is distinct from old."alergias" or
+    new."observaciones" is distinct from old."observaciones" or
+    new."pagado" is distinct from old."pagado" or
+    new."mesa" is distinct from old."mesa"
+  ) then
+    new."avisoPendiente" := true;
+  end if;
+  return new;
 end;
 $$;
-revoke execute on function guardar_orden_familias(uuid, jsonb) from public;
-grant execute on function guardar_orden_familias(uuid, jsonb) to anon, authenticated;
 
--- ---------- Y AHORA SÍ: cerrar la puerta ----------
--- Cinturón: la política deja de ser "for all" y pasa a ser solo
--- lectura. Tirantes: se quitan además los permisos de tabla que
--- Supabase concede por defecto (mismo doble cierre que ya tenían
--- `invitados` y `colaboradores`) -- con que falte uno de los dos,
--- la puerta sigue abierta.
-drop policy if exists "anon_full_access" on evento;
-drop policy if exists "anon_full_access" on mesas;
-drop policy if exists "anon_full_access" on fotos_familiares;
-drop policy if exists "anon_full_access" on orden_familias;
+-- Si cambian los datos de un invitado, marca la invitación de su familia como caducada.
+CREATE FUNCTION public.trg_invalidar_invitacion_familia() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+declare
+  clave text;
+  clave_anterior text;
+begin
+  clave := coalesce(nullif(new."grupoFamiliar", ''), new."apellido");
+  update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null
+  where "grupoFamiliar" = clave and "invitacionEnviada" = true;
 
-create policy "lectura_publica" on evento           for select using (true);
-create policy "lectura_publica" on mesas            for select using (true);
-create policy "lectura_publica" on fotos_familiares for select using (true);
-create policy "lectura_publica" on orden_familias   for select using (true);
+  if TG_OP = 'UPDATE' then
+    clave_anterior := coalesce(nullif(old."grupoFamiliar", ''), old."apellido");
+    if clave_anterior is distinct from clave then
+      update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null
+      where "grupoFamiliar" = clave_anterior and "invitacionEnviada" = true;
+    end if;
+  end if;
 
-revoke insert, update, delete, truncate on table evento           from anon, authenticated;
-revoke insert, update, delete, truncate on table mesas            from anon, authenticated;
-revoke insert, update, delete, truncate on table fotos_familiares from anon, authenticated;
-revoke insert, update, delete, truncate on table orden_familias   from anon, authenticated;
+  return new;
+end;
+$$;
 
--- 2026-09-16 (v27.7): cuánto destaca la cortinilla sobre la música, en
--- puntos. Vive en `evento` y no en el navegador a propósito: así el
--- ajuste se puede consultar desde fuera para afinarlo sin depender de
--- que alguien lea el número de la pantalla.
+-- Al cambiar el texto de una novedad, guarda el anterior.
+CREATE FUNCTION public.trg_historial_novedad_cuerpo() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+begin
+  if old."cuerpo" is distinct from new."cuerpo" then
+    perform registrar_historial_texto('novedad', old."id", 'cuerpo', old."cuerpo");
+  end if;
+  return new;
+end;
+$$;
+
+-- Al cambiar una plantilla de email, guarda la anterior.
+CREATE FUNCTION public.trg_historial_plantillas_email() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+begin
+  if old."plantillaAsignacion" is distinct from new."plantillaAsignacion" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaAsignacion', old."plantillaAsignacion");
+  end if;
+  if old."plantillaDatosCompletados" is distinct from new."plantillaDatosCompletados" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaDatosCompletados', old."plantillaDatosCompletados");
+  end if;
+  if old."plantillaPagoRegistrado" is distinct from new."plantillaPagoRegistrado" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaPagoRegistrado', old."plantillaPagoRegistrado");
+  end if;
+  if old."plantillaInvitacionFamilia" is distinct from new."plantillaInvitacionFamilia" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaInvitacionFamilia', old."plantillaInvitacionFamilia");
+  end if;
+  return new;
+end;
+$$;
+
+
+
+-- ============================================================
+-- 5. AVISOS AUTOMÁTICOS (TRIGGERS)
+-- ============================================================
+-- Se disparan solos cuando cambia una fila. Son los que mantienen
+-- al día el aviso pendiente de cada invitado, invalidan una
+-- invitación cuando cambian los datos de la familia y guardan el
+-- texto anterior para poder deshacer.
+
+CREATE TRIGGER invitados_invalidar_invitacion AFTER INSERT OR UPDATE OF confirmado, pagado, mesa, "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_invalidar_invitacion_familia();
+
+CREATE TRIGGER invitados_recalcular_aviso BEFORE INSERT OR UPDATE ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_recalcular_aviso_pendiente();
+
+CREATE TRIGGER trg_historial_novedad_cuerpo AFTER UPDATE OF cuerpo ON public.novedades FOR EACH ROW EXECUTE FUNCTION public.trg_historial_novedad_cuerpo();
+
+CREATE TRIGGER trg_historial_plantillas_email AFTER UPDATE ON public.evento FOR EACH ROW EXECUTE FUNCTION public.trg_historial_plantillas_email();
+
+CREATE TRIGGER trg_sincronizar_email_colaborador AFTER UPDATE OF email ON auth.users FOR EACH ROW WHEN (((old.email)::text IS DISTINCT FROM (new.email)::text)) EXECUTE FUNCTION public.sincronizar_email_colaborador();
+
+CREATE TRIGGER trg_vincular_cuenta_nueva AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.vincular_cuenta_nueva();
+
+
+
+-- ============================================================
+-- 6. PERMISOS DE LECTURA Y ESCRITURA (RLS)
+-- ============================================================
+-- Todas las tablas tienen la seguridad por fila activada. Solo
+-- cuatro permiten lectura pública, que es lo que necesita la página
+-- de la boda para verse sin entrar: los datos del evento, las fotos
+-- de familia, las mesas y el orden de las familias.
 --
--- No hace falta tocar `guardar_evento`: esa función construye su SET
--- leyendo las columnas reales de la tabla (pg_attribute), así que una
--- columna nueva entra sola. Y NO se añade a su lista blanca de
--- colaboradores: esto es del anfitrión, no está en la ventana de Datos
--- del evento.
-alter table evento add column if not exists "cortinillaRealce" integer not null default 15;
+-- El resto no tiene NINGUNA política. Eso significa que desde fuera
+-- no se puede leer ni escribir nada: solo se llega a través de las
+-- funciones de la sección 4. Ni la lista de invitados, ni los
+-- emails, ni las llaves.
+
+alter table public.evento enable row level security;
+alter table public.invitados enable row level security;
+alter table public.colaboradores enable row level security;
+alter table public.mesas enable row level security;
+alter table public.orden_familias enable row level security;
+alter table public.fotos_familiares enable row level security;
+alter table public.novedades enable row level security;
+alter table public.gastos enable row level security;
+alter table public.avisos_enviados enable row level security;
+alter table public.historial_texto enable row level security;
+alter table public.anfitriones enable row level security;
+alter table public.anfitrion_secreto enable row level security;
+alter table public.config_secretos enable row level security;
+alter table public.tablon_secreto enable row level security;
+alter table public.tablon_accesos enable row level security;
+alter table public.modo_pruebas_snapshot enable row level security;
+
+CREATE POLICY lectura_publica ON public.evento FOR SELECT USING (true);
+
+CREATE POLICY lectura_publica ON public.fotos_familiares FOR SELECT USING (true);
+
+CREATE POLICY lectura_publica ON public.mesas FOR SELECT USING (true);
+
+CREATE POLICY lectura_publica ON public.orden_familias FOR SELECT USING (true);
+
+
+
+-- ============================================================
+-- 7. CARPETAS DE ARCHIVOS (STORAGE)
+-- ============================================================
+-- Cuatro carpetas públicas de lectura: cualquiera puede ver o oír
+-- lo que hay dentro (hace falta para la página y para el mando de
+-- música), pero solo el anfitrión puede subir, cambiar o borrar.
+
+insert into storage.buckets (id, name, public) values ('musica-ambiental', 'musica-ambiental', true)
+  on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('og-imagen', 'og-imagen', true)
+  on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('cronograma', 'cronograma', true)
+  on conflict (id) do nothing;
+insert into storage.buckets (id, name, public) values ('musica-fondo', 'musica-fondo', true)
+  on conflict (id) do nothing;
+
+CREATE POLICY cronograma_lectura_publica ON storage.objects FOR SELECT USING ((bucket_id = 'cronograma'::text));
+
+CREATE POLICY cronograma_solo_anfitrion_borra ON storage.objects FOR DELETE TO authenticated USING (((bucket_id = 'cronograma'::text) AND public.es_anfitrion()));
+
+CREATE POLICY cronograma_solo_anfitrion_reemplaza ON storage.objects FOR UPDATE TO authenticated USING (((bucket_id = 'cronograma'::text) AND public.es_anfitrion())) WITH CHECK (((bucket_id = 'cronograma'::text) AND public.es_anfitrion()));
+
+CREATE POLICY cronograma_solo_anfitrion_sube ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'cronograma'::text) AND public.es_anfitrion()));
+
+CREATE POLICY musica_ambiental_lectura_publica ON storage.objects FOR SELECT USING ((bucket_id = 'musica-ambiental'::text));
+
+CREATE POLICY musica_ambiental_solo_anfitrion_borra ON storage.objects FOR DELETE TO authenticated USING (((bucket_id = 'musica-ambiental'::text) AND public.es_anfitrion()));
+
+CREATE POLICY musica_ambiental_solo_anfitrion_escribe ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'musica-ambiental'::text) AND public.es_anfitrion()));
+
+CREATE POLICY musica_fondo_lectura_publica ON storage.objects FOR SELECT USING ((bucket_id = 'musica-fondo'::text));
+
+CREATE POLICY musica_fondo_solo_anfitrion_borra ON storage.objects FOR DELETE TO authenticated USING (((bucket_id = 'musica-fondo'::text) AND public.es_anfitrion()));
+
+CREATE POLICY musica_fondo_solo_anfitrion_reemplaza ON storage.objects FOR UPDATE TO authenticated USING (((bucket_id = 'musica-fondo'::text) AND public.es_anfitrion())) WITH CHECK (((bucket_id = 'musica-fondo'::text) AND public.es_anfitrion()));
+
+CREATE POLICY musica_fondo_solo_anfitrion_sube ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'musica-fondo'::text) AND public.es_anfitrion()));
+
+CREATE POLICY og_imagen_lectura_publica ON storage.objects FOR SELECT USING ((bucket_id = 'og-imagen'::text));
+
+CREATE POLICY og_imagen_solo_anfitrion_reemplaza ON storage.objects FOR UPDATE TO authenticated USING (((bucket_id = 'og-imagen'::text) AND public.es_anfitrion())) WITH CHECK (((bucket_id = 'og-imagen'::text) AND public.es_anfitrion()));
+
+CREATE POLICY og_imagen_solo_anfitrion_sube ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'og-imagen'::text) AND public.es_anfitrion()));
+
+
+
+-- ============================================================
+-- 8. FILAS INICIALES
+-- ============================================================
+-- Las cuatro tablas de una sola fila necesitan que esa fila exista.
+-- Las llaves se generan solas y no se escriben aquí: tras ejecutar
+-- esto hay que copiar la del anfitrión desde la propia tabla, y la
+-- clave de Resend se mete a mano en config_secretos.
+
+insert into evento (id) values (true) on conflict (id) do nothing;
+insert into anfitrion_secreto (id) values (true) on conflict (id) do nothing;
+insert into tablon_secreto (id) values (true) on conflict (id) do nothing;
+insert into config_secretos (id) values (true) on conflict (id) do nothing;
+
+-- Fin del archivo.
