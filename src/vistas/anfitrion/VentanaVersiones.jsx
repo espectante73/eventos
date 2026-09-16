@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.3",
+    cambios: [
+      "Arreglada la transición entre bloques musicales. Las dos quejas de siempre — que sonaba brusca y que la anterior se cortaba antes de tiempo — eran el mismo fallo.",
+      "El cruce usaba la misma curva que el mando de volumen, y esa curva ahí hace estragos: a mitad de camino las dos pistas quedaban al 12%, con un agujero de silencio en medio. La que salía se esfumaba en el primer cuarto y la que entraba aparecía de golpe al final.",
+      "Ahora las dos van al 71% en el punto medio y la energía se mantiene constante de principio a fin. El cambio se oye continuo, sin hueco y sin salto.",
+    ],
+  },
+  {
     version: "27.2",
     cambios: [
       "Arreglado en el tablón: a los invitados con la letra del móvil aumentada se les cortaba el título de cada apartado.",

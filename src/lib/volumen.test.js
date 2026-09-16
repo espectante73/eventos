@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { porcentajeAVolumen, volumenAPorcentaje, ajustarPorcentaje, PASO_VOLUMEN, duracionCruce, CRUCE_POR_DEFECTO, CRUCE_MINIMO, CRUCE_MAXIMO } from "./volumen";
+import { porcentajeAVolumen, volumenAPorcentaje, ajustarPorcentaje, PASO_VOLUMEN, duracionCruce, CRUCE_POR_DEFECTO, CRUCE_MINIMO, CRUCE_MAXIMO, volumenesDeCruce } from "./volumen";
 
 describe("porcentajeAVolumen", () => {
   it("los extremos son exactos", () => {
@@ -62,5 +62,41 @@ describe("duracionCruce", () => {
   it("no baja de minimo ni pasa de maximo", () => {
     expect(duracionCruce(0.4)).toBe(CRUCE_MINIMO);
     expect(duracionCruce(20)).toBe(CRUCE_MAXIMO);
+  });
+});
+
+describe("volumenesDeCruce", () => {
+  const potencia = ({ saliente, entrante }) => Math.sqrt(saliente ** 2 + entrante ** 2);
+
+  it("al empezar suena solo la que sale; al acabar solo la que entra", () => {
+    expect(volumenesDeCruce(1, 0)).toEqual({ saliente: 1, entrante: 0 });
+    const fin = volumenesDeCruce(1, 1);
+    expect(fin.saliente).toBeCloseTo(0, 6);
+    expect(fin.entrante).toBeCloseTo(1, 6);
+  });
+
+  // Lo que arregla el fallo: antes, a mitad de camino las dos estaban al
+  // 12% y se oía un agujero. Con igual potencia, las dos al 71%.
+  it("a mitad de camino las dos suenan al 71%, no al 12%", () => {
+    const medio = volumenesDeCruce(1, 0.5);
+    expect(medio.saliente).toBeCloseTo(0.707, 3);
+    expect(medio.entrante).toBeCloseTo(0.707, 3);
+  });
+
+  it("la energía total se mantiene constante durante todo el cruce", () => {
+    for (const avance of [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1]) {
+      expect(potencia(volumenesDeCruce(1, avance))).toBeCloseTo(1, 6);
+    }
+  });
+
+  it("respeta el volumen al que hay que llegar", () => {
+    expect(potencia(volumenesDeCruce(0.4, 0.3))).toBeCloseTo(0.4, 6);
+    expect(volumenesDeCruce(0, 0.5)).toEqual({ saliente: 0, entrante: 0 });
+  });
+
+  it("aguanta valores fuera de rango o sin sentido", () => {
+    expect(volumenesDeCruce(1, -1).saliente).toBe(1);
+    expect(volumenesDeCruce(1, 5).entrante).toBeCloseTo(1, 6);
+    expect(volumenesDeCruce(undefined, 0.5)).toEqual({ saliente: 0, entrante: 0 });
   });
 });

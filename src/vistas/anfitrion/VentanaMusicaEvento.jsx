@@ -62,7 +62,7 @@ import {
 } from "lucide-react";
 import { calcularHorasAbsolutas } from "../../lib/cronograma";
 import { useMandoMusica } from "../../lib/useMandoMusica";
-import { porcentajeAVolumen, ajustarPorcentaje, duracionCruce, PASO_VOLUMEN } from "../../lib/volumen";
+import { porcentajeAVolumen, ajustarPorcentaje, duracionCruce, volumenesDeCruce, PASO_VOLUMEN } from "../../lib/volumen";
 import { guardarPista, leerTodasLasPistas } from "../../lib/almacenPistas";
 import { leerFondo, subirFondo, borrarFondo, nombreParaMostrar, PESO_EXCESIVO } from "../../lib/fondoMusica";
 import {
@@ -518,8 +518,17 @@ export function VentanaMusicaEvento({ data, ventana }) {
       const temporizador = setInterval(() => {
         const avance = Math.min(1, (Date.now() - empezado) / total);
         const objetivo = silenciadoRef.current ? 0 : volumenRef.current;
-        saliente.volume = porcentajeAVolumen(objetivo * (1 - avance));
-        entrante.volume = porcentajeAVolumen(objetivo * avance);
+        // La conversión perceptual se hace UNA vez, sobre el volumen al
+        // que tienen que llegar; el reparto entre las dos pistas lo hace
+        // la curva de igual potencia. Hacerlo al revés (convertir la
+        // rampa) era el fallo que dejaba un agujero en mitad del cruce
+        // -- ver volumenesDeCruce en lib/volumen.js.
+        const { saliente: vSale, entrante: vEntra } = volumenesDeCruce(
+          porcentajeAVolumen(objetivo),
+          avance
+        );
+        saliente.volume = vSale;
+        entrante.volume = vEntra;
         if (avance >= 1) cortarFundido();
       }, paso);
       fundidoRef.current = { temporizador, saliente };

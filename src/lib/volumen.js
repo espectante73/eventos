@@ -56,3 +56,37 @@ export function duracionCruce(segundosCortinilla) {
   if (!Number.isFinite(ms) || ms <= 0) return CRUCE_POR_DEFECTO;
   return Math.min(CRUCE_MAXIMO, Math.max(CRUCE_MINIMO, ms));
 }
+
+// ---------- La curva del cruce ----------
+// ⚠️ El fundido NO puede usar `porcentajeAVolumen` sobre la rampa, que
+// es lo que hacía hasta el 2026-09-16. Esa curva (elevar al cubo) es la
+// correcta para el MANDO de volumen: reparte los pasos de forma pareja
+// al oído. Pero aplicada al avance del cruce hace esto:
+//
+//   avance 25%  -> sale 42%, entra  2%
+//   avance 50%  -> sale 12%, entra 12%
+//   avance 75%  -> sale  2%, entra 42%
+//
+// Es decir: la pista que sale se esfuma en el primer cuarto y la que
+// entra no aparece hasta el final, con un agujero en medio donde las
+// dos están casi calladas. El usuario lo describió exactamente así:
+// "la transición suena brusca y se corta antes de tiempo". Las dos
+// quejas eran el mismo fallo.
+//
+// Lo correcto al solapar dos sonidos es un cruce de IGUAL POTENCIA
+// (seno/coseno): la suma de energía se mantiene constante de principio
+// a fin, así que no hay hueco. A mitad de camino las dos suenan al 71%,
+// que es lo que hace que el cambio se perciba continuo.
+//
+// `amplitudObjetivo` ya viene convertida (es un `audio.volume` real,
+// 0-1), no un porcentaje: la conversión perceptual la hace quien llama,
+// una sola vez, y aquí solo se reparte entre las dos pistas.
+export function volumenesDeCruce(amplitudObjetivo, avance) {
+  const a = Math.min(1, Math.max(0, Number(avance) || 0));
+  const amplitud = Math.min(1, Math.max(0, Number(amplitudObjetivo) || 0));
+  const angulo = (a * Math.PI) / 2;
+  return {
+    saliente: amplitud * Math.cos(angulo),
+    entrante: amplitud * Math.sin(angulo),
+  };
+}
