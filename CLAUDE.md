@@ -1392,6 +1392,64 @@ habían recibido enteros 10/11/12/13 por error, pasaron a ser 9/9.1/9.2/9.3.
 si es un tema nuevo (entero) o un ajuste sobre uno ya en curso
 (decimal) -- nunca subir el entero por defecto.**
 
+## Pendiente: hacer el mapa del sitio privado de verdad (aparcado el 2026-09-16)
+
+Decisión del usuario, después de una conversación larga: **para él la
+imagen del mapa es un dato a ocultar, igual que los datos personales.**
+Hoy no lo es -- `public/mapa-de-la-aplicacion.png` lo sirve la web a
+cualquiera con la URL, y el permiso `mapa_sitio_ver` solo decide si se
+enseña el enlace. Aparcado por hoy, no descartado.
+
+### Por qué costó entenderlo (y cómo se explicó al final)
+
+El usuario razonaba que si hay login, lo de dentro está protegido. Lo que
+funcionó no fue la metáfora, fue la demostración: pedirle que abriera
+`https://nexuspoint.rsvp/cabecera-defecto.jpg` sin sesión (se ve), y
+enseñarle la respuesta real de la base a `select` sobre `invitados` sin
+token (`permission denied for table invitados`). La frase que cerró el
+asunto: **el navegador se descarga la app entera, imágenes incluidas,
+antes de preguntarte quién eres; la lista de invitados no viene en esa
+descarga, la app la pide después.** Guardar por si vuelve a salir.
+
+### El bloqueante de verdad: el repositorio es público
+
+`github.com/espectante73/eventos` es **público** (comprobado el
+2026-09-16 por la API de GitHub). Mientras siga así, esconder la imagen
+en la app no sirve: se ve en GitHub. Y las versiones ya subidas **quedan
+en el historial de commits** aunque se borre el archivo de hoy -- por eso
+la respuesta no es un `git rm`, es la visibilidad del repositorio.
+
+⚠️ No empezar por el código. El primer paso es del usuario y está sin
+hacer: Settings -> Change repository visibility -> Private. Vercel sigue
+desplegando igual desde un repo privado. Efecto colateral a recordarle:
+para enseñárselo al desarrollador que se ofreció a revisarlo habrá que
+invitarle como colaborador.
+
+### Plan, cuando se retome
+
+1. Repositorio a privado (usuario).
+2. Cubo **privado** `mapa-sitio` en Supabase (`public` = false), con
+   política de SELECT para `es_anfitrion() or
+   colaborador_tiene_permiso('mapa_sitio_ver')`. Es lo que convierte la
+   casilla en un candado de verdad en vez de un adorno del menú.
+3. Subir el PNG al cubo (arrastrar desde el panel de Supabase).
+4. `MapaSitio.jsx` deja de usar la ruta fija y pide un enlace temporal
+   (`createSignedUrl`); mientras carga, un "cargando"; si el servidor
+   dice que no, un mensaje claro en vez de una imagen rota.
+5. Sacar el PNG de `public/` y devolver `scripts/dibujar-mapa.mjs` a una
+   carpeta que no sirva la web. Ojo: `scripts/dibujar-mapa.test.js` no se
+   entera de esto (compara listas, no rutas), pero el comentario de
+   cabecera de los dos archivos cita la ruta y hay que actualizarlo.
+6. Regenerar y volver a subir el PNG pasa a ser un paso manual más. Vale
+   la pena decírselo antes de empezar.
+
+### Si se decide NO hacerlo
+
+Entonces hay que quitar la casilla "Ver el mapa del sitio" de
+`lib/permisos.js`, o cambiarle el texto. Tal como está hoy parece un
+candado y no lo es -- eso es precisamente lo que llevó a esta
+conversación.
+
 ## "Mapa del sitio" en Mi cuenta, con permiso propio (2026-09-16, v29)
 
 El plano (`public/mapa-de-la-aplicacion.png`) ya se consulta desde la
