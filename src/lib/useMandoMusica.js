@@ -91,11 +91,38 @@ export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
     // cerrado (todo su cuerpo va dentro de un `if (isClosed())`) --
     // así que un canal en estado "errored" nunca se recuperaba y nadie
     // volvía a avisar de nada. Se tira el canal y se levanta otro.
+    // "Vivo" en un solo sitio: lo consultan el vigilante de cada 2s y el
+    // propio reintento justo antes de actuar. Con la comprobación
+    // escrita dos veces, acabarían diciendo cosas distintas.
+    const canalVivo = () =>
+      canalRef.current?.state === "joined" ||
+      Date.now() - ultimoMensajeRef.current < SILENCIO_SOSPECHOSO;
+
+    const cancelarReintento = () => {
+      if (!reintentoRef.current) return;
+      clearTimeout(reintentoRef.current);
+      reintentoRef.current = null;
+    };
+
     const programarReintento = () => {
       if (!vivo || reintentoRef.current) return;
       reintentoRef.current = setTimeout(() => {
         reintentoRef.current = null;
         if (!vivo) return;
+        // ⚠️ Volver a mirar ANTES de tirar nada. Entre que se programó
+        // este reintento (hace 4s) y ahora, el canal ha podido
+        // conectarse solo -- y de hecho es lo normal al arrancar: el
+        // vigilante corre a los 2s, cuando el canal todavía no ha
+        // terminado de unirse, y programa un reintento que ya no hace
+        // falta. Sin esta comprobación, ese reintento tiraba un canal
+        // que funcionaba, al levantar otro volvía a haber un instante
+        // "no unido", y el vigilante programaba otro: un parpadeo cada
+        // pocos segundos, para siempre. Lo reportó el usuario el
+        // 2026-09-16 ("parpadea cada unos 8 segundos, en el Mac y en el
+        // iPhone, la música no se corta, es solo visual") y acertó la
+        // causa: "el sistema de reconstruirse no se para cuando se
+        // conecta".
+        if (canalVivo()) return;
         setEstadoCanal("REINTENTANDO");
         const viejo = canalRef.current;
         canalRef.current = null;
@@ -168,11 +195,13 @@ export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
     // buen rato mudo se levanta un canal nuevo. Los setState con el
     // mismo valor no repintan, así que este latido no cuesta nada.
     const vigilante = setInterval(() => {
-      const unido = canalRef.current?.state === "joined";
-      const recibiendoAhora = Date.now() - ultimoMensajeRef.current < SILENCIO_SOSPECHOSO;
-      const vivoElCanal = unido || recibiendoAhora;
+      const vivoElCanal = canalVivo();
       setConectado(vivoElCanal);
       if (vivoElCanal) {
+        // Si había un reintento en cola de cuando aún no estaba
+        // conectado, sobra: tirar un canal que va bien es justo lo que
+        // provocaba el parpadeo.
+        cancelarReintento();
         setEstadoCanal("SUBSCRIBED");
         setDetalleCanal("");
       } else {

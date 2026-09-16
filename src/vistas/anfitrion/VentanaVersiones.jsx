@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.5",
+    cambios: [
+      "Arreglado el parpadeo de la ventana de música cada pocos segundos, en el Mac y en el móvil. La intuición del usuario era exacta: el sistema que reconstruye la conexión no paraba al conectarse.",
+      "Lo que pasaba: al arrancar, el vigilante mira a los 2 segundos, cuando la conexión aún no ha terminado de establecerse, y programa una reconexión para 4 segundos después. Cuando esa reconexión saltaba, tiraba una conexión que ya funcionaba perfectamente. Al levantar la nueva había otro instante \"sin conectar\", y se programaba otra. Bucle sin fin.",
+      "Ahora la reconexión vuelve a mirar antes de actuar, y el vigilante cancela la que hubiera en cola en cuanto confirma que hay conexión.",
+      "Era solo visual — la música nunca se cortaba — pero tiraba y levantaba la conexión cada pocos segundos sin ninguna necesidad.",
+    ],
+  },
+  {
     version: "27.4",
     cambios: [
       "La cortinilla se oía muy bajita. Era el mismo fallo que la transición, en otro sitio: el código quería bajarla \"un punto\" pero aplicaba el recorte antes de la curva del oído, y acababa sonando a un 61% en vez de a un 95%.",
