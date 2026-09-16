@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.14",
+    cambios: [
+      "Segundo intento con el recuadro de las novedades en el móvil: el arreglo anterior funcionó en los textos de email pero no ahí.",
+      "El motivo: Novedades se abre en una ventana aparte, y a esa ventana los estilos se le copian a mano y llegan un instante después. La medida se hacía antes, sobre un recuadro todavía sin estilo, y como el texto no cambiaba nadie volvía a medir.",
+      "Ahora se mide también cuando el recuadro cambia de ancho, que es justo lo que pasa cuando los estilos por fin llegan.",
+    ],
+  },
+  {
     version: "27.13",
     cambios: [
       "La duración de cada bloque del cronograma se elige de una lista de cinco en cinco minutos, como ya se elegía la hora de inicio. Antes había que teclear el número a mano, que en el móvil es un teclado y una errata esperando.",

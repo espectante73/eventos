@@ -514,15 +514,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             placeholder="Enlace de invitación al grupo de WhatsApp"
             title="WhatsApp → grupo → Info del grupo → Invitar mediante enlace"
             className="flex-1"
-            style={{
-              ...inputStyle,
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 12,
-              // Crece solo (useAltoAutomatico): ni barra interna ni
-              // esquina de arrastre, que en el móvil no existe.
-              overflow: "hidden",
-              resize: "none",
-            }}
+            style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
           />
           <a
             href={evento.enlaceGrupoWhatsapp || undefined}
