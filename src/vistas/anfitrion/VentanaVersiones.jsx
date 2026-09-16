@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "29.1",
+    cambios: [
+      "El mapa ya no se abre en una pestaña del navegador, sino dentro de la app: tiene su X, se cierra con Escape y tocando fuera. En el móvil, una pestaña nueva no tiene botón de volver — no había forma clara de salir.",
+      "Toca la imagen para ampliarla y leer los nombres; tócala otra vez para volver a verla entera.",
+      "Y dos botones: Imprimir y Descargar. Para enviarlo, se descarga y se manda como una foto más.",
+    ],
+  },
+  {
     version: "29",
     cambios: [
       "Nuevo \"Mapa del sitio\" dentro de \"Mi cuenta\": la imagen con todas las secciones de la app, para consultar dónde está cada cosa sin salir a buscarla fuera.",

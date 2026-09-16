@@ -199,6 +199,20 @@
     height: auto;
   }
 
+  /* El mapa del sitio (MapaSitio.jsx): misma técnica que el plano de
+     mesas -- "fixed" para escapar de la caja del modal, y la imagen al
+     100% del ancho de la página para que se lea en papel. El @page de
+     abajo (A2 apaisado) le viene de perlas: el mapa es 16:9. */
+  #zona-imprimible-mapa, #zona-imprimible-mapa * { visibility: visible; }
+  #zona-imprimible-mapa {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+  }
+  #zona-imprimible-mapa img { width: 100% !important; height: auto; }
+
   #zona-imprimible-cronograma, #zona-imprimible-cronograma * { visibility: visible; }
   #zona-imprimible-cronograma {
     position: fixed;

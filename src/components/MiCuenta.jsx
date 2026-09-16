@@ -23,6 +23,7 @@ import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
+import { ModalMapaSitio } from "./MapaSitio";
 
 // `onCerrarSesion`/`enlaceTablon`: antes eran botones sueltos junto a
 // este en la cabecera de Portada.jsx -- a petición del usuario,
@@ -33,6 +34,7 @@ import { ModalFlotante } from "./VentanaFlotante";
 // criterio que `abrirNovedades` en Portada.jsx.
 export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio }) {
   const [abierta, setAbierta] = useState(false);
+  const [mapaAbierto, setMapaAbierto] = useState(false);
   const [nuevaContrasena, setNuevaContrasena] = useState("");
   const [nuevoEmail, setNuevoEmail] = useState("");
   const [guardandoContrasena, setGuardandoContrasena] = useState(false);
@@ -128,25 +130,20 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio }) {
                 </a>
               )}
               {/* El mapa del sitio: la imagen de las secciones de la app,
-                  para saber dónde está cada cosa. Se abre en una pestaña
-                  aparte y no en una ventana flotante a propósito -- mide
-                  1920x1080 y en una ventana pequeña no se leería; en una
-                  pestaña se puede ampliar con los dedos. La imagen la
-                  sirve la propia web (public/mapa-de-la-aplicacion.png),
-                  no hay que salir a GitHub.
-                  Aquí dentro y no en "Abrir sección…" a petición del
-                  usuario, 2026-09-16: no es algo del evento, es para
-                  moverse por la app. */}
+                  para saber dónde está cada cosa. Aquí dentro y no en
+                  "Abrir sección…" a petición del usuario, 2026-09-16: no
+                  es algo del evento, es para moverse por la app.
+                  Se abre en su propio modal (MapaSitio.jsx) encima de
+                  este, no en una pestaña del navegador -- una pestaña no
+                  tiene botón de volver en el móvil. */}
               {mostrarMapaSitio && (
-                <a
-                  href="/mapa-de-la-aplicacion.png"
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  onClick={() => setMapaAbierto(true)}
                   className="boton-3d boton-flotante-imagen flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
                   title="Ver el mapa de las secciones de la aplicación"
                 >
                   <Map size={15} /> Mapa del sitio
-                </a>
+                </button>
               )}
             </div>
           )}
@@ -218,6 +215,8 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio }) {
           </form>
         </ModalFlotante>
       )}
+
+      {mapaAbierto && <ModalMapaSitio onCerrar={() => setMapaAbierto(false)} />}
     </>
   );
 }

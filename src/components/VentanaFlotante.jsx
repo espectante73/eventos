@@ -8,7 +8,10 @@ import { C } from "../theme";
 
 // Ventana flotante genérica: independiente de qué secciones estén plegadas,
 // para que Imprimir/Canciones/Alergias y los avisos de mesas funcionen siempre.
-export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitulo }) {
+// `ancho`: ancho máximo de la caja. 720 es el de siempre y sirve para
+// formularios y listas; el visor del mapa pide más sitio porque enseña
+// una imagen apaisada (ver MapaSitio.jsx).
+export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitulo, ancho = 720 }) {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") onCerrar();
@@ -44,7 +47,7 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
         style={{
           background: C.paper,
           border: `1px solid ${C.line}`,
-          maxWidth: 720,
+          maxWidth: ancho,
           maxHeight: "88vh",
           boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
         }}
