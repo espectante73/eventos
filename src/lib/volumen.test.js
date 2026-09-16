@@ -112,14 +112,14 @@ describe("volumenesDeCruce con cortinilla (el moderador)", () => {
   });
 
   it("la que sale baja poco a poco, no de golpe", () => {
-    expect(con(0.15).saliente).toBeCloseTo(0.924, 3);
-    expect(con(0.3).saliente).toBeCloseTo(0.707, 3);
+    expect(con(0.15).saliente).toBeCloseTo(0.910, 3);
+    expect(con(0.3).saliente).toBeCloseTo(0.655, 3);
   });
 
   it("en el centro las dos se apartan para dejar sonar al moderador", () => {
     const medio = con(0.5);
-    expect(medio.saliente).toBeCloseTo(0.259, 3);
-    expect(medio.entrante).toBeCloseTo(0.259, 3);
+    expect(medio.saliente).toBeCloseTo(0.142, 3);
+    expect(medio.entrante).toBeCloseTo(0.142, 3);
   });
 
   // "La entrada tiene que ser como la salida" -- petición literal.

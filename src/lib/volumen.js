@@ -98,9 +98,9 @@ export function duracionCruce(segundosCortinilla) {
 //
 //   avance   sale   entra
 //    0%      100%     0%
-//   30%       71%     0%
-//   50%       26%    26%   <- aquí manda el moderador
-//   70%        0%    71%
+//   30%       65%     0%
+//   50%       14%    14%   <- aquí manda el moderador
+//   70%        0%    65%
 //  100%        0%   100%
 //
 // La curva de entrada es la de salida del revés, que es justo lo que
@@ -108,7 +108,13 @@ export function duracionCruce(segundosCortinilla) {
 //
 // SIN cortinilla no hay quien llene ese hueco, así que se usa igual
 // potencia: las dos al 71% en el punto medio y energía constante.
-const SOLAPE = 0.6; // cuánto dura la rampa de cada pista, del total
+// Cuánto dura la rampa de cada pista, sobre el total del cruce. Cuanto
+// más corta, más se apartan las dos del centro y más sitio le dejan a
+// la cortinilla. Bajado de 0,6 a 0,55 el 2026-09-16 ("baja un poco
+// más"): el hueco del centro pasa del 26% al 14%. No conviene llegar a
+// 0,5 -- ahí las dos pistas se quedan exactamente a cero a la vez y el
+// relevo se nota como un corte, aunque la cortinilla esté sonando.
+const SOLAPE = 0.55;
 
 export function volumenesDeCruce(amplitudObjetivo, avance, hayCortinilla = false) {
   const a = Math.min(1, Math.max(0, Number(avance) || 0));

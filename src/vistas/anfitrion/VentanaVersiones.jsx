@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.8",
+    cambios: [
+      "La música se aparta más durante la cortinilla: en el punto medio pasa del 26% al 14%. La cortinilla ya estaba al máximo posible, así que la única forma de que destaque más era bajar la música, no subirla a ella.",
+    ],
+  },
+  {
     version: "27.7",
     cambios: [
       "Control nuevo para la cortinilla: cuánto destaca sobre la música, en puntos. Sale en el reproductor, debajo del volumen, y al tocarlo suena al momento para poder afinarlo de oído sin cambiar de bloque.",
