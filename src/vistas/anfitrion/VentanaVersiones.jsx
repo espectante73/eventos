@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.13",
+    cambios: [
+      "La duración de cada bloque del cronograma se elige de una lista de cinco en cinco minutos, como ya se elegía la hora de inicio. Antes había que teclear el número a mano, que en el móvil es un teclado y una errata esperando.",
+      "Las duraciones largas se leen en horas: \"2 h 15 min\" en vez de \"135\".",
+      "Si algún bloque tuviera una duración que no cae en los cincos, se sigue viendo tal cual — no se le cambia el valor a nadie por detrás.",
+    ],
+  },
+  {
     version: "27.12",
     cambios: [
       "Al editar una novedad desde el móvil solo se veían tres líneas y no había forma de estirar el recuadro. Ahora se abre ya con el alto del texto que haya escrito, y crece según escribes.",

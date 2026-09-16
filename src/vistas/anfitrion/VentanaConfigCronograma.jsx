@@ -40,6 +40,23 @@ const TODAS_LAS_HORAS = Array.from({ length: 24 * 12 }, (_, i) => {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 });
 
+// Duraciones elegibles, de cinco en cinco. Antes era un campo numérico
+// donde había que teclear los minutos a mano: en el móvil eso es un
+// teclado y una errata esperando -- y el usuario ya elegía la hora de
+// inicio de una lista, así que la duración chirriaba siendo distinta
+// (petición del 2026-09-16). Hasta 5 horas: el bloque más largo real
+// es el baile, 135 minutos, y así sobra sitio de todos modos.
+const DURACIONES = Array.from({ length: 60 }, (_, i) => (i + 1) * 5);
+
+// "45 min", "1 h", "2 h 15 min" -- una lista de 300 números sueltos no
+// se lee; leída en horas y minutos, sí.
+function nombreDuracion(minutos) {
+  if (minutos < 60) return `${minutos} min`;
+  const h = Math.floor(minutos / 60);
+  const m = minutos % 60;
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
+}
+
 export function VentanaConfigCronograma({ data, ventana }) {
   const { evento, persistEvento, colaboradores, invitados } = data;
   const bloques = Array.isArray(evento.cronogramaBloques) ? evento.cronogramaBloques : [];
@@ -284,18 +301,24 @@ export function VentanaConfigCronograma({ data, ventana }) {
             placeholder="Nombre del bloque"
             style={{ ...inputStyle, height: 42, width: "100%" }}
           />
-          <input
-            type="number"
-            min={0}
-            step={5}
-            value={bloqueActual.duracionMin ?? 0}
+          <select
+            value={DURACIONES.includes(Number(bloqueActual.duracionMin)) ? Number(bloqueActual.duracionMin) : ""}
             onChange={(e) => cambiarBloque(seleccionado, "duracionMin", Number(e.target.value))}
-            style={{ ...inputStyle, width: 70, flexShrink: 0, height: 42 }}
-            title="Cuántos minutos dura este bloque"
-          />
-          <span className="text-sm flex-shrink-0" style={{ color: C.charcoal, opacity: 0.7 }}>
-            min
-          </span>
+            style={{ ...inputStyle, width: 120, flexShrink: 0, height: 42 }}
+            title="Cuánto dura este bloque"
+          >
+            {/* Un bloque guardado con una duración que no cae en los
+                cincos (por ejemplo de antes de esta lista) se sigue
+                viendo: no se le cambia el valor a nadie por la espalda. */}
+            {!DURACIONES.includes(Number(bloqueActual.duracionMin)) && (
+              <option value="">{nombreDuracion(Number(bloqueActual.duracionMin) || 0)}</option>
+            )}
+            {DURACIONES.map((m) => (
+              <option key={m} value={m}>
+                {nombreDuracion(m)}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 
