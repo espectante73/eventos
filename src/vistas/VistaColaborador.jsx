@@ -588,6 +588,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // antes de cada envío.
   const puedeEditarDatosEvento = tienePermiso(colaborador, PERMISOS.DATOS_EVENTO_EDITAR);
   const puedeEnviarInvitaciones = tienePermiso(colaborador, PERMISOS.INVITACIONES_ENVIAR);
+  const puedeVerMapaSitio = tienePermiso(colaborador, PERMISOS.MAPA_SITIO_VER);
   const [ventanaDatosEventoAbierta, setVentanaDatosEventoAbierta] = useState(false);
   const [ventanaInvitacionesAbierta, setVentanaInvitacionesAbierta] = useState(false);
   const motorInvitaciones = useMotorInvitaciones(data);
@@ -747,6 +748,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         evento={evento}
         onCerrarSesion={onCerrarSesion}
         enlaceTablon={enlaceTablon}
+        mostrarMapaSitio={puedeVerMapaSitio}
         botonExtra={
           <>
             {esAnfitrionOriginal && (

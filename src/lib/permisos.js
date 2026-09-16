@@ -16,6 +16,12 @@ export const PERMISOS = {
   // mantener el acceso, hay que marcarle "Editar los datos del evento".
   DATOS_EVENTO_EDITAR: "datos_evento_editar",
   INVITACIONES_ENVIAR: "invitaciones_enviar",
+  // Solo afecta a lo que se ve, no a lo que se puede tocar: enseña el
+  // enlace "Mapa del sitio" dentro de "Mi cuenta". La imagen la sirve la
+  // web sin más (public/mapa-de-la-aplicacion.png), así que no hay nada
+  // que comprobar en la base de datos -- por eso este permiso no aparece
+  // en schema.sql, a diferencia de los tres de arriba.
+  MAPA_SITIO_VER: "mapa_sitio_ver",
 };
 
 // Etiquetas legibles, para VentanaPermisos.jsx -- un objeto en vez de un
@@ -25,6 +31,7 @@ export const ETIQUETAS_PERMISOS = {
   [PERMISOS.NOVEDADES_EDITAR]: "Editar el texto de Novedades",
   [PERMISOS.DATOS_EVENTO_EDITAR]: "Editar los datos del evento (textos de email incluidos)",
   [PERMISOS.INVITACIONES_ENVIAR]: "Enviar invitaciones (solo confirmados y pagados)",
+  [PERMISOS.MAPA_SITIO_VER]: "Ver el mapa del sitio (dónde está cada cosa en la app)",
 };
 
 export function tienePermiso(colaborador, clave) {

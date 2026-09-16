@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "29",
+    cambios: [
+      "Nuevo \"Mapa del sitio\" dentro de \"Mi cuenta\": la imagen con todas las secciones de la app, para consultar dónde está cada cosa sin salir a buscarla fuera.",
+      "Va ahí y no en \"Abrir sección…\" porque no es algo de la boda: es para moverse por la app y para conocerla.",
+      "Se abre en una pestaña aparte, no en una ventana pequeña — así se puede ampliar con los dedos y leerlo de verdad.",
+      "Y hay un permiso nuevo para dárselo a un colaborador: en Permisos aparece \"Ver el mapa del sitio\". Sin marcar, el colaborador no ve el enlace.",
+    ],
+  },
+  {
     version: "28.1",
     cambios: [
       "La X de quitar mesa también se hunde al pulsarla, y es más grande: a 18 píxeles era difícil de acertar con el dedo.",

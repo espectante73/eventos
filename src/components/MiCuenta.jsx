@@ -18,7 +18,7 @@
 // pierda visibilidad de este cambio, queda constancia visible en la
 // ventana Colaboradores hasta que la confirme.
 import { useState } from "react";
-import { UserCog, LogOut, Megaphone } from "lucide-react";
+import { UserCog, LogOut, Megaphone, Map } from "lucide-react";
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
@@ -28,7 +28,10 @@ import { ModalFlotante } from "./VentanaFlotante";
 // este en la cabecera de Portada.jsx -- a petición del usuario,
 // 2026-08-29, se "esconden" aquí dentro para dejar un único botón
 // visible arriba. Mismas acciones de siempre, solo cambia dónde viven.
-export function MiCuenta({ onCerrarSesion, enlaceTablon }) {
+// `mostrarMapaSitio`: solo lo pasa VistaAnfitrion.jsx. El mapa dibuja el
+// menú del anfitrión, así que a un colaborador no le dice nada -- mismo
+// criterio que `abrirNovedades` en Portada.jsx.
+export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio }) {
   const [abierta, setAbierta] = useState(false);
   const [nuevaContrasena, setNuevaContrasena] = useState("");
   const [nuevoEmail, setNuevoEmail] = useState("");
@@ -105,7 +108,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon }) {
               este modal -- filosofía de la app: todo lo más compacto
               posible para móvil, cada fila a su ancho justo, no
               estiradas a lo ancho con flex:1. */}
-          {(onCerrarSesion || enlaceTablon) && (
+          {(onCerrarSesion || enlaceTablon || mostrarMapaSitio) && (
             <div className="flex flex-col items-start gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
               {onCerrarSesion && (
                 <button
@@ -122,6 +125,27 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon }) {
                   title="Abre el tablón público de novedades que ven los confirmados"
                 >
                   <Megaphone size={15} /> Novedades
+                </a>
+              )}
+              {/* El mapa del sitio: la imagen de las secciones de la app,
+                  para saber dónde está cada cosa. Se abre en una pestaña
+                  aparte y no en una ventana flotante a propósito -- mide
+                  1920x1080 y en una ventana pequeña no se leería; en una
+                  pestaña se puede ampliar con los dedos. La imagen la
+                  sirve la propia web (public/mapa-de-la-aplicacion.png),
+                  no hay que salir a GitHub.
+                  Aquí dentro y no en "Abrir sección…" a petición del
+                  usuario, 2026-09-16: no es algo del evento, es para
+                  moverse por la app. */}
+              {mostrarMapaSitio && (
+                <a
+                  href="/mapa-de-la-aplicacion.png"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="boton-3d boton-flotante-imagen flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
+                  title="Ver el mapa de las secciones de la aplicación"
+                >
+                  <Map size={15} /> Mapa del sitio
                 </a>
               )}
             </div>

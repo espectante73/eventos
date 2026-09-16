@@ -1,4 +1,4 @@
-// Dibuja docs/mapa-de-la-aplicacion.png: el mapa de las secciones del
+// Dibuja public/mapa-de-la-aplicacion.png: el mapa de las secciones del
 // menú "Abrir sección..." del anfitrión, en 1920x1080 (16:9), con la
 // paleta real de la app (theme.js).
 //
@@ -243,6 +243,10 @@ x.font = inter(15); x.fillStyle = C.oroHondo;
 const nota = "Las cuatro «ventana aparte» pueden no abrirse en iPhone";
 x.fillText(nota, W - PAD - x.measureText(nota).width, 1022);
 
-const destino = process.argv[2] || "docs/mapa-de-la-aplicacion.png";
+// En public/ y no en docs/: así hay UNA sola copia, la misma que sirve la
+// web (la ventana "Mapa de la app" la carga desde /mapa-de-la-aplicacion.png)
+// y la misma que se ve en GitHub. Dos copias serían dos cosas que
+// sincronizar a mano.
+const destino = process.argv[2] || "public/mapa-de-la-aplicacion.png";
 writeFileSync(destino, c.toBuffer("image/png"));
 console.log(`escrito: ${destino}`);

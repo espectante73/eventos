@@ -62,6 +62,11 @@ export function Portada({
   onCambiarRol,
   anfitrionToken,
   onCerrarSesion,
+  // true = enseñar el enlace "Mapa del sitio" dentro de "Mi cuenta".
+  // Siempre para el anfitrión; para un colaborador, solo si le han
+  // marcado el permiso "Ver el mapa del sitio" (lib/permisos.js).
+  // Portada no lo decide, se lo dan hecho -- igual que enlaceTablon.
+  mostrarMapaSitio,
   // Enlace COMPLETO al tablón público (?tablon=...), ya calculado por
   // quien monta Portada (VistaAnfitrion.jsx / VistaColaborador.jsx) a
   // partir de data.tokenTablon -- Portada no sabe nada de cómo se
@@ -160,7 +165,7 @@ export function Portada({
             VistaColaborador.jsx (Fase C, 2026-08-21). */}
         {onCerrarSesion && (
           <div className="absolute top-4 right-4">
-            <MiCuenta onCerrarSesion={onCerrarSesion} enlaceTablon={enlaceTablon} />
+            <MiCuenta onCerrarSesion={onCerrarSesion} enlaceTablon={enlaceTablon} mostrarMapaSitio={mostrarMapaSitio} />
           </div>
         )}
 

@@ -1,4 +1,4 @@
-// El plano de la aplicación (docs/mapa-de-la-aplicacion.png) se dibuja con
+// El plano de la aplicación (public/mapa-de-la-aplicacion.png) se dibuja con
 // scripts/dibujar-mapa.mjs, y ese script lleva la lista de secciones
 // escrita a mano: no puede importar los componentes de la app porque son
 // JSX y porque depende de `canvas`, que no está instalado en el proyecto.

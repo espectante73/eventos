@@ -63,7 +63,7 @@ const ICONOS_VENTANAS = {
 // crecer, se sabe siempre dónde buscar algo sin tener que recordar en
 // qué orden se fue añadiendo.
 // Se exporta para que scripts/dibujar-mapa.test.js pueda comprobar que el
-// plano de la aplicación (docs/mapa-de-la-aplicacion.png) sigue listando
+// plano de la aplicación (public/mapa-de-la-aplicacion.png) sigue listando
 // las mismas secciones que el menú real.
 export const SUBMENU_CONFIGURACION = [
   { id: "copiaSeguridad", etiqueta: "Backup", icono: Save },

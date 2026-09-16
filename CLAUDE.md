@@ -1392,9 +1392,46 @@ habían recibido enteros 10/11/12/13 por error, pasaron a ser 9/9.1/9.2/9.3.
 si es un tema nuevo (entero) o un ajuste sobre uno ya en curso
 (decimal) -- nunca subir el entero por defecto.**
 
+## "Mapa del sitio" en Mi cuenta, con permiso propio (2026-09-16, v29)
+
+El plano (`public/mapa-de-la-aplicacion.png`) ya se consulta desde la
+app: enlace **"Mapa del sitio"** dentro del modal de "Mi cuenta", junto
+a "Cerrar sesión" y "Novedades".
+
+**Dónde va, y por qué ahí.** Se propuso primero en "Abrir sección…" y el
+usuario lo rechazó con el criterio bueno: *"no es algo del evento, es
+para navegar en la app o para conocerla"*. Ese menú lista secciones de
+la boda; el mapa es meta. En "Mi cuenta" está lo que es de la app y de
+quien la usa. Criterio a respetar en lo que venga.
+
+**Se abre en una pestaña, no en una VentanaFlotante.** La imagen es de
+1920x1080: en una ventana flotante no se lee. En una pestaña se amplía
+con los dedos. Es un `<a target="_blank">` con el mismo estilo que el
+enlace a Novedades que ya había al lado -- sin componente nuevo.
+
+**El PNG se movió de `docs/` a `public/`.** Una sola copia: la que sirve
+la web y la que se ve en GitHub. Dos habrían sido dos cosas que
+sincronizar a mano. `scripts/dibujar-mapa.mjs` escribe ya ahí por
+defecto.
+
+**Permiso nuevo `mapa_sitio_ver`** ("Ver el mapa del sitio"), a petición
+del usuario. Aparece solo con añadir la clave a `PERMISOS` y a
+`ETIQUETAS_PERMISOS` (`lib/permisos.js`): `VentanaPermisos.jsx` dibuja
+una casilla por clave, no hay lista que tocar.
+
+⚠️ Este permiso **no existe en `schema.sql`**, a diferencia de los otros
+tres. Solo decide si se enseña un enlace; la imagen la sirve la web a
+cualquiera que sepa la URL, así que no hay nada que comprobar en la base
+de datos y `colaborador_tiene_permiso` no lo mira nunca. No es un
+descuido: es la primera clave de la app que es solo de pantalla.
+
+El anfitrión lo ve siempre (`mostrarMapaSitio` a pelo desde
+`VistaAnfitrion`); el colaborador, solo con la casilla marcada. `Portada`
+no decide nada, recibe el booleano hecho -- igual que con `enlaceTablon`.
+
 ## El plano de la app no se regenera solo: hay un test que vigila (2026-09-16)
 
-`docs/mapa-de-la-aplicacion.png` se dibuja ejecutando a mano
+`public/mapa-de-la-aplicacion.png` se dibuja ejecutando a mano
 `node scripts/dibujar-mapa.mjs`. No hay ni script de npm ni workflow que
 lo haga: `canvas` es una dependencia nativa que está fuera de
 `package.json` a propósito (si estuviera, Vercel intentaría compilarla en
