@@ -522,6 +522,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
     (saliente, entrante) => {
       cortarFundido();
       const total = duracionFundido();
+      // Con cortinilla las dos pistas se apartan del centro para dejarle
+      // su momento; sin ella se cruzan a igual potencia, que no deja
+      // hueco. Ver volumenesDeCruce en lib/volumen.js.
+      const hayCortinilla = Boolean(cortinillaRef.current && cortinilla);
       const paso = 60;
       const empezado = Date.now();
       // El volumen objetivo se lee en CADA paso, no se calcula una vez:
@@ -537,7 +541,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
         // -- ver volumenesDeCruce en lib/volumen.js.
         const { saliente: vSale, entrante: vEntra } = volumenesDeCruce(
           porcentajeAVolumen(objetivo),
-          avance
+          avance,
+          hayCortinilla
         );
         saliente.volume = vSale;
         entrante.volume = vEntra;
@@ -545,7 +550,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
       }, paso);
       fundidoRef.current = { temporizador, saliente };
     },
-    [cortarFundido, duracionFundido]
+    [cortarFundido, duracionFundido, cortinilla]
   );
 
   // Poner a sonar un bloque: suena la cortinilla y entra su pista. Es el

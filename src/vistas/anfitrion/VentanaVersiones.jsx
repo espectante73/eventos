@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.6",
+    cambios: [
+      "La transición ahora suena como tres personas hablando: la que está, un moderador que da paso, y la que entra.",
+      "La que suena NO se calla al entrar la cortinilla: va bajando poco a poco. En el punto medio las dos pistas se apartan (26%) y la cortinilla se queda sola — ese es su momento, y por eso ahora se la oye.",
+      "La entrada es la salida del revés: la nueva empieza a subir mientras la anterior aún está bajando, así que nunca hay un segundo de silencio.",
+      "Sin cortinilla configurada no se aparta nadie: se cruzan a igual potencia, porque ahí no habría quien llenara el hueco.",
+    ],
+  },
+  {
     version: "27.5",
     cambios: [
       "Arreglado el parpadeo de la ventana de música cada pocos segundos, en el Mac y en el móvil. La intuición del usuario era exacta: el sistema que reconstruye la conexión no paraba al conectarse.",

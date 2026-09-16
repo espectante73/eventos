@@ -100,3 +100,43 @@ describe("volumenesDeCruce", () => {
     expect(volumenesDeCruce(undefined, 0.5)).toEqual({ saliente: 0, entrante: 0 });
   });
 });
+
+describe("volumenesDeCruce con cortinilla (el moderador)", () => {
+  const con = (avance) => volumenesDeCruce(1, avance, true);
+
+  it("empieza con la que sale sola y acaba con la que entra sola", () => {
+    expect(con(0).saliente).toBeCloseTo(1, 6);
+    expect(con(0).entrante).toBe(0);
+    expect(con(1).saliente).toBeCloseTo(0, 6);
+    expect(con(1).entrante).toBeCloseTo(1, 6);
+  });
+
+  it("la que sale baja poco a poco, no de golpe", () => {
+    expect(con(0.15).saliente).toBeCloseTo(0.924, 3);
+    expect(con(0.3).saliente).toBeCloseTo(0.707, 3);
+  });
+
+  it("en el centro las dos se apartan para dejar sonar al moderador", () => {
+    const medio = con(0.5);
+    expect(medio.saliente).toBeCloseTo(0.259, 3);
+    expect(medio.entrante).toBeCloseTo(0.259, 3);
+  });
+
+  // "La entrada tiene que ser como la salida" -- petición literal.
+  it("la curva de entrada es la de salida del revés", () => {
+    for (const a of [0, 0.2, 0.35, 0.5, 0.65, 0.8, 1]) {
+      expect(con(a).saliente).toBeCloseTo(con(1 - a).entrante, 6);
+    }
+  });
+
+  it("nunca se quedan las dos a cero antes del final", () => {
+    for (let a = 0; a < 1; a += 0.05) {
+      const { saliente, entrante } = con(a);
+      expect(saliente + entrante).toBeGreaterThan(0);
+    }
+  });
+
+  it("sin cortinilla se mantiene el cruce de igual potencia", () => {
+    expect(volumenesDeCruce(1, 0.5, false).saliente).toBeCloseTo(0.707, 3);
+  });
+});

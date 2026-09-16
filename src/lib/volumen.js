@@ -81,12 +81,53 @@ export function duracionCruce(segundosCortinilla) {
 // `amplitudObjetivo` ya viene convertida (es un `audio.volume` real,
 // 0-1), no un porcentaje: la conversión perceptual la hace quien llama,
 // una sola vez, y aquí solo se reparte entre las dos pistas.
-export function volumenesDeCruce(amplitudObjetivo, avance) {
+// CON cortinilla el reparto es otro, y a propósito. El usuario lo
+// explicó con tres personas hablando (2026-09-16): la que está
+// hablando, un moderador que da paso, y la que entra.
+//
+//   "la que habla va bajando poco a poco mientras el moderador cobra
+//    protagonismo... se tiene que notar que hay un moderador... y la
+//    entrada tiene que ser como la salida, empezar a subir poco a poco,
+//    los dos a la vez, uno bajando y el otro subiendo... y de esta
+//    forma nunca habrá silencio"
+//
+// Traducido a curvas: las dos pistas se APARTAN del centro para dejarle
+// ese tramo a la cortinilla, en vez de sonar las dos a plena potencia y
+// taparla (que es lo que pasaba, y por eso se oía bajita aunque
+// estuviera al máximo).
+//
+//   avance   sale   entra
+//    0%      100%     0%
+//   30%       71%     0%
+//   50%       26%    26%   <- aquí manda el moderador
+//   70%        0%    71%
+//  100%        0%   100%
+//
+// La curva de entrada es la de salida del revés, que es justo lo que
+// pidió. Y el centro no queda en silencio: ahí está la cortinilla.
+//
+// SIN cortinilla no hay quien llene ese hueco, así que se usa igual
+// potencia: las dos al 71% en el punto medio y energía constante.
+const SOLAPE = 0.6; // cuánto dura la rampa de cada pista, del total
+
+export function volumenesDeCruce(amplitudObjetivo, avance, hayCortinilla = false) {
   const a = Math.min(1, Math.max(0, Number(avance) || 0));
   const amplitud = Math.min(1, Math.max(0, Number(amplitudObjetivo) || 0));
-  const angulo = (a * Math.PI) / 2;
+
+  if (!hayCortinilla) {
+    const angulo = (a * Math.PI) / 2;
+    return {
+      saliente: amplitud * Math.cos(angulo),
+      entrante: amplitud * Math.sin(angulo),
+    };
+  }
+
+  // La saliente recorre su rampa en el primer 60%; la entrante empieza
+  // la suya en el 40% y la termina al final. Se solapan en el centro.
+  const salida = Math.min(1, a / SOLAPE);
+  const entrada = Math.max(0, (a - (1 - SOLAPE)) / SOLAPE);
   return {
-    saliente: amplitud * Math.cos(angulo),
-    entrante: amplitud * Math.sin(angulo),
+    saliente: amplitud * Math.cos((salida * Math.PI) / 2),
+    entrante: amplitud * Math.sin((entrada * Math.PI) / 2),
   };
 }
