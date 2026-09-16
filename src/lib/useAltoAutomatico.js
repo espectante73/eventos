@@ -26,10 +26,20 @@ import { useLayoutEffect } from "react";
 // El truco del "auto" antes de medir es necesario: sin él,
 // `scrollHeight` devuelve el alto actual y el recuadro solo podría
 // crecer -- al borrar texto se quedaría grande para siempre.
-export function useAltoAutomatico(ref, valor) {
+// `visible`: cuándo el recuadro existe de verdad en la pantalla.
+//
+// ⚠️ Hace falta, y su ausencia fue lo que hizo fallar dos intentos
+// seguidos. En Novedades el <textarea> solo se monta al desplegar la
+// tarjeta, pero la tarjeta (que es quien llama a este hook) sigue viva
+// mientras tanto. Al desplegar no cambia ni el texto ni la ref, así que
+// React no volvía a ejecutar el efecto: la medición era correcta, pero
+// se hacía en un momento que no llegaba nunca. En las plantillas de
+// email no pasaba porque allí se desmonta el componente entero y el
+// efecto corre al remontarlo -- de ahí que uno funcionara y el otro no.
+export function useAltoAutomatico(ref, valor, visible = true) {
   useLayoutEffect(() => {
     const el = ref?.current;
-    if (!el) return;
+    if (!visible || !el) return;
 
     const ajustar = () => {
       el.style.height = "auto";
@@ -55,5 +65,5 @@ export function useAltoAutomatico(ref, valor) {
       cancelAnimationFrame(fotograma);
       observador.disconnect();
     };
-  }, [ref, valor]);
+  }, [ref, valor, visible]);
 }

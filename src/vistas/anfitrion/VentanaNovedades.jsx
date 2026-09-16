@@ -54,7 +54,7 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
   // con el botón Deshacer sin tocar el servidor -- ver lib/useDeshacer.js.
   const { valor: cuerpo, cambiar: setCuerpo, deshacer, puedeDeshacer, fijarValor: fijarCuerpo } = useDeshacer(n.cuerpo);
   const cuerpoRef = useRef(null);
-  useAltoAutomatico(cuerpoRef, cuerpo);
+  useAltoAutomatico(cuerpoRef, cuerpo, expandida);
 
   // onMouseDown con preventDefault: sin esto, pulsar el botón le quita el
   // foco al textarea ANTES de que se dispare el click (se pierde la
@@ -198,10 +198,11 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
               ...inputStyle,
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: 12,
-              // Crece solo (useAltoAutomatico): ni barra interna ni
-              // esquina de arrastre, que en el móvil no existe.
-              overflow: "hidden",
-              resize: "none",
+              // Crece solo (useAltoAutomatico), pero se deja la esquina
+              // para estirar a mano: si la medida fallara en algún caso,
+              // el usuario no se queda sin salida (el 2026-09-16 se le
+              // quitó y se quedó atrapado con dos líneas).
+              resize: "vertical",
             }}
           />
           {/* A diferencia del resto de controles de esta ventana, "Publicada"

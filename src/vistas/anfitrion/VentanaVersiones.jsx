@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.15",
+    cambios: [
+      "Tercer intento, y este sí ataca la causa: el recuadro de una novedad solo existe cuando despliegas la tarjeta, y al desplegarla no cambia el texto — así que la medición del alto nunca llegaba a ejecutarse. Medía bien, pero en un momento que no ocurría.",
+      "Por eso en los textos de email sí funcionaba: allí la sección entera se desmonta y se vuelve a montar.",
+      "Y vuelve la esquina para estirar el recuadro a mano. Se había quitado por innecesaria y dejó al usuario atrapado con dos líneas cuando la medición falló.",
+    ],
+  },
+  {
     version: "27.14",
     cambios: [
       "Segundo intento con el recuadro de las novedades en el móvil: el arreglo anterior funcionó en los textos de email pero no ahí.",

@@ -123,8 +123,7 @@ function PlantillaEditable({ label, valor, onCambio, campo, obtenerHistorialText
           ...inputStyle,
           fontFamily: "'IBM Plex Mono', monospace",
           fontSize: 11,
-          overflow: "hidden",
-          resize: "none",
+          resize: "vertical",
         }}
       />
     </Field>
