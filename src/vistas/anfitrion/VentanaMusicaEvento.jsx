@@ -62,7 +62,16 @@ import {
 } from "lucide-react";
 import { calcularHorasAbsolutas } from "../../lib/cronograma";
 import { useMandoMusica } from "../../lib/useMandoMusica";
-import { porcentajeAVolumen, ajustarPorcentaje, duracionCruce, volumenesDeCruce, PASO_VOLUMEN } from "../../lib/volumen";
+import {
+  porcentajeAVolumen,
+  ajustarPorcentaje,
+  duracionCruce,
+  volumenesDeCruce,
+  porcentajeCortinilla,
+  REALCE_CORTINILLA_MINIMO,
+  REALCE_CORTINILLA_MAXIMO,
+  PASO_VOLUMEN,
+} from "../../lib/volumen";
 import { guardarPista, leerTodasLasPistas } from "../../lib/almacenPistas";
 import { leerFondo, subirFondo, borrarFondo, nombreParaMostrar, PESO_EXCESIVO } from "../../lib/fondoMusica";
 import {
@@ -117,7 +126,18 @@ function formatearTiempo(segundos) {
 }
 
 export function VentanaMusicaEvento({ data, ventana }) {
-  const { evento } = data;
+  const { evento, persistEvento } = data;
+  // Cuántos puntos suena la cortinilla POR ENCIMA de la música. Vive en
+  // `evento` (no en el navegador) a propósito: así se puede consultar
+  // desde fuera para afinarlo entre los dos sin que el usuario tenga
+  // que leerme el número de la pantalla.
+  const realceCortinilla = Number.isFinite(Number(evento.cortinillaRealce))
+    ? Number(evento.cortinillaRealce)
+    : 15;
+  const realceRef = useRef(realceCortinilla);
+  useEffect(() => {
+    realceRef.current = realceCortinilla;
+  }, [realceCortinilla]);
   const bloques = useMemo(
     () => (Array.isArray(evento.cronogramaBloques) ? evento.cronogramaBloques : []),
     [evento.cronogramaBloques]
@@ -452,10 +472,29 @@ export function VentanaMusicaEvento({ data, ventana }) {
     // "muy bajita" el 2026-09-16, y además desde el cruce de igual
     // potencia la cama de música suena a plena energía durante toda la
     // transición: la cortinilla tiene que competir con eso.
-    cortinillaRef.current.volume = porcentajeAVolumen(silenciadoRef.current ? 0 : volumenRef.current);
+    cortinillaRef.current.volume = porcentajeAVolumen(
+      silenciadoRef.current ? 0 : porcentajeCortinilla(volumenRef.current, realceRef.current)
+    );
     cortinillaRef.current.currentTime = 0;
     cortinillaRef.current.play().catch(() => {});
   }, [cortinilla]);
+
+  // Sube o baja el realce de la cortinilla y la hace sonar al momento:
+  // esto se afina de oído, y tener que provocar un cambio de bloque
+  // para escuchar cada ajuste haría el afinado insufrible.
+  const cambiarRealce = useCallback(
+    (pasos) => {
+      const siguiente = Math.min(
+        REALCE_CORTINILLA_MAXIMO,
+        Math.max(REALCE_CORTINILLA_MINIMO, realceRef.current + pasos)
+      );
+      if (siguiente === realceRef.current) return;
+      realceRef.current = siguiente;
+      persistEvento({ ...evento, cortinillaRealce: siguiente });
+      sonarCortinilla();
+    },
+    [evento, persistEvento, sonarCortinilla]
+  );
 
   const reproducir = useCallback(() => {
     const audio = audioRef.current;
@@ -1421,6 +1460,41 @@ export function VentanaMusicaEvento({ data, ventana }) {
         </div>
         {botonVolumen(1)}
       </div>
+
+      {/* Cuánto destaca la cortinilla sobre la música. Solo en el
+          reproductor: es un ajuste de una vez, de oído, y el número se
+          guarda en el evento para poder consultarlo desde fuera. */}
+      {esReproductor && cortinilla && (
+        <div className="flex items-center gap-2.5">
+          <span style={{ fontSize: M.texto - 2, color: P.tenue, flex: 1, minWidth: 0 }}>
+            Cortinilla sobre la música
+          </span>
+          <button
+            onClick={() => cambiarRealce(-5)}
+            className="flex items-center justify-center rounded-xl"
+            style={{ ...tecla(false), width: 40, height: 34, color: P.oro, flexShrink: 0 }}
+            title="Que destaque menos"
+          >
+            −
+          </button>
+          <div
+            className="flex items-center justify-center rounded-xl"
+            style={{ ...hueco, width: 62, height: 34, flexShrink: 0 }}
+          >
+            <span style={{ ...cifra, fontSize: M.texto + 1, fontWeight: 600, color: P.texto }}>
+              {realceCortinilla > 0 ? `+${realceCortinilla}` : realceCortinilla}
+            </span>
+          </div>
+          <button
+            onClick={() => cambiarRealce(5)}
+            className="flex items-center justify-center rounded-xl"
+            style={{ ...tecla(false), width: 40, height: 34, color: P.oro, flexShrink: 0 }}
+            title="Que destaque más"
+          >
+            +
+          </button>
+        </div>
+      )}
     </div>
   );
 

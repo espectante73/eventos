@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { porcentajeAVolumen, volumenAPorcentaje, ajustarPorcentaje, PASO_VOLUMEN, duracionCruce, CRUCE_POR_DEFECTO, CRUCE_MINIMO, CRUCE_MAXIMO, volumenesDeCruce } from "./volumen";
+import { porcentajeAVolumen, volumenAPorcentaje, ajustarPorcentaje, PASO_VOLUMEN, duracionCruce, CRUCE_POR_DEFECTO, CRUCE_MINIMO, CRUCE_MAXIMO, volumenesDeCruce, porcentajeCortinilla, REALCE_CORTINILLA_POR_DEFECTO } from "./volumen";
 
 describe("porcentajeAVolumen", () => {
   it("los extremos son exactos", () => {
@@ -138,5 +138,33 @@ describe("volumenesDeCruce con cortinilla (el moderador)", () => {
 
   it("sin cortinilla se mantiene el cruce de igual potencia", () => {
     expect(volumenesDeCruce(1, 0.5, false).saliente).toBeCloseTo(0.707, 3);
+  });
+});
+
+describe("porcentajeCortinilla", () => {
+  it("suma el realce al volumen de la música", () => {
+    expect(porcentajeCortinilla(70, 15)).toBe(85);
+    expect(porcentajeCortinilla(40, 0)).toBe(40);
+    expect(porcentajeCortinilla(60, -20)).toBe(40);
+  });
+
+  it("sigue a la música al bajarla: nunca se queda atronando sola", () => {
+    expect(porcentajeCortinilla(30, 15)).toBe(45);
+    expect(porcentajeCortinilla(0, 15)).toBe(15);
+  });
+
+  it("no se pasa de 100 ni baja de 0", () => {
+    expect(porcentajeCortinilla(95, 40)).toBe(100);
+    expect(porcentajeCortinilla(5, -30)).toBe(0);
+  });
+
+  it("con un realce inservible usa el de por defecto", () => {
+    expect(porcentajeCortinilla(50, undefined)).toBe(50 + REALCE_CORTINILLA_POR_DEFECTO);
+    expect(porcentajeCortinilla(50, NaN)).toBe(50 + REALCE_CORTINILLA_POR_DEFECTO);
+  });
+
+  it("acota realces absurdos", () => {
+    expect(porcentajeCortinilla(50, 999)).toBe(90);
+    expect(porcentajeCortinilla(50, -999)).toBe(20);
   });
 });

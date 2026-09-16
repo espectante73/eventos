@@ -131,3 +131,27 @@ export function volumenesDeCruce(amplitudObjetivo, avance, hayCortinilla = false
     entrante: amplitud * Math.sin((entrada * Math.PI) / 2),
   };
 }
+
+// ---------- Volumen de la cortinilla ----------
+// Se guarda como un REALCE en puntos sobre el volumen de la música, no
+// como un volumen suyo aparte. Dos motivos:
+//
+//  - Sigue al volumen general. Si se baja la música al 30%, la
+//    cortinilla baja con ella. Un volumen independiente reviviría un
+//    fallo ya arreglado en su día: "bajar la música al 30% dejaba la
+//    cortinilla atronando al 70".
+//  - Y aun así puede sonar POR ENCIMA de la música, que es lo que pedía
+//    el usuario (2026-09-16) para que se distinga bien del fondo.
+//
+// El resultado se recorta a 0-100: con la música al 95 y un realce de
+// +15, la cortinilla se queda en 100, no en 110.
+export const REALCE_CORTINILLA_POR_DEFECTO = 15;
+export const REALCE_CORTINILLA_MINIMO = -30;
+export const REALCE_CORTINILLA_MAXIMO = 40;
+
+export function porcentajeCortinilla(volumenMusica, realce) {
+  const base = Math.min(100, Math.max(0, Number(volumenMusica) || 0));
+  const r = Number.isFinite(Number(realce)) ? Number(realce) : REALCE_CORTINILLA_POR_DEFECTO;
+  const acotado = Math.min(REALCE_CORTINILLA_MAXIMO, Math.max(REALCE_CORTINILLA_MINIMO, r));
+  return Math.min(100, Math.max(0, base + acotado));
+}

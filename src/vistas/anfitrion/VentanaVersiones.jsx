@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.7",
+    cambios: [
+      "Control nuevo para la cortinilla: cuánto destaca sobre la música, en puntos. Sale en el reproductor, debajo del volumen, y al tocarlo suena al momento para poder afinarlo de oído sin cambiar de bloque.",
+      "No es un volumen aparte, es un realce: si bajas la música, la cortinilla baja con ella; pero puede sonar por encima, que es lo que hacía falta para distinguirla del fondo.",
+      "El ajuste se guarda en el evento, no en el navegador, para poder consultarlo desde fuera al afinarlo.",
+    ],
+  },
+  {
     version: "27.6",
     cambios: [
       "La transición ahora suena como tres personas hablando: la que está, un moderador que da paso, y la que entra.",

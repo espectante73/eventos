@@ -3100,3 +3100,15 @@ revoke insert, update, delete, truncate on table evento           from anon, aut
 revoke insert, update, delete, truncate on table mesas            from anon, authenticated;
 revoke insert, update, delete, truncate on table fotos_familiares from anon, authenticated;
 revoke insert, update, delete, truncate on table orden_familias   from anon, authenticated;
+
+-- 2026-09-16 (v27.7): cuánto destaca la cortinilla sobre la música, en
+-- puntos. Vive en `evento` y no en el navegador a propósito: así el
+-- ajuste se puede consultar desde fuera para afinarlo sin depender de
+-- que alguien lea el número de la pantalla.
+--
+-- No hace falta tocar `guardar_evento`: esa función construye su SET
+-- leyendo las columnas reales de la tabla (pg_attribute), así que una
+-- columna nueva entra sola. Y NO se añade a su lista blanca de
+-- colaboradores: esto es del anfitrión, no está en la ventana de Datos
+-- del evento.
+alter table evento add column if not exists "cortinillaRealce" integer not null default 15;
