@@ -53,14 +53,19 @@ export function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapaci
             {m.numero}
           </span>
         </div>
+        {/* La X de quitar mesa: mismo relieve .boton-3d que el resto de
+            botones de la app (se levanta al pasar por encima, se hunde al
+            pulsar) y algo más grande -- a 18px era difícil de acertar en
+            el móvil y no daba ninguna señal al tocarla.
+            Pedido por el usuario el 2026-09-16. */}
         {onEliminar && (
           <button
             onClick={onEliminar}
-            className="absolute rounded-full flex items-center justify-center"
-            style={{ width: 18, height: 18, top: -2, right: -2, background: C.wax, color: "#fff" }}
+            className="boton-3d absolute rounded-full flex items-center justify-center"
+            style={{ width: 24, height: 24, top: -3, right: -3, background: C.wax, color: "#fff" }}
             title="Quitar esta mesa"
           >
-            <X size={11} />
+            <X size={15} />
           </button>
         )}
       </div>

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "28.1",
+    cambios: [
+      "La X de quitar mesa también se hunde al pulsarla, y es más grande: a 18 píxeles era difícil de acertar con el dedo.",
+    ],
+  },
+  {
     version: "28",
     cambios: [
       "Los botones de Mesas (\"Añadir mesa\", \"Auto-asignar\" y el de avisos) ya responden al tacto: se levantan al pasar por encima y se hunden al pulsarlos.",
