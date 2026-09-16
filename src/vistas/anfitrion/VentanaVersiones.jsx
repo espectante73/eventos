@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.4",
+    cambios: [
+      "La cortinilla se oía muy bajita. Era el mismo fallo que la transición, en otro sitio: el código quería bajarla \"un punto\" pero aplicaba el recorte antes de la curva del oído, y acababa sonando a un 61% en vez de a un 95%.",
+      "Ahora suena al mismo volumen que la música. Y lo necesita: desde que el cruce mantiene la energía constante, durante la transición hay dos pistas sonando a plena potencia debajo de ella.",
+    ],
+  },
+  {
     version: "27.3",
     cambios: [
       "Arreglada la transición entre bloques musicales. Las dos quejas de siempre — que sonaba brusca y que la anterior se cortaba antes de tiempo — eran el mismo fallo.",

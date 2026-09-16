@@ -438,9 +438,21 @@ export function VentanaMusicaEvento({ data, ventana }) {
     // La cortinilla sigue al volumen general. Antes se quedaba con el
     // que hubiera en el primer clic de la noche y no se movía de ahí:
     // bajar la música al 30% dejaba la cortinilla atronando al 70, y
-    // silenciar no la callaba. Va un punto por debajo de la música
-    // porque suena ENCIMA de dos pistas a la vez.
-    cortinillaRef.current.volume = porcentajeAVolumen(silenciadoRef.current ? 0 : volumenRef.current * 0.85);
+    // silenciar no la callaba.
+    //
+    // ⚠️ Iba a `volumenRef.current * 0.85`, con la intención de dejarla
+    // "un punto por debajo" de la música. Pero ese 0,85 se aplicaba al
+    // PORCENTAJE, antes de la curva perceptual, y al elevarse al cubo se
+    // convertía en un 61% de amplitud: un tercio menos, no un punto.
+    // Mismo error que tenía el fundido cruzado (ver volumenesDeCruce en
+    // lib/volumen.js) -- un factor sobre el porcentaje no es un factor
+    // sobre lo que se oye.
+    //
+    // Ahora va al mismo volumen que la música. El usuario la reportaba
+    // "muy bajita" el 2026-09-16, y además desde el cruce de igual
+    // potencia la cama de música suena a plena energía durante toda la
+    // transición: la cortinilla tiene que competir con eso.
+    cortinillaRef.current.volume = porcentajeAVolumen(silenciadoRef.current ? 0 : volumenRef.current);
     cortinillaRef.current.currentTime = 0;
     cortinillaRef.current.play().catch(() => {});
   }, [cortinilla]);
