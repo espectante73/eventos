@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "28",
+    cambios: [
+      "Los botones de Mesas (\"Añadir mesa\", \"Auto-asignar\" y el de avisos) ya responden al tacto: se levantan al pasar por encima y se hunden al pulsarlos.",
+      "No es un adorno. Con casi veinte mesas, la nueva aparece al final de la fila, fuera de la vista, y no había forma de saber si el clic había entrado o no.",
+      "Es el mismo relieve que ya usaban los demás botones de la app, definido en un solo sitio; en esta pantalla simplemente faltaba.",
+    ],
+  },
+  {
     version: "27.15",
     cambios: [
       "Tercer intento, y este sí ataca la causa: el recuadro de una novedad solo existe cuando despliegas la tarjeta, y al desplegarla no cambia el texto — así que la medición del alto nunca llegaba a ejecutarse. Medía bien, pero en un momento que no ocurría.",

@@ -161,11 +161,18 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
           <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
             Define cuántas mesas y cuántos comensales por mesa.
           </p>
+          {/* Los tres botones llevan .boton-3d: se levantan al pasar por
+              encima y se hunden al pulsar. Es el mismo relieve que ya
+              usan el resto de botones de la app (definido una sola vez
+              en index.css); aquí faltaba, y al añadir una mesa -- que
+              aparece al final de una fila larga, fuera de la vista --
+              no había ninguna señal de que el clic hubiera entrado.
+              Pedido por el usuario el 2026-09-16. */}
           <div className="flex items-center gap-2 flex-wrap">
             {avisosMesas.length > 0 && (
               <button
                 onClick={() => setPanelFlotante("avisosMesas")}
-                className="flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium whitespace-nowrap"
+                className="boton-3d flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium whitespace-nowrap"
                 style={{ background: C.wax, color: "#fff" }}
                 title="Ver familias que se quedaron sin mesa"
               >
@@ -174,14 +181,14 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
             )}
             <button
               onClick={autoAsignarMesas}
-              className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap"
+              className="boton-3d flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap"
               style={{ background: C.ink, color: C.paper }}
             >
               Auto-asignar (preliminar)
             </button>
             <button
               onClick={anadirMesa}
-              className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap"
+              className="boton-3d flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap"
               style={{ border: `1px solid ${C.ink}`, color: C.ink }}
             >
               <Plus size={14} /> Añadir mesa
