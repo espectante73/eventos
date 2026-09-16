@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "27.10",
+    cambios: [
+      "Detalles del control de la cortinilla: el texto centrado en vez de pegado a la izquierda, y la raya de separación con más aire a ambos lados.",
+    ],
+  },
+  {
     version: "27.9",
     cambios: [
       "El control de la cortinilla, colocado como el resto de la app: una raya fina lo separa del volumen, el texto va en su propia línea, y los − / + y la cifra quedan en la misma vertical que los del volumen de arriba.",

@@ -1469,8 +1469,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
           queden en la misma vertical -- a petición del usuario. */}
       {esReproductor && cortinilla && (
         <>
-          <div style={{ height: 1, background: P.linea }} />
-          <span style={etiqueta}>Cortinilla sobre la música</span>
+          {/* La raya, con su propio aire por arriba y por abajo: con el
+              gap de la columna a secas quedaba pegada a los botones. */}
+          <div style={{ height: 1, background: P.linea, marginTop: 6, marginBottom: 6 }} />
+          <span style={{ ...etiqueta, textAlign: "center" }}>Cortinilla sobre la música</span>
           <div className="flex items-stretch gap-2.5">
             <button
               onClick={() => cambiarRealce(-5)}
