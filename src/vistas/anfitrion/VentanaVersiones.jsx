@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.9",
+    cambios: [
+      "Los recuadros de foto de Aniversarios pasan a 16:9, la forma de la pantalla del local: al subir una foto ya ves cómo va a quedar proyectada.",
+      "Las fotos se guardan ahora a tamaño de pantalla (hasta 1920×1080). Antes se reducían a 1080 por el lado más largo, y una foto apaisada se quedaba en unos 1080×608, poco para proyectarla.",
+      "Si alguna foto no está en 16:9, se ve entera con bandas a los lados en vez de recortarse: así se nota cuál falta por pasar.",
+    ],
+  },
+  {
     version: "30.8",
     cambios: [
       "En Aniversarios, el recuadro donde se pincha para poner la foto tiene ahora relieve, como los botones: champán claro en degradado, contorno dorado, y se levanta al pasar por encima y se hunde al pulsar.",

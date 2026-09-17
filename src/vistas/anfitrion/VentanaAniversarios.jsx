@@ -23,7 +23,11 @@ import { Seal } from "../../components/Widgets";
 import { matrimoniosDeInvitados } from "../../lib/matrimonios";
 import { subirFotoMatrimonio, borrarFotoMatrimonio, enlacesTemporales } from "../../lib/fotosAlmacen";
 
-const LADO_MINIATURA = 52;
+// Miniatura en 16:9, la forma de la pantalla del local (2026-09-17, a
+// petición del usuario: "realmente es así como se van a mostrar"). Así, al
+// subir una foto se ve ya cómo va a quedar proyectada.
+const ALTO_MINIATURA = 54;
+const ANCHO_MINIATURA = 96;
 // Anchos fijos de las dos columnas de foto. Hacen falta para que los
 // títulos "Boda" y "Aniversario" de la cabecera caigan justo encima de su
 // recuadro: la de aniversario lleva a veces el botón de la papelera y la
@@ -35,7 +39,7 @@ const LADO_MINIATURA = 52;
 // ocupa sitio y las dos columnas vuelven a ser gemelas.
 // Algo más ancha que la miniatura: la cabecera pinta una banda por columna
 // (como la Lista de invitados) y "ANIV." en negrita no cabía en 52px.
-const ANCHO_COL = LADO_MINIATURA + 16;
+const ANCHO_COL = ANCHO_MINIATURA + 12;
 // Aire entre las dos columnas, con un adorno en medio (ver Separador).
 const SEPARACION_COLUMNAS = 44;
 
@@ -46,7 +50,7 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
   const id = `foto-${titulo}-${Math.random().toString(36).slice(2, 8)}`;
   return (
     <div className="flex justify-center" style={{ width: ANCHO_COL, flexShrink: 0 }}>
-    <div className="relative" style={{ width: LADO_MINIATURA, height: LADO_MINIATURA }}>
+    <div className="relative" style={{ width: ANCHO_MINIATURA, height: ALTO_MINIATURA }}>
       <label
         htmlFor={soloLectura ? undefined : id}
         title={soloLectura ? titulo : `${titulo} — pulsa para ${ocupada ? "cambiarla" : "subirla"}`}
@@ -58,8 +62,8 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
         // a propósito, para que no invite a pinchar donde no hace nada.
         className={`flex items-center justify-center rounded overflow-hidden${soloLectura ? "" : " boton-3d"}`}
         style={{
-          width: LADO_MINIATURA,
-          height: LADO_MINIATURA,
+          width: ANCHO_MINIATURA,
+          height: ALTO_MINIATURA,
           border: `1px solid ${soloLectura ? C.line : ocupada ? C.gold : "rgba(176,141,87,0.55)"}`,
           background: soloLectura
             ? C.paperDark
@@ -72,7 +76,16 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
         }}
       >
         {enlace ? (
-          <img src={enlace} alt={titulo} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img
+            src={enlace}
+            alt={titulo}
+            // "contain" y no "cover": el usuario va a pasar todas las fotos
+            // a 16:9 antes de subirlas, así que normalmente llenan el
+            // recuadro igual. Si alguna llega con otra forma, se ve ENTERA
+            // con bandas a los lados -- una señal visible de que a esa le
+            // falta el paso a 16:9, en vez de recortarla sin avisar.
+            style={{ width: "100%", height: "100%", objectFit: "contain", background: C.ink }}
+          />
         ) : (
           <IconoImagen size={18} style={{ color: soloLectura ? C.charcoal : C.gold, opacity: soloLectura ? 0.35 : 0.85 }} />
         )}
@@ -279,7 +292,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
           <div
             key={m.clave}
             className="flex items-center gap-3 px-2 py-1 rounded"
-            style={{ background: C.paperDark, minHeight: LADO_MINIATURA + 10 }}
+            style={{ background: C.paperDark, minHeight: ALTO_MINIATURA + 10 }}
           >
             <div className="flex-1 min-w-0">
               {/* Una sola línea por fila, como el resto de tablas de la app:

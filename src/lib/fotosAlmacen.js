@@ -12,15 +12,47 @@
 // acertando la dirección. Por eso para enseñar una foto hay que pedir antes
 // un enlace temporal (createSignedUrl), en vez de apuntar a una URL fija.
 import { supabase } from "../supabaseClient";
-import { redimensionarImagenArchivo } from "./descargas";
 
 export const CUBO_FOTOS = "fotos-matrimonios";
 
-// 1080 en el lado largo: es la resolución mínima que pidió el usuario para
-// que se vean bien en la pantalla del local, y deja cada foto en ~300 KB
-// en vez de los 3-4 MB que salen de un móvil.
-const LADO_MAXIMO = 1080;
-const CALIDAD = 0.82;
+// Las fotos se proyectan en una pantalla 16:9, así que se guardan para que
+// quepan en 1920x1080 (Full HD), sin deformarlas ni recortarlas. Antes se
+// limitaba el LADO LARGO a 1080, y una foto apaisada se quedaba en
+// ~1080x608: poco para una pantalla. Corregido el 2026-09-17. Cada foto
+// ronda los 400-600 KB; 100 fotos caben de sobra en el almacén gratuito.
+const ANCHO_MAXIMO = 1920;
+const ALTO_MAXIMO = 1080;
+const CALIDAD = 0.85;
+
+// Reduce la foto para que quepa en ANCHO_MAXIMO x ALTO_MAXIMO manteniendo su
+// forma. Nunca la agranda. No se usa redimensionarImagenArchivo (descargas.js)
+// porque esa limita solo el lado más largo, y aquí importa la caja 16:9.
+function ajustarAPantalla(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const escala = Math.min(1, ANCHO_MAXIMO / img.width, ALTO_MAXIMO / img.height);
+      const ancho = Math.round(img.width * escala);
+      const alto = Math.round(img.height * escala);
+      const canvas = document.createElement("canvas");
+      canvas.width = ancho;
+      canvas.height = alto;
+      canvas.getContext("2d").drawImage(img, 0, 0, ancho, alto);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("No se pudo preparar la imagen"))),
+        "image/jpeg",
+        CALIDAD
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("No se pudo leer la imagen"));
+    };
+    img.src = url;
+  });
+}
 const MINUTOS_ENLACE = 60;
 
 // Nombre de archivo estable a partir de la familia: sin acentos, sin
@@ -36,24 +68,15 @@ export function nombreArchivoFamilia(familia) {
   return limpio || "sin-familia";
 }
 
-function dataUrlABlob(dataUrl) {
-  const [cabecera, base64] = String(dataUrl).split(",");
-  const tipo = (cabecera.match(/:(.*?);/) || [])[1] || "image/jpeg";
-  const binario = atob(base64 || "");
-  const bytes = new Uint8Array(binario.length);
-  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
-  return new Blob([bytes], { type: tipo });
-}
-
 // Sube la foto y devuelve la RUTA dentro del cajón, que es lo que se guarda
 // en la base. `carpeta` es "aniversario" o "boda": las políticas del cajón
 // distinguen las dos (el colaborador solo puede escribir en "boda").
 export async function subirFotoMatrimonio(file, familia, carpeta = "aniversario") {
-  const dataUrl = await redimensionarImagenArchivo(file, LADO_MAXIMO, CALIDAD);
+  const blob = await ajustarAPantalla(file);
   const ruta = `${carpeta}/${nombreArchivoFamilia(familia)}.jpg`;
   const { error } = await supabase.storage
     .from(CUBO_FOTOS)
-    .upload(ruta, dataUrlABlob(dataUrl), { contentType: "image/jpeg", upsert: true });
+    .upload(ruta, blob, { contentType: "image/jpeg", upsert: true });
   if (error) throw error;
   return ruta;
 }

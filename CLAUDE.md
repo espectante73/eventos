@@ -1407,7 +1407,11 @@ matrimonios x 2). Guardadas como texto en una columna, la app se las
 descargaría TODAS en cada apertura -- también en el móvil y con el wifi
 del local el día del evento. En `fotos_familiares` solo va la RUTA;
 el archivo vive en el cubo cerrado `fotos-matrimonios`
-(`lib/fotosAlmacen.js`), reducido a 1080 al subirlo.
+(`lib/fotosAlmacen.js`), ajustado al subirlo para caber en 1920x1080 sin
+recortar ni deformar (hasta v30.8 se limitaba el lado largo a 1080, poco
+para proyectar). Las miniaturas de Aniversarios son 16:9 con
+`object-fit: contain`: el usuario pasará todas las fotos a 16:9 antes de
+subirlas, y si alguna no lo está se ve con bandas, como aviso.
 
 ⚠️ La mitad de boda TODAVÍA es base64: el formulario del colaborador
 sigue guardando un `data:` URI en `fotos_familiares.url`. Está a medias
