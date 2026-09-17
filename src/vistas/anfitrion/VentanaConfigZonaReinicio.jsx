@@ -8,8 +8,7 @@ import { useState } from "react";
 import { Repeat } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { ordenarPorApellidoNombre } from "../../lib/formato";
-import { exportarTodo } from "../../lib/backup";
-import { descargarJSON } from "../../lib/descargas";
+import { AvisoDeshacer } from "../../components/AvisoDeshacer";
 import { Field, TextInput } from "../../components/Formulario";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -57,6 +56,7 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
     invitados,
     resetearPorInvitados,
     resetearAvisos,
+    guardarFotoDeshacer,
   } = data;
 
   // ---------- Reinicio "por invitados": colaborador -> alcance -> categoría ----------
@@ -97,14 +97,14 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
     if (rPalabra.trim().toUpperCase() !== "REINICIAR") return;
     if (invitadoIdsParaReset.length === 0 || !rCategoria) return;
     setREjecutando(true);
-    // El contenido se captura ya (antes de resetear), pero la descarga se
-    // dispara después de que el reinicio termine de verdad — en móvil, un
-    // <a download> puede navegar la pestaña en vez de descargar sin más;
-    // si eso pasara antes del await de abajo, el reinicio ni se llegaría
-    // a intentar (visto en pruebas reales: en el móvil no se aplicaba).
-    const datosBackup = JSON.parse(exportarTodo(data));
+    // La foto va ANTES y en el servidor: si no se puede guardar, no se
+    // toca nada (antes se descargaba un JSON que no se podía restaurar).
+    const guardada = await guardarFotoDeshacer(`Reinicio de ${rCategoria}`);
+    if (!guardada) {
+      setREjecutando(false);
+      return;
+    }
     await resetearPorInvitados(invitadoIdsParaReset, rCategoria);
-    descargarJSON(`backup-antes-de-reiniciar-${rCategoria}-${Date.now()}.json`, datosBackup);
     setREjecutando(false);
     setRMostrarConfirmar(false);
     setRPalabra("");
@@ -119,11 +119,12 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
   const confirmarReinicioAvisos = async () => {
     if (palabraAvisos.trim().toUpperCase() !== "AVISOS") return;
     setReiniciandoAvisos(true);
-    // Mismo motivo que en confirmarResetPorInvitados: capturar antes,
-    // descargar después de que la acción real ya haya terminado.
-    const datosBackup = JSON.parse(exportarTodo(data));
+    const guardada = await guardarFotoDeshacer("Reinicio de avisos");
+    if (!guardada) {
+      setReiniciandoAvisos(false);
+      return;
+    }
     await resetearAvisos();
-    descargarJSON(`backup-antes-de-reiniciar-avisos-${Date.now()}.json`, datosBackup);
     setReiniciandoAvisos(false);
     setReinicioAvisosPendiente(false);
     setPalabraAvisos("");
@@ -132,6 +133,7 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
   return (
     <>
       <VentanaFlotante clave="config-zona-reinicio" titulo="Reinicios" onCerrar={onCerrar}>
+        <AvisoDeshacer data={data} />
         <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
           Zona de reinicio: pone a cero campos concretos de los invitados de un colaborador
           (útil tras pruebas, o para reutilizar la app en otro evento). Los invitados y los

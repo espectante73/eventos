@@ -8,8 +8,6 @@
 import { useState } from "react";
 import { FlaskConical } from "lucide-react";
 import { C } from "../../theme";
-import { exportarTodo } from "../../lib/backup";
-import { descargarJSON } from "../../lib/descargas";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 
@@ -19,6 +17,7 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
     colaboradores,
     activarModoPruebas,
     desactivarModoPruebas,
+    guardarFotoDeshacer,
   } = data;
   const [ejecutando, setEjecutando] = useState(false);
   // Por defecto todos habilitados -- lo normal es que el propio
@@ -61,17 +60,17 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
     );
     if (!ok) return;
     setEjecutando(true);
-    // Copia de seguridad del estado ACTUAL (antes de restaurar) además
-    // de la foto que ya guarda el propio Modo Pruebas al activarse --
-    // por si alguien más (un colaborador real) tocó algo de verdad
-    // mientras estaba activo y ese cambio también se va a perder.
-    const datosBackup = JSON.parse(exportarTodo(data));
-    const restaurado = await desactivarModoPruebas();
-    if (restaurado) {
-      descargarJSON(`backup-antes-de-desactivar-modo-pruebas-${Date.now()}.json`, datosBackup);
-    } else {
+    // La foto del estado ACTUAL se guarda en el servidor antes de
+    // restaurar: si un colaborador tocó algo de verdad mientras el Modo
+    // Pruebas estaba activo, ese cambio se puede recuperar con "Deshacer".
+    // Antes se descargaba un JSON que no se podía volver a subir.
+    const guardada = await guardarFotoDeshacer("Salida del Modo Pruebas");
+    if (!guardada) {
       setEjecutando(false);
+      return;
     }
+    const restaurado = await desactivarModoPruebas();
+    if (!restaurado) setEjecutando(false);
   };
 
   if (activo) {

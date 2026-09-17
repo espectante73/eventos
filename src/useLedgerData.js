@@ -955,6 +955,43 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
+  // ---------- Deshacer la última acción destructiva ----------
+  // Sustituye a la descarga automática de una copia en JSON: esa no se podía
+  // volver a subir a ningún sitio, así que no era un deshacer de verdad
+  // (razonado con el usuario el 2026-09-17). La foto se guarda en el
+  // servidor y vuelve con un botón.
+  const [fotoDeshacer, setFotoDeshacer] = useState(null);
+
+  const refrescarFotoDeshacer = useCallback(async () => {
+    if (!rol) return;
+    const { data: filas } = await supabase.rpc("anfitrion_foto_deshacer", { p_token: rol });
+    setFotoDeshacer(filas && filas.length > 0 ? filas[0] : null);
+  }, [rol]);
+
+  // Se llama ANTES de la acción destructiva: si falla, no se toca nada.
+  const guardarFotoDeshacer = useCallback(async (accion) => {
+    const { error } = await supabase.rpc("anfitrion_guardar_foto_deshacer", {
+      p_token: rol,
+      p_accion: accion || "",
+    });
+    if (error) {
+      avisar("No se pudo guardar la copia previa. No se ha hecho nada.", error);
+      return false;
+    }
+    await refrescarFotoDeshacer();
+    return true;
+  }, [rol, refrescarFotoDeshacer]);
+
+  const deshacerUltimaAccion = useCallback(async () => {
+    const { error } = await supabase.rpc("anfitrion_deshacer", { p_token: rol });
+    if (error) {
+      avisar("No se pudo deshacer.", error);
+      return false;
+    }
+    await refrescarFotoDeshacer();
+    return true;
+  }, [rol, refrescarFotoDeshacer]);
+
   const resetearAvisos = useCallback(async () => {
     if (!esAnfitrion) return false;
     const { error } = await supabase.rpc("anfitrion_resetear_avisos", { p_token: rol });
@@ -1082,6 +1119,10 @@ export function useLedgerData(rol) {
     ordenFamiliares,
     persistOrdenFamiliares,
     resetearAvisos,
+    fotoDeshacer,
+    refrescarFotoDeshacer,
+    guardarFotoDeshacer,
+    deshacerUltimaAccion,
     resetearPorInvitados,
     gastos,
     persistGastos,

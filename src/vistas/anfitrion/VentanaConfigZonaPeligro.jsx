@@ -4,8 +4,7 @@
 // (Fase 4, Ronda 2).
 import { Trash2 } from "lucide-react";
 import { C } from "../../theme";
-import { exportarTodo } from "../../lib/backup";
-import { descargarJSON } from "../../lib/descargas";
+import { AvisoDeshacer } from "../../components/AvisoDeshacer";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 
@@ -16,9 +15,10 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
     persistInvitados,
     persistMesas,
     persistFotosFamiliares,
+    guardarFotoDeshacer,
   } = data;
 
-  const borrarTodoElContenido = () => {
+  const borrarTodoElContenido = async () => {
     const aviso = "¡ADVERTENCIA SE BORRARÁ TODO EL CONTENIDO DE LA APLICACIÓN!";
     const primera = window.confirm(`${aviso}\n\nEvento, colaboradores, invitados, mesas y fotos — todo. Esta acción no se puede deshacer.\n\n¿Quieres continuar?`);
     if (!primera) return;
@@ -30,7 +30,8 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
     // blob: puede navegar la propia pestaña en vez de descargar sin más;
     // si eso pasara antes de esta llamada, la página se recargaría y el
     // borrado ni siquiera llegaría a intentarse.
-    const datosBackup = JSON.parse(exportarTodo(data));
+    const guardada = await guardarFotoDeshacer("Borrado total");
+    if (!guardada) return;
     persistEvento({
       nombre: "",
       fecha: "",
@@ -63,11 +64,11 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
     persistInvitados([]);
     persistMesas([]);
     persistFotosFamiliares({});
-    descargarJSON(`backup-antes-de-borrar-todo-${Date.now()}.json`, datosBackup);
   };
 
   return (
     <VentanaFlotante clave="config-zona-peligro" titulo="Borrado total" onCerrar={onCerrar}>
+      <AvisoDeshacer data={data} />
       <p className="text-xs mb-2" style={{ color: C.wax, fontWeight: 700 }}>
         ⚠ Zona de peligro: esto borra evento, colaboradores, invitados, mesas y fotos —
         todo el contenido de la aplicación. No se puede deshacer.

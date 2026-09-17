@@ -263,6 +263,18 @@ CREATE TABLE public.tablon_accesos (
     "actualizadoEn" timestamp with time zone DEFAULT now() NOT NULL
 );
 
+-- Foto de los datos antes de la última acción destructiva (reinicio o
+-- borrado), para el botón "Deshacer". Una sola fila: se guarda la última.
+-- Separada de modo_pruebas_snapshot a propósito, para que salir del modo
+-- pruebas no pise el deshacer de un reinicio ni al revés (2026-09-17).
+CREATE TABLE public.deshacer_snapshot (
+    id boolean DEFAULT true NOT NULL,
+    datos jsonb NOT NULL,
+    accion text DEFAULT ''::text NOT NULL,
+    "creadoEn" timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT deshacer_snapshot_id_check CHECK (id)
+);
+
 -- Foto de los datos antes de activar el modo pruebas, para poder
 -- volver atrás.
 CREATE TABLE public.modo_pruebas_snapshot (
@@ -313,6 +325,9 @@ ALTER TABLE ONLY public.invitados
 
 ALTER TABLE ONLY public.mesas
     ADD CONSTRAINT mesas_pkey PRIMARY KEY (numero);
+
+ALTER TABLE ONLY public.deshacer_snapshot
+    ADD CONSTRAINT deshacer_snapshot_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.modo_pruebas_snapshot
     ADD CONSTRAINT modo_pruebas_snapshot_pkey PRIMARY KEY (id);
@@ -455,6 +470,134 @@ $$;
 -- ------------------------------------------------------------
 -- Correo e historial
 -- ------------------------------------------------------------
+
+-- Hace la foto de las 9 tablas que contienen datos editables. Fuera quedan
+-- a propósito el historial de textos y los accesos al tablón (son registros
+-- de lo que pasó de verdad), las cuentas y las tablas de secretos.
+-- ⚠️ Al crear una tabla nueva, preguntarse si tiene que entrar aquí: que
+-- `novedades` se quedara fuera durante meses salió justo de no hacerlo.
+CREATE FUNCTION public.foto_de_datos() RETURNS jsonb
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select jsonb_build_object(
+    'evento', (select to_jsonb(e) from evento e limit 1),
+    'colaboradores', (select coalesce(jsonb_agg(c), '[]'::jsonb) from colaboradores c),
+    'invitados', (select coalesce(jsonb_agg(i), '[]'::jsonb) from invitados i),
+    'mesas', (select coalesce(jsonb_agg(m), '[]'::jsonb) from mesas m),
+    'gastos', (select coalesce(jsonb_agg(g), '[]'::jsonb) from gastos g),
+    'ordenFamilias', (select coalesce(jsonb_agg(o), '[]'::jsonb) from orden_familias o),
+    'fotosFamiliares', (select coalesce(jsonb_agg(f), '[]'::jsonb) from fotos_familiares f),
+    'avisosEnviados', (select coalesce(jsonb_agg(a), '[]'::jsonb) from avisos_enviados a),
+    'novedades', (select coalesce(jsonb_agg(n), '[]'::jsonb) from novedades n)
+  );
+$$;
+
+-- Repone una foto: vacía esas mismas 9 tablas y las vuelve a llenar. Es el
+-- ÚNICO sitio donde se repone, para que salir del modo pruebas y deshacer
+-- un reinicio no puedan desincronizarse.
+CREATE FUNCTION public.restaurar_foto(p_datos jsonb) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_datos is null then
+    return;
+  end if;
+
+  delete from invitados where true;
+  delete from colaboradores where true;
+  delete from mesas where true;
+  delete from gastos where true;
+  delete from orden_familias where true;
+  delete from fotos_familiares where true;
+  delete from avisos_enviados where true;
+  delete from novedades where true;
+  delete from evento where true;
+
+  -- Los invitados entran SIN colaborador y se enganchan después: si no, la
+  -- clave foránea fallaría porque los colaboradores aún no existen.
+  insert into invitados
+  select * from jsonb_populate_recordset(
+    null::invitados,
+    (select coalesce(jsonb_agg(elem - 'colaboradorId'), '[]'::jsonb)
+     from jsonb_array_elements(p_datos->'invitados') elem)
+  );
+
+  insert into colaboradores
+  select * from jsonb_populate_recordset(null::colaboradores, p_datos->'colaboradores');
+
+  update invitados i set "colaboradorId" = (elem->>'colaboradorId')::uuid
+  from jsonb_array_elements(p_datos->'invitados') elem
+  where (elem->>'id')::uuid = i."id" and elem->>'colaboradorId' is not null;
+
+  insert into mesas select * from jsonb_populate_recordset(null::mesas, p_datos->'mesas');
+  insert into gastos select * from jsonb_populate_recordset(null::gastos, p_datos->'gastos');
+  insert into orden_familias
+  select * from jsonb_populate_recordset(null::orden_familias, p_datos->'ordenFamilias');
+  insert into fotos_familiares
+  select * from jsonb_populate_recordset(null::fotos_familiares, p_datos->'fotosFamiliares');
+  insert into avisos_enviados overriding system value
+  select * from jsonb_populate_recordset(null::avisos_enviados, p_datos->'avisosEnviados');
+  insert into novedades
+  select * from jsonb_populate_recordset(null::novedades, coalesce(p_datos->'novedades', '[]'::jsonb));
+  insert into evento select * from jsonb_populate_record(null::evento, p_datos->'evento');
+end;
+$$;
+
+-- ⚠️ Las dos anteriores son ayudantes internos: Postgres concede EXECUTE a
+-- PUBLIC en cualquier función nueva, y estas vacían tablas enteras.
+REVOKE EXECUTE ON FUNCTION public.foto_de_datos() FROM public, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.restaurar_foto(jsonb) FROM public, anon, authenticated;
+
+-- Guarda la foto justo antes de una acción destructiva. `p_accion` es el
+-- texto que verá el usuario en el botón ("Reinicio de pagos", etc.).
+CREATE FUNCTION public.anfitrion_guardar_foto_deshacer(p_token uuid, p_accion text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+  insert into deshacer_snapshot ("id", "datos", "accion", "creadoEn")
+  values (true, foto_de_datos(), coalesce(p_accion, ''), now())
+  on conflict ("id") do update set
+    "datos" = excluded."datos", "accion" = excluded."accion", "creadoEn" = excluded."creadoEn";
+end;
+$$;
+
+-- Qué hay guardado, para poder pintar el botón con su fecha. Devuelve
+-- ninguna fila si no hay nada que deshacer.
+CREATE FUNCTION public.anfitrion_foto_deshacer(p_token uuid) RETURNS TABLE(accion text, "creadoEn" timestamp with time zone)
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select d."accion", d."creadoEn"
+  from deshacer_snapshot d
+  where p_token = (select "token" from anfitrion_secreto limit 1);
+$$;
+
+-- Deshace la última acción destructiva y borra la foto: solo se puede
+-- deshacer una vez, para que nadie repita un deshacer con datos viejos.
+CREATE FUNCTION public.anfitrion_deshacer(p_token uuid) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_datos jsonb;
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+  select "datos" into v_datos from deshacer_snapshot where "id" = true;
+  if v_datos is null then
+    return;
+  end if;
+  perform restaurar_foto(v_datos);
+  delete from deshacer_snapshot where true;
+end;
+$$;
 
 -- Manda un email a través de Resend y lo apunta en avisos_enviados.
 CREATE FUNCTION public.enviar_email(p_para text, p_asunto text, p_html text, p_adjunto_nombre text DEFAULT NULL::text, p_adjunto_base64 text DEFAULT NULL::text, p_remitente text DEFAULT NULL::text, p_tipo text DEFAULT 'asignados'::text) RETURNS void
@@ -661,35 +804,13 @@ CREATE FUNCTION public.anfitrion_activar_modo_pruebas(p_token uuid, p_colaborado
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-declare
-  v_datos jsonb;
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
 
-  select jsonb_build_object(
-    'evento', (select to_jsonb(e) from evento e limit 1),
-    'colaboradores', (select coalesce(jsonb_agg(c), '[]'::jsonb) from colaboradores c),
-    'invitados', (select coalesce(jsonb_agg(i), '[]'::jsonb) from invitados i),
-    'mesas', (select coalesce(jsonb_agg(m), '[]'::jsonb) from mesas m),
-    'gastos', (select coalesce(jsonb_agg(g), '[]'::jsonb) from gastos g),
-    'ordenFamilias', (select coalesce(jsonb_agg(o), '[]'::jsonb) from orden_familias o),
-    'fotosFamiliares', (select coalesce(jsonb_agg(f), '[]'::jsonb) from fotos_familiares f),
-    'avisosEnviados', (select coalesce(jsonb_agg(a), '[]'::jsonb) from avisos_enviados a),
-    -- Novedades se creó DESPUÉS del Modo Pruebas y se quedó fuera de la
-    -- foto hasta el 2026-09-17: lo que se tocara en el tablón durante una
-    -- prueba se quedaba así al salir. Lo cazó el usuario preguntando si la
-    -- lista de tablas estaba al día.
-    -- NO entran a propósito: historial_texto y tablon_accesos (son
-    -- registros de lo que ha pasado de verdad; reponerlos borraría
-    -- historia real), anfitriones y las tablas de secretos (cuentas y
-    -- llaves: vaciarlas dejaría a todo el mundo fuera).
-    'novedades', (select coalesce(jsonb_agg(n), '[]'::jsonb) from novedades n)
-  ) into v_datos;
-
   insert into modo_pruebas_snapshot ("id", "datos", "creadoEn")
-  values (true, v_datos, now())
+  values (true, foto_de_datos(), now())
   on conflict ("id") do update set "datos" = excluded."datos", "creadoEn" = excluded."creadoEn";
 
   update colaboradores set "habilitadoEnPruebas" = ("id" = any(p_colaborador_ids_habilitados)) where true;
@@ -832,43 +953,7 @@ begin
     return;
   end if;
 
-  delete from invitados where true;
-  delete from colaboradores where true;
-  delete from mesas where true;
-  delete from gastos where true;
-  delete from orden_familias where true;
-  delete from fotos_familiares where true;
-  delete from avisos_enviados where true;
-  delete from novedades where true;
-  delete from evento where true;
-
-  insert into invitados
-  select * from jsonb_populate_recordset(
-    null::invitados,
-    (select coalesce(jsonb_agg(elem - 'colaboradorId'), '[]'::jsonb)
-     from jsonb_array_elements(v_datos->'invitados') elem)
-  );
-
-  insert into colaboradores
-  select * from jsonb_populate_recordset(null::colaboradores, v_datos->'colaboradores');
-
-  update invitados i set "colaboradorId" = (elem->>'colaboradorId')::uuid
-  from jsonb_array_elements(v_datos->'invitados') elem
-  where (elem->>'id')::uuid = i."id" and elem->>'colaboradorId' is not null;
-
-  insert into mesas select * from jsonb_populate_recordset(null::mesas, v_datos->'mesas');
-  insert into gastos select * from jsonb_populate_recordset(null::gastos, v_datos->'gastos');
-  insert into orden_familias
-  select * from jsonb_populate_recordset(null::orden_familias, v_datos->'ordenFamilias');
-  insert into fotos_familiares
-  select * from jsonb_populate_recordset(null::fotos_familiares, v_datos->'fotosFamiliares');
-  insert into avisos_enviados overriding system value
-  select * from jsonb_populate_recordset(null::avisos_enviados, v_datos->'avisosEnviados');
-
-  insert into novedades
-    select * from jsonb_populate_recordset(null::novedades, coalesce(v_datos->'novedades', '[]'::jsonb));
-  insert into evento select * from jsonb_populate_record(null::evento, v_datos->'evento');
-
+  perform restaurar_foto(v_datos);
   delete from modo_pruebas_snapshot where true;
 end;
 $$;
@@ -1828,6 +1913,7 @@ alter table public.anfitrion_secreto enable row level security;
 alter table public.config_secretos enable row level security;
 alter table public.tablon_secreto enable row level security;
 alter table public.tablon_accesos enable row level security;
+alter table public.deshacer_snapshot enable row level security;
 alter table public.modo_pruebas_snapshot enable row level security;
 
 CREATE POLICY lectura_publica ON public.evento FOR SELECT USING (true);

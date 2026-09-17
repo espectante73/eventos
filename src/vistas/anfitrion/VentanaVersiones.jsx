@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "34",
+    cambios: [
+      "Deshacer de verdad. Antes de un reinicio, del borrado total o de salir del Modo Pruebas, la app guarda una copia EN EL SERVIDOR y aparece un botón \"Deshacer\" con la hora.",
+      "Lo pulsas y todo vuelve a como estaba. Sin archivos, sin adjuntar nada a nadie.",
+      "Se acabaron las descargas automáticas de copias: no se podían volver a subir a ninguna parte, así que no servían de nada.",
+      "Solo se guarda la última: deshacer algo de anteayer sigue siendo cosa de la copia nocturna.",
+    ],
+  },
+  {
     version: "33",
     cambios: [
       "La ventana del colaborador se abre con todo plegado, como Novedades: \"Tus datos\" y \"Estado de cuentas\" ya no ocupan sitio hasta que los abres.",

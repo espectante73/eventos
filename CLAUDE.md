@@ -1719,6 +1719,37 @@ se repone al desactivar.
 **Regla que se lleva de aquí**: al crear una tabla nueva, mirar si tiene
 que entrar en la foto del Modo Pruebas. Nadie lo hizo en su día.
 
+## Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
+
+El usuario lo cerró con una frase que da en el clavo: *"no puedo
+restaurar yo, o sea que no tengo la opción de control z de toda la app;
+si no me vale para eso, no le veo utilidad"*. Tenía razón: descargar una
+copia que no se puede volver a subir no es un deshacer.
+
+**Cómo quedó**: antes de un reinicio, del borrado total o de salir del
+Modo Pruebas, la app llama a `anfitrion_guardar_foto_deshacer(token,
+accion)` -- la foto va al SERVIDOR (`deshacer_snapshot`, una sola fila) --
+y `components/AvisoDeshacer.jsx` pinta el botón con la acción y la hora.
+`anfitrion_deshacer` repone y borra la foto: solo se deshace una vez.
+
+⚠️ La foto se guarda **antes** de la acción, y si falla no se toca nada.
+Al revés (como estaba con la descarga) el reinicio podía ejecutarse igual
+aunque la copia no llegara a existir.
+
+**Una sola reposición para todo**: `foto_de_datos()` y
+`restaurar_foto(jsonb)` son ahora los únicos sitios donde se hace la foto
+y donde se repone. El Modo Pruebas pasa a usarlas, así que su lista de
+tablas y la del deshacer no pueden desincronizarse nunca más -- que es
+exactamente el fallo que tuvo `novedades` durante meses. Las dos llevan
+`REVOKE EXECUTE ... FROM public, anon, authenticated`: vacían tablas
+enteras y Postgres concede EXECUTE a PUBLIC por defecto.
+
+**Borrado**: `lib/backup.js` y su test. Ya no lo usaba nadie tras esto, y
+la regla de la casa es no dejar código muerto.
+
+**Limitación conocida y aceptada**: solo se guarda la ÚLTIMA foto.
+Deshacer lo de anteayer sigue siendo el volcado diario.
+
 ## Retirada la ventana "Backup" (2026-09-17, v32)
 
 Decisión del usuario tras preguntar qué utilidad tenía de verdad. La
