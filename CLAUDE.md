@@ -1443,12 +1443,13 @@ invitarle como colaborador.
 6. Regenerar y volver a subir el PNG pasa a ser un paso manual más. Vale
    la pena decírselo antes de empezar.
 
-### Si se decide NO hacerlo
+### La casilla se queda como está (decidido el 2026-09-17)
 
-Entonces hay que quitar la casilla "Ver el mapa del sitio" de
-`lib/permisos.js`, o cambiarle el texto. Tal como está hoy parece un
-candado y no lo es -- eso es precisamente lo que llevó a esta
-conversación.
+Se le ofreció al usuario quitar "Ver el mapa del sitio" de
+`lib/permisos.js` o cambiarle el texto, porque tal como está parece un
+candado y solo decide si se enseña el enlace. **Dijo que la deja como
+está.** Decisión tomada con la información delante: no volver a
+proponerlo.
 
 ## "Mapa del sitio" en Mi cuenta, con permiso propio (2026-09-16, v29)
 
