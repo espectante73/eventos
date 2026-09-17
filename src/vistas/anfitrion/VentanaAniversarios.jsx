@@ -27,13 +27,14 @@ const LADO_MINIATURA = 52;
 // títulos "Boda" y "Aniversario" de la cabecera caigan justo encima de su
 // recuadro: la de aniversario lleva a veces el botón de la papelera y la
 // de boda nunca, así que sin un ancho fijo cada fila se descuadraría.
-const ANCHO_COL_BODA = LADO_MINIATURA;
-const ANCHO_COL_ANIVERSARIO = LADO_MINIATURA + 26;
-// Aire entre las dos columnas de foto, para que se lean como dos columnas
-// y no como dos recuadros pegados -- pedido por el usuario el 2026-09-17.
-// Una sola constante, usada en la cabecera y en cada fila: si se separan,
-// los títulos dejan de caer encima de su recuadro.
-const SEPARACION_COLUMNAS = 26;
+// ⚠️ Las dos columnas miden EXACTAMENTE lo mismo. En la primera versión la
+// de aniversario era más ancha para dejar sitio al botón de la papelera, y
+// el usuario lo cazó en una captura: "ANIV." no caía centrado como "BODA".
+// La papelera pasó a ir encima de la miniatura (absoluta), así que ya no
+// ocupa sitio y las dos columnas vuelven a ser gemelas.
+const ANCHO_COL = LADO_MINIATURA;
+// Aire entre las dos columnas, con un adorno en medio (ver Separador).
+const SEPARACION_COLUMNAS = 44;
 
 // Un recuadro de foto: la miniatura si la hay, o un hueco gris. El botón de
 // subir es la propia etiqueta del <input file>, así se pulsa en cualquier
@@ -41,7 +42,7 @@ const SEPARACION_COLUMNAS = 26;
 function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLectura }) {
   const id = `foto-${titulo}-${Math.random().toString(36).slice(2, 8)}`;
   return (
-    <div className="flex items-center gap-1">
+    <div className="relative" style={{ width: ANCHO_COL, height: LADO_MINIATURA, flexShrink: 0 }}>
       <label
         htmlFor={soloLectura ? undefined : id}
         title={soloLectura ? titulo : `${titulo} — pulsa para ${ocupada ? "cambiarla" : "subirla"}`}
@@ -75,10 +76,44 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
           }}
         />
       )}
+      {/* Encima de la esquina de la miniatura, no al lado: así la columna
+          mide siempre lo mismo haya foto o no, y los títulos de arriba
+          siguen cayendo centrados. */}
       {!soloLectura && ocupada && (
-        <button onClick={onQuitar} title={`Quitar ${titulo}`} className="boton-3d rounded-full p-1" style={{ color: C.wax }}>
-          <Trash2 size={12} />
+        <button
+          onClick={onQuitar}
+          title={`Quitar ${titulo}`}
+          className="boton-3d rounded-full absolute flex items-center justify-center"
+          style={{ top: -6, right: -6, width: 19, height: 19, background: C.wax, color: "#fff" }}
+        >
+          <Trash2 size={11} />
         </button>
+      )}
+    </div>
+  );
+}
+
+// El adorno entre las dos columnas: un rombo pequeño en dorado. Pedido por
+// el usuario ("alguna figura, algo sencillo que adorne... una pequeña
+// separación"). Ocupa una columna propia de ancho fijo, así que la
+// cabecera y las filas se alinean solas sin cuentas.
+function Separador({ adorno = true }) {
+  return (
+    <div
+      className="flex items-center justify-center"
+      style={{ width: SEPARACION_COLUMNAS, flexShrink: 0, alignSelf: "stretch" }}
+    >
+      {adorno && (
+        <div
+          style={{
+            width: 7,
+            height: 7,
+            background: C.gold,
+            opacity: 0.55,
+            transform: "rotate(45deg)",
+            borderRadius: 1,
+          }}
+        />
       )}
     </div>
   );
@@ -172,19 +207,14 @@ export function VentanaAniversarios({ data, onCerrar }) {
           <div className="flex-1" />
           <div
             className="text-xs uppercase text-center"
-            style={{ width: ANCHO_COL_BODA, color: C.charcoal, opacity: 0.65, letterSpacing: "0.04em" }}
+            style={{ width: ANCHO_COL, flexShrink: 0, color: C.charcoal, opacity: 0.65, letterSpacing: "0.04em" }}
           >
             Boda
           </div>
+          <Separador adorno={false} />
           <div
             className="text-xs uppercase text-center"
-            style={{
-              width: ANCHO_COL_ANIVERSARIO,
-              marginLeft: SEPARACION_COLUMNAS,
-              color: C.charcoal,
-              opacity: 0.65,
-              letterSpacing: "0.04em",
-            }}
+            style={{ width: ANCHO_COL, flexShrink: 0, color: C.charcoal, opacity: 0.65, letterSpacing: "0.04em" }}
           >
             Aniv.
           </div>
@@ -212,24 +242,21 @@ export function VentanaAniversarios({ data, onCerrar }) {
                 {m.aniversario != null && ` · ${m.aniversario} años`}
               </div>
             </div>
-            <div style={{ width: ANCHO_COL_BODA, flexShrink: 0 }}>
-              <Hueco
-                titulo="Boda"
-                enlace={fotosFamiliares?.[m.familia] || ""}
-                ocupada={Boolean(fotosFamiliares?.[m.familia])}
-                soloLectura
-              />
-            </div>
-            <div style={{ width: ANCHO_COL_ANIVERSARIO, marginLeft: SEPARACION_COLUMNAS, flexShrink: 0 }}>
-              <Hueco
-                titulo="Aniversario"
-                enlace={enlaces[fotosAniversario?.[m.familia]] || ""}
-                ocupada={Boolean(fotosAniversario?.[m.familia])}
-                subiendo={subiendo === m.familia}
-                onElegir={(file) => subir(m.familia, file)}
-                onQuitar={() => quitar(m.familia)}
-              />
-            </div>
+            <Hueco
+              titulo="Boda"
+              enlace={fotosFamiliares?.[m.familia] || ""}
+              ocupada={Boolean(fotosFamiliares?.[m.familia])}
+              soloLectura
+            />
+            <Separador />
+            <Hueco
+              titulo="Aniversario"
+              enlace={enlaces[fotosAniversario?.[m.familia]] || ""}
+              ocupada={Boolean(fotosAniversario?.[m.familia])}
+              subiendo={subiendo === m.familia}
+              onElegir={(file) => subir(m.familia, file)}
+              onQuitar={() => quitar(m.familia)}
+            />
           </div>
         ))}
       </div>

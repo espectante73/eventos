@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.4",
+    cambios: [
+      "En Aniversarios, \"ANIV.\" no caía centrado sobre su recuadro: la columna era más ancha que la de \"BODA\" para dejar sitio a la papelera. Ahora la papelera va encima de la miniatura y las dos columnas miden exactamente lo mismo.",
+      "Más aire entre las dos, y un rombo dorado pequeño en medio como separación.",
+    ],
+  },
+  {
     version: "30.3",
     cambios: [
       "Los dos recuadros de foto de Aniversarios llevan ahora su título arriba, como dos columnas: \"Boda\" y \"Aniv.\". Antes eran dos cuadros iguales y no había forma de saber cuál era cuál.",
