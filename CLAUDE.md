@@ -1691,6 +1691,34 @@ coinciden. Cuando se ponga en rojo: arreglar el script y luego
 
 No lleva subida de `VERSION_APP`: en la pantalla no cambia nada.
 
+## El Modo Pruebas no guardaba Novedades (2026-09-17)
+
+Lo cazó el usuario preguntando si la lista de tablas de la foto seguía al
+día: *"hablas de 8 tablas y eso parece de hace más de un mes"*. Tenía
+razón a medias, y la mitad que tenía era la importante.
+
+**Lo que estaba bien**: la foto se guarda con `jsonb_agg(fila entera)` y
+se repone con `jsonb_populate_recordset`, así que las COLUMNAS nuevas
+entran solas (urlAniversario, urlBodaFinal, presente, cortinillaRealce…).
+Por ahí no había agujero.
+
+**El agujero**: `novedades` se creó en v6.3, DESPUÉS del Modo Pruebas, y
+nunca se añadió a la foto. Lo que se escribiera o borrara en el tablón
+durante una prueba se quedaba así al salir. Corregido: entra en la foto y
+se repone al desactivar.
+
+⚠️ Quedan fuera A PROPÓSITO, y conviene no "arreglarlo" sin pensar:
+- `historial_texto` y `tablon_accesos`: son registros de lo que pasó de
+  verdad; reponerlos borraría historia real.
+- `anfitriones`, `anfitrion_secreto`, `config_secretos`: cuentas y
+  llaves. Vaciarlas dejaría a todo el mundo fuera.
+- `tablon_secreto`: la pregunta del tablón sí se quedaría cambiada tras
+  una prueba. Se deja fuera porque la fila lleva también el token, y
+  reponerla entera es más peligroso que el problema que resuelve.
+
+**Regla que se lleva de aquí**: al crear una tabla nueva, mirar si tiene
+que entrar en la foto del Modo Pruebas. Nadie lo hizo en su día.
+
 ## Retirada la ventana "Backup" (2026-09-17, v32)
 
 Decisión del usuario tras preguntar qué utilidad tenía de verdad. La

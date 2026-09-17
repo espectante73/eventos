@@ -676,7 +676,16 @@ begin
     'gastos', (select coalesce(jsonb_agg(g), '[]'::jsonb) from gastos g),
     'ordenFamilias', (select coalesce(jsonb_agg(o), '[]'::jsonb) from orden_familias o),
     'fotosFamiliares', (select coalesce(jsonb_agg(f), '[]'::jsonb) from fotos_familiares f),
-    'avisosEnviados', (select coalesce(jsonb_agg(a), '[]'::jsonb) from avisos_enviados a)
+    'avisosEnviados', (select coalesce(jsonb_agg(a), '[]'::jsonb) from avisos_enviados a),
+    -- Novedades se creó DESPUÉS del Modo Pruebas y se quedó fuera de la
+    -- foto hasta el 2026-09-17: lo que se tocara en el tablón durante una
+    -- prueba se quedaba así al salir. Lo cazó el usuario preguntando si la
+    -- lista de tablas estaba al día.
+    -- NO entran a propósito: historial_texto y tablon_accesos (son
+    -- registros de lo que ha pasado de verdad; reponerlos borraría
+    -- historia real), anfitriones y las tablas de secretos (cuentas y
+    -- llaves: vaciarlas dejaría a todo el mundo fuera).
+    'novedades', (select coalesce(jsonb_agg(n), '[]'::jsonb) from novedades n)
   ) into v_datos;
 
   insert into modo_pruebas_snapshot ("id", "datos", "creadoEn")
@@ -830,6 +839,7 @@ begin
   delete from orden_familias where true;
   delete from fotos_familiares where true;
   delete from avisos_enviados where true;
+  delete from novedades where true;
   delete from evento where true;
 
   insert into invitados
@@ -855,6 +865,8 @@ begin
   insert into avisos_enviados overriding system value
   select * from jsonb_populate_recordset(null::avisos_enviados, v_datos->'avisosEnviados');
 
+  insert into novedades
+    select * from jsonb_populate_recordset(null::novedades, coalesce(v_datos->'novedades', '[]'::jsonb));
   insert into evento select * from jsonb_populate_record(null::evento, v_datos->'evento');
 
   delete from modo_pruebas_snapshot where true;
