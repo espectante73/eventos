@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.1",
+    cambios: [
+      "El mapa del sitio pasa de fondo verde oscuro a fondo champán, el mismo de las ventanas de la app. Cada sección es ahora una pastilla blanca con su contorno, así que se leen como botones y no como renglones de una lista.",
+    ],
+  },
+  {
     version: "30",
     cambios: [
       "Nueva sección \"Aniversarios\", la primera de \"Abrir sección…\": una fila por matrimonio, con su año de boda y los años que cumplen, para ir cargando las dos fotos de cada pareja.",

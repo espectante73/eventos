@@ -49,20 +49,31 @@ for (const [nombre, url, familia, peso] of FUENTES) {
 }
 
 const W = 1920, H = 1080;
+// Fondo claro desde el 2026-09-17, a petición del usuario: sobre el verde
+// oscuro de antes los botones se fundían con el fondo. En claro cada
+// entrada es una pastilla con su propio contorno, que es lo que se busca:
+// que se lean como botones, no como líneas de una lista.
+// El oro tuvo que oscurecerse (#D9B778 sobre blanco casi no se ve) y la
+// crema pasó a ser verde tinta: sobre papel, el texto claro desaparece.
 const C = {
   tinta: "#1F3A2E", tintaAlta: "#24402F", tintaBaja: "#16291F",
-  crema: "#EFE9DE", oro: "#D9B778", oroHondo: "#B08D57", granate: "#8C2F39",
+  // El champán de la app (theme.js: C.paper / C.paperDark). Se probó
+  // primero un casi-blanco y el usuario prefirió este, que además es el
+  // que ya usan las ventanas de la aplicación.
+  papel: "#EFE9DE", papelHondo: "#E4DCC9",
+  texto: "#1F3A2E",
+  crema: "#EFE9DE", oro: "#A87C3A", oroHondo: "#8A6A34", granate: "#8C2F39",
 };
-const linea = "rgba(217,183,120,0.28)";
-const lineaFirme = "rgba(217,183,120,0.52)";
-const tenue = "rgba(239,233,222,0.62)";
+const linea = "rgba(31,58,46,0.20)";
+const lineaFirme = "rgba(31,58,46,0.34)";
+const tenue = "rgba(31,58,46,0.62)";
 
 const c = createCanvas(W, H);
 const x = c.getContext("2d");
 
-// Fondo: mismo degradado en diagonal que el artefacto
+// Fondo: degradado en diagonal, muy suave, para que no sea un blanco plano
 const g = x.createLinearGradient(0, 0, W, H);
-g.addColorStop(0, C.tintaAlta); g.addColorStop(0.55, C.tinta); g.addColorStop(1, C.tintaBaja);
+g.addColorStop(0, C.papel); g.addColorStop(0.55, C.papel); g.addColorStop(1, C.papelHondo);
 x.fillStyle = g; x.fillRect(0, 0, W, H);
 
 const fraunces = (s) => `600 ${s}px Fraunces`;
@@ -99,7 +110,7 @@ const PAD = 72;
 
 // ---------- Cabecera ----------
 x.font = fraunces(64); x.textBaseline = "alphabetic";
-x.fillStyle = C.crema; x.fillText("Mapa de ", PAD, 138);
+x.fillStyle = C.texto; x.fillText("Mapa de ", PAD, 138);
 const anchoMapa = x.measureText("Mapa de ").width;
 x.fillStyle = C.oro; x.fillText("secciones", PAD + anchoMapa, 138);
 
@@ -138,15 +149,19 @@ const ALTO = 58, SALTO = 71;
 
 // tipo: "normal" | "abre" | "rojoFuerte" | "rojoSuave"
 function entrada(cx, cy, nombre, { tipo = "normal", fuera = false } = {}) {
-  let fondo = "rgba(239,233,222,0.045)", borde = linea;
-  if (tipo === "abre") { fondo = "rgba(217,183,120,0.09)"; borde = C.oro; }
-  if (tipo === "rojoFuerte") { fondo = "rgba(140,47,57,0.30)"; borde = C.granate; }
-  if (tipo === "rojoSuave") { fondo = "rgba(140,47,57,0.14)"; borde = C.granate; }
+  let fondo = "#FFFFFF", borde = linea;
+  if (tipo === "abre") { fondo = "rgba(168,124,58,0.10)"; borde = C.oro; }
+  if (tipo === "rojoFuerte") { fondo = "rgba(140,47,57,0.13)"; borde = C.granate; }
+  if (tipo === "rojoSuave") { fondo = "rgba(140,47,57,0.06)"; borde = C.granate; }
 
-  x.fillStyle = fondo; x.fillRect(cx, cy, COL_W, ALTO);
-  x.fillStyle = borde; x.fillRect(cx, cy, 2.5, ALTO);
+  // Contorno propio en cada entrada: sobre papel, un relleno casi blanco
+  // sin borde no se distingue del fondo -- es justo lo que se quería evitar.
+  x.fillStyle = fondo; redondeado(cx, cy, COL_W, ALTO, 6); x.fill();
+  x.strokeStyle = linea; x.lineWidth = 1;
+  redondeado(cx + 0.5, cy + 0.5, COL_W - 1, ALTO - 1, 6); x.stroke();
+  x.fillStyle = borde; x.fillRect(cx, cy + 4, 3, ALTO - 8);
 
-  x.font = fraunces(20); x.fillStyle = C.crema;
+  x.font = fraunces(20); x.fillStyle = C.texto;
   x.fillText(nombre, cx + 20, cy + 36);
 
   let dcha = cx + COL_W - 18;
@@ -169,7 +184,7 @@ function entrada(cx, cy, nombre, { tipo = "normal", fuera = false } = {}) {
 
 // --- Columna 1 ---
 tituloNivel(COLS[0], 268, "Primer nivel");
-x.fillStyle = "rgba(217,183,120,0.12)";
+x.fillStyle = "rgba(168,124,58,0.12)";
 redondeado(COLS[0], 292, 196, 44, 22); x.fill();
 x.strokeStyle = lineaFirme; x.lineWidth = 1;
 redondeado(COLS[0], 292, 196, 44, 22); x.stroke();
@@ -204,7 +219,7 @@ x.beginPath(); x.moveTo(bx + 0.5, y); x.lineTo(bx + 0.5, y + bh); x.stroke();
 x.setLineDash([]);
 x.font = inter(12, 600); x.fillStyle = C.oroHondo;
 espaciado("TERCER NIVEL", bx + 20, y + 22, 2);
-x.font = fraunces(19); x.fillStyle = C.crema;
+x.font = fraunces(19); x.fillStyle = C.texto;
 x.fillText("Anfitrión", bx + 20, y + 52);
 x.font = inter(16); x.fillStyle = tenue;
 x.fillText("…y cada colaborador, uno por línea", bx + 20, y + 80);
@@ -247,7 +262,7 @@ x.font = inter(15); x.fillStyle = tenue;
 x.fillText("Se abre fuera del navegador", px, 1022);
 px += x.measureText("Se abre fuera del navegador").width + 44;
 
-x.fillStyle = "rgba(140,47,57,0.55)"; x.fillRect(px, 1008, 16, 16);
+x.fillStyle = "rgba(140,47,57,0.22)"; x.fillRect(px, 1008, 16, 16);
 x.fillStyle = C.granate; x.fillRect(px, 1008, 2.5, 16);
 px += 16 + 12;
 x.fillStyle = tenue; x.fillText("Sin vuelta atrás", px, 1022);
