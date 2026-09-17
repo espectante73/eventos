@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "32.3",
+    cambios: [
+      "El importe del formulario lleva un filete verde muy fino, para que se recorte bien sobre el dorado de la ficha.",
+    ],
+  },
+  {
     version: "32.2",
     cambios: [
       "El formulario del colaborador adopta la combinación de Aniversarios: la ficha en dorado con las letras en verde, sobre fondo verde.",

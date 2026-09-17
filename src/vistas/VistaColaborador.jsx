@@ -213,7 +213,15 @@ function FormularioDatos({
               (2026-09-17): el importe es el dato que más se consulta. */}
           <span
             className="text-sm px-2 py-0.5 rounded font-semibold"
-            style={{ background: C.ink, color: C.goldClaro }}
+            // Contorno verde muy fino: sobre el dorado de la ficha, el chip
+            // necesita un canto que lo recorte (usuario, 2026-09-17).
+            style={{
+              background: C.ink,
+              color: C.goldClaro,
+              // Un verde un punto más oscuro que el fondo del chip: hace de
+              // filete sin cambiarle el color.
+              border: "1px solid #16291F",
+            }}
             title="Importe calculado según edad y los precios de Configuración"
           >
             € {importe.toFixed(2)}
