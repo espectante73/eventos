@@ -23,6 +23,17 @@ import { matrimoniosDeInvitados } from "../../lib/matrimonios";
 import { subirFotoMatrimonio, borrarFotoMatrimonio, enlacesTemporales } from "../../lib/fotosAlmacen";
 
 const LADO_MINIATURA = 52;
+// Anchos fijos de las dos columnas de foto. Hacen falta para que los
+// títulos "Boda" y "Aniversario" de la cabecera caigan justo encima de su
+// recuadro: la de aniversario lleva a veces el botón de la papelera y la
+// de boda nunca, así que sin un ancho fijo cada fila se descuadraría.
+const ANCHO_COL_BODA = LADO_MINIATURA;
+const ANCHO_COL_ANIVERSARIO = LADO_MINIATURA + 26;
+// Aire entre las dos columnas de foto, para que se lean como dos columnas
+// y no como dos recuadros pegados -- pedido por el usuario el 2026-09-17.
+// Una sola constante, usada en la cabecera y en cada fila: si se separan,
+// los títulos dejan de caer encima de su recuadro.
+const SEPARACION_COLUMNAS = 26;
 
 // Un recuadro de foto: la miniatura si la hay, o un hueco gris. El botón de
 // subir es la propia etiqueta del <input file>, así se pulsa en cualquier
@@ -150,6 +161,33 @@ export function VentanaAniversarios({ data, onCerrar }) {
         </p>
       )}
 
+      {/* Cabecera de las dos columnas de foto, a petición del usuario
+          (2026-09-17): con dos recuadros iguales no había forma de saber
+          cuál era cuál. Solo se pinta si hay matrimonios. */}
+      {matrimonios.length > 0 && (
+        <div className="flex items-center gap-3 px-2 pb-1">
+          <div className="flex-1" />
+          <div
+            className="text-xs uppercase text-center"
+            style={{ width: ANCHO_COL_BODA, color: C.charcoal, opacity: 0.65, letterSpacing: "0.04em" }}
+          >
+            Boda
+          </div>
+          <div
+            className="text-xs uppercase text-center"
+            style={{
+              width: ANCHO_COL_ANIVERSARIO,
+              marginLeft: SEPARACION_COLUMNAS,
+              color: C.charcoal,
+              opacity: 0.65,
+              letterSpacing: "0.04em",
+            }}
+          >
+            Aniv.
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-1">
         {matrimonios.map((m) => (
           <div
@@ -171,20 +209,24 @@ export function VentanaAniversarios({ data, onCerrar }) {
                 {m.aniversario != null && ` · ${m.aniversario} años`}
               </div>
             </div>
-            <Hueco
-              titulo="Boda"
-              enlace={fotosFamiliares?.[m.familia] || ""}
-              ocupada={Boolean(fotosFamiliares?.[m.familia])}
-              soloLectura
-            />
-            <Hueco
-              titulo="Aniversario"
-              enlace={enlaces[fotosAniversario?.[m.familia]] || ""}
-              ocupada={Boolean(fotosAniversario?.[m.familia])}
-              subiendo={subiendo === m.familia}
-              onElegir={(file) => subir(m.familia, file)}
-              onQuitar={() => quitar(m.familia)}
-            />
+            <div style={{ width: ANCHO_COL_BODA, flexShrink: 0 }}>
+              <Hueco
+                titulo="Boda"
+                enlace={fotosFamiliares?.[m.familia] || ""}
+                ocupada={Boolean(fotosFamiliares?.[m.familia])}
+                soloLectura
+              />
+            </div>
+            <div style={{ width: ANCHO_COL_ANIVERSARIO, marginLeft: SEPARACION_COLUMNAS, flexShrink: 0 }}>
+              <Hueco
+                titulo="Aniversario"
+                enlace={enlaces[fotosAniversario?.[m.familia]] || ""}
+                ocupada={Boolean(fotosAniversario?.[m.familia])}
+                subiendo={subiendo === m.familia}
+                onElegir={(file) => subir(m.familia, file)}
+                onQuitar={() => quitar(m.familia)}
+              />
+            </div>
           </div>
         ))}
       </div>

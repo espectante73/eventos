@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.3",
+    cambios: [
+      "Los dos recuadros de foto de Aniversarios llevan ahora su título arriba, como dos columnas: \"Boda\" y \"Aniv.\". Antes eran dos cuadros iguales y no había forma de saber cuál era cuál.",
+      "Y van más separados entre sí, para que se lean como dos columnas y no como dos cuadros pegados.",
+    ],
+  },
+  {
     version: "30.2",
     cambios: [
       "En Aniversarios, cada fila enseña los dos nombres del matrimonio y no solo el del cabeza de familia: \"Ruiz — Benito y Meritxell\".",
