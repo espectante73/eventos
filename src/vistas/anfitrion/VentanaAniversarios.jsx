@@ -50,12 +50,22 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
       <label
         htmlFor={soloLectura ? undefined : id}
         title={soloLectura ? titulo : `${titulo} — pulsa para ${ocupada ? "cambiarla" : "subirla"}`}
-        className="flex items-center justify-center rounded overflow-hidden"
+        // Los recuadros donde SE PUEDE pinchar llevan el mismo relieve que
+        // los botones (.boton-3d: se levantan al pasar, se hunden al
+        // pulsar) y un champán más claro en degradado, a petición del
+        // usuario (2026-09-17): tenían que parecer algo que se pulsa. El de
+        // boda es solo de lectura (lo sube el colaborador) y se queda plano
+        // a propósito, para que no invite a pinchar donde no hace nada.
+        className={`flex items-center justify-center rounded overflow-hidden${soloLectura ? "" : " boton-3d"}`}
         style={{
           width: LADO_MINIATURA,
           height: LADO_MINIATURA,
-          border: `1px solid ${ocupada ? C.line : C.charcoal}`,
-          background: ocupada ? C.paper : C.paperDark,
+          border: `1px solid ${soloLectura ? C.line : ocupada ? C.gold : "rgba(176,141,87,0.55)"}`,
+          background: soloLectura
+            ? C.paperDark
+            : ocupada
+            ? C.paper
+            : "linear-gradient(180deg, #FAF6EE 0%, #EDE4D2 100%)",
           cursor: soloLectura ? "default" : "pointer",
           opacity: subiendo ? 0.5 : 1,
           flexShrink: 0,
@@ -64,7 +74,7 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
         {enlace ? (
           <img src={enlace} alt={titulo} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
-          <IconoImagen size={18} style={{ color: C.charcoal, opacity: 0.45 }} />
+          <IconoImagen size={18} style={{ color: soloLectura ? C.charcoal : C.gold, opacity: soloLectura ? 0.35 : 0.85 }} />
         )}
       </label>
       {!soloLectura && (

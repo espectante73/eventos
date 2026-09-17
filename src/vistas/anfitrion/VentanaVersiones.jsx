@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.8",
+    cambios: [
+      "En Aniversarios, el recuadro donde se pincha para poner la foto tiene ahora relieve, como los botones: champán claro en degradado, contorno dorado, y se levanta al pasar por encima y se hunde al pulsar.",
+      "El de la foto de boda se queda plano a propósito: esa la sube el colaborador y pinchar ahí no hace nada.",
+    ],
+  },
+  {
     version: "30.7",
     cambios: [
       "Aniversarios pierde los cuatro recuadros de números de la cabecera. En su lugar, un círculo rojo en la esquina de \"Aniv.\" con las fotos de aniversario que faltan — el mismo aviso que llevan los colaboradores con invitados sin atender. Desaparece solo cuando están todas.",
