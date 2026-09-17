@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "31.7",
+    cambios: [
+      "\"Subir foto\" y \"Cerrar\" son ya idénticos: mismo alto, misma letra y el mismo contorno dorado. Antes el primero era más pequeño y llevaba otro borde.",
+    ],
+  },
+  {
     version: "31.6",
     cambios: [
       "\"Subir foto\", en el formulario del colaborador, se ve ya como el botón \"Cerrar\" de esa misma pantalla: verde con letra dorada y relieve. Con solo contorno sobre el fondo verde parecía texto escrito en el fondo, no algo que se pulsa.",

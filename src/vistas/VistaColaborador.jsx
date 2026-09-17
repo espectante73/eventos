@@ -308,7 +308,8 @@ function FormularioDatos({
                   fondo en vez de algo pulsable. A petición del usuario,
                   2026-09-17. */}
               <label
-                className="boton-3d boton-verde-solido inline-flex items-center justify-center cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-full"
+                className="boton-3d boton-verde-solido inline-flex items-center justify-center cursor-pointer px-4 py-2 rounded-full text-sm font-semibold"
+                style={{ border: `1px solid ${C.goldClaro}` }}
               >
                 {subiendoFoto ? "Procesando…" : "Subir foto"}
                 <input
