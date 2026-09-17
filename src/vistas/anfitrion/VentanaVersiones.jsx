@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.15",
+    cambios: [
+      "La pregunta antes de quitar una foto de aniversario es la mitad de ancha, se titula \"¿Quitar la foto?\" y va al grano.",
+    ],
+  },
+  {
     version: "30.14",
     cambios: [
       "Los marcos de las fotos de Aniversarios pasan a ser finos, con un poco de aire entre el canto y la foto, como un paspartú.",

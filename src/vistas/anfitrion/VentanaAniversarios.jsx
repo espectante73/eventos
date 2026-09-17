@@ -363,8 +363,10 @@ export function VentanaAniversarios({ data, onCerrar }) {
       </div>
       {porQuitar && (
         <ModalFlotante
-          titulo="¿Quitar la foto de aniversario?"
+          titulo="¿Quitar la foto?"
           onCerrar={() => setPorQuitar(null)}
+          // La mitad del ancho normal: es una pregunta de una línea.
+          ancho={360}
           acciones={
             <>
               <button
@@ -393,7 +395,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
             <b>
               {porQuitar.familia} — {porQuitar.esposo.nombre} y {porQuitar.esposa.nombre}
             </b>
-            . Para recuperarla habrá que volver a subirla.
+            .
           </p>
         </ModalFlotante>
       )}
