@@ -311,7 +311,7 @@ function FormularioDatos({
                   accept="image/*"
                   onChange={onSeleccionarArchivoFoto}
                   disabled={subiendoFoto}
-                  style={{ display: "none" }}
+                  className="sr-only"
                 />
               </label>
               {foto && (

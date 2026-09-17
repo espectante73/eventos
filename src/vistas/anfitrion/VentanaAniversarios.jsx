@@ -135,7 +135,7 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, onVer, s
           id={id}
           type="file"
           accept="image/*"
-          className="hidden"
+          className="sr-only"
           onChange={(e) => {
             const file = e.target.files && e.target.files[0];
             e.target.value = "";
@@ -529,7 +529,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
                     id={idInput}
                     type="file"
                     accept="image/*"
-                    className="hidden"
+                    className="sr-only"
                     onChange={(e) => {
                       const file = e.target.files && e.target.files[0];
                       e.target.value = "";

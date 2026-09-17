@@ -203,7 +203,7 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
                   accept="image/*"
                   onChange={onSeleccionarArchivoImagenPortada}
                   disabled={subiendoImagenPortada}
-                  style={{ display: "none" }}
+                  className="sr-only"
                 />
               </label>
               {evento.imagen !== "/cabecera-defecto.jpg" && (
@@ -261,7 +261,7 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
                   accept="image/*"
                   onChange={onSeleccionarImagenOg}
                   disabled={subiendoImagenOg}
-                  style={{ display: "none" }}
+                  className="sr-only"
                 />
               </label>
             </div>

@@ -77,7 +77,7 @@ export function FondoMusicalTablon() {
       >
         <Upload size={13} />
         {subiendo ? "Subiendo…" : "Subir archivo de audio"}
-        <input type="file" accept="audio/*" onChange={subir} disabled={subiendo} className="hidden" />
+        <input type="file" accept="audio/*" onChange={subir} disabled={subiendo} className="sr-only" />
       </label>
 
       {error && (

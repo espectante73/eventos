@@ -233,7 +233,7 @@ export function VentanaInvitaciones({
                   accept="image/*"
                   onChange={onSeleccionarArchivoPlantillaInvitacion}
                   disabled={subiendoPlantillaInvitacion}
-                  style={{ display: "none" }}
+                  className="sr-only"
                 />
               </label>
               {evento.imagenInvitacion && (

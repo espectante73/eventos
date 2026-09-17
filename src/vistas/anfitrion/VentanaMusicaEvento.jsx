@@ -1564,7 +1564,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
                   {pistas[i] ? pistas[i].nombre : "sin pista"}
                 </span>
                 <Upload size={15} style={{ color: P.oro, flexShrink: 0, opacity: 0.8 }} />
-                <input type="file" accept="audio/*" onChange={elegirArchivo(i)} style={{ display: "none" }} />
+                <input type="file" accept="audio/*" onChange={elegirArchivo(i)} className="sr-only" />
               </label>
             ))}
           </div>
@@ -1574,7 +1574,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
           >
             <Radio size={16} style={{ flexShrink: 0, color: P.oro }} />
             <span className="truncate">{cortinilla ? `Cortinilla: ${cortinilla.nombre}` : "Elegir cortinilla"}</span>
-            <input type="file" accept="audio/*" onChange={elegirArchivo("cortinilla")} style={{ display: "none" }} />
+            <input type="file" accept="audio/*" onChange={elegirArchivo("cortinilla")} className="sr-only" />
           </label>
         </div>
       )}
@@ -1653,7 +1653,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <span className="truncate w-full text-center" style={{ fontSize: 10.5, fontWeight: 600 }}>
               {subiendoFondo ? "Subiendo…" : "Mi imagen"}
             </span>
-            <input type="file" accept="image/*" onChange={elegirFondo} style={{ display: "none" }} disabled={subiendoFondo} />
+            <input type="file" accept="image/*" onChange={elegirFondo} className="sr-only" disabled={subiendoFondo} />
           </label>
         )}
       </div>
@@ -1713,7 +1713,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
           <label className="flex items-center gap-2 cursor-pointer px-3 flex-1 min-w-0" style={{ background: P.panelVivo, borderRadius: 12, minHeight: 40, fontSize: M.texto - 1, transition: SUAVE }}>
             <ImagePlus size={15} style={{ flexShrink: 0, color: P.oro }} />
             <span className="truncate">{subiendoFondo ? "Subiendo…" : "Cambiar la imagen"}</span>
-            <input type="file" accept="image/*" onChange={elegirFondo} style={{ display: "none" }} disabled={subiendoFondo} />
+            <input type="file" accept="image/*" onChange={elegirFondo} className="sr-only" disabled={subiendoFondo} />
           </label>
           <button onClick={quitarFondoPropio} className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, ...tecla(false), color: P.texto, flexShrink: 0 }} title="Borrar la imagen" aria-label="Borrar la imagen">
             <Trash2 size={15} />

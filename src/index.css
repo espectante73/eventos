@@ -54,6 +54,18 @@
   border-radius: 4px;
 }
 
+/* Subir una foto se hace con un <input type="file"> escondido que dispara
+   su <label>. Si se esconde con display:none, el teclado NO puede llegar:
+   con .sr-only sigue oculto pero enfocable. Como el aro no se vería (mide
+   1px), se marca la ETIQUETA visible, que es lo que la persona ve.
+   Dos selectores porque hay dos formas en la app: la etiqueta envuelve al
+   input, o lo apunta con htmlFor y va justo al lado. */
+input[type="file"].sr-only:focus-visible + label,
+label:has(> input[type="file"].sr-only:focus-visible) {
+  outline: 2px solid #1F3A2E; /* = theme.js C.ink */
+  outline-offset: 2px;
+}
+
 /* Sobre fondo claro el dorado se lee peor: ahí, verde tinta. */
 .ventana-cuerpo :where(button, a, [role="button"], input, select, textarea):focus-visible {
   outline-color: #1F3A2E; /* = theme.js C.ink */

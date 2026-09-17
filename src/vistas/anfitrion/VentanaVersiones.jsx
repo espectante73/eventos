@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "31.4",
+    cambios: [
+      "Los botones de subir foto ya se pueden usar con el teclado. Estaban escondidos de una forma que dejaba fuera al tabulador, en las 11 pantallas donde se sube una imagen.",
+      "Aviso: si en Safari el tabulador solo salta entre casillas de texto, no es la app. Es una opción suya: Safari → Ajustes → Avanzado → \"Pulsar Tab para resaltar cada elemento\". Con Opción + Tab funciona sin cambiar nada.",
+    ],
+  },
+  {
     version: "31.3",
     cambios: [
       "Accesibilidad: al moverse por la app con el tabulador, ahora se ve un aro alrededor del botón donde está el cursor. Antes no se marcaba, y quien no usa ratón se perdía.",

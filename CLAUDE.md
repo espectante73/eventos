@@ -1518,6 +1518,18 @@ estado real de los 179 `<button>` de la app:
   por script, y 3 que estaban mudos etiquetados a mano (eliminar invitado
   en la lista, y los dos saltos del reproductor de música).
 
+**v31.4**: los `<input type="file">` iban con `display:none`/`hidden`, que
+los saca del tabulador -- el teclado no podía subir una foto en ninguna de
+las 11 pantallas que suben imágenes. Ahora van con `sr-only` (ocultos pero
+enfocables) y el aro de foco se pinta sobre su `<label>`, que es lo que se
+ve. Al auditarlo se confirmó algo bueno: **0 `div`/`span` con `onClick`**,
+todo lo pulsable es un `<button>` de verdad.
+
+⚠️ Si el usuario dice que "el tabulador no pasa por los botones": es
+**Safari**, que de fábrica solo tabula entre campos de texto (Ajustes →
+Avanzado → "Pulsar Tab para resaltar cada elemento"; o Opción+Tab). No es
+un fallo de la app -- comprobarlo antes de tocar nada.
+
 **Paso 2 (pendiente, acordado con el usuario)**: crear un componente
 `Boton` con tres variantes (principal / secundario / peligro) y dos
 tamaños, y migrar los 179. ⚠️ Eso SÍ cambia cosas en pantalla: hacerlo
