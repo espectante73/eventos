@@ -205,7 +205,7 @@ function FormularioDatos({
           <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
             {form.apellido}, {form.nombre}
           </span>
-          <span className="text-xs" style={{ color: C.ink, opacity: 0.8 }}>
+          <span className="text-xs" style={{ color: C.ink }}>
             datos {contarDatosRellenados(form, foto, evento)} de {totalDatosInvitado(form, evento)}
           </span>
           {/* Colores al revés que el resto de la cabecera (fondo dorado,
@@ -216,11 +216,12 @@ function FormularioDatos({
             // Contorno verde muy fino: sobre el dorado de la ficha, el chip
             // necesita un canto que lo recorte (usuario, 2026-09-17).
             style={{
-              background: C.ink,
-              color: C.goldClaro,
-              // Un verde un punto más oscuro que el fondo del chip: hace de
-              // filete sin cambiarle el color.
-              border: "1px solid #16291F",
+              // Dorado más CLARO que el de la ficha, para que se despegue, con
+              // la letra en el mismo verde que el nombre y un filete verde
+              // fino (usuario, 2026-09-17).
+              background: "#F2DFAE",
+              color: C.ink,
+              border: `1px solid ${C.ink}`,
             }}
             title="Importe calculado según edad y los precios de Configuración"
           >
@@ -237,7 +238,7 @@ function FormularioDatos({
             Cerrar
           </button>
         </div>
-        <div className="text-xs mt-1" style={{ color: C.goldClaro, opacity: 0.7 }}>
+        <div className="text-xs mt-1" style={{ color: C.ink }}>
           Familia {invitado.grupoFamiliar || form.apellido} · {form.zona || "sin zona"}
         </div>
       </div>
@@ -272,7 +273,7 @@ function FormularioDatos({
             >
               {colaboradorVinculado.email || "sin registrar"}
             </div>
-            <span className="text-xs italic" style={{ color: C.ink, opacity: 0.8 }}>
+            <span className="text-xs italic" style={{ color: C.ink }}>
               Se edita en Colaboradores, no aquí.
             </span>
           </div>
@@ -284,7 +285,7 @@ function FormularioDatos({
             >
               {form.email || "—"}
             </div>
-            <span className="text-xs italic" style={{ color: C.ink, opacity: 0.8 }}>
+            <span className="text-xs italic" style={{ color: C.ink }}>
               Solo pedimos email a mayores de edad.
             </span>
           </div>
@@ -301,7 +302,7 @@ function FormularioDatos({
       <div>
         {/* gap-6 (antes 3): el botón de subir foto quedaba pegado al año de
             boda -- a petición del usuario, 2026-09-17. */}
-        <div className="flex items-start gap-6 flex-wrap">
+        <div className="flex items-start gap-10 flex-wrap">
           {pideDatosDeBoda(form) ? (
             <>
           <Field label="Año boda">
@@ -348,7 +349,7 @@ function FormularioDatos({
               >
                 No aplica
               </div>
-              <span className="text-xs italic" style={{ color: C.ink, opacity: 0.8 }}>
+              <span className="text-xs italic" style={{ color: C.ink }}>
                 El año y la foto de boda solo se piden a quien viene con su pareja.
               </span>
             </Field>
@@ -376,16 +377,16 @@ function FormularioDatos({
       <div>
         <span
           className="text-xs uppercase block mb-1"
-          style={{ color: C.goldClaro, fontFamily: "'IBM Plex Mono', monospace" }}
+          style={{ color: C.ink, fontFamily: "'IBM Plex Mono', monospace" }}
         >
           Alergias *
         </span>
         <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-1 text-sm" style={{ color: C.goldClaro }}>
+          <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
             <input type="checkbox" checked={alergiaSel.no} onChange={marcarNo} />
             No
           </label>
-          <label className="flex items-center gap-1 text-sm" style={{ color: C.goldClaro }}>
+          <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
             <input
               type="checkbox"
               checked={alergiaSel.gluten}
@@ -393,7 +394,7 @@ function FormularioDatos({
             />
             Gluten
           </label>
-          <label className="flex items-center gap-1 text-sm" style={{ color: C.goldClaro }}>
+          <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
             <input
               type="checkbox"
               checked={alergiaSel.lactosa}

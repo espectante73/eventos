@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "32.4",
+    cambios: [
+      "Todo el texto del formulario del colaborador va ya en el mismo verde que el nombre de la persona. Quedaban letras en dorado que sobre el fondo dorado casi no se leían.",
+      "El importe vuelve a fondo dorado con letra verde, pero en un dorado más claro que la ficha y con un filete verde fino, para que se recorte.",
+      "Y más separación entre el año de boda y la foto.",
+    ],
+  },
+  {
     version: "32.3",
     cambios: [
       "El importe del formulario lleva un filete verde muy fino, para que se recorte bien sobre el dorado de la ficha.",
