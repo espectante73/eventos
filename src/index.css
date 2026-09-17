@@ -37,6 +37,14 @@
   transform: translateY(0);
 }
 
+/* El formulario del colaborador va sobre dorado (ver VistaColaborador):
+   las etiquetas de Formulario.jsx se pintan en C.gold, pensado para el
+   fondo claro del resto de la app, y ahí no se leerían. */
+.formulario-dorado label > span:first-child {
+  color: #1F3A2E; /* = theme.js C.ink */
+  opacity: 0.85;
+}
+
 /* ---------- Foco de teclado (accesibilidad, 2026-09-17) ----------
    Ningún botón de la app marcaba dónde estaba el cursor al moverse con el
    tabulador: quien no usa ratón (o usa lector de pantalla) se perdía. Es

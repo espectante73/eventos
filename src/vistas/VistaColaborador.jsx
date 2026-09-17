@@ -179,11 +179,17 @@ function FormularioDatos({
 
   return (
     <div
-      className="p-3 rounded space-y-3"
-      // Verde de la propia app (C.ink, el mismo de la cabecera/franja de
-      // datos), letras en dorado (C.goldClaro) -- a petición del usuario,
-      // en vez del verde claro de la primera prueba.
-      style={{ background: C.ink, border: `1px solid ${C.line}` }}
+      // Misma combinación que las filas de Aniversarios, a petición del
+      // usuario (2026-09-17): dorado metálico de fondo y letras en verde.
+      // La clase `formulario-dorado` solo existe para teñir de verde las
+      // etiquetas de los campos, que Field pinta en dorado para el resto de
+      // pantallas (de fondo claro) y aquí serían invisibles.
+      className="formulario-dorado p-3 rounded space-y-3"
+      style={{
+        background: "linear-gradient(135deg, #B8893F 0%, #E6C77F 38%, #D4AE5E 62%, #A97D34 100%)",
+        boxShadow: "inset 0 1px 0 rgba(255,244,214,0.55), inset 0 -1px 0 rgba(90,62,20,0.35)",
+        border: `1px solid ${C.gold}`,
+      }}
     >
       {/* Fondo propio (antes el rojo iba directo sobre el verde oscuro
           del formulario -- poco legible, rojo sobre verde oscuro) -- a
@@ -196,10 +202,10 @@ function FormularioDatos({
       </p>
       <div>
         <div className="flex items-center gap-2 flex-wrap">
-          <span style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 600 }}>
+          <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
             {form.apellido}, {form.nombre}
           </span>
-          <span className="text-xs" style={{ color: C.goldClaro, opacity: 0.75 }}>
+          <span className="text-xs" style={{ color: C.ink, opacity: 0.8 }}>
             datos {contarDatosRellenados(form, foto, evento)} de {totalDatosInvitado(form, evento)}
           </span>
           {/* Colores al revés que el resto de la cabecera (fondo dorado,
@@ -207,7 +213,7 @@ function FormularioDatos({
               (2026-09-17): el importe es el dato que más se consulta. */}
           <span
             className="text-sm px-2 py-0.5 rounded font-semibold"
-            style={{ background: C.goldClaro, color: C.ink }}
+            style={{ background: C.ink, color: C.goldClaro }}
             title="Importe calculado según edad y los precios de Configuración"
           >
             € {importe.toFixed(2)}
@@ -258,7 +264,7 @@ function FormularioDatos({
             >
               {colaboradorVinculado.email || "sin registrar"}
             </div>
-            <span className="text-xs italic" style={{ color: C.goldClaro, opacity: 0.7 }}>
+            <span className="text-xs italic" style={{ color: C.ink, opacity: 0.8 }}>
               Se edita en Colaboradores, no aquí.
             </span>
           </div>
@@ -270,7 +276,7 @@ function FormularioDatos({
             >
               {form.email || "—"}
             </div>
-            <span className="text-xs italic" style={{ color: C.goldClaro, opacity: 0.7 }}>
+            <span className="text-xs italic" style={{ color: C.ink, opacity: 0.8 }}>
               Solo pedimos email a mayores de edad.
             </span>
           </div>
@@ -334,7 +340,7 @@ function FormularioDatos({
               >
                 No aplica
               </div>
-              <span className="text-xs italic" style={{ color: C.goldClaro, opacity: 0.7 }}>
+              <span className="text-xs italic" style={{ color: C.ink, opacity: 0.8 }}>
                 El año y la foto de boda solo se piden a quien viene con su pareja.
               </span>
             </Field>
@@ -595,7 +601,9 @@ function FilaInvitadoColaborador({
         </button>
       </div>
       {abierto && (
-        <div className="p-3 pt-0">
+        // Verde detrás de la tarjeta dorada, misma idea que el cuerpo de la
+        // ventana Aniversarios.
+        <div className="p-3 pt-0" style={{ background: C.ink }}>
           <FormularioDatos
             invitado={g}
             evento={evento}

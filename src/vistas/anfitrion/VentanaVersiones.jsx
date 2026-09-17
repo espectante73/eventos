@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "32.2",
+    cambios: [
+      "El formulario del colaborador adopta la combinación de Aniversarios: la ficha en dorado con las letras en verde, sobre fondo verde.",
+      "El importe se invierte para seguir destacando: ahora va en verde con letra dorada.",
+    ],
+  },
+  {
     version: "32.1",
     cambios: [
       "La foto de boda del formulario del colaborador se ve y se maneja igual que en Aniversarios: recuadro en 16:9, se toca para subirla y, si ya está, se abre en grande.",
