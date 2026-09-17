@@ -199,7 +199,17 @@ excluyen del volcado a propósito). Requiere el secreto de repositorio
 - ✅ Tablón público de novedades, de solo lectura, sin login — con
   aviso de privacidad, música ambiental opcional y acceso directo desde
   la portada para anfitrión/colaborador.
-- ⏳ Pendiente, sin urgencia (ver historial de sesiones en `CLAUDE.md`):
-  onboarding del resto de colaboradores a login real, decidir si retirar
-  también el enlace-token del anfitrión, y ampliar la batería de tests
-  automáticos al propio flujo de login.
+- ✅ Fotos de matrimonio (boda y aniversario) en un cubo cerrado de
+  Storage, con descarga en un solo ZIP para montarlas en la plantilla.
+- ✅ Lint, pruebas y build se ejecutan solos en cada subida
+  (`.github/workflows/pruebas.yml`).
+- ⏳ Pendiente (ver `CLAUDE.md` para el detalle):
+  - probar una restauración real del volcado diario en un proyecto
+    vacío -- un backup sin restauración probada no es un backup;
+  - partir el paquete de la web (hoy son 1,2 MB en un solo archivo);
+  - ampliar las pruebas al flujo de login.
+
+## Licencia
+
+Proyecto privado. Todos los derechos reservados: el código se publica
+para poder enseñarlo, no para reutilizarlo sin permiso.

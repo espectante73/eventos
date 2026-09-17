@@ -1,0 +1,32 @@
+# Lint + pruebas + build en cada subida y en cada pull request.
+#
+# Existían los tres desde hace tiempo, pero había que acordarse de
+# lanzarlos a mano. Esto los ejecuta solo: si algo se rompe, el aviso
+# llega antes de que el cambio llegue a la boda.
+name: Pruebas
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      # El build necesita las variables de Vite. No son secretos de
+      # verdad (la clave publicable viaja ya dentro del JS compilado),
+      # pero aquí basta con valores de relleno: solo se comprueba que el
+      # proyecto compila, no se despliega nada.
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://ejemplo.supabase.co
+          VITE_SUPABASE_ANON_KEY: clave-de-relleno
