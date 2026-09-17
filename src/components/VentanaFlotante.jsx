@@ -121,7 +121,6 @@ export const ETIQUETAS_VENTANAS = {
   invitaciones: "Invitaciones",
   invitados: "Invitados",
   cuentas: "Cuentas",
-  copiaSeguridad: "Backup",
   configuracion: "Configuración",
   versiones: "Versiones",
   novedades: "Novedades",

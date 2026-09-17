@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "32",
+    cambios: [
+      "Retirado el botón \"Backup\" de Configuración. No tenía utilidad real: guardaba menos de la mitad de los datos y no se podía restaurar.",
+      "La copia de seguridad de verdad se sigue haciendo sola cada noche, completa, fuera de la app.",
+      "Y la copia que se descarga antes de un borrado o un reinicio sigue igual: esa no dependía de este botón.",
+    ],
+  },
+  {
     version: "31.9",
     cambios: [
       "En el formulario del colaborador, el importe se ve al revés que el resto: fondo dorado y letra verde, y un punto más grande. Es el dato que más se mira.",

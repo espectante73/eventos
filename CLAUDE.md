@@ -1691,6 +1691,33 @@ coinciden. Cuando se ponga en rojo: arreglar el script y luego
 
 No lleva subida de `VERSION_APP`: en la pantalla no cambia nada.
 
+## Retirada la ventana "Backup" (2026-09-17, v32)
+
+Decisión del usuario tras preguntar qué utilidad tenía de verdad. La
+respuesta honesta era: ninguna práctica. Queda constancia de por qué, para
+que no se reconstruya sin pensarlo:
+
+- Exportaba **5 de las 12 tablas** (fuera el tablón, las cuentas, el orden
+  de familias y los avisos enviados) y, de cada colaborador, solo nombre y
+  email: ni `authUserId` ni permisos.
+- **No tenía restaurar** desde el 2026-09-13 (v24.4), porque recuperar esa
+  foto dejaba a los doce colaboradores sin acceso y reenganchaba invitados
+  comparando nombres escritos.
+- Venía de cuando la app no tenía base de datos y republicarla lo borraba
+  todo. Desde que hay **volcado diario completo**
+  (`.github/workflows/backup.yml`), ese camino sobra.
+- Un botón llamado "copia de seguridad" que ni guarda la mitad ni
+  restaura es justo lo que confunde el día que haya un problema.
+
+⚠️ **`lib/backup.js` NO se ha tocado y sigue en uso**: BORRAR TODO, Modo
+Pruebas y los reinicios descargan con `exportarTodo` su copia automática
+antes de la acción destructiva. Eso se queda. Lo retirado es solo la
+ventana y su entrada de menú.
+
+Si algún día se quiere un "exportar/restaurar" de verdad, primero hay que
+arreglar `exportarTodo` para que guarde las doce tablas conservando los
+ids -- no reconstruir esta ventana tal cual.
+
 ## `schema.sql` reescrito desde cero (2026-09-16)
 
 Hecho. El archivo pasó de 3.114 líneas a ~1.860 y dejó de ser un

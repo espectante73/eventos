@@ -231,7 +231,6 @@ x.fillText("como lo ve esa persona, sin salir de tu sesión.", bx + 20, y + 132)
 tituloNivel(COLS[2], 268, "Configuración");
 y = 300;
 const config = [
-  ["Backup", {}],
   ["Borrado total", { tipo: "rojoFuerte" }],
   ["Cronograma", { fuera: true }],
   ["Datos evento", {}],

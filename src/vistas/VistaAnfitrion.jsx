@@ -21,7 +21,6 @@ import { VentanaMusicaEvento } from "./anfitrion/VentanaMusicaEvento";
 import { guardarAspecto, ASPECTO_POR_DEFECTO } from "../lib/temasMusica";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
-import { VentanaCopiaSeguridad } from "./anfitrion/VentanaCopiaSeguridad";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
 import { VentanaConfigModoPruebas } from "./anfitrion/VentanaConfigModoPruebas";
 import { VentanaConfigZonaReinicio } from "./anfitrion/VentanaConfigZonaReinicio";
@@ -235,7 +234,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
   const esAparatoTactil = () => window.matchMedia?.("(pointer: coarse) and (hover: none)").matches;
 
   const [abierto, setAbierto] = useState({
-    copiaSeguridad: false,
     progreso: false,
     "colaboradores-datos": false,
     mesas: false,
@@ -366,10 +364,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
       )}
 
       {/* Copia de seguridad */}
-      {abierto.copiaSeguridad && (
-        <VentanaCopiaSeguridad data={data} onCerrar={() => toggle("copiaSeguridad")} />
-      )}
-
       {/* Configuración ya no tiene ventana propia: se abre directo desde el
           submenú "Configuración" de "Abrir sección…" (ver DesplegableSecciones.jsx) */}
       {abierto["config-datos-evento"] && (

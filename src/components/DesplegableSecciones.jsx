@@ -15,7 +15,6 @@
 import {
   Users,
   Settings,
-  Save,
   Wallet,
   Mail,
   List,
@@ -45,7 +44,6 @@ const ICONOS_VENTANAS = {
   aniversarios: Heart,
   colaboradores: Users,
   configuracion: Settings,
-  copiaSeguridad: Save,
   cuentas: Wallet,
   invitaciones: Mail,
   invitados: List,
@@ -68,7 +66,6 @@ const ICONOS_VENTANAS = {
 // plano de la aplicación (public/mapa-de-la-aplicacion.png) sigue listando
 // las mismas secciones que el menú real.
 export const SUBMENU_CONFIGURACION = [
-  { id: "copiaSeguridad", etiqueta: "Backup", icono: Save },
   { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2, fondo: "#B00020", color: C.paper },
   { id: "config-cronograma", etiqueta: "Cronograma", icono: Clock3 },
   { id: "config-datos-evento", etiqueta: "Datos evento", icono: Calendar },
