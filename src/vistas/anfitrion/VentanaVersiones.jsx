@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.12",
+    cambios: [
+      "Quitar una foto de aniversario ya no es inmediato: primero pregunta, con el nombre del matrimonio, y hay que confirmar.",
+      "Las filas pasan a un dorado metálico, con brillo y canto, en vez del dorado plano que tiraba a mostaza.",
+      "Y más separación entre filas, para que no se lean como un solo bloque.",
+    ],
+  },
+  {
     version: "30.11",
     cambios: [
       "En Aniversarios, el fondo que hay detrás de las filas pasa de marfil al verde de la app: las filas doradas resaltan más.",

@@ -18,7 +18,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Trash2, Image as IconoImagen } from "lucide-react";
 import { C } from "../../theme";
-import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Seal } from "../../components/Widgets";
 import { matrimoniosDeInvitados } from "../../lib/matrimonios";
 import { subirFotoMatrimonio, borrarFotoMatrimonio, enlacesTemporales } from "../../lib/fotosAlmacen";
@@ -184,6 +184,11 @@ export function VentanaAniversarios({ data, onCerrar }) {
   const [enlaces, setEnlaces] = useState({});
   const [subiendo, setSubiendo] = useState("");
   const [error, setError] = useState("");
+  // Familia cuya foto de aniversario se va a quitar, pendiente de confirmar.
+  // Borra el archivo del almacén de verdad, así que no va directo al pulsar
+  // la papelera (pedido por el usuario, 2026-09-17). Modal propio y no
+  // window.confirm: mismo lenguaje visual que el resto de la app.
+  const [porQuitar, setPorQuitar] = useState(null);
 
   const matrimonios = useMemo(
     () => matrimoniosDeInvitados(invitados, evento?.fecha),
@@ -292,14 +297,23 @@ export function VentanaAniversarios({ data, onCerrar }) {
         </p>
       )}
 
-      <div className="flex flex-col gap-1">
+      {/* 10px entre filas (antes 4): sobre el verde, las filas doradas se
+          leían como un solo bloque. */}
+      <div className="flex flex-col" style={{ gap: 10 }}>
         {matrimonios.map((m) => (
           <div
             key={m.clave}
             className="flex items-center gap-3 px-2 py-1 rounded"
             // Fondo en el dorado de las letras de la cabecera, y texto en el
             // verde de la app, a petición del usuario (2026-09-17).
-            style={{ background: C.goldClaro, minHeight: ALTO_MINIATURA + 10 }}
+            style={{
+              // Dorado "de verdad" (2026-09-17): el C.goldClaro plano se veía
+              // mostaza. Degradado metálico con un brillo en diagonal, más un
+              // filo claro arriba y oscuro abajo para darle canto.
+              background: "linear-gradient(135deg, #B8893F 0%, #E6C77F 38%, #D4AE5E 62%, #A97D34 100%)",
+              boxShadow: "inset 0 1px 0 rgba(255,244,214,0.55), inset 0 -1px 0 rgba(90,62,20,0.35), 0 2px 6px rgba(0,0,0,0.35)",
+              minHeight: ALTO_MINIATURA + 10,
+            }}
           >
             <div className="flex-1 min-w-0">
               {/* Una sola línea por fila, como el resto de tablas de la app:
@@ -328,11 +342,47 @@ export function VentanaAniversarios({ data, onCerrar }) {
               ocupada={Boolean(fotosAniversario?.[m.familia])}
               subiendo={subiendo === m.familia}
               onElegir={(file) => subir(m.familia, file)}
-              onQuitar={() => quitar(m.familia)}
+              onQuitar={() => setPorQuitar(m)}
             />
           </div>
         ))}
       </div>
+      {porQuitar && (
+        <ModalFlotante
+          titulo="¿Quitar la foto de aniversario?"
+          onCerrar={() => setPorQuitar(null)}
+          acciones={
+            <>
+              <button
+                onClick={() => {
+                  const familia = porQuitar.familia;
+                  setPorQuitar(null);
+                  quitar(familia);
+                }}
+                className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
+                style={{ background: C.wax, color: "#fff" }}
+              >
+                Sí, quitarla
+              </button>
+              <button
+                onClick={() => setPorQuitar(null)}
+                className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
+                style={{ border: `1px solid ${C.ink}`, color: C.ink }}
+              >
+                Cancelar
+              </button>
+            </>
+          }
+        >
+          <p className="text-sm" style={{ color: C.charcoal }}>
+            Se borrará la foto de aniversario de{" "}
+            <b>
+              {porQuitar.familia} — {porQuitar.esposo.nombre} y {porQuitar.esposa.nombre}
+            </b>
+            . Para recuperarla habrá que volver a subirla.
+          </p>
+        </ModalFlotante>
+      )}
     </VentanaFlotante>
   );
 }
