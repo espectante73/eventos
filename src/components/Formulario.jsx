@@ -46,7 +46,12 @@ export function Field({ label, children }) {
       <span
         className="uppercase tracking-wide text-xs"
         style={{
-          color: C.gold,
+          // El color va por variable CSS para que una pantalla pueda
+          // cambiarlo: el formulario del colaborador va sobre dorado y ahí
+          // C.gold no se lee (.formulario-dorado en index.css). Un color
+          // escrito aquí dentro gana siempre a cualquier regla de CSS, que
+          // es justo lo que pasó al primer intento.
+          color: `var(--etiqueta-campo, ${C.gold})`,
           fontFamily: "'IBM Plex Mono', monospace",
           letterSpacing: "0.06em",
         }}

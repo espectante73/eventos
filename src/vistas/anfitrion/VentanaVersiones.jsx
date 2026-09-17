@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "32.5",
+    cambios: [
+      "Ahora sí: los títulos de los campos del formulario (EMAIL, AÑO NAC., CANCIÓN…) se ven en verde sobre el dorado. En la versión anterior el cambio no llegaba a aplicarse.",
+    ],
+  },
+  {
     version: "32.4",
     cambios: [
       "Todo el texto del formulario del colaborador va ya en el mismo verde que el nombre de la persona. Quedaban letras en dorado que sobre el fondo dorado casi no se leían.",
