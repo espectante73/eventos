@@ -1216,7 +1216,17 @@ export function SeccionInvitados({
               anchor="bottom-left"
               opciones={opcionesMenuInvitados}
               render={({ ref, toggle }) => (
-                <Boton variante="secundario" tamano="pequeno" ref={ref} onClick={toggle} titulo="Imprimir, canciones, alergias, añadir, editar o importar">
+                <Boton
+                  variante="secundario"
+                  tamano="pequeno"
+                  // `oscuro`: este botón vive en la cabecera verde de la
+                  // ventana. Sin esto saldría con contorno y letra en verde
+                  // tinta, invisibles sobre ese fondo.
+                  oscuro
+                  ref={ref}
+                  onClick={toggle}
+                  titulo="Imprimir, canciones, alergias, añadir, editar o importar"
+                >
                   <MoreHorizontal size={14} /> Acciones
                 </Boton>
               )}

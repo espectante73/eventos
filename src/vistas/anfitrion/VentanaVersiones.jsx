@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "31.8",
+    cambios: [
+      "Arreglado el botón \"Acciones\" de la Lista de invitados, que se rompió al unificar los botones: había perdido el color claro sobre la barra verde y el enlace con su desplegable.",
+    ],
+  },
+  {
     version: "31.7",
     cambios: [
       "\"Subir foto\" y \"Cerrar\" son ya idénticos: mismo alto, misma letra y el mismo contorno dorado. Antes el primero era más pequeño y llevaba otro borde.",

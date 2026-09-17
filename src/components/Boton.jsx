@@ -21,6 +21,7 @@
 // Lo que NO pasa por aquí, a propósito: el mando de música (teclas con su
 // propio lenguaje), las filas de MenuFlotante y los botones translúcidos
 // sobre la foto de la Portada. Unificarlos los empeoraría.
+import { forwardRef } from "react";
 import { C } from "../theme";
 
 const TAMANOS = {
@@ -44,7 +45,11 @@ export function estilosBoton(variante = "secundario", tamano = "normal", oscuro 
   return { ...base, ...(colores[variante] || colores.secundario), borderRadius: 6 };
 }
 
-export function Boton({
+// forwardRef: MenuFlotante necesita la referencia al botón que lo abre para
+// colocar el panel debajo. Sin esto, `ref` se pierde en silencio (React no
+// lo pasa a un componente de función) y el desplegable de "Acciones" de la
+// Lista de invitados se descoloca. Encontrado el 2026-09-17, al migrarlo.
+export const Boton = forwardRef(function Boton({
   children,
   variante = "secundario",
   tamano = "normal",
@@ -56,7 +61,7 @@ export function Boton({
   className = "",
   style,
   ...resto
-}) {
+}, ref) {
   const soloIcono = !children;
   if (import.meta.env.DEV && soloIcono && !titulo) {
     // Un botón de solo icono sin nombre es mudo para un lector de pantalla.
@@ -64,6 +69,7 @@ export function Boton({
   }
   return (
     <button
+      ref={ref}
       type={type}
       disabled={disabled}
       title={titulo}
@@ -82,4 +88,4 @@ export function Boton({
       {children}
     </button>
   );
-}
+});
