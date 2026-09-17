@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { nombreArchivoFamilia, esRutaAlmacen, nombreDescargaBoda } from "./fotosAlmacen";
+import {
+  nombreArchivoFamilia,
+  esRutaAlmacen,
+  nombreDescargaBoda,
+  faltaParaEncargo,
+  hojaDeEncargo,
+} from "./fotosAlmacen";
 
 // El nombre del archivo tiene que ser ESTABLE: volver a subir la foto de una
 // familia debe reemplazar la suya, no dejar un archivo nuevo cada vez. Si
@@ -50,5 +56,49 @@ describe("nombreDescargaBoda", () => {
 
   it("quita los caracteres que no admite un nombre de archivo", () => {
     expect(nombreDescargaBoda({ ...m, familia: "Ruiz/Pérez" })).toBe("Ruiz-Pérez - Gustavo y Míriam - 1998.jpg");
+  });
+});
+
+describe("faltaParaEncargo", () => {
+  const m = (familia, anioBoda) => ({ familia, anioBoda, esposo: { nombre: "A" }, esposa: { nombre: "B" } });
+
+  it("da por completo solo si todos tienen año y foto", () => {
+    const r = faltaParaEncargo([m("Uno", "1998")], { Uno: "boda/uno.jpg" });
+    expect(r.completo).toBe(true);
+  });
+
+  it("señala a quién le falta el año y a quién la foto", () => {
+    const r = faltaParaEncargo([m("Uno", ""), m("Dos", "2001")], { Dos: "boda/dos.jpg" });
+    expect(r.completo).toBe(false);
+    expect(r.sinAnio.map((x) => x.familia)).toEqual(["Uno"]);
+    expect(r.sinFoto.map((x) => x.familia)).toEqual(["Uno"]);
+  });
+});
+
+describe("hojaDeEncargo", () => {
+  const uno = {
+    familia: "Abreu01",
+    esposo: { nombre: "Gustavo" },
+    esposa: { nombre: "Míriam" },
+    anioBoda: "1998",
+    aniversario: 28,
+  };
+
+  it("nombra el archivo igual que la descarga, para que casen", () => {
+    expect(hojaDeEncargo([uno])).toContain(nombreDescargaBoda(uno));
+  });
+
+  it("lleva los nombres, el año y los años que cumplen", () => {
+    const t = hojaDeEncargo([uno]);
+    expect(t).toContain("Nombres: Gustavo y Míriam. Año de boda: 1998. Cumplen 28 años.");
+  });
+
+  it("no inventa los años cumplidos si no se pueden calcular", () => {
+    expect(hojaDeEncargo([{ ...uno, aniversario: null }])).not.toContain("Cumplen");
+  });
+
+  it("escribe un bloque por matrimonio", () => {
+    const t = hojaDeEncargo([uno, { ...uno, familia: "Ruiz01" }]);
+    expect(t.match(/Monta esta foto/g)).toHaveLength(2);
   });
 });

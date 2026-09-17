@@ -174,3 +174,52 @@ export function nombreDescargaBoda({ familia, esposo, esposa, anioBoda }) {
   const anio = limpiar(anioBoda) || "sin año";
   return `${[limpiar(familia) || "Sin familia", nombres, anio].filter(Boolean).join(" - ")}.jpg`;
 }
+
+// ---------- Hoja de encargo para la otra IA ----------
+// El usuario monta cada foto de boda en una plantilla usando ChatGPT, a
+// mano. La hoja le ahorra teclear: un bloque por foto, ya redactado, con
+// los nombres, el año de boda y los años que cumplen -- todo sacado de la
+// lista de invitados, no escrito a mano. Copia, pega y adjunta.
+//
+// ⚠️ Regla del usuario (2026-09-17): la hoja SOLO se entrega si los datos
+// están completos. Con un año a medias, la instrucción saldría mal y el
+// error se repetiría en las 48.
+
+// Qué falta para poder redactar el encargo.
+export function faltaParaEncargo(matrimonios, fotosOriginales) {
+  const sinAnio = [];
+  const sinFoto = [];
+  for (const m of matrimonios || []) {
+    if (!String(m.anioBoda || "").trim()) sinAnio.push(m);
+    if (!fotosOriginales?.[m.familia]) sinFoto.push(m);
+  }
+  return { sinAnio, sinFoto, completo: sinAnio.length === 0 && sinFoto.length === 0 };
+}
+
+export function hojaDeEncargo(matrimonios) {
+  const cabecera = [
+    "HOJA DE ENCARGO — fotos de boda para la plantilla",
+    "",
+    "Para cada foto: copia su bloque, pégalo en ChatGPT y adjunta la foto",
+    "con ese mismo nombre, junto con la plantilla.",
+    "",
+    "============================================================",
+    "",
+  ];
+  const bloques = (matrimonios || []).map((m) => {
+    const nombre = nombreDescargaBoda(m);
+    const anios = m.aniversario != null ? ` Cumplen ${m.aniversario} años.` : "";
+    return [
+      nombre,
+      "",
+      "Monta esta foto en la plantilla adjunta.",
+      `Nombres: ${m.esposo?.nombre} y ${m.esposa?.nombre}. Año de boda: ${m.anioBoda}.${anios}`,
+      "Devuélvela en 16:9, 1920x1080, y guárdala como archivo con el nombre",
+      `exacto "${nombre}".`,
+      "",
+      "------------------------------------------------------------",
+      "",
+    ].join("\n");
+  });
+  return cabecera.join("\n") + bloques.join("\n");
+}

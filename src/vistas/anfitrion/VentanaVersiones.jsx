@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "31.1",
+    cambios: [
+      "El archivo que descargas incluye ahora una \"Hoja de encargo\": un bloque por foto, ya redactado, con los nombres, el año de boda y los años que cumplen, listo para copiar y pegar en ChatGPT.",
+      "Solo se prepara si están todos los datos recogidos. Si falta algún año de boda o alguna foto, la app te dice quiénes son y te deja descargar solo las fotos.",
+    ],
+  },
+  {
     version: "31",
     cambios: [
       "Las fotos de boda que suben los colaboradores se guardan ahora como ORIGINALES, a buen tamaño y en el almacén, sin hacer más pesada la app.",

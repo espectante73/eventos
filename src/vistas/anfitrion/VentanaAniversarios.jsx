@@ -28,6 +28,8 @@ import {
   esRutaAlmacen,
   bytesDeFoto,
   nombreDescargaBoda,
+  faltaParaEncargo,
+  hojaDeEncargo,
   CARPETA,
 } from "../../lib/fotosAlmacen";
 import { crearZip } from "../../lib/zip";
@@ -315,14 +317,17 @@ export function VentanaAniversarios({ data, onCerrar }) {
   // pasarlas por la plantilla con otra IA (usuario, 2026-09-17: un ZIP
   // porque Safari bloquea decenas de descargas seguidas).
   const conOriginal = matrimonios.filter((m) => fotosFamiliares?.[m.familia]);
+  // La hoja de encargo solo se entrega con TODOS los datos recogidos: con un
+  // año a medias la instrucción saldría mal y el error se repetiría en las
+  // 48 (regla del usuario, 2026-09-17).
+  const falta = faltaParaEncargo(matrimonios, fotosFamiliares);
   const pedirDescarga = () => {
     setError("");
     if (conOriginal.length === 0) {
       setError("Todavía no hay fotos de boda subidas por los colaboradores.");
       return;
     }
-    const sinAnio = conOriginal.filter((m) => !String(m.anioBoda || "").trim());
-    if (sinAnio.length > 0) setAvisoDescarga({ sinAnio });
+    if (!falta.completo) setAvisoDescarga(falta);
     else descargarOriginales();
   };
   const descargarOriginales = async () => {
@@ -348,6 +353,12 @@ export function VentanaAniversarios({ data, onCerrar }) {
     );
     if (archivos.length > 0) {
       archivos.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+      if (falta.completo) {
+        archivos.unshift({
+          nombre: "Hoja de encargo.txt",
+          datos: new TextEncoder().encode(hojaDeEncargo(matrimonios)),
+        });
+      }
       descargarBlob("Fotos de boda originales.zip", new Blob([crearZip(archivos)], { type: "application/zip" }));
     }
     if (fallidas.length > 0) setError(`No se pudieron descargar ${fallidas.length}: ${fallidas.join(", ")}.`);
@@ -591,9 +602,9 @@ export function VentanaAniversarios({ data, onCerrar }) {
 
       {avisoDescarga && (
         <ModalFlotante
-          titulo="Fotos sin año de boda"
+          titulo="Faltan datos por recoger"
           onCerrar={() => setAvisoDescarga(null)}
-          ancho={420}
+          ancho={460}
           acciones={
             <>
               <button
@@ -601,7 +612,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
                 className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
                 style={{ background: C.ink, color: C.goldClaro }}
               >
-                Descargar igualmente
+                Descargar solo las fotos
               </button>
               <button
                 onClick={() => setAvisoDescarga(null)}
@@ -613,18 +624,39 @@ export function VentanaAniversarios({ data, onCerrar }) {
             </>
           }
         >
-          {/* La plantilla necesita el año: se avisa antes de bajar archivos
-              que dirían "sin año" (decidido con el usuario, 2026-09-17). */}
-          <p className="text-sm mb-2" style={{ color: C.charcoal }}>
-            {avisoDescarga.sinAnio.length} de {conOriginal.length} saldrán con «sin año» en el nombre:
+          <p className="text-sm mb-3" style={{ color: C.charcoal }}>
+            La hoja de encargo no se puede preparar todavía: llevaría instrucciones
+            incompletas y ese fallo se repetiría en todas las fotos.
           </p>
-          <ul className="text-sm list-disc pl-5" style={{ color: C.charcoal }}>
-            {avisoDescarga.sinAnio.map((m) => (
-              <li key={m.clave}>{nombreMatrimonio(m)}</li>
-            ))}
-          </ul>
+          {avisoDescarga.sinAnio.length > 0 && (
+            <>
+              <p className="text-sm font-medium" style={{ color: C.ink }}>
+                Sin año de boda ({avisoDescarga.sinAnio.length}):
+              </p>
+              <ul className="text-sm list-disc pl-5 mb-3" style={{ color: C.charcoal }}>
+                {avisoDescarga.sinAnio.slice(0, 8).map((m) => (
+                  <li key={m.clave}>{nombreMatrimonio(m)}</li>
+                ))}
+                {avisoDescarga.sinAnio.length > 8 && <li>…y {avisoDescarga.sinAnio.length - 8} más.</li>}
+              </ul>
+            </>
+          )}
+          {avisoDescarga.sinFoto.length > 0 && (
+            <>
+              <p className="text-sm font-medium" style={{ color: C.ink }}>
+                Sin foto de boda ({avisoDescarga.sinFoto.length}):
+              </p>
+              <ul className="text-sm list-disc pl-5" style={{ color: C.charcoal }}>
+                {avisoDescarga.sinFoto.slice(0, 8).map((m) => (
+                  <li key={m.clave}>{nombreMatrimonio(m)}</li>
+                ))}
+                {avisoDescarga.sinFoto.length > 8 && <li>…y {avisoDescarga.sinFoto.length - 8} más.</li>}
+              </ul>
+            </>
+          )}
         </ModalFlotante>
       )}
+
     </VentanaFlotante>
   );
 }

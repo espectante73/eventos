@@ -1477,6 +1477,26 @@ Cómo quedó:
   "Sin plantilla". Sello rojo en la cabecera Boda = las que faltan por
   montar. La vista grande deja comparar original y terminada.
 
+- **Hoja de encargo** (v31.1): dentro del mismo ZIP, un `Hoja de
+  encargo.txt` con un bloque redactado por foto (nombres, año de boda,
+  años que cumplen) para copiar y pegar en ChatGPT. ⚠️ Regla del usuario:
+  **solo se incluye si los datos están COMPLETOS** -- con un año a medias
+  la instrucción saldría mal y el fallo se repetiría en las 48. Si falta
+  algo, la app dice quiénes y ofrece bajar solo las fotos.
+
+**Por qué a mano y no por API** (evaluado el 2026-09-17): el usuario tiene
+ChatGPT **Plus**, que NO da acceso a la API -- se factura aparte
+(confirmado en la ayuda oficial de OpenAI). La API de imágenes sí
+serviría (acepta varias imágenes de referencia y 16:9, del orden de
+0,05-0,21 $ por imagen), pero son ~100 fotos UNA sola vez: no compensa
+montar la conexión ni el riesgo a diez semanas de la boda. Si algún día
+se reutiliza la app para otro evento con fotos así, se revalora.
+
+Pendiente de comprobar por el usuario: si al pedirle a ChatGPT que
+devuelva la imagen **como archivo con un nombre exacto** el nombre llega
+intacto. Si llega, merece la pena montar la subida EN BLOQUE de las
+terminadas (emparejando por nombre); si no, se quedan una a una.
+
 ⚠️ A día de hoy los 48 matrimonios están "sin año" en la Lista de
 invitados: lo rellena el colaborador junto con la foto.
 
