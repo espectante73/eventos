@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.5",
+    cambios: [
+      "Aniversarios se parece ya a la Lista de invitados: los números viven en recuadritos en la cabecera (Matrimonios, Boda, Aniversario, Faltan) en vez de en una frase suelta.",
+      "Y \"BODA\" y \"ANIV.\" se quedan clavados arriba al desplazar, así que con 49 filas no pierdes de vista cuál es cuál.",
+      "Fuera la frase explicativa: sobraba.",
+    ],
+  },
+  {
     version: "30.4",
     cambios: [
       "En Aniversarios, \"ANIV.\" no caía centrado sobre su recuadro: la columna era más ancha que la de \"BODA\" para dejar sitio a la papelera. Ahora la papelera va encima de la miniatura y las dos columnas miden exactamente lo mismo.",

@@ -146,7 +146,19 @@ export function VentanaAniversarios({ data, onCerrar }) {
     };
   }, [rutas.join("|")]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const conBoda = matrimonios.filter((m) => fotosFamiliares?.[m.familia]).length;
   const hechas = matrimonios.filter((m) => fotosAniversario?.[m.familia]).length;
+
+  // Mismos recuadros informativos que la Lista de invitados, a petición del
+  // usuario (2026-09-17): "pequeños recuadros informativos" en la cabecera
+  // en vez de una línea de texto suelta. Van en `subtitulo` (cabecera de la
+  // ventana, que no desplaza), así que se ven siempre.
+  const resumen = [
+    { label: "Matrimonios", value: matrimonios.length },
+    { label: "Boda", value: conBoda },
+    { label: "Aniversario", value: hechas },
+    { label: "Faltan", value: matrimonios.length - hechas, alerta: matrimonios.length - hechas > 0 },
+  ];
 
   const subir = async (familia, file) => {
     setError("");
@@ -173,19 +185,44 @@ export function VentanaAniversarios({ data, onCerrar }) {
   };
 
   return (
-    <VentanaFlotante clave="aniversarios" titulo="Aniversarios" onCerrar={onCerrar} ancho="min(760px, calc(100vw - 48px))">
-      {/* Corta a propósito: el usuario pidió quitar lo de la resolución y
-          los permisos ("no des más explicación"). Eso ya está documentado
-          en la cabecera de este archivo y en lib/fotosAlmacen.js, que es
-          donde le sirve a quien toque el código, no en su pantalla. */}
-      <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.75 }}>
-        La foto de boda la sube el colaborador en su formulario; la de
-        aniversario la guardas tú.
-      </p>
-      <p className="text-sm mb-3" style={{ color: C.ink, fontFamily: "'Fraunces', serif", fontWeight: 700 }}>
-        {hechas} de {matrimonios.length} hechas
-      </p>
-
+    <VentanaFlotante
+      clave="aniversarios"
+      titulo="Aniversarios"
+      onCerrar={onCerrar}
+      ancho="min(760px, calc(100vw - 48px))"
+      subtitulo={
+        <div className="flex items-center gap-2 flex-wrap">
+          {[resumen.slice(0, 2), resumen.slice(2)].map((grupo, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded px-2 py-1"
+              style={{ border: `1px solid ${C.gold}` }}
+            >
+              {grupo.map((r) => (
+                <div key={r.label} className="text-center">
+                  <div
+                    className="text-[10px] uppercase"
+                    style={{ color: C.goldClaro, opacity: 0.75, fontFamily: "'IBM Plex Mono', monospace" }}
+                  >
+                    {r.label}
+                  </div>
+                  <div
+                    className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
+                    style={{
+                      background: r.alerta ? C.avisoFondo : "rgba(239,233,222,0.92)",
+                      color: r.alerta ? C.peligro : C.ink,
+                      fontFamily: "'Fraunces', serif",
+                    }}
+                  >
+                    {r.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      }
+    >
       {error && (
         <p className="text-xs mb-2" style={{ color: C.wax }}>
           ⚠ {error}
@@ -203,7 +240,23 @@ export function VentanaAniversarios({ data, onCerrar }) {
           (2026-09-17): con dos recuadros iguales no había forma de saber
           cuál era cuál. Solo se pinta si hay matrimonios. */}
       {matrimonios.length > 0 && (
-        <div className="flex items-center gap-3 px-2 pb-1">
+        <div
+          className="flex items-center gap-3 px-2"
+          // Inmovilizada arriba al desplazar la lista, igual que la cabecera
+          // de la Lista de invitados: con 49 filas, si se va con el scroll
+          // se pierde cuál columna es cuál. El cuerpo de VentanaFlotante es
+          // el que desplaza, así que `top: 0` se pega a su borde.
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+            background: C.paper,
+            paddingTop: 4,
+            paddingBottom: 6,
+            borderBottom: `1px solid ${C.line}`,
+            marginBottom: 4,
+          }}
+        >
           <div className="flex-1" />
           <div
             className="text-xs uppercase text-center"
