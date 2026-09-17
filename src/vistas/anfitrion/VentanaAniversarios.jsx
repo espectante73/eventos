@@ -64,11 +64,15 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
         style={{
           width: ANCHO_MINIATURA,
           height: ALTO_MINIATURA,
-          border: `1px solid ${soloLectura ? C.line : ocupada ? C.gold : "rgba(176,141,87,0.55)"}`,
+          // Marco de cuadro: canto verde de la app en los dos recuadros, para
+          // que se lean como fotos enmarcadas sobre el dorado y no como
+          // casillas de formulario (2026-09-17, "le falta algo"). El de boda,
+          // sin foto, deja de ser un gris lavado: verde translúcido, a juego.
+          border: `3px solid ${C.ink}`,
           background: soloLectura
-            ? C.paperDark
+            ? "rgba(31,58,46,0.22)"
             : ocupada
-            ? C.paper
+            ? C.ink
             : "linear-gradient(180deg, #FAF6EE 0%, #EDE4D2 100%)",
           cursor: soloLectura ? "default" : "pointer",
           opacity: subiendo ? 0.5 : 1,
@@ -87,7 +91,7 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
             style={{ width: "100%", height: "100%", objectFit: "contain", background: C.ink }}
           />
         ) : (
-          <IconoImagen size={18} style={{ color: soloLectura ? C.charcoal : C.gold, opacity: soloLectura ? 0.35 : 0.85 }} />
+          <IconoImagen size={18} style={{ color: soloLectura ? C.ink : C.gold, opacity: soloLectura ? 0.45 : 0.85 }} />
         )}
       </label>
       {!soloLectura && (
@@ -318,7 +322,12 @@ export function VentanaAniversarios({ data, onCerrar }) {
             <div className="flex-1 min-w-0">
               {/* Una sola línea por fila, como el resto de tablas de la app:
                   si no cabe se recorta, nunca se parte en dos. */}
-              <div className="text-sm whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: C.ink }}>
+              <div
+                className="whitespace-nowrap overflow-hidden text-ellipsis"
+                // Fraunces, la letra con serifa de los títulos de la app: la
+                // de datos (Inter) hacía la fila demasiado "de oficina".
+                style={{ color: C.ink, fontFamily: "'Fraunces', serif", fontSize: 17 }}
+              >
                 {/* Los dos nombres, no solo el del cabeza de familia: a
                     petición del usuario, 2026-09-17 ("Benito y Meritxell").
                     Sigue siendo una sola línea -- si no cabe, se recorta. */}

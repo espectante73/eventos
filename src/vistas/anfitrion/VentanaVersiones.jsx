@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.13",
+    cambios: [
+      "Los recuadros de foto de Aniversarios llevan un marco verde, como un cuadro, en vez de parecer casillas de formulario. El de boda vacío deja de ser gris y pasa a un verde suave.",
+      "Los nombres del matrimonio van en la letra con serifa de los títulos de la app.",
+    ],
+  },
+  {
     version: "30.12",
     cambios: [
       "Quitar una foto de aniversario ya no es inmediato: primero pregunta, con el nombre del matrimonio, y hay que confirmar.",
