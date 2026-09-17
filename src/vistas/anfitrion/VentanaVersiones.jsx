@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "31.3",
+    cambios: [
+      "Accesibilidad: al moverse por la app con el tabulador, ahora se ve un aro alrededor del botón donde está el cursor. Antes no se marcaba, y quien no usa ratón se perdía.",
+      "Los botones que son solo un icono (papelera, cerrar, flechas del reproductor…) tienen ya un nombre que los lectores de pantalla pueden leer.",
+      "No cambia nada de lo que ves con el ratón.",
+    ],
+  },
+  {
     version: "31.2",
     cambios: [
       "En el formulario del colaborador, el año de nacimiento pasa a ser el PRIMER dato, por delante del email.",

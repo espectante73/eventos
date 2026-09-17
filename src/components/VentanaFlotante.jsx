@@ -63,7 +63,7 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
           >
             {titulo}
           </h3>
-          <button onClick={onCerrar} title="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
+          <button onClick={onCerrar} title="Cerrar" aria-label="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
             <X size={18} />
           </button>
         </div>
@@ -281,7 +281,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
                 este panel: poner aquí una X propia dejaría dos botones
                 de cerrar, uno al lado del otro. */}
             {!fijo && (
-              <button onClick={onCerrar} title="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
+              <button onClick={onCerrar} title="Cerrar" aria-label="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
                 <X size={18} />
               </button>
             )}

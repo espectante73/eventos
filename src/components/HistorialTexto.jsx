@@ -48,7 +48,7 @@ export function BotonHistorial({ obtenerHistorial, onRestaurar }) {
     <div className="relative inline-block">
       <button
         type="button"
-        title="Ver versiones anteriores guardadas"
+        title="Ver versiones anteriores guardadas" aria-label="Ver versiones anteriores guardadas"
         onMouseDown={(e) => e.preventDefault()}
         onClick={alternar}
         className="p-1.5 rounded"
@@ -85,7 +85,7 @@ export function BotonHistorial({ obtenerHistorial, onRestaurar }) {
                 </div>
                 <button
                   type="button"
-                  title="Restaurar esta versión"
+                  title="Restaurar esta versión" aria-label="Restaurar esta versión"
                   onClick={() => {
                     onRestaurar(v.valorAnterior);
                     setAbierto(false);

@@ -107,7 +107,7 @@ export function FondoMusicalTablon() {
                 <Music size={13} style={{ color: C.gold, flexShrink: 0 }} />
                 <span className="truncate">{p.name.replace(/^\d+-/, "")}</span>
               </span>
-              <button onClick={() => eliminar(p.name)} title="Eliminar esta pista" className="p-1 flex-shrink-0">
+              <button onClick={() => eliminar(p.name)} title="Eliminar esta pista" aria-label="Eliminar esta pista" className="p-1 flex-shrink-0">
                 <Trash2 size={14} style={{ color: C.wax }} />
               </button>
             </div>

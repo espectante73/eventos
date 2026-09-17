@@ -155,7 +155,7 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
             {botonFormato(Underline, "u", "Subrayado")}
             <button
               type="button"
-              title="Viñeta (en la línea actual, o en cada línea seleccionada)"
+              title="Viñeta (en la línea actual, o en cada línea seleccionada)" aria-label="Viñeta (en la línea actual, o en cada línea seleccionada)"
               onMouseDown={(e) => e.preventDefault()}
               onClick={anadirVineta}
               className="p-1.5 rounded"
@@ -166,7 +166,7 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
             <div style={{ width: 1, alignSelf: "stretch", background: C.line }} />
             <button
               type="button"
-              title="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)"
+              title="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)" aria-label="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)"
               onMouseDown={(e) => e.preventDefault()}
               onClick={deshacer}
               disabled={!puedeDeshacer}

@@ -37,6 +37,28 @@
   transform: translateY(0);
 }
 
+/* ---------- Foco de teclado (accesibilidad, 2026-09-17) ----------
+   Ningún botón de la app marcaba dónde estaba el cursor al moverse con el
+   tabulador: quien no usa ratón (o usa lector de pantalla) se perdía. Es
+   uno de los criterios de accesibilidad web más básicos.
+
+   :focus-visible y no :focus a secas -- así el aro SOLO aparece al navegar
+   con teclado, nunca al hacer clic con el ratón, que es lo que la gente
+   percibe como "se me queda marcado el botón".
+
+   Va en un sitio único para los 179 botones de la app, en vez de tocar uno
+   a uno: mismo criterio que .boton-3d. */
+:where(button, a, [role="button"], summary, input, select, textarea):focus-visible {
+  outline: 2px solid #D9B778; /* = theme.js C.goldClaro */
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Sobre fondo claro el dorado se lee peor: ahí, verde tinta. */
+.ventana-cuerpo :where(button, a, [role="button"], input, select, textarea):focus-visible {
+  outline-color: #1F3A2E; /* = theme.js C.ink */
+}
+
 /* .boton-verde-solido: mismo lenguaje (degradado verde + letra dorada)
    pero OPACO, para botones sobre una tarjeta blanca/clara sólida (no
    una foto) -- Login, "Cerrar sesión" de colaboradores, y ahora el

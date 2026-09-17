@@ -1293,6 +1293,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <div className="flex items-center gap-3">
               <button
                 onClick={hacer("saltar", -salto)}
+                title={`Atrás ${salto} segundos`}
+                aria-label={`Atrás ${salto} segundos`}
                 className="flex items-center justify-center"
                 style={{ width: M.salto, height: M.salto, borderRadius: 14, ...tecla(false), color: P.texto, transition: SUAVE }}
               >
@@ -1324,6 +1326,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
               </button>
               <button
                 onClick={hacer("saltar", salto)}
+                title={`Adelante ${salto} segundos`}
+                aria-label={`Adelante ${salto} segundos`}
                 className="flex items-center justify-center"
                 style={{ width: M.salto, height: M.salto, borderRadius: 14, ...tecla(false), color: P.texto, transition: SUAVE }}
               >
@@ -1369,7 +1373,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
                       onClick={hacer("cortinilla")}
                       className="rounded-full flex items-center justify-center"
                       style={{ width: 34, height: 34, background: P.panelVivo, color: P.oro, transition: SUAVE }}
-                      title="Lanzar la cortinilla"
+                      title="Lanzar la cortinilla" aria-label="Lanzar la cortinilla"
                     >
                       <Radio size={16} />
                     </button>
@@ -1711,7 +1715,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <span className="truncate">{subiendoFondo ? "Subiendo…" : "Cambiar la imagen"}</span>
             <input type="file" accept="image/*" onChange={elegirFondo} style={{ display: "none" }} disabled={subiendoFondo} />
           </label>
-          <button onClick={quitarFondoPropio} className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, ...tecla(false), color: P.texto, flexShrink: 0 }} title="Borrar la imagen">
+          <button onClick={quitarFondoPropio} className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, ...tecla(false), color: P.texto, flexShrink: 0 }} title="Borrar la imagen" aria-label="Borrar la imagen">
             <Trash2 size={15} />
           </button>
         </div>
@@ -1802,10 +1806,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <GripVertical size={16} />
           </span>
           <span className="flex-1 truncate" style={etiqueta}>{NOMBRES_PANEL[clave]}</span>
-          <button onClick={() => moverPanel(clave, -1)} disabled={posicion === 0} className="flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: 10, ...tecla(false), color: P.texto, opacity: posicion === 0 ? 0.35 : 1 }} title="Moverlo antes">
+          <button onClick={() => moverPanel(clave, -1)} disabled={posicion === 0} className="flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: 10, ...tecla(false), color: P.texto, opacity: posicion === 0 ? 0.35 : 1 }} title="Moverlo antes" aria-label="Moverlo antes">
             <ArrowUp size={15} />
           </button>
-          <button onClick={() => moverPanel(clave, 1)} disabled={posicion === aspecto.orden.length - 1} className="flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: 10, ...tecla(false), color: P.texto, opacity: posicion === aspecto.orden.length - 1 ? 0.35 : 1 }} title="Moverlo después">
+          <button onClick={() => moverPanel(clave, 1)} disabled={posicion === aspecto.orden.length - 1} className="flex items-center justify-center" style={{ width: 34, height: 34, borderRadius: 10, ...tecla(false), color: P.texto, opacity: posicion === aspecto.orden.length - 1 ? 0.35 : 1 }} title="Moverlo después" aria-label="Moverlo después">
             <ArrowDown size={15} />
           </button>
         </div>
@@ -2020,7 +2024,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
                 onClick={() => setAspectoAbierto((a) => !a)}
                 className="flex items-center justify-center"
                 style={{ width: 34, height: 34, borderRadius: 10, ...tecla(aspectoAbierto), color: aspectoAbierto ? P.oro : P.tenue, transition: SUAVE }}
-                title="Acabado y colocación"
+                title="Acabado y colocación" aria-label="Acabado y colocación"
               >
                 <Palette size={16} />
               </button>

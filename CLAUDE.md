@@ -1500,6 +1500,30 @@ terminadas (emparejando por nombre); si no, se quedan una a una.
 ⚠️ A día de hoy los 48 matrimonios están "sin año" en la Lista de
 invitados: lo rellena el colaborador junto con la foto.
 
+### Accesibilidad de los botones: paso 1 hecho, paso 2 pendiente (2026-09-17)
+
+A raíz de que un desarrollador va a revisar el repositorio, se midió el
+estado real de los 179 `<button>` de la app:
+
+- **12 combinaciones distintas** de tamaño/padding/redondeo escritas a
+  mano; solo 39 llevan `.boton-3d`. **No existe un componente `Boton`.**
+- **0 `aria-label`** y **0 reglas de foco** en todo el CSS.
+- Objetivos táctiles por debajo de 44px (la papelera de Aniversarios, 19px).
+
+**Paso 1 (hecho, v31.3)** -- sin ningún cambio visual:
+- Regla global `:focus-visible` en `index.css` (aro dorado; verde dentro
+  del cuerpo claro de las ventanas). `:focus-visible` y no `:focus`, para
+  que el aro no salga al hacer clic con el ratón.
+- `aria-label` en los 24 botones de solo icono: 21 copiados de su `title`
+  por script, y 3 que estaban mudos etiquetados a mano (eliminar invitado
+  en la lista, y los dos saltos del reproductor de música).
+
+**Paso 2 (pendiente, acordado con el usuario)**: crear un componente
+`Boton` con tres variantes (principal / secundario / peligro) y dos
+tamaños, y migrar los 179. ⚠️ Eso SÍ cambia cosas en pantalla: hacerlo
+pantalla a pantalla y con capturas del usuario, nunca de golpe, y no a
+pocas semanas de la boda.
+
 ### Cabecera inmovilizada dentro de una VentanaFlotante: `top: -16`
 
 Aniversarios (v30.6) pega su cabecera de columnas al borde de arriba del

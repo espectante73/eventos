@@ -95,7 +95,7 @@ function PlantillaEditable({ label, valor, onCambio, campo, obtenerHistorialText
         <div style={{ width: 1, alignSelf: "stretch", background: C.line }} />
         <button
           type="button"
-          title="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)"
+          title="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)" aria-label="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)"
           onMouseDown={(e) => e.preventDefault()}
           onClick={deshacer}
           disabled={!puedeDeshacer}

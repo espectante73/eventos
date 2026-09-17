@@ -479,7 +479,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
               onClick={() => setMusicaEnPagina(false)}
               className="flex items-center justify-center"
               style={{ width: 40, height: 40, borderRadius: 10, color: C.goldClaro }}
-              title="Cerrar"
+              title="Cerrar" aria-label="Cerrar"
             >
               <X size={20} />
             </button>

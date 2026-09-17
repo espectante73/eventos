@@ -142,10 +142,10 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
           >
             <Send size={20} style={{ color: c.email ? C.gold : C.line }} />
           </button>
-          <button onClick={() => setRelevando(true)} title="Relevar (sustituir) colaborador">
+          <button onClick={() => setRelevando(true)} title="Relevar (sustituir) colaborador" aria-label="Relevar (sustituir) colaborador">
             <Repeat size={20} style={{ color: C.ink }} />
           </button>
-          <button onClick={() => onEliminar(c.id)} title="Eliminar colaborador">
+          <button onClick={() => onEliminar(c.id)} title="Eliminar colaborador" aria-label="Eliminar colaborador">
             <Trash2 size={20} style={{ color: C.wax }} />
           </button>
         </div>

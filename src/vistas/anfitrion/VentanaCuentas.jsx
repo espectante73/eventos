@@ -320,7 +320,7 @@ export function VentanaCuentas({ data, onCerrar }) {
                     </button>
                     <button
                       onClick={() => deshacerRecogidaColaborador(c.id)}
-                      title="Deshacer (si se confirmó por error)"
+                      title="Deshacer (si se confirmó por error)" aria-label="Deshacer (si se confirmó por error)"
                     >
                       <Undo2 size={15} style={{ color: C.wax }} />
                     </button>
@@ -412,7 +412,7 @@ export function VentanaCuentas({ data, onCerrar }) {
               />
               Pagado
             </label>
-            <button onClick={() => eliminarGasto(g.id)} title="Quitar este gasto">
+            <button onClick={() => eliminarGasto(g.id)} title="Quitar este gasto" aria-label="Quitar este gasto">
               <X size={15} style={{ color: C.wax }} />
             </button>
           </div>

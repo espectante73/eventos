@@ -1733,7 +1733,11 @@ export function SeccionInvitados({
                         }}
                       />
                     </button>
-                    <button onClick={() => eliminarInvitado(g.id)}>
+                    <button
+                      onClick={() => eliminarInvitado(g.id)}
+                      title={`Eliminar a ${g.nombre} ${g.apellido}`.trim()}
+                      aria-label={`Eliminar a ${g.nombre} ${g.apellido}`.trim()}
+                    >
                       <Trash2 size={14} style={{ color: C.wax }} />
                     </button>
                   </span>

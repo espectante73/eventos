@@ -149,7 +149,7 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, onVer, s
       {!soloLectura && ocupada && (
         <button
           onClick={onQuitar}
-          title={`Quitar ${titulo}`}
+          title={`Quitar ${titulo}`} aria-label={`Quitar ${titulo}`}
           className="boton-3d rounded-full absolute flex items-center justify-center"
           style={{ top: -6, right: -6, width: 19, height: 19, background: C.wax, color: "#fff" }}
         >

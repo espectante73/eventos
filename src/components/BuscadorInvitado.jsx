@@ -28,7 +28,7 @@ export function BuscadorInvitado({ invitados, invitadoId, onSeleccionar, placeho
             onSeleccionar("");
             setTexto("");
           }}
-          title="Quitar selección"
+          title="Quitar selección" aria-label="Quitar selección"
         >
           <X size={13} style={{ color: C.wax }} />
         </button>

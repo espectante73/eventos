@@ -63,7 +63,7 @@ export function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapaci
             onClick={onEliminar}
             className="boton-3d absolute rounded-full flex items-center justify-center"
             style={{ width: 24, height: 24, top: -3, right: -3, background: C.wax, color: "#fff" }}
-            title="Quitar esta mesa"
+            title="Quitar esta mesa" aria-label="Quitar esta mesa"
           >
             <X size={15} />
           </button>
