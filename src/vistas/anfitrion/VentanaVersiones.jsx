@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "32.1",
+    cambios: [
+      "La foto de boda del formulario del colaborador se ve y se maneja igual que en Aniversarios: recuadro en 16:9, se toca para subirla y, si ya está, se abre en grande.",
+      "Desde esa vista grande se cambia la foto, y la papelera pide confirmación antes de borrarla.",
+      "Fuera el botón \"Subir foto\" y la miniatura cuadrada: eran otra manera de hacer lo mismo.",
+    ],
+  },
+  {
     version: "32",
     cambios: [
       "Retirado el botón \"Backup\" de Configuración. No tenía utilidad real: guardaba menos de la mitad de los datos y no se podía restaurar.",

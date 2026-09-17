@@ -37,6 +37,8 @@ import { C } from "../theme";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
+import { HuecoFoto } from "../components/HuecoFoto";
+import { Boton, estilosBoton } from "../components/Boton";
 import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
@@ -85,6 +87,10 @@ function FormularioDatos({
   // enseñarla hace falta un enlace temporal; useEnlaceFoto lo pide solo si
   // es una ruta, y deja pasar tal cual lo antiguo o un enlace pegado.
   const enlaceFoto = useEnlaceFoto(foto);
+  // Ver la foto en grande, y confirmar antes de quitarla: mismo trato que en
+  // Aniversarios, donde borrar una foto pide confirmación.
+  const [verFoto, setVerFoto] = useState(false);
+  const [quitandoFoto, setQuitandoFoto] = useState(false);
   const [aviso, setAviso] = useState("");
   const avisoTimeout = useRef(null);
   useEffect(() => setForm(invitado), [invitado.id]);
@@ -122,9 +128,7 @@ function FormularioDatos({
     mostrarAviso(nuevaFoto ? "Guardado: foto familiar." : "Foto familiar eliminada.");
   };
 
-  const onSeleccionarArchivoFoto = async (e) => {
-    const file = e.target.files && e.target.files[0];
-    e.target.value = "";
+  const subirArchivoFoto = async (file) => {
     if (!file) return;
     setErrorFoto("");
     setSubiendoFoto(true);
@@ -297,48 +301,20 @@ function FormularioDatos({
             />
           </Field>
           <Field label="Foto boda">
-            <div className="flex items-center gap-2 flex-wrap">
-              {enlaceFoto && (
-                <img
-                  src={enlaceFoto}
-                  alt="Foto de familia"
-                  className="rounded object-cover"
-                  style={{ width: 32, height: 32, border: `1px solid ${C.line}` }}
-                />
-              )}
-              {/* Mismo lenguaje que "Cerrar" de esta misma pantalla
-                  (.boton-verde-solido: degradado verde + letra dorada), y no
-                  el botón de contorno: el formulario del colaborador va sobre
-                  verde oscuro, y ahí un contorno parecía texto escrito en el
-                  fondo en vez de algo pulsable. A petición del usuario,
-                  2026-09-17. */}
-              <label
-                className="boton-3d boton-verde-solido inline-flex items-center justify-center cursor-pointer px-4 py-2 rounded-full text-sm font-semibold"
-                style={{ border: `1px solid ${C.goldClaro}` }}
-              >
-                {subiendoFoto ? "Procesando…" : "Subir foto"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={onSeleccionarArchivoFoto}
-                  disabled={subiendoFoto}
-                  className="sr-only"
-                />
-              </label>
-              {foto && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFoto("");
-                    guardarFoto("");
-                  }}
-                  className="text-xs"
-                  style={{ color: C.wax }}
-                >
-                  Quitar
-                </button>
-              )}
-            </div>
+            {/* La misma pieza que la ventana Aniversarios (HuecoFoto): 16:9,
+                se toca para subir, y con foto ya puesta se abre en grande.
+                Antes había aquí un botón "Subir foto" y una miniatura
+                cuadrada de 32px: otra forma de hacer lo mismo. Unificado a
+                petición del usuario, 2026-09-17. */}
+            <HuecoFoto
+              titulo="Foto de boda"
+              enlace={enlaceFoto}
+              ocupada={Boolean(foto)}
+              subiendo={subiendoFoto}
+              onElegir={subirArchivoFoto}
+              onQuitar={() => setQuitandoFoto(true)}
+              onVer={() => setVerFoto(true)}
+            />
             {errorFoto && (
               <p className="text-xs" style={{ color: C.wax }}>
                 {errorFoto}
@@ -421,6 +397,66 @@ function FormularioDatos({
           />
         </div>
       </div>
+
+      {/* Foto de boda en grande, y el cambio desde ahí: igual que en
+          Aniversarios. */}
+      {verFoto && enlaceFoto && (
+        <ModalFlotante titulo="Foto de boda" onCerrar={() => setVerFoto(false)} ancho={860}>
+          <div style={{ width: "100%", aspectRatio: "16 / 9", background: C.ink, borderRadius: 4, overflow: "hidden" }}>
+            <img
+              src={enlaceFoto}
+              alt="Foto de boda"
+              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+            />
+          </div>
+          <label
+            className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer mt-3"
+            style={estilosBoton("principal", "normal")}
+          >
+            {subiendoFoto ? "Procesando…" : "Cambiar foto"}
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              disabled={subiendoFoto}
+              onChange={(e) => {
+                const file = e.target.files && e.target.files[0];
+                e.target.value = "";
+                if (!file) return;
+                setVerFoto(false);
+                subirArchivoFoto(file);
+              }}
+            />
+          </label>
+        </ModalFlotante>
+      )}
+
+      {quitandoFoto && (
+        <ModalFlotante
+          titulo="¿Quitar la foto?"
+          onCerrar={() => setQuitandoFoto(false)}
+          ancho={360}
+          acciones={
+            <>
+              <Boton
+                variante="peligro"
+                onClick={() => {
+                  setQuitandoFoto(false);
+                  setFoto("");
+                  guardarFoto("");
+                }}
+              >
+                Sí, quitarla
+              </Boton>
+              <Boton onClick={() => setQuitandoFoto(false)}>Cancelar</Boton>
+            </>
+          }
+        >
+          <p className="text-sm" style={{ color: C.charcoal }}>
+            Se borrará la foto de boda de la familia <b>{invitado.grupoFamiliar || invitado.apellido}</b>.
+          </p>
+        </ModalFlotante>
+      )}
     </div>
   );
 }
