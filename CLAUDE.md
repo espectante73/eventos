@@ -1719,6 +1719,34 @@ se repone al desactivar.
 **Regla que se lleva de aquí**: al crear una tabla nueva, mirar si tiene
 que entrar en la foto del Modo Pruebas. Nadie lo hizo en su día.
 
+## Dónde lo dejamos (2026-09-17, fin de sesión)
+
+**Hecho y desplegado**: v31 a v34. El SQL del deshacer está ejecutado y
+verificado en la base real (las funciones responden; `restaurar_foto`
+contesta "permission denied" desde fuera, que es lo correcto).
+
+**Lo primero al volver**, porque está construido pero SIN probar en vivo:
+1. Probar el botón "Deshacer" con un reinicio pequeño: que salga el aviso
+   con la hora, que los datos vuelvan, y que el aviso desaparezca después
+   (solo se deshace una vez).
+2. Probar el circuito de fotos de boda de punta a punta.
+
+**El usuario eligió para la próxima sesión** (2026-09-17, al despedirse):
+**registro de errores** y **peso de la app**. En ese orden de interés.
+- *Registro de errores*: hoy, si a un colaborador le falla algo en su
+  móvil, no queda rastro. Hay `ErrorBoundary`, pero no avisa a nadie.
+  Requiere alta en un servicio externo (decisión suya).
+- *Peso*: el bundle son 1.194 kB (362 kB comprimido) en un solo archivo.
+  Los candidatos claros a cargarse solo cuando se usan son jspdf,
+  html2canvas y la ventana de Música.
+
+**Pendiente de decisión del usuario**: la licencia (se puso "privado,
+todos los derechos reservados" en el README, sin confirmar) y la nota de
+privacidad para el tablón, que redacta él y repaso yo.
+
+**Bloqueado por datos**: la hoja de encargo necesita el año de boda y los
+48 matrimonios lo tienen vacío.
+
 ## Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
 
 El usuario lo cerró con una frase que da en el clavo: *"no puedo
