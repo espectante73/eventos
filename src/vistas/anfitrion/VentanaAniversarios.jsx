@@ -239,6 +239,9 @@ export function VentanaAniversarios({ data, onCerrar }) {
       titulo="Aniversarios"
       onCerrar={onCerrar}
       ancho="min(760px, calc(100vw - 48px))"
+      // Verde de la app debajo de las filas doradas, a petición del usuario
+      // (2026-09-17): sobre marfil, el dorado quedaba apagado.
+      fondoCuerpo={C.ink}
     >
       {/* Cabecera de columnas con el MISMO aspecto que la de la Lista de
           invitados (C.ink, filete dorado, una banda por columna), pegada al
@@ -277,13 +280,13 @@ export function VentanaAniversarios({ data, onCerrar }) {
       )}
 
       {error && (
-        <p className="text-xs mb-2" style={{ color: C.wax }}>
+        <p className="text-xs mb-2" style={{ color: C.avisoFondo }}>
           ⚠ {error}
         </p>
       )}
 
       {matrimonios.length === 0 && (
-        <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <p className="text-sm italic" style={{ color: C.goldClaro, opacity: 0.8 }}>
           Todavía no hay matrimonios: se forman marcando a alguien como esposo (O)
           y a su pareja como esposa (A) dentro de la misma familia.
         </p>

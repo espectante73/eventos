@@ -150,7 +150,10 @@ export const ETIQUETAS_VENTANAS = {
 // tuvimos en Música del evento). Todo lo demás -- título, `extra`,
 // `subtitulo`, `acciones` -- se pinta igual, así que la sección no se
 // entera de en cuál de los dos modos está.
-export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo, fijo }) {
+// `fondoCuerpo`: color de fondo opcional solo para el cuerpo (debajo de la
+// cabecera). Sin él, el marfil de siempre. Lo usa Aniversarios, que pinta
+// sus filas doradas sobre el verde de la app (2026-09-17).
+export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo, fijo, fondoCuerpo }) {
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
   // "left" fijo (no en cascada como antes): todas las ventanas nacen
   // alineadas al mismo borde izquierdo, a petición del usuario -- el
@@ -305,7 +308,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
         style={
           fijo
             ? { flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
-            : { flex: 1, overflowY: "auto" }
+            : { flex: 1, overflowY: "auto", ...(fondoCuerpo ? { background: fondoCuerpo } : {}) }
         }
       >
         {children}

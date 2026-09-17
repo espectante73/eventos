@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.11",
+    cambios: [
+      "En Aniversarios, el fondo que hay detrás de las filas pasa de marfil al verde de la app: las filas doradas resaltan más.",
+    ],
+  },
+  {
     version: "30.10",
     cambios: [
       "Las filas de Aniversarios pasan a fondo dorado (el de las letras de la cabecera) con el texto en el verde de la app.",
