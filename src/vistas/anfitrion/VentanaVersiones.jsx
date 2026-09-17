@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.10",
+    cambios: [
+      "Las filas de Aniversarios pasan a fondo dorado (el de las letras de la cabecera) con el texto en el verde de la app.",
+      "El rombo que separa las dos fotos es algo más grande y en champán, para que se vea sobre el dorado.",
+    ],
+  },
+  {
     version: "30.9",
     cambios: [
       "Los recuadros de foto de Aniversarios pasan a 16:9, la forma de la pantalla del local: al subir una foto ya ves cómo va a quedar proyectada.",

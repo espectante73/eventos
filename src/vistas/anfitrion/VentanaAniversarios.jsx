@@ -164,10 +164,12 @@ function Separador({ adorno = true }) {
       {adorno && (
         <div
           style={{
-            width: 7,
-            height: 7,
-            background: C.gold,
-            opacity: 0.55,
+            // Más grande y en champán (2026-09-17): sobre el fondo dorado
+            // de las filas, el rombo dorado de antes desaparecía.
+            width: 11,
+            height: 11,
+            background: C.paper,
+            boxShadow: "0 1px 2px rgba(31,58,46,0.25)",
             transform: "rotate(45deg)",
             borderRadius: 1,
           }}
@@ -292,7 +294,9 @@ export function VentanaAniversarios({ data, onCerrar }) {
           <div
             key={m.clave}
             className="flex items-center gap-3 px-2 py-1 rounded"
-            style={{ background: C.paperDark, minHeight: ALTO_MINIATURA + 10 }}
+            // Fondo en el dorado de las letras de la cabecera, y texto en el
+            // verde de la app, a petición del usuario (2026-09-17).
+            style={{ background: C.goldClaro, minHeight: ALTO_MINIATURA + 10 }}
           >
             <div className="flex-1 min-w-0">
               {/* Una sola línea por fila, como el resto de tablas de la app:
@@ -303,7 +307,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
                     Sigue siendo una sola línea -- si no cabe, se recorta. */}
                 <b>{m.familia}</b> — {m.esposo.nombre} y {m.esposa.nombre}
               </div>
-              <div className="text-xs whitespace-nowrap" style={{ color: C.charcoal, opacity: 0.7 }}>
+              <div className="text-xs whitespace-nowrap" style={{ color: C.ink, opacity: 0.75 }}>
                 {m.anioBoda || "sin año"}
                 {m.aniversario != null && ` · ${m.aniversario} años`}
               </div>
