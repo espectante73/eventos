@@ -1446,6 +1446,16 @@ del cabeza de familia, y pinchar y subir. Eso es lo que hay.
 El contador 0/1/2 en una columna de la Lista de invitados fue idea suya y
 sigue pendiente; se dejó fuera para no meter dos cosas a la vez.
 
+### Cabecera inmovilizada dentro de una VentanaFlotante: `top: -16`
+
+Aniversarios (v30.6) pega su cabecera de columnas al borde de arriba del
+cuerpo de la ventana, que lleva `p-4`. Con `top: 0` quedaba una rendija
+de 16px al desplazar: el navegador inmoviliza respetando el relleno del
+contenedor. Lo que funciona: márgenes negativos de `-16px` (arriba y a
+los lados) y `top: -16`. **Confirmado por el usuario en pantalla real el
+2026-09-17** ("scroll perfecto"). Mismo truco para cualquier cabecera
+fija que se monte dentro de una VentanaFlotante normal.
+
 ### El mapa ya no lleva la versión ni la fecha escritas a mano
 
 `scripts/dibujar-mapa.mjs` decía "v24.3 · 7 septiembre 2026" en pleno
