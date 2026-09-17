@@ -1450,6 +1450,38 @@ del cabeza de familia, y pinchar y subir. Eso es lo que hay.
 El contador 0/1/2 en una columna de la Lista de invitados fue idea suya y
 sigue pendiente; se dejó fuera para no meter dos cosas a la vez.
 
+### PENDIENTE (en pausa, a decidir por el usuario): el viaje de ida y vuelta de las fotos de boda
+
+Estado a 2026-09-17: **NO construido**. El usuario lo paró a propósito
+("es una pelota muy grande para que luego tengas que deshacer"). No
+empezar sin que lo confirme.
+
+El flujo real, tal como lo explicó:
+1. El colaborador sube la foto de boda ORIGINAL en su formulario.
+2. El anfitrión las descarga todas, identificadas.
+3. Las pasa por OTRA IA especializada en imágenes, que las inserta en una
+   plantilla ya diseñada (16:9, con el año de boda). Se probó hacerlo con
+   Claude y no salía bien: no respeta las caras. No volver a ofrecerlo.
+4. Vuelve a subir la terminada; es la que se ve en el evento.
+
+Lo que se le propuso y quedó sin confirmar:
+- Descarga en un solo ZIP (Safari bloquea 48 descargas seguidas), sin
+  dependencias nuevas: un ZIP "store" sin compresión se escribe a mano y
+  los JPEG no comprimen de todos modos. Nombre de archivo:
+  `Abreu01 - Gustavo y Míriam - 1998.jpg` -- el año de boda es
+  imprescindible, va en la plantilla.
+- ⚠️ A día de hoy los 48 matrimonios están "sin año": la descarga debe
+  avisar de los que no lo tienen, no bajarlos con el año vacío.
+- Guardar ORIGINAL y TERMINADA por separado (dos rutas por familia), para
+  no perder la original si un montaje sale mal. La columna Boda enseña la
+  terminada, o la original con una marca de "falta la plantilla".
+- Mover por fin la foto de boda al almacén (hoy es base64 dentro de
+  `fotos_familiares.url`, que se descarga entera en cada apertura). Toca
+  el formulario del colaborador. Hoy hay 0 fotos de boda subidas, así que
+  no hay nada que migrar si se hace antes de que empiecen.
+- Subir la original del colaborador a más de 1600px (lo que hace hoy
+  `redimensionarImagenArchivo`), para dar margen a la otra IA.
+
 ### Cabecera inmovilizada dentro de una VentanaFlotante: `top: -16`
 
 Aniversarios (v30.6) pega su cabecera de columnas al borde de arriba del
