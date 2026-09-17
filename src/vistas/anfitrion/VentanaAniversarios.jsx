@@ -16,12 +16,22 @@
 // "fotos-matrimonios" (ver lib/fotosAlmacen.js). Aquí solo se manejan rutas
 // y enlaces temporales.
 import { useEffect, useMemo, useState } from "react";
-import { Trash2, Image as IconoImagen } from "lucide-react";
+import { Trash2, Download, Image as IconoImagen } from "lucide-react";
 import { C } from "../../theme";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Seal } from "../../components/Widgets";
 import { matrimoniosDeInvitados } from "../../lib/matrimonios";
-import { subirFotoMatrimonio, borrarFotoMatrimonio, enlacesTemporales } from "../../lib/fotosAlmacen";
+import {
+  subirFotoMatrimonio,
+  borrarFotoMatrimonio,
+  enlacesTemporales,
+  esRutaAlmacen,
+  bytesDeFoto,
+  nombreDescargaBoda,
+  CARPETA,
+} from "../../lib/fotosAlmacen";
+import { crearZip } from "../../lib/zip";
+import { descargarBlob } from "../../lib/descargas";
 
 // Miniatura en 16:9, la forma de la pantalla del local (2026-09-17, a
 // petición del usuario: "realmente es así como se van a mostrar"). Así, al
@@ -48,7 +58,7 @@ const SEPARACION_COLUMNAS = 44;
 // Un recuadro de foto: la miniatura si la hay, o un hueco gris. El botón de
 // subir es la propia etiqueta del <input file>, así se pulsa en cualquier
 // punto del recuadro.
-function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, onVer, soloLectura }) {
+function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, onVer, soloLectura, marca }) {
   const id = `foto-${titulo}-${Math.random().toString(36).slice(2, 8)}`;
   // Qué hace pinchar el recuadro (2026-09-17, a petición del usuario):
   //   - con foto ya visible -> la abre en grande (onVer); cambiarla se hace
@@ -97,6 +107,27 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, onVer, s
           <IconoImagen size={18} style={{ color: soloLectura ? C.ink : C.gold, opacity: soloLectura ? 0.45 : 0.85 }} />
         )}
       </Etiqueta>
+      {/* Aviso sobre la propia miniatura. Lo usa la columna Boda para "falta
+          la plantilla": se ve la original del colaborador, pero todavía no
+          la versión montada que irá a la pantalla. */}
+      {marca && (
+        <span
+          className="absolute left-0 right-0 text-center uppercase pointer-events-none"
+          style={{
+            bottom: 4,
+            fontSize: 8,
+            fontWeight: 700,
+            letterSpacing: "0.05em",
+            color: "#fff",
+            background: "rgba(140,47,57,0.88)",
+            margin: "0 4px",
+            borderRadius: 2,
+            lineHeight: "12px",
+          }}
+        >
+          {marca}
+        </span>
+      )}
       {accion === "subir" && (
         <input
           id={id}
@@ -187,7 +218,15 @@ function Separador({ adorno = true }) {
 }
 
 export function VentanaAniversarios({ data, onCerrar }) {
-  const { invitados, evento, fotosFamiliares, fotosAniversario, persistFotosAniversario } = data;
+  const {
+    invitados,
+    evento,
+    fotosFamiliares,
+    fotosAniversario,
+    fotosBodaFinal,
+    persistFotosAniversario,
+    persistFotosBodaFinal,
+  } = data;
   const [enlaces, setEnlaces] = useState({});
   // Al CAMBIAR una foto la ruta no cambia (el nombre de archivo es estable a
   // propósito), así que el efecto de abajo no se enteraría y el navegador
@@ -196,24 +235,36 @@ export function VentanaAniversarios({ data, onCerrar }) {
   const [recargaEnlaces, setRecargaEnlaces] = useState(0);
   const [subiendo, setSubiendo] = useState("");
   const [error, setError] = useState("");
-  // Familia cuya foto de aniversario se va a quitar, pendiente de confirmar.
-  // Borra el archivo del almacén de verdad, así que no va directo al pulsar
-  // la papelera (pedido por el usuario, 2026-09-17). Modal propio y no
-  // window.confirm: mismo lenguaje visual que el resto de la app.
+  // Foto pendiente de quitar: { matrimonio, tipo }. Borra el archivo del
+  // almacén de verdad, así que pide confirmación (usuario, 2026-09-17).
   const [porQuitar, setPorQuitar] = useState(null);
-  // Foto abierta en grande: { matrimonio, tipo: "boda" | "aniversario", enlace }.
+  // Foto abierta en grande: { matrimonio, tipo: "boda" | "aniversario", cual }.
+  // En boda, `cual` es "final" (con plantilla) u "original" (colaborador).
   const [enGrande, setEnGrande] = useState(null);
+  // Descarga de originales: null, o { sinAnio: [...] } esperando confirmar.
+  const [avisoDescarga, setAvisoDescarga] = useState(null);
+  const [descargando, setDescargando] = useState(false);
 
   const matrimonios = useMemo(
     () => matrimoniosDeInvitados(invitados, evento?.fecha),
     [invitados, evento?.fecha]
   );
 
+  // Las dos fotos que gestiona el anfitrión desde aquí. La original de boda
+  // no está: esa la sube el colaborador y aquí solo se mira y se descarga.
+  const TIPOS = {
+    aniversario: { mapa: fotosAniversario, guardar: persistFotosAniversario, carpeta: CARPETA.ANIVERSARIO, nombre: "de aniversario" },
+    bodaFinal: { mapa: fotosBodaFinal, guardar: persistFotosBodaFinal, carpeta: CARPETA.BODA_FINAL, nombre: "de boda con plantilla" },
+  };
+
   // Los enlaces del cajón cerrado caducan, así que se piden al abrir la
   // ventana y cada vez que cambia alguna ruta -- no se guardan en la base.
   const rutas = useMemo(
-    () => matrimonios.map((m) => fotosAniversario?.[m.familia]).filter(Boolean),
-    [matrimonios, fotosAniversario]
+    () =>
+      matrimonios
+        .flatMap((m) => [fotosAniversario?.[m.familia], fotosBodaFinal?.[m.familia], fotosFamiliares?.[m.familia]])
+        .filter(esRutaAlmacen),
+    [matrimonios, fotosAniversario, fotosBodaFinal, fotosFamiliares]
   );
   useEffect(() => {
     let cancelado = false;
@@ -225,33 +276,97 @@ export function VentanaAniversarios({ data, onCerrar }) {
     };
   }, [rutas.join("|"), recargaEnlaces]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hechas = matrimonios.filter((m) => fotosAniversario?.[m.familia]).length;
-  const faltan = matrimonios.length - hechas;
+  // Lo que va en el <img> para un valor guardado: enlace temporal si es una
+  // ruta del cajón; tal cual si es una foto antigua en base64 o un enlace.
+  const verFoto = (valor) => (esRutaAlmacen(valor) ? enlaces[valor] || "" : valor || "");
 
-  const subir = async (familia, file) => {
+  const faltanAniversario = matrimonios.filter((m) => !fotosAniversario?.[m.familia]).length;
+  const faltanPlantilla = matrimonios.filter((m) => !fotosBodaFinal?.[m.familia]).length;
+
+  const subir = async (tipo, familia, file) => {
+    const t = TIPOS[tipo];
     setError("");
-    setSubiendo(familia);
+    setSubiendo(`${tipo}:${familia}`);
     try {
-      const ruta = await subirFotoMatrimonio(file, familia, "aniversario");
-      await persistFotosAniversario({ ...(fotosAniversario || {}), [familia]: ruta });
+      const ruta = await subirFotoMatrimonio(file, familia, t.carpeta);
+      await t.guardar({ ...(t.mapa || {}), [familia]: ruta });
       setRecargaEnlaces((n) => n + 1);
     } catch (e) {
-      setError(`No se pudo subir la foto de ${familia}. ${e?.message || ""}`.trim());
+      setError(`No se pudo subir la foto ${t.nombre} de ${familia}. ${e?.message || ""}`.trim());
     }
     setSubiendo("");
   };
 
-  const quitar = async (familia) => {
+  const quitar = async (tipo, familia) => {
+    const t = TIPOS[tipo];
     setError("");
-    setSubiendo(familia);
+    setSubiendo(`${tipo}:${familia}`);
     try {
-      await borrarFotoMatrimonio(fotosAniversario?.[familia]);
-      await persistFotosAniversario({ ...(fotosAniversario || {}), [familia]: "" });
+      await borrarFotoMatrimonio(t.mapa?.[familia]);
+      await t.guardar({ ...(t.mapa || {}), [familia]: "" });
     } catch (e) {
-      setError(`No se pudo quitar la foto de ${familia}. ${e?.message || ""}`.trim());
+      setError(`No se pudo quitar la foto ${t.nombre} de ${familia}. ${e?.message || ""}`.trim());
     }
     setSubiendo("");
   };
+
+  // Descarga en UN solo ZIP las ORIGINALES de boda que han subido los
+  // colaboradores, cada una con "Familia - Esposo y Esposa - año.jpg", para
+  // pasarlas por la plantilla con otra IA (usuario, 2026-09-17: un ZIP
+  // porque Safari bloquea decenas de descargas seguidas).
+  const conOriginal = matrimonios.filter((m) => fotosFamiliares?.[m.familia]);
+  const pedirDescarga = () => {
+    setError("");
+    if (conOriginal.length === 0) {
+      setError("Todavía no hay fotos de boda subidas por los colaboradores.");
+      return;
+    }
+    const sinAnio = conOriginal.filter((m) => !String(m.anioBoda || "").trim());
+    if (sinAnio.length > 0) setAvisoDescarga({ sinAnio });
+    else descargarOriginales();
+  };
+  const descargarOriginales = async () => {
+    setAvisoDescarga(null);
+    setDescargando(true);
+    const archivos = [];
+    const fallidas = [];
+    const usados = new Set();
+    await Promise.all(
+      conOriginal.map(async (m) => {
+        const valor = fotosFamiliares[m.familia];
+        try {
+          const datos = await bytesDeFoto(valor, enlaces[valor]);
+          let nombre = nombreDescargaBoda(m);
+          // Dos matrimonios con la misma familia, nombres y año: no pisar.
+          for (let i = 2; usados.has(nombre); i++) nombre = nombreDescargaBoda(m).replace(/\.jpg$/, ` (${i}).jpg`);
+          usados.add(nombre);
+          archivos.push({ nombre, datos });
+        } catch (_) {
+          fallidas.push(m.familia);
+        }
+      })
+    );
+    if (archivos.length > 0) {
+      archivos.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+      descargarBlob("Fotos de boda originales.zip", new Blob([crearZip(archivos)], { type: "application/zip" }));
+    }
+    if (fallidas.length > 0) setError(`No se pudieron descargar ${fallidas.length}: ${fallidas.join(", ")}.`);
+    setDescargando(false);
+  };
+
+  const accionesCabecera = (
+    <button
+      onClick={pedirDescarga}
+      disabled={descargando}
+      title="Descargar en un solo archivo las fotos de boda originales, con su nombre y año"
+      className="boton-3d flex items-center gap-1 rounded-full px-3 py-1.5 text-sm"
+      style={{ color: C.goldClaro, border: `1px solid ${C.gold}`, opacity: descargando ? 0.6 : 1 }}
+    >
+      <Download size={15} /> {descargando ? "Preparando…" : "Originales"}
+    </button>
+  );
+
+  const nombreMatrimonio = (m) => `${m.familia} — ${m.esposo.nombre} y ${m.esposa.nombre}`;
 
   return (
     <VentanaFlotante
@@ -259,20 +374,16 @@ export function VentanaAniversarios({ data, onCerrar }) {
       titulo="Aniversarios"
       onCerrar={onCerrar}
       ancho="min(760px, calc(100vw - 48px))"
+      extra={accionesCabecera}
       // Verde de la app debajo de las filas doradas, a petición del usuario
       // (2026-09-17): sobre marfil, el dorado quedaba apagado.
       fondoCuerpo={C.ink}
     >
       {/* Cabecera de columnas con el MISMO aspecto que la de la Lista de
           invitados (C.ink, filete dorado, una banda por columna), pegada al
-          borde de arriba del cuerpo para que se lea como la cabecera de la
-          propia tabla. El usuario lo señaló con la lista delante: la primera
-          versión era un rótulo gris suelto, separado de las filas.
-          Inmovilizada al desplazar. El cuerpo de VentanaFlotante lleva p-4:
-          los márgenes negativos la estiran de borde a borde, y `top: -16`
-          la pega arriba del todo en vez de dejar esos 16px de hueco. Lleva
-          los mismos 24px a los lados (16 del cuerpo + 8 de cada fila) para
-          que las columnas caigan sobre las de las filas. */}
+          borde de arriba del cuerpo. Inmovilizada al desplazar: el cuerpo
+          lleva p-4, así que márgenes negativos y `top: -16` (confirmado en
+          pantalla real). 24px a los lados = 16 del cuerpo + 8 de cada fila. */}
       {matrimonios.length > 0 && (
         <div
           className="flex gap-3"
@@ -293,9 +404,11 @@ export function VentanaAniversarios({ data, onCerrar }) {
           >
             Matrimonio
           </div>
-          <BandaCabecera>Boda</BandaCabecera>
+          {/* En Boda el sello cuenta las que faltan por montar en la
+              plantilla; en Aniv., las fotos de aniversario que faltan. */}
+          <BandaCabecera aviso={faltanPlantilla}>Boda</BandaCabecera>
           <Separador adorno={false} />
-          <BandaCabecera aviso={faltan}>Aniv.</BandaCabecera>
+          <BandaCabecera aviso={faltanAniversario}>Aniv.</BandaCabecera>
         </div>
       )}
 
@@ -312,118 +425,133 @@ export function VentanaAniversarios({ data, onCerrar }) {
         </p>
       )}
 
-      {/* 10px entre filas (antes 4): sobre el verde, las filas doradas se
-          leían como un solo bloque. */}
+      {/* 10px entre filas: sobre el verde, las filas doradas se leían como
+          un solo bloque. */}
       <div className="flex flex-col" style={{ gap: 10 }}>
-        {matrimonios.map((m) => (
-          <div
-            key={m.clave}
-            className="flex items-center gap-3 px-2 py-1 rounded"
-            // Fondo en el dorado de las letras de la cabecera, y texto en el
-            // verde de la app, a petición del usuario (2026-09-17).
-            style={{
-              // Dorado "de verdad" (2026-09-17): el C.goldClaro plano se veía
-              // mostaza. Degradado metálico con un brillo en diagonal, más un
-              // filo claro arriba y oscuro abajo para darle canto.
-              background: "linear-gradient(135deg, #B8893F 0%, #E6C77F 38%, #D4AE5E 62%, #A97D34 100%)",
-              boxShadow: "inset 0 1px 0 rgba(255,244,214,0.55), inset 0 -1px 0 rgba(90,62,20,0.35), 0 2px 6px rgba(0,0,0,0.35)",
-              minHeight: ALTO_MINIATURA + 10,
-            }}
-          >
-            <div className="flex-1 min-w-0">
-              {/* Una sola línea por fila, como el resto de tablas de la app:
-                  si no cabe se recorta, nunca se parte en dos. */}
-              <div
-                className="whitespace-nowrap overflow-hidden text-ellipsis"
-                // Fraunces, la letra con serifa de los títulos de la app: la
-                // de datos (Inter) hacía la fila demasiado "de oficina".
-                style={{ color: C.ink, fontFamily: "'Fraunces', serif", fontSize: 17 }}
-              >
-                {/* Los dos nombres, no solo el del cabeza de familia: a
-                    petición del usuario, 2026-09-17 ("Benito y Meritxell").
-                    Sigue siendo una sola línea -- si no cabe, se recorta. */}
-                <b>{m.familia}</b> — {m.esposo.nombre} y {m.esposa.nombre}
-              </div>
-              <div className="text-xs whitespace-nowrap" style={{ color: C.ink, opacity: 0.75 }}>
-                {m.anioBoda || "sin año"}
-                {m.aniversario != null && ` · ${m.aniversario} años`}
-              </div>
-            </div>
-            <Hueco
-              titulo="Boda"
-              enlace={fotosFamiliares?.[m.familia] || ""}
-              ocupada={Boolean(fotosFamiliares?.[m.familia])}
-              soloLectura
-              onVer={() => setEnGrande({ matrimonio: m, tipo: "boda", enlace: fotosFamiliares?.[m.familia] })}
-            />
-            <Separador />
-            <Hueco
-              titulo="Aniversario"
-              enlace={enlaces[fotosAniversario?.[m.familia]] || ""}
-              ocupada={Boolean(fotosAniversario?.[m.familia])}
-              subiendo={subiendo === m.familia}
-              onElegir={(file) => subir(m.familia, file)}
-              onQuitar={() => setPorQuitar(m)}
-              onVer={() =>
-                setEnGrande({ matrimonio: m, tipo: "aniversario", enlace: enlaces[fotosAniversario?.[m.familia]] })
-              }
-            />
-          </div>
-        ))}
-      </div>
-      {/* Vista en grande, en 16:9 como en la pantalla del local. La de
-          aniversario se cambia desde aquí ("Cambiar foto"); la de boda es
-          solo para mirar, la sube el colaborador. */}
-      {enGrande && (
-        <ModalFlotante
-          titulo={`${enGrande.tipo === "boda" ? "Boda" : "Aniversario"} — ${enGrande.matrimonio.esposo.nombre} y ${enGrande.matrimonio.esposa.nombre}`}
-          onCerrar={() => setEnGrande(null)}
-          ancho={960}
-          acciones={
-            enGrande.tipo === "aniversario" ? (
-              <>
-                <label
-                  htmlFor="aniversarios-cambiar-foto"
-                  className="boton-3d px-3 py-1.5 rounded text-sm font-medium cursor-pointer"
-                  style={{ background: C.ink, color: C.goldClaro }}
+        {matrimonios.map((m) => {
+          const original = fotosFamiliares?.[m.familia] || "";
+          const final = fotosBodaFinal?.[m.familia] || "";
+          const aniversario = fotosAniversario?.[m.familia] || "";
+          return (
+            <div
+              key={m.clave}
+              className="flex items-center gap-3 px-2 py-1 rounded"
+              style={{
+                // Dorado metálico con brillo en diagonal y canto (2026-09-17).
+                background: "linear-gradient(135deg, #B8893F 0%, #E6C77F 38%, #D4AE5E 62%, #A97D34 100%)",
+                boxShadow: "inset 0 1px 0 rgba(255,244,214,0.55), inset 0 -1px 0 rgba(90,62,20,0.35), 0 2px 6px rgba(0,0,0,0.35)",
+                minHeight: ALTO_MINIATURA + 10,
+              }}
+            >
+              <div className="flex-1 min-w-0">
+                {/* Una sola línea por fila: si no cabe se recorta. Fraunces,
+                    la letra de los títulos de la app. */}
+                <div
+                  className="whitespace-nowrap overflow-hidden text-ellipsis"
+                  style={{ color: C.ink, fontFamily: "'Fraunces', serif", fontSize: 17 }}
                 >
-                  Cambiar foto
-                </label>
-                <input
-                  id="aniversarios-cambiar-foto"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files && e.target.files[0];
-                    e.target.value = "";
-                    if (!file) return;
-                    const familia = enGrande.matrimonio.familia;
-                    setEnGrande(null);
-                    subir(familia, file);
-                  }}
+                  <b>{m.familia}</b> — {m.esposo.nombre} y {m.esposa.nombre}
+                </div>
+                <div className="text-xs whitespace-nowrap" style={{ color: C.ink, opacity: 0.75 }}>
+                  {m.anioBoda || "sin año"}
+                  {m.aniversario != null && ` · ${m.aniversario} años`}
+                </div>
+              </div>
+              {/* Columna Boda: enseña la terminada (con plantilla) si ya está;
+                  si no, la original del colaborador con la marca "sin
+                  plantilla". La papelera solo quita la terminada: la
+                  original es del colaborador y se conserva. */}
+              <Hueco
+                titulo="Boda"
+                enlace={verFoto(final || original)}
+                ocupada={Boolean(final)}
+                soloLectura={!final}
+                marca={!final && original ? "Sin plantilla" : ""}
+                subiendo={subiendo === `bodaFinal:${m.familia}`}
+                onQuitar={() => setPorQuitar({ matrimonio: m, tipo: "bodaFinal" })}
+                onVer={() => setEnGrande({ matrimonio: m, tipo: "boda", cual: final ? "final" : "original" })}
+              />
+              <Separador />
+              <Hueco
+                titulo="Aniversario"
+                enlace={verFoto(aniversario)}
+                ocupada={Boolean(aniversario)}
+                subiendo={subiendo === `aniversario:${m.familia}`}
+                onElegir={(file) => subir("aniversario", m.familia, file)}
+                onQuitar={() => setPorQuitar({ matrimonio: m, tipo: "aniversario" })}
+                onVer={() => setEnGrande({ matrimonio: m, tipo: "aniversario" })}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Vista en grande, en 16:9 como en la pantalla del local. */}
+      {enGrande &&
+        (() => {
+          const m = enGrande.matrimonio;
+          const esBoda = enGrande.tipo === "boda";
+          const original = fotosFamiliares?.[m.familia] || "";
+          const final = fotosBodaFinal?.[m.familia] || "";
+          const valor = esBoda ? (enGrande.cual === "final" ? final : original) : fotosAniversario?.[m.familia];
+          const tipoSubida = esBoda ? "bodaFinal" : "aniversario";
+          const idInput = `aniversarios-subir-${tipoSubida}`;
+          const titulo = esBoda
+            ? `Boda (${enGrande.cual === "final" ? "con plantilla" : "original"}) — ${m.esposo.nombre} y ${m.esposa.nombre}`
+            : `Aniversario — ${m.esposo.nombre} y ${m.esposa.nombre}`;
+          const textoSubir = esBoda ? (final ? "Cambiar con plantilla" : "Subir con plantilla") : "Cambiar foto";
+          return (
+            <ModalFlotante
+              titulo={titulo}
+              onCerrar={() => setEnGrande(null)}
+              ancho={960}
+              acciones={
+                <>
+                  <label
+                    htmlFor={idInput}
+                    className="boton-3d px-3 py-1.5 rounded text-sm font-medium cursor-pointer"
+                    style={{ background: C.ink, color: C.goldClaro }}
+                  >
+                    {textoSubir}
+                  </label>
+                  <input
+                    id={idInput}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files && e.target.files[0];
+                      e.target.value = "";
+                      if (!file) return;
+                      setEnGrande(null);
+                      subir(tipoSubida, m.familia, file);
+                    }}
+                  />
+                  {/* Comparar la original con la montada, sin salir. */}
+                  {esBoda && final && original && (
+                    <button
+                      onClick={() => setEnGrande({ ...enGrande, cual: enGrande.cual === "final" ? "original" : "final" })}
+                      className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
+                      style={{ border: `1px solid ${C.ink}`, color: C.ink }}
+                    >
+                      {enGrande.cual === "final" ? "Ver original" : "Ver con plantilla"}
+                    </button>
+                  )}
+                </>
+              }
+            >
+              <div
+                style={{ width: "100%", aspectRatio: "16 / 9", background: C.ink, borderRadius: 4, overflow: "hidden" }}
+              >
+                <img
+                  src={verFoto(valor)}
+                  alt={titulo}
+                  style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
                 />
-              </>
-            ) : null
-          }
-        >
-          <div
-            style={{
-              width: "100%",
-              aspectRatio: "16 / 9",
-              background: C.ink,
-              borderRadius: 4,
-              overflow: "hidden",
-            }}
-          >
-            <img
-              src={enGrande.enlace}
-              alt={enGrande.tipo}
-              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-            />
-          </div>
-        </ModalFlotante>
-      )}
+              </div>
+            </ModalFlotante>
+          );
+        })()}
 
       {porQuitar && (
         <ModalFlotante
@@ -435,9 +563,9 @@ export function VentanaAniversarios({ data, onCerrar }) {
             <>
               <button
                 onClick={() => {
-                  const familia = porQuitar.familia;
+                  const { matrimonio, tipo } = porQuitar;
                   setPorQuitar(null);
-                  quitar(familia);
+                  quitar(tipo, matrimonio.familia);
                 }}
                 className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
                 style={{ background: C.wax, color: "#fff" }}
@@ -455,12 +583,46 @@ export function VentanaAniversarios({ data, onCerrar }) {
           }
         >
           <p className="text-sm" style={{ color: C.charcoal }}>
-            Se borrará la foto de aniversario de{" "}
-            <b>
-              {porQuitar.familia} — {porQuitar.esposo.nombre} y {porQuitar.esposa.nombre}
-            </b>
-            .
+            Se borrará la foto {TIPOS[porQuitar.tipo].nombre} de <b>{nombreMatrimonio(porQuitar.matrimonio)}</b>.
+            {porQuitar.tipo === "bodaFinal" && " La original se conserva."}
           </p>
+        </ModalFlotante>
+      )}
+
+      {avisoDescarga && (
+        <ModalFlotante
+          titulo="Fotos sin año de boda"
+          onCerrar={() => setAvisoDescarga(null)}
+          ancho={420}
+          acciones={
+            <>
+              <button
+                onClick={descargarOriginales}
+                className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
+                style={{ background: C.ink, color: C.goldClaro }}
+              >
+                Descargar igualmente
+              </button>
+              <button
+                onClick={() => setAvisoDescarga(null)}
+                className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
+                style={{ border: `1px solid ${C.ink}`, color: C.ink }}
+              >
+                Cancelar
+              </button>
+            </>
+          }
+        >
+          {/* La plantilla necesita el año: se avisa antes de bajar archivos
+              que dirían "sin año" (decidido con el usuario, 2026-09-17). */}
+          <p className="text-sm mb-2" style={{ color: C.charcoal }}>
+            {avisoDescarga.sinAnio.length} de {conOriginal.length} saldrán con «sin año» en el nombre:
+          </p>
+          <ul className="text-sm list-disc pl-5" style={{ color: C.charcoal }}>
+            {avisoDescarga.sinAnio.map((m) => (
+              <li key={m.clave}>{nombreMatrimonio(m)}</li>
+            ))}
+          </ul>
         </ModalFlotante>
       )}
     </VentanaFlotante>

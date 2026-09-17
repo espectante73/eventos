@@ -165,7 +165,11 @@ CREATE TABLE public.fotos_familiares (
     -- cambio del 2026-09-17; el formulario del colaborador sigue
     -- guardándola así hasta que se migre esa mitad.
     url text DEFAULT ''::text NOT NULL,
-    "urlAniversario" text DEFAULT ''::text NOT NULL
+    "urlAniversario" text DEFAULT ''::text NOT NULL,
+    -- La de boda ya montada en la plantilla (2026-09-17). "url" es la
+    -- ORIGINAL del colaborador y no se toca: si un montaje sale mal, se
+    -- rehace desde ella. Solo la escribe el anfitrión.
+    "urlBodaFinal" text DEFAULT ''::text NOT NULL
 );
 
 -- El tablón de novedades que ven los invitados.
@@ -594,14 +598,15 @@ begin
     raise exception 'No autorizado para guardar fotos familiares';
   end if;
 
-  -- La de aniversario solo la toca el anfitrión. Un colaborador puede
-  -- guardar la de boda (es la que sube en su formulario) sin poder pisar
-  -- la otra, aunque la mande vacía en la misma fila.
-  insert into fotos_familiares ("grupoFamiliar", "url", "urlAniversario")
+  -- La de aniversario y la de boda con plantilla solo las toca el
+  -- anfitrión. Un colaborador guarda la original de boda (la que sube en
+  -- su formulario) sin poder pisar las otras, aunque las mande vacías.
+  insert into fotos_familiares ("grupoFamiliar", "url", "urlAniversario", "urlBodaFinal")
   select
     v->>'grupoFamiliar',
     coalesce(v->>'url', ''),
-    case when v_es_anfitrion then coalesce(v->>'urlAniversario', '') else '' end
+    case when v_es_anfitrion then coalesce(v->>'urlAniversario', '') else '' end,
+    case when v_es_anfitrion then coalesce(v->>'urlBodaFinal', '') else '' end
   from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
   where coalesce(v->>'grupoFamiliar', '') <> ''
   on conflict ("grupoFamiliar") do update set
@@ -609,6 +614,10 @@ begin
     "urlAniversario" = case
       when v_es_anfitrion then excluded."urlAniversario"
       else fotos_familiares."urlAniversario"
+    end,
+    "urlBodaFinal" = case
+      when v_es_anfitrion then excluded."urlBodaFinal"
+      else fotos_familiares."urlBodaFinal"
     end;
 end;
 $$;
@@ -1886,9 +1895,10 @@ insert into tablon_secreto (id) values (true) on conflict (id) do nothing;
 insert into config_secretos (id) values (true) on conflict (id) do nothing;
 
 -- Las fotos de matrimonio: las ve cualquiera que haya entrado (anfitrión o
--- colaborador), nadie desde fuera. Escribir en la carpeta "aniversario"
--- queda solo para el anfitrión; en "boda" también el colaborador, que es
--- quien la sube desde su formulario.
+-- colaborador), nadie desde fuera. Carpetas: "boda" (original, la sube el
+-- colaborador), "boda-final" (con plantilla) y "aniversario"; en estas dos
+-- últimas solo escribe el anfitrión, porque la condición de carpeta pide
+-- exactamente 'boda'.
 create policy fotos_matrimonios_ver on storage.objects
   for select to authenticated
   using (bucket_id = 'fotos-matrimonios');

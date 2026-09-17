@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "31",
+    cambios: [
+      "Las fotos de boda que suben los colaboradores se guardan ahora como ORIGINALES, a buen tamaño y en el almacén, sin hacer más pesada la app.",
+      "Nuevo botón \"Originales\" en Aniversarios: descarga todas en un solo archivo, cada una con su nombre y año de boda, por ejemplo \"Abreu01 - Gustavo y Míriam - 1998.jpg\". Si alguna no tiene año, avisa antes.",
+      "Después de montarlas en la plantilla, se suben desde la vista grande de la columna Boda. La original no se pierde: se puede comparar con la terminada y volver a ella.",
+      "Mientras falte la de plantilla, la columna Boda enseña la original con la marca \"Sin plantilla\", y el círculo rojo de la cabecera cuenta cuántas quedan.",
+    ],
+  },
+  {
     version: "30.16",
     cambios: [
       "En Aniversarios, pinchar una foto ya subida la abre en grande, en 16:9, tal y como se verá en la pantalla del local.",

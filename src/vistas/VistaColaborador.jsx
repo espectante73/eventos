@@ -28,7 +28,7 @@ import {
 } from "../lib/invitados";
 import { ordenarPorApellidoNombre } from "../lib/formato";
 import { construirEnlaceTablon } from "../lib/url";
-import { redimensionarImagenArchivo } from "../lib/descargas";
+import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso } from "../lib/permisos";
@@ -80,6 +80,11 @@ function FormularioDatos({
   const [alergiaSel, setAlergiaSel] = useState(() => parsearAlergias(invitado.alergias));
   const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [errorFoto, setErrorFoto] = useState("");
+  // `foto` guarda lo que va a la base: desde el 2026-09-17 una RUTA del
+  // cajón "fotos-matrimonios" (antes, la foto entera en base64). Para
+  // enseñarla hace falta un enlace temporal; useEnlaceFoto lo pide solo si
+  // es una ruta, y deja pasar tal cual lo antiguo o un enlace pegado.
+  const enlaceFoto = useEnlaceFoto(foto);
   const [aviso, setAviso] = useState("");
   const avisoTimeout = useRef(null);
   useEffect(() => setForm(invitado), [invitado.id]);
@@ -124,9 +129,13 @@ function FormularioDatos({
     setErrorFoto("");
     setSubiendoFoto(true);
     try {
-      const dataUrl = await redimensionarImagenArchivo(file);
-      setFoto(dataUrl);
-      guardarFoto(dataUrl);
+      // Al almacén, como ORIGINAL (se guarda grande: el anfitrión la pasará
+      // por la plantilla con otra IA). Mismo nombre de archivo que usa
+      // Aniversarios para esta familia, así volver a subir la reemplaza.
+      const familia = invitado.grupoFamiliar || invitado.apellido || "";
+      const ruta = await subirFotoMatrimonio(file, familia, CARPETA.BODA);
+      setFoto(ruta);
+      guardarFoto(ruta);
     } catch (_) {
       setErrorFoto("No se ha podido procesar la imagen. Prueba con otra o pega un enlace.");
     } finally {
@@ -280,9 +289,9 @@ function FormularioDatos({
           </Field>
           <Field label="Foto boda">
             <div className="flex items-center gap-2 flex-wrap">
-              {foto && (
+              {enlaceFoto && (
                 <img
-                  src={foto}
+                  src={enlaceFoto}
                   alt="Foto de familia"
                   className="rounded object-cover"
                   style={{ width: 32, height: 32, border: `1px solid ${C.line}` }}

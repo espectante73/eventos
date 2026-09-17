@@ -22,6 +22,20 @@ export function descargarCSV(nombreArchivo, cabeceras, filas) {
   URL.revokeObjectURL(url);
 }
 
+// Descarga cualquier Blob ya preparado (p.ej. el ZIP de fotos de boda). El
+// revokeObjectURL va con un respiro: Safari cancela la descarga si se
+// revoca en el mismo instante del clic, y el archivo pesa varios MB.
+export function descargarBlob(nombreArchivo, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
 // Copia de seguridad en JSON de lo que se va a poner a cero, descargada al
 // dispositivo justo antes de ejecutar cualquier reinicio en bloque — para
 // poder recuperar los datos a mano si hiciera falta.
