@@ -139,10 +139,13 @@ export function VentanaAniversarios({ data, onCerrar }) {
 
   return (
     <VentanaFlotante clave="aniversarios" titulo="Aniversarios" onCerrar={onCerrar} ancho="min(760px, calc(100vw - 48px))">
+      {/* Corta a propósito: el usuario pidió quitar lo de la resolución y
+          los permisos ("no des más explicación"). Eso ya está documentado
+          en la cabecera de este archivo y en lib/fotosAlmacen.js, que es
+          donde le sirve a quien toque el código, no en su pantalla. */}
       <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.75 }}>
-        Una fila por matrimonio. La foto de boda la sube el colaborador en su
-        formulario; la de aniversario, tú. Se guardan reducidas a 1080 y solo
-        las ve quien haya entrado en la app.
+        La foto de boda la sube el colaborador en su formulario; la de
+        aniversario la guardas tú.
       </p>
       <p className="text-sm mb-3" style={{ color: C.ink, fontFamily: "'Fraunces', serif", fontWeight: 700 }}>
         {hechas} de {matrimonios.length} hechas
