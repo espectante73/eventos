@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.7",
+    cambios: [
+      "Aniversarios pierde los cuatro recuadros de números de la cabecera. En su lugar, un círculo rojo en la esquina de \"Aniv.\" con las fotos de aniversario que faltan — el mismo aviso que llevan los colaboradores con invitados sin atender. Desaparece solo cuando están todas.",
+    ],
+  },
+  {
     version: "30.6",
     cambios: [
       "La cabecera de columnas de Aniversarios es ya como la de la Lista de invitados: barra verde pegada arriba, filete dorado y una banda por columna (Matrimonio, Boda, Aniv.), para que se lea como parte de la tabla y no como un rótulo suelto.",

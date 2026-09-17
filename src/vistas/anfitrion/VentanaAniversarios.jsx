@@ -19,6 +19,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Trash2, Image as IconoImagen } from "lucide-react";
 import { C } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { Seal } from "../../components/Widgets";
 import { matrimoniosDeInvitados } from "../../lib/matrimonios";
 import { subirFotoMatrimonio, borrarFotoMatrimonio, enlacesTemporales } from "../../lib/fotosAlmacen";
 
@@ -100,10 +101,10 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
 // Una columna de la cabecera: misma banda clara con esquinas redondeadas
 // arriba que la Lista de invitados (tintaColumnaCabecera en
 // SeccionInvitados.jsx), para que se vea que la columna baja hasta las filas.
-function BandaCabecera({ children }) {
+function BandaCabecera({ children, aviso = 0 }) {
   return (
     <div
-      className="flex items-center justify-center text-sm font-bold uppercase py-2"
+      className="relative flex items-center justify-center text-sm font-bold uppercase py-2"
       style={{
         width: ANCHO_COL,
         flexShrink: 0,
@@ -113,6 +114,16 @@ function BandaCabecera({ children }) {
       }}
     >
       {children}
+      {/* El mismo sello rojo con número que avisa de los invitados sin
+          atender de cada colaborador (Seal, en ColaboradorCard). Aquí
+          cuenta las fotos de aniversario que FALTAN, y como Seal no pinta
+          nada con 0, desaparece solo cuando están todas. Sustituye a los
+          cuatro recuadros de resumen de la v30.5, a petición del usuario. */}
+      {aviso > 0 && (
+        <span className="absolute" style={{ top: -6, right: -8 }}>
+          <Seal count={aviso} size={20} />
+        </span>
+      )}
     </div>
   );
 }
@@ -170,19 +181,8 @@ export function VentanaAniversarios({ data, onCerrar }) {
     };
   }, [rutas.join("|")]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const conBoda = matrimonios.filter((m) => fotosFamiliares?.[m.familia]).length;
   const hechas = matrimonios.filter((m) => fotosAniversario?.[m.familia]).length;
-
-  // Mismos recuadros informativos que la Lista de invitados, a petición del
-  // usuario (2026-09-17): "pequeños recuadros informativos" en la cabecera
-  // en vez de una línea de texto suelta. Van en `subtitulo` (cabecera de la
-  // ventana, que no desplaza), así que se ven siempre.
-  const resumen = [
-    { label: "Matrimonios", value: matrimonios.length },
-    { label: "Boda", value: conBoda },
-    { label: "Aniversario", value: hechas },
-    { label: "Faltan", value: matrimonios.length - hechas, alerta: matrimonios.length - hechas > 0 },
-  ];
+  const faltan = matrimonios.length - hechas;
 
   const subir = async (familia, file) => {
     setError("");
@@ -214,38 +214,6 @@ export function VentanaAniversarios({ data, onCerrar }) {
       titulo="Aniversarios"
       onCerrar={onCerrar}
       ancho="min(760px, calc(100vw - 48px))"
-      subtitulo={
-        <div className="flex items-center gap-2 flex-wrap">
-          {[resumen.slice(0, 2), resumen.slice(2)].map((grupo, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 rounded px-2 py-1"
-              style={{ border: `1px solid ${C.gold}` }}
-            >
-              {grupo.map((r) => (
-                <div key={r.label} className="text-center">
-                  <div
-                    className="text-[10px] uppercase"
-                    style={{ color: C.goldClaro, opacity: 0.75, fontFamily: "'IBM Plex Mono', monospace" }}
-                  >
-                    {r.label}
-                  </div>
-                  <div
-                    className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
-                    style={{
-                      background: r.alerta ? C.avisoFondo : "rgba(239,233,222,0.92)",
-                      color: r.alerta ? C.peligro : C.ink,
-                      fontFamily: "'Fraunces', serif",
-                    }}
-                  >
-                    {r.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      }
     >
       {/* Cabecera de columnas con el MISMO aspecto que la de la Lista de
           invitados (C.ink, filete dorado, una banda por columna), pegada al
@@ -279,7 +247,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
           </div>
           <BandaCabecera>Boda</BandaCabecera>
           <Separador adorno={false} />
-          <BandaCabecera>Aniv.</BandaCabecera>
+          <BandaCabecera aviso={faltan}>Aniv.</BandaCabecera>
         </div>
       )}
 
