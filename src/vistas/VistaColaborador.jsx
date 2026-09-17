@@ -198,9 +198,12 @@ function FormularioDatos({
           <span className="text-xs" style={{ color: C.goldClaro, opacity: 0.75 }}>
             datos {contarDatosRellenados(form, foto, evento)} de {totalDatosInvitado(form, evento)}
           </span>
+          {/* Colores al revés que el resto de la cabecera (fondo dorado,
+              letra verde) y un punto más de letra, a petición del usuario
+              (2026-09-17): el importe es el dato que más se consulta. */}
           <span
-            className="text-xs px-2 py-0.5 rounded"
-            style={{ border: `1px solid rgba(255,255,255,0.25)`, color: C.goldClaro, opacity: 0.9 }}
+            className="text-sm px-2 py-0.5 rounded font-semibold"
+            style={{ background: C.goldClaro, color: C.ink }}
             title="Importe calculado según edad y los precios de Configuración"
           >
             € {importe.toFixed(2)}
@@ -278,7 +281,9 @@ function FormularioDatos({
         )}
       </Field>
       <div>
-        <div className="flex items-start gap-3 flex-wrap">
+        {/* gap-6 (antes 3): el botón de subir foto quedaba pegado al año de
+            boda -- a petición del usuario, 2026-09-17. */}
+        <div className="flex items-start gap-6 flex-wrap">
           {pideDatosDeBoda(form) ? (
             <>
           <Field label="Año boda">

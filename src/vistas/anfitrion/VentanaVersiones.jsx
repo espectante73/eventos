@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "31.9",
+    cambios: [
+      "En el formulario del colaborador, el importe se ve al revés que el resto: fondo dorado y letra verde, y un punto más grande. Es el dato que más se mira.",
+      "Y más aire entre el año de boda y el botón de subir foto, que estaban pegados.",
+    ],
+  },
+  {
     version: "31.8",
     cambios: [
       "Arreglado el botón \"Acciones\" de la Lista de invitados, que se rompió al unificar los botones: había perdido el color claro sobre la barra verde y el enlace con su desplegable.",
