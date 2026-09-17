@@ -16,6 +16,11 @@
 // SUBMENU_CONFIGURACION (components/DesplegableSecciones.jsx) -- el
 // mapa anterior quedó desactualizado justo por no hacer esto cuando el
 // primer nivel pasó de 14 entradas a 8.
+// La versión y la fecha salen de la app, no escritas a mano: las dos se
+// quedaron antiguas (el mapa decía "v24.3 · 7 septiembre" en pleno v29)
+// porque nadie se acuerda de tocarlas al regenerar. El test de
+// dibujar-mapa.test.js vigila las secciones, no esto.
+import { VERSION_APP } from "../src/constants.js";
 import { createCanvas, registerFont } from "canvas";
 import { writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -102,11 +107,18 @@ x.font = inter(18); x.fillStyle = tenue;
 x.fillText("Todo lo que se abre desde la portada del anfitrión, en los tres niveles que tiene el menú.", PAD, 176);
 x.fillText("Dentro de cada nivel, las entradas van en orden alfabético.", PAD, 202);
 
+function fechaDeHoy() {
+  const meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO",
+                 "AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"];
+  const d = new Date();
+  return `${d.getDate()} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 x.font = fraunces(38); x.fillStyle = C.oro;
-const vTxt = "v24.3";
+const vTxt = `v${VERSION_APP}`;
 x.fillText(vTxt, W - PAD - x.measureText(vTxt).width, 138);
 x.font = inter(13); x.fillStyle = tenue;
-const fTxt = "7 SEPTIEMBRE 2026";
+const fTxt = fechaDeHoy();
 x.fillText("", 0, 0);
 espaciado(fTxt, W - PAD - anchoEspaciado(fTxt, 1.6), 168, 1.6);
 
@@ -166,6 +178,7 @@ x.fillText("Abrir sección…", COLS[0] + 26, 320);
 
 let y = 362;
 const nivel1 = [
+  ["Aniversarios", {}],
   ["Colaboradores", { tipo: "abre" }],
   ["Configuración", { tipo: "abre" }],
   ["Cuentas", {}],

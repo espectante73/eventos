@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30",
+    cambios: [
+      "Nueva sección \"Aniversarios\", la primera de \"Abrir sección…\": una fila por matrimonio, con su año de boda y los años que cumplen, para ir cargando las dos fotos de cada pareja.",
+      "Arriba te dice por dónde vas: \"31 de 48 hechas\".",
+      "La foto de boda la sigue subiendo el colaborador en su formulario; la de aniversario la subes tú desde aquí.",
+      "Las fotos ya no se guardan dentro de la base de datos, sino en un almacén cerrado: se reducen a 1080 al subirlas y solo las ve quien haya entrado en la app. Con unas 100 fotos por delante, guardarlas dentro habría hecho que la app se las descargara todas cada vez que se abre.",
+    ],
+  },
+  {
     version: "29.1",
     cambios: [
       "El mapa ya no se abre en una pestaña del navegador, sino dentro de la app: tiene su X, se cierra con Escape y tocando fuera. En el móvil, una pestaña nueva no tiene botón de volver — no había forma clara de salir.",

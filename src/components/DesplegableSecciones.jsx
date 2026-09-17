@@ -33,6 +33,7 @@ import {
   Music,
   KeyRound,
   Clock3,
+  Heart,
 } from "lucide-react";
 import { C } from "../theme";
 import { UserSolido } from "./Widgets";
@@ -41,6 +42,7 @@ import { MenuFlotante } from "./MenuFlotante";
 
 // Un icono por sección, para ubicarla de un vistazo en la lista.
 const ICONOS_VENTANAS = {
+  aniversarios: Heart,
   colaboradores: Users,
   configuracion: Settings,
   copiaSeguridad: Save,

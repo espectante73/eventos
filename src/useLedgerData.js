@@ -44,6 +44,11 @@ export function useLedgerData(rol) {
   const [invitados, setInvitados] = useState([]);
   const [mesas, setMesas] = useState([]);
   const [fotosFamiliares, setFotosFamiliares] = useState({});
+  // Foto de aniversario, aparte de la de boda aunque vivan en la misma
+  // tabla. Guarda la RUTA del archivo dentro del cajón "fotos-matrimonios",
+  // no la foto: son ~50 y metidas en la base se descargarían enteras cada
+  // vez que se abre la app (2026-09-17).
+  const [fotosAniversario, setFotosAniversario] = useState({});
   const [loaded, setLoaded] = useState(false);
   const [esAnfitrion, setEsAnfitrion] = useState(false);
   const [avisosEnviados, setAvisosEnviados] = useState([]);
@@ -124,9 +129,13 @@ export function useLedgerData(rol) {
   }, [colaboradores]);
 
   const fotosFamiliaresRef = useRef(fotosFamiliares);
+  const fotosAniversarioRef = useRef(fotosAniversario);
   useEffect(() => {
     fotosFamiliaresRef.current = fotosFamiliares;
   }, [fotosFamiliares]);
+  useEffect(() => {
+    fotosAniversarioRef.current = fotosAniversario;
+  }, [fotosAniversario]);
 
   const ordenFamiliaresRef = useRef(ordenFamiliares);
   useEffect(() => {
@@ -205,6 +214,9 @@ export function useLedgerData(rol) {
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
         setFotosFamiliares(
           Object.fromEntries((fotosFilas || []).map((r) => [r.grupoFamiliar, r.url]))
+        );
+        setFotosAniversario(
+          Object.fromEntries((fotosFilas || []).map((r) => [r.grupoFamiliar, r.urlAniversario || ""]))
         );
         setColaboradores(perfil);
         if (!errInv) setInvitados(misInvitados || []);
@@ -290,6 +302,9 @@ export function useLedgerData(rol) {
         if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
         setFotosFamiliares(
           Object.fromEntries((fotosFilas || []).map((r) => [r.grupoFamiliar, r.url]))
+        );
+        setFotosAniversario(
+          Object.fromEntries((fotosFilas || []).map((r) => [r.grupoFamiliar, r.urlAniversario || ""]))
         );
         if (!errCol) setColaboradores(todosColaboradores || []);
         if (!errInv) setInvitados(todosInvitados || []);
@@ -409,25 +424,48 @@ export function useLedgerData(rol) {
     }
   }, [rol]);
 
-  const persistFotosFamiliares = useCallback(async (next) => {
-    const anterior = fotosFamiliaresRef.current;
-    setFotosFamiliares(next);
-    fotosFamiliaresRef.current = next;
-    const filas = Object.entries(next).map(([grupoFamiliar, url]) => ({
+  // Las dos fotos de cada familia viven en la MISMA fila de la tabla, así
+  // que cualquier guardado tiene que mandar las dos o la otra se borraría.
+  // Por eso hay un solo escritor y dos envoltorios finos encima, en vez de
+  // dos funciones que manden cada una su mitad ("una sola pieza").
+  const guardarFilasDeFotos = useCallback(async (boda, aniversario) => {
+    const familias = new Set([...Object.keys(boda), ...Object.keys(aniversario)]);
+    const filas = [...familias].map((grupoFamiliar) => ({
       grupoFamiliar,
-      url,
+      url: boda[grupoFamiliar] || "",
+      urlAniversario: aniversario[grupoFamiliar] || "",
     }));
-    if (filas.length === 0) return;
+    if (filas.length === 0) return null;
     const { error } = await supabase.rpc("guardar_fotos_familiares", {
       p_token: rol,
       p_filas: filas,
     });
+    return error;
+  }, [rol]);
+
+  const persistFotosFamiliares = useCallback(async (next) => {
+    const anterior = fotosFamiliaresRef.current;
+    setFotosFamiliares(next);
+    fotosFamiliaresRef.current = next;
+    const error = await guardarFilasDeFotos(next, fotosAniversarioRef.current);
     if (error) {
       avisar("No se pudo guardar la foto familiar. Se deshace el cambio en pantalla.", error);
       setFotosFamiliares(anterior);
       fotosFamiliaresRef.current = anterior;
     }
-  }, [rol]);
+  }, [guardarFilasDeFotos]);
+
+  const persistFotosAniversario = useCallback(async (next) => {
+    const anterior = fotosAniversarioRef.current;
+    setFotosAniversario(next);
+    fotosAniversarioRef.current = next;
+    const error = await guardarFilasDeFotos(fotosFamiliaresRef.current, next);
+    if (error) {
+      avisar("No se pudo guardar la foto de aniversario. Se deshace el cambio en pantalla.", error);
+      setFotosAniversario(anterior);
+      fotosAniversarioRef.current = anterior;
+    }
+  }, [guardarFilasDeFotos]);
 
   const persistOrdenFamiliares = useCallback(async (next) => {
     const anterior = ordenFamiliaresRef.current;
@@ -940,6 +978,9 @@ export function useLedgerData(rol) {
       }
       if (fotosFilas) {
         setFotosFamiliares(Object.fromEntries(fotosFilas.map((r) => [r.grupoFamiliar, r.url])));
+        setFotosAniversario(
+          Object.fromEntries(fotosFilas.map((r) => [r.grupoFamiliar, r.urlAniversario || ""]))
+        );
       }
       if (ordenFilas) {
         setOrdenFamiliares(
@@ -992,6 +1033,7 @@ export function useLedgerData(rol) {
     asistenciaEnVivo,
     mesas,
     fotosFamiliares,
+    fotosAniversario,
     loaded,
     esAnfitrion,
     persistEvento,
@@ -999,6 +1041,7 @@ export function useLedgerData(rol) {
     persistInvitados,
     persistMesas,
     persistFotosFamiliares,
+    persistFotosAniversario,
     avisarColaborador,
     probarEmailColaborador,
     enviarInvitacionLogin,

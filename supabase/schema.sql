@@ -158,7 +158,14 @@ CREATE TABLE public.orden_familias (
 -- Una foto por familia, guardada como texto (base64).
 CREATE TABLE public.fotos_familiares (
     "grupoFamiliar" text NOT NULL,
-    url text DEFAULT ''::text NOT NULL
+    -- Las dos guardan la RUTA del archivo dentro del cubo
+    -- "fotos-matrimonios", nunca la foto: son ~100 y metidas aquí se
+    -- descargarían enteras cada vez que se abre la app.
+    -- ⚠️ "url" todavía puede traer un data: URI en base64 de antes del
+    -- cambio del 2026-09-17; el formulario del colaborador sigue
+    -- guardándola así hasta que se migre esa mitad.
+    url text DEFAULT ''::text NOT NULL,
+    "urlAniversario" text DEFAULT ''::text NOT NULL
 );
 
 -- El tablón de novedades que ven los invitados.
@@ -576,18 +583,33 @@ CREATE FUNCTION public.guardar_fotos_familiares(p_token uuid, p_filas jsonb) RET
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
+declare
+  v_es_anfitrion boolean;
 begin
-  if p_token is distinct from (select "token" from anfitrion_secreto limit 1)
+  v_es_anfitrion := p_token is not distinct from (select "token" from anfitrion_secreto limit 1);
+
+  if not v_es_anfitrion
      and not exists (select 1 from colaboradores c where c."authUserId" = auth.uid())
   then
     raise exception 'No autorizado para guardar fotos familiares';
   end if;
 
-  insert into fotos_familiares ("grupoFamiliar", "url")
-  select v->>'grupoFamiliar', coalesce(v->>'url', '')
+  -- La de aniversario solo la toca el anfitrión. Un colaborador puede
+  -- guardar la de boda (es la que sube en su formulario) sin poder pisar
+  -- la otra, aunque la mande vacía en la misma fila.
+  insert into fotos_familiares ("grupoFamiliar", "url", "urlAniversario")
+  select
+    v->>'grupoFamiliar',
+    coalesce(v->>'url', ''),
+    case when v_es_anfitrion then coalesce(v->>'urlAniversario', '') else '' end
   from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
   where coalesce(v->>'grupoFamiliar', '') <> ''
-  on conflict ("grupoFamiliar") do update set "url" = excluded."url";
+  on conflict ("grupoFamiliar") do update set
+    "url" = excluded."url",
+    "urlAniversario" = case
+      when v_es_anfitrion then excluded."urlAniversario"
+      else fotos_familiares."urlAniversario"
+    end;
 end;
 $$;
 
@@ -1813,6 +1835,13 @@ insert into storage.buckets (id, name, public) values ('cronograma', 'cronograma
 insert into storage.buckets (id, name, public) values ('musica-fondo', 'musica-fondo', true)
   on conflict (id) do nothing;
 
+-- El quinto es CERRADO (public = false), a diferencia de los cuatro de
+-- arriba: guarda las fotos de boda y de aniversario de cada matrimonio, y
+-- esas no deben poder verse acertando una dirección. Para enseñarlas hay
+-- que pedir un enlace temporal (createSignedUrl), ver lib/fotosAlmacen.js.
+insert into storage.buckets (id, name, public) values ('fotos-matrimonios', 'fotos-matrimonios', false)
+  on conflict (id) do nothing;
+
 CREATE POLICY cronograma_lectura_publica ON storage.objects FOR SELECT USING ((bucket_id = 'cronograma'::text));
 
 CREATE POLICY cronograma_solo_anfitrion_borra ON storage.objects FOR DELETE TO authenticated USING (((bucket_id = 'cronograma'::text) AND public.es_anfitrion()));
@@ -1855,5 +1884,39 @@ insert into evento (id) values (true) on conflict (id) do nothing;
 insert into anfitrion_secreto (id) values (true) on conflict (id) do nothing;
 insert into tablon_secreto (id) values (true) on conflict (id) do nothing;
 insert into config_secretos (id) values (true) on conflict (id) do nothing;
+
+-- Las fotos de matrimonio: las ve cualquiera que haya entrado (anfitrión o
+-- colaborador), nadie desde fuera. Escribir en la carpeta "aniversario"
+-- queda solo para el anfitrión; en "boda" también el colaborador, que es
+-- quien la sube desde su formulario.
+create policy fotos_matrimonios_ver on storage.objects
+  for select to authenticated
+  using (bucket_id = 'fotos-matrimonios');
+
+create policy fotos_matrimonios_sube on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'fotos-matrimonios'
+    and (public.es_anfitrion() or (storage.foldername(name))[1] = 'boda')
+  );
+
+create policy fotos_matrimonios_reemplaza on storage.objects
+  for update to authenticated
+  using (
+    bucket_id = 'fotos-matrimonios'
+    and (public.es_anfitrion() or (storage.foldername(name))[1] = 'boda')
+  )
+  with check (
+    bucket_id = 'fotos-matrimonios'
+    and (public.es_anfitrion() or (storage.foldername(name))[1] = 'boda')
+  );
+
+create policy fotos_matrimonios_borra on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'fotos-matrimonios'
+    and (public.es_anfitrion() or (storage.foldername(name))[1] = 'boda')
+  );
+
 
 -- Fin del archivo.

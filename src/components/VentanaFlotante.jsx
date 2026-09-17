@@ -94,6 +94,7 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
 let contadorZIndexVentanas = 50;
 
 export const ORDEN_VENTANAS = [
+  "aniversarios",
   "colaboradores",
   "configuracion",
   "cuentas",
@@ -113,6 +114,7 @@ export const ORDEN_VENTANAS = [
 // siguen abriéndose como ventana desde el submenú de Configuración
 // (Permisos, Backup): la etiqueta se usa igual al pintarlas.
 export const ETIQUETAS_VENTANAS = {
+  aniversarios: "Aniversarios",
   progreso: "Progreso",
   colaboradores: "Colaboradores",
   mesas: "Mesas",

@@ -13,6 +13,7 @@ import { C } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
 import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
+import { VentanaAniversarios } from "./anfitrion/VentanaAniversarios";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaPermisos } from "./anfitrion/VentanaPermisos";
 import { VentanaConfigCronograma } from "./anfitrion/VentanaConfigCronograma";
@@ -393,6 +394,11 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
 
       {abierto["config-zona-peligro"] && (
         <VentanaConfigZonaPeligro data={data} onCerrar={() => toggle("config-zona-peligro")} />
+      )}
+
+      {/* Aniversarios: carga de las dos fotos de cada matrimonio */}
+      {abierto.aniversarios && (
+        <VentanaAniversarios data={data} onCerrar={() => toggle("aniversarios")} />
       )}
 
       {/* Versiones */}

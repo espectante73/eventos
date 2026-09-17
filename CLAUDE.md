@@ -1392,6 +1392,67 @@ habían recibido enteros 10/11/12/13 por error, pasaron a ser 9/9.1/9.2/9.3.
 si es un tema nuevo (entero) o un ajuste sobre uno ya en curso
 (decimal) -- nunca subir el entero por defecto.**
 
+## Ventana "Aniversarios" y las fotos fuera de la base (2026-09-17, v30)
+
+Dos fotos por matrimonio -- la de su boda y una de aniversario hecha
+antes del evento -- para enseñarlas en una pantalla del local: las de
+boda durante el cóctel, las de aniversario en el postre. Por eso se
+quitó el bloque "Foto 1" del cronograma: las fotos de aniversario ya no
+se hacen el mismo día.
+
+### Las fotos van al ALMACÉN, no dentro de la base
+
+Regla nueva y la más importante de esta tanda. Serán ~100 fotos (50
+matrimonios x 2). Guardadas como texto en una columna, la app se las
+descargaría TODAS en cada apertura -- también en el móvil y con el wifi
+del local el día del evento. En `fotos_familiares` solo va la RUTA;
+el archivo vive en el cubo cerrado `fotos-matrimonios`
+(`lib/fotosAlmacen.js`), reducido a 1080 al subirlo.
+
+⚠️ La mitad de boda TODAVÍA es base64: el formulario del colaborador
+sigue guardando un `data:` URI en `fotos_familiares.url`. Está a medias
+a propósito (nadie ha subido ninguna aún, la tabla está vacía), pero hay
+que terminarlo antes de que los 12 colaboradores empiecen a subir: 48
+fotos en base64 son ~20 MB en cada apertura de la app.
+
+### El cubo es cerrado, y aquí sí compensa
+
+A diferencia del mapa del sitio (ver más arriba, donde se decidió que no
+valía la pena), estas son fotos de personas reales. `public = false` y
+enlaces temporales (`createSignedUrl`) para enseñarlas. Las políticas
+distinguen por carpeta: en `aniversario/` solo escribe el anfitrión; en
+`boda/` también el colaborador, que es quien la sube.
+
+### Un solo escritor para las dos fotos
+
+Las dos viven en la misma fila de `fotos_familiares`, así que un guardado
+que mandara solo su mitad borraría la otra. `useLedgerData.js` tiene un
+único `guardarFilasDeFotos(boda, aniversario)` y dos envoltorios finos
+encima (`persistFotosFamiliares`, `persistFotosAniversario`) que siempre
+mandan la fila completa. La función SQL protege además el lado del
+colaborador con un `case when v_es_anfitrion`.
+
+### Por qué la ventana existe, si la lista de invitados es la raíz
+
+La regla dice que una vista que solo reordena es un duplicado, y la
+ventana "Matrimonios" se quitó en septiembre justo por eso. Esta no
+reordena: es una zona de TRABAJO para cargar ~50 fotos a lo largo de
+semanas. El usuario descartó explícitamente las dos alternativas que se
+le propusieron -- un panel dentro de la celda de la lista ("mucho lío") y
+soltar la carpeta entera de golpe con los archivos renombrados ("tengo
+que escogerla, ubicarla"). Quería una lista con el apellido y el nombre
+del cabeza de familia, y pinchar y subir. Eso es lo que hay.
+
+El contador 0/1/2 en una columna de la Lista de invitados fue idea suya y
+sigue pendiente; se dejó fuera para no meter dos cosas a la vez.
+
+### El mapa ya no lleva la versión ni la fecha escritas a mano
+
+`scripts/dibujar-mapa.mjs` decía "v24.3 · 7 septiembre 2026" en pleno
+v29.1. Ahora importa `VERSION_APP` de `src/constants.js` y calcula la
+fecha al dibujar. El test de `dibujar-mapa.test.js` vigila las secciones,
+no esto -- por eso se quedó antiguo sin que saltara nada.
+
 ## Pendiente: hacer el mapa del sitio privado de verdad (aparcado el 2026-09-16)
 
 Decisión del usuario, después de una conversación larga: **para él la
