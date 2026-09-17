@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "31.6",
+    cambios: [
+      "\"Subir foto\", en el formulario del colaborador, se ve ya como el botón \"Cerrar\" de esa misma pantalla: verde con letra dorada y relieve. Con solo contorno sobre el fondo verde parecía texto escrito en el fondo, no algo que se pulsa.",
+    ],
+  },
+  {
     version: "31.5",
     cambios: [
       "Los botones de la app pasan a ser todos la misma pieza, con tres tipos claros: el principal de cada pantalla (verde), los secundarios (solo contorno) y los de peligro (rojo, para lo que no tiene vuelta atrás).",

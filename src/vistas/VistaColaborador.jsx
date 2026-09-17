@@ -41,7 +41,6 @@ import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
 import { VentanaInvitacionesColaborador } from "./VentanaInvitacionesColaborador";
-import { estilosBoton } from "../components/Boton";
 
 // ---------- Colaborador view ----------
 
@@ -302,9 +301,14 @@ function FormularioDatos({
                   style={{ width: 32, height: 32, border: `1px solid ${C.line}` }}
                 />
               )}
+              {/* Mismo lenguaje que "Cerrar" de esta misma pantalla
+                  (.boton-verde-solido: degradado verde + letra dorada), y no
+                  el botón de contorno: el formulario del colaborador va sobre
+                  verde oscuro, y ahí un contorno parecía texto escrito en el
+                  fondo en vez de algo pulsable. A petición del usuario,
+                  2026-09-17. */}
               <label
-                className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer"
-                style={estilosBoton("secundario", "pequeno")}
+                className="boton-3d boton-verde-solido inline-flex items-center justify-center cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-full"
               >
                 {subiendoFoto ? "Procesando…" : "Subir foto"}
                 <input
