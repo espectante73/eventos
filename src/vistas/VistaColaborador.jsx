@@ -228,6 +228,20 @@ function FormularioDatos({
           {aviso}
         </span>
       )}
+      {/* El año de nacimiento va EL PRIMERO, antes del email (a petición
+          del usuario, 2026-09-17). Es el dato del que dependen los demás:
+          si la persona es menor, el email ni se pide. Con el email arriba,
+          el formulario empezaba preguntando algo que a veces sobra. */}
+      <Field label="Año nac. *">
+        <TextInput
+          value={form.anioNacimiento}
+          onChange={(e) => setForm({ ...form, anioNacimiento: e.target.value })}
+          onBlur={() => revisarYGuardar(form)}
+          placeholder="1988"
+          maxLength={4}
+          style={{ width: 90 }}
+        />
+      </Field>
       <Field label="Email">
         {colaboradorVinculado ? (
           <div>
@@ -265,16 +279,6 @@ function FormularioDatos({
       </Field>
       <div>
         <div className="flex items-start gap-3 flex-wrap">
-          <Field label="Año nac. *">
-            <TextInput
-              value={form.anioNacimiento}
-              onChange={(e) => setForm({ ...form, anioNacimiento: e.target.value })}
-              onBlur={() => revisarYGuardar(form)}
-              placeholder="1988"
-              maxLength={4}
-              style={{ width: 90 }}
-            />
-          </Field>
           {pideDatosDeBoda(form) ? (
             <>
           <Field label="Año boda">

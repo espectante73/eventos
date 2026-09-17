@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "31.2",
+    cambios: [
+      "En el formulario del colaborador, el año de nacimiento pasa a ser el PRIMER dato, por delante del email.",
+      "Tiene sentido: de ese año depende todo lo demás. Si la persona es menor, el email ni se pide — y antes era justo lo primero que aparecía.",
+    ],
+  },
+  {
     version: "31.1",
     cambios: [
       "El archivo que descargas incluye ahora una \"Hoja de encargo\": un bloque por foto, ya redactado, con los nombres, el año de boda y los años que cumplen, listo para copiar y pegar en ChatGPT.",
