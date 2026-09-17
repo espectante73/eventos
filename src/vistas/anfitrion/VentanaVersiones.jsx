@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.16",
+    cambios: [
+      "En Aniversarios, pinchar una foto ya subida la abre en grande, en 16:9, tal y como se verá en la pantalla del local.",
+      "La de aniversario se cambia desde esa vista, con el botón \"Cambiar foto\". Un recuadro vacío sigue sirviendo para subirla directamente.",
+      "La foto de boda también se puede ver en grande, pero sin cambiarla: esa la sube el colaborador.",
+    ],
+  },
+  {
     version: "30.15",
     cambios: [
       "La pregunta antes de quitar una foto de aniversario es la mitad de ancha, se titula \"¿Quitar la foto?\" y va al grano.",

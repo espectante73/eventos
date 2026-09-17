@@ -48,38 +48,39 @@ const SEPARACION_COLUMNAS = 44;
 // Un recuadro de foto: la miniatura si la hay, o un hueco gris. El botón de
 // subir es la propia etiqueta del <input file>, así se pulsa en cualquier
 // punto del recuadro.
-function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLectura }) {
+function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, onVer, soloLectura }) {
   const id = `foto-${titulo}-${Math.random().toString(36).slice(2, 8)}`;
+  // Qué hace pinchar el recuadro (2026-09-17, a petición del usuario):
+  //   - con foto ya visible -> la abre en grande (onVer); cambiarla se hace
+  //     desde esa vista, no desde aquí.
+  //   - vacío y editable -> elige archivo y la sube, como siempre.
+  //   - vacío y de solo lectura (boda sin subir), o foto aún cargando su
+  //     enlace -> no hace nada.
+  const accion = enlace ? "ver" : !soloLectura && !ocupada ? "subir" : "nada";
+  const Etiqueta = accion === "ver" ? "button" : accion === "subir" ? "label" : "div";
   return (
     <div className="flex justify-center" style={{ width: ANCHO_COL, flexShrink: 0 }}>
     <div className="relative" style={{ width: ANCHO_MINIATURA, height: ALTO_MINIATURA }}>
-      <label
-        htmlFor={soloLectura ? undefined : id}
-        title={soloLectura ? titulo : `${titulo} — pulsa para ${ocupada ? "cambiarla" : "subirla"}`}
-        // Los recuadros donde SE PUEDE pinchar llevan el mismo relieve que
-        // los botones (.boton-3d: se levantan al pasar, se hunden al
-        // pulsar) y un champán más claro en degradado, a petición del
-        // usuario (2026-09-17): tenían que parecer algo que se pulsa. El de
-        // boda es solo de lectura (lo sube el colaborador) y se queda plano
-        // a propósito, para que no invite a pinchar donde no hace nada.
-        className={`flex items-center justify-center rounded overflow-hidden${soloLectura ? "" : " boton-3d"}`}
+      <Etiqueta
+        {...(accion === "ver" ? { type: "button", onClick: onVer } : {})}
+        {...(accion === "subir" ? { htmlFor: id } : {})}
+        title={accion === "ver" ? `${titulo} — ver en grande` : accion === "subir" ? `${titulo} — pulsa para subirla` : titulo}
+        // Relieve de botón (.boton-3d) en todo lo que se puede pinchar: el
+        // hueco de subir y cualquier foto que se pueda ver en grande. El de
+        // boda vacío se queda plano: ahí pinchar no hace nada.
+        className={`flex items-center justify-center rounded overflow-hidden${accion === "nada" ? "" : " boton-3d"}`}
         style={{
           width: ANCHO_MINIATURA,
           height: ALTO_MINIATURA,
-          // Marco de cuadro: canto verde de la app en los dos recuadros, para
-          // que se lean como fotos enmarcadas sobre el dorado y no como
-          // casillas de formulario (2026-09-17, "le falta algo"). El de boda,
-          // sin foto, deja de ser un gris lavado: verde translúcido, a juego.
-          // Marco fino con aire entre el canto y la foto, como un paspartú
-          // (2026-09-17: el de 3px pegado a la foto quedaba basto).
+          // Marco fino con aire entre el canto y la foto, como un paspartú.
           border: `1px solid ${C.ink}`,
           padding: 3,
-          background: soloLectura
-            ? "rgba(31,58,46,0.22)"
-            : ocupada
+          background: enlace
             ? C.paper
+            : soloLectura
+            ? "rgba(31,58,46,0.22)"
             : "linear-gradient(180deg, #FAF6EE 0%, #EDE4D2 100%)",
-          cursor: soloLectura ? "default" : "pointer",
+          cursor: accion === "ver" ? "zoom-in" : accion === "subir" ? "pointer" : "default",
           opacity: subiendo ? 0.5 : 1,
           flexShrink: 0,
         }}
@@ -88,18 +89,15 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
           <img
             src={enlace}
             alt={titulo}
-            // "contain" y no "cover": el usuario va a pasar todas las fotos
-            // a 16:9 antes de subirlas, así que normalmente llenan el
-            // recuadro igual. Si alguna llega con otra forma, se ve ENTERA
-            // con bandas a los lados -- una señal visible de que a esa le
-            // falta el paso a 16:9, en vez de recortarla sin avisar.
+            // "contain" y no "cover": si alguna foto no llega en 16:9 se ve
+            // ENTERA con bandas, como aviso, en vez de recortarse sin avisar.
             style={{ width: "100%", height: "100%", objectFit: "contain", background: C.ink }}
           />
         ) : (
           <IconoImagen size={18} style={{ color: soloLectura ? C.ink : C.gold, opacity: soloLectura ? 0.45 : 0.85 }} />
         )}
-      </label>
-      {!soloLectura && (
+      </Etiqueta>
+      {accion === "subir" && (
         <input
           id={id}
           type="file"
@@ -191,6 +189,11 @@ function Separador({ adorno = true }) {
 export function VentanaAniversarios({ data, onCerrar }) {
   const { invitados, evento, fotosFamiliares, fotosAniversario, persistFotosAniversario } = data;
   const [enlaces, setEnlaces] = useState({});
+  // Al CAMBIAR una foto la ruta no cambia (el nombre de archivo es estable a
+  // propósito), así que el efecto de abajo no se enteraría y el navegador
+  // seguiría enseñando la vieja desde su caché. Este contador fuerza a pedir
+  // enlaces nuevos, que llevan otra firma y por tanto otra dirección.
+  const [recargaEnlaces, setRecargaEnlaces] = useState(0);
   const [subiendo, setSubiendo] = useState("");
   const [error, setError] = useState("");
   // Familia cuya foto de aniversario se va a quitar, pendiente de confirmar.
@@ -198,6 +201,8 @@ export function VentanaAniversarios({ data, onCerrar }) {
   // la papelera (pedido por el usuario, 2026-09-17). Modal propio y no
   // window.confirm: mismo lenguaje visual que el resto de la app.
   const [porQuitar, setPorQuitar] = useState(null);
+  // Foto abierta en grande: { matrimonio, tipo: "boda" | "aniversario", enlace }.
+  const [enGrande, setEnGrande] = useState(null);
 
   const matrimonios = useMemo(
     () => matrimoniosDeInvitados(invitados, evento?.fecha),
@@ -218,7 +223,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
     return () => {
       cancelado = true;
     };
-  }, [rutas.join("|")]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rutas.join("|"), recargaEnlaces]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hechas = matrimonios.filter((m) => fotosAniversario?.[m.familia]).length;
   const faltan = matrimonios.length - hechas;
@@ -229,6 +234,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
     try {
       const ruta = await subirFotoMatrimonio(file, familia, "aniversario");
       await persistFotosAniversario({ ...(fotosAniversario || {}), [familia]: ruta });
+      setRecargaEnlaces((n) => n + 1);
     } catch (e) {
       setError(`No se pudo subir la foto de ${familia}. ${e?.message || ""}`.trim());
     }
@@ -348,6 +354,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
               enlace={fotosFamiliares?.[m.familia] || ""}
               ocupada={Boolean(fotosFamiliares?.[m.familia])}
               soloLectura
+              onVer={() => setEnGrande({ matrimonio: m, tipo: "boda", enlace: fotosFamiliares?.[m.familia] })}
             />
             <Separador />
             <Hueco
@@ -357,10 +364,67 @@ export function VentanaAniversarios({ data, onCerrar }) {
               subiendo={subiendo === m.familia}
               onElegir={(file) => subir(m.familia, file)}
               onQuitar={() => setPorQuitar(m)}
+              onVer={() =>
+                setEnGrande({ matrimonio: m, tipo: "aniversario", enlace: enlaces[fotosAniversario?.[m.familia]] })
+              }
             />
           </div>
         ))}
       </div>
+      {/* Vista en grande, en 16:9 como en la pantalla del local. La de
+          aniversario se cambia desde aquí ("Cambiar foto"); la de boda es
+          solo para mirar, la sube el colaborador. */}
+      {enGrande && (
+        <ModalFlotante
+          titulo={`${enGrande.tipo === "boda" ? "Boda" : "Aniversario"} — ${enGrande.matrimonio.esposo.nombre} y ${enGrande.matrimonio.esposa.nombre}`}
+          onCerrar={() => setEnGrande(null)}
+          ancho={960}
+          acciones={
+            enGrande.tipo === "aniversario" ? (
+              <>
+                <label
+                  htmlFor="aniversarios-cambiar-foto"
+                  className="boton-3d px-3 py-1.5 rounded text-sm font-medium cursor-pointer"
+                  style={{ background: C.ink, color: C.goldClaro }}
+                >
+                  Cambiar foto
+                </label>
+                <input
+                  id="aniversarios-cambiar-foto"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files && e.target.files[0];
+                    e.target.value = "";
+                    if (!file) return;
+                    const familia = enGrande.matrimonio.familia;
+                    setEnGrande(null);
+                    subir(familia, file);
+                  }}
+                />
+              </>
+            ) : null
+          }
+        >
+          <div
+            style={{
+              width: "100%",
+              aspectRatio: "16 / 9",
+              background: C.ink,
+              borderRadius: 4,
+              overflow: "hidden",
+            }}
+          >
+            <img
+              src={enGrande.enlace}
+              alt={enGrande.tipo}
+              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+            />
+          </div>
+        </ModalFlotante>
+      )}
+
       {porQuitar && (
         <ModalFlotante
           titulo="¿Quitar la foto?"
