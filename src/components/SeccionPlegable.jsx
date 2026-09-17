@@ -10,8 +10,23 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { C } from "../theme";
 
-export function SeccionPlegable({ icono: Icono, titulo, resumen, children, abiertaPorDefecto = false }) {
-  const [abierta, setAbierta] = useState(abiertaPorDefecto);
+// `abierta` + `onAlternar`: modo CONTROLADO, para cuando quien la usa
+// necesita que solo haya una sección abierta a la vez (VistaColaborador,
+// 2026-09-17). Sin esos dos props se comporta como siempre, con su propio
+// estado.
+export function SeccionPlegable({
+  icono: Icono,
+  titulo,
+  resumen,
+  children,
+  abiertaPorDefecto = false,
+  abierta: abiertaControlada,
+  onAlternar,
+}) {
+  const [abiertaPropia, setAbiertaPropia] = useState(abiertaPorDefecto);
+  const controlada = abiertaControlada !== undefined;
+  const abierta = controlada ? abiertaControlada : abiertaPropia;
+  const setAbierta = controlada ? () => onAlternar?.() : setAbiertaPropia;
   return (
     <div className="rounded-lg overflow-hidden" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
       <button

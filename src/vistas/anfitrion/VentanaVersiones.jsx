@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "33",
+    cambios: [
+      "La ventana del colaborador se abre con todo plegado, como Novedades: \"Tus datos\" y \"Estado de cuentas\" ya no ocupan sitio hasta que los abres.",
+      "Solo puede haber una cosa abierta a la vez. Al abrir la ficha de un invitado se cierra lo demás.",
+      "En el móvil, la ficha abierta es lo único en pantalla: para ver otra cosa hay que cerrarla. En el ordenador se sigue viendo la lista entera.",
+    ],
+  },
+  {
     version: "32.5",
     cambios: [
       "Ahora sí: los títulos de los campos del formulario (EMAIL, AÑO NAC., CANCIÓN…) se ven en verde sobre el dorado. En la versión anterior el cambio no llegaba a aplicarse.",

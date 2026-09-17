@@ -1772,6 +1772,26 @@ bueno del todo. Aquí no hay Postgres local ni Docker para validarlo.
 una columna, se cambia dentro de su `create table` y se anota aquí la
 migración que hay que ejecutar en la base real.
 
+### Filosofía de UX: todo plegado y una sola cosa abierta (2026-09-17, v33)
+
+El usuario lo dijo claro: *"lo lógico es que la app tenga una misma
+filosofía de UX"*. El patrón de Novedades (todo plegado al abrir, como
+mucho una sección desplegada) pasa a ser el de la app.
+
+Aplicado en la ventana del colaborador: "Tus datos" y "Estado de cuentas"
+dejan de ocupar sitio siempre y son dos `SeccionPlegable`; el MISMO
+`abiertoId` gobierna esos dos paneles y la ficha de cada invitado, así que
+abrir uno cierra los demás sin lógica aparte.
+
+`SeccionPlegable` gana modo **controlado** (`abierta` + `onAlternar`).
+Sin esos props se comporta como siempre, con su estado propio: el resto
+de pantallas no se entera.
+
+**En el móvil, la ficha abierta es la protagonista**: mientras hay una
+abierta se esconden los dos paneles, los títulos de sección y las demás
+fichas (`hidden sm:block`), así que para ver otra cosa hay que cerrarla.
+En escritorio no se esconde nada, que ahí la lista cabe.
+
 ### La Lista de invitados es la raíz: una vista que solo reordena es un duplicado
 
 Decidido el 2026-09-04, a raíz de un caso real. Toda la app depende de

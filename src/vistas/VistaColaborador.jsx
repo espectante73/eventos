@@ -3,18 +3,7 @@
 // aviso al anfitrión al terminar). Movida tal cual desde App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
-import {
-  Check,
-  Mail,
-  Bell,
-  User,
-  ClipboardList,
-  Euro,
-  ChevronDown,
-  Megaphone,
-  Calendar,
-  Send,
-} from "lucide-react";
+import { Bell, Calendar, Check, ChevronDown, ClipboardList, Euro, Mail, Megaphone, Send, User, UserCog } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
 import {
@@ -38,6 +27,7 @@ import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto } from "../components/HuecoFoto";
+import { SeccionPlegable } from "../components/SeccionPlegable";
 import { Boton, estilosBoton } from "../components/Boton";
 import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
@@ -488,6 +478,10 @@ function FilaInvitadoColaborador({
   evento,
   fotosFamiliares,
   colaboradorVinculado,
+  // `oculta`: hay OTRA ficha abierta. En el móvil esta se esconde, para que
+  // la abierta sea lo único en pantalla; en escritorio sigue viéndose la
+  // lista entera, que ahí sí cabe (usuario, 2026-09-17).
+  oculta,
 }) {
   const importe = importeEsperadoInvitado(g, evento);
 
@@ -545,7 +539,7 @@ function FilaInvitadoColaborador({
   };
 
   return (
-    <div className="rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+    <div className={`rounded ${oculta ? "hidden sm:block" : ""}`} style={{ background: "#fff", border: `1px solid ${C.line}` }}>
       <div className="flex flex-wrap items-center gap-3 p-3 text-sm">
         {!abierto && (
           <button onClick={confirmarPago} className="flex items-center gap-1">
@@ -730,6 +724,11 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const marcarPresente = (id, presente) => {
     persistInvitados(invitados.map((g) => (g.id === id ? { ...g, presente } : g)));
   };
+
+  // Una ficha de invitado abierta (no los paneles): en el móvil pasa a ser
+  // la protagonista y se esconde todo lo demás -- "para ver otra cosa hay
+  // que cerrarla", como pidió el usuario.
+  const fichaAbierta = Boolean(abiertoId) && abiertoId !== "perfil" && abiertoId !== "cuentas";
 
   const toggleAbierto = (g) =>
     setAbiertoId((actual) => {
@@ -920,6 +919,19 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           titulo={colaborador.nombre}
           onCerrar={() => setFormularioAbierto(false)}
         >
+          {/* Todo plegado al abrir y solo una cosa abierta a la vez, como en
+              Novedades -- filosofía única de la app, a petición del usuario
+              (2026-09-17). El mismo `abiertoId` sirve para estos dos paneles
+              y para la ficha de cada invitado, así que abrir una cierra las
+              demás sin lógica aparte. */}
+          <div className={`space-y-2 ${fichaAbierta ? "hidden sm:block" : ""}`}>
+            <SeccionPlegable
+              icono={UserCog}
+              titulo="Tus datos"
+              resumen={`${gruposFamiliaresACargo.length} familia${gruposFamiliaresACargo.length === 1 ? "" : "s"}`}
+              abierta={abiertoId === "perfil"}
+              onAlternar={() => setAbiertoId((a) => (a === "perfil" ? null : "perfil"))}
+            >
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
@@ -951,6 +963,15 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               debajo, en su propia sección. Textos más cortos (Pendiente,
               Importe total, Cobrado) para que quepan cómodos en un
               recuadro más pequeño. */}
+            </SeccionPlegable>
+
+            <SeccionPlegable
+              icono={Euro}
+              titulo="Estado de cuentas"
+              resumen={`Pendiente ${formatoEuro(importePendiente)}`}
+              abierta={abiertoId === "cuentas"}
+              onAlternar={() => setAbiertoId((a) => (a === "cuentas" ? null : "cuentas"))}
+            >
           <div
             className="grid grid-cols-3 gap-1.5 mt-2 pt-2"
             style={{ borderTop: `1px solid ${C.line}` }}
@@ -1000,9 +1021,11 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               <BarraCompacta icono={Mail} completado={familiasConInvitacion} total={gruposFamiliaresACargo.length} color={C.wax} />
             </div>
           </div>
+            </SeccionPlegable>
+          </div>
 
-          <section className="mt-8">
-            <div className="flex items-center justify-between mb-4 pb-2" style={{ borderBottom: `1.5px solid ${C.line}` }}>
+          <section className={`mt-8 ${fichaAbierta ? "mt-2" : ""}`}>
+            <div className={`flex items-center justify-between mb-4 pb-2 ${fichaAbierta ? "hidden sm:flex" : ""}`} style={{ borderBottom: `1.5px solid ${C.line}` }}>
               <h2
                 className="flex items-center gap-2 text-xl"
                 style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}
@@ -1032,9 +1055,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
+                  oculta={fichaAbierta && abiertoId !== g.id}
                 />
               ))}
-              {pendientes.length === 0 && (
+              {pendientes.length === 0 && !fichaAbierta && (
                 <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
                   No hay avisos pendientes.
                 </p>
@@ -1042,8 +1066,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             </div>
           </section>
 
-          <section className="mt-8">
-            <SectionTitle icon={Check}>Invitados COMPLETADOS</SectionTitle>
+          <section className={`mt-8 ${fichaAbierta ? "mt-2" : ""}`}>
+            <div className={fichaAbierta ? "hidden sm:block" : ""}>
+              <SectionTitle icon={Check}>Invitados COMPLETADOS</SectionTitle>
+            </div>
             <div className="space-y-2">
               {ordenarPorApellidoNombre(completos).map((g) => (
                 <FilaInvitadoColaborador
@@ -1059,9 +1085,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
+                  oculta={fichaAbierta && abiertoId !== g.id}
                 />
               ))}
-              {completos.length === 0 && (
+              {completos.length === 0 && !fichaAbierta && (
                 <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
                   Todavía ningún invitado con datos completos.
                 </p>
