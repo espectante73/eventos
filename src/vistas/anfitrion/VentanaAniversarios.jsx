@@ -26,7 +26,9 @@ import { subirFotoMatrimonio, borrarFotoMatrimonio, enlacesTemporales } from "..
 // Miniatura en 16:9, la forma de la pantalla del local (2026-09-17, a
 // petición del usuario: "realmente es así como se van a mostrar"). Así, al
 // subir una foto se ve ya cómo va a quedar proyectada.
-const ALTO_MINIATURA = 54;
+// 58 y no 54: el marco (1px) y el aire interior (3px) comen 8px de cada
+// lado, y así la foto de dentro sigue en 16:9 (88x50).
+const ALTO_MINIATURA = 58;
 const ANCHO_MINIATURA = 96;
 // Anchos fijos de las dos columnas de foto. Hacen falta para que los
 // títulos "Boda" y "Aniversario" de la cabecera caigan justo encima de su
@@ -68,11 +70,14 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
           // que se lean como fotos enmarcadas sobre el dorado y no como
           // casillas de formulario (2026-09-17, "le falta algo"). El de boda,
           // sin foto, deja de ser un gris lavado: verde translúcido, a juego.
-          border: `3px solid ${C.ink}`,
+          // Marco fino con aire entre el canto y la foto, como un paspartú
+          // (2026-09-17: el de 3px pegado a la foto quedaba basto).
+          border: `1px solid ${C.ink}`,
+          padding: 3,
           background: soloLectura
             ? "rgba(31,58,46,0.22)"
             : ocupada
-            ? C.ink
+            ? C.paper
             : "linear-gradient(180deg, #FAF6EE 0%, #EDE4D2 100%)",
           cursor: soloLectura ? "default" : "pointer",
           opacity: subiendo ? 0.5 : 1,

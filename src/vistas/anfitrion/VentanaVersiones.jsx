@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.14",
+    cambios: [
+      "Los marcos de las fotos de Aniversarios pasan a ser finos, con un poco de aire entre el canto y la foto, como un paspartú.",
+    ],
+  },
+  {
     version: "30.13",
     cambios: [
       "Los recuadros de foto de Aniversarios llevan un marco verde, como un cuadro, en vez de parecer casillas de formulario. El de boda vacío deja de ser gris y pasa a un verde suave.",
