@@ -1773,13 +1773,9 @@ export function SeccionInvitados({
             <Boton variante="secundario" onClick={() => setMostrarResumenAsignacion(false)}>
               Seguir editando
             </Boton>
-            <button
-              onClick={cancelarAvisosAsignacion}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ border: `1px solid ${C.wax}`, color: C.wax }}
-            >
+            <Boton variante="peligro" onClick={cancelarAvisosAsignacion}>
               Cancelar (no avisar)
-            </button>
+            </Boton>
           </div>
         </ModalFlotante>
       )}

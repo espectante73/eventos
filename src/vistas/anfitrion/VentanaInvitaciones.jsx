@@ -18,7 +18,7 @@ import { redimensionarImagenArchivo, guardarArchivoInvitacion, obtenerCarpetaInv
 import { Field } from "../../components/Formulario";
 import { GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
-import { Boton } from "../../components/Boton";
+import { Boton, estilosBoton } from "../../components/Boton";
 
 export function VentanaInvitaciones({
   data,
@@ -225,8 +225,8 @@ export function VentanaInvitaciones({
                 />
               )}
               <label
-                className="text-xs px-2 py-1 rounded cursor-pointer"
-                style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+                className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer"
+                style={estilosBoton("secundario", "pequeno")}
               >
                 {subiendoPlantillaInvitacion ? "Procesando…" : "Subir archivo desde el dispositivo"}
                 <input
@@ -336,18 +336,14 @@ export function VentanaInvitaciones({
             </select>
           </Field>
           {colaboradorInvitacionSel && (
-            <button
+            <Boton
+              variante="principal"
               onClick={() => setMostrarResumenLoteInvitaciones(true)}
               disabled={familiasPendientesDeEnviar.length === 0}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{
-                background: familiasPendientesDeEnviar.length === 0 ? C.line : C.wax,
-                color: familiasPendientesDeEnviar.length === 0 ? C.charcoal : "#fff",
-              }}
             >
               Revisar y enviar a {familiasPendientesDeEnviar.length} familia
               {familiasPendientesDeEnviar.length === 1 ? "" : "s"} (sin enviar todavía)
-            </button>
+            </Boton>
           )}
         </div>
 
@@ -382,15 +378,15 @@ export function VentanaInvitaciones({
                     <ImageIcon size={13} />
                     {descargando === familia.clave ? "Generando..." : "Descargar"}
                   </Boton>
-                  <button
+                  <Boton
+                    variante="principal"
+                    tamano="pequeno"
+                    icono={Mail}
                     onClick={() => abrirPreviewInvitacion(familia)}
                     disabled={descargando === familia.clave}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium"
-                    style={{ background: C.gold, color: "#fff", opacity: descargando === familia.clave ? 0.6 : 1 }}
                   >
-                    <Mail size={13} />
                     {descargando === familia.clave ? "Generando..." : "Enviar por email"}
-                  </button>
+                  </Boton>
                 </div>
               </div>
               <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>

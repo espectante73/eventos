@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "31.5",
+    cambios: [
+      "Los botones de la app pasan a ser todos la misma pieza, con tres tipos claros: el principal de cada pantalla (verde), los secundarios (solo contorno) y los de peligro (rojo, para lo que no tiene vuelta atrás).",
+      "Antes había 179 botones escritos uno a uno, con 12 tamaños distintos. Ahora 83 salen de una sola receta: si algún día cambia el aspecto, cambia en todos a la vez.",
+      "Los botones de subir foto también tienen ya relieve, así se ve que se pueden pulsar.",
+      "Se quedan como estaban, a propósito, el mando de música y los botones verdes sobre la foto de portada: tienen su propio estilo.",
+    ],
+  },
+  {
     version: "31.4",
     cambios: [
       "Los botones de subir foto ya se pueden usar con el teclado. Estaban escondidos de una forma que dejaba fuera al tabulador, en las 11 pantallas donde se sube una imagen.",

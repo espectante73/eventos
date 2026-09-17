@@ -14,6 +14,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Upload, Trash2, Music } from "lucide-react";
 import { C } from "../theme";
 import { supabase } from "../supabaseClient";
+import { estilosBoton } from "./Boton";
 
 const BUCKET = "musica-ambiental";
 
@@ -72,8 +73,8 @@ export function FondoMusicalTablon() {
       </p>
 
       <label
-        className="flex items-center justify-center gap-2 px-3 py-2 rounded text-xs font-medium mb-2 cursor-pointer"
-        style={{ background: C.ink, color: C.paper, opacity: subiendo ? 0.6 : 1 }}
+        className="boton-3d flex items-center justify-center gap-2 font-medium mb-2 cursor-pointer"
+        style={{ ...estilosBoton("principal", "pequeno"), opacity: subiendo ? 0.6 : 1 }}
       >
         <Upload size={13} />
         {subiendo ? "Subiendo…" : "Subir archivo de audio"}

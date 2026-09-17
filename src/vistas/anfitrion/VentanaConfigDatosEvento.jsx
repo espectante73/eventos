@@ -11,6 +11,7 @@ import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { PlantillasEmail } from "../../components/PlantillasEmail";
 import { emailValido } from "../../lib/validacion";
+import { estilosBoton } from "../../components/Boton";
 
 // Miniatura que WhatsApp/Facebook muestran al pegar cualquier enlace de
 // esta web (login, tablón...) -- a petición del usuario, 2026-08-25. Es
@@ -194,8 +195,8 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
                 />
               )}
               <label
-                className="text-xs px-2 py-1 rounded cursor-pointer"
-                style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+                className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer"
+                style={estilosBoton("secundario", "pequeno")}
               >
                 {subiendoImagenPortada ? "Procesando…" : "Subir imagen desde el dispositivo"}
                 <input
@@ -252,8 +253,8 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
                 }}
               />
               <label
-                className="text-xs px-2 py-1 rounded cursor-pointer"
-                style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+                className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer"
+                style={estilosBoton("secundario", "pequeno")}
               >
                 {subiendoImagenOg ? "Subiendo…" : "Subir imagen para WhatsApp"}
                 <input

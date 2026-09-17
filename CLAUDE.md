@@ -1530,11 +1530,27 @@ todo lo pulsable es un `<button>` de verdad.
 Avanzado → "Pulsar Tab para resaltar cada elemento"; o Opción+Tab). No es
 un fallo de la app -- comprobarlo antes de tocar nada.
 
-**Paso 2 (pendiente, acordado con el usuario)**: crear un componente
-`Boton` con tres variantes (principal / secundario / peligro) y dos
-tamaños, y migrar los 179. ⚠️ Eso SÍ cambia cosas en pantalla: hacerlo
-pantalla a pantalla y con capturas del usuario, nunca de golpe, y no a
-pocas semanas de la boda.
+**Paso 2 (hecho el 2026-09-17, v31.5)**: `components/Boton.jsx`, con tres
+variantes (principal / secundario / peligro), dos tamaños (normal /
+pequeno), soporte de icono y de fondo oscuro. Da de serie el relieve, el
+aro de foco, el estado desactivado y el `aria-label` de los botones de
+solo icono (avisa por consola en desarrollo si falta el `titulo`).
+`estilosBoton()` se exporta aparte para las etiquetas `<label>` que
+disparan un `<input type="file">` y no pueden ser `<button>`.
+
+83 botones migrados. Lo que NO pasa por la pieza, a propósito:
+- el **mando de música** (27): teclas con lenguaje propio;
+- los botones **verdes translúcidos sobre la foto** de Portada y
+  VistaColaborador (`.boton-verde-solido`, `.boton-flotante-imagen`) y el
+  **login**: su propio lenguaje, ya aprobado por el usuario;
+- las filas de `MenuFlotante`;
+- los **iconos sueltos dentro de tablas** (papelera, flechas de orden,
+  chivatos de rol): no llevan caja, y meterlos en una apretaría la fila.
+  Todos tienen ya `title` + `aria-label`.
+
+⚠️ Al migrar se perdió el texto de 3 botones por un `\1` que no era una
+sustitución de verdad (se escribió literal). Se recuperó del diff. Si se
+vuelve a migrar algo en bloque: comprobar el diff, no solo que compile.
 
 ### Cabecera inmovilizada dentro de una VentanaFlotante: `top: -16`
 

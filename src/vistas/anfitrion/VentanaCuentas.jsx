@@ -317,17 +317,14 @@ export function VentanaCuentas({ data, onCerrar }) {
                   </>
                 ) : (
                   <>
-                    <button
+                    <Boton
+                      variante="principal"
+                      tamano="pequeno"
                       onClick={() => abrirConfirmar(c)}
                       disabled={importeSuyo === 0}
-                      className="px-3 py-1.5 rounded text-xs font-medium"
-                      style={{
-                        background: importeSuyo === 0 ? C.paperDark : C.ink,
-                        color: importeSuyo === 0 ? C.charcoal : C.paper,
-                      }}
                     >
                       Confirmar recogida
-                    </button>
+                    </Boton>
                     <Boton variante="secundario" tamano="pequeno" onClick={() => abrirPreviewProbar(c)} disabled={generandoPreview === c.id || !c.email} titulo="Ver el acuse de prueba antes de enviarlo, sin confirmar ni registrar nada">
                       <Mail size={13} /> {generandoPreview === c.id ? "Generando…" : "Probar acuse"}
                     </Boton>

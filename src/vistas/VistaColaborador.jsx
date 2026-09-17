@@ -41,6 +41,7 @@ import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
 import { VentanaInvitacionesColaborador } from "./VentanaInvitacionesColaborador";
+import { estilosBoton } from "../components/Boton";
 
 // ---------- Colaborador view ----------
 
@@ -302,8 +303,8 @@ function FormularioDatos({
                 />
               )}
               <label
-                className="text-xs px-2 py-1 rounded cursor-pointer"
-                style={{ border: `1px solid ${C.gold}`, color: C.gold }}
+                className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer"
+                style={estilosBoton("secundario", "pequeno")}
               >
                 {subiendoFoto ? "Procesando…" : "Subir foto"}
                 <input
