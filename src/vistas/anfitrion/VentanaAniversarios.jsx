@@ -32,7 +32,9 @@ const LADO_MINIATURA = 52;
 // el usuario lo cazó en una captura: "ANIV." no caía centrado como "BODA".
 // La papelera pasó a ir encima de la miniatura (absoluta), así que ya no
 // ocupa sitio y las dos columnas vuelven a ser gemelas.
-const ANCHO_COL = LADO_MINIATURA;
+// Algo más ancha que la miniatura: la cabecera pinta una banda por columna
+// (como la Lista de invitados) y "ANIV." en negrita no cabía en 52px.
+const ANCHO_COL = LADO_MINIATURA + 16;
 // Aire entre las dos columnas, con un adorno en medio (ver Separador).
 const SEPARACION_COLUMNAS = 44;
 
@@ -42,7 +44,8 @@ const SEPARACION_COLUMNAS = 44;
 function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLectura }) {
   const id = `foto-${titulo}-${Math.random().toString(36).slice(2, 8)}`;
   return (
-    <div className="relative" style={{ width: ANCHO_COL, height: LADO_MINIATURA, flexShrink: 0 }}>
+    <div className="flex justify-center" style={{ width: ANCHO_COL, flexShrink: 0 }}>
+    <div className="relative" style={{ width: LADO_MINIATURA, height: LADO_MINIATURA }}>
       <label
         htmlFor={soloLectura ? undefined : id}
         title={soloLectura ? titulo : `${titulo} — pulsa para ${ocupada ? "cambiarla" : "subirla"}`}
@@ -89,6 +92,27 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, soloLect
           <Trash2 size={11} />
         </button>
       )}
+    </div>
+    </div>
+  );
+}
+
+// Una columna de la cabecera: misma banda clara con esquinas redondeadas
+// arriba que la Lista de invitados (tintaColumnaCabecera en
+// SeccionInvitados.jsx), para que se vea que la columna baja hasta las filas.
+function BandaCabecera({ children }) {
+  return (
+    <div
+      className="flex items-center justify-center text-sm font-bold uppercase py-2"
+      style={{
+        width: ANCHO_COL,
+        flexShrink: 0,
+        color: C.goldClaro,
+        background: "rgba(255,255,255,0.07)",
+        borderRadius: "6px 6px 0 0",
+      }}
+    >
+      {children}
     </div>
   );
 }
@@ -223,6 +247,42 @@ export function VentanaAniversarios({ data, onCerrar }) {
         </div>
       }
     >
+      {/* Cabecera de columnas con el MISMO aspecto que la de la Lista de
+          invitados (C.ink, filete dorado, una banda por columna), pegada al
+          borde de arriba del cuerpo para que se lea como la cabecera de la
+          propia tabla. El usuario lo señaló con la lista delante: la primera
+          versión era un rótulo gris suelto, separado de las filas.
+          Inmovilizada al desplazar. El cuerpo de VentanaFlotante lleva p-4:
+          los márgenes negativos la estiran de borde a borde, y `top: -16`
+          la pega arriba del todo en vez de dejar esos 16px de hueco. Lleva
+          los mismos 24px a los lados (16 del cuerpo + 8 de cada fila) para
+          que las columnas caigan sobre las de las filas. */}
+      {matrimonios.length > 0 && (
+        <div
+          className="flex gap-3"
+          style={{
+            position: "sticky",
+            top: -16,
+            zIndex: 2,
+            background: C.ink,
+            borderBottom: `1px solid ${C.gold}`,
+            margin: "-16px -16px 8px",
+            padding: "8px 24px 0",
+            alignItems: "stretch",
+          }}
+        >
+          <div
+            className="flex-1 flex items-center text-sm font-bold uppercase pb-2"
+            style={{ color: C.goldClaro }}
+          >
+            Matrimonio
+          </div>
+          <BandaCabecera>Boda</BandaCabecera>
+          <Separador adorno={false} />
+          <BandaCabecera>Aniv.</BandaCabecera>
+        </div>
+      )}
+
       {error && (
         <p className="text-xs mb-2" style={{ color: C.wax }}>
           ⚠ {error}
@@ -234,44 +294,6 @@ export function VentanaAniversarios({ data, onCerrar }) {
           Todavía no hay matrimonios: se forman marcando a alguien como esposo (O)
           y a su pareja como esposa (A) dentro de la misma familia.
         </p>
-      )}
-
-      {/* Cabecera de las dos columnas de foto, a petición del usuario
-          (2026-09-17): con dos recuadros iguales no había forma de saber
-          cuál era cuál. Solo se pinta si hay matrimonios. */}
-      {matrimonios.length > 0 && (
-        <div
-          className="flex items-center gap-3 px-2"
-          // Inmovilizada arriba al desplazar la lista, igual que la cabecera
-          // de la Lista de invitados: con 49 filas, si se va con el scroll
-          // se pierde cuál columna es cuál. El cuerpo de VentanaFlotante es
-          // el que desplaza, así que `top: 0` se pega a su borde.
-          style={{
-            position: "sticky",
-            top: 0,
-            zIndex: 2,
-            background: C.paper,
-            paddingTop: 4,
-            paddingBottom: 6,
-            borderBottom: `1px solid ${C.line}`,
-            marginBottom: 4,
-          }}
-        >
-          <div className="flex-1" />
-          <div
-            className="text-xs uppercase text-center"
-            style={{ width: ANCHO_COL, flexShrink: 0, color: C.charcoal, opacity: 0.65, letterSpacing: "0.04em" }}
-          >
-            Boda
-          </div>
-          <Separador adorno={false} />
-          <div
-            className="text-xs uppercase text-center"
-            style={{ width: ANCHO_COL, flexShrink: 0, color: C.charcoal, opacity: 0.65, letterSpacing: "0.04em" }}
-          >
-            Aniv.
-          </div>
-        </div>
       )}
 
       <div className="flex flex-col gap-1">

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.6",
+    cambios: [
+      "La cabecera de columnas de Aniversarios es ya como la de la Lista de invitados: barra verde pegada arriba, filete dorado y una banda por columna (Matrimonio, Boda, Aniv.), para que se lea como parte de la tabla y no como un rótulo suelto.",
+    ],
+  },
+  {
     version: "30.5",
     cambios: [
       "Aniversarios se parece ya a la Lista de invitados: los números viven en recuadritos en la cabecera (Matrimonios, Boda, Aniversario, Faltan) en vez de en una frase suelta.",
