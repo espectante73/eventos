@@ -25,6 +25,7 @@ import { useState } from "react";
 import { Printer, Download } from "lucide-react";
 import { C } from "../theme";
 import { ModalFlotante } from "./VentanaFlotante";
+import { Boton } from "./Boton";
 
 const RUTA_MAPA = "/mapa-de-la-aplicacion.png";
 const ANCHO_AMPLIADO = 1400;
@@ -51,13 +52,9 @@ export function ModalMapaSitio({ onCerrar }) {
       ancho={1100}
       acciones={
         <>
-          <button
-            onClick={imprimir}
-            className="boton-3d flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-            style={{ background: C.ink, color: C.paper }}
-          >
+          <Boton variante="principal" onClick={imprimir}>
             <Printer size={14} /> Imprimir
-          </button>
+          </Boton>
           <a
             href={RUTA_MAPA}
             download="mapa-de-la-aplicacion.png"

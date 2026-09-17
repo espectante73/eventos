@@ -21,6 +21,7 @@ import { envolverSeleccion } from "../../lib/textoEnriquecido";
 import { useDeshacer } from "../../lib/useDeshacer";
 import { BotonHistorial } from "../../components/HistorialTexto";
 import { FondoMusicalTablon } from "../../components/FondoMusicalTablon";
+import { Boton } from "../../components/Boton";
 
 // Añade "prefijo" al principio de cada línea tocada por la selección
 // actual (o solo la línea del cursor, si no hay nada seleccionado) --
@@ -61,16 +62,9 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
   // selección de texto, y el onBlur del textarea dispara un guardado con
   // el texto todavía sin la etiqueta nueva).
   const botonFormato = (Icono, tag, etiqueta) => (
-    <button
-      type="button"
-      title={etiqueta}
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={() => cuerpoRef.current && envolverSeleccion(cuerpoRef.current, cuerpo, tag, setCuerpo)}
-      className="p-1.5 rounded"
-      style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-    >
+    <Boton variante="secundario" type="button" titulo={etiqueta} onMouseDown={(e) => e.preventDefault()} onClick={() => cuerpoRef.current && envolverSeleccion(cuerpoRef.current, cuerpo, tag, setCuerpo)}>
       <Icono size={13} />
-    </button>
+    </Boton>
   );
 
   const anadirVineta = () => {
@@ -153,28 +147,13 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
             {botonFormato(Bold, "b", "Negrita")}
             {botonFormato(Italic, "i", "Cursiva")}
             {botonFormato(Underline, "u", "Subrayado")}
-            <button
-              type="button"
-              title="Viñeta (en la línea actual, o en cada línea seleccionada)" aria-label="Viñeta (en la línea actual, o en cada línea seleccionada)"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={anadirVineta}
-              className="p-1.5 rounded"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-            >
+            <Boton variante="secundario" type="button" titulo="Viñeta (en la línea actual, o en cada línea seleccionada)" aria-label="Viñeta (en la línea actual, o en cada línea seleccionada)" onMouseDown={(e) => e.preventDefault()} onClick={anadirVineta}>
               <List size={13} />
-            </button>
+            </Boton>
             <div style={{ width: 1, alignSelf: "stretch", background: C.line }} />
-            <button
-              type="button"
-              title="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)" aria-label="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={deshacer}
-              disabled={!puedeDeshacer}
-              className="p-1.5 rounded"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: puedeDeshacer ? 1 : 0.35 }}
-            >
+            <Boton variante="secundario" type="button" titulo="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)" aria-label="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)" onMouseDown={(e) => e.preventDefault()} onClick={deshacer} disabled={!puedeDeshacer}>
               <Undo2 size={13} />
-            </button>
+            </Boton>
             {!soloTexto && (
               <BotonHistorial
                 obtenerHistorial={() => obtenerHistorialTexto("novedad", n.id, "cuerpo")}

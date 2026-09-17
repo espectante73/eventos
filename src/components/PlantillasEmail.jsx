@@ -20,6 +20,7 @@ import { SeccionPlegable } from "./SeccionPlegable";
 import { envolverSeleccion } from "../lib/textoEnriquecido";
 import { useDeshacer } from "../lib/useDeshacer";
 import { BotonHistorial } from "./HistorialTexto";
+import { Boton } from "./Boton";
 
 // Las cuatro, con un título corto para la fila plegada (el largo de
 // antes no cabía) y el de siempre como explicación dentro.
@@ -74,16 +75,9 @@ function PlantillaEditable({ label, valor, onCambio, campo, obtenerHistorialText
   // foco al textarea ANTES de que se dispare el click (se pierde la
   // selección de texto) -- mismo gotcha ya resuelto en Novedades.
   const botonFormato = (Icono, tag, etiqueta) => (
-    <button
-      type="button"
-      title={etiqueta}
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={() => ref.current && envolverSeleccion(ref.current, texto, tag, setTexto)}
-      className="p-1 rounded"
-      style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-    >
+    <Boton variante="secundario" type="button" titulo={etiqueta} onMouseDown={(e) => e.preventDefault()} onClick={() => ref.current && envolverSeleccion(ref.current, texto, tag, setTexto)}>
       <Icono size={12} />
-    </button>
+    </Boton>
   );
 
   return (
@@ -93,17 +87,9 @@ function PlantillaEditable({ label, valor, onCambio, campo, obtenerHistorialText
         {botonFormato(Italic, "i", "Cursiva")}
         {botonFormato(Underline, "u", "Subrayado")}
         <div style={{ width: 1, alignSelf: "stretch", background: C.line }} />
-        <button
-          type="button"
-          title="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)" aria-label="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={deshacer}
-          disabled={!puedeDeshacer}
-          className="p-1 rounded"
-          style={{ border: `1px solid ${C.line}`, color: C.charcoal, opacity: puedeDeshacer ? 1 : 0.35 }}
-        >
+        <Boton variante="secundario" type="button" titulo="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)" aria-label="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)" onMouseDown={(e) => e.preventDefault()} onClick={deshacer} disabled={!puedeDeshacer}>
           <Undo2 size={12} />
-        </button>
+        </Boton>
         <BotonHistorial
           obtenerHistorial={() => obtenerHistorialTexto("plantilla", null, campo)}
           onRestaurar={(valorAnterior) => {

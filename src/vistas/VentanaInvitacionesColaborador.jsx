@@ -16,6 +16,7 @@
 import { Send, Check } from "lucide-react";
 import { C } from "../theme";
 import { VentanaFlotante, ModalFlotante } from "../components/VentanaFlotante";
+import { Boton } from "../components/Boton";
 
 export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
   const {
@@ -69,14 +70,9 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
                     {destinatario?.email || "sin email"}
                   </div>
                 </div>
-                <button
-                  onClick={() => intentarEnviar(f)}
-                  disabled={!destinatario?.email || descargando === f.clave}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium flex-shrink-0"
-                  style={{ background: C.ink, color: C.paper, opacity: destinatario?.email ? 1 : 0.4 }}
-                >
+                <Boton variante="principal" tamano="pequeno" onClick={() => intentarEnviar(f)} disabled={!destinatario?.email || descargando === f.clave}>
                   <Send size={13} /> {descargando === f.clave ? "Generando…" : "Enviar"}
-                </button>
+                </Boton>
               </div>
             );
           })}
@@ -110,21 +106,12 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
             style={{ border: `1px solid ${C.line}` }}
           />
           <div className="flex gap-2 justify-end">
-            <button
-              onClick={() => setPreviewInvitacion(null)}
-              className="px-3 py-1.5 rounded text-sm"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-            >
+            <Boton variante="secundario" onClick={() => setPreviewInvitacion(null)}>
               Cancelar
-            </button>
-            <button
-              onClick={confirmarEnvioInvitacion}
-              disabled={enviandoInvitacion}
-              className="px-3 py-1.5 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
+            </Boton>
+            <Boton variante="principal" onClick={confirmarEnvioInvitacion} disabled={enviandoInvitacion}>
               {enviandoInvitacion ? "Enviando…" : "Confirmar y enviar"}
-            </button>
+            </Boton>
           </div>
         </ModalFlotante>
       )}

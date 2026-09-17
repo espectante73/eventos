@@ -17,6 +17,7 @@ import { MesaRedonda } from "../../components/Mesas";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { PlanoMesas } from "../../components/PlanoMesas";
+import { Boton } from "../../components/Boton";
 
 export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlotante, onCerrar }) {
   const { mesas, invitados, persistMesas, persistInvitados } = data;
@@ -170,29 +171,16 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
               Pedido por el usuario el 2026-09-16. */}
           <div className="flex items-center gap-2 flex-wrap">
             {avisosMesas.length > 0 && (
-              <button
-                onClick={() => setPanelFlotante("avisosMesas")}
-                className="boton-3d flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium whitespace-nowrap"
-                style={{ background: C.wax, color: "#fff" }}
-                title="Ver familias que se quedaron sin mesa"
-              >
+              <Boton variante="peligro" tamano="pequeno" onClick={() => setPanelFlotante("avisosMesas")} titulo="Ver familias que se quedaron sin mesa">
                 <AlertTriangle size={12} /> {avisosMesas.length} aviso{avisosMesas.length !== 1 && "s"}
-              </button>
+              </Boton>
             )}
-            <button
-              onClick={autoAsignarMesas}
-              className="boton-3d flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap"
-              style={{ background: C.ink, color: C.paper }}
-            >
+            <Boton variante="principal" onClick={autoAsignarMesas}>
               Auto-asignar (preliminar)
-            </button>
-            <button
-              onClick={anadirMesa}
-              className="boton-3d flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium whitespace-nowrap"
-              style={{ border: `1px solid ${C.ink}`, color: C.ink }}
-            >
+            </Boton>
+            <Boton variante="secundario" onClick={anadirMesa}>
               <Plus size={14} /> Añadir mesa
-            </button>
+            </Boton>
           </div>
         </div>
         <div className="flex flex-wrap gap-4">

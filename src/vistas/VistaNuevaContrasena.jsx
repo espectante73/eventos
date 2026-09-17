@@ -4,6 +4,7 @@
 // email la persona entraría directa a sus datos sin poder fijar aún la
 // contraseña nueva que pidió.
 import { useState } from "react";
+import { Boton } from "../components/Boton";
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 
@@ -79,14 +80,9 @@ export function VistaNuevaContrasena({ onListo }) {
             {error}
           </p>
         )}
-        <button
-          type="submit"
-          disabled={cargando}
-          className="w-full py-2 rounded font-medium"
-          style={{ background: C.ink, color: C.paper, height: 44 }}
-        >
+        <Boton type="submit" variante="principal" disabled={cargando} className="w-full" style={{ height: 44 }}>
           {cargando ? "Guardando…" : "Guardar contraseña"}
-        </button>
+        </Boton>
       </form>
     </div>
   );

@@ -23,6 +23,7 @@ import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
+import { Boton } from "./Boton";
 import { ModalMapaSitio } from "./MapaSitio";
 
 // `onCerrarSesion`/`enlaceTablon`: antes eran botones sueltos junto a
@@ -168,14 +169,9 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio }) {
                 {avisoContrasena.texto}
               </p>
             )}
-            <button
-              type="submit"
-              disabled={guardandoContrasena}
-              className="px-3 py-1.5 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
+            <Boton type="submit" variante="principal" disabled={guardandoContrasena}>
               {guardandoContrasena ? "Guardando…" : "Cambiar contraseña"}
-            </button>
+            </Boton>
           </form>
 
           <form onSubmit={cambiarEmail} className="pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
@@ -204,14 +200,9 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio }) {
                 {avisoEmail.texto}
               </p>
             )}
-            <button
-              type="submit"
-              disabled={guardandoEmail}
-              className="px-3 py-1.5 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
+            <Boton type="submit" variante="principal" disabled={guardandoEmail}>
               {guardandoEmail ? "Guardando…" : "Cambiar email"}
-            </button>
+            </Boton>
           </form>
         </ModalFlotante>
       )}

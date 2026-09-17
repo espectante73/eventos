@@ -19,6 +19,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Trash2, Download, Image as IconoImagen } from "lucide-react";
 import { C } from "../../theme";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
+import { Boton, estilosBoton } from "../../components/Boton";
 import { Seal } from "../../components/Widgets";
 import { matrimoniosDeInvitados } from "../../lib/matrimonios";
 import {
@@ -147,14 +148,15 @@ function Hueco({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, onVer, s
           mide siempre lo mismo haya foto o no, y los títulos de arriba
           siguen cayendo centrados. */}
       {!soloLectura && ocupada && (
-        <button
+        <Boton
+          variante="peligro"
+          tamano="pequeno"
+          icono={Trash2}
+          titulo={`Quitar ${titulo}`}
           onClick={onQuitar}
-          title={`Quitar ${titulo}`} aria-label={`Quitar ${titulo}`}
-          className="boton-3d rounded-full absolute flex items-center justify-center"
-          style={{ top: -6, right: -6, width: 19, height: 19, background: C.wax, color: "#fff" }}
-        >
-          <Trash2 size={11} />
-        </button>
+          className="absolute rounded-full"
+          style={{ top: -8, right: -8, minHeight: 22, padding: 4 }}
+        />
       )}
     </div>
     </div>
@@ -366,15 +368,16 @@ export function VentanaAniversarios({ data, onCerrar }) {
   };
 
   const accionesCabecera = (
-    <button
+    <Boton
+      variante="secundario"
+      oscuro
+      icono={Download}
+      titulo="Descargar en un solo archivo las fotos de boda originales, con su nombre y año"
       onClick={pedirDescarga}
       disabled={descargando}
-      title="Descargar en un solo archivo las fotos de boda originales, con su nombre y año"
-      className="boton-3d flex items-center gap-1 rounded-full px-3 py-1.5 text-sm"
-      style={{ color: C.goldClaro, border: `1px solid ${C.gold}`, opacity: descargando ? 0.6 : 1 }}
     >
-      <Download size={15} /> {descargando ? "Preparando…" : "Originales"}
-    </button>
+      {descargando ? "Preparando…" : "Originales"}
+    </Boton>
   );
 
   const nombreMatrimonio = (m) => `${m.familia} — ${m.esposo.nombre} y ${m.esposa.nombre}`;
@@ -518,10 +521,13 @@ export function VentanaAniversarios({ data, onCerrar }) {
               ancho={960}
               acciones={
                 <>
+                  {/* Es un <label> y no un <Boton>: tiene que disparar el
+                      <input type="file"> de al lado. Se le clava el mismo
+                      aspecto con estilosBoton para que no desafine. */}
                   <label
                     htmlFor={idInput}
-                    className="boton-3d px-3 py-1.5 rounded text-sm font-medium cursor-pointer"
-                    style={{ background: C.ink, color: C.goldClaro }}
+                    className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer"
+                    style={estilosBoton("principal", "normal")}
                   >
                     {textoSubir}
                   </label>
@@ -540,13 +546,9 @@ export function VentanaAniversarios({ data, onCerrar }) {
                   />
                   {/* Comparar la original con la montada, sin salir. */}
                   {esBoda && final && original && (
-                    <button
-                      onClick={() => setEnGrande({ ...enGrande, cual: enGrande.cual === "final" ? "original" : "final" })}
-                      className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
-                      style={{ border: `1px solid ${C.ink}`, color: C.ink }}
-                    >
+                    <Boton onClick={() => setEnGrande({ ...enGrande, cual: enGrande.cual === "final" ? "original" : "final" })}>
                       {enGrande.cual === "final" ? "Ver original" : "Ver con plantilla"}
-                    </button>
+                    </Boton>
                   )}
                 </>
               }
@@ -572,24 +574,17 @@ export function VentanaAniversarios({ data, onCerrar }) {
           ancho={360}
           acciones={
             <>
-              <button
+              <Boton
+                variante="peligro"
                 onClick={() => {
                   const { matrimonio, tipo } = porQuitar;
                   setPorQuitar(null);
                   quitar(tipo, matrimonio.familia);
                 }}
-                className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
-                style={{ background: C.wax, color: "#fff" }}
               >
                 Sí, quitarla
-              </button>
-              <button
-                onClick={() => setPorQuitar(null)}
-                className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
-                style={{ border: `1px solid ${C.ink}`, color: C.ink }}
-              >
-                Cancelar
-              </button>
+              </Boton>
+              <Boton onClick={() => setPorQuitar(null)}>Cancelar</Boton>
             </>
           }
         >
@@ -607,20 +602,10 @@ export function VentanaAniversarios({ data, onCerrar }) {
           ancho={460}
           acciones={
             <>
-              <button
-                onClick={descargarOriginales}
-                className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
-                style={{ background: C.ink, color: C.goldClaro }}
-              >
+              <Boton variante="principal" onClick={descargarOriginales}>
                 Descargar solo las fotos
-              </button>
-              <button
-                onClick={() => setAvisoDescarga(null)}
-                className="boton-3d px-3 py-1.5 rounded text-sm font-medium"
-                style={{ border: `1px solid ${C.ink}`, color: C.ink }}
-              >
-                Cancelar
-              </button>
+              </Boton>
+              <Boton onClick={() => setAvisoDescarga(null)}>Cancelar</Boton>
             </>
           }
         >

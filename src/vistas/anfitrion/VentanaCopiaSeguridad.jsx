@@ -29,6 +29,7 @@ import { Copy } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { exportarTodo } from "../../lib/backup";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { Boton } from "../../components/Boton";
 
 export function VentanaCopiaSeguridad({ data, onCerrar }) {
   const [mostrarExportar, setMostrarExportar] = useState(false);
@@ -46,13 +47,9 @@ export function VentanaCopiaSeguridad({ data, onCerrar }) {
         hace falta recuperar de verdad, se hace desde el volcado diario.
       </p>
       <div className="flex flex-wrap gap-2 mb-3">
-        <button
-          onClick={() => setMostrarExportar((v) => !v)}
-          className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-          style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-        >
+        <Boton variante="secundario" onClick={() => setMostrarExportar((v) => !v)}>
           <Copy size={14} /> Exportar todo
-        </button>
+        </Boton>
       </div>
 
       {mostrarExportar && (

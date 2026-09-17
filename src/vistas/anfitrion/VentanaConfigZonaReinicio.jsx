@@ -12,6 +12,7 @@ import { exportarTodo } from "../../lib/backup";
 import { descargarJSON } from "../../lib/descargas";
 import { Field, TextInput } from "../../components/Formulario";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
+import { Boton } from "../../components/Boton";
 
 // Cualquier reinicio que toque invitados limpia también su aviso
 // pendiente — si la asignación o el dato era de prueba, el aviso que
@@ -326,17 +327,9 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
             >
               {rEjecutando ? "Reiniciando…" : "Confirmar reinicio"}
             </button>
-            <button
-              onClick={() => {
-                setRMostrarConfirmar(false);
-                setRPalabra("");
-              }}
-              disabled={rEjecutando}
-              className="px-3 py-2 rounded text-sm"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-            >
+            <Boton variante="secundario" onClick={() => { setRMostrarConfirmar(false); setRPalabra(""); }} disabled={rEjecutando}>
               Cancelar
-            </button>
+            </Boton>
           </div>
         </ModalFlotante>
       )}
@@ -377,17 +370,9 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
             >
               {reiniciandoAvisos ? "Reiniciando…" : "Confirmar reinicio"}
             </button>
-            <button
-              onClick={() => {
-                setReinicioAvisosPendiente(false);
-                setPalabraAvisos("");
-              }}
-              disabled={reiniciandoAvisos}
-              className="px-3 py-2 rounded text-sm"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-            >
+            <Boton variante="secundario" onClick={() => { setReinicioAvisosPendiente(false); setPalabraAvisos(""); }} disabled={reiniciandoAvisos}>
               Cancelar
-            </button>
+            </Boton>
           </div>
         </ModalFlotante>
       )}

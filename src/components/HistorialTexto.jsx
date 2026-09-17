@@ -14,6 +14,7 @@ import { useState } from "react";
 import { History, RotateCcw } from "lucide-react";
 import { C } from "../theme";
 import { formatearFecha } from "../lib/formato";
+import { Boton } from "./Boton";
 
 // Quita las etiquetas HTML sencillas (<b>/<i>/<u>) para la vista previa
 // de cada versión -- aquí solo hace falta un resumen legible, no el
@@ -46,16 +47,9 @@ export function BotonHistorial({ obtenerHistorial, onRestaurar }) {
 
   return (
     <div className="relative inline-block">
-      <button
-        type="button"
-        title="Ver versiones anteriores guardadas" aria-label="Ver versiones anteriores guardadas"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={alternar}
-        className="p-1.5 rounded"
-        style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-      >
+      <Boton variante="secundario" type="button" titulo="Ver versiones anteriores guardadas" aria-label="Ver versiones anteriores guardadas" onMouseDown={(e) => e.preventDefault()} onClick={alternar}>
         <History size={13} />
-      </button>
+      </Boton>
       {abierto && (
         <div
           className="absolute z-10 mt-1 rounded shadow-lg"
@@ -83,18 +77,9 @@ export function BotonHistorial({ obtenerHistorial, onRestaurar }) {
                     {textoPlano(v.valorAnterior).slice(0, 60) || "(vacío)"}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  title="Restaurar esta versión" aria-label="Restaurar esta versión"
-                  onClick={() => {
-                    onRestaurar(v.valorAnterior);
-                    setAbierto(false);
-                  }}
-                  className="p-1 rounded flex-shrink-0"
-                  style={{ border: `1px solid ${C.line}`, color: C.ink }}
-                >
+                <Boton variante="secundario" type="button" titulo="Restaurar esta versión" aria-label="Restaurar esta versión" onClick={() => { onRestaurar(v.valorAnterior); setAbierto(false); }}>
                   <RotateCcw size={12} />
-                </button>
+                </Boton>
               </div>
             ))}
         </div>

@@ -4,6 +4,7 @@
 // import cruzado con App.jsx sería un círculo).
 import React from "react";
 import { C } from "../theme";
+import { Boton } from "./Boton";
 
 // Un Error Boundary tiene que ser una clase (React todavía no ofrece el
 // equivalente con hooks) — es el único mecanismo que puede capturar un
@@ -77,34 +78,18 @@ export class ErrorBoundary extends React.Component {
                 deja una página en blanco de verdad, sin nada que la
                 vuelva a pintar. Ahí lo que sirve es reintentar (volver a
                 montar el contenido) o cerrarla y abrirla desde el menú. */}
-            <button
-              onClick={this.props.ventana ? this.reintentar : () => window.location.reload()}
-              className="px-4 py-2 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
+            <Boton variante="principal" onClick={this.props.ventana ? this.reintentar : () => window.location.reload()}>
               {this.props.ventana ? "Reintentar" : "Recargar la página"}
-            </button>
+            </Boton>
             {this.props.alReiniciar && (
-              <button
-                onClick={() => {
-                  this.props.alReiniciar();
-                  if (this.props.ventana) this.reintentar();
-                  else window.location.reload();
-                }}
-                className="px-4 py-2 rounded text-sm font-medium"
-                style={{ background: "#fff", color: C.ink, border: `1px solid ${C.line}` }}
-              >
+              <Boton variante="secundario" onClick={() => { this.props.alReiniciar(); if (this.props.ventana) this.reintentar(); else window.location.reload(); }}>
                 Restablecer el aspecto
-              </button>
+              </Boton>
             )}
             {this.props.ventana && (
-              <button
-                onClick={() => this.props.ventana.close()}
-                className="px-4 py-2 rounded text-sm font-medium"
-                style={{ background: "#fff", color: C.ink, border: `1px solid ${C.line}` }}
-              >
+              <Boton variante="secundario" onClick={() => this.props.ventana.close()}>
                 Cerrar la ventana
-              </button>
+              </Boton>
             )}
           </div>
         </div>

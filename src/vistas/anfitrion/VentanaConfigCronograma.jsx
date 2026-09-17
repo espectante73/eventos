@@ -26,6 +26,7 @@ import { Printer, ChevronDown, Plus, Trash2 } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { generarImagenCronograma, calcularHorasAbsolutas } from "../../lib/cronograma";
 import { resolverColaborador } from "../../lib/invitados";
+import { Boton } from "../../components/Boton";
 
 // Todas las horas del día en pasos de 5 minutos, en un único <select> --
 // a petición del usuario ("un único reloj, no dos relojes distintos").
@@ -238,14 +239,9 @@ export function VentanaConfigCronograma({ data, ventana }) {
             </option>
           ))}
         </select>
-        <button
-          onClick={anadirBloque}
-          className="flex items-center gap-1 px-3 rounded text-sm font-medium flex-shrink-0"
-          style={{ height: 42, background: C.ink, color: C.paper }}
-          title="Añadir un bloque detrás del que estás viendo"
-        >
+        <Boton variante="principal" onClick={anadirBloque} titulo="Añadir un bloque detrás del que estás viendo">
           <Plus size={15} /> Añadir
-        </button>
+        </Boton>
         <button
           onClick={() => setConfirmandoQuitar(true)}
           disabled={bloques.length <= 1}
@@ -271,20 +267,12 @@ export function VentanaConfigCronograma({ data, ventana }) {
             ¿Quitar «{bloqueActual.texto || `Bloque ${seleccionado + 1}`}»? Se pierde también quién
             lo atendía.
           </p>
-          <button
-            onClick={quitarBloque}
-            className="text-xs px-2 py-1 rounded font-medium"
-            style={{ background: C.peligro, color: "#fff" }}
-          >
+          <Boton variante="peligro" tamano="pequeno" onClick={quitarBloque}>
             Quitar
-          </button>
-          <button
-            onClick={() => setConfirmandoQuitar(false)}
-            className="text-xs px-2 py-1 rounded font-medium"
-            style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-          >
+          </Boton>
+          <Boton variante="secundario" tamano="pequeno" onClick={() => setConfirmandoQuitar(false)}>
             Cancelar
-          </button>
+          </Boton>
         </div>
       )}
 
@@ -452,13 +440,9 @@ export function VentanaConfigCronograma({ data, ventana }) {
           <div id="zona-imprimible-cronograma">
             <img src={imagen} alt="Cronograma del día" className="w-full rounded mb-2" />
           </div>
-          <button
-            onClick={imprimir}
-            className="boton-3d flex items-center gap-2 px-3 py-1.5 rounded text-sm font-medium mb-4"
-            style={{ border: `1px solid ${C.line}`, color: C.ink }}
-          >
+          <Boton variante="secundario" onClick={imprimir}>
             <Printer size={14} /> Imprimir
-          </button>
+          </Boton>
         </>
       )}
 

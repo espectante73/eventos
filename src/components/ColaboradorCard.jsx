@@ -10,6 +10,7 @@ import { ordenarPorApellidoNombre, formatearFecha } from "../lib/formato";
 import { emailValido } from "../lib/validacion";
 import { Seal, GrupoFamiliarInput } from "./Widgets";
 import { BuscadorInvitado } from "./BuscadorInvitado";
+import { Boton } from "./Boton";
 
 export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin, onConfirmarEmailActualizado, onAvisar }) {
   const [relevando, setRelevando] = useState(false);
@@ -83,20 +84,12 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
           />
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={confirmarRelevo}
-            className="px-3 py-1 rounded text-xs font-medium"
-            style={{ background: C.wax, color: C.paper }}
-          >
+          <Boton variante="peligro" tamano="pequeno" onClick={confirmarRelevo}>
             Confirmar relevo
-          </button>
-          <button
-            onClick={() => setRelevando(false)}
-            className="px-3 py-1 rounded text-xs font-medium"
-            style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-          >
+          </Boton>
+          <Boton tamano="pequeno" onClick={() => setRelevando(false)}>
             Cancelar
-          </button>
+          </Boton>
         </div>
       </div>
     );
@@ -131,23 +124,19 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
         </button>
         <div className="flex items-center gap-3">
           <Seal count={pendientes} size={26} />
-          <button
-            onClick={enviarInvitacion}
-            disabled={enviandoInvitacion || !c.email}
-            title={
+          <Boton
+            variante="secundario"
+            icono={Send}
+            titulo={
               c.email
                 ? "Enviar por email la invitación para crear su cuenta"
                 : "Añade primero un email para poder enviarle la invitación"
             }
-          >
-            <Send size={20} style={{ color: c.email ? C.gold : C.line }} />
-          </button>
-          <button onClick={() => setRelevando(true)} title="Relevar (sustituir) colaborador" aria-label="Relevar (sustituir) colaborador">
-            <Repeat size={20} style={{ color: C.ink }} />
-          </button>
-          <button onClick={() => onEliminar(c.id)} title="Eliminar colaborador" aria-label="Eliminar colaborador">
-            <Trash2 size={20} style={{ color: C.wax }} />
-          </button>
+            onClick={enviarInvitacion}
+            disabled={enviandoInvitacion || !c.email}
+          />
+          <Boton icono={Repeat} titulo="Relevar (sustituir) colaborador" onClick={() => setRelevando(true)} />
+          <Boton variante="peligro" icono={Trash2} titulo="Eliminar colaborador" onClick={() => onEliminar(c.id)} />
         </div>
       </div>
 
@@ -170,15 +159,14 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
           </span>
         )}
         {c.email && emailValido(c.email) && (
-          <button
+          <Boton
+            tamano="pequeno"
+            titulo="Envía un email de prueba a esta dirección para confirmar que llega"
             onClick={probarEmail}
             disabled={probando}
-            className="text-xs px-2 py-1 rounded whitespace-nowrap"
-            style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-            title="Envía un email de prueba a esta dirección para confirmar que llega"
           >
             {probando ? "Enviando…" : "Probar"}
-          </button>
+          </Boton>
         )}
       </div>
       {c.email && !emailValido(c.email) && (
@@ -202,15 +190,15 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
             {pendientesAviso.length} invitado{pendientesAviso.length !== 1 && "s"} nuevo
             {pendientesAviso.length !== 1 && "s"} sin avisar
           </span>
-          <button
+          <Boton
+            variante="peligro"
+            tamano="pequeno"
+            titulo={c.email ? "Ver el email y enviarlo" : "Añade primero un email"}
             onClick={() => onAvisar(c)}
             disabled={!c.email}
-            className="text-xs px-2 py-1 rounded font-medium whitespace-nowrap"
-            style={{ background: c.email ? C.wax : C.line, color: c.email ? "#fff" : C.charcoal }}
-            title={c.email ? "Ver el email y enviarlo" : "Añade primero un email"}
           >
             Avisar ahora
-          </button>
+          </Boton>
         </div>
       )}
       {c.emailSincronizadoEn && (
@@ -222,13 +210,9 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
             ℹ {c.nombre} cambió su email de acceso el {formatearFecha(String(c.emailSincronizadoEn).slice(0, 10))} —
             los avisos ya le llegan a esta dirección nueva.
           </span>
-          <button
-            onClick={() => onConfirmarEmailActualizado(c.id)}
-            className="text-xs px-2 py-1 rounded whitespace-nowrap"
-            style={{ border: `1px solid ${C.ink}`, color: C.ink }}
-          >
+          <Boton tamano="pequeno" onClick={() => onConfirmarEmailActualizado(c.id)}>
             Entendido
-          </button>
+          </Boton>
         </div>
       )}
       {resultadoPrueba === "ok" && (

@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { ChevronDown, AlertTriangle, CircleCheck, Clock } from "lucide-react";
 import { C } from "../theme";
+import { Boton } from "./Boton";
 
 export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
   // Nace ABIERTO: se llega hasta aquí desde "Acciones" → Revisión, así
@@ -101,15 +102,9 @@ export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
                   eso están los filtros de la propia tabla. */}
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {h.personas.slice(0, 12).map((g) => (
-                  <button
-                    key={g.id}
-                    onClick={() => onBuscar(g)}
-                    className="text-xs rounded px-1.5 py-0.5"
-                    style={{ border: `1px solid ${C.line}`, background: "#fff", color: C.charcoal }}
-                    title="Buscarlo en la lista"
-                  >
+                  <Boton variante="secundario" tamano="pequeno" key={g.id} onClick={() => onBuscar(g)} titulo="Buscarlo en la lista">
                     {g.apellido}, {g.nombre}
-                  </button>
+                  </Boton>
                 ))}
                 {h.personas.length > 12 && (
                   <span className="text-xs self-center" style={{ color: C.charcoal, opacity: 0.6 }}>
@@ -119,13 +114,9 @@ export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
               </div>
             </div>
           ))}
-          <button
-            onClick={onCerrar}
-            className="text-xs rounded px-2 py-1"
-            style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-          >
+          <Boton variante="secundario" tamano="pequeno" onClick={onCerrar}>
             Cerrar la revisión
-          </button>
+          </Boton>
         </div>
       )}
     </div>

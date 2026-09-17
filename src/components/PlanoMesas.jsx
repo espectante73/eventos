@@ -12,6 +12,7 @@ import { useRef } from "react";
 import { Printer } from "lucide-react";
 import { C } from "../theme";
 import { MesaPlano } from "./Mesas";
+import { Boton } from "./Boton";
 
 // Posición por defecto en rejilla para las mesas que todavía no se han
 // arrastrado a mano en el plano (posX/posY a null).
@@ -44,7 +45,8 @@ export function PlanoMesas({ data, ocupacionMesa }) {
         de papel A2 en el diálogo de impresión de tu navegador.
       </p>
       <div className="flex items-center gap-2 mb-3">
-        <button
+        <Boton
+          variante="principal"
           onClick={() => {
             setTimeout(() => {
               try {
@@ -54,11 +56,9 @@ export function PlanoMesas({ data, ocupacionMesa }) {
               }
             }, 60);
           }}
-          className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-          style={{ background: C.ink, color: C.paper }}
         >
           <Printer size={14} /> Imprimir (A2)
-        </button>
+        </Boton>
       </div>
       <div id="zona-imprimible-plano">
         <div

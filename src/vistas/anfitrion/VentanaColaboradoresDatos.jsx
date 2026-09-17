@@ -24,6 +24,7 @@ import { ColaboradorCard } from "../../components/ColaboradorCard";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { EncabezadoOrdenable } from "../../components/Widgets";
+import { Boton } from "../../components/Boton";
 
 const ETIQUETA_TIPO_AVISO = {
   asignados: "Asignados",
@@ -197,13 +198,9 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
               onSeleccionar={(id) => setNuevoColab({ ...nuevoColab, invitadoId: id })}
               placeholder="Buscar invitado para hacerlo colaborador..."
             />
-            <button
-              onClick={agregarColaborador}
-              className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
+            <Boton variante="principal" onClick={agregarColaborador}>
               <Plus size={14} /> Añadir
-            </button>
+            </Boton>
           </div>
         </SeccionPlegable>
         </div>
@@ -413,28 +410,15 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
             }}
           />
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={confirmarEnvioAvisoPreview}
-              disabled={enviandoAvisoPreview}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
+            <Boton variante="principal" onClick={confirmarEnvioAvisoPreview} disabled={enviandoAvisoPreview}>
               {enviandoAvisoPreview ? "Enviando…" : "Aceptar y enviar"}
-            </button>
-            <button
-              onClick={() => setAvisoPreview(null)}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-            >
+            </Boton>
+            <Boton variante="secundario" onClick={() => setAvisoPreview(null)}>
               Cancelar
-            </button>
-            <button
-              onClick={irAEditarAsignacion}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-            >
+            </Boton>
+            <Boton variante="secundario" onClick={irAEditarAsignacion}>
               Editar asignación
-            </button>
+            </Boton>
           </div>
         </ModalFlotante>
     )}

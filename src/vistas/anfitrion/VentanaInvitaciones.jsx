@@ -18,6 +18,7 @@ import { redimensionarImagenArchivo, guardarArchivoInvitacion, obtenerCarpetaInv
 import { Field } from "../../components/Formulario";
 import { GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
+import { Boton } from "../../components/Boton";
 
 export function VentanaInvitaciones({
   data,
@@ -308,16 +309,9 @@ export function VentanaInvitaciones({
 
         {window.showDirectoryPicker && (
           <div className="mb-4 flex items-center gap-2 flex-wrap">
-            <button
-              onClick={async () => {
-                const carpeta = await obtenerCarpetaInvitaciones({ forzarElegir: true });
-                setNombreCarpetaInvitaciones(carpeta ? carpeta.name : null);
-              }}
-              className="text-xs px-2 py-1 rounded font-medium"
-              style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-            >
+            <Boton variante="secundario" tamano="pequeno" onClick={async () => { const carpeta = await obtenerCarpetaInvitaciones({ forzarElegir: true }); setNombreCarpetaInvitaciones(carpeta ? carpeta.name : null); }}>
               {nombreCarpetaInvitaciones ? "Cambiar carpeta" : "Elegir carpeta de guardado"}
-            </button>
+            </Boton>
             <span className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
               {nombreCarpetaInvitaciones
                 ? `Guardando en: "${nombreCarpetaInvitaciones}"`
@@ -384,15 +378,10 @@ export function VentanaInvitaciones({
                   )}
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => descargarInvitacion(familia)}
-                    disabled={descargando === familia.clave}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-medium"
-                    style={{ background: C.ink, color: C.paper, opacity: descargando === familia.clave ? 0.6 : 1 }}
-                  >
+                  <Boton variante="principal" tamano="pequeno" onClick={() => descargarInvitacion(familia)} disabled={descargando === familia.clave}>
                     <ImageIcon size={13} />
                     {descargando === familia.clave ? "Generando..." : "Descargar"}
-                  </button>
+                  </Boton>
                   <button
                     onClick={() => abrirPreviewInvitacion(familia)}
                     disabled={descargando === familia.clave}
@@ -522,24 +511,14 @@ export function VentanaInvitaciones({
             })}
           </ul>
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={confirmarEnvioLoteInvitaciones}
-              disabled={enviandoLoteInvitaciones}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
+            <Boton variante="principal" onClick={confirmarEnvioLoteInvitaciones} disabled={enviandoLoteInvitaciones}>
               {enviandoLoteInvitaciones
                 ? "Enviando…"
                 : `Confirmar y enviar ${familiasPendientesDeEnviar.length} invitaciones`}
-            </button>
-            <button
-              onClick={() => setMostrarResumenLoteInvitaciones(false)}
-              disabled={enviandoLoteInvitaciones}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-            >
+            </Boton>
+            <Boton variante="secundario" onClick={() => setMostrarResumenLoteInvitaciones(false)} disabled={enviandoLoteInvitaciones}>
               Cancelar
-            </button>
+            </Boton>
           </div>
         </ModalFlotante>
       )}

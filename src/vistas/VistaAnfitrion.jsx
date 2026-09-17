@@ -31,6 +31,7 @@ import { VentanaMesas } from "./anfitrion/VentanaMesas";
 import { VentanaCuentas } from "./anfitrion/VentanaCuentas";
 import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
+import { Boton } from "../components/Boton";
 
 export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion }) {
   const { evento, colaboradores, invitados, persistInvitados, tokenTablon } = data;
@@ -444,21 +445,12 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
             dangerouslySetInnerHTML={{ __html: evento.plantillaInvitacionFamilia || "" }}
           />
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={confirmarEnvioInvitacion}
-              disabled={enviandoInvitacion}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
+            <Boton variante="principal" onClick={confirmarEnvioInvitacion} disabled={enviandoInvitacion}>
               {enviandoInvitacion ? "Enviando…" : "Aceptar y enviar"}
-            </button>
-            <button
-              onClick={() => setPreviewInvitacion(null)}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-            >
+            </Boton>
+            <Boton variante="secundario" onClick={() => setPreviewInvitacion(null)}>
               Cancelar
-            </button>
+            </Boton>
           </div>
         </ModalFlotante>
       )}

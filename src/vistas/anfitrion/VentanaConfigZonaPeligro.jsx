@@ -7,6 +7,7 @@ import { C } from "../../theme";
 import { exportarTodo } from "../../lib/backup";
 import { descargarJSON } from "../../lib/descargas";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { Boton } from "../../components/Boton";
 
 export function VentanaConfigZonaPeligro({ data, onCerrar }) {
   const {
@@ -71,13 +72,9 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
         ⚠ Zona de peligro: esto borra evento, colaboradores, invitados, mesas y fotos —
         todo el contenido de la aplicación. No se puede deshacer.
       </p>
-      <button
-        onClick={borrarTodoElContenido}
-        className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-        style={{ background: C.peligro, color: "#fff" }}
-      >
+      <Boton variante="peligro" onClick={borrarTodoElContenido}>
         <Trash2 size={14} /> BORRAR TODO
-      </button>
+      </Boton>
     </VentanaFlotante>
   );
 }

@@ -43,6 +43,7 @@ import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { InformeInvitados } from "../../components/InformeInvitados";
 import { revisarInvitados } from "../../lib/revisionInvitados";
+import { Boton } from "../../components/Boton";
 
 export function SeccionInvitados({
   data,
@@ -1215,15 +1216,9 @@ export function SeccionInvitados({
               anchor="bottom-left"
               opciones={opcionesMenuInvitados}
               render={({ ref, toggle }) => (
-                <button
-                  ref={ref}
-                  onClick={toggle}
-                  className="flex items-center justify-center gap-1 text-xs px-2 py-1 rounded"
-                  style={{ border: `1px solid ${C.gold}`, color: C.goldClaro }}
-                  title="Imprimir, canciones, alergias, añadir, editar o importar"
-                >
+                <Boton variante="secundario" tamano="pequeno" ref={ref} onClick={toggle} titulo="Imprimir, canciones, alergias, añadir, editar o importar">
                   <MoreHorizontal size={14} /> Acciones
-                </button>
+                </Boton>
               )}
             />
           </div>
@@ -1299,13 +1294,9 @@ export function SeccionInvitados({
               setNuevoInvitado({ ...nuevoInvitado, zona: e.target.value })
             }
           />
-          <button
-            onClick={agregarInvitado}
-            className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-            style={{ background: C.ink, color: C.paper }}
-          >
+          <Boton variante="principal" onClick={agregarInvitado}>
             <Plus size={14} /> Añadir
-          </button>
+          </Boton>
         </div>
         )}
 
@@ -1327,13 +1318,9 @@ export function SeccionInvitados({
               className="w-full mb-2"
               style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace" }}
             />
-            <button
-              onClick={importarInvitados}
-              className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
+            <Boton variante="principal" onClick={importarInvitados}>
               <Plus size={14} /> Importar filas
-            </button>
+            </Boton>
           </div>
         )}
 
@@ -1780,21 +1767,12 @@ export function SeccionInvitados({
             ))}
           </ul>
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={enviarAvisosAsignacion}
-              disabled={enviandoAvisosAsignacion}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ background: C.ink, color: C.paper }}
-            >
+            <Boton variante="principal" onClick={enviarAvisosAsignacion} disabled={enviandoAvisosAsignacion}>
               {enviandoAvisosAsignacion ? "Enviando…" : "Enviar avisos"}
-            </button>
-            <button
-              onClick={() => setMostrarResumenAsignacion(false)}
-              className="px-3 py-2 rounded text-sm font-medium"
-              style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-            >
+            </Boton>
+            <Boton variante="secundario" onClick={() => setMostrarResumenAsignacion(false)}>
               Seguir editando
-            </button>
+            </Boton>
             <button
               onClick={cancelarAvisosAsignacion}
               className="px-3 py-2 rounded text-sm font-medium"
@@ -1819,20 +1797,12 @@ export function SeccionInvitados({
           onCerrar={() => setPanelFlotante(null)}
           acciones={
             <>
-              <button
-                onClick={imprimirPanelActivo}
-                className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-                style={{ background: C.ink, color: C.paper }}
-              >
+              <Boton variante="principal" onClick={imprimirPanelActivo}>
                 <Printer size={14} /> Imprimir
-              </button>
-              <button
-                onClick={exportarPanelActivoCSV}
-                className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-                style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-              >
+              </Boton>
+              <Boton variante="secundario" onClick={exportarPanelActivoCSV}>
                 <Copy size={14} /> Exportar CSV
-              </button>
+              </Boton>
               <span className="text-xs ml-auto" style={{ color: C.charcoal, opacity: 0.6 }}>
                 Si no se abre el diálogo de impresión, usa Cmd/Ctrl+P.
               </span>
@@ -2044,13 +2014,9 @@ export function SeccionInvitados({
                 if (e.key === "Enter") anadirRolNuevo(invitadoRolAbierto);
               }}
             />
-            <button
-              onClick={() => anadirRolNuevo(invitadoRolAbierto)}
-              className="boton-3d px-3 py-1.5 rounded text-sm font-medium flex-shrink-0"
-              style={{ border: `1px solid ${C.line}`, color: C.ink }}
-            >
+            <Boton variante="secundario" onClick={() => anadirRolNuevo(invitadoRolAbierto)}>
               Añadir
-            </button>
+            </Boton>
           </div>
         </ModalFlotante>
       )}

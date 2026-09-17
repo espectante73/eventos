@@ -13,6 +13,7 @@ import { construirAsuntoAcuse, construirHtmlAcuse } from "../../lib/acuseRecogid
 import { generarPdfAcuse } from "../../lib/acuseImagen";
 import { TextInput } from "../../components/Formulario";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
+import { Boton } from "../../components/Boton";
 
 export function VentanaCuentas({ data, onCerrar }) {
   const {
@@ -284,14 +285,9 @@ export function VentanaCuentas({ data, onCerrar }) {
                       style={{ width: 90, textAlign: "right" }}
                     />
                     <span className="text-xs" style={{ color: C.charcoal }}>€</span>
-                    <button
-                      onClick={() => abrirPreviewConfirmar(c)}
-                      disabled={generandoPreview === c.id}
-                      className="px-3 py-1.5 rounded text-xs font-medium"
-                      style={{ background: C.ink, color: C.paper }}
-                    >
+                    <Boton variante="principal" tamano="pequeno" onClick={() => abrirPreviewConfirmar(c)} disabled={generandoPreview === c.id}>
                       {generandoPreview === c.id ? "Generando…" : "Revisar y confirmar"}
-                    </button>
+                    </Boton>
                     <button
                       onClick={() => setConfirmandoId(null)}
                       className="text-xs"
@@ -309,15 +305,9 @@ export function VentanaCuentas({ data, onCerrar }) {
                       ✓ Recogido {formato(c.dineroRecogidoImporte || 0)} € el{" "}
                       {formatearFecha(String(c.dineroRecogidoEn).slice(0, 10))}
                     </span>
-                    <button
-                      onClick={() => reenviarAcuse(c)}
-                      disabled={enviandoId === c.id || !c.email}
-                      title="Reenviar el acuse por email otra vez"
-                      className="flex items-center gap-1 text-xs px-2 py-1 rounded"
-                      style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-                    >
+                    <Boton variante="secundario" tamano="pequeno" onClick={() => reenviarAcuse(c)} disabled={enviandoId === c.id || !c.email} titulo="Reenviar el acuse por email otra vez">
                       <Mail size={13} /> {enviandoId === c.id ? "Enviando…" : "Reenviar acuse"}
-                    </button>
+                    </Boton>
                     <button
                       onClick={() => deshacerRecogidaColaborador(c.id)}
                       title="Deshacer (si se confirmó por error)" aria-label="Deshacer (si se confirmó por error)"
@@ -338,15 +328,9 @@ export function VentanaCuentas({ data, onCerrar }) {
                     >
                       Confirmar recogida
                     </button>
-                    <button
-                      onClick={() => abrirPreviewProbar(c)}
-                      disabled={generandoPreview === c.id || !c.email}
-                      title="Ver el acuse de prueba antes de enviarlo, sin confirmar ni registrar nada"
-                      className="flex items-center gap-1 text-xs px-2 py-1 rounded"
-                      style={{ border: `1px solid ${C.gold}`, color: C.gold }}
-                    >
+                    <Boton variante="secundario" tamano="pequeno" onClick={() => abrirPreviewProbar(c)} disabled={generandoPreview === c.id || !c.email} titulo="Ver el acuse de prueba antes de enviarlo, sin confirmar ni registrar nada">
                       <Mail size={13} /> {generandoPreview === c.id ? "Generando…" : "Probar acuse"}
-                    </button>
+                    </Boton>
                   </>
                 )}
               </div>
@@ -370,13 +354,9 @@ export function VentanaCuentas({ data, onCerrar }) {
       {mostrarListaGastos && (
       <>
       <div className="flex items-center justify-end mb-2">
-        <button
-          onClick={agregarGasto}
-          className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium"
-          style={{ background: C.ink, color: C.paper }}
-        >
+        <Boton variante="principal" onClick={agregarGasto}>
           <Plus size={14} /> Añadir gasto
-        </button>
+        </Boton>
       </div>
       <div className="space-y-2">
         {gastos.map((g) => (
@@ -459,25 +439,16 @@ export function VentanaCuentas({ data, onCerrar }) {
           style={{ width: "100%", height: 420, border: `1px solid ${C.line}` }}
         />
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={confirmarEnvioAcuse}
-            disabled={enviandoAcuse || !previewAcuse.colaborador.email}
-            className="px-3 py-2 rounded text-sm font-medium"
-            style={{ background: C.ink, color: C.paper }}
-          >
+          <Boton variante="principal" onClick={confirmarEnvioAcuse} disabled={enviandoAcuse || !previewAcuse.colaborador.email}>
             {enviandoAcuse
               ? "Enviando…"
               : previewAcuse.tipo === "confirmar"
               ? "Aceptar y confirmar"
               : "Aceptar y enviar"}
-          </button>
-          <button
-            onClick={() => setPreviewAcuse(null)}
-            className="px-3 py-2 rounded text-sm font-medium"
-            style={{ border: `1px solid ${C.line}`, color: C.charcoal }}
-          >
+          </Boton>
+          <Boton variante="secundario" onClick={() => setPreviewAcuse(null)}>
             Cancelar
-          </button>
+          </Boton>
         </div>
       </ModalFlotante>
     )}

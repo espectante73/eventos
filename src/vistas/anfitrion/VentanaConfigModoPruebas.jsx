@@ -11,6 +11,7 @@ import { C } from "../../theme";
 import { exportarTodo } from "../../lib/backup";
 import { descargarJSON } from "../../lib/descargas";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { Boton } from "../../components/Boton";
 
 export function VentanaConfigModoPruebas({ data, onCerrar }) {
   const {
@@ -88,14 +89,9 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
             seguridad del estado actual, por si hace falta recuperar algo a mano.
           </p>
         </div>
-        <button
-          onClick={desactivar}
-          disabled={ejecutando}
-          className="px-4 py-2 rounded text-sm font-semibold"
-          style={{ background: C.wax, color: "#fff" }}
-        >
+        <Boton variante="peligro" onClick={desactivar} disabled={ejecutando}>
           {ejecutando ? "Restaurando…" : "Desactivar y restaurar todo"}
-        </button>
+        </Boton>
       </VentanaFlotante>
     );
   }
@@ -160,14 +156,9 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
         )}
       </div>
       <div className="flex justify-end">
-        <button
-          onClick={activar}
-          disabled={ejecutando}
-          className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold"
-          style={{ background: C.wax, color: "#fff" }}
-        >
+        <Boton variante="peligro" onClick={activar} disabled={ejecutando}>
           <FlaskConical size={16} /> Activar Modo Pruebas
-        </button>
+        </Boton>
       </div>
     </VentanaFlotante>
   );
