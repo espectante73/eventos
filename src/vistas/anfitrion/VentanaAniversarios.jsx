@@ -161,7 +161,10 @@ export function VentanaAniversarios({ data, onCerrar }) {
               {/* Una sola línea por fila, como el resto de tablas de la app:
                   si no cabe se recorta, nunca se parte en dos. */}
               <div className="text-sm whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: C.ink }}>
-                <b>{m.familia}</b> — {m.esposo.nombre}
+                {/* Los dos nombres, no solo el del cabeza de familia: a
+                    petición del usuario, 2026-09-17 ("Benito y Meritxell").
+                    Sigue siendo una sola línea -- si no cabe, se recorta. */}
+                <b>{m.familia}</b> — {m.esposo.nombre} y {m.esposa.nombre}
               </div>
               <div className="text-xs whitespace-nowrap" style={{ color: C.charcoal, opacity: 0.7 }}>
                 {m.anioBoda || "sin año"}

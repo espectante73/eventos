@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "30.2",
+    cambios: [
+      "En Aniversarios, cada fila enseña los dos nombres del matrimonio y no solo el del cabeza de familia: \"Ruiz — Benito y Meritxell\".",
+    ],
+  },
+  {
     version: "30.1",
     cambios: [
       "El mapa del sitio pasa de fondo verde oscuro a fondo champán, el mismo de las ventanas de la app. Cada sección es ahora una pastilla blanca con su contorno, así que se leen como botones y no como renglones de una lista.",
