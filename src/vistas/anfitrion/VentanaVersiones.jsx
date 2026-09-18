@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "34.10",
+    cambios: [
+      "Mi cuenta, todavía más estrecha: en el móvil ya no ocupa casi toda la pantalla. Lo de dentro —una contraseña, un email y los botones— cabe de sobra.",
+    ],
+  },
+  {
     version: "34.9",
     cambios: [
       "Los botones de Mi cuenta, más estrechos: miden lo mismo que las filas del menú \"Abrir sección…\", y los rótulos se abrevian para caber (\"Código app\", \"Errores app\", \"Cambiar clave\").",

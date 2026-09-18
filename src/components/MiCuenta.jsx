@@ -129,7 +129,11 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
         <ModalFlotante
           titulo="Mi cuenta"
           onCerrar={cerrar}
-          ancho={400}
+          // 300 (antes 400): en el móvil la ventana ocupaba casi toda la
+          // pantalla y lo de dentro -- una contraseña, un email y unos
+          // botones de 146px -- cabe de sobra en menos (usuario, captura
+          // del 2026-09-18).
+          ancho={300}
           // La explicación del email de acceso va en el PIE y plegada, a
           // petición del usuario (2026-09-18): en medio del formulario
           // rompía la línea de los botones, y solo le interesa a quien vaya
@@ -239,7 +243,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
             <input
               type="password"
               autoComplete="new-password"
-              placeholder="Nueva contraseña (mín. 8 caracteres)"
+              placeholder="Mínimo 8 caracteres"
               value={nuevaContrasena}
               onChange={(e) => setNuevaContrasena(e.target.value)}
               className="w-full mb-2"

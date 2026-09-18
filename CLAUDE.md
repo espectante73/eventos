@@ -1744,7 +1744,10 @@ solo hay una contraseña de 8-12 caracteres y un email de unos 20; no
 necesita una ventana grande. Del ancho de un móvil en vertical, **también
 en el ordenador**.
 
-Aplicado en Mi cuenta (`ModalFlotante ancho={400}`). Al construir o
+Aplicado en Mi cuenta: primero `ancho={400}`, y tras ver una captura del
+móvil el usuario la quiso aún más estrecha -- quedó en `ancho={300}`, con
+el texto de ayuda de la contraseña acortado a "Mínimo 8 caracteres" para
+que quepa (el título de la sección ya dice qué es). Al construir o
 revisar cualquier ventana, empezar por preguntarse cuánto ocupa de verdad
 lo de dentro. `ModalFlotante` acepta `ancho` para esto (720 por defecto).
 
