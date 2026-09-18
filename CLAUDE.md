@@ -1719,6 +1719,24 @@ se repone al desactivar.
 **Regla que se lleva de aquí**: al crear una tabla nueva, mirar si tiene
 que entrar en la foto del Modo Pruebas. Nadie lo hizo en su día.
 
+## Permiso "Ver el código de la app" (2026-09-18, v34.2)
+
+El usuario quería que el desarrollador que revisa la app encontrara el
+enlace a GitHub DENTRO de ella, en vez de mandárselo por WhatsApp. Se dio
+de alta como colaborador y se le marca este permiso: aparece "Código de
+la app" en Mi cuenta. `URL_REPOSITORIO` vive en `constants.js`.
+
+⚠️ Mismo caso que `mapa_sitio_ver`: **solo de pantalla**. El repositorio
+es público, así que el permiso decide quién ve el enlace, no quién entra.
+Se le dijo al usuario antes de construirlo. Si el repo pasa a privado,
+habrá que invitar al desarrollador también desde GitHub.
+
+Antes de llegar aquí se le desaconsejó darle acceso a la app con datos
+reales: como colaborador no vería nada útil, y como anfitrión vería las
+alergias, emails y pagos de 140 personas. Se le propuso, si quiere que vea
+la app funcionando, una copia con datos inventados (que además serviría de
+prueba de restauración del esquema) o una videollamada.
+
 ## Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
 
 Medido con los source maps: casi la mitad del archivo principal era

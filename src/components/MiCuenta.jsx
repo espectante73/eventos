@@ -18,13 +18,14 @@
 // pierda visibilidad de este cambio, queda constancia visible en la
 // ventana Colaboradores hasta que la confirme.
 import { useState } from "react";
-import { UserCog, LogOut, Megaphone, Map } from "lucide-react";
+import { UserCog, LogOut, Megaphone, Map, Code2 } from "lucide-react";
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
 import { Boton } from "./Boton";
 import { ModalMapaSitio } from "./MapaSitio";
+import { URL_REPOSITORIO } from "../constants";
 
 // `onCerrarSesion`/`enlaceTablon`: antes eran botones sueltos junto a
 // este en la cabecera de Portada.jsx -- a petición del usuario,
@@ -33,7 +34,7 @@ import { ModalMapaSitio } from "./MapaSitio";
 // `mostrarMapaSitio`: solo lo pasa VistaAnfitrion.jsx. El mapa dibuja el
 // menú del anfitrión, así que a un colaborador no le dice nada -- mismo
 // criterio que `abrirNovedades` en Portada.jsx.
-export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio }) {
+export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarRepositorio }) {
   const [abierta, setAbierta] = useState(false);
   const [mapaAbierto, setMapaAbierto] = useState(false);
   const [nuevaContrasena, setNuevaContrasena] = useState("");
@@ -111,7 +112,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio }) {
               este modal -- filosofía de la app: todo lo más compacto
               posible para móvil, cada fila a su ancho justo, no
               estiradas a lo ancho con flex:1. */}
-          {(onCerrarSesion || enlaceTablon || mostrarMapaSitio) && (
+          {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarRepositorio) && (
             <div className="flex flex-col items-start gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
               {onCerrarSesion && (
                 <button
@@ -145,6 +146,20 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio }) {
                 >
                   <Map size={15} /> Mapa del sitio
                 </button>
+              )}
+              {/* Enlace al código, para el desarrollador que revisa la app
+                  (permiso "Ver el código de la app"). En pestaña nueva a
+                  propósito: es una web externa, no una parte de esta. */}
+              {mostrarRepositorio && (
+                <a
+                  href={URL_REPOSITORIO}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="boton-3d boton-flotante-imagen flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
+                  title="Abre el código de la aplicación en GitHub"
+                >
+                  <Code2 size={15} /> Código de la app
+                </a>
               )}
             </div>
           )}

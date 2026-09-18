@@ -67,6 +67,8 @@ export function Portada({
   // marcado el permiso "Ver el mapa del sitio" (lib/permisos.js).
   // Portada no lo decide, se lo dan hecho -- igual que enlaceTablon.
   mostrarMapaSitio,
+  // Igual que mostrarMapaSitio: Portada no decide, recibe el booleano.
+  mostrarRepositorio,
   // Enlace COMPLETO al tablón público (?tablon=...), ya calculado por
   // quien monta Portada (VistaAnfitrion.jsx / VistaColaborador.jsx) a
   // partir de data.tokenTablon -- Portada no sabe nada de cómo se
@@ -165,7 +167,12 @@ export function Portada({
             VistaColaborador.jsx (Fase C, 2026-08-21). */}
         {onCerrarSesion && (
           <div className="absolute top-4 right-4">
-            <MiCuenta onCerrarSesion={onCerrarSesion} enlaceTablon={enlaceTablon} mostrarMapaSitio={mostrarMapaSitio} />
+            <MiCuenta
+              onCerrarSesion={onCerrarSesion}
+              enlaceTablon={enlaceTablon}
+              mostrarMapaSitio={mostrarMapaSitio}
+              mostrarRepositorio={mostrarRepositorio}
+            />
           </div>
         )}
 

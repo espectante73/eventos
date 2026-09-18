@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "34.2",
+    cambios: [
+      "Nuevo permiso \"Ver el código de la app\": a quien se lo marques le aparece en Mi cuenta un enlace al código en GitHub. Pensado para el desarrollador que revisa la app: lo encuentra ahí dentro sin tener que mandárselo por otro lado.",
+      "Ojo: el código está publicado, así que el permiso decide quién ve el enlace, no quién puede entrar.",
+    ],
+  },
+  {
     version: "34.1",
     cambios: [
       "La app pesa casi tres veces menos al abrirla: lo primero que se descarga baja de 1,2 MB a 443 KB. Quien más lo nota es el invitado que abre el tablón desde el móvil.",

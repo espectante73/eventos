@@ -22,6 +22,11 @@ export const PERMISOS = {
   // que comprobar en la base de datos -- por eso este permiso no aparece
   // en schema.sql, a diferencia de los tres de arriba.
   MAPA_SITIO_VER: "mapa_sitio_ver",
+  // Enseña en "Mi cuenta" el enlace al código en GitHub, para que el
+  // desarrollador que revisa la app lo encuentre ahí dentro sin que haya
+  // que mandárselo por otro lado (usuario, 2026-09-18). Igual que el del
+  // mapa: solo de pantalla, sin nada que comprobar en la base.
+  REPOSITORIO_VER: "repositorio_ver",
 };
 
 // Etiquetas legibles, para VentanaPermisos.jsx -- un objeto en vez de un
@@ -32,6 +37,7 @@ export const ETIQUETAS_PERMISOS = {
   [PERMISOS.DATOS_EVENTO_EDITAR]: "Editar los datos del evento (textos de email incluidos)",
   [PERMISOS.INVITACIONES_ENVIAR]: "Enviar invitaciones (solo confirmados y pagados)",
   [PERMISOS.MAPA_SITIO_VER]: "Ver el mapa del sitio (dónde está cada cosa en la app)",
+  [PERMISOS.REPOSITORIO_VER]: "Ver el código de la app (enlace a GitHub)",
 };
 
 export function tienePermiso(colaborador, clave) {
