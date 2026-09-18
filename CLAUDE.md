@@ -1719,6 +1719,23 @@ se repone al desactivar.
 **Regla que se lleva de aquí**: al crear una tabla nueva, mirar si tiene
 que entrar en la foto del Modo Pruebas. Nadie lo hizo en su día.
 
+## Regla de la app: todo al alcance del pulgar DERECHO
+
+Recordado por el usuario el 2026-09-18 ("habíamos dicho que todo se
+manejaría con el pulgar derecho"). Ya estaba aplicado en muchos sitios
+--el botón "Abrir sección…" de la Portada, el Modo Pruebas, los accesos
+del formulario del colaborador-- pero no escrito como regla general.
+
+**Los botones y accesos van a la DERECHA de la ventana.** Si tienen que
+medir todos lo mismo, ancho fijo común y alineados a la derecha, no a lo
+ancho con el texto centrado ni a la izquierda. Aplicado en Mi cuenta en la
+v34.7 (`w-60` + `items-end`), después de que en la v34.5-34.6 quedaran a
+lo ancho o a la izquierda.
+
+Al construir o revisar una ventana: comprobar esta regla junto con la de
+"lo más pequeña posible" y la de "estandarizar con el estilo que ya
+existe".
+
 ## Regla de la app: ventanas lo más pequeñas posible (2026-09-18)
 
 Pedido explícito del usuario, "tomamos nota de esto": **una ventana mide

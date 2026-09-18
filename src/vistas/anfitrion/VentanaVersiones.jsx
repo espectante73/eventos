@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "34.7",
+    cambios: [
+      "Los botones de Mi cuenta van ahora a la derecha de la ventana, todos del mismo ancho: la app se maneja con el pulgar derecho.",
+    ],
+  },
+  {
     version: "34.6",
     cambios: [
       "Todos los botones de Mi cuenta vuelven al estilo de inicio —la pastilla verde con letra dorada de la portada— y miden todos lo mismo, incluidos \"Cambiar contraseña\" y \"Cambiar email\".",

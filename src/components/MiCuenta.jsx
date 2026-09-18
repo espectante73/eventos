@@ -42,8 +42,12 @@ import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
 // botones de los formularios se quedaron a la medida de su texto. El
 // usuario lo había pedido con el estilo de inicio y todos iguales. Esta es
 // la versión que pidió.
+//
+// Y a la DERECHA de la ventana: la app se maneja con el pulgar derecho
+// (regla del usuario, ver CLAUDE.md). Por eso no van a lo ancho, sino con
+// un ancho fijo común (w-60) y alineados a la derecha.
 const CLASE_BOTON_INICIO =
-  "boton-3d boton-flotante-imagen w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium";
+  "boton-3d boton-flotante-imagen w-60 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium";
 
 export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarRepositorio, mostrarErrores }) {
   const [abierta, setAbierta] = useState(false);
@@ -129,7 +133,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               ventana ya es estrecha, del ancho de un móvil, siguen siendo
               compactos. */}
           {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarRepositorio || mostrarErrores) && (
-            <div className="flex flex-col gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
+            <div className="flex flex-col items-end gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
               {onCerrarSesion && (
                 <button
                   onClick={onCerrarSesion}
@@ -216,9 +220,11 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                 {avisoContrasena.texto}
               </p>
             )}
+            <div className="flex justify-end">
             <button type="submit" disabled={guardandoContrasena} className={CLASE_BOTON_INICIO} style={{ opacity: guardandoContrasena ? 0.6 : 1 }}>
               {guardandoContrasena ? "Guardando…" : "Cambiar contraseña"}
             </button>
+            </div>
           </form>
 
           <form onSubmit={cambiarEmail} className="pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
@@ -247,9 +253,11 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                 {avisoEmail.texto}
               </p>
             )}
+            <div className="flex justify-end">
             <button type="submit" disabled={guardandoEmail} className={CLASE_BOTON_INICIO} style={{ opacity: guardandoEmail ? 0.6 : 1 }}>
               {guardandoEmail ? "Guardando…" : "Cambiar email"}
             </button>
+            </div>
           </form>
         </ModalFlotante>
       )}
