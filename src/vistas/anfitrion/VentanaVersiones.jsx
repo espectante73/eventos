@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "34.3",
+    cambios: [
+      "Registro de errores: si a alguien le falla algo en la app, el fallo llega solo a Sentry, con la pantalla, el aparato y lo que pasó. Antes no quedaba rastro salvo que te lo contaran.",
+      "Los avisos no llevan datos de los invitados: ni nombres, ni emails, ni la llave del tablón. Solo el error técnico.",
+    ],
+  },
+  {
     version: "34.2",
     cambios: [
       "Nuevo permiso \"Ver el código de la app\": a quien se lo marques le aparece en Mi cuenta un enlace al código en GitHub. Pensado para el desarrollador que revisa la app: lo encuentra ahí dentro sin tener que mandárselo por otro lado.",

@@ -5,6 +5,7 @@
 import React from "react";
 import { C } from "../theme";
 import { Boton } from "./Boton";
+import { informarError } from "../lib/registroErrores";
 
 // Un Error Boundary tiene que ser una clase (React todavía no ofrece el
 // equivalente con hooks) — es el único mecanismo que puede capturar un
@@ -31,6 +32,10 @@ export class ErrorBoundary extends React.Component {
   componentDidCatch(error, info) {
     // eslint-disable-next-line no-console
     console.error("Error inesperado capturado por ErrorBoundary:", error, info);
+    // Y se avisa al registro de errores: sin esto, un fallo atrapado aquí
+    // se quedaba en la pantalla de quien lo sufría (2026-09-18). Solo va
+    // la pila de componentes, ningún dato de la app.
+    informarError(error, { pilaComponentes: info?.componentStack });
   }
 
   reintentar = () => this.setState({ error: null });

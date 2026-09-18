@@ -203,10 +203,13 @@ excluyen del volcado a propósito). Requiere el secreto de repositorio
   Storage, con descarga en un solo ZIP para montarlas en la plantilla.
 - ✅ Lint, pruebas y build se ejecutan solos en cada subida
   (`.github/workflows/pruebas.yml`).
+- ✅ Carga por trozos: lo que se descarga al abrir bajó de 1,2 MB a
+  ~530 KB; el PDF, Versiones y las vistas grandes llegan cuando se usan.
+- ✅ Registro de errores con Sentry (región UE), sin datos personales:
+  ver `src/lib/registroErrores.js`.
 - ⏳ Pendiente (ver `CLAUDE.md` para el detalle):
   - probar una restauración real del volcado diario en un proyecto
     vacío -- un backup sin restauración probada no es un backup;
-  - partir el paquete de la web (hoy son 1,2 MB en un solo archivo);
   - ampliar las pruebas al flujo de login.
 
 ## Licencia

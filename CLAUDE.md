@@ -1719,6 +1719,34 @@ se repone al desactivar.
 **Regla que se lleva de aquí**: al crear una tabla nueva, mirar si tiene
 que entrar en la foto del Modo Pruebas. Nadie lo hizo en su día.
 
+## Registro de errores con Sentry (2026-09-18, v34.3)
+
+Antes, un fallo en el móvil de un colaborador no dejaba rastro. Ahora
+llega a Sentry (cuenta del usuario, región **EU/Alemania** -- `.de.` en la
+dirección). `lib/registroErrores.js` lo inicia desde `main.jsx`, lo
+primero, y el `ErrorBoundary` informa de lo que atrapa.
+
+La dirección (DSN) va en `VITE_SENTRY_DSN`, guardada en Vercel para
+production/preview/development con la CLI (`vercel env add ... --value
+... --no-sensitive --yes`; esta versión de la CLI no acepta el valor por
+stdin) y en `.env` local. No es secreta: solo sirve para enviar. Sin ella
+la app funciona igual y no avisa.
+
+⚠️ **Privacidad, decidido con el usuario**: los avisos no llevan datos de
+invitados. `sendDefaultPii: false`, sin rendimiento ni grabación de
+sesión, fuera las migas de consola, y `limpiarEvento` quita el usuario,
+cabeceras, cookies, cuerpo y **todas las consultas de las URLs** -- el
+enlace del tablón lleva la llave en `?tablon=...` y sin eso viajaría en
+cada informe. Probado en `registroErrores.test.js`; no quitar esas
+pruebas.
+
+Coste: +31 KB comprimidos al abrir (de 125 a 156). Se aceptó: sigue
+siendo más de dos veces más ligera que antes de trocear.
+
+Comprobado enviando un evento de prueba a la dirección con `curl`:
+Sentry lo aceptó. Aparece en el panel como "Prueba de conexión…", con
+entorno "prueba"; se puede borrar.
+
 ## Permiso "Ver el código de la app" (2026-09-18, v34.2)
 
 El usuario quería que el desarrollador que revisa la app encontrara el
