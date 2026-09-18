@@ -18,7 +18,6 @@
 // es exactamente el tamaño final. El anfitrión confirmó que cada acuse
 // lleva como mucho 12-14 invitados, así que el diseño da por hecho ese
 // máximo (sitio de sobra) en vez de recalcular alturas dinámicas.
-import { jsPDF } from "jspdf";
 import { formatearFecha } from "./formato";
 
 const formatoEuro = (n) =>
@@ -250,6 +249,11 @@ export async function generarPdfAcuse({ evento, colaborador, items, total, fecha
   const canvas = dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO });
   const imagenPng = canvas.toDataURL("image/png");
 
+  // jsPDF (con sus piezas de compresión) era casi la mitad de la app y se
+  // descargaba SIEMPRE, también en el móvil de cada invitado que abre el
+  // tablón. Solo hace falta aquí, al generar un acuse: se trae en este
+  // momento (2026-09-18).
+  const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   pdf.addImage(imagenPng, "PNG", 0, 0, PAGINA_ANCHO, PAGINA_ALTO);
   return pdf.output("datauristring"); // "data:application/pdf;base64,...."

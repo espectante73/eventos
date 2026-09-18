@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { LogOut } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase, supabaseConfigurado } from "./supabaseClient";
 import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl } from "./lib/url";
 import { C } from "./theme";
-import { VistaAnfitrion } from "./vistas/VistaAnfitrion";
-import { VistaColaborador } from "./vistas/VistaColaborador";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
 import { VistaTablon } from "./vistas/VistaTablon";
+
+// Las dos vistas grandes se descargan solo cuando hacen falta (2026-09-18).
+// El que más lo nota es el invitado que abre el tablón desde el móvil: ya
+// no se baja la app entera del anfitrión para leer las novedades.
+// ⚠️ La ventana de Música NO se trocea aparte a propósito: se abre en el
+// local, con un wifi desconocido, y no puede quedarse descargando delante
+// de todo el mundo. Va dentro de VistaAnfitrion, que carga al entrar.
+const VistaAnfitrion = lazy(() => import("./vistas/VistaAnfitrion").then((m) => ({ default: m.VistaAnfitrion })));
+const VistaColaborador = lazy(() => import("./vistas/VistaColaborador").then((m) => ({ default: m.VistaColaborador })));
 
 // ---------- Red de seguridad ante errores inesperados ----------
 
@@ -410,6 +417,7 @@ export default function App() {
             podía mostrar era "rol no encontrado" -- caso ahora cubierto
             arriba con la pantalla dedicada "No tienes acceso", antes de
             llegar siquiera a este punto del render. */}
+        <Suspense fallback={<PantallaCargando />}>
         {data.esAnfitrion && !vistaPrevia ? (
           <VistaAnfitrion
             data={data}
@@ -445,7 +453,21 @@ export default function App() {
             , o pide al anfitrión que te vincule una si aún no tienes.
           </p>
         )}
+        </Suspense>
       </div>
+    </div>
+  );
+}
+
+// La misma pantalla de carga de siempre, ahora también mientras llega el
+// trozo de la vista (anfitrión o colaborador) que se descarga a demanda.
+function PantallaCargando() {
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: C.paper, color: C.ink, fontFamily: "'Fraunces', serif" }}
+    >
+      Abriendo el libro de invitados…
     </div>
   );
 }

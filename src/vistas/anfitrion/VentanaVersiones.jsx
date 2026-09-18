@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "34.1",
+    cambios: [
+      "La app pesa casi tres veces menos al abrirla: lo primero que se descarga baja de 1,2 MB a 443 KB. Quien más lo nota es el invitado que abre el tablón desde el móvil.",
+      "Lo que casi nunca se usa —el generador de PDF de los acuses o este historial— se descarga ahora solo cuando lo abres.",
+      "La ventana de Música se queda siempre cargada a propósito: en el local no puede quedarse esperando al wifi.",
+    ],
+  },
+  {
     version: "34",
     cambios: [
       "Deshacer de verdad. Antes de un reinicio, del borrado total o de salir del Modo Pruebas, la app guarda una copia EN EL SERVIDOR y aparece un botón \"Deshacer\" con la hora.",

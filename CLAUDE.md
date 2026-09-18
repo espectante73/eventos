@@ -1719,6 +1719,32 @@ se repone al desactivar.
 **Regla que se lleva de aquí**: al crear una tabla nueva, mirar si tiene
 que entrar en la foto del Modo Pruebas. Nadie lo hizo en su día.
 
+## Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
+
+Medido con los source maps: casi la mitad del archivo principal era
+**jsPDF** con sus piezas de compresión (pako, fflate, fast-png), que solo
+se usa al generar un acuse en Cuentas. Detrás, el texto de Versiones y
+las vistas de anfitrión y colaborador, que el invitado del tablón no
+necesita para nada.
+
+- `acuseImagen.js`: `await import("jspdf")` dentro de `generarPdfAcuse`.
+- `App.jsx`: `VistaAnfitrion` y `VistaColaborador` con `React.lazy`, bajo
+  un `Suspense` que enseña la pantalla de carga de siempre.
+- `VistaAnfitrion.jsx`: `VentanaVersiones` con `lazy`.
+
+Resultado: el trozo inicial pasa de 1.196 KB (362 comprimido) a 443 KB
+(125 comprimido). El resto llega cuando se usa.
+
+⚠️ **La ventana de Música NO se trocea, a propósito**: se abre en el
+local con un wifi desconocido y no puede quedarse descargando delante de
+los invitados. Va dentro de VistaAnfitrion, que carga al entrar. Si
+alguien propone "optimizarla", este es el motivo para no hacerlo.
+
+⚠️ **Efecto secundario cubierto**: tras un despliegue, una pestaña
+abierta de antes pide trozos con nombres que ya no existen. `main.jsx`
+escucha `vite:preloadError` y recarga UNA vez (marca en sessionStorage
+para no entrar en bucle si el fallo es otro, como estar sin conexión).
+
 ## Dónde lo dejamos (2026-09-17, fin de sesión)
 
 **Hecho y desplegado**: v31 a v34. El SQL del deshacer está ejecutado y

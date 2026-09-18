@@ -4,7 +4,7 @@
 // 2026-08-08 (ver CLAUDE.md) — sigue siendo un único componente grande;
 // dividir su interior es un cambio aparte, deliberadamente pospuesto (ver
 // CLAUDE.md, Fase 4).
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { X } from "lucide-react";
 import { construirEnlaceTablon } from "../lib/url";
 import { usePopupWindow } from "../lib/usePopupWindow";
@@ -12,7 +12,6 @@ import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { C } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
-import { VentanaVersiones } from "./anfitrion/VentanaVersiones";
 import { VentanaAniversarios } from "./anfitrion/VentanaAniversarios";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaPermisos } from "./anfitrion/VentanaPermisos";
@@ -31,6 +30,12 @@ import { VentanaCuentas } from "./anfitrion/VentanaCuentas";
 import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 import { Boton } from "../components/Boton";
+
+// Versiones es casi todo texto (el historial de cambios) y es de lo que
+// menos se abre: se descarga al pulsarla, no al entrar (2026-09-18).
+const VentanaVersiones = lazy(() =>
+  import("./anfitrion/VentanaVersiones").then((m) => ({ default: m.VentanaVersiones }))
+);
 
 export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion }) {
   const { evento, colaboradores, invitados, persistInvitados, tokenTablon } = data;
@@ -398,7 +403,9 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
 
       {/* Versiones */}
       {abierto.versiones && (
-        <VentanaVersiones onCerrar={() => toggle("versiones")} />
+        <Suspense fallback={null}>
+          <VentanaVersiones onCerrar={() => toggle("versiones")} />
+        </Suspense>
       )}
 
       {previewInvitacion && (
