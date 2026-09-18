@@ -1747,6 +1747,17 @@ Comprobado enviando un evento de prueba a la dirección con `curl`:
 Sentry lo aceptó. Aparece en el panel como "Prueba de conexión…", con
 entorno "prueba"; se puede borrar.
 
+⚠️ **Ese evento de prueba mostró la IP del usuario** (85.86.x.x): Sentry
+la deduce EN SU SERVIDOR de la conexión entrante, aunque el evento no la
+traiga. `sendDefaultPii: false` no basta para eso. Hay que activar en el
+panel de Sentry: proyecto → Settings → **Security & Privacy** → "Prevent
+Storing of IP Addresses". Se le pidió al usuario el 2026-09-18; confirmar
+que lo hizo.
+
+v34.4: enlace "Errores de la app" en Mi cuenta, solo anfitrión
+(`URL_REGISTRO_ERRORES` en constants.js). Pintar los errores DENTRO de la
+app no se hace: exigiría una clave secreta de Sentry en el navegador.
+
 ## Permiso "Ver el código de la app" (2026-09-18, v34.2)
 
 El usuario quería que el desarrollador que revisa la app encontrara el

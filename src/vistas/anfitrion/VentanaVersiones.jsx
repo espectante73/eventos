@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "34.4",
+    cambios: [
+      "En Mi cuenta hay un botón nuevo, \"Errores de la app\", que abre directamente el panel donde se ven los fallos. Solo lo ve el anfitrión.",
+    ],
+  },
+  {
     version: "34.3",
     cambios: [
       "Registro de errores: si a alguien le falla algo en la app, el fallo llega solo a Sentry, con la pantalla, el aparato y lo que pasó. Antes no quedaba rastro salvo que te lo contaran.",

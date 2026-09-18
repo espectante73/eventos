@@ -69,6 +69,8 @@ export function Portada({
   mostrarMapaSitio,
   // Igual que mostrarMapaSitio: Portada no decide, recibe el booleano.
   mostrarRepositorio,
+  // Solo lo pasa VistaAnfitrion: el panel de errores es cosa del anfitrión.
+  mostrarErrores,
   // Enlace COMPLETO al tablón público (?tablon=...), ya calculado por
   // quien monta Portada (VistaAnfitrion.jsx / VistaColaborador.jsx) a
   // partir de data.tokenTablon -- Portada no sabe nada de cómo se
@@ -172,6 +174,7 @@ export function Portada({
               enlaceTablon={enlaceTablon}
               mostrarMapaSitio={mostrarMapaSitio}
               mostrarRepositorio={mostrarRepositorio}
+              mostrarErrores={mostrarErrores}
             />
           </div>
         )}

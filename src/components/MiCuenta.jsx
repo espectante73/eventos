@@ -18,14 +18,14 @@
 // pierda visibilidad de este cambio, queda constancia visible en la
 // ventana Colaboradores hasta que la confirme.
 import { useState } from "react";
-import { UserCog, LogOut, Megaphone, Map, Code2 } from "lucide-react";
+import { UserCog, LogOut, Megaphone, Map, Code2, Bug } from "lucide-react";
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
 import { Boton } from "./Boton";
 import { ModalMapaSitio } from "./MapaSitio";
-import { URL_REPOSITORIO } from "../constants";
+import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
 
 // `onCerrarSesion`/`enlaceTablon`: antes eran botones sueltos junto a
 // este en la cabecera de Portada.jsx -- a petición del usuario,
@@ -34,7 +34,7 @@ import { URL_REPOSITORIO } from "../constants";
 // `mostrarMapaSitio`: solo lo pasa VistaAnfitrion.jsx. El mapa dibuja el
 // menú del anfitrión, así que a un colaborador no le dice nada -- mismo
 // criterio que `abrirNovedades` en Portada.jsx.
-export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarRepositorio }) {
+export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarRepositorio, mostrarErrores }) {
   const [abierta, setAbierta] = useState(false);
   const [mapaAbierto, setMapaAbierto] = useState(false);
   const [nuevaContrasena, setNuevaContrasena] = useState("");
@@ -112,7 +112,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               este modal -- filosofía de la app: todo lo más compacto
               posible para móvil, cada fila a su ancho justo, no
               estiradas a lo ancho con flex:1. */}
-          {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarRepositorio) && (
+          {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarRepositorio || mostrarErrores) && (
             <div className="flex flex-col items-start gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
               {onCerrarSesion && (
                 <button
@@ -159,6 +159,22 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   title="Abre el código de la aplicación en GitHub"
                 >
                   <Code2 size={15} /> Código de la app
+                </a>
+              )}
+              {/* Los fallos que ha tenido la app, en Sentry. Solo para el
+                  anfitrión (2026-09-18): el usuario pidió verlos "desde la
+                  app". Dentro de la app no se pueden pintar -- haría falta
+                  una clave secreta de Sentry en el navegador --, así que es
+                  un enlace directo al panel. */}
+              {mostrarErrores && (
+                <a
+                  href={URL_REGISTRO_ERRORES}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="boton-3d boton-flotante-imagen flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
+                  title="Ver los errores que ha tenido la app (Sentry)"
+                >
+                  <Bug size={15} /> Errores de la app
                 </a>
               )}
             </div>
