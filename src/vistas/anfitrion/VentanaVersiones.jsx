@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "34.6",
+    cambios: [
+      "Todos los botones de Mi cuenta vuelven al estilo de inicio —la pastilla verde con letra dorada de la portada— y miden todos lo mismo, incluidos \"Cambiar contraseña\" y \"Cambiar email\".",
+    ],
+  },
+  {
     version: "34.5",
     cambios: [
       "Mi cuenta es ahora una ventana estrecha, del ancho de un móvil, también en el ordenador: solo tiene una contraseña, un email y unos pocos accesos.",

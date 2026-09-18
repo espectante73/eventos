@@ -23,7 +23,6 @@ import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
-import { Boton, estilosBoton } from "./Boton";
 import { ModalMapaSitio } from "./MapaSitio";
 import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
 
@@ -34,17 +33,17 @@ import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
 // `mostrarMapaSitio`: solo lo pasa VistaAnfitrion.jsx. El mapa dibuja el
 // menú del anfitrión, así que a un colaborador no le dice nada -- mismo
 // criterio que `abrirNovedades` en Portada.jsx.
-// Los accesos de Mi cuenta (Cerrar sesión, Novedades, Mapa, Código,
-// Errores): TODOS con la misma receta -- la pieza común de botones en su
-// variante secundaria, a lo ancho de la ventana y con el icono a la
-// izquierda. Antes cada uno medía lo que su texto, y al ir sumando accesos
-// se perdía la línea (usuario, 2026-09-18). Van por estilosBoton y no por
-// <Boton> porque tres de ellos son enlaces <a>, no botones.
-const ESTILO_ACCESO = {
-  ...estilosBoton("secundario", "normal"),
-  width: "100%",
-  justifyContent: "flex-start",
-};
+// TODOS los botones de Mi cuenta con el estilo de INICIO -- la pastilla
+// verde con letra y contorno dorados de "Abrir sección…" y "Mi cuenta" en
+// la portada -- y el MISMO ancho, a lo ancho de la ventana.
+//
+// ⚠️ Corrección del 2026-09-18: en la v34.5 se pasaron a la variante
+// secundaria (cuadrada, solo contorno) por decisión propia, y los dos
+// botones de los formularios se quedaron a la medida de su texto. El
+// usuario lo había pedido con el estilo de inicio y todos iguales. Esta es
+// la versión que pidió.
+const CLASE_BOTON_INICIO =
+  "boton-3d boton-flotante-imagen w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium";
 
 export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarRepositorio, mostrarErrores }) {
   const [abierta, setAbierta] = useState(false);
@@ -125,16 +124,16 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               ⚠️ Cambio de criterio el 2026-09-18: antes cada acceso medía
               lo que su texto ("a su ancho justo"). Con cinco accesos eso
               dejaba una escalera de anchos distintos, y el usuario pidió
-              que fueran iguales. Ahora todos van a lo ancho de la ventana
-              (ESTILO_ACCESO) -- y como la ventana ya es estrecha, del
-              ancho de un móvil, siguen siendo compactos. */}
+              que fueran iguales y con el estilo de inicio: todos van con
+              CLASE_BOTON_INICIO, a lo ancho de la ventana -- y como la
+              ventana ya es estrecha, del ancho de un móvil, siguen siendo
+              compactos. */}
           {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarRepositorio || mostrarErrores) && (
             <div className="flex flex-col gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
               {onCerrarSesion && (
                 <button
                   onClick={onCerrarSesion}
-                  className="boton-3d inline-flex items-center gap-2 font-medium"
-                  style={ESTILO_ACCESO}
+                  className={CLASE_BOTON_INICIO}
                 >
                   <LogOut size={15} /> Cerrar sesión
                 </button>
@@ -142,8 +141,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               {enlaceTablon && (
                 <a
                   href={enlaceTablon}
-                  className="boton-3d inline-flex items-center gap-2 font-medium"
-                  style={ESTILO_ACCESO}
+                  className={CLASE_BOTON_INICIO}
                   title="Abre el tablón público de novedades que ven los confirmados"
                 >
                   <Megaphone size={15} /> Novedades
@@ -159,8 +157,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               {mostrarMapaSitio && (
                 <button
                   onClick={() => setMapaAbierto(true)}
-                  className="boton-3d inline-flex items-center gap-2 font-medium"
-                  style={ESTILO_ACCESO}
+                  className={CLASE_BOTON_INICIO}
                   title="Ver el mapa de las secciones de la aplicación"
                 >
                   <Map size={15} /> Mapa del sitio
@@ -174,8 +171,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   href={URL_REPOSITORIO}
                   target="_blank"
                   rel="noreferrer"
-                  className="boton-3d inline-flex items-center gap-2 font-medium"
-                  style={ESTILO_ACCESO}
+                  className={CLASE_BOTON_INICIO}
                   title="Abre el código de la aplicación en GitHub"
                 >
                   <Code2 size={15} /> Código de la app
@@ -191,8 +187,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   href={URL_REGISTRO_ERRORES}
                   target="_blank"
                   rel="noreferrer"
-                  className="boton-3d inline-flex items-center gap-2 font-medium"
-                  style={ESTILO_ACCESO}
+                  className={CLASE_BOTON_INICIO}
                   title="Ver los errores que ha tenido la app (Sentry)"
                 >
                   <Bug size={15} /> Errores de la app
@@ -221,9 +216,9 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                 {avisoContrasena.texto}
               </p>
             )}
-            <Boton type="submit" variante="principal" disabled={guardandoContrasena}>
+            <button type="submit" disabled={guardandoContrasena} className={CLASE_BOTON_INICIO} style={{ opacity: guardandoContrasena ? 0.6 : 1 }}>
               {guardandoContrasena ? "Guardando…" : "Cambiar contraseña"}
-            </Boton>
+            </button>
           </form>
 
           <form onSubmit={cambiarEmail} className="pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
@@ -252,9 +247,9 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                 {avisoEmail.texto}
               </p>
             )}
-            <Boton type="submit" variante="principal" disabled={guardandoEmail}>
+            <button type="submit" disabled={guardandoEmail} className={CLASE_BOTON_INICIO} style={{ opacity: guardandoEmail ? 0.6 : 1 }}>
               {guardandoEmail ? "Guardando…" : "Cambiar email"}
-            </Boton>
+            </button>
           </form>
         </ModalFlotante>
       )}

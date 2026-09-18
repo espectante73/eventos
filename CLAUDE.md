@@ -1731,11 +1731,19 @@ Aplicado en Mi cuenta (`ModalFlotante ancho={400}`). Al construir o
 revisar cualquier ventana, empezar por preguntarse cuánto ocupa de verdad
 lo de dentro. `ModalFlotante` acepta `ancho` para esto (720 por defecto).
 
-Y en la misma ventana: los accesos (Cerrar sesión, Novedades, Mapa,
-Código, Errores) pasan a medir **todos lo mismo**, a lo ancho de la
-ventana, con la receta común de botón secundario (`ESTILO_ACCESO`). Antes
-cada uno medía lo que su texto y, al ir sumando accesos, se perdía la
-línea. Sustituye al criterio anterior de "cada fila a su ancho justo".
+Y en la misma ventana, **todos** los botones (los cinco accesos y los dos
+de los formularios) van con el **estilo de inicio** -- la pastilla verde
+con letra y contorno dorados de la portada -- y el mismo ancho, a lo
+ancho de la ventana (`CLASE_BOTON_INICIO`). Sustituye al criterio anterior
+de "cada fila a su ancho justo".
+
+⚠️ **Lección de esta tanda**: en la v34.5 los pasé a la variante
+secundaria de `Boton` (cuadrada, solo contorno) porque me pareció mejor,
+y dejé los de los formularios a medida de su texto. El usuario lo había
+pedido con el estilo de inicio y todos iguales, y lo tuvo que señalar.
+**Cuando el usuario dice "estandarizar", es con el estilo que ÉL ha
+nombrado o el que ya existe en la pantalla, no con el que yo prefiera.**
+Si hay duda sobre cuál, preguntar antes de cambiar el aspecto.
 
 ## Registro de errores con Sentry (2026-09-18, v34.3)
 
