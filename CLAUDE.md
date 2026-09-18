@@ -1719,6 +1719,24 @@ se repone al desactivar.
 **Regla que se lleva de aquí**: al crear una tabla nueva, mirar si tiene
 que entrar en la foto del Modo Pruebas. Nadie lo hizo en su día.
 
+## Regla de la app: ventanas lo más pequeñas posible (2026-09-18)
+
+Pedido explícito del usuario, "tomamos nota de esto": **una ventana mide
+lo que necesita su contenido, no más**. El ejemplo que puso: en Mi cuenta
+solo hay una contraseña de 8-12 caracteres y un email de unos 20; no
+necesita una ventana grande. Del ancho de un móvil en vertical, **también
+en el ordenador**.
+
+Aplicado en Mi cuenta (`ModalFlotante ancho={400}`). Al construir o
+revisar cualquier ventana, empezar por preguntarse cuánto ocupa de verdad
+lo de dentro. `ModalFlotante` acepta `ancho` para esto (720 por defecto).
+
+Y en la misma ventana: los accesos (Cerrar sesión, Novedades, Mapa,
+Código, Errores) pasan a medir **todos lo mismo**, a lo ancho de la
+ventana, con la receta común de botón secundario (`ESTILO_ACCESO`). Antes
+cada uno medía lo que su texto y, al ir sumando accesos, se perdía la
+línea. Sustituye al criterio anterior de "cada fila a su ancho justo".
+
 ## Registro de errores con Sentry (2026-09-18, v34.3)
 
 Antes, un fallo en el móvil de un colaborador no dejaba rastro. Ahora

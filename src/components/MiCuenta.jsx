@@ -23,7 +23,7 @@ import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
-import { Boton } from "./Boton";
+import { Boton, estilosBoton } from "./Boton";
 import { ModalMapaSitio } from "./MapaSitio";
 import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
 
@@ -34,6 +34,18 @@ import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
 // `mostrarMapaSitio`: solo lo pasa VistaAnfitrion.jsx. El mapa dibuja el
 // menú del anfitrión, así que a un colaborador no le dice nada -- mismo
 // criterio que `abrirNovedades` en Portada.jsx.
+// Los accesos de Mi cuenta (Cerrar sesión, Novedades, Mapa, Código,
+// Errores): TODOS con la misma receta -- la pieza común de botones en su
+// variante secundaria, a lo ancho de la ventana y con el icono a la
+// izquierda. Antes cada uno medía lo que su texto, y al ir sumando accesos
+// se perdía la línea (usuario, 2026-09-18). Van por estilosBoton y no por
+// <Boton> porque tres de ellos son enlaces <a>, no botones.
+const ESTILO_ACCESO = {
+  ...estilosBoton("secundario", "normal"),
+  width: "100%",
+  justifyContent: "flex-start",
+};
+
 export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarRepositorio, mostrarErrores }) {
   const [abierta, setAbierta] = useState(false);
   const [mapaAbierto, setMapaAbierto] = useState(false);
@@ -103,21 +115,26 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
       </button>
 
       {abierta && (
-        <ModalFlotante titulo="Mi cuenta" onCerrar={cerrar}>
+        <ModalFlotante titulo="Mi cuenta" onCerrar={cerrar} ancho={400}>
+          {/* ancho={400}: el de un móvil en vertical, también en el
+              ordenador. Aquí solo hay una contraseña, un email y unos pocos
+              accesos. Regla de la app pedida por el usuario (2026-09-18):
+              las ventanas, lo más pequeñas posible para lo que contienen. */}
           {/* Antes eran botones sueltos en la cabecera de Portada.jsx --
-              ahora viven aquí dentro, a petición del usuario. Mismo
-              estilo que el resto de botones/filas de menú de la app
-              (.boton-3d .boton-flotante-imagen: degradado verde,
-              contorno dorado) en vez de un verde plano inventado para
-              este modal -- filosofía de la app: todo lo más compacto
-              posible para móvil, cada fila a su ancho justo, no
-              estiradas a lo ancho con flex:1. */}
+              ahora viven aquí dentro, a petición del usuario.
+              ⚠️ Cambio de criterio el 2026-09-18: antes cada acceso medía
+              lo que su texto ("a su ancho justo"). Con cinco accesos eso
+              dejaba una escalera de anchos distintos, y el usuario pidió
+              que fueran iguales. Ahora todos van a lo ancho de la ventana
+              (ESTILO_ACCESO) -- y como la ventana ya es estrecha, del
+              ancho de un móvil, siguen siendo compactos. */}
           {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarRepositorio || mostrarErrores) && (
-            <div className="flex flex-col items-start gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
+            <div className="flex flex-col gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
               {onCerrarSesion && (
                 <button
                   onClick={onCerrarSesion}
-                  className="boton-3d boton-flotante-imagen flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
+                  className="boton-3d inline-flex items-center gap-2 font-medium"
+                  style={ESTILO_ACCESO}
                 >
                   <LogOut size={15} /> Cerrar sesión
                 </button>
@@ -125,7 +142,8 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               {enlaceTablon && (
                 <a
                   href={enlaceTablon}
-                  className="boton-3d boton-flotante-imagen flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
+                  className="boton-3d inline-flex items-center gap-2 font-medium"
+                  style={ESTILO_ACCESO}
                   title="Abre el tablón público de novedades que ven los confirmados"
                 >
                   <Megaphone size={15} /> Novedades
@@ -141,7 +159,8 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               {mostrarMapaSitio && (
                 <button
                   onClick={() => setMapaAbierto(true)}
-                  className="boton-3d boton-flotante-imagen flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
+                  className="boton-3d inline-flex items-center gap-2 font-medium"
+                  style={ESTILO_ACCESO}
                   title="Ver el mapa de las secciones de la aplicación"
                 >
                   <Map size={15} /> Mapa del sitio
@@ -155,7 +174,8 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   href={URL_REPOSITORIO}
                   target="_blank"
                   rel="noreferrer"
-                  className="boton-3d boton-flotante-imagen flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
+                  className="boton-3d inline-flex items-center gap-2 font-medium"
+                  style={ESTILO_ACCESO}
                   title="Abre el código de la aplicación en GitHub"
                 >
                   <Code2 size={15} /> Código de la app
@@ -171,7 +191,8 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   href={URL_REGISTRO_ERRORES}
                   target="_blank"
                   rel="noreferrer"
-                  className="boton-3d boton-flotante-imagen flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium"
+                  className="boton-3d inline-flex items-center gap-2 font-medium"
+                  style={ESTILO_ACCESO}
                   title="Ver los errores que ha tenido la app (Sentry)"
                 >
                   <Bug size={15} /> Errores de la app

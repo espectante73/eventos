@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "34.5",
+    cambios: [
+      "Mi cuenta es ahora una ventana estrecha, del ancho de un móvil, también en el ordenador: solo tiene una contraseña, un email y unos pocos accesos.",
+      "Y esos accesos (Cerrar sesión, Novedades, Mapa del sitio…) miden todos lo mismo, en vez de cada uno lo que su texto.",
+    ],
+  },
+  {
     version: "34.4",
     cambios: [
       "En Mi cuenta hay un botón nuevo, \"Errores de la app\", que abre directamente el panel donde se ven los fallos. Solo lo ve el anfitrión.",
