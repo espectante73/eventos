@@ -11,6 +11,60 @@ quede desactualizado; no dejes que se pudra como pasó con el README.
 Responder siempre en español al trabajar en este proyecto, salvo que se
 pida explícitamente lo contrario.
 
+## Normas de estándar de la app
+
+Lo que el usuario ya ha fijado como norma, recogido en una lista a
+petición suya el 2026-09-18. **Repasarla antes de construir o retocar
+cualquier pantalla.** El detalle y el porqué de cada una está más abajo,
+en la sección que se indica entre paréntesis.
+
+1. **"Estandarizar" es con SU modelo.** El estilo que él nombra o el que
+   ya está aprobado en esa pantalla; nunca uno elegido por mí. Si no está
+   claro cuál es, preguntar en una línea ANTES de tocar el aspecto. En Mi
+   cuenta cambié el estilo por mi cuenta tres veces (v34.5-34.7) hasta
+   preguntar. («Regla de la app: ventanas lo más pequeñas posible»)
+2. **Ventanas tan pequeñas como su contenido.** Del ancho de un móvil en
+   vertical, también en el ordenador. `ModalFlotante` acepta `ancho`.
+   (misma sección)
+3. **Todo a la derecha, para el pulgar derecho.** Botones y accesos
+   alineados a la derecha. («Regla de la app: todo al alcance del pulgar
+   DERECHO»)
+4. **Botones del mismo grupo, todos iguales y del ancho del texto más
+   largo.** En Mi cuenta el modelo es el de inicio: copia exacta de las
+   filas de "Abrir sección…" (`FilaMenu`), pastilla verde, letra dorada,
+   icono de 19 a la izquierda, ancho `ANCHO_FILA_MENU` importado (no
+   copiado). Ningún rótulo más largo que "Mapa del sitio". **Si se añade
+   un botón, se abrevia el rótulo; no se ensancha el botón.** Margen
+   derecho tan justo como el izquierdo. En otra pantalla, el modelo es el
+   que ya esté aprobado en ella (norma 1).
+5. **Los textos de ayuda, al pie de la ventana y plegados** (`<details>`),
+   no en medio de los botones ni del formulario.
+6. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
+   protagonista y lo demás se esconde. («Filosofía de UX: todo plegado y
+   una sola cosa abierta»)
+7. **Tablas: una sola línea por fila**, todas de la misma altura; si no
+   cabe, se ensancha o se recorta, nunca dos líneas. («Tablas: una sola
+   línea por fila…»)
+8. **Una sola pieza, no sincronizar**: si dos partes tienen que coincidir
+   siempre, comparten componente o constante; no se miden por separado
+   para igualarlas.
+9. **Toda ventana nueva es una `VentanaFlotante`**; si una crece mucho,
+   ventana lanzadora pequeña + una ventana por parte. («Toda UI nueva usa
+   `VentanaFlotante`»)
+10. **La Lista de invitados es la raíz**: una vista que solo reordena lo
+    que la lista ya muestra va dentro de la lista, no aparte. («La Lista
+    de invitados es la raíz…»)
+11. **Piezas compartidas**: botones comunes con `Boton` (principal /
+    secundario / peligro, con relieve 3D al pulsar); fotos con `HuecoFoto`
+    (16:9, mismo marco). Los lenguajes propios ya aprobados (pastilla de
+    inicio, mando de música, iconos sueltos en tablas) se respetan tal
+    cual. («Accesibilidad de los botones…»)
+12. **Confirmar siempre en una ventana propia**, nunca con
+    `window.alert`/`window.confirm` (en las ventanas emergentes rompen).
+    Todo borrado pide confirmación.
+13. **Antes de dar por hecho un cambio de aspecto, pedir una captura
+    real**, mejor del móvil.
+
 ## Estado actual (2026-08-06)
 
 La app está en **v6.0**. El evento real de referencia es una **boda el 13
@@ -1728,9 +1782,9 @@ del formulario del colaborador-- pero no escrito como regla general.
 
 **Los botones y accesos van a la DERECHA de la ventana.** Si tienen que
 medir todos lo mismo, ancho fijo común y alineados a la derecha, no a lo
-ancho con el texto centrado ni a la izquierda. Aplicado en Mi cuenta en la
-v34.7 (`w-60` + `items-end`), después de que en la v34.5-34.6 quedaran a
-lo ancho o a la izquierda.
+ancho con el texto centrado ni a la izquierda. Aplicado en Mi cuenta con
+`ANCHO_FILA_MENU` + `items-end` (en la v34.5-34.6 quedaron a lo ancho o a
+la izquierda, y en la v34.7 a 240px centrados).
 
 Al construir o revisar una ventana: comprobar esta regla junto con la de
 "lo más pequeña posible" y la de "estandarizar con el estilo que ya
