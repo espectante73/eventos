@@ -35,6 +35,10 @@ const ALTO_MINIMO = 120;
 // saliendo más ancho que antes de este repaso): 173px. -15px otra vez
 // (a petición del usuario): 158px.
 const ANCHO_PANEL = 158;
+// Ancho real de cada fila (el panel menos 6px de margen a cada lado).
+// Exportado para que Mi cuenta use EXACTAMENTE la misma medida que el menú
+// "Abrir sección…", en vez de una copia del número (2026-09-18).
+export const ANCHO_FILA_MENU = ANCHO_PANEL - 12;
 
 // Altura máxima real según el hueco disponible en pantalla, no un 60vh
 // fijo: si el botón está cerca del borde, un límite fijo deja que el

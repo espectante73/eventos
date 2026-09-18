@@ -23,6 +23,7 @@ import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
+import { ANCHO_FILA_MENU } from "./MenuFlotante";
 import { ModalMapaSitio } from "./MapaSitio";
 import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
 
@@ -38,10 +39,12 @@ import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
 // modelo de inicio": misma clase, mismo relleno, icono de 19 a la izquierda,
 // pastilla redondeada, letra dorada.
 //
-// Y el mismo criterio de ancho que allí (ANCHO_PANEL): **lo marca el texto
-// más largo y todos se ajustan a él**. Aquí el más largo es "Cambiar
-// contraseña" (con su icono), y de ahí sale ANCHO_BOTON. Si se añade un
-// botón con un texto más largo, se sube este número y cambian todos.
+// Y la MISMA medida que allí (ANCHO_FILA_MENU, importada, no copiada): el
+// usuario pidió que ningún texto pase de "Mapa del sitio" y que el margen
+// derecho quede igual de justo que el izquierdo, así que los rótulos van
+// abreviados ("Código app", "Errores app", "Cambiar clave") para caber.
+// ⚠️ Si se añade un botón, su rótulo tiene que caber en esa medida: se
+// abrevia el rótulo, no se ensancha el botón.
 //
 // Van a la derecha de la ventana: la app se maneja con el pulgar derecho.
 //
@@ -49,10 +52,9 @@ import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
 // variante secundaria cuadrada, la v34.6 a todo lo ancho y la v34.7 a un
 // ancho de 240px con el texto centrado -- las tres por decisión propia. El
 // usuario había pedido desde el principio el modelo de inicio.
-const ANCHO_BOTON = 200;
 const CLASE_BOTON_INICIO =
   "boton-3d boton-flotante-imagen flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap";
-const ESTILO_BOTON_INICIO = { color: C.goldClaro, borderRadius: 9999, width: ANCHO_BOTON };
+const ESTILO_BOTON_INICIO = { color: C.goldClaro, borderRadius: 9999, width: ANCHO_FILA_MENU };
 const ICONO = { size: 19, style: { flexShrink: 0, opacity: 0.85 } };
 
 export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarRepositorio, mostrarErrores }) {
@@ -207,7 +209,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   style={ESTILO_BOTON_INICIO}
                   title="Abre el código de la aplicación en GitHub"
                 >
-                  <Code2 {...ICONO} /> Código de la app
+                  <Code2 {...ICONO} /> Código app
                 </a>
               )}
               {/* Los fallos que ha tenido la app, en Sentry. Solo para el
@@ -224,7 +226,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   style={ESTILO_BOTON_INICIO}
                   title="Ver los errores que ha tenido la app (Sentry)"
                 >
-                  <Bug {...ICONO} /> Errores de la app
+                  <Bug {...ICONO} /> Errores app
                 </a>
               )}
             </div>
@@ -252,7 +254,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
             )}
             <div className="flex justify-end">
             <button type="submit" disabled={guardandoContrasena} className={CLASE_BOTON_INICIO} style={{ ...ESTILO_BOTON_INICIO, opacity: guardandoContrasena ? 0.6 : 1 }}>
-              <KeyRound {...ICONO} /> {guardandoContrasena ? "Guardando…" : "Cambiar contraseña"}
+              <KeyRound {...ICONO} /> {guardandoContrasena ? "Guardando…" : "Cambiar clave"}
             </button>
             </div>
           </form>

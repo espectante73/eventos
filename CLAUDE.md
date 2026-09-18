@@ -1752,9 +1752,13 @@ Y en la misma ventana, **todos** los botones (los cinco accesos y los dos
 de los formularios) son copia EXACTA de las filas del menú "Abrir
 sección…" (`FilaMenu` en MenuFlotante.jsx), que el usuario llama **"el
 modelo de inicio"**: misma clase, relleno, icono de 19 a la izquierda,
-pastilla redondeada, letra dorada. Y el mismo criterio de ancho que allí
-(`ANCHO_PANEL`): **lo marca el texto más largo y todos se ajustan a él**
-(`ANCHO_BOTON` en MiCuenta.jsx). A la derecha, por el pulgar.
+pastilla redondeada, letra dorada. Y **la misma medida que allí**:
+`ANCHO_FILA_MENU` (ANCHO_PANEL − 12), exportada desde MenuFlotante e
+importada en MiCuenta, no copiada. El usuario pidió que ningún rótulo pase
+de "Mapa del sitio" y que el margen derecho quede tan justo como el
+izquierdo: los rótulos se abrevian ("Código app", "Errores app", "Cambiar
+clave") para caber. **Si se añade un botón, se abrevia el rótulo; no se
+ensancha el botón.** A la derecha, por el pulgar.
 
 La explicación del email de acceso va en el **pie de la ventana, plegada**
 (`<details>`): en medio del formulario rompía la línea de los botones.

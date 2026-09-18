@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "34.9",
+    cambios: [
+      "Los botones de Mi cuenta, más estrechos: miden lo mismo que las filas del menú \"Abrir sección…\", y los rótulos se abrevian para caber (\"Código app\", \"Errores app\", \"Cambiar clave\").",
+    ],
+  },
+  {
     version: "34.8",
     cambios: [
       "Los botones de Mi cuenta son ahora iguales que los del menú \"Abrir sección…\": misma pastilla, icono a la izquierda, y todos del ancho que marca el texto más largo. A la derecha, para el pulgar.",
