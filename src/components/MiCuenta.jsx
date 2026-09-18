@@ -18,7 +18,7 @@
 // pierda visibilidad de este cambio, queda constancia visible en la
 // ventana Colaboradores hasta que la confirme.
 import { useState } from "react";
-import { UserCog, LogOut, Megaphone, Map, Code2, Bug } from "lucide-react";
+import { UserCog, LogOut, Megaphone, Map, Code2, Bug, KeyRound, Mail } from "lucide-react";
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
@@ -33,21 +33,27 @@ import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
 // `mostrarMapaSitio`: solo lo pasa VistaAnfitrion.jsx. El mapa dibuja el
 // menú del anfitrión, así que a un colaborador no le dice nada -- mismo
 // criterio que `abrirNovedades` en Portada.jsx.
-// TODOS los botones de Mi cuenta con el estilo de INICIO -- la pastilla
-// verde con letra y contorno dorados de "Abrir sección…" y "Mi cuenta" en
-// la portada -- y el MISMO ancho, a lo ancho de la ventana.
+// TODOS los botones de Mi cuenta son una copia EXACTA de las filas del menú
+// "Abrir sección…" (FilaMenu en MenuFlotante.jsx), que el usuario llama "el
+// modelo de inicio": misma clase, mismo relleno, icono de 19 a la izquierda,
+// pastilla redondeada, letra dorada.
 //
-// ⚠️ Corrección del 2026-09-18: en la v34.5 se pasaron a la variante
-// secundaria (cuadrada, solo contorno) por decisión propia, y los dos
-// botones de los formularios se quedaron a la medida de su texto. El
-// usuario lo había pedido con el estilo de inicio y todos iguales. Esta es
-// la versión que pidió.
+// Y el mismo criterio de ancho que allí (ANCHO_PANEL): **lo marca el texto
+// más largo y todos se ajustan a él**. Aquí el más largo es "Cambiar
+// contraseña" (con su icono), y de ahí sale ANCHO_BOTON. Si se añade un
+// botón con un texto más largo, se sube este número y cambian todos.
 //
-// Y a la DERECHA de la ventana: la app se maneja con el pulgar derecho
-// (regla del usuario, ver CLAUDE.md). Por eso no van a lo ancho, sino con
-// un ancho fijo común (w-60) y alineados a la derecha.
+// Van a la derecha de la ventana: la app se maneja con el pulgar derecho.
+//
+// ⚠️ Historia, para no repetirla (2026-09-18): la v34.5 los pasó a la
+// variante secundaria cuadrada, la v34.6 a todo lo ancho y la v34.7 a un
+// ancho de 240px con el texto centrado -- las tres por decisión propia. El
+// usuario había pedido desde el principio el modelo de inicio.
+const ANCHO_BOTON = 200;
 const CLASE_BOTON_INICIO =
-  "boton-3d boton-flotante-imagen w-60 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium";
+  "boton-3d boton-flotante-imagen flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap";
+const ESTILO_BOTON_INICIO = { color: C.goldClaro, borderRadius: 9999, width: ANCHO_BOTON };
+const ICONO = { size: 19, style: { flexShrink: 0, opacity: 0.85 } };
 
 export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarRepositorio, mostrarErrores }) {
   const [abierta, setAbierta] = useState(false);
@@ -118,7 +124,28 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
       </button>
 
       {abierta && (
-        <ModalFlotante titulo="Mi cuenta" onCerrar={cerrar} ancho={400}>
+        <ModalFlotante
+          titulo="Mi cuenta"
+          onCerrar={cerrar}
+          ancho={400}
+          // La explicación del email de acceso va en el PIE y plegada, a
+          // petición del usuario (2026-09-18): en medio del formulario
+          // rompía la línea de los botones, y solo le interesa a quien vaya
+          // a cambiarlo. <details> nativo: se abre y se cierra sin estado.
+          acciones={
+            <details className="text-xs w-full" style={{ color: C.charcoal }}>
+              <summary className="cursor-pointer select-none" style={{ opacity: 0.8 }}>
+                Sobre el email de acceso
+              </summary>
+              <p className="mt-2" style={{ opacity: 0.75 }}>
+                Este es tu email de INICIO DE SESIÓN. Si tienes invitados asignados como
+                colaborador, en cuanto confirmes el cambio también pasará a ser el email al
+                que te lleguen los avisos automáticos — el anfitrión verá un aviso de que
+                ha cambiado.
+              </p>
+            </details>
+          }
+        >
           {/* ancho={400}: el de un móvil en vertical, también en el
               ordenador. Aquí solo hay una contraseña, un email y unos pocos
               accesos. Regla de la app pedida por el usuario (2026-09-18):
@@ -128,27 +155,27 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               ⚠️ Cambio de criterio el 2026-09-18: antes cada acceso medía
               lo que su texto ("a su ancho justo"). Con cinco accesos eso
               dejaba una escalera de anchos distintos, y el usuario pidió
-              que fueran iguales y con el estilo de inicio: todos van con
-              CLASE_BOTON_INICIO, a lo ancho de la ventana -- y como la
-              ventana ya es estrecha, del ancho de un móvil, siguen siendo
-              compactos. */}
+              que fueran iguales y con el modelo de inicio: ver
+              CLASE_BOTON_INICIO y ANCHO_BOTON arriba. */}
           {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarRepositorio || mostrarErrores) && (
-            <div className="flex flex-col items-end gap-2 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
+            <div className="flex flex-col items-end gap-2.5 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
               {onCerrarSesion && (
                 <button
                   onClick={onCerrarSesion}
                   className={CLASE_BOTON_INICIO}
+                  style={ESTILO_BOTON_INICIO}
                 >
-                  <LogOut size={15} /> Cerrar sesión
+                  <LogOut {...ICONO} /> Cerrar sesión
                 </button>
               )}
               {enlaceTablon && (
                 <a
                   href={enlaceTablon}
                   className={CLASE_BOTON_INICIO}
+                  style={ESTILO_BOTON_INICIO}
                   title="Abre el tablón público de novedades que ven los confirmados"
                 >
-                  <Megaphone size={15} /> Novedades
+                  <Megaphone {...ICONO} /> Novedades
                 </a>
               )}
               {/* El mapa del sitio: la imagen de las secciones de la app,
@@ -162,9 +189,10 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                 <button
                   onClick={() => setMapaAbierto(true)}
                   className={CLASE_BOTON_INICIO}
+                  style={ESTILO_BOTON_INICIO}
                   title="Ver el mapa de las secciones de la aplicación"
                 >
-                  <Map size={15} /> Mapa del sitio
+                  <Map {...ICONO} /> Mapa del sitio
                 </button>
               )}
               {/* Enlace al código, para el desarrollador que revisa la app
@@ -176,9 +204,10 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   target="_blank"
                   rel="noreferrer"
                   className={CLASE_BOTON_INICIO}
+                  style={ESTILO_BOTON_INICIO}
                   title="Abre el código de la aplicación en GitHub"
                 >
-                  <Code2 size={15} /> Código de la app
+                  <Code2 {...ICONO} /> Código de la app
                 </a>
               )}
               {/* Los fallos que ha tenido la app, en Sentry. Solo para el
@@ -192,9 +221,10 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   target="_blank"
                   rel="noreferrer"
                   className={CLASE_BOTON_INICIO}
+                  style={ESTILO_BOTON_INICIO}
                   title="Ver los errores que ha tenido la app (Sentry)"
                 >
-                  <Bug size={15} /> Errores de la app
+                  <Bug {...ICONO} /> Errores de la app
                 </a>
               )}
             </div>
@@ -221,8 +251,8 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               </p>
             )}
             <div className="flex justify-end">
-            <button type="submit" disabled={guardandoContrasena} className={CLASE_BOTON_INICIO} style={{ opacity: guardandoContrasena ? 0.6 : 1 }}>
-              {guardandoContrasena ? "Guardando…" : "Cambiar contraseña"}
+            <button type="submit" disabled={guardandoContrasena} className={CLASE_BOTON_INICIO} style={{ ...ESTILO_BOTON_INICIO, opacity: guardandoContrasena ? 0.6 : 1 }}>
+              <KeyRound {...ICONO} /> {guardandoContrasena ? "Guardando…" : "Cambiar contraseña"}
             </button>
             </div>
           </form>
@@ -230,12 +260,6 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
           <form onSubmit={cambiarEmail} className="pt-4" style={{ borderTop: `1px solid ${C.line}` }}>
             <p className="text-sm font-medium mb-2" style={{ color: C.ink, fontFamily: "'Fraunces', serif" }}>
               Cambiar mi email de acceso
-            </p>
-            <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
-              Este es tu email de INICIO DE SESIÓN. Si tienes invitados asignados como
-              colaborador, en cuanto confirmes el cambio también pasará a ser el email al
-              que te lleguen los avisos automáticos — el anfitrión verá un aviso de que
-              ha cambiado.
             </p>
             <input
               type="email"
@@ -254,8 +278,8 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               </p>
             )}
             <div className="flex justify-end">
-            <button type="submit" disabled={guardandoEmail} className={CLASE_BOTON_INICIO} style={{ opacity: guardandoEmail ? 0.6 : 1 }}>
-              {guardandoEmail ? "Guardando…" : "Cambiar email"}
+            <button type="submit" disabled={guardandoEmail} className={CLASE_BOTON_INICIO} style={{ ...ESTILO_BOTON_INICIO, opacity: guardandoEmail ? 0.6 : 1 }}>
+              <Mail {...ICONO} /> {guardandoEmail ? "Guardando…" : "Cambiar email"}
             </button>
             </div>
           </form>

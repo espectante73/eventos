@@ -1749,10 +1749,15 @@ revisar cualquier ventana, empezar por preguntarse cuánto ocupa de verdad
 lo de dentro. `ModalFlotante` acepta `ancho` para esto (720 por defecto).
 
 Y en la misma ventana, **todos** los botones (los cinco accesos y los dos
-de los formularios) van con el **estilo de inicio** -- la pastilla verde
-con letra y contorno dorados de la portada -- y el mismo ancho, a lo
-ancho de la ventana (`CLASE_BOTON_INICIO`). Sustituye al criterio anterior
-de "cada fila a su ancho justo".
+de los formularios) son copia EXACTA de las filas del menú "Abrir
+sección…" (`FilaMenu` en MenuFlotante.jsx), que el usuario llama **"el
+modelo de inicio"**: misma clase, relleno, icono de 19 a la izquierda,
+pastilla redondeada, letra dorada. Y el mismo criterio de ancho que allí
+(`ANCHO_PANEL`): **lo marca el texto más largo y todos se ajustan a él**
+(`ANCHO_BOTON` en MiCuenta.jsx). A la derecha, por el pulgar.
+
+La explicación del email de acceso va en el **pie de la ventana, plegada**
+(`<details>`): en medio del formulario rompía la línea de los botones.
 
 ⚠️ **Lección de esta tanda**: en la v34.5 los pasé a la variante
 secundaria de `Boton` (cuadrada, solo contorno) porque me pareció mejor,
@@ -1761,6 +1766,10 @@ pedido con el estilo de inicio y todos iguales, y lo tuvo que señalar.
 **Cuando el usuario dice "estandarizar", es con el estilo que ÉL ha
 nombrado o el que ya existe en la pantalla, no con el que yo prefiera.**
 Si hay duda sobre cuál, preguntar antes de cambiar el aspecto.
+
+Y se repitió dos veces más (v34.6 a todo lo ancho, v34.7 a 240px centrado)
+antes de preguntar. La tercera vez, una pregunta de una línea ("¿es el
+menú de Abrir sección…?") lo resolvió a la primera. Preguntar ANTES.
 
 ## Registro de errores con Sentry (2026-09-18, v34.3)
 

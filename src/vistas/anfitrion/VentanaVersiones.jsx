@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "34.8",
+    cambios: [
+      "Los botones de Mi cuenta son ahora iguales que los del menú \"Abrir sección…\": misma pastilla, icono a la izquierda, y todos del ancho que marca el texto más largo. A la derecha, para el pulgar.",
+      "La explicación sobre el email de acceso baja al pie de la ventana, plegada: la abre quien la necesite.",
+    ],
+  },
+  {
     version: "34.7",
     cambios: [
       "Los botones de Mi cuenta van ahora a la derecha de la ventana, todos del mismo ancho: la app se maneja con el pulgar derecho.",
