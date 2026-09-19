@@ -1565,6 +1565,35 @@ terminadas (emparejando por nombre); si no, se quedan una a una.
 ⚠️ A día de hoy los 48 matrimonios están "sin año" en la Lista de
 invitados: lo rellena el colaborador junto con la foto.
 
+**El año de boda, compartido entre los cónyuges (2026-09-19, v36.2)**.
+Lo cazó el usuario: la foto de boda es POR FAMILIA (`fotos_familiares`),
+así que al subirla en la ficha de un cónyuge aparece en la del otro; el
+año, en cambio, es una columna de CADA invitado (`invitados.anioBoda`), y
+el otro se quedaba sin año o con uno distinto. `matrimoniosDeInvitados`
+tapaba el hueco con `primeroNoVacio(esposo, esposa)`, pero el contador
+"datos X de Y" y la columna de la lista seguían viendo el vacío, y con
+dos años distintos ganaba el del esposo sin avisar.
+- Arreglo en la BASE, no en la pantalla: el colaborador guarda UNA ficha
+  cada vez (`colaborador_guardar_invitado`), y su cónyuge puede ni estar
+  en su lista. Trigger `invitados_anio_boda_pareja` →
+  `trg_igualar_anio_boda_pareja()`: al cambiar el año de un esposo/esposa
+  se copia al otro de la misma familia (mismo criterio de familia que
+  `lib/matrimonios.js`). Si alguien se estrena como cónyuge sin año, toma
+  el de su pareja. Borrar el año lo borra en los dos.
+- ⚠️ Los valores guardados son "esposo"/"esposa"; la O y la A son solo lo
+  que se ve en la lista.
+- Relee la fila en vez de fiarse de NEW: en el guardado de muchas filas
+  del anfitrión, otra pasada del mismo trigger puede haberla cambiado ya.
+  `pg_trigger_depth() > 1` corta la cadena de su propia copia.
+- Se descartó mover el año a `fotos_familiares` (lo más "una sola pieza"):
+  obligaba a cambiar ~8 archivos que leen `g.anioBoda` a diez semanas de
+  la boda. La regla de la base garantiza lo mismo: siempre iguales.
+- `useLedgerData.js`: tras guardar un cambio de año, el colaborador
+  recarga su lista para que la ficha de la pareja lo enseñe al momento.
+- SQL dado al usuario el 2026-09-19, con un arreglo de una vez (rellena
+  el año que falte con el de la pareja, sin generar avisos) y una consulta
+  que lista las parejas con dos años DISTINTOS, si las hubiera.
+
 ### Accesibilidad de los botones: paso 1 hecho, paso 2 pendiente (2026-09-17)
 
 A raíz de que un desarrollador va a revisar el repositorio, se midió el

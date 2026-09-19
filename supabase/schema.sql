@@ -1804,6 +1804,66 @@ begin
 end;
 $$;
 
+-- Los dos cónyuges (rolFamiliar esposo/esposa de la misma familia) tienen
+-- SIEMPRE el mismo año de boda, igual que comparten la foto (2026-09-19).
+-- Lo cazó el usuario: el colaborador rellena la ficha de uno, y el otro
+-- se quedaba sin año -- o con otro distinto. El colaborador guarda una
+-- sola ficha cada vez, así que la copia tiene que hacerla la base.
+CREATE FUNCTION public.trg_igualar_anio_boda_pareja() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+declare
+  v_actual invitados;
+  v_familia text;
+  v_anio text;
+begin
+  -- La copia al cónyuge vuelve a disparar este trigger: esa no hace nada.
+  if pg_trigger_depth() > 1 then
+    return null;
+  end if;
+  if TG_OP = 'UPDATE'
+     and old."anioBoda" is not distinct from new."anioBoda"
+     and old."rolFamiliar" is not distinct from new."rolFamiliar"
+     and old."grupoFamiliar" is not distinct from new."grupoFamiliar"
+     and old."apellido" is not distinct from new."apellido" then
+    return null;
+  end if;
+  -- Se relee la fila: en un guardado de muchas filas a la vez (el del
+  -- anfitrión), otra pasada de este trigger puede haberla cambiado ya.
+  select * into v_actual from invitados where "id" = new."id";
+  if not found or v_actual."rolFamiliar" not in ('esposo', 'esposa') then
+    return null;
+  end if;
+  v_familia := lower(trim(coalesce(nullif(v_actual."grupoFamiliar", ''), v_actual."apellido", '')));
+  if v_familia = '' then
+    return null;
+  end if;
+  v_anio := coalesce(v_actual."anioBoda", '');
+
+  -- Recién marcado como cónyuge (o recién movido de familia) y sin año:
+  -- toma el de su pareja. Si lo que ha hecho es BORRAR su año, no: eso se
+  -- copia tal cual, más abajo.
+  if v_anio = '' and not (TG_OP = 'UPDATE' and old."anioBoda" is distinct from new."anioBoda") then
+    select p."anioBoda" into v_anio from invitados p
+    where p."id" <> v_actual."id" and p."rolFamiliar" in ('esposo', 'esposa')
+      and lower(trim(coalesce(nullif(p."grupoFamiliar", ''), p."apellido", ''))) = v_familia
+      and coalesce(p."anioBoda", '') <> ''
+    limit 1;
+    if coalesce(v_anio, '') <> '' then
+      update invitados set "anioBoda" = v_anio where "id" = v_actual."id";
+    end if;
+    return null;
+  end if;
+
+  -- En cualquier otro caso, su año pasa a su pareja.
+  update invitados p set "anioBoda" = v_anio
+  where p."id" <> v_actual."id" and p."rolFamiliar" in ('esposo', 'esposa')
+    and lower(trim(coalesce(nullif(p."grupoFamiliar", ''), p."apellido", ''))) = v_familia
+    and p."anioBoda" is distinct from v_anio;
+  return null;
+end;
+$$;
+
 -- Si cambian los datos de un invitado, marca la invitación de su familia como caducada.
 CREATE FUNCTION public.trg_invalidar_invitacion_familia() RETURNS trigger
     LANGUAGE plpgsql
@@ -1870,6 +1930,8 @@ $$;
 -- al día el aviso pendiente de cada invitado, invalidan una
 -- invitación cuando cambian los datos de la familia y guardan el
 -- texto anterior para poder deshacer.
+
+CREATE TRIGGER invitados_anio_boda_pareja AFTER INSERT OR UPDATE OF "anioBoda", "rolFamiliar", "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_igualar_anio_boda_pareja();
 
 CREATE TRIGGER invitados_invalidar_invitacion AFTER INSERT OR UPDATE OF confirmado, pagado, mesa, "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_invalidar_invitacion_familia();
 

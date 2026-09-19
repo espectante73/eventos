@@ -886,6 +886,18 @@ export function useLedgerData(rol) {
           avisar("No se pudieron guardar los datos (¿sigue asignado a ti este invitado?). Se deshace el cambio en pantalla.", error);
           setInvitados(anterior);
           invitadosRef.current = anterior;
+        } else if (previo && previo.anioBoda !== cambiado.anioBoda) {
+          // El año de boda lo copia la base al cónyuge (trigger
+          // invitados_anio_boda_pareja, 2026-09-19). Se recarga la lista
+          // para que la ficha de su pareja lo enseñe ya, sin esperar al
+          // refresco de cada minuto.
+          const { data: recargados } = await supabase.rpc("colaborador_mis_invitados", {
+            p_colaborador_id: rol,
+          });
+          if (recargados) {
+            setInvitados(recargados);
+            invitadosRef.current = recargados;
+          }
         }
       }
     },

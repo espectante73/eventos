@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "36.2",
+    cambios: [
+      "El año de boda se comparte entre los dos cónyuges, como la foto: el colaborador lo escribe en la ficha de uno y aparece también en la del otro. Antes el otro se quedaba sin año, o con uno distinto.",
+    ],
+  },
+  {
     version: "36.1",
     cambios: [
       "La vibración en el iPhone, de verdad: Apple cerró en iOS 26.5 la forma que usaba la 36, así que no vibraba. Ahora cada botón lleva dentro un interruptor invisible que el dedo toca, y eso sí hace vibrar al iPhone.",
