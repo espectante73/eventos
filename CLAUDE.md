@@ -75,6 +75,27 @@ en la sección que se indica entre paréntesis.
     pregunta dentro.
 15. **Antes de dar por hecho un cambio de aspecto, pedir una captura
     real**, mejor del móvil.
+16. **MODELO A SEGUIR para los datos (el usuario, 2026-09-19: "una mejora
+    sustancial, práctica y para anotar como modelo a seguir").** Lo que en
+    la vida real va junto (una pareja, una familia), la app lo mantiene
+    junto SOLA, sin depender de que alguien se acuerde:
+    - un dato compartido vale para todos (el año de boda de la pareja);
+      una acción sobre uno se aplica a todos (la mesa de la familia);
+    - UNA sola definición de "familia"/"pareja" para toda la app
+      (`lib/mesas.js`, `lib/matrimonios.js`), nunca una copia por pantalla;
+    - si la regla no se puede cumplir entera, no se hace a medias: no se
+      toca nada y se avisa con la cifra concreta ("son 4 y quedan 2
+      sitios"), en una ventana que se vea;
+    - si quien escribe puede ser un colaborador que solo guarda una ficha,
+      la regla va en la BASE (trigger), no solo en la pantalla;
+    - lo que ya estaba mal de antes lo encuentra la Revisión; no se
+      "arregla" a escondidas;
+    - las excepciones que marca el usuario quedan fuera por diseño (el
+      hijo mayor con otro apellido es otra familia);
+    - y la regla lleva sus pruebas automáticas.
+    Ante un dato nuevo, preguntarse: ¿debería ir junto con el de alguien
+    más? («Una familia no se separa en las mesas», «El año de boda,
+    compartido entre los cónyuges»)
 
 ## Estado actual (2026-08-06)
 
