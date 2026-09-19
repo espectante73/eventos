@@ -147,9 +147,10 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
   return (
     <>
       <VentanaFlotante clave="mesas" titulo="Mesas" onCerrar={onCerrar}>
-        {/* Texto en su propia línea y los botones debajo, alineados al
-            borde izquierdo -- a petición del usuario, 2026-09-05: antes
-            iban a la derecha del párrafo, en la misma fila. */}
+        {/* Texto en su propia línea y los botones debajo (usuario,
+            2026-09-05). Desde el 2026-09-19, del lado del pulgar: a la
+            derecha, o a la izquierda si en ese móvil se eligió esa mano, y
+            con "Añadir mesa" -- el más usado -- pegado al borde. */}
         <div className="mb-3">
           <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
             Define cuántas mesas y cuántos comensales por mesa.
@@ -161,14 +162,14 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
               aparece al final de una fila larga, fuera de la vista --
               no había ninguna señal de que el clic hubiera entrado.
               Pedido por el usuario el 2026-09-16. */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap justify-end zurdo:flex-row-reverse">
             {avisosMesas.length > 0 && (
               <Boton variante="peligro" tamano="pequeno" onClick={() => setPanelFlotante("avisosMesas")} titulo="Ver familias que se quedaron sin mesa">
                 <AlertTriangle size={12} /> {avisosMesas.length} aviso{avisosMesas.length !== 1 && "s"}
               </Boton>
             )}
-            <Boton variante="principal" onClick={autoAsignarMesas}>
-              Auto-asignar (preliminar)
+            <Boton variante="principal" onClick={autoAsignarMesas} titulo="Reparte a las familias confirmadas en las mesas; luego se puede retocar a mano">
+              Auto-asignar
             </Boton>
             <Boton variante="secundario" onClick={anadirMesa}>
               <Plus size={14} /> Añadir mesa

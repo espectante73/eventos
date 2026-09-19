@@ -68,6 +68,27 @@ select:active {
   filter: brightness(0.93);
 }
 
+/* El interruptor invisible que hace vibrar el iPhone (lib/respuestaTactil.js).
+   Cubre el botón entero y no se ve; el dedo lo toca a él, el iPhone vibra y
+   el toque sigue subiendo al botón. clip-path y no overflow: overflow solo
+   recorta lo que se ve, no dónde se puede tocar. */
+.interruptor-haptico {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  clip-path: inset(0 round 999px);
+  cursor: inherit;
+}
+/* Botón desactivado: el toque pasa de largo, ni vibra ni hace nada. */
+button:disabled > .interruptor-haptico {
+  pointer-events: none;
+}
+
 /* El círculo rojo de quitar/borrar (BotonQuitar, PreguntaSeguridad.jsx)
    se ve de 24px, pero el dedo acierta en 44px: el mínimo para un móvil.
    La zona de más es invisible y no ocupa sitio. */

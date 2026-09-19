@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "36.1",
+    cambios: [
+      "La vibración en el iPhone, de verdad: Apple cerró en iOS 26.5 la forma que usaba la 36, así que no vibraba. Ahora cada botón lleva dentro un interruptor invisible que el dedo toca, y eso sí hace vibrar al iPhone.",
+      "El clic se oye más (el de la 36 era casi inaudible en el altavoz del móvil). Con el iPhone en silencio no suena, como los clics del teclado.",
+      "Mesas: los botones van del lado del pulgar, y \"Auto-asignar\" pierde el \"(preliminar)\".",
+    ],
+  },
+  {
     version: "36",
     cambios: [
       "Todo lo que se pulsa tiene relieve y se hunde al tocarlo, también los desplegables de las tablas (asignar mesa, colaborador), los títulos que se pliegan y lo que antes era texto subrayado (\"Vaciar mesa\", \"Entendido\"…). Al pulsar suena un clic muy suave y el móvil vibra.",

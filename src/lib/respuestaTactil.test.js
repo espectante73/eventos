@@ -36,6 +36,15 @@ describe("respuesta al pulsar", () => {
     expect(queRespuesta(b.querySelector("p"))).toBe(null);
   });
 
+  it("el interruptor invisible de dentro de un botón cuenta como el botón", () => {
+    const b = poner(
+      '<button id="a">Añadir<input type="checkbox" switch class="interruptor-haptico"></button>' +
+        '<button id="d" disabled>No<input type="checkbox" switch class="interruptor-haptico"></button>'
+    );
+    expect(queRespuesta(b.querySelector("#a .interruptor-haptico"))).toEqual({ sonido: true, vibracion: true });
+    expect(queRespuesta(b.querySelector("#d .interruptor-haptico"))).toBe(null);
+  });
+
   it("dentro de la Música del evento vibra pero no suena", () => {
     const b = poner('<div data-sin-sonido-clic><button>▶</button></div>');
     expect(queRespuesta(b.querySelector("button"))).toEqual({ sonido: false, vibracion: true });

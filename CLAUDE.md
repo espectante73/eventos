@@ -1862,6 +1862,40 @@ número de colaboradores, gastos y total).
 **El mando de la Música** sigue con sus teclas propias; solo ganan el
 hundirse (`.mando-teclas button:active`).
 
+### v36.1: el iPhone no vibraba (iOS 26.5) y el clic no se oía
+
+El usuario lo probó en su iPhone: ni sonido ni vibración.
+- **Vibración**: el truco de pulsar un `<input switch>` escondido DESDE EL
+  CÓDIGO lo cerró Apple en **iOS 26.5** (comprobado en la documentación
+  de varias librerías, sep. 2026). Lo único que sigue funcionando es que
+  el DEDO toque un interruptor nativo. `respuestaTactil.js` mete, solo en
+  el iPhone (táctil y sin `navigator.vibrate`), un
+  `<input type="checkbox" switch class="interruptor-haptico">` invisible
+  dentro de CADA `<button>` (un `MutationObserver` lo pone también en los
+  que aparecen después). Cubre el botón (`opacity: 0`, `clip-path` para
+  que el toque no se salga de la forma) y el toque sigue subiendo al
+  botón, así que su `onClick` funciona igual. Técnica de
+  github.com/m1ckc3s/project-fathom, probada allí en aparato real.
+  ⚠️ Consecuencias a recordar:
+  - Solo en `<button>`: dentro de un enlace, una etiqueta de subir foto o
+    un `<summary>`, el interruptor les robaría la acción (se toca el
+    interruptor y el navegador ya no sigue el enlace ni abre el archivo).
+  - Un botón `type="submit"`: el navegador ya no envía el formulario solo
+    (el que recibe el toque es el interruptor). Se envía a mano con
+    `form.requestSubmit(boton)` en el mismo escuchador.
+  - Si un botón no está posicionado, se le pone `position: relative`
+    (si no, el interruptor cubriría otra cosa).
+  - Si algo raro pasa con un botón SOLO en el iPhone, sospechar de esto
+    primero. Se apaga quitando la llamada a `vigilarBotones`.
+- **Sonido**: el primer clic era un pitido a volumen 0,05, inaudible en el
+  altavoz del móvil. Ahora es un golpe de ruido filtrado de 12 ms a 0,6.
+  El iPhone lo calla con el interruptor de silencio (igual que el
+  teclado): es lo correcto, no se fuerza con `navigator.audioSession`.
+
+**Mesas**: la fila de botones pasa al lado del pulgar (`justify-end` +
+`zurdo:flex-row-reverse`, "Añadir mesa" en el borde) y el botón se queda
+en "Auto-asignar", a petición del usuario.
+
 ## Pulgar derecho o izquierdo (2026-09-19, v35)
 
 Idea del usuario: que quien maneje el móvil con la izquierda tenga los
