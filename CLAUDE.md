@@ -1896,6 +1896,12 @@ El usuario lo probó en su iPhone: ni sonido ni vibración.
 `zurdo:flex-row-reverse`, "Añadir mesa" en el borde) y el botón se queda
 en "Auto-asignar", a petición del usuario.
 
+**Probado por el usuario en su iPhone el 2026-09-19 y aprobado**: la
+vibración funciona (el interruptor invisible dentro de cada botón), la
+elección de mano, la X de quitar con su pregunta y los avisos. Es decir,
+la técnica del interruptor SÍ funciona en su iOS: no volver al truco de
+pulsarlo desde el código.
+
 ## Pulgar derecho o izquierdo (2026-09-19, v35)
 
 Idea del usuario: que quien maneje el móvil con la izquierda tenga los
