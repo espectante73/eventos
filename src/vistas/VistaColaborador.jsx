@@ -59,7 +59,7 @@ function FormularioDatos({
   const [form, setForm] = useState(invitado);
   const [foto, setFoto] = useState(fotoFamiliar || "");
   // Ninguna casilla marcada por defecto: si no se ha tocado nada, "alergias"
-  // se queda vacío de verdad (no cuenta como respondido en "datos X de 7"
+  // se queda vacío de verdad (no cuenta como respondido en "datos X de Y"
   // hasta que el colaborador marque algo, aunque sea "No" explícitamente).
   const parsearAlergias = (texto) => {
     const partes = (texto || "").split(",").map((s) => s.trim()).filter(Boolean);
@@ -71,6 +71,37 @@ function FormularioDatos({
     };
   };
   const [alergiaSel, setAlergiaSel] = useState(() => parsearAlergias(invitado.alergias));
+  // Canción y observaciones: casilla "Sí" (usuario, 2026-09-19). Sin marcar
+  // es "no": plegada y fuera de la cuenta de datos. Nace marcada solo si ya
+  // hay texto guardado.
+  const opcionalesDe = (g) => ({
+    cancion: String(g.cancion || "").trim() !== "",
+    observaciones: String(g.observaciones || "").trim() !== "",
+  });
+  const [abiertos, setAbiertos] = useState(() => opcionalesDe(invitado));
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
+  // Desmarcar con algo escrito borra lo escrito: por eso pregunta antes.
+  const alternarOpcional = (campo) => {
+    if (!abiertos[campo]) {
+      setAbiertos({ ...abiertos, [campo]: true });
+      return;
+    }
+    const cerrar = () => {
+      setAbiertos((a) => ({ ...a, [campo]: false }));
+      if (String(form[campo] || "").trim() === "") return;
+      const nuevo = { ...form, [campo]: "" };
+      setForm(nuevo);
+      revisarYGuardar(nuevo);
+    };
+    if (String(form[campo] || "").trim() === "") cerrar();
+    else
+      preguntar({
+        titulo: campo === "cancion" ? "¿Quitar la canción?" : "¿Quitar las observaciones?",
+        texto: form[campo],
+        rotulo: "Sí, quitar",
+        alConfirmar: cerrar,
+      });
+  };
   const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [errorFoto, setErrorFoto] = useState("");
   // `foto` guarda lo que va a la base: desde el 2026-09-17 una RUTA del
@@ -87,6 +118,8 @@ function FormularioDatos({
   useEffect(() => setForm(invitado), [invitado.id]);
   useEffect(() => setFoto(fotoFamiliar || ""), [fotoFamiliar, invitado.id]);
   useEffect(() => setAlergiaSel(parsearAlergias(invitado.alergias)), [invitado.id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => setAbiertos(opcionalesDe(invitado)), [invitado.id]);
   useEffect(() => () => clearTimeout(avisoTimeout.current), []);
 
   const mostrarAviso = (texto) => {
@@ -182,6 +215,7 @@ function FormularioDatos({
         border: `1px solid ${C.gold}`,
       }}
     >
+      {ventanaPregunta}
       {/* Fondo propio (antes el rojo iba directo sobre el verde oscuro
           del formulario -- poco legible, rojo sobre verde oscuro) -- a
           petición del usuario. */}
@@ -197,7 +231,7 @@ function FormularioDatos({
             {form.apellido}, {form.nombre}
           </span>
           <span className="text-xs" style={{ color: C.ink }}>
-            datos {contarDatosRellenados(form, foto, evento)} de {totalDatosInvitado(form, evento)}
+            datos {contarDatosRellenados(form, foto, evento, abiertos)} de {totalDatosInvitado(form, evento, abiertos)}
           </span>
           {/* Colores al revés que el resto de la cabecera (fondo dorado,
               letra verde) y un punto más de letra, a petición del usuario
@@ -348,24 +382,39 @@ function FormularioDatos({
           )}
         </div>
       </div>
-      <Field label="Canción">
-        <TextInput
-          value={form.cancion}
-          onChange={(e) => setForm({ ...form, cancion: e.target.value })}
-          onBlur={() => revisarYGuardar(form)}
-          placeholder="Título — Artista"
-          className="w-full"
-        />
-      </Field>
-      <Field label="Observaciones">
-        <TextInput
-          value={form.observaciones || ""}
-          onChange={(e) => setForm({ ...form, observaciones: e.target.value })}
-          onBlur={() => revisarYGuardar(form)}
-          placeholder="Cualquier detalle adicional"
-          className="w-full"
-        />
-      </Field>
+      {/* Canción y observaciones: casilla "Sí", con el mismo aspecto que
+          las de alergias de aquí abajo. Sin marcar = "no": no cuenta en
+          "datos X de Y". Marcada, aparece el campo y cuenta. */}
+      {[
+        { campo: "cancion", titulo: "Canción", placeholder: "Título — Artista" },
+        { campo: "observaciones", titulo: "Observaciones", placeholder: "Cualquier detalle adicional" },
+      ].map(({ campo, titulo, placeholder }) => (
+        <div key={campo}>
+          <span
+            className="text-xs uppercase block mb-1"
+            style={{ color: C.ink, fontFamily: "'IBM Plex Mono', monospace" }}
+          >
+            {titulo}
+          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
+              <input type="checkbox" checked={abiertos[campo]} onChange={() => alternarOpcional(campo)} />
+              Sí
+            </label>
+            {abiertos[campo] && (
+              <TextInput
+                value={form[campo] || ""}
+                onChange={(e) => setForm({ ...form, [campo]: e.target.value })}
+                onBlur={() => revisarYGuardar(form)}
+                placeholder={placeholder}
+                className="flex-1"
+                style={{ minWidth: 160 }}
+                autoFocus={!String(form[campo] || "").trim()}
+              />
+            )}
+          </div>
+        </div>
+      ))}
       <div>
         <span
           className="text-xs uppercase block mb-1"

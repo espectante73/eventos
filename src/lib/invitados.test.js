@@ -199,15 +199,30 @@ describe("esMenorDeEdad / pideEmail", () => {
 describe("totalDatosInvitado", () => {
   const evento = { fecha: "2026-11-13" };
 
-  it("a un esposo adulto se le piden los 7 de siempre", () => {
-    expect(totalDatosInvitado({ rolFamiliar: "esposo", anioNacimiento: "1990" }, evento)).toBe(7);
+  // Canción y observaciones no cuentan si no se eligen (2026-09-19).
+  it("a un esposo adulto se le piden 5: año nac., año boda, email, alergias y foto", () => {
+    expect(totalDatosInvitado({ rolFamiliar: "esposo", anioNacimiento: "1990" }, evento)).toBe(5);
   });
 
-  it("a un hijo menor se le piden 4: sin año de boda, sin foto y sin email", () => {
-    expect(totalDatosInvitado({ rolFamiliar: "hijo", anioNacimiento: "2015" }, evento)).toBe(4);
+  it("a un hijo menor se le piden 2: año nac. y alergias (nada de boda ni email)", () => {
+    expect(totalDatosInvitado({ rolFamiliar: "hijo", anioNacimiento: "2015" }, evento)).toBe(2);
   });
 
-  it("a un suelto adulto se le piden 5: sin año de boda y sin foto", () => {
-    expect(totalDatosInvitado({ rolFamiliar: "suelto", anioNacimiento: "1990" }, evento)).toBe(5);
+  it("a un suelto adulto se le piden 3: año nac., email y alergias", () => {
+    expect(totalDatosInvitado({ rolFamiliar: "suelto", anioNacimiento: "1990" }, evento)).toBe(3);
+  });
+
+  it("canción y observaciones cuentan solo si se eligen (casilla o texto guardado)", () => {
+    const nino = { rolFamiliar: "hijo", anioNacimiento: "2015" };
+    expect(totalDatosInvitado({ ...nino, cancion: "Bamboleo" }, evento)).toBe(3);
+    expect(totalDatosInvitado(nino, evento, { cancion: true, observaciones: true })).toBe(4);
+    // Marcada pero vacía: cuenta como pendiente.
+    expect(contarDatosRellenados({ ...nino, alergias: "No" }, false, evento, { cancion: true })).toBe(2);
+    expect(totalDatosInvitado({ ...nino, alergias: "No" }, evento, { cancion: true })).toBe(3);
+  });
+
+  it("un niño con todo lo suyo contestado sale completo: N de N", () => {
+    const nino = { rolFamiliar: "hijo", anioNacimiento: "2015", alergias: "No" };
+    expect(contarDatosRellenados(nino, false, evento)).toBe(totalDatosInvitado(nino, evento));
   });
 });

@@ -1869,6 +1869,24 @@ Al construir o revisar una ventana: comprobar esta regla junto con la de
 "lo más pequeña posible" y la de "estandarizar con el estilo que ya
 existe".
 
+## "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
+
+El usuario: un niño salía "5 de 7" aunque tuviera todo lo suyo, y así
+siempre parecía incompleto. Además canción y observaciones casi siempre se
+quedan vacías y contaban igual.
+- La cuenta vive SOLO en `lib/invitados.js` (`camposQueAplican`,
+  `totalDatosInvitado`, `contarDatosRellenados`): lo que no aplica (email
+  de un menor, año y foto de boda de quien no es O ni A) no cuenta.
+- Canción y observaciones son `CAMPOS_OPCIONALES`: en el formulario, una
+  casilla "Sí" con el mismo aspecto que las de alergias. Sin marcar =
+  "no", plegadas, fuera de la cuenta. Marcada = aparece el campo y cuenta
+  (vacía, como pendiente). Guardado, "sí" es tener texto: no hay columna
+  nueva. Desmarcar con texto pregunta antes de borrarlo.
+- Ejemplos (pruebas en invitados.test.js): esposo adulto 5, suelto adulto
+  3, hijo menor 2; +1 por cada opcional elegido.
+- `datosCompletos` (los dos obligatorios, año de nacimiento y alergias) no
+  cambia: es lo que decide "completo" para pagos y llegadas.
+
 ## Una familia no se separa en las mesas (2026-09-19, v37)
 
 REGLA INFLEXIBLE del usuario: "les he puesto el mismo apellido y el rol

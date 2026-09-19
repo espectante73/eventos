@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.5",
+    cambios: [
+      "Formulario del colaborador: \"datos X de Y\" cuenta solo lo que se le pide a esa persona, así que completo es siempre \"N de N\" (un niño, por ejemplo, \"2 de 2\").",
+      "Canción y observaciones llevan una casilla \"Sí\", como las alergias: sin marcar es \"no\", se quedan plegadas y no cuentan. Marcada, aparece el campo y cuenta. Desmarcarla con algo escrito pregunta antes de borrarlo.",
+    ],
+  },
+  {
     version: "37.4",
     cambios: [
       "Revisión: excepciones. Junto a cada nombre hay un botón \"Excepción\" para dar por bueno un caso consciente (p. ej. la madre que va con el grupo de su hija para sentarse juntas). Pregunta antes, y la Revisión deja de avisar solo de ese caso; los demás casos iguales se siguen avisando. Abajo, en \"Excepciones permitidas\", se ven y se pueden quitar.",

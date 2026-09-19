@@ -62,24 +62,40 @@ export function pideEmail(g, evento) {
   return !esMenorDeEdad(g, evento);
 }
 
-// Los campos de texto que SÍ se le piden a esta persona en concreto.
-export function camposQueAplican(g, evento) {
+// Canción y observaciones son OPCIONALES DE VERDAD (usuario, 2026-09-19):
+// casi siempre se quedan vacías, y contarlas dejaba a casi todos en "5 de
+// 7" para siempre. En el formulario van con una casilla "Sí": sin marcar
+// es "no", se quedan plegadas y NO cuentan; marcada, aparece el campo y
+// cuenta. Guardado, "sí" es simplemente que tenga texto.
+// `abiertos` ({ cancion, observaciones }): lo que el formulario tiene
+// marcado ahora mismo; sin él, se deduce del texto guardado.
+export const CAMPOS_OPCIONALES = ["cancion", "observaciones"];
+
+export function eligeOpcional(g, campo, abiertos) {
+  if (abiertos && campo in abiertos) return Boolean(abiertos[campo]);
+  return String(g?.[campo] || "").trim() !== "";
+}
+
+// Los campos de texto que SÍ se le piden a esta persona en concreto: lo
+// que no aplica (el email de un menor, el año de boda de quien no es O ni
+// A) o lo opcional que no ha elegido, no cuenta. Así "completo" es
+// siempre "N de N", sea quien sea.
+export function camposQueAplican(g, evento, abiertos) {
   return CAMPOS_DATOS_INVITADO.filter((campo) => {
     if (campo === "anioBoda") return pideDatosDeBoda(g);
     if (campo === "email") return pideEmail(g, evento);
+    if (CAMPOS_OPCIONALES.includes(campo)) return eligeOpcional(g, campo, abiertos);
     return true;
   });
 }
 
-// El "de M" del contador, ajustado a esta persona: si no se le pide el
-// año de boda ni la foto, un hijo se quedaría en "5 de 7" para siempre y
-// parecería que falta algo cuando no falta nada.
-export function totalDatosInvitado(g, evento) {
-  return camposQueAplican(g, evento).length + (pideDatosDeBoda(g) ? 1 : 0);
+// El "de M" del contador, ajustado a esta persona.
+export function totalDatosInvitado(g, evento, abiertos) {
+  return camposQueAplican(g, evento, abiertos).length + (pideDatosDeBoda(g) ? 1 : 0);
 }
 
-export function contarDatosRellenados(g, foto, evento) {
-  const rellenos = camposQueAplican(g, evento).filter((c) => (g[c] || "").trim() !== "").length;
+export function contarDatosRellenados(g, foto, evento, abiertos) {
+  const rellenos = camposQueAplican(g, evento, abiertos).filter((c) => String(g[c] || "").trim() !== "").length;
   return rellenos + (pideDatosDeBoda(g) && foto ? 1 : 0);
 }
 
