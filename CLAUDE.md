@@ -1897,6 +1897,13 @@ quedan vacías y contaban igual.
   colaborador, ese otro no recibe los datos de Colaboradores (por
   privacidad solo ve su propio perfil), así que ahí el email sigue
   pareciendo vacío y editable. No resuelto.
+- v37.7: en la lista del colaborador, ficha CERRADA que no está en N de N
+  → fondo `C.avisoFondo`, borde rojo y latido lento (`.ficha-incompleta`,
+  2,8 s, sombra roja al 16%; quieta con "reducir movimiento"). Elegido por
+  el usuario: rojo mientras falte cualquier dato que se le pide, también
+  email o foto -- sabiendo que un adulto que no dé su email se quedaría en
+  rojo. Las secciones NUEVOS/COMPLETADOS siguen por los obligatorios, así
+  que puede haber una ficha roja en COMPLETADOS: es lo esperado.
 
 ## Una familia no se separa en las mesas (2026-09-19, v37)
 

@@ -597,8 +597,22 @@ function FilaInvitadoColaborador({
     );
   };
 
+  // "Datos X de Y" de esta ficha, una sola vez para toda la fila.
+  const datosRellenos = contarDatosRellenados(conEmailDeColaborador(g, colaboradorVinculado), fotoFamiliar, evento);
+  const datosTotal = totalDatosInvitado(g, evento);
+  // Ficha CERRADA con datos a medias (no está en N de N): fondo rojo suave y
+  // un latido lento, "que le dé un toque al verla, pero suave" (usuario,
+  // 2026-09-19). Abierta no late: ya se está rellenando.
+  const incompleta = !abierto && datosRellenos < datosTotal;
+
   return (
-    <div className={`rounded ${oculta ? "hidden sm:block" : ""}`} style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+    <div
+      className={`rounded ${oculta ? "hidden sm:block" : ""}${incompleta ? " ficha-incompleta" : ""}`}
+      style={{
+        background: incompleta ? C.avisoFondo : "#fff",
+        border: `1px solid ${incompleta ? "rgba(176, 0, 32, 0.45)" : C.line}`,
+      }}
+    >
       <div className="flex flex-wrap items-center gap-3 p-3 text-sm">
         {!abierto && (
           <button onClick={confirmarPago} className="boton-3d rounded flex items-center gap-1">
@@ -616,13 +630,11 @@ function FilaInvitadoColaborador({
         )}
         {datosCompletos(g) ? (
           <span className="flex items-center gap-1 text-xs" style={{ color: C.ink, opacity: 0.7 }}>
-            <Check size={12} /> datos {contarDatosRellenados(conEmailDeColaborador(g, colaboradorVinculado), fotoFamiliar, evento)} de{" "}
-            {totalDatosInvitado(g, evento)}
+            <Check size={12} /> datos {datosRellenos} de {datosTotal}
           </span>
         ) : (
           <span className="flex items-center gap-1 text-xs" style={{ color: C.wax }}>
-            <Bell size={12} /> datos {contarDatosRellenados(conEmailDeColaborador(g, colaboradorVinculado), fotoFamiliar, evento)} de{" "}
-            {totalDatosInvitado(g, evento)}
+            <Bell size={12} /> datos {datosRellenos} de {datosTotal}
           </span>
         )}
         <button

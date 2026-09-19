@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.7",
+    cambios: [
+      "Lista del colaborador: cada ficha cerrada que no esté en \"N de N\" se ve con fondo rojo suave y un latido lento, para que se note sin molestar. Abierta no late.",
+    ],
+  },
+  {
     version: "37.6",
     cambios: [
       "\"Datos X de Y\" de un invitado que también es colaborador: su email cuenta aunque lo haya puesto el anfitrión en Colaboradores (antes salía \"3 de 4\" en vez de \"4 de 4\").",
