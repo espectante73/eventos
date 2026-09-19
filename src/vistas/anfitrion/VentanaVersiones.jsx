@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.4",
+    cambios: [
+      "Revisión: excepciones. Junto a cada nombre hay un botón \"Excepción\" para dar por bueno un caso consciente (p. ej. la madre que va con el grupo de su hija para sentarse juntas). Pregunta antes, y la Revisión deja de avisar solo de ese caso; los demás casos iguales se siguen avisando. Abajo, en \"Excepciones permitidas\", se ven y se pueden quitar.",
+    ],
+  },
+  {
     version: "37.3",
     cambios: [
       "Revisión de la Lista de invitados: botón \"Cerrar\" arriba y a la vista (antes tocar el título solo la plegaba y volvía a abrirse, y el cierre estaba al final de todo). Al cerrarla, la lista vuelve a como estaba antes de abrirla, aunque se haya pulsado algún nombre del informe.",

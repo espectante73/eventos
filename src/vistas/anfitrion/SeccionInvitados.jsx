@@ -41,7 +41,7 @@ import { EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widget
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { InformeInvitados } from "../../components/InformeInvitados";
-import { revisarInvitados } from "../../lib/revisionInvitados";
+import { revisarConExcepciones } from "../../lib/revisionInvitados";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { asignarMesaConSuFamilia, confirmarConSuFamilia } from "../../lib/mesas";
@@ -513,7 +513,33 @@ export function SeccionInvitados({
   };
   // Informe de revisión: solo lee, no toca nada. Ver
   // lib/revisionInvitados.js para lo que comprueba y por qué.
-  const hallazgos = revisarInvitados(invitados, evento, colaboradores);
+  const { hallazgos, excepciones: excepcionesRevision } = revisarConExcepciones(invitados, evento, colaboradores);
+
+  // Dar por bueno un caso concreto que la Revisión señala (usuario,
+  // 2026-09-19): pregunta antes, y se guarda en el propio invitado.
+  const permitirExcepcion = (g, h) =>
+    preguntar({
+      titulo: "¿Permitir esta excepción?",
+      texto:
+        `${g.nombre} ${g.apellido}: «${h.titulo}».\n` +
+        "La Revisión dejará de avisar de este caso; de los demás, no. Se puede deshacer abajo, en «Excepciones permitidas».",
+      rotulo: "Sí, permitir",
+      peligro: false,
+      alConfirmar: () =>
+        persistInvitados(
+          invitados.map((x) =>
+            x.id === g.id
+              ? { ...x, excepcionesRevision: [...new Set([...(x.excepcionesRevision || []), h.clave])] }
+              : x
+          )
+        ),
+    });
+  const quitarExcepcion = (g, clave) =>
+    persistInvitados(
+      invitados.map((x) =>
+        x.id === g.id ? { ...x, excepcionesRevision: (x.excepcionesRevision || []).filter((c) => c !== clave) } : x
+      )
+    );
   // El "numerito" que pidió el usuario, pero dentro del propio filtro:
   // así se ven los cinco papeles a la vez, en vez de tener que filtrar
   // uno por uno para saber cuántos hay de cada.
@@ -1292,6 +1318,9 @@ export function SeccionInvitados({
             // colaborador"); si no, se busca a la persona por su nombre.
             onBuscar={(g) => setFiltros({ ...filtros, ...(g.filtros || { texto: `${g.nombre} ${g.apellido}` }) })}
             onCerrar={cerrarRevision}
+            excepciones={excepcionesRevision}
+            onExcepcion={permitirExcepcion}
+            onQuitarExcepcion={quitarExcepcion}
           />
         )}
         {mostrarAnadir && (

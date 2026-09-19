@@ -117,7 +117,14 @@ CREATE TABLE public.invitados (
     "rolesTrabajo" jsonb DEFAULT '[]'::jsonb NOT NULL,
     "excluidoTablon" boolean DEFAULT false NOT NULL,
     "rolFamiliar" text DEFAULT ''::text NOT NULL,
-    presente boolean DEFAULT false NOT NULL
+    presente boolean DEFAULT false NOT NULL,
+    -- Avisos de la Revisión dados por buenos A PROPÓSITO para esta persona
+    -- (claves de lib/revisionInvitados.js), p. ej. ["sueltoConFamilia"]
+    -- para la madre que se sienta con su hija (2026-09-19).
+    -- SIN "not null" a propósito: una foto de Deshacer o del Modo Pruebas
+    -- guardada antes de existir la columna la trae vacía, y con "not null"
+    -- reponerla fallaría. La app trata el vacío como "ninguna".
+    "excepcionesRevision" jsonb DEFAULT '[]'::jsonb
 );
 
 -- Quién ayuda a recoger datos y qué permisos tiene cada uno.
@@ -1149,7 +1156,7 @@ begin
     "id","nombre","apellido","zona","confirmado","colaboradorId",
     "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
     "cancion","alergias","observaciones","pagado","rolesTrabajo",
-    "excluidoTablon","rolFamiliar","presente"
+    "excluidoTablon","rolFamiliar","presente","excepcionesRevision"
   )
   select
     (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
@@ -1162,7 +1169,8 @@ begin
     coalesce(f->'rolesTrabajo', '[]'::jsonb),
     coalesce((f->>'excluidoTablon')::boolean, false),
     coalesce(f->>'rolFamiliar', ''),
-    coalesce((f->>'presente')::boolean, false)
+    coalesce((f->>'presente')::boolean, false),
+    coalesce(f->'excepcionesRevision', '[]'::jsonb)
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update set
     "nombre"=excluded."nombre", "apellido"=excluded."apellido",
@@ -1173,7 +1181,8 @@ begin
     "cancion"=excluded."cancion", "alergias"=excluded."alergias",
     "observaciones"=excluded."observaciones", "pagado"=excluded."pagado",
     "rolesTrabajo"=excluded."rolesTrabajo", "excluidoTablon"=excluded."excluidoTablon",
-    "rolFamiliar"=excluded."rolFamiliar", "presente"=excluded."presente";
+    "rolFamiliar"=excluded."rolFamiliar", "presente"=excluded."presente",
+    "excepcionesRevision"=excluded."excepcionesRevision";
 
   delete from invitados g
   where not exists (

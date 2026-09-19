@@ -9,8 +9,11 @@ import { useState } from "react";
 import { ChevronDown, AlertTriangle, CircleCheck, Clock } from "lucide-react";
 import { C } from "../theme";
 import { Boton } from "./Boton";
+import { BotonQuitar } from "./PreguntaSeguridad";
 
-export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
+// `excepciones`: los casos aceptados a propósito (lib/revisionInvitados.js).
+// `onExcepcion(persona, hallazgo)` / `onQuitarExcepcion(persona, clave)`.
+export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerrar, onExcepcion, onQuitarExcepcion }) {
   // Nace ABIERTO: se llega hasta aquí desde "Acciones" → Revisión, así
   // que quien lo abre quiere verlo ya, no volver a desplegarlo.
   const [abierto, setAbierto] = useState(true);
@@ -111,10 +114,18 @@ export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {h.personas.slice(0, 12).map((g) => (
                   // `etiqueta`: el hallazgo no es una persona sino, p. ej., un
-                  // colaborador con su cifra ("Ana: 14").
-                  <Boton variante="secundario" tamano="pequeno" key={g.id} onClick={() => onBuscar(g)} titulo={g.etiqueta ? "Verlo en la lista" : "Buscarlo en la lista"}>
-                    {g.etiqueta || `${g.apellido}, ${g.nombre}`}
-                  </Boton>
+                  // colaborador con su cifra ("Ana: 14"). A esos no se les
+                  // puede dar por buena una excepción: no son un invitado.
+                  <span key={g.id} className="inline-flex items-center gap-1">
+                    <Boton variante="secundario" tamano="pequeno" onClick={() => onBuscar(g)} titulo={g.etiqueta ? "Verlo en la lista" : "Buscarlo en la lista"}>
+                      {g.etiqueta || `${g.apellido}, ${g.nombre}`}
+                    </Boton>
+                    {!g.etiqueta && onExcepcion && (
+                      <Boton tamano="pequeno" onClick={() => onExcepcion(g, h)} titulo="Es un caso consciente: dejar de avisar de él">
+                        Excepción
+                      </Boton>
+                    )}
+                  </span>
                 ))}
                 {h.personas.length > 12 && (
                   <span className="text-xs self-center" style={{ color: C.charcoal, opacity: 0.6 }}>
@@ -125,6 +136,37 @@ export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Las excepciones aceptadas, al pie y plegadas (norma de la app):
+          para ver qué se ha dado por bueno y poder deshacerlo. */}
+      {abierto && excepciones.length > 0 && (
+        <details className="px-3 pb-3 text-xs" style={{ color: C.charcoal }}>
+          <summary className="cursor-pointer select-none" style={{ opacity: 0.8 }}>
+            Excepciones permitidas ({excepciones.length})
+          </summary>
+          <div className="mt-2 space-y-1.5">
+            {excepciones.map(({ clave, titulo, persona }) => (
+              <div key={`${persona.id}-${clave}`} className="flex items-center gap-2">
+                <span className="flex-1 min-w-0">
+                  <b>
+                    {persona.apellido}, {persona.nombre}
+                  </b>{" "}
+                  · {titulo}
+                </span>
+                <BotonQuitar
+                  titulo="Quitar esta excepción"
+                  pregunta={{
+                    titulo: "¿Quitar la excepción?",
+                    texto: `La Revisión volverá a avisar de ${persona.nombre} ${persona.apellido}: «${titulo}».`,
+                    rotulo: "Sí, quitarla",
+                  }}
+                  onClick={() => onQuitarExcepcion(persona, clave)}
+                />
+              </div>
+            ))}
+          </div>
+        </details>
       )}
     </div>
   );

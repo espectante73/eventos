@@ -1911,6 +1911,23 @@ afecta (se le sienta aparte si hace falta).
   si se cierra la ventana de la lista con la Revisión abierta.
   ⚠️ Lección general: todo panel que se abre tiene que tener su salida
   ARRIBA y a la vista, y salir deja la pantalla como estaba.
+- v37.4: **excepciones**. El caso real: una madre con S dentro del grupo
+  Gatell01 de su hija, a propósito, para sentarse juntas; la Revisión lo
+  daba por error sin dejar aceptarlo. El usuario quiere que SIGA avisando
+  ("en líneas generales esto sería un error") pero poder dar por bueno
+  ESE caso. Se guarda en el propio invitado: `invitados.excepcionesRevision`
+  (jsonb, lista de claves de aviso aceptadas). `revisarConExcepciones`
+  devuelve los avisos sin las aceptadas y la lista de aceptadas; la
+  Revisión pone "Excepción" junto a cada nombre (pregunta antes) y, al
+  pie y plegado, "Excepciones permitidas" con su X para quitarlas. Solo
+  para invitados: los colaboradores del reparto no llevan el botón.
+  ⚠️ La columna es SIN "not null" a propósito: una foto de Deshacer o del
+  Modo Pruebas anterior a la columna la trae vacía, y con "not null"
+  reponerla fallaría (`jsonb_populate_recordset` pone NULL en lo que falta).
+  Lo mismo aplica a cualquier columna nueva que se añada.
+  SQL: `alter table` + la función `anfitrion_guardar_invitados` con la
+  columna (dado al usuario el 2026-09-19). Sin ese SQL, la excepción se
+  pierde al recargar.
 - ⚠️ El desplegable de mesa sigue desactivando solo las mesas llenas para
   UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
   al elegirla, sale el aviso y no se mueve nadie.

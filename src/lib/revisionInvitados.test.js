@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { revisarInvitados } from "./revisionInvitados";
+import { revisarInvitados, revisarConExcepciones } from "./revisionInvitados";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const persona = (extra) => ({
@@ -109,6 +109,31 @@ describe("revisarInvitados", () => {
     expect(reparto.personas.map((p) => p.etiqueta)).toEqual(["Ana: 8", "Eva: 14"]);
     expect(reparto.personas[0].filtros).toEqual({ texto: "", colaboradorId: "pocos" });
     expect(reparto.tipo).toBe("pendiente");
+  });
+
+  it("una excepción aceptada deja de avisarse, SOLO para esa persona y ese aviso", () => {
+    const madre = persona({ nombre: "Madre", apellido: "Gatell", grupoFamiliar: "Gatell01", excepcionesRevision: ["sueltoConFamilia"] });
+    const otraS = persona({ nombre: "Otra", apellido: "Gatell", grupoFamiliar: "Gatell01" });
+    const lista = [
+      persona({ apellido: "Gatell", grupoFamiliar: "Gatell01", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ apellido: "Gatell", grupoFamiliar: "Gatell01", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
+      madre,
+      otraS,
+    ];
+    const { hallazgos, excepciones } = revisarConExcepciones(lista);
+    const suelto = hallazgos.find((h) => h.clave === "sueltoConFamilia");
+    expect(suelto.personas).toEqual([otraS]);
+    expect(excepciones).toHaveLength(1);
+    expect(excepciones[0]).toMatchObject({ clave: "sueltoConFamilia", persona: madre });
+  });
+
+  it("si todas las personas de un aviso son excepciones, el aviso desaparece", () => {
+    const lista = [
+      persona({ apellido: "Gatell", grupoFamiliar: "Gatell01", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ apellido: "Gatell", grupoFamiliar: "Gatell01", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
+      persona({ apellido: "Gatell", grupoFamiliar: "Gatell01", excepcionesRevision: ["sueltoConFamilia"] }),
+    ];
+    expect(revisarInvitados(lista).map((h) => h.clave)).not.toContain("sueltoConFamilia");
   });
 
   it("caza a una familia repartida en varias mesas", () => {

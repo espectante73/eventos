@@ -77,7 +77,7 @@ function hallazgo(clave, titulo, ayuda, personas, tipo = "error") {
   return { clave, titulo, ayuda, tipo, personas };
 }
 
-export function revisarInvitados(invitados = [], evento = {}, colaboradores = []) {
+function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
   const grupos = agruparPorFamilia(invitados);
   const hallazgos = [];
 
@@ -297,4 +297,34 @@ export function revisarInvitados(invitados = [], evento = {}, colaboradores = []
   // obliga a cruzar filas entre sí, que es lo que la lista no puede
   // enseñar por muchas columnas que tenga.
   return hallazgos;
+}
+
+// EXCEPCIONES (usuario, 2026-09-19). La Revisión avisa porque "en líneas
+// generales esto sería un error", pero hay casos conscientes: una madre con
+// S dentro del grupo Gatell01 de su hija, para sentarse juntas. Se aceptan
+// UNO a UNO, por persona y por tipo de aviso: se guarda en el propio
+// invitado (`excepcionesRevision`, la lista de claves aceptadas) y la
+// Revisión deja de avisar SOLO de ese caso; los demás casos iguales se
+// siguen avisando. Las aceptadas se listan aparte para poder quitarlas.
+function aceptada(g, clave) {
+  return Array.isArray(g?.excepcionesRevision) && g.excepcionesRevision.includes(clave);
+}
+
+export function revisarConExcepciones(invitados = [], evento = {}, colaboradores = []) {
+  const hallazgos = [];
+  const excepciones = [];
+  for (const h of todosLosHallazgos(invitados, evento, colaboradores)) {
+    const pendientesDeVer = [];
+    for (const g of h.personas) {
+      if (aceptada(g, h.clave)) excepciones.push({ clave: h.clave, titulo: h.titulo, persona: g });
+      else pendientesDeVer.push(g);
+    }
+    if (pendientesDeVer.length) hallazgos.push({ ...h, personas: pendientesDeVer });
+  }
+  return { hallazgos, excepciones };
+}
+
+// Solo los avisos que quedan, ya sin las excepciones aceptadas.
+export function revisarInvitados(invitados = [], evento = {}, colaboradores = []) {
+  return revisarConExcepciones(invitados, evento, colaboradores).hallazgos;
 }
