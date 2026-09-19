@@ -224,6 +224,27 @@ export function revisarInvitados(invitados = [], evento = {}) {
       )
     );
 
+  // Un matrimonio con uno confirmado y el otro no (usuario, 2026-09-19). Su
+  // propia regla: la O y la A son solo para quien viene con su pareja; el
+  // que viene solo lleva P o S. Así que esto es o un "sí" a medias o una
+  // letra mal puesta.
+  // ⚠️ Que los dos cónyuges tengan COLABORADORES distintos NO se avisa, a
+  // propósito: el usuario reparte 10-12 invitados por colaborador para
+  // igualar el trabajo y el dinero a recoger, y eso obliga a veces a
+  // separar a una pareja. Esa regla está por encima.
+  const matrimoniosAMedias = matrimoniosDeInvitados(invitados, evento.fecha)
+    .filter((m) => Boolean(m.esposo.confirmado) !== Boolean(m.esposa.confirmado))
+    .flatMap((m) => [m.esposo, m.esposa]);
+  if (matrimoniosAMedias.length)
+    hallazgos.push(
+      hallazgo(
+        "matrimonioAMedias",
+        "Matrimonio con uno confirmado y el otro no",
+        "Un matrimonio (O y A) viene siempre junto. O falta confirmar al otro, o el que viene solo tiene que llevar P o S.",
+        matrimoniosAMedias
+      )
+    );
+
   const matrimoniosSinBoda = matrimoniosDeInvitados(invitados, evento.fecha)
     .filter((m) => m.aniversario === null)
     .map((m) => m.esposo);

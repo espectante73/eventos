@@ -78,6 +78,24 @@ describe("revisarInvitados", () => {
     expect(encontradas).not.toContain("sinRevisar");
   });
 
+  it("caza al matrimonio con uno confirmado y el otro no", () => {
+    const lista = [
+      persona({ rolFamiliar: ROL_FAMILIAR.ESPOSO, confirmado: true }),
+      persona({ rolFamiliar: ROL_FAMILIAR.ESPOSA, confirmado: false, mesa: null }),
+    ];
+    const aMedias = revisarInvitados(lista).find((h) => h.clave === "matrimonioAMedias");
+    expect(aMedias.personas).toHaveLength(2);
+  });
+
+  it("NO avisa de un matrimonio con colaboradores distintos (reparto 10-12 por colaborador)", () => {
+    const lista = [
+      persona({ rolFamiliar: ROL_FAMILIAR.ESPOSO, colaboradorId: "c1" }),
+      persona({ rolFamiliar: ROL_FAMILIAR.ESPOSA, colaboradorId: "c2" }),
+    ];
+    expect(revisarInvitados(lista).map((h) => h.clave)).not.toContain("matrimonioAMedias");
+    expect(revisarInvitados(lista).some((h) => /colaborador/i.test(h.titulo) && h.clave !== "asignadoSinRolFamiliar")).toBe(false);
+  });
+
   it("caza a una familia repartida en varias mesas", () => {
     const lista = [
       persona({ rolFamiliar: ROL_FAMILIAR.PADRE, mesa: 1 }),

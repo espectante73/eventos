@@ -92,6 +92,12 @@ en la sección que se indica entre paréntesis.
       "arregla" a escondidas;
     - las excepciones que marca el usuario quedan fuera por diseño (el
       hijo mayor con otro apellido es otra familia);
+    - ⚠️ y hay reglas del usuario POR ENCIMA: cada colaborador lleva un
+      número parecido de invitados, **entre 10 y 12**, para igualar el
+      trabajo y el dinero a recoger ("el mismo peso de responsabilidad").
+      Por eso un matrimonio PUEDE tener dos colaboradores distintos
+      (también cuando solo uno de los dos es colaborador, o los dos). No
+      avisar de eso ni "juntarlos" (decidido el 2026-09-19);
     - y la regla lleva sus pruebas automáticas.
     Ante un dato nuevo, preguntarse: ¿debería ir junto con el de alguien
     más? («Una familia no se separa en las mesas», «El año de boda,
@@ -1885,6 +1891,9 @@ afecta (se le sienta aparte si hace falta).
   pantalla: el aviso de arriba de la lista no se ve desde la fila 100.
 - La Revisión gana "Familia repartida en varias mesas", para lo que se
   repartió a mano antes de la regla.
+- v37.1: y "Matrimonio con uno confirmado y el otro no" (la O y la A son
+  solo para quien viene con su pareja). El aviso de "colaboradores
+  distintos" que se le propuso lo RECHAZÓ el usuario: ver la norma 16.
 - ⚠️ El desplegable de mesa sigue desactivando solo las mesas llenas para
   UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
   al elegirla, sale el aviso y no se mueve nadie.

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.1",
+    cambios: [
+      "La Revisión avisa del matrimonio con uno confirmado y el otro no: o falta confirmar al otro, o el que viene solo tiene que llevar P o S.",
+    ],
+  },
+  {
     version: "37",
     cambios: [
       "Una familia no se separa en las mesas: al poner (o quitar) la mesa a uno, se pone (o se quita) a toda su familia confirmada. Si no caben todos, no se sienta a nadie y la app dice cuántos son y cuántos sitios quedan.",
