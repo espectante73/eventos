@@ -89,6 +89,16 @@ export function camposQueAplican(g, evento, abiertos) {
   });
 }
 
+// Un invitado que además es colaborador guarda su email en Colaboradores,
+// no en su ficha (que se deja vacía a propósito: ver CLAUDE.md, "El email
+// de un invitado que también es colaborador vive en dos sitios"). Para
+// contar sus datos vale ese: si no, salía "3 de 4" aunque el anfitrión ya
+// hubiera puesto el email (Raúl Sierra, 2026-09-19).
+export function conEmailDeColaborador(g, colaboradorVinculado) {
+  if (!colaboradorVinculado) return g;
+  return { ...g, email: colaboradorVinculado.email || "" };
+}
+
 // El "de M" del contador, ajustado a esta persona.
 export function totalDatosInvitado(g, evento, abiertos) {
   return camposQueAplican(g, evento, abiertos).length + (pideDatosDeBoda(g) ? 1 : 0);

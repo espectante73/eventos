@@ -1886,6 +1886,17 @@ quedan vacías y contaban igual.
   3, hijo menor 2; +1 por cada opcional elegido.
 - `datosCompletos` (los dos obligatorios, año de nacimiento y alergias) no
   cambia: es lo que decide "completo" para pagos y llegadas.
+- v37.6: un invitado que ES colaborador (Raúl Sierra) salía "3 de 4": su
+  email vive en Colaboradores y su ficha de invitado lo tiene vacío a
+  propósito, pero la cuenta miraba la ficha. `conEmailDeColaborador(g,
+  colaboradorVinculado)` pone el de Colaboradores antes de contar, en los
+  dos sitios donde se ve la cuenta. Y la alergia "de fuera" (Melocotón)
+  ya contaba bien: su "6 de 7" era la cuenta vieja de canción y
+  observaciones (prueba añadida).
+  ⚠️ Límite conocido: si ese invitado-colaborador está asignado a OTRO
+  colaborador, ese otro no recibe los datos de Colaboradores (por
+  privacidad solo ve su propio perfil), así que ahí el email sigue
+  pareciendo vacío y editable. No resuelto.
 
 ## Una familia no se separa en las mesas (2026-09-19, v37)
 

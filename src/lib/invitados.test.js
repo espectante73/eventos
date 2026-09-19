@@ -3,6 +3,7 @@ import {
   datosCompletos,
   contarDatosRellenados,
   totalDatosInvitado,
+  conEmailDeColaborador,
   pideDatosDeBoda,
   esMenorDeEdad,
   pideEmail,
@@ -232,6 +233,15 @@ describe("totalDatosInvitado", () => {
     // Sin canción ni observaciones elegidas: 5 de 5 (foto incluida).
     expect(contarDatosRellenados(casado, "ruta/foto.jpg", evento)).toBe(5);
     expect(totalDatosInvitado(casado, evento)).toBe(5);
+  });
+
+  it("un invitado que es colaborador: su email de Colaboradores cuenta (4 de 4, no 3 de 4)", () => {
+    const raul = { rolFamiliar: "suelto", anioNacimiento: "1975", alergias: "No", email: "", cancion: "Bamboleo" };
+    const comoColaborador = { id: "c1", invitadoId: "raul", email: "raul@ejemplo.com" };
+    expect(contarDatosRellenados(raul, false, evento)).toBe(3);
+    expect(contarDatosRellenados(conEmailDeColaborador(raul, comoColaborador), false, evento)).toBe(4);
+    expect(totalDatosInvitado(raul, evento)).toBe(4);
+    expect(conEmailDeColaborador(raul, undefined)).toBe(raul);
   });
 
   it("un niño con todo lo suyo contestado sale completo: N de N", () => {

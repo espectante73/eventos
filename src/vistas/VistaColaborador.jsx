@@ -12,6 +12,7 @@ import {
   totalDatosInvitado,
   pideDatosDeBoda,
   esMenorDeEdad,
+  conEmailDeColaborador,
   importeEsperadoInvitado,
   resolverColaborador,
 } from "../lib/invitados";
@@ -231,7 +232,8 @@ function FormularioDatos({
             {form.apellido}, {form.nombre}
           </span>
           <span className="text-xs" style={{ color: C.ink }}>
-            datos {contarDatosRellenados(form, foto, evento, abiertos)} de {totalDatosInvitado(form, evento, abiertos)}
+            datos {contarDatosRellenados(conEmailDeColaborador(form, colaboradorVinculado), foto, evento, abiertos)} de{" "}
+            {totalDatosInvitado(form, evento, abiertos)}
           </span>
           {/* Colores al revés que el resto de la cabecera (fondo dorado,
               letra verde) y un punto más de letra, a petición del usuario
@@ -614,11 +616,13 @@ function FilaInvitadoColaborador({
         )}
         {datosCompletos(g) ? (
           <span className="flex items-center gap-1 text-xs" style={{ color: C.ink, opacity: 0.7 }}>
-            <Check size={12} /> datos {contarDatosRellenados(g, fotoFamiliar, evento)} de {totalDatosInvitado(g, evento)}
+            <Check size={12} /> datos {contarDatosRellenados(conEmailDeColaborador(g, colaboradorVinculado), fotoFamiliar, evento)} de{" "}
+            {totalDatosInvitado(g, evento)}
           </span>
         ) : (
           <span className="flex items-center gap-1 text-xs" style={{ color: C.wax }}>
-            <Bell size={12} /> datos {contarDatosRellenados(g, fotoFamiliar, evento)} de {totalDatosInvitado(g, evento)}
+            <Bell size={12} /> datos {contarDatosRellenados(conEmailDeColaborador(g, colaboradorVinculado), fotoFamiliar, evento)} de{" "}
+            {totalDatosInvitado(g, evento)}
           </span>
         )}
         <button

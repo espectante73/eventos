@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.6",
+    cambios: [
+      "\"Datos X de Y\" de un invitado que también es colaborador: su email cuenta aunque lo haya puesto el anfitrión en Colaboradores (antes salía \"3 de 4\" en vez de \"4 de 4\").",
+    ],
+  },
+  {
     version: "37.5",
     cambios: [
       "Formulario del colaborador: \"datos X de Y\" cuenta solo lo que se le pide a esa persona, así que completo es siempre \"N de N\" (un niño, por ejemplo, \"2 de 2\").",
