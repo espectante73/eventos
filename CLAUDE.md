@@ -1927,7 +1927,8 @@ afecta (se le sienta aparte si hace falta).
   Lo mismo aplica a cualquier columna nueva que se añada.
   SQL: `alter table` + la función `anfitrion_guardar_invitados` con la
   columna (dado al usuario el 2026-09-19). Sin ese SQL, la excepción se
-  pierde al recargar.
+  pierde al recargar. **Ejecutado y probado por el usuario el mismo
+  día**: la excepción de Gatell01 se guarda y sigue tras recargar.
 - ⚠️ El desplegable de mesa sigue desactivando solo las mesas llenas para
   UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
   al elegirla, sale el aviso y no se mueve nadie.
