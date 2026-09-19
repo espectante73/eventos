@@ -1593,6 +1593,8 @@ dos años distintos ganaba el del esposo sin avisar.
 - SQL dado al usuario el 2026-09-19, con un arreglo de una vez (rellena
   el año que falte con el de la pareja, sin generar avisos) y una consulta
   que lista las parejas con dos años DISTINTOS, si las hubiera.
+- **Ejecutado y probado por el usuario el 2026-09-19**: con la primera
+  pareja, antes del SQL el año estaba solo en uno; después, en los dos.
 
 ### Accesibilidad de los botones: paso 1 hecho, paso 2 pendiente (2026-09-17)
 
