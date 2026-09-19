@@ -1918,6 +1918,23 @@ quedan vacías y contaban igual.
   `fotos_familiares` en sus cuatro mapas en UN sitio (antes eran tres
   copias de tres líneas); `guardarFilasDeFotos` manda las cuatro cosas.
   SQL dado al usuario el 2026-09-19 (columna + `guardar_fotos_familiares`).
+- v37.9: **una sola definición de "incompleta"** en la vista del
+  colaborador: `estadoDatos` (lib/invitados.js) = no está en N de N. La
+  usan la fila roja, la sección (rebautizada de NUEVOS a **INCOMPLETOS**,
+  a petición del usuario), `Seal` de "Abrir formulario", "Con datos
+  completos" y el botón "Datos completos": con fichas en rojo ya no avisa
+  al anfitrión (el servidor, `colaborador_confirmar_datos_completos`, sigue
+  mirando solo los dos obligatorios; el cliente es quien decide ahora).
+  Latido más rojo y más marcado (el fondo late de #F9DADF a #F2B9C1, 2 s).
+  Los avisos de esos dos botones, en la ventana de la app.
+  **EL MODELO DEL FORMULARIO, dicho por el usuario**: "lo obligado es
+  marcar sí o no; lo otro es automático: aplica o no aplica por edad o por
+  single". Es decir: el colaborador solo decide Sí/No (canción,
+  observaciones, foto de boda); si un dato aplica o no lo decide la app
+  sola (email por la edad, año y foto de boda por ser O/A). Todo dato
+  nuevo del formulario tiene que encajar en una de las dos cosas.
+  ⚠️ Queda un hueco: el email de un adulto que no lo quiera dar no tiene
+  Sí/No, y esa ficha no llega nunca a N de N.
 
 ## Una familia no se separa en las mesas (2026-09-19, v37)
 

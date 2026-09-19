@@ -13,6 +13,7 @@ import {
   pideDatosDeBoda,
   esMenorDeEdad,
   conEmailDeColaborador,
+  estadoDatos,
   importeEsperadoInvitado,
   resolverColaborador,
 } from "../lib/invitados";
@@ -631,19 +632,24 @@ function FilaInvitadoColaborador({
 
   // "Datos X de Y" de esta ficha, una sola vez para toda la fila.
   const sinFotoBoda = Boolean(fotosSinBoda[g.grupoFamiliar || ""]);
-  const datosRellenos = contarDatosRellenados(conEmailDeColaborador(g, colaboradorVinculado), fotoFamiliar, evento, { fotoBoda: !sinFotoBoda });
-  const datosTotal = totalDatosInvitado(g, evento, { fotoBoda: !sinFotoBoda });
-  // Ficha CERRADA con datos a medias (no está en N de N): fondo rojo suave y
-  // un latido lento, "que le dé un toque al verla, pero suave" (usuario,
-  // 2026-09-19). Abierta no late: ya se está rellenando.
-  const incompleta = !abierto && datosRellenos < datosTotal;
+  const { rellenos: datosRellenos, total: datosTotal, incompleta: faltanDatos } = estadoDatos(g, {
+    evento,
+    foto: fotoFamiliar,
+    sinFotoBoda,
+    colaboradorVinculado,
+  });
+  // Ficha CERRADA con datos a medias (no está en N de N): fondo rojo y un
+  // latido (usuario, 2026-09-19: primero "suave", luego "más rojo, más
+  // latido"). Abierta no late: ya se está rellenando.
+  const incompleta = !abierto && faltanDatos;
 
   return (
     <div
       className={`rounded ${oculta ? "hidden sm:block" : ""}${incompleta ? " ficha-incompleta" : ""}`}
       style={{
-        background: incompleta ? C.avisoFondo : "#fff",
-        border: `1px solid ${incompleta ? "rgba(176, 0, 32, 0.45)" : C.line}`,
+        // El tono de reposo del latido (.ficha-incompleta en index.css).
+        background: incompleta ? "#F9DADF" : "#fff",
+        border: `1px solid ${incompleta ? "rgba(176, 0, 32, 0.7)" : C.line}`,
       }}
     >
       <div className="flex flex-wrap items-center gap-3 p-3 text-sm">
@@ -661,7 +667,7 @@ function FilaInvitadoColaborador({
             )}
           </button>
         )}
-        {datosCompletos(g) ? (
+        {!faltanDatos ? (
           <span className="flex items-center gap-1 text-xs" style={{ color: C.ink, opacity: 0.7 }}>
             <Check size={12} /> datos {datosRellenos} de {datosTotal}
           </span>
@@ -736,6 +742,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, fotosSinBoda, persistFotosSinBoda, evento, ordenFamiliares, tokenTablon } = data;
   const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
+  // Avisos en la ventana de la app, no en la del navegador (norma 12).
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
+  const aviso = (titulo, texto) => preguntar({ titulo, texto, soloAviso: true });
   // Permisos extra (más allá de sus invitados asignados), concedidos por
   // el anfitrión desde la ventana Permisos -- a petición del usuario,
   // 2026-08-25, empezando por poder editar el texto de Novedades. Mismo
@@ -795,8 +804,18 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // no manda tentativa al navegador del colaborador (ver schema.sql) --
   // este filtro es ahora un no-op de refuerzo, no la barrera real.
   const confirmados = misInvitados.filter((g) => g.confirmado);
-  const esPendiente = (g) =>
-    g.id === abiertoId ? pendienteAlAbrir : !datosCompletos(g);
+  // INCOMPLETA = no está en "N de N" (la misma regla que pinta la fila de
+  // rojo, lib/invitados.js). Antes estas secciones solo miraban los datos
+  // obligatorios (año de nacimiento y alergias), y una ficha podía estar en
+  // "completados" y en rojo a la vez.
+  const incompletaDe = (g) =>
+    estadoDatos(g, {
+      evento,
+      foto: fotosFamiliares[g.grupoFamiliar || ""],
+      sinFotoBoda: Boolean(fotosSinBoda?.[g.grupoFamiliar || ""]),
+      colaboradorVinculado: colaboradores.find((c) => c.invitadoId === g.id),
+    }).incompleta;
+  const esPendiente = (g) => (g.id === abiertoId ? pendienteAlAbrir : incompletaDe(g));
   const pendientes = confirmados.filter(esPendiente);
   const completos = confirmados.filter((g) => !esPendiente(g));
   const pagados = confirmados.filter((g) => g.pagado);
@@ -850,7 +869,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const toggleAbierto = (g) =>
     setAbiertoId((actual) => {
       if (actual === g.id) return null;
-      setPendienteAlAbrir(!datosCompletos(g));
+      setPendienteAlAbrir(incompletaDe(g));
       return g.id;
     });
 
@@ -863,20 +882,27 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const [enviandoPagos, setEnviandoPagos] = useState(false);
 
   const confirmarDatosCompletos = async () => {
+    // Misma regla que la sección INCOMPLETOS: con fichas en rojo no se avisa
+    // de "terminado". El servidor solo comprueba los dos obligatorios; esto
+    // es lo que de verdad decide.
+    if (pendientes.length > 0) {
+      aviso(
+        "Todavía no",
+        `Hay ${pendientes.length} ficha${pendientes.length !== 1 ? "s" : ""} incompleta${pendientes.length !== 1 ? "s" : ""} (en rojo, en INCOMPLETOS).`
+      );
+      return;
+    }
     setEnviandoDatos(true);
     const { data, error } = await supabase.rpc("colaborador_confirmar_datos_completos", {
       p_colaborador_id: colaboradorId,
     });
     setEnviandoDatos(false);
     if (error) {
-      window.alert("No se pudo avisar al anfitrión. Inténtalo de nuevo.");
+      aviso("No se pudo", "No se pudo avisar al anfitrión. Inténtalo de nuevo.");
       return;
     }
-    window.alert(
-      data
-        ? "Aviso enviado al anfitrión: datos completos."
-        : "Todavía faltan invitados confirmados por completar sus datos."
-    );
+    if (data) aviso("Hecho", "Aviso enviado al anfitrión: datos completos.");
+    else aviso("Todavía no", "Todavía faltan invitados confirmados por completar sus datos.");
   };
 
   const confirmarPagosCompletos = async () => {
@@ -886,14 +912,11 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
     });
     setEnviandoPagos(false);
     if (error) {
-      window.alert("No se pudo avisar al anfitrión. Inténtalo de nuevo.");
+      aviso("No se pudo", "No se pudo avisar al anfitrión. Inténtalo de nuevo.");
       return;
     }
-    window.alert(
-      data
-        ? "Aviso enviado al anfitrión: pagos completos."
-        : "Todavía faltan invitados confirmados por pagar."
-    );
+    if (data) aviso("Hecho", "Aviso enviado al anfitrión: pagos completos.");
+    else aviso("Todavía no", "Todavía faltan invitados confirmados por pagar.");
   };
 
   if (!colaborador) return null;
@@ -1149,7 +1172,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}
               >
                 <Bell size={18} strokeWidth={2} />
-                Invitados NUEVOS {pendientes.length > 0 && `(${pendientes.length})`}
+                Invitados INCOMPLETOS {pendientes.length > 0 && `(${pendientes.length})`}
               </h2>
               <button
                 onClick={() => setMostrarConfirmar(true)}
@@ -1180,7 +1203,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               ))}
               {pendientes.length === 0 && !fichaAbierta && (
                 <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
-                  No hay avisos pendientes.
+                  Ninguna ficha incompleta.
                 </p>
               )}
             </div>
@@ -1220,6 +1243,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         </VentanaFlotante>
       )}
 
+      {ventanaPregunta}
       {mostrarConfirmar && (
         <ModalFlotante titulo="¿Has terminado tu trabajo?" onCerrar={() => setMostrarConfirmar(false)}>
           <p className="text-sm mb-3" style={{ color: C.charcoal }}>

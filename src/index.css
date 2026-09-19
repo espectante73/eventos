@@ -89,24 +89,29 @@ button:disabled > .interruptor-haptico {
   pointer-events: none;
 }
 
-/* Ficha del colaborador con datos a medias (VistaColaborador.jsx): el fondo
-   rojo suave va en línea; aquí solo el latido, lento y flojo -- "que le dé
-   un toque al verla, pero suave" (usuario, 2026-09-19). */
+/* Ficha del colaborador con datos a medias (VistaColaborador.jsx). Primero
+   se pidió "que le dé un toque, pero suave"; al verlo, "más rojo y más
+   latido" (usuario, 2026-09-19). Late el fondo (de rosa a rojo claro) y un
+   halo rojo alrededor. Una animación gana al fondo puesto en línea, así
+   que el de la fila es solo el tono de reposo. */
 @keyframes latido-incompleta {
   0%,
   100% {
+    background-color: #f9dadf;
     box-shadow: 0 0 0 0 rgba(176, 0, 32, 0);
   }
   50% {
-    box-shadow: 0 0 0 3px rgba(176, 0, 32, 0.16);
+    background-color: #f2b9c1;
+    box-shadow: 0 0 0 5px rgba(176, 0, 32, 0.28);
   }
 }
 .ficha-incompleta {
-  animation: latido-incompleta 2.8s ease-in-out infinite;
+  animation: latido-incompleta 2s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .ficha-incompleta {
     animation: none;
+    background-color: #f4c6cd !important;
   }
 }
 

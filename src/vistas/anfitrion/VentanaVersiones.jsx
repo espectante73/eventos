@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.9",
+    cambios: [
+      "Lista del colaborador: la sección \"Invitados NUEVOS\" pasa a llamarse \"Invitados INCOMPLETOS\" y recoge toda ficha que no esté en \"N de N\". El contador del botón \"Abrir formulario\" y el aviso \"Datos completos\" al anfitrión usan la misma regla.",
+      "La ficha incompleta, más roja y con el latido más marcado.",
+      "Los avisos de \"Datos completos\" y \"Pagos completos\" salen en una ventana de la app, no en la del navegador.",
+    ],
+  },
+  {
     version: "37.8",
     cambios: [
       "Foto de boda con casilla \"Sí\", marcada por defecto. Si un matrimonio no tiene foto, el colaborador la desmarca: deja de contar como dato pendiente (vale para los dos cónyuges), en Aniversarios sale \"No tienen\" y la hoja de encargo ya no la espera.",

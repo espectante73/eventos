@@ -117,6 +117,17 @@ export function contarDatosRellenados(g, foto, evento, abiertos) {
   return rellenos + (pideFotoBoda(g, abiertos) && foto ? 1 : 0);
 }
 
+// "Datos X de Y" de una ficha y si está INCOMPLETA (no está en N de N). Una
+// sola definición para toda la vista del colaborador (usuario, 2026-09-19):
+// la fila en rojo, la sección INCOMPLETOS, el contador de "Abrir
+// formulario" y el aviso "Datos completos" al anfitrión.
+export function estadoDatos(g, { evento, foto, sinFotoBoda = false, colaboradorVinculado } = {}) {
+  const opciones = { fotoBoda: !sinFotoBoda };
+  const rellenos = contarDatosRellenados(conEmailDeColaborador(g, colaboradorVinculado), foto, evento, opciones);
+  const total = totalDatosInvitado(g, evento, opciones);
+  return { rellenos, total, incompleta: rellenos < total };
+}
+
 export function tieneAlergiaReal(g) {
   // "No" es una respuesta explícita de que no hay alergia — no cuenta como alergia.
   return Boolean(g.alergias && g.alergias.trim() && g.alergias.trim() !== "No");
