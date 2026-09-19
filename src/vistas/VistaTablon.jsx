@@ -427,7 +427,7 @@ export function VistaTablon({ token }) {
                     que leen 58 personas en el móvil.) */}
                 <button
                   onClick={() => alternar(n.id)}
-                  className="w-full flex items-start justify-between gap-2 px-4 py-3 text-left"
+                  className="boton-3d w-full flex items-start justify-between gap-2 px-4 py-3 text-left"
                 >
                   <span
                     className="min-w-0 flex-1"

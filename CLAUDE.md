@@ -59,12 +59,21 @@ en la sección que se indica entre paréntesis.
 11. **Piezas compartidas**: botones comunes con `Boton` (principal /
     secundario / peligro, con relieve 3D al pulsar); fotos con `HuecoFoto`
     (16:9, mismo marco). Los lenguajes propios ya aprobados (pastilla de
-    inicio, mando de música, iconos sueltos en tablas) se respetan tal
-    cual. («Accesibilidad de los botones…»)
-12. **Confirmar siempre en una ventana propia**, nunca con
-    `window.alert`/`window.confirm` (en las ventanas emergentes rompen).
-    Todo borrado pide confirmación.
-13. **Antes de dar por hecho un cambio de aspecto, pedir una captura
+    inicio, mando de música) se respetan tal cual. Los iconos sueltos de
+    las tablas YA NO son excepción desde la v36: van con `Boton`.
+    («Accesibilidad de los botones…»)
+12. **Todo quitar o borrar pregunta antes**, en la ventana de la app
+    (`usePreguntaSeguridad`), nunca con `window.alert`/`window.confirm`
+    (en las ventanas emergentes rompen). («Relieve, clic y pregunta de
+    seguridad»)
+13. **Todo lo que se pulsa tiene relieve y se hunde al tocarlo**, y suena
+    un clic suave + vibra (v36). Incluye desplegables, títulos plegables y
+    acciones que eran texto subrayado. Nada de texto subrayado como botón.
+14. **Quitar/borrar = `BotonQuitar`**: el mismo círculo rojo en toda la
+    app, 24 px a la vista y 44 px de zona de toque (el mínimo del móvil).
+    X = quitar; papelera (`borrar`) = se borra para siempre. Lleva la
+    pregunta dentro.
+15. **Antes de dar por hecho un cambio de aspecto, pedir una captura
     real**, mejor del móvil.
 
 ## Estado actual (2026-08-06)
@@ -1791,6 +1800,67 @@ la izquierda, y en la v34.7 a 240px centrados).
 Al construir o revisar una ventana: comprobar esta regla junto con la de
 "lo más pequeña posible" y la de "estandarizar con el estilo que ya
 existe".
+
+## Relieve, clic y pregunta de seguridad (2026-09-19, v36)
+
+El usuario lo pidió como norma ya hablada y sin cumplir del todo: todo
+botón con relieve, que dé sensación de clic al pulsarlo, un clic suave de
+sonido, vibración en el móvil ("si no, puedo apretarlo muchas veces e ir
+creando miles de mesas"), todas las X del mismo tamaño y con el mínimo
+táctil del móvil, y todo quitar/borrar con pregunta de seguridad. Él
+eligió: títulos plegables con relieve (sí), subrayados → botones (sí), y
+papelera dentro del círculo rojo cuando se borra para siempre.
+
+**Tres piezas, una por cosa:**
+- `index.css`: `.boton-3d, select` en la MISMA regla (todo desplegable
+  nuevo la hereda sin clase). Levantarse al pasar el ratón solo con
+  `@media (hover: hover)`: en el móvil se quedaba pegado. Al pulsar se
+  hunde (`translateY(1px)` + sombra por dentro, 0.04 s).
+  ⚠️ **Fallo que había**: `.boton-3d.boton-flotante-imagen:hover` ganaba a
+  `.boton-3d:active`, así que las pastillas verdes NO se hundían al
+  pulsarlas. Ahora tienen su propio `:active`, detrás.
+- `lib/respuestaTactil.js`: UN escuchador por documento (pestaña y cada
+  ventana emergente). Clic fabricado con Web Audio (sin archivo) y
+  vibración: `navigator.vibrate` en Android; en iPhone no existe, y se usa
+  el truco de iOS 18 de pulsar un `<input type="checkbox" switch>`
+  escondido. Si Apple lo quita, no vibra y ya está. ⚠️ Además escucha
+  `touchstart`: **sin eso el iPhone no aplica `:active`** y ningún botón
+  se hunde al tocarlo. Dentro de la Música no suena (`data-sin-sonido-clic`:
+  ese aparato puede ir a los altavoces del local), pero sí vibra.
+- `components/PreguntaSeguridad.jsx`: `usePreguntaSeguridad()` (la
+  pregunta, con el aspecto de la de "¿Quitar la foto?" de Aniversarios) y
+  `BotonQuitar` (el círculo rojo, que lleva la pregunta dentro). La
+  pregunta se pinta con un portal en el `<body>` del documento del botón:
+  dentro de una fila de tabla heredaría el "una sola línea" y el recorte.
+  `yaPregunta` solo para quien ya tiene la suya (Aniversarios y el
+  formulario del colaborador con la foto; el Cronograma, debajo).
+
+**Hallazgo serio, ya cerrado**: eliminar un invitado, un colaborador o una
+novedad, quitar un gasto o una mesa vacía se hacía de UN toque, sin
+preguntar. Y 9 preguntas iban con `window.confirm` (prohibido): Mesas,
+pago y llegada del colaborador, invitaciones del colaborador, Borrado
+total, Modo Pruebas. Todas pasadas a la ventana de la app.
+
+⚠️ **Pendiente**: quedan ~12 `window.alert` (avisos de un solo botón), la
+mayoría en `avisar()` de `useLedgerData.js` y en `useMotorInvitaciones.js`.
+Van con `preguntar({ soloAviso: true })`, pero `avisar()` vive fuera de
+React y hace falta montarlo aparte. No se hizo en esta tanda.
+
+**Lista de invitados**: la columna de los tres iconos pasa de 92 a 100 px
+(y la tabla de 1080 a 1088 de mínimo) para que quepan con caja. Tag y
+ShieldOff llevan `relative z-[1]`: quedan por encima de la zona de toque
+de 44 px de la papelera de al lado, y un toque en ellos nunca cae en
+borrar. Los desplegables de mesa y colaborador conservan el fondo
+transparente que pidió el usuario en agosto; ganan relieve, 28 px de alto
+y esquinas de 6.
+
+**Estado de cuentas**: Resumen, Recaudado por colaborador y Gastos, tres
+`SeccionPlegable` controladas por un solo estado (una abierta como
+mucho), igual que el tablón. Cada título lleva su resumen (balance,
+número de colaboradores, gastos y total).
+
+**El mando de la Música** sigue con sus teclas propias; solo ganan el
+hundirse (`.mando-teclas button:active`).
 
 ## Pulgar derecho o izquierdo (2026-09-19, v35)
 

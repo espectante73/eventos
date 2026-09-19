@@ -27,6 +27,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { aplicarMano, alCambiarMano } from "./mano";
+import { activarRespuestaTactil } from "./respuestaTactil";
 
 export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
   const [abierta, setAbierta] = useState(false);
@@ -90,6 +91,9 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
     // esta ventana tiene el suyo propio, y sin el atributo la variante
     // `zurdo:` no se aplicaría aquí dentro.
     aplicarMano(ventana.document);
+    // Y el clic + la vibración: los toques de aquí dentro no llegan al
+    // documento de la pestaña.
+    activarRespuestaTactil(ventana.document);
     dejarDeSeguirManoRef.current?.();
     dejarDeSeguirManoRef.current = alCambiarMano(() => aplicarMano(ventana.document));
     ventana.document.body.style.height = "100vh";

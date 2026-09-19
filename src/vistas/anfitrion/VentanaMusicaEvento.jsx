@@ -74,6 +74,7 @@ import {
 } from "../../lib/volumen";
 import { guardarPista, leerTodasLasPistas } from "../../lib/almacenPistas";
 import { leerFondo, subirFondo, borrarFondo, nombreParaMostrar, PESO_EXCESIVO } from "../../lib/fondoMusica";
+import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import {
   TEMAS_MUSICA,
   PANELES,
@@ -127,6 +128,7 @@ function formatearTiempo(segundos) {
 
 export function VentanaMusicaEvento({ data, ventana }) {
   const { evento, persistEvento } = data;
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   // Cuántos puntos suena la cortinilla POR ENCIMA de la música. Vive en
   // `evento` (no en el navegador) a propósito: así se puede consultar
   // desde fuera para afinarlo entre los dos sin que el usuario tenga
@@ -1715,7 +1717,11 @@ export function VentanaMusicaEvento({ data, ventana }) {
             <span className="truncate">{subiendoFondo ? "Subiendo…" : "Cambiar la imagen"}</span>
             <input type="file" accept="image/*" onChange={elegirFondo} className="sr-only" disabled={subiendoFondo} />
           </label>
-          <button onClick={quitarFondoPropio} className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, ...tecla(false), color: P.texto, flexShrink: 0 }} title="Borrar la imagen" aria-label="Borrar la imagen">
+          <button
+            onClick={() =>
+              preguntar({ titulo: "¿Borrar la imagen?", texto: "La ventana vuelve a su acabado normal.", rotulo: "Sí, borrarla", alConfirmar: quitarFondoPropio })
+            }
+            className="flex items-center justify-center" style={{ width: 40, height: 40, borderRadius: 12, ...tecla(false), color: P.texto, flexShrink: 0 }} title="Borrar la imagen" aria-label="Borrar la imagen">
             <Trash2 size={15} />
           </button>
         </div>
@@ -1930,7 +1936,11 @@ export function VentanaMusicaEvento({ data, ventana }) {
 
   return (
     <div
-      className="flex flex-col metal-cepillado"
+      // mando-teclas: sus teclas se hunden al pulsarlas (index.css).
+      className="flex flex-col metal-cepillado mando-teclas"
+      // Sin el clic de los botones (lib/respuestaTactil.js): este aparato
+      // puede estar sonando por los altavoces del local.
+      data-sin-sonido-clic
       style={{
         height: "100%",
         background: P.fondo,
@@ -2112,6 +2122,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
           </div>
         )}
       </div>
+      {ventanaPregunta}
     </div>
   );
 }

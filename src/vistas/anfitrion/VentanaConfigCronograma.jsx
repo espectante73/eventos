@@ -22,11 +22,12 @@
 // principal aunque se vea dentro de la ventana emergente (mismo motivo
 // ya documentado para el portapapeles de Novedades).
 import { useState, useEffect } from "react";
-import { Printer, ChevronDown, Plus, Trash2 } from "lucide-react";
+import { Printer, ChevronDown, Plus } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { generarImagenCronograma, calcularHorasAbsolutas } from "../../lib/cronograma";
 import { resolverColaborador } from "../../lib/invitados";
 import { Boton } from "../../components/Boton";
+import { BotonQuitar } from "../../components/PreguntaSeguridad";
 
 // Todas las horas del día en pasos de 5 minutos, en un único <select> --
 // a petición del usuario ("un único reloj, no dos relojes distintos").
@@ -182,7 +183,7 @@ export function VentanaConfigCronograma({ data, ventana }) {
   const BotonOpcion = ({ activo, onClick, children }) => (
     <button
       onClick={onClick}
-      className="px-3 py-1.5 rounded text-sm"
+      className="boton-3d px-3 py-1.5 rounded text-sm"
       style={{
         border: `1px solid ${activo ? C.ink : C.line}`,
         background: activo ? C.ink : "transparent",
@@ -242,20 +243,14 @@ export function VentanaConfigCronograma({ data, ventana }) {
         <Boton variante="principal" onClick={anadirBloque} titulo="Añadir un bloque detrás del que estás viendo">
           <Plus size={15} /> Añadir
         </Boton>
-        <button
+        {/* yaPregunta: la pregunta sale justo debajo, con el bloque delante. */}
+        <BotonQuitar
+          borrar
+          yaPregunta
           onClick={() => setConfirmandoQuitar(true)}
           disabled={bloques.length <= 1}
-          className="flex items-center justify-center rounded flex-shrink-0"
-          style={{
-            height: 42,
-            width: 42,
-            border: `1px solid ${bloques.length <= 1 ? C.line : C.peligro}`,
-            color: bloques.length <= 1 ? C.line : C.peligro,
-          }}
-          title={bloques.length <= 1 ? "Tiene que quedar al menos un bloque" : "Quitar este bloque"}
-        >
-          <Trash2 size={16} />
-        </button>
+          titulo={bloques.length <= 1 ? "Tiene que quedar al menos un bloque" : "Quitar este bloque"}
+        />
       </div>
 
       {confirmandoQuitar && bloqueActual && (
@@ -326,7 +321,7 @@ export function VentanaConfigCronograma({ data, ventana }) {
           <div className="mb-2 rounded" style={{ border: `1px solid ${C.line}` }}>
             <button
               onClick={() => setAtiendeAbierto((a) => !a)}
-              className="w-full flex items-center justify-between gap-2 px-2 py-2 text-sm"
+              className="boton-3d w-full flex items-center justify-between gap-2 px-2 py-2 text-sm"
               style={{ color: C.charcoal }}
             >
               <span>¿Quién lo atiende?</span>

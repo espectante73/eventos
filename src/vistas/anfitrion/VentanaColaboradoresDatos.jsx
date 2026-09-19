@@ -207,7 +207,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
 
         <button
           onClick={() => persistEvento({ ...evento, asistenciaAbierta: !evento.asistenciaAbierta })}
-          className="flex items-center gap-2 px-3 rounded-lg text-sm font-medium whitespace-nowrap"
+          className="boton-3d flex items-center gap-2 px-3 rounded-lg text-sm font-medium whitespace-nowrap"
           style={{
             border: `1px solid ${evento.asistenciaAbierta ? C.ink : C.line}`,
             background: evento.asistenciaAbierta ? C.ink : "#fff",
@@ -270,7 +270,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
               <button
                 key={op.clave}
                 onClick={() => setFiltroTipoAviso(op.clave)}
-                className="text-xs px-2 py-1 rounded font-medium"
+                className="boton-3d text-xs px-2 py-1 rounded font-medium"
                 style={{
                   background: filtroTipoAviso === op.clave ? C.ink : "transparent",
                   color: filtroTipoAviso === op.clave ? C.paper : C.charcoal,

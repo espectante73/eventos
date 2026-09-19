@@ -4,7 +4,7 @@
 // balance. Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08
 // (Fase 4, Ronda 4).
 import { useState } from "react";
-import { Plus, X, Mail, Undo2 } from "lucide-react";
+import { Plus, Mail, Undo2, Calculator, Users, Receipt } from "lucide-react";
 import { C } from "../../theme";
 import { importeEsperadoInvitado, resolverColaborador } from "../../lib/invitados";
 import { parsePrecio, formatearFecha, ordenarPorApellidoNombre } from "../../lib/formato";
@@ -14,6 +14,8 @@ import { generarPdfAcuse } from "../../lib/acuseImagen";
 import { TextInput } from "../../components/Formulario";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
+import { SeccionPlegable } from "../../components/SeccionPlegable";
+import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 
 export function VentanaCuentas({ data, onCerrar }) {
   const {
@@ -26,8 +28,13 @@ export function VentanaCuentas({ data, onCerrar }) {
     reenviarAcuseColaborador,
     deshacerRecogidaColaborador,
   } = data;
-  const [mostrarListaGastos, setMostrarListaGastos] = useState(false);
-  const [mostrarColaboradores, setMostrarColaboradores] = useState(false);
+  // Las tres partes, plegadas y como mucho UNA abierta: la filosofía del
+  // tablón, a petición del usuario (2026-09-19). Antes el resumen estaba
+  // siempre a la vista y solo las otras dos se plegaban.
+  // null | "resumen" | "colaboradores" | "gastos"
+  const [seccionAbierta, setSeccionAbierta] = useState(null);
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
+  const alternar = (id) => setSeccionAbierta((actual) => (actual === id ? null : id));
   // Fila en la que se está editando el importe antes de confirmar la
   // recogida — null cuando ninguna está abierta.
   const [confirmandoId, setConfirmandoId] = useState(null);
@@ -200,12 +207,15 @@ export function VentanaCuentas({ data, onCerrar }) {
   return (
     <>
     <VentanaFlotante clave="cuentas" titulo="Estado de cuentas" onCerrar={onCerrar}>
-      <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
-        "Lo que entra" se calcula solo (pagos de invitados confirmados). "Lo que sale"
-        son los gastos que añadas abajo — incluye también los costes de la propia app
-        (dominio, suscripciones...), no solo proveedores de la boda.
-      </p>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+      <div className="space-y-2">
+      <SeccionPlegable
+        icono={Calculator}
+        titulo="Resumen"
+        resumen={`Balance ${formato(balance)} €`}
+        abierta={seccionAbierta === "resumen"}
+        onAlternar={() => alternar("resumen")}
+      >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 mt-2">
         <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 18, color: C.ink }}>
             {formato(recaudado)} €
@@ -242,21 +252,22 @@ export function VentanaCuentas({ data, onCerrar }) {
           </div>
         </div>
       </div>
+      {/* La explicación, al pie de su sección (norma de la app). */}
+      <p className="text-xs" style={{ color: C.charcoal, opacity: 0.75 }}>
+        "Lo que entra" se calcula solo (pagos de invitados confirmados). "Lo que sale"
+        son los gastos que añadas en Gastos — incluye también los costes de la propia app
+        (dominio, suscripciones...), no solo proveedores de la boda.
+      </p>
+      </SeccionPlegable>
 
-      <button
-        onClick={() => setMostrarColaboradores((v) => !v)}
-        className="flex items-center gap-2 text-sm font-medium mb-2"
-        style={{ color: C.ink }}
+      <SeccionPlegable
+        icono={Users}
+        titulo="Recaudado por colaborador"
+        resumen={`${colaboradores.length} colaborador${colaboradores.length !== 1 ? "es" : ""}`}
+        abierta={seccionAbierta === "colaboradores"}
+        onAlternar={() => alternar("colaboradores")}
       >
-        {mostrarColaboradores ? "▾" : "▸"} Recaudado por colaborador ({colaboradores.length})
-      </button>
-      {mostrarColaboradores && (
-        <div className="space-y-2 mb-4">
-          <p className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
-            Confirmar la recogida manda por email al propio colaborador un acuse con el
-            desglose de sus invitados, el importe total, la fecha y la firma — para que
-            lo guarde como comprobante.
-          </p>
+        <div className="space-y-2 mt-2">
           {colaboradores.map((c) => {
             const importeSuyo = importeRecaudadoPorColaborador(c);
             const recogido = Boolean(c.dineroRecogidoEn);
@@ -288,13 +299,9 @@ export function VentanaCuentas({ data, onCerrar }) {
                     <Boton variante="principal" tamano="pequeno" onClick={() => abrirPreviewConfirmar(c)} disabled={generandoPreview === c.id}>
                       {generandoPreview === c.id ? "Generando…" : "Revisar y confirmar"}
                     </Boton>
-                    <button
-                      onClick={() => setConfirmandoId(null)}
-                      className="text-xs"
-                      style={{ color: C.charcoal, opacity: 0.7 }}
-                    >
+                    <Boton variante="secundario" tamano="pequeno" onClick={() => setConfirmandoId(null)}>
                       Cancelar
-                    </button>
+                    </Boton>
                   </>
                 ) : recogido ? (
                   <>
@@ -308,12 +315,20 @@ export function VentanaCuentas({ data, onCerrar }) {
                     <Boton variante="secundario" tamano="pequeno" onClick={() => reenviarAcuse(c)} disabled={enviandoId === c.id || !c.email} titulo="Reenviar el acuse por email otra vez">
                       <Mail size={13} /> {enviandoId === c.id ? "Enviando…" : "Reenviar acuse"}
                     </Boton>
-                    <button
-                      onClick={() => deshacerRecogidaColaborador(c.id)}
-                      title="Deshacer (si se confirmó por error)" aria-label="Deshacer (si se confirmó por error)"
-                    >
-                      <Undo2 size={15} style={{ color: C.wax }} />
-                    </button>
+                    <Boton
+                      tamano="pequeno"
+                      icono={Undo2}
+                      titulo="Deshacer (si se confirmó por error)"
+                      onClick={() =>
+                        preguntar({
+                          titulo: "¿Deshacer la recogida?",
+                          texto: `El dinero de ${c.nombre} volverá a constar como no recogido.`,
+                          rotulo: "Sí, deshacer",
+                          alConfirmar: () => deshacerRecogidaColaborador(c.id),
+                        })
+                      }
+                      style={{ color: C.wax }}
+                    />
                   </>
                 ) : (
                   <>
@@ -338,19 +353,22 @@ export function VentanaCuentas({ data, onCerrar }) {
               Todavía no hay colaboradores.
             </p>
           )}
+          <p className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+            Confirmar la recogida manda por email al propio colaborador un acuse con el
+            desglose de sus invitados, el importe total, la fecha y la firma — para que
+            lo guarde como comprobante.
+          </p>
         </div>
-      )}
+      </SeccionPlegable>
 
-      <button
-        onClick={() => setMostrarListaGastos((v) => !v)}
-        className="flex items-center gap-2 text-sm font-medium mb-2"
-        style={{ color: C.ink }}
+      <SeccionPlegable
+        icono={Receipt}
+        titulo="Gastos"
+        resumen={`${gastos.length} · ${formato(totalGastos)} €`}
+        abierta={seccionAbierta === "gastos"}
+        onAlternar={() => alternar("gastos")}
       >
-        {mostrarListaGastos ? "▾" : "▸"} Gastos ({gastos.length})
-      </button>
-      {mostrarListaGastos && (
-      <>
-      <div className="flex items-center justify-end zurdo:justify-start mb-2">
+      <div className="flex items-center justify-end zurdo:justify-start mb-2 mt-2">
         <Boton variante="principal" onClick={agregarGasto}>
           <Plus size={14} /> Añadir gasto
         </Boton>
@@ -389,9 +407,15 @@ export function VentanaCuentas({ data, onCerrar }) {
               />
               Pagado
             </label>
-            <button onClick={() => eliminarGasto(g.id)} title="Quitar este gasto" aria-label="Quitar este gasto">
-              <X size={15} style={{ color: C.wax }} />
-            </button>
+            <BotonQuitar
+              titulo="Quitar este gasto"
+              pregunta={{
+                titulo: "¿Quitar este gasto?",
+                texto: [g.concepto, g.importe && `${g.importe} €`].filter(Boolean).join(" · ") || "Gasto sin concepto.",
+                rotulo: "Sí, quitarlo",
+              }}
+              onClick={() => eliminarGasto(g.id)}
+            />
           </div>
         ))}
         {gastos.length === 0 && (
@@ -400,8 +424,9 @@ export function VentanaCuentas({ data, onCerrar }) {
           </p>
         )}
       </div>
-      </>
-      )}
+      </SeccionPlegable>
+      </div>
+      {ventanaPregunta}
     </VentanaFlotante>
 
     {previewAcuse && (

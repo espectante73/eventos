@@ -17,6 +17,7 @@ import { Send, Check } from "lucide-react";
 import { C } from "../theme";
 import { VentanaFlotante, ModalFlotante } from "../components/VentanaFlotante";
 import { Boton } from "../components/Boton";
+import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
 
 export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
   const {
@@ -33,12 +34,15 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
   const pendientes = familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada);
   const yaEnviadas = familiasListasParaInvitacion.filter((f) => f.invitacionEnviada);
 
-  const intentarEnviar = (familia) => {
-    const confirma = window.confirm(
-      `¿Confirmas que ya tienes en tu poder el dinero de "${familia.apellido}"? Solo se genera y envía la invitación si confirmas.`
-    );
-    if (confirma) abrirPreviewInvitacion(familia);
-  };
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
+  const intentarEnviar = (familia) =>
+    preguntar({
+      titulo: "¿Tienes ya el dinero?",
+      texto: `Confirma que ya tienes en tu poder el dinero de "${familia.apellido}". Solo se genera y envía la invitación si confirmas.`,
+      rotulo: "Sí, lo tengo",
+      peligro: false,
+      alConfirmar: () => abrirPreviewInvitacion(familia),
+    });
 
   return (
     <VentanaFlotante clave="invitaciones-colaborador" titulo="Enviar invitaciones" onCerrar={onCerrar}>
@@ -115,6 +119,7 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
           </div>
         </ModalFlotante>
       )}
+      {ventanaPregunta}
     </VentanaFlotante>
   );
 }

@@ -472,7 +472,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
             <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 600 }}>Música del evento</span>
             <button
               onClick={() => setMusicaEnPagina(false)}
-              className="flex items-center justify-center"
+              className="boton-3d flex items-center justify-center"
               style={{ width: 40, height: 40, borderRadius: 10, color: C.goldClaro }}
               title="Cerrar" aria-label="Cerrar"
             >

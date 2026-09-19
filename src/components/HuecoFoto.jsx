@@ -3,9 +3,9 @@
 // "que se vea igual que en Aniversarios, tocando encima y que permita
 // preview"). Antes el formulario tenía su propio botón "Subir foto" y una
 // miniatura cuadrada de 32px: dos maneras distintas de hacer lo mismo.
-import { Trash2, Image as IconoImagen } from "lucide-react";
+import { Image as IconoImagen } from "lucide-react";
 import { C } from "../theme";
-import { Boton } from "./Boton";
+import { BotonQuitar } from "./PreguntaSeguridad";
 
 // Miniatura en 16:9, la forma de la pantalla del local (2026-09-17, a
 // petición del usuario: "realmente es así como se van a mostrar"). Así, al
@@ -117,14 +117,14 @@ export function HuecoFoto({ titulo, enlace, ocupada, subiendo, onElegir, onQuita
           mide siempre lo mismo haya foto o no, y los títulos de arriba
           siguen cayendo centrados. */}
       {!soloLectura && ocupada && (
-        <Boton
-          variante="peligro"
-          tamano="pequeno"
-          icono={Trash2}
+        // yaPregunta: Aniversarios y el formulario del colaborador enseñan su
+        // propia pregunta, con el nombre del matrimonio.
+        <BotonQuitar
+          borrar
+          yaPregunta
           titulo={`Quitar ${titulo}`}
           onClick={onQuitar}
-          className="absolute rounded-full"
-          style={{ top: -8, right: -8, minHeight: 22, padding: 4 }}
+          style={{ position: "absolute", top: -8, right: -8 }}
         />
       )}
     </div>

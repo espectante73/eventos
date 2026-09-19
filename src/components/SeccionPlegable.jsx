@@ -31,7 +31,7 @@ export function SeccionPlegable({
     <div className="rounded-lg overflow-hidden" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
       <button
         onClick={() => setAbierta((a) => !a)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left"
+        className="boton-3d w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left"
       >
         <span className="flex items-center gap-2 text-sm min-w-0" style={{ color: C.ink, fontWeight: 600 }}>
           {Icono && <Icono size={15} style={{ color: C.gold, flexShrink: 0 }} />}

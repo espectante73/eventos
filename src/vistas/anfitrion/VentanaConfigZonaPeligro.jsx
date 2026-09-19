@@ -7,6 +7,7 @@ import { C } from "../../theme";
 import { AvisoDeshacer } from "../../components/AvisoDeshacer";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
+import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 
 export function VentanaConfigZonaPeligro({ data, onCerrar }) {
   const {
@@ -18,12 +19,23 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
     guardarFotoDeshacer,
   } = data;
 
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
+  // Dos preguntas seguidas, como antes, ahora en la ventana de la app.
+  const pedirBorrarTodo = () =>
+    preguntar({
+      titulo: "¿Borrar TODO?",
+      texto: "Evento, colaboradores, invitados, mesas y fotos — todo el contenido de la aplicación.",
+      rotulo: "Sí, continuar",
+      alConfirmar: () =>
+        preguntar({
+          titulo: "Última confirmación",
+          texto: "Se borrará TODO de verdad. ¿Lo confirmas definitivamente?",
+          rotulo: "Sí, borrar todo",
+          alConfirmar: borrarTodoElContenido,
+        }),
+    });
+
   const borrarTodoElContenido = async () => {
-    const aviso = "¡ADVERTENCIA SE BORRARÁ TODO EL CONTENIDO DE LA APLICACIÓN!";
-    const primera = window.confirm(`${aviso}\n\nEvento, colaboradores, invitados, mesas y fotos — todo. Esta acción no se puede deshacer.\n\n¿Quieres continuar?`);
-    if (!primera) return;
-    const segunda = window.confirm(`${aviso}\n\nÚltima confirmación: se borrará TODO de verdad. ¿Confirmas definitivamente?`);
-    if (!segunda) return;
     // El contenido del backup se captura YA (antes de borrar nada), pero
     // el DISPARO de la descarga se deja para el final, después de lanzar
     // el borrado — en móvil (sobre todo iOS), un <a download> hacia un
@@ -73,9 +85,10 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
         ⚠ Zona de peligro: esto borra evento, colaboradores, invitados, mesas y fotos —
         todo el contenido de la aplicación. No se puede deshacer.
       </p>
-      <Boton variante="peligro" onClick={borrarTodoElContenido}>
+      <Boton variante="peligro" onClick={pedirBorrarTodo}>
         <Trash2 size={14} /> BORRAR TODO
       </Boton>
+      {ventanaPregunta}
     </VentanaFlotante>
   );
 }

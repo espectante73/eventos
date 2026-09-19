@@ -36,12 +36,8 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
 
   const eliminarMesa = (numero) => {
     const afectados = invitados.filter((g) => g.mesa === numero);
+    // La pregunta ya la ha hecho el botón (BotonQuitar, en Mesas.jsx).
     if (afectados.length > 0) {
-      const confirmar = window.confirm(
-        `La mesa ${numero} tiene ${afectados.length} invitado(s) asignado(s). Al eliminarla, ` +
-          `vuelven a quedar sin mesa (no se borra a nadie). ¿Continuar?`
-      );
-      if (!confirmar) return;
       persistInvitados(
         invitados.map((g) => (g.mesa === numero ? { ...g, mesa: null } : g))
       );
@@ -52,11 +48,7 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
   const vaciarMesa = (numero) => {
     const afectados = invitados.filter((g) => g.mesa === numero);
     if (afectados.length === 0) return;
-    const confirmar = window.confirm(
-      `Vaciar la mesa ${numero}: ${afectados.length} invitado(s) volverán a quedar sin mesa ` +
-        `(no se borra a nadie). ¿Continuar?`
-    );
-    if (!confirmar) return;
+    // La pregunta ya la ha hecho el botón "Vaciar mesa" (Mesas.jsx).
     persistInvitados(invitados.map((g) => (g.mesa === numero ? { ...g, mesa: null } : g)));
   };
 

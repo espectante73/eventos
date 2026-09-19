@@ -261,7 +261,7 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
             setRPalabra("");
           }}
           disabled={!rCategoria || (rCategoria !== "avisos" && invitadoIdsParaReset.length === 0)}
-          className="flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium mb-2"
+          className="boton-3d flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium mb-2"
           style={{
             border: `1px solid ${C.wax}`,
             color: !rCategoria || (rCategoria !== "avisos" && invitadoIdsParaReset.length === 0) ? C.line : C.wax,
@@ -321,7 +321,7 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
             <button
               onClick={confirmarResetPorInvitados}
               disabled={rEjecutando || rPalabra.trim().toUpperCase() !== "REINICIAR"}
-              className="px-3 py-2 rounded text-sm font-medium"
+              className="boton-3d px-3 py-2 rounded text-sm font-medium"
               style={{
                 background: rPalabra.trim().toUpperCase() === "REINICIAR" ? C.wax : C.line,
                 color: "#fff",
@@ -364,7 +364,7 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
             <button
               onClick={confirmarReinicioAvisos}
               disabled={reiniciandoAvisos || palabraAvisos.trim().toUpperCase() !== "AVISOS"}
-              className="px-3 py-2 rounded text-sm font-medium"
+              className="boton-3d px-3 py-2 rounded text-sm font-medium"
               style={{
                 background: palabraAvisos.trim().toUpperCase() === "AVISOS" ? C.wax : C.line,
                 color: "#fff",

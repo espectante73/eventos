@@ -172,7 +172,7 @@ export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, 
   return (
     <button
       onClick={() => onClick(columna)}
-      className="flex items-center justify-center gap-1 w-full"
+      className="boton-3d rounded flex items-center justify-center gap-1 w-full"
       style={{
         borderRight: sinDivisor ? "none" : `1px solid ${claro ? "rgba(255,255,255,0.25)" : C.line}`,
         // En la variante `claro` (barra verde de Invitados), TODAS las

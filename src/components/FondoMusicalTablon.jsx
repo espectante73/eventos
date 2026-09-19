@@ -11,10 +11,11 @@
 // pueda vivir dentro del plegable de VentanaNovedades.jsx. La lógica de
 // Storage es exactamente la misma que tenía la ventana.
 import { useState, useEffect, useCallback } from "react";
-import { Upload, Trash2, Music } from "lucide-react";
+import { Upload, Music } from "lucide-react";
 import { C } from "../theme";
 import { supabase } from "../supabaseClient";
 import { estilosBoton } from "./Boton";
+import { BotonQuitar } from "./PreguntaSeguridad";
 
 const BUCKET = "musica-ambiental";
 
@@ -108,9 +109,12 @@ export function FondoMusicalTablon() {
                 <Music size={13} style={{ color: C.gold, flexShrink: 0 }} />
                 <span className="truncate">{p.name.replace(/^\d+-/, "")}</span>
               </span>
-              <button onClick={() => eliminar(p.name)} title="Eliminar esta pista" aria-label="Eliminar esta pista" className="p-1 flex-shrink-0">
-                <Trash2 size={14} style={{ color: C.wax }} />
-              </button>
+              <BotonQuitar
+                borrar
+                titulo="Eliminar esta pista"
+                pregunta={{ titulo: "¿Eliminar esta pista?", texto: p.name.replace(/^\d+-/, ""), rotulo: "Sí, eliminar" }}
+                onClick={() => eliminar(p.name)}
+              />
             </div>
           ))}
         </div>

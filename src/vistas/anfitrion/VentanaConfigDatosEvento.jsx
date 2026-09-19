@@ -11,7 +11,8 @@ import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { PlantillasEmail } from "../../components/PlantillasEmail";
 import { emailValido } from "../../lib/validacion";
-import { estilosBoton } from "../../components/Boton";
+import { Boton, estilosBoton } from "../../components/Boton";
+import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 
 // Miniatura que WhatsApp/Facebook muestran al pegar cualquier enlace de
 // esta web (login, tablón...) -- a petición del usuario, 2026-08-25. Es
@@ -68,6 +69,7 @@ function GrupoPrecio({ titulo, etiquetaA, valorA, onCambiarA, etiquetaB, valorB,
 
 export function VentanaConfigDatosEvento({ data, onCerrar }) {
   const { evento, persistEvento } = data;
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   const [subiendoImagenPortada, setSubiendoImagenPortada] = useState(false);
   const [errorImagenPortada, setErrorImagenPortada] = useState("");
   const [subiendoImagenOg, setSubiendoImagenOg] = useState(false);
@@ -208,14 +210,19 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
                 />
               </label>
               {evento.imagen !== "/cabecera-defecto.jpg" && (
-                <button
-                  type="button"
-                  onClick={() => persistEvento({ ...evento, imagen: "/cabecera-defecto.jpg" })}
-                  className="text-xs"
-                  style={{ color: C.wax }}
+                <Boton
+                  tamano="pequeno"
+                  onClick={() =>
+                    preguntar({
+                      titulo: "¿Quitar la imagen de portada?",
+                      texto: "Se usará la imagen incluida en la app.",
+                      rotulo: "Sí, quitarla",
+                      alConfirmar: () => persistEvento({ ...evento, imagen: "/cabecera-defecto.jpg" }),
+                    })
+                  }
                 >
                   Quitar y usar la imagen incluida
-                </button>
+                </Boton>
               )}
             </div>
             {errorImagenPortada && (
@@ -351,6 +358,7 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
             de la app queda concentrado aquí. */}
         <PlantillasEmail data={data} />
       </div>
+      {ventanaPregunta}
     </VentanaFlotante>
   );
 }

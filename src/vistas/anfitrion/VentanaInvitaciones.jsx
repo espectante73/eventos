@@ -11,7 +11,7 @@
 // generarImagenParaFamilia y modoCalibracion tampoco son exclusivos de
 // esta ventana por el mismo motivo.
 import { useState, useEffect } from "react";
-import { Check, Mail, Image as ImageIcon } from "lucide-react";
+import { Check, Mail, Image as ImageIcon, ChevronUp, ChevronDown } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { resolverColaborador } from "../../lib/invitados";
 import { redimensionarImagenArchivo, guardarArchivoInvitacion, obtenerCarpetaInvitaciones, leerHandleCarpeta } from "../../lib/descargas";
@@ -19,6 +19,7 @@ import { Field } from "../../components/Formulario";
 import { GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton, estilosBoton } from "../../components/Boton";
+import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 
 export function VentanaInvitaciones({
   data,
@@ -33,6 +34,7 @@ export function VentanaInvitaciones({
   marcarInvitacionEnviada,
   onCerrar,
 }) {
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   const { evento, colaboradores, invitados, persistEvento, persistInvitados, enviarInvitacionFamilia } = data;
 
   const [nombreCarpetaInvitaciones, setNombreCarpetaInvitaciones] = useState(null);
@@ -238,14 +240,19 @@ export function VentanaInvitaciones({
                 />
               </label>
               {evento.imagenInvitacion && (
-                <button
-                  type="button"
-                  onClick={() => persistEvento({ ...evento, imagenInvitacion: "" })}
-                  className="text-xs"
-                  style={{ color: C.wax }}
+                <Boton
+                  tamano="pequeno"
+                  onClick={() =>
+                    preguntar({
+                      titulo: "¿Quitar la plantilla?",
+                      texto: "Se usará la plantilla incluida en la app.",
+                      rotulo: "Sí, quitarla",
+                      alConfirmar: () => persistEvento({ ...evento, imagenInvitacion: "" }),
+                    })
+                  }
                 >
                   Quitar y usar la plantilla incluida
-                </button>
+                </Boton>
               )}
             </div>
           </Field>
@@ -412,22 +419,20 @@ export function VentanaInvitaciones({
                         style={{ background: "#fff", border: `1px solid ${C.line}` }}
                       >
                         <span style={{ color: C.ink, minWidth: 90 }}>{m.nombre}</span>
-                        <button
+                        <Boton
+                          tamano="pequeno"
+                          icono={ChevronUp}
+                          titulo="Mover antes"
                           onClick={() => moverNombreFamilia(familia, m.id, -1)}
                           disabled={i === 0}
-                          style={{ color: i === 0 ? C.line : C.gold }}
-                          title="Mover antes"
-                        >
-                          ▲
-                        </button>
-                        <button
+                        />
+                        <Boton
+                          tamano="pequeno"
+                          icono={ChevronDown}
+                          titulo="Mover después"
                           onClick={() => moverNombreFamilia(familia, m.id, 1)}
                           disabled={i === familia.confirmados.length - 1}
-                          style={{ color: i === familia.confirmados.length - 1 ? C.line : C.gold }}
-                          title="Mover después"
-                        >
-                          ▼
-                        </button>
+                        />
                         <div className="flex-1">
                           {colaboradorVinculado ? (
                             <div
@@ -467,6 +472,7 @@ export function VentanaInvitaciones({
             </p>
           )}
         </div>
+        {ventanaPregunta}
       </VentanaFlotante>
 
       {mostrarResumenLoteInvitaciones && (

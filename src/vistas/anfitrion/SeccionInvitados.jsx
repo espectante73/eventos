@@ -17,7 +17,6 @@
 import { useState } from "react";
 import {
   Check,
-  Trash2,
   Music,
   AlertTriangle,
   Plus,
@@ -44,6 +43,7 @@ import { MenuFlotante } from "../../components/MenuFlotante";
 import { InformeInvitados } from "../../components/InformeInvitados";
 import { revisarInvitados } from "../../lib/revisionInvitados";
 import { Boton } from "../../components/Boton";
+import { BotonQuitar } from "../../components/PreguntaSeguridad";
 
 export function SeccionInvitados({
   data,
@@ -472,7 +472,7 @@ export function SeccionInvitados({
   // lo vio el usuario el 2026-09-05 y dio con la causa: "tienen tres
   // iconos al final que no tienen encabezado, están ocupando espacio del
   // resto". Con una medida fija, las tres rejillas parten de lo mismo.
-  const columnasTabla = "1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.75fr 0.75fr 0.7fr 92px";
+  const columnasTabla = "1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.75fr 0.75fr 0.7fr 100px";
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
@@ -1261,9 +1261,9 @@ export function SeccionInvitados({
           >
             <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
             <span className="flex-1">{aviso}</span>
-            <button onClick={() => setAviso("")} style={{ textDecoration: "underline" }}>
+            <Boton tamano="pequeno" onClick={() => setAviso("")}>
               Cerrar
-            </button>
+            </Boton>
           </p>
         )}
 
@@ -1342,13 +1342,9 @@ export function SeccionInvitados({
             <p className="text-xs flex-1" style={{ color: C.peligro }}>
               {avisoAsignacion}
             </p>
-            <button
-              onClick={() => setAvisoAsignacion("")}
-              className="text-xs font-medium"
-              style={{ color: C.peligro }}
-            >
+            <Boton tamano="pequeno" onClick={() => setAvisoAsignacion("")}>
               Entendido
-            </button>
+            </Boton>
           </div>
         )}
 
@@ -1370,7 +1366,7 @@ export function SeccionInvitados({
               columna de acciones (captura del usuario, 2026-09-05). Con
               1080 entran las once; si alguna queda justa, el texto se
               recorta con puntos suspensivos, que es la regla de la casa. */}
-          <div style={{ minWidth: 1080 }}>
+          <div style={{ minWidth: 1088 }}>
             {cabeceraTabla}
             {/* La cabecera de columnas Y la fila de filtros
                 (Invitado/Familia/... y sus buscadores) viven ahora en la
@@ -1570,7 +1566,7 @@ export function SeccionInvitados({
                       // la celda (que alterna por fila y por columna)
                       // en vez de una caja blanca encima -- a petición
                       // del usuario, 2026-08-20.
-                      style={{ ...inputStyle, border: "none", background: "transparent", padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0 }}
+                      style={{ ...inputStyle, border: "none", background: "transparent", padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0, minHeight: 28, borderRadius: 6 }}
                     >
                       <option value="">Sin asignar</option>
                       {colaboradores.map((c) => (
@@ -1615,6 +1611,8 @@ export function SeccionInvitados({
                         fontSize: 12,
                         width: "100%",
                         minWidth: 0,
+                        minHeight: 28,
+                        borderRadius: 6,
                         opacity: g.confirmado ? 1 : 0.5,
                       }}
                     >
@@ -1641,9 +1639,12 @@ export function SeccionInvitados({
                       Confirmado/Pagado, que no necesitan llamar la
                       atención tanto. */}
                   <span style={celda(7, { justifyContent: "center", textAlign: "center" })}>
+                    {/* Con relieve como todo lo que se pulsa (norma del
+                        2026-09-19): ya no ocupa la celda entera. */}
                     <button
                       onClick={() => toggleConfirmar(g.id)}
-                      className="flex items-center justify-center w-full"
+                      className="boton-3d rounded flex items-center justify-center px-2"
+                      style={{ minHeight: 28, minWidth: 40 }}
                     >
                       {g.confirmado ? (
                         <Check size={20} style={{ color: C.ink }} />
@@ -1701,10 +1702,17 @@ export function SeccionInvitados({
                       <span className="text-xs" style={{ opacity: 0.4 }}>—</span>
                     )}
                   </span>
-                  <span style={{ ...celda(11), gap: 6 }}>
-                    <button
+                  {/* Los tres, con la misma pieza Boton que el resto de la app
+                      (relieve, se hunde al pulsar). 100px de columna: 92 ya
+                      no daba para tres con caja. */}
+                  <span style={{ ...celda(11), gap: 4 }}>
+                    <Boton
+                      tamano="pequeno"
                       onClick={() => setInvitadoRolAbierto(g.id)}
-                      title="Rol de trabajo el día del evento (acomodador, etc.)"
+                      titulo="Rol de trabajo el día del evento (acomodador, etc.)"
+                      aria-label="Rol de trabajo el día del evento (acomodador, etc.)"
+                      className="relative z-[1]"
+                      style={{ padding: 5 }}
                     >
                       <Tag
                         size={14}
@@ -1713,14 +1721,20 @@ export function SeccionInvitados({
                           opacity: Array.isArray(g.rolesTrabajo) && g.rolesTrabajo.length > 0 ? 1 : 0.35,
                         }}
                       />
-                    </button>
-                    <button
+                    </Boton>
+                    <Boton
+                      tamano="pequeno"
                       onClick={() => alternarExcluidoTablon(g.id)}
-                      title={
+                      titulo={
                         g.excluidoTablon
                           ? "Excluido del acceso al tablón — su nombre nunca sirve como respuesta válida"
                           : "Excluir del acceso al tablón (nombre de conocimiento público, p.ej. el anfitrión)"
                       }
+                      aria-label={g.excluidoTablon ? "Excluido del acceso al tablón" : "Excluir del acceso al tablón"}
+                      // Por encima de la zona de toque (44px) de la papelera
+                      // de al lado: un toque aquí nunca debe caer en borrar.
+                      className="relative z-[1]"
+                      style={{ padding: 5 }}
                     >
                       <ShieldOff
                         size={14}
@@ -1729,14 +1743,17 @@ export function SeccionInvitados({
                           opacity: g.excluidoTablon ? 1 : 0.35,
                         }}
                       />
-                    </button>
-                    <button
+                    </Boton>
+                    <BotonQuitar
+                      borrar
+                      titulo={`Eliminar a ${g.nombre} ${g.apellido}`.trim()}
+                      pregunta={{
+                        titulo: "¿Eliminar de la lista?",
+                        texto: `${g.nombre} ${g.apellido}`.trim() + " se borra de la lista de invitados.",
+                        rotulo: "Sí, eliminar",
+                      }}
                       onClick={() => eliminarInvitado(g.id)}
-                      title={`Eliminar a ${g.nombre} ${g.apellido}`.trim()}
-                      aria-label={`Eliminar a ${g.nombre} ${g.apellido}`.trim()}
-                    >
-                      <Trash2 size={14} style={{ color: C.wax }} />
-                    </button>
+                    />
                   </span>
                 </div>
               );
@@ -1998,12 +2015,15 @@ export function SeccionInvitados({
                       {rol}
                     </label>
                     {activo && (
-                      <button
+                      <Boton
+                        tamano="pequeno"
                         onClick={() => marcarResponsable(rol, invitadoRolAbierto)}
-                        title={esResponsable ? "Es el responsable de este rol -- pulsa para quitarlo" : "Marcar como responsable de este rol"}
+                        titulo={esResponsable ? "Es el responsable de este rol -- pulsa para quitarlo" : "Marcar como responsable de este rol"}
+                        aria-label={esResponsable ? "Quitar como responsable de este rol" : "Marcar como responsable de este rol"}
+                        style={{ padding: 5 }}
                       >
                         <Star size={14} fill={esResponsable ? C.gold : "none"} style={{ color: C.gold }} />
-                      </button>
+                      </Boton>
                     )}
                   </div>
                 );

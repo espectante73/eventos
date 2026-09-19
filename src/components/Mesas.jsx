@@ -2,13 +2,15 @@
 // Mesas) y la versión arrastrable dentro del lienzo del Plano de mesas.
 // Movidas fuera de App.jsx en el reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
-import { X } from "lucide-react";
 import { C, inputStyle } from "../theme";
+import { Boton } from "./Boton";
+import { BotonQuitar, usePreguntaSeguridad } from "./PreguntaSeguridad";
 
 // Mesa redonda con sillas alrededor (número de sillas = capacidad, con un
 // máximo visual para no amontonarlas si la capacidad es muy alta). El
 // tamaño del círculo es fijo; solo cambia cuántas sillas se dibujan.
 export function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapacidad, onEliminar, onVaciar }) {
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   const sillas = Math.max(0, Math.min(m.capacidad, 16));
   const diametro = 84;
   const lienzo = diametro + 26;
@@ -58,15 +60,22 @@ export function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapaci
             pulsar) y algo más grande -- a 18px era difícil de acertar en
             el móvil y no daba ninguna señal al tocarla.
             Pedido por el usuario el 2026-09-16. */}
+        {/* Desde el 2026-09-19 es la pieza común BotonQuitar: el mismo
+            círculo en toda la app, con zona de toque de 44px y la pregunta
+            de seguridad dentro. */}
         {onEliminar && (
-          <button
+          <BotonQuitar
+            titulo="Quitar esta mesa"
+            pregunta={{
+              titulo: `¿Quitar la mesa ${m.numero}?`,
+              texto: ocupados > 0
+                ? `Tiene ${ocupados} invitado${ocupados !== 1 ? "s" : ""}: volverán a quedar sin mesa. No se borra a nadie.`
+                : "Está vacía.",
+              rotulo: "Sí, quitarla",
+            }}
             onClick={onEliminar}
-            className="boton-3d absolute rounded-full flex items-center justify-center"
-            style={{ width: 24, height: 24, top: -3, right: -3, background: C.wax, color: "#fff" }}
-            title="Quitar esta mesa" aria-label="Quitar esta mesa"
-          >
-            <X size={15} />
-          </button>
+            style={{ position: "absolute", top: -3, right: -3 }}
+          />
         )}
       </div>
       <input
@@ -85,15 +94,22 @@ export function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapaci
         </div>
       )}
       {onVaciar && ocupados > 0 && (
-        <button
-          onClick={onVaciar}
-          className="text-xs underline"
-          style={{ color: C.wax }}
-          title="Desasignar a todos los invitados de esta mesa (no se borra a nadie)"
+        <Boton
+          tamano="pequeno"
+          titulo="Desasignar a todos los invitados de esta mesa (no se borra a nadie)"
+          onClick={() =>
+            preguntar({
+              titulo: `¿Vaciar la mesa ${m.numero}?`,
+              texto: `${ocupados} invitado${ocupados !== 1 ? "s" : ""} volverán a quedar sin mesa. No se borra a nadie.`,
+              rotulo: "Sí, vaciarla",
+              alConfirmar: onVaciar,
+            })
+          }
         >
           Vaciar mesa
-        </button>
+        </Boton>
       )}
+      {ventanaPregunta}
     </div>
   );
 }

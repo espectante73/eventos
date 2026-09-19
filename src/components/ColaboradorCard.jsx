@@ -3,7 +3,7 @@
 // relevar/eliminar. Movida fuera de App.jsx en el reparto del 2026-08-08
 // (ver CLAUDE.md).
 import { useState } from "react";
-import { Send, Repeat, Trash2, Mail } from "lucide-react";
+import { Send, Repeat, Mail } from "lucide-react";
 import { C, inputStyle } from "../theme";
 import { resolverColaborador, datosCompletos } from "../lib/invitados";
 import { ordenarPorApellidoNombre, formatearFecha } from "../lib/formato";
@@ -11,6 +11,7 @@ import { emailValido } from "../lib/validacion";
 import { Seal, GrupoFamiliarInput } from "./Widgets";
 import { BuscadorInvitado } from "./BuscadorInvitado";
 import { Boton } from "./Boton";
+import { BotonQuitar } from "./PreguntaSeguridad";
 
 export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin, onConfirmarEmailActualizado, onAvisar }) {
   const [relevando, setRelevando] = useState(false);
@@ -103,7 +104,7 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
       <div className="flex items-center justify-between">
         <button
           onClick={() => setAbierta((v) => !v)}
-          className="text-left flex-1"
+          className="boton-3d text-left flex-1 rounded px-2 py-1"
         >
           <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
             {c.nombre}
@@ -136,7 +137,16 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
             disabled={enviandoInvitacion || !c.email}
           />
           <Boton icono={Repeat} titulo="Relevar (sustituir) colaborador" onClick={() => setRelevando(true)} />
-          <Boton variante="peligro" icono={Trash2} titulo="Eliminar colaborador" onClick={() => onEliminar(c.id)} />
+          <BotonQuitar
+            borrar
+            titulo="Eliminar colaborador"
+            pregunta={{
+              titulo: "¿Eliminar este colaborador?",
+              texto: `${c.nombre || "Sin nombre"} deja de estar en Colaboradores.`,
+              rotulo: "Sí, eliminar",
+            }}
+            onClick={() => onEliminar(c.id)}
+          />
         </div>
       </div>
 
@@ -246,13 +256,9 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
           <p className="text-xs flex-1" style={{ color: C.peligro }}>
             {avisoAsignacion}
           </p>
-          <button
-            onClick={() => setAvisoAsignacion("")}
-            className="text-xs font-medium"
-            style={{ color: C.peligro }}
-          >
+          <Boton tamano="pequeno" onClick={() => setAvisoAsignacion("")}>
             Entendido
-          </button>
+          </Boton>
         </div>
       )}
 

@@ -42,6 +42,16 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "36",
+    cambios: [
+      "Todo lo que se pulsa tiene relieve y se hunde al tocarlo, también los desplegables de las tablas (asignar mesa, colaborador), los títulos que se pliegan y lo que antes era texto subrayado (\"Vaciar mesa\", \"Entendido\"…). Al pulsar suena un clic muy suave y el móvil vibra.",
+      "Todos los botones de quitar son el mismo círculo rojo: X para quitar, papelera para borrar para siempre. Se ven pequeños, pero el dedo acierta en la medida mínima de un móvil (44 px).",
+      "Nada se quita ni se borra sin preguntar antes. Hasta ahora, eliminar un invitado, un colaborador o una novedad se hacía de un solo toque.",
+      "Las preguntas salen en una ventana de la app, no en la del navegador.",
+      "Estado de cuentas: sus tres partes (Resumen, Recaudado por colaborador, Gastos) plegadas y solo una abierta a la vez, como en el tablón.",
+    ],
+  },
+  {
     version: "35",
     cambios: [
       "Pulgar derecho o izquierdo: la primera vez que se entra desde el móvil, una ventanita pregunta con qué mano se usa, y los botones se colocan de ese lado. El móvil lo recuerda. Se cambia cuando se quiera en Mi cuenta. En el ordenador no cambia nada.",

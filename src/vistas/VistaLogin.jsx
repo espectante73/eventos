@@ -28,6 +28,7 @@ import { useState, useEffect, useRef } from "react";
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
+import { Boton } from "../components/Boton";
 
 const TITULOS = { entrar: "Entrar", crear: "Crear cuenta", recuperar: "Recuperar contraseña" };
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
@@ -287,36 +288,18 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
 
         {modo === "entrar" && (
           <>
-            <button
-              type="button"
-              onClick={() => cambiarModo("recuperar")}
-              disabled={cargando}
-              className="w-full text-sm underline mb-1"
-              style={{ color: C.charcoal, opacity: 0.7 }}
-            >
+            <Boton tamano="pequeno" onClick={() => cambiarModo("recuperar")} disabled={cargando} className="w-full mb-2">
               He olvidado mi contraseña
-            </button>
-            <button
-              type="button"
-              onClick={() => cambiarModo("crear")}
-              disabled={cargando}
-              className="w-full text-sm underline"
-              style={{ color: C.charcoal, opacity: 0.7 }}
-            >
+            </Boton>
+            <Boton tamano="pequeno" onClick={() => cambiarModo("crear")} disabled={cargando} className="w-full">
               ¿No tienes cuenta todavía? Crear cuenta
-            </button>
+            </Boton>
           </>
         )}
         {(modo === "crear" || modo === "recuperar") && (
-          <button
-            type="button"
-            onClick={() => cambiarModo("entrar")}
-            disabled={cargando}
-            className="w-full text-sm underline"
-            style={{ color: C.charcoal, opacity: 0.7 }}
-          >
+          <Boton tamano="pequeno" onClick={() => cambiarModo("entrar")} disabled={cargando} className="w-full">
             Ya tengo cuenta — entrar
-          </button>
+          </Boton>
         )}
       </form>
     </div>

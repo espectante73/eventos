@@ -24,8 +24,8 @@ export function SectionTitle({ icon: Icon, children, onToggle, compacto }) {
         onClick={onToggle}
         className={
           compacto
-            ? "flex items-center gap-2 text-xl text-left"
-            : "flex items-center gap-2 text-xl mb-4 pb-2 w-full text-left"
+            ? "boton-3d rounded px-2 flex items-center gap-2 text-xl text-left"
+            : "boton-3d rounded px-2 flex items-center gap-2 text-xl mb-4 pb-2 w-full text-left"
         }
         style={estilo}
       >

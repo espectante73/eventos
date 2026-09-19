@@ -2,10 +2,10 @@
 // ejemplo, al relevar a un colaborador). Movido fuera de App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState } from "react";
-import { X } from "lucide-react";
-import { C, inputStyle } from "../theme";
+import { inputStyle } from "../theme";
 import { ordenarPorApellidoNombre } from "../lib/formato";
 import { TextInput } from "./Formulario";
+import { BotonQuitar } from "./PreguntaSeguridad";
 
 export function BuscadorInvitado({ invitados, invitadoId, onSeleccionar, placeholder }) {
   const [texto, setTexto] = useState("");
@@ -23,15 +23,18 @@ export function BuscadorInvitado({ invitados, invitadoId, onSeleccionar, placeho
         <span className="flex-1 text-sm">
           {seleccionado.apellido}, {seleccionado.nombre}
         </span>
-        <button
+        <BotonQuitar
+          titulo="Quitar selección"
+          pregunta={{
+            titulo: "¿Quitar la selección?",
+            texto: `${seleccionado.apellido}, ${seleccionado.nombre}`,
+            rotulo: "Sí, quitarla",
+          }}
           onClick={() => {
             onSeleccionar("");
             setTexto("");
           }}
-          title="Quitar selección" aria-label="Quitar selección"
-        >
-          <X size={13} style={{ color: C.wax }} />
-        </button>
+        />
       </div>
     );
   }

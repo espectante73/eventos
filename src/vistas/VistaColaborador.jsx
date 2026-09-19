@@ -29,6 +29,7 @@ import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto } from "../components/HuecoFoto";
 import { SeccionPlegable } from "../components/SeccionPlegable";
 import { Boton, estilosBoton } from "../components/Boton";
+import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
 import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
@@ -485,6 +486,8 @@ function FilaInvitadoColaborador({
   oculta,
 }) {
   const importe = importeEsperadoInvitado(g, evento);
+  // Las preguntas en la ventana de la app, no en la del navegador (norma).
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
   // Confirmación siempre (marcar Y quitar): con todas las filas cerradas muy
   // juntas, el pulgar puede tocar el botón de pago de un invitado equivocado
@@ -492,17 +495,18 @@ function FilaInvitadoColaborador({
   const confirmarPago = () => {
     const nombreCompleto = `${g.nombre} ${g.apellido}`.trim();
     if (!g.pagado && !datosCompletos(g)) {
-      window.alert(
-        `No se puede marcar a ${nombreCompleto} como pagado todavía: faltan sus datos obligatorios (año de nacimiento y alergias).`
-      );
+      preguntar({
+        titulo: "Todavía no",
+        texto: `No se puede marcar a ${nombreCompleto} como pagado: faltan sus datos obligatorios (año de nacimiento y alergias).`,
+        soloAviso: true,
+      });
       return;
     }
-    const mensaje = g.pagado
-      ? `¿Quitar el pago de ${nombreCompleto}?`
-      : `¿Marcar a ${nombreCompleto} como pagado?`;
-    if (window.confirm(mensaje)) {
-      onMarcarPagado(g.id, !g.pagado);
-    }
+    preguntar(
+      g.pagado
+        ? { titulo: "¿Quitar el pago?", texto: nombreCompleto, rotulo: "Sí, quitarlo", alConfirmar: () => onMarcarPagado(g.id, false) }
+        : { titulo: "¿Marcar como pagado?", texto: nombreCompleto, rotulo: "Sí, pagado", peligro: false, alConfirmar: () => onMarcarPagado(g.id, true) }
+    );
   };
 
   // Asistencia el día del evento (2026-09-06). Con confirmación, por el
@@ -528,22 +532,25 @@ function FilaInvitadoColaborador({
   const confirmarPresente = () => {
     const nombreCompleto = `${g.nombre} ${g.apellido}`.trim();
     if (!puedeTocarLlegada) {
-      window.alert(`No se puede marcar la llegada de ${nombreCompleto}: ${motivoBloqueo}.`);
+      preguntar({
+        titulo: "Todavía no",
+        texto: `No se puede marcar la llegada de ${nombreCompleto}: ${motivoBloqueo}.`,
+        soloAviso: true,
+      });
       return;
     }
-    const mensaje = g.presente
-      ? `¿Quitar la llegada de ${nombreCompleto}?`
-      : `¿Confirmas que ${nombreCompleto} ya está aquí?`;
-    if (window.confirm(mensaje)) {
-      onMarcarPresente(g.id, !g.presente);
-    }
+    preguntar(
+      g.presente
+        ? { titulo: "¿Quitar la llegada?", texto: nombreCompleto, rotulo: "Sí, quitarla", alConfirmar: () => onMarcarPresente(g.id, false) }
+        : { titulo: "¿Ya está aquí?", texto: nombreCompleto, rotulo: "Sí, ha llegado", peligro: false, alConfirmar: () => onMarcarPresente(g.id, true) }
+    );
   };
 
   return (
     <div className={`rounded ${oculta ? "hidden sm:block" : ""}`} style={{ background: "#fff", border: `1px solid ${C.line}` }}>
       <div className="flex flex-wrap items-center gap-3 p-3 text-sm">
         {!abierto && (
-          <button onClick={confirmarPago} className="flex items-center gap-1">
+          <button onClick={confirmarPago} className="boton-3d rounded flex items-center gap-1">
             {g.pagado ? (
               <Stamp color={C.ink}>Pagado</Stamp>
             ) : (
@@ -567,7 +574,7 @@ function FilaInvitadoColaborador({
         )}
         <button
           onClick={onToggleAbierto}
-          className="flex items-center gap-2 ml-auto"
+          className="boton-3d rounded px-2 py-1 flex items-center gap-2 ml-auto"
           style={{ color: C.ink }}
         >
           <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
@@ -590,7 +597,7 @@ function FilaInvitadoColaborador({
                 ? `Marcar que ${g.nombre} ha llegado`
                 : `No se puede: ${motivoBloqueo}`
           }
-          className="flex items-center justify-center rounded-full flex-shrink-0"
+          className="boton-3d flex items-center justify-center rounded-full flex-shrink-0"
           style={{
             width: 32,
             height: 32,
@@ -620,6 +627,7 @@ function FilaInvitadoColaborador({
           />
         </div>
       )}
+      {ventanaPregunta}
     </div>
   );
 }

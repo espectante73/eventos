@@ -10,6 +10,7 @@ import { FlaskConical } from "lucide-react";
 import { C } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
+import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 
 export function VentanaConfigModoPruebas({ data, onCerrar }) {
   const {
@@ -40,12 +41,26 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
   const marcarTodos = () => setHabilitados(new Set(colaboradores.map((c) => c.id)));
   const desmarcarTodos = () => setHabilitados(new Set());
 
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
+
+  const pedirActivar = () =>
+    preguntar({
+      titulo: "¿Activar Modo Pruebas?",
+      texto: "Se guarda una foto completa de los datos actuales del evento. Podrás volver a este estado exacto en cualquier momento apagando el Modo Pruebas.",
+      rotulo: "Sí, activar",
+      peligro: false,
+      alConfirmar: activar,
+    });
+
+  const pedirDesactivar = () =>
+    preguntar({
+      titulo: "¿Desactivar y restaurar todo?",
+      texto: "Se restaura TODO exactamente a como estaba al activar el Modo Pruebas — se deshace cualquier cambio hecho desde entonces, sea de prueba o real.",
+      rotulo: "Sí, restaurar",
+      alConfirmar: desactivar,
+    });
+
   const activar = async () => {
-    const ok = window.confirm(
-      "Se guarda una foto completa de los datos actuales del evento. Podrás volver a este " +
-        "estado exacto en cualquier momento apagando el Modo Pruebas.\n\n¿Activar Modo Pruebas?"
-    );
-    if (!ok) return;
     setEjecutando(true);
     await activarModoPruebas(Array.from(habilitados));
     // activarModoPruebas() recarga la página al terminar -- no hace
@@ -54,11 +69,6 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
   };
 
   const desactivar = async () => {
-    const ok = window.confirm(
-      "Se restaura TODO exactamente a como estaba al activar el Modo Pruebas — se deshace " +
-        "cualquier cambio hecho desde entonces, sea de prueba o real.\n\n¿Desactivar y restaurar todo?"
-    );
-    if (!ok) return;
     setEjecutando(true);
     // La foto del estado ACTUAL se guarda en el servidor antes de
     // restaurar: si un colaborador tocó algo de verdad mientras el Modo
@@ -88,9 +98,10 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
             seguridad del estado actual, por si hace falta recuperar algo a mano.
           </p>
         </div>
-        <Boton variante="peligro" onClick={desactivar} disabled={ejecutando}>
+        <Boton variante="peligro" onClick={pedirDesactivar} disabled={ejecutando}>
           {ejecutando ? "Restaurando…" : "Desactivar y restaurar todo"}
         </Boton>
+        {ventanaPregunta}
       </VentanaFlotante>
     );
   }
@@ -114,24 +125,13 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
                 <p className="text-xs" style={{ color: C.line }}>
                   Colaboradores habilitados durante la prueba:
                 </p>
-                <div className="flex items-center gap-1 text-xs whitespace-nowrap">
-                  <button
-                    type="button"
-                    onClick={marcarTodos}
-                    className="underline"
-                    style={{ color: C.wax }}
-                  >
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  <Boton tamano="pequeno" onClick={marcarTodos}>
                     Todos
-                  </button>
-                  <span style={{ color: C.line }}>/</span>
-                  <button
-                    type="button"
-                    onClick={desmarcarTodos}
-                    className="underline"
-                    style={{ color: C.wax }}
-                  >
+                  </Boton>
+                  <Boton tamano="pequeno" onClick={desmarcarTodos}>
                     Ninguno
-                  </button>
+                  </Boton>
                 </div>
               </div>
               <div className="space-y-1">
@@ -155,10 +155,11 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
         )}
       </div>
       <div className="flex justify-end zurdo:justify-start">
-        <Boton variante="peligro" onClick={activar} disabled={ejecutando}>
+        <Boton variante="peligro" onClick={pedirActivar} disabled={ejecutando}>
           <FlaskConical size={16} /> Activar Modo Pruebas
         </Boton>
       </div>
+      {ventanaPregunta}
     </VentanaFlotante>
   );
 }

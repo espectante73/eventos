@@ -6,7 +6,7 @@
 // cuenta — a petición del usuario, 2026-08-25.
 import { useState, useRef } from "react";
 import { useAltoAutomatico } from "../../lib/useAltoAutomatico";
-import { Plus, Trash2, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown, Lock, Undo2, AlertTriangle, Music } from "lucide-react";
+import { Plus, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown, Lock, Undo2, AlertTriangle, Music } from "lucide-react";
 import { C, inputStyle } from "../../theme";
 import { uid } from "../../lib/id";
 import { formatearFecha } from "../../lib/formato";
@@ -22,6 +22,7 @@ import { useDeshacer } from "../../lib/useDeshacer";
 import { BotonHistorial } from "../../components/HistorialTexto";
 import { FondoMusicalTablon } from "../../components/FondoMusicalTablon";
 import { Boton } from "../../components/Boton";
+import { BotonQuitar } from "../../components/PreguntaSeguridad";
 
 // Añade "prefijo" al principio de cada línea tocada por la selección
 // actual (o solo la línea del cursor, si no hay nada seleccionado) --
@@ -95,7 +96,8 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
         <button
           onClick={onAlternar}
           title={expandida ? "Plegar" : "Desplegar para editar el texto"}
-          className="p-0.5 flex-shrink-0"
+          aria-label={expandida ? "Plegar" : "Desplegar para editar el texto"}
+          className="boton-3d rounded p-1 flex-shrink-0"
         >
           <ChevronDown
             size={16}
@@ -131,15 +133,17 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
         <span className="text-xs whitespace-nowrap" style={{ color: C.charcoal, opacity: 0.5 }}>
           {formatearFecha(String(n.creadaEn).slice(0, 10))}
         </span>
-        <button
-          onClick={() => onEliminar(n.id)}
+        <BotonQuitar
+          borrar
           disabled={soloTexto}
-          title={soloTexto ? "No tienes permiso para borrar novedades" : "Eliminar esta novedad"}
-          className="p-1 flex-shrink-0"
-          style={{ opacity: soloTexto ? 0.3 : 1, cursor: soloTexto ? "not-allowed" : "pointer" }}
-        >
-          <Trash2 size={16} style={{ color: C.wax }} />
-        </button>
+          titulo={soloTexto ? "No tienes permiso para borrar novedades" : "Eliminar esta novedad"}
+          pregunta={{
+            titulo: "¿Eliminar esta novedad?",
+            texto: n.titulo || "(sin título)",
+            rotulo: "Sí, eliminar",
+          }}
+          onClick={() => onEliminar(n.id)}
+        />
       </div>
       {expandida && (
         <div className="px-3 pb-3 space-y-2" style={{ borderTop: `1px solid ${C.line}` }}>
@@ -444,7 +448,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
         <>
           <button
             onClick={() => setPieAbierto((a) => !a)}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs w-full"
+            className="boton-3d flex items-center gap-1.5 px-4 py-2 text-xs w-full"
             style={{ color: C.charcoal, opacity: 0.7, flexShrink: 0, borderTop: `1px solid ${C.line}` }}
           >
             <ChevronDown size={14} style={{ transform: pieAbierto ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
@@ -535,7 +539,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
               tener una abierta sin la otra. */}
           <button
             onClick={() => setMusicaAbierta((a) => !a)}
-            className="flex items-center gap-1.5 px-4 py-2 text-xs w-full"
+            className="boton-3d flex items-center gap-1.5 px-4 py-2 text-xs w-full"
             style={{ color: C.charcoal, opacity: 0.7, flexShrink: 0, borderTop: `1px solid ${C.line}` }}
           >
             <ChevronDown size={14} style={{ transform: musicaAbierta ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />

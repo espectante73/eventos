@@ -34,7 +34,7 @@ export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
     >
       <button
         onClick={() => setAbierto((a) => !a)}
-        className="w-full flex items-center gap-2 px-3 py-2 text-sm"
+        className="boton-3d w-full flex items-center gap-2 px-3 py-2 text-sm"
         style={{ color: C.charcoal }}
       >
         {todoBien ? (
@@ -54,9 +54,9 @@ export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
       {abierto && todoBien && (
         <p className="px-3 pb-3 text-sm" style={{ color: C.charcoal, opacity: 0.7 }}>
           No hay incoherencias ni nada pendiente en la lista.{" "}
-          <button onClick={onCerrar} style={{ textDecoration: "underline" }}>
+          <Boton tamano="pequeno" onClick={onCerrar}>
             Cerrar
-          </button>
+          </Boton>
         </p>
       )}
 

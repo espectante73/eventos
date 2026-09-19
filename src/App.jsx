@@ -378,7 +378,7 @@ export default function App() {
           <span className="font-medium">Hay una versión nueva de la app — recarga para actualizar.</span>
           <button
             onClick={() => window.location.reload()}
-            className="px-3 py-1 rounded font-medium whitespace-nowrap"
+            className="boton-3d px-3 py-1 rounded font-medium whitespace-nowrap"
             style={{ background: "#fff", color: C.wax }}
           >
             Actualizar
