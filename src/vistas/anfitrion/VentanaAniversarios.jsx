@@ -32,6 +32,7 @@ import {
   nombreDescargaBoda,
   faltaParaEncargo,
   hojaDeEncargo,
+  matrimoniosParaEncargo,
   CARPETA,
 } from "../../lib/fotosAlmacen";
 import { crearZip } from "../../lib/zip";
@@ -105,6 +106,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
     fotosFamiliares,
     fotosAniversario,
     fotosBodaFinal,
+    fotosSinBoda,
     persistFotosAniversario,
     persistFotosBodaFinal,
   } = data;
@@ -162,7 +164,9 @@ export function VentanaAniversarios({ data, onCerrar }) {
   const verFoto = (valor) => (esRutaAlmacen(valor) ? enlaces[valor] || "" : valor || "");
 
   const faltanAniversario = matrimonios.filter((m) => !fotosAniversario?.[m.familia]).length;
-  const faltanPlantilla = matrimonios.filter((m) => !fotosBodaFinal?.[m.familia]).length;
+  // Los que no tienen foto de boda (marcado por el colaborador) no tienen
+  // nada que montar: no cuentan como "falta la plantilla".
+  const faltanPlantilla = matrimonios.filter((m) => !fotosBodaFinal?.[m.familia] && !fotosSinBoda?.[m.familia]).length;
 
   const subir = async (tipo, familia, file) => {
     const t = TIPOS[tipo];
@@ -199,7 +203,8 @@ export function VentanaAniversarios({ data, onCerrar }) {
   // La hoja de encargo solo se entrega con TODOS los datos recogidos: con un
   // año a medias la instrucción saldría mal y el error se repetiría en las
   // 48 (regla del usuario, 2026-09-17).
-  const falta = faltaParaEncargo(matrimonios, fotosFamiliares);
+  const paraEncargo = matrimoniosParaEncargo(matrimonios, fotosSinBoda);
+  const falta = faltaParaEncargo(paraEncargo, fotosFamiliares);
   const pedirDescarga = () => {
     setError("");
     if (conOriginal.length === 0) {
@@ -235,7 +240,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
       if (falta.completo) {
         archivos.unshift({
           nombre: "Hoja de encargo.txt",
-          datos: new TextEncoder().encode(hojaDeEncargo(matrimonios)),
+          datos: new TextEncoder().encode(hojaDeEncargo(paraEncargo)),
         });
       }
       descargarBlob("Fotos de boda originales.zip", new Blob([crearZip(archivos)], { type: "application/zip" }));
@@ -357,7 +362,9 @@ export function VentanaAniversarios({ data, onCerrar }) {
                 enlace={verFoto(final || original)}
                 ocupada={Boolean(final)}
                 soloLectura={!final}
-                marca={!final && original ? "Sin plantilla" : ""}
+                // "No tienen": el colaborador marcó que ese matrimonio no
+                // tiene foto de boda. Así se sabe que no falta, que no hay.
+                marca={!final && original ? "Sin plantilla" : !original && fotosSinBoda?.[m.familia] ? "No tienen" : ""}
                 subiendo={subiendo === `bodaFinal:${m.familia}`}
                 onQuitar={() => setPorQuitar({ matrimonio: m, tipo: "bodaFinal" })}
                 onVer={() => setEnGrande({ matrimonio: m, tipo: "boda", cual: final ? "final" : "original" })}

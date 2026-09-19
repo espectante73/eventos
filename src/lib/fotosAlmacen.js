@@ -185,6 +185,14 @@ export function nombreDescargaBoda({ familia, esposo, esposa, anioBoda }) {
 // están completos. Con un año a medias, la instrucción saldría mal y el
 // error se repetiría en las 48.
 
+// Los matrimonios que entran en el encargo: todos menos los que el
+// colaborador ha marcado que NO tienen foto de boda (2026-09-19). Sin foto
+// no hay nada que montar, y contarlos dejaría el encargo "incompleto" para
+// siempre.
+export function matrimoniosParaEncargo(matrimonios, sinFotoBoda) {
+  return (matrimonios || []).filter((m) => !sinFotoBoda?.[m.familia]);
+}
+
 // Qué falta para poder redactar el encargo.
 export function faltaParaEncargo(matrimonios, fotosOriginales) {
   const sinAnio = [];

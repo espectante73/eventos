@@ -99,14 +99,22 @@ export function conEmailDeColaborador(g, colaboradorVinculado) {
   return { ...g, email: colaboradorVinculado.email || "" };
 }
 
+// La foto de boda se pide a O y A, SALVO que el colaborador haya marcado
+// que ese matrimonio no tiene (usuario, 2026-09-19). Al revés que canción y
+// observaciones, su casilla "Sí" nace MARCADA: lo normal es que la haya.
+// `abiertos.fotoBoda === false` = marcado que no tienen.
+export function pideFotoBoda(g, abiertos) {
+  return pideDatosDeBoda(g) && abiertos?.fotoBoda !== false;
+}
+
 // El "de M" del contador, ajustado a esta persona.
 export function totalDatosInvitado(g, evento, abiertos) {
-  return camposQueAplican(g, evento, abiertos).length + (pideDatosDeBoda(g) ? 1 : 0);
+  return camposQueAplican(g, evento, abiertos).length + (pideFotoBoda(g, abiertos) ? 1 : 0);
 }
 
 export function contarDatosRellenados(g, foto, evento, abiertos) {
   const rellenos = camposQueAplican(g, evento, abiertos).filter((c) => String(g[c] || "").trim() !== "").length;
-  return rellenos + (pideDatosDeBoda(g) && foto ? 1 : 0);
+  return rellenos + (pideFotoBoda(g, abiertos) && foto ? 1 : 0);
 }
 
 export function tieneAlergiaReal(g) {

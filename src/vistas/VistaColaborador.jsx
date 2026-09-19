@@ -56,6 +56,10 @@ function FormularioDatos({
   importe,
   onCerrar,
   colaboradorVinculado,
+  // La familia ha marcado que NO tiene foto de boda (casilla "Sí"
+  // desmarcada). Es de la familia, como la foto: vale para los dos.
+  sinFotoBoda = false,
+  onCambiarSinFotoBoda,
 }) {
   const [form, setForm] = useState(invitado);
   const [foto, setFoto] = useState(fotoFamiliar || "");
@@ -232,8 +236,8 @@ function FormularioDatos({
             {form.apellido}, {form.nombre}
           </span>
           <span className="text-xs" style={{ color: C.ink }}>
-            datos {contarDatosRellenados(conEmailDeColaborador(form, colaboradorVinculado), foto, evento, abiertos)} de{" "}
-            {totalDatosInvitado(form, evento, abiertos)}
+            datos {contarDatosRellenados(conEmailDeColaborador(form, colaboradorVinculado), foto, evento, { ...abiertos, fotoBoda: !sinFotoBoda })} de{" "}
+            {totalDatosInvitado(form, evento, { ...abiertos, fotoBoda: !sinFotoBoda })}
           </span>
           {/* Colores al revés que el resto de la cabecera (fondo dorado,
               letra verde) y un punto más de letra, a petición del usuario
@@ -344,6 +348,30 @@ function FormularioDatos({
             />
           </Field>
           <Field label="Foto boda">
+            {/* Casilla "Sí", MARCADA por defecto (usuario, 2026-09-19): lo
+                normal es que haya foto. Desmarcada = ese matrimonio no tiene,
+                la foto deja de contar en "datos X de Y" y Aniversarios lo
+                enseña. Con la foto ya puesta no se puede desmarcar: primero
+                hay que quitarla. */}
+            <label
+              className="flex items-center gap-1 text-sm mb-1"
+              style={{ color: C.ink }}
+              title={foto ? "Con la foto ya puesta no se puede marcar que no tienen: quítala primero" : undefined}
+            >
+              <input
+                type="checkbox"
+                checked={!sinFotoBoda}
+                disabled={Boolean(foto)}
+                onChange={() => onCambiarSinFotoBoda?.(invitado.grupoFamiliar, !sinFotoBoda)}
+              />
+              Sí
+            </label>
+            {sinFotoBoda ? (
+              <span className="text-xs italic" style={{ color: C.ink }}>
+                No tienen foto de boda.
+              </span>
+            ) : (
+            <>
             {/* La misma pieza que la ventana Aniversarios (HuecoFoto): 16:9,
                 se toca para subir, y con foto ya puesta se abre en grande.
                 Antes había aquí un botón "Subir foto" y una miniatura
@@ -362,6 +390,8 @@ function FormularioDatos({
               <p className="text-xs" style={{ color: C.wax }}>
                 {errorFoto}
               </p>
+            )}
+            </>
             )}
           </Field>
             </>
@@ -530,6 +560,8 @@ function FilaInvitadoColaborador({
   onMarcarPresente,
   evento,
   fotosFamiliares,
+  fotosSinBoda = {},
+  onCambiarSinFotoBoda,
   colaboradorVinculado,
   // `oculta`: hay OTRA ficha abierta. En el móvil esta se esconde, para que
   // la abierta sea lo único en pantalla; en escritorio sigue viéndose la
@@ -598,8 +630,9 @@ function FilaInvitadoColaborador({
   };
 
   // "Datos X de Y" de esta ficha, una sola vez para toda la fila.
-  const datosRellenos = contarDatosRellenados(conEmailDeColaborador(g, colaboradorVinculado), fotoFamiliar, evento);
-  const datosTotal = totalDatosInvitado(g, evento);
+  const sinFotoBoda = Boolean(fotosSinBoda[g.grupoFamiliar || ""]);
+  const datosRellenos = contarDatosRellenados(conEmailDeColaborador(g, colaboradorVinculado), fotoFamiliar, evento, { fotoBoda: !sinFotoBoda });
+  const datosTotal = totalDatosInvitado(g, evento, { fotoBoda: !sinFotoBoda });
   // Ficha CERRADA con datos a medias (no está en N de N): fondo rojo suave y
   // un latido lento, "que le dé un toque al verla, pero suave" (usuario,
   // 2026-09-19). Abierta no late: ya se está rellenando.
@@ -689,6 +722,8 @@ function FilaInvitadoColaborador({
             importe={importe}
             onCerrar={onToggleAbierto}
             colaboradorVinculado={colaboradorVinculado}
+            sinFotoBoda={sinFotoBoda}
+            onCambiarSinFotoBoda={onCambiarSinFotoBoda}
           />
         </div>
       )}
@@ -698,7 +733,7 @@ function FilaInvitadoColaborador({
 }
 
 export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken, onCerrarSesion }) {
-  const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, evento, ordenFamiliares, tokenTablon } = data;
+  const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, fotosSinBoda, persistFotosSinBoda, evento, ordenFamiliares, tokenTablon } = data;
   const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
   // Permisos extra (más allá de sus invitados asignados), concedidos por
@@ -790,6 +825,13 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
     const clave = grupoFamiliar || "";
     if (!clave) return;
     persistFotosFamiliares({ ...fotosFamiliares, [clave]: url });
+  };
+
+  // "Esta familia no tiene foto de boda" (o sí, al volver a marcarla).
+  const cambiarSinFotoBoda = (grupoFamiliar, sin) => {
+    const clave = grupoFamiliar || "";
+    if (!clave) return;
+    persistFotosSinBoda({ ...(fotosSinBoda || {}), [clave]: sin });
   };
 
   const marcarPagado = (id, pagado) => {
@@ -1130,6 +1172,8 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   onMarcarPresente={marcarPresente}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
+                  fotosSinBoda={fotosSinBoda || {}}
+                  onCambiarSinFotoBoda={cambiarSinFotoBoda}
                   colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
                   oculta={fichaAbierta && abiertoId !== g.id}
                 />
@@ -1160,6 +1204,8 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   onMarcarPresente={marcarPresente}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
+                  fotosSinBoda={fotosSinBoda || {}}
+                  onCambiarSinFotoBoda={cambiarSinFotoBoda}
                   colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
                   oculta={fichaAbierta && abiertoId !== g.id}
                 />

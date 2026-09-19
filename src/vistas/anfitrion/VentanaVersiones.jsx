@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.8",
+    cambios: [
+      "Foto de boda con casilla \"Sí\", marcada por defecto. Si un matrimonio no tiene foto, el colaborador la desmarca: deja de contar como dato pendiente (vale para los dos cónyuges), en Aniversarios sale \"No tienen\" y la hoja de encargo ya no la espera.",
+    ],
+  },
+  {
     version: "37.7",
     cambios: [
       "Lista del colaborador: cada ficha cerrada que no esté en \"N de N\" se ve con fondo rojo suave y un latido lento, para que se note sin molestar. Abierta no late.",

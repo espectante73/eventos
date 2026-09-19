@@ -244,6 +244,14 @@ describe("totalDatosInvitado", () => {
     expect(conEmailDeColaborador(raul, undefined)).toBe(raul);
   });
 
+  it("un matrimonio sin foto de boda (casilla desmarcada) no cuenta la foto", () => {
+    const casado = { rolFamiliar: "esposa", anioNacimiento: "1962", anioBoda: "1985", email: "b@b.com", alergias: "No" };
+    expect(contarDatosRellenados(casado, "", evento)).toBe(4);
+    expect(totalDatosInvitado(casado, evento)).toBe(5);
+    expect(contarDatosRellenados(casado, "", evento, { fotoBoda: false })).toBe(4);
+    expect(totalDatosInvitado(casado, evento, { fotoBoda: false })).toBe(4);
+  });
+
   it("un niño con todo lo suyo contestado sale completo: N de N", () => {
     const nino = { rolFamiliar: "hijo", anioNacimiento: "2015", alergias: "No" };
     expect(contarDatosRellenados(nino, false, evento)).toBe(totalDatosInvitado(nino, evento));

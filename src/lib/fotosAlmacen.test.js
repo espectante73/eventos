@@ -4,6 +4,7 @@ import {
   esRutaAlmacen,
   nombreDescargaBoda,
   faltaParaEncargo,
+  matrimoniosParaEncargo,
   hojaDeEncargo,
 } from "./fotosAlmacen";
 
@@ -56,6 +57,14 @@ describe("nombreDescargaBoda", () => {
 
   it("quita los caracteres que no admite un nombre de archivo", () => {
     expect(nombreDescargaBoda({ ...m, familia: "Ruiz/Pérez" })).toBe("Ruiz-Pérez - Gustavo y Míriam - 1998.jpg");
+  });
+});
+
+describe("matrimoniosParaEncargo", () => {
+  it("deja fuera a los que no tienen foto de boda", () => {
+    const lista = [{ familia: "Uno" }, { familia: "Dos" }];
+    expect(matrimoniosParaEncargo(lista, { Dos: true }).map((m) => m.familia)).toEqual(["Uno"]);
+    expect(matrimoniosParaEncargo(lista, undefined)).toHaveLength(2);
   });
 });
 

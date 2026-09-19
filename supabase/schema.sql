@@ -176,7 +176,12 @@ CREATE TABLE public.fotos_familiares (
     -- La de boda ya montada en la plantilla (2026-09-17). "url" es la
     -- ORIGINAL del colaborador y no se toca: si un montaje sale mal, se
     -- rehace desde ella. Solo la escribe el anfitrión.
-    "urlBodaFinal" text DEFAULT ''::text NOT NULL
+    "urlBodaFinal" text DEFAULT ''::text NOT NULL,
+    -- El colaborador marca que este matrimonio NO tiene foto de boda
+    -- (2026-09-19): la foto deja de contar como pendiente y el encargo no
+    -- la espera. Sin "not null" a propósito, como "excepcionesRevision":
+    -- una foto de Deshacer anterior a la columna la trae vacía.
+    "sinFotoBoda" boolean DEFAULT false
 );
 
 -- El tablón de novedades que ven los invitados.
@@ -751,16 +756,19 @@ begin
   -- La de aniversario y la de boda con plantilla solo las toca el
   -- anfitrión. Un colaborador guarda la original de boda (la que sube en
   -- su formulario) sin poder pisar las otras, aunque las mande vacías.
-  insert into fotos_familiares ("grupoFamiliar", "url", "urlAniversario", "urlBodaFinal")
+  -- "sinFotoBoda" lo marcan igual el colaborador y el anfitrión.
+  insert into fotos_familiares ("grupoFamiliar", "url", "urlAniversario", "urlBodaFinal", "sinFotoBoda")
   select
     v->>'grupoFamiliar',
     coalesce(v->>'url', ''),
     case when v_es_anfitrion then coalesce(v->>'urlAniversario', '') else '' end,
-    case when v_es_anfitrion then coalesce(v->>'urlBodaFinal', '') else '' end
+    case when v_es_anfitrion then coalesce(v->>'urlBodaFinal', '') else '' end,
+    coalesce((v->>'sinFotoBoda')::boolean, false)
   from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
   where coalesce(v->>'grupoFamiliar', '') <> ''
   on conflict ("grupoFamiliar") do update set
     "url" = excluded."url",
+    "sinFotoBoda" = excluded."sinFotoBoda",
     "urlAniversario" = case
       when v_es_anfitrion then excluded."urlAniversario"
       else fotos_familiares."urlAniversario"

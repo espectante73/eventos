@@ -1904,6 +1904,20 @@ quedan vacías y contaban igual.
   email o foto -- sabiendo que un adulto que no dé su email se quedaría en
   rojo. Las secciones NUEVOS/COMPLETADOS siguen por los obligatorios, así
   que puede haber una ficha roja en COMPLETADOS: es lo esperado.
+- v37.8: **"no tienen foto de boda"**. Casilla "Sí" en la foto de boda,
+  MARCADA por defecto (al revés que canción y observaciones: lo normal es
+  que haya foto). Desmarcada = ese matrimonio no tiene. Es de la FAMILIA,
+  como la foto (`fotos_familiares."sinFotoBoda"`), así que vale para los
+  dos cónyuges (norma 16). Efectos, todos desde el mismo dato:
+  `pideFotoBoda` la saca de "datos X de Y"; Aniversarios pone "No tienen"
+  en el hueco y no la cuenta en "falta plantilla"; `matrimoniosParaEncargo`
+  la deja fuera de la hoja de encargo (si no, el encargo no estaría nunca
+  completo). Con la foto ya subida la casilla no se puede desmarcar: hay
+  que quitar la foto primero.
+  `useLedgerData`: `repartirFilasDeFotos` reparte ahora las filas de
+  `fotos_familiares` en sus cuatro mapas en UN sitio (antes eran tres
+  copias de tres líneas); `guardarFilasDeFotos` manda las cuatro cosas.
+  SQL dado al usuario el 2026-09-19 (columna + `guardar_fotos_familiares`).
 
 ## Una familia no se separa en las mesas (2026-09-19, v37)
 
