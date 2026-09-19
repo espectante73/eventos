@@ -14,7 +14,7 @@
 // `filtros`/`setFiltros` igual: el botón "Editar asignación" de la
 // ventana Avisos necesita poder rellenar el filtro de colaborador de
 // esta misma tabla, así que ese estado también vive en VistaAnfitrion.
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Check,
   Music,
@@ -83,6 +83,33 @@ export function SeccionInvitados({
   const [mostrarResumenAsignacion, setMostrarResumenAsignacion] = useState(false);
   const [enviandoAvisosAsignacion, setEnviandoAvisosAsignacion] = useState(false);
   const [mostrarRevision, setMostrarRevision] = useState(false);
+  // Los filtros de la lista tal como estaban al abrir la Revisión. Tocar un
+  // nombre del informe filtra la lista; al cerrar el informe, la lista
+  // vuelve a como estaba (usuario, 2026-09-19: "si veo la revisión y no
+  // hago cambios, debe poder salir y volver a ver la lista normal").
+  const [filtrosAntesDeRevision, setFiltrosAntesDeRevision] = useState(null);
+  const abrirRevision = () => {
+    setFiltrosAntesDeRevision(filtros);
+    setMostrarRevision(true);
+  };
+  const cerrarRevision = () => {
+    if (filtrosAntesDeRevision) setFiltros(filtrosAntesDeRevision);
+    setFiltrosAntesDeRevision(null);
+    setMostrarRevision(false);
+  };
+  // Y si se cierra la ventana entera con la Revisión abierta, igual: al
+  // volver, la lista no puede seguir filtrada por un nombre del informe.
+  const filtrosAntesRef = useRef(null);
+  useEffect(() => {
+    filtrosAntesRef.current = filtrosAntesDeRevision;
+  }, [filtrosAntesDeRevision]);
+  useEffect(
+    () => () => {
+      if (filtrosAntesRef.current) setFiltros(filtrosAntesRef.current);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
   // Avisos de la propia interfaz, NUNCA `window.alert`: dentro de una
   // ventana emergente ese diálogo sale en la pestaña principal (o no
   // sale) y además bloquea. Ya nos costó una ronda de bugs en Novedades.
@@ -561,7 +588,7 @@ export function SeccionInvitados({
       etiqueta: (mostrarRevision ? "✓ " : "") + "Revisión" + (erroresRevision ? ` (${erroresRevision})` : ""),
       icono: ClipboardCheck,
       ...(erroresRevision ? { fondo: C.peligro, color: "#fff" } : {}),
-      onClick: () => setMostrarRevision((v) => !v),
+      onClick: () => (mostrarRevision ? cerrarRevision() : abrirRevision()),
     },
     ...(invitados.length > 0
       ? [
@@ -1264,7 +1291,7 @@ export function SeccionInvitados({
             // Un hallazgo puede traer sus propios filtros (p. ej. "los de este
             // colaborador"); si no, se busca a la persona por su nombre.
             onBuscar={(g) => setFiltros({ ...filtros, ...(g.filtros || { texto: `${g.nombre} ${g.apellido}` }) })}
-            onCerrar={() => setMostrarRevision(false)}
+            onCerrar={cerrarRevision}
           />
         )}
         {mostrarAnadir && (

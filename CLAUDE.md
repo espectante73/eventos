@@ -1902,6 +1902,15 @@ afecta (se le sienta aparte si hace falta).
   colaborador ("Ana: 14") que filtra la lista por él: un hallazgo puede
   traer `etiqueta` y `filtros` propios, y `InformeInvitados`/`onBuscar`
   los usan si vienen.
+- v37.3: el usuario no podía SALIR de la Revisión: tocar el título solo la
+  plegaba (y al tocarlo otra vez se abría), y el único "Cerrar" estaba al
+  final de todos los avisos. Ahora "Cerrar" va en la fila del título, del
+  lado del pulgar. Y al cerrar, la lista vuelve a los filtros que tenía
+  al abrir la Revisión (`filtrosAntesDeRevision` en SeccionInvitados): un
+  nombre pulsado en el informe la dejaba filtrada para siempre. También
+  si se cierra la ventana de la lista con la Revisión abierta.
+  ⚠️ Lección general: todo panel que se abre tiene que tener su salida
+  ARRIBA y a la vista, y salir deja la pantalla como estaba.
 - ⚠️ El desplegable de mesa sigue desactivando solo las mesas llenas para
   UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
   al elegirla, sale el aviso y no se mueve nadie.

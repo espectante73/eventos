@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.3",
+    cambios: [
+      "Revisión de la Lista de invitados: botón \"Cerrar\" arriba y a la vista (antes tocar el título solo la plegaba y volvía a abrirse, y el cierre estaba al final de todo). Al cerrarla, la lista vuelve a como estaba antes de abrirla, aunque se haya pulsado algún nombre del informe.",
+    ],
+  },
+  {
     version: "37.2",
     cambios: [
       "La Revisión avisa del colaborador que tenga menos de 10 o más de 12 invitados asignados, para que todos lleven el mismo trabajo y el mismo dinero a recoger. Pulsando su nombre, la lista enseña sus invitados. Los colaboradores sin ningún invitado no se avisan.",

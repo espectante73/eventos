@@ -32,9 +32,16 @@ export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
       className="rounded mb-3"
       style={{ border: `1px solid ${errores.length ? C.peligro : C.line}`, background: "#fff" }}
     >
+      {/* Arriba, siempre a la vista: plegar (el título) y SALIR ("Cerrar").
+          Antes el título solo plegaba -- al tocarlo otra vez volvía a
+          abrirse -- y el único "Cerrar" estaba al final de todos los
+          avisos: el usuario no encontraba cómo salir (2026-09-19). Cerrar
+          devuelve la lista a como estaba antes de abrir la Revisión.
+          "Cerrar" del lado del pulgar, en espejo con la mano izquierda. */}
+      <div className="flex items-center gap-2 pr-2 zurdo:flex-row-reverse zurdo:pr-0 zurdo:pl-2">
       <button
         onClick={() => setAbierto((a) => !a)}
-        className="boton-3d w-full flex items-center gap-2 px-3 py-2 text-sm"
+        className="boton-3d flex-1 min-w-0 flex items-center gap-2 px-3 py-2 text-sm"
         style={{ color: C.charcoal }}
       >
         {todoBien ? (
@@ -50,13 +57,14 @@ export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
           style={{ transform: abierto ? "rotate(180deg)" : "none", transition: "transform .15s ease", flexShrink: 0 }}
         />
       </button>
+      <Boton tamano="pequeno" onClick={onCerrar} titulo="Salir de la Revisión y volver a la lista como estaba">
+        Cerrar
+      </Boton>
+      </div>
 
       {abierto && todoBien && (
         <p className="px-3 pb-3 text-sm" style={{ color: C.charcoal, opacity: 0.7 }}>
-          No hay incoherencias ni nada pendiente en la lista.{" "}
-          <Boton tamano="pequeno" onClick={onCerrar}>
-            Cerrar
-          </Boton>
+          No hay incoherencias ni nada pendiente en la lista.
         </p>
       )}
 
@@ -116,9 +124,6 @@ export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
               </div>
             </div>
           ))}
-          <Boton variante="secundario" tamano="pequeno" onClick={onCerrar}>
-            Cerrar la revisión
-          </Boton>
         </div>
       )}
     </div>
