@@ -1837,6 +1837,12 @@ alinear abajo, no a la derecha).
 ⚠️ **Al poner un botón nuevo a la derecha, añadir su `zurdo:`** en el
 mismo cambio, o en el móvil de un zurdo se quedará en el lado malo.
 
+**Probado por el usuario en su móvil el 2026-09-19 y aprobado a la
+primera**: "es exactamente lo que había pedido". Lo que funcionó: antes
+de construir, una sola pregunta con dos bocetos del aspecto (norma 1) y
+otra sobre a quién preguntar. Repetir esa forma con lo nuevo que tenga
+aspecto propio.
+
 ## Regla de la app: ventanas lo más pequeñas posible (2026-09-18)
 
 Pedido explícito del usuario, "tomamos nota de esto": **una ventana mide
