@@ -221,6 +221,19 @@ describe("totalDatosInvitado", () => {
     expect(totalDatosInvitado({ ...nino, alergias: "No" }, evento, { cancion: true })).toBe(3);
   });
 
+  it("una alergia fuera de las tres de siempre (Melocotón) cuenta como contestada", () => {
+    const casado = {
+      rolFamiliar: "esposo",
+      anioNacimiento: "1960",
+      anioBoda: "1985",
+      email: "a@a.com",
+      alergias: "Melocotón",
+    };
+    // Sin canción ni observaciones elegidas: 5 de 5 (foto incluida).
+    expect(contarDatosRellenados(casado, "ruta/foto.jpg", evento)).toBe(5);
+    expect(totalDatosInvitado(casado, evento)).toBe(5);
+  });
+
   it("un niño con todo lo suyo contestado sale completo: N de N", () => {
     const nino = { rolFamiliar: "hijo", anioNacimiento: "2015", alergias: "No" };
     expect(contarDatosRellenados(nino, false, evento)).toBe(totalDatosInvitado(nino, evento));
