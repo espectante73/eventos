@@ -1935,6 +1935,17 @@ quedan vacías y contaban igual.
   nuevo del formulario tiene que encajar en una de las dos cosas.
   ⚠️ Queda un hueco: el email de un adulto que no lo quiera dar no tiene
   Sí/No, y esa ficha no llega nunca a N de N.
+- v37.10: **valores por defecto de las casillas, decididos por el
+  usuario**: foto de boda SÍ, canción SÍ, observaciones NO, alergias
+  ninguna marcada (se contesta a propósito: es lo seguro para la comida;
+  "alergias no" se entendió como "sin marcar", no como "No" marcado).
+  Canción "Sí" por defecto obliga a GUARDAR su "no": `invitados."sinCancion"`
+  (sin "not null", como las otras columnas nuevas). `eligeOpcional` lo lee;
+  el formulario lo guarda al desmarcar (y borra lo escrito, preguntando
+  antes) y lo quita al volver a marcar. SQL: columna +
+  `anfitrion_guardar_invitados` + `colaborador_guardar_invitado`.
+  Efecto esperado: toda ficha sin canción pasa a rojo hasta que el
+  colaborador la escriba o la desmarque.
 
 ## Una familia no se separa en las mesas (2026-09-19, v37)
 

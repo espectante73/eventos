@@ -62,18 +62,21 @@ export function pideEmail(g, evento) {
   return !esMenorDeEdad(g, evento);
 }
 
-// Canción y observaciones son OPCIONALES DE VERDAD (usuario, 2026-09-19):
-// casi siempre se quedan vacías, y contarlas dejaba a casi todos en "5 de
-// 7" para siempre. En el formulario van con una casilla "Sí": sin marcar
-// es "no", se quedan plegadas y NO cuentan; marcada, aparece el campo y
-// cuenta. Guardado, "sí" es simplemente que tenga texto.
+// Canción y observaciones llevan una casilla "Sí" en el formulario
+// (usuario, 2026-09-19): "lo obligado es marcar sí o no". Marcada, aparece
+// el campo y cuenta; sin marcar, se pliega y NO cuenta.
+// - Canción: "Sí" POR DEFECTO. Por eso su "no" hay que guardarlo aparte
+//   (`sinCancion`): sin él, una canción vacía es "falta ponerla".
+// - Observaciones: "No" por defecto. "Sí" es simplemente tener texto.
 // `abiertos` ({ cancion, observaciones }): lo que el formulario tiene
-// marcado ahora mismo; sin él, se deduce del texto guardado.
+// marcado ahora mismo; sin él, se deduce de lo guardado.
 export const CAMPOS_OPCIONALES = ["cancion", "observaciones"];
 
 export function eligeOpcional(g, campo, abiertos) {
   if (abiertos && campo in abiertos) return Boolean(abiertos[campo]);
-  return String(g?.[campo] || "").trim() !== "";
+  if (String(g?.[campo] || "").trim() !== "") return true;
+  if (campo === "cancion") return !g?.sinCancion;
+  return false;
 }
 
 // Los campos de texto que SÍ se le piden a esta persona en concreto: lo

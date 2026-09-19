@@ -14,6 +14,7 @@ import {
   esMenorDeEdad,
   conEmailDeColaborador,
   estadoDatos,
+  eligeOpcional,
   importeEsperadoInvitado,
   resolverColaborador,
 } from "../lib/invitados";
@@ -46,6 +47,9 @@ const ETIQUETAS_CAMPOS_INVITADO = {
   cancion: "Canción",
   alergias: "Alergias",
   observaciones: "Observaciones",
+  // El "no" de la canción (su casilla nace marcada): cambiarlo también se
+  // guarda, y el aviso dice "Canción".
+  sinCancion: "Canción",
 };
 
 function FormularioDatos({
@@ -80,9 +84,12 @@ function FormularioDatos({
   // Canción y observaciones: casilla "Sí" (usuario, 2026-09-19). Sin marcar
   // es "no": plegada y fuera de la cuenta de datos. Nace marcada solo si ya
   // hay texto guardado.
+  // Canción: marcada por defecto, salvo que se haya guardado que no
+  // (`sinCancion`). Observaciones: solo si ya tiene texto. Mismo criterio
+  // que la cuenta (eligeOpcional, lib/invitados.js).
   const opcionalesDe = (g) => ({
-    cancion: String(g.cancion || "").trim() !== "",
-    observaciones: String(g.observaciones || "").trim() !== "",
+    cancion: eligeOpcional(g, "cancion"),
+    observaciones: eligeOpcional(g, "observaciones"),
   });
   const [abiertos, setAbiertos] = useState(() => opcionalesDe(invitado));
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
@@ -90,12 +97,19 @@ function FormularioDatos({
   const alternarOpcional = (campo) => {
     if (!abiertos[campo]) {
       setAbiertos({ ...abiertos, [campo]: true });
+      // La canción guarda su "sí" (vuelve a pedirse).
+      if (campo === "cancion" && form.sinCancion) {
+        const nuevo = { ...form, sinCancion: false };
+        setForm(nuevo);
+        revisarYGuardar(nuevo);
+      }
       return;
     }
     const cerrar = () => {
       setAbiertos((a) => ({ ...a, [campo]: false }));
-      if (String(form[campo] || "").trim() === "") return;
-      const nuevo = { ...form, [campo]: "" };
+      // La canción guarda su "no"; las observaciones, con quedarse vacías.
+      const nuevo = { ...form, [campo]: "", ...(campo === "cancion" ? { sinCancion: true } : {}) };
+      if (JSON.stringify(nuevo) === JSON.stringify(form)) return;
       setForm(nuevo);
       revisarYGuardar(nuevo);
     };

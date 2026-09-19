@@ -124,7 +124,11 @@ CREATE TABLE public.invitados (
     -- SIN "not null" a propósito: una foto de Deshacer o del Modo Pruebas
     -- guardada antes de existir la columna la trae vacía, y con "not null"
     -- reponerla fallaría. La app trata el vacío como "ninguna".
-    "excepcionesRevision" jsonb DEFAULT '[]'::jsonb
+    "excepcionesRevision" jsonb DEFAULT '[]'::jsonb,
+    -- La casilla "Sí" de la canción nace MARCADA (2026-09-19): su "no" hay
+    -- que guardarlo, o una canción vacía sería "falta ponerla". Sin "not
+    -- null", por lo mismo que "excepcionesRevision".
+    "sinCancion" boolean DEFAULT false
 );
 
 -- Quién ayuda a recoger datos y qué permisos tiene cada uno.
@@ -1164,7 +1168,7 @@ begin
     "id","nombre","apellido","zona","confirmado","colaboradorId",
     "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
     "cancion","alergias","observaciones","pagado","rolesTrabajo",
-    "excluidoTablon","rolFamiliar","presente","excepcionesRevision"
+    "excluidoTablon","rolFamiliar","presente","excepcionesRevision","sinCancion"
   )
   select
     (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
@@ -1178,7 +1182,8 @@ begin
     coalesce((f->>'excluidoTablon')::boolean, false),
     coalesce(f->>'rolFamiliar', ''),
     coalesce((f->>'presente')::boolean, false),
-    coalesce(f->'excepcionesRevision', '[]'::jsonb)
+    coalesce(f->'excepcionesRevision', '[]'::jsonb),
+    coalesce((f->>'sinCancion')::boolean, false)
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update set
     "nombre"=excluded."nombre", "apellido"=excluded."apellido",
@@ -1190,7 +1195,8 @@ begin
     "observaciones"=excluded."observaciones", "pagado"=excluded."pagado",
     "rolesTrabajo"=excluded."rolesTrabajo", "excluidoTablon"=excluded."excluidoTablon",
     "rolFamiliar"=excluded."rolFamiliar", "presente"=excluded."presente",
-    "excepcionesRevision"=excluded."excepcionesRevision";
+    "excepcionesRevision"=excluded."excepcionesRevision",
+    "sinCancion"=excluded."sinCancion";
 
   delete from invitados g
   where not exists (
@@ -1555,7 +1561,8 @@ begin
     "email"          = coalesce(p_cambios->>'email', "email"),
     "cancion"        = coalesce(p_cambios->>'cancion', "cancion"),
     "alergias"       = coalesce(p_cambios->>'alergias', "alergias"),
-    "observaciones"  = coalesce(p_cambios->>'observaciones', "observaciones")
+    "observaciones"  = coalesce(p_cambios->>'observaciones', "observaciones"),
+    "sinCancion"     = coalesce((p_cambios->>'sinCancion')::boolean, "sinCancion")
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
   returning *;
 end;

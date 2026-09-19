@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.10",
+    cambios: [
+      "Canción con la casilla \"Sí\" marcada por defecto, como la foto de boda: el colaborador escribe la canción o la desmarca, y ese \"no\" se guarda. Observaciones sigue sin marcar, y alergias sin ninguna casilla marcada (hay que contestar a propósito).",
+    ],
+  },
+  {
     version: "37.9",
     cambios: [
       "Lista del colaborador: la sección \"Invitados NUEVOS\" pasa a llamarse \"Invitados INCOMPLETOS\" y recoge toda ficha que no esté en \"N de N\". El contador del botón \"Abrir formulario\" y el aviso \"Datos completos\" al anfitrión usan la misma regla.",
