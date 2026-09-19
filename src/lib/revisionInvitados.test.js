@@ -96,6 +96,21 @@ describe("revisarInvitados", () => {
     expect(revisarInvitados(lista).some((h) => /colaborador/i.test(h.titulo) && h.clave !== "asignadoSinRolFamiliar")).toBe(false);
   });
 
+  it("avisa del colaborador con menos de 10 o más de 12, y no del que tiene 0", () => {
+    const colaboradores = [
+      { id: "pocos", nombre: "Ana" },
+      { id: "bien", nombre: "Luis" },
+      { id: "muchos", nombre: "Eva" },
+      { id: "dev", nombre: "Desarrollador" },
+    ];
+    const asignar = (id, n) => Array.from({ length: n }, () => persona({ colaboradorId: id }));
+    const lista = [...asignar("pocos", 8), ...asignar("bien", 11), ...asignar("muchos", 14)];
+    const reparto = revisarInvitados(lista, {}, colaboradores).find((h) => h.clave === "repartoColaboradores");
+    expect(reparto.personas.map((p) => p.etiqueta)).toEqual(["Ana: 8", "Eva: 14"]);
+    expect(reparto.personas[0].filtros).toEqual({ texto: "", colaboradorId: "pocos" });
+    expect(reparto.tipo).toBe("pendiente");
+  });
+
   it("caza a una familia repartida en varias mesas", () => {
     const lista = [
       persona({ rolFamiliar: ROL_FAMILIAR.PADRE, mesa: 1 }),

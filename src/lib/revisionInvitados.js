@@ -33,6 +33,12 @@ import { conyugesSueltos, matrimoniosDeInvitados } from "./matrimonios";
 // sin poder quedarse solo en una mesa de desconocidos.
 const EDAD_MENOR = 18;
 
+// REGLA DEL USUARIO (2026-09-19): cada colaborador lleva un número parecido
+// de invitados, entre 10 y 12, para que el trabajo y el dinero a recoger
+// sean iguales para todos ("el mismo peso de responsabilidad"). Está por
+// encima de juntar a un matrimonio con un mismo colaborador.
+export const INVITADOS_POR_COLABORADOR = { minimo: 10, maximo: 12 };
+
 // Un adulto es quien tiene 18 o más. A quien no ha dado su año de
 // nacimiento todavía se le cuenta como adulto SI lleva un papel de
 // adulto (O, A, P o S): en plena recogida de datos falta media lista, y
@@ -71,7 +77,7 @@ function hallazgo(clave, titulo, ayuda, personas, tipo = "error") {
   return { clave, titulo, ayuda, tipo, personas };
 }
 
-export function revisarInvitados(invitados = [], evento = {}) {
+export function revisarInvitados(invitados = [], evento = {}, colaboradores = []) {
   const grupos = agruparPorFamilia(invitados);
   const hallazgos = [];
 
@@ -242,6 +248,30 @@ export function revisarInvitados(invitados = [], evento = {}) {
         "Matrimonio con uno confirmado y el otro no",
         "Un matrimonio (O y A) viene siempre junto. O falta confirmar al otro, o el que viene solo tiene que llevar P o S.",
         matrimoniosAMedias
+      )
+    );
+
+  // El reparto entre colaboradores. Los que tienen 0 no cuentan: no llevan
+  // invitados (p. ej. el desarrollador, dado de alta solo para ver el
+  // código) o todavía no se ha empezado a repartir. Cada "persona" aquí es
+  // un colaborador con su cifra; al pulsarlo, la lista se filtra por él.
+  const { minimo, maximo } = INVITADOS_POR_COLABORADOR;
+  const fueraDelReparto = (colaboradores || [])
+    .map((c) => ({ c, n: invitados.filter((g) => g.colaboradorId === c.id).length }))
+    .filter(({ n }) => n > 0 && (n < minimo || n > maximo))
+    .map(({ c, n }) => ({
+      id: `colaborador-${c.id}`,
+      etiqueta: `${c.nombre || "Sin nombre"}: ${n}`,
+      filtros: { texto: "", colaboradorId: c.id },
+    }));
+  if (fueraDelReparto.length)
+    hallazgos.push(
+      hallazgo(
+        "repartoColaboradores",
+        `Colaboradores fuera del reparto (${minimo} a ${maximo} invitados)`,
+        "Para que todos lleven el mismo trabajo y el mismo dinero a recoger. Pulsa uno para ver sus invitados.",
+        fueraDelReparto,
+        "pendiente"
       )
     );
 

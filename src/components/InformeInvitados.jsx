@@ -102,8 +102,10 @@ export function InformeInvitados({ hallazgos, onBuscar, onCerrar }) {
                   eso están los filtros de la propia tabla. */}
               <div className="flex flex-wrap gap-1 mt-1.5">
                 {h.personas.slice(0, 12).map((g) => (
-                  <Boton variante="secundario" tamano="pequeno" key={g.id} onClick={() => onBuscar(g)} titulo="Buscarlo en la lista">
-                    {g.apellido}, {g.nombre}
+                  // `etiqueta`: el hallazgo no es una persona sino, p. ej., un
+                  // colaborador con su cifra ("Ana: 14").
+                  <Boton variante="secundario" tamano="pequeno" key={g.id} onClick={() => onBuscar(g)} titulo={g.etiqueta ? "Verlo en la lista" : "Buscarlo en la lista"}>
+                    {g.etiqueta || `${g.apellido}, ${g.nombre}`}
                   </Boton>
                 ))}
                 {h.personas.length > 12 && (

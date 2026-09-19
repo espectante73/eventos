@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.2",
+    cambios: [
+      "La Revisión avisa del colaborador que tenga menos de 10 o más de 12 invitados asignados, para que todos lleven el mismo trabajo y el mismo dinero a recoger. Pulsando su nombre, la lista enseña sus invitados. Los colaboradores sin ningún invitado no se avisan.",
+    ],
+  },
+  {
     version: "37.1",
     cambios: [
       "La Revisión avisa del matrimonio con uno confirmado y el otro no: o falta confirmar al otro, o el que viene solo tiene que llevar P o S.",

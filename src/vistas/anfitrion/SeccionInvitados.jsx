@@ -486,7 +486,7 @@ export function SeccionInvitados({
   };
   // Informe de revisión: solo lee, no toca nada. Ver
   // lib/revisionInvitados.js para lo que comprueba y por qué.
-  const hallazgos = revisarInvitados(invitados, evento);
+  const hallazgos = revisarInvitados(invitados, evento, colaboradores);
   // El "numerito" que pidió el usuario, pero dentro del propio filtro:
   // así se ven los cinco papeles a la vez, en vez de tener que filtrar
   // uno por uno para saber cuántos hay de cada.
@@ -1261,7 +1261,9 @@ export function SeccionInvitados({
         {mostrarRevision && (
           <InformeInvitados
             hallazgos={hallazgos}
-            onBuscar={(g) => setFiltros({ ...filtros, texto: `${g.nombre} ${g.apellido}` })}
+            // Un hallazgo puede traer sus propios filtros (p. ej. "los de este
+            // colaborador"); si no, se busca a la persona por su nombre.
+            onBuscar={(g) => setFiltros({ ...filtros, ...(g.filtros || { texto: `${g.nombre} ${g.apellido}` }) })}
             onCerrar={() => setMostrarRevision(false)}
           />
         )}

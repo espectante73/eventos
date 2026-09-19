@@ -1894,6 +1894,14 @@ afecta (se le sienta aparte si hace falta).
 - v37.1: y "Matrimonio con uno confirmado y el otro no" (la O y la A son
   solo para quien viene con su pareja). El aviso de "colaboradores
   distintos" que se le propuso lo RECHAZÓ el usuario: ver la norma 16.
+- v37.2: "Colaboradores fuera del reparto (10 a 12 invitados)", tipo
+  pendiente. `INVITADOS_POR_COLABORADOR` en `revisionInvitados.js` es la
+  única cifra. Cuenta TODOS los asignados (confirmados o no), y no avisa
+  de quien tiene 0 (el desarrollador, dado de alta solo para ver el
+  código, o un reparto sin empezar). Cada botón del hallazgo es un
+  colaborador ("Ana: 14") que filtra la lista por él: un hallazgo puede
+  traer `etiqueta` y `filtros` propios, y `InformeInvitados`/`onBuscar`
+  los usan si vienen.
 - ⚠️ El desplegable de mesa sigue desactivando solo las mesas llenas para
   UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
   al elegirla, sale el aviso y no se mueve nadie.
