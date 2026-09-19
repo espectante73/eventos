@@ -13,7 +13,7 @@
 // Cada hallazgo devuelve las personas afectadas para poder saltar a
 // ellas en la propia lista, que sigue siendo donde se corrige.
 import { ROL_FAMILIAR } from "./rolFamiliar";
-import { calcularEdad } from "./invitados";
+import { calcularEdad, familiasSinEmail, ROLES_CON_EMAIL_FAMILIAR } from "./invitados";
 import { conyugesSueltos, matrimoniosDeInvitados } from "./matrimonios";
 
 // Quién necesita a un adulto suyo al lado en la mesa.
@@ -271,6 +271,28 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
         `Colaboradores fuera del reparto (${minimo} a ${maximo} invitados)`,
         "Para que todos lleven el mismo trabajo y el mismo dinero a recoger. Pulsa uno para ver sus invitados.",
         fueraDelReparto,
+        "pendiente"
+      )
+    );
+
+  // Al menos un email por familia (usuario, 2026-09-19): la misma regla que
+  // el aviso del colaborador (lib/invitados.js, familiasSinEmail). Se
+  // señalan sus adultos confirmados, que son quienes podrían darlo.
+  const sinEmail = familiasSinEmail(invitados, colaboradores);
+  const adultosSinEmail = [...grupos]
+    .filter(([clave]) => sinEmail.has(clave))
+    .flatMap(([, miembros]) => {
+      const confirmados = miembros.filter((g) => g.confirmado);
+      const adultos = confirmados.filter((g) => ROLES_CON_EMAIL_FAMILIAR.includes(g.rolFamiliar));
+      return adultos.length ? adultos : confirmados;
+    });
+  if (adultosSinEmail.length)
+    hallazgos.push(
+      hallazgo(
+        "familiaSinEmail",
+        "Familias sin ningún email",
+        "Hace falta al menos un email por familia: el del esposo o el de la esposa (el que viene solo, el suyo).",
+        adultosSinEmail,
         "pendiente"
       )
     );

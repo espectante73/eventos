@@ -56,6 +56,19 @@ export function useLedgerData(rol) {
   // Familias que NO tienen foto de boda, marcado por el colaborador
   // (usuario, 2026-09-19): así la foto deja de contar como dato pendiente.
   const [fotosSinBoda, setFotosSinBoda] = useState({});
+  // Colaborador: las familias suyas SIN ningún email de un adulto. Lo
+  // calcula la base (colaborador_familias_sin_email), que ve a la familia
+  // entera: el colaborador solo ve a sus invitados, y un matrimonio puede
+  // tener dos colaboradores. El anfitrión no lo necesita: lo calcula él
+  // mismo con la lista completa (lib/invitados.js, familiasSinEmail).
+  const [familiasSinEmailServidor, setFamiliasSinEmailServidor] = useState([]);
+  const cargarFamiliasSinEmail = useCallback(async (colaboradorId) => {
+    const { data, error } = await supabase.rpc("colaborador_familias_sin_email", {
+      p_colaborador_id: colaboradorId,
+    });
+    // Sin la función en la base (SQL sin ejecutar), no se avisa de nada.
+    setFamiliasSinEmailServidor(error ? [] : data || []);
+  }, []);
   // Reparte las filas de `fotos_familiares` en sus cuatro mapas. Una sola
   // función para los tres sitios que las cargan: antes cada uno copiaba
   // las tres líneas, y una columna nueva había que acordarse de añadirla
@@ -232,6 +245,7 @@ export function useLedgerData(rol) {
         // su cuenta (no se fía de que el cliente ya lo sepa).
         const tienePermisoNovedades =
           perfil[0] && Array.isArray(perfil[0].permisos) && perfil[0].permisos.includes("novedades_editar");
+        await cargarFamiliasSinEmail(rol);
         const { data: novedadesColaborador } = tienePermisoNovedades
           ? await supabase.rpc("colaborador_listar_novedades", { p_colaborador_id: rol })
           : { data: null };
@@ -906,6 +920,9 @@ export function useLedgerData(rol) {
           avisar("No se pudieron guardar los datos (¿sigue asignado a ti este invitado?). Se deshace el cambio en pantalla.", error);
           setInvitados(anterior);
           invitadosRef.current = anterior;
+        } else if (previo && (previo.email !== cambiado.email || previo.sinEmail !== cambiado.sinEmail)) {
+          // El aviso de "familia sin ningún email" depende de esto.
+          cargarFamiliasSinEmail(rol);
         } else if (previo && previo.anioBoda !== cambiado.anioBoda) {
           // El año de boda lo copia la base al cónyuge (trigger
           // invitados_anio_boda_pareja, 2026-09-19). Se recarga la lista
@@ -921,7 +938,7 @@ export function useLedgerData(rol) {
         }
       }
     },
-    [esAnfitrion, rol, avisarLlegada]
+    [esAnfitrion, rol, avisarLlegada, cargarFamiliasSinEmail]
   );
 
   const avisarColaborador = useCallback(
@@ -1129,6 +1146,7 @@ export function useLedgerData(rol) {
     fotosAniversario,
     fotosBodaFinal,
     fotosSinBoda,
+    familiasSinEmailServidor,
     loaded,
     esAnfitrion,
     persistEvento,

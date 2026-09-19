@@ -73,10 +73,51 @@ export function pideEmail(g, evento) {
 export const CAMPOS_OPCIONALES = ["cancion", "observaciones"];
 
 export function eligeOpcional(g, campo, abiertos) {
+  // Quien viene solo (S) tiene que dar email: para él no hay "no".
+  if (campo === "email" && g?.rolFamiliar === ROL_FAMILIAR.SUELTO) return true;
   if (abiertos && campo in abiertos) return Boolean(abiertos[campo]);
   if (String(g?.[campo] || "").trim() !== "") return true;
   if (campo === "cancion") return !g?.sinCancion;
+  if (campo === "email") return !g?.sinEmail;
   return false;
+}
+
+// ---------- Email: al menos uno por familia (usuario, 2026-09-19) ----------
+// El email lleva casilla "Sí" MARCADA por defecto (se guarda su "no" en
+// `sinEmail`), salvo para quien viene solo (S): ahí es obligatorio. Y cada
+// familia necesita al menos UN email de un adulto (esposo, esposa, padre o
+// madre sin pareja, o el propio suelto); si no hay ninguno, el colaborador
+// ve un aviso.
+// ⚠️ Esta regla está DOS veces, a propósito: aquí (el anfitrión ve a toda
+// la familia) y en SQL, `colaborador_familias_sin_email` (el colaborador
+// solo ve a SUS invitados, y un matrimonio puede tener dos colaboradores).
+// Si cambia una, cambiar la otra.
+export const ROLES_CON_EMAIL_FAMILIAR = [
+  ROL_FAMILIAR.ESPOSO,
+  ROL_FAMILIAR.ESPOSA,
+  ROL_FAMILIAR.PADRE,
+  ROL_FAMILIAR.SUELTO,
+];
+
+export function claveFamilia(g) {
+  return String(g?.grupoFamiliar || g?.apellido || "").trim().toLowerCase();
+}
+
+// Las familias (clave) con algún confirmado y sin ningún adulto con email.
+// El email de un invitado que es colaborador vive en Colaboradores.
+export function familiasSinEmail(invitados, colaboradores) {
+  const conEmail = new Set();
+  const conConfirmados = new Set();
+  for (const g of invitados || []) {
+    const clave = claveFamilia(g);
+    if (!clave) continue;
+    if (g.confirmado) conConfirmados.add(clave);
+    if (!ROLES_CON_EMAIL_FAMILIAR.includes(g.rolFamiliar)) continue;
+    // El de su ficha O el de Colaboradores: igual que en la función SQL.
+    const vinculado = (colaboradores || []).find((c) => c.invitadoId === g.id);
+    if (String(g.email || "").trim() || String(vinculado?.email || "").trim()) conEmail.add(clave);
+  }
+  return new Set([...conConfirmados].filter((clave) => !conEmail.has(clave)));
 }
 
 // Los campos de texto que SÍ se le piden a esta persona en concreto: lo
@@ -86,7 +127,7 @@ export function eligeOpcional(g, campo, abiertos) {
 export function camposQueAplican(g, evento, abiertos) {
   return CAMPOS_DATOS_INVITADO.filter((campo) => {
     if (campo === "anioBoda") return pideDatosDeBoda(g);
-    if (campo === "email") return pideEmail(g, evento);
+    if (campo === "email") return pideEmail(g, evento) && eligeOpcional(g, "email", abiertos);
     if (CAMPOS_OPCIONALES.includes(campo)) return eligeOpcional(g, campo, abiertos);
     return true;
   });

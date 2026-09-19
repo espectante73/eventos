@@ -1946,6 +1946,23 @@ quedan vacías y contaban igual.
   `anfitrion_guardar_invitados` + `colaborador_guardar_invitado`.
   Efecto esperado: toda ficha sin canción pasa a rojo hasta que el
   colaborador la escriba o la desmarque.
+- v37.11: **email**, regla del usuario: "mínimo uno por familia, esposo o
+  esposa; si es un single, es necesario; mejor opción sí por defecto y un
+  mensaje al colaborador si ningún miembro de la familia pone email".
+  - Casilla "Sí" marcada por defecto; su "no" en `invitados."sinEmail"`.
+    Para el suelto (S) no hay casilla ni "no": `eligeOpcional` lo fuerza.
+  - "Familia sin ningún email" = familia con algún confirmado y ningún
+    adulto (esposo, esposa, padre, suelto) con email en su ficha O en
+    Colaboradores. La regla está DOS veces a propósito: `familiasSinEmail`
+    (lib/invitados.js, la usa el anfitrión, que ve la lista entera: vista
+    previa y Revisión) y la función SQL `colaborador_familias_sin_email`
+    (el colaborador solo ve a sus invitados, y un matrimonio puede tener
+    dos colaboradores). Devuelve solo la clave de la familia, nada
+    personal. Se recarga con el ciclo de cada minuto y tras guardar un
+    email. Si cambia una de las dos, cambiar la otra.
+  - El colaborador ve el aviso bajo el email de cada miembro de esa familia;
+    el anfitrión, en la Revisión ("Familias sin ningún email", pendiente).
+  SQL: columna + las dos funciones de guardar + la función nueva.
 
 ## Una familia no se separa en las mesas (2026-09-19, v37)
 

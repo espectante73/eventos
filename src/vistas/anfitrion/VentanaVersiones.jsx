@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.11",
+    cambios: [
+      "Email con casilla \"Sí\" marcada por defecto: si un adulto no da email, el colaborador la desmarca y deja de contar. Quien viene solo (S) tiene que darlo: para él no hay casilla.",
+      "Al menos un email por familia (el del esposo o el de la esposa): si nadie de la familia lo tiene, el colaborador ve un aviso en el formulario, y la Revisión lo señala al anfitrión.",
+    ],
+  },
+  {
     version: "37.10",
     cambios: [
       "Canción con la casilla \"Sí\" marcada por defecto, como la foto de boda: el colaborador escribe la canción o la desmarca, y ese \"no\" se guarda. Observaciones sigue sin marcar, y alergias sin ninguna casilla marcada (hay que contestar a propósito).",

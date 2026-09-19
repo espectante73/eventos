@@ -128,7 +128,11 @@ CREATE TABLE public.invitados (
     -- La casilla "Sí" de la canción nace MARCADA (2026-09-19): su "no" hay
     -- que guardarlo, o una canción vacía sería "falta ponerla". Sin "not
     -- null", por lo mismo que "excepcionesRevision".
-    "sinCancion" boolean DEFAULT false
+    "sinCancion" boolean DEFAULT false,
+    -- Igual para el email (2026-09-19): casilla "Sí" marcada por defecto;
+    -- aquí se guarda su "no". Quien viene solo (suelto) no puede decir que
+    -- no: eso lo impone la app.
+    "sinEmail" boolean DEFAULT false
 );
 
 -- Quién ayuda a recoger datos y qué permisos tiene cada uno.
@@ -1168,7 +1172,7 @@ begin
     "id","nombre","apellido","zona","confirmado","colaboradorId",
     "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
     "cancion","alergias","observaciones","pagado","rolesTrabajo",
-    "excluidoTablon","rolFamiliar","presente","excepcionesRevision","sinCancion"
+    "excluidoTablon","rolFamiliar","presente","excepcionesRevision","sinCancion","sinEmail"
   )
   select
     (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
@@ -1183,7 +1187,8 @@ begin
     coalesce(f->>'rolFamiliar', ''),
     coalesce((f->>'presente')::boolean, false),
     coalesce(f->'excepcionesRevision', '[]'::jsonb),
-    coalesce((f->>'sinCancion')::boolean, false)
+    coalesce((f->>'sinCancion')::boolean, false),
+    coalesce((f->>'sinEmail')::boolean, false)
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update set
     "nombre"=excluded."nombre", "apellido"=excluded."apellido",
@@ -1196,7 +1201,8 @@ begin
     "rolesTrabajo"=excluded."rolesTrabajo", "excluidoTablon"=excluded."excluidoTablon",
     "rolFamiliar"=excluded."rolFamiliar", "presente"=excluded."presente",
     "excepcionesRevision"=excluded."excepcionesRevision",
-    "sinCancion"=excluded."sinCancion";
+    "sinCancion"=excluded."sinCancion",
+    "sinEmail"=excluded."sinEmail";
 
   delete from invitados g
   where not exists (
@@ -1543,6 +1549,42 @@ begin
 end;
 $$;
 
+-- Las familias del colaborador SIN ningún email de un adulto (2026-09-19):
+-- regla del usuario, al menos un email por familia (el del esposo o la
+-- esposa; el suelto, el suyo). Lo calcula la base porque ve a la familia
+-- entera, y el colaborador solo a sus invitados (un matrimonio puede
+-- llevarlo dos colaboradores). Solo devuelve la clave de la familia, nunca
+-- un dato de nadie. ⚠️ La misma regla está en lib/invitados.js
+-- (familiasSinEmail): si cambia una, cambiar la otra.
+CREATE FUNCTION public.colaborador_familias_sin_email(p_colaborador_id uuid) RETURNS SETOF text
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  with mias as (
+    select distinct lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) as familia
+    from invitados i
+    where i."colaboradorId" = p_colaborador_id
+      and i."confirmado"
+      and exists (
+        select 1 from colaboradores c
+        where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
+      )
+  )
+  select m.familia from mias m
+  where m.familia <> ''
+    and not exists (
+      select 1
+      from invitados i
+      left join colaboradores c on c."invitadoId" = i."id"
+      where lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) = m.familia
+        and i."rolFamiliar" in ('esposo', 'esposa', 'padre', 'suelto')
+        and (coalesce(i."email", '') <> '' or coalesce(c."email", '') <> '')
+    );
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.colaborador_familias_sin_email(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.colaborador_familias_sin_email(uuid) TO authenticated;
+
 -- El colaborador guarda los datos de uno de sus invitados.
 CREATE FUNCTION public.colaborador_guardar_invitado(p_colaborador_id uuid, p_invitado_id uuid, p_cambios jsonb) RETURNS SETOF public.invitados
     LANGUAGE plpgsql SECURITY DEFINER
@@ -1562,7 +1604,8 @@ begin
     "cancion"        = coalesce(p_cambios->>'cancion', "cancion"),
     "alergias"       = coalesce(p_cambios->>'alergias', "alergias"),
     "observaciones"  = coalesce(p_cambios->>'observaciones', "observaciones"),
-    "sinCancion"     = coalesce((p_cambios->>'sinCancion')::boolean, "sinCancion")
+    "sinCancion"     = coalesce((p_cambios->>'sinCancion')::boolean, "sinCancion"),
+    "sinEmail"       = coalesce((p_cambios->>'sinEmail')::boolean, "sinEmail")
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
   returning *;
 end;

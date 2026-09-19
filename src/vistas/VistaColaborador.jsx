@@ -15,6 +15,8 @@ import {
   conEmailDeColaborador,
   estadoDatos,
   eligeOpcional,
+  familiasSinEmail,
+  claveFamilia,
   importeEsperadoInvitado,
   resolverColaborador,
 } from "../lib/invitados";
@@ -50,6 +52,7 @@ const ETIQUETAS_CAMPOS_INVITADO = {
   // El "no" de la canción (su casilla nace marcada): cambiarlo también se
   // guarda, y el aviso dice "Canción".
   sinCancion: "Canción",
+  sinEmail: "Email",
 };
 
 function FormularioDatos({
@@ -65,6 +68,8 @@ function FormularioDatos({
   // desmarcada). Es de la familia, como la foto: vale para los dos.
   sinFotoBoda = false,
   onCambiarSinFotoBoda,
+  // Nadie de la familia tiene email (regla: al menos uno por familia).
+  familiaSinEmail = false,
 }) {
   const [form, setForm] = useState(invitado);
   const [foto, setFoto] = useState(fotoFamiliar || "");
@@ -90,16 +95,21 @@ function FormularioDatos({
   const opcionalesDe = (g) => ({
     cancion: eligeOpcional(g, "cancion"),
     observaciones: eligeOpcional(g, "observaciones"),
+    email: eligeOpcional(g, "email"),
   });
   const [abiertos, setAbiertos] = useState(() => opcionalesDe(invitado));
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   // Desmarcar con algo escrito borra lo escrito: por eso pregunta antes.
+  // Los que nacen marcados guardan su "no" aparte (canción, email); las
+  // observaciones, con quedarse vacías.
+  const CAMPO_NO = { cancion: "sinCancion", email: "sinEmail" };
   const alternarOpcional = (campo) => {
+    const campoNo = CAMPO_NO[campo];
     if (!abiertos[campo]) {
       setAbiertos({ ...abiertos, [campo]: true });
-      // La canción guarda su "sí" (vuelve a pedirse).
-      if (campo === "cancion" && form.sinCancion) {
-        const nuevo = { ...form, sinCancion: false };
+      // Vuelve a pedirse: se guarda su "sí".
+      if (campoNo && form[campoNo]) {
+        const nuevo = { ...form, [campoNo]: false };
         setForm(nuevo);
         revisarYGuardar(nuevo);
       }
@@ -107,8 +117,7 @@ function FormularioDatos({
     }
     const cerrar = () => {
       setAbiertos((a) => ({ ...a, [campo]: false }));
-      // La canción guarda su "no"; las observaciones, con quedarse vacías.
-      const nuevo = { ...form, [campo]: "", ...(campo === "cancion" ? { sinCancion: true } : {}) };
+      const nuevo = { ...form, [campo]: "", ...(campoNo ? { [campoNo]: true } : {}) };
       if (JSON.stringify(nuevo) === JSON.stringify(form)) return;
       setForm(nuevo);
       revisarYGuardar(nuevo);
@@ -116,7 +125,7 @@ function FormularioDatos({
     if (String(form[campo] || "").trim() === "") cerrar();
     else
       preguntar({
-        titulo: campo === "cancion" ? "¿Quitar la canción?" : "¿Quitar las observaciones?",
+        titulo: { cancion: "¿Quitar la canción?", email: "¿Quitar el email?" }[campo] || "¿Quitar las observaciones?",
         texto: form[campo],
         rotulo: "Sí, quitar",
         alConfirmar: cerrar,
@@ -337,13 +346,41 @@ function FormularioDatos({
             </span>
           </div>
         ) : (
-          <TextInput
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            onBlur={() => revisarYGuardar(form)}
-            placeholder="correo@ejemplo.com"
-            className="w-full"
-          />
+          // Casilla "Sí" marcada por defecto (usuario, 2026-09-19), salvo
+          // para quien viene solo (S): ahí el email es obligatorio y no hay
+          // casilla.
+          <div>
+            {form.rolFamiliar !== "suelto" && (
+              <label className="flex items-center gap-1 text-sm mb-1" style={{ color: C.ink }}>
+                <input type="checkbox" checked={abiertos.email} onChange={() => alternarOpcional("email")} />
+                Sí
+              </label>
+            )}
+            {abiertos.email ? (
+              <TextInput
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onBlur={() => revisarYGuardar(form)}
+                placeholder={form.rolFamiliar === "suelto" ? "Obligatorio: viene solo" : "correo@ejemplo.com"}
+                className="w-full"
+              />
+            ) : (
+              <span className="text-xs italic" style={{ color: C.ink }}>
+                No da email.
+              </span>
+            )}
+          </div>
+        )}
+        {/* Al menos un email por familia (del esposo o la esposa; el
+            suelto, el suyo). Lo decide la base, que ve a la familia
+            entera aunque la lleven dos colaboradores. */}
+        {familiaSinEmail && (
+          <p
+            className="text-xs font-bold inline-block px-2 py-1 rounded mt-1"
+            style={{ color: C.wax, background: C.paper }}
+          >
+            ⚠ Nadie de esta familia tiene email todavía: hace falta al menos uno (del esposo o de la esposa).
+          </p>
         )}
       </Field>
       <div>
@@ -577,6 +614,7 @@ function FilaInvitadoColaborador({
   fotosFamiliares,
   fotosSinBoda = {},
   onCambiarSinFotoBoda,
+  familiaSinEmail = false,
   colaboradorVinculado,
   // `oculta`: hay OTRA ficha abierta. En el móvil esta se esconde, para que
   // la abierta sea lo único en pantalla; en escritorio sigue viéndose la
@@ -744,6 +782,7 @@ function FilaInvitadoColaborador({
             colaboradorVinculado={colaboradorVinculado}
             sinFotoBoda={sinFotoBoda}
             onCambiarSinFotoBoda={onCambiarSinFotoBoda}
+            familiaSinEmail={familiaSinEmail}
           />
         </div>
       )}
@@ -754,6 +793,11 @@ function FilaInvitadoColaborador({
 
 export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken, onCerrarSesion }) {
   const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, fotosSinBoda, persistFotosSinBoda, evento, ordenFamiliares, tokenTablon } = data;
+  // Familias sin ningún email: el colaborador lo recibe de la base; el
+  // anfitrión (vista previa "Formularios") lo calcula con la lista entera.
+  const familiasSinEmailAhora = data.esAnfitrion
+    ? familiasSinEmail(invitados, colaboradores)
+    : new Set(data.familiasSinEmailServidor || []);
   const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
   // Avisos en la ventana de la app, no en la del navegador (norma 12).
@@ -1211,6 +1255,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   fotosFamiliares={fotosFamiliares}
                   fotosSinBoda={fotosSinBoda || {}}
                   onCambiarSinFotoBoda={cambiarSinFotoBoda}
+                  familiaSinEmail={familiasSinEmailAhora.has(claveFamilia(g))}
                   colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
                   oculta={fichaAbierta && abiertoId !== g.id}
                 />
@@ -1243,6 +1288,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   fotosFamiliares={fotosFamiliares}
                   fotosSinBoda={fotosSinBoda || {}}
                   onCambiarSinFotoBoda={cambiarSinFotoBoda}
+                  familiaSinEmail={familiasSinEmailAhora.has(claveFamilia(g))}
                   colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
                   oculta={fichaAbierta && abiertoId !== g.id}
                 />

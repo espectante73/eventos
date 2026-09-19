@@ -4,6 +4,7 @@ import {
   contarDatosRellenados,
   totalDatosInvitado,
   conEmailDeColaborador,
+  familiasSinEmail,
   pideDatosDeBoda,
   esMenorDeEdad,
   pideEmail,
@@ -257,5 +258,33 @@ describe("totalDatosInvitado", () => {
   it("un niño con todo lo suyo contestado sale completo: N de N", () => {
     const nino = { rolFamiliar: "hijo", anioNacimiento: "2015", alergias: "No", sinCancion: true };
     expect(contarDatosRellenados(nino, false, evento)).toBe(totalDatosInvitado(nino, evento));
+  });
+});
+
+describe("email: casilla Sí por defecto y al menos uno por familia", () => {
+  const evento = { fecha: "2026-11-13" };
+
+  it("un adulto puede decir que no da email: deja de contar", () => {
+    const esposa = { rolFamiliar: "esposa", anioNacimiento: "1970", sinCancion: true };
+    expect(totalDatosInvitado(esposa, evento)).toBe(5);
+    expect(totalDatosInvitado({ ...esposa, sinEmail: true }, evento)).toBe(4);
+  });
+
+  it("quien viene solo (S) tiene que darlo: su 'no' no vale", () => {
+    const suelto = { rolFamiliar: "suelto", anioNacimiento: "1970", sinEmail: true, sinCancion: true };
+    expect(totalDatosInvitado(suelto, evento)).toBe(3);
+  });
+
+  it("una familia sin ningún email de un adulto se señala; con uno basta", () => {
+    const esposo = { id: "o", apellido: "Abreu", grupoFamiliar: "Abreu01", rolFamiliar: "esposo", confirmado: true, email: "" };
+    const esposa = { id: "a", apellido: "Abreu", grupoFamiliar: "Abreu01", rolFamiliar: "esposa", confirmado: true, email: "" };
+    const hijo = { id: "h", apellido: "Abreu", grupoFamiliar: "Abreu01", rolFamiliar: "hijo", confirmado: true, email: "hijo@a.com" };
+    expect([...familiasSinEmail([esposo, esposa, hijo], [])]).toEqual(["abreu01"]);
+    expect(familiasSinEmail([esposo, { ...esposa, email: "a@a.com" }, hijo], []).size).toBe(0);
+  });
+
+  it("el email de Colaboradores cuenta para la familia", () => {
+    const raul = { id: "r", apellido: "Sierra", grupoFamiliar: "Sierra01", rolFamiliar: "suelto", confirmado: true, email: "" };
+    expect(familiasSinEmail([raul], [{ id: "c", invitadoId: "r", email: "raul@a.com" }]).size).toBe(0);
   });
 });

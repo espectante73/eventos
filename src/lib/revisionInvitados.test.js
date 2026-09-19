@@ -11,6 +11,7 @@ const persona = (extra) => ({
   anioNacimiento: "1980",
   anioBoda: "2001",
   alergias: "No",
+  email: "x@x.com",
   confirmado: true,
   pagado: true,
   mesa: 1,
@@ -134,6 +135,19 @@ describe("revisarInvitados", () => {
       persona({ apellido: "Gatell", grupoFamiliar: "Gatell01", excepcionesRevision: ["sueltoConFamilia"] }),
     ];
     expect(revisarInvitados(lista).map((h) => h.clave)).not.toContain("sueltoConFamilia");
+  });
+
+  it("señala a la familia sin ningún email, y no a la que tiene uno", () => {
+    const sinNinguno = [
+      persona({ apellido: "Abreu", grupoFamiliar: "Abreu01", rolFamiliar: ROL_FAMILIAR.ESPOSO, email: "" }),
+      persona({ apellido: "Abreu", grupoFamiliar: "Abreu01", rolFamiliar: ROL_FAMILIAR.ESPOSA, email: "" }),
+    ];
+    const conUno = [
+      persona({ apellido: "Luis", grupoFamiliar: "Luis01", rolFamiliar: ROL_FAMILIAR.ESPOSO, email: "a@a.com" }),
+      persona({ apellido: "Luis", grupoFamiliar: "Luis01", rolFamiliar: ROL_FAMILIAR.ESPOSA, email: "" }),
+    ];
+    const h = revisarInvitados([...sinNinguno, ...conUno]).find((x) => x.clave === "familiaSinEmail");
+    expect(h.personas.map((p) => p.grupoFamiliar)).toEqual(["Abreu01", "Abreu01"]);
   });
 
   it("caza a una familia repartida en varias mesas", () => {
