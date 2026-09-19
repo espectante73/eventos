@@ -43,7 +43,8 @@ import { MenuFlotante } from "../../components/MenuFlotante";
 import { InformeInvitados } from "../../components/InformeInvitados";
 import { revisarInvitados } from "../../lib/revisionInvitados";
 import { Boton } from "../../components/Boton";
-import { BotonQuitar } from "../../components/PreguntaSeguridad";
+import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
+import { asignarMesaConSuFamilia, confirmarConSuFamilia } from "../../lib/mesas";
 
 export function SeccionInvitados({
   data,
@@ -67,6 +68,10 @@ export function SeccionInvitados({
 
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
   const [textoImport, setTextoImport] = useState("");
+  // Los avisos de las mesas salen en una ventanita en medio de la pantalla:
+  // el aviso de arriba de la lista no se ve si se está en la fila 100.
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
+  const avisarMesa = (texto) => texto && preguntar({ titulo: "Mesa sin cambiar", texto, soloAviso: true });
   const [mostrarImport, setMostrarImport] = useState(false);
   const [mostrarAnadir, setMostrarAnadir] = useState(false);
   const [orden, setOrden] = useState({ columna: "invitado", direccion: "asc" });
@@ -168,35 +173,20 @@ export function SeccionInvitados({
     persistInvitados(invitados.map((g) => (g.id === id ? { ...g, rolFamiliar } : g)));
   };
 
+  // REGLA INFLEXIBLE del usuario (2026-09-19): una familia no se separa.
+  // Poner o quitar la mesa a uno la pone o la quita a toda su familia
+  // confirmada; si no caben todos, no se sienta a nadie y se avisa. Solo
+  // se sientan confirmados (la mesa es sitio real), y quitar la mesa se
+  // permite siempre. Toda la regla vive en lib/mesas.js.
   const asignarMesa = (id, mesaValue) => {
     setAviso("");
     const numero = mesaValue ? Number(mesaValue) : null;
-    const invitadoActual = invitados.find((g) => g.id === id);
-    // Solo se puede asignar mesa a un invitado ya CONFIRMADO -- el
-    // contador de ocupación (ocupacionMesa) solo cuenta confirmados a
-    // propósito (la mesa es sitio real para quien va a venir de
-    // verdad), así que dejar asignar a alguien sin confirmar hacía que
-    // el indicador pareciera "no actualizarse" (en realidad contaba
-    // bien, solo que a ese invitado no lo contaba). El <select> ya va
-    // deshabilitado para invitados sin confirmar (ver más abajo); esto
-    // es la comprobación de refuerzo en el propio guardado. Quitar la
-    // mesa (numero = null) se sigue permitiendo siempre, confirmado o
-    // no -- a petición del usuario, 2026-08-20.
-    if (numero && invitadoActual && !invitadoActual.confirmado) {
-      setAviso("Este invitado todavía no está confirmado: confírmalo antes de asignarle mesa.");
+    const { invitados: siguiente, aviso: motivo } = asignarMesaConSuFamilia(invitados, id, numero, mesas);
+    if (motivo) {
+      avisarMesa(motivo);
       return;
     }
-    if (numero) {
-      const mesa = mesas.find((m) => m.numero === numero);
-      const yaEnEstaMesa = invitadoActual && invitadoActual.mesa === numero;
-      if (mesa && !yaEnEstaMesa && ocupacionMesa(numero) >= mesa.capacidad) {
-        setAviso(`La mesa ${numero} ya está completa (${mesa.capacidad}/${mesa.capacidad}).`);
-        return;
-      }
-    }
-    persistInvitados(
-      invitados.map((g) => (g.id === id ? { ...g, mesa: numero } : g))
-    );
+    persistInvitados(siguiente);
   };
 
   const importarInvitados = () => {
@@ -224,12 +214,12 @@ export function SeccionInvitados({
     setTextoImport("");
   };
 
+  // Al confirmar a alguien cuya familia ya tiene mesa, se sienta con ella
+  // (misma regla: la familia no se separa).
   const toggleConfirmar = (id) => {
-    persistInvitados(
-      invitados.map((g) =>
-        g.id === id ? { ...g, confirmado: !g.confirmado } : g
-      )
-    );
+    const { invitados: siguiente, aviso: motivo } = confirmarConSuFamilia(invitados, id, mesas);
+    persistInvitados(siguiente);
+    avisarMesa(motivo);
   };
 
   const eliminarInvitado = (id) => {
@@ -1254,6 +1244,7 @@ export function SeccionInvitados({
         >
         {/* Se abre desde "Acciones" → Revisión; no está siempre a la
             vista. Tocar un nombre lo busca en la lista de abajo. */}
+        {ventanaPregunta}
         {aviso && (
           <p
             className="rounded px-3 py-2 mb-3 text-sm flex items-start gap-2"

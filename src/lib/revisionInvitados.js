@@ -189,6 +189,25 @@ export function revisarInvitados(invitados = [], evento = {}) {
       )
     );
 
+  // Una familia repartida en varias mesas. Desde el 2026-09-19 la app ya no
+  // deja hacerlo (regla inflexible del usuario, lib/mesas.js), pero lo que
+  // se repartió a mano antes hay que poder encontrarlo.
+  const familiasRepartidas = [];
+  for (const [clave, miembros] of grupos) {
+    if (!clave) continue;
+    const sentados = miembros.filter((g) => g.confirmado && g.mesa);
+    if (new Set(sentados.map((g) => g.mesa)).size > 1) familiasRepartidas.push(...sentados);
+  }
+  if (familiasRepartidas.length)
+    hallazgos.push(
+      hallazgo(
+        "familiaRepartida",
+        "Familia repartida en varias mesas",
+        "Una familia no se separa. Elige la mesa de uno de ellos y se moverá la familia entera.",
+        familiasRepartidas
+      )
+    );
+
   // Asignados a un colaborador pero sin rol familiar. Desde el
   // 2026-09-14 la app impide crear casos nuevos (ver asignarColaborador
   // en VistaAnfitrion.jsx), pero los que ya existían de antes hay que

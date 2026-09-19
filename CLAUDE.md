@@ -1842,6 +1842,32 @@ Al construir o revisar una ventana: comprobar esta regla junto con la de
 "lo más pequeña posible" y la de "estandarizar con el estilo que ya
 existe".
 
+## Una familia no se separa en las mesas (2026-09-19, v37)
+
+REGLA INFLEXIBLE del usuario: "les he puesto el mismo apellido y el rol
+porque no deben separarse en el evento". Al asignar la mesa A MANO a uno
+de una familia, la reciben todos. Excepción que él mismo marcó: el hijo
+mayor que va con otro apellido es OTRO grupo familiar, y a ese no le
+afecta (se le sienta aparte si hace falta).
+
+- `lib/mesas.js` es la única definición. `claveFamiliaMesa` = grupo
+  familiar o, si está vacío, el apellido: la MISMA que ya usaba el
+  "Auto-asignar", que ahora la importa en vez de tener su copia.
+- `asignarMesaConSuFamilia`: poner la mesa a uno la pone a toda su familia
+  CONFIRMADA; quitarla, la quita a todos. Si no caben todos, no se sienta
+  a nadie y se avisa ("son 4 y solo quedan 2 sitios"). Los no confirmados
+  se quedan sin mesa (la mesa es sitio real).
+- `confirmarConSuFamilia`: al confirmar a alguien cuya familia ya está en
+  una mesa, se sienta con ella si cabe; si no, se confirma igual, sin mesa,
+  y se avisa. Desconfirmar no toca ninguna mesa.
+- Los avisos salen con `preguntar({ soloAviso: true })`, en medio de la
+  pantalla: el aviso de arriba de la lista no se ve desde la fila 100.
+- La Revisión gana "Familia repartida en varias mesas", para lo que se
+  repartió a mano antes de la regla.
+- ⚠️ El desplegable de mesa sigue desactivando solo las mesas llenas para
+  UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
+  al elegirla, sale el aviso y no se mueve nadie.
+
 ## Relieve, clic y pregunta de seguridad (2026-09-19, v36)
 
 El usuario lo pidió como norma ya hablada y sin cumplir del todo: todo

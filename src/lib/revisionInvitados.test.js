@@ -78,6 +78,16 @@ describe("revisarInvitados", () => {
     expect(encontradas).not.toContain("sinRevisar");
   });
 
+  it("caza a una familia repartida en varias mesas", () => {
+    const lista = [
+      persona({ rolFamiliar: ROL_FAMILIAR.PADRE, mesa: 1 }),
+      persona({ rolFamiliar: ROL_FAMILIAR.HIJO, mesa: 2 }),
+      persona({ rolFamiliar: ROL_FAMILIAR.SUELTO, apellido: "Otro", grupoFamiliar: "Otro 01", mesa: 3 }),
+    ];
+    const repartida = revisarInvitados(lista).find((h) => h.clave === "familiaRepartida");
+    expect(repartida.personas).toHaveLength(2);
+  });
+
   it("cuenta como pendiente el matrimonio sin año de boda, una vez por pareja", () => {
     const lista = [
       persona({ nombre: "Benito", rolFamiliar: ROL_FAMILIAR.ESPOSO, anioBoda: "" }),

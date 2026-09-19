@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37",
+    cambios: [
+      "Una familia no se separa en las mesas: al poner (o quitar) la mesa a uno, se pone (o se quita) a toda su familia confirmada. Si no caben todos, no se sienta a nadie y la app dice cuántos son y cuántos sitios quedan.",
+      "Al confirmar a alguien cuya familia ya tiene mesa, se sienta con los suyos.",
+      "La Revisión avisa de las familias que ya estaban repartidas en varias mesas.",
+    ],
+  },
+  {
     version: "36.3",
     cambios: [
       "Las fotos de matrimonio, sobre champán en vez de verde: una línea dorada muy fina y aire hasta la foto, como un paspartú. En las miniaturas y en la vista en grande, en Aniversarios y en el formulario del colaborador.",

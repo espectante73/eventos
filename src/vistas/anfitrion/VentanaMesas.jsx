@@ -18,6 +18,7 @@ import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { PlanoMesas } from "../../components/PlanoMesas";
 import { Boton } from "../../components/Boton";
+import { claveFamiliaMesa } from "../../lib/mesas";
 
 export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlotante, onCerrar }) {
   const { mesas, invitados, persistMesas, persistInvitados } = data;
@@ -67,7 +68,8 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
     const gruposMap = {};
     nuevos.forEach((g) => {
       if (g.confirmado) {
-        const key = (g.grupoFamiliar || g.apellido || g.id).trim().toLowerCase();
+        // La misma "familia" que al asignar a mano (lib/mesas.js).
+        const key = claveFamiliaMesa(g);
         (gruposMap[key] = gruposMap[key] || []).push(g);
       }
     });
