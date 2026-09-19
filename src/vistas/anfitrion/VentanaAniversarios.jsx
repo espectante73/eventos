@@ -20,7 +20,7 @@ import { Download } from "lucide-react";
 import { C } from "../../theme";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton, estilosBoton } from "../../components/Boton";
-import { HuecoFoto, ANCHO_COL, ALTO_MINIATURA } from "../../components/HuecoFoto";
+import { HuecoFoto, ANCHO_COL, ALTO_MINIATURA, estiloMarcoFoto } from "../../components/HuecoFoto";
 import { Seal } from "../../components/Widgets";
 import { matrimoniosDeInvitados } from "../../lib/matrimonios";
 import {
@@ -431,7 +431,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
               }
             >
               <div
-                style={{ width: "100%", aspectRatio: "16 / 9", background: C.ink, borderRadius: 4, overflow: "hidden" }}
+                style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 4, overflow: "hidden", ...estiloMarcoFoto(10) }}
               >
                 <img
                   src={verFoto(valor)}

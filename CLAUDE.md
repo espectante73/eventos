@@ -1596,6 +1596,16 @@ dos años distintos ganaba el del esposo sin avisar.
 - **Ejecutado y probado por el usuario el 2026-09-19**: con la primera
   pareja, antes del SQL el año estaba solo en uno; después, en los dos.
 
+**Marco de las fotos, champán (2026-09-19, v36.3)**. El usuario: "el fondo
+verde las hace oscuras y poco atractivas; mejor fondo champán y línea muy
+muy fina dorada con algo de aire". `estiloMarcoFoto(aire)` en
+HuecoFoto.jsx es la única definición: la usan las miniaturas (aire 5) y
+las dos vistas en grande (aire 10). El champán es el del tema "Champán"
+de la Música (#E8D5AE → #D6BE8F), no uno nuevo; la línea, 0,5 px en
+`C.gold`. Las bandas de una foto que no sea 16:9 salen ahora en champán:
+se funden con el marco y ya no avisan tanto como las verdes. La miniatura
+pasa de 58 a 59 de alto para que la foto de dentro siga en 16:9.
+
 ### Accesibilidad de los botones: paso 1 hecho, paso 2 pendiente (2026-09-17)
 
 A raíz de que un desarrollador va a revisar el repositorio, se midió el

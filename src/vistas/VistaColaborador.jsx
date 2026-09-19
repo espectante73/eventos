@@ -26,7 +26,7 @@ import { C } from "../theme";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
-import { HuecoFoto } from "../components/HuecoFoto";
+import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
 import { SeccionPlegable } from "../components/SeccionPlegable";
 import { Boton, estilosBoton } from "../components/Boton";
 import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
@@ -409,7 +409,7 @@ function FormularioDatos({
           Aniversarios. */}
       {verFoto && enlaceFoto && (
         <ModalFlotante titulo="Foto de boda" onCerrar={() => setVerFoto(false)} ancho={860}>
-          <div style={{ width: "100%", aspectRatio: "16 / 9", background: C.ink, borderRadius: 4, overflow: "hidden" }}>
+          <div style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 4, overflow: "hidden", ...estiloMarcoFoto(10) }}>
             <img
               src={enlaceFoto}
               alt="Foto de boda"

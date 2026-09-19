@@ -7,12 +7,29 @@ import { Image as IconoImagen } from "lucide-react";
 import { C } from "../theme";
 import { BotonQuitar } from "./PreguntaSeguridad";
 
+// El marco de TODAS las fotos de matrimonio: las miniaturas y las vistas en
+// grande (Aniversarios y el formulario del colaborador). Pedido por el
+// usuario el 2026-09-19: el verde de antes las hacía oscuras y poco
+// atractivas; fondo champán, una línea dorada muy muy fina y aire entre la
+// línea y la foto, como un paspartú. El champán es el del tema "Champán"
+// de la Música (lib/temasMusica.js), ya aprobado, no uno nuevo.
+// Una sola pieza: quien enseñe una de estas fotos usa esto, no su copia.
+export const CHAMPAN = "#E8D5AE";
+export function estiloMarcoFoto(aire) {
+  return {
+    background: `linear-gradient(178deg, ${CHAMPAN} 0%, #D6BE8F 100%)`,
+    border: `0.5px solid ${C.gold}`,
+    padding: aire,
+  };
+}
+const AIRE_MINIATURA = 5;
+
 // Miniatura en 16:9, la forma de la pantalla del local (2026-09-17, a
 // petición del usuario: "realmente es así como se van a mostrar"). Así, al
 // subir una foto se ve ya cómo va a quedar proyectada.
-// 58 y no 54: el marco (1px) y el aire interior (3px) comen 8px de cada
-// lado, y así la foto de dentro sigue en 16:9 (88x50).
-export const ALTO_MINIATURA = 58;
+// 59: la línea (0.5px) y el aire (5px) comen 11px de cada lado, y así la
+// foto de dentro sigue en 16:9 (85x48).
+export const ALTO_MINIATURA = 59;
 export const ANCHO_MINIATURA = 96;
 // Anchos fijos de las dos columnas de foto. Hacen falta para que los
 // títulos "Boda" y "Aniversario" de la cabecera caigan justo encima de su
@@ -54,16 +71,13 @@ export function HuecoFoto({ titulo, enlace, ocupada, subiendo, onElegir, onQuita
         style={{
           width: ANCHO_MINIATURA,
           height: ALTO_MINIATURA,
-          // Marco fino con aire entre el canto y la foto, como un paspartú.
-          border: `1px solid ${C.ink}`,
-          padding: 3,
-          background: enlace
-            ? C.paper
-            : soloLectura
-            ? "rgba(31,58,46,0.22)"
-            : "linear-gradient(180deg, #FAF6EE 0%, #EDE4D2 100%)",
+          // Marco champán, línea dorada finísima y aire hasta la foto.
+          // Vacío y sin nada que hacer (boda sin subir): el mismo champán,
+          // apagado, para que se note que ahí no se pulsa.
+          ...estiloMarcoFoto(AIRE_MINIATURA),
+          ...(!enlace && soloLectura ? { opacity: 0.55 } : {}),
           cursor: accion === "ver" ? "zoom-in" : accion === "subir" ? "pointer" : "default",
-          opacity: subiendo ? 0.5 : 1,
+          ...(subiendo ? { opacity: 0.5 } : {}),
           flexShrink: 0,
         }}
       >
@@ -73,10 +87,11 @@ export function HuecoFoto({ titulo, enlace, ocupada, subiendo, onElegir, onQuita
             alt={titulo}
             // "contain" y no "cover": si alguna foto no llega en 16:9 se ve
             // ENTERA con bandas, como aviso, en vez de recortarse sin avisar.
-            style={{ width: "100%", height: "100%", objectFit: "contain", background: C.ink }}
+            // Si no llega en 16:9, las bandas salen en champán y no en verde.
+            style={{ width: "100%", height: "100%", objectFit: "contain", background: CHAMPAN }}
           />
         ) : (
-          <IconoImagen size={18} style={{ color: soloLectura ? C.ink : C.gold, opacity: soloLectura ? 0.45 : 0.85 }} />
+          <IconoImagen size={18} style={{ color: "#7A5C24", opacity: soloLectura ? 0.5 : 0.85 }} />
         )}
       </Etiqueta>
       {/* Aviso sobre la propia miniatura. Lo usa la columna Boda para "falta

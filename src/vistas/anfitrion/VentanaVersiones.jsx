@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "36.3",
+    cambios: [
+      "Las fotos de matrimonio, sobre champán en vez de verde: una línea dorada muy fina y aire hasta la foto, como un paspartú. En las miniaturas y en la vista en grande, en Aniversarios y en el formulario del colaborador.",
+    ],
+  },
+  {
     version: "36.2",
     cambios: [
       "El año de boda se comparte entre los dos cónyuges, como la foto: el colaborador lo escribe en la ficha de uno y aparece también en la del otro. Antes el otro se quedaba sin año, o con uno distinto.",
