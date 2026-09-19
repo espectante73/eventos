@@ -222,7 +222,8 @@ function FormularioDatos({
               petición del usuario. */}
           <button
             onClick={onCerrar}
-            className="boton-3d boton-verde-solido ml-auto px-4 py-2 rounded-full text-sm font-semibold"
+            // Con la mano izquierda (lib/mano.js), delante del nombre.
+            className="boton-3d boton-verde-solido ml-auto zurdo:ml-0 zurdo:order-first px-4 py-2 rounded-full text-sm font-semibold"
             style={{ border: `1px solid ${C.goldClaro}` }}
           >
             Cerrar

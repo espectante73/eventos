@@ -105,7 +105,7 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
             className="w-full rounded mb-3"
             style={{ border: `1px solid ${C.line}` }}
           />
-          <div className="flex gap-2 justify-end">
+          <div className="flex gap-2 justify-end zurdo:flex-row-reverse">
             <Boton variante="secundario" onClick={() => setPreviewInvitacion(null)}>
               Cancelar
             </Boton>

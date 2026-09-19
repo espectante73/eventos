@@ -26,6 +26,7 @@
 // emergente en silencio, sin ningún error que avisar.
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { aplicarMano, alCambiarMano } from "./mano";
 
 export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
   const [abierta, setAbierta] = useState(false);
@@ -37,8 +38,11 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
   const [ventana, setVentana] = useState(null);
   const ventanaRef = useRef(null);
   const raizRef = useRef(null);
+  const dejarDeSeguirManoRef = useRef(null);
 
   const cerrar = useCallback(() => {
+    dejarDeSeguirManoRef.current?.();
+    dejarDeSeguirManoRef.current = null;
     if (raizRef.current) {
       raizRef.current.unmount();
       raizRef.current = null;
@@ -82,6 +86,12 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
       ventana.document.head.appendChild(nodo.cloneNode(true));
     });
     ventana.document.body.style.margin = "0";
+    // La mano del móvil (lib/mano.js) va en el <html> de CADA documento:
+    // esta ventana tiene el suyo propio, y sin el atributo la variante
+    // `zurdo:` no se aplicaría aquí dentro.
+    aplicarMano(ventana.document);
+    dejarDeSeguirManoRef.current?.();
+    dejarDeSeguirManoRef.current = alCambiarMano(() => aplicarMano(ventana.document));
     ventana.document.body.style.height = "100vh";
 
     const div = ventana.document.createElement("div");
@@ -99,6 +109,8 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
     // referencias para que abrir() sepa que ya no hay ninguna ventana
     // real detrás y pueda crear una nueva la próxima vez.
     ventana.addEventListener("beforeunload", () => {
+      dejarDeSeguirManoRef.current?.();
+      dejarDeSeguirManoRef.current = null;
       ventanaRef.current = null;
       raizRef.current = null;
       setVentana(null);

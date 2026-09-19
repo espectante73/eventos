@@ -18,7 +18,7 @@
 // pierda visibilidad de este cambio, queda constancia visible en la
 // ventana Colaboradores hasta que la confirme.
 import { useState } from "react";
-import { UserCog, LogOut, Megaphone, Map, Code2, Bug, KeyRound, Mail } from "lucide-react";
+import { UserCog, LogOut, Megaphone, Map, Code2, Bug, KeyRound, Mail, Hand } from "lucide-react";
 import { C, inputStyle } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
@@ -26,6 +26,7 @@ import { ModalFlotante } from "./VentanaFlotante";
 import { ANCHO_FILA_MENU } from "./MenuFlotante";
 import { ModalMapaSitio } from "./MapaSitio";
 import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
+import { useMano, MANO } from "../lib/mano";
 
 // `onCerrarSesion`/`enlaceTablon`: antes eran botones sueltos junto a
 // este en la cabecera de Portada.jsx -- a petición del usuario,
@@ -57,6 +58,70 @@ const CLASE_BOTON_INICIO =
 const ESTILO_BOTON_INICIO = { color: C.goldClaro, borderRadius: 9999, width: ANCHO_FILA_MENU };
 const ICONO = { size: 19, style: { flexShrink: 0, opacity: 0.85 } };
 
+// Pulgar derecho o izquierdo (lib/mano.js), a petición del usuario
+// (2026-09-19). Él eligió el aspecto: UNA pastilla del modelo de inicio,
+// del mismo ancho que las demás, partida en dos; la mitad elegida va
+// rellena de dorado. Solo se puede elegir una.
+// `preguntando`: en la ventanita de la primera vez no sale ninguna marcada.
+function SelectorMano({ preguntando = false }) {
+  const { mano, elegir } = useMano();
+  const marcada = mano || (preguntando ? null : MANO.DERECHA);
+  const mitad = (valor, rotulo, titulo) => {
+    const elegida = marcada === valor;
+    return (
+      <button
+        type="button"
+        role="radio"
+        aria-checked={elegida}
+        title={titulo}
+        onClick={() => elegir(valor)}
+        className="flex-1 rounded-full py-1"
+        style={elegida ? { background: C.goldClaro, color: C.ink, fontWeight: 600 } : { color: C.goldClaro }}
+      >
+        {rotulo}
+      </button>
+    );
+  };
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Mano con la que usas el móvil"
+      className="boton-3d boton-flotante-imagen flex items-center gap-1 text-sm whitespace-nowrap"
+      style={{ ...ESTILO_BOTON_INICIO, padding: "4px 4px 4px 12px" }}
+    >
+      <Hand {...ICONO} />
+      {mitad(MANO.IZQUIERDA, "Izda.", "Botones a la izquierda, para el pulgar izquierdo")}
+      {mitad(MANO.DERECHA, "Dcha.", "Botones a la derecha, para el pulgar derecho")}
+    </div>
+  );
+}
+
+// La primera vez que se entra desde un móvil, una ventanita pregunta la
+// mano. Solo a quien entra con sesión (anfitrión y colaboradores): el
+// usuario decidió no preguntárselo a los invitados del tablón. Se recuerda
+// en el móvil y no vuelve a salir; cerrarla sin elegir cuenta como
+// "derecha", que es como estaba la app.
+function PreguntaMano() {
+  const { mano, tactil, elegir } = useMano();
+  if (!tactil || mano) return null;
+  return (
+    <ModalFlotante
+      titulo="¿Qué mano usas?"
+      onCerrar={() => elegir(MANO.DERECHA)}
+      ancho={260}
+      acciones={
+        <p className="text-xs w-full text-center" style={{ color: C.charcoal, opacity: 0.75 }}>
+          Se puede cambiar en Mi cuenta.
+        </p>
+      }
+    >
+      <div className="flex justify-center">
+        <SelectorMano preguntando />
+      </div>
+    </ModalFlotante>
+  );
+}
+
 export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarRepositorio, mostrarErrores }) {
   const [abierta, setAbierta] = useState(false);
   const [mapaAbierto, setMapaAbierto] = useState(false);
@@ -67,6 +132,8 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
   // { tipo: "ok" | "error", texto } | null
   const [avisoContrasena, setAvisoContrasena] = useState(null);
   const [avisoEmail, setAvisoEmail] = useState(null);
+  // El selector de mano solo sale en el móvil: en el ordenador no cambia nada.
+  const { tactil } = useMano();
 
   const cerrar = () => {
     setAbierta(false);
@@ -125,6 +192,8 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
         <UserCog size={16} /> Mi cuenta
       </button>
 
+      <PreguntaMano />
+
       {abierta && (
         <ModalFlotante
           titulo="Mi cuenta"
@@ -163,8 +232,10 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               dejaba una escalera de anchos distintos, y el usuario pidió
               que fueran iguales y con el modelo de inicio: ver
               CLASE_BOTON_INICIO y ANCHO_BOTON arriba. */}
-          {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarRepositorio || mostrarErrores) && (
-            <div className="flex flex-col items-end gap-2.5 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
+          {/* `zurdo:`: con la mano izquierda elegida en el móvil, todo lo de
+              aquí se alinea a la izquierda (lib/mano.js). */}
+          {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarRepositorio || mostrarErrores || tactil) && (
+            <div className="flex flex-col items-end zurdo:items-start gap-2.5 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
               {onCerrarSesion && (
                 <button
                   onClick={onCerrarSesion}
@@ -233,6 +304,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   <Bug {...ICONO} /> Errores app
                 </a>
               )}
+              {tactil && <SelectorMano />}
             </div>
           )}
 
@@ -256,7 +328,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                 {avisoContrasena.texto}
               </p>
             )}
-            <div className="flex justify-end">
+            <div className="flex justify-end zurdo:justify-start">
             <button type="submit" disabled={guardandoContrasena} className={CLASE_BOTON_INICIO} style={{ ...ESTILO_BOTON_INICIO, opacity: guardandoContrasena ? 0.6 : 1 }}>
               <KeyRound {...ICONO} /> {guardandoContrasena ? "Guardando…" : "Cambiar clave"}
             </button>
@@ -283,7 +355,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                 {avisoEmail.texto}
               </p>
             )}
-            <div className="flex justify-end">
+            <div className="flex justify-end zurdo:justify-start">
             <button type="submit" disabled={guardandoEmail} className={CLASE_BOTON_INICIO} style={{ ...ESTILO_BOTON_INICIO, opacity: guardandoEmail ? 0.6 : 1 }}>
               <Mail {...ICONO} /> {guardandoEmail ? "Guardando…" : "Cambiar email"}
             </button>

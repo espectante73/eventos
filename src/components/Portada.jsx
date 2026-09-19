@@ -43,6 +43,7 @@ import { VERSION_APP } from "../constants";
 import { formatearFecha, formatearDiaSemana } from "../lib/formato";
 import { DesplegableSecciones } from "./DesplegableSecciones";
 import { MiCuenta } from "./MiCuenta";
+import { useMano } from "../lib/mano";
 
 // Ancho máximo de la tarjeta de portada -- generoso para que el póster se
 // lea bien, pero sin llegar a ocupar el ancho completo de una pantalla de
@@ -104,6 +105,10 @@ export function Portada({
 }) {
   const [form, setForm] = useState(evento);
   useEffect(() => setForm(evento), [evento]);
+  // Móvil manejado con la izquierda (lib/mano.js): los botones que flotan
+  // sobre la foto se van al borde izquierdo.
+  const { zurdo } = useMano();
+  const alPieDeLaFoto = zurdo ? { bottom: "9%", left: 16 } : { bottom: "9%", right: 16 };
 
   // NO usar evento.imagenInvitacion aquí -- esa es la plantilla para
   // generar la invitación de cada familia (lleva recuadros reservados
@@ -152,7 +157,8 @@ export function Portada({
         )}
 
         <span
-          className="absolute top-4 left-4 text-xs px-2 py-1 rounded"
+          // Con la mano izquierda cambia de esquina con "Mi cuenta".
+          className="absolute top-4 left-4 zurdo:left-auto zurdo:right-4 text-xs px-2 py-1 rounded"
           style={{ background: "rgba(255,255,255,0.7)", color: C.charcoal, fontFamily: "'IBM Plex Mono', monospace" }}
         >
           v{VERSION_APP}
@@ -168,7 +174,7 @@ export function Portada({
             cualquier colaborador logueado, sin tocar nada en
             VistaColaborador.jsx (Fase C, 2026-08-21). */}
         {onCerrarSesion && (
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 zurdo:right-auto zurdo:left-4">
             <MiCuenta
               onCerrarSesion={onCerrarSesion}
               enlaceTablon={enlaceTablon}
@@ -195,11 +201,11 @@ export function Portada({
             abrirCronograma={abrirCronograma}
             abrirMusicaEvento={abrirMusicaEvento}
             abrirInvitados={abrirInvitados}
-            posicion={{ bottom: "9%", right: 16 }}
+            posicion={alPieDeLaFoto}
           />
         )}
         {!(editable && toggle) && botonExtra && (
-          <div className="absolute flex flex-col items-end gap-2" style={{ bottom: "9%", right: 16 }}>
+          <div className="absolute flex flex-col items-end zurdo:items-start gap-2" style={alPieDeLaFoto}>
             {botonExtra}
           </div>
         )}

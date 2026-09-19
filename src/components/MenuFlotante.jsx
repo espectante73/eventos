@@ -14,6 +14,7 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { C } from "../theme";
+import { esZurdo } from "../lib/mano";
 
 // Margen mínimo respecto al borde de la ventana, y altura mínima aunque
 // haya poco hueco (por debajo de esto, mejor dejar que se salga un poco
@@ -121,10 +122,14 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
 
   const abrirSubmenu = () => {
     const r = filaRef.current.getBoundingClientRect();
-    const { win } = realmDe(filaRef.current);
+    const { doc, win } = realmDe(filaRef.current);
+    // Móvil manejado con la izquierda (lib/mano.js): el submenú sale hacia
+    // la DERECHA de la fila, en espejo, porque el menú entero está pegado
+    // al borde izquierdo.
+    const lado = esZurdo(doc) ? { left: r.right + 4 } : { right: win.innerWidth - r.left + 4 };
     setPos({
       top: r.top,
-      right: win.innerWidth - r.left + 4,
+      ...lado,
       maxHeight: alturaMaximaDisponible(r.top, false, win), // crece hacia abajo desde r.top
     });
     onAbrir();
@@ -210,6 +215,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
               className="fixed rounded-xl overflow-y-auto"
               style={{
                 top: pos.top,
+                left: pos.left,
                 right: pos.right,
                 width: ANCHO_PANEL,
                 maxWidth: "calc(100vw - 2rem)",
@@ -291,26 +297,30 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
 
   const abrir = () => {
     const r = botonRef.current.getBoundingClientRect();
-    const { win } = realmDe(botonRef.current);
+    const { doc, win } = realmDe(botonRef.current);
+    // Móvil manejado con la izquierda (lib/mano.js): todo en espejo. Los
+    // botones que abren estos menús se han ido al borde izquierdo, así que
+    // el panel tiene que crecer hacia la derecha en vez de hacia la izquierda.
+    const zurdo = esZurdo(doc);
     if (anchor === "right") {
       // Cuelga del borde superior del botón y crece hacia arriba.
       setPos({
         bottom: win.innerHeight - r.top + 4,
-        right: win.innerWidth - r.right,
+        ...(zurdo ? { left: r.left } : { right: win.innerWidth - r.right }),
         maxHeight: alturaMaximaDisponible(r.top, true, win),
       });
     } else if (anchor === "left") {
       // Cuelga del borde superior del botón y crece hacia abajo.
       setPos({
         top: r.top,
-        right: win.innerWidth - r.left + 4,
+        ...(zurdo ? { left: r.right + 4 } : { right: win.innerWidth - r.left + 4 }),
         maxHeight: alturaMaximaDisponible(r.top, false, win),
       });
     } else {
       // "bottom-left": cuelga del borde inferior del botón y crece hacia abajo.
       setPos({
         top: r.bottom + 4,
-        left: r.left,
+        ...(zurdo ? { right: win.innerWidth - r.right } : { left: r.left }),
         maxHeight: alturaMaximaDisponible(r.bottom, false, win),
       });
     }

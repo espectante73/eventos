@@ -138,7 +138,7 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
                 {colaboradores.map((c) => (
                   <label
                     key={c.id}
-                    className="flex items-center justify-end gap-2 text-sm py-0.5"
+                    className="flex items-center justify-end zurdo:flex-row-reverse gap-2 text-sm py-0.5"
                     style={{ color: C.charcoal }}
                   >
                     {c.nombre}
@@ -154,7 +154,7 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
           </>
         )}
       </div>
-      <div className="flex justify-end">
+      <div className="flex justify-end zurdo:justify-start">
         <Boton variante="peligro" onClick={activar} disabled={ejecutando}>
           <FlaskConical size={16} /> Activar Modo Pruebas
         </Boton>

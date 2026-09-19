@@ -396,7 +396,7 @@ export default function App() {
             más abajo) -- ni Portada ni VistaColaborador llegan a montarse
             para alojarlo ahí. */}
         {session && !data.esAnfitrion && !data.colaboradores.some((c) => c.id === rol) && (
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end zurdo:justify-start mb-4">
             <button
               onClick={() => supabase.auth.signOut()}
               className="boton-3d boton-verde-solido flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"

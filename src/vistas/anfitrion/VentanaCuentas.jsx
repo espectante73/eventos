@@ -350,7 +350,7 @@ export function VentanaCuentas({ data, onCerrar }) {
       </button>
       {mostrarListaGastos && (
       <>
-      <div className="flex items-center justify-end mb-2">
+      <div className="flex items-center justify-end zurdo:justify-start mb-2">
         <Boton variante="principal" onClick={agregarGasto}>
           <Plus size={14} /> Añadir gasto
         </Boton>

@@ -26,9 +26,11 @@ en la sección que se indica entre paréntesis.
 2. **Ventanas tan pequeñas como su contenido.** Del ancho de un móvil en
    vertical, también en el ordenador. `ModalFlotante` acepta `ancho`.
    (misma sección)
-3. **Todo a la derecha, para el pulgar derecho.** Botones y accesos
-   alineados a la derecha. («Regla de la app: todo al alcance del pulgar
-   DERECHO»)
+3. **Todo a la derecha, para el pulgar derecho** -- salvo en el móvil de
+   quien elija la mano izquierda (v35). Todo botón que se ponga a la
+   derecha lleva su espejo `zurdo:` (p. ej. `justify-end
+   zurdo:justify-start`). («Regla de la app: todo al alcance del pulgar
+   DERECHO» y «Pulgar derecho o izquierdo»)
 4. **Botones del mismo grupo, todos iguales y del ancho del texto más
    largo.** En Mi cuenta el modelo es el de inicio: copia exacta de las
    filas de "Abrir sección…" (`FilaMenu`), pastilla verde, letra dorada,
@@ -1789,6 +1791,51 @@ la izquierda, y en la v34.7 a 240px centrados).
 Al construir o revisar una ventana: comprobar esta regla junto con la de
 "lo más pequeña posible" y la de "estandarizar con el estilo que ya
 existe".
+
+## Pulgar derecho o izquierdo (2026-09-19, v35)
+
+Idea del usuario: que quien maneje el móvil con la izquierda tenga los
+botones de ese lado. Él eligió el aspecto (una pastilla del modelo de
+inicio partida en dos, "Izda. | Dcha.", la elegida rellena de dorado) y a
+quién se pregunta (a él y a los colaboradores; a los invitados del
+tablón no). También pidió que la app **recuerde** la elección.
+
+**Cómo funciona** (`lib/mano.js`, una sola pieza):
+- La elección se guarda **en el móvil** (localStorage `manoPreferida`),
+  no en la base: es cómo coge cada uno su teléfono. Sin SQL.
+- Solo cuenta en aparatos **táctiles** (`pointer: coarse` + `hover:
+  none`, el mismo criterio que VistaAnfitrion). En el ordenador todo
+  sigue a la derecha aunque se haya elegido la izquierda.
+- `aplicarMano()` pone `data-mano="izquierda"` en `<html>`. De ese
+  atributo cuelga todo: la variante de Tailwind **`zurdo:`**
+  (`tailwind.config.js`), los menús (`MenuFlotante` lo lee al abrirse y
+  abre en espejo) y `useMano()` para lo que se coloca desde JS (los
+  botones que flotan sobre la foto de la Portada).
+- Las ventanas emergentes (`usePopupWindow`) tienen su propio `<html>`:
+  se les pone el atributo al abrirlas y se sigue al cambiar.
+- La primera vez, `PreguntaMano` (dentro de MiCuenta.jsx, así que solo
+  sale con sesión) abre una ventanita "¿Qué mano usas?". Cerrarla sin
+  elegir cuenta como derecha, para no volver a preguntar. Se cambia
+  después en Mi cuenta, donde el selector solo aparece en el móvil.
+- En el tablón no se pregunta, pero si ese móvil ya lo tiene elegido, el
+  botón de la música se pone a la izquierda.
+
+**Lo que cambia de lado**: Portada ("Abrir sección…", los botones del
+colaborador, Mi cuenta ↔ la etiqueta de versión), los menús
+desplegables, Mi cuenta por dentro, "Cerrar" de la ficha del
+colaborador, música del tablón, Modo Pruebas, "Añadir gasto" y la
+confirmación de envío de invitaciones del colaborador. En filas con
+varios botones se usa `zurdo:flex-row-reverse`: con `justify-end`, eso
+las pega a la izquierda y pone el botón principal en el borde.
+
+**Lo que NO cambia, a propósito**: el mando de la música (con él
+invertido, "atrás" quedaría a la derecha de "adelante"), la X de cerrar
+de las ventanas, las filas de las listas (el check de llegada, las
+papeleras) y las filas alineadas abajo (`items-end` en una fila es
+alinear abajo, no a la derecha).
+
+⚠️ **Al poner un botón nuevo a la derecha, añadir su `zurdo:`** en el
+mismo cambio, o en el móvil de un zurdo se quedará en el lado malo.
 
 ## Regla de la app: ventanas lo más pequeñas posible (2026-09-18)
 

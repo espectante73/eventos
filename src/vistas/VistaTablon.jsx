@@ -350,7 +350,9 @@ export function VistaTablon({ token }) {
           <audio ref={audioRef} onEnded={siguientePista} />
           <button
             onClick={alternarMusica}
-            className="fixed bottom-5 right-5 flex items-center justify-center rounded-full boton-3d"
+            // A la izquierda si este móvil ya tiene elegida esa mano (se
+            // elige dentro de la app; al tablón no se le pregunta).
+            className="fixed bottom-5 right-5 zurdo:right-auto zurdo:left-5 flex items-center justify-center rounded-full boton-3d"
             style={{ width: 52, height: 52, background: C.ink, color: C.paper, zIndex: 50 }}
             title={sonando ? "Pausar la música" : "Activar fondo musical"}
           >

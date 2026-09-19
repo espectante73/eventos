@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "35",
+    cambios: [
+      "Pulgar derecho o izquierdo: la primera vez que se entra desde el móvil, una ventanita pregunta con qué mano se usa, y los botones se colocan de ese lado. El móvil lo recuerda. Se cambia cuando se quiera en Mi cuenta. En el ordenador no cambia nada.",
+    ],
+  },
+  {
     version: "34.10",
     cambios: [
       "Mi cuenta, todavía más estrecha: en el móvil ya no ocupa casi toda la pantalla. Lo de dentro —una contraseña, un email y los botones— cabe de sobra.",
