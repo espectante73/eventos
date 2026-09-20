@@ -1719,6 +1719,12 @@ Hoy no lo es -- `public/mapa-de-la-aplicacion.png` lo sirve la web a
 cualquiera con la URL, y el permiso `mapa_sitio_ver` solo decide si se
 enseña el enlace. Aparcado por hoy, no descartado.
 
+⚠️ **Decisión firme del 2026-09-20: se queda como está.** El usuario:
+*"lo dejamos como está hasta que vuelva a preguntar"*. No volver a
+sacarlo en las listas de pendientes ni ofrecerlo como siguiente paso —
+lo retomará él cuando quiera. Lo de abajo es el porqué, para no tener
+que reconstruir la conversación si algún día vuelve.
+
 ### Por qué costó entenderlo (y cómo se explicó al final)
 
 El usuario razonaba que si hay login, lo de dentro está protegido. Lo que
