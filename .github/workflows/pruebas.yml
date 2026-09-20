@@ -14,10 +14,16 @@ jobs:
   comprobar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          # ⚠️ La MISMA versión que la máquina donde se desarrolla. Con
+          # Node 20 (npm 10) esto llevaba fallando desde el primer día:
+          # el package-lock.json que escribe npm 11 se dejaba fuera
+          # `esbuild@0.28.2` (una dependencia "peer" de la copia de Vite
+          # que trae vitest 4), y `npm ci` con npm 10 lo rechaza entero.
+          # Ver "Las pruebas de GitHub nunca habían pasado" en CLAUDE.md.
+          node-version: "24"
           cache: npm
       - run: npm ci
       - run: npm run lint

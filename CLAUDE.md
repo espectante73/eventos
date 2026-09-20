@@ -1869,6 +1869,43 @@ Al construir o revisar una ventana: comprobar esta regla junto con la de
 "lo más pequeña posible" y la de "estandarizar con el estilo que ya
 existe".
 
+## Las pruebas de GitHub nunca habían pasado (2026-09-20)
+
+El usuario: "me llegan bastantes emails de GitHub". El flujo **Pruebas**
+(`.github/workflows/pruebas.yml`) fallaba en TODAS las subidas -- y al
+mirarlo, **no había pasado ni una sola vez desde que se creó**
+(`actions/workflows/pruebas.yml/runs?status=success` -> `total_count: 0`).
+Un aviso que siempre está en rojo no avisa de nada: se vuelve ruido y se
+ignora, que es justo lo contrario de para lo que se puso.
+
+**El fallo**: reventaba en `npm ci`, a los 10 segundos, con
+`Missing: esbuild@0.28.2 from lock file` (y sus 26 paquetes de
+plataforma). La máquina de desarrollo tiene **Node 24 / npm 11**, y el
+flujo pedía **Node 20 / npm 10**. `vitest` 4 trae su propia copia de Vite,
+que declara `esbuild ^0.27 || ^0.28` como dependencia *peer*; npm 11 no
+la escribe en el `package-lock.json` y npm 10 exige que esté. Lo mismo en
+local pasaba desapercibido porque nadie ejecuta `npm ci` a mano.
+
+**Arreglo, dos cosas**:
+1. `node-version: "24"` en el flujo -- **la misma que la máquina donde se
+   desarrolla**. Es la protección de verdad: mientras CI use otro npm que
+   el de casa, el lockfile puede volver a discrepar.
+2. `package-lock.json` regenerado con npm 10 (`npm install
+   --package-lock-only`), que añade las 27 entradas que faltaban.
+   Comprobado que `npm ci` pasa con npm 10 **y** con npm 11.
+
+De paso, `actions/checkout` y `actions/setup-node` de v4 a v5: GitHub
+está retirando Node 20 para las propias acciones y ya lo avisaba en cada
+ejecución.
+
+**Cómo se diagnosticó sin tener acceso a los registros** (los de Actions
+piden permisos de administrador, y aquí no hay `gh` instalado): el repo
+es público, así que la API anónima da el estado de cada paso
+(`/actions/runs/<id>/jobs`) -- eso señaló `npm ci`. Luego, para ver el
+error de verdad, `nvm install 20` y reproducirlo en un clon limpio del
+repo. Ese es el camino cuando CI falla y el registro no se alcanza:
+**clonar limpio y reproducir con la versión exacta que usa el flujo**.
+
 ## No se podía salir del Modo Pruebas (2026-09-20, v37.13)
 
 **El fallo**: `restaurar_foto()` -- la que usan TANTO la salida del Modo
