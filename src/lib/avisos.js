@@ -36,7 +36,7 @@ export function registrarHostAvisos(host) {
   if (pendientes.length) {
     const cola = pendientes;
     pendientes = [];
-    cola.forEach(({ mensaje, titulo }) => host.mostrar(mensaje, titulo));
+    cola.forEach(({ mensaje, titulo, detalle }) => host.mostrar(mensaje, titulo, detalle));
   }
   return () => hosts.delete(host);
 }
@@ -53,14 +53,15 @@ export function partirAviso(mensaje, titulo) {
   return { titulo: "Aviso", texto };
 }
 
-// Enseña un aviso. Devuelve false si no había ningún sitio donde
-// enseñarlo (queda en espera al primero que se apunte).
-export function avisoEnPantalla(mensaje, titulo) {
+// Enseña un aviso. `detalle` es el motivo técnico, en letra pequeña.
+// Devuelve false si no había ningún sitio donde enseñarlo (queda en
+// espera al primero que se apunte).
+export function avisoEnPantalla(mensaje, titulo, detalle) {
   const host = hostElegido();
   if (!host) {
-    if (pendientes.length < MAXIMO_EN_ESPERA) pendientes.push({ mensaje, titulo });
+    if (pendientes.length < MAXIMO_EN_ESPERA) pendientes.push({ mensaje, titulo, detalle });
     return false;
   }
-  host.mostrar(mensaje, titulo);
+  host.mostrar(mensaje, titulo, detalle);
   return true;
 }

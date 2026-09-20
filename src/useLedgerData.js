@@ -39,7 +39,10 @@ function avisar(mensaje, error) {
   // En la ventana de siempre, no en un window.alert (ver lib/avisos.js):
   // el alert bloquea el navegador y, disparado desde una ventana
   // emergente, salía en la pestaña de detrás.
-  avisoEnPantalla(mensaje);
+  //
+  // Con el motivo que da la base de datos en letra pequeña: un "no se
+  // pudo" a secas no se puede ni diagnosticar ni contar por teléfono.
+  avisoEnPantalla(mensaje, undefined, error?.message || error?.hint || "");
 }
 
 export function useLedgerData(rol) {

@@ -1869,6 +1869,42 @@ Al construir o revisar una ventana: comprobar esta regla junto con la de
 "lo más pequeña posible" y la de "estandarizar con el estilo que ya
 existe".
 
+## No se podía salir del Modo Pruebas (2026-09-20, v37.13)
+
+**El fallo**: `restaurar_foto()` -- la que usan TANTO la salida del Modo
+Pruebas COMO el "Deshacer" -- borraba todo y volvía a meterlo, pero
+insertaba los **invitados antes que las mesas**. `invitados."mesa"` es
+una clave foránea a `mesas."numero"` (`invitados_mesa_fk`): en cuanto un
+solo invitado tiene mesa puesta, ese insert revienta y la restauración
+entera se deshace. El Modo Pruebas se quedaba activo para siempre.
+
+**Por qué apareció justo ahora**: llevaba meses ahí sin molestar porque
+NADIE tenía mesa asignada. El 2026-09-19 (v37, "una familia no se
+separa") el usuario empezó a sentar gente, y al día siguiente ya no
+podía salir del Modo Pruebas. Las dos funciones que dependen de esto
+-- Deshacer y Modo Pruebas -- estaban rotas a la vez, y el "probar
+Deshacer" que había pendiente habría fallado igual.
+
+**Arreglo**: las mesas se insertan las PRIMERAS. De paso, `coalesce(...,
+'[]')` en cada tabla (una foto vieja sin alguna clave ya no rompe) y
+`set_config('eventos.recalculo_aviso_activo','off')` durante la
+restauración, para que `avisoPendiente` vuelva tal cual estaba en vez de
+recalcularlo el trigger.
+
+**Lección, y esto vale para cualquier restauración futura**: el orden de
+inserción tiene que seguir las claves foráneas. Hoy son estas:
+`invitados."mesa"` -> `mesas`, `invitados."colaboradorId"` ->
+`colaboradores` (por eso los invitados entran sin colaborador y se
+enganchan al final) y `colaboradores."invitadoId"` -> `invitados`. Al
+añadir una tabla o una clave foránea nueva, repasar `restaurar_foto`.
+
+**Lo otro que falló**: el aviso decía solo "No se pudo desactivar el
+Modo Pruebas", sin el motivo -- imposible de diagnosticar sin abrir la
+consola del navegador, que el usuario no va a abrir. Ahora `avisar()`
+manda `error.message` y la ventana lo enseña en letra pequeña debajo
+(`detalle` en `PreguntaSeguridad`). **Todo aviso de error lleva el
+motivo técnico.**
+
 ## Se acabaron los avisos del navegador (2026-09-20, v37.12)
 
 Último resto de la norma 12: `window.alert` estaba prohibido, pero

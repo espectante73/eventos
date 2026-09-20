@@ -7,7 +7,7 @@ function hostFalso(tieneFoco) {
   const vistos = [];
   const quitar = registrarHostAvisos({
     doc: { hasFocus: () => tieneFoco },
-    mostrar: (mensaje, titulo) => vistos.push({ mensaje, titulo }),
+    mostrar: (mensaje, titulo, detalle) => vistos.push({ mensaje, titulo, detalle }),
   });
   return { vistos, quitar };
 }
@@ -41,6 +41,13 @@ describe("dónde sale el aviso", () => {
     const pestana = hostFalso(true);
     abiertos = [pestana];
     expect(pestana.vistos[0].mensaje).toBe("Fallo al arrancar.");
+  });
+
+  it("lleva el motivo técnico, para poder contar qué ha fallado", () => {
+    const pestana = hostFalso(true);
+    abiertos = [pestana];
+    avisoEnPantalla("No se pudo desactivar el Modo Pruebas.", undefined, 'violates foreign key constraint "invitados_mesa_fk"');
+    expect(pestana.vistos[0].detalle).toContain("invitados_mesa_fk");
   });
 });
 

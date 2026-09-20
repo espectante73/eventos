@@ -17,7 +17,8 @@ export function AvisosGlobales() {
     const doc = ancla.current?.ownerDocument || document;
     return registrarHostAvisos({
       doc,
-      mostrar: (mensaje, titulo) => preguntar({ ...partirAviso(mensaje, titulo), soloAviso: true }),
+      mostrar: (mensaje, titulo, detalle) =>
+        preguntar({ ...partirAviso(mensaje, titulo), detalle, soloAviso: true }),
     });
   }, [preguntar]);
 

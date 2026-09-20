@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.13",
+    cambios: [
+      "Corregido un fallo grave: si algún invitado tenía mesa asignada, no se podía salir del Modo Pruebas ni usar el Deshacer. La restauración devolvía los invitados antes que las mesas, y la mesa de cada uno apuntaba a una mesa que todavía no existía.",
+      "Cuando algo falla, el aviso dice ahora el motivo exacto en letra pequeña, en vez de un \"no se pudo\" a secas.",
+    ],
+  },
+  {
     version: "37.12",
     cambios: [
       "Ya no queda ni un aviso de los del navegador: todos salen en la ventana de la app, con el mismo aspecto que las preguntas de seguridad.",

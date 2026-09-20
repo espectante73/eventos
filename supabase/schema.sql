@@ -525,6 +525,11 @@ begin
     return;
   end if;
 
+  -- Una foto se restaura TAL CUAL. Sin esto, el trigger que recalcula
+  -- "avisoPendiente" lo reescribiría al insertar y la copia no sería
+  -- fiel.
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
+
   delete from invitados where true;
   delete from colaboradores where true;
   delete from mesas where true;
@@ -535,30 +540,38 @@ begin
   delete from novedades where true;
   delete from evento where true;
 
+  -- ⚠️ Las MESAS van ANTES que los invitados: invitados."mesa" apunta a
+  -- mesas."numero" (invitados_mesa_fk). Al revés, cualquier invitado con
+  -- mesa asignada rompía la restauración entera -- y con ella el
+  -- "Deshacer" y la salida del Modo Pruebas. No se notó durante meses
+  -- porque hasta el 2026-09-19 nadie tenía mesa puesta (bug encontrado
+  -- el 2026-09-20: el usuario no podía salir del Modo Pruebas).
+  insert into mesas
+  select * from jsonb_populate_recordset(null::mesas, coalesce(p_datos->'mesas', '[]'::jsonb));
+
   -- Los invitados entran SIN colaborador y se enganchan después: si no, la
   -- clave foránea fallaría porque los colaboradores aún no existen.
   insert into invitados
   select * from jsonb_populate_recordset(
     null::invitados,
     (select coalesce(jsonb_agg(elem - 'colaboradorId'), '[]'::jsonb)
-     from jsonb_array_elements(p_datos->'invitados') elem)
+     from jsonb_array_elements(coalesce(p_datos->'invitados', '[]'::jsonb)) elem)
   );
 
   insert into colaboradores
-  select * from jsonb_populate_recordset(null::colaboradores, p_datos->'colaboradores');
+  select * from jsonb_populate_recordset(null::colaboradores, coalesce(p_datos->'colaboradores', '[]'::jsonb));
 
   update invitados i set "colaboradorId" = (elem->>'colaboradorId')::uuid
-  from jsonb_array_elements(p_datos->'invitados') elem
+  from jsonb_array_elements(coalesce(p_datos->'invitados', '[]'::jsonb)) elem
   where (elem->>'id')::uuid = i."id" and elem->>'colaboradorId' is not null;
 
-  insert into mesas select * from jsonb_populate_recordset(null::mesas, p_datos->'mesas');
-  insert into gastos select * from jsonb_populate_recordset(null::gastos, p_datos->'gastos');
+  insert into gastos select * from jsonb_populate_recordset(null::gastos, coalesce(p_datos->'gastos', '[]'::jsonb));
   insert into orden_familias
-  select * from jsonb_populate_recordset(null::orden_familias, p_datos->'ordenFamilias');
+  select * from jsonb_populate_recordset(null::orden_familias, coalesce(p_datos->'ordenFamilias', '[]'::jsonb));
   insert into fotos_familiares
-  select * from jsonb_populate_recordset(null::fotos_familiares, p_datos->'fotosFamiliares');
+  select * from jsonb_populate_recordset(null::fotos_familiares, coalesce(p_datos->'fotosFamiliares', '[]'::jsonb));
   insert into avisos_enviados overriding system value
-  select * from jsonb_populate_recordset(null::avisos_enviados, p_datos->'avisosEnviados');
+  select * from jsonb_populate_recordset(null::avisos_enviados, coalesce(p_datos->'avisosEnviados', '[]'::jsonb));
   insert into novedades
   select * from jsonb_populate_recordset(null::novedades, coalesce(p_datos->'novedades', '[]'::jsonb));
   insert into evento select * from jsonb_populate_record(null::evento, p_datos->'evento');

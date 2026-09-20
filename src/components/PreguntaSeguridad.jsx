@@ -26,6 +26,10 @@ import { Boton } from "./Boton";
 //   peligro  false para una pregunta que no borra nada (botón verde)
 //   soloAviso  true = no hay nada que confirmar, solo un "Entendido"
 //              (p. ej. "no se puede marcar como pagado: faltan datos")
+//   detalle  el motivo técnico, en letra pequeña (lo que dice la base de
+//            datos cuando algo falla). Sin esto, un "no se pudo" no se
+//            puede ni diagnosticar ni contar: pasó el 2026-09-20 con la
+//            salida del Modo Pruebas.
 export function usePreguntaSeguridad() {
   const [pendiente, setPendiente] = useState(null);
   const cerrar = () => setPendiente(null);
@@ -69,6 +73,14 @@ export function usePreguntaSeguridad() {
       {pendiente.texto && (
         <p className="text-sm" style={{ color: C.charcoal, whiteSpace: "pre-line" }}>
           {pendiente.texto}
+        </p>
+      )}
+      {pendiente.detalle && (
+        <p
+          className="text-xs mt-2 pt-2"
+          style={{ color: C.line, borderTop: `1px solid ${C.line}33`, whiteSpace: "pre-line", wordBreak: "break-word" }}
+        >
+          {pendiente.detalle}
         </p>
       )}
     </ModalFlotante>
