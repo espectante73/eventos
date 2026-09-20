@@ -725,12 +725,12 @@ export function SeccionInvitados({
                   letterSpacing: "0.03em",
                 }}
               >
-                <span style={{ background: tintaColumnaCabecera(0), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(0), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="invitado" orden={orden} onClick={cambiarOrden}>
                     Invitado
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(1), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(1), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
                     Familia
                   </EncabezadoOrdenable>
@@ -740,7 +740,7 @@ export function SeccionInvitados({
                     para contar los matrimonios y para la ventana
                     "Matrimonios" -- cada pareja tiene su foto de boda y
                     se les hará otra en el evento. */}
-                <span style={{ background: tintaColumnaCabecera(2), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(2), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="rolFamiliar" orden={orden} onClick={cambiarOrden}>
                     Rol
                   </EncabezadoOrdenable>
@@ -751,37 +751,37 @@ export function SeccionInvitados({
                     que se quitó la de Matrimonios: filtrando por O sale
                     una fila por pareja, que es justo esa lista
                     (2026-09-04). */}
-                <span style={{ background: tintaColumnaCabecera(3), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(3), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="anioBoda" orden={orden} onClick={cambiarOrden}>
                     Boda
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(4), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="zona" orden={orden} onClick={cambiarOrden}>
                     Zona
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(5), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="colaborador" orden={orden} onClick={cambiarOrden}>
                     Colaborador
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(6), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="mesa" orden={orden} onClick={cambiarOrden}>
                     Mesa
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(7), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="confirmado" orden={orden} onClick={cambiarOrden}>
                     Confirm.
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(8), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="datos" orden={orden} onClick={cambiarOrden}>
                     Datos
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(9), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(9), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="pagado" orden={orden} onClick={cambiarOrden}>
                     Pagado
                   </EncabezadoOrdenable>
@@ -791,12 +791,12 @@ export function SeccionInvitados({
                     su gente (2026-09-06). Aquí es de solo lectura -- el
                     recuento y el filtro son lo que de verdad hace falta
                     desde este lado. */}
-                <span style={{ background: tintaColumnaCabecera(10), borderRadius: "6px 6px 0 0" }}>
+                <span style={{ background: tintaColumnaCabecera(10), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="presente" orden={orden} onClick={cambiarOrden}>
                     Llegó
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(11), borderRadius: "6px 6px 0 0" }}></span>
+                <span style={{ background: tintaColumnaCabecera(11), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}></span>
               </div>
               {/* Fila de filtros, subida aquí junto a la cabecera de
                   columnas (antes vivía sola en la caja blanca) -- a
@@ -826,7 +826,7 @@ export function SeccionInvitados({
                     juntas, cabecera+filtro se leen como un único
                     recuadro por columna, a petición del usuario,
                     2026-08-20. */}
-                <span style={{ background: tintaColumnaCabecera(0), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(0), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <TextInput
                     value={filtros.texto}
                     onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
@@ -844,7 +844,7 @@ export function SeccionInvitados({
                     }}
                   />
                 </span>
-                <span style={{ background: tintaColumnaCabecera(1), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(1), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.grupoFamiliar}
                     onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
@@ -869,7 +869,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(2), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(2), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.rolFamiliar}
                     onChange={(e) => setFiltros({ ...filtros, rolFamiliar: e.target.value })}
@@ -908,7 +908,7 @@ export function SeccionInvitados({
                     <option value="sin">{conCuenta("Sin rol", "sin")}</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(3), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(3), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.anioBoda}
                     onChange={(e) => setFiltros({ ...filtros, anioBoda: e.target.value })}
@@ -931,7 +931,7 @@ export function SeccionInvitados({
                     <option value="sin">Sin año</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(4), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(4), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.zona}
                     onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
@@ -956,7 +956,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(5), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(5), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.colaboradorId}
                     onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
@@ -982,7 +982,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(6), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(6), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.mesa}
                     onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
@@ -1011,7 +1011,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(7), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(7), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.confirmado}
                     onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
@@ -1033,7 +1033,7 @@ export function SeccionInvitados({
                     <option value="tentativa">Sin confirmar</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(8), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(8), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.datos}
                     onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
@@ -1055,7 +1055,7 @@ export function SeccionInvitados({
                     <option value="pendiente">Por recopilar</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(9), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(9), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.pagado}
                     onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
@@ -1077,7 +1077,7 @@ export function SeccionInvitados({
                     <option value="pendiente">Pendiente</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(10), borderRadius: "0 0 6px 6px" }}>
+                <span style={{ background: tintaColumnaCabecera(10), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.presente}
                     onChange={(e) => setFiltros({ ...filtros, presente: e.target.value })}
@@ -1100,7 +1100,7 @@ export function SeccionInvitados({
                     <option value="no">Falta ({confirmadosCount - totalPresentes})</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(11), borderRadius: "0 0 6px 6px" }} />
+                <span style={{ background: tintaColumnaCabecera(11), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }} />
               </div>
             </div>
           </div>
@@ -1662,7 +1662,7 @@ export function SeccionInvitados({
                         minWidth: 0,
                         minHeight: 28,
                         borderRadius: R.caja,
-                        opacity: g.confirmado ? 1 : 0.5,
+                        opacity: g.confirmado ? 1 : OP.tenue,
                       }}
                     >
                       <option value="">Sin mesa</option>
@@ -1767,7 +1767,7 @@ export function SeccionInvitados({
                         size={14}
                         style={{
                           color: Array.isArray(g.rolesTrabajo) && g.rolesTrabajo.length > 0 ? C.ink : C.charcoal,
-                          opacity: Array.isArray(g.rolesTrabajo) && g.rolesTrabajo.length > 0 ? 1 : 0.35,
+                          opacity: Array.isArray(g.rolesTrabajo) && g.rolesTrabajo.length > 0 ? 1 : OP.apagado,
                         }}
                       />
                     </Boton>
@@ -1789,7 +1789,7 @@ export function SeccionInvitados({
                         size={14}
                         style={{
                           color: g.excluidoTablon ? C.peligro : C.charcoal,
-                          opacity: g.excluidoTablon ? 1 : 0.35,
+                          opacity: g.excluidoTablon ? 1 : OP.apagado,
                         }}
                       />
                     </Boton>

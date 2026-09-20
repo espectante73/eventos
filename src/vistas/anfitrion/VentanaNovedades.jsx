@@ -204,7 +204,7 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
           </label>
           <label
             className="flex items-center gap-1.5 text-xs"
-            style={{ color: C.charcoal, opacity: soloTexto ? 0.35 : 0.75 }}
+            style={{ color: C.charcoal, opacity: soloTexto ? OP.apagado : OP.secundario }}
             title={soloTexto ? "No tienes permiso para cambiar esto" : undefined}
           >
             <input
@@ -398,7 +398,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
                 : "Rellena primero la URL web en Configuración → URL web"
             }
             className="boton-3d rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium"
-            style={{ color: C.goldClaro, opacity: enlace && !soloTexto ? 1 : 0.35 }}
+            style={{ color: C.goldClaro, opacity: enlace && !soloTexto ? 1 : OP.apagado }}
           >
             {copiado ? <Check size={16} /> : <LinkIcon size={16} />}
             Enlace
@@ -408,7 +408,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             disabled={soloTexto}
             title={soloTexto ? "No tienes permiso para esto" : "Nueva novedad"}
             className="boton-3d rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs font-medium"
-            style={{ color: C.goldClaro, opacity: soloTexto ? 0.35 : 1 }}
+            style={{ color: C.goldClaro, opacity: soloTexto ? OP.apagado : 1 }}
           >
             <Plus size={16} />
             Nueva
@@ -509,7 +509,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             style={{
               background: evento.enlaceGrupoWhatsapp ? "#25D366" : C.line,
               color: evento.enlaceGrupoWhatsapp ? "#fff" : C.charcoal,
-              opacity: evento.enlaceGrupoWhatsapp ? 1 : 0.6,
+              opacity: evento.enlaceGrupoWhatsapp ? 1 : OP.secundario,
               cursor: evento.enlaceGrupoWhatsapp ? "pointer" : "not-allowed",
             }}
             title={evento.enlaceGrupoWhatsapp ? "Abrir el grupo en WhatsApp" : "Pega antes el enlace del grupo"}

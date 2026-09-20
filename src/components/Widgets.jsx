@@ -5,7 +5,7 @@
 // del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect } from "react";
 import { User } from "lucide-react";
-import { C, inputStyle, R, T, S } from "../theme";
+import { C, inputStyle, R, T, S, OP } from "../theme";
 
 // "Icono de usuario sólido" (relleno) para distinguir al Anfitrión de
 // cada colaborador (icono de contorno normal, el mismo User sin
@@ -15,19 +15,24 @@ export function UserSolido(props) {
   return <User fill="currentColor" {...props} />;
 }
 
-export function Seal({ count, size = 22 }) {
+// `late`: el sello da el mismo latido que una ficha incompleta
+// (.sello-latiendo en index.css). Solo donde el número significa "esto
+// falta por hacer" -- no en un recuento cualquiera.
+export function Seal({ count, size = 22, late = false }) {
   if (!count) return null;
   return (
     <span
-      className="inline-flex items-center justify-center rounded-full font-semibold"
+      className={`inline-flex items-center justify-center rounded-full font-semibold${late ? " sello-latiendo" : ""}`}
       style={{
         background: C.wax,
         color: C.paper,
         width: size,
         height: size,
-        fontSize: size > 22 ? 13 : 12,
+        fontSize: T.pequeno,
         fontFamily: "'IBM Plex Mono', monospace",
-        boxShadow: S.sutil,
+        // Con latido, la sombra la pone la animación: si se queda aquí,
+        // gana esta y el halo no se ve.
+        ...(late ? {} : { boxShadow: S.sutil }),
       }}
     >
       {count}
@@ -146,7 +151,7 @@ export function BarraCompacta({ icono: Icono, completado, total, color, claro })
         style={{
           fontSize: T.micro,
           color: claro ? "rgba(255,255,255,0.9)" : C.charcoal,
-          opacity: claro ? 1 : 0.7,
+          opacity: claro ? 1 : OP.secundario,
           fontFamily: "'IBM Plex Mono', monospace",
           minWidth: 30,
           textAlign: "right",

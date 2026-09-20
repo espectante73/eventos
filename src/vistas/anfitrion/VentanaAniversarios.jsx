@@ -53,7 +53,7 @@ function BandaCabecera({ children, aviso = 0 }) {
         flexShrink: 0,
         color: C.goldClaro,
         background: "rgba(255,255,255,0.07)",
-        borderRadius: "6px 6px 0 0",
+        borderRadius: `${R.caja}px ${R.caja}px 0 0`,
       }}
     >
       {children}

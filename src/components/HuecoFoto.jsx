@@ -91,7 +91,7 @@ export function HuecoFoto({ titulo, enlace, ocupada, subiendo, onElegir, onQuita
             style={{ width: "100%", height: "100%", objectFit: "contain", background: CHAMPAN }}
           />
         ) : (
-          <IconoImagen size={18} style={{ color: "#7A5C24", opacity: soloLectura ? 0.5 : 0.85 }} />
+          <IconoImagen size={18} style={{ color: "#7A5C24", opacity: soloLectura ? OP.tenue : OP.secundario }} />
         )}
       </Etiqueta>
       {/* Aviso sobre la propia miniatura. Lo usa la columna Boda para "falta

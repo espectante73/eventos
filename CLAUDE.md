@@ -1994,6 +1994,41 @@ arregla una vez, la deriva vuelve sola. Mismo espíritu que
 línea con `escala-libre:` y el motivo (hoy hay UNA, el rombo de 11px de
 Aniversarios, que con redondeo de caja dejaría de parecer un rombo).
 
+## El sello que late (2026-09-20, v38.1)
+
+El usuario: que el botón "Abrir formulario" avise como avisan las fichas
+plegadas incompletas. Él mismo propuso tres formas (halo dorado en el
+contorno, el botón entero en rojo, o el número parpadeando) y preguntó
+cuál veía mejor.
+
+**Elegido: late el SELLO rojo, no el botón.** Dos motivos, y los dos son
+normas suyas de antes:
+- el botón es la pastilla de cristal sobre la foto, lenguaje ya aprobado
+  (norma 11);
+- el rojo ya significa "falta algo" en toda la app, y el dorado es
+  adorno. Si el dorado empieza a parpadear, pasa a hacer dos trabajos.
+
+`.sello-latiendo` en index.css, al lado de `.ficha-incompleta` y **al
+mismo ritmo (2s)**: es el mismo aviso, contado en vez de suelto.
+`Seal` gana el prop `late`, solo donde el número quiere decir "esto falta
+por hacer". ⚠️ Con latido, la sombra la pone la animación: si se deja
+también en el `style`, gana esa y el halo no se ve.
+
+**De rebote, el guardia del acabado encontró lo que el primer repaso no
+vio.** El test solo miraba el número pegado a los dos puntos, así que se
+le escapaban:
+- los valores escondidos en un "si pasa esto, tanto; si no, cuanto"
+  (`fontSize: size > 22 ? 13 : 12`, en el propio `Seal`);
+- los redondeos escritos como texto CSS (`borderRadius: "6px 6px 0 0"`,
+  24 veces en la Lista de invitados y en Aniversarios).
+
+Ahora mira la expresión entera, descuenta lo que ya sale de la escala
+(`${R.caja}px`) y perdona el `0` y el `1`, que no son un valor elegido a
+ojo sino "nada" y "del todo". Las opacidades de estado (botón
+deshabilitado, icono que no aplica) entran en la escala como
+`OP.apagado`. **Lección: un guardia que solo mira la forma más obvia da
+una seguridad falsa.**
+
 ## Se acabaron los avisos del navegador (2026-09-20, v37.12)
 
 Último resto de la norma 12: `window.alert` estaba prohibido, pero

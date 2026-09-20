@@ -75,7 +75,7 @@ export function FondoMusicalTablon() {
 
       <label
         className="boton-3d flex items-center justify-center gap-2 font-medium mb-2 cursor-pointer"
-        style={{ ...estilosBoton("principal", "pequeno"), opacity: subiendo ? 0.6 : 1 }}
+        style={{ ...estilosBoton("principal", "pequeno"), opacity: subiendo ? OP.secundario : 1 }}
       >
         <Upload size={13} />
         {subiendo ? "Subiendo…" : "Subir archivo de audio"}

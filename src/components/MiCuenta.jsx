@@ -329,7 +329,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               </p>
             )}
             <div className="flex justify-end zurdo:justify-start">
-            <button type="submit" disabled={guardandoContrasena} className={CLASE_BOTON_INICIO} style={{ ...ESTILO_BOTON_INICIO, opacity: guardandoContrasena ? 0.6 : 1 }}>
+            <button type="submit" disabled={guardandoContrasena} className={CLASE_BOTON_INICIO} style={{ ...ESTILO_BOTON_INICIO, opacity: guardandoContrasena ? OP.secundario : 1 }}>
               <KeyRound {...ICONO} /> {guardandoContrasena ? "Guardando…" : "Cambiar clave"}
             </button>
             </div>
@@ -356,7 +356,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               </p>
             )}
             <div className="flex justify-end zurdo:justify-start">
-            <button type="submit" disabled={guardandoEmail} className={CLASE_BOTON_INICIO} style={{ ...ESTILO_BOTON_INICIO, opacity: guardandoEmail ? 0.6 : 1 }}>
+            <button type="submit" disabled={guardandoEmail} className={CLASE_BOTON_INICIO} style={{ ...ESTILO_BOTON_INICIO, opacity: guardandoEmail ? OP.secundario : 1 }}>
               <Mail {...ICONO} /> {guardandoEmail ? "Guardando…" : "Cambiar email"}
             </button>
             </div>

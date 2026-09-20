@@ -15,7 +15,7 @@
 import { useState, useRef, forwardRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Trash2 } from "lucide-react";
-import { C } from "../theme";
+import { C, OP } from "../theme";
 import { ModalFlotante } from "./VentanaFlotante";
 import { Boton } from "./Boton";
 
@@ -151,7 +151,7 @@ export const BotonQuitar = forwardRef(function BotonQuitar(
           height: TAMANO_BOTON_QUITAR,
           background: C.wax,
           color: "#fff",
-          opacity: disabled ? 0.35 : 1,
+          opacity: disabled ? OP.apagado : 1,
           cursor: disabled ? "not-allowed" : "pointer",
           ...style,
         }}

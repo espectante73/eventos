@@ -760,7 +760,7 @@ function FilaInvitadoColaborador({
             border: `2px solid ${g.presente ? C.ink : C.line}`,
             background: g.presente ? C.ink : "transparent",
             color: g.presente ? C.paper : C.line,
-            opacity: puedeTocarLlegada ? 1 : 0.3,
+            opacity: puedeTocarLlegada ? 1 : OP.apagado,
             cursor: puedeTocarLlegada ? "pointer" : "not-allowed",
           }}
         >
@@ -1084,7 +1084,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
             >
               Abrir formulario
-              <Seal count={pendientes.length} />
+              <Seal count={pendientes.length} late />
             </button>
           </>
         }

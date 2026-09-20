@@ -38,8 +38,18 @@ function numerosSueltos(propiedad) {
       // que no es una caja ni un texto (un rombo de adorno, por
       // ejemplo). Si aparecen muchas, la escala está mal, no el sitio.
       if (linea.includes("escala-libre")) return;
-      const m = linea.match(new RegExp(`${propiedad}: (\\d+(?:\\.\\d+)?)`));
-      if (m) fallos.push(`${ruta}:${i + 1} -> ${propiedad}: ${m[1]}`);
+      // Mira la expresión entera, no solo lo que viene justo detrás de
+      // los dos puntos: el valor escondido en un "si pasa esto, tanto;
+      // si no, cuanto" se coló en el primer repaso justo así
+      // (`fontSize: grande ? 13 : 12`, en Seal).
+      const expresion = linea.match(new RegExp(`${propiedad}:([^,}\\n]*)`));
+      if (!expresion) return;
+      // Fuera lo que YA sale de la escala (`${R.caja}px`), y fuera el 0
+      // y el 1: no son un valor elegido a ojo, son "nada" y "del todo".
+      const aOjo = [...expresion[1].replace(/\$\{[^}]*\}/g, "").matchAll(/(?<![\w.$])\d+(?:\.\d+)?/g)]
+        .map((n) => n[0])
+        .filter((n) => n !== "0" && n !== "1");
+      if (aOjo.length) fallos.push(`${ruta}:${i + 1} -> ${propiedad}:${expresion[1]}`);
     });
   }
   return fallos;
@@ -81,8 +91,8 @@ describe("la escala es corta a propósito", () => {
     expect(Object.keys(S)).toHaveLength(3);
   });
 
-  it("dos tonos para el texto secundario, y uno solo para líneas", () => {
-    expect(OP.secundario).toBeGreaterThan(OP.tenue);
-    expect(OP.tenue).toBeGreaterThan(OP.linea);
+  it("los tonos van de más visible a menos, sin repetirse", () => {
+    const valores = Object.values(OP);
+    expect(valores).toEqual([...new Set(valores)].sort((a, b) => b - a));
   });
 });

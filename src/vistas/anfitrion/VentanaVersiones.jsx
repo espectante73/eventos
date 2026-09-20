@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "38.1",
+    cambios: [
+      "El número rojo del botón \"Abrir formulario\" late, igual que las fichas incompletas: mismo aviso, mismo latido. El botón no cambia.",
+      "Más valores sueltos que se habían escapado del repaso de acabados (redondeos escritos como texto y opacidades de lo desactivado) pasan también a la escala.",
+    ],
+  },
+  {
     version: "38",
     cambios: [
       "Acabado más fino, con el mismo estilo de siempre: los tamaños de letra pasan de 13 distintos a 6, los redondeos de esquina de 5 a 2, los grises del texto secundario de 9 a 2 y las sombras de 8 a 3.",

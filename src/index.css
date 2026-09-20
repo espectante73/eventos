@@ -108,6 +108,31 @@ button:disabled > .interruptor-haptico {
 .ficha-incompleta {
   animation: latido-incompleta 2s ease-in-out infinite;
 }
+
+/* El sello rojo con el número de fichas que faltan (Seal en Widgets.jsx,
+   botón "Abrir formulario"). Mismo latido que la ficha incompleta y al
+   mismo ritmo: es el mismo aviso, contado en vez de suelto. Late el
+   SELLO, no el botón -- el botón es la pastilla de cristal sobre la foto,
+   lenguaje ya aprobado (norma 11), y el dorado de la app es adorno, no
+   alarma (decidido con el usuario el 2026-09-20). */
+@keyframes latido-sello {
+  0%,
+  100% {
+    box-shadow: 0 1px 2px rgba(31, 25, 15, 0.18), 0 0 0 0 rgba(176, 0, 32, 0);
+  }
+  50% {
+    box-shadow: 0 1px 2px rgba(31, 25, 15, 0.18), 0 0 0 5px rgba(176, 0, 32, 0.3);
+  }
+}
+.sello-latiendo {
+  animation: latido-sello 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sello-latiendo {
+    animation: none;
+    box-shadow: 0 1px 2px rgba(31, 25, 15, 0.18), 0 0 0 3px rgba(176, 0, 32, 0.3);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .ficha-incompleta {
     animation: none;

@@ -71,11 +71,13 @@ export const S = {
   flotanteOscura: "0 8px 30px rgba(0, 0, 0, 0.35)",
 };
 
-// Cuánto se apaga el texto que no es el principal. Dos para texto; la
-// tercera es solo para líneas y separadores, que no son texto.
+// Cuánto se apaga lo que no es el protagonista. Dos tonos para el
+// texto secundario, uno para lo que está desactivado o no aplica, y uno
+// para líneas y separadores (que no son texto).
 export const OP = {
   secundario: 0.7,
   tenue: 0.5,
+  apagado: 0.35, // botón deshabilitado, icono que no aplica
   linea: 0.3,
 };
 

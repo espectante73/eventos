@@ -22,7 +22,7 @@
 // propio lenguaje), las filas de MenuFlotante y los botones translúcidos
 // sobre la foto de la Portada. Unificarlos los empeoraría.
 import { forwardRef } from "react";
-import { C, R, T } from "../theme";
+import { C, R, T, OP } from "../theme";
 
 const TAMANOS = {
   normal: { padding: "6px 12px", fontSize: T.normal, minHeight: 36 },
@@ -79,7 +79,7 @@ export const Boton = forwardRef(function Boton({
         ...estilosBoton(variante, tamano, oscuro),
         ...(soloIcono ? { padding: tamano === "pequeno" ? 5 : 8, gap: 0 } : {}),
         cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
+        opacity: disabled ? OP.tenue : 1,
         ...style,
       }}
       {...resto}
