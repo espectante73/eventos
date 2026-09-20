@@ -2736,11 +2736,22 @@ Transparente para el usuario: `mi_rol()` lee el token fresco de
 Verificado por el usuario: entrar, editar, guardar, cerrar y volver a
 abrir.
 
-⚠️ **PENDIENTE, y es la contrapartida de todo esto:** al no haber ya
-enlace de emergencia, la única vía de recuperación del anfitrión es el
-correo de "recuperar contraseña" de Supabase Auth — que en el plan
-gratuito tiene un límite de envío bajo y **ya falló una vez** ("email
-rate limit exceeded", agosto). Configurar SMTP propio con Resend
-(Authentication → Settings → SMTP) es lo que convierte esto en seguro Y
-sin riesgo de quedarse fuera. La cuenta y la clave de Resend ya existen
-y funcionan para los avisos.
+✅ **RESUELTO el 2026-09-20.** Era la contrapartida de todo esto: al no
+haber ya enlace de emergencia, la única vía de recuperación del
+anfitrión es el correo de "recuperar contraseña" de Supabase Auth, que
+en el plan gratuito tiene un límite de envío bajo y **falló una vez**
+("email rate limit exceeded", agosto). Ya hay **SMTP propio con Resend**
+configurado (`smtp.resend.com`, puerto 465, usuario `resend`, la API key
+de Resend en el campo Password) y **probado en vivo**: el correo de
+recuperación llega al instante desde `mail.nexuspoint.rsvp`, firmado por
+ese dominio, no desde `supabase.io`.
+
+⚠️ Dónde vive esa pantalla, que Supabase la ha movido: **Authentication →
+Emails → SMTP**, o sea `/dashboard/project/<ref>/auth/smtp`. El viejo
+`/settings/auth` ya no lleva ahí.
+
+Dos detalles cosméticos pendientes, ninguno urgente: el remitente de los
+correos de Auth es `aviso-colaborador@` (se entiende regular para un
+"restablecer contraseña"), y los asuntos de las plantillas de Supabase
+Auth siguen en inglés ("Reset your password") aunque el cuerpo esté en
+español.
