@@ -1898,6 +1898,10 @@ inserción tiene que seguir las claves foráneas. Hoy son estas:
 enganchan al final) y `colaboradores."invitadoId"` -> `invitados`. Al
 añadir una tabla o una clave foránea nueva, repasar `restaurar_foto`.
 
+✅ **Probado en vivo por el usuario el 2026-09-20**: sale del Modo
+Pruebas y el "Deshacer" funciona. Con esto queda cerrado el "probar
+Deshacer" que llevaba pendiente desde el 2026-09-17.
+
 **Lo otro que falló**: el aviso decía solo "No se pudo desactivar el
 Modo Pruebas", sin el motivo -- imposible de diagnosticar sin abrir la
 consola del navegador, que el usuario no va a abrir. Ahora `avisar()`
