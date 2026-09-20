@@ -2031,6 +2031,12 @@ de interfaz, es el borde de una onda. ⚠️ El halo sale FUERA del botón: si
 alguna vez se mete el sello en un contenedor con `overflow: hidden`, se
 recortará y parecerá que el latido se ha roto.
 
+✅ **Aprobado por el usuario el 2026-09-20** ("espectacular"). Y una
+lección de método: los tres aros salieron de tres vueltas suyas seguidas
+("más llamativo", "otro aro", "un tercero más rojo"). Ninguna de las
+tres la habría acertado yo de una: con él conviene **construir de uno en
+uno y enseñar**, no proponer el resultado final de golpe.
+
 **De rebote, el guardia del acabado encontró lo que el primer repaso no
 vio.** El test solo miraba el número pegado a los dos puntos, así que se
 le escapaban:
