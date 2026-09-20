@@ -2022,11 +2022,14 @@ con `width`, para que no empuje al texto del botón. Y contorno blanco de
 pieza, y vive tanto sobre fotos como sobre las filas doradas de
 Aniversarios.
 
-**Y en la v38.3**, un segundo aro: uno cerrado y fuerte (8 px, 0,45) y
-otro por fuera más grande y más suave (17 px, 0,18). La onda llega casi
-el doble de lejos que con un aro solo. ⚠️ El halo sale FUERA del botón:
-si alguna vez se mete el sello en un contenedor con `overflow: hidden`,
-se recortará y parecerá que el latido se ha roto.
+**Y en la v38.3 y la v38.4**, un segundo y un tercer aro, pedidos de uno
+en uno: 8 px a 0,45, 17 px a 0,18 y 27 px a 0,30 — este último en un rojo
+más puro (#D60822) que el burdeos de la app (`C.peligro`, #B00020),
+porque a 27 px el burdeos se disolvía en la foto. Es el ÚNICO sitio donde
+se usa un rojo que no es el de la paleta, y es a propósito: no es color
+de interfaz, es el borde de una onda. ⚠️ El halo sale FUERA del botón: si
+alguna vez se mete el sello en un contenedor con `overflow: hidden`, se
+recortará y parecerá que el latido se ha roto.
 
 **De rebote, el guardia del acabado encontró lo que el primer repaso no
 vio.** El test solo miraba el número pegado a los dos puntos, así que se

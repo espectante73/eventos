@@ -122,20 +122,25 @@ button:disabled > .interruptor-haptico {
     box-shadow:
       0 1px 2px rgba(31, 25, 15, 0.18),
       0 0 0 0 rgba(176, 0, 32, 0),
-      0 0 0 0 rgba(176, 0, 32, 0);
+      0 0 0 0 rgba(176, 0, 32, 0),
+      0 0 0 0 rgba(214, 8, 34, 0);
   }
   50% {
-    /* DOS aros, a petición del usuario: uno cerrado y fuerte, y otro
-       por fuera más grande y más suave, para que la onda llegue más
-       lejos (2026-09-20). Antes era un solo aro de 5 px; luego uno de
-       9; ahora 8 + 17, que es casi el doble de alcance.
+    /* TRES aros, pedidos de uno en uno por el usuario el 2026-09-20
+       (empezó siendo uno solo de 5 px):
+         1) pegado al sello, fuerte -- 8 px;
+         2) por fuera, más ancho y más suave -- 17 px;
+         3) el de más afuera, en un rojo más puro que el burdeos de la
+            app (#D60822 frente a #B00020), para que el borde de la onda
+            se lea y no se disuelva -- 27 px.
        El sello crece un 12% con transform, no con width: así no empuja
        al texto del botón ni al resto de la barra. */
     transform: scale(1.12);
     box-shadow:
       0 1px 2px rgba(31, 25, 15, 0.18),
       0 0 0 8px rgba(176, 0, 32, 0.45),
-      0 0 0 17px rgba(176, 0, 32, 0.18);
+      0 0 0 17px rgba(176, 0, 32, 0.18),
+      0 0 0 27px rgba(214, 8, 34, 0.3);
   }
 }
 .sello-latiendo {
@@ -147,7 +152,8 @@ button:disabled > .interruptor-haptico {
     box-shadow:
       0 1px 2px rgba(31, 25, 15, 0.18),
       0 0 0 4px rgba(176, 0, 32, 0.45),
-      0 0 0 8px rgba(176, 0, 32, 0.18);
+      0 0 0 8px rgba(176, 0, 32, 0.18),
+      0 0 0 13px rgba(214, 8, 34, 0.3);
   }
 }
 @media (prefers-reduced-motion: reduce) {

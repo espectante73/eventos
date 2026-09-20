@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "38.4",
+    cambios: [
+      "Un tercer aro, el de más afuera, en un rojo más vivo que el burdeos de la app: así el borde de la onda se ve y no se disuelve en la foto.",
+    ],
+  },
+  {
     version: "38.3",
     cambios: [
       "El latido del sello rojo gana un segundo aro, más grande y más suave: la onda llega casi el doble de lejos.",
