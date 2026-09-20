@@ -2014,6 +2014,14 @@ mismo ritmo (2s)**: es el mismo aviso, contado en vez de suelto.
 por hacer". ⚠️ Con latido, la sombra la pone la animación: si se deja
 también en el `style`, gana esa y el halo no se ve.
 
+**Ajustado en la v38.2**, tras verlo: *"más llamativo pero un contorno
+blanco muy fino para el contraste"*. El halo pasa de 5 a 9 px y de 0,30 a
+0,45 de opacidad, y el sello crece un 12% al latir — con `transform`, no
+con `width`, para que no empuje al texto del botón. Y contorno blanco de
+1 px en TODOS los sellos, no solo en el que late: el sello es una sola
+pieza, y vive tanto sobre fotos como sobre las filas doradas de
+Aniversarios.
+
 **De rebote, el guardia del acabado encontró lo que el primer repaso no
 vio.** El test solo miraba el número pegado a los dos puntos, así que se
 le escapaban:

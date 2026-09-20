@@ -30,6 +30,11 @@ export function Seal({ count, size = 22, late = false }) {
         height: size,
         fontSize: T.pequeno,
         fontFamily: "'IBM Plex Mono', monospace",
+        // Contorno blanco muy fino (usuario, 2026-09-20): el sello vive
+        // sobre fotos y sobre filas doradas, y el rojo solo no siempre
+        // se recorta bien del fondo. Va en TODOS los sellos, no solo en
+        // el que late: el sello es una sola pieza.
+        border: "1px solid rgba(255, 255, 255, 0.92)",
         // Con latido, la sombra la pone la animación: si se queda aquí,
         // gana esta y el halo no se ve.
         ...(late ? {} : { boxShadow: S.sutil }),

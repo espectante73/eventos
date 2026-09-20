@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "38.2",
+    cambios: [
+      "El sello rojo late más fuerte: el halo casi dobla y el número crece un poco al latir.",
+      "Y lleva un contorno blanco muy fino, para que se recorte bien sobre la foto y sobre las filas doradas.",
+    ],
+  },
+  {
     version: "38.1",
     cambios: [
       "El número rojo del botón \"Abrir formulario\" late, igual que las fichas incompletas: mismo aviso, mismo latido. El botón no cambia.",
