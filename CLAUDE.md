@@ -2568,9 +2568,15 @@ contesta "permission denied" desde fuera, que es lo correcto).
   Los candidatos claros a cargarse solo cuando se usan son jspdf,
   html2canvas y la ventana de Música.
 
-**Pendiente de decisión del usuario**: la licencia (se puso "privado,
-todos los derechos reservados" en el README, sin confirmar) y la nota de
-privacidad para el tablón, que redacta él y repaso yo.
+✅ **La licencia, decidida el 2026-09-20**: se queda **privada, todos los
+derechos reservados**, como estaba en el README. El usuario lo confirmó
+("creo que eso es lo que quiero"). Tema cerrado, no volver a sacarlo.
+
+📅 **La nota de privacidad, para la semana del 2026-09-20** (él dijo
+"queda para esta semana"). Va **en el tablón de invitados**, que es donde
+la ve quien entrega sus datos. La redacta él y la repaso yo. Es lo único
+de la lista con fecha propia: si la semana pasa sin que aparezca, vale la
+pena recordárselo una vez.
 
 **Bloqueado por datos**: la hoja de encargo necesita el año de boda y los
 48 matrimonios lo tienen vacío.

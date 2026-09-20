@@ -216,3 +216,5 @@ excluyen del volcado a propósito). Requiere el secreto de repositorio
 
 Proyecto privado. Todos los derechos reservados: el código se publica
 para poder enseñarlo, no para reutilizarlo sin permiso.
+
+Confirmado por el autor el 2026-09-20.
