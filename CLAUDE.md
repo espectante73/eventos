@@ -2570,7 +2570,8 @@ la versión correcta; la base real necesita la migración de abajo):
    15". Hoy hay 9 mesas, así que no ha dado la cara todavía: la mesa 16
    fallaría.
 
-Migración pendiente de ejecutar en el SQL Editor de Supabase:
+Migración (ya EJECUTADA, comprobado el 2026-09-20: `evento."cortinillaRealce"`
+existe en la base real y guarda el valor que puso el usuario):
 
 ```sql
 alter table evento add column if not exists "cortinillaRealce" integer not null default 15;
