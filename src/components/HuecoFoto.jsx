@@ -4,7 +4,7 @@
 // preview"). Antes el formulario tenía su propio botón "Subir foto" y una
 // miniatura cuadrada de 32px: dos maneras distintas de hacer lo mismo.
 import { Image as IconoImagen } from "lucide-react";
-import { C } from "../theme";
+import { C, R, T, OP } from "../theme";
 import { BotonQuitar } from "./PreguntaSeguridad";
 
 // El marco de TODAS las fotos de matrimonio: las miniaturas y las vistas en
@@ -75,9 +75,9 @@ export function HuecoFoto({ titulo, enlace, ocupada, subiendo, onElegir, onQuita
           // Vacío y sin nada que hacer (boda sin subir): el mismo champán,
           // apagado, para que se note que ahí no se pulsa.
           ...estiloMarcoFoto(AIRE_MINIATURA),
-          ...(!enlace && soloLectura ? { opacity: 0.55 } : {}),
+          ...(!enlace && soloLectura ? { opacity: OP.tenue } : {}),
           cursor: accion === "ver" ? "zoom-in" : accion === "subir" ? "pointer" : "default",
-          ...(subiendo ? { opacity: 0.5 } : {}),
+          ...(subiendo ? { opacity: OP.tenue } : {}),
           flexShrink: 0,
         }}
       >
@@ -102,13 +102,13 @@ export function HuecoFoto({ titulo, enlace, ocupada, subiendo, onElegir, onQuita
           className="absolute left-0 right-0 text-center uppercase pointer-events-none"
           style={{
             bottom: 4,
-            fontSize: 8,
+            fontSize: T.micro,
             fontWeight: 700,
             letterSpacing: "0.05em",
             color: "#fff",
             background: "rgba(140,47,57,0.88)",
             margin: "0 4px",
-            borderRadius: 2,
+            borderRadius: R.caja,
             lineHeight: "12px",
           }}
         >

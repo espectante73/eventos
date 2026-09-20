@@ -23,7 +23,7 @@
 // ya documentado para el portapapeles de Novedades).
 import { useState, useEffect } from "react";
 import { Printer, ChevronDown, Plus } from "lucide-react";
-import { C, inputStyle } from "../../theme";
+import { C, inputStyle, OP } from "../../theme";
 import { generarImagenCronograma, calcularHorasAbsolutas } from "../../lib/cronograma";
 import { resolverColaborador } from "../../lib/invitados";
 import { Boton } from "../../components/Boton";
@@ -212,7 +212,7 @@ export function VentanaConfigCronograma({ data, ventana }) {
           lado en la misma fila -- renombrar un bloque ya no se hace
           desde aquí. */}
       <div className="flex items-center justify-between gap-3 mb-2">
-        <span className="text-sm" style={{ color: C.charcoal, opacity: 0.8 }}>
+        <span className="text-sm" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Inicio del cronograma
         </span>
         <select
@@ -325,7 +325,7 @@ export function VentanaConfigCronograma({ data, ventana }) {
               style={{ color: C.charcoal }}
             >
               <span>¿Quién lo atiende?</span>
-              <span className="flex items-center gap-1.5" style={{ opacity: 0.7 }}>
+              <span className="flex items-center gap-1.5" style={{ opacity: OP.secundario }}>
                 <span className="text-xs">{resumenAtiende}</span>
                 <ChevronDown
                   size={14}
@@ -336,7 +336,7 @@ export function VentanaConfigCronograma({ data, ventana }) {
             {atiendeAbierto && (
               <div className="px-2 pb-2">
                 {seleccionado === 0 ? (
-                  <p className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+                  <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
                     Automático: cada colaborador recibe a sus propios invitados —{" "}
                     {colaboradoresConConfirmados.length === 0
                       ? "todavía ninguno tiene confirmados."
@@ -362,7 +362,7 @@ export function VentanaConfigCronograma({ data, ventana }) {
 
                     {bloqueActual.tipoAtiende === "interno" &&
                       (colaboradores.length === 0 && invitadosConRol.length === 0 ? (
-                        <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.5 }}>
+                        <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.tenue }}>
                           Todavía no hay ningún colaborador ni invitado con rol de trabajo.
                         </p>
                       ) : (
@@ -385,7 +385,7 @@ export function VentanaConfigCronograma({ data, ventana }) {
                                 onChange={() => alternarAsignado(seleccionado, g.id)}
                               />
                               {g.nombre}
-                              <span style={{ opacity: 0.6 }}>
+                              <span style={{ opacity: OP.secundario }}>
                                 (
                                 {g.rolesTrabajo
                                   .map((r) => (responsablesRol[r] === g.id ? `★ ${r}` : r))

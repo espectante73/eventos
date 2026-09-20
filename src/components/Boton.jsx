@@ -22,11 +22,11 @@
 // propio lenguaje), las filas de MenuFlotante y los botones translúcidos
 // sobre la foto de la Portada. Unificarlos los empeoraría.
 import { forwardRef } from "react";
-import { C } from "../theme";
+import { C, R, T } from "../theme";
 
 const TAMANOS = {
-  normal: { padding: "6px 12px", fontSize: 14, minHeight: 36 },
-  pequeno: { padding: "3px 8px", fontSize: 12, minHeight: 28 },
+  normal: { padding: "6px 12px", fontSize: T.normal, minHeight: 36 },
+  pequeno: { padding: "3px 8px", fontSize: T.pequeno, minHeight: 28 },
 };
 
 // `oscuro`: el botón vive sobre fondo verde (cabeceras de ventana), donde el
@@ -42,7 +42,7 @@ export function estilosBoton(variante = "secundario", tamano = "normal", oscuro 
       : { background: "transparent", color: C.ink, border: `1px solid ${C.ink}` },
     peligro: { background: C.wax, color: "#fff", border: "1px solid transparent" },
   };
-  return { ...base, ...(colores[variante] || colores.secundario), borderRadius: 6 };
+  return { ...base, ...(colores[variante] || colores.secundario), borderRadius: R.caja };
 }
 
 // forwardRef: MenuFlotante necesita la referencia al botón que lo abre para

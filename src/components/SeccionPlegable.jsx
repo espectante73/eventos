@@ -8,7 +8,7 @@
 // información -- de un vistazo se ve el estado sin abrir nada.
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { C } from "../theme";
+import { C, OP } from "../theme";
 
 // `abierta` + `onAlternar`: modo CONTROLADO, para cuando quien la usa
 // necesita que solo haya una sección abierta a la vez (VistaColaborador,
@@ -38,7 +38,7 @@ export function SeccionPlegable({
           <span className="truncate">{titulo}</span>
         </span>
         <span className="flex items-center gap-2 flex-shrink-0 min-w-0">
-          <span className="text-xs truncate" style={{ color: C.charcoal, opacity: 0.7, maxWidth: 180 }}>
+          <span className="text-xs truncate" style={{ color: C.charcoal, opacity: OP.secundario, maxWidth: 180 }}>
             {resumen}
           </span>
           <ChevronDown

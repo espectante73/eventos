@@ -9,7 +9,7 @@
 // Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4,
 // Ronda 1).
 import { ClipboardList, Euro, Mail, Music } from "lucide-react";
-import { C } from "../../theme";
+import { C, OP } from "../../theme";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
 import { BarraCompacta } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
@@ -100,11 +100,11 @@ export function VentanaProgreso({ data, onCerrar }) {
         })}
       </div>
       {colaboradores.length === 0 && (
-        <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Añade colaboradores para ver su progreso individual.
         </p>
       )}
-      <p className="text-xs mt-3" style={{ color: C.charcoal, opacity: 0.6 }}>
+      <p className="text-xs mt-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
         <b>Canciones:</b> No obligatorio. <b>Alergias:</b> Obligatorio.
       </p>
     </VentanaFlotante>

@@ -12,7 +12,7 @@
 // esta ventana por el mismo motivo.
 import { useState, useEffect } from "react";
 import { Check, Mail, Image as ImageIcon, ChevronUp, ChevronDown } from "lucide-react";
-import { C, inputStyle } from "../../theme";
+import { C, inputStyle, T, OP } from "../../theme";
 import { resolverColaborador } from "../../lib/invitados";
 import { redimensionarImagenArchivo, guardarArchivoInvitacion, obtenerCarpetaInvitaciones, leerHandleCarpeta } from "../../lib/descargas";
 import { Field } from "../../components/Formulario";
@@ -199,25 +199,25 @@ export function VentanaInvitaciones({
                   fontFamily: "'Fraunces', serif",
                   color: cifra.alerta && cifra.valor > 0 ? C.wax : C.ink,
                   fontWeight: 700,
-                  fontSize: 18,
+                  fontSize: T.destacado,
                 }}
               >
                 {cifra.valor}
               </div>
-              <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+              <div className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
                 {cifra.etiqueta}
               </div>
             </div>
           ))}
         </div>
 
-        <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
+        <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Solo aparecen aquí las familias en las que <strong>todos</strong> sus confirmados
           ya han pagado. Genera la imagen (con el apellido familiar y los nombres de los
           integrantes) y descárgala para enviarla tú mismo por WhatsApp o email — un
           artefacto de Claude no puede enviar correos automáticamente.
         </p>
-        <div className="mb-4 p-3 rounded" style={{ background: C.paperDark, border: `1px dashed ${C.line}` }}>
+        <div className="mb-4 p-4 rounded" style={{ background: C.paperDark, border: `1px dashed ${C.line}` }}>
           <Field label="Imagen de la plantilla de invitación (vertical, para móvil)">
             <div className="flex items-center gap-3 flex-wrap">
               {evento.imagenInvitacion && (
@@ -273,7 +273,7 @@ export function VentanaInvitaciones({
             fila de evento sin este dato todavía (antes de pegar el SQL)
             se comporte igual que hoy: mostrando los 3. */}
         <div className="mb-4 flex items-center gap-4 flex-wrap text-xs" style={{ color: C.charcoal }}>
-          <span style={{ opacity: 0.6 }}>Imprimir:</span>
+          <span style={{ opacity: OP.secundario }}>Imprimir:</span>
           <label className="flex items-center gap-1.5">
             <input
               type="checkbox"
@@ -321,7 +321,7 @@ export function VentanaInvitaciones({
             <Boton variante="secundario" tamano="pequeno" onClick={async () => { const carpeta = await obtenerCarpetaInvitaciones({ forzarElegir: true }); setNombreCarpetaInvitaciones(carpeta ? carpeta.name : null); }}>
               {nombreCarpetaInvitaciones ? "Cambiar carpeta" : "Elegir carpeta de guardado"}
             </Boton>
-            <span className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+            <span className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
               {nombreCarpetaInvitaciones
                 ? `Guardando en: "${nombreCarpetaInvitaciones}"`
                 : "Sin elegir — se descargará a la carpeta de Descargas de siempre."}
@@ -329,7 +329,7 @@ export function VentanaInvitaciones({
           </div>
         )}
 
-        <div className="mb-4 p-3 rounded flex flex-wrap items-end gap-2" style={{ background: C.paperDark, border: `1px dashed ${C.line}` }}>
+        <div className="mb-4 p-4 rounded flex flex-wrap items-end gap-2" style={{ background: C.paperDark, border: `1px dashed ${C.line}` }}>
           <Field label="Envío por bloques: elige un colaborador">
             <select
               value={colaboradorInvitacionSel}
@@ -360,7 +360,7 @@ export function VentanaInvitaciones({
           {familiasParaMostrarInvitacion.map((familia) => (
             <div
               key={familia.clave}
-              className="p-3 rounded text-sm"
+              className="p-4 rounded text-sm"
               style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
             >
               <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -398,7 +398,7 @@ export function VentanaInvitaciones({
                   </Boton>
                 </div>
               </div>
-              <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>
+              <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
                 Orden de los nombres en la invitación (usa las flechas para cambiarlo, p.ej.
                 para poner al esposo primero — a esa persona se le enviará el email) y su
                 email de contacto:
@@ -439,7 +439,7 @@ export function VentanaInvitaciones({
                           {colaboradorVinculado ? (
                             <div
                               className="px-2 py-1 rounded"
-                              style={{ background: C.paperDark, color: C.charcoal, opacity: 0.7 }}
+                              style={{ background: C.paperDark, color: C.charcoal, opacity: OP.secundario }}
                               title="Se edita en Colaboradores, no aquí"
                             >
                               {colaboradorVinculado.email || "sin registrar"}
@@ -467,7 +467,7 @@ export function VentanaInvitaciones({
             </div>
           ))}
           {familiasParaMostrarInvitacion.length === 0 && (
-            <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+            <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
               {colaboradorInvitacionSel
                 ? "Este colaborador no tiene ninguna familia con el pago y la mesa completos todavía."
                 : "Todavía ninguna familia tiene el pago completo y la mesa asignada para todos sus confirmados."}
@@ -496,7 +496,7 @@ export function VentanaInvitaciones({
                   <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
                     Familia {familia.apellido}
                   </div>
-                  <div style={{ color: C.charcoal, opacity: 0.8 }}>
+                  <div style={{ color: C.charcoal, opacity: OP.secundario }}>
                     {familia.confirmados.map((m) => m.nombre).join(", ")} —{" "}
                     {familia.confirmados.length} confirmado
                     {familia.confirmados.length === 1 ? "" : "s"}, todos con pago hecho

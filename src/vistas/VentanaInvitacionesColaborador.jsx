@@ -14,7 +14,7 @@
 // de verdad el dinero en su poder -- una pregunta más, no solo la lista
 // ya filtrada.
 import { Send, Check } from "lucide-react";
-import { C } from "../theme";
+import { C, OP } from "../theme";
 import { VentanaFlotante, ModalFlotante } from "../components/VentanaFlotante";
 import { Boton } from "../components/Boton";
 import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
@@ -46,14 +46,14 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
 
   return (
     <VentanaFlotante clave="invitaciones-colaborador" titulo="Enviar invitaciones" onCerrar={onCerrar}>
-      <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
+      <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
         Solo aparecen aquí las familias ya confirmadas, con todos los pagos hechos y con mesa
         asignada. Antes de cada envío se te pedirá confirmar que ya tienes el dinero en tu
         poder.
       </p>
 
       {pendientes.length === 0 ? (
-        <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Todavía no hay ninguna familia lista para enviar.
         </p>
       ) : (
@@ -63,14 +63,14 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
             return (
               <div
                 key={f.clave}
-                className="flex items-center justify-between gap-2 p-3 rounded"
+                className="flex items-center justify-between gap-2 p-4 rounded"
                 style={{ background: "#fff", border: `1px solid ${C.line}` }}
               >
                 <div className="min-w-0">
                   <div className="truncate" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
                     {f.apellido}
                   </div>
-                  <div className="text-xs truncate" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  <div className="text-xs truncate" style={{ color: C.charcoal, opacity: OP.secundario }}>
                     {destinatario?.email || "sin email"}
                   </div>
                 </div>
@@ -90,7 +90,7 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
           </h4>
           <div className="space-y-1">
             {yaEnviadas.map((f) => (
-              <div key={f.clave} className="flex items-center gap-2 text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
+              <div key={f.clave} className="flex items-center gap-2 text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
                 <Check size={12} style={{ color: C.ink }} /> {f.apellido}
               </div>
             ))}

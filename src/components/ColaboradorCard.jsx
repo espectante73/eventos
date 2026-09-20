@@ -4,7 +4,7 @@
 // (ver CLAUDE.md).
 import { useState } from "react";
 import { Send, Repeat, Mail } from "lucide-react";
-import { C, inputStyle } from "../theme";
+import { C, inputStyle, T, OP } from "../theme";
 import { resolverColaborador, datosCompletos } from "../lib/invitados";
 import { ordenarPorApellidoNombre, formatearFecha } from "../lib/formato";
 import { emailValido } from "../lib/validacion";
@@ -71,8 +71,8 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
 
   if (relevando) {
     return (
-      <div className="p-3 rounded space-y-2" style={{ background: "#fff", border: `1px solid ${C.wax}` }}>
-        <div className="text-xs" style={{ color: C.charcoal, opacity: 0.8 }}>
+      <div className="p-4 rounded space-y-2" style={{ background: "#fff", border: `1px solid ${C.wax}` }}>
+        <div className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Elegir quién releva a <strong>{c.nombre}</strong>. Los datos ya recopilados de sus
           invitados no se pierden; solo cambia quién sigue a cargo.
         </div>
@@ -98,7 +98,7 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
 
   return (
     <div
-      className="p-3 rounded"
+      className="p-4 rounded"
       style={{ background: "#fff", border: `1px solid ${C.line}` }}
     >
       <div className="flex items-center justify-between">
@@ -109,7 +109,7 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
           <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
             {c.nombre}
           </div>
-          <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+          <div className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
             {asignados.length} asignado{asignados.length !== 1 && "s"}
             {/* Con la tarjeta plegada, el botón "Avisar ahora" queda
                 dentro: este aviso tiene que verse FUERA, o habría que ir
@@ -164,7 +164,7 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
           />
         </div>
         {!c.email && (
-          <span className="text-xs whitespace-nowrap" style={{ color: C.charcoal, opacity: 0.5 }}>
+          <span className="text-xs whitespace-nowrap" style={{ color: C.charcoal, opacity: OP.tenue }}>
             sin email (no recibirá avisos)
           </span>
         )}
@@ -265,7 +265,7 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
       {abierta && (
         <div className="mt-3 space-y-1.5" style={{ borderTop: `1px solid ${C.line}`, paddingTop: 8 }}>
           {asignados.length === 0 && (
-            <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+            <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
               Nadie asignado todavía.
             </p>
           )}
@@ -273,14 +273,14 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
             <div key={g.id} className="flex items-center justify-between gap-2 text-xs">
               <span style={{ color: C.charcoal }}>
                 {g.apellido}, {g.nombre}{" "}
-                <span style={{ opacity: 0.5 }}>
+                <span style={{ opacity: OP.tenue }}>
                   ({g.confirmado ? (datosCompletos(g) ? "completo" : "confirmado") : "tentativa"})
                 </span>
               </span>
               <select
                 value={g.colaboradorId || ""}
                 onChange={(e) => setAvisoAsignacion(onAsignarColaborador(g.id, e.target.value) || "")}
-                style={{ ...inputStyle, padding: "2px 4px", fontSize: 11 }}
+                style={{ ...inputStyle, padding: "2px 4px", fontSize: T.pequeno }}
               >
                 <option value="">Sin asignar</option>
                 {colaboradores.map((otro) => (

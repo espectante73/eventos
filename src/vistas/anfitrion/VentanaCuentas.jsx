@@ -5,7 +5,7 @@
 // (Fase 4, Ronda 4).
 import { useState } from "react";
 import { Plus, Mail, Undo2, Calculator, Users, Receipt } from "lucide-react";
-import { C } from "../../theme";
+import { C, T, OP } from "../../theme";
 import { importeEsperadoInvitado, resolverColaborador } from "../../lib/invitados";
 import { parsePrecio, formatearFecha, ordenarPorApellidoNombre } from "../../lib/formato";
 import { uid } from "../../lib/id";
@@ -217,7 +217,7 @@ export function VentanaCuentas({ data, onCerrar }) {
       >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 mt-2">
         <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 18, color: C.ink }}>
+          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.ink }}>
             {formato(recaudado)} €
           </div>
           <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
@@ -225,7 +225,7 @@ export function VentanaCuentas({ data, onCerrar }) {
           </div>
         </div>
         <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 18, color: C.charcoal }}>
+          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.charcoal }}>
             {formato(pendienteCobro)} €
           </div>
           <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
@@ -233,7 +233,7 @@ export function VentanaCuentas({ data, onCerrar }) {
           </div>
         </div>
         <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 18, color: C.wax }}>
+          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.wax }}>
             {formato(totalGastos)} €
           </div>
           <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
@@ -244,7 +244,7 @@ export function VentanaCuentas({ data, onCerrar }) {
           className="p-2 rounded text-center"
           style={{ background: balance >= 0 ? "#E3E9AE" : "#F0D3C8", border: `1px solid ${C.line}` }}
         >
-          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 18, color: C.ink }}>
+          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.ink }}>
             {formato(balance)} €
           </div>
           <div className="text-xs uppercase" style={{ color: C.charcoal, fontFamily: "'IBM Plex Mono', monospace" }}>
@@ -253,7 +253,7 @@ export function VentanaCuentas({ data, onCerrar }) {
         </div>
       </div>
       {/* La explicación, al pie de su sección (norma de la app). */}
-      <p className="text-xs" style={{ color: C.charcoal, opacity: 0.75 }}>
+      <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
         "Lo que entra" se calcula solo (pagos de invitados confirmados). "Lo que sale"
         son los gastos que añadas en Gastos — incluye también los costes de la propia app
         (dominio, suscripciones...), no solo proveedores de la boda.
@@ -349,11 +349,11 @@ export function VentanaCuentas({ data, onCerrar }) {
             );
           })}
           {colaboradores.length === 0 && (
-            <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+            <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
               Todavía no hay colaboradores.
             </p>
           )}
-          <p className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+          <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Confirmar la recogida manda por email al propio colaborador un acuse con el
             desglose de sus invitados, el importe total, la fecha y la firma — para que
             lo guarde como comprobante.
@@ -419,7 +419,7 @@ export function VentanaCuentas({ data, onCerrar }) {
           </div>
         ))}
         {gastos.length === 0 && (
-          <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+          <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Todavía no hay gastos registrados.
           </p>
         )}

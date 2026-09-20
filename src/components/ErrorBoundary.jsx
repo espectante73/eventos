@@ -3,7 +3,7 @@
 // uno propio dentro de la ventana emergente de Música del evento, y un
 // import cruzado con App.jsx sería un círculo).
 import React from "react";
-import { C } from "../theme";
+import { C, OP } from "../theme";
 import { Boton } from "./Boton";
 import { informarError } from "../lib/registroErrores";
 
@@ -57,7 +57,7 @@ export class ErrorBoundary extends React.Component {
           >
             Algo ha fallado
           </h1>
-          <p className="text-sm mb-3" style={{ color: C.charcoal, opacity: 0.8 }}>
+          <p className="text-sm mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Ha ocurrido un error inesperado y esta pantalla no se puede seguir mostrando.
             Tus datos están a salvo en la base de datos — nada de esto los afecta.
           </p>

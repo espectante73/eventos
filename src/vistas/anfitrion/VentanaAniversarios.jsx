@@ -17,7 +17,7 @@
 // y enlaces temporales.
 import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
-import { C } from "../../theme";
+import { C, R, T, OP, S } from "../../theme";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton, estilosBoton } from "../../components/Boton";
 import { HuecoFoto, ANCHO_COL, ALTO_MINIATURA, estiloMarcoFoto } from "../../components/HuecoFoto";
@@ -89,9 +89,9 @@ function Separador({ adorno = true }) {
             width: 11,
             height: 11,
             background: C.paper,
-            boxShadow: "0 1px 2px rgba(31,58,46,0.25)",
+            boxShadow: S.sutil,
             transform: "rotate(45deg)",
-            borderRadius: 1,
+            borderRadius: 1, // escala-libre: es un rombo de 11px, no una caja
           }}
         />
       )}
@@ -315,7 +315,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
       )}
 
       {matrimonios.length === 0 && (
-        <p className="text-sm italic" style={{ color: C.goldClaro, opacity: 0.8 }}>
+        <p className="text-sm italic" style={{ color: C.goldClaro, opacity: OP.secundario }}>
           Todavía no hay matrimonios: se forman marcando a alguien como esposo (O)
           y a su pareja como esposa (A) dentro de la misma familia.
         </p>
@@ -344,11 +344,11 @@ export function VentanaAniversarios({ data, onCerrar }) {
                     la letra de los títulos de la app. */}
                 <div
                   className="whitespace-nowrap overflow-hidden text-ellipsis"
-                  style={{ color: C.ink, fontFamily: "'Fraunces', serif", fontSize: 17 }}
+                  style={{ color: C.ink, fontFamily: "'Fraunces', serif", fontSize: T.destacado }}
                 >
                   <b>{m.familia}</b> — {m.esposo.nombre} y {m.esposa.nombre}
                 </div>
-                <div className="text-xs whitespace-nowrap" style={{ color: C.ink, opacity: 0.75 }}>
+                <div className="text-xs whitespace-nowrap" style={{ color: C.ink, opacity: OP.secundario }}>
                   {m.anioBoda || "sin año"}
                   {m.aniversario != null && ` · ${m.aniversario} años`}
                 </div>
@@ -438,7 +438,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
               }
             >
               <div
-                style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 4, overflow: "hidden", ...estiloMarcoFoto(10) }}
+                style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: R.caja, overflow: "hidden", ...estiloMarcoFoto(10) }}
               >
                 <img
                   src={verFoto(valor)}

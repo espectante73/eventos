@@ -10,7 +10,7 @@
 // entrada más del menú.
 import { useRef } from "react";
 import { Printer } from "lucide-react";
-import { C } from "../theme";
+import { C, OP } from "../theme";
 import { MesaPlano } from "./Mesas";
 import { Boton } from "./Boton";
 
@@ -39,7 +39,7 @@ export function PlanoMesas({ data, ocupacionMesa }) {
 
   return (
     <div className="pt-1">
-      <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
+      <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
         Arrastra cada mesa a la posición que quieras para representar cómo queda en el local.
         La posición se guarda sola. Para imprimirlo en A2, pulsa "Imprimir" y elige el tamaño
         de papel A2 en el diálogo de impresión de tu navegador.
@@ -91,7 +91,7 @@ export function PlanoMesas({ data, ocupacionMesa }) {
         </div>
       </div>
       {mesas.length === 0 && (
-        <p className="text-sm italic mt-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <p className="text-sm italic mt-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Todavía no hay mesas — créalas primero en "Mesas".
         </p>
       )}

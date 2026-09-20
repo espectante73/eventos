@@ -16,7 +16,7 @@
 // estaba y Avisos desapareció del menú.
 import { useState } from "react";
 import { Plus, Mail, DoorOpen, DoorClosed } from "lucide-react";
-import { C } from "../../theme";
+import { C, OP } from "../../theme";
 import { uid } from "../../lib/id";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
 import { BuscadorInvitado } from "../../components/BuscadorInvitado";
@@ -186,7 +186,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
           titulo="Añadir colaborador"
           resumen={`${colaboradores.length} en total`}
         >
-          <p className="text-xs mb-2 pt-1" style={{ color: C.charcoal, opacity: 0.7 }}>
+          <p className="text-xs mb-2 pt-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Los colaboradores son también invitados del evento: búscalo por apellido o nombre
             entre los ya añadidos a la lista. Si aún no está, añádelo primero en la Lista de
             invitados.
@@ -251,7 +251,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
           );
         })}
         {colaboradores.length === 0 && (
-          <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+          <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Aún no hay colaboradores.
           </p>
         )}
@@ -282,7 +282,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
             ))}
           </div>
           {emailsOrdenados.length === 0 ? (
-            <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+            <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
               {avisosEnviados.length === 0
                 ? "Todavía no se ha enviado ningún aviso."
                 : "Ninguno de este tipo todavía."}
@@ -312,7 +312,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
                     className="grid items-center text-xs py-1"
                     style={{ gridTemplateColumns: columnasHistorial, borderBottom: `1px solid ${C.line}` }}
                   >
-                    <span style={{ color: C.charcoal, opacity: 0.5 }} className="whitespace-nowrap">
+                    <span style={{ color: C.charcoal, opacity: OP.tenue }} className="whitespace-nowrap">
                       {new Date(a.creadoEn).toLocaleString("es-ES")}
                     </span>
                     <span
@@ -327,10 +327,10 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
                     >
                       {a.exito === true ? "✓" : a.exito === false ? "✗" : "?"}
                     </span>
-                    <span style={{ color: C.charcoal, opacity: 0.7 }}>
+                    <span style={{ color: C.charcoal, opacity: OP.secundario }}>
                       {ETIQUETA_TIPO_AVISO[a.tipo] || a.tipo}
                     </span>
-                    <span style={{ color: C.charcoal, opacity: 0.7 }} className="truncate">
+                    <span style={{ color: C.charcoal, opacity: OP.secundario }} className="truncate">
                       {a.destinatario}
                     </span>
                     <span style={{ color: C.ink }} className="truncate">
@@ -400,7 +400,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
             Mensaje que se enviará
           </p>
           <div
-            className="p-3 rounded text-sm mb-4"
+            className="p-4 rounded text-sm mb-4"
             style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
             dangerouslySetInnerHTML={{
               __html: (evento.plantillaAsignacion || "").replace(

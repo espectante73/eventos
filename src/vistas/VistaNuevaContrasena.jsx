@@ -5,7 +5,7 @@
 // contraseña nueva que pidió.
 import { useState } from "react";
 import { Boton } from "../components/Boton";
-import { C, inputStyle } from "../theme";
+import { C, inputStyle, OP, S } from "../theme";
 import { supabase } from "../supabaseClient";
 
 export function VistaNuevaContrasena({ onListo }) {
@@ -43,7 +43,7 @@ export function VistaNuevaContrasena({ onListo }) {
       <form
         onSubmit={guardar}
         className="w-full max-w-sm p-6 rounded-lg"
-        style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
+        style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: S.flotante }}
       >
         <h1
           className="text-xl mb-4 text-center"
@@ -51,7 +51,7 @@ export function VistaNuevaContrasena({ onListo }) {
         >
           Elige tu contraseña nueva
         </h1>
-        <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>
+        <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Contraseña nueva
         </label>
         <input
@@ -63,7 +63,7 @@ export function VistaNuevaContrasena({ onListo }) {
           style={{ ...inputStyle, width: "100%", height: 42 }}
           required
         />
-        <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>
+        <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Repite la contraseña
         </label>
         <input

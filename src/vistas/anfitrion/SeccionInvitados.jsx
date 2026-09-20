@@ -29,7 +29,7 @@ import {
   ShieldOff,
   ClipboardCheck,
 } from "lucide-react";
-import { C, inputStyle } from "../../theme";
+import { C, inputStyle, R, T, OP } from "../../theme";
 import { uid } from "../../lib/id";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio } from "../../lib/invitados";
 import { ordenarPorApellidoNombre } from "../../lib/formato";
@@ -837,7 +837,7 @@ export function SeccionInvitados({
                       color: C.goldClaro,
                       fontFamily: "'IBM Plex Mono', monospace",
                       padding: "2px 5px",
-                      fontSize: 12,
+                      fontSize: T.pequeno,
                       width: "100%",
                       minWidth: 0,
                       boxSizing: "border-box",
@@ -855,7 +855,7 @@ export function SeccionInvitados({
                       color: C.goldClaro,
                       fontFamily: "'IBM Plex Mono', monospace",
                       padding: "2px 4px",
-                      fontSize: 12,
+                      fontSize: T.pequeno,
                       width: "100%",
                       minWidth: 0,
                       boxSizing: "border-box",
@@ -880,7 +880,7 @@ export function SeccionInvitados({
                       color: C.goldClaro,
                       fontFamily: "'IBM Plex Mono', monospace",
                       padding: "2px 0",
-                      fontSize: 12,
+                      fontSize: T.pequeno,
                       width: "100%",
                       minWidth: 0,
                       // Misma razón que en la celda de datos: la flecha
@@ -919,7 +919,7 @@ export function SeccionInvitados({
                       color: C.goldClaro,
                       fontFamily: "'IBM Plex Mono', monospace",
                       padding: "2px 4px",
-                      fontSize: 12,
+                      fontSize: T.pequeno,
                       width: "100%",
                       minWidth: 0,
                       boxSizing: "border-box",
@@ -942,7 +942,7 @@ export function SeccionInvitados({
                       color: C.goldClaro,
                       fontFamily: "'IBM Plex Mono', monospace",
                       padding: "2px 4px",
-                      fontSize: 12,
+                      fontSize: T.pequeno,
                       width: "100%",
                       minWidth: 0,
                       boxSizing: "border-box",
@@ -967,7 +967,7 @@ export function SeccionInvitados({
                       color: C.goldClaro,
                       fontFamily: "'IBM Plex Mono', monospace",
                       padding: "2px 4px",
-                      fontSize: 12,
+                      fontSize: T.pequeno,
                       width: "100%",
                       minWidth: 0,
                       boxSizing: "border-box",
@@ -993,7 +993,7 @@ export function SeccionInvitados({
                       color: C.goldClaro,
                       fontFamily: "'IBM Plex Mono', monospace",
                       padding: "2px 4px",
-                      fontSize: 12,
+                      fontSize: T.pequeno,
                       width: "100%",
                       minWidth: 0,
                       boxSizing: "border-box",
@@ -1022,7 +1022,7 @@ export function SeccionInvitados({
                       color: C.goldClaro,
                       fontFamily: "'IBM Plex Mono', monospace",
                       padding: "2px 4px",
-                      fontSize: 12,
+                      fontSize: T.pequeno,
                       width: "100%",
                       minWidth: 0,
                       boxSizing: "border-box",
@@ -1044,7 +1044,7 @@ export function SeccionInvitados({
                       color: C.goldClaro,
                       fontFamily: "'IBM Plex Mono', monospace",
                       padding: "2px 4px",
-                      fontSize: 12,
+                      fontSize: T.pequeno,
                       width: "100%",
                       minWidth: 0,
                       boxSizing: "border-box",
@@ -1066,7 +1066,7 @@ export function SeccionInvitados({
                       color: C.goldClaro,
                       fontFamily: "'IBM Plex Mono', monospace",
                       padding: "2px 4px",
-                      fontSize: 12,
+                      fontSize: T.pequeno,
                       width: "100%",
                       minWidth: 0,
                       boxSizing: "border-box",
@@ -1088,7 +1088,7 @@ export function SeccionInvitados({
                       color: C.goldClaro,
                       fontFamily: "'IBM Plex Mono', monospace",
                       padding: "2px 4px",
-                      fontSize: 12,
+                      fontSize: T.pequeno,
                       width: "100%",
                       minWidth: 0,
                       boxSizing: "border-box",
@@ -1159,7 +1159,7 @@ export function SeccionInvitados({
                   <div key={m.etiqueta} className="text-center">
                     <div
                       className="text-[10px] uppercase"
-                      style={{ color: C.goldClaro, opacity: 0.85, fontFamily: "'IBM Plex Mono', monospace" }}
+                      style={{ color: C.goldClaro, opacity: OP.secundario, fontFamily: "'IBM Plex Mono', monospace" }}
                     >
                       {m.etiqueta}
                     </div>
@@ -1170,7 +1170,7 @@ export function SeccionInvitados({
                         color: m.color,
                         fontFamily: "'Fraunces', serif",
                         fontWeight: 700,
-                        fontSize: 26,
+                        fontSize: T.cifra,
                         lineHeight: 1.1,
                       }}
                     >
@@ -1231,7 +1231,7 @@ export function SeccionInvitados({
                   <div key={s.label} className="text-center">
                     <div
                       className="text-[10px] uppercase"
-                      style={{ color: C.goldClaro, opacity: 0.75, fontFamily: "'IBM Plex Mono', monospace" }}
+                      style={{ color: C.goldClaro, opacity: OP.secundario, fontFamily: "'IBM Plex Mono', monospace" }}
                     >
                       {s.label}
                     </div>
@@ -1361,10 +1361,10 @@ export function SeccionInvitados({
 
         {mostrarImport && (
           <div
-            className="p-3 rounded mb-4"
+            className="p-4 rounded mb-4"
             style={{ background: "#fff", border: `1px dashed ${C.gold}` }}
           >
-            <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
+            <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
               Pega tus filas en el orden Grupo familiar, Apellido, Nombre, Colaborador, Zona —
               directamente copiadas de tu hoja de cálculo (una fila por línea). Si el nombre
               del colaborador coincide con uno ya creado abajo, se enlaza automáticamente.
@@ -1534,9 +1534,9 @@ export function SeccionInvitados({
                           WebkitAppearance: "none",
                           MozAppearance: "none",
                           background: idsSueltos.has(g.id) ? C.avisoFondo : "rgba(31,58,46,0.06)",
-                          borderRadius: 4,
+                          borderRadius: R.caja,
                           padding: "2px 0",
-                          fontSize: 13,
+                          fontSize: T.pequeno,
                           fontWeight: 700,
                           fontFamily: "'IBM Plex Mono', monospace",
                           color: idsSueltos.has(g.id) ? C.peligro : C.gold,
@@ -1583,7 +1583,7 @@ export function SeccionInvitados({
                       en su formulario; aquí solo se lee. */}
                   <span style={celda(3, { justifyContent: "center", textAlign: "center" })}>
                     {g.anioBoda ? (
-                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}>
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno }}>
                         {g.anioBoda}
                         {aniversarioDe(g) !== null && (
                           <>
@@ -1615,7 +1615,7 @@ export function SeccionInvitados({
                       // la celda (que alterna por fila y por columna)
                       // en vez de una caja blanca encima -- a petición
                       // del usuario, 2026-08-20.
-                      style={{ ...inputStyle, border: "none", background: "transparent", padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0, minHeight: 28, borderRadius: 6 }}
+                      style={{ ...inputStyle, border: "none", background: "transparent", padding: "3px 5px", fontSize: T.pequeno, width: "100%", minWidth: 0, minHeight: 28, borderRadius: R.caja }}
                     >
                       <option value="">Sin asignar</option>
                       {colaboradores.map((c) => (
@@ -1657,11 +1657,11 @@ export function SeccionInvitados({
                         border: "none",
                         background: "transparent",
                         padding: "3px 5px",
-                        fontSize: 12,
+                        fontSize: T.pequeno,
                         width: "100%",
                         minWidth: 0,
                         minHeight: 28,
-                        borderRadius: 6,
+                        borderRadius: R.caja,
                         opacity: g.confirmado ? 1 : 0.5,
                       }}
                     >
@@ -1700,7 +1700,7 @@ export function SeccionInvitados({
                       ) : (
                         <span
                           className="text-xs font-bold italic uppercase"
-                          style={{ color: C.charcoal, opacity: 0.7 }}
+                          style={{ color: C.charcoal, opacity: OP.secundario }}
                         >
                           No
                         </span>
@@ -1720,7 +1720,7 @@ export function SeccionInvitados({
                         </span>
                       )
                     ) : (
-                      <span className="text-xs" style={{ opacity: 0.5 }}>
+                      <span className="text-xs" style={{ opacity: OP.tenue }}>
                         —
                       </span>
                     )}
@@ -1732,14 +1732,14 @@ export function SeccionInvitados({
                       ) : (
                         <span
                           className="text-xs font-bold italic uppercase"
-                          style={{ color: C.charcoal, opacity: 0.7 }}
+                          style={{ color: C.charcoal, opacity: OP.secundario }}
                           title="Se confirma desde la vista del colaborador"
                         >
                           No
                         </span>
                       )
                     ) : (
-                      <span className="text-xs" style={{ opacity: 0.5 }}>
+                      <span className="text-xs" style={{ opacity: OP.tenue }}>
                         —
                       </span>
                     )}
@@ -1748,7 +1748,7 @@ export function SeccionInvitados({
                     {g.presente ? (
                       <Check size={20} style={{ color: C.ink }} />
                     ) : (
-                      <span className="text-xs" style={{ opacity: 0.4 }}>—</span>
+                      <span className="text-xs" style={{ opacity: OP.tenue }}>—</span>
                     )}
                   </span>
                   {/* Los tres, con la misma pieza Boton que el resto de la app
@@ -1808,12 +1808,12 @@ export function SeccionInvitados({
               );
             })}
             {invitados.length === 0 && (
-              <p className="text-sm italic p-3" style={{ color: C.charcoal, opacity: 0.6 }}>
+              <p className="text-sm italic p-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
                 Aún no hay invitados en la lista.
               </p>
             )}
             {invitados.length > 0 && invitadosOrdenados.length === 0 && (
-              <p className="text-sm italic p-3" style={{ color: C.charcoal, opacity: 0.6 }}>
+              <p className="text-sm italic p-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
                 Ningún invitado coincide con los filtros aplicados.
               </p>
             )}
@@ -1875,7 +1875,7 @@ export function SeccionInvitados({
               <Boton variante="secundario" onClick={exportarPanelActivoCSV}>
                 <Copy size={14} /> Exportar CSV
               </Boton>
-              <span className="text-xs ml-auto" style={{ color: C.charcoal, opacity: 0.6 }}>
+              <span className="text-xs ml-auto" style={{ color: C.charcoal, opacity: OP.secundario }}>
                 Si no se abre el diálogo de impresión, usa Cmd/Ctrl+P.
               </span>
             </>
@@ -1944,7 +1944,7 @@ export function SeccionInvitados({
                   );
                 })}
                 {invitadosOrdenados.length === 0 && (
-                  <p className="text-sm italic p-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  <p className="text-sm italic p-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
                     Ningún invitado coincide con los filtros aplicados.
                   </p>
                 )}
@@ -1986,7 +1986,7 @@ export function SeccionInvitados({
                   )
                 )}
                 {invitados.filter((g) => g.cancion && g.cancion.trim()).length === 0 && (
-                  <p className="text-sm italic p-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  <p className="text-sm italic p-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
                     Todavía nadie ha indicado una canción.
                   </p>
                 )}
@@ -2027,7 +2027,7 @@ export function SeccionInvitados({
                   </div>
                 ))}
                 {invitados.filter(tieneAlergiaReal).length === 0 && (
-                  <p className="text-sm italic p-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  <p className="text-sm italic p-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
                     Todavía nadie ha indicado alergias.
                   </p>
                 )}
@@ -2045,7 +2045,7 @@ export function SeccionInvitados({
             setNuevoRolTexto("");
           }}
         >
-          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
+          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Marca los roles que este invitado desempeña EL DÍA del evento (acomodador,
             fotografía...) -- no da ningún acceso a la app, solo sirve para poder asignarlo a un
             bloque del cronograma. La estrella marca quién es el responsable de ese rol para

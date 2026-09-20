@@ -3,7 +3,7 @@ import { LogOut } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase, supabaseConfigurado } from "./supabaseClient";
 import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl } from "./lib/url";
-import { C } from "./theme";
+import { C, OP, S } from "./theme";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
 import { VistaTablon } from "./vistas/VistaTablon";
@@ -209,7 +209,7 @@ export default function App() {
           >
             Falta configuración
           </h1>
-          <p className="text-sm" style={{ color: C.charcoal, opacity: 0.8 }}>
+          <p className="text-sm" style={{ color: C.charcoal, opacity: OP.secundario }}>
             No se ha encontrado la conexión con la base de datos. Si acabas de desplegar esto,
             revisa que <code>VITE_SUPABASE_URL</code> y <code>VITE_SUPABASE_ANON_KEY</code>{" "}
             estén rellenas (en Vercel: Settings → Environment Variables). Este mensaje no
@@ -268,7 +268,7 @@ export default function App() {
           >
             No tienes acceso
           </h1>
-          <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: 0.8 }}>
+          <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Este enlace ya no funciona. Los enlaces directos se han retirado por seguridad:
             llevaban la contraseña dentro de la propia dirección web. Inicia sesión con tu cuenta
             para entrar, o pide al anfitrión que te vincule una si todavía no tienes.
@@ -301,7 +301,7 @@ export default function App() {
         style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
       >
         <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
-          <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: 0.8 }}>
+          <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Tu cuenta ha iniciado sesión correctamente, pero todavía no está
             vinculada a ningún acceso (ni anfitrión ni colaborador). Pide al
             anfitrión que la vincule.
@@ -359,7 +359,7 @@ export default function App() {
       {modoPruebas && (
         <div
           className="fixed left-0 right-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold"
-          style={{ top: 0, background: C.peligro, color: "#fff", zIndex: 61, boxShadow: "0 2px 10px rgba(0,0,0,0.3)" }}
+          style={{ top: 0, background: C.peligro, color: "#fff", zIndex: 61, boxShadow: S.flotante }}
         >
           🧪 MODO PRUEBAS ACTIVO — todo lo que se haga se restaurará al desactivarlo
         </div>
@@ -372,7 +372,7 @@ export default function App() {
             background: C.wax,
             color: "#fff",
             zIndex: 60,
-            boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+            boxShadow: S.flotante,
           }}
         >
           <span className="font-medium">Hay una versión nueva de la app — recarga para actualizar.</span>
@@ -444,7 +444,7 @@ export default function App() {
             onCerrarSesion={session ? () => supabase.auth.signOut() : null}
           />
         ) : (
-          <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.7 }}>
+          <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Este enlace no es válido, ha caducado, o ya no funciona porque los enlaces de
             colaborador se retiraron a favor del login.{" "}
             <a href="/" style={{ color: C.ink, textDecoration: "underline" }}>

@@ -19,7 +19,7 @@
 // ventana Colaboradores hasta que la confirme.
 import { useState } from "react";
 import { UserCog, LogOut, Megaphone, Map, Code2, Bug, KeyRound, Mail, Hand } from "lucide-react";
-import { C, inputStyle } from "../theme";
+import { C, inputStyle, R, OP } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
@@ -55,8 +55,8 @@ import { useMano, MANO } from "../lib/mano";
 // usuario había pedido desde el principio el modelo de inicio.
 const CLASE_BOTON_INICIO =
   "boton-3d boton-flotante-imagen flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap";
-const ESTILO_BOTON_INICIO = { color: C.goldClaro, borderRadius: 9999, width: ANCHO_FILA_MENU };
-const ICONO = { size: 19, style: { flexShrink: 0, opacity: 0.85 } };
+const ESTILO_BOTON_INICIO = { color: C.goldClaro, borderRadius: R.redondo, width: ANCHO_FILA_MENU };
+const ICONO = { size: 19, style: { flexShrink: 0, opacity: OP.secundario } };
 
 // Pulgar derecho o izquierdo (lib/mano.js), a petición del usuario
 // (2026-09-19). Él eligió el aspecto: UNA pastilla del modelo de inicio,
@@ -110,7 +110,7 @@ function PreguntaMano() {
       onCerrar={() => elegir(MANO.DERECHA)}
       ancho={260}
       acciones={
-        <p className="text-xs w-full text-center" style={{ color: C.charcoal, opacity: 0.75 }}>
+        <p className="text-xs w-full text-center" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Se puede cambiar en Mi cuenta.
         </p>
       }
@@ -209,10 +209,10 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
           // a cambiarlo. <details> nativo: se abre y se cierra sin estado.
           acciones={
             <details className="text-xs w-full" style={{ color: C.charcoal }}>
-              <summary className="cursor-pointer select-none" style={{ opacity: 0.8 }}>
+              <summary className="cursor-pointer select-none" style={{ opacity: OP.secundario }}>
                 Sobre el email de acceso
               </summary>
-              <p className="mt-2" style={{ opacity: 0.75 }}>
+              <p className="mt-2" style={{ opacity: OP.secundario }}>
                 Este es tu email de INICIO DE SESIÓN. Si tienes invitados asignados como
                 colaborador, en cuanto confirmes el cambio también pasará a ser el email al
                 que te lleguen los avisos automáticos — el anfitrión verá un aviso de que

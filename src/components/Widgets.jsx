@@ -5,7 +5,7 @@
 // del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect } from "react";
 import { User } from "lucide-react";
-import { C, inputStyle } from "../theme";
+import { C, inputStyle, R, T, S } from "../theme";
 
 // "Icono de usuario sólido" (relleno) para distinguir al Anfitrión de
 // cada colaborador (icono de contorno normal, el mismo User sin
@@ -27,7 +27,7 @@ export function Seal({ count, size = 22 }) {
         height: size,
         fontSize: size > 22 ? 13 : 12,
         fontFamily: "'IBM Plex Mono', monospace",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.35)",
+        boxShadow: S.sutil,
       }}
     >
       {count}
@@ -73,7 +73,7 @@ export function Stamp({ children, color = C.ink, pequeno, dorado }) {
       style={{
         color,
         border: `1.5px solid ${color}`,
-        borderRadius: 3,
+        borderRadius: R.caja,
         transform: "rotate(-2deg)",
         fontFamily: "'IBM Plex Mono', monospace",
         letterSpacing: "0.08em",
@@ -108,7 +108,7 @@ export function ProgresoBar({ label, icono: Icono, completado, total, color }) {
           {completado}/{total} · {pct}%
         </span>
       </div>
-      <div style={{ background: C.paperDark, borderRadius: 4, height: 10, overflow: "hidden" }}>
+      <div style={{ background: C.paperDark, borderRadius: R.caja, height: 10, overflow: "hidden" }}>
         <div
           style={{
             width: `${pct}%`,
@@ -139,12 +139,12 @@ export function BarraCompacta({ icono: Icono, completado, total, color, claro })
       title={`${completado}/${total} · ${pct}%`}
     >
       <Icono size={14} style={{ color, flexShrink: 0 }} />
-      <div style={{ flex: 1, background: C.paperDark, borderRadius: 3, height: 7, overflow: "hidden" }}>
+      <div style={{ flex: 1, background: C.paperDark, borderRadius: R.caja, height: 7, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, background: color, height: "100%", transition: "width 0.3s ease" }} />
       </div>
       <span
         style={{
-          fontSize: 10,
+          fontSize: T.micro,
           color: claro ? "rgba(255,255,255,0.9)" : C.charcoal,
           opacity: claro ? 1 : 0.7,
           fontFamily: "'IBM Plex Mono', monospace",
@@ -201,7 +201,7 @@ export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, 
       }}
     >
       {children}
-      <span style={{ fontSize: 10 }}>
+      <span style={{ fontSize: T.micro }}>
         {/* En la variante `claro` (barra verde de Invitados), todas las
             columnas usan el mismo tipo de flecha que ya llevaba
             Invitado (▲/▼ de un solo sentido) en vez de mezclar con la
@@ -230,7 +230,7 @@ export function GrupoFamiliarInput({ value, onCommit }) {
       value={v}
       onChange={(e) => setV(e.target.value)}
       onBlur={() => onCommit(v)}
-      style={{ ...inputStyle, padding: "3px 5px", fontSize: 12, width: "100%", minWidth: 0 }}
+      style={{ ...inputStyle, padding: "3px 5px", fontSize: T.pequeno, width: "100%", minWidth: 0 }}
     />
   );
 }

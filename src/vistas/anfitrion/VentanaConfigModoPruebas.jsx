@@ -7,7 +7,7 @@
 // rojo — ver App.jsx. Añadida el 2026-08-12, a petición del usuario.
 import { useState } from "react";
 import { FlaskConical } from "lucide-react";
-import { C } from "../../theme";
+import { C, OP } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
@@ -86,7 +86,7 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
   if (activo) {
     return (
       <VentanaFlotante clave="config-modo-pruebas" titulo="Modo pruebas" onCerrar={onCerrar}>
-        <div className="p-3 rounded mb-3" style={{ background: "#F0D3C8", border: `1px solid ${C.wax}` }}>
+        <div className="p-4 rounded mb-3" style={{ background: "#F0D3C8", border: `1px solid ${C.wax}` }}>
           <p className="text-sm font-semibold mb-1" style={{ color: C.wax }}>
             🧪 Modo Pruebas ACTIVO
           </p>
@@ -119,7 +119,7 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
         </div>
         {colaboradores.length > 0 && (
           <>
-            <div className="w-px my-1 self-stretch" style={{ background: C.line, opacity: 0.3 }} />
+            <div className="w-px my-1 self-stretch" style={{ background: C.line, opacity: OP.linea }} />
             <div className="flex-1 min-w-0 pl-4">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <p className="text-xs" style={{ color: C.line }}>

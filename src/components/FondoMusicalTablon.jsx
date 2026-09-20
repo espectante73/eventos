@@ -12,7 +12,7 @@
 // Storage es exactamente la misma que tenía la ventana.
 import { useState, useEffect, useCallback } from "react";
 import { Upload, Music } from "lucide-react";
-import { C } from "../theme";
+import { C, OP } from "../theme";
 import { supabase } from "../supabaseClient";
 import { estilosBoton } from "./Boton";
 import { BotonQuitar } from "./PreguntaSeguridad";
@@ -67,7 +67,7 @@ export function FondoMusicalTablon() {
 
   return (
     <div>
-      <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
+      <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
         Suena de fondo mientras alguien tiene abierto el tablón público (nunca en tu propia
         app de gestión). Con varias pistas, van sonando una detrás de otra. El primer clic de
         cada visitante debe activarla a propósito.
@@ -89,11 +89,11 @@ export function FondoMusicalTablon() {
       )}
 
       {pistas === null ? (
-        <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Cargando…
         </p>
       ) : pistas.length === 0 ? (
-        <p className="text-xs italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Todavía no hay ninguna pista subida — el tablón no sonará hasta que subas al menos
           una.
         </p>

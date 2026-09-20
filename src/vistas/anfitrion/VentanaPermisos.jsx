@@ -19,7 +19,7 @@
 // Pruebas).
 import { useState } from "react";
 import { KeyRound } from "lucide-react";
-import { C, inputStyle } from "../../theme";
+import { C, inputStyle, OP } from "../../theme";
 import { PERMISOS, ETIQUETAS_PERMISOS } from "../../lib/permisos";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
@@ -52,11 +52,11 @@ export function VentanaPermisos({ data, onCerrar }) {
       onCerrar={onCerrar}
       ancho="min(420px, calc(100vw - 48px))"
     >
-      <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
+      <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
         Acceso extra para un colaborador
       </p>
       {colaboradores.length === 0 ? (
-        <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Todavía no hay ningún colaborador.
         </p>
       ) : (
@@ -66,7 +66,7 @@ export function VentanaPermisos({ data, onCerrar }) {
               checkboxes de abajo): el control que hay que tocar siempre
               del lado del pulgar, nunca al fondo a la izquierda. */}
           <div className="flex items-center justify-between gap-3 mb-3">
-            <span className="text-sm" style={{ color: C.charcoal, opacity: 0.8 }}>
+            <span className="text-sm" style={{ color: C.charcoal, opacity: OP.secundario }}>
               Colaborador
             </span>
             <select

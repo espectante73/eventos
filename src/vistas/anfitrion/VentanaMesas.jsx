@@ -11,7 +11,7 @@
 // definirse dentro.
 import { useState } from "react";
 import { AlertTriangle, Plus, Map } from "lucide-react";
-import { C } from "../../theme";
+import { C, OP } from "../../theme";
 import { tieneAlergiaReal } from "../../lib/invitados";
 import { MesaRedonda } from "../../components/Mesas";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
@@ -154,7 +154,7 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
             derecha, o a la izquierda si en ese móvil se eligió esa mano, y
             con "Añadir mesa" -- el más usado -- pegado al borde. */}
         <div className="mb-3">
-          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
+          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Define cuántas mesas y cuántos comensales por mesa.
           </p>
           {/* Los tres botones llevan .boton-3d: se levantan al pasar por
@@ -199,7 +199,7 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
             );
           })}
           {mesas.length === 0 && (
-            <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+            <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
               Todavía no hay mesas — pulsa "Añadir mesa" para crear la primera.
             </p>
           )}
@@ -227,7 +227,7 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
           colorTitulo={C.wax}
           onCerrar={() => setPanelFlotante(null)}
         >
-          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
+          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
             La auto-asignación nunca reparte un grupo familiar entre mesas por su cuenta.
             Estas familias se han quedado (total o parcialmente) sin mesa — sube la capacidad
             de alguna mesa, mueve gente a mano, o vuelve a pulsar "Auto-asignar" tras

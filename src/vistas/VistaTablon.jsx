@@ -11,7 +11,7 @@
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause } from "lucide-react";
-import { C, inputStyle } from "../theme";
+import { C, inputStyle, OP, S } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, formatearDiaSemana } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
@@ -269,7 +269,7 @@ export function VistaTablon({ token }) {
           <h1 className="text-xl mb-2" style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}>
             Enlace no válido
           </h1>
-          <p className="text-sm" style={{ color: C.charcoal, opacity: 0.8 }}>
+          <p className="text-sm" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Este enlace no funciona o ha caducado. Pide al anfitrión que te pase el enlace
             correcto del tablón.
           </p>
@@ -291,7 +291,7 @@ export function VistaTablon({ token }) {
         <form
           onSubmit={enviarRespuesta}
           className="w-full p-6 rounded-lg"
-          style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
+          style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: S.flotante }}
         >
           <div className="flex items-center gap-2 mb-3" style={{ color: C.gold }}>
             <Lock size={18} />
@@ -317,7 +317,7 @@ export function VistaTablon({ token }) {
               consta en la invitación), no cualquier otro apellido que la
               persona pueda tener -- si no, no coincidirá nunca con lo
               guardado en la lista de invitados. */}
-          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
             El apellido debe ser el familiar de tu invitación (el mismo con el que te invitamos), no otro apellido que tengas.
           </p>
           {errorRespuesta && (
@@ -367,7 +367,7 @@ export function VistaTablon({ token }) {
         </div>
 
         <div className="flex items-center gap-2 mb-4">
-          <a href="/" className="text-xs underline" style={{ color: C.charcoal, opacity: 0.6 }}>
+          <a href="/" className="text-xs underline" style={{ color: C.charcoal, opacity: OP.secundario }}>
             ← Volver a la web
           </a>
         </div>
@@ -406,7 +406,7 @@ export function VistaTablon({ token }) {
         >
           FAQ
         </h2>
-        <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Información relativa al evento dividida por secciones
         </p>
 
@@ -441,7 +441,7 @@ export function VistaTablon({ token }) {
                       style={
                         n.esNovedad
                           ? { background: C.ink, color: C.paper }
-                          : { border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.7 }
+                          : { border: `1px solid ${C.line}`, color: C.charcoal, opacity: OP.secundario }
                       }
                     >
                       {n.esNovedad ? "NOVEDADES" : "FAQ"}
@@ -454,7 +454,7 @@ export function VistaTablon({ token }) {
                 </button>
                 {abierta && (
                   <div style={{ borderTop: `1px solid ${C.line}` }}>
-                    <p className="px-4 pt-2.5 text-xs" style={{ color: C.charcoal, opacity: 0.5 }}>
+                    <p className="px-4 pt-2.5 text-xs" style={{ color: C.charcoal, opacity: OP.tenue }}>
                       {formatearFecha(String(n.creadaEn).slice(0, 10))}
                     </p>
                   </div>
@@ -482,7 +482,7 @@ export function VistaTablon({ token }) {
             );
           })}
           {novedades.length === 0 && (
-            <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+            <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
               Todavía no hay ninguna novedad publicada.
             </p>
           )}

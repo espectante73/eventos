@@ -12,7 +12,7 @@
 // nada más).
 import { useState } from "react";
 import { History, RotateCcw } from "lucide-react";
-import { C } from "../theme";
+import { C, OP } from "../theme";
 import { formatearFecha } from "../lib/formato";
 import { Boton } from "./Boton";
 
@@ -56,12 +56,12 @@ export function BotonHistorial({ obtenerHistorial, onRestaurar }) {
           style={{ background: "#fff", border: `1px solid ${C.line}`, width: 260, right: 0 }}
         >
           {cargando && (
-            <p className="text-xs p-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+            <p className="text-xs p-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
               Cargando…
             </p>
           )}
           {!cargando && versiones && versiones.length === 0 && (
-            <p className="text-xs p-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+            <p className="text-xs p-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
               Todavía no hay versiones anteriores guardadas.
             </p>
           )}
@@ -70,7 +70,7 @@ export function BotonHistorial({ obtenerHistorial, onRestaurar }) {
             versiones.map((v) => (
               <div key={v.id} className="flex items-start gap-2 p-2 text-xs" style={{ borderTop: `1px solid ${C.line}` }}>
                 <div className="flex-1 min-w-0">
-                  <div style={{ color: C.charcoal, opacity: 0.5 }}>
+                  <div style={{ color: C.charcoal, opacity: OP.tenue }}>
                     {formatearFecha(String(v.guardadoEn).slice(0, 10))} {String(v.guardadoEn).slice(11, 16)}
                   </div>
                   <div className="truncate" style={{ color: C.charcoal }}>

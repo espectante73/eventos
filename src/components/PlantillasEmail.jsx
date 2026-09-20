@@ -14,7 +14,7 @@
 import { useRef } from "react";
 import { useAltoAutomatico } from "../lib/useAltoAutomatico";
 import { Bold, Italic, Underline, Undo2, Mail } from "lucide-react";
-import { C, inputStyle } from "../theme";
+import { C, inputStyle, T, OP } from "../theme";
 import { Field } from "./Formulario";
 import { SeccionPlegable } from "./SeccionPlegable";
 import { envolverSeleccion } from "../lib/textoEnriquecido";
@@ -108,7 +108,7 @@ function PlantillaEditable({ label, valor, onCambio, campo, obtenerHistorialText
         style={{
           ...inputStyle,
           fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: 11,
+          fontSize: T.pequeno,
           resize: "vertical",
         }}
       />
@@ -120,7 +120,7 @@ export function PlantillasEmail({ data }) {
   const { evento, persistEvento, obtenerHistorialTexto } = data;
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs" style={{ color: C.charcoal, opacity: 0.75 }}>
+      <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
         Texto de los avisos automáticos por email. Usa <code>{"{colaborador}"}</code> donde
         quieras que aparezca ese nombre — se rellena solo al enviar. Admite HTML sencillo, o
         usa los botones de formato de cada campo. Se guarda al salir del campo, no mientras

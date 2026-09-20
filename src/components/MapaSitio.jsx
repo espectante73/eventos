@@ -23,7 +23,7 @@
 // lo que ya sabe hacer cualquier móvil.
 import { useState } from "react";
 import { Printer, Download } from "lucide-react";
-import { C } from "../theme";
+import { C, R, OP } from "../theme";
 import { ModalFlotante } from "./VentanaFlotante";
 import { Boton } from "./Boton";
 
@@ -63,13 +63,13 @@ export function ModalMapaSitio({ onCerrar }) {
           >
             <Download size={14} /> Descargar
           </a>
-          <span className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+          <span className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Para enviarlo, descárgalo y mándalo como una foto más.
           </span>
         </>
       }
     >
-      <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
+      <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
         {ampliada
           ? "Arrastra para moverte por el mapa. Toca la imagen para volver a verlo entero."
           : "Toca la imagen para ampliarla y poder leer los nombres."}
@@ -79,7 +79,7 @@ export function ModalMapaSitio({ onCerrar }) {
           overflow: "auto",
           overscrollBehavior: "contain",
           border: `1px solid ${C.line}`,
-          borderRadius: 6,
+          borderRadius: R.caja,
           background: C.paperDark,
         }}
       >

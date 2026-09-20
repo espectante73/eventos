@@ -102,6 +102,15 @@ en la sección que se indica entre paréntesis.
     Ante un dato nuevo, preguntarse: ¿debería ir junto con el de alguien
     más? («Una familia no se separa en las mesas», «El año de boda,
     compartido entre los cónyuges»)
+17. **Los valores del acabado salen de `theme.js`, nunca a mano.** Tamaño
+    de letra (`T`), redondeo (`R`), sombra (`S`) y opacidad (`OP`). Un
+    número suelto pone en rojo `src/theme.test.js`. Si de verdad hace
+    falta uno que no está, se añade a la escala, no al sitio; la única
+    salida es marcar la línea con `escala-libre:` y el motivo al lado, y
+    es para lo que no es ni caja ni texto. El aire (`AIRE`) va en
+    tarjetas, paneles y formularios, **nunca en las filas de las
+    tablas** — ahí mandan las normas 7 y 8. («El acabado, con una escala
+    y no a ojo»)
 
 ## Estado actual (2026-08-06)
 
@@ -1945,6 +1954,45 @@ consola del navegador, que el usuario no va a abrir. Ahora `avisar()`
 manda `error.message` y la ventana lo enseña en letra pequeña debajo
 (`detalle` en `PreguntaSeguridad`). **Todo aviso de error lleva el
 motivo técnico.**
+
+## El acabado, con una escala y no a ojo (2026-09-20, v38)
+
+El usuario: *"la app debe de tener un aspecto más refinado en sus
+acabados, mismo aspecto general y estandarizado pero creo que la imagen
+falta refinarla"*. Preguntado con tres opciones dibujadas, eligió
+**"ordenar + un punto de aire"**.
+
+**Lo que se midió antes de tocar nada** (y es la parte que importa: el
+estilo no estaba mal elegido, los VALORES habían derivado):
+
+| | Antes | Ahora |
+|---|---|---|
+| Tamaños de letra | 13 (8, 10, 11, 12, 13, 14, 15, 17, 18, 20, 22, 26) | 6 (`T`) |
+| Redondeos | 5 (2, 3, 4, 6, 9999) | 2 (`R`) |
+| Opacidad del texto secundario | 9 (0,3 a 0,85) | 2, más una para líneas (`OP`) |
+| Sombras a mano | 8 | 3 (`S`) |
+
+Ninguno se ve mal por separado. Sumados son justo lo que hace que algo
+parezca "casi terminado". Es el mismo problema que ya había pasado con
+los rojos copiados a mano (`#B00020` / `#FBEAEA`, ver `C.peligro`).
+
+**El aire**: los paneles y tarjetas (`p-3 rounded`) pasan a `p-4`. ⚠️ Las
+**filas de las tablas no se tocan**: más aire ahí choca de frente con dos
+normas suyas anteriores ("una sola línea por fila" y "las ventanas, lo
+más pequeñas posible"). Una lista de 140 invitados con más aire es una
+lista que no cabe.
+
+**Lo que NO entra**: `VentanaMusicaEvento.jsx`. El mando de música tiene
+lenguaje propio ya aprobado (norma 11) — paleta oscura suya y teclas con
+su relieve. Está excluido del repaso Y del test.
+
+**El guardia**: `src/theme.test.js`. Recorre todos los `.jsx` y se pone
+en rojo si encuentra un `fontSize`, `borderRadius` u `opacity` escrito a
+mano. Sin esto, en unos meses vuelve a haber trece tamaños: la escala se
+arregla una vez, la deriva vuelve sola. Mismo espíritu que
+`scripts/dibujar-mapa.test.js`. Salida de emergencia estrecha: marcar la
+línea con `escala-libre:` y el motivo (hoy hay UNA, el rombo de 11px de
+Aniversarios, que con redondeo de caja dejaría de parecer un rombo).
 
 ## Se acabaron los avisos del navegador (2026-09-20, v37.12)
 

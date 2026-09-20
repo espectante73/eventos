@@ -1,7 +1,7 @@
 // Ventana "Versiones": historial de cambios de la app. No depende de
 // ningún dato del evento — solo de sus propias constantes. Extraída de
 // VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4, Ronda 1).
-import { C } from "../../theme";
+import { C, OP } from "../../theme";
 import { VERSION_APP } from "../../constants";
 import { Stamp } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
@@ -41,6 +41,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // área mejorada) en vez de un único bloque de texto largo — más fácil de
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
+  {
+    version: "38",
+    cambios: [
+      "Acabado más fino, con el mismo estilo de siempre: los tamaños de letra pasan de 13 distintos a 6, los redondeos de esquina de 5 a 2, los grises del texto secundario de 9 a 2 y las sombras de 8 a 3.",
+      "Un punto más de aire en tarjetas, paneles y formularios. Las tablas se quedan igual de compactas a propósito: con 140 invitados, más aire sería una lista que no cabe.",
+      "El mando de la Música no se toca: tiene su propio aspecto, ya aprobado.",
+      "Y para que no vuelva a desordenarse solo, hay una prueba que salta si alguien escribe un tamaño o un redondeo a mano.",
+    ],
+  },
   {
     version: "37.13",
     cambios: [
@@ -1527,7 +1536,7 @@ export function VentanaVersiones({ onCerrar }) {
         {HISTORIAL_VERSIONES.map((v) => (
           <div
             key={v.version}
-            className="flex items-start gap-3 p-3 rounded"
+            className="flex items-start gap-3 p-4 rounded"
             style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
           >
             <Stamp color={v.version === VERSION_APP ? C.ink : C.charcoal}>
@@ -1545,7 +1554,7 @@ export function VentanaVersiones({ onCerrar }) {
       </div>
       {RESUMEN_VERSIONES_ANTERIORES.length > 0 && (
         <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
-          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.6 }}>
+          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Versiones anteriores completas (resumidas):
           </p>
           <div className="space-y-2">
@@ -1553,7 +1562,7 @@ export function VentanaVersiones({ onCerrar }) {
               <div
                 key={v.version}
                 className="flex items-start gap-3 p-2 rounded"
-                style={{ background: C.paperDark, opacity: 0.8 }}
+                style={{ background: C.paperDark, opacity: OP.secundario }}
               >
                 <Stamp color={C.charcoal}>v{v.version}</Stamp>
                 <p className="text-xs" style={{ color: C.charcoal }}>

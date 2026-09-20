@@ -6,7 +6,7 @@
 // (Fase 4, Ronda 2).
 import { useState } from "react";
 import { Repeat } from "lucide-react";
-import { C, inputStyle } from "../../theme";
+import { C, inputStyle, OP } from "../../theme";
 import { ordenarPorApellidoNombre } from "../../lib/formato";
 import { AvisoDeshacer } from "../../components/AvisoDeshacer";
 import { Field, TextInput } from "../../components/Formulario";
@@ -134,7 +134,7 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
     <>
       <VentanaFlotante clave="config-zona-reinicio" titulo="Reinicios" onCerrar={onCerrar}>
         <AvisoDeshacer data={data} />
-        <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.75 }}>
+        <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Zona de reinicio: pone a cero campos concretos de los invitados de un colaborador
           (útil tras pruebas, o para reutilizar la app en otro evento). Los invitados y los
           colaboradores <strong>nunca</strong> se borran aquí — solo los campos que elijas.
@@ -270,7 +270,7 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
           <Repeat size={14} /> Reiniciar
         </button>
 
-        <p className="text-xs" style={{ color: C.charcoal, opacity: 0.6 }}>
+        <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
           {rCategoria === "avisos"
             ? "Vacía el historial de emails enviados. No depende de colaborador ni de alcance."
             : rAlcance === "invitado"

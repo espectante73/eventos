@@ -27,7 +27,7 @@ import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso } from "../lib/permisos";
 import { generarImagenCronograma } from "../lib/cronograma";
-import { C } from "../theme";
+import { C, R, T, OP } from "../theme";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
@@ -237,7 +237,7 @@ function FormularioDatos({
       // La clase `formulario-dorado` solo existe para teñir de verde las
       // etiquetas de los campos, que Field pinta en dorado para el resto de
       // pantallas (de fondo claro) y aquí serían invisibles.
-      className="formulario-dorado p-3 rounded space-y-3"
+      className="formulario-dorado p-4 rounded space-y-3"
       style={{
         background: "linear-gradient(135deg, #B8893F 0%, #E6C77F 38%, #D4AE5E 62%, #A97D34 100%)",
         boxShadow: "inset 0 1px 0 rgba(255,244,214,0.55), inset 0 -1px 0 rgba(90,62,20,0.35)",
@@ -325,7 +325,7 @@ function FormularioDatos({
           <div>
             <div
               className="w-full px-2 py-1.5 rounded text-sm"
-              style={{ background: C.paperDark, color: C.charcoal, opacity: 0.7 }}
+              style={{ background: C.paperDark, color: C.charcoal, opacity: OP.secundario }}
             >
               {colaboradorVinculado.email || "sin registrar"}
             </div>
@@ -337,7 +337,7 @@ function FormularioDatos({
           <div>
             <div
               className="w-full px-2 py-1.5 rounded text-sm"
-              style={{ background: C.paperDark, color: C.charcoal, opacity: 0.7 }}
+              style={{ background: C.paperDark, color: C.charcoal, opacity: OP.secundario }}
             >
               {form.email || "—"}
             </div>
@@ -455,7 +455,7 @@ function FormularioDatos({
             <Field label="Boda">
               <div
                 className="px-2 py-1.5 rounded text-sm"
-                style={{ background: C.paperDark, color: C.charcoal, opacity: 0.7 }}
+                style={{ background: C.paperDark, color: C.charcoal, opacity: OP.secundario }}
               >
                 No aplica
               </div>
@@ -542,7 +542,7 @@ function FormularioDatos({
           Aniversarios. */}
       {verFoto && enlaceFoto && (
         <ModalFlotante titulo="Foto de boda" onCerrar={() => setVerFoto(false)} ancho={860}>
-          <div style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 4, overflow: "hidden", ...estiloMarcoFoto(10) }}>
+          <div style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: R.caja, overflow: "hidden", ...estiloMarcoFoto(10) }}>
             <img
               src={enlaceFoto}
               alt="Foto de boda"
@@ -712,7 +712,7 @@ function FilaInvitadoColaborador({
             ) : (
               <span
                 className="text-xs px-2 py-0.5 rounded"
-                style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: 0.6 }}
+                style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: OP.secundario }}
               >
                 Pendiente de pago
               </span>
@@ -720,7 +720,7 @@ function FilaInvitadoColaborador({
           </button>
         )}
         {!faltanDatos ? (
-          <span className="flex items-center gap-1 text-xs" style={{ color: C.ink, opacity: 0.7 }}>
+          <span className="flex items-center gap-1 text-xs" style={{ color: C.ink, opacity: OP.secundario }}>
             <Check size={12} /> datos {datosRellenos} de {datosTotal}
           </span>
         ) : (
@@ -1001,13 +1001,13 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   return (
     <div className="space-y-8">
       {bloqueadoEnPruebas && (
-        <div className="p-3 rounded text-sm font-semibold" style={{ background: C.peligro, color: "#fff" }}>
+        <div className="p-4 rounded text-sm font-semibold" style={{ background: C.peligro, color: "#fff" }}>
           🧪 El anfitrión ha activado el Modo Pruebas y te ha dejado fuera por ahora: no podrás
           guardar datos, marcar pagos ni confirmar nada hasta que lo desactive.
         </div>
       )}
       {permisosActivos.length > 0 && (
-        <div className="p-3 rounded text-sm font-semibold" style={{ background: C.peligro, color: "#fff" }}>
+        <div className="p-4 rounded text-sm font-semibold" style={{ background: C.peligro, color: "#fff" }}>
           🔑 Tienes permisos de edición: {permisosActivos.map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ")}.
         </div>
       )}
@@ -1047,7 +1047,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                     className="boton-3d boton-verde-solido flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium"
                     title="Estás previsualizando como colaborador — cambia de vista aquí"
                   >
-                    Cambiar vista <ChevronDown size={13} style={{ opacity: 0.8 }} />
+                    Cambiar vista <ChevronDown size={13} style={{ opacity: OP.secundario }} />
                   </button>
                 )}
               />
@@ -1133,7 +1133,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             >
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>
+              <div className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
                 FAMILIAS CONFIRMADAS:{" "}
                 {gruposFamiliaresACargo.length > 0
                   ? gruposFamiliaresACargo.join(", ")
@@ -1145,7 +1145,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               {!colaborador.email && (
                 <div className="text-xs mt-1" style={{ color: C.wax }}>
                   Sin email de contacto{" "}
-                  <span className="italic" style={{ opacity: 0.75 }}>
+                  <span className="italic" style={{ opacity: OP.secundario }}>
                     (solo lo puede cambiar el anfitrión)
                   </span>
                 </div>
@@ -1181,20 +1181,20 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 Cobrado y Pendiente conservan su fondo de color propio
                 (verde/rojo) con letra blanca. */}
             <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
-              <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Importe total</div>
-              <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 15 }}>
+              <div className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>Importe total</div>
+              <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: T.normal }}>
                 {formatoEuro(importeEsperado)}
               </div>
             </div>
             <div className="h-full rounded p-2 text-center" style={{ background: C.ink }}>
-              <div className="text-xs" style={{ color: "#fff", opacity: 0.85 }}>Cobrado</div>
-              <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: 15 }}>
+              <div className="text-xs" style={{ color: "#fff", opacity: OP.secundario }}>Cobrado</div>
+              <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: T.normal }}>
                 {formatoEuro(importeCobrado)}
               </div>
             </div>
             <div className="h-full rounded p-2 text-center" style={{ background: C.wax }}>
-              <div className="text-xs" style={{ color: "#fff", opacity: 0.85 }}>Pendiente</div>
-              <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: 15 }}>
+              <div className="text-xs" style={{ color: "#fff", opacity: OP.secundario }}>Pendiente</div>
+              <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: T.normal }}>
                 {formatoEuro(importePendiente)}
               </div>
             </div>
@@ -1203,14 +1203,14 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 tarjetas (antes centraba el bloque entero, y el título
                 también bajaba). Dígito algo más grande (18px, no 15px). */}
             <div className="h-full rounded p-2 flex flex-col text-center" style={{ background: C.paperDark }}>
-              <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>No pagados</div>
-              <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18, marginTop: -2 }}>
+              <div className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>No pagados</div>
+              <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: T.destacado, marginTop: -2 }}>
                 {noPagados.length}
               </div>
             </div>
             <div className="h-full rounded p-2 flex flex-col text-center" style={{ background: C.paperDark }}>
-              <div className="text-xs" style={{ color: C.charcoal, opacity: 0.7 }}>Pagados</div>
-              <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: 18, marginTop: -2 }}>
+              <div className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>Pagados</div>
+              <div className="flex-1 flex items-center justify-center" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: T.destacado, marginTop: -2 }}>
                 {pagados.length}
               </div>
             </div>
@@ -1261,7 +1261,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 />
               ))}
               {pendientes.length === 0 && !fichaAbierta && (
-                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
                   Ninguna ficha incompleta.
                 </p>
               )}
@@ -1294,7 +1294,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 />
               ))}
               {completos.length === 0 && !fichaAbierta && (
-                <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+                <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
                   Todavía ningún invitado con datos completos.
                 </p>
               )}

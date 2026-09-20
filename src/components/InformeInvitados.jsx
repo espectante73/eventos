@@ -7,7 +7,7 @@
 // la raíz").
 import { useState } from "react";
 import { ChevronDown, AlertTriangle, CircleCheck, Clock } from "lucide-react";
-import { C } from "../theme";
+import { C, T, OP } from "../theme";
 import { Boton } from "./Boton";
 import { BotonQuitar } from "./PreguntaSeguridad";
 
@@ -53,7 +53,7 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
           <AlertTriangle size={16} style={{ color: errores.length ? C.peligro : C.gold, flexShrink: 0 }} />
         )}
         <span style={{ fontWeight: 600 }}>Revisión</span>
-        <span style={{ opacity: 0.75 }}>{resumen}</span>
+        <span style={{ opacity: OP.secundario }}>{resumen}</span>
         <ChevronDown
           size={16}
           className="ml-auto"
@@ -66,7 +66,7 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
       </div>
 
       {abierto && todoBien && (
-        <p className="px-3 pb-3 text-sm" style={{ color: C.charcoal, opacity: 0.7 }}>
+        <p className="px-3 pb-3 text-sm" style={{ color: C.charcoal, opacity: OP.secundario }}>
           No hay incoherencias ni nada pendiente en la lista.
         </p>
       )}
@@ -86,7 +86,7 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
                 {h.tipo === "error" ? (
                   <AlertTriangle size={14} style={{ color: C.peligro, flexShrink: 0 }} />
                 ) : (
-                  <Clock size={14} style={{ color: C.charcoal, opacity: 0.6, flexShrink: 0 }} />
+                  <Clock size={14} style={{ color: C.charcoal, opacity: OP.secundario, flexShrink: 0 }} />
                 )}
                 <span style={{ fontWeight: 600, color: h.tipo === "error" ? C.peligro : C.charcoal }}>
                   {h.titulo}
@@ -97,14 +97,14 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
                     background: h.tipo === "error" ? C.peligro : C.ink,
                     color: "#fff",
                     fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 12,
+                    fontSize: T.pequeno,
                   }}
                 >
                   {h.personas.length}
                 </span>
               </div>
               {h.ayuda && (
-                <p className="text-xs mt-1" style={{ color: C.charcoal, opacity: 0.75 }}>
+                <p className="text-xs mt-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
                   {h.ayuda}
                 </p>
               )}
@@ -128,7 +128,7 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
                   </span>
                 ))}
                 {h.personas.length > 12 && (
-                  <span className="text-xs self-center" style={{ color: C.charcoal, opacity: 0.6 }}>
+                  <span className="text-xs self-center" style={{ color: C.charcoal, opacity: OP.secundario }}>
                     y {h.personas.length - 12} más
                   </span>
                 )}
@@ -142,7 +142,7 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
           para ver qué se ha dado por bueno y poder deshacerlo. */}
       {abierto && excepciones.length > 0 && (
         <details className="px-3 pb-3 text-xs" style={{ color: C.charcoal }}>
-          <summary className="cursor-pointer select-none" style={{ opacity: 0.8 }}>
+          <summary className="cursor-pointer select-none" style={{ opacity: OP.secundario }}>
             Excepciones permitidas ({excepciones.length})
           </summary>
           <div className="mt-2 space-y-1.5">

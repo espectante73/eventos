@@ -2,7 +2,7 @@
 // Mesas) y la versión arrastrable dentro del lienzo del Plano de mesas.
 // Movidas fuera de App.jsx en el reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
-import { C, inputStyle } from "../theme";
+import { C, inputStyle, T, OP } from "../theme";
 import { Boton } from "./Boton";
 import { BotonQuitar, usePreguntaSeguridad } from "./PreguntaSeguridad";
 
@@ -51,7 +51,7 @@ export function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapaci
             border: `2px solid ${tieneAlergias || lleno ? C.wax : C.line}`,
           }}
         >
-          <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 22, color: C.ink }}>
+          <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.titulo, color: C.ink }}>
             {m.numero}
           </span>
         </div>
@@ -85,7 +85,7 @@ export function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapaci
         onChange={(e) => onCambiarCapacidad(e.target.value)}
         style={{ ...inputStyle, width: 56, textAlign: "center", padding: "2px 4px" }}
       />
-      <div className="text-xs" style={{ color: lleno ? C.wax : C.charcoal, opacity: 0.75 }}>
+      <div className="text-xs" style={{ color: lleno ? C.wax : C.charcoal, opacity: OP.secundario }}>
         {ocupados}/{m.capacidad}
       </div>
       {tieneAlergias && (
@@ -215,10 +215,10 @@ export function MesaPlano({ m, ocupados, canvasRef, onMover }) {
         }}
       >
         <div className="text-center leading-tight">
-          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 13, color: C.ink }}>
+          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.pequeno, color: C.ink }}>
             {m.numero}
           </div>
-          <div style={{ fontSize: 8, color: C.charcoal }}>
+          <div style={{ fontSize: T.micro, color: C.charcoal }}>
             {ocupados}/{m.capacidad}
           </div>
         </div>

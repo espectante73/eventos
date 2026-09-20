@@ -7,7 +7,7 @@
 import { useState, useRef } from "react";
 import { useAltoAutomatico } from "../../lib/useAltoAutomatico";
 import { Plus, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown, Lock, Undo2, AlertTriangle, Music } from "lucide-react";
-import { C, inputStyle } from "../../theme";
+import { C, inputStyle, T, OP } from "../../theme";
 import { uid } from "../../lib/id";
 import { formatearFecha } from "../../lib/formato";
 import { construirEnlaceTablon } from "../../lib/url";
@@ -117,7 +117,7 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
           style={
             n.esNovedad
               ? { background: C.ink, color: C.paper }
-              : { border: `1px solid ${C.line}`, color: C.charcoal, opacity: 0.7 }
+              : { border: `1px solid ${C.line}`, color: C.charcoal, opacity: OP.secundario }
           }
         >
           {n.esNovedad ? "NOVEDADES" : "FAQ"}
@@ -125,12 +125,12 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
         {!n.publicada && (
           <span
             className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
-            style={{ background: C.paperDark, color: C.charcoal, opacity: 0.7 }}
+            style={{ background: C.paperDark, color: C.charcoal, opacity: OP.secundario }}
           >
             Borrador
           </span>
         )}
-        <span className="text-xs whitespace-nowrap" style={{ color: C.charcoal, opacity: 0.5 }}>
+        <span className="text-xs whitespace-nowrap" style={{ color: C.charcoal, opacity: OP.tenue }}>
           {formatearFecha(String(n.creadaEn).slice(0, 10))}
         </span>
         <BotonQuitar
@@ -180,7 +180,7 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
             style={{
               ...inputStyle,
               fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 12,
+              fontSize: T.pequeno,
               // Crece solo (useAltoAutomatico), pero se deja la esquina
               // para estirar a mano: si la medida fallara en algún caso,
               // el usuario no se queda sin salida (el 2026-09-16 se le
@@ -194,7 +194,7 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
               lleva implícita la opción de publicarlo o no. Reforzado
               también en el servidor (colaborador_guardar_novedades ya
               acepta "publicada", no solo título/cuerpo). */}
-          <label className="flex items-center gap-1.5 text-xs" style={{ color: C.charcoal, opacity: 0.75 }}>
+          <label className="flex items-center gap-1.5 text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
             <input
               type="checkbox"
               checked={n.publicada}
@@ -430,7 +430,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
           />
         ))}
         {novedades.length === 0 && (
-          <p className="text-sm italic" style={{ color: C.charcoal, opacity: 0.6 }}>
+          <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Todavía no hay ninguna novedad escrita.
           </p>
         )}
@@ -449,7 +449,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
           <button
             onClick={() => setPieAbierto((a) => !a)}
             className="boton-3d flex items-center gap-1.5 px-4 py-2 text-xs w-full"
-            style={{ color: C.charcoal, opacity: 0.7, flexShrink: 0, borderTop: `1px solid ${C.line}` }}
+            style={{ color: C.charcoal, opacity: OP.secundario, flexShrink: 0, borderTop: `1px solid ${C.line}` }}
           >
             <ChevronDown size={14} style={{ transform: pieAbierto ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
             Grupo de WhatsApp y pregunta de acceso
@@ -465,7 +465,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             placeholder="Texto que ve la persona antes de entrar"
             title="El acceso en sí ya no depende de esto -- solo comprueba nombre y apellido contra los confirmados. Esto es solo el redactado que ve la persona."
             className="flex-1"
-            style={{ ...inputStyle, fontSize: 12 }}
+            style={{ ...inputStyle, fontSize: T.pequeno }}
           />
         </div>
         {errorPregunta && (
@@ -498,7 +498,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             placeholder="Enlace de invitación al grupo de WhatsApp"
             title="WhatsApp → grupo → Info del grupo → Invitar mediante enlace"
             className="flex-1"
-            style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}
+            style={{ ...inputStyle, fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno }}
           />
           <a
             href={evento.enlaceGrupoWhatsapp || undefined}
@@ -540,7 +540,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
           <button
             onClick={() => setMusicaAbierta((a) => !a)}
             className="boton-3d flex items-center gap-1.5 px-4 py-2 text-xs w-full"
-            style={{ color: C.charcoal, opacity: 0.7, flexShrink: 0, borderTop: `1px solid ${C.line}` }}
+            style={{ color: C.charcoal, opacity: OP.secundario, flexShrink: 0, borderTop: `1px solid ${C.line}` }}
           >
             <ChevronDown size={14} style={{ transform: musicaAbierta ? "rotate(180deg)" : "none", transition: "transform 0.15s" }} />
             <Music size={13} style={{ flexShrink: 0 }} />

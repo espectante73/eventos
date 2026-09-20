@@ -3,7 +3,7 @@
 // reparto del 2026-08-08 (Fase 4, Ronda 2).
 import { useState } from "react";
 import { Image as ImageIcon, Euro, Mail, Globe } from "lucide-react";
-import { C, inputStyle } from "../../theme";
+import { C, inputStyle, T, OP } from "../../theme";
 import { redimensionarImagenArchivo } from "../../lib/descargas";
 import { supabase } from "../../supabaseClient";
 import { Field, TextInput } from "../../components/Formulario";
@@ -42,10 +42,10 @@ function GrupoPrecio({ titulo, etiquetaA, valorA, onCambiarA, etiquetaB, valorB,
       )}
       <div
         className="flex items-center justify-center gap-4 text-xs uppercase mb-2"
-        style={{ color: C.paper, opacity: 0.85, letterSpacing: "0.06em" }}
+        style={{ color: C.paper, opacity: OP.secundario, letterSpacing: "0.06em" }}
       >
         <span>{etiquetaA}</span>
-        <span style={{ opacity: 0.5 }}>--</span>
+        <span style={{ opacity: OP.tenue }}>--</span>
         <span>{etiquetaB}</span>
       </div>
       <div className="flex items-center justify-center gap-4">
@@ -57,9 +57,9 @@ function GrupoPrecio({ titulo, etiquetaA, valorA, onCambiarA, etiquetaB, valorB,
             <input
               value={valor}
               onChange={onCambiar}
-              style={{ ...inputStyle, width: moneda ? 56 : 72, textAlign: "center", fontSize: 22, fontWeight: 700 }}
+              style={{ ...inputStyle, width: moneda ? 56 : 72, textAlign: "center", fontSize: T.titulo, fontWeight: 700 }}
             />
-            {moneda && <span style={{ color: C.paper, fontSize: 20, fontWeight: 700 }}>€</span>}
+            {moneda && <span style={{ color: C.paper, fontSize: T.titulo, fontWeight: 700 }}>€</span>}
           </div>
         ))}
       </div>
@@ -129,7 +129,7 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
 
   return (
     <VentanaFlotante clave="config-datos-evento" titulo="Datos del evento" onCerrar={onCerrar}>
-      <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.75 }}>
+      <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
         Datos del evento (esto es lo que se ve en la portada).
       </p>
       <div className="grid grid-cols-2 gap-4 mb-4" style={{ maxWidth: 500 }}>
@@ -243,7 +243,7 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
 
         <div>
           <Field label="Imagen para compartir en WhatsApp">
-            <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: 0.7 }}>
+            <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
               La miniatura que aparece al pegar cualquier enlace de esta web (el del tablón,
               el de login...) en WhatsApp — sube aquí la misma foto de cabecera si quieres que
               se vea ahí también.
@@ -278,7 +278,7 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
                 {errorImagenOg}
               </p>
             )}
-            <p className="text-xs mt-1" style={{ color: C.charcoal, opacity: 0.5 }}>
+            <p className="text-xs mt-1" style={{ color: C.charcoal, opacity: OP.tenue }}>
               Si vuelves a subirla más tarde, un enlace YA compartido antes puede tardar en
               actualizarse en WhatsApp — cachean la miniatura por su cuenta.
             </p>
@@ -318,7 +318,7 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
           titulo="Email del anfitrión"
           resumen={evento.emailAnfitrion || "sin configurar"}
         >
-          <p className="text-xs mb-2 pt-1" style={{ color: C.charcoal, opacity: 0.75 }}>
+          <p className="text-xs mb-2 pt-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Tu email, para recibir avisos automáticos cuando un colaborador complete todos los
             datos o todos los pagos de sus invitados asignados.
           </p>
@@ -338,7 +338,7 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
         </SeccionPlegable>
 
         <SeccionPlegable icono={Globe} titulo="URL de la web" resumen={evento.urlPublica || "sin configurar"}>
-          <p className="text-xs mb-2 pt-1" style={{ color: C.charcoal, opacity: 0.75 }}>
+          <p className="text-xs mb-2 pt-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
             <strong>Importante:</strong> la URL de tu web ya publicada. Sin este dato, los enlaces
             que copies para cada colaborador no apuntarán al sitio correcto.
           </p>

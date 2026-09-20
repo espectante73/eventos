@@ -25,7 +25,7 @@
 // no está configurada (proyecto clonado en local sin Turnstile todavía),
 // sencillamente no se pinta ni se exige -- no bloquea el login de nadie.
 import { useState, useEffect, useRef } from "react";
-import { C, inputStyle } from "../theme";
+import { C, inputStyle, OP, S } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { Boton } from "../components/Boton";
@@ -199,7 +199,7 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
       <form
         onSubmit={enviar}
         className="w-full max-w-sm p-6 rounded-lg"
-        style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
+        style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: S.flotante }}
       >
         <h1
           className="text-xl mb-4 text-center"
@@ -208,18 +208,18 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
           {TITULOS[modo]}
         </h1>
         {modo === "crear" && (
-          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
+          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Usa el mismo email con el que ya estás dado de alta como
             colaborador (el de los avisos) — así se te reconoce solo.
           </p>
         )}
         {modo === "recuperar" && (
-          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: 0.7 }}>
+          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Escribe tu email y te enviamos un enlace para crear una
             contraseña nueva.
           </p>
         )}
-        <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>
+        <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Email
         </label>
         <input
@@ -248,7 +248,7 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
         )}
         {modo !== "recuperar" && (
           <>
-            <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: 0.7 }}>
+            <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
               Contraseña
             </label>
             <input

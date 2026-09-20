@@ -4,7 +4,7 @@
 // App.jsx en el reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
-import { C } from "../theme";
+import { C, S } from "../theme";
 
 // Ventana flotante genérica: independiente de qué secciones estén plegadas,
 // para que Imprimir/Canciones/Alergias y los avisos de mesas funcionen siempre.
@@ -49,7 +49,7 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
           border: `1px solid ${C.line}`,
           maxWidth: ancho,
           maxHeight: "88vh",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+          boxShadow: S.flotanteOscura,
         }}
         onClick={(e) => e.stopPropagation()}
       >

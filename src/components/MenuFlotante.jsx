@@ -13,7 +13,7 @@
 // tiene por la imagen de cabecera).
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { C } from "../theme";
+import { C, R, OP } from "../theme";
 import { esZurdo } from "../lib/mano";
 
 // Margen mínimo respecto al borde de la ventana, y altura mínima aunque
@@ -167,7 +167,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
     return (
       <div
         className="px-3 pt-1 pb-0.5 text-xs uppercase"
-        style={{ color: C.goldClaro, opacity: 0.7, letterSpacing: "0.06em" }}
+        style={{ color: C.goldClaro, opacity: OP.secundario, letterSpacing: "0.06em" }}
       >
         {opcion.encabezado}
       </div>
@@ -195,10 +195,10 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
             ...(abierto ? { background: "rgba(239,233,222,0.12)" } : {}),
             margin: "5px 6px",
             width: "calc(100% - 12px)",
-            borderRadius: 9999,
+            borderRadius: R.redondo,
           }}
         >
-          {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: 0.85 }} />}
+          {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
           {opcion.etiqueta}
         </button>
         {abierto &&
@@ -262,7 +262,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
         ...(opcion.fondo ? { background: opcion.fondo } : {}),
         margin: "5px 6px",
         width: "calc(100% - 12px)",
-        borderRadius: 9999,
+        borderRadius: R.redondo,
       }}
       onMouseEnter={(e) => {
         if (opcion.fondo) e.currentTarget.style.filter = "brightness(1.2)";
@@ -271,7 +271,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
         if (opcion.fondo) e.currentTarget.style.filter = "none";
       }}
     >
-      {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: 0.85 }} />}
+      {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
       <span>{opcion.etiqueta}</span>
     </button>
   );

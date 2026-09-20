@@ -9,7 +9,7 @@ import { X } from "lucide-react";
 import { construirEnlaceTablon } from "../lib/url";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
-import { C } from "../theme";
+import { C, T, R } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
 import { VentanaAniversarios } from "./anfitrion/VentanaAniversarios";
@@ -443,7 +443,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
             Mensaje del email
           </p>
           <div
-            className="p-3 rounded text-sm mb-4"
+            className="p-4 rounded text-sm mb-4"
             style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
             dangerouslySetInnerHTML={{ __html: evento.plantillaInvitacionFamilia || "" }}
           />
@@ -469,11 +469,11 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
             className="flex items-center justify-between px-3"
             style={{ minHeight: 44, flexShrink: 0, background: C.ink, color: C.goldClaro }}
           >
-            <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 600 }}>Música del evento</span>
+            <span style={{ fontFamily: "'Fraunces', serif", fontSize: T.normal, fontWeight: 600 }}>Música del evento</span>
             <button
               onClick={() => setMusicaEnPagina(false)}
               className="boton-3d flex items-center justify-center"
-              style={{ width: 40, height: 40, borderRadius: 10, color: C.goldClaro }}
+              style={{ width: 40, height: 40, borderRadius: R.caja, color: C.goldClaro }}
               title="Cerrar" aria-label="Cerrar"
             >
               <X size={20} />
