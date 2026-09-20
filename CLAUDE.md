@@ -1982,6 +1982,13 @@ normas suyas anteriores ("una sola línea por fila" y "las ventanas, lo
 más pequeñas posible"). Una lista de 140 invitados con más aire es una
 lista que no cabe.
 
+✅ **Dado por bueno por el usuario el 2026-09-20** ("quedó muy bien").
+Pedí las capturas de la norma 15 (lista de invitados y formulario del
+colaborador, que son las pantallas que más cambiaron) y él las dio por
+innecesarias. Queda dicho aquí porque **no lo he visto yo**: si algún
+día aparece algo apretado o cortado en esas dos pantallas, el repaso de
+acabados de la v38 es el primer sitio donde mirar.
+
 **Lo que NO entra**: `VentanaMusicaEvento.jsx`. El mando de música tiene
 lenguaje propio ya aprobado (norma 11) — paleta oscura suya y teclas con
 su relieve. Está excluido del repaso Y del test.
