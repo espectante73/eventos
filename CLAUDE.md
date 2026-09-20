@@ -2762,6 +2762,6 @@ delante de la @ sirve para enviar.
 Los correos de Auth venían en inglés de fábrica ("Reset your
 password"). El texto en español de las tres plantillas que la app usa de
 verdad (`signUp`, `resetPasswordForEmail`, `updateUser({email})`) está en
-**`docs/plantillas-email-auth.md`**, listo para pegar en Authentication →
+**`supabase/plantillas-email-auth.md`**, listo para pegar en Authentication →
 Emails → Templates. Esas plantillas viven en el panel de Supabase, no en
 el repo: ese archivo es la única copia.
