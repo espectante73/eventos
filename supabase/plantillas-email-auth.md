@@ -25,6 +25,9 @@ con las llaves dobles y los espacios de dentro.
 Remitente de estos correos: `acceso@mail.nexuspoint.rsvp` (campo "Sender
 email" de Authentication → Emails → SMTP).
 
+✅ **Pegadas y probadas en vivo el 2026-09-20**: el correo de recuperar
+contraseña llega en español y con el estilo de la app.
+
 ---
 
 ## 1. Confirm signup
