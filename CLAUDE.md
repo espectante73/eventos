@@ -2445,6 +2445,19 @@ privacidad para el tablón, que redacta él y repaso yo.
 **Bloqueado por datos**: la hoja de encargo necesita el año de boda y los
 48 matrimonios lo tienen vacío.
 
+**Ritmo real del evento** (el usuario, 2026-09-20). Dos cosas que
+conviene no confundir con un fallo:
+
+- **Las mesas de hoy (3) no son las del evento.** Serán **12-14**, y el
+  reparto se hace cuando estén TODAS las confirmaciones: con ~60
+  confirmados de ~140 no se puede sentar a nadie. Si en la base hay
+  pocas mesas, es que todavía no toca, no que se hayan perdido.
+  (El tope de 15 mesas de la base ya está quitado, así que 16 o más
+  tampoco darían problema.)
+- **Las fotos terminadas van después**, y la prueba del nombre de
+  archivo con ChatGPT (para subirlas en bloque) la hará cuando las
+  tenga. No insistir antes.
+
 ## Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
 
 El usuario lo cerró con una frase que da en el clavo: *"no puedo
