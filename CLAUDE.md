@@ -1955,6 +1955,17 @@ manda `error.message` y la ventana lo enseña en letra pequeña debajo
 (`detalle` en `PreguntaSeguridad`). **Todo aviso de error lleva el
 motivo técnico.**
 
+## La prueba del local no toca todavía (2026-09-20)
+
+La prueba de la tele del local (cortinilla y Música del evento con el
+wifi de allí) lleva meses apareciendo como "lo único pendiente". El
+usuario lo aclaró: **es para bastante más cerca del evento**, y la fecha
+ni siquiera está fijada.
+
+No listarla entre lo pendiente de ahora ni ofrecerla como siguiente
+paso: no está olvidada, es que no toca. Lo mismo vale para las fotos
+terminadas y el reparto de mesas — ver "Ritmo real del evento".
+
 ## El acabado, con una escala y no a ojo (2026-09-20, v38)
 
 El usuario: *"la app debe de tener un aspecto más refinado en sus
