@@ -119,15 +119,23 @@ button:disabled > .interruptor-haptico {
   0%,
   100% {
     transform: scale(1);
-    box-shadow: 0 1px 2px rgba(31, 25, 15, 0.18), 0 0 0 0 rgba(176, 0, 32, 0);
+    box-shadow:
+      0 1px 2px rgba(31, 25, 15, 0.18),
+      0 0 0 0 rgba(176, 0, 32, 0),
+      0 0 0 0 rgba(176, 0, 32, 0);
   }
   50% {
-    /* Más llamativo, a petición del usuario (2026-09-20): el halo pasa
-       de 5 a 9 px y de 0,30 a 0,45, y además el sello crece un 12%. El
-       tamaño cambia con transform, no con width: así no empuja al texto
-       del botón ni al resto de la barra. */
+    /* DOS aros, a petición del usuario: uno cerrado y fuerte, y otro
+       por fuera más grande y más suave, para que la onda llegue más
+       lejos (2026-09-20). Antes era un solo aro de 5 px; luego uno de
+       9; ahora 8 + 17, que es casi el doble de alcance.
+       El sello crece un 12% con transform, no con width: así no empuja
+       al texto del botón ni al resto de la barra. */
     transform: scale(1.12);
-    box-shadow: 0 1px 2px rgba(31, 25, 15, 0.18), 0 0 0 9px rgba(176, 0, 32, 0.45);
+    box-shadow:
+      0 1px 2px rgba(31, 25, 15, 0.18),
+      0 0 0 8px rgba(176, 0, 32, 0.45),
+      0 0 0 17px rgba(176, 0, 32, 0.18);
   }
 }
 .sello-latiendo {
@@ -136,7 +144,10 @@ button:disabled > .interruptor-haptico {
 @media (prefers-reduced-motion: reduce) {
   .sello-latiendo {
     animation: none;
-    box-shadow: 0 1px 2px rgba(31, 25, 15, 0.18), 0 0 0 4px rgba(176, 0, 32, 0.45);
+    box-shadow:
+      0 1px 2px rgba(31, 25, 15, 0.18),
+      0 0 0 4px rgba(176, 0, 32, 0.45),
+      0 0 0 8px rgba(176, 0, 32, 0.18);
   }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "38.3",
+    cambios: [
+      "El latido del sello rojo gana un segundo aro, más grande y más suave: la onda llega casi el doble de lejos.",
+    ],
+  },
+  {
     version: "38.2",
     cambios: [
       "El sello rojo late más fuerte: el halo casi dobla y el número crece un poco al latir.",
