@@ -1869,6 +1869,42 @@ Al construir o revisar una ventana: comprobar esta regla junto con la de
 "lo más pequeña posible" y la de "estandarizar con el estilo que ya
 existe".
 
+## Se acabaron los avisos del navegador (2026-09-20, v37.12)
+
+Último resto de la norma 12: `window.alert` estaba prohibido, pero
+seguían vivos ~12 -- casi todos en `avisar()` de `useLedgerData.js` (los
+"no se pudo guardar, se deshace el cambio en pantalla") más los de
+`useMotorInvitaciones.js` y `VentanaInvitaciones.jsx`. No se habían
+migrado porque `avisar()` es una función suelta, fuera de React, y
+`usePreguntaSeguridad` es un hook: no se puede llamar desde ahí.
+
+**Cómo se resolvió** (`src/lib/avisos.js` + `components/AvisosGlobales.jsx`):
+
+- `avisos.js` no pinta nada: solo guarda la lista de *sitios* donde se
+  puede enseñar un aviso. `avisoEnPantalla(mensaje, titulo?)` es una
+  función normal, llamable desde cualquier parte.
+- `AvisosGlobales` es el sitio: monta un `usePreguntaSeguridad` en modo
+  `soloAviso` y se apunta a esa lista con el `document` en el que vive.
+- **En qué ventana sale**: la del documento que tiene el foco
+  (`doc.hasFocus()`). Va montado una vez en `main.jsx` (la pestaña) y
+  una vez dentro de `usePopupWindow.actualizar()` -- o sea, en TODA
+  ventana emergente, sin tocar las cinco por separado. Así se cierra de
+  raíz el bug repetido de "el aviso sale en la ventana de detrás".
+- Un aviso disparado antes del primer render (fallo al arrancar) espera
+  en una cola de 5 como mucho, y sale en cuanto hay dónde.
+- `partirAviso` corta el mensaje en título + explicación (la primera
+  frase si mide 70 o menos), para que se vea igual que el resto de
+  preguntas de la app. Con título propio cuando el mensaje es largo.
+
+⚠️ Sigue habiendo DOS excepciones a propósito, y no son un olvido:
+`persistNovedades` y `persistPreguntaTablon` devuelven `true`/`false` sin
+avisar, porque `VentanaNovedades.jsx` enseña el fallo en su propia
+pantalla, junto al texto que no se ha podido guardar -- ahí se entiende
+mejor que en una ventana aparte.
+
+Pruebas en `src/lib/avisos.test.js` (7): foco, ventana de respaldo, cola
+y el corte del título.
+
 ## "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
 
 El usuario: un niño salía "5 de 7" aunque tuviera todo lo suyo, y así
@@ -2068,10 +2104,9 @@ preguntar. Y 9 preguntas iban con `window.confirm` (prohibido): Mesas,
 pago y llegada del colaborador, invitaciones del colaborador, Borrado
 total, Modo Pruebas. Todas pasadas a la ventana de la app.
 
-⚠️ **Pendiente**: quedan ~12 `window.alert` (avisos de un solo botón), la
-mayoría en `avisar()` de `useLedgerData.js` y en `useMotorInvitaciones.js`.
-Van con `preguntar({ soloAviso: true })`, pero `avisar()` vive fuera de
-React y hace falta montarlo aparte. No se hizo en esta tanda.
+✅ **Cerrado en la v37.12**: los ~12 `window.alert` que quedaban (avisos
+de un solo botón) ya salen en la ventana de la app. Ver "Se acabaron los
+avisos del navegador".
 
 **Lista de invitados**: la columna de los tres iconos pasa de 92 a 100 px
 (y la tabla de 1080 a 1088 de mínimo) para que quepan con caja. Tag y
@@ -2390,6 +2425,36 @@ ventana y su entrada de menú.
 Si algún día se quiere un "exportar/restaurar" de verdad, primero hay que
 arreglar `exportarTodo` para que guarde las doce tablas conservando los
 ids -- no reconstruir esta ventana tal cual.
+
+## Comprobar si un SQL está subido, con la clave pública (2026-09-20)
+
+Yo no puedo ejecutar SQL ni tengo la clave de servicio, pero SÍ puedo
+comprobar desde fuera si lo que le paso al usuario llegó a la base --
+sin ver ni un dato de nadie. La API REST de Supabase distingue "no
+existe" de "no tienes permiso", y eso basta:
+
+```bash
+set -a; . ./.env; set +a          # VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY
+curl -s -X POST "$VITE_SUPABASE_URL/rest/v1/rpc/<funcion>" \
+  -H "apikey: $VITE_SUPABASE_ANON_KEY" -H "Content-Type: application/json" -d '{}'
+```
+
+- `PGRST202` ("Could not find the function") -> **no está subido**.
+- `42501` ("permission denied for function") -> **está subido**, y
+  además el `REVOKE ... FROM anon` funciona.
+- Una columna se comprueba igual con
+  `/rest/v1/<tabla>?select=<columna>&limit=1`: `42703` es que no existe;
+  `42501` es que la tabla no deja leer a `anon` (no dice nada de la
+  columna: hay que mirar por otro lado).
+
+Truco que ahorra trabajo: el editor SQL de Supabase ejecuta el script
+**entero en una transacción**. Si la ÚLTIMA sentencia del bloque dejó su
+huella, todo lo anterior también entró. Con comprobar la última función
+del bloque basta.
+
+Así se verificó el 2026-09-20 que los bloques de la v37.8, la v37.10 y la
+v37.11 estaban aplicados (`colaborador_familias_sin_email` existe y está
+revocada; `fotos_familiares."sinFotoBoda"` existe).
 
 ## `schema.sql` reescrito desde cero (2026-09-16)
 

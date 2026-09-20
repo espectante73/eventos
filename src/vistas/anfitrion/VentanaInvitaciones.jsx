@@ -20,6 +20,7 @@ import { GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton, estilosBoton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
+import { avisoEnPantalla } from "../../lib/avisos";
 
 export function VentanaInvitaciones({
   data,
@@ -88,8 +89,9 @@ export function VentanaInvitaciones({
     const dataUrl = await generarImagenParaFamilia(familia);
     setDescargando(null);
     if (!dataUrl) {
-      window.alert(
-        "No se ha podido generar la imagen, probablemente porque la URL de la imagen del evento no permite descargarla desde otro origen. Prueba con otra imagen alojada en un servicio que sí lo permita, o quita la URL para usar el fondo por defecto."
+      avisoEnPantalla(
+        "Probablemente la URL de la imagen del evento no permite descargarla desde otro origen. Prueba con otra imagen alojada en un servicio que sí lo permita, o quita la URL para usar el fondo por defecto.",
+        "No se ha podido generar la imagen"
       );
       return;
     }
@@ -150,11 +152,11 @@ export function VentanaInvitaciones({
     }
     setEnviandoLoteInvitaciones(false);
     setMostrarResumenLoteInvitaciones(false);
-    window.alert(
-      `Enviadas ${enviados} invitaciones.` +
-        (saltados.length > 0
-          ? `\n\nNo se pudieron enviar (${saltados.length}):\n${saltados.join("\n")}`
-          : "")
+    avisoEnPantalla(
+      saltados.length > 0
+        ? `No se pudieron enviar (${saltados.length}):\n${saltados.join("\n")}`
+        : "Todas se han enviado.",
+      `Enviadas ${enviados} ${enviados === 1 ? "invitación" : "invitaciones"}`
     );
   };
 

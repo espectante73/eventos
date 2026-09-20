@@ -10,6 +10,7 @@
 import { useState } from "react";
 import { generarInvitacionImagen } from "./imagenInvitacion";
 import { resolverColaborador } from "./invitados";
+import { avisoEnPantalla } from "./avisos";
 
 export function useMotorInvitaciones(data) {
   const { evento, colaboradores, invitados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia } = data;
@@ -121,9 +122,10 @@ export function useMotorInvitaciones(data) {
   const abrirPreviewInvitacion = async (familia) => {
     const destinatario = destinatarioConEmail(familia);
     if (!destinatario?.email) {
-      window.alert(
-        "No se puede enviar todavía: ninguno de los confirmados de esta familia tiene " +
-          "email guardado. Rellena el de alguno de ellos (en su formulario de datos) para poder enviarle la invitación."
+      avisoEnPantalla(
+        "Ninguno de los confirmados de esta familia tiene email guardado. " +
+          "Rellena el de alguno de ellos (en su formulario de datos) para poder enviarle la invitación.",
+        "No se puede enviar todavía"
       );
       return;
     }
@@ -131,8 +133,9 @@ export function useMotorInvitaciones(data) {
     const dataUrl = await generarImagenParaFamilia(familia);
     setDescargando(null);
     if (!dataUrl) {
-      window.alert(
-        "No se ha podido generar la imagen, probablemente porque la URL de la imagen del evento no permite descargarla desde otro origen. Prueba con otra imagen alojada en un servicio que sí lo permita, o quita la URL para usar el fondo por defecto."
+      avisoEnPantalla(
+        "Probablemente la URL de la imagen del evento no permite descargarla desde otro origen. Prueba con otra imagen alojada en un servicio que sí lo permita, o quita la URL para usar el fondo por defecto.",
+        "No se ha podido generar la imagen"
       );
       return;
     }
@@ -152,7 +155,7 @@ export function useMotorInvitaciones(data) {
     setEnviandoInvitacion(false);
     if (ok) {
       marcarInvitacionEnviada(previewInvitacion.familia.clave);
-      window.alert(`Invitación enviada a ${previewInvitacion.destinatario.email}.`);
+      avisoEnPantalla(previewInvitacion.destinatario.email, "Invitación enviada");
       setPreviewInvitacion(null);
     }
   };

@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App, { ErrorBoundary } from "./App.jsx";
+import { AvisosGlobales } from "./components/AvisosGlobales.jsx";
 import "./index.css";
 import { iniciarRegistroErrores } from "./lib/registroErrores";
 import { iniciarMano } from "./lib/mano";
@@ -47,6 +48,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ErrorBoundary>
       <App />
+      {/* Los avisos de la app (lib/avisos.js): fuera de App para que
+          salgan igual en el login, en el tablón y en cualquier vista. */}
+      <AvisosGlobales />
     </ErrorBoundary>
   </React.StrictMode>
 );

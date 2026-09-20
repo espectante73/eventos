@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "37.12",
+    cambios: [
+      "Ya no queda ni un aviso de los del navegador: todos salen en la ventana de la app, con el mismo aspecto que las preguntas de seguridad.",
+      "Y salen en la ventana que estás mirando: si el aviso se dispara desde la Lista de invitados, Novedades o Música (que son ventanas aparte), aparece ahí y no en la pestaña de detrás.",
+    ],
+  },
+  {
     version: "37.11",
     cambios: [
       "Email con casilla \"Sí\" marcada por defecto: si un adulto no da email, el colaborador la desmarca y deja de contar. Quien viene solo (S) tiene que darlo: para él no hay casilla.",

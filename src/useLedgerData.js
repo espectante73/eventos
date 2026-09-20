@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabaseClient";
+import { avisoEnPantalla } from "./lib/avisos";
 import { useCanalAsistencia } from "./lib/useCanalAsistencia";
 import { C } from "./theme";
 
@@ -35,7 +36,10 @@ const EVENTO_POR_DEFECTO = {
 function avisar(mensaje, error) {
   // eslint-disable-next-line no-console
   console.error(mensaje, error);
-  window.alert(mensaje);
+  // En la ventana de siempre, no en un window.alert (ver lib/avisos.js):
+  // el alert bloquea el navegador y, disparado desde una ventana
+  // emergente, salía en la pestaña de detrás.
+  avisoEnPantalla(mensaje);
 }
 
 export function useLedgerData(rol) {
@@ -675,10 +679,10 @@ export function useLedgerData(rol) {
   // ya existentes -- vuelve a comprobar el permiso por su cuenta en el
   // servidor, no se fía de lo que el cliente ya deshabilitó en pantalla.
   //
-  // Deliberadamente NO usa avisar() (window.alert): esta función la
-  // llama VentanaNovedades.jsx, que vive en una ventana emergente -- ver
-  // el porqué en persistPreguntaTablon(), unas líneas más abajo (mismo
-  // problema, mismo motivo).
+  // Deliberadamente NO usa avisar(): esta función la llama
+  // VentanaNovedades.jsx, que enseña el fallo dentro de su propia
+  // pantalla -- ver el porqué en persistPreguntaTablon(), unas líneas
+  // más abajo (mismo motivo).
   const persistNovedades = useCallback(
     async (next) => {
       const anterior = novedadesRef.current;
@@ -699,14 +703,16 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol]
   );
 
-  // Deliberadamente NO usa avisar() (window.alert): esta función solo la
-  // llama VentanaNovedades.jsx, que vive en una ventana emergente -- un
-  // window.alert() a secas apunta al `window` de la pestaña principal
-  // (mismo problema de fondo que el portapapeles, ver
-  // usePopupWindow.js/CLAUDE.md), y como es una llamada BLOQUEANTE,
-  // aparecía en el sitio equivocado y dejaba la ventana como "colgada"
-  // hasta encontrarla y cerrarla. Devuelve true/false; quien la llama
-  // decide cómo avisar (un mensaje normal en su propia interfaz).
+  // Deliberadamente NO usa avisar(): esta función solo la llama
+  // VentanaNovedades.jsx, que vive en una ventana emergente y ya enseña
+  // el fallo en su propia pantalla, junto al texto que no se ha podido
+  // guardar -- ahí se entiende mejor que en una ventana aparte. Devuelve
+  // true/false; quien la llama decide cómo avisar.
+  // (Antes esto era además obligatorio: avisar() era un window.alert,
+  // que apunta al `window` de la pestaña principal -- mismo problema de
+  // fondo que el portapapeles, ver usePopupWindow.js/CLAUDE.md -- y al
+  // ser BLOQUEANTE dejaba la ventana como "colgada". Ya no: lib/avisos.js
+  // enseña el aviso en la ventana que tiene el foco.)
   const persistPreguntaTablon = useCallback(
     async (pregunta) => {
       const anterior = preguntaTablon;

@@ -24,8 +24,9 @@
 // un await, etc.) -- si no, algunos navegadores (Safari sobre todo) no
 // lo consideran una acción directa del usuario y bloquean la ventana
 // emergente en silencio, sin ningún error que avisar.
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, createElement, Fragment } from "react";
 import { createRoot } from "react-dom/client";
+import { AvisosGlobales } from "../components/AvisosGlobales.jsx";
 import { aplicarMano, alCambiarMano } from "./mano";
 import { activarRespuestaTactil } from "./respuestaTactil";
 
@@ -131,7 +132,10 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
   // llamarlo cada vez que cambien los datos que le interesan (p.ej.
   // porque `data` se ha refrescado sola), mientras siga abierta.
   const actualizar = useCallback((hijos) => {
-    if (raizRef.current) raizRef.current.render(hijos);
+    // Con su propio sitio para los avisos (lib/avisos.js): esta ventana
+    // tiene un documento aparte, y un aviso disparado desde aquí dentro
+    // tiene que salir AQUÍ, no en la pestaña de detrás.
+    if (raizRef.current) raizRef.current.render(createElement(Fragment, null, hijos, createElement(AvisosGlobales)));
   }, []);
 
   // Si el componente que usa esto se desmonta del todo (p.ej. cierre de
