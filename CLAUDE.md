@@ -2759,6 +2759,9 @@ sentido), que es el `emailRemitente` de `config_secretos`. No hace falta
 crear buzón: con el dominio verificado en Resend, cualquier nombre
 delante de la @ sirve para enviar.
 
-⚠️ Cosmético pendiente, sin urgencia: los asuntos de las plantillas de
-Supabase Auth siguen en inglés ("Reset your password") aunque el cuerpo
-esté en español. Se cambian en Authentication → Emails → Templates.
+Los correos de Auth venían en inglés de fábrica ("Reset your
+password"). El texto en español de las tres plantillas que la app usa de
+verdad (`signUp`, `resetPasswordForEmail`, `updateUser({email})`) está en
+**`docs/plantillas-email-auth.md`**, listo para pegar en Authentication →
+Emails → Templates. Esas plantillas viven en el panel de Supabase, no en
+el repo: ese archivo es la única copia.
