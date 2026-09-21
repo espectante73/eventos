@@ -1984,10 +1984,12 @@ motivo técnico.**
 
 ## "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
 
-El texto vive en **`textos/nota-privacidad-tablon.md`** (todavía sin
-montar en la app). ⚠️ **La nota manda sobre el código**: esta casilla
-existe porque la nota lo promete. Si cambia la nota, repasar que la app
-siga cumpliendo lo que dice.
+El texto vive en `evento."notaPrivacidad"`, se ve al pie del tablón y se
+edita en Datos del evento (v39.3 y v39.4). ⚠️ **La nota manda sobre el
+código**: esta casilla existe porque la nota lo promete. Y ahora que el
+texto es editable, **nadie avisa si alguien lo cambia**: la ventana de
+edición lo dice en rojo, pero es lo único que hay. Historia de las
+decisiones en `textos/nota-privacidad-tablon.md`.
 
 Sale de la nota de privacidad que el usuario escribió para el tablón:
 *"se eliminarán, salvo que tú autorices expresamente que los guarde para

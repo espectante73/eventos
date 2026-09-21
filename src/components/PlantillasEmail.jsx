@@ -66,7 +66,11 @@ function resumenDe(texto) {
 // para que el historial de guardado (ver HistorialTexto.jsx) recoja
 // versiones reales, no una fila por cada letra tecleada. Mismo patrón
 // ya usado en Novedades (NovedadCard: estado local + onBlur).
-function PlantillaEditable({ label, valor, onCambio, campo, obtenerHistorialTexto }) {
+// Exportado (2026-09-21): lo reutiliza la nota de privacidad del tablón,
+// que es otro texto largo de `evento` con las mismas necesidades —
+// formato, deshacer e historial. Un segundo editor sería un editor de
+// más que mantener.
+export function TextoEditableEvento({ label, valor, onCambio, campo, obtenerHistorialTexto, filas = 3, tipoHistorial = "plantilla" }) {
   const { valor: texto, cambiar: setTexto, deshacer, puedeDeshacer, fijarValor: fijarTexto } = useDeshacer(valor || "");
   const ref = useRef(null);
   useAltoAutomatico(ref, texto);
@@ -91,7 +95,7 @@ function PlantillaEditable({ label, valor, onCambio, campo, obtenerHistorialText
           <Undo2 size={12} />
         </Boton>
         <BotonHistorial
-          obtenerHistorial={() => obtenerHistorialTexto("plantilla", null, campo)}
+          obtenerHistorial={() => obtenerHistorialTexto(tipoHistorial, null, campo)}
           onRestaurar={(valorAnterior) => {
             fijarTexto(valorAnterior);
             onCambio(valorAnterior);
@@ -103,7 +107,7 @@ function PlantillaEditable({ label, valor, onCambio, campo, obtenerHistorialText
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
         onBlur={() => texto !== (valor || "") && onCambio(texto)}
-        rows={3}
+        rows={filas}
         className="w-full"
         style={{
           ...inputStyle,
@@ -128,7 +132,7 @@ export function PlantillasEmail({ data }) {
       </p>
       {PLANTILLAS.map((p) => (
         <SeccionPlegable key={p.campo} icono={Mail} titulo={p.titulo} resumen={resumenDe(evento[p.campo])}>
-          <PlantillaEditable
+          <TextoEditableEvento
             label={p.label}
             valor={evento[p.campo]}
             campo={p.campo}

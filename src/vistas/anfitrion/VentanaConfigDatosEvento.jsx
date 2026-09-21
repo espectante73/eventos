@@ -2,14 +2,15 @@
 // imagen de portada del evento. Extraída de VistaAnfitrion.jsx en el
 // reparto del 2026-08-08 (Fase 4, Ronda 2).
 import { useState } from "react";
-import { Image as ImageIcon, Euro, Mail, Globe } from "lucide-react";
+import { Image as ImageIcon, Euro, Mail, Globe, ShieldCheck } from "lucide-react";
 import { C, inputStyle, T, OP } from "../../theme";
 import { redimensionarImagenArchivo } from "../../lib/descargas";
 import { supabase } from "../../supabaseClient";
 import { Field, TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
-import { PlantillasEmail } from "../../components/PlantillasEmail";
+import { PlantillasEmail, TextoEditableEvento } from "../../components/PlantillasEmail";
+import { NOTA_PRIVACIDAD_POR_DEFECTO, TITULO_NOTA_PRIVACIDAD } from "../../constants";
 import { emailValido } from "../../lib/validacion";
 import { Boton, estilosBoton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
@@ -379,6 +380,34 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
             2026-09-06: es texto del evento, y así todo el texto editable
             de la app queda concentrado aquí. */}
         <PlantillasEmail data={data} />
+
+        {/* La nota de privacidad del tablón. Aquí y no en Novedades:
+            decisión del usuario (2026-09-21), porque la nota dice su
+            nombre, sus plazos y lo que se compromete a hacer con los
+            datos de la gente — es un dato del evento, no una novedad. */}
+        <SeccionPlegable
+          icono={ShieldCheck}
+          titulo="Nota de privacidad del tablón"
+          resumen={TITULO_NOTA_PRIVACIDAD}
+        >
+          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
+            Es lo que lee el invitado al pulsar «{TITULO_NOTA_PRIVACIDAD}» al pie del tablón.
+            Admite HTML sencillo, o usa los botones de formato. Se guarda al salir del campo.
+          </p>
+          <p className="text-xs mb-2" style={{ color: C.wax }}>
+            ⚠ Si cambias lo que aquí se promete (los 3 meses, la autorización para guardar los
+            datos, el borrado de una foto ya entregada), acuérdate de que la app tiene que poder
+            cumplirlo: eso no se ajusta solo.
+          </p>
+          <TextoEditableEvento
+            label="Texto de la nota"
+            valor={evento.notaPrivacidad || NOTA_PRIVACIDAD_POR_DEFECTO}
+            campo="notaPrivacidad"
+            filas={14}
+            obtenerHistorialTexto={data.obtenerHistorialTexto}
+            onCambio={(v) => persistEvento({ ...evento, notaPrivacidad: v })}
+          />
+        </SeccionPlegable>
       </div>
       {ventanaPregunta}
     </VentanaFlotante>

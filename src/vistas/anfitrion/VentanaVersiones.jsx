@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "39.4",
+    cambios: [
+      "La nota de privacidad ya se puede editar, en Datos del evento, con el mismo editor que los textos de email (formato, deshacer e historial).",
+      "La puede cambiar quien tenga el permiso \"Editar los datos del evento\". No basta con el de Novedades: la nota dice tus plazos y lo que te comprometes a hacer con los datos de la gente.",
+    ],
+  },
+  {
     version: "39.3",
     cambios: [
       "El tablón del invitado lleva al pie un link discreto, \"Tus datos, en claro\", que abre la nota de privacidad en una ventana.",

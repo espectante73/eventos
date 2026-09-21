@@ -17,6 +17,7 @@ import { formatearFecha, valorFechaEvento } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
 import { EnlaceTexto } from "../components/Boton";
 import { NotaPrivacidad } from "../components/NotaPrivacidad";
+import { TITULO_NOTA_PRIVACIDAD } from "../constants";
 import { uid } from "../lib/id";
 
 const BUCKET_MUSICA = "musica-ambiental";
@@ -512,11 +513,11 @@ export function VistaTablon({ token }) {
               botón: te lleva a otro sitio, no hace nada (norma 13, ver
               EnlaceTexto). Y al lado del pulgar. */}
           <div className="flex justify-end zurdo:justify-start mt-6">
-            <EnlaceTexto onClick={() => setNotaAbierta(true)}>Tus datos, en claro</EnlaceTexto>
+            <EnlaceTexto onClick={() => setNotaAbierta(true)}>{TITULO_NOTA_PRIVACIDAD}</EnlaceTexto>
           </div>
         </div>
       </div>
-      {notaAbierta && <NotaPrivacidad onCerrar={() => setNotaAbierta(false)} />}
+      {notaAbierta && <NotaPrivacidad evento={evento} onCerrar={() => setNotaAbierta(false)} />}
     </div>
   );
 }

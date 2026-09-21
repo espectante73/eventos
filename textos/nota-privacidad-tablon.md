@@ -1,7 +1,9 @@
 # Nota de privacidad del tablón de invitados
 
-⚠️ **El texto ya NO vive aquí.** Está montado en la app, en
-`src/components/NotaPrivacidad.jsx`, y ese archivo es la única copia.
+⚠️ **El texto ya NO vive aquí.** Vive en la BASE DE DATOS,
+`evento."notaPrivacidad"`, y se edita desde Configuración → Datos del
+evento. El valor por defecto (por si esa columna está vacía) está en
+`src/constants.js`, en `NOTA_PRIVACIDAD_POR_DEFECTO`.
 Dos copias de un mismo texto derivan siempre — ya pasó con los rojos y
 con los tamaños de letra.
 
@@ -67,4 +69,15 @@ espacio doble en "sin ánimo de lucro".
 - No se menciona el **trabajo asignado** el día del evento
   (`rolesTrabajo`), que la app también guarda.
 
-✅ **Montada en el tablón el 2026-09-21** (v39.3).
+✅ **Montada en el tablón el 2026-09-21** (v39.3) y **editable** desde
+la v39.4.
+
+**Quién la puede editar**: el anfitrión y quien tenga el permiso
+"Editar los datos del evento". Él lo eligió entre tres opciones; el
+motivo, en sus términos: la nota dice su nombre, sus plazos y lo que se
+compromete a hacer con los datos de la gente, así que no es cosa de
+quien escribe las novedades del tablón.
+
+Usa el MISMO editor que las plantillas de email (`TextoEditableEvento`,
+en `components/PlantillasEmail.jsx`): formato, deshacer e historial de
+versiones. Un segundo editor habría sido uno de más.

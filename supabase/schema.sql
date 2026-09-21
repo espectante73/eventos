@@ -83,6 +83,10 @@ CREATE TABLE public.evento (
     -- arriba se guarda igual (el año hace falta para los aniversarios),
     -- pero la portada y el tablón leen "No hay fecha confirmada".
     "fechaSinConfirmar" boolean DEFAULT false,
+    -- La nota de privacidad del tablón (2026-09-21). Vacío = se usa el
+    -- texto por defecto de src/constants.js. La edita el anfitrión o un
+    -- colaborador con el permiso "datos_evento_editar".
+    "notaPrivacidad" text,
     "enlaceGrupoWhatsapp" text DEFAULT ''::text NOT NULL,
     "cronogramaBloques" jsonb DEFAULT '[{"texto": "Recepción", "duracionMin": 15}, {"texto": "Cóctel", "duracionMin": 30}, {"texto": "Foto 1", "duracionMin": 15}, {"texto": "Mesas", "duracionMin": 15}, {"texto": "Cena", "duracionMin": 90}, {"texto": "Foto 2", "duracionMin": 15}, {"texto": "Postre", "duracionMin": 15}, {"texto": "Baile", "duracionMin": 135}, {"texto": "Final", "duracionMin": 15}]'::jsonb NOT NULL,
     "cronogramaHoraFin" text DEFAULT '23:45'::text NOT NULL,
@@ -730,7 +734,8 @@ declare
     'ocultarTituloEnImagen', 'emailAnfitrion', 'urlPublica',
     'precioAdulto', 'precioNino', 'edadNinoDesde', 'edadNinoHasta',
     'plantillaAsignacion', 'plantillaDatosCompletados',
-    'plantillaPagoRegistrado', 'plantillaInvitacionFamilia'
+    'plantillaPagoRegistrado', 'plantillaInvitacionFamilia',
+    'notaPrivacidad'
   ];
 begin
   v_es_anfitrion := p_token is not null
