@@ -2023,7 +2023,22 @@ por la norma de avisar con cifras.
 foto es otra cosa y ante la duda se borra. Si algún día se quiere lo
 contrario, es una decisión suya, no un descuido que arreglar.
 
-SQL en «SQL pendiente de la v39.2».
+SQL **ejecutado y comprobado el 2026-09-21** (columna `conservarDatos` +
+`anfitrion_guardar_invitados` + `colaborador_guardar_invitado`). El de la
+v39.4 (`notaPrivacidad` + `guardar_evento`), también.
+
+Truco que salió de aquí y sirve para cualquier migración futura: la tabla
+`invitados` no deja mirar nada desde fuera, ni siquiera qué columnas
+tiene, así que **yo no puedo comprobar sus migraciones**. Esta consulta
+se la pasa el usuario y responde en un segundo:
+
+```sql
+select
+  (select count(*) from information_schema.columns
+     where table_name = 'invitados' and column_name = 'conservarDatos') as en_invitados,
+  (select count(*) from information_schema.columns
+     where table_name = 'evento'    and column_name = 'notaPrivacidad') as en_evento;
+```
 
 ## Cómo se le habla al invitado: tú y USTEDES, nunca vosotros (2026-09-21)
 
