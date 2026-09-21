@@ -37,8 +37,28 @@ export const ETIQUETAS_PERMISOS = {
   [PERMISOS.DATOS_EVENTO_EDITAR]: "Editar los datos del evento (textos de email incluidos)",
   [PERMISOS.INVITACIONES_ENVIAR]: "Enviar invitaciones (solo confirmados y pagados)",
   [PERMISOS.MAPA_SITIO_VER]: "Ver el mapa del sitio (dónde está cada cosa en la app)",
-  [PERMISOS.REPOSITORIO_VER]: "Ver el código de la app (enlace a GitHub)",
+  [PERMISOS.REPOSITORIO_VER]: "Ver el código de la app",
 };
+
+// ⚠️ Hay DOS clases de permiso, y confundirlas ya dio un fallo real
+// (usuario, 2026-09-21): el aviso rojo del colaborador decía "Tienes
+// permisos de edición" y metía en la misma lista "Ver el código de la
+// app", que no deja editar nada. El texto se escribió para los de
+// EDICIÓN y los de VISTA se colaron después en la misma lista.
+//
+//   EDICIÓN: dejan CAMBIAR algo del evento. Hay que avisar de ellos: es
+//            responsabilidad, y el colaborador tiene que saber que la
+//            tiene.
+//   VISTA:   solo enseñan algo que ya existe (el mapa, el código). No
+//            son responsabilidad de nadie y no van en un aviso rojo.
+//
+// Al añadir un permiso nuevo hay que meterlo aquí; si no, el test
+// permisos.test.js se pone en rojo.
+export const PERMISOS_DE_VISTA = [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER];
+
+export function esDeEdicion(clave) {
+  return !PERMISOS_DE_VISTA.includes(clave);
+}
 
 export function tienePermiso(colaborador, clave) {
   return Array.isArray(colaborador?.permisos) && colaborador.permisos.includes(clave);

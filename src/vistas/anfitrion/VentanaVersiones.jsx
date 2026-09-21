@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "38.5",
+    cambios: [
+      "El aviso rojo \"Tienes permisos de edición\" ya no mete en la lista los permisos que solo dejan mirar (el mapa del sitio y el código de la app). Prometía algo que no era.",
+      "Y la etiqueta \"Ver el código de la app\" deja de mencionar GitHub, que no le decía nada a quien no programa.",
+    ],
+  },
+  {
     version: "38.4",
     cambios: [
       "Un tercer aro, el de más afuera, en un rojo más vivo que el burdeos de la app: así el borde de la onda se ve y no se disuelve en la foto.",

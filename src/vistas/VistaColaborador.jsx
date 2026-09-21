@@ -25,7 +25,7 @@ import { construirEnlaceTablon } from "../lib/url";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
-import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso } from "../lib/permisos";
+import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso, esDeEdicion } from "../lib/permisos";
 import { generarImagenCronograma } from "../lib/cronograma";
 import { C, R, T, OP } from "../theme";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
@@ -997,6 +997,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // de la app: nunca una bandera fija que haya que acordarse de apagar) --
   // desaparece solo si el anfitrión le quita el permiso.
   const permisosActivos = Array.isArray(colaborador?.permisos) ? colaborador.permisos : [];
+  // Solo los que dejan CAMBIAR algo. Los de vista (el mapa, el código)
+  // no son responsabilidad de nadie y no pintan nada en un aviso rojo
+  // -- ver la nota de los dos tipos en lib/permisos.js.
+  const permisosDeEdicion = permisosActivos.filter(esDeEdicion);
 
   return (
     <div className="space-y-8">
@@ -1006,9 +1010,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           guardar datos, marcar pagos ni confirmar nada hasta que lo desactive.
         </div>
       )}
-      {permisosActivos.length > 0 && (
+      {permisosDeEdicion.length > 0 && (
         <div className="p-4 rounded text-sm font-semibold" style={{ background: C.peligro, color: "#fff" }}>
-          🔑 Tienes permisos de edición: {permisosActivos.map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ")}.
+          🔑 Tienes permisos de edición: {permisosDeEdicion.map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ")}.
         </div>
       )}
       {/* Misma Portada que ve el anfitrión (imagen + franja fecha/hora/

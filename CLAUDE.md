@@ -1961,6 +1961,36 @@ manda `error.message` y la ventana lo enseña en letra pequeña debajo
 (`detalle` en `PreguntaSeguridad`). **Todo aviso de error lleva el
 motivo técnico.**
 
+## Dos clases de permiso, no una (2026-09-21, v38.5)
+
+Lo cazó el usuario: el aviso rojo del colaborador decía **"🔑 Tienes
+permisos de edición: Ver el código de la app (enlace a GitHub)"**. Dos
+cosas mal en una frase.
+
+**Su diagnóstico, que es el bueno**: *"no creo que deba de tener permiso
+de edición, eso es del otro permiso... y es otro tipo de permiso, lo
+copiaste de este"*. Exacto: el banner se escribió para los permisos que
+dejan CAMBIAR cosas, y cuando se añadieron los de VISTA (mapa del sitio,
+código de la app) se metieron en la misma lista sin revisar el texto.
+
+**Arreglo**: `lib/permisos.js` distingue los dos tipos
+(`PERMISOS_DE_VISTA` + `esDeEdicion()`), y el banner solo lista los de
+edición. Si alguien solo tiene permisos de vista, no sale banner: no hay
+nada de lo que avisar. `lib/permisos.test.js` se pone en rojo si un
+permiso nuevo se queda sin clasificar o sin etiqueta.
+
+De paso, la etiqueta pierde el "(enlace a GitHub)": a quien no programa
+no le dice nada y suena a que tiene que irse a otro sitio.
+
+⚠️ **Queda abierto**: el enlace al código sigue escondido dentro de "Mi
+cuenta", así que quien lo tiene concedido tiene que buscarlo. El usuario
+tiene una idea propia para enseñarlo de otra manera y **no la ha contado
+todavía** — no adelantarse con una solución mía: preguntarle.
+
+**Lección general**: al añadir una clave a una lista existente, leer el
+texto que la lista ya imprime. Aquí la etiqueta era correcta y la frase
+que la envolvía, no.
+
 ## La prueba del local no toca todavía (2026-09-20)
 
 La prueba de la tele del local (cortinilla y Música del evento con el
