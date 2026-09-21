@@ -11,6 +11,7 @@ import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 
 export function VentanaConfigZonaPeligro({ data, onCerrar }) {
   const {
+    invitados,
     persistEvento,
     persistColaboradores,
     persistInvitados,
@@ -19,12 +20,24 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
     guardarFotoDeshacer,
   } = data;
 
+  // Los que AUTORIZARON expresamente que se guarden sus datos (la casilla
+  // del formulario del colaborador, 2026-09-21). El borrado total los
+  // respeta: es lo que promete la nota de privacidad del tablón, y
+  // borrarlos igualmente sería incumplir lo que se les dijo.
+  const conAutorizacion = (invitados || []).filter((g) => g.conservarDatos);
+
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   // Dos preguntas seguidas, como antes, ahora en la ventana de la app.
   const pedirBorrarTodo = () =>
     preguntar({
       titulo: "¿Borrar TODO?",
-      texto: "Evento, colaboradores, invitados, mesas y fotos — todo el contenido de la aplicación.",
+      texto:
+        "Evento, colaboradores, invitados, mesas y fotos — todo el contenido de la aplicación." +
+        (conAutorizacion.length > 0
+          ? `\n\nSe quedan ${conAutorizacion.length} ${
+              conAutorizacion.length === 1 ? "invitado que autorizó" : "invitados que autorizaron"
+            } guardar sus datos, con su nombre y sus datos personales. Se les quita todo lo de este evento: mesa, pago, confirmación y colaborador.`
+          : "\n\nNadie ha autorizado que se guarden sus datos, así que no se queda ninguno."),
       rotulo: "Sí, continuar",
       alConfirmar: () =>
         preguntar({
@@ -73,7 +86,24 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
         "Hola,<br><br>Aquí tienes tu invitación. ¡Les esperamos con muchas ganas!",
     });
     persistColaboradores([]);
-    persistInvitados([]);
+    // Los que autorizaron se quedan, pero SOLO ellos y SOLO su parte
+    // personal: lo de este evento (mesa, pago, confirmación, llegada,
+    // colaborador, avisos) se va con el evento. Guardar "para otra
+    // ocasión" es guardar a la persona, no la boda.
+    persistInvitados(
+      conAutorizacion.map((g) => ({
+        ...g,
+        colaboradorId: null,
+        mesa: null,
+        confirmado: false,
+        pagado: false,
+        presente: false,
+        avisoPendiente: false,
+        rolesTrabajo: [],
+        excepcionesRevision: [],
+        excluidoTablon: false,
+      }))
+    );
     persistMesas([]);
     persistFotosFamiliares({});
   };
@@ -85,6 +115,13 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
         ⚠ Zona de peligro: esto borra evento, colaboradores, invitados, mesas y fotos —
         todo el contenido de la aplicación. No se puede deshacer.
       </p>
+      {conAutorizacion.length > 0 && (
+        <p className="text-xs mb-2" style={{ color: C.charcoal }}>
+          Se quedarán <b>{conAutorizacion.length}</b>{" "}
+          {conAutorizacion.length === 1 ? "invitado que autorizó" : "invitados que autorizaron"}{" "}
+          expresamente guardar sus datos, sin nada de este evento.
+        </p>
+      )}
       <Boton variante="peligro" onClick={pedirBorrarTodo}>
         <Trash2 size={14} /> BORRAR TODO
       </Boton>

@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "39.2",
+    cambios: [
+      "En el formulario de cada invitado, una casilla: \"Autorizo expresamente a que guarden mis datos\". Nace desmarcada: la marca quien contesta, no quien rellena.",
+      "El Borrado total la respeta: quien autorizó se queda con sus datos personales, y se le quita todo lo de este evento (mesa, pago, confirmación y colaborador). La pregunta de seguridad dice cuántos son.",
+    ],
+  },
+  {
     version: "39.1",
     cambios: [
       "El invitado vuelve a ver el tablón completo: la fila de la fecha se enseña siempre, y cuando no hay día cerrado pone \"No hay fecha confirmada\", igual que lo ves tú.",

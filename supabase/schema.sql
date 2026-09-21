@@ -136,7 +136,13 @@ CREATE TABLE public.invitados (
     -- Igual para el email (2026-09-19): casilla "Sí" marcada por defecto;
     -- aquí se guarda su "no". Quien viene solo (suelto) no puede decir que
     -- no: eso lo impone la app.
-    "sinEmail" boolean DEFAULT false
+    "sinEmail" boolean DEFAULT false,
+    -- Autorización EXPRESA del invitado a conservar sus datos después del
+    -- evento (2026-09-21). Lo promete la nota de privacidad del tablón, y
+    -- el "Borrado total" la respeta. Sin marcar = se borra.
+    -- Nullable a propósito, como el resto de columnas nuevas: una foto de
+    -- Deshacer anterior a esta columna tiene que poder restaurarse.
+    "conservarDatos" boolean DEFAULT false
 );
 
 -- Quién ayuda a recoger datos y qué permisos tiene cada uno.
@@ -1189,7 +1195,8 @@ begin
     "id","nombre","apellido","zona","confirmado","colaboradorId",
     "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
     "cancion","alergias","observaciones","pagado","rolesTrabajo",
-    "excluidoTablon","rolFamiliar","presente","excepcionesRevision","sinCancion","sinEmail"
+    "excluidoTablon","rolFamiliar","presente","excepcionesRevision","sinCancion","sinEmail",
+    "conservarDatos"
   )
   select
     (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
@@ -1205,7 +1212,8 @@ begin
     coalesce((f->>'presente')::boolean, false),
     coalesce(f->'excepcionesRevision', '[]'::jsonb),
     coalesce((f->>'sinCancion')::boolean, false),
-    coalesce((f->>'sinEmail')::boolean, false)
+    coalesce((f->>'sinEmail')::boolean, false),
+    coalesce((f->>'conservarDatos')::boolean, false)
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update set
     "nombre"=excluded."nombre", "apellido"=excluded."apellido",
@@ -1219,7 +1227,8 @@ begin
     "rolFamiliar"=excluded."rolFamiliar", "presente"=excluded."presente",
     "excepcionesRevision"=excluded."excepcionesRevision",
     "sinCancion"=excluded."sinCancion",
-    "sinEmail"=excluded."sinEmail";
+    "sinEmail"=excluded."sinEmail",
+    "conservarDatos"=excluded."conservarDatos";
 
   delete from invitados g
   where not exists (
@@ -1622,7 +1631,8 @@ begin
     "alergias"       = coalesce(p_cambios->>'alergias', "alergias"),
     "observaciones"  = coalesce(p_cambios->>'observaciones', "observaciones"),
     "sinCancion"     = coalesce((p_cambios->>'sinCancion')::boolean, "sinCancion"),
-    "sinEmail"       = coalesce((p_cambios->>'sinEmail')::boolean, "sinEmail")
+    "sinEmail"       = coalesce((p_cambios->>'sinEmail')::boolean, "sinEmail"),
+    "conservarDatos" = coalesce((p_cambios->>'conservarDatos')::boolean, "conservarDatos")
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
   returning *;
 end;

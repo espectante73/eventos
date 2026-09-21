@@ -1982,6 +1982,42 @@ manda `error.message` y la ventana lo enseña en letra pequeña debajo
 (`detalle` en `PreguntaSeguridad`). **Todo aviso de error lleva el
 motivo técnico.**
 
+## "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
+
+Sale de la nota de privacidad que el usuario escribió para el tablón:
+*"se eliminarán, salvo que tú autorices expresamente que los guarde para
+otra ocasión; el colaborador te lo preguntará y dejará constancia"*. Si
+la app promete eso, tiene que poder cumplirlo.
+
+`invitados."conservarDatos"`, una casilla en el formulario del
+colaborador.
+
+**Tres decisiones, y las tres importan:**
+- **Nace DESMARCADA**, al revés que canción, email o foto de boda. Un
+  permiso que viene dado de fábrica no es un permiso: lo marca quien
+  contesta, no quien rellena.
+- **NO cuenta en "datos X de Y"**. No es un dato del invitado, es una
+  decisión suya; si contara, una ficha parecería incompleta por no haber
+  dicho que sí — y eso es presionar para que diga que sí.
+- **La frase es la suya, palabra por palabra.** Primero puse "Quiero que
+  guardes mis datos" y él lo corrigió: *"sería lo correcto, autorizo
+  expresamente a que guarden mis datos"*. Es la constancia de una
+  autorización, no una preferencia.
+
+**El Borrado total la respeta** (`VentanaConfigZonaPeligro.jsx`): quien
+autorizó se queda, y **solo con su parte personal**. Se le quita todo lo
+de este evento — mesa, pago, confirmación, llegada, colaborador, avisos,
+roles y excepciones. Guardar "para otra ocasión" es guardar a la persona,
+no la boda. La ventana y la pregunta de seguridad dicen **cuántos** son,
+por la norma de avisar con cifras.
+
+⚠️ **Las fotos de boda SÍ se borran**, también las de quien autorizó
+(`persistFotosFamiliares({})`). La autorización habla de "mis datos"; una
+foto es otra cosa y ante la duda se borra. Si algún día se quiere lo
+contrario, es una decisión suya, no un descuido que arreglar.
+
+SQL en «SQL pendiente de la v39.2».
+
 ## Cómo se le habla al invitado: tú y USTEDES, nunca vosotros (2026-09-21)
 
 El usuario, corrigiendo un borrador mío: *"no uso el término sentaros,

@@ -54,6 +54,7 @@ const ETIQUETAS_CAMPOS_INVITADO = {
   // guarda, y el aviso dice "Canción".
   sinCancion: "Canción",
   sinEmail: "Email",
+  conservarDatos: "Autorización para guardar sus datos",
 };
 
 function FormularioDatos({
@@ -537,6 +538,46 @@ function FormularioDatos({
             style={{ maxWidth: 140 }}
           />
         </div>
+      </div>
+
+      {/* Permiso para conservar los datos después del evento (usuario,
+          2026-09-21). Lo pide la propia nota de privacidad del tablón:
+          "se eliminarán, salvo que tú autorices expresamente que los
+          guarde para otra ocasión; el colaborador te lo preguntará y
+          dejará constancia". La frase es la suya, palabra por palabra
+          ("autorizo expresamente"): esto es la constancia de una
+          autorización, no una preferencia.
+          ⚠️ DESMARCADA por defecto, a diferencia de canción o foto de
+          boda: un permiso que viene dado de fábrica no es un permiso.
+          Tiene que marcarlo quien contesta, no quien rellena.
+          ⚠️ Y NO cuenta en "datos X de Y": no es un dato del invitado,
+          es una decisión suya. Si contara, una ficha parecería
+          incompleta por no haber dicho que sí. */}
+      <div>
+        <span
+          className="text-xs uppercase block mb-1"
+          style={{ color: C.ink, fontFamily: "'IBM Plex Mono', monospace" }}
+        >
+          Después del evento
+        </span>
+        <label className="flex items-start gap-2 text-sm cursor-pointer" style={{ color: C.ink }}>
+          <input
+            type="checkbox"
+            checked={Boolean(form.conservarDatos)}
+            onChange={(e) => {
+              const siguiente = { ...form, conservarDatos: e.target.checked };
+              setForm(siguiente);
+              revisarYGuardar(siguiente);
+            }}
+            className="flex-shrink-0 mt-0.5"
+          />
+          <span>
+            Autorizo expresamente a que guarden mis datos
+            <span className="block text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
+              Para otra ocasión. Si no se marca, se borran a los 3 meses del evento.
+            </span>
+          </span>
+        </label>
       </div>
 
       {/* Foto de boda en grande, y el cambio desde ahí: igual que en
