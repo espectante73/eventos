@@ -1984,6 +1984,11 @@ motivo técnico.**
 
 ## "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
 
+El texto vive en **`textos/nota-privacidad-tablon.md`** (todavía sin
+montar en la app). ⚠️ **La nota manda sobre el código**: esta casilla
+existe porque la nota lo promete. Si cambia la nota, repasar que la app
+siga cumpliendo lo que dice.
+
 Sale de la nota de privacidad que el usuario escribió para el tablón:
 *"se eliminarán, salvo que tú autorices expresamente que los guarde para
 otra ocasión; el colaborador te lo preguntará y dejará constancia"*. Si
