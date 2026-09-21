@@ -2039,6 +2039,18 @@ contraseña", "Crear cuenta", "Ya tengo cuenta") dejan de ser botones y
 pasan a `EnlaceTexto`. No hacen nada: solo cambian lo que enseña ese
 mismo formulario.
 
+✅ **Aprobado por el usuario el 2026-09-21** ("sencillamente maravilloso").
+
+**La lección de toda esta tanda, que es la que vale para mañana**: una
+norma suya tiene un ÁMBITO, y el ámbito no siempre está escrito. La 13
+nació con los botones 3D y hablaba de acciones; yo la apliqué a un link
+de login, que es una convención universal de internet, y quedó mal. Fue
+él quien lo vio: *"no me acuerdo en qué momento te puse esa norma, pero
+en todas las páginas web oficialmente se ve como un link subrayado"*.
+Cuando una norma suya choca de frente con algo que cualquiera reconoce
+de internet, el choque es la señal: **preguntar por el alcance antes de
+aplicarla al pie de la letra.**
+
 **Y en la v38.8, el paso intermedio**, después de verlo funcionando:
 *"colocaste GitHub dos veces... un botón grande, largo, que encima se ve
 basto, no armoniza con la aplicación... aquí haríamos una excepción, lo
