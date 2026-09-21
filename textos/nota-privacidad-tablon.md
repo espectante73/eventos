@@ -24,22 +24,22 @@ tú, que eso es otra cosa.
 **Tus datos, en claro**
 
 Los datos que le diste a tu colaborador los gestiona Benito Fariña, el
-anfitrión, para organizar este evento. Es un evento privado, sin
-finalidad comercial ni ánimo de lucro: las cantidades que se aportan son
-únicamente para cubrir los gastos de organización y para pagar los
-servicios de los profesionales contratados.
+anfitrión, para organizar este evento. Es un evento privado, sin  ánimo
+de lucro: el pago de la entrada es únicamente para cubrir los gastos de
+organización y para pagar los servicios de los profesionales
+contratados.
 
-**Qué se guarda:** tu nombre y apellidos, tu zona, si vienes, si has
-pagado, tu mesa y si llegaste el día del evento. Y, si los diste: tu
-email, tu año de nacimiento, tu año de boda, una canción, alergias y
-observaciones. De los matrimonios invitados, la foto de boda.
+**Qué se guarda:** tu nombre y apellidos, tu zona, si has pagado, tu mesa
+y si llegaste el día del evento, tu email, tu año de nacimiento, tu año
+de boda, una canción, alergias y observaciones. De los matrimonios
+invitados, ls foto de su boda.
 
-**Para qué:** para saber cuántas personas vienen, cómo sentarles,
+**Para qué:** para saber cuántos invitados vienen, cómo sentarles,
 avisarles de las novedades, mandarles la invitación y que la cocina tenga
 en cuenta las alergias.
 
-**Las alergias** se piden solo para la cocina, y darlas es cosa tuya: si
-prefieres no decirlas, no pasa nada.
+**Las alergias** se piden solo para la cocina: si prefieres no decirlas,
+no pasa nada.
 
 **Quién lo ve:** el anfitrión y el colaborador que te atiende. Ningún
 colaborador ve los invitados de otro.
@@ -54,13 +54,41 @@ ocasión. En ese caso, el colaborador te lo preguntará y dejará constancia
 de tu autorización.
 
 **Las fotos de boda:** en "Las bodas de todos" se verán las bodas de
-todos en sus fotos de boda. Si prefieren que la suya no se muestre,
-díganselo al colaborador y no se mostrará.
+todos en sus fotos de boda. Esa es la razón por la que se piden: para
+mostrarlas. Si prefieren que la suya no se vea, basta con no darla, y si
+ya la dieron y cambian de idea, díganselo al colaborador y se borra.
 
 **Al entrar en este tablón** se guarda tu nombre y un código del aparato
 desde el que entras, solo para detectar accesos raros. No se guarda tu
 dirección de internet.
 
-**Lo que puedes pedir:** ver los datos que hay sobre ti, corregirlos,
-borrarlos u oponerte a su uso cuando corresponda. Puedes gestionarlo a
-través del colaborador, que se lo trasladará al anfitrión.
+**Lo que puedes pedir:** Gestionar tus datos a través del colaborador y
+él se los trasladará al anfitrión.
+
+---
+
+## Lo que queda por decidir (a 2026-09-21)
+
+Repasado con el usuario. **Aprobado por él:** el párrafo de las fotos
+(*"no tiene sentido recoger una foto para no mostrarla, así que hay que
+dejarle claro que no la voy a recoger"*), con el añadido del caso de
+quien ya la dio y cambia de idea — la app sabe hacer las dos cosas: no
+pedirla (casilla "Foto boda") y borrar una entregada.
+
+**Pendiente de su palabra**, se lo señalé y no lo he tocado:
+1. **Los derechos.** "Gestionar tus datos" no dice qué se puede pedir.
+   Antes ponía ver, corregir, borrar u oponerse. ⚠️ Ojo al contexto: él
+   razonó —y tiene razón— que el RGPD **no le aplica** (art. 2.2.c,
+   actividad exclusivamente personal o doméstica: es su boda, con sus
+   amigos, sin ánimo de lucro). La nota es deferencia, no obligación. La
+   pregunta ya no es legal sino de trato: ¿lista de derechos o una línea
+   de cortesía?
+2. Falta **"si vienes"** en lo que se guarda (la app guarda `confirmado`).
+3. Ya no se distingue lo **voluntario** (email, año de nacimiento, año de
+   boda, canción, alergias, observaciones) de lo que se guarda siempre.
+4. "**ls** foto de su boda" → "la".
+5. Espacio doble en "sin  ánimo de lucro".
+6. No queda ningún **contacto directo** suyo: todo pasa por el
+   colaborador.
+7. No se menciona el **trabajo asignado** el día del evento
+   (`rolesTrabajo`), que la app también guarda.
