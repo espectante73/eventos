@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "38.9",
+    cambios: [
+      "En el login, \"He olvidado mi contraseña\" y \"Crear cuenta\" pasan a ser links subrayados en gris suave, como en cualquier web, en vez de botones.",
+      "Y el aviso del proyecto queda en una sola línea: \"Tienes permiso para ver el proyecto en GitHub\", donde esa última parte es el link.",
+    ],
+  },
+  {
     version: "38.8",
     cambios: [
       "El acceso al proyecto deja de ser un botón grande y pasa a ser un link dorado, que armoniza mejor dentro del aviso.",

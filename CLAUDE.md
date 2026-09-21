@@ -69,12 +69,17 @@ en la sección que se indica entre paréntesis.
 13. **Todo lo que se pulsa tiene relieve y se hunde al tocarlo**, y suena
     un clic suave + vibra (v36). Incluye desplegables, títulos plegables y
     acciones que eran texto subrayado. Nada de texto subrayado como botón.
-    ⚠️ **Una excepción, concedida por el usuario el 2026-09-21**: un link
-    que SALE de la app metido dentro de un aviso. Ahí una pastilla con
-    relieve pesa más que el propio aviso ("no queda nada bien"), y va como
-    link subrayado en dorado. Vale para links externos dentro de un aviso,
-    no para acciones de la app. Sigue llevando `py-2` (altura de dedo) y
-    el lado del pulgar. («Dos clases de permiso, no una»)
+    ⚠️ **Acotada por el usuario el 2026-09-21**, y el criterio es este:
+    - **ACCIÓN sobre los datos** (guardar, borrar, confirmar, abrir una
+      ventana) → `Boton`, con relieve. La norma, tal cual.
+    - **LINK, que te lleva a otro sitio** (otra pantalla del login, otra
+      web) → `EnlaceTexto`, **subrayado en gris suave**. Sus palabras:
+      *"en las ventanas del login, 'he olvidado mi contraseña'... en
+      todas las páginas web oficialmente se ve como un link subrayado con
+      ese gris suave. Eso sí lo vamos a dejar como estándar"*.
+    Una sola pieza para los dos usos, `EnlaceTexto` en
+    `components/Boton.jsx`. Lleva `py-2` aunque se vea como texto: en el
+    móvil un link fino se falla. («Dos clases de permiso, no una»)
 14. **Quitar/borrar = `BotonQuitar`**: el mismo círculo rojo en toda la
     app, 24 px a la vista y 44 px de zona de toque (el mínimo del móvil).
     X = quitar; papelera (`borrar`) = se borra para siempre. Lleva la
@@ -2017,7 +2022,24 @@ Dos detalles que decidió él y no yo:
 (`VistaAnfitrion` ya no pasa `mostrarRepositorio`). Es lo que se pidió, y
 el anfitrión tiene el repositorio en su propio ordenador.
 
-**Y en la v38.8, el aspecto final**, después de verlo funcionando:
+**Y en la v38.9, la forma definitiva**: *"quiero que la frase 'ver
+proyecto de GitHub' sea el link como tal, y que ese banner sea de una
+sola línea"*. El aviso queda en un renglón — **"🔑 Tienes permiso para
+_ver el proyecto en GitHub_."** — con la última parte subrayada en
+dorado. El permiso y la forma de usarlo son la misma cosa, así que se
+dicen una sola vez, y "GitHub" aparece una sola vez.
+⚠️ Al ir DENTRO de la frase ya no puede irse al lado del pulgar: es
+texto, no un acceso suelto. Por eso `EnlaceTexto` tiene el modo
+`enLinea`, que hereda tamaño y grosor del renglón (si no, se vería un
+trozo de otra letra en medio de la frase) y conserva el relleno de dedo,
+que en un elemento en línea no descuadra el renglón.
+
+De la misma tanda: los tres secundarios del **login** ("He olvidado mi
+contraseña", "Crear cuenta", "Ya tengo cuenta") dejan de ser botones y
+pasan a `EnlaceTexto`. No hacen nada: solo cambian lo que enseña ese
+mismo formulario.
+
+**Y en la v38.8, el paso intermedio**, después de verlo funcionando:
 *"colocaste GitHub dos veces... un botón grande, largo, que encima se ve
 basto, no armoniza con la aplicación... aquí haríamos una excepción, lo
 dejamos como un link, tal vez con los colores de la aplicación"*.

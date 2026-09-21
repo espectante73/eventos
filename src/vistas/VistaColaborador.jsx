@@ -3,7 +3,7 @@
 // aviso al anfitrión al terminar). Movida tal cual desde App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
-import { Bell, Calendar, Check, ChevronDown, ClipboardList, Code2, Euro, Mail, Megaphone, Send, User, UserCog } from "lucide-react";
+import { Bell, Calendar, Check, ChevronDown, ClipboardList, Euro, Mail, Megaphone, Send, User, UserCog } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
 import {
@@ -34,7 +34,7 @@ import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
 import { SeccionPlegable } from "../components/SeccionPlegable";
-import { Boton, estilosBoton } from "../components/Boton";
+import { Boton, estilosBoton, EnlaceTexto } from "../components/Boton";
 import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
 import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
@@ -1029,33 +1029,28 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             </p>
           )}
           {puedeVerRepositorio && (
-            <>
-              <p style={{ fontWeight: 600 }} className={permisosDeEdicion.length > 0 ? "mt-2" : ""}>
-                🔑 Tienes permiso para ver el proyecto en GitHub.
-              </p>
-              {/* ⚠️ EXCEPCIÓN a la norma 13 ("nada de texto subrayado
-                  como botón"), concedida por el usuario el 2026-09-21
-                  después de ver la pastilla con relieve: "no es que no
-                  queda bien, no queda nada bien... lo dejamos como un
-                  link, tal vez con los colores de la aplicación". Un
-                  botón grande dentro de un aviso de dos líneas pesaba
-                  más que el propio aviso.
-                  Y no repite "GitHub": ya lo dice la frase de arriba.
-                  Sigue yendo al lado del pulgar, y el `py-2` le da altura
-                  de dedo aunque se vea como una línea de texto. */}
-              <div className="flex justify-end zurdo:justify-start mt-1">
-                <a
-                  href={URL_REPOSITORIO}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 py-2"
-                  style={{ color: C.goldClaro, textDecoration: "underline", textUnderlineOffset: 3 }}
-                  title="Abre el proyecto en otra pestaña"
-                >
-                  <Code2 size={14} /> Link para acceder al proyecto
-                </a>
-              </div>
-            </>
+            /* UNA SOLA LÍNEA, y el link es la propia frase (usuario,
+               2026-09-21). Antes eran dos renglones: uno anunciaba el
+               permiso y otro repetía "GitHub" en un botón aparte. El
+               permiso y la forma de usarlo son la misma cosa, así que se
+               dicen una sola vez.
+               ⚠️ EXCEPCIÓN a la norma 13, concedida por él: un link que
+               SALE de la app, subrayado, sin relieve. Al ir dentro de la
+               frase tampoco puede irse al lado del pulgar -- es texto,
+               no un acceso suelto. */
+            <p style={{ fontWeight: 600 }} className={permisosDeEdicion.length > 0 ? "mt-2" : ""}>
+              🔑 Tienes permiso para{" "}
+              <EnlaceTexto
+                href={URL_REPOSITORIO}
+                enLinea
+                color={C.goldClaro}
+                style={{ opacity: 1 }}
+                title="Abre el proyecto en otra pestaña"
+              >
+                ver el proyecto en GitHub
+              </EnlaceTexto>
+              .
+            </p>
           )}
         </div>
       )}

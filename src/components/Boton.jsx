@@ -89,3 +89,68 @@ export const Boton = forwardRef(function Boton({
     </button>
   );
 });
+
+// ---------- El link de texto ----------
+//
+// La norma 13 dice que todo lo que se pulsa lleva relieve y nada de texto
+// subrayado. Nació con los botones 3D y va dirigida a las ACCIONES de la
+// app (guardar, borrar, confirmar). El usuario acotó su alcance el
+// 2026-09-21: *"en las ventanas del login, 'he olvidado mi contraseña' o
+// 'recuperar contraseña'... en todas las páginas web oficialmente se ve
+// como un link subrayado con ese gris suave. Eso sí lo vamos a dejar como
+// estándar"*.
+//
+// El criterio, entonces:
+//   ACCIÓN sobre los datos  -> `Boton`, con relieve.
+//   LINK: te lleva a otro sitio (otra pantalla del login, otra web)
+//         -> `EnlaceTexto`, subrayado.
+//
+// Con `href` sale un enlace de verdad, siempre en pestaña nueva (solo se
+// usa para salir de la app). Sin él, un <button>: en el login no se va a
+// ninguna parte, solo cambia lo que enseña el formulario.
+//
+// ⚠️ `py-2` no es decorativo: se ve como una línea de texto, pero el dedo
+// necesita dónde acertar. Un link fino en el móvil se falla.
+// `enLinea`: el link va DENTRO de una frase ("Tienes permiso para <ver
+// el proyecto>"), no en su propia línea. Entonces no puede ser una caja
+// flex con alto propio: descuadraría el renglón. El relleno de arriba y
+// abajo se queda igualmente -- en un elemento en línea no cambia la
+// altura del renglón, pero el dedo sigue teniendo dónde acertar.
+export function EnlaceTexto({ children, href, onClick, disabled, color = C.charcoal, enLinea = false, className = "", style, ...resto }) {
+  const comun = {
+    className: `${enLinea ? "" : "inline-flex items-center gap-1.5 py-2"} ${className}`.trim(),
+    style: {
+      color,
+      // Ese punto de transparencia es lo que lo vuelve "gris suave" en vez
+      // de un texto normal subrayado.
+      opacity: disabled ? OP.apagado : OP.secundario,
+      textDecoration: "underline",
+      textUnderlineOffset: 3,
+      fontSize: T.pequeno,
+      cursor: disabled ? "not-allowed" : "pointer",
+      background: "none",
+      border: "none",
+      // Solo los lados: el alto lo pone `py-2` de la clase, y un
+      // `padding: 0` en línea ganaría a la clase y se lo comería.
+      paddingLeft: 0,
+      paddingRight: 0,
+      // Dentro de una frase hereda tamaño y grosor de la frase, o se
+      // vería como un trozo suelto de otra letra.
+      ...(enLinea ? { display: "inline", fontSize: "inherit", fontWeight: "inherit", paddingTop: 8, paddingBottom: 8 } : {}),
+      ...style,
+    },
+    ...resto,
+  };
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noreferrer" {...comun}>
+        {children}
+      </a>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} {...comun}>
+      {children}
+    </button>
+  );
+}

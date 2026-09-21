@@ -28,7 +28,7 @@ import { useState, useEffect, useRef } from "react";
 import { C, inputStyle, OP, S } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
-import { Boton } from "../components/Boton";
+import { EnlaceTexto } from "../components/Boton";
 
 const TITULOS = { entrar: "Entrar", crear: "Crear cuenta", recuperar: "Recuperar contraseña" };
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
@@ -286,21 +286,27 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
           {cargando ? "Un momento…" : modo === "recuperar" ? "Enviar enlace" : TITULOS[modo]}
         </button>
 
-        {modo === "entrar" && (
-          <>
-            <Boton tamano="pequeno" onClick={() => cambiarModo("recuperar")} disabled={cargando} className="w-full mb-2">
-              He olvidado mi contraseña
-            </Boton>
-            <Boton tamano="pequeno" onClick={() => cambiarModo("crear")} disabled={cargando} className="w-full">
-              ¿No tienes cuenta todavía? Crear cuenta
-            </Boton>
-          </>
-        )}
-        {(modo === "crear" || modo === "recuperar") && (
-          <Boton tamano="pequeno" onClick={() => cambiarModo("entrar")} disabled={cargando} className="w-full">
-            Ya tengo cuenta — entrar
-          </Boton>
-        )}
+        {/* Links, no botones: no hacen nada, solo cambian lo que enseña
+            este mismo formulario. Es lo que hace cualquier login de
+            internet, y el usuario lo fijó como estándar el 2026-09-21
+            (ver la cabecera de EnlaceTexto en components/Boton.jsx). */}
+        <div className="flex flex-col items-center">
+          {modo === "entrar" && (
+            <>
+              <EnlaceTexto onClick={() => cambiarModo("recuperar")} disabled={cargando}>
+                He olvidado mi contraseña
+              </EnlaceTexto>
+              <EnlaceTexto onClick={() => cambiarModo("crear")} disabled={cargando}>
+                ¿No tienes cuenta todavía? Crear cuenta
+              </EnlaceTexto>
+            </>
+          )}
+          {(modo === "crear" || modo === "recuperar") && (
+            <EnlaceTexto onClick={() => cambiarModo("entrar")} disabled={cargando}>
+              Ya tengo cuenta — entrar
+            </EnlaceTexto>
+          )}
+        </div>
       </form>
     </div>
   );
