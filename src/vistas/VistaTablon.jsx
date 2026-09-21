@@ -393,12 +393,16 @@ export function VistaTablon({ token }) {
                   invitado veía medio tablón y sin saber por qué. Ahora ve
                   lo mismo que el anfitrión, y cuando no hay día cerrado
                   lo pone con todas las letras (usuario, 2026-09-21).
-                  ⚠️ PUENTE TEMPORAL: mientras quede alguna base con
-                  `tablonOcultarFecha` puesto y sin migrar, se respeta como
-                  si fuera "sin confirmar" -- así no se escapa una fecha
-                  provisional a los invitados entre el despliegue y el SQL.
-                  Se puede quitar (y con él la columna) en cuanto el SQL
-                  de la v39.1 esté ejecutado. */}
+                  ⚠️ `tablonOcultarFecha` se sigue respetando como si
+                  fuera "sin confirmar", y NO es un puente que se pueda
+                  quitar sin pensarlo. Nació para cubrir la ventana entre
+                  el despliegue y el SQL (ya ejecutado el 2026-09-21),
+                  pero se queda por un motivo mejor: una foto de Deshacer
+                  o de Modo Pruebas ANTERIOR a esa migración trae
+                  `tablonOcultarFecha = true` y `fechaSinConfirmar` vacío.
+                  Al restaurarla, sin esta línea, la fecha provisional se
+                  les escaparía a los invitados sin que nadie se entere.
+                  Quitarla solo cuando ya no quede ninguna foto vieja. */}
               <InfoItem
                 claro
                 icon={Calendar}

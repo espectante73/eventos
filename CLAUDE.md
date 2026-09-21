@@ -2026,16 +2026,27 @@ confirmada... tal como aparece para el anfitrión"*.
 
 Retirada la casilla de Novedades; la fila se enseña siempre.
 
-⚠️ **Puente temporal en `VistaTablon.jsx`**: mientras `tablonOcultarFecha`
-siga puesto en la base, se respeta como si fuera "sin confirmar". Sin él
-habría una ventana entre el despliegue y el SQL en la que a los invitados
-se les escaparía la fecha provisional. Se puede quitar —y borrar la
-columna— en cuanto esto esté ejecutado:
+**SQL de la mudanza, EJECUTADO y comprobado el 2026-09-21**
+(`fechaSinConfirmar` = true, `tablonOcultarFecha` = false en la base
+real):
 
 ```sql
 update public.evento set "fechaSinConfirmar" = true, "tablonOcultarFecha" = false
 where "tablonOcultarFecha";
 ```
+
+⚠️ **`VistaTablon.jsx` sigue respetando `tablonOcultarFecha`, y eso NO es
+un resto que quitar sin pensarlo.** Se puso para cubrir la ventana entre
+el despliegue y el SQL, pero se queda por un motivo mejor: **una foto de
+Deshacer o de Modo Pruebas anterior a la migración** trae
+`tablonOcultarFecha = true` y `fechaSinConfirmar` vacío. Al restaurarla,
+sin esa línea, la fecha provisional se les escaparía a los invitados sin
+que nadie se entere. Es el mismo tipo de trampa que las columnas nuevas
+NOT NULL rompiendo restauraciones antiguas. Quitarlo solo cuando ya no
+quede ninguna foto vieja.
+
+✅ **Aprobado por el usuario el 2026-09-21** ("superior, ha quedado muy
+bien").
 
 ## Dos clases de permiso, no una (2026-09-21, v38.5)
 
