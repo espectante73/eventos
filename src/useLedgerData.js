@@ -30,7 +30,7 @@ const EVENTO_POR_DEFECTO = {
   plantillaPagoRegistrado:
     "Hola,<br><br><b>{colaborador}</b> ha completado todos los pagos de sus invitados asignados.",
   plantillaInvitacionFamilia:
-    "Hola,<br><br>Aquí tienes tu invitación. ¡Os esperamos con muchas ganas!",
+    "Hola,<br><br>Aquí tienes tu invitación. ¡Les esperamos con muchas ganas!",
 };
 
 function avisar(mensaje, error) {

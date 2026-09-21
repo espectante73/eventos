@@ -1982,6 +1982,25 @@ manda `error.message` y la ventana lo enseña en letra pequeña debajo
 (`detalle` en `PreguntaSeguridad`). **Todo aviso de error lleva el
 motivo técnico.**
 
+## Cómo se le habla al invitado: tú y USTEDES, nunca vosotros (2026-09-21)
+
+El usuario, corrigiendo un borrador mío: *"no uso el término sentaros,
+sí uso sentarles"*. Es el español de Canarias: el plural de "tú" es
+**ustedes**, no "vosotros". Vale para TODO el texto que lee un invitado
+o un colaborador — pantallas, emails, el tablón y la nota de privacidad.
+
+- Singular: **tú** ("tus datos", "puedes pedirme").
+- Plural: **ustedes / les / su** ("sentarles", "avisarles", "sus fotos",
+  "si prefieren", "díganselo").
+- ❌ Nunca: vosotros, vuestro, -áis, -éis, -asteis, decidme, os esperamos.
+
+Repasado el 2026-09-21: en la app solo quedaba un "¡Os esperamos con
+muchas ganas!", en la plantilla de la invitación a la familia (el valor
+por defecto de `useLedgerData.js` y el de "restaurar textos" de
+`VentanaConfigZonaPeligro.jsx`, los dos corregidos a "¡Les esperamos!").
+⚠️ El texto que está GUARDADO en la base es suyo y lo cambia él desde
+"Texto emails": el suyo también lo tenía y se le avisó.
+
 ## "Todavía no hay fecha confirmada" (2026-09-21, v39)
 
 El usuario: su boda **no tiene fecha cerrada** y el formulario solo
