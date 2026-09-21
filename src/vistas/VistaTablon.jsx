@@ -386,14 +386,25 @@ export function VistaTablon({ token }) {
               {/* Fecha ocultable temporalmente desde Novedades -- a
                   petición del usuario, 2026-08-27. Solo afecta a esta
                   pantalla pública, no a la portada ni a la invitación. */}
-              {!evento.tablonOcultarFecha && (
-                <InfoItem
-                  claro
-                  icon={Calendar}
-                  label="Fecha"
-                  value={valorFechaEvento(evento)}
-                />
-              )}
+              {/* La fila de la fecha se enseña SIEMPRE. Antes se podía
+                  esconder entera (`tablonOcultarFecha`, 2026-08-27), un
+                  parche temporal para el mismo problema que ahora
+                  resuelve bien "Todavía no hay fecha confirmada": el
+                  invitado veía medio tablón y sin saber por qué. Ahora ve
+                  lo mismo que el anfitrión, y cuando no hay día cerrado
+                  lo pone con todas las letras (usuario, 2026-09-21).
+                  ⚠️ PUENTE TEMPORAL: mientras quede alguna base con
+                  `tablonOcultarFecha` puesto y sin migrar, se respeta como
+                  si fuera "sin confirmar" -- así no se escapa una fecha
+                  provisional a los invitados entre el despliegue y el SQL.
+                  Se puede quitar (y con él la columna) en cuanto el SQL
+                  de la v39.1 esté ejecutado. */}
+              <InfoItem
+                claro
+                icon={Calendar}
+                label="Fecha"
+                value={valorFechaEvento(evento.tablonOcultarFecha ? { ...evento, fechaSinConfirmar: true } : evento)}
+              />
               <InfoItem claro icon={Clock} label="Hora" value={evento.hora || "—"} />
               <InfoItem claro icon={MapPin} label="Lugar" value={evento.lugar || "—"} />
             </div>

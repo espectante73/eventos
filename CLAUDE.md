@@ -2015,6 +2015,28 @@ columna que exista en `evento`, así que no hay que tocar la función):
 alter table public.evento add column if not exists "fechaSinConfirmar" boolean default false;
 ```
 
+### Y de paso, fuera el parche viejo (v39.1)
+
+`tablonOcultarFecha` (2026-08-27) escondía la FILA ENTERA de la fecha en
+el tablón público. Nació como algo temporal por este mismo motivo — no
+enseñar todavía un día que no era firme — y dejaba al invitado viendo
+medio tablón sin saber por qué. El usuario lo cerró el 2026-09-21: *"ahora
+se puede ver el tablón completo y mostrar el concepto fecha no
+confirmada... tal como aparece para el anfitrión"*.
+
+Retirada la casilla de Novedades; la fila se enseña siempre.
+
+⚠️ **Puente temporal en `VistaTablon.jsx`**: mientras `tablonOcultarFecha`
+siga puesto en la base, se respeta como si fuera "sin confirmar". Sin él
+habría una ventana entre el despliegue y el SQL en la que a los invitados
+se les escaparía la fecha provisional. Se puede quitar —y borrar la
+columna— en cuanto esto esté ejecutado:
+
+```sql
+update public.evento set "fechaSinConfirmar" = true, "tablonOcultarFecha" = false
+where "tablonOcultarFecha";
+```
+
 ## Dos clases de permiso, no una (2026-09-21, v38.5)
 
 Lo cazó el usuario: el aviso rojo del colaborador decía **"🔑 Tienes

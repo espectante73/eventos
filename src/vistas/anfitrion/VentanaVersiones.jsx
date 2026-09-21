@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "39.1",
+    cambios: [
+      "El invitado vuelve a ver el tablón completo: la fila de la fecha se enseña siempre, y cuando no hay día cerrado pone \"No hay fecha confirmada\", igual que lo ves tú.",
+      "Retirada la opción \"Ocultar la fecha en el tablón\": era un parche para el mismo problema, y escondía la fila entera sin explicar por qué.",
+    ],
+  },
+  {
     version: "39",
     cambios: [
       "En Datos del evento, una casilla \"Todavía no hay fecha confirmada\": al marcarla, la portada y el tablón dicen \"No hay fecha confirmada\" en vez de una raya, y las invitaciones salen sin fecha.",

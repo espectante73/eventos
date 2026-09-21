@@ -517,20 +517,15 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             Abrir grupo
           </a>
         </div>
-              {/* Ocultar solo la fecha en el tablón público -- a petición
-                  del usuario, 2026-08-27, con carácter TEMPORAL (p.ej.
-                  mientras todavía no quiere que los confirmados sepan el
-                  día exacto). No afecta a la fecha en ningún otro sitio
-                  (portada, invitación, Datos evento) -- solo a esta
-                  pantalla pública. */}
-              <label className="flex items-center gap-2 text-xs" style={{ color: C.charcoal }}>
-                <input
-                  type="checkbox"
-                  checked={Boolean(evento.tablonOcultarFecha)}
-                  onChange={(e) => persistEvento({ ...evento, tablonOcultarFecha: e.target.checked })}
-                />
-                Ocultar la fecha en el tablón público (temporalmente)
-              </label>
+              {/* ⚠️ Aquí había "Ocultar la fecha en el tablón público
+                  (temporalmente)", del 2026-08-27. Se retiró el
+                  2026-09-21: era un parche para no enseñar una fecha que
+                  todavía no era firme, y escondía la fila entera -- el
+                  invitado veía medio tablón sin saber por qué. Eso ahora
+                  se dice bien con la casilla "Todavía no hay fecha
+                  confirmada" de Datos del evento, que además vale para la
+                  portada y para las invitaciones. Dos ajustes para el
+                  mismo problema eran uno de más. */}
             </div>
           )}
 
