@@ -40,7 +40,7 @@ import { useState, useEffect } from "react";
 import { Calendar, Clock, MapPin, Image as ImageIcon } from "lucide-react";
 import { C } from "../theme";
 import { VERSION_APP } from "../constants";
-import { formatearFecha, formatearDiaSemana } from "../lib/formato";
+import { valorFechaEvento } from "../lib/formato";
 import { DesplegableSecciones } from "./DesplegableSecciones";
 import { MiCuenta } from "./MiCuenta";
 import { useMano } from "../lib/mano";
@@ -236,7 +236,7 @@ export function Portada({
             claro
             icon={Calendar}
             label="Fecha"
-            value={form.fecha ? [formatearDiaSemana(form.fecha), formatearFecha(form.fecha)] : "—"}
+            value={valorFechaEvento(form)}
           />
           <InfoItem claro icon={Clock} label="Hora" value={form.hora || "—"} />
           <InfoItem claro icon={MapPin} label="Lugar" value={form.lugar || "—"} />

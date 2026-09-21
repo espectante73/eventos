@@ -557,7 +557,9 @@ export function SeccionInvitados({
   // cuando se empieza a mirar) y, fuera de esa fecha, únicamente si hay
   // alguien marcado -- para poder probarlo antes sin que el resto del
   // año sea ruido en la cabecera.
-  const hoyEsElEvento = evento.fecha === new Date().toISOString().slice(0, 10);
+  // Sin fecha cerrada no hay "día del evento" que valga, aunque la fecha
+  // provisional caiga hoy (usuario, 2026-09-21).
+  const hoyEsElEvento = !evento.fechaSinConfirmar && evento.fecha === new Date().toISOString().slice(0, 10);
   const mostrarLlegada = hoyEsElEvento || totalPresentes > 0;
   const totalInvitados = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;

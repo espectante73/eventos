@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY } from "./formato";
+import { formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY, valorFechaEvento, TEXTO_SIN_FECHA } from "./formato";
 
 describe("formatearFecha", () => {
   it("convierte ISO a formato largo en español", () => {
@@ -56,5 +56,29 @@ describe("listaConY", () => {
     expect(listaConY(["Ana"])).toBe("Ana");
     expect(listaConY(["Ana", "Bea"])).toBe("Ana y Bea");
     expect(listaConY(["Ana", "Bea", "Cris"])).toBe("Ana, Bea y Cris");
+  });
+});
+
+// "Todavía no hay fecha confirmada" (usuario, 2026-09-21): su boda no
+// tiene día cerrado y un "—" no explica nada. UNA definición para la
+// portada y el tablón, o acabarían diciendo cosas distintas.
+describe("valorFechaEvento", () => {
+  it("con fecha, día de la semana y fecha", () => {
+    expect(valorFechaEvento({ fecha: "2026-11-27" })).toEqual(["Viernes", "27 noviembre 2026"]);
+  });
+
+  it("marcado \"sin confirmar\", lo dice — aunque haya fecha escrita", () => {
+    expect(valorFechaEvento({ fecha: "2026-11-27", fechaSinConfirmar: true })).toBe(TEXTO_SIN_FECHA);
+  });
+
+  it("sin fecha y sin marcar, una raya: no es lo mismo \"no la he puesto\" que \"no la hay\"", () => {
+    expect(valorFechaEvento({ fecha: "" })).toBe("—");
+    expect(valorFechaEvento(undefined)).toBe("—");
+  });
+
+  it("la fecha escrita NO se borra: el año hace falta para los aniversarios", () => {
+    const evento = { fecha: "2026-11-27", fechaSinConfirmar: true };
+    expect(valorFechaEvento(evento)).toBe(TEXTO_SIN_FECHA);
+    expect(evento.fecha).toBe("2026-11-27");
   });
 });

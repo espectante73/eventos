@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause } from "lucide-react";
 import { C, inputStyle, OP, S } from "../theme";
 import { supabase } from "../supabaseClient";
-import { formatearFecha, formatearDiaSemana } from "../lib/formato";
+import { formatearFecha, valorFechaEvento } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
 import { uid } from "../lib/id";
 
@@ -391,7 +391,7 @@ export function VistaTablon({ token }) {
                   claro
                   icon={Calendar}
                   label="Fecha"
-                  value={evento.fecha ? [formatearDiaSemana(evento.fecha), formatearFecha(evento.fecha)] : "—"}
+                  value={valorFechaEvento(evento)}
                 />
               )}
               <InfoItem claro icon={Clock} label="Hora" value={evento.hora || "—"} />

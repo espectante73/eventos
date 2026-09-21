@@ -1982,6 +1982,39 @@ manda `error.message` y la ventana lo enseña en letra pequeña debajo
 (`detalle` en `PreguntaSeguridad`). **Todo aviso de error lleva el
 motivo técnico.**
 
+## "Todavía no hay fecha confirmada" (2026-09-21, v39)
+
+El usuario: su boda **no tiene fecha cerrada** y el formulario solo
+dejaba poner una. En la portada y en el tablón salía un "—", que no
+explica nada: no es lo mismo "no la he rellenado" que "no la hay".
+
+**Una casilla** en Datos del evento: `evento."fechaSinConfirmar"`.
+
+⚠️ **A propósito NO borra la fecha escrita**, aunque él dijo "anule la
+fecha". Dos motivos, los dos reales:
+- el **año** se sigue usando para calcular los aniversarios de los 48
+  matrimonios (`anioDelEvento`); borrarlo vaciaría esa columna entera;
+- si mañana se confirma ese mismo día, no hay que volver a teclearlo.
+Lo que hace la casilla es dejar de **enseñarla**. El formulario lo dice
+en voz alta cuando está marcada, para que no parezca que se ha perdido.
+
+Dónde cambia: portada, tablón público y la imagen de la invitación (una
+invitación con una fecha que puede cambiar es peor que una sin fecha).
+Y `hoyEsElEvento` en la Lista de invitados no se activa aunque la fecha
+provisional caiga hoy.
+
+**Una sola definición**, `valorFechaEvento(evento)` en `lib/formato.js`:
+si cada pantalla lo resolviera por su cuenta acabarían diciendo cosas
+distintas — que es exactamente lo que ya pasó con los rojos y con los
+tamaños de letra.
+
+SQL (solo la columna; `guardar_evento` es genérico y guarda cualquier
+columna que exista en `evento`, así que no hay que tocar la función):
+
+```sql
+alter table public.evento add column if not exists "fechaSinConfirmar" boolean default false;
+```
+
 ## Dos clases de permiso, no una (2026-09-21, v38.5)
 
 Lo cazó el usuario: el aviso rojo del colaborador decía **"🔑 Tienes

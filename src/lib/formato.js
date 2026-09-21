@@ -11,6 +11,22 @@ const DIAS_ES = [
   "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado",
 ];
 
+// Lo que se lee en la fila "Fecha" cuando todavía no hay día cerrado.
+// A petición del usuario (2026-09-21): su boda aún no tiene fecha y un
+// "—" no explica nada; los invitados confirmados ya saben que está por
+// cerrar y la app tiene que decirlo igual de claro.
+export const TEXTO_SIN_FECHA = "No hay fecha confirmada";
+
+// UNA sola definición de "qué pone en la fila Fecha", para la Portada, el
+// tablón público y cualquier sitio que venga después. Si cada pantalla lo
+// resolviera por su cuenta, acabarían diciendo cosas distintas -- que es
+// exactamente lo que pasó con los rojos y con los tamaños de letra.
+export function valorFechaEvento(evento) {
+  if (evento?.fechaSinConfirmar) return TEXTO_SIN_FECHA;
+  if (!evento?.fecha) return "—";
+  return [formatearDiaSemana(evento.fecha), formatearFecha(evento.fecha)];
+}
+
 export function formatearFecha(fechaISO) {
   if (!fechaISO) return "";
   const partes = fechaISO.split("-");

@@ -149,6 +149,28 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
             value={evento.fecha}
             onChange={(e) => persistEvento({ ...evento, fecha: e.target.value })}
           />
+          {/* "Todavía no hay fecha" (usuario, 2026-09-21): su boda aún no
+              tiene día cerrado, y un "—" en la portada no explica nada.
+              A propósito NO borra la fecha escrita: el año sigue haciendo
+              falta para calcular los aniversarios de cada matrimonio, y
+              si mañana se confirma el mismo día no hay que volver a
+              teclearlo. Lo que hace es dejar de ENSEÑARLA. */}
+          <label className="flex items-center gap-2 mt-2 cursor-pointer" style={{ color: C.charcoal, fontSize: T.pequeno }}>
+            <input
+              type="checkbox"
+              checked={Boolean(evento.fechaSinConfirmar)}
+              onChange={(e) => persistEvento({ ...evento, fechaSinConfirmar: e.target.checked })}
+              className="flex-shrink-0"
+              style={{ width: 18, height: 18 }}
+            />
+            Todavía no hay fecha confirmada
+          </label>
+          {evento.fechaSinConfirmar && (
+            <p className="mt-1" style={{ color: C.wax, fontSize: T.pequeno }}>
+              En la portada y en el tablón se lee «No hay fecha confirmada», y las
+              invitaciones salen sin fecha. La de arriba se guarda, pero no se enseña.
+            </p>
+          )}
         </Field>
         <Field label="Hora">
           <TextInput

@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "39",
+    cambios: [
+      "En Datos del evento, una casilla \"Todavía no hay fecha confirmada\": al marcarla, la portada y el tablón dicen \"No hay fecha confirmada\" en vez de una raya, y las invitaciones salen sin fecha.",
+      "La fecha escrita no se borra: el año sigue haciendo falta para calcular los aniversarios de cada matrimonio, y si se confirma ese mismo día no hay que volver a teclearlo.",
+    ],
+  },
+  {
     version: "38.9",
     cambios: [
       "En el login, \"He olvidado mi contraseña\" y \"Crear cuenta\" pasan a ser links subrayados en gris suave, como en cualquier web, en vez de botones.",

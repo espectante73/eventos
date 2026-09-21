@@ -79,6 +79,10 @@ CREATE TABLE public.evento (
     "plantillaPagoRegistrado" text DEFAULT 'Hola,<br><br><b>{colaborador}</b> ha marcado como pagado a <b>{invitado}</b>.'::text NOT NULL,
     "plantillaInvitacionFamilia" text DEFAULT 'Hola,<br><br>Aquí tienes tu invitación. ¡Os esperamos con muchas ganas!'::text NOT NULL,
     "modoPruebasActivo" boolean DEFAULT false NOT NULL,
+    -- "Todavía no hay fecha confirmada" (2026-09-21): la fecha de
+    -- arriba se guarda igual (el año hace falta para los aniversarios),
+    -- pero la portada y el tablón leen "No hay fecha confirmada".
+    "fechaSinConfirmar" boolean DEFAULT false,
     "enlaceGrupoWhatsapp" text DEFAULT ''::text NOT NULL,
     "cronogramaBloques" jsonb DEFAULT '[{"texto": "Recepción", "duracionMin": 15}, {"texto": "Cóctel", "duracionMin": 30}, {"texto": "Foto 1", "duracionMin": 15}, {"texto": "Mesas", "duracionMin": 15}, {"texto": "Cena", "duracionMin": 90}, {"texto": "Foto 2", "duracionMin": 15}, {"texto": "Postre", "duracionMin": 15}, {"texto": "Baile", "duracionMin": 135}, {"texto": "Final", "duracionMin": 15}]'::jsonb NOT NULL,
     "cronogramaHoraFin" text DEFAULT '23:45'::text NOT NULL,
