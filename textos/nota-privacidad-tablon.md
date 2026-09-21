@@ -75,14 +75,20 @@ dejarle claro que no la voy a recoger"*), con el añadido del caso de
 quien ya la dio y cambia de idea — la app sabe hacer las dos cosas: no
 pedirla (casilla "Foto boda") y borrar una entregada.
 
+**Decidido por él: se queda "Gestionar tus datos".** Le señalé que no
+dice QUÉ se puede pedir (ver, corregir, borrar) y su respuesta fue que
+*"con gestionar englobo lo que puede hacer la persona, borrar o
+corregir"*. Cerrado, no volver sobre ello.
+
+⚠️ Contexto que conviene no perder: él razonó —y tiene razón— que el
+RGPD **no le aplica** (art. 2.2.c, actividad exclusivamente personal o
+doméstica: es su boda, con sus amigos, sin ánimo de lucro, y el tablón
+no está abierto a gente indeterminada). Esta nota es deferencia, no
+obligación. Lo único que cambiaría el cuadro sería que otra persona
+organizase su evento con esta app: ahí ya sería un servicio a un
+tercero.
+
 **Pendiente de su palabra**, se lo señalé y no lo he tocado:
-1. **Los derechos.** "Gestionar tus datos" no dice qué se puede pedir.
-   Antes ponía ver, corregir, borrar u oponerse. ⚠️ Ojo al contexto: él
-   razonó —y tiene razón— que el RGPD **no le aplica** (art. 2.2.c,
-   actividad exclusivamente personal o doméstica: es su boda, con sus
-   amigos, sin ánimo de lucro). La nota es deferencia, no obligación. La
-   pregunta ya no es legal sino de trato: ¿lista de derechos o una línea
-   de cortesía?
 2. Falta **"si vienes"** en lo que se guarda (la app guarda `confirmado`).
 3. Ya no se distingue lo **voluntario** (email, año de nacimiento, año de
    boda, canción, alergias, observaciones) de lo que se guarda siempre.
