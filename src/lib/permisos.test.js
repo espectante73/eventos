@@ -34,7 +34,13 @@ describe("los dos tipos de permiso", () => {
     expect(tienePermiso(soloMira, PERMISOS.REPOSITORIO_VER)).toBe(true);
   });
 
-  it("la etiqueta del código ya no dice GitHub: no le decía nada a quien no programa", () => {
-    expect(ETIQUETAS_PERMISOS[PERMISOS.REPOSITORIO_VER]).not.toMatch(/github/i);
+  // La etiqueta dio dos vueltas el mismo día. Primero era "Ver el código
+  // de la app (enlace a GitHub)" dentro de una frase que prometía
+  // "permisos de edición": el problema no era nombrar GitHub, era la
+  // frase. Con la frase arreglada, el usuario pidió justo lo contrario
+  // -- que se vea claro que lleva a GitHub, porque el link ES el
+  // permiso.
+  it("la etiqueta dice a dónde lleva", () => {
+    expect(ETIQUETAS_PERMISOS[PERMISOS.REPOSITORIO_VER]).toMatch(/github/i);
   });
 });

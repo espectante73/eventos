@@ -37,7 +37,7 @@ export const ETIQUETAS_PERMISOS = {
   [PERMISOS.DATOS_EVENTO_EDITAR]: "Editar los datos del evento (textos de email incluidos)",
   [PERMISOS.INVITACIONES_ENVIAR]: "Enviar invitaciones (solo confirmados y pagados)",
   [PERMISOS.MAPA_SITIO_VER]: "Ver el mapa del sitio (dónde está cada cosa en la app)",
-  [PERMISOS.REPOSITORIO_VER]: "Ver el código de la app",
+  [PERMISOS.REPOSITORIO_VER]: "Ver el proyecto en GitHub",
 };
 
 // ⚠️ Hay DOS clases de permiso, y confundirlas ya dio un fallo real

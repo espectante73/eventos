@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "38.6",
+    cambios: [
+      "El link al proyecto en GitHub deja de estar escondido en \"Mi cuenta\": ahora está en el propio aviso que anuncia el permiso. Donde se anuncia es donde se entra.",
+      "Va con relieve, como todo lo que se pulsa en la app, y dice claramente a dónde lleva.",
+    ],
+  },
+  {
     version: "38.5",
     cambios: [
       "El aviso rojo \"Tienes permisos de edición\" ya no mete en la lista los permisos que solo dejan mirar (el mapa del sitio y el código de la app). Prometía algo que no era.",

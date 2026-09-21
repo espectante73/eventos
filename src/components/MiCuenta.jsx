@@ -18,14 +18,14 @@
 // pierda visibilidad de este cambio, queda constancia visible en la
 // ventana Colaboradores hasta que la confirme.
 import { useState } from "react";
-import { UserCog, LogOut, Megaphone, Map, Code2, Bug, KeyRound, Mail, Hand } from "lucide-react";
+import { UserCog, LogOut, Megaphone, Map, Bug, KeyRound, Mail, Hand } from "lucide-react";
 import { C, inputStyle, R, OP } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
 import { ANCHO_FILA_MENU } from "./MenuFlotante";
 import { ModalMapaSitio } from "./MapaSitio";
-import { URL_REPOSITORIO, URL_REGISTRO_ERRORES } from "../constants";
+import { URL_REGISTRO_ERRORES } from "../constants";
 import { useMano, MANO } from "../lib/mano";
 
 // `onCerrarSesion`/`enlaceTablon`: antes eran botones sueltos junto a
@@ -122,7 +122,7 @@ function PreguntaMano() {
   );
 }
 
-export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarRepositorio, mostrarErrores }) {
+export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarErrores }) {
   const [abierta, setAbierta] = useState(false);
   const [mapaAbierto, setMapaAbierto] = useState(false);
   const [nuevaContrasena, setNuevaContrasena] = useState("");
@@ -234,7 +234,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               CLASE_BOTON_INICIO y ANCHO_BOTON arriba. */}
           {/* `zurdo:`: con la mano izquierda elegida en el móvil, todo lo de
               aquí se alinea a la izquierda (lib/mano.js). */}
-          {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarRepositorio || mostrarErrores || tactil) && (
+          {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarErrores || tactil) && (
             <div className="flex flex-col items-end zurdo:items-start gap-2.5 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
               {onCerrarSesion && (
                 <button
@@ -272,21 +272,14 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   <Map {...ICONO} /> Mapa del sitio
                 </button>
               )}
-              {/* Enlace al código, para el desarrollador que revisa la app
-                  (permiso "Ver el código de la app"). En pestaña nueva a
-                  propósito: es una web externa, no una parte de esta. */}
-              {mostrarRepositorio && (
-                <a
-                  href={URL_REPOSITORIO}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={CLASE_BOTON_INICIO}
-                  style={ESTILO_BOTON_INICIO}
-                  title="Abre el código de la aplicación en GitHub"
-                >
-                  <Code2 {...ICONO} /> Código app
-                </a>
-              )}
+              {/* ⚠️ Aquí había un botón "Código app" y se quitó el
+                  2026-09-21, a petición del usuario: estaba ESCONDIDO.
+                  Al colaborador se le decía "tienes este permiso" en un
+                  sitio y el acceso vivía en otro, dentro de "Mi cuenta",
+                  así que había que buscarlo. Ahora el link vive en el
+                  propio aviso que anuncia el permiso, en
+                  VistaColaborador.jsx: donde se anuncia es donde se
+                  entra. */}
               {/* Los fallos que ha tenido la app, en Sentry. Solo para el
                   anfitrión (2026-09-18): el usuario pidió verlos "desde la
                   app". Dentro de la app no se pueden pintar -- haría falta

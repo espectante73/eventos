@@ -1982,10 +1982,24 @@ permiso nuevo se queda sin clasificar o sin etiqueta.
 De paso, la etiqueta pierde el "(enlace a GitHub)": a quien no programa
 no le dice nada y suena a que tiene que irse a otro sitio.
 
-⚠️ **Queda abierto**: el enlace al código sigue escondido dentro de "Mi
-cuenta", así que quien lo tiene concedido tiene que buscarlo. El usuario
-tiene una idea propia para enseñarlo de otra manera y **no la ha contado
-todavía** — no adelantarse con una solución mía: preguntarle.
+✅ **Resuelto en la v38.6, con la idea del usuario**: *"quitar el botón
+dentro de Mi cuenta y que la expresión link al proyecto en GitHub sea
+realmente un link y acceder desde ahí"*. **Donde se anuncia el permiso
+es donde se entra.** El aviso se queda (él lo pidió expresamente: "no
+quitaría el baner"), y dentro lleva el link.
+
+Dos detalles que decidió él y no yo:
+- **Con relieve, no subrayado.** Su idea original era un link de texto
+  subrayado; preguntado con las dos versiones dibujadas, eligió el
+  relieve para no hacer excepción a su norma 13.
+- **La etiqueta vuelve a nombrar GitHub** ("Ver el proyecto en GitHub").
+  En la v38.5 se lo habíamos quitado porque confundía — pero lo que
+  confundía era la frase que lo envolvía, no la palabra. Con el link a la
+  vista, decir a dónde lleva es justo lo que hace falta.
+
+⚠️ El botón desaparece de "Mi cuenta" **también para el anfitrión**
+(`VistaAnfitrion` ya no pasa `mostrarRepositorio`). Es lo que se pidió, y
+el anfitrión tiene el repositorio en su propio ordenador.
 
 **Lección general**: al añadir una clave a una lista existente, leer el
 texto que la lista ya imprime. Aquí la etiqueta era correcta y la frase

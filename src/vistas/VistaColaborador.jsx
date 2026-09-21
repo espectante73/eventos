@@ -3,7 +3,7 @@
 // aviso al anfitrión al terminar). Movida tal cual desde App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
-import { Bell, Calendar, Check, ChevronDown, ClipboardList, Euro, Mail, Megaphone, Send, User, UserCog } from "lucide-react";
+import { Bell, Calendar, Check, ChevronDown, ClipboardList, Code2, Euro, Mail, Megaphone, Send, User, UserCog } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
 import {
@@ -28,6 +28,7 @@ import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso, esDeEdicion } from "../lib/permisos";
 import { generarImagenCronograma } from "../lib/cronograma";
 import { C, R, T, OP } from "../theme";
+import { URL_REPOSITORIO } from "../constants";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
@@ -1010,9 +1011,35 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           guardar datos, marcar pagos ni confirmar nada hasta que lo desactive.
         </div>
       )}
-      {permisosDeEdicion.length > 0 && (
-        <div className="p-4 rounded text-sm font-semibold" style={{ background: C.peligro, color: "#fff" }}>
-          🔑 Tienes permisos de edición: {permisosDeEdicion.map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ")}.
+      {/* El aviso de permisos. El usuario lo quiere mantener (2026-09-21):
+          es lo primero que se ve y ahí se entera uno de lo que puede
+          hacer. Dos partes distintas a propósito:
+            - la frase de "permisos de edición", solo si los hay -- los
+              que dejan mirar no son responsabilidad de nadie;
+            - y el LINK al proyecto, que es el permiso y el acceso a la
+              vez. Antes se anunciaba aquí y el botón estaba escondido en
+              "Mi cuenta", así que había que buscarlo.
+          El link va con relieve, no subrayado: norma 13, elegido por el
+          usuario sobre su propia idea inicial de texto subrayado. */}
+      {(permisosDeEdicion.length > 0 || puedeVerRepositorio) && (
+        <div className="p-4 rounded text-sm" style={{ background: C.peligro, color: "#fff" }}>
+          {permisosDeEdicion.length > 0 && (
+            <p style={{ fontWeight: 600 }}>
+              🔑 Tienes permisos de edición: {permisosDeEdicion.map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ")}.
+            </p>
+          )}
+          {puedeVerRepositorio && (
+            <a
+              href={URL_REPOSITORIO}
+              target="_blank"
+              rel="noreferrer"
+              className={`boton-3d inline-flex items-center gap-2 px-3 py-2 ${permisosDeEdicion.length > 0 ? "mt-3" : ""}`}
+              style={{ background: C.paper, color: C.ink, borderRadius: R.caja, fontWeight: 600 }}
+              title="Abre el proyecto en GitHub, en otra pestaña"
+            >
+              <Code2 size={15} /> Link al proyecto en GitHub
+            </a>
+          )}
         </div>
       )}
       {/* Misma Portada que ve el anfitrión (imagen + franja fecha/hora/
@@ -1027,7 +1054,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         onCerrarSesion={onCerrarSesion}
         enlaceTablon={enlaceTablon}
         mostrarMapaSitio={puedeVerMapaSitio}
-        mostrarRepositorio={puedeVerRepositorio}
         botonExtra={
           <>
             {esAnfitrionOriginal && (
