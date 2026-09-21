@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "39.3",
+    cambios: [
+      "El tablón del invitado lleva al pie un link discreto, \"Tus datos, en claro\", que abre la nota de privacidad en una ventana.",
+    ],
+  },
+  {
     version: "39.2",
     cambios: [
       "En el formulario de cada invitado, una casilla: \"Autorizo expresamente a que guarden mis datos\". Nace desmarcada: la marca quien contesta, no quien rellena.",

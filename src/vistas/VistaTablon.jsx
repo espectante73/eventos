@@ -15,6 +15,8 @@ import { C, inputStyle, OP, S } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, valorFechaEvento } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
+import { EnlaceTexto } from "../components/Boton";
+import { NotaPrivacidad } from "../components/NotaPrivacidad";
 import { uid } from "../lib/id";
 
 const BUCKET_MUSICA = "musica-ambiental";
@@ -54,6 +56,8 @@ export function VistaTablon({ token }) {
   // novedades, tenerlas todas desplegadas de golpe (o ir abriendo varias
   // sin plegar las anteriores) era un muro de texto imposible de leer.
   const [idAbierto, setIdAbierto] = useState(null);
+  // La nota de privacidad, al pie: cerrada hasta que alguien la pide.
+  const [notaAbierta, setNotaAbierta] = useState(false);
   // ---------- Pregunta de acceso (capa extra sobre el enlace en sí) ----------
   // A petición del usuario, 2026-08-25: aunque el enlace se reenvíe fuera
   // del grupo, sin la respuesta correcta el tablón no enseña nada -- ni
@@ -501,8 +505,18 @@ export function VistaTablon({ token }) {
               Todavía no hay ninguna novedad publicada.
             </p>
           )}
+
+          {/* Al pie, discreto y sin competir con las novedades: la nota de
+              privacidad (usuario, 2026-09-21, eligiendo entre sección
+              plegada, link al pie o texto abierto). Link subrayado, no
+              botón: te lleva a otro sitio, no hace nada (norma 13, ver
+              EnlaceTexto). Y al lado del pulgar. */}
+          <div className="flex justify-end zurdo:justify-start mt-6">
+            <EnlaceTexto onClick={() => setNotaAbierta(true)}>Tus datos, en claro</EnlaceTexto>
+          </div>
         </div>
       </div>
+      {notaAbierta && <NotaPrivacidad onCerrar={() => setNotaAbierta(false)} />}
     </div>
   );
 }
