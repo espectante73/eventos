@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "38.8",
+    cambios: [
+      "El acceso al proyecto deja de ser un botón grande y pasa a ser un link dorado, que armoniza mejor dentro del aviso.",
+      "Y ya no repite la palabra GitHub: si el aviso de arriba lo dice, abajo basta con \"Link para acceder al proyecto\".",
+    ],
+  },
+  {
     version: "38.7",
     cambios: [
       "El aviso vuelve a decir \"Tienes permiso para ver el proyecto en GitHub\", igual que dice los de edición. El link va debajo.",

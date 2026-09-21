@@ -1033,19 +1033,26 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               <p style={{ fontWeight: 600 }} className={permisosDeEdicion.length > 0 ? "mt-2" : ""}>
                 🔑 Tienes permiso para ver el proyecto en GitHub.
               </p>
-              {/* Al lado del pulgar, y en espejo con la mano izquierda:
-                  la regla del pulgar vale para TODO lo que se pulsa, no
-                  solo para los botones de las ventanas (lib/mano.js). */}
-              <div className="flex justify-end zurdo:justify-start mt-2">
+              {/* ⚠️ EXCEPCIÓN a la norma 13 ("nada de texto subrayado
+                  como botón"), concedida por el usuario el 2026-09-21
+                  después de ver la pastilla con relieve: "no es que no
+                  queda bien, no queda nada bien... lo dejamos como un
+                  link, tal vez con los colores de la aplicación". Un
+                  botón grande dentro de un aviso de dos líneas pesaba
+                  más que el propio aviso.
+                  Y no repite "GitHub": ya lo dice la frase de arriba.
+                  Sigue yendo al lado del pulgar, y el `py-2` le da altura
+                  de dedo aunque se vea como una línea de texto. */}
+              <div className="flex justify-end zurdo:justify-start mt-1">
                 <a
                   href={URL_REPOSITORIO}
                   target="_blank"
                   rel="noreferrer"
-                  className="boton-3d inline-flex items-center gap-2 px-3 py-2"
-                  style={{ background: C.paper, color: C.ink, borderRadius: R.caja, fontWeight: 600 }}
-                  title="Abre el proyecto en GitHub, en otra pestaña"
+                  className="inline-flex items-center gap-1.5 py-2"
+                  style={{ color: C.goldClaro, textDecoration: "underline", textUnderlineOffset: 3 }}
+                  title="Abre el proyecto en otra pestaña"
                 >
-                  <Code2 size={15} /> Link al proyecto en GitHub
+                  <Code2 size={14} /> Link para acceder al proyecto
                 </a>
               </div>
             </>

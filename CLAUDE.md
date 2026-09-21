@@ -69,6 +69,12 @@ en la sección que se indica entre paréntesis.
 13. **Todo lo que se pulsa tiene relieve y se hunde al tocarlo**, y suena
     un clic suave + vibra (v36). Incluye desplegables, títulos plegables y
     acciones que eran texto subrayado. Nada de texto subrayado como botón.
+    ⚠️ **Una excepción, concedida por el usuario el 2026-09-21**: un link
+    que SALE de la app metido dentro de un aviso. Ahí una pastilla con
+    relieve pesa más que el propio aviso ("no queda nada bien"), y va como
+    link subrayado en dorado. Vale para links externos dentro de un aviso,
+    no para acciones de la app. Sigue llevando `py-2` (altura de dedo) y
+    el lado del pulgar. («Dos clases de permiso, no una»)
 14. **Quitar/borrar = `BotonQuitar`**: el mismo círculo rojo en toda la
     app, 24 px a la vista y 44 px de zona de toque (el mínimo del móvil).
     X = quitar; papelera (`borrar`) = se borra para siempre. Lleva la
@@ -2010,6 +2016,19 @@ Dos detalles que decidió él y no yo:
 ⚠️ El botón desaparece de "Mi cuenta" **también para el anfitrión**
 (`VistaAnfitrion` ya no pasa `mostrarRepositorio`). Es lo que se pidió, y
 el anfitrión tiene el repositorio en su propio ordenador.
+
+**Y en la v38.8, el aspecto final**, después de verlo funcionando:
+*"colocaste GitHub dos veces... un botón grande, largo, que encima se ve
+basto, no armoniza con la aplicación... aquí haríamos una excepción, lo
+dejamos como un link, tal vez con los colores de la aplicación"*.
+- La frase de arriba ya dice GitHub, así que el link de abajo es solo
+  **"Link para acceder al proyecto"**. La palabra no se repite.
+- Fuera la pastilla con relieve: **link subrayado en dorado**
+  (`C.goldClaro`) sobre el rojo del aviso. Es la excepción a la norma 13
+  anotada arriba. Un botón de ese tamaño dentro de un aviso de dos
+  líneas pesaba más que el aviso.
+- ⚠️ Conserva `py-2`: se ve como una línea de texto, pero el dedo tiene
+  dónde acertar.
 
 **Corregido en la v38.7**, con dos fallos míos que cazó el usuario en la
 misma frase:
