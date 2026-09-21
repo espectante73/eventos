@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "38.7",
+    cambios: [
+      "El aviso vuelve a decir \"Tienes permiso para ver el proyecto en GitHub\", igual que dice los de edición. El link va debajo.",
+      "Y el link respeta la mano elegida: a la derecha con el pulgar derecho, a la izquierda con el izquierdo. Se había quedado fijo a la izquierda.",
+    ],
+  },
+  {
     version: "38.6",
     cambios: [
       "El link al proyecto en GitHub deja de estar escondido en \"Mi cuenta\": ahora está en el propio aviso que anuncia el permiso. Donde se anuncia es donde se entra.",

@@ -1880,6 +1880,16 @@ ancho con el texto centrado ni a la izquierda. Aplicado en Mi cuenta con
 `ANCHO_FILA_MENU` + `items-end` (en la v34.5-34.6 quedaron a lo ancho o a
 la izquierda, y en la v34.7 a 240px centrados).
 
+⚠️ **Y vale para CUALQUIER cosa pulsable, no solo para los botones de
+una ventana.** Roto el 2026-09-21 con el link al proyecto de GitHub: se
+metió dentro de un aviso como un `inline-flex` suelto y se fue a la
+izquierda, con el usuario teniendo elegida la mano derecha. Lo cazó él
+("yo tengo elegido derecha y has colocado el botón a la izquierda"). La
+forma correcta es envolverlo:
+`<div className="flex justify-end zurdo:justify-start">`. Sin el
+`zurdo:`, la elección de mano no se aplica y el botón se queda donde el
+texto lo deje caer.
+
 Al construir o revisar una ventana: comprobar esta regla junto con la de
 "lo más pequeña posible" y la de "estandarizar con el estilo que ya
 existe".
@@ -2000,6 +2010,17 @@ Dos detalles que decidió él y no yo:
 ⚠️ El botón desaparece de "Mi cuenta" **también para el anfitrión**
 (`VistaAnfitrion` ya no pasa `mostrarRepositorio`). Es lo que se pidió, y
 el anfitrión tiene el repositorio en su propio ordenador.
+
+**Corregido en la v38.7**, con dos fallos míos que cazó el usuario en la
+misma frase:
+1. **El link se fue a la izquierda** teniendo él elegida la mano derecha.
+   Lo metí como `inline-flex` suelto dentro del aviso, sin el envoltorio
+   `justify-end zurdo:justify-start`. Ver la nota nueva en "Regla de la
+   app: todo al alcance del pulgar".
+2. **Quité la frase que anuncia el permiso** y dejé el link a secas. Él
+   lo quería **igual que el otro banner**: "en vez de permiso de
+   edición, tienes permiso para ver el link de GitHub". El aviso dice lo
+   que tienes; el botón es cómo se usa. Las dos cosas, no una.
 
 **Lección general**: al añadir una clave a una lista existente, leer el
 texto que la lista ya imprime. Aquí la etiqueta era correcta y la frase

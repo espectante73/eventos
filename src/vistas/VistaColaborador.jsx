@@ -1029,16 +1029,26 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             </p>
           )}
           {puedeVerRepositorio && (
-            <a
-              href={URL_REPOSITORIO}
-              target="_blank"
-              rel="noreferrer"
-              className={`boton-3d inline-flex items-center gap-2 px-3 py-2 ${permisosDeEdicion.length > 0 ? "mt-3" : ""}`}
-              style={{ background: C.paper, color: C.ink, borderRadius: R.caja, fontWeight: 600 }}
-              title="Abre el proyecto en GitHub, en otra pestaña"
-            >
-              <Code2 size={15} /> Link al proyecto en GitHub
-            </a>
+            <>
+              <p style={{ fontWeight: 600 }} className={permisosDeEdicion.length > 0 ? "mt-2" : ""}>
+                🔑 Tienes permiso para ver el proyecto en GitHub.
+              </p>
+              {/* Al lado del pulgar, y en espejo con la mano izquierda:
+                  la regla del pulgar vale para TODO lo que se pulsa, no
+                  solo para los botones de las ventanas (lib/mano.js). */}
+              <div className="flex justify-end zurdo:justify-start mt-2">
+                <a
+                  href={URL_REPOSITORIO}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="boton-3d inline-flex items-center gap-2 px-3 py-2"
+                  style={{ background: C.paper, color: C.ink, borderRadius: R.caja, fontWeight: 600 }}
+                  title="Abre el proyecto en GitHub, en otra pestaña"
+                >
+                  <Code2 size={15} /> Link al proyecto en GitHub
+                </a>
+              </div>
+            </>
           )}
         </div>
       )}
