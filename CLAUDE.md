@@ -2023,6 +2023,9 @@ por la norma de avisar con cifras.
 foto es otra cosa y ante la duda se borra. Si algún día se quiere lo
 contrario, es una decisión suya, no un descuido que arreglar.
 
+✅ **Probado en vivo por el usuario el 2026-09-21**: la casilla guarda
+tanto al marcarla como al desmarcarla.
+
 SQL **ejecutado y comprobado el 2026-09-21** (columna `conservarDatos` +
 `anfitrion_guardar_invitados` + `colaborador_guardar_invitado`). El de la
 v39.4 (`notaPrivacidad` + `guardar_evento`), también.
