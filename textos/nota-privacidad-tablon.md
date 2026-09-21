@@ -24,7 +24,7 @@ tú, que eso es otra cosa.
 **Tus datos, en claro**
 
 Los datos que le diste a tu colaborador los gestiona Benito Fariña, el
-anfitrión, para organizar este evento. Es un evento privado, sin  ánimo
+anfitrión, para organizar este evento. Es un evento privado, sin ánimo
 de lucro: el pago de la entrada es únicamente para cubrir los gastos de
 organización y para pagar los servicios de los profesionales
 contratados.
@@ -32,7 +32,7 @@ contratados.
 **Qué se guarda:** tu nombre y apellidos, tu zona, si has pagado, tu mesa
 y si llegaste el día del evento, tu email, tu año de nacimiento, tu año
 de boda, una canción, alergias y observaciones. De los matrimonios
-invitados, ls foto de su boda.
+invitados, la foto de su boda.
 
 **Para qué:** para saber cuántos invitados vienen, cómo sentarles,
 avisarles de las novedades, mandarles la invitación y que la cocina tenga
@@ -88,13 +88,22 @@ obligación. Lo único que cambiaría el cuadro sería que otra persona
 organizase su evento con esta app: ahí ya sería un servicio a un
 tercero.
 
-**Pendiente de su palabra**, se lo señalé y no lo he tocado:
-2. Falta **"si vienes"** en lo que se guarda (la app guarda `confirmado`).
-3. Ya no se distingue lo **voluntario** (email, año de nacimiento, año de
-   boda, canción, alergias, observaciones) de lo que se guarda siempre.
-4. "**ls** foto de su boda" → "la".
-5. Espacio doble en "sin  ánimo de lucro".
-6. No queda ningún **contacto directo** suyo: todo pasa por el
-   colaborador.
-7. No se menciona el **trabajo asignado** el día del evento
-   (`rolesTrabajo`), que la app también guarda.
+**Descartado por él**, con su motivo, para no volver a proponerlo:
+- **"Si vienes"**: redundante. *"Todos los datos son almacenados y se
+  pueden gestionar."*
+- **Distinguir lo voluntario** (email, año de nacimiento, canción...):
+  tampoco. Los datos de base — nombre, apellidos, zona — **salen de su
+  agenda de teléfono**, no se los da el invitado: *"es mi gran
+  familia"*. La nota ya dice aparte que las alergias son voluntarias.
+
+**Corregido** (solo erratas, no contenido): "ls foto" → "la", y un
+espacio doble en "sin ánimo de lucro".
+
+**Sin plantear todavía**, por si algún día se retoma:
+- No queda ningún **contacto directo** suyo: todo pasa por el
+  colaborador.
+- No se menciona el **trabajo asignado** el día del evento
+  (`rolesTrabajo`), que la app también guarda.
+
+**Falta lo único que queda de verdad: montarla en el tablón.** Hay que
+decidir dónde va dentro de la pantalla del invitado.
