@@ -311,6 +311,27 @@ CREATE TABLE public.deshacer_snapshot (
 
 -- Foto de los datos antes de activar el modo pruebas, para poder
 -- volver atrás.
+-- Qué SQL se ha ejecutado de verdad en ESTA base (2026-09-23).
+--
+-- `schema.sql` dice cómo DEBERÍA ser la base; su historial en git dice
+-- qué cambió y cuándo. Lo que no dice ninguno de los dos es si el
+-- usuario llegó a ejecutar cada bloque: eso no es un dato del código,
+-- es un dato de su Supabase. Dos veces se dio por subido algo que no lo
+-- estaba (`sinCancion`/`sinEmail` el 20 de septiembre, `conservarDatos`
+-- el 21) y hubo que pedírselo a él.
+--
+-- De lectura pública a propósito: así se puede comprobar desde fuera con
+-- la clave anon, sin molestarle. Solo contiene nombres de migración y
+-- fechas; ningún dato de nadie.
+--
+-- ⚠️ Cada bloque de SQL que se le pase termina apuntándose aquí:
+--   insert into migraciones_aplicadas ("nombre") values ('v39.2-conservar-datos')
+--     on conflict ("nombre") do nothing;
+CREATE TABLE public.migraciones_aplicadas (
+    "nombre" text NOT NULL,
+    "aplicadaEn" timestamp with time zone DEFAULT now() NOT NULL
+);
+
 CREATE TABLE public.modo_pruebas_snapshot (
     id boolean DEFAULT true NOT NULL,
     datos jsonb NOT NULL,
@@ -362,6 +383,9 @@ ALTER TABLE ONLY public.mesas
 
 ALTER TABLE ONLY public.deshacer_snapshot
     ADD CONSTRAINT deshacer_snapshot_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.migraciones_aplicadas
+    ADD CONSTRAINT migraciones_aplicadas_pkey PRIMARY KEY ("nombre");
 
 ALTER TABLE ONLY public.modo_pruebas_snapshot
     ADD CONSTRAINT modo_pruebas_snapshot_pkey PRIMARY KEY (id);
@@ -2076,6 +2100,7 @@ alter table public.tablon_secreto enable row level security;
 alter table public.tablon_accesos enable row level security;
 alter table public.deshacer_snapshot enable row level security;
 alter table public.modo_pruebas_snapshot enable row level security;
+alter table public.migraciones_aplicadas enable row level security;
 
 CREATE POLICY lectura_publica ON public.evento FOR SELECT USING (true);
 
@@ -2084,6 +2109,10 @@ CREATE POLICY lectura_publica ON public.fotos_familiares FOR SELECT USING (true)
 CREATE POLICY lectura_publica ON public.mesas FOR SELECT USING (true);
 
 CREATE POLICY lectura_publica ON public.orden_familias FOR SELECT USING (true);
+
+-- La quinta de lectura pública: el registro de migraciones. No es para
+-- la web, es para poder comprobar desde fuera qué SQL está ejecutado.
+CREATE POLICY lectura_publica ON public.migraciones_aplicadas FOR SELECT USING (true);
 
 
 

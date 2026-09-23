@@ -66,11 +66,18 @@ en la sección que se indica entre paréntesis.
 2. **Ventanas tan pequeñas como su contenido.** Del ancho de un móvil en
    vertical, también en el ordenador. `ModalFlotante` acepta `ancho`.
    (misma sección)
-3. **Todo a la derecha, para el pulgar derecho** -- salvo en el móvil de
-   quien elija la mano izquierda (v35). Todo botón que se ponga a la
-   derecha lleva su espejo `zurdo:` (p. ej. `justify-end
-   zurdo:justify-start`). («Regla de la app: todo al alcance del pulgar
-   DERECHO» y «Pulgar derecho o izquierdo»)
+3. **Todo al alcance del pulgar QUE ELIJA CADA UNO.** Desde la v35 cada
+   persona elige mano en su móvil, y **la app entera se acomoda a esa
+   elección**: esa es la norma, no "a la derecha". La derecha es solo lo
+   que se ve por defecto.
+   En la práctica: todo lo que se pulsa se alinea al lado del pulgar y
+   lleva SIEMPRE su espejo `zurdo:` (`justify-end zurdo:justify-start`,
+   `items-end zurdo:items-start`...). Sin el `zurdo:`, la elección no se
+   aplica y el botón se queda donde caiga.
+   ⚠️ Vale para CUALQUIER cosa pulsable, no solo para los botones de una
+   ventana: se rompió el 2026-09-21 con un link metido dentro de un
+   aviso. («Regla de la app: todo al alcance del pulgar» y «Pulgar
+   derecho o izquierdo»)
 4. **Botones del mismo grupo, todos iguales y del ancho del texto más
    largo.** En Mi cuenta el modelo es el de inicio: copia exacta de las
    filas de "Abrir sección…" (`FilaMenu`), pastilla verde, letra dorada,
@@ -1918,14 +1925,22 @@ se repone al desactivar.
 **Regla que se lleva de aquí**: al crear una tabla nueva, mirar si tiene
 que entrar en la foto del Modo Pruebas. Nadie lo hizo en su día.
 
-## Regla de la app: todo al alcance del pulgar DERECHO
+## Regla de la app: todo al alcance del pulgar
 
 Recordado por el usuario el 2026-09-18 ("habíamos dicho que todo se
 manejaría con el pulgar derecho"). Ya estaba aplicado en muchos sitios
 --el botón "Abrir sección…" de la Portada, el Modo Pruebas, los accesos
 del formulario del colaborador-- pero no escrito como regla general.
 
-**Los botones y accesos van a la DERECHA de la ventana.** Si tienen que
+⚠️ **Corregido el 2026-09-23, porque esta sección se quedó desfasada y
+lo vio él.** Nació como "pulgar DERECHO", y en la v35 se construyó el
+selector de mano: **cada persona elige, y la app se acomoda a su
+elección.** La norma es *el pulgar de quien la usa*, no *el derecho*. La
+derecha es solo lo que sale por defecto. Todo lo que se pulsa lleva su
+espejo `zurdo:`; sin él, la elección de esa persona no se aplica.
+
+**Los botones y accesos van al lado del pulgar** (a la derecha por
+defecto). Si tienen que
 medir todos lo mismo, ancho fijo común y alineados a la derecha, no a lo
 ancho con el texto centrado ni a la izquierda. Aplicado en Mi cuenta con
 `ANCHO_FILA_MENU` + `items-end` (en la v34.5-34.6 quedaron a lo ancho o a
@@ -2991,6 +3006,39 @@ ventana y su entrada de menú.
 Si algún día se quiere un "exportar/restaurar" de verdad, primero hay que
 arreglar `exportarTodo` para que guarde las doce tablas conservando los
 ids -- no reconstruir esta ventana tal cual.
+
+## El registro de migraciones (2026-09-23)
+
+Pregunta suya: *"¿tienes que llevar un registro de todos los SQL que has
+subido, o te vale con consultarlo en GitHub?"*.
+
+La respuesta: **el TEXTO del SQL ya está en git** (`schema.sql` y su
+historial), y duplicarlo sería el mismo error que descartamos con
+`DECISIONS.md`. Pero falta otra cosa: **schema.sql dice cómo debería ser
+la base, no qué ha ejecutado él de verdad.** Eso no es un dato del
+código, es un dato de su Supabase, y git no puede saberlo.
+
+Nos mordió dos veces en cuatro días: `sinCancion`/`sinEmail` (20 de
+septiembre) y `conservarDatos` (21), las dos dadas por subidas sin
+estarlo.
+
+**La tabla `migraciones_aplicadas`** lo cierra: nombre y fecha, de
+lectura pública, y cada bloque de SQL termina apuntándose solo.
+Entonces se comprueba desde fuera con la clave anon, en una llamada, sin
+preguntarle nada:
+
+```
+GET /rest/v1/migraciones_aplicadas?select=nombre,aplicadaEn&order=aplicadaEn.desc
+```
+
+⚠️ **La regla, y es lo único que hay que recordar:** todo SQL que se le
+pase termina con su línea. Si no se apunta, el registro miente — y un
+registro que miente es peor que no tenerlo.
+
+```sql
+insert into public.migraciones_aplicadas ("nombre") values ('v40-lo-que-sea')
+  on conflict ("nombre") do nothing;
+```
 
 ## Comprobar si un SQL está subido, con la clave pública (2026-09-20)
 
