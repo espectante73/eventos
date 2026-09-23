@@ -945,6 +945,16 @@ lleve meses sin pasar, ni que "ya estemos avisados". La prueba concreta,
 una por una: **¿qué test o qué línea lo impide hoy?** Si se sabe
 nombrar, la trampa se va y queda el puntero; si no, se queda entera.
 
+**Sin confirmar todavía: si el correo de CONFIRMACIÓN de cuenta ya
+llega a la bandeja principal.** Sus colaboradores lo encontraban en
+spam, pero eso fue con la configuración vieja, cuando Supabase lo
+mandaba desde sus servidores compartidos
+(`noreply@mail.app.supabase.io`). Desde el 2026-09-20 sale de
+`acceso@mail.nexuspoint.rsvp`, y el correo de recuperar contraseña —que
+va por el mismo camino— sí le llegó a Recibidos. Lo probará con un
+colaborador nuevo. ⚠️ El correo de INVITACIÓN nunca fue el problema: ese
+siempre llegó bien.
+
 **El mapa de la app** se queda como está hasta que él lo retome
 (2026-09-20). Ver «Pendiente: hacer el mapa del sitio privado de verdad»
 para el porqué de entonces.
