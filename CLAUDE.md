@@ -130,6 +130,12 @@ Y cuatro reglas que salen de esta criba, cada una de un error real:
 por hecho.** La mitad de lo que se borró en la criba lo escribí yo
 creyendo que ayudaba.
 
+⚠️ **Este archivo se relee al empezar CADA conversación. El chat no:** se
+compacta o se cierra y desaparece. De ahí el error fácil de cometer —
+explicarle algo importante en la conversación, quedarse tranquilo porque
+"ya está dicho", y perderlo. **Si tiene que sobrevivir, va aquí. Si se
+queda en el chat, no existe.**
+
 ### Las normas también se pudren
 
 Lo planteó él el 2026-09-23: a medida que la app se concrete, parte de
