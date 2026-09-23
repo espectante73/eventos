@@ -18,6 +18,7 @@ import { redimensionarImagenArchivo, guardarArchivoInvitacion, obtenerCarpetaInv
 import { Field } from "../../components/Formulario";
 import { GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
+import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { Boton, estilosBoton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { avisoEnPantalla } from "../../lib/avisos";
@@ -211,13 +212,25 @@ export function VentanaInvitaciones({
           ))}
         </div>
 
+        {/* ⚠️ Este texto decía "un artefacto de Claude no puede enviar
+            correos automáticamente". Era verdad cuando la app vivía
+            dentro de un artefacto; desde que es una web con Resend los
+            manda ella sola, y aquí mismo hay un botón "Enviar por email".
+            Llevaba meses mintiendo (visto por el usuario, 2026-09-23). */}
         <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Solo aparecen aquí las familias en las que <strong>todos</strong> sus confirmados
-          ya han pagado. Genera la imagen (con el apellido familiar y los nombres de los
-          integrantes) y descárgala para enviarla tú mismo por WhatsApp o email — un
-          artefacto de Claude no puede enviar correos automáticamente.
+          ya han pagado. De cada una se genera su imagen, con el apellido familiar y los
+          nombres. Puedes enviarla por email desde aquí, o descargarla para mandarla tú
+          por WhatsApp.
         </p>
-        <div className="mb-4 p-4 rounded" style={{ background: C.paperDark, border: `1px dashed ${C.line}` }}>
+        {/* Plegado (norma: todo plegado y una sola cosa abierta). Es un
+            ajuste que se toca una vez y luego estorba: lo que se viene a
+            hacer aquí es mandar invitaciones, y esa lista queda debajo. */}
+        <SeccionPlegable
+          icono={ImageIcon}
+          titulo="Plantilla de la invitación"
+          resumen={evento.imagenInvitacion ? "imagen puesta" : "sin imagen"}
+        >
           <Field label="Imagen de la plantilla de invitación (vertical, para móvil)">
             <div className="flex items-center gap-3 flex-wrap">
               {evento.imagenInvitacion && (
@@ -263,7 +276,7 @@ export function VentanaInvitaciones({
               {errorPlantillaInvitacion}
             </p>
           )}
-        </div>
+        </SeccionPlegable>
 
         {/* Qué se imprime en la imagen -- a petición del usuario,
             2026-08-27: poder quitar fecha/hora/lugar sueltos sin tener que

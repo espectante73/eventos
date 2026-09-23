@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "41.3",
+    cambios: [
+      "En Invitaciones, los ajustes de la plantilla se pliegan: lo que se viene a hacer ahí es mandar invitaciones, no cambiar la imagen.",
+      "Y corregido un texto que llevaba meses mintiendo: decía que la app no podía enviar correos, cuando hay un botón de enviar por email justo debajo.",
+    ],
+  },
+  {
     version: "41.2",
     cambios: [
       "Filtro por rol de trabajo en la Lista de invitados: ya puedes ver de un vistazo quiénes son los acomodadores, o quién no tiene ningún rol. Está en la última columna, la de los iconos.",
