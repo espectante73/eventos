@@ -30,10 +30,23 @@ Dos partes, y se usan de forma distinta:
 1. **PARTE 1 — Reglas que hay que obedecer siempre.** Se lee antes de
    tocar nada. Incluye «Por qué es así», que son las razones por las que
    algo está hecho de una manera y no de otra.
-2. **PARTE 2 — Trampas ya pagadas.** Errores que costaron tiempo real y
-   que **ningún test puede evitar**, porque viven fuera del código: en
-   Supabase, en el iPhone, en la Mac del usuario o en el panel de otra
-   empresa. Cada una está aquí porque es lo único que impide repetirla.
+2. **PARTE 2 — Trampas ya pagadas.** Errores que costaron tiempo real.
+   Cada una está aquí porque es lo único que impide repetirla.
+
+⚠️ **NORMA (usuario, 2026-09-23): una trampa que pueda tener un test, lo
+tiene.** Escribir el test es parte de arreglar el fallo, no un extra
+para después. Solo se queda como texto la que **no se puede probar**, y
+entonces se dice por qué (vive en Supabase, en el iPhone, en su Mac o en
+el panel de otra empresa).
+
+Y no hace falta que el test ejecute la app: **se puede probar el TEXTO
+del proyecto**. `supabase/schema.test.js` comprueba que
+`restaurar_foto` inserte las mesas antes que los invitados y que ninguna
+política sea `for all`; `src/reglas-del-proyecto.test.js`, que no vuelva
+un `window.alert` o que la Música no se cargue aparte;
+`src/theme.test.js`, que no se escriba un color a mano. Esa puerta es más
+ancha de lo que parece: **antes de dar una trampa por no comprobable,
+buscar qué archivo delataría el fallo.**
 
 Hubo una PARTE 3 con la historia — cómo se llegó hasta aquí — y **se
 borró el 2026-09-23**, de acuerdo con el usuario. De sus 6.000 palabras,
@@ -896,27 +909,6 @@ falta el contexto completo.
 
 ### Sesión del 2026-08-12: Modo Pruebas, seguridad, acuse en PDF, y repaso visual
 
-**Modo Pruebas gana selección de colaboradores habilitados.**
-`colaboradores.habilitadoEnPruebas` (default `true`) + la función
-`colaborador_puede_actuar()` centraliza el bloqueo para las 5 RPC
-`colaborador_*` que actúan de verdad (`colaborador_mi_perfil` queda
-fuera a propósito: un colaborador bloqueado debe poder seguir viendo su
-propio perfil). `anfitrion_activar_modo_pruebas` ganó el parámetro
-`p_colaborador_ids_habilitados` (cambio de firma → hizo falta el `drop
-function` de siempre). `VentanaConfigModoPruebas.jsx` muestra un
-checklist con "Todos/Ninguno" antes de activar. Dos bugs reales
-encontrados y corregidos en el camino:
-- Las funciones de Modo Pruebas (activar/desactivar) tenían varios
-  `UPDATE`/`DELETE` intencionalmente sin `WHERE` (toda la tabla a
-  propósito) -- Supabase lo bloquea con código 21000 salvo que lleven
-  `where true` (ver la regla ya añadida más abajo, sección "Reglas de
-  diseño").
-- `colaborador_mis_invitados` quedó mal enganchada a
-  `colaborador_puede_actuar()` en la primera versión: eso bloqueaba
-  también la VISIBILIDAD de la lista (no solo los gestos) a quien
-  estuviera deshabilitado. Corregido para que solo dependa de
-  `authUserId = auth.uid()`, igual que `colaborador_mi_perfil`.
-
 **Bug de seguridad real, no solo de estilo: la previsualización
 "Formularios" del anfitrión llevaba rota desde el 12 de agosto (Fase
 B, retirada del enlace-token de colaborador)** -- cambiar `rol` para
@@ -929,47 +921,6 @@ reutiliza los datos que el anfitrión ya tiene cargados enteros. Lección:
 cualquier RPC `colaborador_*` nueva que dependa de `auth.uid()` debe
 asumir que el anfitrión puede querer "verla" sin ser esa persona --
 para eso está `vistaPrevia`, no para añadir excepciones a la propia RPC.
-
-**Repaso visual completo ("toque más moderno, verde/dorado/marfil,
-toque 3D suave"), en Portada.jsx y de ahí a toda la app:**
-- Portada: pasó por 3 rediseños hasta encontrar el bueno. Primero
-  imagen a pantalla completa con datos superpuestos (recortaba la foto
-  en móvil), luego foto+franja separadas (arregló el recorte pero
-  pensada para foto panorámica), y por fin el definitivo: el póster
-  VERTICAL real de la invitación (`evento.imagen`, NO
-  `evento.imagenInvitacion` -- son dos imágenes distintas, la de
-  Invitaciones lleva recuadros de Familia/Mesa que no pintan nada en un
-  dashboard) en una tarjeta centrada de ancho máximo 480px, con
-  fecha/hora/lugar en vivo en su propia franja verde debajo (no
-  "quemados" en la imagen, para no depender de regenerarla si cambia
-  algo en Configuración).
-- Dos clases CSS reutilizables (`index.css`): `.boton-3d` (relieve
-  sutil, cualquier botón) y `.boton-verde-solido`/`.boton-flotante-imagen`
-  (degradado verde + letra dorada `C.goldClaro`, opaco para tarjetas
-  claras / translúcido+difuminado para ir sobre una foto).
-  `.panel-flotante-cristal` para paneles/cabeceras (desplegables,
-  cabeceras de `VentanaFlotante`).
-- `theme.js` ganó `C.goldClaro` (#D9B778): `C.gold` (#B08D57) es
-  demasiado apagado sobre fondo oscuro -- `C.gold` se queda para fondos
-  claros (uso original), `C.goldClaro` para texto sobre verde oscuro.
-- Cabeceras de `VentanaFlotante` y del recuadro de `VistaColaborador`:
-  mismo verde/dorado que los botones. La cabecera de `VistaColaborador`
-  es `sticky` -- ⚠️ gotcha real: no funcionaba hasta quitar
-  `overflow-hidden` del contenedor exterior (que estaba ahí solo para
-  redondear esquinas) -- `position: sticky` se anula sin avisar si
-  cualquier antecesor tiene `overflow` distinto de `visible`. El
-  redondeado se reparte ahora en cada pieza por separado
-  (`borderTopLeftRadius`/etc.) en vez de un `overflow-hidden` compartido.
-- Login (`VistaLogin.jsx`): mismo fondo verde y botón dorado.
-- `VistaColaborador.jsx`: recuadro de datos reordenado varias veces
-  hasta el layout final (2 filas de 3 tarjetas: Importe total/Cobrado/
-  Pendiente arriba, No pagados/Pagados/porcentajes abajo; Cobrado con
-  fondo verde y letra blanca, Pendiente con fondo rojo y letra blanca;
-  texto arriba y número/importe debajo en las 6, sin excepción). El
-  formulario de cada invitado (`FormularioDatos`) quedó en pruebas con
-  fondo verde oscuro (`C.ink`) + letras doradas, con el aviso de "*
-  campos obligatorios" en su propio recuadro crema (el rojo directo
-  sobre verde oscuro no se leía bien).
 
 ⚠️ **Sin acceso a un navegador real para verificar visualmente estos
 cambios en vivo** (la sandbox no deja que un navegador headless lanzado
@@ -984,24 +935,6 @@ repaso visual, pedir una captura real antes de dar un cambio de layout
 por bueno, no fiarse solo del razonamiento sobre el CSS.
 
 ### 2026-08-24: Fase C ampliada (sincronizar email de acceso con avisos) y Fase D (CAPTCHA)
-
-**Completado y confirmado en producción (mismo día).** El sitio de
-Cloudflare Turnstile lo creó el usuario a mano; la Site Key se añadió a
-Vercel (`VITE_TURNSTILE_SITE_KEY`, los tres entornos) y el proyecto se
-redesplegó, todo ello vía la CLI de `vercel` (login con flujo de
-dispositivo, `vercel link`, `vercel env add`, `vercel redeploy`) en vez
-de guiar al usuario por un dashboard que había cambiado desde lo que yo
-recordaba — la guía inicial por el dashboard le hizo perder el tiempo
-más de una vez (menús de Vercel/Supabase distintos a los descritos),
-lección ya anotada más abajo. La Secret Key se activó en Supabase por
-la **Management API** (`PATCH /v1/projects/{ref}/config/auth`,
-`security_captcha_enabled`/`security_captcha_provider`/
-`security_captcha_secret` — nombres de campo sacados del OpenAPI real
-de `api.supabase.com`, no adivinados) usando un Personal Access Token
-de un solo uso que el usuario revocó justo después. Verificado con un
-`GET` al mismo endpoint (`security_captcha_enabled: true`) y, ya en
-vivo, el usuario confirma ver el check de Turnstile al entrar en
-`nexuspoint.rsvp`.
 
 ⚠️ **Lección de esta sesión: no dar por buenas instrucciones de
 memoria sobre la UI de un dashboard externo (Vercel, Supabase,
@@ -1022,16 +955,6 @@ abrir la página. Se resolvió con un botón flotante visible (nunca un
 intento silencioso de `audio.play()` en el `useEffect` inicial, que
 fallaría y podría confundirse con un fallo real) — el primer clic de
 cada visitante activa la música a partir de ahí.
-
-**Formato de texto (negrita/cursiva/subrayado) en Novedades**, pedido
-a mitad de esta misma sesión: en vez de escribir `<b>`/`<i>`/`<u>` a
-mano en el `textarea` (que ya admitía HTML sencillo desde el principio,
-igual que las plantillas de email), 3 botones envuelven la selección
-actual. Gotcha real evitado: los botones llevan
-`onMouseDown={(e) => e.preventDefault()}` — sin eso, pulsarlos le
-quita el foco al `textarea` antes de que el `click` llegue a disparar
-(se pierde la selección de texto, y el `onBlur` del `textarea` guarda
-la versión vieja, sin la etiqueta nueva).
 
 ⚠️ **Aviso ya dejado por escrito en la propia ventana de Configuración**:
 si el anfitrión reemplaza la foto más tarde, un enlace YA compartido
@@ -1114,33 +1037,6 @@ ejecutándose en el realm de la pestaña principal.
 
 ### 2026-08-25 (novena tanda): pregunta de acceso al tablón (v6.7)
 
-- `tablon_secreto` gana dos columnas: `pregunta` (pública, hay que
-  mostrarla) y `respuestaCorrecta` (nunca sale de la tabla cerrada --
-  se compara siempre dentro de una función, igual que el resto de
-  secretos de la app).
-- `tablon_listar_novedades` cambia de firma (1 → 2 parámetros, con el
-  `drop function` de rigor antes -- misma lección de siempre) para
-  exigir TAMBIÉN la respuesta correcta, no solo el token: así, alguien
-  que llamara a la función directamente sin pasar por la pantalla de la
-  pregunta tampoco obtendría datos reales -- la pregunta protege de
-  verdad la API, no es solo una pantalla decorativa por delante.
-- Comparación case-insensitive y sin espacios de sobra (`lower(trim(...))`
-  en las dos partes) pero SÍ sensible a acentos -- documentado en la UI
-  para que el anfitrión elija una respuesta sencilla.
-- Sin pregunta configurada (`respuestaCorrecta = ''`), cualquier
-  respuesta vacía coincide sola -- el tablón no pide nada en ese caso,
-  ni hace falta que el anfitrión "desactive" nada a propósito.
-- `VentanaNovedades.jsx` gana un campo pregunta+respuesta en el pie,
-  encima del enlace de WhatsApp.
-- `VistaTablon.jsx`: nuevo estado "bloqueado" -- antes de cargar NADA
-  (ni siquiera fecha/hora/lugar), comprueba si hay pregunta configurada
-  y, si la hay, si este dispositivo ya tiene una respuesta guardada en
-  `localStorage` de una vez anterior (y sigue siendo válida -- si el
-  anfitrión cambió la pregunta desde entonces, se descarta y se vuelve
-  a pedir). La respuesta ya verificada viaja en cada refresco periódico
-  (la RPC la exige en cada llamada), guardada en un `ref` para no
-  disparar re-renders de más.
-
 **Tercer bug real de la misma tanda: el propio guardado borraba lo que
 se estaba escribiendo al lado.** El usuario lo describió bien una vez
 se le pidió explicarlo despacio: "el guardado automático nos traiciona,
@@ -1196,9 +1092,6 @@ fotos en base64 son ~20 MB en cada apertura de la app.
   **solo se incluye si los datos están COMPLETOS** -- con un año a medias
   la instrucción saldría mal y el fallo se repetiría en las 48. Si falta
   algo, la app dice quiénes y ofrece bajar solo las fotos.
-
-⚠️ A día de hoy los 48 matrimonios están "sin año" en la Lista de
-invitados: lo rellena el colaborador junto con la foto.
 
 **El año de boda, compartido entre los cónyuges (2026-09-19, v36.2)**.
 Lo cazó el usuario: la foto de boda es POR FAMILIA (`fotos_familiares`),
@@ -1322,18 +1215,6 @@ quede ninguna foto vieja.
 (`VistaAnfitrion` ya no pasa `mostrarRepositorio`). Es lo que se pidió, y
 el anfitrión tiene el repositorio en su propio ordenador.
 
-**Y en la v38.9, la forma definitiva**: *"quiero que la frase 'ver
-proyecto de GitHub' sea el link como tal, y que ese banner sea de una
-sola línea"*. El aviso queda en un renglón — **"🔑 Tienes permiso para
-_ver el proyecto en GitHub_."** — con la última parte subrayada en
-dorado. El permiso y la forma de usarlo son la misma cosa, así que se
-dicen una sola vez, y "GitHub" aparece una sola vez.
-⚠️ Al ir DENTRO de la frase ya no puede irse al lado del pulgar: es
-texto, no un acceso suelto. Por eso `EnlaceTexto` tiene el modo
-`enLinea`, que hereda tamaño y grosor del renglón (si no, se vería un
-trozo de otra letra en medio de la frase) y conserva el relleno de dedo,
-que en un elemento en línea no descuadra el renglón.
-
 **La lección de toda esta tanda, que es la que vale para mañana**: una
 norma suya tiene un ÁMBITO, y el ámbito no siempre está escrito. La 13
 nació con los botones 3D y hablaba de acciones; yo la apliqué a un link
@@ -1343,20 +1224,6 @@ en todas las páginas web oficialmente se ve como un link subrayado"*.
 Cuando una norma suya choca de frente con algo que cualquiera reconoce
 de internet, el choque es la señal: **preguntar por el alcance antes de
 aplicarla al pie de la letra.**
-
-**Y en la v38.8, el paso intermedio**, después de verlo funcionando:
-*"colocaste GitHub dos veces... un botón grande, largo, que encima se ve
-basto, no armoniza con la aplicación... aquí haríamos una excepción, lo
-dejamos como un link, tal vez con los colores de la aplicación"*.
-- La frase de arriba ya dice GitHub, así que el link de abajo es solo
-  **"Link para acceder al proyecto"**. La palabra no se repite.
-- Fuera la pastilla con relieve: **link subrayado en dorado**
-  (`C.goldClaro`) sobre el rojo del aviso. Un botón de ese tamaño dentro
-  de un aviso de dos líneas pesaba más que el aviso. Esto es lo que dos
-  días después hizo reescribir la norma 13 entera: no era una excepción,
-  era que la norma estaba mal planteada.
-- ⚠️ Conserva `py-2`: se ve como una línea de texto, pero el dedo tiene
-  dónde acertar.
 
 **Lección general**: al añadir una clave a una lista existente, leer el
 texto que la lista ya imprime. Aquí la etiqueta era correcta y la frase
@@ -1390,33 +1257,11 @@ lista que no cabe.
 
 ### El sello que late (2026-09-20, v38.1)
 
-`.sello-latiendo` en index.css, al lado de `.ficha-incompleta` y **al
-mismo ritmo (2s)**: es el mismo aviso, contado en vez de suelto.
-`Seal` gana el prop `late`, solo donde el número quiere decir "esto falta
-por hacer". ⚠️ Con latido, la sombra la pone la animación: si se deja
-también en el `style`, gana esa y el halo no se ve.
-
-**Y en la v38.3 y la v38.4**, un segundo y un tercer aro, pedidos de uno
-en uno: 8 px a 0,45, 17 px a 0,18 y 27 px a 0,30 — este último en un rojo
-más puro (#D60822) que el burdeos de la app (`C.peligro`, #B00020),
-porque a 27 px el burdeos se disolvía en la foto. Es el ÚNICO sitio donde
-se usa un rojo que no es el de la paleta, y es a propósito: no es color
-de interfaz, es el borde de una onda. ⚠️ El halo sale FUERA del botón: si
-alguna vez se mete el sello en un contenedor con `overflow: hidden`, se
-recortará y parecerá que el latido se ha roto.
-
 ✅ **Aprobado por el usuario el 2026-09-20** ("espectacular"). Y una
 lección de método: los tres aros salieron de tres vueltas suyas seguidas
 ("más llamativo", "otro aro", "un tercero más rojo"). Ninguna de las
 tres la habría acertado yo de una: con él conviene **construir de uno en
 uno y enseñar**, no proponer el resultado final de golpe.
-
-Ahora mira la expresión entera, descuenta lo que ya sale de la escala
-(`${R.caja}px`) y perdona el `0` y el `1`, que no son un valor elegido a
-ojo sino "nada" y "del todo". Las opacidades de estado (botón
-deshabilitado, icono que no aplica) entran en la escala como
-`OP.apagado`. **Lección: un guardia que solo mira la forma más obvia da
-una seguridad falsa.**
 
 ### Se acabaron los avisos del navegador (2026-09-20, v37.12)
 
@@ -1427,99 +1272,6 @@ pantalla, junto al texto que no se ha podido guardar -- ahí se entiende
 mejor que en una ventana aparte.
 
 ### "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
-
-El usuario: un niño salía "5 de 7" aunque tuviera todo lo suyo, y así
-siempre parecía incompleto. Además canción y observaciones casi siempre se
-quedan vacías y contaban igual.
-- La cuenta vive SOLO en `lib/invitados.js` (`camposQueAplican`,
-  `totalDatosInvitado`, `contarDatosRellenados`): lo que no aplica (email
-  de un menor, año y foto de boda de quien no es O ni A) no cuenta.
-- Canción y observaciones son `CAMPOS_OPCIONALES`: en el formulario, una
-  casilla "Sí" con el mismo aspecto que las de alergias. Sin marcar =
-  "no", plegadas, fuera de la cuenta. Marcada = aparece el campo y cuenta
-  (vacía, como pendiente). Guardado, "sí" es tener texto: no hay columna
-  nueva. Desmarcar con texto pregunta antes de borrarlo.
-- Ejemplos (pruebas en invitados.test.js): esposo adulto 5, suelto adulto
-  3, hijo menor 2; +1 por cada opcional elegido.
-- `datosCompletos` (los dos obligatorios, año de nacimiento y alergias) no
-  cambia: es lo que decide "completo" para pagos y llegadas.
-- v37.6: un invitado que ES colaborador (Raúl Sierra) salía "3 de 4": su
-  email vive en Colaboradores y su ficha de invitado lo tiene vacío a
-  propósito, pero la cuenta miraba la ficha. `conEmailDeColaborador(g,
-  colaboradorVinculado)` pone el de Colaboradores antes de contar, en los
-  dos sitios donde se ve la cuenta. Y la alergia "de fuera" (Melocotón)
-  ya contaba bien: su "6 de 7" era la cuenta vieja de canción y
-  observaciones (prueba añadida).
-  ⚠️ Límite conocido: si ese invitado-colaborador está asignado a OTRO
-  colaborador, ese otro no recibe los datos de Colaboradores (por
-  privacidad solo ve su propio perfil), así que ahí el email sigue
-  pareciendo vacío y editable. No resuelto.
-- v37.7: en la lista del colaborador, ficha CERRADA que no está en N de N
-  → fondo `C.avisoFondo`, borde rojo y latido lento (`.ficha-incompleta`,
-  2,8 s, sombra roja al 16%; quieta con "reducir movimiento"). Elegido por
-  el usuario: rojo mientras falte cualquier dato que se le pide, también
-  email o foto -- sabiendo que un adulto que no dé su email se quedaría en
-  rojo. Las secciones NUEVOS/COMPLETADOS siguen por los obligatorios, así
-  que puede haber una ficha roja en COMPLETADOS: es lo esperado.
-- v37.8: **"no tienen foto de boda"**. Casilla "Sí" en la foto de boda,
-  MARCADA por defecto (al revés que canción y observaciones: lo normal es
-  que haya foto). Desmarcada = ese matrimonio no tiene. Es de la FAMILIA,
-  como la foto (`fotos_familiares."sinFotoBoda"`), así que vale para los
-  dos cónyuges (norma 16). Efectos, todos desde el mismo dato:
-  `pideFotoBoda` la saca de "datos X de Y"; Aniversarios pone "No tienen"
-  en el hueco y no la cuenta en "falta plantilla"; `matrimoniosParaEncargo`
-  la deja fuera de la hoja de encargo (si no, el encargo no estaría nunca
-  completo). Con la foto ya subida la casilla no se puede desmarcar: hay
-  que quitar la foto primero.
-  `useLedgerData`: `repartirFilasDeFotos` reparte ahora las filas de
-  `fotos_familiares` en sus cuatro mapas en UN sitio (antes eran tres
-  copias de tres líneas); `guardarFilasDeFotos` manda las cuatro cosas.
-  SQL dado al usuario el 2026-09-19 (columna + `guardar_fotos_familiares`).
-- v37.9: **una sola definición de "incompleta"** en la vista del
-  colaborador: `estadoDatos` (lib/invitados.js) = no está en N de N. La
-  usan la fila roja, la sección (rebautizada de NUEVOS a **INCOMPLETOS**,
-  a petición del usuario), `Seal` de "Abrir formulario", "Con datos
-  completos" y el botón "Datos completos": con fichas en rojo ya no avisa
-  al anfitrión (el servidor, `colaborador_confirmar_datos_completos`, sigue
-  mirando solo los dos obligatorios; el cliente es quien decide ahora).
-  Latido más rojo y más marcado (el fondo late de #F9DADF a #F2B9C1, 2 s).
-  Los avisos de esos dos botones, en la ventana de la app.
-  **EL MODELO DEL FORMULARIO, dicho por el usuario**: "lo obligado es
-  marcar sí o no; lo otro es automático: aplica o no aplica por edad o por
-  single". Es decir: el colaborador solo decide Sí/No (canción,
-  observaciones, foto de boda); si un dato aplica o no lo decide la app
-  sola (email por la edad, año y foto de boda por ser O/A). Todo dato
-  nuevo del formulario tiene que encajar en una de las dos cosas.
-  ⚠️ Queda un hueco: el email de un adulto que no lo quiera dar no tiene
-  Sí/No, y esa ficha no llega nunca a N de N.
-- v37.10: **valores por defecto de las casillas, decididos por el
-  usuario**: foto de boda SÍ, canción SÍ, observaciones NO, alergias
-  ninguna marcada (se contesta a propósito: es lo seguro para la comida;
-  "alergias no" se entendió como "sin marcar", no como "No" marcado).
-  Canción "Sí" por defecto obliga a GUARDAR su "no": `invitados."sinCancion"`
-  (sin "not null", como las otras columnas nuevas). `eligeOpcional` lo lee;
-  el formulario lo guarda al desmarcar (y borra lo escrito, preguntando
-  antes) y lo quita al volver a marcar. SQL: columna +
-  `anfitrion_guardar_invitados` + `colaborador_guardar_invitado`.
-  Efecto esperado: toda ficha sin canción pasa a rojo hasta que el
-  colaborador la escriba o la desmarque.
-- v37.11: **email**, regla del usuario: "mínimo uno por familia, esposo o
-  esposa; si es un single, es necesario; mejor opción sí por defecto y un
-  mensaje al colaborador si ningún miembro de la familia pone email".
-  - Casilla "Sí" marcada por defecto; su "no" en `invitados."sinEmail"`.
-    Para el suelto (S) no hay casilla ni "no": `eligeOpcional` lo fuerza.
-  - "Familia sin ningún email" = familia con algún confirmado y ningún
-    adulto (esposo, esposa, padre, suelto) con email en su ficha O en
-    Colaboradores. La regla está DOS veces a propósito: `familiasSinEmail`
-    (lib/invitados.js, la usa el anfitrión, que ve la lista entera: vista
-    previa y Revisión) y la función SQL `colaborador_familias_sin_email`
-    (el colaborador solo ve a sus invitados, y un matrimonio puede tener
-    dos colaboradores). Devuelve solo la clave de la familia, nada
-    personal. Se recarga con el ciclo de cada minuto y tras guardar un
-    email. Si cambia una de las dos, cambiar la otra.
-  - El colaborador ve el aviso bajo el email de cada miembro de esa familia;
-    el anfitrión, en la Revisión ("Familias sin ningún email", pendiente).
-  SQL: columna + las dos funciones de guardar + la función nueva.
 
 ### Una familia no se separa en las mesas (2026-09-19, v37)
 
@@ -1581,30 +1333,6 @@ quedan vacías y contaban igual.
 
 ### Relieve, clic y pregunta de seguridad (2026-09-19, v36)
 
-**Tres piezas, una por cosa:**
-- `index.css`: `.boton-3d, select` en la MISMA regla (todo desplegable
-  nuevo la hereda sin clase). Levantarse al pasar el ratón solo con
-  `@media (hover: hover)`: en el móvil se quedaba pegado. Al pulsar se
-  hunde (`translateY(1px)` + sombra por dentro, 0.04 s).
-  ⚠️ **Fallo que había**: `.boton-3d.boton-flotante-imagen:hover` ganaba a
-  `.boton-3d:active`, así que las pastillas verdes NO se hundían al
-  pulsarlas. Ahora tienen su propio `:active`, detrás.
-- `lib/respuestaTactil.js`: UN escuchador por documento (pestaña y cada
-  ventana emergente). Clic fabricado con Web Audio (sin archivo) y
-  vibración: `navigator.vibrate` en Android; en iPhone no existe, y se usa
-  el truco de iOS 18 de pulsar un `<input type="checkbox" switch>`
-  escondido. Si Apple lo quita, no vibra y ya está. ⚠️ Además escucha
-  `touchstart`: **sin eso el iPhone no aplica `:active`** y ningún botón
-  se hunde al tocarlo. Dentro de la Música no suena (`data-sin-sonido-clic`:
-  ese aparato puede ir a los altavoces del local), pero sí vibra.
-- `components/PreguntaSeguridad.jsx`: `usePreguntaSeguridad()` (la
-  pregunta, con el aspecto de la de "¿Quitar la foto?" de Aniversarios) y
-  `BotonQuitar` (el círculo rojo, que lleva la pregunta dentro). La
-  pregunta se pinta con un portal en el `<body>` del documento del botón:
-  dentro de una fila de tabla heredaría el "una sola línea" y el recorte.
-  `yaPregunta` solo para quien ya tiene la suya (Aniversarios y el
-  formulario del colaborador con la foto; el Cronograma, debajo).
-
 El usuario lo probó en su iPhone: ni sonido ni vibración.
 - **Vibración**: el truco de pulsar un `<input switch>` escondido DESDE EL
   CÓDIGO lo cerró Apple en **iOS 26.5** (comprobado en la documentación
@@ -1664,13 +1392,6 @@ para no entrar en bucle si el fallo es otro, como estar sin conexión).
 Al revés (como estaba con la descarga) el reinicio podía ejecutarse igual
 aunque la copia no llegara a existir.
 
-### Retirada la ventana "Backup" (2026-09-17, v32)
-
-⚠️ **`lib/backup.js` NO se ha tocado y sigue en uso**: BORRAR TODO, Modo
-Pruebas y los reinicios descargan con `exportarTodo` su copia automática
-antes de la acción destructiva. Eso se queda. Lo retirado es solo la
-ventana y su entrada de menú.
-
 ### `schema.sql` reescrito desde cero (2026-09-16)
 
 ⚠️ Regla que sustituye a la de antes: **no se añade nada al final de
@@ -1688,29 +1409,6 @@ técnicamente cumpla la regla.
 ⚠️ **Regla nueva: al añadir una columna a una tabla abierta a `anon`,
 releer la política de esa tabla en el mismo cambio.** No basta con que
 la decisión fuera buena el día que se tomó.
-
-- **`colaborador_tiene_permiso(text)`**: versión genérica de
-  `colaborador_puede_editar_novedades(uuid)`. Resuelve el colaborador
-  por `auth.uid()` y NO acepta ningún id que venga del cliente. Usar
-  esta para cualquier permiso nuevo.
-- **`guardar_evento` aplica lista blanca de columnas a los
-  colaboradores.** Sin ella, el permiso `datos_evento_editar` habría
-  dejado a un colaborador abrir el control de llegadas
-  (`asistenciaAbierta`) o activar el Modo Pruebas — columnas que no
-  están en su ventana y que nadie quiso concederle. ⚠️ Al añadir un
-  campo a `VentanaConfigDatosEvento.jsx`, añadirlo también a
-  `v_permitidas` dentro de la función, o ese campo dejará de guardarse
-  para los colaboradores en silencio (el resto de la fila sí se guarda).
-- **El `SET` de `guardar_evento` se construye desde `pg_attribute`**, no
-  con una lista de columnas escrita a mano. `evento` ya va por 37
-  columnas y crece cada pocas sesiones: una lista fija se habría
-  desactualizado al primer `alter table`, perdiendo campos sin avisar.
-  Los nombres salen del catálogo y van con `%I`; el valor viaja como
-  parámetro (`$1`), nunca concatenado.
-- **`persistMesas` dejó de ser `delete` + `upsert` en dos llamadas.** Es
-  una sola función transaccional, así que ya no puede quedarse a medias
-  — el comentario que avisaba de eso en `useLedgerData.js` desapareció
-  porque el problema desapareció.
 
 ⚠️ **El fallo que se coló y por qué:** las 4 funciones se escribieron con
 `p_token text`, pero `anfitrion_secreto.token` es `uuid` y todas las
