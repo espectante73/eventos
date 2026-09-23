@@ -28,7 +28,7 @@ import { useState, useEffect, useRef } from "react";
 import { C, inputStyle, OP, S } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
-import { EnlaceTexto } from "../components/Boton";
+import { Boton, EnlaceTexto } from "../components/Boton";
 
 const TITULOS = { entrar: "Entrar", crear: "Crear cuenta", recuperar: "Recuperar contraseña" };
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
@@ -40,6 +40,14 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [aviso, setAviso] = useState("");
+  // Cuenta creada y pendiente de confirmar. Es una PANTALLA entera, no un
+  // aviso debajo del formulario: el usuario contó (2026-09-23) que sus
+  // colaboradores creaban la cuenta y "se les quedaba la pantalla como si
+  // tuvieran que volver a crearla". Y tenían razón en lo que veían —
+  // seguían delante del mismo formulario, con los botones de "crear
+  // cuenta" y "he olvidado mi contraseña" a la vista. El aviso salía, pero
+  // pequeño y debajo.
+  const [cuentaCreada, setCuentaCreada] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
   const cajaCaptchaRef = useRef(null);
   const widgetIdRef = useRef(null);
@@ -148,9 +156,7 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
     // deja sesión abierta todavía — hay que avisar de que revise su
     // correo. Si no está activada, la sesión ya queda abierta sola y
     // App.jsx pasa a la app en cuanto detecte el cambio.
-    if (!data.session) {
-      setAviso("Cuenta creada. Revisa tu email para confirmarla antes de entrar.");
-    }
+    if (!data.session) setCuentaCreada(email);
   };
 
   const enviarRecuperacion = async (e) => {
@@ -196,6 +202,43 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
         fontFamily: "'Inter', sans-serif",
       }}
     >
+      {cuentaCreada ? (
+        <div
+          className="w-full max-w-sm p-6 rounded-lg"
+          style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: S.flotante }}
+        >
+          <h1
+            className="text-xl mb-3 text-center"
+            style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}
+          >
+            Tu cuenta ya está creada
+          </h1>
+          <p className="text-sm mb-3" style={{ color: C.charcoal, lineHeight: 1.5 }}>
+            Te hemos enviado un correo a <b style={{ color: C.ink }}>{cuentaCreada}</b>. Ábrelo y
+            pulsa el enlace para confirmarla.
+          </p>
+          <p
+            className="text-sm mb-4 p-3 rounded"
+            style={{ color: C.wax, background: C.avisoFondo, border: `1px solid ${C.wax}`, lineHeight: 1.5 }}
+          >
+            ⚠ <b>Mira en la carpeta de spam</b>: el primer correo suele caer ahí. Márcalo como
+            “No es spam” y así los siguientes te llegarán bien.
+          </p>
+          <p className="text-sm mb-4" style={{ color: C.charcoal, lineHeight: 1.5 }}>
+            Cuando lo hayas confirmado, vuelve aquí y entra con tu contraseña.
+          </p>
+          <Boton
+            variante="principal"
+            className="w-full"
+            onClick={() => {
+              setCuentaCreada("");
+              cambiarModo("entrar");
+            }}
+          >
+            Ya la he confirmado — entrar
+          </Boton>
+        </div>
+      ) : (
       <form
         onSubmit={enviar}
         className="w-full max-w-sm p-6 rounded-lg"
@@ -208,10 +251,18 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
           {TITULOS[modo]}
         </h1>
         {modo === "crear" && (
-          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            Usa el mismo email con el que ya estás dado de alta como
-            colaborador (el de los avisos) — así se te reconoce solo.
-          </p>
+          <>
+            <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
+              Usa el mismo email con el que ya estás dado de alta como
+              colaborador (el de los avisos) — así se te reconoce solo.
+            </p>
+            {/* Avisado ANTES de crear la cuenta, no solo después: así se
+                sabe que hay que ir a buscarlo (usuario, 2026-09-23). */}
+            <p className="text-xs mb-3" style={{ color: C.wax }}>
+              ⚠ Después te llegará un correo para confirmar la cuenta. Suele caer en spam:
+              míralo ahí si no lo ves.
+            </p>
+          </>
         )}
         {modo === "recuperar" && (
           <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
@@ -308,6 +359,7 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
           )}
         </div>
       </form>
+      )}
     </div>
   );
 }

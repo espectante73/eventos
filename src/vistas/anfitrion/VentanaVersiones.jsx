@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "40.2",
+    cambios: [
+      "Al crear la cuenta, el colaborador ya no se queda mirando el mismo formulario sin saber si funcionó: sale una pantalla entera que dice que su cuenta está creada y que revise el correo, avisando de que suele caer en spam.",
+      "Y el correo con el que los invitas también lo avisa antes, para que vayan a buscarlo.",
+    ],
+  },
+  {
     version: "40.1",
     cambios: [
       "El mismo arreglo de la v40, aplicado a todo lo demás: novedades, fotos de boda, mesas, colaboradores, gastos y orden de familias. Ninguno vuelve a mandar la lista entera al guardar.",

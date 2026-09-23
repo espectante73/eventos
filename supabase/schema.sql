@@ -1099,6 +1099,16 @@ begin
     '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
     'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
     'font-weight:600;font-family:sans-serif;">Crear mi cuenta</a></div>' ||
+    -- ⚠️ El aviso del spam va AQUÍ, antes de que empiece, no solo en la
+    -- pantalla de después: el usuario contó (2026-09-23) que a sus
+    -- colaboradores el primer correo les cae siempre en spam y se quedan
+    -- atascados sin saber por qué.
+    '<div style="margin-top:20px;padding:12px 14px;border-radius:6px;' ||
+    'background:#FBEAEC;border:1px solid #8C2F39;color:#8C2F39;' ||
+    'font-family:sans-serif;font-size:14px;line-height:1.5;">' ||
+    '<b>Después de crear la cuenta te llegará otro correo para confirmarla.</b><br>' ||
+    'Ese suele caer en la carpeta de spam. Búscalo ahí y márcalo como ' ||
+    '&laquo;No es spam&raquo;: así los siguientes te llegarán bien.</div>' ||
     '<br><small>Si el botón no funciona, copia este enlace: ' || v_enlace || '</small>'
   );
 end;
