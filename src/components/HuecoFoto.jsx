@@ -14,10 +14,12 @@ import { BotonQuitar } from "./PreguntaSeguridad";
 // línea y la foto, como un paspartú. El champán es el del tema "Champán"
 // de la Música (lib/temasMusica.js), ya aprobado, no uno nuevo.
 // Una sola pieza: quien enseñe una de estas fotos usa esto, no su copia.
-export const CHAMPAN = "#E8D5AE";
+// El champán vive en la paleta (theme.js). Se reexporta porque varios
+// archivos ya lo importaban de aquí.
+export const CHAMPAN = C.champan;
 export function estiloMarcoFoto(aire) {
   return {
-    background: `linear-gradient(178deg, ${CHAMPAN} 0%, #D6BE8F 100%)`,
+    background: `linear-gradient(178deg, ${C.champan} 0%, ${C.champanHondo} 100%)`,
     border: `0.5px solid ${C.gold}`,
     padding: aire,
   };

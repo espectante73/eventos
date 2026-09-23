@@ -15,6 +15,12 @@ export const C = {
   // este dorado más claro se lee mucho mejor ahí. C.gold se queda para
   // fondos claros (el uso original, mayoritario en la app).
   goldClaro: "#D9B778",
+  // El champán de los marcos de foto (Aniversarios y el formulario del
+  // colaborador). Vivía dentro de HuecoFoto.jsx, que es un componente:
+  // ningún otro sitio podía usarlo sin copiarlo a mano. Subido a la
+  // paleta el 2026-09-23, cuando el mapa lo necesitó.
+  champan: "#E8D5AE",
+  champanHondo: "#D6BE8F",
   charcoal: "#2B2620",
   line: "#C9BFA9",
   // Rojo de aviso/peligro y su fondo suave a juego — centralizados el

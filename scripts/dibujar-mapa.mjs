@@ -94,13 +94,26 @@ const C = {
   papelHondo: TEMA.paperDark,
   texto: TEMA.ink,
   crema: TEMA.paper,
-  // ⚠️ Estos dos dorados NO son los de la app todavía: el mapa lleva
-  // #A87C3A / #8A6A34 desde que se aprobó su aspecto, y C.gold es
-  // #B08D57. Cambiarlos cambia una imagen ya aprobada, así que está
-  // preguntado y pendiente de su respuesta (2026-09-23). Cuando conteste:
-  // o pasan a TEMA.gold, o se anota aquí por qué se quedan.
-  oro: "#A87C3A",
-  oroHondo: "#8A6A34",
+  // El dorado de la app (usuario, 2026-09-23: "usa el dorado de la
+  // app"). Antes el mapa llevaba dos dorados propios, #A87C3A y #8A6A34,
+  // que no existían en la paleta.
+  //
+  // ⚠️ El mapa es TODO de fondo claro (champán), así que aquí no sirve
+  // C.goldClaro: es el dorado para fondos oscuros y sobre este papel se
+  // desvanece (contraste 1,6 sobre 1). El que corresponde es C.gold, el
+  // que la app usa sobre papel.
+  //
+  // `oroHondo` es ese MISMO dorado, oscurecido: lo llevan rótulos de 12
+  // y 13 px en mayúsculas, y C.gold tal cual se queda en 2,6 de
+  // contraste, por debajo de lo que se lee cómodo. Oscurecido llega a
+  // 4,4 — mejor incluso que el #8A6A34 inventado que había antes. Se
+  // calcula a partir de C.gold, no se escribe: así sigue al original si
+  // algún día cambia la paleta.
+  oro: TEMA.gold,
+  oroHondo: aclarar(TEMA.gold, -40),
+  // El champán de los marcos de foto, ya en la paleta (theme.js): es el
+  // fondo suave de la app.
+  champan: TEMA.champan,
   granate: TEMA.wax,
 };
 const linea = "rgba(31,58,46,0.20)";
