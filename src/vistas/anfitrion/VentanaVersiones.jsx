@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "41.6",
+    cambios: [
+      "El filtro de la última columna se llama \"Función\": es la palabra que usas tú para lo que hace cada uno el día del evento.",
+    ],
+  },
+  {
     version: "41.5",
     cambios: [
       "El filtro nuevo dice \"Trabajo\" en vez de \"Todos\": está en la columna de los iconos, que no tiene título, y había dos filtros de \"rol\" sin forma de distinguirlos.",

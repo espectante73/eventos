@@ -1059,7 +1059,7 @@ export function SeccionInvitados({
                     <select
                       value={filtros.rolTrabajo || ""}
                       onChange={(e) => setFiltros({ ...filtros, rolTrabajo: e.target.value })}
-                      title="Filtrar por el trabajo del día (acomodador, barra…)"
+                      title="Filtrar por la función del día (acomodador, barra…)"
                       // Mismo estilo EXACTO que el filtro de al lado
                       // ("Llegó"): la flecha quitada y el texto centrado
                       // son solo de las columnas estrechísimas (rol
@@ -1085,13 +1085,13 @@ export function SeccionInvitados({
                           filtro de "rol" en la tabla (el familiar), así que
                           la palabra tiene que separarlos. Lo vio el usuario,
                           2026-09-23. */}
-                      <option value="">Trabajo</option>
+                      <option value="">Función</option>
                       {rolesConocidos.map((r) => (
                         <option key={r} value={r}>
                           {r}
                         </option>
                       ))}
-                      <option value="sin">Sin trabajo</option>
+                      <option value="sin">Sin función</option>
                     </select>
                   )}
                 </span>
