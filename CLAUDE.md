@@ -857,6 +857,26 @@ de allí— es **para bastante más cerca del evento**, dicho por él
 (2026-09-20). Y la fecha ni siquiera está fijada. No listarla entre lo
 pendiente de ahora ni ofrecerla como siguiente paso.
 
+**Adelgazar la PARTE 2 convirtiendo trampas en tests** (idea suya,
+2026-09-23; no toca ahora). A medida que la app se concrete, algunas
+trampas dejarán de poder ocurrir y su párrafo podrá quedarse en una
+línea: *"lo vigila tal test"*. El documento adelgaza **como
+consecuencia** de que la app es más segura, no a costa de nada.
+
+⚠️ Con la cuenta hecha, para que la meta sea realista: de las 61
+trampas, **28 dependen de algo externo** (Supabase, el iPhone, paneles
+de otras empresas, npm, su Mac) y suman 5.201 palabras — esas **no
+desaparecen nunca**, por bien que programemos. Las otras **34 son de
+nuestro código**, 2.388 palabras: ese es el techo real de lo que se
+puede convertir en test.
+
+El criterio para cuando se haga: **una trampa se borra cuando hoy es
+imposible caer en ella**, y solo hay dos formas — un test lo impide, o
+el código que lo permitía ya no existe. No vale que sea antigua, ni que
+lleve meses sin pasar, ni que "ya estemos avisados". La prueba concreta,
+una por una: **¿qué test o qué línea lo impide hoy?** Si se sabe
+nombrar, la trampa se va y queda el puntero; si no, se queda entera.
+
 **El mapa de la app** se queda como está hasta que él lo retome
 (2026-09-20). Ver «Pendiente: hacer el mapa del sitio privado de verdad»
 para el porqué de entonces.
