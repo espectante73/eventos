@@ -6,6 +6,23 @@ cualquier instancia de Claude Code que abra este proyecto — en cualquier
 máquina — tenga el mismo contexto de fondo. Actualízalo cuando algo aquí
 quede desactualizado; no dejes que se pudra como pasó con el README.
 
+⚠️ **Aquí no hay ninguna sección de "estado actual", y es a propósito.**
+Había una y llegó a mentir durante siete semanas (decía "v6.0" con la app
+en la v39 y una fecha de boda que ya no existía). La versión vive en
+`src/constants.js` y la fecha en la base de datos; una copia aquí se
+pudre siempre. Lo mismo vale para "próximos pasos": nace caducando.
+**Si algo se presenta como el presente, tiene que salir de donde viva el
+dato, no de este archivo.** (Decidido con el usuario el 2026-09-23, al
+encontrarla él: *"esto es historia, no una norma, y no aplica"*.)
+
+**Para qué se hizo esta app, que sí es estable:** organizar la boda del
+usuario, **y reutilizarla para otros eventos** con pequeñas adaptaciones.
+No es de un solo uso — por eso la Zona de Reinicio es una función
+permanente y no un SQL de usar y tirar. ⚠️ Tiene una consecuencia legal
+que él ya conoce: el día que OTRA persona organice su evento con esta
+app, deja de ser una actividad personal suya (ver «Autorizo expresamente
+a que guarden mis datos»).
+
 ## Idioma
 
 Responder siempre en español al trabajar en este proyecto, salvo que se
@@ -174,128 +191,6 @@ en la sección que se indica entre paréntesis.
     tablas** — ahí mandan las normas 7 y 8. («El acabado, con una escala
     y no a ojo»)
 
-## Estado actual (2026-08-06)
-
-La app está en **v6.0**. El evento real de referencia es una **boda el 13
-de noviembre de 2026** (Rte. El Rincón, Icod de los Vinos, Tenerife).
-
-El sistema de avisos automáticos por email (Resend, vía función SQL
-`enviar_email` que llama a Resend directamente desde Postgres) **ya se ha
-probado en vivo con un colaborador real** y funciona. La primera prueba
-sacó varios ajustes reales, ya aplicados en código y en la base de datos:
-
-- El email al colaborador con invitados asignados **solo nombra a los
-  confirmados** — los que siguen en tentativa no se mencionan, para no
-  levantar sospechas sobre la organización antes de tiempo. Si un
-  tentativa se confirma más tarde, genera su propia tanda de aviso nueva
-  (no se pierde, solo se retrasa).
-- "He terminado mi trabajo" (colaborador) ya no lo bloquea tener
-  invitados en tentativa sin confirmar — solo mira que los confirmados de
-  ese lote estén completos.
-- Nuevo botón "Probar" junto al email de cada colaborador (sección
-  Colaboradores): envía un email de prueba al momento, con aviso visible
-  si el formato no parece válido. Motivo: una errata de un carácter en un
-  email de colaborador pasó desapercibida varios días hasta que se
-  investigó por qué no le llegaban avisos — la causa raíz de por qué
-  corregirla y recargar no bastaba a la primera no se ha localizado del
-  todo; si se repite, hace falta investigarlo con el paso a paso exacto.
-- "Reiniciar avisos (historial de emails)" ahora también vuelve a marcar
-  como pendientes (`avisoPendiente = true`) a todos los invitados ya
-  asignados a un colaborador, no solo borra el historial. Motivo: los
-  reinicios por invitado (datos/pago/mesa/asignación) ya limpian
-  "avisoPendiente" como parte de su categoría — sin este cambio, tras
-  usarlos no quedaba ningún botón con el que volver a probar el envío
-  real, aunque el colaborador tuviera un email válido.
-
-⚠️ El README sigue sin reflejar nada de esto (habla de "pendiente" para
-toda la fase de emails) — está desactualizado, no lo tomes como fuente de
-verdad.
-
-Desde que se construyó el sistema de emails, el resto del trabajo se ha
-ido en: mejoras de comodidad (Plano de mesas, Estado de cuentas), el
-modelo de ventanas flotantes (ver más abajo), solidez general (backup
-automático también en BORRAR TODO, reversión de guardados fallidos, Error
-Boundary) y backup diario automático de la base de datos (ver más abajo).
-
-**Por qué importa:** el plan es reutilizar esta misma app para **otros
-eventos futuros** con pequeñas adaptaciones — no es un proyecto de un solo
-uso. Por eso la Zona de Reinicio es una función permanente de la app, no un
-script SQL de usar y tirar.
-
-**Próximos pasos probables:** seguir probando el flujo de emails en vivo
-con los ajustes de hoy ya activos (código en Vercel y funciones SQL ya
-aplicadas en Supabase). Si se reporta un email que no llega o llega mal,
-mirar primero el registro "Avisos enviados" dentro de la propia app (tabla
-`avisos_enviados`) y, si hace falta, los logs de Resend — no asumir que el
-código de envío está roto sin descartar antes un problema de configuración
-(clave de API, remitente) o de plantilla.
-
-**2026-08-08: red de pruebas (Vitest + jsdom) y ESLint (`no-undef`).**
-`npm test` corre los tests unitarios (co-localizados en `src/lib/*.test.js`)
-sobre las funciones puras; `npm run lint` detecta al instante cualquier
-referencia a una variable no importada — el fallo silencioso más peligroso
-al mover código entre ficheros en JS sin tipos (no rompe el build, solo
-revienta en tiempo de ejecución la primera vez que se toca esa rama). Las
-dos se usaron como red de seguridad, junto a `npm run build`, en las 3
-fases siguientes.
-
-**2026-08-08: `App.jsx` dividido de 6.262 a 240 líneas (rama
-`refactor/dividir-app-jsx`, sin fusionar todavía — pendiente de que el
-usuario la pruebe a mano en `npm run dev`).** Mismo código, mismos
-comentarios, solo cambia el fichero, en 3 fases (cada una con su propio
-commit, verificado con lint+test+build antes del siguiente):
-- Fase 1: funciones puras a `src/lib/*.js` (con sus tests co-localizados).
-- Fase 2: componentes de presentación "hoja" (reciben props, no dependen
-  del estado de `VistaAnfitrion`) a `src/components/*.jsx`, más `theme.js`
-  (paleta `C`, `inputStyle`) y `constants.js` (`VERSION_APP`) como módulos
-  compartidos nuevos para que ni App.jsx ni los componentes dependan el
-  uno del otro.
-- Fase 3: `VistaAnfitrion` (~3.650 líneas) y `VistaColaborador` a
-  `src/vistas/*.jsx`, tal cual, sin dividir su interior todavía.
-El tamaño del bundle final es prácticamente idéntico al de antes de
-empezar (511.98 kB vs 511.97 kB) — señal de que nada se perdió ni se
-duplicó.
-
-**Fase 4 — COMPLETA (2026-08-08/09).** Dividido el interior de
-`VistaAnfitrion.jsx` en 5 rondas de riesgo creciente, cada una en su
-propia rama, probada a mano por el usuario y fusionada antes de empezar
-la siguiente:
-- Ronda 1: `versiones`, `progreso`, `copiaSeguridad`, `config-url-web`,
-  `config-email-anfitrion`, `config-precios`. De paso, corrigió dos
-  fallos reales ya existentes en Invitaciones con el email de un
-  invitado que también es colaborador (ver más abajo,
-  `emailDeInvitado`/`destinatarioConEmail`).
-- Ronda 2: `config-datos-evento`, `config-plantillas-email`,
-  `config-zona-reinicio`, `config-zona-peligro`.
-- Ronda 3: `colaboradores` y `mesas`.
-- Ronda 4 (la más grande): `plano`, `cuentas`, `avisos`, `invitaciones`.
-  Avisos e Invitaciones comparten de verdad el motor de "enviar la
-  invitación a una familia" — esa parte se quedó en el cascarón, pasada
-  como props a las dos, en vez de duplicarla.
-- Ronda 5 (última): la tabla "Lista de invitados" (ni siquiera era una
-  ventana flotante, era la sección siempre visible) a
-  `SeccionInvitados.jsx`.
-
-Resultado: `VistaAnfitrion.jsx` pasó de **3.788 a 548 líneas**. Cada
-ventana vive ahora en su propio fichero bajo `src/vistas/anfitrion/`. Lo
-que queda en el cascarón (`VistaAnfitrion.jsx`) es exactamente lo que
-comparten de verdad 2+ ventanas entre sí (`asignarColaborador`,
-`ocupacionMesa`, `panelFlotante`/`setPanelFlotante`,
-`filtros`/`setFiltros`, el motor de invitaciones) — pasado como props a
-quien lo necesite, nunca duplicado. Patrón a seguir si se añade una
-ventana nueva: si su lógica no la usa nadie más, vive entera en su
-propio fichero; si la comparten dos o más, se queda en el cascarón y se
-pasa como prop.
-
-Dos lecciones confirmadas durante el reparto:
-- `npm run lint` (no-undef) cazó al vuelo una constante perdida al mover
-  un bloque grande (Ronda 2), antes de llegar al navegador.
-- `npm run build` (no el lint) cazó un import de la librería equivocada
-  (`calcularEdad`/`edadPromedio` importados de `lib/formato` en vez de
-  `lib/invitados`, Ronda 5) — ESLint no lo ve porque el nombre sí existe
-  en algún sitio; solo Rollup, al construir de verdad, comprueba que el
-  módulo de origen lo exporte. Las dos comprobaciones son necesarias.
-
 ## Sesión del 2026-08-12: Modo Pruebas, seguridad, acuse en PDF, y repaso visual
 
 Sesión larga, varios frentes distintos. Resumen para no tener que releer
@@ -448,6 +343,16 @@ Database, o en el mensaje de error si el workflow empieza a fallar de
 nuevo), hay que subir el número de esa imagen a juego.
 
 ## Reglas de diseño ya decididas
+
+### Un email de colaborador mal escrito no se nota: por eso existe "Probar"
+
+Una errata de UN carácter en el email de un colaborador pasó varios días
+sin detectarse — simplemente no le llegaban los avisos, y nada lo decía.
+De ahí el botón **"Probar"** junto al email de cada colaborador: envía
+uno de prueba al momento. ⚠️ Y la regla al depurar un envío: mirar
+primero el historial "Avisos enviados" (`avisos_enviados`) y, si hace
+falta, los logs de Resend. **No dar por roto el código de envío sin
+descartar antes la configuración o la plantilla.**
 
 ### `enviar_email` nunca debe esperar de forma bloqueante la respuesta HTTP
 
@@ -2285,17 +2190,6 @@ misma frase:
 texto que la lista ya imprime. Aquí la etiqueta era correcta y la frase
 que la envolvía, no.
 
-## La prueba del local no toca todavía (2026-09-20)
-
-La prueba de la tele del local (cortinilla y Música del evento con el
-wifi de allí) lleva meses apareciendo como "lo único pendiente". El
-usuario lo aclaró: **es para bastante más cerca del evento**, y la fecha
-ni siquiera está fijada.
-
-No listarla entre lo pendiente de ahora ni ofrecerla como siguiente
-paso: no está olvidada, es que no toca. Lo mismo vale para las fotos
-terminadas y el reparto de mesas — ver "Ritmo real del evento".
-
 ## El mapa se quedaba viejo sin que nadie se enterara (2026-09-23)
 
 El usuario: *"no coincide la versión del mapa con la que estamos"*. Tenía
@@ -2907,53 +2801,40 @@ abierta de antes pide trozos con nombres que ya no existen. `main.jsx`
 escucha `vite:preloadError` y recarga UNA vez (marca en sessionStorage
 para no entrar en bucle si el fallo es otro, como estar sin conexión).
 
-## Dónde lo dejamos (2026-09-17, fin de sesión)
+## Lo que está esperando, y por qué no es un fallo
 
-**Hecho y desplegado**: v31 a v34. El SQL del deshacer está ejecutado y
-verificado en la base real (las funciones responden; `restaurar_foto`
-contesta "permission denied" desde fuera, que es lo correcto).
+Cosas que llevan tiempo sin moverse **porque no toca**, no porque se
+hayan olvidado. Antes esto era una sección "Dónde lo dejamos" con fecha,
+que se quedó vieja en una semana; esto no caduca porque no habla de un
+día concreto.
 
-**Lo primero al volver**, porque está construido pero SIN probar en vivo:
-1. Probar el botón "Deshacer" con un reinicio pequeño: que salga el aviso
-   con la hora, que los datos vuelvan, y que el aviso desaparezca después
-   (solo se deshace una vez).
-2. Probar el circuito de fotos de boda de punta a punta.
+✅ **La licencia está decidida** (2026-09-20): **privada, todos los
+derechos reservados**, como pone el README. Él lo confirmó. Cerrado, no
+volver a sacarlo.
 
-**El usuario eligió para la próxima sesión** (2026-09-17, al despedirse):
-**registro de errores** y **peso de la app**. En ese orden de interés.
-- *Registro de errores*: hoy, si a un colaborador le falla algo en su
-  móvil, no queda rastro. Hay `ErrorBoundary`, pero no avisa a nadie.
-  Requiere alta en un servicio externo (decisión suya).
-- *Peso*: el bundle son 1.194 kB (362 kB comprimido) en un solo archivo.
-  Los candidatos claros a cargarse solo cuando se usan son jspdf,
-  html2canvas y la ventana de Música.
+**Bloqueado por datos:** la hoja de encargo de las fotos necesita el año
+de boda, y los 48 matrimonios lo tienen vacío. Lo rellenan los
+colaboradores junto con la foto; no es trabajo suyo.
 
-✅ **La licencia, decidida el 2026-09-20**: se queda **privada, todos los
-derechos reservados**, como estaba en el README. El usuario lo confirmó
-("creo que eso es lo que quiero"). Tema cerrado, no volver a sacarlo.
-
-📅 **La nota de privacidad, para la semana del 2026-09-20** (él dijo
-"queda para esta semana"). Va **en el tablón de invitados**, que es donde
-la ve quien entrega sus datos. La redacta él y la repaso yo. Es lo único
-de la lista con fecha propia: si la semana pasa sin que aparezca, vale la
-pena recordárselo una vez.
-
-**Bloqueado por datos**: la hoja de encargo necesita el año de boda y los
-48 matrimonios lo tienen vacío.
-
-**Ritmo real del evento** (el usuario, 2026-09-20). Dos cosas que
-conviene no confundir con un fallo:
-
-- **Las mesas de hoy (3) no son las del evento.** Serán **12-14**, y el
+**El ritmo real del evento** (él, 2026-09-20). Dos cosas que conviene no
+confundir con un fallo:
+- **Las pocas mesas de hoy no son las del evento.** Serán **12-14**, y el
   reparto se hace cuando estén TODAS las confirmaciones: con ~60
-  confirmados de ~140 no se puede sentar a nadie. Si en la base hay
-  pocas mesas, es que todavía no toca, no que se hayan perdido.
-  (El tope de 15 mesas de la base ya está quitado, así que 16 o más
-  tampoco darían problema.)
-- **Las fotos terminadas van después**, y la prueba del nombre de
-  archivo con ChatGPT (para subirlas en bloque) la hará cuando las
-  tenga. No insistir antes.
+  confirmados de ~140 no se puede sentar a nadie. Si hay pocas mesas en
+  la base, es que no toca, no que se hayan perdido. (El tope de 15 mesas
+  ya está quitado.)
+- **Las fotos terminadas van después**, y la prueba del nombre de archivo
+  con ChatGPT (para subirlas en bloque) la hará cuando las tenga. No
+  insistir antes.
 
+**La prueba del local** —la tele, la cortinilla y la música con el wifi
+de allí— es **para bastante más cerca del evento**, dicho por él
+(2026-09-20). Y la fecha ni siquiera está fijada. No listarla entre lo
+pendiente de ahora ni ofrecerla como siguiente paso.
+
+**El mapa de la app** se queda como está hasta que él lo retome
+(2026-09-20). Ver «Pendiente: hacer el mapa del sitio privado de verdad»
+para el porqué de entonces.
 ## Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
 
 El usuario lo cerró con una frase que da en el clavo: *"no puedo
