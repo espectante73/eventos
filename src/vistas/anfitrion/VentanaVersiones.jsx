@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "41.1",
+    cambios: [
+      "Terminado el blindaje de la Lista de invitados: las 16 operaciones que tocan tus datos ya están fuera de la pantalla, con 27 pruebas automáticas.",
+      "Nuevo aviso: si cambias el apellido o el grupo familiar de alguien que tiene familia en la lista, se te dice cuántos se quedan atrás — porque a partir de ahí ya no se sentarán juntos.",
+    ],
+  },
+  {
     version: "41",
     cambios: [
       "Primera ronda para blindar la Lista de invitados: añadir, importar y eliminar salen de la pantalla y pasan a tener 14 pruebas automáticas. No cambia nada de lo que ves.",

@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { agregarInvitado, importarInvitados, eliminarInvitado, mismaPersona } from "./edicionInvitados";
+import {
+  agregarInvitado, importarInvitados, eliminarInvitado, mismaPersona,
+  cambiarCampo, alternarRolTrabajo, alternarExcluidoTablon,
+  permitirExcepcion, quitarExcepcion, marcarResponsable,
+} from "./edicionInvitados";
 
 // La lista de invitados es la base de toda la app: si aquí se pierde
 // alguien, no se nota hasta que falta en la boda. Estas pruebas son el
@@ -104,5 +108,97 @@ describe("cuándo dos fichas son la misma persona", () => {
 
   it("dos personas distintas siguen siendo distintas", () => {
     expect(mismaPersona(juan, ana)).toBe(false);
+  });
+});
+
+describe("cambiar un campo suelto", () => {
+  const familia = [
+    { id: "1", nombre: "Juan", apellido: "Gatell", grupoFamiliar: "Gatell01" },
+    { id: "2", nombre: "Ana", apellido: "Gatell", grupoFamiliar: "Gatell01" },
+    { id: "3", nombre: "Luis", apellido: "Gatell", grupoFamiliar: "Gatell01" },
+  ];
+
+  it("cambia solo a quien toca", () => {
+    const { invitados } = cambiarCampo(familia, "1", "zona", "Centro");
+    expect(invitados[0].zona).toBe("Centro");
+    expect(invitados[1].zona).toBeUndefined();
+  });
+
+  it("quita los espacios de los lados", () => {
+    const { invitados } = cambiarCampo(familia, "1", "nombre", "  Juan Carlos  ");
+    expect(invitados[0].nombre).toBe("Juan Carlos");
+  });
+
+  it("si el valor es el mismo, no devuelve una lista nueva", () => {
+    const { invitados } = cambiarCampo(familia, "1", "nombre", "Juan");
+    expect(invitados).toBe(familia);
+  });
+
+  it("un campo que no existe no toca nada y lo dice", () => {
+    const { invitados, aviso } = cambiarCampo(familia, "1", "pagado", true);
+    expect(invitados).toBe(familia);
+    expect(aviso).toContain("desconocido");
+  });
+
+  // Norma 16: cambiar el apellido saca a esa persona de su familia, y de
+  // eso dependen la mesa, los matrimonios y el acceso al tablón. Es
+  // legítimo (el hijo mayor con otro apellido), pero no en silencio.
+  it("cambiar el grupo familiar avisa con cuántos se quedan atrás", () => {
+    const { invitados, aviso } = cambiarCampo(familia, "1", "grupoFamiliar", "Mora01");
+    expect(invitados[0].grupoFamiliar).toBe("Mora01");
+    expect(aviso).toContain("otros 2");
+  });
+
+  it("si no deja a nadie atrás, no avisa de nada", () => {
+    const solo = [{ id: "9", nombre: "Eva", apellido: "Sola", grupoFamiliar: "Sola01" }];
+    const { aviso } = cambiarCampo(solo, "9", "grupoFamiliar", "Otra01");
+    expect(aviso).toBe("");
+  });
+});
+
+describe("roles de trabajo y marcas", () => {
+  const g = [{ id: "1", nombre: "Juan", apellido: "Gatell", rolesTrabajo: ["acomodador"] }];
+
+  it("pulsar un rol que ya tiene se lo quita", () => {
+    expect(alternarRolTrabajo(g, "1", "acomodador").invitados[0].rolesTrabajo).toEqual([]);
+  });
+
+  it("pulsar uno nuevo se lo añade, sin perder los que tenía", () => {
+    expect(alternarRolTrabajo(g, "1", "barra").invitados[0].rolesTrabajo).toEqual(["acomodador", "barra"]);
+  });
+
+  it("un rol vacío no hace nada", () => {
+    expect(alternarRolTrabajo(g, "1", "   ").invitados).toBe(g);
+  });
+
+  it("excluir del tablón es un interruptor", () => {
+    const una = alternarExcluidoTablon(g, "1").invitados;
+    expect(una[0].excluidoTablon).toBe(true);
+    expect(alternarExcluidoTablon(una, "1").invitados[0].excluidoTablon).toBe(false);
+  });
+});
+
+describe("excepciones de la Revisión", () => {
+  const g = [{ id: "1", nombre: "Juan", apellido: "Gatell" }];
+
+  it("permitir la misma dos veces no la duplica", () => {
+    const una = permitirExcepcion(g, "1", "familiaRepartida").invitados;
+    const dos = permitirExcepcion(una, "1", "familiaRepartida").invitados;
+    expect(dos[0].excepcionesRevision).toEqual(["familiaRepartida"]);
+  });
+
+  it("quitarla deja las demás", () => {
+    let l = permitirExcepcion(g, "1", "a").invitados;
+    l = permitirExcepcion(l, "1", "b").invitados;
+    expect(quitarExcepcion(l, "1", "a").invitados[0].excepcionesRevision).toEqual(["b"]);
+  });
+});
+
+describe("responsable de un rol", () => {
+  it("uno solo por rol, y pulsarlo otra vez lo quita", () => {
+    const uno = marcarResponsable({}, "acomodador", "1");
+    expect(uno).toEqual({ acomodador: "1" });
+    expect(marcarResponsable(uno, "acomodador", "2")).toEqual({ acomodador: "2" });
+    expect(marcarResponsable(uno, "acomodador", "1")).toEqual({});
   });
 });

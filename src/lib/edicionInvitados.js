@@ -12,10 +12,14 @@
 // tocar pantalla ni base de datos. Así se pueden probar en frío, con
 // todos los casos raros, tantas veces como haga falta.
 //
-// Todas devuelven `{ invitados, aviso }`, el mismo trato que `lib/mesas.js`:
-// si `aviso` trae texto, NO se ha tocado nada y ahí está el motivo. Es la
-// norma de la casa: nada a medias, y se avisa con cifras.
+// Todas devuelven `{ invitados, aviso }`, el mismo trato que
+// `lib/mesas.js`. El `aviso` es lo que hay que contarle al usuario; para
+// saber si algo cambió se compara la lista devuelta con la de entrada
+// (`siguiente !== invitados`). A veces se hace el cambio Y se avisa —por
+// ejemplo, al añadir a alguien que se llama igual que otro—, porque
+// bloquearlo sería decidir por él.
 import { uid } from "./id";
+import { claveFamiliaMesa } from "./mesas";
 
 // Dos personas son "la misma" si coinciden nombre y apellido, sin
 // mirar mayúsculas, tildes ni espacios de más — el mismo criterio que
@@ -128,4 +132,106 @@ export function eliminarInvitado(invitados, id, colaboradores = []) {
     };
   }
   return { invitados: invitados.filter((x) => x.id !== id), aviso: "" };
+}
+
+// ---------- Cambiar un campo suelto ----------
+//
+// Estaba escrito cinco veces, una por campo (nombre, apellido, zona,
+// grupo familiar, rol familiar), con el mismo `map` copiado. Cinco
+// copias del mismo gesto son cinco sitios donde equivocarse.
+const CAMPOS = ["nombre", "apellido", "zona", "grupoFamiliar", "rolFamiliar"];
+
+export function cambiarCampo(invitados, id, campo, valor) {
+  if (!CAMPOS.includes(campo)) return { invitados, aviso: `Campo desconocido: ${campo}.` };
+  const g = invitados.find((x) => x.id === id);
+  if (!g) return { invitados, aviso: "" };
+
+  const limpio = String(valor ?? "").trim();
+  if (limpio === String(g[campo] ?? "")) return { invitados, aviso: "" };
+
+  const siguiente = invitados.map((x) => (x.id === id ? { ...x, [campo]: limpio } : x));
+
+  // ⚠️ Cambiar el apellido o el grupo familiar CAMBIA DE FAMILIA a esa
+  // persona, y de eso dependen la mesa (una familia no se separa), los
+  // matrimonios y el acceso al tablón. Es legítimo —el hijo mayor con
+  // otro apellido— pero no debe pasar sin que se vea. Se hace y se
+  // avisa con la cifra, como manda la norma 16.
+  if (campo === "apellido" || campo === "grupoFamiliar") {
+    const antes = claveFamiliaMesa(g);
+    const ahora = claveFamiliaMesa(siguiente.find((x) => x.id === id));
+    if (antes !== ahora) {
+      const quedan = invitados.filter((x) => x.id !== id && claveFamiliaMesa(x) === antes).length;
+      if (quedan > 0) {
+        return {
+          invitados: siguiente,
+          aviso:
+            `${g.nombre} ${g.apellido}`.trim() +
+            ` pasa a ser de otra familia. Los otros ${quedan} se quedan como estaban, ` +
+            "así que ya no se sentarán juntos por la regla de la familia.",
+        };
+      }
+    }
+  }
+  return { invitados: siguiente, aviso: "" };
+}
+
+// ---------- Roles de trabajo del día ----------
+export function alternarRolTrabajo(invitados, id, rol) {
+  const limpio = String(rol || "").trim();
+  if (!limpio) return { invitados, aviso: "" };
+  return {
+    invitados: invitados.map((g) => {
+      if (g.id !== id) return g;
+      const actuales = Array.isArray(g.rolesTrabajo) ? g.rolesTrabajo : [];
+      return {
+        ...g,
+        rolesTrabajo: actuales.includes(limpio)
+          ? actuales.filter((r) => r !== limpio)
+          : [...actuales, limpio],
+      };
+    }),
+    aviso: "",
+  };
+}
+
+// ---------- Excluir del tablón público ----------
+export function alternarExcluidoTablon(invitados, id) {
+  return {
+    invitados: invitados.map((g) => (g.id === id ? { ...g, excluidoTablon: !g.excluidoTablon } : g)),
+    aviso: "",
+  };
+}
+
+// ---------- Excepciones de la Revisión ----------
+export function permitirExcepcion(invitados, id, clave) {
+  return {
+    invitados: invitados.map((g) =>
+      g.id === id
+        ? { ...g, excepcionesRevision: [...new Set([...(g.excepcionesRevision || []), clave])] }
+        : g
+    ),
+    aviso: "",
+  };
+}
+
+export function quitarExcepcion(invitados, id, clave) {
+  return {
+    invitados: invitados.map((g) =>
+      g.id === id
+        ? { ...g, excepcionesRevision: (g.excepcionesRevision || []).filter((c) => c !== clave) }
+        : g
+    ),
+    aviso: "",
+  };
+}
+
+// ---------- Responsable de un rol ----------
+// No toca a los invitados: vive en `evento.rolesTrabajoResponsables`,
+// un mapa { rol: invitadoId }. Uno solo por rol para todo el evento.
+// Pulsar sobre el que ya es responsable lo quita.
+export function marcarResponsable(responsables, rol, invitadoId) {
+  const siguiente = { ...(responsables || {}) };
+  if (siguiente[rol] === invitadoId) delete siguiente[rol];
+  else siguiente[rol] = invitadoId;
+  return siguiente;
 }

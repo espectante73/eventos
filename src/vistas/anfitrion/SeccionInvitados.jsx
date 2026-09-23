@@ -48,6 +48,12 @@ import {
   agregarInvitado as crearInvitado,
   importarInvitados as importarFilas,
   eliminarInvitado as borrarInvitado,
+  cambiarCampo,
+  alternarRolTrabajo as alternarRol,
+  alternarExcluidoTablon as alternarTablon,
+  permitirExcepcion as marcarExcepcion,
+  quitarExcepcion as desmarcarExcepcion,
+  marcarResponsable as fijarResponsable,
 } from "../../lib/edicionInvitados";
 
 export function SeccionInvitados({
@@ -164,27 +170,20 @@ export function SeccionInvitados({
     onCerrar();
   };
 
-  const asignarGrupoFamiliar = (id, grupoFamiliar) => {
-    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, grupoFamiliar } : g)));
+  // Los cinco campos pasan por la misma función de lib/edicionInvitados.js
+  // (antes era el mismo `map` copiado cinco veces). Cambiar el apellido o
+  // el grupo familiar saca a esa persona de su familia: eso lo avisa la
+  // propia función, con la cifra de cuántos se quedan atrás.
+  const editarCampo = (id, campo) => (valor) => {
+    const { invitados: siguiente, aviso } = cambiarCampo(invitados, id, campo, valor);
+    if (siguiente !== invitados) persistInvitados(siguiente);
+    avisarLista(aviso);
   };
-
-  const asignarApellido = (id, apellido) => {
-    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, apellido } : g)));
-  };
-
-  const asignarNombre = (id, nombre) => {
-    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, nombre } : g)));
-  };
-
-  const asignarZona = (id, zona) => {
-    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, zona } : g)));
-  };
-
-  // "esposo" | "esposa" | "hijo" | "" (unidad suelta) -- ver
-  // lib/rolFamiliar.js y lib/matrimonios.js.
-  const asignarRolFamiliar = (id, rolFamiliar) => {
-    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, rolFamiliar } : g)));
-  };
+  const asignarGrupoFamiliar = (id, v) => editarCampo(id, "grupoFamiliar")(v);
+  const asignarApellido = (id, v) => editarCampo(id, "apellido")(v);
+  const asignarNombre = (id, v) => editarCampo(id, "nombre")(v);
+  const asignarZona = (id, v) => editarCampo(id, "zona")(v);
+  const asignarRolFamiliar = (id, v) => editarCampo(id, "rolFamiliar")(v);
 
   // REGLA INFLEXIBLE del usuario (2026-09-19): una familia no se separa.
   // Poner o quitar la mesa a uno la pone o la quita a toda su familia
@@ -241,24 +240,13 @@ export function SeccionInvitados({
     ...new Set(invitados.flatMap((g) => (Array.isArray(g.rolesTrabajo) ? g.rolesTrabajo : []))),
   ].sort();
 
-  const alternarRolTrabajo = (id, rol) => {
-    persistInvitados(
-      invitados.map((g) => {
-        if (g.id !== id) return g;
-        const actuales = Array.isArray(g.rolesTrabajo) ? g.rolesTrabajo : [];
-        const siguientes = actuales.includes(rol) ? actuales.filter((r) => r !== rol) : [...actuales, rol];
-        return { ...g, rolesTrabajo: siguientes };
-      })
-    );
-  };
+  const alternarRolTrabajo = (id, rol) => persistInvitados(alternarRol(invitados, id, rol).invitados);
 
   // Excluir del acceso al tablón público (2026-08-29): nombres que
   // nunca deben servir como respuesta válida, aunque el invitado esté
   // confirmado -- empezando por el propio anfitrión, cuyo nombre es
   // información pública (ver schema.sql, "excluidoTablon").
-  const alternarExcluidoTablon = (id) => {
-    persistInvitados(invitados.map((g) => (g.id === id ? { ...g, excluidoTablon: !g.excluidoTablon } : g)));
-  };
+  const alternarExcluidoTablon = (id) => persistInvitados(alternarTablon(invitados, id).invitados);
 
   const anadirRolNuevo = (id) => {
     const rol = nuevoRolTexto.trim();
@@ -274,16 +262,8 @@ export function SeccionInvitados({
   // no en el invitado ni en el bloque -- un único mapa por rol, para
   // que sirva igual si "acomodador" apareciera en más de un bloque.
   const responsablesRol = evento.rolesTrabajoResponsables || {};
-  const marcarResponsable = (rol, invitadoId) => {
-    const actual = responsablesRol[rol];
-    const siguientes = { ...responsablesRol };
-    if (actual === invitadoId) {
-      delete siguientes[rol];
-    } else {
-      siguientes[rol] = invitadoId;
-    }
-    persistEvento({ ...evento, rolesTrabajoResponsables: siguientes });
-  };
+  const marcarResponsable = (rol, invitadoId) =>
+    persistEvento({ ...evento, rolesTrabajoResponsables: fijarResponsable(responsablesRol, rol, invitadoId) });
 
   const imprimirPanelActivo = () => {
     setTimeout(() => {
@@ -497,21 +477,10 @@ export function SeccionInvitados({
         "La Revisión dejará de avisar de este caso; de los demás, no. Se puede deshacer abajo, en «Excepciones permitidas».",
       rotulo: "Sí, permitir",
       peligro: false,
-      alConfirmar: () =>
-        persistInvitados(
-          invitados.map((x) =>
-            x.id === g.id
-              ? { ...x, excepcionesRevision: [...new Set([...(x.excepcionesRevision || []), h.clave])] }
-              : x
-          )
-        ),
+      alConfirmar: () => persistInvitados(marcarExcepcion(invitados, g.id, h.clave).invitados),
     });
   const quitarExcepcion = (g, clave) =>
-    persistInvitados(
-      invitados.map((x) =>
-        x.id === g.id ? { ...x, excepcionesRevision: (x.excepcionesRevision || []).filter((c) => c !== clave) } : x
-      )
-    );
+    persistInvitados(desmarcarExcepcion(invitados, g.id, clave).invitados);
   // El "numerito" que pidió el usuario, pero dentro del propio filtro:
   // así se ven los cinco papeles a la vez, en vez de tener que filtrar
   // uno por uno para saber cuántos hay de cada.
