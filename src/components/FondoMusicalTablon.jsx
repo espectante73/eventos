@@ -44,7 +44,7 @@ export function FondoMusicalTablon() {
     setSubiendo(true);
     setError("");
     // Nombre único delante del original (que puede repetirse o traer
-    // espacios/acentos) -- evita colisiones sin depender de que el propio
+    // espacios/tildes) -- evita colisiones sin depender de que el propio
     // usuario elija nombres distintos cada vez.
     const nombreArchivo = `${Date.now()}-${archivo.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     const { error: errSubida } = await supabase.storage.from(BUCKET).upload(nombreArchivo, archivo);

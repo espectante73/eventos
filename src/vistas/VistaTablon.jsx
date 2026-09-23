@@ -237,13 +237,13 @@ export function VistaTablon({ token }) {
     setComprobando(false);
     if (esCorrecta !== true) {
       // Norma 19: se dice EN QUÉ se ha podido equivocar. Lo que compara
-      // la base (normalizar_nombre_tablon) perdona mayúsculas, acentos,
+      // la base (normalizar_nombre_tablon) perdona mayúsculas, tildes,
       // comas y espacios de más — pero NO el orden: apellido primero.
       // Antes solo ponía "Respuesta incorrecta", y el invitado no tenía
       // forma de saber cuál de las cuatro cosas había fallado.
       setErrorRespuesta(
         "No te encontramos. Escribe primero tu apellido y después tu nombre, " +
-          "tal como aparecen en tu invitación. Da igual las mayúsculas y los acentos."
+          "tal como aparecen en tu invitación. Dan igual las mayúsculas y las tildes."
       );
       return;
     }

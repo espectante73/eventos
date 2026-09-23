@@ -360,11 +360,11 @@ en la sección que se indica entre paréntesis.
     que está mal.** "Respuesta incorrecta" o "No se pudo guardar" dejan a
     la persona sin saber qué hacer distinto. Hay que nombrar lo que
     puede fallar y lo que no importa: *"escribe primero tu apellido y
-    después tu nombre; da igual las mayúsculas y los acentos"*. Y si el
+    después tu nombre; dan igual las mayúsculas y las tildes"*. Y si el
     motivo es técnico, va en letra pequeña (`detalle` de
     `PreguntaSeguridad`). ⚠️ Antes de escribir un "no importa", mirar el
     código que compara: aquí `normalizar_nombre_tablon` perdona
-    mayúsculas, acentos, comas y espacios, pero **no el orden**.
+    mayúsculas, tildes, comas y espacios, pero **no el orden**.
 18. **Guardar solo lo que cambió, nunca el estado entero.** Cuando dos
     personas pueden escribir a la vez —y aquí pueden: el anfitrión y sus
     colaboradores, o el propio anfitrión con el móvil y el Mac abiertos—
@@ -708,6 +708,11 @@ o un colaborador — pantallas, emails, el tablón y la nota de privacidad.
 - Plural: **ustedes / les / su** ("sentarles", "avisarles", "sus fotos",
   "si prefieren", "díganselo").
 - ❌ Nunca: vosotros, vuestro, -áis, -éis, -asteis, decidme, os esperamos.
+
+⚠️ **"Tilde", no "acento"** (él, 2026-09-23). El **acento** es fonético
+—la fuerza de voz—; la **tilde** es el signo que se escribe. Si se habla
+de lo que alguien teclea, es tilde. Vale para las pantallas y también
+para los comentarios del código: un solo vocabulario.
 
 Repasado el 2026-09-21: en la app solo quedaba un "¡Os esperamos con
 muchas ganas!", en la plantilla de la invitación a la familia (el valor

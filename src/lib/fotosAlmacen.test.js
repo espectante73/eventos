@@ -13,7 +13,7 @@ import {
 // alguien cambia esta función sin querer, las fotos ya subidas se quedan
 // huérfanas en el almacén y la ventana enseña huecos grises.
 describe("nombreArchivoFamilia", () => {
-  it("quita acentos, espacios y mayúsculas", () => {
+  it("quita tildes, espacios y mayúsculas", () => {
     expect(nombreArchivoFamilia("Martínez Ruiz")).toBe("martinez-ruiz");
     expect(nombreArchivoFamilia("PÉREZ")).toBe("perez");
   });

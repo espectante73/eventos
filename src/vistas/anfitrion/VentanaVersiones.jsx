@@ -45,7 +45,7 @@ const HISTORIAL_VERSIONES = [
     version: "40.3",
     cambios: [
       "El ojo para ver la contraseña, en los cuatro sitios donde se escribe una: entrar, crear cuenta y las dos de cambiarla.",
-      "Y en el tablón, cuando un invitado no acierta su nombre, se le dice en qué se ha podido equivocar: primero el apellido, después el nombre, y que las mayúsculas y los acentos dan igual.",
+      "Y en el tablón, cuando un invitado no acierta su nombre, se le dice en qué se ha podido equivocar: primero el apellido, después el nombre, y que las mayúsculas y las tildes dan igual.",
     ],
   },
   {

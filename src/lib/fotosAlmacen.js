@@ -69,7 +69,7 @@ function reducirImagen(file, anchoMax, altoMax) {
 }
 const MINUTOS_ENLACE = 60;
 
-// Nombre de archivo estable a partir de la familia: sin acentos, sin
+// Nombre de archivo estable a partir de la familia: sin tildes, sin
 // espacios y en minúsculas. Estable a propósito -- volver a subir la foto
 // de una familia REEMPLAZA la suya en vez de dejar basura acumulada.
 export function nombreArchivoFamilia(familia) {
