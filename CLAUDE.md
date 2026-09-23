@@ -75,11 +75,28 @@ Lo mismo con un duplicado que se descubre. El hallazgo es relato ("los
 rojos estaban copiados a mano"); la conclusión es la norma ("los colores
 salen de `theme.js`, nunca escritos en el sitio").
 
-⚠️ **Y de ahí, cómo se escribe una norma: la norma es la CONCLUSIÓN, no
-la discusión.** Los pros y los contras que se pesaron son relato. Lo que
-se escribe son dos frases — la decisión y el motivo —, no el camino
-hasta ellas. Al revés de lo que yo venía haciendo: contar el
-razonamiento entero y dejar la conclusión enterrada al final.
+### Y cuánto motivo se escribe
+
+> **El motivo se guarda cuando su ausencia provoca un error.**
+
+Suya, el 2026-09-23, y resuelve la duda de siempre: cuánto de lo que
+razonamos juntos hay que dejar escrito. Tres líneas:
+
+- **La conclusión** se guarda siempre. Es el "igual a".
+- **El motivo**, solo si sin él la conclusión parece arbitraria o
+  mejorable y alguien —yo— la va a deshacer creyendo que simplifica.
+  *"Las fotos viven fuera de la base"* leído solo suena a complicación
+  innecesaria; con cinco palabras detrás (*son 100 y se descargarían
+  todas en cada apertura*) ya nadie la toca. Esa línea no es relato: es
+  lo que protege la conclusión.
+- **El camino se tira siempre.** Los pros y los contras que se pesaron
+  no se escriben. Era justo lo que yo venía haciendo al revés: contar el
+  razonamiento entero y dejar la conclusión enterrada al final.
+
+⚠️ Única excepción, y es una frase, no una página: **si alguien ya se
+equivocó por ese camino, se escribe dónde está el resbalón.** Como el
+versionado: "6.10 es 7" se entendió mal y `VERSION_APP` saltó de 7 a 13
+en una sesión.
 
 Y cuatro reglas que salen de esta criba, cada una de un error real:
 
