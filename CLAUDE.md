@@ -56,7 +56,16 @@ sobre cómo es la app** (para eso, las "Normas de estándar" de abajo).
    —suyo o mío—, decirlo directamente y por qué, aunque no haya pedido
    revisión. **No estar de acuerdo por defecto.** Señalarlo ANTES de
    implementar, no después.
-5. **Comprobar los cálculos.** En cálculos, algoritmos de varios pasos o
+5. **`lint`, `build` y `test`: los tres, siempre.** No es rutina, cazan
+   cosas distintas. `npm run lint` (`no-undef`) pilla una variable que se
+   quedó sin importar al mover código — no rompe el build, revienta en el
+   navegador la primera vez que alguien toca esa rama. Y `npm run build`
+   pilla lo que el lint NO ve: un import traído del módulo equivocado (el
+   nombre existe en algún sitio, así que ESLint lo da por bueno; solo
+   Rollup comprueba que el módulo de origen lo exporte de verdad). Pasó
+   con `calcularEdad` importado de `lib/formato` en vez de
+   `lib/invitados`.
+6. **Comprobar los cálculos.** En cálculos, algoritmos de varios pasos o
    lógica condicional enredada, ejecutarlo o repasarlo paso a paso antes
    de darlo por bueno.
 
@@ -343,6 +352,16 @@ Database, o en el mensaje de error si el workflow empieza a fallar de
 nuevo), hay que subir el número de esa imagen a juego.
 
 ## Reglas de diseño ya decididas
+
+### Dónde vive una ventana nueva
+
+Regla del reparto de `VistaAnfitrion.jsx` (agosto 2026), y sigue en pie:
+**si la lógica de una ventana no la usa nadie más, vive entera en su
+propio fichero** bajo `src/vistas/anfitrion/`. **Si la comparten dos o
+más ventanas, se queda en el cascarón** (`VistaAnfitrion.jsx`) y se pasa
+como prop — nunca duplicada. Hoy comparten de verdad
+`asignarColaborador`, `ocupacionMesa`, `panelFlotante`, `filtros` y el
+motor de invitaciones; nada más.
 
 ### Un email de colaborador mal escrito no se nota: por eso existe "Probar"
 
