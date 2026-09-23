@@ -1060,8 +1060,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             - y el LINK al proyecto, que es el permiso y el acceso a la
               vez. Antes se anunciaba aquí y el botón estaba escondido en
               "Mi cuenta", así que había que buscarlo.
-          El link va con relieve, no subrayado: norma 13, elegido por el
-          usuario sobre su propia idea inicial de texto subrayado. */}
+          (Aquí hubo un rodeo: primero se puso con relieve, y dos días
+          después la norma 13 se reescribió para decir que un link va
+          subrayado. Ahora lo está.) */}
       {(permisosDeEdicion.length > 0 || puedeVerRepositorio) && (
         <div className="p-4 rounded text-sm" style={{ background: C.peligro, color: "#fff" }}>
           {permisosDeEdicion.length > 0 && (
@@ -1075,10 +1076,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                permiso y otro repetía "GitHub" en un botón aparte. El
                permiso y la forma de usarlo son la misma cosa, así que se
                dicen una sola vez.
-               ⚠️ EXCEPCIÓN a la norma 13, concedida por él: un link que
-               SALE de la app, subrayado, sin relieve. Al ir dentro de la
-               frase tampoco puede irse al lado del pulgar -- es texto,
-               no un acceso suelto. */
+               Norma 13: es un LINK, así que va subrayado y sin
+               relieve. Al ir dentro de la frase tampoco puede irse al
+               lado del pulgar -- es texto, no un acceso suelto. */
             <p style={{ fontWeight: 600 }} className={permisosDeEdicion.length > 0 ? "mt-2" : ""}>
               🔑 Tienes permiso para{" "}
               <EnlaceTexto

@@ -113,20 +113,24 @@ en la sección que se indica entre paréntesis.
     (`usePreguntaSeguridad`), nunca con `window.alert`/`window.confirm`
     (en las ventanas emergentes rompen). («Relieve, clic y pregunta de
     seguridad»)
-13. **Todo lo que se pulsa tiene relieve y se hunde al tocarlo**, y suena
-    un clic suave + vibra (v36). Incluye desplegables, títulos plegables y
-    acciones que eran texto subrayado. Nada de texto subrayado como botón.
-    ⚠️ **Acotada por el usuario el 2026-09-21**, y el criterio es este:
-    - **ACCIÓN sobre los datos** (guardar, borrar, confirmar, abrir una
-      ventana) → `Boton`, con relieve. La norma, tal cual.
-    - **LINK, que te lleva a otro sitio** (otra pantalla del login, otra
-      web) → `EnlaceTexto`, **subrayado en gris suave**. Sus palabras:
-      *"en las ventanas del login, 'he olvidado mi contraseña'... en
-      todas las páginas web oficialmente se ve como un link subrayado con
-      ese gris suave. Eso sí lo vamos a dejar como estándar"*.
-    Una sola pieza para los dos usos, `EnlaceTexto` en
-    `components/Boton.jsx`. Lleva `py-2` aunque se vea como texto: en el
-    móvil un link fino se falla. («Dos clases de permiso, no una»)
+13. **Lo que se PULSA lleva relieve; lo que es un LINK va subrayado.**
+    Son dos cosas distintas, no una norma con una excepción:
+    - **ACCIÓN sobre los datos** —guardar, borrar, confirmar, abrir una
+      ventana— → `Boton`: relieve, se hunde al tocarlo, clic suave y
+      vibración (v36). Incluye desplegables y títulos plegables.
+    - **LINK, que te lleva a otro sitio** —otra pantalla del login, otra
+      web— → `EnlaceTexto`: **subrayado, en gris suave**. Es el
+      **estándar de internet**: lo que cualquiera reconoce al verlo y lo
+      que un desarrollador espera encontrar. Por eso se respeta tal cual,
+      sin inventar nada.
+    Nada de texto subrayado para una ACCIÓN, y nada de pastilla con
+    relieve para un LINK. Una sola pieza para los dos usos, en
+    `components/Boton.jsx`. `EnlaceTexto` lleva `py-2` aunque se vea como
+    texto: en el móvil un link fino se falla.
+    ⚠️ Escrita así el 2026-09-23, porque la versión anterior decía "nada
+    de texto subrayado" y tres líneas después admitía el subrayado como
+    excepción. Lo vio él: **una norma que se contradice no es una norma.**
+    («Dos clases de permiso, no una»)
 14. **Quitar/borrar = `BotonQuitar`**: el mismo círculo rojo en toda la
     app, 24 px a la vista y 44 px de zona de toque (el mínimo del móvil).
     X = quitar; papelera (`borrar`) = se borra para siempre. Lleva la
@@ -2213,7 +2217,7 @@ quitaría el baner"), y dentro lleva el link.
 Dos detalles que decidió él y no yo:
 - **Con relieve, no subrayado.** Su idea original era un link de texto
   subrayado; preguntado con las dos versiones dibujadas, eligió el
-  relieve para no hacer excepción a su norma 13.
+  relieve, que entonces era lo que decía la norma 13.
 - **La etiqueta vuelve a nombrar GitHub** ("Ver el proyecto en GitHub").
   En la v38.5 se lo habíamos quitado porque confundía — pero lo que
   confundía era la frase que lo envolvía, no la palabra. Con el link a la
@@ -2259,9 +2263,10 @@ dejamos como un link, tal vez con los colores de la aplicación"*.
 - La frase de arriba ya dice GitHub, así que el link de abajo es solo
   **"Link para acceder al proyecto"**. La palabra no se repite.
 - Fuera la pastilla con relieve: **link subrayado en dorado**
-  (`C.goldClaro`) sobre el rojo del aviso. Es la excepción a la norma 13
-  anotada arriba. Un botón de ese tamaño dentro de un aviso de dos
-  líneas pesaba más que el aviso.
+  (`C.goldClaro`) sobre el rojo del aviso. Un botón de ese tamaño dentro
+  de un aviso de dos líneas pesaba más que el aviso. Esto es lo que dos
+  días después hizo reescribir la norma 13 entera: no era una excepción,
+  era que la norma estaba mal planteada.
 - ⚠️ Conserva `py-2`: se ve como una línea de texto, pero el dedo tiene
   dónde acertar.
 

@@ -92,18 +92,18 @@ export const Boton = forwardRef(function Boton({
 
 // ---------- El link de texto ----------
 //
-// La norma 13 dice que todo lo que se pulsa lleva relieve y nada de texto
-// subrayado. Nació con los botones 3D y va dirigida a las ACCIONES de la
-// app (guardar, borrar, confirmar). El usuario acotó su alcance el
-// 2026-09-21: *"en las ventanas del login, 'he olvidado mi contraseña' o
-// 'recuperar contraseña'... en todas las páginas web oficialmente se ve
-// como un link subrayado con ese gris suave. Eso sí lo vamos a dejar como
-// estándar"*.
+// Norma 13: lo que se PULSA lleva relieve; lo que es un LINK va
+// subrayado. Son dos cosas distintas, no una regla con una excepción.
 //
-// El criterio, entonces:
 //   ACCIÓN sobre los datos  -> `Boton`, con relieve.
 //   LINK: te lleva a otro sitio (otra pantalla del login, otra web)
-//         -> `EnlaceTexto`, subrayado.
+//         -> `EnlaceTexto`, subrayado en gris suave.
+//
+// El subrayado no es un capricho: es el ESTÁNDAR DE INTERNET, el que
+// cualquiera reconoce y el que un desarrollador espera encontrar. Lo
+// fijó el usuario el 2026-09-21 mirando su propio login: *"'he olvidado
+// mi contraseña'... en todas las páginas web se ve como un link
+// subrayado con ese gris suave. Eso sí lo vamos a dejar como estándar"*.
 //
 // Con `href` sale un enlace de verdad, siempre en pestaña nueva (solo se
 // usa para salir de la app). Sin él, un <button>: en el login no se va a
