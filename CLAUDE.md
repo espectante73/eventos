@@ -23,28 +23,58 @@ que él ya conoce: el día que OTRA persona organice su evento con esta
 app, deja de ser una actividad personal suya (ver «Autorizo expresamente
 a que guarden mis datos»).
 
-## Cómo está ordenado este archivo
+## Cómo está ordenado este archivo, y qué se guarda a partir de ahora
 
-Tres partes, y se usan de forma distinta. Lo decidió el usuario el
-2026-09-23, después de medir que el 70% del archivo era relato con las
-advertencias enterradas dentro.
+Dos partes, y se usan de forma distinta:
 
 1. **PARTE 1 — Reglas que hay que obedecer siempre.** Se lee antes de
-   tocar nada. Es corta a propósito.
+   tocar nada. Incluye «Por qué es así», que son las razones por las que
+   algo está hecho de una manera y no de otra.
 2. **PARTE 2 — Trampas ya pagadas.** Errores que costaron tiempo real y
-   que ningún test puede evitar, porque viven fuera del código: en
+   que **ningún test puede evitar**, porque viven fuera del código: en
    Supabase, en el iPhone, en la Mac del usuario o en el panel de otra
-   empresa. **Cada una está aquí porque es lo único que impide
-   repetirla.** Se lee entera al menos una vez, y se vuelve a ella
-   cuando algo se rompe sin explicación.
-3. **PARTE 3 — La historia.** Cómo se llegó hasta aquí. No hace falta
-   para trabajar; sirve para entender por qué algo es como es. Se
-   consulta, no se estudia.
+   empresa. Cada una está aquí porque es lo único que impide repetirla.
 
-⚠️ Al añadir algo nuevo: si es una regla, va a la 1. Si es un error que
-puede repetirse y no hay test que lo impida, va a la 2. Si es el relato
-de una sesión, va a la 3. **Una advertencia dentro de un relato no
-protege a nadie**: si está en la 3, es que no era una trampa.
+Hubo una PARTE 3 con la historia — cómo se llegó hasta aquí — y **se
+borró el 2026-09-23**, de acuerdo con el usuario. De sus 6.000 palabras,
+1.800 eran reglas disfrazadas de relato (están arriba, en «Por qué es
+así») y el resto era crónica: *"ese día pasó esto, se probó aquello"*.
+Él lo resumió bien: *"si dicen las razones de por qué algo se hace,
+entonces son reglas"*. **Lo borrado sigue entero en el historial de
+git**, recuperable con un comando.
+
+### La regla, a partir de ahora
+
+La app va a seguir creciendo, así que este archivo volverá a engordar si
+no hay un criterio. Es este, y es una sola pregunta antes de escribir un
+párrafo:
+
+> **Si borro esto, ¿qué error repetiría o qué decisión desharía?**
+
+- ¿Una regla, o el porqué de que algo sea así? → **PARTE 1**.
+- ¿Un error que puede repetirse y **no hay test que lo impida**? →
+  **PARTE 2**.
+- ¿Ninguno de los dos? → **no se escribe.** El código ya lo cuenta, git
+  guarda cómo se llegó, y los tests vigilan lo que se puede vigilar.
+
+Y cuatro reglas que salen de esta criba, cada una de un error real:
+
+1. **Si un fallo se cierra con un test, el test ES el registro.** No se
+   escribe además su historia. Pasó con las mesas, la escala del
+   acabado, los permisos y el mapa: el relato sobraba desde el día uno.
+2. **Nada que se presente como "el presente"** — estado, versión,
+   próximos pasos. Nace caducando. Había una sección «Estado actual» que
+   mintió durante siete semanas. El dato vive donde vive: la versión en
+   `src/constants.js`, la fecha en la base.
+3. **Una advertencia dentro de un relato no protege a nadie.** Si algo
+   merece un ⚠, va **solo**, en la PARTE 2. Enterrada en una historia,
+   nadie la lee y además impide podar esa historia.
+4. **Corto.** Una entrada de la PARTE 2 son de 3 a 8 líneas: qué pasó,
+   dónde y qué no repetir. Si crece más, es que se ha colado relato.
+
+⚠️ Y al terminar algo: **preguntarse si hace falta escribirlo, no darlo
+por hecho.** La mitad de lo que se borró en la criba lo escribí yo
+creyendo que ayudaba.
 
 ======================================================================
 
@@ -680,6 +710,59 @@ del bloque basta.
 Así se verificó el 2026-09-20 que los bloques de la v37.8, la v37.10 y la
 v37.11 estaban aplicados (`colaborador_familias_sin_email` existe y está
 revocada; `fotos_familiares."sinFotoBoda"` existe).
+
+## Por qué es así: decisiones que no se ven en el código
+
+Lo que queda cuando se tira la historia. No son anécdotas: son las
+razones por las que algo está hecho de esta manera y no de otra. **Sin
+esto escrito, yo propondría deshacerlas creyendo que mejoro algo**, que
+es exactamente lo que hay que evitar.
+
+**Las fotos de matrimonio viven FUERA de la base.** En
+`fotos_familiares` solo va la RUTA; el archivo está en el cubo cerrado
+`fotos-matrimonios` (`lib/fotosAlmacen.js`). Son ~100 fotos: metidas
+como texto en una columna, la app se las descargaría TODAS cada vez que
+alguien la abre — también en el móvil y con el wifi del local el día del
+evento. Las miniaturas son 16:9 con `object-fit: contain`; si una foto
+no viene en 16:9 se ve con bandas, y eso es el aviso.
+
+**La ventana "Aniversarios" no es una vista duplicada.** La regla de la
+casa dice que una vista que solo reordena lo que la lista ya enseña es
+un duplicado (por eso se quitó "Matrimonios"). Esta no reordena: es una
+zona de TRABAJO para ir cargando ~50 fotos a lo largo de semanas. El
+usuario descartó las dos alternativas que se le propusieron — un panel
+dentro de la celda ("mucho lío") y soltar la carpeta entera de golpe
+("tengo que escogerla, ubicarla"). No volver a proponerlas.
+
+**Ninguna tabla abierta a escritura anónima, nunca.** En septiembre
+había cuatro (`evento`, `mesas`, `fotos_familiares`, `orden_familias`)
+con una política `for all using (true) with check (true)`. Era grave, y
+no por lo obvio: `evento` guarda las PLANTILLAS de los emails
+automáticos, así que reescribirlas desde fuera es decidir el texto que
+la app manda a ~140 invitados con el remitente legítimo del anfitrión.
+La decisión original fue correcta cuando se tomó ("datos sin
+sensibilidad real") y se pudrió al crecer la tabla por debajo. Regla:
+una política de lectura pública es `for select`, nunca `for all`.
+
+**El Deshacer vive en el SERVIDOR, y las copias en JSON están
+descartadas.** Él lo cerró así: *"no puedo restaurar yo... si no me vale
+para eso, no le veo utilidad"*. Descargar una copia que no se puede
+volver a subir no es un deshacer. `foto_de_datos()` y
+`restaurar_foto()` son los ÚNICOS sitios donde se hace la foto y donde
+se repone; el Modo Pruebas usa esas mismas, para que sus listas de
+tablas no puedan desincronizarse (fallo que ya tuvo `novedades` durante
+meses). Solo se guarda la ÚLTIMA foto: deshacer lo de anteayer es el
+volcado diario. `lib/backup.js` y la ventana "Backup" se borraron; **no
+resucitarlas**. Si algún día se quiere un exportar/restaurar de verdad,
+primero hay que arreglar `exportarTodo` para las doce tablas
+conservando los ids.
+
+**El versionado: entero = tema nuevo, decimal = ajuste.** Un entero por
+cada funcionalidad nueva de verdad, y un decimal detrás por cada retoque
+sobre ESE mismo tema (38, 38.1, 38.2… hasta el siguiente tema, que pasa
+a 39). ⚠️ Se malinterpretó una vez y `VERSION_APP` saltó de 7 a 13 en
+una sola sesión. **Nunca subir el entero por defecto**: preguntarse
+antes si es tema nuevo o ajuste.
 
 ## Lo que está esperando, y por qué no es un fallo
 
@@ -1556,765 +1639,3 @@ hacerla siempre antes de desplegar el cliente.
 ⚠️ Dónde vive esa pantalla, que Supabase la ha movido: **Authentication →
 Emails → SMTP**, o sea `/dashboard/project/<ref>/auth/smtp`. El viejo
 `/settings/auth` ya no lleva ahí.
-
-======================================================================
-
-# PARTE 3 — La historia
-
-Cómo se llegó hasta aquí. Las advertencias que había aquí dentro están
-ahora en la PARTE 2.
-
-## Sesión del 2026-08-12: Modo Pruebas, seguridad, acuse en PDF, y repaso visual
-
-**PDF del acuse de recogida, rediseño completo** (`lib/acuseImagen.js`):
-antes se dibujaba a tamaño propio y se ESCALABA para caber en un A4 --
-eso encogía también la letra (el pie de página acababa a ~8pt reales).
-Ahora se dibuja YA a las medidas exactas de un A4 (595.28 x 841.89pt),
-sin ningún escalado. Tabla con cabecera y filas cebra, bloque de TOTAL
-en caja destacada, nombre del evento en script dorado (fuente "Alex
-Brush", cargada con `document.fonts.load()` porque no se usa en ningún
-otro sitio de la app -- mismo gotcha que Fraunces en
-`generarImagenParaFamilia`). Con pocos invitados (máximo real: 12-14)
-el hueco sobrante se reparte entre 3 puntos del dibujo para que se vea
-igual de equilibrado con 2 invitados que con 14. Verificado con
-node-canvas antes de subir cada ronda, no solo por cálculo -- así se
-cazó un hueco vacío real que el cálculo solo no habría revelado.
-
-**"Estado de cuentas": "Confirmar recogida" y "Probar acuse" ya no
-envían directamente** -- generan el PDF y abren una vista previa
-(mismo patrón que ya usaba Invitaciones) con el destinatario, el
-importe y el PDF incrustado; el envío real solo pasa al aceptar ahí.
-
-## 2026-08-24: Fase C ampliada (sincronizar email de acceso con avisos) y Fase D (CAPTCHA)
-
-**Fase D (endurecer el login), investigada y cerrada con una acción
-concreta.** Se comprobó contra la documentación oficial de Supabase
-(no se había verificado antes, solo asumido):
-- Supabase Auth **no** trae de fábrica ningún bloqueo tras varios
-  intentos fallidos de contraseña en `signInWithPassword` — solo
-  límites de tasa por IP en otros endpoints (renovación de token:
-  1800/hora con ráfagas de 30; verificación: 360/hora; emails: ~2/hora
-  combinado; OTP: 360/hora).
-- Sí ofrece CAPTCHA (hCaptcha o Cloudflare Turnstile) en
-  signup/signin/password-reset, pero apagado por defecto.
-- 2FA (TOTP) está soportado pero exige un flujo de enrolamiento +
-  verificación extra en cada login — descartado por ahora: trabajo real
-  para un beneficio marginal con 10-15 personas de confianza, no un
-  objetivo de alto valor.
-
-**Fase G, aparcada a petición del usuario.** Evaluada (ver más arriba
-el análisis de coste/beneficio: montar tests de integración de
-login/RLS exige un proyecto de Supabase aparte solo para pruebas) y
-decidido no abordarla ahora — desproporcionada para 10-15 personas,
-con la Fase A todavía pendiente y más urgente de cara a noviembre.
-Se retoma si algún día conviene.
-
-## 2026-08-24: examen honesto del código (a petición del usuario) — 5 hallazgos, los 5 arreglados
-
-1. **Código muerto real: `buildLink()` en `lib/url.js`.** Sobrevivía
-   desde la Fase B (2026-08-12, retirada del enlace-token de
-   colaborador) sin ninguna llamada real en la app — sustituida de
-   hecho por `anfitrion_enviar_invitacion_login` +
-   `getEmailCrearCuentaFromUrl`, pero nadie borró la función vieja ni
-   su test (`url.test.js`), que seguía pasando en verde dando una falsa
-   sensación de cobertura real. Eliminada la función y su test.
-2. **Redundancia real de estructura: colores duplicados a mano en vez
-   de usar `theme.js`.** `#B00020` suelto en `App.jsx` (x2),
-   `VistaColaborador.jsx`, `VentanaConfigZonaPeligro.jsx` (x2, una
-   dentro de una plantilla de email) y `useLedgerData.js` (la misma
-   plantilla de email duplicada por segunda vez, detectado de rebote al
-   arreglar esto). `#FBEAEC` suelto en `ColaboradorCard.jsx` y
-   `VentanaAvisos.jsx` (x2), y en `VentanaMesas.jsx` con una desviación
-   real de un carácter (`#FBEAEA`, visualmente idéntico) — prueba de
-   que copiar hexadecimales a mano ya había empezado a desviarse.
-   Centralizados en `theme.js` como `C.peligro` y `C.avisoFondo`; los 9
-   sitios ahora apuntan al mismo token.
-3. **Tres exports que no importaba nadie fuera de su propio fichero:**
-   `ANCHO_MAXIMO_PORTADA`, `CAMPOS_DATOS_INVITADO` (se les quitó
-   `export`, sin más) y `supabaseConfigurado` — este último sí tenía un
-   uso real posible y se le dio: `App.jsx` ahora lo importa y muestra
-   una pantalla clara ("Falta configuración") si `.env`/Vercel se
-   queda sin las claves de Supabase, en vez del único `console.error`
-   de antes (invisible para cualquiera que no abra las herramientas de
-   desarrollador) o un "Abriendo el libro de invitados…" infinito sin
-   ninguna pista real.
-4. **Bug real pero solo en `npm run dev` local, no en producción:** el
-   widget de Turnstile (`VistaLogin.jsx`) se montaba con
-   `window.turnstile.render(...)` pero su `useEffect` de limpieza nunca
-   llamaba a `window.turnstile.remove(...)`. Con `React.StrictMode`
-   activo (`main.jsx`), el doble montaje/desmontaje intencional de
-   React en desarrollo dejaba dos widgets de CAPTCHA superpuestos sobre
-   el mismo `<div>` al probar el login en local (nunca en el build de
-   producción real, donde StrictMode no actúa así). Corregido llamando
-   a `remove()` en la limpieza.
-5. **Por qué nada de esto lo había cazado `npm run lint`:**
-   `"no-unused-vars": "off"` en `.eslintrc.json` — ya sabido de antes
-   (ver `project_eventos_estado` en la memoria de Claude), pero
-   confirma que "lint en verde" nunca ha sido garantía de "sin código
-   muerto", solo de "sin referencias a variables inexistentes"
-   (`no-undef`). Tras limpiar los puntos 1-3, activar la regla de
-   verdad (`"error"`) no generó ni un solo aviso nuevo — se dejó
-   encendida para que un `buildLink()` futuro no pueda volver a
-   colarse sin que lint lo note.
-
-## 2026-08-25: Tablón público de novedades (v6.3)
-
-**Qué se construyó:**
-- `schema.sql`: tabla `novedades` (titulo, cuerpo con HTML sencillo
-  como las plantillas de email, `publicada`, `creadaEn`), tabla
-  `tablon_secreto` (mismo patrón que `anfitrion_secreto`), y 5 RPC —
-  lado anfitrión: `anfitrion_obtener_token_tablon`,
-  `anfitrion_listar_novedades` (ve borradores también),
-  `anfitrion_guardar_novedades` (mismo patrón `set columna=excluded.
-  columna` que colaboradores/invitados, `creadaEn` nunca se
-  sobreescribe en un `update`); lado público: `tablon_verificar_token`,
-  `tablon_listar_novedades` (solo `publicada = true`).
-- `useLedgerData.js`: `novedades`/`persistNovedades` (mismo patrón
-  optimista de siempre) y `tokenTablon`, cargados solo en la rama
-  anfitrión de `cargarDatos`.
-- `VentanaNovedades.jsx` (nueva ventana del anfitrión, "Abrir
-  sección…"): añadir/editar/borrar novedades, checkbox "Publicada",
-  y el enlace público con botón de copiar.
-- `VistaTablon.jsx` (nueva, pública): deliberadamente **no** usa
-  `useLedgerData` -- no hay rol ni sesión que resolver, solo llama a
-  Supabase directo con el token de la URL. `App.jsx` la monta ANTES de
-  cualquier lógica de sesión/login en cuanto detecta `?tablon=...` en
-  la URL (mismo patrón de "cortar el render pronto" que ya usaba la
-  pantalla de "Falta configuración"). Muestra fecha/hora/lugar fijos
-  arriba (reutiliza `InfoItem` de `Portada.jsx`) y las novedades como
-  acordeón (la más reciente empieza abierta, el resto plegado) con
-  refresco cada minuto, igual que el resto de la app.
-- `lib/url.js`: `getTokenTablonFromUrl()`, mismo patrón que
-  `getRolFromUrl`/`getEmailCrearCuentaFromUrl`.
-
-## 2026-08-25 (mismo día): refuerzos sobre el tablón, tras verlo listo para ~140 personas (v6.4)
-
-**Botón "Novedades" + volver, para anfitrión Y colaborador (no solo el
-anfitrión).** `Portada.jsx` gana `enlaceTablon` (prop ya calculada por
-quien la monta) — como la comparten `VistaAnfitrion.jsx` y
-`VistaColaborador.jsx`, hizo falta que un colaborador *logueado* pueda
-consultar el token del tablón también: `colaborador_obtener_token_tablon`,
-mismo patrón de seguridad que `colaborador_mis_invitados`
-(`"authUserId" = auth.uid()`, nunca solo el id suelto). Fórmula del
-enlace centralizada en `lib/url.js` (`construirEnlaceTablon`) para que
-las dos vistas no puedan desincronizarse copiándola cada una por su
-lado. "Volver" es un `<a href="/">` normal (mismo patrón que "No tienes
-acceso") — con Supabase Auth persistiendo la sesión en el navegador,
-un anfitrión/colaborador con login real vuelve directo a su vista;
-solo un invitado sin cuenta (el caso normal para el tablón) acabaría en
-el login, que es lo esperado.
-
-## 2026-08-25 (mismo día, tercera tanda): rediseño de Novedades + ventana de verdad (v6.5)
-
-**Ventana de verdad del sistema operativo, no una VentanaFlotante —
-primer uso de este patrón en el proyecto.** Pedido explícito: "que
-flote fuera del navegador para poder ver todo el texto antes de
-enviarlo". Aclarado con el usuario que había dos lecturas posibles
-(una VentanaFlotante más grande por defecto, o una ventana real vía
-`window.open`) — eligió la segunda, sabiendo que es un mecanismo
-nunca usado antes aquí. Implementado en `lib/usePopupWindow.js`:
-
-## 2026-08-25 (cuarta tanda): bug real de createPortal entre ventanas + plegado en Novedades
-
-**Bug real reportado por el usuario: los botones de la cabecera
-(Enlace/Nueva) de la ventana emergente no respondían.** Causa raíz
-confirmada: la primera versión de `usePopupWindow.js` usaba
-`createPortal` desde el árbol de React de la pestaña principal hacia
-un `<div>` dentro del `document` de la ventana emergente. Esto mueve
-DÓNDE se pintan los nodos, pero React engancha su sistema de eventos
-sintéticos en el contenedor raíz de la pestaña principal (no en
-`document`) -- los clics dentro de la ventana emergente son eventos
-nativos de OTRO `document` por completo, y nunca llegan a burbujear
-hasta ese escuchador. Resultado: los nodos se veían bien, pero ningún
-`onClick` se disparaba nunca.
-
-**Corregido con un `createRoot()` propio** dentro del `document` de la
-ventana emergente (en vez de un portal desde el root principal) --
-`usePopupWindow.js` ahora expone `actualizar(hijos)`, que llama a
-`raiz.render(hijos)` sobre ESE root. `VistaAnfitrion.jsx` la llama
-desde un `useEffect` que depende de `data` (y de si la ventana sigue
-abierta), para que el contenido se mantenga al día con cada refresco
-sin tener que cerrar y volver a abrir la ventana. El estado local de
-React (p.ej. qué novedades están plegadas) sobrevive a estos repintados
-porque siguen siendo el MISMO componente en la MISMA posición del árbol
--- React reconcilia en vez de desmontar y remontar.
-
-**Plegado por novedad, en las dos ventanas.** El usuario señaló que con
-varias novedades escritas, tenerlas todas desplegadas de golpe (tanto
-en el editor del anfitrión como, potencialmente, en el tablón público)
-sería un muro de texto ilegible. El tablón público (`VistaTablon.jsx`)
-YA tenía este acordeón desde que se construyó (la más reciente empieza
-abierta, el resto plegado) -- se confirmó que seguía funcionando,
-sin necesidad de tocarlo. Lo que sí faltaba era en el propio editor:
-`VentanaNovedades.jsx` ahora pliega cada tarjeta por defecto (mostrando
-solo título, fecha, y una etiqueta "Borrador" si no está publicada),
-con una nueva desplegándose sola al crearla (hay que escribir en ella,
-no tendría sentido que naciera plegada).
-
-## 2026-08-25 (sexta tanda): bug real -- los buckets de Storage llevaban vacíos desde que se crearon (v6.6)
-
-El usuario reportó que la imagen para WhatsApp no cargaba en la app.
-Primera sospecha (equivocada): que seguía entrando con el enlace-token
-viejo en vez de login real -- descartada, confirmó que solo usa login.
-Segunda comprobación, esta vez por fuera del código: `curl` contra la
-API pública de Storage confirmó que **los dos buckets
-(`og-imagen` y `musica-ambiental`) estaban completamente vacíos** --
-ninguna subida había llegado a completarse nunca, ni siquiera la de
-música probada en la sesión anterior. El mensaje de error de la app
-era genérico ("No se ha podido subir la imagen. Prueba con otra.") y
-no dejaba ver la causa real -- corregido primero para mostrar
-`error.message` tal cual (en `VentanaConfigDatosEvento.jsx` y
-`VentanaConfigMusica.jsx`), lo que reveló el mensaje real:
-**`permission denied for table anfitriones`**.
-
-**Causa raíz real:** las 5 políticas de Storage escritas en la sesión
-anterior comprobaban `exists (select 1 from anfitriones a where
-a."authUserId" = auth.uid())` DIRECTAMENTE dentro de la propia
-política. Pero `anfitriones` es una tabla deliberadamente cerrada
-(`revoke all ... from anon, authenticated`, ver la sección de login)
-para que solo se pueda leer desde dentro de una función con privilegios
-elevados (como `mi_rol()`), nunca por consulta directa -- y una
-política de RLS se evalúa con los permisos de la propia conexión
-(`authenticated`), no con privilegios elevados. El error no aparecía en
-ningún sitio hasta que se mostró `error.message` de verdad: antes de
-eso, la subida simplemente "no hacía nada" de cara al usuario.
-
-## 2026-08-25 (séptima tanda): el botón "Enlace" copiaba lo de antes, no el enlace nuevo
-
-Bug real reportado por el usuario: al pulsar "Enlace" en Novedades y
-pegar después, salía un bloque de SQL que había copiado antes para
-pegarlo en Supabase -- no el enlace del tablón. Causa: `copiarYAbrirGrupo`
-llamaba a `window.open(enlaceGrupo)` ANTES de
-`navigator.clipboard.writeText(enlace)`. `window.open()` le quita el
-foco a la pestaña (pasa a la ventana nueva del grupo) antes de que
-termine de escribirse el portapapeles, y escribir en el portapapeles
-sin foco falla EN SILENCIO en la mayoría de navegadores -- sin ninguna
-alerta ni error, sencillamente no llega a sobrescribir lo que ya
-hubiera copiado antes. Arreglado invirtiendo el orden: el portapapeles
-va primero (con el foco todavía en la pestaña), `window.open()`
-después -- sigue disparándose de forma síncrona dentro del mismo clic,
-así que tampoco lo bloquea ningún navegador por no venir de una acción
-directa.
-
-## 2026-08-25 (novena tanda): pregunta de acceso al tablón (v6.7)
-
-**Mismo problema de fondo, otra vez: `window.alert()` dentro de la
-ventana emergente.** El usuario reportó que al guardar la pregunta
-saltaba "no se ha podido guardar" y la ventana se quedaba "en bucle",
-sin dejar escribir. Causa: `persistPreguntaTablon` (useLedgerData.js)
-usaba el `avisar()` compartido de siempre, que llama a `window.alert()`
-a secas -- mismo problema que el portapapeles de la tanda anterior:
-el `window` al que apunta es el de la pestaña principal, no el de la
-ventana emergente donde de verdad se estaba escribiendo, y al ser una
-llamada BLOQUEANTE, colgaba la ventana hasta encontrar y cerrar una
-alerta que podía ni siquiera verse bien. Arreglado quitando el
-`window.alert()` de `persistPreguntaTablon` por completo (ahora
-devuelve `true`/`false`, solo hace `console.error` si falla) --
-`VentanaNovedades.jsx` muestra el aviso como texto normal dentro de su
-propia interfaz, sin ningún diálogo nativo de por medio. **Regla ya
-consolidada para cualquier cosa nueva dentro de esta ventana emergente:
-nunca `window.alert()`/`window.confirm()`/`window.prompt()` a secas --
-ni un mensaje de error debe depender de un diálogo nativo del
-navegador, que siempre corre el riesgo de apuntar a la ventana
-equivocada.**
-
-## 2026-08-25 (undécima tanda): FAQ vs Novedades como etiqueta, no como secciones separadas (v6.8)
-
-`novedades` gana `"esNovedad"` boolean (default `false` -- FAQ es el
-caso mayoritario). `anfitrion_guardar_novedades` actualizada para
-incluirla tanto en el `insert` como en el `on conflict do update`
-(mismo patrón que las demás columnas). Checkbox nuevo en
-`VentanaNovedades.jsx` ("Marcarla como NOVEDADES") + la misma etiqueta
-visual (fondo verde tinta si es NOVEDADES, contorno neutro si es FAQ)
-en el editor y en `VistaTablon.jsx`, delante del título -- se ve igual
-plegada que desplegada.
-
-## 2026-08-25 (decimotercera tanda): tres permisos más (v6.10)
-
-**Ninguna de las tres ventanas nuevas es una ventana emergente** (a
-diferencia de Novedades) -- son `VentanaFlotante` normales, dentro de
-la propia pestaña del colaborador, con `useState` locales en vez de
-`usePopupWindow.js`. Evita a propósito reintroducir toda la clase de
-bugs de "ventana equivocada" (portapapeles, `window.alert`...) de las
-tandas anteriores: `window.confirm()` (la pregunta del dinero) funciona
-sin problema aquí porque el código y el usuario comparten de verdad la
-misma ventana del navegador.
-
-## 2026-08-26: esquema de versionado corregido (entero.decimal, sin el "6." fijo)
-
-"Versión 6.10 es 7" (petición del usuario) se interpretó primero como
-"a partir de ahora, cada cambio sube un número entero" -- mal: eso
-disparó `VERSION_APP` de 7 a 13 en una sola sesión, un entero por cada
-ajuste pequeño (texto, orden, un detalle visual), cuando la intención
-real era mucho más simple: **dejar de anteponer un "6." fijo a todo**,
-no abandonar los decimales.
-
-**Esquema correcto, confirmado con el usuario:** un número entero por
-cada tema/funcionalidad nueva de verdad (como antes: Cronograma,
-Logística...), y un decimal detrás para cada ajuste posterior sobre ESE
-mismo tema (8, 8.1, 8.2... hasta que llegue el siguiente tema de
-verdad, que pasa a 9). Exactamente el mismo criterio que ya usaba el
-antiguo esquema "6.x" -- solo cambia que el número entero ya no lleva
-un "6." delante fijo.
-
-`HISTORIAL_VERSIONES` (`VentanaVersiones.jsx`) se renumeró para
-reflejar esto: la ventana "Logística" y sus 3 retoques posteriores, que
-habían recibido enteros 10/11/12/13 por error, pasaron a ser 9/9.1/9.2/9.3.
-**Antes de subir `VERSION_APP` en cualquier cambio futuro, preguntarse
-si es un tema nuevo (entero) o un ajuste sobre uno ya en curso
-(decimal) -- nunca subir el entero por defecto.**
-
-## Ventana "Aniversarios" y las fotos fuera de la base (2026-09-17, v30)
-
-Regla nueva y la más importante de esta tanda. Serán ~100 fotos (50
-matrimonios x 2). Guardadas como texto en una columna, la app se las
-descargaría TODAS en cada apertura -- también en el móvil y con el wifi
-del local el día del evento. En `fotos_familiares` solo va la RUTA;
-el archivo vive en el cubo cerrado `fotos-matrimonios`
-(`lib/fotosAlmacen.js`), ajustado al subirlo para caber en 1920x1080 sin
-recortar ni deformar (hasta v30.8 se limitaba el lado largo a 1080, poco
-para proyectar). Las miniaturas de Aniversarios son 16:9 con
-`object-fit: contain`: el usuario pasará todas las fotos a 16:9 antes de
-subirlas, y si alguna no lo está se ve con bandas, como aviso.
-
-La regla dice que una vista que solo reordena es un duplicado, y la
-ventana "Matrimonios" se quitó en septiembre justo por eso. Esta no
-reordena: es una zona de TRABAJO para cargar ~50 fotos a lo largo de
-semanas. El usuario descartó explícitamente las dos alternativas que se
-le propusieron -- un panel dentro de la celda de la lista ("mucho lío") y
-soltar la carpeta entera de golpe con los archivos renombrados ("tengo
-que escogerla, ubicarla"). Quería una lista con el apellido y el nombre
-del cabeza de familia, y pinchar y subir. Eso es lo que hay.
-
-El contador 0/1/2 en una columna de la Lista de invitados fue idea suya y
-sigue pendiente; se dejó fuera para no meter dos cosas a la vez.
-
-Confirmado por el usuario punto a punto (A sí, B sí, C sí, D sí) y
-construido. El flujo real:
-1. El colaborador sube la foto de boda ORIGINAL en su formulario.
-2. El anfitrión descarga todas las originales en Aniversarios.
-3. Las pasa por OTRA IA especializada, que las monta en una plantilla ya
-   diseñada con el año de boda. Se probó con Claude y no respeta las caras:
-   no volver a ofrecerlo.
-4. Sube la terminada desde la vista grande de la columna Boda.
-
-Pendiente de comprobar por el usuario: si al pedirle a ChatGPT que
-devuelva la imagen **como archivo con un nombre exacto** el nombre llega
-intacto. Si llega, merece la pena montar la subida EN BLOQUE de las
-terminadas (emparejando por nombre); si no, se quedan una a una.
-
-### Accesibilidad de los botones: paso 1 hecho, paso 2 pendiente (2026-09-17)
-
-- **12 combinaciones distintas** de tamaño/padding/redondeo escritas a
-  mano; solo 39 llevan `.boton-3d`. **No existe un componente `Boton`.**
-- **0 `aria-label`** y **0 reglas de foco** en todo el CSS.
-- Objetivos táctiles por debajo de 44px (la papelera de Aniversarios, 19px).
-
-**Paso 1 (hecho, v31.3)** -- sin ningún cambio visual:
-- Regla global `:focus-visible` en `index.css` (aro dorado; verde dentro
-  del cuerpo claro de las ventanas). `:focus-visible` y no `:focus`, para
-  que el aro no salga al hacer clic con el ratón.
-- `aria-label` en los 24 botones de solo icono: 21 copiados de su `title`
-  por script, y 3 que estaban mudos etiquetados a mano (eliminar invitado
-  en la lista, y los dos saltos del reproductor de música).
-
-**Paso 2 (hecho el 2026-09-17, v31.5)**: `components/Boton.jsx`, con tres
-variantes (principal / secundario / peligro), dos tamaños (normal /
-pequeno), soporte de icono y de fondo oscuro. Da de serie el relieve, el
-aro de foco, el estado desactivado y el `aria-label` de los botones de
-solo icono (avisa por consola en desarrollo si falta el `titulo`).
-`estilosBoton()` se exporta aparte para las etiquetas `<label>` que
-disparan un `<input type="file">` y no pueden ser `<button>`.
-
-Aniversarios (v30.6) pega su cabecera de columnas al borde de arriba del
-cuerpo de la ventana, que lleva `p-4`. Con `top: 0` quedaba una rendija
-de 16px al desplazar: el navegador inmoviliza respetando el relleno del
-contenedor. Lo que funciona: márgenes negativos de `-16px` (arriba y a
-los lados) y `top: -16`. **Confirmado por el usuario en pantalla real el
-2026-09-17** ("scroll perfecto"). Mismo truco para cualquier cabecera
-fija que se monte dentro de una VentanaFlotante normal.
-
-## Pendiente: hacer el mapa del sitio privado de verdad (aparcado el 2026-09-16)
-
-Decisión del usuario, después de una conversación larga: **para él la
-imagen del mapa es un dato a ocultar, igual que los datos personales.**
-Hoy no lo es -- `public/mapa-de-la-aplicacion.png` lo sirve la web a
-cualquiera con la URL, y el permiso `mapa_sitio_ver` solo decide si se
-enseña el enlace. Aparcado por hoy, no descartado.
-
-### Por qué costó entenderlo (y cómo se explicó al final)
-
-El usuario razonaba que si hay login, lo de dentro está protegido. Lo que
-funcionó no fue la metáfora, fue la demostración: pedirle que abriera
-`https://nexuspoint.rsvp/cabecera-defecto.jpg` sin sesión (se ve), y
-enseñarle la respuesta real de la base a `select` sobre `invitados` sin
-token (`permission denied for table invitados`). La frase que cerró el
-asunto: **el navegador se descarga la app entera, imágenes incluidas,
-antes de preguntarte quién eres; la lista de invitados no viene en esa
-descarga, la app la pide después.** Guardar por si vuelve a salir.
-
-### El bloqueante de verdad: el repositorio es público
-
-`github.com/espectante73/eventos` es **público** (comprobado el
-2026-09-16 por la API de GitHub). Mientras siga así, esconder la imagen
-en la app no sirve: se ve en GitHub. Y las versiones ya subidas **quedan
-en el historial de commits** aunque se borre el archivo de hoy -- por eso
-la respuesta no es un `git rm`, es la visibilidad del repositorio.
-
-### Plan, cuando se retome
-
-1. Repositorio a privado (usuario).
-2. Cubo **privado** `mapa-sitio` en Supabase (`public` = false), con
-   política de SELECT para `es_anfitrion() or
-   colaborador_tiene_permiso('mapa_sitio_ver')`. Es lo que convierte la
-   casilla en un candado de verdad en vez de un adorno del menú.
-3. Subir el PNG al cubo (arrastrar desde el panel de Supabase).
-4. `MapaSitio.jsx` deja de usar la ruta fija y pide un enlace temporal
-   (`createSignedUrl`); mientras carga, un "cargando"; si el servidor
-   dice que no, un mensaje claro en vez de una imagen rota.
-5. Sacar el PNG de `public/` y devolver `scripts/dibujar-mapa.mjs` a una
-   carpeta que no sirva la web. Ojo: `scripts/dibujar-mapa.test.js` no se
-   entera de esto (compara listas, no rutas), pero el comentario de
-   cabecera de los dos archivos cita la ruta y hay que actualizarlo.
-6. Regenerar y volver a subir el PNG pasa a ser un paso manual más. Vale
-   la pena decírselo antes de empezar.
-
-### La casilla se queda como está (decidido el 2026-09-17)
-
-Se le ofreció al usuario quitar "Ver el mapa del sitio" de
-`lib/permisos.js` o cambiarle el texto, porque tal como está parece un
-candado y solo decide si se enseña el enlace. **Dijo que la deja como
-está.** Decisión tomada con la información delante: no volver a
-proponerlo.
-
-## El plano de la app no se regenera solo: hay un test que vigila (2026-09-16)
-
-El test NO comprueba que la imagen esté regenerada, solo que las listas
-coinciden. Cuando se ponga en rojo: arreglar el script y luego
-`npm i -D canvas --no-save && node scripts/dibujar-mapa.mjs`.
-
-## El Modo Pruebas no guardaba Novedades (2026-09-17)
-
-Lo cazó el usuario preguntando si la lista de tablas de la foto seguía al
-día: *"hablas de 8 tablas y eso parece de hace más de un mes"*. Tenía
-razón a medias, y la mitad que tenía era la importante.
-
-**Lo que estaba bien**: la foto se guarda con `jsonb_agg(fila entera)` y
-se repone con `jsonb_populate_recordset`, así que las COLUMNAS nuevas
-entran solas (urlAniversario, urlBodaFinal, presente, cortinillaRealce…).
-Por ahí no había agujero.
-
-**El agujero**: `novedades` se creó en v6.3, DESPUÉS del Modo Pruebas, y
-nunca se añadió a la foto. Lo que se escribiera o borrara en el tablón
-durante una prueba se quedaba así al salir. Corregido: entra en la foto y
-se repone al desactivar.
-
-**Regla que se lleva de aquí**: al crear una tabla nueva, mirar si tiene
-que entrar en la foto del Modo Pruebas. Nadie lo hizo en su día.
-
-## Las pruebas de GitHub nunca habían pasado (2026-09-20)
-
-El usuario: "me llegan bastantes emails de GitHub". El flujo **Pruebas**
-(`.github/workflows/pruebas.yml`) fallaba en TODAS las subidas -- y al
-mirarlo, **no había pasado ni una sola vez desde que se creó**
-(`actions/workflows/pruebas.yml/runs?status=success` -> `total_count: 0`).
-Un aviso que siempre está en rojo no avisa de nada: se vuelve ruido y se
-ignora, que es justo lo contrario de para lo que se puso.
-
-**El fallo**: reventaba en `npm ci`, a los 10 segundos, con
-`Missing: esbuild@0.28.2 from lock file` (y sus 26 paquetes de
-plataforma). La máquina de desarrollo tiene **Node 24 / npm 11**, y el
-flujo pedía **Node 20 / npm 10**. `vitest` 4 trae su propia copia de Vite,
-que declara `esbuild ^0.27 || ^0.28` como dependencia *peer*; npm 11 no
-la escribe en el `package-lock.json` y npm 10 exige que esté. Lo mismo en
-local pasaba desapercibido porque nadie ejecuta `npm ci` a mano.
-
-**Arreglo, dos cosas**:
-1. `node-version: "24"` en el flujo -- **la misma que la máquina donde se
-   desarrolla**. Es la protección de verdad: mientras CI use otro npm que
-   el de casa, el lockfile puede volver a discrepar.
-2. `package-lock.json` regenerado con npm 10 (`npm install
-   --package-lock-only`), que añade las 27 entradas que faltaban.
-   Comprobado que `npm ci` pasa con npm 10 **y** con npm 11.
-
-De paso, `actions/checkout` y `actions/setup-node` de v4 a v5: GitHub
-está retirando Node 20 para las propias acciones y ya lo avisaba en cada
-ejecución.
-
-**Cómo se diagnosticó sin tener acceso a los registros** (los de Actions
-piden permisos de administrador, y aquí no hay `gh` instalado): el repo
-es público, así que la API anónima da el estado de cada paso
-(`/actions/runs/<id>/jobs`) -- eso señaló `npm ci`. Luego, para ver el
-error de verdad, `nvm install 20` y reproducirlo en un clon limpio del
-repo. Ese es el camino cuando CI falla y el registro no se alcanza:
-**clonar limpio y reproducir con la versión exacta que usa el flujo**.
-
-## No se podía salir del Modo Pruebas (2026-09-20, v37.13)
-
-**El fallo**: `restaurar_foto()` -- la que usan TANTO la salida del Modo
-Pruebas COMO el "Deshacer" -- borraba todo y volvía a meterlo, pero
-insertaba los **invitados antes que las mesas**. `invitados."mesa"` es
-una clave foránea a `mesas."numero"` (`invitados_mesa_fk`): en cuanto un
-solo invitado tiene mesa puesta, ese insert revienta y la restauración
-entera se deshace. El Modo Pruebas se quedaba activo para siempre.
-
-**Por qué apareció justo ahora**: llevaba meses ahí sin molestar porque
-NADIE tenía mesa asignada. El 2026-09-19 (v37, "una familia no se
-separa") el usuario empezó a sentar gente, y al día siguiente ya no
-podía salir del Modo Pruebas. Las dos funciones que dependen de esto
--- Deshacer y Modo Pruebas -- estaban rotas a la vez, y el "probar
-Deshacer" que había pendiente habría fallado igual.
-
-**Arreglo**: las mesas se insertan las PRIMERAS. De paso, `coalesce(...,
-'[]')` en cada tabla (una foto vieja sin alguna clave ya no rompe) y
-`set_config('eventos.recalculo_aviso_activo','off')` durante la
-restauración, para que `avisoPendiente` vuelva tal cual estaba en vez de
-recalcularlo el trigger.
-
-✅ **Probado en vivo por el usuario el 2026-09-20**: sale del Modo
-Pruebas y el "Deshacer" funciona. Con esto queda cerrado el "probar
-Deshacer" que llevaba pendiente desde el 2026-09-17.
-
-**Lo otro que falló**: el aviso decía solo "No se pudo desactivar el
-Modo Pruebas", sin el motivo -- imposible de diagnosticar sin abrir la
-consola del navegador, que el usuario no va a abrir. Ahora `avisar()`
-manda `error.message` y la ventana lo enseña en letra pequeña debajo
-(`detalle` en `PreguntaSeguridad`). **Todo aviso de error lleva el
-motivo técnico.**
-
-## "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
-
-**El Borrado total la respeta** (`VentanaConfigZonaPeligro.jsx`): quien
-autorizó se queda, y **solo con su parte personal**. Se le quita todo lo
-de este evento — mesa, pago, confirmación, llegada, colaborador, avisos,
-roles y excepciones. Guardar "para otra ocasión" es guardar a la persona,
-no la boda. La ventana y la pregunta de seguridad dicen **cuántos** son,
-por la norma de avisar con cifras.
-
-✅ **Probado en vivo por el usuario el 2026-09-21**: la casilla guarda
-tanto al marcarla como al desmarcarla.
-
-```sql
-select
-  (select count(*) from information_schema.columns
-     where table_name = 'invitados' and column_name = 'conservarDatos') as en_invitados,
-  (select count(*) from information_schema.columns
-     where table_name = 'evento'    and column_name = 'notaPrivacidad') as en_evento;
-```
-
-## "Todavía no hay fecha confirmada" (2026-09-21, v39)
-
-```sql
-alter table public.evento add column if not exists "fechaSinConfirmar" boolean default false;
-```
-
-```sql
-update public.evento set "fechaSinConfirmar" = true, "tablonOcultarFecha" = false
-where "tablonOcultarFecha";
-```
-
-✅ **Aprobado por el usuario el 2026-09-21** ("superior, ha quedado muy
-bien").
-
-## Dos clases de permiso, no una (2026-09-21, v38.5)
-
-✅ **Resuelto en la v38.6, con la idea del usuario**: *"quitar el botón
-dentro de Mi cuenta y que la expresión link al proyecto en GitHub sea
-realmente un link y acceder desde ahí"*. **Donde se anuncia el permiso
-es donde se entra.** El aviso se queda (él lo pidió expresamente: "no
-quitaría el baner"), y dentro lleva el link.
-
-Dos detalles que decidió él y no yo:
-- **Con relieve, no subrayado.** Su idea original era un link de texto
-  subrayado; preguntado con las dos versiones dibujadas, eligió el
-  relieve, que entonces era lo que decía la norma 13.
-- **La etiqueta vuelve a nombrar GitHub** ("Ver el proyecto en GitHub").
-  En la v38.5 se lo habíamos quitado porque confundía — pero lo que
-  confundía era la frase que lo envolvía, no la palabra. Con el link a la
-  vista, decir a dónde lleva es justo lo que hace falta.
-
-✅ **Aprobado por el usuario el 2026-09-21** ("sencillamente maravilloso").
-
-**Corregido en la v38.7**, con dos fallos míos que cazó el usuario en la
-misma frase:
-1. **El link se fue a la izquierda** teniendo él elegida la mano derecha.
-   Lo metí como `inline-flex` suelto dentro del aviso, sin el envoltorio
-   `justify-end zurdo:justify-start`. Ver la nota nueva en "Regla de la
-   app: todo al alcance del pulgar".
-2. **Quité la frase que anuncia el permiso** y dejé el link a secas. Él
-   lo quería **igual que el otro banner**: "en vez de permiso de
-   edición, tienes permiso para ver el link de GitHub". El aviso dice lo
-   que tienes; el botón es cómo se usa. Las dos cosas, no una.
-
-## El acabado, con una escala y no a ojo (2026-09-20, v38)
-
-✅ **Dado por bueno por el usuario el 2026-09-20** ("quedó muy bien").
-Pedí las capturas de la norma 15 (lista de invitados y formulario del
-colaborador, que son las pantallas que más cambiaron) y él las dio por
-innecesarias. Queda dicho aquí porque **no lo he visto yo**: si algún
-día aparece algo apretado o cortado en esas dos pantallas, el repaso de
-acabados de la v38 es el primer sitio donde mirar.
-
-**Lo que NO entra**: `VentanaMusicaEvento.jsx`. El mando de música tiene
-lenguaje propio ya aprobado (norma 11) — paleta oscura suya y teclas con
-su relieve. Está excluido del repaso Y del test.
-
-**El guardia**: `src/theme.test.js`. Recorre todos los `.jsx` y se pone
-en rojo si encuentra un `fontSize`, `borderRadius` u `opacity` escrito a
-mano. Sin esto, en unos meses vuelve a haber trece tamaños: la escala se
-arregla una vez, la deriva vuelve sola. Mismo espíritu que
-`scripts/dibujar-mapa.test.js`. Salida de emergencia estrecha: marcar la
-línea con `escala-libre:` y el motivo (hoy hay UNA, el rombo de 11px de
-Aniversarios, que con redondeo de caja dejaría de parecer un rombo).
-
-## El sello que late (2026-09-20, v38.1)
-
-**Elegido: late el SELLO rojo, no el botón.** Dos motivos, y los dos son
-normas suyas de antes:
-- el botón es la pastilla de cristal sobre la foto, lenguaje ya aprobado
-  (norma 11);
-- el rojo ya significa "falta algo" en toda la app, y el dorado es
-  adorno. Si el dorado empieza a parpadear, pasa a hacer dos trabajos.
-
-## Se acabaron los avisos del navegador (2026-09-20, v37.12)
-
-Último resto de la norma 12: `window.alert` estaba prohibido, pero
-seguían vivos ~12 -- casi todos en `avisar()` de `useLedgerData.js` (los
-"no se pudo guardar, se deshace el cambio en pantalla") más los de
-`useMotorInvitaciones.js` y `VentanaInvitaciones.jsx`. No se habían
-migrado porque `avisar()` es una función suelta, fuera de React, y
-`usePreguntaSeguridad` es un hook: no se puede llamar desde ahí.
-
-- `avisos.js` no pinta nada: solo guarda la lista de *sitios* donde se
-  puede enseñar un aviso. `avisoEnPantalla(mensaje, titulo?)` es una
-  función normal, llamable desde cualquier parte.
-- `AvisosGlobales` es el sitio: monta un `usePreguntaSeguridad` en modo
-  `soloAviso` y se apunta a esa lista con el `document` en el que vive.
-- **En qué ventana sale**: la del documento que tiene el foco
-  (`doc.hasFocus()`). Va montado una vez en `main.jsx` (la pestaña) y
-  una vez dentro de `usePopupWindow.actualizar()` -- o sea, en TODA
-  ventana emergente, sin tocar las cinco por separado. Así se cierra de
-  raíz el bug repetido de "el aviso sale en la ventana de detrás".
-- Un aviso disparado antes del primer render (fallo al arrancar) espera
-  en una cola de 5 como mucho, y sale en cuanto hay dónde.
-- `partirAviso` corta el mensaje en título + explicación (la primera
-  frase si mide 70 o menos), para que se vea igual que el resto de
-  preguntas de la app. Con título propio cuando el mensaje es largo.
-
-## Relieve, clic y pregunta de seguridad (2026-09-19, v36)
-
-El usuario lo pidió como norma ya hablada y sin cumplir del todo: todo
-botón con relieve, que dé sensación de clic al pulsarlo, un clic suave de
-sonido, vibración en el móvil ("si no, puedo apretarlo muchas veces e ir
-creando miles de mesas"), todas las X del mismo tamaño y con el mínimo
-táctil del móvil, y todo quitar/borrar con pregunta de seguridad. Él
-eligió: títulos plegables con relieve (sí), subrayados → botones (sí), y
-papelera dentro del círculo rojo cuando se borra para siempre.
-
-✅ **Cerrado en la v37.12**: los ~12 `window.alert` que quedaban (avisos
-de un solo botón) ya salen en la ventana de la app. Ver "Se acabaron los
-avisos del navegador".
-
-## Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
-
-El usuario lo cerró con una frase que da en el clavo: *"no puedo
-restaurar yo, o sea que no tengo la opción de control z de toda la app;
-si no me vale para eso, no le veo utilidad"*. Tenía razón: descargar una
-copia que no se puede volver a subir no es un deshacer.
-
-**Cómo quedó**: antes de un reinicio, del borrado total o de salir del
-Modo Pruebas, la app llama a `anfitrion_guardar_foto_deshacer(token,
-accion)` -- la foto va al SERVIDOR (`deshacer_snapshot`, una sola fila) --
-y `components/AvisoDeshacer.jsx` pinta el botón con la acción y la hora.
-`anfitrion_deshacer` repone y borra la foto: solo se deshace una vez.
-
-**Una sola reposición para todo**: `foto_de_datos()` y
-`restaurar_foto(jsonb)` son ahora los únicos sitios donde se hace la foto
-y donde se repone. El Modo Pruebas pasa a usarlas, así que su lista de
-tablas y la del deshacer no pueden desincronizarse nunca más -- que es
-exactamente el fallo que tuvo `novedades` durante meses. Las dos llevan
-`REVOKE EXECUTE ... FROM public, anon, authenticated`: vacían tablas
-enteras y Postgres concede EXECUTE a PUBLIC por defecto.
-
-**Borrado**: `lib/backup.js` y su test. Ya no lo usaba nadie tras esto, y
-la regla de la casa es no dejar código muerto.
-
-**Limitación conocida y aceptada**: solo se guarda la ÚLTIMA foto.
-Deshacer lo de anteayer sigue siendo el volcado diario.
-
-## Retirada la ventana "Backup" (2026-09-17, v32)
-
-Si algún día se quiere un "exportar/restaurar" de verdad, primero hay que
-arreglar `exportarTodo` para que guarde las doce tablas conservando los
-ids -- no reconstruir esta ventana tal cual.
-
-## `schema.sql` reescrito desde cero (2026-09-16)
-
-```sql
-alter table evento add column if not exists "cortinillaRealce" integer not null default 15;
-alter table mesas drop constraint if exists mesas_numero_check;
-alter table mesas add constraint mesas_numero_check check ("numero" >= 1);
-```
-
-El usuario lo dijo claro: *"lo lógico es que la app tenga una misma
-filosofía de UX"*. El patrón de Novedades (todo plegado al abrir, como
-mucho una sección desplegada) pasa a ser el de la app.
-
-## 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
-
-Salió de una pregunta del usuario ("¿qué peligros hay en que el
-repositorio sea público?"). Al auditarlo apareció algo bastante peor que
-el repositorio: **cuatro tablas estaban abiertas a ESCRITURA para
-cualquiera de internet** — `evento`, `mesas`, `fotos_familiares` y
-`orden_familias`, con la política `anon_full_access ... for all using
-(true) with check (true)` y los permisos de tabla por defecto intactos.
-
-**Comprobado en vivo, no deducido del código.** Con la clave publicable
-sacada del JS compilado de `nexuspoint.rsvp` (que es pública por diseño;
-eso no es el fallo), un `PATCH` anónimo sobre `evento` devolvía `204`,
-no `403`. La prueba se hizo filtrando a una fila inexistente
-(`?id=eq.false`) para confirmar el permiso sin modificar ni un byte real
-— merece la pena repetir ese truco cada vez que haya que verificar
-permisos contra la base de producción.
-
-**Por qué era grave, y no un detalle:** `evento` guarda las PLANTILLAS
-de los emails automáticos. Reescribirlas desde fuera equivale a decidir
-el texto de los correos que la propia app manda, con el remitente
-legítimo del anfitrión, a los ~140 invitados. El resto (fecha, lugar,
-precios, fotos familiares, borrar las mesas, borrar la fila de `evento`
-entera) viene detrás.
-
-**Por qué pasó, que es lo que hay que recordar:** la decisión original
-era CORRECTA cuando se tomó. El comentario decía "datos sin sensibilidad
-real" y esas tablas solo tenían las mesas y el orden de las familias.
-Después se le añadieron 13 columnas a `evento` — plantillas de email,
-email del anfitrión, cronograma, `asistenciaAbierta`,
-`modoPruebasActivo` — sin volver a mirar aquella decisión. **El
-comentario se quedó igual mientras el riesgo crecía por debajo.**
-
-**Cómo quedó:** la lectura sigue abierta (el tablón público la
-necesita); escribir pasa por 4 funciones nuevas — `guardar_evento`,
-`anfitrion_guardar_mesas`, `guardar_fotos_familiares`,
-`guardar_orden_familias` — con el mismo doble cierre que ya tenían
-`invitados` y `colaboradores`: política `for select` + `revoke insert,
-update, delete, truncate`. Con una sola de las dos capas, la puerta
-sigue entornada.
-
-Detalles que conviene no perder:
-
-**Orden de despliegue, importante si se repite algo así:** crear las
-funciones primero (el código viejo sigue funcionando, no cambia ningún
-permiso), desplegar el cliente después, y cerrar los permisos al final.
-Al revés hay una ventana en la que nadie puede guardar nada.
-
-## 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
-
-✅ **RESUELTO el 2026-09-20.** Era la contrapartida de todo esto: al no
-haber ya enlace de emergencia, la única vía de recuperación del
-anfitrión es el correo de "recuperar contraseña" de Supabase Auth, que
-en el plan gratuito tiene un límite de envío bajo y **falló una vez**
-("email rate limit exceeded", agosto). Ya hay **SMTP propio con Resend**
-configurado (`smtp.resend.com`, puerto 465, usuario `resend`, la API key
-de Resend en el campo Password) y **probado en vivo**: el correo de
-recuperación llega al instante desde `mail.nexuspoint.rsvp`, firmado por
-ese dominio, no desde `supabase.io`.
