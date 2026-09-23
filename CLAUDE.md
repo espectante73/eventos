@@ -959,6 +959,18 @@ de allí— es **para bastante más cerca del evento**, dicho por él
 (2026-09-20). Y la fecha ni siquiera está fijada. No listarla entre lo
 pendiente de ahora ni ofrecerla como siguiente paso.
 
+**⏳ ENCARGO ABIERTO: bajar de las 14.000 palabras.** Él, 2026-09-23,
+insistiendo después de la poda: *"son muchas, hay que simplificar más y
+dejar solo lo que es realmente útil"*. Para otra sesión, no a última
+hora de un día de trabajo. El peso: PARTE 1 **7.619** palabras, PARTE 2
+**4.915**, encabezado **~1.500** — empezar por la PARTE 1, que además se
+lee entera cada vez. ⚠️ No vale leer por encima y borrar lo que suene a
+relleno: la poda de hoy ya se llevó el relato. Solo cede aplicando el
+criterio de entrada a **cada párrafo, uno por uno**. Y apretar la
+redacción no es recortar: si la norma sigue ahí, las palabras vuelven
+la próxima vez que haya que explicarla. Recortar es **quitar**, o dejar
+el puntero a un test.
+
 **Adelgazar la PARTE 2 convirtiendo trampas en tests** (idea suya,
 2026-09-23; no toca ahora). A medida que la app se concrete, algunas
 trampas dejarán de poder ocurrir y su párrafo podrá quedarse en una
