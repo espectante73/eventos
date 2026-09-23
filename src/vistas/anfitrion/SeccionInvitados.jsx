@@ -352,6 +352,12 @@ export function SeccionInvitados({
       if (filtros.rolFamiliar === "sin" && g.rolFamiliar) return false;
       if (Object.values(ROL_FAMILIAR).includes(filtros.rolFamiliar) && g.rolFamiliar !== filtros.rolFamiliar)
         return false;
+      // Rol de TRABAJO del día (acomodador, barra...), no confundir con
+      // el rol familiar. "sin" = no tiene ninguno.
+      if (filtros.rolTrabajo) {
+        const suyos = Array.isArray(g.rolesTrabajo) ? g.rolesTrabajo : [];
+        if (filtros.rolTrabajo === "sin" ? suyos.length > 0 : !suyos.includes(filtros.rolTrabajo)) return false;
+      }
       if (filtros.zona && g.zona !== filtros.zona) return false;
       if (filtros.anioBoda === "con" && !g.anioBoda) return false;
       if (filtros.anioBoda === "sin" && g.anioBoda) return false;
@@ -1043,7 +1049,44 @@ export function SeccionInvitados({
                     <option value="no">Falta ({confirmadosCount - totalPresentes})</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(11), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }} />
+                {/* Filtro por rol de trabajo, en la misma columna que su
+                    icono. Estrecho a propósito: la columna mide 100 px y
+                    es la última (usuario, 2026-09-23: "de una letra o
+                    dos, no más ancho"). Solo aparece si ya hay algún rol
+                    creado — si no, sería un desplegable vacío. */}
+                <span style={{ background: tintaColumnaCabecera(11), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                  {rolesConocidos.length > 0 && (
+                    <select
+                      value={filtros.rolTrabajo || ""}
+                      onChange={(e) => setFiltros({ ...filtros, rolTrabajo: e.target.value })}
+                      title="Filtrar por rol de trabajo del día"
+                      style={{
+                        ...inputStyle,
+                        border: "none",
+                        background: "transparent",
+                        color: C.goldClaro,
+                        fontFamily: "'IBM Plex Mono', monospace",
+                        padding: "2px 0",
+                        fontSize: T.pequeno,
+                        width: "100%",
+                        minWidth: 0,
+                        appearance: "none",
+                        WebkitAppearance: "none",
+                        MozAppearance: "none",
+                        textAlign: "center",
+                        textAlignLast: "center",
+                      }}
+                    >
+                      <option value="">Rol</option>
+                      {rolesConocidos.map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                      <option value="sin">sin rol</option>
+                    </select>
+                  )}
+                </span>
               </div>
             </div>
           </div>

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "41.2",
+    cambios: [
+      "Filtro por rol de trabajo en la Lista de invitados: ya puedes ver de un vistazo quiénes son los acomodadores, o quién no tiene ningún rol. Está en la última columna, la de los iconos.",
+    ],
+  },
+  {
     version: "41.1",
     cambios: [
       "Terminado el blindaje de la Lista de invitados: las 16 operaciones que tocan tus datos ya están fuera de la pantalla, con 27 pruebas automáticas.",
