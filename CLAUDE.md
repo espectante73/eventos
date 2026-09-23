@@ -2236,6 +2236,42 @@ No listarla entre lo pendiente de ahora ni ofrecerla como siguiente
 paso: no está olvidada, es que no toca. Lo mismo vale para las fotos
 terminadas y el reparto de mesas — ver "Ritmo real del evento".
 
+## El mapa se quedaba viejo sin que nadie se enterara (2026-09-23)
+
+El usuario: *"no coincide la versión del mapa con la que estamos"*. Tenía
+razón: `public/mapa-de-la-aplicacion.png` era del 19 de septiembre y la
+app iba por la v39.4. El mapa enseña la versión en una esquina, así que
+llevaba días mintiendo.
+
+**Por qué pasó, y es la parte interesante.** Ya había un test
+(`scripts/dibujar-mapa.test.js`) que vigilaba que las listas de secciones
+del script coincidieran con el menú real. Pero su propia cabecera decía:
+*"Lo que NO comprueba: que la imagen esté regenerada"*. O sea, el agujero
+estaba **escrito y aceptado**. Un guardia que documenta lo que no vigila
+sigue sin vigilarlo.
+
+**Arreglo:** el script deja una ficha, `scripts/mapa-generado.json`, con
+la versión con la que dibujó. El test la compara con `VERSION_APP` y, si
+no coinciden, se pone en rojo **con el comando de regenerar en el propio
+mensaje de error**. Regenerar el mapa pasa a ser parte de subir una
+versión.
+
+**Y de paso, la paleta.** El script tenía los colores **copiados a mano**
+de `theme.js`, y ya habían derivado: sus dos dorados (#A87C3A, #8A6A34)
+no existen en la app (`C.gold` es #B08D57). Misma historia que los rojos
+y los tamaños de letra. Ahora la paleta sale de `theme.js`, y las tres
+tintas oscuras se calculan a partir de `C.ink` en vez de escribirse.
+⚠️ Los dos dorados se quedan como estaban **de momento**: cambiarlos
+cambia una imagen que él ya aprobó, así que está preguntado. Al
+contestar, o pasan a `TEMA.gold` o se anota aquí el porqué.
+
+⚠️ **Node, roto de rebote.** El `nvm install 20` del 2026-09-20 (para
+reproducir el fallo de GitHub) dejó el alias `default` en `lts/*`, que no
+resolvía a nada: en un terminal nuevo no había `node` ni `npm`. Corregido
+con `nvm alias default v24.18.1`. **Lección: `nvm install` toca la
+configuración de su máquina, no solo la mía.** Si hace falta otra versión
+para una prueba, dejar el `default` como estaba al terminar.
+
 ## El acabado, con una escala y no a ojo (2026-09-20, v38)
 
 El usuario: *"la app debe de tener un aspecto más refinado en sus

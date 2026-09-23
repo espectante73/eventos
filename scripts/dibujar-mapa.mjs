@@ -18,9 +18,19 @@
 // primer nivel pasó de 14 entradas a 8.
 // La versión y la fecha salen de la app, no escritas a mano: las dos se
 // quedaron antiguas (el mapa decía "v24.3 · 7 septiembre" en pleno v29)
-// porque nadie se acuerda de tocarlas al regenerar. El test de
-// dibujar-mapa.test.js vigila las secciones, no esto.
+// porque nadie se acuerda de tocarlas al regenerar.
+//
+// ⚠️ Pero eso solo arregla la mitad: si NADIE ejecuta este script, la
+// imagen sigue siendo la vieja por mucho que el script sepa la versión
+// buena. Volvió a pasar (el usuario, 2026-09-23: "no coincide la versión
+// del mapa con la que estamos"): la imagen era del 19 de septiembre y la
+// app iba por la v39.4.
+// Por eso el script deja también una FICHA (scripts/mapa-generado.json)
+// con la versión con la que se dibujó, y dibujar-mapa.test.js se pone en
+// rojo si no coincide con VERSION_APP. Regenerar es entonces parte de
+// subir una versión, no algo que hay que acordarse de hacer.
 import { VERSION_APP } from "../src/constants.js";
+import { C as TEMA } from "../src/theme.js";
 import { createCanvas, registerFont } from "canvas";
 import { writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -55,14 +65,43 @@ const W = 1920, H = 1080;
 // que se lean como botones, no como líneas de una lista.
 // El oro tuvo que oscurecerse (#D9B778 sobre blanco casi no se ve) y la
 // crema pasó a ser verde tinta: sobre papel, el texto claro desaparece.
+// ⚠️ La paleta SALE DE theme.js, no copiada a mano. Estaba copiada y ya
+// había derivado: los dos dorados del mapa no existían en la app
+// (#A87C3A y #8A6A34 frente a C.gold #B08D57). Es la misma historia que
+// los rojos y los tamaños de letra -- lo que se copia, deriva. Ahora un
+// cambio de paleta en la app aparece en el mapa al regenerarlo
+// (usuario, 2026-09-23: "si hemos hecho algún ajuste en los botones que
+// se refleje en el mapa").
+//
+// Las tres tintas oscuras son variantes del verde de la app para dar
+// volumen a los paneles; se calculan a partir de C.ink en vez de
+// escribirlas, para que sigan al original si algún día cambia.
+function aclarar(hex, cuanto) {
+  const n = parseInt(hex.slice(1), 16);
+  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) =>
+    Math.max(0, Math.min(255, Math.round(v + cuanto)))
+  );
+  return `#${c.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}
+
 const C = {
-  tinta: "#1F3A2E", tintaAlta: "#24402F", tintaBaja: "#16291F",
-  // El champán de la app (theme.js: C.paper / C.paperDark). Se probó
-  // primero un casi-blanco y el usuario prefirió este, que además es el
-  // que ya usan las ventanas de la aplicación.
-  papel: "#EFE9DE", papelHondo: "#E4DCC9",
-  texto: "#1F3A2E",
-  crema: "#EFE9DE", oro: "#A87C3A", oroHondo: "#8A6A34", granate: "#8C2F39",
+  tinta: TEMA.ink,
+  tintaAlta: aclarar(TEMA.ink, 8),
+  tintaBaja: aclarar(TEMA.ink, -9),
+  // El champán de la app. Se probó primero un casi-blanco y el usuario
+  // prefirió este, que además es el que ya usan las ventanas.
+  papel: TEMA.paper,
+  papelHondo: TEMA.paperDark,
+  texto: TEMA.ink,
+  crema: TEMA.paper,
+  // ⚠️ Estos dos dorados NO son los de la app todavía: el mapa lleva
+  // #A87C3A / #8A6A34 desde que se aprobó su aspecto, y C.gold es
+  // #B08D57. Cambiarlos cambia una imagen ya aprobada, así que está
+  // preguntado y pendiente de su respuesta (2026-09-23). Cuando conteste:
+  // o pasan a TEMA.gold, o se anota aquí por qué se quedan.
+  oro: "#A87C3A",
+  oroHondo: "#8A6A34",
+  granate: TEMA.wax,
 };
 const linea = "rgba(31,58,46,0.20)";
 const lineaFirme = "rgba(31,58,46,0.34)";
@@ -276,4 +315,12 @@ x.fillText(nota, W - PAD - x.measureText(nota).width, 1022);
 // sincronizar a mano.
 const destino = process.argv[2] || "public/mapa-de-la-aplicacion.png";
 writeFileSync(destino, c.toBuffer("image/png"));
-console.log(`escrito: ${destino}`);
+
+// La ficha de lo que se acaba de dibujar. No es documentación: es lo que
+// mira el test para saber si la imagen está al día. Va en scripts/ y no
+// en public/ porque no hay que servirla a nadie.
+writeFileSync(
+  "scripts/mapa-generado.json",
+  JSON.stringify({ version: VERSION_APP, generadoEn: new Date().toISOString().slice(0, 10) }, null, 2) + "\n"
+);
+console.log(`escrito: ${destino} (v${VERSION_APP})`);

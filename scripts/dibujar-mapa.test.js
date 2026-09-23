@@ -9,14 +9,20 @@
 // menú y no toca el script, se pone en rojo aquí, en `npm test`, en vez de
 // descubrirse meses después mirando la imagen.
 //
-// Lo que NO comprueba: que la imagen esté regenerada. Solo que las listas
-// coinciden. Si este test pasa, basta con ejecutar el script para tener el
-// plano al día (ver la cabecera de dibujar-mapa.mjs).
+// Y desde el 2026-09-23 comprueba TAMBIÉN que la imagen esté regenerada.
+// Antes no: bastaba con que las listas coincidieran, así que el mapa podía
+// llevar semanas enseñando una versión vieja sin que nada se quejara. Pasó
+// (el usuario: "no coincide la versión del mapa con la que estamos"): la
+// imagen era del 19 de septiembre y la app iba por la v39.4.
+// El script deja una ficha (mapa-generado.json) con la versión que dibujó;
+// aquí se compara con VERSION_APP. Regenerar pasa a ser parte de subir una
+// versión, no algo que haya que acordarse de hacer.
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "../src/components/VentanaFlotante";
+import { VERSION_APP } from "../src/constants.js";
 import { SUBMENU_CONFIGURACION } from "../src/components/DesplegableSecciones";
 
 const aqui = dirname(fileURLToPath(import.meta.url));
@@ -44,5 +50,24 @@ describe("el plano de la aplicación lista las mismas secciones que el menú", (
     for (const clave of ORDEN_VENTANAS) {
       expect(ETIQUETAS_VENTANAS[clave], `falta la etiqueta de "${clave}"`).toBeTruthy();
     }
+  });
+});
+
+// El mapa enseña "v39.4" en la esquina. Si la app sube de versión y nadie
+// regenera la imagen, esa esquina miente.
+describe("el mapa está al día", () => {
+  const ficha = JSON.parse(readFileSync(join(aqui, "mapa-generado.json"), "utf-8"));
+
+  it("se dibujó con la versión que corre ahora mismo", () => {
+    expect(
+      ficha.version,
+      `El mapa se dibujó con la v${ficha.version} y la app va por la v${VERSION_APP}. ` +
+        'Regenéralo:  (node -e "require(\'canvas\')" || npm i -D canvas --no-save) && node scripts/dibujar-mapa.mjs'
+    ).toBe(VERSION_APP);
+  });
+
+  it("la imagen existe y no está vacía", () => {
+    const png = readFileSync(join(aqui, "..", "public", "mapa-de-la-aplicacion.png"));
+    expect(png.length).toBeGreaterThan(10000);
   });
 });
