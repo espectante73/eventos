@@ -33,20 +33,8 @@ Dos partes, y se usan de forma distinta:
 2. **PARTE 2 — Trampas ya pagadas.** Errores que costaron tiempo real.
    Cada una está aquí porque es lo único que impide repetirla.
 
-⚠️ **NORMA (usuario, 2026-09-23): una trampa que pueda tener un test, lo
-tiene.** Escribir el test es parte de arreglar el fallo, no un extra
-para después. Solo se queda como texto la que **no se puede probar**, y
-entonces se dice por qué (vive en Supabase, en el iPhone, en su Mac o en
-el panel de otra empresa).
-
-Y no hace falta que el test ejecute la app: **se puede probar el TEXTO
-del proyecto**. `supabase/schema.test.js` comprueba que
-`restaurar_foto` inserte las mesas antes que los invitados y que ninguna
-política sea `for all`; `src/reglas-del-proyecto.test.js`, que no vuelva
-un `window.alert` o que la Música no se cargue aparte;
-`src/theme.test.js`, que no se escriba un color a mano. Esa puerta es más
-ancha de lo que parece: **antes de dar una trampa por no comprobable,
-buscar qué archivo delataría el fallo.**
+⚠️ Una trampa entra aquí **solo si no se le puede poner un test**. Si se
+le puede, se le pone: es la regla 6 de «Cómo trabajar aquí».
 
 Hubo una PARTE 3 con la historia — cómo se llegó hasta aquí — y **se
 borró el 2026-09-23**, de acuerdo con el usuario. De sus 6.000 palabras,
@@ -209,7 +197,20 @@ sobre cómo es la app** (para eso, las "Normas de estándar" de abajo).
    Rollup comprueba que el módulo de origen lo exporte de verdad). Pasó
    con `calcularEdad` importado de `lib/formato` en vez de
    `lib/invitados`.
-6. **Comprobar los cálculos.** En cálculos, algoritmos de varios pasos o
+6. **Al arreglar un fallo, dejar un vigilante.** Una trampa que pueda
+   tener un test, **lo tiene**: escribir el test es parte de arreglar el
+   fallo, no un extra para después. Solo se queda como texto en la PARTE
+   2 la que NO se puede probar, y entonces se dice por qué (vive en
+   Supabase, en el iPhone, en su Mac o en el panel de otra empresa).
+   ⚠️ **No hace falta que el test ejecute la app: se puede probar el
+   TEXTO del proyecto.** `supabase/schema.test.js` comprueba que
+   `restaurar_foto` inserte las mesas antes que los invitados y que
+   ninguna política sea `for all`; `src/reglas-del-proyecto.test.js`,
+   que no vuelva un `window.alert`; `src/theme.test.js`, que no se
+   escriba un color a mano. Esa puerta es más ancha de lo que parece:
+   **antes de dar una trampa por no comprobable, buscar qué archivo
+   delataría el fallo.**
+7. **Comprobar los cálculos.** En cálculos, algoritmos de varios pasos o
    lógica condicional enredada, ejecutarlo o repasarlo paso a paso antes
    de darlo por bueno.
 
