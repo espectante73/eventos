@@ -117,6 +117,27 @@ Y cuatro reglas que salen de esta criba, cada una de un error real:
 por hecho.** La mitad de lo que se borró en la criba lo escribí yo
 creyendo que ayudaba.
 
+### Las normas también se pudren
+
+Lo planteó él el 2026-09-23: a medida que la app se concrete, parte de
+lo guardado habrá que cambiarlo. Cierto, y el mismo día pasó tres veces
+— la norma del pulgar llevaba desfasada desde la v35, la 13 se
+contradecía a sí misma, y «Estado actual» mentía desde hacía siete
+semanas.
+
+Se pudren de tres maneras: la app cambia y la norma no; una norma nueva
+choca con una vieja que nadie miró; o la norma describe un estado en vez
+de un criterio.
+
+⚠️ **Las tres las encontró ÉL leyendo, ninguna yo.** Un test vigila que
+el código cumpla una regla, pero **no puede vigilar que la regla siga
+siendo verdad**. Así que el guardia es de mano, y va en dos momentos:
+
+- **Al tocar una zona de la app**, releer su norma ANTES de escribir
+  código. Si ya no describe lo que hay, se corrige en el mismo cambio.
+- **Al escribir una norma nueva**, buscar si ya existe otra que diga lo
+  contrario. Eso es justo lo que falló con la 13.
+
 ======================================================================
 
 # PARTE 1 — Reglas que hay que obedecer siempre
