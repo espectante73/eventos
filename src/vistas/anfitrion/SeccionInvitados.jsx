@@ -30,7 +30,6 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { C, inputStyle, R, T, OP } from "../../theme";
-import { uid } from "../../lib/id";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio } from "../../lib/invitados";
 import { ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
@@ -45,6 +44,11 @@ import { revisarConExcepciones } from "../../lib/revisionInvitados";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { asignarMesaConSuFamilia, confirmarConSuFamilia } from "../../lib/mesas";
+import {
+  agregarInvitado as crearInvitado,
+  importarInvitados as importarFilas,
+  eliminarInvitado as borrarInvitado,
+} from "../../lib/edicionInvitados";
 
 export function SeccionInvitados({
   data,
@@ -72,6 +76,9 @@ export function SeccionInvitados({
   // el aviso de arriba de la lista no se ve si se está en la fila 100.
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   const avisarMesa = (texto) => texto && preguntar({ titulo: "Mesa sin cambiar", texto, soloAviso: true });
+  // Los avisos de las operaciones de lib/edicionInvitados.js: si traen
+  // texto, es que NO se ha hecho el cambio (o se hizo con una salvedad).
+  const avisarLista = (texto) => texto && preguntar({ titulo: "Lista de invitados", texto, soloAviso: true });
   const [mostrarImport, setMostrarImport] = useState(false);
   const [mostrarAnadir, setMostrarAnadir] = useState(false);
   const [orden, setOrden] = useState({ columna: "invitado", direccion: "asc" });
@@ -123,36 +130,15 @@ export function SeccionInvitados({
     );
   };
 
+  // La decisión vive en lib/edicionInvitados.js, con sus pruebas: aquí
+  // solo se recoge lo que escribió el usuario y se enseña el aviso.
   const agregarInvitado = () => {
-    if (
-      !nuevoInvitado.nombre.trim() ||
-      !nuevoInvitado.apellido.trim() ||
-      !nuevoInvitado.grupoFamiliar.trim()
-    )
-      return;
-    persistInvitados([
-      ...invitados,
-      {
-        id: uid(),
-        nombre: nuevoInvitado.nombre.trim(),
-        apellido: nuevoInvitado.apellido.trim(),
-        zona: nuevoInvitado.zona.trim(),
-        confirmado: false,
-        colaboradorId: null,
-        grupoFamiliar: nuevoInvitado.grupoFamiliar.trim(),
-        mesa: null,
-        anioNacimiento: "",
-        anioBoda: "",
-        rolFamiliar: "",
-        email: "",
-        cancion: "",
-        alergias: "",
-        observaciones: "",
-        pagado: false,
-        presente: false,
-      },
-    ]);
-    setNuevoInvitado({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
+    const { invitados: siguiente, aviso } = crearInvitado(invitados, nuevoInvitado);
+    if (siguiente !== invitados) {
+      persistInvitados(siguiente);
+      setNuevoInvitado({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
+    }
+    avisarLista(aviso);
   };
 
   const intentarCerrarInvitados = () => {
@@ -217,28 +203,12 @@ export function SeccionInvitados({
   };
 
   const importarInvitados = () => {
-    const filas = parseImport(textoImport, colaboradores);
-    if (filas.length === 0) return;
-    const nuevos = filas.map((r) => ({
-      id: uid(),
-      nombre: r.nombre,
-      apellido: r.apellido,
-      zona: r.zona,
-      confirmado: false,
-      colaboradorId: r.colaboradorId,
-      grupoFamiliar: r.grupoFamiliar,
-      mesa: null,
-      anioNacimiento: "",
-      anioBoda: "",
-      rolFamiliar: "",
-      email: "",
-      cancion: "",
-      alergias: "",
-      observaciones: "",
-      pagado: false,
-    }));
-    persistInvitados([...invitados, ...nuevos]);
-    setTextoImport("");
+    const { invitados: siguiente, aviso } = importarFilas(invitados, parseImport(textoImport, colaboradores));
+    if (siguiente !== invitados) {
+      persistInvitados(siguiente);
+      setTextoImport("");
+    }
+    avisarLista(aviso);
   };
 
   // Al confirmar a alguien cuya familia ya tiene mesa, se sienta con ella
@@ -250,7 +220,9 @@ export function SeccionInvitados({
   };
 
   const eliminarInvitado = (id) => {
-    persistInvitados(invitados.filter((g) => g.id !== id));
+    const { invitados: siguiente, aviso } = borrarInvitado(invitados, id, colaboradores);
+    if (siguiente !== invitados) persistInvitados(siguiente);
+    avisarLista(aviso);
   };
 
   // ---------- Rol de trabajo (2026-08-27) ----------

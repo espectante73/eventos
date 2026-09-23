@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "41",
+    cambios: [
+      "Primera ronda para blindar la Lista de invitados: añadir, importar y eliminar salen de la pantalla y pasan a tener 14 pruebas automáticas. No cambia nada de lo que ves.",
+      "Y de paso aparecieron dos fallos que llevaban ahí desde el principio: importar dos veces la misma lista duplicaba a todo el mundo en silencio, y borrar a un invitado que además es colaborador le dejaba la cuenta sin ficha sin avisar. Los dos, corregidos.",
+    ],
+  },
+  {
     version: "40.3",
     cambios: [
       "El ojo para ver la contraseña, en los cuatro sitios donde se escribe una: entrar, crear cuenta y las dos de cambiarla.",

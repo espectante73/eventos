@@ -356,6 +356,14 @@ en la sección que se indica entre paréntesis.
     tarjetas, paneles y formularios, **nunca en las filas de las
     tablas** — ahí mandan las normas 7 y 8. («El acabado, con una escala
     y no a ojo»)
+20. **Lo que ESCRIBE en los datos vive en `lib/`, con pruebas.** Nunca
+    dentro de un componente: ahí no se puede probar sin dibujar la
+    pantalla entera, y lo que no se puede probar acaba rompiéndose. Son
+    funciones puras que reciben la lista y devuelven la nueva, y
+    devuelven `{ datos, aviso }` — si el aviso trae texto, NO se ha
+    tocado nada y ese es el motivo. Modelo: `lib/mesas.js`,
+    `lib/edicionInvitados.js`. Lo que solo lee o pinta puede quedarse en
+    el componente.
 19. **Un mensaje de error dice en qué se ha podido equivocar, no solo
     que está mal.** "Respuesta incorrecta" o "No se pudo guardar" dejan a
     la persona sin saber qué hacer distinto. Hay que nombrar lo que
