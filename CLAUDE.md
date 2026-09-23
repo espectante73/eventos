@@ -367,12 +367,19 @@ en la sección que se indica entre paréntesis.
     mandan solo las filas que difieren de la última verdad del servidor,
     y **aparte** la lista completa de ids, que es lo único que el
     borrado necesita. Lo que no se manda, no se toca.
-    ⚠️ **Sigue sin arreglar en dos sitios**, y los dos tienen más de un
-    escritor: `guardar_fotos_familiares` (los colaboradores suben la
-    foto de boda) y `guardar_novedades` (un colaborador con el permiso
-    edita el tablón). Los demás (`mesas`, `gastos`, `colaboradores`,
-    `orden_familias`) solo los escribe el anfitrión: ahí el riesgo es
-    únicamente tener dos pestañas suyas abiertas.
+    ⚠️ **No hay "solo lo escribe el anfitrión".** Él es anfitrión Y
+    colaborador a la vez (lleva 10 invitados suyos) y puede tener el
+    formulario en el móvil y la lista en el portátil abiertos a la vez:
+    entonces son dos escritores aunque sea una sola persona. Lo dijo él
+    el 2026-09-23, y por eso se arreglaron **los siete sitios**, no solo
+    los que tenían un colaborador delante: invitados, novedades, fotos
+    familiares, mesas, colaboradores, gastos y orden de familias.
+    ⚠️ Y hay escritores que no son personas: el trigger
+    `invitados_invalidar_invitacion` pone `invitacionEnviada` a false por
+    su cuenta. Mandar `orden_familias` entera lo deshacía.
+    ⚠️ **No arreglarlo a medias** (él, el mismo día): un patrón peligroso
+    corregido en tres sitios de siete no protege nada, solo da sensación
+    de que está resuelto.
     («Tests»: `supabase/schema.test.js` y `src/reglas-del-proyecto.test.js`)
 
 

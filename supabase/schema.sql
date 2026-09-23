@@ -1105,7 +1105,8 @@ end;
 $$;
 
 -- Guarda la lista de colaboradores y sus permisos.
-CREATE FUNCTION public.anfitrion_guardar_colaboradores(p_token uuid, p_filas jsonb) RETURNS void
+-- ⚠️ Norma 18: p_filas son solo los cambiados; p_ids, los que deben quedar.
+CREATE FUNCTION public.anfitrion_guardar_colaboradores(p_token uuid, p_filas jsonb, p_ids uuid[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -1170,16 +1171,15 @@ begin
         "email" = excluded."email",
         "permisos" = excluded."permisos";
 
-  delete from colaboradores c
-  where not exists (
-    select 1 from jsonb_array_elements(p_filas) f
-    where (f->>'id')::uuid = c."id"
-  );
+  if p_ids is not null then
+    delete from colaboradores c where not (c."id" = any(p_ids));
+  end if;
 end;
 $$;
 
 -- Guarda la lista de gastos.
-CREATE FUNCTION public.anfitrion_guardar_gastos(p_token uuid, p_filas jsonb) RETURNS void
+-- ⚠️ Norma 18: p_filas son solo los cambiados; p_ids, los que deben quedar.
+CREATE FUNCTION public.anfitrion_guardar_gastos(p_token uuid, p_filas jsonb, p_ids uuid[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -1202,11 +1202,9 @@ begin
         "importe" = excluded."importe",
         "pagado" = excluded."pagado";
 
-  delete from gastos g
-  where not exists (
-    select 1 from jsonb_array_elements(p_filas) f
-    where (f->>'id')::uuid = g."id"
-  );
+  if p_ids is not null then
+    delete from gastos g where not (g."id" = any(p_ids));
+  end if;
 end;
 $$;
 
@@ -1274,7 +1272,8 @@ end;
 $$;
 
 -- Guarda las mesas y su posición en el plano.
-CREATE FUNCTION public.anfitrion_guardar_mesas(p_token uuid, p_filas jsonb) RETURNS void
+-- ⚠️ Norma 18: p_filas son solo las cambiadas; p_numeros, las que deben quedar.
+CREATE FUNCTION public.anfitrion_guardar_mesas(p_token uuid, p_filas jsonb, p_numeros integer[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -1283,10 +1282,9 @@ begin
     raise exception 'Token no válido';
   end if;
 
-  delete from mesas
-  where "numero" not in (
-    select (v->>'numero')::int from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
-  );
+  if p_numeros is not null then
+    delete from mesas where not ("numero" = any(p_numeros));
+  end if;
 
   insert into mesas ("numero", "capacidad", "posX", "posY")
   select (v->>'numero')::int,
@@ -1302,7 +1300,9 @@ end;
 $$;
 
 -- Guarda las novedades del tablón.
-CREATE FUNCTION public.anfitrion_guardar_novedades(p_token uuid, p_filas jsonb) RETURNS void
+-- ⚠️ Norma 18: p_filas son SOLO las novedades cambiadas. El borrado usa
+-- p_ids, la lista completa de las que deben quedar.
+CREATE FUNCTION public.anfitrion_guardar_novedades(p_token uuid, p_filas jsonb, p_ids uuid[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -1324,11 +1324,9 @@ begin
         "publicada" = excluded."publicada",
         "esNovedad" = excluded."esNovedad";
 
-  delete from novedades n
-  where not exists (
-    select 1 from jsonb_array_elements(p_filas) f
-    where (f->>'id')::uuid = n."id"
-  );
+  if p_ids is not null then
+    delete from novedades n where not (n."id" = any(p_ids));
+  end if;
 end;
 $$;
 

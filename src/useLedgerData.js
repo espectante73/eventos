@@ -80,7 +80,24 @@ export function useLedgerData(rol) {
   // función para los tres sitios que las cargan: antes cada uno copiaba
   // las tres líneas, y una columna nueva había que acordarse de añadirla
   // en los tres.
+  // La última verdad del servidor, para no mandar de vuelta filas que no
+  // hemos tocado (norma 18). Los colaboradores suben la foto de boda: si
+  // el anfitrión reenviara la colección entera con su copia, borraría la
+  // que acaban de subir.
+  const fotosServidorRef = useRef({});
+
   const repartirFilasDeFotos = (filas) => {
+    fotosServidorRef.current = Object.fromEntries(
+      (filas || []).map((r) => [
+        r.grupoFamiliar,
+        JSON.stringify({
+          url: r.url || "",
+          urlAniversario: r.urlAniversario || "",
+          urlBodaFinal: r.urlBodaFinal || "",
+          sinFotoBoda: Boolean(r.sinFotoBoda),
+        }),
+      ])
+    );
     const porFamilia = (dato) => Object.fromEntries((filas || []).map((r) => [r.grupoFamiliar, dato(r)]));
     setFotosFamiliares(porFamilia((r) => r.url));
     setFotosAniversario(porFamilia((r) => r.urlAniversario || ""));
@@ -450,9 +467,14 @@ export function useLedgerData(rol) {
     const anterior = mesasRef.current;
     setMesas(next);
     mesasRef.current = next;
+    // Norma 18: solo lo cambiado. `anterior` es lo último que se leyó
+    // del servidor; lo que no se manda, no se toca.
+    const yaEstaba = Object.fromEntries(anterior.map((x) => [x.numero, JSON.stringify(x)]));
+    const cambiadas = next.filter((x) => yaEstaba[x.numero] !== JSON.stringify(x));
     const { error } = await supabase.rpc("anfitrion_guardar_mesas", {
       p_token: rol,
-      p_filas: next,
+      p_filas: cambiadas,
+      p_numeros: next.map((m) => m.numero),
     });
     if (error) {
       avisar("No se pudieron guardar las mesas. Se deshace el cambio en pantalla.", error);
@@ -479,11 +501,26 @@ export function useLedgerData(rol) {
       urlBodaFinal: bodaFinal[grupoFamiliar] || "",
       sinFotoBoda: Boolean(sinBoda[grupoFamiliar]),
     }));
-    if (filas.length === 0) return null;
+    // Norma 18: solo lo que difiere de lo que tiene el servidor. Esta
+    // función no borra lo que no llega, pero SÍ reescribe las cuatro
+    // columnas de cada fila que se manda — mandarlas todas era pisar con
+    // una copia vieja la foto que un colaborador acabara de subir.
+    const cambiadas = filas.filter(
+      ({ grupoFamiliar, url, urlAniversario, urlBodaFinal, sinFotoBoda }) =>
+        fotosServidorRef.current[grupoFamiliar] !==
+        JSON.stringify({ url, urlAniversario, urlBodaFinal, sinFotoBoda })
+    );
+    if (cambiadas.length === 0) return null;
     const { error } = await supabase.rpc("guardar_fotos_familiares", {
       p_token: rol,
-      p_filas: filas,
+      p_filas: cambiadas,
     });
+    if (!error) {
+      for (const f of cambiadas) {
+        const { grupoFamiliar, ...resto } = f;
+        fotosServidorRef.current[grupoFamiliar] = JSON.stringify(resto);
+      }
+    }
     return error;
   }, [rol]);
 
@@ -545,10 +582,24 @@ export function useLedgerData(rol) {
       invitacionEnviada: Boolean(datos.invitacionEnviada),
       invitacionEnviadaEn: datos.invitacionEnviadaEn || null,
     }));
-    if (filas.length === 0) return;
+    // Norma 18. Aquí hay un segundo escritor que no es una persona: el
+    // trigger `invitados_invalidar_invitacion` pone `invitacionEnviada`
+    // a false solo. Mandar la colección entera lo deshacía.
+    const yaEstaba = Object.fromEntries(
+      Object.entries(anterior).map(([g, d]) => [
+        g,
+        JSON.stringify({
+          orden: d.orden || [],
+          invitacionEnviada: Boolean(d.invitacionEnviada),
+          invitacionEnviadaEn: d.invitacionEnviadaEn || null,
+        }),
+      ])
+    );
+    const cambiadas = filas.filter(({ grupoFamiliar, ...resto }) => yaEstaba[grupoFamiliar] !== JSON.stringify(resto));
+    if (cambiadas.length === 0) return;
     const { error } = await supabase.rpc("guardar_orden_familias", {
       p_token: rol,
-      p_filas: filas,
+      p_filas: cambiadas,
     });
     if (error) {
       avisar("No se pudo guardar el orden de la familia. Se deshace el cambio en pantalla.", error);
@@ -563,9 +614,14 @@ export function useLedgerData(rol) {
       setColaboradores(next);
       colaboradoresRef.current = next;
       if (!esAnfitrion) return; // Un colaborador nunca modifica la lista de colaboradores.
+      // Norma 18: solo lo cambiado. `anterior` es lo último que se leyó
+      // del servidor; lo que no se manda, no se toca.
+      const yaEstaba = Object.fromEntries(anterior.map((x) => [x.id, JSON.stringify(x)]));
+      const cambiadas = next.filter((x) => yaEstaba[x.id] !== JSON.stringify(x));
       const { error } = await supabase.rpc("anfitrion_guardar_colaboradores", {
         p_token: rol,
-        p_filas: next,
+        p_filas: cambiadas,
+        p_ids: next.map((c) => c.id),
       });
       if (error) {
         avisar("No se pudieron guardar los colaboradores. Se deshace el cambio en pantalla.", error);
@@ -582,9 +638,14 @@ export function useLedgerData(rol) {
       setGastos(next);
       gastosRef.current = next;
       if (!esAnfitrion) return; // Estado de cuentas: solo el anfitrión lo toca.
+      // Norma 18: solo lo cambiado. `anterior` es lo último que se leyó
+      // del servidor; lo que no se manda, no se toca.
+      const yaEstaba = Object.fromEntries(anterior.map((x) => [x.id, JSON.stringify(x)]));
+      const cambiadas = next.filter((x) => yaEstaba[x.id] !== JSON.stringify(x));
       const { error } = await supabase.rpc("anfitrion_guardar_gastos", {
         p_token: rol,
-        p_filas: next,
+        p_filas: cambiadas,
+        p_ids: next.map((g) => g.id),
       });
       if (error) {
         avisar("No se pudo guardar el estado de cuentas. Se deshace el cambio en pantalla.", error);
@@ -691,9 +752,22 @@ export function useLedgerData(rol) {
       const anterior = novedadesRef.current;
       setNovedades(next);
       novedadesRef.current = next;
+      // Norma 18. Aquí hay dos escritores de verdad: el anfitrión y un
+      // colaborador con el permiso "novedades_editar". Mandar la lista
+      // entera reescribía el título y el cuerpo de TODAS las novedades
+      // con la copia de quien guardara último.
+      const anteriorSerializado = Object.fromEntries(anterior.map((n) => [n.id, JSON.stringify(n)]));
+      const cambiadas = next.filter((n) => anteriorSerializado[n.id] !== JSON.stringify(n));
       const { error } = esAnfitrion
-        ? await supabase.rpc("anfitrion_guardar_novedades", { p_token: rol, p_filas: next })
-        : await supabase.rpc("colaborador_guardar_novedades", { p_colaborador_id: rol, p_filas: next });
+        ? await supabase.rpc("anfitrion_guardar_novedades", {
+            p_token: rol,
+            p_filas: cambiadas,
+            p_ids: next.map((n) => n.id),
+          })
+        : await supabase.rpc("colaborador_guardar_novedades", {
+            p_colaborador_id: rol,
+            p_filas: cambiadas,
+          });
       if (error) {
         // eslint-disable-next-line no-console
         console.error("No se pudo guardar el tablón de novedades.", error);

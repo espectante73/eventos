@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "40.1",
+    cambios: [
+      "El mismo arreglo de la v40, aplicado a todo lo demás: novedades, fotos de boda, mesas, colaboradores, gastos y orden de familias. Ninguno vuelve a mandar la lista entera al guardar.",
+      "Hacía falta porque tú eres anfitrión y colaborador a la vez: con el móvil y el portátil abiertos, ya son dos personas escribiendo.",
+    ],
+  },
+  {
     version: "40",
     cambios: [
       "Arreglado un fallo que aún no había dado la cara: al guardar la Lista de invitados se mandaba la lista entera, así que podías borrar sin enterarte lo que un colaborador acabara de rellenar en ese minuto. Ahora se manda solo lo que has cambiado tú.",

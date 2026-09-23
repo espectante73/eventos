@@ -110,4 +110,23 @@ describe("el guardado del anfitrión manda solo lo cambiado", () => {
   it("manda aparte la lista completa de ids, para el borrado", () => {
     expect(ledger).toContain("p_ids: next.map((g) => g.id)");
   });
+
+  // Norma 18, los otros dos sitios con más de un escritor. El usuario es
+  // anfitrión Y colaborador a la vez (lleva 10 invitados suyos), así que
+  // puede tener el móvil y el portátil escribiendo a la vez él solo.
+  it("las novedades también mandan solo lo cambiado", () => {
+    expect(ledger).toContain("p_filas: cambiadas,");
+    expect(ledger).not.toMatch(/guardar_novedades[\s\S]{0,140}p_filas:\s*next\b/);
+  });
+
+  it("las fotos familiares también", () => {
+    expect(ledger).toMatch(/const cambiadas = filas\.filter/);
+    expect(ledger).not.toMatch(/guardar_fotos_familiares[\s\S]{0,120}p_filas:\s*filas\b/);
+  });
+
+  it("ninguna llamada de guardado manda una colección entera", () => {
+    const sospechosas = [...ledger.matchAll(/p_filas:\s*(\w+)/g)].map((m) => m[1]);
+    // `cambiadas` es lo correcto; cualquier otra cosa es la lista entera.
+    expect([...new Set(sospechosas)]).toEqual(["cambiadas"]);
+  });
 });
