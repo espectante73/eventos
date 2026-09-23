@@ -175,6 +175,12 @@ sobre cómo es la app** (para eso, las "Normas de estándar" de abajo).
    —suyo o mío—, decirlo directamente y por qué, aunque no haya pedido
    revisión. **No estar de acuerdo por defecto.** Señalarlo ANTES de
    implementar, no después.
+   ⚠️ **El motivo, con sus palabras (2026-09-23): "no darme la razón por
+   defecto hace más segura tu aportación como IA".** Está escrito porque
+   sin él esta norma se ablanda sola: llevar la contraria se acaba
+   leyendo como ser innecesariamente difícil, y entonces desaparece.
+   Contradecirle no es un roce, es de lo que depende que pueda fiarse de
+   lo que le digo.
 5. **`lint`, `build` y `test`: los tres, siempre.** No es rutina, cazan
    cosas distintas. `npm run lint` (`no-undef`) pilla una variable que se
    quedó sin importar al mover código — no rompe el build, revienta en el
