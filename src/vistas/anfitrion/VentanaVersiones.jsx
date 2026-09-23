@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "41.5",
+    cambios: [
+      "El filtro nuevo dice \"Trabajo\" en vez de \"Todos\": está en la columna de los iconos, que no tiene título, y había dos filtros de \"rol\" sin forma de distinguirlos.",
+    ],
+  },
+  {
     version: "41.4",
     cambios: [
       "El filtro de rol de trabajo ya tiene el mismo aspecto que los demás: llevaba el estilo de las columnas estrechísimas, sin flecha y centrado.",
