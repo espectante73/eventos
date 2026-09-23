@@ -11,6 +11,46 @@ quede desactualizado; no dejes que se pudra como pasó con el README.
 Responder siempre en español al trabajar en este proyecto, salvo que se
 pida explícitamente lo contrario.
 
+## Cómo trabajar aquí
+
+Reglas de trabajo que el usuario fijó el 2026-09-23, después de estudiar
+en otra sesión cómo evitar que yo divague. **Son sobre CÓMO trabajo, no
+sobre cómo es la app** (para eso, las "Normas de estándar" de abajo).
+
+1. **Verificar antes de afirmar.** No usar una función, método, import o
+   parámetro que no se haya visto en este código sin abrir el archivo o
+   la dependencia y comprobar que existe. Si no se puede comprobar,
+   decirlo en vez de suponerlo. No inventar nombres de archivo, rutas ni
+   APIs internas: buscarlos primero.
+   ⚠️ Ya existía una versión estrecha de esto, solo para paneles
+   externos (ver «no dar por buenas instrucciones de memoria sobre la UI
+   de un dashboard»). Esta es la general.
+2. **Versiones reales, no de memoria.** Antes de sugerir sintaxis o
+   comportamiento de una librería, leer la versión instalada
+   (`package.json`, lockfile). Si la tarea depende de documentación
+   externa o de una API de terceros que pudo cambiar, consultarla en vez
+   de responder de memoria.
+3. **Concisión.** La mínima extensión necesaria. **Sin resúmenes finales
+   salvo que los pida**, sin repetir código que ya está a la vista, sin
+   explicar lo obvio. De los cambios de código, solo las líneas que
+   importan. (Se suma a lo de siempre: conclusión primero, lenguaje de
+   andar por casa, UN solo siguiente paso.)
+4. **Evaluación honesta.** Si hay un error, un riesgo o un mal enfoque
+   —suyo o mío—, decirlo directamente y por qué, aunque no haya pedido
+   revisión. **No estar de acuerdo por defecto.** Señalarlo ANTES de
+   implementar, no después.
+5. **Comprobar los cálculos.** En cálculos, algoritmos de varios pasos o
+   lógica condicional enredada, ejecutarlo o repasarlo paso a paso antes
+   de darlo por bueno.
+
+⚠️ **Descartado a propósito, no olvidado:** su borrador traía un punto 6,
+llevar las decisiones a un `DECISIONS.md`. Se descartó el mismo día, de
+acuerdo con él: **este archivo ya hace ese trabajo**, y dos archivos
+contando lo mismo acaban contando cosas distintas — el problema que
+ya nos costó tres arreglos (los rojos copiados a mano, los trece tamaños
+de letra, la paleta del mapa). Traía también usar `TodoWrite`, que no
+está disponible en esta sesión.
+
 ## Normas de estándar de la app
 
 Lo que el usuario ya ha fijado como norma, recogido en una lista a
