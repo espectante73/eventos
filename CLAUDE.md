@@ -380,6 +380,9 @@ en la sección que se indica entre paréntesis.
     ⚠️ **No arreglarlo a medias** (él, el mismo día): un patrón peligroso
     corregido en tres sitios de siete no protege nada, solo da sensación
     de que está resuelto.
+    ✅ Los siete arreglados, SQL ejecutado y guardado probado en vivo el
+    2026-09-23 (`v40-guardar-solo-lo-cambiado` y
+    `v40.1-colaboradores-solo-lo-cambiado` en `migraciones_aplicadas`).
     («Tests»: `supabase/schema.test.js` y `src/reglas-del-proyecto.test.js`)
 
 
