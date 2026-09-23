@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "40.3",
+    cambios: [
+      "El ojo para ver la contraseña, en los cuatro sitios donde se escribe una: entrar, crear cuenta y las dos de cambiarla.",
+      "Y en el tablón, cuando un invitado no acierta su nombre, se le dice en qué se ha podido equivocar: primero el apellido, después el nombre, y que las mayúsculas y los acentos dan igual.",
+    ],
+  },
+  {
     version: "40.2",
     cambios: [
       "Al crear la cuenta, el colaborador ya no se queda mirando el mismo formulario sin saber si funcionó: sale una pantalla entera que dice que su cuenta está creada y que revise el correo, avisando de que suele caer en spam.",

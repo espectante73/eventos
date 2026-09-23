@@ -29,6 +29,7 @@ import { C, inputStyle, OP, S } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { Boton, EnlaceTexto } from "../components/Boton";
+import { CampoContrasena } from "../components/CampoContrasena";
 
 const TITULOS = { entrar: "Entrar", crear: "Crear cuenta", recuperar: "Recuperar contraseña" };
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
@@ -299,16 +300,11 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
         )}
         {modo !== "recuperar" && (
           <>
-            <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
-              Contraseña
-            </label>
-            <input
-              type="password"
+            <CampoContrasena
+              className="mb-3"
               autoComplete={modo === "entrar" ? "current-password" : "new-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full mb-3"
-              style={{ ...inputStyle, width: "100%", height: 42 }}
               required
             />
           </>

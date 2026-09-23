@@ -356,6 +356,15 @@ en la sección que se indica entre paréntesis.
     tarjetas, paneles y formularios, **nunca en las filas de las
     tablas** — ahí mandan las normas 7 y 8. («El acabado, con una escala
     y no a ojo»)
+19. **Un mensaje de error dice en qué se ha podido equivocar, no solo
+    que está mal.** "Respuesta incorrecta" o "No se pudo guardar" dejan a
+    la persona sin saber qué hacer distinto. Hay que nombrar lo que
+    puede fallar y lo que no importa: *"escribe primero tu apellido y
+    después tu nombre; da igual las mayúsculas y los acentos"*. Y si el
+    motivo es técnico, va en letra pequeña (`detalle` de
+    `PreguntaSeguridad`). ⚠️ Antes de escribir un "no importa", mirar el
+    código que compara: aquí `normalizar_nombre_tablon` perdona
+    mayúsculas, acentos, comas y espacios, pero **no el orden**.
 18. **Guardar solo lo que cambió, nunca el estado entero.** Cuando dos
     personas pueden escribir a la vez —y aquí pueden: el anfitrión y sus
     colaboradores, o el propio anfitrión con el móvil y el Mac abiertos—

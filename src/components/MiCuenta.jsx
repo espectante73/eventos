@@ -25,6 +25,7 @@ import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
 import { ANCHO_FILA_MENU } from "./MenuFlotante";
 import { ModalMapaSitio } from "./MapaSitio";
+import { CampoContrasena } from "./CampoContrasena";
 import { URL_REGISTRO_ERRORES } from "../constants";
 import { useMano, MANO } from "../lib/mano";
 
@@ -305,14 +306,13 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
             <p className="text-sm font-medium mb-2" style={{ color: C.ink, fontFamily: "'Fraunces', serif" }}>
               Cambiar mi contraseña
             </p>
-            <input
-              type="password"
+            <CampoContrasena
+              etiqueta=""
+              className="mb-2"
               autoComplete="new-password"
               placeholder="Mínimo 8 caracteres"
               value={nuevaContrasena}
               onChange={(e) => setNuevaContrasena(e.target.value)}
-              className="w-full mb-2"
-              style={{ ...inputStyle, width: "100%" }}
               required
             />
             {avisoContrasena && (

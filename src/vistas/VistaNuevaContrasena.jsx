@@ -5,7 +5,8 @@
 // contraseña nueva que pidió.
 import { useState } from "react";
 import { Boton } from "../components/Boton";
-import { C, inputStyle, OP, S } from "../theme";
+import { CampoContrasena } from "../components/CampoContrasena";
+import { C, S } from "../theme";
 import { supabase } from "../supabaseClient";
 
 export function VistaNuevaContrasena({ onListo }) {
@@ -51,28 +52,20 @@ export function VistaNuevaContrasena({ onListo }) {
         >
           Elige tu contraseña nueva
         </h1>
-        <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
-          Contraseña nueva
-        </label>
-        <input
-          type="password"
+        <CampoContrasena
+          etiqueta="Contraseña nueva"
+          className="mb-3"
           autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full mb-3"
-          style={{ ...inputStyle, width: "100%", height: 42 }}
           required
         />
-        <label className="block text-xs mb-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
-          Repite la contraseña
-        </label>
-        <input
-          type="password"
+        <CampoContrasena
+          etiqueta="Repite la contraseña"
+          className="mb-3"
           autoComplete="new-password"
           value={confirmacion}
           onChange={(e) => setConfirmacion(e.target.value)}
-          className="w-full mb-3"
-          style={{ ...inputStyle, width: "100%", height: 42 }}
           required
         />
         {error && (
