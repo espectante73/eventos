@@ -408,6 +408,13 @@ export function SeccionInvitados({
             return g.pagado ? 1 : 0;
           case "presente":
             return g.presente ? 1 : 0;
+          // Los que tienen función, arriba y juntos por función; los que
+          // no tienen, al final. Es como se repasa cuando buscas a los
+          // acomodadores.
+          case "rolTrabajo": {
+            const suyos = Array.isArray(g.rolesTrabajo) ? [...g.rolesTrabajo].sort() : [];
+            return suyos.length > 0 ? `0${suyos.join(",")}` : "1";
+          }
           default:
             return `${(g.apellido || "").toLowerCase()} ${(g.nombre || "").toLowerCase()}`;
         }
@@ -745,7 +752,15 @@ export function SeccionInvitados({
                     Llegó
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(11), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}></span>
+                {/* El título va ARRIBA y el filtro abajo, como en todas
+                    las demás columnas (usuario, 2026-09-23: lo tenía al
+                    revés). "Función" es lo que hace esa persona el día
+                    del evento — acomodador, barra… */}
+                <span style={{ background: tintaColumnaCabecera(11), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                  <EncabezadoOrdenable claro sinDivisor columna="rolTrabajo" orden={orden} onClick={cambiarOrden}>
+                    Función
+                  </EncabezadoOrdenable>
+                </span>
               </div>
               {/* Fila de filtros, subida aquí junto a la cabecera de
                   columnas (antes vivía sola en la caja blanca) -- a
@@ -1085,7 +1100,7 @@ export function SeccionInvitados({
                           filtro de "rol" en la tabla (el familiar), así que
                           la palabra tiene que separarlos. Lo vio el usuario,
                           2026-09-23. */}
-                      <option value="">Función</option>
+                      <option value="">Todos</option>
                       {rolesConocidos.map((r) => (
                         <option key={r} value={r}>
                           {r}
