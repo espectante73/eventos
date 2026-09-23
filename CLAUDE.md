@@ -57,6 +57,17 @@ párrafo:
 - ¿Ninguno de los dos? → **no se escribe.** El código ya lo cuenta, git
   guarda cómo se llegó, y los tests vigilan lo que se puede vigilar.
 
+Dicho como lo dijo él, que es más corto: **o es una norma de la app, o
+es una trampa corregida que explica por qué algo se hace así. Todo lo
+que salga de ahí es relato, y por tanto innecesario.**
+
+⚠️ Con un tercer caso que PARECE relato y no lo es: **una decisión que él
+descartó.** El mapa que se queda público, el `DECISIONS.md` que no se
+hizo, las dos alternativas de Aniversarios que rechazó. No son normas ni
+fallos, pero sin ellas escritas se las vuelvo a proponer dentro de seis
+meses y le hago perder el rato otra vez. Eso es lo que recoge la segunda
+mitad de la pregunta: «o qué decisión desharía».
+
 Y cuatro reglas que salen de esta criba, cada una de un error real:
 
 1. **Si un fallo se cierra con un test, el test ES el registro.** No se
