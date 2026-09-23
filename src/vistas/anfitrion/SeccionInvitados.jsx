@@ -1060,30 +1060,31 @@ export function SeccionInvitados({
                       value={filtros.rolTrabajo || ""}
                       onChange={(e) => setFiltros({ ...filtros, rolTrabajo: e.target.value })}
                       title="Filtrar por rol de trabajo del día"
+                      // Mismo estilo EXACTO que el filtro de al lado
+                      // ("Llegó"): la flecha quitada y el texto centrado
+                      // son solo de las columnas estrechísimas (rol
+                      // familiar, datos), no del resto. Lo señaló el
+                      // usuario, 2026-09-23.
                       style={{
                         ...inputStyle,
                         border: "none",
                         background: "transparent",
                         color: C.goldClaro,
                         fontFamily: "'IBM Plex Mono', monospace",
-                        padding: "2px 0",
+                        padding: "2px 4px",
                         fontSize: T.pequeno,
                         width: "100%",
                         minWidth: 0,
-                        appearance: "none",
-                        WebkitAppearance: "none",
-                        MozAppearance: "none",
-                        textAlign: "center",
-                        textAlignLast: "center",
+                        boxSizing: "border-box",
                       }}
                     >
-                      <option value="">Rol</option>
+                      <option value="">Todos</option>
                       {rolesConocidos.map((r) => (
                         <option key={r} value={r}>
                           {r}
                         </option>
                       ))}
-                      <option value="sin">sin rol</option>
+                      <option value="sin">Sin rol</option>
                     </select>
                   )}
                 </span>

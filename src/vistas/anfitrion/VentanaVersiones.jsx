@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "41.4",
+    cambios: [
+      "El filtro de rol de trabajo ya tiene el mismo aspecto que los demás: llevaba el estilo de las columnas estrechísimas, sin flecha y centrado.",
+    ],
+  },
+  {
     version: "41.3",
     cambios: [
       "En Invitaciones, los ajustes de la plantilla se pliegan: lo que se viene a hacer ahí es mandar invitaciones, no cambiar la imagen.",
