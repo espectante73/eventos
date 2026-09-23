@@ -356,6 +356,25 @@ en la sección que se indica entre paréntesis.
     tarjetas, paneles y formularios, **nunca en las filas de las
     tablas** — ahí mandan las normas 7 y 8. («El acabado, con una escala
     y no a ojo»)
+18. **Guardar solo lo que cambió, nunca el estado entero.** Cuando dos
+    personas pueden escribir a la vez —y aquí pueden: el anfitrión y sus
+    colaboradores, o el propio anfitrión con el móvil y el Mac abiertos—
+    mandar la colección completa significa **escribir tu copia encima de
+    lo que el otro acaba de guardar**. Se pierde sin error y sin aviso:
+    el dato simplemente vuelve atrás. Lo destapó él el 2026-09-23
+    preguntando qué pasa con varios colaboradores a la vez.
+    **Cómo se hace bien** (modelo: `anfitrion_guardar_invitados`): se
+    mandan solo las filas que difieren de la última verdad del servidor,
+    y **aparte** la lista completa de ids, que es lo único que el
+    borrado necesita. Lo que no se manda, no se toca.
+    ⚠️ **Sigue sin arreglar en dos sitios**, y los dos tienen más de un
+    escritor: `guardar_fotos_familiares` (los colaboradores suben la
+    foto de boda) y `guardar_novedades` (un colaborador con el permiso
+    edita el tablón). Los demás (`mesas`, `gastos`, `colaboradores`,
+    `orden_familias`) solo los escribe el anfitrión: ahí el riesgo es
+    únicamente tener dos pestañas suyas abiertas.
+    («Tests»: `supabase/schema.test.js` y `src/reglas-del-proyecto.test.js`)
+
 
 ## Reglas de diseño ya decididas
 

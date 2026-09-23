@@ -1211,7 +1211,13 @@ end;
 $$;
 
 -- Guarda la lista de invitados. Es la función más usada de toda la app.
-CREATE FUNCTION public.anfitrion_guardar_invitados(p_token uuid, p_filas jsonb) RETURNS void
+-- ⚠️ p_filas son SOLO las filas cambiadas, no la lista entera
+-- (2026-09-23). Mandarla entera hacía que el anfitrión pisara sin
+-- enterarse lo que un colaborador acabara de rellenar: su pantalla podía
+-- llevar hasta un minuto abierta y guardaba su copia vieja de TODOS. El
+-- borrado necesita aparte la lista completa de ids (p_ids), que es como
+-- se sabe a quién se ha quitado.
+CREATE FUNCTION public.anfitrion_guardar_invitados(p_token uuid, p_filas jsonb, p_ids uuid[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -1259,11 +1265,11 @@ begin
     "sinEmail"=excluded."sinEmail",
     "conservarDatos"=excluded."conservarDatos";
 
-  delete from invitados g
-  where not exists (
-    select 1 from jsonb_array_elements(p_filas) f
-    where (f->>'id')::uuid = g."id"
-  );
+  -- Solo se borra si de verdad llega la lista de quién debe quedar: un
+  -- p_ids nulo por error no puede vaciar la tabla.
+  if p_ids is not null then
+    delete from invitados g where not (g."id" = any(p_ids));
+  end if;
 end;
 $$;
 

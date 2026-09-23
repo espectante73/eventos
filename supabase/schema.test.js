@@ -90,6 +90,31 @@ describe("nada abierto a escritura anónima", () => {
   });
 });
 
+describe("el anfitrión no pisa lo que rellena un colaborador", () => {
+  // 2026-09-23. El guardado del anfitrión mandaba la lista ENTERA y la
+  // función borraba a quien no viniera en ella. Su pantalla puede llevar
+  // hasta un minuto abierta: si un colaborador rellenaba un email en ese
+  // rato, el siguiente guardado del anfitrión lo devolvía a como estaba
+  // en su copia, sin error y sin aviso. Con un colaborador no coincidía;
+  // con cinco a la vez, sí.
+  const cuerpo = cuerpoDe("anfitrion_guardar_invitados");
+
+  it("recibe la lista de ids aparte de las filas", () => {
+    expect(sql).toContain("anfitrion_guardar_invitados(p_token uuid, p_filas jsonb, p_ids uuid[])");
+  });
+
+  it("borra por p_ids, nunca por ausencia en p_filas", () => {
+    expect(cuerpo).toMatch(/delete from invitados[\s\S]*p_ids/);
+    expect(cuerpo, "vuelve a borrar por lo que falte en p_filas").not.toMatch(
+      /delete from invitados[\s\S]{0,200}jsonb_array_elements\(p_filas\)/
+    );
+  });
+
+  it("un p_ids nulo no puede vaciar la tabla", () => {
+    expect(cuerpo).toContain("if p_ids is not null then");
+  });
+});
+
 describe("el token del anfitrión siempre es uuid", () => {
   // 2026-09-06: cuatro funciones se escribieron con `p_token text`
   // mientras `anfitrion_secreto.token` es uuid. La comparación no

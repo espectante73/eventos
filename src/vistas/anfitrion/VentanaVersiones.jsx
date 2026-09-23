@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "40",
+    cambios: [
+      "Arreglado un fallo que aún no había dado la cara: al guardar la Lista de invitados se mandaba la lista entera, así que podías borrar sin enterarte lo que un colaborador acabara de rellenar en ese minuto. Ahora se manda solo lo que has cambiado tú.",
+      "Con un colaborador era casi imposible que pasara. Con cinco rellenando a la vez, no.",
+    ],
+  },
+  {
     version: "39.4",
     cambios: [
       "La nota de privacidad ya se puede editar, en Datos del evento, con el mismo editor que los textos de email (formato, deshacer e historial).",

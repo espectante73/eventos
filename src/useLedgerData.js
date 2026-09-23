@@ -844,9 +844,30 @@ export function useLedgerData(rol) {
           (g) => g.id in presenciaPorId && presenciaPorId[g.id] !== Boolean(g.presente)
         );
 
+        // ⚠️ Se mandan SOLO las filas que el anfitrión ha cambiado, no
+        // la lista entera (2026-09-23). Antes se mandaba entera y la
+        // función borraba a quien no viniera: si un colaborador rellenaba
+        // un email mientras esta pantalla llevaba un rato abierta, el
+        // siguiente guardado del anfitrión lo devolvía a como estaba en
+        // SU copia. Sin error y sin aviso — el dato simplemente volvía
+        // atrás. Con un colaborador no coincidía nunca; con cinco a la
+        // vez, sí.
+        //
+        // `anterior` es la última verdad del servidor: después de cada
+        // guardado se recarga con anfitrion_listar_invitados (unas
+        // líneas más abajo) y el refresco de cada minuto hace lo mismo.
+        // Lo que no está en `cambiadas` no se toca, así que el trabajo
+        // de los colaboradores sobrevive.
+        //
+        // `p_ids` va aparte porque el borrado sí necesita la lista
+        // completa: es como la función sabe a quién se ha quitado.
+        const anteriorSerializado = Object.fromEntries(anterior.map((g) => [g.id, JSON.stringify(g)]));
+        const cambiadas = next.filter((g) => anteriorSerializado[g.id] !== JSON.stringify(g));
+
         const { error } = await supabase.rpc("anfitrion_guardar_invitados", {
           p_token: rol,
-          p_filas: next,
+          p_filas: cambiadas,
+          p_ids: next.map((g) => g.id),
         });
         if (error) avisar("No se pudieron guardar los invitados.", error);
         else llegadasCambiadas.forEach((g) => avisarLlegada(g.id, Boolean(g.presente)));

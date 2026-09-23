@@ -90,3 +90,24 @@ describe("CI y la máquina de desarrollo, la misma versión de Node", () => {
     expect(m[1]).toBe(nvmrc);
   });
 });
+
+describe("el guardado del anfitrión manda solo lo cambiado", () => {
+  // La otra mitad del mismo arreglo: si el cliente vuelve a mandar
+  // `next` entero, la función nueva ya no borra de más pero el anfitrión
+  // seguiría pisando con su copia vieja lo que un colaborador acabe de
+  // rellenar.
+  const ledger = leer("src/useLedgerData.js");
+
+  it("calcula las filas cambiadas contra la última verdad del servidor", () => {
+    expect(ledger).toMatch(/const cambiadas = next\.filter/);
+  });
+
+  it("no manda la lista entera como p_filas", () => {
+    expect(ledger).toContain("p_filas: cambiadas,");
+    expect(ledger).not.toMatch(/anfitrion_guardar_invitados[\s\S]{0,120}p_filas:\s*next\b/);
+  });
+
+  it("manda aparte la lista completa de ids, para el borrado", () => {
+    expect(ledger).toContain("p_ids: next.map((g) => g.id)");
+  });
+});
