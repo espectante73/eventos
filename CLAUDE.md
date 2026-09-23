@@ -61,12 +61,25 @@ Dicho como lo dijo él, que es más corto: **o es una norma de la app, o
 es una trampa corregida que explica por qué algo se hace así. Todo lo
 que salga de ahí es relato, y por tanto innecesario.**
 
-⚠️ Con un tercer caso que PARECE relato y no lo es: **una decisión que él
-descartó.** El mapa que se queda público, el `DECISIONS.md` que no se
-hizo, las dos alternativas de Aniversarios que rechazó. No son normas ni
-fallos, pero sin ellas escritas se las vuelvo a proponer dentro de seis
-meses y le hago perder el rato otra vez. Eso es lo que recoge la segunda
-mitad de la pregunta: «o qué decisión desharía».
+⚠️ **Un "no" razonado suyo ES una norma**, aunque no lo parezca. Lo
+planteó él el 2026-09-23 y tiene razón: después de pesar juntos los pros
+y los contras, la conclusión *"esto no se hace así, y este es el
+motivo"* cumple todo lo que cumple una norma — es una decisión y no un
+suceso, vale hacia adelante, no caduca, y **si no se conoce se
+incumple**, que es la prueba de fuego: se la vuelvo a proponer. El mapa
+que se queda público, el `DECISIONS.md` que no se hizo, las dos
+alternativas de Aniversarios que rechazó: todo eso va a la PARTE 1, en
+negativo, no a ningún cajón aparte.
+
+Lo mismo con un duplicado que se descubre. El hallazgo es relato ("los
+rojos estaban copiados a mano"); la conclusión es la norma ("los colores
+salen de `theme.js`, nunca escritos en el sitio").
+
+⚠️ **Y de ahí, cómo se escribe una norma: la norma es la CONCLUSIÓN, no
+la discusión.** Los pros y los contras que se pesaron son relato. Lo que
+se escribe son dos frases — la decisión y el motivo —, no el camino
+hasta ellas. Al revés de lo que yo venía haciendo: contar el
+razonamiento entero y dejar la conclusión enterrada al final.
 
 Y cuatro reglas que salen de esta criba, cada una de un error real:
 
