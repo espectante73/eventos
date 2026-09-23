@@ -144,6 +144,19 @@ siendo verdad**. Así que el guardia es de mano, y va en dos momentos:
   código. Si ya no describe lo que hay, se corrige en el mismo cambio.
 - **Al escribir una norma nueva**, buscar si ya existe otra que diga lo
   contrario. Eso es justo lo que falló con la 13.
+- ⚠️ **Al BORRAR código, borrar su norma en el mismo cambio.** Si
+  desaparece el botón, la función o la ventana que una regla vigilaba,
+  esa regla deja de proteger y pasa a mentir. Pasó con `lib/backup.js`:
+  se borró en la v34 y su trampa siguió seis días diciendo que "sigue en
+  uso". Una regla falsa es peor que ninguna — me haría proteger algo que
+  no existe.
+
+⚠️ **Y la consecuencia buena, que la vio él (2026-09-23): este archivo
+encoge cuando la APP se simplifica, no cuando se edita el texto.** Si
+dos conceptos se funden, sobra una de sus dos reglas; si una función
+desaparece, sobra su trampa entera. Igual que un test lo encoge porque
+la app es más segura. En los tres casos el texto sigue a la realidad, y
+nunca al revés.
 
 ======================================================================
 
