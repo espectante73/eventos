@@ -30,6 +30,13 @@ export function montar(elemento) {
     // Volver a dibujar con otras propiedades, sin montar otra vez.
     pintar: (otro) => act(() => raiz.render(otro)),
     pulsar: (el) => act(() => el.dispatchEvent(new MouseEvent("click", { bubbles: true }))),
+    // Elegir en un desplegable. React escucha "change", y el valor hay
+    // que ponerlo antes de avisar.
+    elegir: (select, valor) =>
+      act(() => {
+        select.value = valor;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      }),
     desmontar: () => {
       act(() => raiz.unmount());
       contenedor.remove();

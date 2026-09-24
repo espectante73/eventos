@@ -982,21 +982,6 @@ redacción no es recortar: si la norma sigue ahí, las palabras vuelven
 la próxima vez que haya que explicarla. Recortar es **quitar**, o dejar
 el puntero a un test.
 
-**⏳ ENCARGO ABIERTO: pruebas que DIBUJAN cada pantalla.** Nació el
-2026-09-24: un "Algo ha fallado" al pulsar un filtro que no vieron ni el
-lint, ni el build, ni las 305 pruebas de entonces. La Lista de invitados
-ya la tiene (`SeccionInvitados.pantalla.test.jsx`). Faltan, por orden de
-riesgo: el **formulario del colaborador** (lo abren 13 personas que no
-son él), el **Cronograma** y **Estado de cuentas**. ⚠️ Antes de escribir
-ninguna: hay **cuatro recetas distintas** de dibujar un componente en las
-pruebas, tres de ellas copiadas entre sí (`Boton`, `Widgets`,
-`PreguntaSeguridad`) y la cuarta la de la Lista. Primero **un solo
-ayudante** y las cuatro a él (norma 8); si no, serían siete copias. Y al
-final, un guardia que exija la prueba de cada ventana, para no tener que
-escribirlo como norma: **cero palabras**. Entonces se podrá podar el
-párrafo de 117 palabras «Sin acceso a un navegador real» de la PARTE 2,
-cuya conclusión ya es la norma 15.
-
 **Adelgazar la PARTE 2 convirtiendo trampas en tests** (idea suya,
 2026-09-23; no toca ahora). A medida que la app se concrete, algunas
 trampas dejarán de poder ocurrir y su párrafo podrá quedarse en una
@@ -1052,18 +1037,6 @@ reutiliza los datos que el anfitrión ya tiene cargados enteros. Lección:
 cualquier RPC `colaborador_*` nueva que dependa de `auth.uid()` debe
 asumir que el anfitrión puede querer "verla" sin ser esa persona --
 para eso está `vistaPrevia`, no para añadir excepciones a la propia RPC.
-
-⚠️ **Sin acceso a un navegador real para verificar visualmente estos
-cambios en vivo** (la sandbox no deja que un navegador headless lanzado
-aquí alcance `localhost`, y no hay credenciales de anfitrión
-compartidas) -- todo este repaso se verificó con lint/build y revisión
-cuidadosa del código, y se corrigió con las capturas reales que fue
-mandando el usuario en cada ronda. Varios bugs reales se colaron así
-(recorte de imagen por aspect-ratio, imagen equivocada usada en la
-Portada, fecha/hora/lugar desaparecidos por una condición mal
-compartida, sticky roto por overflow-hidden) -- si se retoma este
-repaso visual, pedir una captura real antes de dar un cambio de layout
-por bueno, no fiarse solo del razonamiento sobre el CSS.
 
 ### 2026-08-24: Fase C ampliada (sincronizar email de acceso con avisos) y Fase D (CAPTCHA)
 

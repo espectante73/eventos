@@ -15,7 +15,10 @@ function jsx(dir = "src", acc = []) {
   for (const n of readdirSync(dir)) {
     const r = join(dir, n);
     if (statSync(r).isDirectory()) jsx(r, acc);
-    else if (/\.jsx?$/.test(n) && !/\.test\.js$/.test(n)) acc.push(r);
+    // ⚠️ `.test.jsx` también fuera: las pruebas de pantalla llevan datos
+    // de mentira dentro, y los guardias de abajo los tomaban por código
+    // de la app.
+    else if (/\.jsx?$/.test(n) && !/\.test\.jsx?$/.test(n)) acc.push(r);
   }
   return acc;
 }
@@ -70,6 +73,69 @@ describe("norma 21: a las personas se las nombra Apellido, Nombre", () => {
       /\$\{\w+\.nombre\}\s+\$\{\w+\.apellido\}/.test(sinComentarios(leer(r)))
     );
     expect(culpables).toEqual([]);
+  });
+});
+
+describe("cada pantalla tiene una prueba que la dibuja", () => {
+  // Nació el 2026-09-24: un "Algo ha fallado" al pulsar un filtro que no
+  // vieron ni el lint, ni el build, ni las 305 pruebas de entonces --
+  // ninguna dibujaba una pantalla. Lo encontró él, pulsando.
+  //
+  // Esto está en vez de escribirlo como norma: un guardia dispara solo,
+  // una norma solo si alguien la lee. Y no cuesta ni una palabra de
+  // CLAUDE.md.
+  //
+  // ⚠️ La lista de abajo es de las que FALTAN, y va encogiendo. Añadir
+  // una pantalla nueva sin su prueba obliga a meterla aquí, y eso se ve
+  // en el diff: no es un olvido silencioso, es una decisión escrita.
+  const SIN_PRUEBA_TODAVIA = [
+    "VentanaInvitacionesColaborador",
+    "VistaAnfitrion",
+    "VistaLogin",
+    "VistaNuevaContrasena",
+    "VistaTablon",
+    "VentanaAniversarios",
+    "VentanaColaboradoresDatos",
+    "VentanaConfigDatosEvento",
+    "VentanaConfigModoPruebas",
+    "VentanaConfigZonaPeligro",
+    "VentanaConfigZonaReinicio",
+    "VentanaInvitaciones",
+    "VentanaMesas",
+    "VentanaMusicaEvento",
+    "VentanaNovedades",
+    "VentanaPermisos",
+    "VentanaProgreso",
+    "VentanaVersiones",
+  ];
+
+  const pantallas = archivos
+    .filter((r) => r.startsWith("src/vistas/"))
+    .map((r) => r.split("/").pop().replace(".jsx", ""));
+
+  const pruebasDePantalla = (function reunir(dir = "src", acc = []) {
+    for (const n of readdirSync(dir)) {
+      const r = join(dir, n);
+      if (statSync(r).isDirectory()) reunir(r, acc);
+      else if (/\.pantalla\.test\.jsx$/.test(n)) acc.push(leer(r));
+    }
+    return acc;
+  })().join("\n");
+
+  it("hay pantallas que mirar (si esto falla, el buscador está roto)", () => {
+    expect(pantallas.length).toBeGreaterThan(15);
+  });
+
+  it("las que no están en la lista de pendientes, tienen su prueba", () => {
+    const sinCubrir = pantallas.filter(
+      (nombre) => !SIN_PRUEBA_TODAVIA.includes(nombre) && !pruebasDePantalla.includes(nombre)
+    );
+    expect(sinCubrir).toEqual([]);
+  });
+
+  it("la lista de pendientes no miente: si una ya tiene prueba, se quita de la lista", () => {
+    const yaCubiertas = SIN_PRUEBA_TODAVIA.filter((nombre) => pruebasDePantalla.includes(nombre));
+    expect(yaCubiertas).toEqual([]);
   });
 });
 
