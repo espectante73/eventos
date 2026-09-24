@@ -909,12 +909,10 @@ trampas dejarán de poder ocurrir y su párrafo podrá quedarse en una
 línea: *"lo vigila tal test"*. El documento adelgaza **como
 consecuencia** de que la app es más segura, no a costa de nada.
 
-⚠️ Con la cuenta hecha, para que la meta sea realista: de las 61
-trampas, **28 dependen de algo externo** (Supabase, el iPhone, paneles
-de otras empresas, npm, su Mac) y suman 5.201 palabras — esas **no
-desaparecen nunca**, por bien que programemos. Las otras **34 son de
-nuestro código**, 2.388 palabras: ese es el techo real de lo que se
-puede convertir en test.
+⚠️ Para que la meta sea realista: las trampas que dependen de algo
+externo (Supabase, el iPhone, paneles de otras empresas, npm, su Mac)
+**no desaparecen nunca**, por bien que programemos. Solo las de nuestro
+código pueden acabar siendo un test.
 
 El criterio para cuando se haga: **una trampa se borra cuando hoy es
 imposible caer en ella**, y solo hay dos formas — un test lo impide, o
