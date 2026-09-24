@@ -28,7 +28,7 @@ import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso, esDeEdicion } from "../lib/permisos";
 import { generarImagenCronograma } from "../lib/cronograma";
-import { C, R, T, OP } from "../theme";
+import { C, R, T, OP, DORADO } from "../theme";
 import { URL_REPOSITORIO } from "../constants";
 import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
@@ -272,8 +272,8 @@ function FormularioDatos({
       // pantallas (de fondo claro) y aquí serían invisibles.
       className="formulario-dorado p-4 rounded space-y-3"
       style={{
-        background: "linear-gradient(135deg, #B8893F 0%, #E6C77F 38%, #D4AE5E 62%, #A97D34 100%)",
-        boxShadow: "inset 0 1px 0 rgba(255,244,214,0.55), inset 0 -1px 0 rgba(90,62,20,0.35)",
+        background: DORADO.fondo,
+        boxShadow: DORADO.relieve,
         border: `1px solid ${C.gold}`,
       }}
     >

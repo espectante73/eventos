@@ -245,7 +245,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
         // móvil -- mismo valor que ya usa ModalFlotante, antes iban
         // distintos sin motivo real.
         maxHeight: fijo ? "100%" : tam ? undefined : "88vh",
-        boxShadow: fijo ? "none" : "0 8px 30px rgba(0,0,0,0.35)",
+        boxShadow: fijo ? "none" : S.flotanteOscura,
         top: fijo ? undefined : pos.top,
         left: fijo ? undefined : pos.left,
         zIndex: fijo ? undefined : zIndex,

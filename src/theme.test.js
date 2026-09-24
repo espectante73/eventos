@@ -68,6 +68,13 @@ describe("la escala del acabado no se escribe a mano", () => {
     expect(numerosSueltos("borderRadius")).toEqual([]);
   });
 
+  // La cuarta, añadida el 2026-09-24 a petición suya: "¿el test debe
+  // vigilar las 4 o solo las 3 que prometía?". Las cuatro -- una escala
+  // con un agujero obliga a explicar el agujero.
+  it("ninguna sombra suelta: se elige de S (o de DORADO)", () => {
+    expect(numerosSueltos("boxShadow")).toEqual([]);
+  });
+
   it("ninguna opacidad suelta: se elige de OP", () => {
     expect(numerosSueltos("opacity")).toEqual([]);
   });

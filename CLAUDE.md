@@ -349,8 +349,8 @@ en la sección que se indica entre paréntesis.
 
 17. **Los valores del acabado salen de `theme.js`, nunca a mano.** Tamaño
     de letra (`T`), redondeo (`R`), sombra (`S`) y transparencia (`OP`).
-    Un número suelto pone en rojo `src/theme.test.js` —salvo las sombras,
-    que no vigila nadie—. Si hace falta uno que no está, se añade a la
+    Un número suelto pone en rojo `src/theme.test.js`. Si hace falta uno
+    que no está, se añade a la
     escala, no al sitio; la única salida es marcar la línea con
     `escala-libre:` y el motivo al lado. («El acabado, con una escala y
     no a ojo»)

@@ -93,6 +93,16 @@ export const OP = {
   linea: 0.3,
 };
 
+// El dorado metálico de las fichas: el formulario del colaborador y las
+// miniaturas de Aniversarios. El fondo, el relieve y la versión con
+// sombra estaban escritos a mano en los DOS sitios, idénticos.
+export const DORADO = {
+  fondo: "linear-gradient(135deg, #B8893F 0%, #E6C77F 38%, #D4AE5E 62%, #A97D34 100%)",
+  relieve: "inset 0 1px 0 rgba(255,244,214,0.55), inset 0 -1px 0 rgba(90,62,20,0.35)",
+  relieveFlotante:
+    "inset 0 1px 0 rgba(255,244,214,0.55), inset 0 -1px 0 rgba(90,62,20,0.35), 0 2px 6px rgba(0,0,0,0.35)",
+};
+
 export const inputStyle = {
   background: "#fff",
   border: `1px solid ${C.line}`,

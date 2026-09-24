@@ -17,7 +17,7 @@
 // y enlaces temporales.
 import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
-import { C, R, T, OP, S } from "../../theme";
+import { C, R, T, OP, S, DORADO } from "../../theme";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton, estilosBoton } from "../../components/Boton";
 import { HuecoFoto, ANCHO_COL, ALTO_MINIATURA, estiloMarcoFoto } from "../../components/HuecoFoto";
@@ -334,8 +334,8 @@ export function VentanaAniversarios({ data, onCerrar }) {
               className="flex items-center gap-3 px-2 py-1 rounded"
               style={{
                 // Dorado metálico con brillo en diagonal y canto (2026-09-17).
-                background: "linear-gradient(135deg, #B8893F 0%, #E6C77F 38%, #D4AE5E 62%, #A97D34 100%)",
-                boxShadow: "inset 0 1px 0 rgba(255,244,214,0.55), inset 0 -1px 0 rgba(90,62,20,0.35), 0 2px 6px rgba(0,0,0,0.35)",
+                background: DORADO.fondo,
+                boxShadow: DORADO.relieveFlotante,
                 minHeight: ALTO_MINIATURA + 10,
               }}
             >
