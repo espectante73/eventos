@@ -893,13 +893,20 @@ razones por las que algo está hecho de esta manera y no de otra. **Sin
 esto escrito, yo propondría deshacerlas creyendo que mejoro algo**, que
 es exactamente lo que hay que evitar.
 
-**Las fotos de matrimonio viven FUERA de la base.** En
+**Las imágenes viven FUERA de la base.** En
 `fotos_familiares` solo va la RUTA; el archivo está en el cubo cerrado
 `fotos-matrimonios` (`lib/fotosAlmacen.js`). Son ~100 fotos: metidas
 como texto en una columna, la app se las descargaría TODAS cada vez que
 alguien la abre — también en el móvil y con el wifi del local el día del
 evento. Las miniaturas son 16:9 con `object-fit: contain`; si una foto
 no viene en 16:9 se ve con bandas, y eso es el aviso.
+
+⚠️ **Vale para CUALQUIER imagen, y hoy se incumple en `evento`:** la
+portada y la plantilla de invitación van dentro de la fila, 830 KB que
+se bajan enteros en cada apertura y cada minuto
+(`VentanaConfigDatosEvento.jsx`, al subirla). Con la de WhatsApp sí se
+hace bien: cubo `og-imagen`. Cuando se arregle, esto se borra y lo
+vigila un test.
 
 **La ventana "Aniversarios" no es una vista duplicada.** La regla de la
 casa dice que una vista que solo reordena lo que la lista ya enseña es
