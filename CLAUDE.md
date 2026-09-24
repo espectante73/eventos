@@ -270,9 +270,10 @@ en la sección que se indica entre paréntesis.
    las de al lado, así que los anchos van fijos y definidos una sola vez,
    no a lo que mida el contenido de cada una. Lo vigila
    `reglas-del-proyecto.test.js`.
-8. **Una sola pieza, no sincronizar**: si dos partes tienen que coincidir
-   siempre, comparten componente o constante; no se miden por separado
-   para igualarlas.
+8. **Una sola pieza, no sincronizar**: si dos sitios tienen que decir
+   siempre lo mismo —un componente, una constante, una función—,
+   comparten la definición. Nunca dos copias mantenidas iguales a mano:
+   **derivan sin que nadie lo vea**.
 9. **Toda ventana nueva es una `VentanaFlotante`**; si crece mucho,
    lanzadora pequeña + una ventana por parte. ⚠️ Excepción: las que se
    usan **mientras se mira otra cosa** —Novedades, Cronograma, Música,
