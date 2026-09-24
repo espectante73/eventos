@@ -713,20 +713,15 @@ v34.4: enlace "Errores de la app" en Mi cuenta, solo anfitrión
 (`URL_REGISTRO_ERRORES` en constants.js). Pintar los errores DENTRO de la
 app no se hace: exigiría una clave secreta de Sentry en el navegador.
 
-## El registro de migraciones (2026-09-23)
+## El registro de migraciones
 
-Pregunta suya: *"¿tienes que llevar un registro de todos los SQL que has
-subido, o te vale con consultarlo en GitHub?"*.
-
-La respuesta: **el TEXTO del SQL ya está en git** (`schema.sql` y su
+**El TEXTO del SQL ya está en git** (`schema.sql` y su
 historial), y duplicarlo sería el mismo error que descartamos con
 `DECISIONS.md`. Pero falta otra cosa: **schema.sql dice cómo debería ser
 la base, no qué ha ejecutado él de verdad.** Eso no es un dato del
 código, es un dato de su Supabase, y git no puede saberlo.
 
-Nos mordió dos veces en cuatro días: `sinCancion`/`sinEmail` (20 de
-septiembre) y `conservarDatos` (21), las dos dadas por subidas sin
-estarlo.
+Nos mordió dos veces: dos migraciones dadas por subidas sin estarlo.
 
 **La tabla `migraciones_aplicadas`** lo cierra: nombre y fecha, de
 lectura pública, y cada bloque de SQL termina apuntándose solo.
@@ -746,7 +741,7 @@ insert into public.migraciones_aplicadas ("nombre") values ('v40-lo-que-sea')
   on conflict ("nombre") do nothing;
 ```
 
-## Comprobar si un SQL está subido, con la clave pública (2026-09-20)
+## Comprobar si un SQL está subido, con la clave pública
 
 Yo no puedo ejecutar SQL ni tengo la clave de servicio, pero SÍ puedo
 comprobar desde fuera si lo que le paso al usuario llegó a la base --
@@ -771,10 +766,6 @@ Truco que ahorra trabajo: el editor SQL de Supabase ejecuta el script
 **entero en una transacción**. Si la ÚLTIMA sentencia del bloque dejó su
 huella, todo lo anterior también entró. Con comprobar la última función
 del bloque basta.
-
-Así se verificó el 2026-09-20 que los bloques de la v37.8, la v37.10 y la
-v37.11 estaban aplicados (`colaborador_familias_sin_email` existe y está
-revocada; `fotos_familiares."sinFotoBoda"` existe).
 
 ## Por qué es así: decisiones que no se ven en el código
 
