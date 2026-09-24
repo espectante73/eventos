@@ -858,9 +858,6 @@ para el porqué de entonces.
 
 # PARTE 2 — Trampas ya pagadas
 
-Cada entrada dice de qué sección de la PARTE 3 viene, por si hace
-falta el contexto completo.
-
 ### 2.1 Sesión del 2026-08-12: Modo Pruebas, seguridad, acuse en PDF, y repaso visual
 
 **Bug de seguridad real, no solo de estilo: la previsualización
