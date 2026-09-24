@@ -356,34 +356,20 @@ en la sección que se indica entre paréntesis.
     tarjetas, paneles y formularios, **nunca en las filas de las
     tablas** — ahí mandan las normas 7 y 8. («El acabado, con una escala
     y no a ojo»)
-18. **Guardar solo lo que cambió, nunca el estado entero.** Cuando dos
-    personas pueden escribir a la vez —y aquí pueden: el anfitrión y sus
-    colaboradores, o el propio anfitrión con el móvil y el Mac abiertos—
-    mandar la colección completa significa **escribir tu copia encima de
-    lo que el otro acaba de guardar**. Se pierde sin error y sin aviso:
-    el dato simplemente vuelve atrás. Lo destapó él el 2026-09-23
-    preguntando qué pasa con varios colaboradores a la vez.
-    **Cómo se hace bien** (modelo: `anfitrion_guardar_invitados`): se
-    mandan solo las filas que difieren de la última verdad del servidor,
-    y **aparte** la lista completa de ids, que es lo único que el
-    borrado necesita. Lo que no se manda, no se toca.
-    ⚠️ **No hay "solo lo escribe el anfitrión".** Él es anfitrión Y
-    colaborador a la vez (lleva 10 invitados suyos) y puede tener el
-    formulario en el móvil y la lista en el portátil abiertos a la vez:
-    entonces son dos escritores aunque sea una sola persona. Lo dijo él
-    el 2026-09-23, y por eso se arreglaron **los siete sitios**, no solo
-    los que tenían un colaborador delante: invitados, novedades, fotos
-    familiares, mesas, colaboradores, gastos y orden de familias.
-    ⚠️ Y hay escritores que no son personas: el trigger
-    `invitados_invalidar_invitacion` pone `invitacionEnviada` a false por
-    su cuenta. Mandar `orden_familias` entera lo deshacía.
-    ⚠️ **No arreglarlo a medias** (él, el mismo día): un patrón peligroso
-    corregido en tres sitios de siete no protege nada, solo da sensación
-    de que está resuelto.
-    ✅ Los siete arreglados, SQL ejecutado y guardado probado en vivo el
-    2026-09-23 (`v40-guardar-solo-lo-cambiado` y
-    `v40.1-colaboradores-solo-lo-cambiado` en `migraciones_aplicadas`).
-    («Tests»: `supabase/schema.test.js` y `src/reglas-del-proyecto.test.js`)
+18. **Guardar solo lo que cambió, nunca el estado entero.** Aquí SIEMPRE
+    hay dos escritores posibles: un colaborador, o él mismo con el móvil
+    y el Mac abiertos. Mandar la colección entera es **escribir tu copia
+    encima de lo que el otro acaba de guardar**, y se pierde sin error y
+    sin aviso: el dato vuelve atrás y nadie se entera.
+    **Cómo se hace bien** (modelo: `anfitrion_guardar_invitados`): solo
+    las filas que difieren de la última verdad del servidor y, **aparte**,
+    la lista completa de ids, que es lo único que el borrado necesita. Lo
+    que no se manda, no se toca.
+    ⚠️ Hay escritores que no son personas: un trigger cambia una columna
+    por su cuenta, y mandar la colección entera lo deshace.
+    ⚠️ Y no vale a medias: corregido en la mitad de los sitios no protege
+    nada, solo da sensación de que está resuelto. Lo vigilan
+    `reglas-del-proyecto.test.js` y `supabase/schema.test.js`.
 19. **Un mensaje de error dice en qué se ha podido equivocar, no solo
     que está mal.** Se nombra lo que puede fallar y lo que no importa:
     *"escribe primero tu apellido y después tu nombre; dan igual las
