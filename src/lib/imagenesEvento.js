@@ -25,22 +25,6 @@ export const IMAGEN_EVENTO = {
   INVITACION: "plantilla-invitacion",
 };
 
-// ¿Este valor es una imagen metida DENTRO de la ficha del evento?
-// Las que están bien guardadas son una dirección ("/cabecera-defecto.jpg"
-// o "https://…"); las que están mal empiezan por "data:".
-export function estaDentroDeLaFicha(valor) {
-  return String(valor || "").startsWith("data:");
-}
-
-// Cuánto ocupa de verdad eso que está dentro de la ficha, en KB. El texto
-// en base64 abulta un tercio más que el archivo, y se enseña para que se
-// entienda por qué hay que sacarlo.
-export function pesoEnKB(valor) {
-  const texto = String(valor || "");
-  if (!texto) return 0;
-  return Math.round((texto.length * 3) / 4 / 1024);
-}
-
 function tipoDe(dataUrl) {
   const m = String(dataUrl).match(/^data:([^;]+);/);
   return m ? m[1] : "image/jpeg";

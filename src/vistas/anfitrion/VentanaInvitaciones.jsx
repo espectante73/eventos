@@ -15,7 +15,7 @@ import { Check, Mail, Image as ImageIcon, ChevronUp, ChevronDown } from "lucide-
 import { C, inputStyle, T, OP } from "../../theme";
 import { resolverColaborador } from "../../lib/invitados";
 import { redimensionarImagenArchivo, guardarArchivoInvitacion, obtenerCarpetaInvitaciones, leerHandleCarpeta } from "../../lib/descargas";
-import { guardarImagenEvento, IMAGEN_EVENTO, estaDentroDeLaFicha, pesoEnKB } from "../../lib/imagenesEvento";
+import { guardarImagenEvento, IMAGEN_EVENTO } from "../../lib/imagenesEvento";
 import { Field } from "../../components/Formulario";
 import { GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
@@ -50,22 +50,6 @@ export function VentanaInvitaciones({
       .then((handle) => setNombreCarpetaInvitaciones(handle ? handle.name : null))
       .catch(() => {});
   }, []);
-
-  // Igual que la portada: la que ya estaba dentro de la fila se mueve
-  // cuando él lo pulse, no sola.
-  const plantillaDentro = estaDentroDeLaFicha(evento.imagenInvitacion);
-  const moverPlantillaAlAlmacen = async () => {
-    setErrorPlantillaInvitacion("");
-    setSubiendoPlantillaInvitacion(true);
-    try {
-      const url = await guardarImagenEvento(evento.imagenInvitacion, IMAGEN_EVENTO.INVITACION);
-      persistEvento({ ...evento, imagenInvitacion: url });
-    } catch (_) {
-      setErrorPlantillaInvitacion("No se ha podido mover la imagen al almacén.");
-    } finally {
-      setSubiendoPlantillaInvitacion(false);
-    }
-  };
 
   const onSeleccionarArchivoPlantillaInvitacion = async (e) => {
     const file = e.target.files && e.target.files[0];
@@ -252,20 +236,6 @@ export function VentanaInvitaciones({
         >
           <Field label="Imagen de la plantilla de invitación (vertical, para móvil)">
             <div className="flex items-center gap-3 flex-wrap">
-              {plantillaDentro && (
-                <div
-                  className="w-full rounded px-3 py-2 text-xs flex items-center justify-between gap-2 flex-wrap"
-                  style={{ background: C.avisoFondo, border: `1px solid ${C.peligro}` }}
-                >
-                  <span style={{ color: C.charcoal }}>
-                    Esta imagen está guardada <b>dentro de la ficha del evento</b> ({pesoEnKB(evento.imagenInvitacion)} KB).
-                    Eso se descarga entero cada vez que alguien abre la app.
-                  </span>
-                  <Boton variante="principal" tamano="pequeno" onClick={moverPlantillaAlAlmacen} disabled={subiendoPlantillaInvitacion}>
-                    {subiendoPlantillaInvitacion ? "Moviendo…" : "Moverla al almacén"}
-                  </Boton>
-                </div>
-              )}
               {evento.imagenInvitacion && (
                 <img
                   src={evento.imagenInvitacion}

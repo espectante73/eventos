@@ -45,7 +45,7 @@ const HISTORIAL_VERSIONES = [
     version: "44",
     cambios: [
       "La portada y la plantilla de la invitación dejan de guardarse DENTRO de la ficha del evento y pasan al almacén. Eran 830 KB que se descargaban enteros cada vez que alguien abría la app, y otra vez cada minuto.",
-      "Las que ya estaban dentro no se mueven solas: en Datos del evento y en Invitaciones sale un aviso con lo que pesan y un botón para moverlas cuando tú quieras.",
+      "Las dos que ya estaban dentro se sacan volviéndolas a subir una vez desde la propia app: no hace falta ningún botón especial ni ningún paso raro.",
     ],
   },
   {
