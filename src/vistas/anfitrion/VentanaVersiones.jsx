@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "42.4",
+    cambios: [
+      "En la imagen del cronograma, el ancho de cada recuadro vuelve a ser proporcional a sus minutos en TODO el dibujo, no solo dentro de su fila: antes cada fila se estiraba hasta el borde, así que un bloque corto que cayera solo en su fila salía enorme. Ahora el bloque más largo ocupa una fila entera y los demás se miden contra él.",
+    ],
+  },
+  {
     version: "42.3",
     cambios: [
       "Arreglado el error \"No se pudo guardar la configuración del evento\" que salía al tocar el Cronograma: la app mandaba la ficha entera del evento (con las dos imágenes dentro, unos 830 KB) cada vez que cambiabas una letra, y la base de datos cortaba el guardado por tardar demasiado. Ahora solo se manda lo que cambia.",

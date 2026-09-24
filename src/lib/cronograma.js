@@ -17,14 +17,6 @@
 // todos los que van después, sin tocarlos a mano.
 import { C } from "../theme";
 
-// Cuántos bloques caben en cada fila de la imagen. Antes era un patrón
-// fijo [4, 3, 2], copiado de la imagen original de referencia, y valía
-// porque los bloques eran siempre nueve. Desde v27 se pueden añadir y
-// quitar desde la app, así que el patrón fijo dejó de tener sentido: se
-// reparte siempre igual, sea cual sea el número. Tres por fila a
-// petición del usuario (2026-09-14) -- con cuatro, el texto de cada
-// bloque se quedaba estrecho.
-const BLOQUES_POR_FILA = 3;
 
 function sumarMinutos(horaBase, minutos) {
   const [h, m] = String(horaBase || "0:00").split(":").map(Number);
@@ -82,6 +74,48 @@ const MARGEN = 14;
 const GAP = 8;
 const ANCHO = 720;
 
+// Ancho mínimo de un recuadro: lo que necesita la hora ("23:10") para
+// poder leerse. Por debajo de eso el recuadro ya no explica nada.
+const ANCHO_MINIMO = 58;
+
+// Reparto de los bloques en filas con UNA SOLA escala de minutos para
+// todo el cronograma.
+//
+// ⚠️ Antes el ancho se repartía DENTRO de cada fila: cada fila se
+// estiraba hasta ocupar el ancho entero, así que un bloque corto que
+// cayera solo en su fila salía enorme. Lo cazó él el 2026-09-24 con una
+// captura: "Final apenas son unos minutos y se ve más grande que Baile,
+// que es lo que más dura". La proporcionalidad era la petición original
+// del diseño (2026-08-27) y solo se cumplía dentro de una misma fila.
+//
+// Ahora el minuto vale lo mismo en todo el dibujo: la escala sale del
+// bloque más largo, que es el que ocupa una fila entera, y los demás se
+// miden contra él. Las filas quedan desiguales por la derecha, y eso es
+// justo lo que deja ver de un vistazo cuál dura más.
+export function repartirEnFilas(bloques, anchoUtil, gap = GAP, minimo = ANCHO_MINIMO) {
+  const duracionMax = Math.max(1, ...bloques.map((b) => b.duracion));
+  const porMinuto = anchoUtil / duracionMax;
+  const conAncho = bloques.map((b) => ({
+    ...b,
+    ancho: Math.min(anchoUtil, Math.max(minimo, b.duracion * porMinuto)),
+  }));
+
+  const filas = [];
+  let fila = [];
+  let usado = 0;
+  for (const b of conAncho) {
+    if (fila.length && usado + gap + b.ancho > anchoUtil) {
+      filas.push(fila);
+      fila = [];
+      usado = 0;
+    }
+    usado += (fila.length ? gap : 0) + b.ancho;
+    fila.push(b);
+  }
+  if (fila.length) filas.push(fila);
+  return filas;
+}
+
 function dibujarBloque(ctx, x, y, w, h, hora, lineasTexto) {
   redondeado(ctx, x, y, w, h, 14);
   ctx.fillStyle = C.ink;
@@ -134,10 +168,7 @@ export function generarImagenCronograma(horaInicio, bloques) {
     duracion: Math.max(1, Number(b.duracionMin) || 1),
   }));
 
-  const filas = [];
-  for (let cursor = 0; cursor < conDatos.length; cursor += BLOQUES_POR_FILA) {
-    filas.push(conDatos.slice(cursor, cursor + BLOQUES_POR_FILA));
-  }
+  const filas = repartirEnFilas(conDatos, ANCHO - MARGEN * 2);
 
   const alto = MARGEN * 2 + filas.length * ALTURA_FILA + (filas.length - 1) * GAP;
   const canvas = document.createElement("canvas");
@@ -149,15 +180,12 @@ export function generarImagenCronograma(horaInicio, bloques) {
 
   let y = MARGEN;
   filas.forEach((fila) => {
-    const anchoDisponible = ANCHO - MARGEN * 2 - GAP * (fila.length - 1);
-    const totalDuracion = fila.reduce((s, b) => s + b.duracion, 0);
     let x = MARGEN;
     fila.forEach((b) => {
-      const w = (b.duracion / totalDuracion) * anchoDisponible;
       ctx.font = FONT_TEXTO;
-      const lineas = partirEnLineas(ctx, b.texto || "", w - 8);
-      dibujarBloque(ctx, x, y, w, ALTURA_FILA, b.hora, lineas);
-      x += w + GAP;
+      const lineas = partirEnLineas(ctx, b.texto || "", b.ancho - 8);
+      dibujarBloque(ctx, x, y, b.ancho, ALTURA_FILA, b.hora, lineas);
+      x += b.ancho + GAP;
     });
     y += ALTURA_FILA + GAP;
   });
