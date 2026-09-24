@@ -664,9 +664,6 @@ izquierdo: los rótulos se abrevian ("Código app", "Errores app", "Cambiar
 clave") para caber. **Si se añade un botón, se abrevia el rótulo; no se
 ensancha el botón.** A la derecha, por el pulgar.
 
-La explicación del email de acceso va en el **pie de la ventana, plegada**
-(`<details>`): en medio del formulario rompía la línea de los botones.
-
 ⚠️ **Lección de esta tanda**: en la v34.5 los pasé a la variante
 secundaria de `Boton` (cuadrada, solo contorno) porque me pareció mejor,
 y dejé los de los formularios a medida de su texto. El usuario lo había
