@@ -241,7 +241,6 @@ Lo que el usuario ya ha fijado como norma, recogido en una lista a
 petición suya el 2026-09-18. **Repasarla antes de construir o retocar
 cualquier pantalla.** El detalle y el porqué de cada una está más abajo,
 en la sección que se indica entre paréntesis.
-
 1. **"Estandarizar" es con SU modelo.** El estilo que él nombra o el que
    ya está aprobado en esa pantalla; nunca uno elegido por mí. Si no está
    claro cuál es, preguntar en una línea ANTES de tocar el aspecto. En Mi
@@ -357,23 +356,6 @@ en la sección que se indica entre paréntesis.
     tarjetas, paneles y formularios, **nunca en las filas de las
     tablas** — ahí mandan las normas 7 y 8. («El acabado, con una escala
     y no a ojo»)
-20. **Lo que ESCRIBE en los datos vive en `lib/`, con pruebas.** Nunca
-    dentro de un componente: ahí no se puede probar sin dibujar la
-    pantalla entera, y lo que no se puede probar acaba rompiéndose. Son
-    funciones puras que reciben la lista y devuelven la nueva, y
-    devuelven `{ datos, aviso }` — si el aviso trae texto, NO se ha
-    tocado nada y ese es el motivo. Modelo: `lib/mesas.js`,
-    `lib/edicionInvitados.js`. Lo que solo lee o pinta puede quedarse en
-    el componente.
-19. **Un mensaje de error dice en qué se ha podido equivocar, no solo
-    que está mal.** "Respuesta incorrecta" o "No se pudo guardar" dejan a
-    la persona sin saber qué hacer distinto. Hay que nombrar lo que
-    puede fallar y lo que no importa: *"escribe primero tu apellido y
-    después tu nombre; dan igual las mayúsculas y las tildes"*. Y si el
-    motivo es técnico, va en letra pequeña (`detalle` de
-    `PreguntaSeguridad`). ⚠️ Antes de escribir un "no importa", mirar el
-    código que compara: aquí `normalizar_nombre_tablon` perdona
-    mayúsculas, tildes, comas y espacios, pero **no el orden**.
 18. **Guardar solo lo que cambió, nunca el estado entero.** Cuando dos
     personas pueden escribir a la vez —y aquí pueden: el anfitrión y sus
     colaboradores, o el propio anfitrión con el móvil y el Mac abiertos—
@@ -402,6 +384,23 @@ en la sección que se indica entre paréntesis.
     2026-09-23 (`v40-guardar-solo-lo-cambiado` y
     `v40.1-colaboradores-solo-lo-cambiado` en `migraciones_aplicadas`).
     («Tests»: `supabase/schema.test.js` y `src/reglas-del-proyecto.test.js`)
+19. **Un mensaje de error dice en qué se ha podido equivocar, no solo
+    que está mal.** "Respuesta incorrecta" o "No se pudo guardar" dejan a
+    la persona sin saber qué hacer distinto. Hay que nombrar lo que
+    puede fallar y lo que no importa: *"escribe primero tu apellido y
+    después tu nombre; dan igual las mayúsculas y las tildes"*. Y si el
+    motivo es técnico, va en letra pequeña (`detalle` de
+    `PreguntaSeguridad`). ⚠️ Antes de escribir un "no importa", mirar el
+    código que compara: aquí `normalizar_nombre_tablon` perdona
+    mayúsculas, tildes, comas y espacios, pero **no el orden**.
+20. **Lo que ESCRIBE en los datos vive en `lib/`, con pruebas.** Nunca
+    dentro de un componente: ahí no se puede probar sin dibujar la
+    pantalla entera, y lo que no se puede probar acaba rompiéndose. Son
+    funciones puras que reciben la lista y devuelven la nueva, y
+    devuelven `{ datos, aviso }` — si el aviso trae texto, NO se ha
+    tocado nada y ese es el motivo. Modelo: `lib/mesas.js`,
+    `lib/edicionInvitados.js`. Lo que solo lee o pinta puede quedarse en
+    el componente.
 21. **A las personas se las nombra "Apellido, Nombre"**, en toda la app:
     listas, desplegables, avisos y preguntas de confirmación. Así es como
     él las busca — *"los localizo por apellido, es la filosofía de la
