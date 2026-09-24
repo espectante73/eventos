@@ -93,18 +93,6 @@ export const OP = {
   linea: 0.3,
 };
 
-// El aire. "Un punto más de respiro" (usuario, 2026-09-20), pero SOLO
-// en tarjetas, paneles y formularios.
-// ⚠️ NO en las filas de las tablas: chocaría con dos normas suyas
-// anteriores -- "una sola línea por fila" y "las ventanas, lo más
-// pequeñas posible". Una lista de 140 invitados con más aire se
-// convierte en una lista que no cabe.
-export const AIRE = {
-  tarjeta: 14, // relleno de una tarjeta o panel
-  entreBloques: 12, // separación entre bloques dentro de una ventana
-  fila: 6, // filas de tabla: se quedan como estaban
-};
-
 export const inputStyle = {
   background: "#fff",
   border: `1px solid ${C.line}`,

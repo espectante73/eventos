@@ -348,14 +348,12 @@ en la sección que se indica entre paréntesis.
     compartido entre los cónyuges»)
 
 17. **Los valores del acabado salen de `theme.js`, nunca a mano.** Tamaño
-    de letra (`T`), redondeo (`R`), sombra (`S`) y opacidad (`OP`). Un
-    número suelto pone en rojo `src/theme.test.js`. Si de verdad hace
-    falta uno que no está, se añade a la escala, no al sitio; la única
-    salida es marcar la línea con `escala-libre:` y el motivo al lado, y
-    es para lo que no es ni caja ni texto. El aire (`AIRE`) va en
-    tarjetas, paneles y formularios, **nunca en las filas de las
-    tablas** — ahí mandan las normas 7 y 8. («El acabado, con una escala
-    y no a ojo»)
+    de letra (`T`), redondeo (`R`), sombra (`S`) y transparencia (`OP`).
+    Un número suelto pone en rojo `src/theme.test.js` —salvo las sombras,
+    que no vigila nadie—. Si hace falta uno que no está, se añade a la
+    escala, no al sitio; la única salida es marcar la línea con
+    `escala-libre:` y el motivo al lado. («El acabado, con una escala y
+    no a ojo»)
 18. **Guardar solo lo que cambió, nunca el estado entero.** Aquí siempre
     hay dos escritores posibles: un colaborador, o él mismo con el móvil
     y el Mac abiertos. Mandar la colección entera es **escribir tu copia
