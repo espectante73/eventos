@@ -169,18 +169,15 @@ pida explícitamente lo contrario.
 
 ## Cómo trabajar aquí
 
-Reglas de trabajo que el usuario fijó el 2026-09-23, después de estudiar
-en otra sesión cómo evitar que yo divague. **Son sobre CÓMO trabajo, no
-sobre cómo es la app** (para eso, las "Normas de estándar" de abajo).
+**Son sobre CÓMO trabajo, no sobre cómo es la app** (para eso, las "Normas de estándar" de abajo).
 
 1. **Verificar antes de afirmar.** No usar una función, método, import o
    parámetro que no se haya visto en este código sin abrir el archivo o
    la dependencia y comprobar que existe. Si no se puede comprobar,
    decirlo en vez de suponerlo. No inventar nombres de archivo, rutas ni
    APIs internas: buscarlos primero.
-   ⚠️ Ya existía una versión estrecha de esto, solo para paneles
-   externos (ver «no dar por buenas instrucciones de memoria sobre la UI
-   de un dashboard»). Esta es la general.
+   (Para paneles externos, la versión concreta: «no dar por buenas
+   instrucciones de memoria sobre la UI de un dashboard».)
 2. **Versiones reales, no de memoria.** Antes de sugerir sintaxis o
    comportamiento de una librería, leer la versión instalada
    (`package.json`, lockfile). Si la tarea depende de documentación
@@ -232,8 +229,7 @@ llevar las decisiones a un `DECISIONS.md`. Se descartó el mismo día, de
 acuerdo con él: **este archivo ya hace ese trabajo**, y dos archivos
 contando lo mismo acaban contando cosas distintas — el problema que
 ya nos costó tres arreglos (los rojos copiados a mano, los trece tamaños
-de letra, la paleta del mapa). Traía también usar `TodoWrite`, que no
-está disponible en esta sesión.
+de letra, la paleta del mapa).
 
 ## Normas de estándar de la app
 
@@ -651,22 +647,18 @@ para los comentarios del código: un solo vocabulario.
 ## Backup automático de la base de datos
 
 Existe un backup diario automático vía GitHub Actions
-(`.github/workflows/backup.yml`), configurado el 2026-08-05. Se ejecuta
+(`.github/workflows/backup.yml`). Se ejecuta
 solo cada día y también se puede lanzar a mano desde la pestaña Actions
 ("Run workflow"). El volcado (`pg_dump`) se guarda como **artifact** de
 esa ejecución (Actions → la ejecución → sección "Artifacts", se conservan
 90 días) — deliberadamente **no** se commitea al repositorio.
 
-Motivo de no commitearlo: la base de datos guarda credenciales propias en
-las tablas `config_secretos` (clave de la API de Resend) y
-`anfitrion_secreto` (token de acceso del anfitrión). Un primer intento de
-guardar el volcado dentro del repo fue bloqueado por el "secret scanning"
-de GitHub al detectar la clave real de Resend en texto plano — señal
-correcta, no un error a silenciar. La solución fue doble: excluir los
-datos de esas dos tablas del volcado (`--exclude-table-data`, se conserva
-la estructura por si hace falta restaurar, pero no el secreto) y además
-sacar el backup por completo del historial de git usando artifacts en vez
-de un commit.
+Motivo: la base guarda secretos en `config_secretos` (la clave de
+Resend) y `anfitrion_secreto` (el token del anfitrión), y el repositorio
+es público. Por eso, dos medidas a la vez: el volcado excluye los datos
+de esas dos tablas (`--exclude-table-data`, se conserva su estructura) y
+va como artifact, nunca en un commit. Si el "secret scanning" de GitHub
+bloquea algo, es la señal correcta, no un error a silenciar.
 
 Requiere el secreto de repositorio `SUPABASE_DB_URL` (Settings → Secrets
 and variables → Actions), con la cadena de conexión **"Session pooler"**
