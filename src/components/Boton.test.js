@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { createElement, act } from "react";
-import { createRoot } from "react-dom/client";
-
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+import { createElement } from "react";
+import { montar } from "../pruebas/dibujar";
 import { estilosBoton, EnlaceTexto } from "./Boton";
 
 // La pieza existe para que no vuelva a haber 12 tamaños distintos: estas
@@ -38,17 +36,13 @@ describe("estilosBoton", () => {
 // Una ACCIÓN sobre los datos lleva relieve; un LINK que te lleva a otro
 // sitio (otra pantalla del login, otra web) va subrayado.
 describe("EnlaceTexto", () => {
-  let contenedor, raiz;
+  let vista, contenedor;
   beforeEach(() => {
-    contenedor = document.createElement("div");
-    document.body.appendChild(contenedor);
-    raiz = createRoot(contenedor);
+    vista = montar(createElement("span"));
+    contenedor = vista.contenedor;
   });
-  afterEach(() => {
-    act(() => raiz.unmount());
-    contenedor.remove();
-  });
-  const pintar = (props, texto) => act(() => raiz.render(createElement(EnlaceTexto, props, texto)));
+  afterEach(() => vista.desmontar());
+  const pintar = (props, texto) => vista.pintar(createElement(EnlaceTexto, props, texto));
 
   it("sin href es un botón: en el login no se va a ninguna parte", () => {
     pintar({ onClick: () => {} }, "He olvidado mi contraseña");

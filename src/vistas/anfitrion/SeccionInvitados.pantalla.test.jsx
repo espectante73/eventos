@@ -11,7 +11,7 @@
 // por CADA valor de CADA filtro. No comprueba cómo se ve (para eso sigue
 // haciendo falta su captura, norma 15); comprueba que se puede ver.
 import { describe, it, expect } from "vitest";
-import { renderToStaticMarkup } from "react-dom/server";
+import { dibujarYSoltar } from "../../pruebas/dibujar";
 import { SeccionInvitados } from "./SeccionInvitados";
 import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
 
@@ -58,7 +58,7 @@ const FILTROS_VACIOS = {
 };
 
 function dibujar(filtros = {}) {
-  return renderToStaticMarkup(
+  return dibujarYSoltar(
     <SeccionInvitados
       data={data}
       asignarColaborador={() => null}
@@ -127,7 +127,7 @@ describe("la Lista de invitados se puede dibujar", () => {
   it("con la lista vacía tampoco se cae", () => {
     const vacio = { ...data, invitados: [], colaboradores: [], mesas: [] };
     expect(() =>
-      renderToStaticMarkup(
+      dibujarYSoltar(
         <SeccionInvitados
           data={vacio}
           asignarColaborador={() => null}

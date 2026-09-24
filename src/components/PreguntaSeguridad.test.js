@@ -1,24 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createElement, act } from "react";
-import { createRoot } from "react-dom/client";
+import { createElement } from "react";
+import { montar } from "../pruebas/dibujar";
 import { BotonQuitar } from "./PreguntaSeguridad";
-
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 // La norma: nada se quita ni se borra sin preguntar antes.
 describe("BotonQuitar", () => {
-  let contenedor, raiz;
+  let vista, contenedor;
   beforeEach(() => {
-    contenedor = document.createElement("div");
-    document.body.appendChild(contenedor);
-    raiz = createRoot(contenedor);
+    vista = montar(createElement("span"));
+    contenedor = vista.contenedor;
   });
   afterEach(() => {
-    act(() => raiz.unmount());
+    vista.desmontar();
     document.body.innerHTML = "";
   });
-  const pintar = (props) => act(() => raiz.render(createElement(BotonQuitar, props)));
-  const pulsar = (el) => act(() => el.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  const pintar = (props) => vista.pintar(createElement(BotonQuitar, props));
+  const pulsar = (el) => vista.pulsar(el);
   const botonCon = (texto) => [...document.querySelectorAll("button")].find((b) => b.textContent === texto);
 
   it("pulsarlo NO borra: primero pregunta", () => {

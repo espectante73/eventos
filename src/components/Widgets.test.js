@@ -1,26 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { createElement, act } from "react";
-import { createRoot } from "react-dom/client";
+import { createElement } from "react";
+import { montar } from "../pruebas/dibujar";
 import { Seal } from "./Widgets";
-
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 // El sello rojo del botón "Abrir formulario": cuenta lo que falta y late
 // igual que una ficha incompleta (usuario, 2026-09-20). Late el SELLO,
 // nunca el botón.
 describe("Seal", () => {
-  let contenedor, raiz;
+  let vista, contenedor;
   beforeEach(() => {
-    contenedor = document.createElement("div");
-    document.body.appendChild(contenedor);
-    raiz = createRoot(contenedor);
+    vista = montar(createElement("span"));
+    contenedor = vista.contenedor;
   });
-  afterEach(() => {
-    act(() => raiz.unmount());
-    contenedor.remove();
-  });
+  afterEach(() => vista.desmontar());
 
-  const pintar = (props) => act(() => raiz.render(createElement(Seal, props)));
+  const pintar = (props) => vista.pintar(createElement(Seal, props));
 
   it("sin nada pendiente no se pinta: un cero no es un aviso", () => {
     pintar({ count: 0, late: true });
