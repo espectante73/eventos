@@ -243,9 +243,8 @@ cualquier pantalla.** El detalle y el porqué de cada una está más abajo,
 en la sección que se indica entre paréntesis.
 1. **"Estandarizar" es con SU modelo.** El estilo que él nombra o el que
    ya está aprobado en esa pantalla; nunca uno elegido por mí. Si no está
-   claro cuál es, preguntar en una línea ANTES de tocar el aspecto. En Mi
-   cuenta cambié el estilo por mi cuenta tres veces (v34.5-34.7) hasta
-   preguntar. («Regla de la app: ventanas lo más pequeñas posible»)
+   claro cuál es, **preguntar en una línea ANTES de tocar el aspecto**.
+   («Regla de la app: ventanas lo más pequeñas posible»)
 2. **Ventanas tan pequeñas como su contenido.** Del ancho de un móvil en
    vertical, también en el ordenador. `ModalFlotante` acepta `ancho`.
    (misma sección)
