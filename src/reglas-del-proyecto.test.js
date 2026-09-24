@@ -76,6 +76,18 @@ describe("norma 21: a las personas se las nombra Apellido, Nombre", () => {
   });
 });
 
+describe("1.6: tú y ustedes, nunca vosotros", () => {
+  // Español de Canarias. Solo palabras que no tienen otra lectura, para
+  // que el guardia no salte en falso. Las plantillas que él guarda en la
+  // base no las ve este test: son suyas y las cambia él.
+  it("ningún texto de la app habla de vosotros", () => {
+    const culpables = archivos.filter((r) =>
+      /\b(vosotros|vosotras|vuestr[oa]s?|os esperamos|sentaros|decidme)\b/i.test(sinComentarios(leer(r)))
+    );
+    expect(culpables).toEqual([]);
+  });
+});
+
 describe("norma 3: lo que se alinea a la derecha lleva su espejo zurdo", () => {
   // La elección de mano solo se aplica si CADA cosa pulsable lleva su
   // espejo. `mano.test.js` prueba el mecanismo, no esto: hasta hoy no lo

@@ -606,23 +606,14 @@ menú de Abrir sección…?") lo resolvió a la primera. Preguntar ANTES.
 
 ## 1.6 Cómo se le habla al invitado: tú y USTEDES, nunca vosotros
 
-El usuario, corrigiendo un borrador mío: *"no uso el término sentaros,
-sí uso sentarles"*. Es el español de Canarias: el plural de "tú" es
-**ustedes**, no "vosotros". Vale para TODO el texto que lee un invitado
-o un colaborador — pantallas, emails, el tablón y la nota de privacidad.
+Español de Canarias, en todo lo que lee un invitado o un colaborador:
+- Singular **tú** ("tus datos"); plural **ustedes / les / su**
+  ("sentarles", "sus fotos").
+- ❌ Nunca vosotros, vuestro, -áis, -éis, os.
+- **Tilde**, no "acento", cuando se habla de lo que alguien escribe.
+- Las plantillas guardadas en la base son suyas: se le avisa, no se tocan.
 
-- Singular: **tú** ("tus datos", "puedes pedirme").
-- Plural: **ustedes / les / su** ("sentarles", "avisarles", "sus fotos",
-  "si prefieren", "díganselo").
-- ❌ Nunca: vosotros, vuestro, -áis, -éis, -asteis, decidme, os esperamos.
-
-⚠️ **"Tilde", no "acento"**. El **acento** es fonético
-—la fuerza de voz—; la **tilde** es el signo que se escribe. Si se habla
-de lo que alguien teclea, es tilde. Vale para las pantallas y también
-para los comentarios del código: un solo vocabulario.
-
-⚠️ Las plantillas GUARDADAS en la base son suyas: si una lleva un
-"vosotros", se le avisa y lo cambia él desde "Texto emails"; no se tocan.
+Lo vigila `reglas-del-proyecto.test.js`.
 
 ## 1.7 Backup automático de la base de datos
 
