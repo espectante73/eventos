@@ -901,12 +901,9 @@ alguien la abre — también en el móvil y con el wifi del local el día del
 evento. Las miniaturas son 16:9 con `object-fit: contain`; si una foto
 no viene en 16:9 se ve con bandas, y eso es el aviso.
 
-⚠️ **Vale para CUALQUIER imagen, y hoy se incumple en `evento`:** la
-portada y la plantilla de invitación van dentro de la fila, 830 KB que
-se bajan enteros en cada apertura y cada minuto
-(`VentanaConfigDatosEvento.jsx`, al subirla). Con la de WhatsApp sí se
-hace bien: cubo `og-imagen`. Cuando se arregle, esto se borra y lo
-vigila un test.
+⚠️ **Vale para CUALQUIER imagen**, no solo las de boda: la portada y la
+plantilla de invitación van al cajón `imagenes-evento` (v44). Lo vigila
+`reglas-del-proyecto.test.js`.
 
 **La ventana "Aniversarios" no es una vista duplicada.** La regla de la
 casa dice que una vista que solo reordena lo que la lista ya enseña es
