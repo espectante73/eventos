@@ -250,17 +250,9 @@ en la sección que se indica entre paréntesis.
 2. **Ventanas tan pequeñas como su contenido.** Del ancho de un móvil en
    vertical, también en el ordenador. `ModalFlotante` acepta `ancho`.
    (misma sección)
-3. **Todo al alcance del pulgar QUE ELIJA CADA UNO.** Desde la v35 cada
-   persona elige mano en su móvil, y **la app entera se acomoda a esa
-   elección**: esa es la norma, no "a la derecha". La derecha es solo lo
-   que se ve por defecto.
-   En la práctica: todo lo que se pulsa se alinea al lado del pulgar y
-   lleva SIEMPRE su espejo `zurdo:` (`justify-end zurdo:justify-start`,
-   `items-end zurdo:items-start`...). Sin el `zurdo:`, la elección no se
-   aplica y el botón se queda donde caiga.
-   ⚠️ Vale para CUALQUIER cosa pulsable, no solo para los botones de una
-   ventana: se rompió el 2026-09-21 con un link metido dentro de un
-   aviso. («El pulgar: la regla y cómo funciona»)
+3. **Todo al alcance del pulgar QUE ELIJA CADA UNO.** La app entera se
+   acomoda a esa elección; la derecha es solo lo que sale por defecto.
+   («El pulgar: la regla y cómo funciona»)
 4. **Botones del mismo grupo, todos iguales y del ancho del texto más
    largo.** En Mi cuenta el modelo es el de inicio: copia exacta de las
    filas de "Abrir sección…" (`FilaMenu`), pastilla verde, letra dorada,
