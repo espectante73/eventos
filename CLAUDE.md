@@ -602,7 +602,7 @@ de las ventanas, las filas de las listas (el check de llegada, las
 papeleras) y las filas alineadas abajo (`items-end` en una fila es
 alinear abajo, no a la derecha).
 
-## Regla de la app: ventanas lo más pequeñas posible (2026-09-18)
+## Regla de la app: ventanas lo más pequeñas posible
 
 Pedido explícito del usuario, "tomamos nota de esto": **una ventana mide
 lo que necesita su contenido, no más**. El ejemplo que puso: en Mi cuenta
@@ -615,7 +615,7 @@ móvil el usuario la quiso aún más estrecha -- quedó en `ancho={300}`, con
 el texto de ayuda de la contraseña acortado a "Mínimo 8 caracteres" para
 que quepa (el título de la sección ya dice qué es). Al construir o
 revisar cualquier ventana, empezar por preguntarse cuánto ocupa de verdad
-lo de dentro. `ModalFlotante` acepta `ancho` para esto (720 por defecto).
+lo de dentro.
 
 En esa ventana los rótulos se abrevian ("Código app", "Errores app",
 "Cambiar clave") para caber en el ancho del modelo (norma 4).
@@ -624,15 +624,11 @@ En esa ventana los rótulos se abrevian ("Código app", "Errores app",
 secundaria de `Boton` (cuadrada, solo contorno) porque me pareció mejor,
 y dejé los de los formularios a medida de su texto. El usuario lo había
 pedido con el estilo de inicio y todos iguales, y lo tuvo que señalar.
-**Cuando el usuario dice "estandarizar", es con el estilo que ÉL ha
-nombrado o el que ya existe en la pantalla, no con el que yo prefiera.**
-Si hay duda sobre cuál, preguntar antes de cambiar el aspecto.
-
 Y se repitió dos veces más (v34.6 a todo lo ancho, v34.7 a 240px centrado)
 antes de preguntar. La tercera vez, una pregunta de una línea ("¿es el
 menú de Abrir sección…?") lo resolvió a la primera. Preguntar ANTES.
 
-## Cómo se le habla al invitado: tú y USTEDES, nunca vosotros (2026-09-21)
+## Cómo se le habla al invitado: tú y USTEDES, nunca vosotros
 
 El usuario, corrigiendo un borrador mío: *"no uso el término sentaros,
 sí uso sentarles"*. Es el español de Canarias: el plural de "tú" es
@@ -644,17 +640,13 @@ o un colaborador — pantallas, emails, el tablón y la nota de privacidad.
   "si prefieren", "díganselo").
 - ❌ Nunca: vosotros, vuestro, -áis, -éis, -asteis, decidme, os esperamos.
 
-⚠️ **"Tilde", no "acento"** (él, 2026-09-23). El **acento** es fonético
+⚠️ **"Tilde", no "acento"**. El **acento** es fonético
 —la fuerza de voz—; la **tilde** es el signo que se escribe. Si se habla
 de lo que alguien teclea, es tilde. Vale para las pantallas y también
 para los comentarios del código: un solo vocabulario.
 
-Repasado el 2026-09-21: en la app solo quedaba un "¡Os esperamos con
-muchas ganas!", en la plantilla de la invitación a la familia (el valor
-por defecto de `useLedgerData.js` y el de "restaurar textos" de
-`VentanaConfigZonaPeligro.jsx`, los dos corregidos a "¡Les esperamos!").
-⚠️ El texto que está GUARDADO en la base es suyo y lo cambia él desde
-"Texto emails": el suyo también lo tenía y se le avisó.
+⚠️ Las plantillas GUARDADAS en la base son suyas: si una lleva un
+"vosotros", se le avisa y lo cambia él desde "Texto emails"; no se tocan.
 
 ## Backup automático de la base de datos
 
