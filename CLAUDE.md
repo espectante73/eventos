@@ -308,20 +308,13 @@ en la sección que se indica entre paréntesis.
     app, 24 px a la vista y 44 px de zona de toque (el mínimo del móvil).
     X = quitar; papelera (`borrar`) = se borra para siempre. Lleva la
     pregunta dentro.
-15. **Un cambio de aspecto no está hecho hasta que él lo ha visto.**
-    Pedir la captura —mejor del móvil— **antes de decir que está hecho**,
-    no después de que él lo vea mal. "Puesto", "hecho" o "ya está" sobre
-    algo que no se ha visto es una afirmación sin comprobar, y eso lo
-    prohíbe la regla 1 de «Cómo trabajar aquí».
+15. **Pedir la captura ANTES de decir que un cambio de aspecto está
+    hecho**: no está hecho hasta que él lo ha visto. Mejor del móvil.
+    Decir "hecho" sobre algo que no se ha visto es afirmar sin comprobar,
+    justo lo que prohíbe la regla 1 de «Cómo trabajar aquí».
     ⚠️ Y antes de escribir el cambio: **mirar cómo está resuelto lo que
-    ya existe al lado** (norma 1). No el primero que se parezca — el de
-    su misma situación. El 2026-09-23 hicieron falta tres intentos para
-    una columna nueva de la Lista de invitados: se copió el estilo de la
-    columna más estrecha (que va sin flecha y centrada), luego la palabra
-    del filtro chocaba con otra columna, y el título se puso en la fila
-    de abajo en vez de arriba. **Las dos normas estaban escritas; el
-    fallo fue no aplicarlas.** Por eso esto no es una norma nueva: es
-    esta misma, sin la rendija.
+    ya existe al lado** — el de su misma situación, no el primero que se
+    parezca.
 16. **Lo que en la vida real va junto —una pareja, una familia— la app
     lo mantiene junto SOLA:**
     1. un dato compartido vale para todos (el año de boda de la pareja);
