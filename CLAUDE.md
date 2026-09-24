@@ -275,8 +275,8 @@ en la sección que se indica entre paréntesis.
    para igualarlas.
 9. **Toda ventana nueva es una `VentanaFlotante`**; si una crece mucho,
    ventana lanzadora pequeña + una ventana por parte.
-10. **La Lista de invitados es la raíz**: una vista que solo reordena lo
-    que la lista ya muestra va dentro de la lista, no aparte.
+10. **Una vista que solo reordena o filtra lo que la Lista de invitados
+    ya muestra va DENTRO de la lista, no aparte**: la lista es la raíz.
 11. **Piezas compartidas**: los botones con `Boton` (principal /
     secundario / peligro), las fotos con `HuecoFoto` (16:9, mismo marco),
     y también los iconos sueltos de las tablas. Los lenguajes propios ya
