@@ -76,6 +76,17 @@ describe("norma 21: a las personas se las nombra Apellido, Nombre", () => {
   });
 });
 
+describe("norma 16: una sola definición de familia", () => {
+  // La norma lo prometía y no era verdad: había CUATRO. Tres copiadas
+  // palabra por palabra (matrimonios, revisión, invitados) y una
+  // distinta (mesas, que añade el id). Lo destapó él el 2026-09-24
+  // pidiendo repasar la 16 "que seguro que hay algo que corregir".
+  it("solo `lib/invitados.js` define claveFamilia", () => {
+    const definen = archivos.filter((r) => /function claveFamilia\b/.test(leer(r)));
+    expect(definen).toEqual(["src/lib/invitados.js"]);
+  });
+});
+
 describe("las imágenes no vuelven a meterse dentro de la ficha del evento", () => {
   // La norma «Las imágenes viven FUERA de la base» estaba escrita desde
   // el 2026-09-17 para las fotos de boda, y se incumplía en `evento`: la

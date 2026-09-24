@@ -16,6 +16,10 @@
 
 import { nombreCompleto } from "./formato";
 
+// ⚠️ Es `claveFamilia` (lib/invitados.js) MÁS el id como último recurso:
+// dos fichas a medio crear, sin grupo ni apellido, compartirían clave y
+// acabarían sentadas en la misma mesa. En el resto de la app esa clave
+// vacía simplemente se salta, así que allí no hace falta.
 export function claveFamiliaMesa(g) {
   return String(g?.grupoFamiliar || g?.apellido || g?.id || "").trim().toLowerCase();
 }

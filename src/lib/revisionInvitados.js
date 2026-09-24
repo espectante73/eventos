@@ -13,7 +13,7 @@
 // Cada hallazgo devuelve las personas afectadas para poder saltar a
 // ellas en la propia lista, que sigue siendo donde se corrige.
 import { ROL_FAMILIAR } from "./rolFamiliar";
-import { calcularEdad, familiasSinEmail, ROLES_CON_EMAIL_FAMILIAR } from "./invitados";
+import { calcularEdad, familiasSinEmail, claveFamilia, ROLES_CON_EMAIL_FAMILIAR } from "./invitados";
 import { conyugesSueltos, matrimoniosDeInvitados } from "./matrimonios";
 import { colaboradoresSinFichaEnlazada, mismaPersona } from "./edicionInvitados";
 
@@ -55,10 +55,6 @@ function esAdulto(g, evento) {
   const edad = calcularEdad(g.anioNacimiento, evento);
   if (edad !== null) return edad >= EDAD_MENOR;
   return [ROL_FAMILIAR.ESPOSO, ROL_FAMILIAR.ESPOSA, ROL_FAMILIAR.PADRE, ROL_FAMILIAR.SUELTO].includes(g.rolFamiliar);
-}
-
-function claveFamilia(g) {
-  return String(g.grupoFamiliar || g.apellido || "").trim().toLowerCase();
 }
 
 function agruparPorFamilia(invitados) {

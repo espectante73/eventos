@@ -16,12 +16,7 @@
 // cuya pareja no está invitada), lo que toca es un emparejado
 // explícito, no parchear esta función.
 import { ROL_FAMILIAR } from "./rolFamiliar";
-
-// La familia se identifica igual que en el resto de la app:
-// `grupoFamiliar` y, si está vacío, el apellido.
-function claveFamilia(g) {
-  return String(g.grupoFamiliar || g.apellido || "").trim().toLowerCase();
-}
+import { claveFamilia } from "./invitados";
 
 function primeroNoVacio(...valores) {
   return valores.find((v) => String(v || "").trim() !== "") || "";

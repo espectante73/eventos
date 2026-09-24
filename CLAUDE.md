@@ -326,8 +326,9 @@ en la sección que se indica entre paréntesis.
     (una pareja, una familia), la app lo mantiene junto SOLA:
     1. un dato compartido vale para todos (el año de boda de la pareja);
        una acción sobre uno se aplica a todos (la mesa de la familia);
-    2. UNA sola definición de "familia"/"pareja" para toda la app
-       (`lib/mesas.js`, `lib/matrimonios.js`), nunca una copia por pantalla;
+    2. UNA sola definición de "familia": `claveFamilia` en
+       `lib/invitados.js`, nunca una copia por archivo. La única variante
+       es `claveFamiliaMesa`, que añade el id y dice por qué;
     3. si no se puede cumplir entera, no se hace a medias: no se toca
        nada y se avisa con la cifra concreta ("son 4 y quedan 2 sitios"),
        en una ventana que se vea;
