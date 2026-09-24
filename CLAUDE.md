@@ -1188,12 +1188,6 @@ producción.**
 
 ### Ventana "Aniversarios" y las fotos fuera de la base (2026-09-17, v30)
 
-⚠️ La mitad de boda TODAVÍA es base64: el formulario del colaborador
-sigue guardando un `data:` URI en `fotos_familiares.url`. Está a medias
-a propósito (nadie ha subido ninguna aún, la tabla está vacía), pero hay
-que terminarlo antes de que los 12 colaboradores empiecen a subir: 48
-fotos en base64 son ~20 MB en cada apertura de la app.
-
 - **Hoja de encargo** (v31.1): dentro del mismo ZIP, un `Hoja de
   encargo.txt` con un bloque redactado por foto (nombres, año de boda,
   años que cumplen) para copiar y pegar en ChatGPT. ⚠️ Regla del usuario:
