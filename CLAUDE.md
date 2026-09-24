@@ -417,6 +417,13 @@ en la sección que se indica entre paréntesis.
     él las busca — *"los localizo por apellido, es la filosofía de la
     app"*, y venía de su origen. Una sola definición, `nombreCompleto` en
     `lib/formato.js`. Lo vigila `reglas-del-proyecto.test.js`.
+22. **Una persona, varios papeles.** Alguien puede ser invitado,
+    colaborador y acomodador a la vez: son papeles de la MISMA persona,
+    no personas distintas (él, 2026-09-24). Una lista de gente se arma
+    **con personas**, y los papeles se enseñan al lado. Nunca pegando una
+    fuente detrás de otra: así salía «¿Quién lo atiende?», una fila por
+    papel, y quien estaba en los dos cajones aparecía dos veces. Modelo:
+    `personasAsignables` en `lib/cronograma.js`.
 
 
 ## Reglas de diseño ya decididas
