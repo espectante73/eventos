@@ -138,6 +138,15 @@ describe("personasAsignables: una sola fila por persona", () => {
     expect(personas[0].alias).toEqual(["inv-3"]);
   });
 
+  it("quien solo es invitado también sale con su apellido, y la lista va ordenada", () => {
+    const rubenInv = { id: "inv-4", nombre: "Rubén", apellido: "Pacheco", rolesTrabajo: ["Acomodador"] };
+    const noelia = { id: "col-1", nombre: "Álvarez, Noelia", invitadoId: null };
+    expect(personasAsignables([noelia], [rubenInv]).map((p) => p.nombre)).toEqual([
+      "Álvarez, Noelia",
+      "Pacheco, Rubén",
+    ]);
+  });
+
   it("las tildes y las mayúsculas no impiden juntarlos", () => {
     const col = { id: "col-8", nombre: "JORDÁN, Adrian", invitadoId: null };
     const inv = { id: "inv-8", nombre: "adrian", apellido: "jordan", rolesTrabajo: ["Acomodador"] };
@@ -147,7 +156,7 @@ describe("personasAsignables: una sola fila por persona", () => {
   it("dos personas distintas de la misma familia NO se juntan", () => {
     const dani = { id: "col-5", nombre: "Luis, Dani", invitadoId: null };
     const miriam = { id: "inv-5", nombre: "Míriam", apellido: "Luis", rolesTrabajo: ["Acomodador"] };
-    expect(personasAsignables([dani], [miriam]).map((p) => p.nombre)).toEqual(["Luis, Dani", "Míriam"]);
+    expect(personasAsignables([dani], [miriam]).map((p) => p.nombre)).toEqual(["Luis, Dani", "Luis, Míriam"]);
   });
 
   it("manda el id del colaborador, y el de invitado queda de alias", () => {

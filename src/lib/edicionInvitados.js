@@ -35,6 +35,36 @@ export function mismaPersona(a, b) {
   return limpiar(a) === limpiar(b);
 }
 
+// El colaborador guarda su nombre en UN solo campo, "Apellido, Nombre";
+// el invitado lo tiene en dos. Se parte por la coma para poder
+// preguntárselo a `mismaPersona`. Sin coma no se adivina nada: el
+// apellido se deja vacío, y así no casa con nadie por error.
+export function fichaDelColaborador(colaborador) {
+  const partes = String(colaborador?.nombre || "").split(",");
+  return partes.length > 1
+    ? { apellido: partes[0], nombre: partes.slice(1).join(" ") }
+    : { nombre: partes[0] || "", apellido: "" };
+}
+
+// Colaboradores que ESTÁN en la lista de invitados pero cuya cuenta no
+// está enlazada con su ficha (`invitadoId` vacío). No es un capricho de
+// orden: de ese enlace cuelgan tres cosas que fallan en silencio --
+//   · su email no cuenta para el "al menos un email por familia",
+//   · el motor de invitaciones no lo encuentra como destinatario,
+//   · y en la Lista de invitados no le sale la ★ de colaborador.
+// Pasa con los colaboradores creados antes de que dar de alta a uno
+// obligara a elegir su ficha. Los que NO están invitados (alguien que
+// ayuda sin venir) no cuentan: ahí el enlace vacío es lo correcto.
+export function colaboradoresSinFichaEnlazada(colaboradores = [], invitados = []) {
+  const parejas = [];
+  for (const c of colaboradores) {
+    if (c?.invitadoId && invitados.some((g) => g.id === c.invitadoId)) continue;
+    const ficha = invitados.find((g) => mismaPersona(fichaDelColaborador(c), g));
+    if (ficha) parejas.push({ colaborador: c, invitado: ficha });
+  }
+  return parejas;
+}
+
 // Los campos de un invitado recién creado. En un solo sitio: estaban
 // escritos dos veces (al añadir a mano y al importar) y ya se habían
 // separado — el de importar se había quedado sin `presente`.

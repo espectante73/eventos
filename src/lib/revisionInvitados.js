@@ -15,6 +15,7 @@
 import { ROL_FAMILIAR } from "./rolFamiliar";
 import { calcularEdad, familiasSinEmail, ROLES_CON_EMAIL_FAMILIAR } from "./invitados";
 import { conyugesSueltos, matrimoniosDeInvitados } from "./matrimonios";
+import { colaboradoresSinFichaEnlazada } from "./edicionInvitados";
 
 // Quién necesita a un adulto suyo al lado en la mesa.
 //
@@ -293,6 +294,23 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
         "Familias sin ningún email",
         "Hace falta al menos un email por familia: el del esposo o el de la esposa (el que viene solo, el suyo).",
         adultosSinEmail,
+        "pendiente"
+      )
+    );
+
+  // La cuenta de un colaborador va enlazada a su ficha de invitado. Sin
+  // ese enlace fallan tres cosas en silencio (ver
+  // `colaboradoresSinFichaEnlazada`), y la más cara es la del email: su
+  // familia puede salir como "sin ningún email" teniéndolo él puesto en
+  // Colaboradores.
+  const sinFicha = colaboradoresSinFichaEnlazada(colaboradores, invitados);
+  if (sinFicha.length)
+    hallazgos.push(
+      hallazgo(
+        "colaboradorSinFicha",
+        "Colaboradores sin su ficha enlazada",
+        "Están en la lista de invitados, pero su cuenta de colaborador no está unida a su ficha. Por eso su email no cuenta para su familia, el motor de invitaciones no los encuentra y no les sale la ★ de colaborador.",
+        sinFicha.map((x) => x.invitado),
         "pendiente"
       )
     );

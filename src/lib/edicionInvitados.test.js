@@ -3,6 +3,7 @@ import {
   agregarInvitado, importarInvitados, eliminarInvitado, mismaPersona,
   cambiarCampo, alternarRolTrabajo, alternarExcluidoTablon,
   permitirExcepcion, quitarExcepcion, marcarResponsable,
+  colaboradoresSinFichaEnlazada, fichaDelColaborador,
 } from "./edicionInvitados";
 
 // La lista de invitados es la base de toda la app: si aquí se pierde
@@ -200,5 +201,39 @@ describe("responsable de un rol", () => {
     expect(uno).toEqual({ acomodador: "1" });
     expect(marcarResponsable(uno, "acomodador", "2")).toEqual({ acomodador: "2" });
     expect(marcarResponsable(uno, "acomodador", "1")).toEqual({});
+  });
+});
+
+// De este enlace cuelgan el email de la familia, el motor de
+// invitaciones y la ★ de la lista. Los colaboradores creados antes de
+// que dar de alta obligara a elegir ficha se quedaron sin él.
+describe("colaboradoresSinFichaEnlazada", () => {
+  const jacob = { id: "inv-1", nombre: "Jacob", apellido: "Barrios" };
+  const miriam = { id: "inv-2", nombre: "Míriam", apellido: "Luis" };
+
+  it("señala al colaborador que está invitado pero no enlazado", () => {
+    const col = { id: "c1", nombre: "Barrios, Jacob", invitadoId: null };
+    const [pareja] = colaboradoresSinFichaEnlazada([col], [jacob, miriam]);
+    expect(pareja.invitado.id).toBe("inv-1");
+  });
+
+  it("el que ya está enlazado no se señala", () => {
+    const col = { id: "c1", nombre: "Barrios, Jacob", invitadoId: "inv-1" };
+    expect(colaboradoresSinFichaEnlazada([col], [jacob])).toEqual([]);
+  });
+
+  it("un colaborador que NO está invitado no es un fallo", () => {
+    const col = { id: "c1", nombre: "Pérez, Ana", invitadoId: null };
+    expect(colaboradoresSinFichaEnlazada([col], [jacob, miriam])).toEqual([]);
+  });
+
+  it("un enlace que apunta a una ficha borrada sí se señala", () => {
+    const col = { id: "c1", nombre: "Barrios, Jacob", invitadoId: "ya-no-existe" };
+    expect(colaboradoresSinFichaEnlazada([col], [jacob])).toHaveLength(1);
+  });
+
+  it("parte el nombre del colaborador por la coma; sin coma no adivina", () => {
+    expect(fichaDelColaborador({ nombre: "Barrios, Jacob" })).toEqual({ apellido: "Barrios", nombre: " Jacob" });
+    expect(fichaDelColaborador({ nombre: "Jacob" })).toEqual({ nombre: "Jacob", apellido: "" });
   });
 });

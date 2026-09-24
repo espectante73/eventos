@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "42.7",
+    cambios: [
+      "En «¿Quién lo atiende?» todos salen con su apellido y la lista va ordenada por él. Antes, quien solo era invitado con rol de trabajo salía con el nombre de pila suelto y al final de la lista.",
+      "La Revisión de la lista avisa de los colaboradores que están invitados pero cuya cuenta no está unida a su ficha. Ese enlace decide si su email cuenta para su familia, si el motor de invitaciones los encuentra y si les sale la ★ en la lista.",
+    ],
+  },
+  {
     version: "42.6",
     cambios: [
       "Los nombres duplicados de «¿Quién lo atiende?» ya se juntan de verdad: antes solo se reconocía a la misma persona si el colaborador estaba enlazado a su ficha de invitado, y ninguno lo está. Ahora también se reconocen por nombre y apellido.",

@@ -236,3 +236,20 @@ describe("asignados sin rol familiar", () => {
     expect(claves(revisarInvitados(sinColaborador, { fecha: "2026-11-13" }))).not.toContain("asignadoSinRolFamiliar");
   });
 });
+
+describe("colaboradores sin su ficha enlazada", () => {
+  const jacob = persona({ id: "inv-1", nombre: "Jacob", apellido: "Barrios", grupoFamiliar: "Barrios 01" });
+
+  it("sale en la revisión, y deja de salir en cuanto se enlaza", () => {
+    const suelto = { id: "c1", nombre: "Barrios, Jacob", invitadoId: null, email: "j@j.com" };
+    const enlazado = { ...suelto, invitadoId: "inv-1" };
+    expect(claves(revisarInvitados([jacob], {}, [suelto]))).toContain("colaboradorSinFicha");
+    expect(claves(revisarInvitados([jacob], {}, [enlazado]))).not.toContain("colaboradorSinFicha");
+  });
+
+  it("señala a la persona, para poder saltar a ella en la lista", () => {
+    const suelto = { id: "c1", nombre: "Barrios, Jacob", invitadoId: null, email: "j@j.com" };
+    const h = buscar(revisarInvitados([jacob], {}, [suelto]), "colaboradorSinFicha");
+    expect(h.personas.map((p) => p.id)).toEqual(["inv-1"]);
+  });
+});
