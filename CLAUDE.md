@@ -872,14 +872,14 @@ derechos reservados**, como pone el README. Él lo confirmó. Cerrado, no
 volver a sacarlo.
 
 **Bloqueado por datos:** la hoja de encargo de las fotos necesita el año
-de boda, y los 48 matrimonios lo tienen vacío. Lo rellenan los
+de boda, y casi ningún matrimonio lo tiene todavía. Lo rellenan los
 colaboradores junto con la foto; no es trabajo suyo.
 
 **El ritmo real del evento** (él, 2026-09-20). Dos cosas que conviene no
 confundir con un fallo:
 - **Las pocas mesas de hoy no son las del evento.** Serán **12-14**, y el
-  reparto se hace cuando estén TODAS las confirmaciones: con ~60
-  confirmados de ~140 no se puede sentar a nadie. Si hay pocas mesas en
+  reparto se hace cuando estén TODAS las confirmaciones; antes no se
+  puede sentar a nadie. Si hay pocas mesas en
   la base, es que no toca, no que se hayan perdido. (El tope de 15 mesas
   ya está quitado.)
 - **Las fotos terminadas van después**, y la prueba del nombre de archivo
@@ -891,20 +891,7 @@ de allí— es **para bastante más cerca del evento**, dicho por él
 (2026-09-20). Y la fecha ni siquiera está fijada. No listarla entre lo
 pendiente de ahora ni ofrecerla como siguiente paso.
 
-**⏳ ENCARGO ABIERTO: bajar de las 14.000 palabras.** Él, 2026-09-23,
-insistiendo después de la poda: *"son muchas, hay que simplificar más y
-dejar solo lo que es realmente útil"*. Para otra sesión, no a última
-hora de un día de trabajo. El peso: PARTE 1 **7.619** palabras, PARTE 2
-**4.915**, encabezado **~1.500** — empezar por la PARTE 1, que además se
-lee entera cada vez. ⚠️ No vale leer por encima y borrar lo que suene a
-relleno: la poda de hoy ya se llevó el relato. Solo cede aplicando el
-criterio de entrada a **cada párrafo, uno por uno**. Y apretar la
-redacción no es recortar: si la norma sigue ahí, las palabras vuelven
-la próxima vez que haya que explicarla. Recortar es **quitar**, o dejar
-el puntero a un test.
-
-**Adelgazar la PARTE 2 convirtiendo trampas en tests** (idea suya,
-2026-09-23; no toca ahora). A medida que la app se concrete, algunas
+**Adelgazar la PARTE 2 convirtiendo trampas en tests** (idea suya). A medida que la app se concrete, algunas
 trampas dejarán de poder ocurrir y su párrafo podrá quedarse en una
 línea: *"lo vigila tal test"*. El documento adelgaza **como
 consecuencia** de que la app es más segura, no a costa de nada.
