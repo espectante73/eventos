@@ -493,20 +493,9 @@ Si algún modal nuevo se queda con un z-index fijo en vez de pedirlo al
 contador, puede abrirse oculto detrás de una `VentanaFlotante` que ya
 llevara un rato en uso (su z-index ya habría subido por encima).
 
-Cómo aplicar:
-1. Toda ventana nueva se monta con `VentanaFlotante`, heredando gratis el
-   comportamiento anterior.
-2. Si una sección crece hasta tener varias partes claramente distintas
-   (como pasó con Configuración: Datos del evento, Precios, URL web, Email
-   anfitrión, Texto emails, Reinicios, Borrado total), no amontonarlas
-   todas en una sola ventana larga. En su lugar: una ventana "lanzadora"
-   pequeña con un desplegable "SECCIÓN" que abre cada parte como su propia
-   `VentanaFlotante` independiente — mismo patrón que usa la navegación de
-   la Portada para abrir Mesas, Avisos, etc.
-3. Cualquier control interactivo añadido a la cabecera de una ventana (vía
-   el prop `extra`) debe cortar la propagación del `mousedown`/
-   `touchstart` (`e.stopPropagation()`), para no arrastrar la ventana sin
-   querer.
+⚠️ Y un control interactivo puesto en la CABECERA de una ventana (prop
+`extra`) tiene que cortar la propagación del `mousedown`/`touchstart`
+(`e.stopPropagation()`): si no, tocarlo arrastra la ventana.
 
 Cualquier código nuevo que necesite "el email de un invitado" (no solo
 mostrarlo, también para decidir si puede enviársele algo) tiene que
