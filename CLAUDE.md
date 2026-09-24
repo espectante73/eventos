@@ -273,8 +273,11 @@ en la sección que se indica entre paréntesis.
 8. **Una sola pieza, no sincronizar**: si dos partes tienen que coincidir
    siempre, comparten componente o constante; no se miden por separado
    para igualarlas.
-9. **Toda ventana nueva es una `VentanaFlotante`**; si una crece mucho,
-   ventana lanzadora pequeña + una ventana por parte.
+9. **Toda ventana nueva es una `VentanaFlotante`**; si crece mucho,
+   lanzadora pequeña + una ventana por parte. ⚠️ Excepción: las que se
+   usan **mientras se mira otra cosa** —Novedades, Cronograma, Música,
+   Lista de invitados— son ventanas de verdad del sistema
+   (`usePopupWindow`).
 10. **Una vista que solo reordena o filtra lo que la Lista de invitados
     ya muestra va DENTRO de la lista, no aparte**: la lista es la raíz.
 11. **Piezas compartidas**: los botones con `Boton` (principal /
