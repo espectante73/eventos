@@ -323,33 +323,31 @@ en la sección que se indica entre paréntesis.
     de abajo en vez de arriba. **Las dos normas estaban escritas; el
     fallo fue no aplicarlas.** Por eso esto no es una norma nueva: es
     esta misma, sin la rendija.
-16. **MODELO A SEGUIR para los datos (el usuario, 2026-09-19: "una mejora
-    sustancial, práctica y para anotar como modelo a seguir").** Lo que en
-    la vida real va junto (una pareja, una familia), la app lo mantiene
-    junto SOLA, sin depender de que alguien se acuerde:
-    - un dato compartido vale para todos (el año de boda de la pareja);
-      una acción sobre uno se aplica a todos (la mesa de la familia);
-    - UNA sola definición de "familia"/"pareja" para toda la app
-      (`lib/mesas.js`, `lib/matrimonios.js`), nunca una copia por pantalla;
-    - si la regla no se puede cumplir entera, no se hace a medias: no se
-      toca nada y se avisa con la cifra concreta ("son 4 y quedan 2
-      sitios"), en una ventana que se vea;
-    - si quien escribe puede ser un colaborador que solo guarda una ficha,
-      la regla va en la BASE (trigger), no solo en la pantalla;
-    - lo que ya estaba mal de antes lo encuentra la Revisión; no se
-      "arregla" a escondidas;
-    - las excepciones que marca el usuario quedan fuera por diseño (el
-      hijo mayor con otro apellido es otra familia);
-    - ⚠️ y hay reglas del usuario POR ENCIMA: cada colaborador lleva un
-      número parecido de invitados, **entre 10 y 12**, para igualar el
-      trabajo y el dinero a recoger ("el mismo peso de responsabilidad").
-      Por eso un matrimonio PUEDE tener dos colaboradores distintos
-      (también cuando solo uno de los dos es colaborador, o los dos). No
-      avisar de eso ni "juntarlos" (decidido el 2026-09-19);
-    - y la regla lleva sus pruebas automáticas.
-    Ante un dato nuevo, preguntarse: ¿debería ir junto con el de alguien
-    más? («Una familia no se separa en las mesas», «El año de boda,
+16. **MODELO A SEGUIR para los datos.** Lo que en la vida real va junto
+    (una pareja, una familia), la app lo mantiene junto SOLA:
+    1. un dato compartido vale para todos (el año de boda de la pareja);
+       una acción sobre uno se aplica a todos (la mesa de la familia);
+    2. UNA sola definición de "familia"/"pareja" para toda la app
+       (`lib/mesas.js`, `lib/matrimonios.js`), nunca una copia por pantalla;
+    3. si no se puede cumplir entera, no se hace a medias: no se toca
+       nada y se avisa con la cifra concreta ("son 4 y quedan 2 sitios"),
+       en una ventana que se vea;
+    4. si quien escribe puede ser un colaborador que solo guarda una
+       ficha, la regla va en la BASE (trigger), no solo en la pantalla;
+    5. lo que ya estaba mal de antes lo ENCUENTRA la Revisión; no se
+       arregla a escondidas. ⚠️ Protege DECISIONES suyas, no la
+       fontanería: cambiar un archivo de sitio se hace y ya, sin
+       preguntar (él, 2026-09-24);
+    6. las excepciones que él marca quedan fuera por diseño;
+    7. ⚠️ y hay reglas suyas POR ENCIMA: cada colaborador lleva entre 10
+       y 12 invitados ("el mismo peso de responsabilidad"), así que un
+       matrimonio PUEDE tener dos colaboradores distintos. No avisar de
+       eso ni "juntarlos";
+    8. y la regla lleva sus pruebas automáticas.
+    Ante un dato nuevo: **¿debería ir junto con el de alguien más?**
+    («Una familia no se separa en las mesas», «El año de boda,
     compartido entre los cónyuges»)
+
 17. **Los valores del acabado salen de `theme.js`, nunca a mano.** Tamaño
     de letra (`T`), redondeo (`R`), sombra (`S`) y opacidad (`OP`). Un
     número suelto pone en rojo `src/theme.test.js`. Si de verdad hace
