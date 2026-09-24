@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "42.6",
+    cambios: [
+      "Los nombres duplicados de «¿Quién lo atiende?» ya se juntan de verdad: antes solo se reconocía a la misma persona si el colaborador estaba enlazado a su ficha de invitado, y ninguno lo está. Ahora también se reconocen por nombre y apellido.",
+    ],
+  },
+  {
     version: "42.5",
     cambios: [
       "En «¿Quién lo atiende?» cada persona sale una sola vez: quien es colaborador y además acomodador aparecía dos veces, una en cada lista. Ahora va en una línea, con su rol de trabajo al lado.",

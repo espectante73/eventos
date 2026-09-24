@@ -16,6 +16,7 @@
 // inicio del cronograma. Cambiar un solo bloque desplaza automáticamente
 // todos los que van después, sin tocarlos a mano.
 import { C } from "../theme";
+import { mismaPersona } from "./edicionInvitados";
 
 
 function sumarMinutos(horaBase, minutos) {
@@ -52,13 +53,33 @@ export function calcularHorasAbsolutas(horaInicio, bloques) {
 // COLABORADOR, porque es el que los bloques ya venían guardando; el del
 // invitado se queda de alias, para que lo guardado antes de juntarlos
 // siga saliendo marcado.
+// El colaborador guarda su nombre en UN solo campo ("Barrios, Jacob") y
+// el invitado lo tiene en dos. Se parte por la coma para poder
+// preguntárselo a `mismaPersona`, que es quien decide en toda la app si
+// dos personas son la misma (nombre y apellido, sin mirar mayúsculas ni
+// tildes). Sin coma no se adivina nada: se deja el apellido vacío, que
+// no casará con nadie.
+function fichaDelColaborador(colaborador) {
+  const partes = String(colaborador?.nombre || "").split(",");
+  return partes.length > 1
+    ? { apellido: partes[0], nombre: partes.slice(1).join(" ") }
+    : { nombre: partes[0] || "", apellido: "" };
+}
+
 export function personasAsignables(colaboradores, invitadosConRol, responsablesRol = {}) {
   const etiquetaRoles = (g) =>
     (g.rolesTrabajo || []).map((r) => (responsablesRol[r] === g.id ? `★ ${r}` : r));
 
   const yaListados = new Set();
   const personas = (colaboradores || []).map((c) => {
-    const comoInvitado = (invitadosConRol || []).find((g) => g.id === c.invitadoId);
+    // El enlace explícito manda, pero casi ningún colaborador lo tiene:
+    // se crean escribiendo el nombre, no eligiendo una ficha de invitado.
+    // Por eso hay segundo camino, por nombre y apellido (él, 2026-09-24:
+    // los mismos cinco seguían duplicados después del primer arreglo).
+    const conRol = invitadosConRol || [];
+    const comoInvitado =
+      (c.invitadoId ? conRol.find((g) => g.id === c.invitadoId) : null) ||
+      conRol.find((g) => mismaPersona(fichaDelColaborador(c), g));
     if (comoInvitado) yaListados.add(comoInvitado.id);
     return {
       id: c.id,

@@ -125,6 +125,31 @@ describe("personasAsignables: una sola fila por persona", () => {
     expect(p.roles).toEqual(["★ Acomodador"]);
   });
 
+  // El caso real de su boda: los colaboradores se crearon escribiendo el
+  // nombre, así que NINGUNO tiene el enlace a su ficha de invitado. Sin
+  // este camino, los cinco que son colaborador y acomodador seguían
+  // saliendo dos veces (él, 2026-09-24, con la lista delante).
+  it("sin enlace explícito, los junta por nombre y apellido", () => {
+    const jacobCol = { id: "col-9", nombre: "Barrios, Jacob", invitadoId: null };
+    const jacobInv = { id: "inv-3", nombre: "Jacob", apellido: "Barrios", rolesTrabajo: ["Acomodador"] };
+    const personas = personasAsignables([jacobCol], [jacobInv, omar]);
+    expect(personas.map((p) => p.nombre)).toEqual(["Barrios, Jacob", "Omar"]);
+    expect(personas[0].roles).toEqual(["Acomodador"]);
+    expect(personas[0].alias).toEqual(["inv-3"]);
+  });
+
+  it("las tildes y las mayúsculas no impiden juntarlos", () => {
+    const col = { id: "col-8", nombre: "JORDÁN, Adrian", invitadoId: null };
+    const inv = { id: "inv-8", nombre: "adrian", apellido: "jordan", rolesTrabajo: ["Acomodador"] };
+    expect(personasAsignables([col], [inv])).toHaveLength(1);
+  });
+
+  it("dos personas distintas de la misma familia NO se juntan", () => {
+    const dani = { id: "col-5", nombre: "Luis, Dani", invitadoId: null };
+    const miriam = { id: "inv-5", nombre: "Míriam", apellido: "Luis", rolesTrabajo: ["Acomodador"] };
+    expect(personasAsignables([dani], [miriam]).map((p) => p.nombre)).toEqual(["Luis, Dani", "Míriam"]);
+  });
+
   it("manda el id del colaborador, y el de invitado queda de alias", () => {
     const [p] = personasAsignables([noelia], [noeliaInvitada]);
     expect(p.id).toBe("col-1");
