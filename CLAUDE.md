@@ -385,14 +385,12 @@ en la sección que se indica entre paréntesis.
     `v40.1-colaboradores-solo-lo-cambiado` en `migraciones_aplicadas`).
     («Tests»: `supabase/schema.test.js` y `src/reglas-del-proyecto.test.js`)
 19. **Un mensaje de error dice en qué se ha podido equivocar, no solo
-    que está mal.** "Respuesta incorrecta" o "No se pudo guardar" dejan a
-    la persona sin saber qué hacer distinto. Hay que nombrar lo que
-    puede fallar y lo que no importa: *"escribe primero tu apellido y
-    después tu nombre; dan igual las mayúsculas y las tildes"*. Y si el
-    motivo es técnico, va en letra pequeña (`detalle` de
-    `PreguntaSeguridad`). ⚠️ Antes de escribir un "no importa", mirar el
-    código que compara: aquí `normalizar_nombre_tablon` perdona
-    mayúsculas, tildes, comas y espacios, pero **no el orden**.
+    que está mal.** Se nombra lo que puede fallar y lo que no importa:
+    *"escribe primero tu apellido y después tu nombre; dan igual las
+    mayúsculas y las tildes"*. El motivo técnico va aparte, en letra
+    pequeña (`detalle` de `PreguntaSeguridad`). ⚠️ Antes de escribir un
+    "no importa", mirar el código que compara: `normalizar_nombre_tablon`
+    perdona mayúsculas, tildes, comas y espacios, pero **no el orden**.
 20. **Lo que ESCRIBE en los datos vive en `lib/`, con pruebas.** Nunca
     dentro de una pantalla: suelto se prueba a fondo, dentro no.
     Devuelven la lista nueva y un `aviso`; si el aviso trae texto, o **no
