@@ -291,6 +291,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         onCerrarSesion={onCerrarSesion}
         enlaceTablon={enlaceTablon}
         mostrarMapaSitio
+        mostrarDiseno
         mostrarErrores
         abrirNovedades={abrirNovedades}
         abrirCronograma={abrirCronograma}

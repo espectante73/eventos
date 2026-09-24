@@ -17,14 +17,16 @@
 // sigue sin recibir avisos importantes). Para que el anfitrión no
 // pierda visibilidad de este cambio, queda constancia visible en la
 // ventana Colaboradores hasta que la confirme.
-import { useState } from "react";
-import { UserCog, LogOut, Megaphone, Map, Bug, KeyRound, Mail, Hand } from "lucide-react";
+import { useState, lazy, Suspense } from "react";
+import { UserCog, LogOut, Megaphone, Map, Bug, KeyRound, Mail, Hand, BookOpen } from "lucide-react";
 import { C, inputStyle, R, OP } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { ModalFlotante } from "./VentanaFlotante";
 import { ANCHO_FILA_MENU } from "./MenuFlotante";
 import { ModalMapaSitio } from "./MapaSitio";
+// En su propio trozo: lleva CLAUDE.md dentro y solo se baja al abrirlo.
+const ModalDiseno = lazy(() => import("./ModalDiseno"));
 import { CampoContrasena } from "./CampoContrasena";
 import { URL_REGISTRO_ERRORES } from "../constants";
 import { useMano, MANO } from "../lib/mano";
@@ -123,9 +125,10 @@ function PreguntaMano() {
   );
 }
 
-export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarErrores }) {
+export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarDiseno, mostrarErrores }) {
   const [abierta, setAbierta] = useState(false);
   const [mapaAbierto, setMapaAbierto] = useState(false);
+  const [disenoAbierto, setDisenoAbierto] = useState(false);
   const [nuevaContrasena, setNuevaContrasena] = useState("");
   const [nuevoEmail, setNuevoEmail] = useState("");
   const [guardandoContrasena, setGuardandoContrasena] = useState(false);
@@ -235,7 +238,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               CLASE_BOTON_INICIO y ANCHO_BOTON arriba. */}
           {/* `zurdo:`: con la mano izquierda elegida en el móvil, todo lo de
               aquí se alinea a la izquierda (lib/mano.js). */}
-          {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarErrores || tactil) && (
+          {(onCerrarSesion || enlaceTablon || mostrarMapaSitio || mostrarDiseno || mostrarErrores || tactil) && (
             <div className="flex flex-col items-end zurdo:items-start gap-2.5 mb-5 pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
               {onCerrarSesion && (
                 <button
@@ -271,6 +274,21 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   title="Ver el mapa de las secciones de la aplicación"
                 >
                   <Map {...ICONO} /> Mapa del sitio
+                </button>
+              )}
+              {/* El diseño de la app: CLAUDE.md, plegado por secciones. El
+                  anfitrión siempre; un colaborador, con su permiso de vista
+                  (usuario, 2026-09-24). Mismo trato que el mapa: dentro de
+                  la app y no en una pestaña, que en el móvil no tiene
+                  vuelta atrás. */}
+              {mostrarDiseno && (
+                <button
+                  onClick={() => setDisenoAbierto(true)}
+                  className={CLASE_BOTON_INICIO}
+                  style={ESTILO_BOTON_INICIO}
+                  title="Leer el documento con el que se construye la app"
+                >
+                  <BookOpen {...ICONO} /> Diseño app
                 </button>
               )}
               {/* ⚠️ Aquí había un botón "Código app" y se quitó el
@@ -358,6 +376,11 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
       )}
 
       {mapaAbierto && <ModalMapaSitio onCerrar={() => setMapaAbierto(false)} />}
+      {disenoAbierto && (
+        <Suspense fallback={null}>
+          <ModalDiseno onCerrar={() => setDisenoAbierto(false)} />
+        </Suspense>
+      )}
     </>
   );
 }

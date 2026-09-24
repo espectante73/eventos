@@ -1,0 +1,133 @@
+// El diseño de la app (CLAUDE.md) partido para leerlo DENTRO de la app
+// (usuario, 2026-09-24). Funciones puras: reciben el texto y devuelven su
+// estructura, sin pintar nada, para poder probarlas sin dibujar pantallas.
+//
+// ⚠️ El documento es también una pantalla. Solo se entiende lo que hay
+// aquí abajo: párrafos, listas, bloques de código, títulos y negrita,
+// cursiva y `código` dentro del texto. Si CLAUDE.md empieza a usar otra
+// cosa (tablas, enlaces), aquí saldrá como texto plano.
+
+export function contarPalabras(texto) {
+  return String(texto || "").split(/\s+/).filter(Boolean).length;
+}
+
+function trocear(texto, patron) {
+  const marcas = [...texto.matchAll(patron)];
+  return marcas.map((m, i) => {
+    const fin = i + 1 < marcas.length ? marcas[i + 1].index : texto.length;
+    const cuerpo = texto.slice(m.index, fin).replace(/\n=+\s*$/, "").trimEnd();
+    return {
+      num: m[1],
+      titulo: m[2].trim(),
+      texto: cuerpo.split("\n").slice(1).join("\n"),
+      palabras: contarPalabras(cuerpo),
+    };
+  });
+}
+
+// El documento tiene tres trozos: el encabezado (cómo está ordenado), la
+// PARTE 1 (reglas, secciones "## 1.N") y la PARTE 2 (trampas, "### 2.N").
+export function partirManual(texto) {
+  const t = String(texto || "");
+  const i1 = t.indexOf("# PARTE 1");
+  const i2 = t.indexOf("# PARTE 2");
+  if (i1 < 0 || i2 < 0) {
+    return { encabezado: { texto: t, palabras: contarPalabras(t) }, partes: [], palabras: contarPalabras(t) };
+  }
+  const encabezado = t.slice(0, i1);
+  const p1 = t.slice(i1, i2);
+  const p2 = t.slice(i2);
+  const titulo = (trozo) => trozo.split("\n")[0].replace(/^#\s*/, "").trim();
+  const partes = [
+    { titulo: titulo(p1), secciones: trocear(p1, /^## (1\.\d+) (.+)$/gm) },
+    { titulo: titulo(p2), secciones: trocear(p2, /^### (2\.\d+) (.+)$/gm) },
+  ].map((p) => ({ ...p, palabras: p.secciones.reduce((s, x) => s + x.palabras, 0) }));
+  return {
+    encabezado: {
+      texto: encabezado.split("\n").slice(1).join("\n").replace(/\n=+\s*$/, "").trimEnd(),
+      palabras: contarPalabras(encabezado.replace(/\n=+\s*$/, "")),
+    },
+    partes,
+    palabras: contarPalabras(t),
+  };
+}
+
+// De texto a bloques: párrafo, título, lista, lista numerada, código.
+export function bloques(texto) {
+  const salida = [];
+  let parrafo = [];
+  let lista = null;
+  let codigo = null;
+  const cerrarParrafo = () => {
+    if (parrafo.length) salida.push({ tipo: "p", texto: parrafo.join(" ") });
+    parrafo = [];
+  };
+  const cerrarLista = () => {
+    if (lista) salida.push(lista);
+    lista = null;
+  };
+  for (const linea of String(texto || "").split("\n")) {
+    if (linea.trim().startsWith("```")) {
+      if (codigo) {
+        salida.push({ tipo: "codigo", texto: codigo.join("\n") });
+        codigo = null;
+      } else {
+        cerrarParrafo();
+        cerrarLista();
+        codigo = [];
+      }
+      continue;
+    }
+    if (codigo) {
+      codigo.push(linea);
+      continue;
+    }
+    if (/^#{1,4} /.test(linea)) {
+      cerrarParrafo();
+      cerrarLista();
+      salida.push({ tipo: "titulo", texto: linea.replace(/^#+\s*/, "") });
+      continue;
+    }
+    const vineta = linea.match(/^\s*[-•] (.*)$/);
+    const numero = linea.match(/^\s{0,4}(\d+)\. (.*)$/);
+    if (vineta || numero) {
+      cerrarParrafo();
+      const tipo = vineta ? "ul" : "ol";
+      if (lista && lista.tipo !== tipo) cerrarLista();
+      if (!lista) lista = { tipo, items: [] };
+      lista.items.push(vineta ? vineta[1] : numero[2]);
+      continue;
+    }
+    if (!linea.trim()) {
+      cerrarParrafo();
+      cerrarLista();
+      continue;
+    }
+    if (lista && /^\s{2,}\S/.test(linea)) {
+      lista.items[lista.items.length - 1] += " " + linea.trim();
+      continue;
+    }
+    cerrarLista();
+    parrafo.push(linea.trim());
+  }
+  if (codigo) salida.push({ tipo: "codigo", texto: codigo.join("\n") });
+  cerrarParrafo();
+  cerrarLista();
+  return salida;
+}
+
+// Dentro de una línea: **negrita**, *cursiva* y `código`.
+export function trozosEnLinea(texto) {
+  const salida = [];
+  const patron = /`([^`]+)`|\*\*(.+?)\*\*|(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])/g;
+  let ultimo = 0;
+  for (const m of String(texto || "").matchAll(patron)) {
+    if (m.index > ultimo) salida.push({ tipo: "texto", texto: texto.slice(ultimo, m.index) });
+    if (m[1] !== undefined) salida.push({ tipo: "codigo", texto: m[1] });
+    else if (m[2] !== undefined) salida.push({ tipo: "negrita", texto: m[2] });
+    else salida.push({ tipo: "cursiva", texto: m[3] });
+    ultimo = m.index + m[0].length;
+  }
+  if (ultimo < String(texto || "").length) salida.push({ tipo: "texto", texto: texto.slice(ultimo) });
+  return salida;
+}

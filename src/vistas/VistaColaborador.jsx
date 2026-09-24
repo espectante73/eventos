@@ -1144,6 +1144,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         onCerrarSesion={onCerrarSesion}
         enlaceTablon={enlaceTablon}
         mostrarMapaSitio={puedeVerMapaSitio}
+        mostrarDiseno={tienePermiso(colaborador, PERMISOS.DISENO_VER)}
         botonExtra={
           <>
             {esAnfitrionOriginal && (

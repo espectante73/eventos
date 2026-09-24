@@ -27,6 +27,13 @@ export const PERMISOS = {
   // que mandárselo por otro lado (usuario, 2026-09-18). Igual que el del
   // mapa: solo de pantalla, sin nada que comprobar en la base.
   REPOSITORIO_VER: "repositorio_ver",
+  // Enseña en "Mi cuenta" el diseño de la app (CLAUDE.md, el documento
+  // con el que se construye). Se llamó "normas" una hora y se cambió:
+  // chocaba con las "Normas de estándar" de dentro del documento, y un
+  // colaborador podía leerlo como normas del evento. Solo de pantalla, como el mapa: el archivo
+  // ya es público en GitHub, así que no hay nada que proteger en la base
+  // (usuario, 2026-09-24: "quiero poder dar permiso de ver").
+  DISENO_VER: "diseno_ver",
 };
 
 // Etiquetas legibles, para VentanaPermisos.jsx -- un objeto en vez de un
@@ -38,6 +45,7 @@ export const ETIQUETAS_PERMISOS = {
   [PERMISOS.INVITACIONES_ENVIAR]: "Enviar invitaciones (solo confirmados y pagados)",
   [PERMISOS.MAPA_SITIO_VER]: "Ver el mapa del sitio (dónde está cada cosa en la app)",
   [PERMISOS.REPOSITORIO_VER]: "Ver el proyecto en GitHub",
+  [PERMISOS.DISENO_VER]: "Ver el diseño de la app (cómo se construye)",
 };
 
 // ⚠️ Hay DOS clases de permiso, y confundirlas ya dio un fallo real
@@ -54,7 +62,7 @@ export const ETIQUETAS_PERMISOS = {
 //
 // Al añadir un permiso nuevo hay que meterlo aquí; si no, el test
 // permisos.test.js se pone en rojo.
-export const PERMISOS_DE_VISTA = [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER];
+export const PERMISOS_DE_VISTA = [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER, PERMISOS.DISENO_VER];
 
 export function esDeEdicion(clave) {
   return !PERMISOS_DE_VISTA.includes(clave);

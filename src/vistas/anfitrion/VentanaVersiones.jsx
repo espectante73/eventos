@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "45",
+    cambios: [
+      "Nuevo en Mi cuenta: «Diseño app». Es el documento con el que se construye la app, para que puedas consultarlo tú mismo, plegado por secciones y con lo que pesa cada una. Se actualiza solo con cada versión.",
+      "Se puede dar permiso a un colaborador para verlo desde la ventana Permisos («Ver el diseño de la app»). Es un permiso de vista: no deja cambiar nada.",
+    ],
+  },
+  {
     version: "44",
     cambios: [
       "La portada y la plantilla de la invitación dejan de guardarse DENTRO de la ficha del evento y pasan al almacén. Eran 830 KB que se descargaban enteros cada vez que alguien abría la app, y otra vez cada minuto.",

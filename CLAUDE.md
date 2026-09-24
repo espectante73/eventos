@@ -33,6 +33,12 @@ Dos partes, y se usan de forma distinta:
 2. **PARTE 2 — Trampas ya pagadas.** Errores que costaron tiempo real.
    Cada una está aquí porque es lo único que impide repetirla.
 
+⚠️ **Este archivo se lee también dentro de la app** (Mi cuenta →
+«Diseño app»), plegado por secciones. Por eso la numeración 1.x / 2.x
+no puede saltarse (lo vigila `lib/manual.test.js`), y solo se pintan
+párrafos, listas, código, títulos, negrita y cursiva: una tabla o un
+enlace saldrían como texto plano.
+
 ⚠️ Una trampa entra aquí **solo si no se le puede poner un test**. Si se
 le puede, se le pone: es la regla 6 de «Cómo trabajar aquí».
 
