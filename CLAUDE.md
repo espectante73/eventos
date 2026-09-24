@@ -982,6 +982,21 @@ redacción no es recortar: si la norma sigue ahí, las palabras vuelven
 la próxima vez que haya que explicarla. Recortar es **quitar**, o dejar
 el puntero a un test.
 
+**⏳ ENCARGO ABIERTO: pruebas que DIBUJAN cada pantalla.** Nació el
+2026-09-24: un "Algo ha fallado" al pulsar un filtro que no vieron ni el
+lint, ni el build, ni las 305 pruebas de entonces. La Lista de invitados
+ya la tiene (`SeccionInvitados.pantalla.test.jsx`). Faltan, por orden de
+riesgo: el **formulario del colaborador** (lo abren 13 personas que no
+son él), el **Cronograma** y **Estado de cuentas**. ⚠️ Antes de escribir
+ninguna: hay **cuatro recetas distintas** de dibujar un componente en las
+pruebas, tres de ellas copiadas entre sí (`Boton`, `Widgets`,
+`PreguntaSeguridad`) y la cuarta la de la Lista. Primero **un solo
+ayudante** y las cuatro a él (norma 8); si no, serían siete copias. Y al
+final, un guardia que exija la prueba de cada ventana, para no tener que
+escribirlo como norma: **cero palabras**. Entonces se podrá podar el
+párrafo de 117 palabras «Sin acceso a un navegador real» de la PARTE 2,
+cuya conclusión ya es la norma 15.
+
 **Adelgazar la PARTE 2 convirtiendo trampas en tests** (idea suya,
 2026-09-23; no toca ahora). A medida que la app se concrete, algunas
 trampas dejarán de poder ocurrir y su párrafo podrá quedarse en una
