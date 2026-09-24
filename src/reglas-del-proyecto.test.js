@@ -76,6 +76,36 @@ describe("norma 21: a las personas se las nombra Apellido, Nombre", () => {
   });
 });
 
+describe("norma 3: lo que se alinea a la derecha lleva su espejo zurdo", () => {
+  // La elección de mano solo se aplica si CADA cosa pulsable lleva su
+  // espejo. `mano.test.js` prueba el mecanismo, no esto: hasta hoy no lo
+  // vigilaba nadie y se rompió una vez (2026-09-21).
+  //
+  // ⚠️ Dos casos que NO son fallo y por eso se saltan:
+  //   · en una columna (`flex-col`), `justify-end` significa ABAJO, no a
+  //     la derecha;
+  //   · el mando de música tiene lenguaje propio aprobado (norma 11).
+  //
+  // ⚠️ Y lo que este guardia NO caza: un elemento pulsable suelto que no
+  // se alinea a ningún lado. Ese fue justo el fallo del link de GitHub, y
+  // sigue dependiendo de mirarlo.
+  it("ningún `justify-end` horizontal se queda sin su `zurdo:`", () => {
+    const culpables = [];
+    for (const ruta of archivos) {
+      if (ruta.endsWith("VentanaMusicaEvento.jsx")) continue;
+      leer(ruta)
+        .split("\n")
+        .forEach((linea, i) => {
+          if (!linea.includes("justify-end")) return;
+          if (linea.includes("flex-col")) return;
+          if (linea.includes("zurdo:")) return;
+          culpables.push(`${ruta}:${i + 1}`);
+        });
+    }
+    expect(culpables).toEqual([]);
+  });
+});
+
 describe("norma 16: una sola definición de familia", () => {
   // La norma lo prometía y no era verdad: había CUATRO. Tres copiadas
   // palabra por palabra (matrimonios, revisión, invitados) y una

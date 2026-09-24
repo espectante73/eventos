@@ -580,13 +580,6 @@ corregido, pero a vigilar si se cambia de dominio en el futuro.
 
 ## El pulgar: la regla y cómo funciona (v35, 2026-09-19)
 
-⚠️ **Esto eran DOS secciones** —la regla por un lado y cómo funciona por
-otro— y decían tres veces lo mismo. Las fundió él el 2026-09-23: *"creo
-que hay dos secciones distintas que dicen lo mismo"*. Tenía razón, y de
-paso destapó que una estaba marcada como "la vigila un test" cuando
-`mano.test.js` comprueba el mecanismo, **no** que cada botón lleve su
-espejo. Esa parte no la vigila nada: por eso está escrita.
-
 ### La regla
 
 **Todo lo que se pulsa va al lado del pulgar de quien lo usa.** Desde la
@@ -598,6 +591,9 @@ ponga a un lado lleva SIEMPRE su espejo `zurdo:` en el mismo cambio
 (`justify-end zurdo:justify-start`, `items-end zurdo:items-start`,
 `zurdo:flex-row-reverse` en filas de varios botones). Sin él, la
 elección de esa persona no se aplica y el botón se queda donde caiga.
+Lo vigila `reglas-del-proyecto.test.js` (el espejo) y `mano.test.js` (el
+mecanismo). ⚠️ Lo que no caza ningún test: un elemento pulsable suelto
+que no se alinea a ningún lado — el fallo del link de GitHub.
 
 ⚠️ Vale para **cualquier cosa pulsable, no solo los botones de una
 ventana**. Se rompió el 2026-09-21 con el link al proyecto de GitHub:
