@@ -253,13 +253,9 @@ en la sección que se indica entre paréntesis.
    acomoda a esa elección; la derecha es solo lo que sale por defecto.
    («El pulgar: la regla y cómo funciona»)
 4. **Botones del mismo grupo, todos iguales y del ancho del texto más
-   largo.** En Mi cuenta el modelo es el de inicio: copia exacta de las
-   filas de "Abrir sección…" (`FilaMenu`), pastilla verde, letra dorada,
-   icono de 19 a la izquierda, ancho `ANCHO_FILA_MENU` importado (no
-   copiado). Ningún rótulo más largo que "Mapa del sitio". **Si se añade
-   un botón, se abrevia el rótulo; no se ensancha el botón.** Margen
-   derecho tan justo como el izquierdo. En otra pantalla, el modelo es el
-   que ya esté aprobado en ella (norma 1).
+   largo.** Si se añade uno, **se abrevia el rótulo; no se ensancha el
+   botón**. El modelo es el que ya esté aprobado en esa pantalla (norma
+   1). («Regla de la app: ventanas lo más pequeñas posible»)
 5. **Los textos de ayuda, al pie de la ventana y plegados** (`<details>`),
    no en medio de los botones ni del formulario.
 6. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
@@ -650,8 +646,7 @@ pastilla redondeada, letra dorada. Y **la misma medida que allí**:
 importada en MiCuenta, no copiada. El usuario pidió que ningún rótulo pase
 de "Mapa del sitio" y que el margen derecho quede tan justo como el
 izquierdo: los rótulos se abrevian ("Código app", "Errores app", "Cambiar
-clave") para caber. **Si se añade un botón, se abrevia el rótulo; no se
-ensancha el botón.** A la derecha, por el pulgar.
+clave") para caber. A la derecha, por el pulgar.
 
 ⚠️ **Lección de esta tanda**: en la v34.5 los pasé a la variante
 secundaria de `Boton` (cuadrada, solo contorno) porque me pareció mejor,
