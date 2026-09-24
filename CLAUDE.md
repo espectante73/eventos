@@ -277,11 +277,10 @@ en la sección que se indica entre paréntesis.
    ventana lanzadora pequeña + una ventana por parte.
 10. **La Lista de invitados es la raíz**: una vista que solo reordena lo
     que la lista ya muestra va dentro de la lista, no aparte.
-11. **Piezas compartidas**: botones comunes con `Boton` (principal /
-    secundario / peligro, con relieve 3D al pulsar); fotos con `HuecoFoto`
-    (16:9, mismo marco). Los lenguajes propios ya aprobados (pastilla de
-    inicio, mando de música) se respetan tal cual. Los iconos sueltos de
-    las tablas YA NO son excepción desde la v36: van con `Boton`.
+11. **Piezas compartidas**: los botones con `Boton` (principal /
+    secundario / peligro), las fotos con `HuecoFoto` (16:9, mismo marco),
+    y también los iconos sueltos de las tablas. Los lenguajes propios ya
+    aprobados —pastilla de inicio, mando de música— se respetan tal cual.
 12. **Todo quitar o borrar pregunta antes**, en la ventana de la app
     (`usePreguntaSeguridad`), nunca con `window.alert`/`window.confirm`
     (en las ventanas emergentes rompen). («Relieve, clic y pregunta de
