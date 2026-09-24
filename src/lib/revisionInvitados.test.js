@@ -253,3 +253,30 @@ describe("colaboradores sin su ficha enlazada", () => {
     expect(h.personas.map((p) => p.id)).toEqual(["inv-1"]);
   });
 });
+
+describe("la misma persona, dos veces en la lista", () => {
+  it("dos fichas con el mismo nombre y apellido salen las dos", () => {
+    const uno = persona({ id: "a", nombre: "Jacob", apellido: "Barrios", grupoFamiliar: "Barrios 01" });
+    const otro = persona({ id: "b", nombre: "Jacob", apellido: "Barrios", grupoFamiliar: "Barrios 01" });
+    const h = buscar(revisarInvitados([uno, otro]), "invitadoRepetido");
+    expect(h.personas.map((p) => p.id).sort()).toEqual(["a", "b"]);
+  });
+
+  it("las tildes y las mayúsculas no engañan", () => {
+    const uno = persona({ id: "a", nombre: "Adrián", apellido: "Jordán" });
+    const otro = persona({ id: "b", nombre: "adrian", apellido: "JORDAN" });
+    expect(claves(revisarInvitados([uno, otro]))).toContain("invitadoRepetido");
+  });
+
+  it("dos personas distintas de la misma familia no son un repetido", () => {
+    const uno = persona({ id: "a", nombre: "Dani", apellido: "Luis" });
+    const otro = persona({ id: "b", nombre: "Míriam", apellido: "Luis" });
+    expect(claves(revisarInvitados([uno, otro]))).not.toContain("invitadoRepetido");
+  });
+
+  it("las fichas todavía en blanco no cuentan como repetidas", () => {
+    const uno = persona({ id: "a", nombre: "", apellido: "" });
+    const otro = persona({ id: "b", nombre: "", apellido: "" });
+    expect(claves(revisarInvitados([uno, otro]))).not.toContain("invitadoRepetido");
+  });
+});

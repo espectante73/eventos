@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "42.9",
+    cambios: [
+      "La Revisión avisa si la misma persona está dos veces en la lista. Cada ficha cuenta por separado en el aforo, en la mesa y en las invitaciones, y hasta ahora un doble solo se veía al añadirlo, nunca después. Si son dos personas distintas que se llaman igual, se marca como excepción.",
+    ],
+  },
+  {
     version: "42.8",
     cambios: [
       "A las personas se las nombra «Apellido, Nombre» en toda la app, también en los avisos y en las preguntas de confirmación, que decían «Juan Gatell». El buscador acepta las dos formas: puedes escribir «Gatell, Juan» o solo «juan».",

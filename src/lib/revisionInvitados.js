@@ -15,7 +15,7 @@
 import { ROL_FAMILIAR } from "./rolFamiliar";
 import { calcularEdad, familiasSinEmail, ROLES_CON_EMAIL_FAMILIAR } from "./invitados";
 import { conyugesSueltos, matrimoniosDeInvitados } from "./matrimonios";
-import { colaboradoresSinFichaEnlazada } from "./edicionInvitados";
+import { colaboradoresSinFichaEnlazada, mismaPersona } from "./edicionInvitados";
 
 // Quién necesita a un adulto suyo al lado en la mesa.
 //
@@ -295,6 +295,36 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
         "Hace falta al menos un email por familia: el del esposo o el de la esposa (el que viene solo, el suyo).",
         adultosSinEmail,
         "pendiente"
+      )
+    );
+
+  // Dos fichas para la misma persona. La app ya avisa al AÑADIR a alguien
+  // que ya estaba, pero eso solo protege en ese momento: una lista
+  // importada dos veces, o una ficha recreada, deja dobles que nadie ve
+  // después. Y un doble sale caro -- cuenta dos veces en el aforo, puede
+  // ocupar dos sitios en la mesa, recibir dos invitaciones, y hace que
+  // la app trate a una persona como dos (lo que pasó en el cronograma el
+  // 2026-09-24). Dos personas distintas que se llamen igual existen: para
+  // eso está marcar la excepción.
+  const yaAgrupados = new Set();
+  const repetidos = [];
+  for (const g of invitados) {
+    if (yaAgrupados.has(g.id)) continue;
+    if (!String(g.nombre || "").trim() && !String(g.apellido || "").trim()) continue;
+    const iguales = invitados.filter((x) => mismaPersona(x, g));
+    if (iguales.length > 1) {
+      iguales.forEach((x) => yaAgrupados.add(x.id));
+      repetidos.push(...iguales);
+    }
+  }
+  if (repetidos.length)
+    hallazgos.push(
+      hallazgo(
+        "invitadoRepetido",
+        "La misma persona, dos veces en la lista",
+        "Hay dos o más fichas con el mismo nombre y apellido. Cada una cuenta por separado: en el aforo, en la mesa y en las invitaciones. Si de verdad son dos personas distintas que se llaman igual, márcalo como excepción.",
+        repetidos,
+        "error"
       )
     );
 
