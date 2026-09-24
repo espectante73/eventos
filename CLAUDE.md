@@ -1316,11 +1316,9 @@ para una prueba, dejar el `default` como estaba al terminar.
 
 ### El acabado, con una escala y no a ojo (2026-09-20, v38)
 
-**El aire**: los paneles y tarjetas (`p-3 rounded`) pasan a `p-4`. ⚠️ Las
-**filas de las tablas no se tocan**: más aire ahí choca de frente con dos
-normas suyas anteriores ("una sola línea por fila" y "las ventanas, lo
-más pequeñas posible"). Una lista de 140 invitados con más aire es una
-lista que no cabe.
+**El aire**: en paneles y tarjetas sí; ⚠️ en las **filas de las tablas
+no** — con 140 invitados, una lista con más aire es una lista que no
+cabe.
 
 ### El sello que late (2026-09-20, v38.1)
 
