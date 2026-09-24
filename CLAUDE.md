@@ -322,8 +322,8 @@ en la sección que se indica entre paréntesis.
     de abajo en vez de arriba. **Las dos normas estaban escritas; el
     fallo fue no aplicarlas.** Por eso esto no es una norma nueva: es
     esta misma, sin la rendija.
-16. **MODELO A SEGUIR para los datos.** Lo que en la vida real va junto
-    (una pareja, una familia), la app lo mantiene junto SOLA:
+16. **Lo que en la vida real va junto —una pareja, una familia— la app
+    lo mantiene junto SOLA:**
     1. un dato compartido vale para todos (el año de boda de la pareja);
        una acción sobre uno se aplica a todos (la mesa de la familia);
     2. UNA sola definición de "familia": `claveFamilia` en
