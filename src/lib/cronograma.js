@@ -40,6 +40,56 @@ export function calcularHorasAbsolutas(horaInicio, bloques) {
   return horas;
 }
 
+// ---------- Quién puede atender un bloque ----------
+//
+// Son DOS listas que se solapan: los colaboradores y los invitados con
+// algún rol de trabajo (acomodador, etc.). Un colaborador casi siempre es
+// también invitado, así que quien era las dos cosas salía dos veces. Lo
+// cazó él el 2026-09-24: "tiene los nombres duplicados cuando son
+// acomodadores".
+//
+// Aquí se juntan en una sola fila por persona. El id que manda es el del
+// COLABORADOR, porque es el que los bloques ya venían guardando; el del
+// invitado se queda de alias, para que lo guardado antes de juntarlos
+// siga saliendo marcado.
+export function personasAsignables(colaboradores, invitadosConRol, responsablesRol = {}) {
+  const etiquetaRoles = (g) =>
+    (g.rolesTrabajo || []).map((r) => (responsablesRol[r] === g.id ? `★ ${r}` : r));
+
+  const yaListados = new Set();
+  const personas = (colaboradores || []).map((c) => {
+    const comoInvitado = (invitadosConRol || []).find((g) => g.id === c.invitadoId);
+    if (comoInvitado) yaListados.add(comoInvitado.id);
+    return {
+      id: c.id,
+      nombre: c.nombre,
+      roles: comoInvitado ? etiquetaRoles(comoInvitado) : [],
+      alias: comoInvitado ? [comoInvitado.id] : [],
+    };
+  });
+
+  for (const g of invitadosConRol || []) {
+    if (yaListados.has(g.id)) continue;
+    personas.push({ id: g.id, nombre: g.nombre, roles: etiquetaRoles(g), alias: [] });
+  }
+  return personas;
+}
+
+export function estaAsignada(asignados, persona) {
+  const actuales = Array.isArray(asignados) ? asignados : [];
+  return actuales.some((id) => id === persona.id || (persona.alias || []).includes(id));
+}
+
+// Marcar o desmarcar a una persona. Al marcarla se queda SOLO su id
+// principal: si ese bloque traía guardado el id de invitado de cuando
+// eran dos filas, se sustituye en vez de dejar los dos dentro.
+export function alternarPersonaAsignada(asignados, persona) {
+  const actuales = Array.isArray(asignados) ? asignados : [];
+  const suyos = [persona.id, ...(persona.alias || [])];
+  const sinEsaPersona = actuales.filter((id) => !suyos.includes(id));
+  return estaAsignada(actuales, persona) ? sinEsaPersona : [...sinEsaPersona, persona.id];
+}
+
 function redondeado(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);

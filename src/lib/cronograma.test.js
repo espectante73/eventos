@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { calcularHorasAbsolutas, repartirEnFilas } from "./cronograma";
+import {
+  calcularHorasAbsolutas,
+  repartirEnFilas,
+  personasAsignables,
+  estaAsignada,
+  alternarPersonaAsignada,
+} from "./cronograma";
 
 const bloques = [
   { duracionMin: 15, texto: "Recepción" },
@@ -91,5 +97,59 @@ describe("repartirEnFilas: el minuto vale lo mismo en todo el dibujo", () => {
   it("el orden nunca se toca: es una cronología, no un puzle", () => {
     const filas = repartirEnFilas(conDuracion([10, 100, 10]), 400, 0, 0);
     expect(filas.flat().map((b) => b.texto)).toEqual(["B0", "B1", "B2"]);
+  });
+});
+
+// Él, 2026-09-24, con una captura de "¿Quién lo atiende?": "tiene los
+// nombres duplicados cuando son acomodadores". Un colaborador casi
+// siempre es también invitado; si además tiene rol de trabajo, salía en
+// las dos listas.
+describe("personasAsignables: una sola fila por persona", () => {
+  const noelia = { id: "col-1", nombre: "Álvarez, Noelia", invitadoId: "inv-1" };
+  const alma = { id: "col-2", nombre: "Gatel, Alma", invitadoId: "inv-9" };
+  const noeliaInvitada = { id: "inv-1", nombre: "Noelia", rolesTrabajo: ["Acomodador"] };
+  const omar = { id: "inv-7", nombre: "Omar", rolesTrabajo: ["Acomodador"] };
+
+  it("quien es colaborador Y acomodador sale una vez, con su rol al lado", () => {
+    const personas = personasAsignables([noelia], [noeliaInvitada, omar]);
+    expect(personas.map((p) => p.nombre)).toEqual(["Álvarez, Noelia", "Omar"]);
+    expect(personas[0].roles).toEqual(["Acomodador"]);
+  });
+
+  it("un colaborador sin rol de trabajo sale sin paréntesis", () => {
+    expect(personasAsignables([alma], [omar])[0].roles).toEqual([]);
+  });
+
+  it("la estrella del responsable se conserva", () => {
+    const [p] = personasAsignables([], [omar], { Acomodador: "inv-7" });
+    expect(p.roles).toEqual(["★ Acomodador"]);
+  });
+
+  it("manda el id del colaborador, y el de invitado queda de alias", () => {
+    const [p] = personasAsignables([noelia], [noeliaInvitada]);
+    expect(p.id).toBe("col-1");
+    expect(p.alias).toEqual(["inv-1"]);
+  });
+});
+
+describe("marcar a una persona en un bloque", () => {
+  const persona = { id: "col-1", nombre: "Noelia", roles: [], alias: ["inv-1"] };
+
+  it("lo guardado con el id viejo sigue saliendo marcado", () => {
+    expect(estaAsignada(["inv-1"], persona)).toBe(true);
+    expect(estaAsignada(["col-1"], persona)).toBe(true);
+    expect(estaAsignada(["otro"], persona)).toBe(false);
+  });
+
+  it("al marcarla se queda SOLO su id principal, no los dos", () => {
+    expect(alternarPersonaAsignada(["otro"], persona)).toEqual(["otro", "col-1"]);
+  });
+
+  it("al desmarcarla se va también el id viejo", () => {
+    expect(alternarPersonaAsignada(["inv-1", "otro"], persona)).toEqual(["otro"]);
+  });
+
+  it("un bloque sin nadie asignado no rompe nada", () => {
+    expect(alternarPersonaAsignada(undefined, persona)).toEqual(["col-1"]);
   });
 });

@@ -24,7 +24,13 @@
 import { useState, useEffect } from "react";
 import { Printer, Plus, UserCog } from "lucide-react";
 import { C, inputStyle, OP } from "../../theme";
-import { generarImagenCronograma, calcularHorasAbsolutas } from "../../lib/cronograma";
+import {
+  generarImagenCronograma,
+  calcularHorasAbsolutas,
+  personasAsignables,
+  estaAsignada,
+  alternarPersonaAsignada,
+} from "../../lib/cronograma";
 import { resolverColaborador } from "../../lib/invitados";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar } from "../../components/PreguntaSeguridad";
@@ -136,15 +142,7 @@ export function VentanaConfigCronograma({ data, ventana }) {
     setConfirmandoQuitar(false);
   };
 
-  const alternarAsignado = (indice, colaboradorId) => {
-    const actuales = Array.isArray(bloques[indice]?.asignados) ? bloques[indice].asignados : [];
-    const siguientes = actuales.includes(colaboradorId)
-      ? actuales.filter((id) => id !== colaboradorId)
-      : [...actuales, colaboradorId];
-    cambiarBloque(indice, "asignados", siguientes);
-  };
-
-  const imprimir = () => {
+    const imprimir = () => {
     setTimeout(() => {
       try {
         // ventana.print(), NUNCA window.print() a secas -- ver el
@@ -158,6 +156,14 @@ export function VentanaConfigCronograma({ data, ventana }) {
 
   const bloqueActual = bloques[seleccionado];
   const horasAbsolutas = calcularHorasAbsolutas(horaInicio, bloques);
+  // Sin elegir todavía vale INTERNO: es el caso normal, y así al
+  // desplegar "¿Quién lo atiende?" se ve la lista. Antes, en un bloque
+  // recién creado, debajo de los dos botones no aparecía nada (él,
+  // 2026-09-24: "en esta sección no aparece la lista").
+  const tipoAtiende = bloqueActual?.tipoAtiende || "interno";
+  // Una sola fila por persona: el que es colaborador Y acomodador salía
+  // dos veces (ver lib/cronograma.js).
+  const personas = personasAsignables(colaboradores, invitadosConRol, responsablesRol);
 
   // Resumen de una línea para el desplegable plegado -- a petición del
   // usuario, 2026-08-29: no hace falta ver el detalle de "quién lo
@@ -165,18 +171,18 @@ export function VentanaConfigCronograma({ data, ventana }) {
   const resumenAtiende = (() => {
     if (!bloqueActual) return "";
     if (seleccionado === 0) return "Automático (colaboradores)";
-    if (bloqueActual.tipoAtiende === "interno") {
+    if (tipoAtiende === "interno") {
       const n = Array.isArray(bloqueActual.asignados) ? bloqueActual.asignados.length : 0;
       return n > 0 ? `Interno (${n})` : "Interno -- nadie elegido todavía";
     }
-    if (bloqueActual.tipoAtiende === "externo") {
+    if (tipoAtiende === "externo") {
       return bloqueActual.tipoExterno === "contratado"
         ? "Externo: contratado"
         : bloqueActual.tipoExterno === "local"
         ? "Externo: del local"
         : "Externo -- falta elegir cuál";
     }
-    return "Sin definir";
+    return "";
   })();
 
   // Botón de opción simple (Interno/Externo, Del local/Contratado) --
@@ -344,57 +350,49 @@ export function VentanaConfigCronograma({ data, ventana }) {
                 <>
                   <div className="flex items-center gap-2 mb-2">
                     <BotonOpcion
-                      activo={bloqueActual.tipoAtiende === "interno"}
+                      activo={tipoAtiende === "interno"}
                       onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "interno")}
                     >
                       Interno
                     </BotonOpcion>
                     <BotonOpcion
-                      activo={bloqueActual.tipoAtiende === "externo"}
+                      activo={tipoAtiende === "externo"}
                       onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "externo")}
                     >
                       Externo
                     </BotonOpcion>
                   </div>
 
-                  {bloqueActual.tipoAtiende === "interno" &&
-                    (colaboradores.length === 0 && invitadosConRol.length === 0 ? (
+                  {tipoAtiende === "interno" &&
+                    (personas.length === 0 ? (
                       <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.tenue }}>
                         Todavía no hay ningún colaborador ni invitado con rol de trabajo.
                       </p>
                     ) : (
                       <div className="flex flex-col gap-1">
-                        {colaboradores.map((c) => (
-                          <label key={c.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
+                        {personas.map((p) => (
+                          <label key={p.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
                             <input
                               type="checkbox"
-                              checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(c.id)}
-                              onChange={() => alternarAsignado(seleccionado, c.id)}
+                              checked={estaAsignada(bloqueActual.asignados, p)}
+                              onChange={() =>
+                                cambiarBloque(
+                                  seleccionado,
+                                  "asignados",
+                                  alternarPersonaAsignada(bloqueActual.asignados, p)
+                                )
+                              }
                             />
-                            {c.nombre}
-                          </label>
-                        ))}
-                        {invitadosConRol.map((g) => (
-                          <label key={g.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
-                            <input
-                              type="checkbox"
-                              checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(g.id)}
-                              onChange={() => alternarAsignado(seleccionado, g.id)}
-                            />
-                            {g.nombre}
-                            <span style={{ opacity: OP.secundario }}>
-                              (
-                              {g.rolesTrabajo
-                                .map((r) => (responsablesRol[r] === g.id ? `★ ${r}` : r))
-                                .join(", ")}
-                              )
-                            </span>
+                            {p.nombre}
+                            {p.roles.length > 0 && (
+                              <span style={{ opacity: OP.secundario }}>({p.roles.join(", ")})</span>
+                            )}
                           </label>
                         ))}
                       </div>
                     ))}
 
-                  {bloqueActual.tipoAtiende === "externo" && (
+                  {tipoAtiende === "externo" && (
                     <div className="flex items-center gap-2">
                       <BotonOpcion
                         activo={bloqueActual.tipoExterno === "local"}

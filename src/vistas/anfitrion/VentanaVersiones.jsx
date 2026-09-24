@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "42.5",
+    cambios: [
+      "En «¿Quién lo atiende?» cada persona sale una sola vez: quien es colaborador y además acomodador aparecía dos veces, una en cada lista. Ahora va en una línea, con su rol de trabajo al lado.",
+      "Al desplegar «¿Quién lo atiende?» en un bloque nuevo ya se ve la lista: antes, hasta que no elegías Interno o Externo, debajo de los dos botones no aparecía nada.",
+    ],
+  },
+  {
     version: "42.4",
     cambios: [
       "En la imagen del cronograma, el ancho de cada recuadro vuelve a ser proporcional a sus minutos en TODO el dibujo, no solo dentro de su fila: antes cada fila se estiraba hasta el borde, así que un bloque corto que cayera solo en su fila salía enorme. Ahora el bloque más largo ocupa una fila entera y los demás se miden contra él.",
