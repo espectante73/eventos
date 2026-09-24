@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "43",
+    cambios: [
+      "En la Lista de invitados, quien además es colaborador lleva un filete dorado en el borde izquierdo de su fila y el nombre en negrita. Antes era una estrellita detrás del nombre, tan pequeña y tan clara que no se veía.",
+      "El filete va en el BORDE y no en el fondo a propósito: el fondo rojo que late sigue siendo solo del invitado al que le faltan datos, así que una fila puede ser las dos cosas sin confundirse.",
+    ],
+  },
+  {
     version: "42.9",
     cambios: [
       "La Revisión avisa si la misma persona está dos veces en la lista. Cada ficha cuenta por separado en el aforo, en la mesa y en las invitaciones, y hasta ahora un doble solo se veía al añadirlo, nunca después. Si son dos personas distintas que se llaman igual, se marca como excepción.",

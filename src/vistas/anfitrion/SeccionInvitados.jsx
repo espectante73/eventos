@@ -458,6 +458,20 @@ export function SeccionInvitados({
   // iconos al final que no tienen encabezado, están ocupando espacio del
   // resto". Con una medida fija, las tres rejillas parten de lo mismo.
   const columnasTabla = "1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.75fr 0.75fr 0.7fr 100px";
+// Filete dorado pegado al borde izquierdo de la fila de quien, además de
+// invitado, es colaborador (él, 2026-09-24). Antes era una ★ detrás del
+// nombre: estaba, pero en dorado claro y de letra pequeña -- hubo que
+// ampliar una foto tres veces para verla, así que no marcaba nada.
+//
+// ⚠️ Habla por el BORDE a propósito. El FONDO ya está ocupado: es el rojo
+// que late cuando a un invitado le faltan datos. Dos señales en el mismo
+// canal se pisan; en canales distintos, una fila puede ser las dos cosas
+// y se leen las dos.
+//
+// Y lo llevan TODAS las filas, transparente cuando no toca, incluidas la
+// cabecera y los filtros: si solo lo llevaran unas, sus columnas se
+// correrían 4 px y dejarían de cuadrar con las de al lado (norma 7).
+const FILETE_COLABORADOR = 4;
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
@@ -679,6 +693,7 @@ export function SeccionInvitados({
                 className="grid text-sm font-bold uppercase text-center"
                 style={{
                   gridTemplateColumns: columnasTabla,
+                  borderLeft: `${FILETE_COLABORADOR}px solid transparent`,
                   color: C.goldClaro,
                   fontFamily: "'IBM Plex Mono', monospace",
                   letterSpacing: "0.03em",
@@ -785,6 +800,7 @@ export function SeccionInvitados({
                 // equivalente del lado del cuerpo).
                 style={{
                   gridTemplateColumns: columnasTabla,
+                  borderLeft: `${FILETE_COLABORADOR}px solid transparent`,
                 }}
               >
                 {/* Cada celda de filtro va envuelta en el mismo recuadro
@@ -1481,6 +1497,9 @@ export function SeccionInvitados({
                   style={{
                     gridTemplateColumns: columnasTabla,
                     background: i % 2 ? C.paperDark : "#fff",
+                    borderLeft: `${FILETE_COLABORADOR}px solid ${
+                      colaboradores.some((c) => c.invitadoId === g.id) ? C.gold : "transparent"
+                    }`,
                     fontFamily: "'Inter', sans-serif",
                     color: C.charcoal,
                   }}
@@ -1503,16 +1522,20 @@ export function SeccionInvitados({
                       </span>
                     ) : (
                       <>
-                        {g.apellido}, {g.nombre}
-                        {colaboradores.some((c) => c.invitadoId === g.id) && (
-                          <span
-                            className="ml-1 text-xs"
-                            style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
-                            title="También es colaborador"
-                          >
-                            ★
-                          </span>
-                        )}
+                        <span
+                          style={
+                            colaboradores.some((c) => c.invitadoId === g.id)
+                              ? { fontWeight: 600 }
+                              : undefined
+                          }
+                          title={
+                            colaboradores.some((c) => c.invitadoId === g.id)
+                              ? "También es colaborador"
+                              : undefined
+                          }
+                        >
+                          {nombreCompleto(g)}
+                        </span>
                       </>
                     )}
                   </span>
