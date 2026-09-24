@@ -265,11 +265,11 @@ en la sección que se indica entre paréntesis.
 6. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
    protagonista y lo demás se esconde.
 7. **Tablas y listas: una sola línea por fila**, todas de la misma
-   altura; si no cabe, se ensancha o se recorta, nunca dos líneas. Y las
-   columnas cuadran ENTRE filas: cada fila es su propia caja y no ve a
-   las de al lado, así que los anchos van fijos y definidos una sola vez,
-   no a lo que mida el contenido de cada una. Lo vigila
-   `reglas-del-proyecto.test.js`.
+   altura; si no cabe, se ensancha o se recorta, nunca dos líneas. Y los
+   anchos de las columnas van **fijos y definidos una sola vez**: cada
+   fila es su propia caja y no ve a las de al lado. Lo vigila
+   `reglas-del-proyecto.test.js`, de momento solo en la fila del
+   colaborador.
 8. **Una sola pieza, no sincronizar**: si dos sitios tienen que decir
    siempre lo mismo —un componente, una constante, una función—,
    comparten la definición. Nunca dos copias mantenidas iguales a mano:
