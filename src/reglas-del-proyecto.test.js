@@ -76,6 +76,21 @@ describe("norma 21: a las personas se las nombra Apellido, Nombre", () => {
   });
 });
 
+describe("Mi cuenta recibe todo lo que sabe mostrar", () => {
+  // La v45 salió con el botón "Diseño app" invisible: VistaAnfitrion
+  // mandaba `mostrarDiseno` a la Portada, y la Portada no se lo pasaba a
+  // MiCuenta. Las pruebas de la ventana estaban en verde porque probaban
+  // la ventana suelta, no el camino hasta el botón. Lo vio él: "v45 no
+  // muestra nada nuevo".
+  it("la Portada reenvía a MiCuenta cada `mostrar…` que MiCuenta acepta", () => {
+    const firma = leer("src/components/MiCuenta.jsx").match(/export function MiCuenta\(\{([^}]*)\}\)/)[1];
+    const mostrar = firma.match(/mostrar\w+/g);
+    const portada = leer("src/components/Portada.jsx");
+    const perdidos = mostrar.filter((p) => !portada.includes(`${p}={${p}}`));
+    expect(perdidos).toEqual([]);
+  });
+});
+
 describe("1.6: tú y ustedes, nunca vosotros", () => {
   // Español de Canarias. Solo palabras que no tienen otra lectura, para
   // que el guardia no salte en falso. Las plantillas que él guarda en la

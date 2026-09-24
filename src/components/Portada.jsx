@@ -70,6 +70,8 @@ export function Portada({
   mostrarMapaSitio,
   // Igual que mostrarMapaSitio: Portada no decide, recibe el booleano.
   mostrarRepositorio,
+  // "Diseño app" en Mi cuenta: lo mismo, Portada solo lo pasa.
+  mostrarDiseno,
   // Solo lo pasa VistaAnfitrion: el panel de errores es cosa del anfitrión.
   mostrarErrores,
   // Enlace COMPLETO al tablón público (?tablon=...), ya calculado por
@@ -180,6 +182,7 @@ export function Portada({
               enlaceTablon={enlaceTablon}
               mostrarMapaSitio={mostrarMapaSitio}
               mostrarRepositorio={mostrarRepositorio}
+              mostrarDiseno={mostrarDiseno}
               mostrarErrores={mostrarErrores}
             />
           </div>

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "45.1",
+    cambios: [
+      "Ahora sí aparece «Diseño app» en Mi cuenta. En la 45 estaba construido pero no se veía: el aviso de mostrarlo se perdía por el camino.",
+    ],
+  },
+  {
     version: "45",
     cambios: [
       "Nuevo en Mi cuenta: «Diseño app». Es el documento con el que se construye la app, para que puedas consultarlo tú mismo, plegado por secciones y con lo que pesa cada una. Se actualiza solo con cada versión.",
