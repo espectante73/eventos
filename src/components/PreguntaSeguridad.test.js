@@ -5,10 +5,9 @@ import { BotonQuitar } from "./PreguntaSeguridad";
 
 // La norma: nada se quita ni se borra sin preguntar antes.
 describe("BotonQuitar", () => {
-  let vista, contenedor;
+  let vista;
   beforeEach(() => {
     vista = montar(createElement("span"));
-    contenedor = vista.contenedor;
   });
   afterEach(() => {
     vista.desmontar();
