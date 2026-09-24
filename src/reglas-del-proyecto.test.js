@@ -76,6 +76,28 @@ describe("norma 21: a las personas se las nombra Apellido, Nombre", () => {
   });
 });
 
+describe("las imágenes no vuelven a meterse dentro de la ficha del evento", () => {
+  // La norma «Las imágenes viven FUERA de la base» estaba escrita desde
+  // el 2026-09-17 para las fotos de boda, y se incumplía en `evento`: la
+  // portada y la plantilla de invitación iban como texto dentro de la
+  // fila. 830 KB que se bajaban en cada apertura y cada minuto, y que de
+  // paso cortaban el guardado por "statement timeout" al tocar cualquier
+  // otra cosa del evento.
+  it("nadie guarda un data: en evento.imagen ni en imagenInvitacion", () => {
+    const culpables = archivos.filter((r) => /imagen\w*:\s*(dataUrl|"?data:)/.test(sinComentarios(leer(r))));
+    expect(culpables).toEqual([]);
+  });
+
+  it("las dos subidas pasan por el almacén", () => {
+    for (const ruta of [
+      "src/vistas/anfitrion/VentanaConfigDatosEvento.jsx",
+      "src/vistas/anfitrion/VentanaInvitaciones.jsx",
+    ]) {
+      expect(leer(ruta)).toContain("guardarImagenEvento(");
+    }
+  });
+});
+
 describe("cada pantalla tiene una prueba que la dibuja", () => {
   // Nació el 2026-09-24: un "Algo ha fallado" al pulsar un filtro que no
   // vieron ni el lint, ni el build, ni las 305 pruebas de entonces --

@@ -2144,6 +2144,11 @@ insert into storage.buckets (id, name, public) values ('musica-ambiental', 'musi
   on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('og-imagen', 'og-imagen', true)
   on conflict (id) do nothing;
+-- La portada y la plantilla de invitación: en el cajón, no dentro de la
+-- fila de `evento` (2026-09-24, v44). Público como og-imagen: la portada
+-- la ve cualquiera que abra el tablón.
+insert into storage.buckets (id, name, public) values ('imagenes-evento', 'imagenes-evento', true)
+  on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('cronograma', 'cronograma', true)
   on conflict (id) do nothing;
 insert into storage.buckets (id, name, public) values ('musica-fondo', 'musica-fondo', true)
@@ -2177,6 +2182,14 @@ CREATE POLICY musica_fondo_solo_anfitrion_borra ON storage.objects FOR DELETE TO
 CREATE POLICY musica_fondo_solo_anfitrion_reemplaza ON storage.objects FOR UPDATE TO authenticated USING (((bucket_id = 'musica-fondo'::text) AND public.es_anfitrion())) WITH CHECK (((bucket_id = 'musica-fondo'::text) AND public.es_anfitrion()));
 
 CREATE POLICY musica_fondo_solo_anfitrion_sube ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'musica-fondo'::text) AND public.es_anfitrion()));
+
+CREATE POLICY imagenes_evento_lectura_publica ON storage.objects FOR SELECT USING ((bucket_id = 'imagenes-evento'::text));
+
+CREATE POLICY imagenes_evento_solo_anfitrion_sube ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'imagenes-evento'::text) AND public.es_anfitrion()));
+
+CREATE POLICY imagenes_evento_solo_anfitrion_reemplaza ON storage.objects FOR UPDATE TO authenticated USING (((bucket_id = 'imagenes-evento'::text) AND public.es_anfitrion())) WITH CHECK (((bucket_id = 'imagenes-evento'::text) AND public.es_anfitrion()));
+
+CREATE POLICY imagenes_evento_solo_anfitrion_borra ON storage.objects FOR DELETE TO authenticated USING (((bucket_id = 'imagenes-evento'::text) AND public.es_anfitrion()));
 
 CREATE POLICY og_imagen_lectura_publica ON storage.objects FOR SELECT USING ((bucket_id = 'og-imagen'::text));
 

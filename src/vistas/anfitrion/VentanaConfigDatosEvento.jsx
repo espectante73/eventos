@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Image as ImageIcon, Euro, Mail, Globe, ShieldCheck } from "lucide-react";
 import { C, inputStyle, T, OP } from "../../theme";
 import { redimensionarImagenArchivo } from "../../lib/descargas";
+import { guardarImagenEvento, IMAGEN_EVENTO, estaDentroDeLaFicha, pesoEnKB } from "../../lib/imagenesEvento";
 import { supabase } from "../../supabaseClient";
 import { Field, TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
@@ -105,6 +106,23 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
     }
   };
 
+  // La portada que se subió antes de que esto existiera está DENTRO de la
+  // fila. No se mueve sola (norma 16: lo que ya estaba mal no se arregla a
+  // escondidas): se enseña lo que pesa y se mueve cuando él lo pulse.
+  const portadaDentro = estaDentroDeLaFicha(evento.imagen);
+  const moverPortadaAlAlmacen = async () => {
+    setErrorImagenPortada("");
+    setSubiendoImagenPortada(true);
+    try {
+      const url = await guardarImagenEvento(evento.imagen, IMAGEN_EVENTO.PORTADA);
+      persistEvento({ ...evento, imagen: url });
+    } catch (_) {
+      setErrorImagenPortada("No se ha podido mover la imagen al almacén.");
+    } finally {
+      setSubiendoImagenPortada(false);
+    }
+  };
+
   const onSeleccionarArchivoImagenPortada = async (e) => {
     const file = e.target.files && e.target.files[0];
     e.target.value = "";
@@ -120,9 +138,13 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
       // (redimensionarImagenArchivo(file, 2000, 0.88) en
       // VentanaInvitaciones.jsx), incluso un punto por encima.
       const dataUrl = await redimensionarImagenArchivo(file, 2000, 0.9);
-      persistEvento({ ...evento, imagen: dataUrl });
+      // Al ALMACÉN, no dentro de la fila: en la ficha del evento solo va
+      // la dirección (ver lib/imagenesEvento.js y la norma «Las imágenes
+      // viven FUERA de la base»).
+      const url = await guardarImagenEvento(dataUrl, IMAGEN_EVENTO.PORTADA);
+      persistEvento({ ...evento, imagen: url });
     } catch (_) {
-      setErrorImagenPortada("No se ha podido procesar la imagen. Prueba con otra.");
+      setErrorImagenPortada("No se ha podido guardar la imagen. Prueba con otra.");
     } finally {
       setSubiendoImagenPortada(false);
     }
@@ -211,6 +233,20 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
         <div>
           <Field label="Imagen de portada">
             <div className="flex items-center gap-2 flex-wrap">
+              {portadaDentro && (
+                <div
+                  className="w-full rounded px-3 py-2 text-xs flex items-center justify-between gap-2 flex-wrap"
+                  style={{ background: C.avisoFondo, border: `1px solid ${C.peligro}` }}
+                >
+                  <span style={{ color: C.charcoal }}>
+                    Esta imagen está guardada <b>dentro de la ficha del evento</b> ({pesoEnKB(evento.imagen)} KB).
+                    Eso se descarga entero cada vez que alguien abre la app.
+                  </span>
+                  <Boton variante="principal" tamano="pequeno" onClick={moverPortadaAlAlmacen} disabled={subiendoImagenPortada}>
+                    {subiendoImagenPortada ? "Moviendo…" : "Moverla al almacén"}
+                  </Boton>
+                </div>
+              )}
               {evento.imagen && (
                 <img
                   src={evento.imagen}

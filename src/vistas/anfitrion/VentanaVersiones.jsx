@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "44",
+    cambios: [
+      "La portada y la plantilla de la invitación dejan de guardarse DENTRO de la ficha del evento y pasan al almacén. Eran 830 KB que se descargaban enteros cada vez que alguien abría la app, y otra vez cada minuto.",
+      "Las que ya estaban dentro no se mueven solas: en Datos del evento y en Invitaciones sale un aviso con lo que pesan y un botón para moverlas cuando tú quieras.",
+    ],
+  },
+  {
     version: "43.2",
     cambios: [
       "Arreglado el «Algo ha fallado» al filtrar por Acomodador en la Lista de invitados. Era un fallo mío de la versión anterior: la lista se filtraba antes de que existiera uno de los valores que necesitaba. Los datos nunca estuvieron en peligro.",
