@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { X } from "lucide-react";
 import { construirEnlaceTablon } from "../lib/url";
 import { usePopupWindow } from "../lib/usePopupWindow";
+import { nombreCompleto } from "../lib/formato";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { C, T, R } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
@@ -225,7 +226,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
     const nuevoId = colaboradorId || null;
     const invitado = invitados.find((g) => g.id === id);
     if (nuevoId && invitado && !invitado.rolFamiliar) {
-      return `${invitado.nombre} ${invitado.apellido} todavía no tiene rol familiar. Ponle su rol (O, A, H, P o S) antes de asignarle colaborador: el formulario que verá el colaborador depende de ese rol.`;
+      return `${nombreCompleto(invitado)} todavía no tiene rol familiar. Ponle su rol (O, A, H, P o S) antes de asignarle colaborador: el formulario que verá el colaborador depende de ese rol.`;
     }
     persistInvitados(
       invitados.map((g) => (g.id === id ? { ...g, colaboradorId: nuevoId } : g))

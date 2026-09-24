@@ -412,6 +412,11 @@ en la sección que se indica entre paréntesis.
     2026-09-23 (`v40-guardar-solo-lo-cambiado` y
     `v40.1-colaboradores-solo-lo-cambiado` en `migraciones_aplicadas`).
     («Tests»: `supabase/schema.test.js` y `src/reglas-del-proyecto.test.js`)
+21. **A las personas se las nombra "Apellido, Nombre"**, en toda la app:
+    listas, desplegables, avisos y preguntas de confirmación. Así es como
+    él las busca — *"los localizo por apellido, es la filosofía de la
+    app"*, y venía de su origen. Una sola definición, `nombreCompleto` en
+    `lib/formato.js`. Lo vigila `reglas-del-proyecto.test.js`.
 
 
 ## Reglas de diseño ya decididas

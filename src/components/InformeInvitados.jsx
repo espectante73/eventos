@@ -9,6 +9,7 @@ import { useState } from "react";
 import { ChevronDown, AlertTriangle, CircleCheck, Clock } from "lucide-react";
 import { C, T, OP } from "../theme";
 import { Boton } from "./Boton";
+import { nombreCompleto } from "../lib/formato";
 import { BotonQuitar } from "./PreguntaSeguridad";
 
 // `excepciones`: los casos aceptados a propósito (lib/revisionInvitados.js).
@@ -158,7 +159,7 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
                   titulo="Quitar esta excepción"
                   pregunta={{
                     titulo: "¿Quitar la excepción?",
-                    texto: `La Revisión volverá a avisar de ${persona.nombre} ${persona.apellido}: «${titulo}».`,
+                    texto: `La Revisión volverá a avisar de ${nombreCompleto(persona)}: «${titulo}».`,
                     rotulo: "Sí, quitarla",
                   }}
                   onClick={() => onQuitarExcepcion(persona, clave)}

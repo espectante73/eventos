@@ -59,6 +59,20 @@ describe("norma 7: la fila del invitado, de una sola línea y a la misma altura"
   });
 });
 
+describe("norma 21: a las personas se las nombra Apellido, Nombre", () => {
+  // Él, 2026-09-24: "los localizo por apellido, es la filosofía de la
+  // app", y venía "desde su origen primitivo". La lista, el buscador y
+  // los desplegables ya lo hacían; se salían los avisos y las preguntas
+  // de confirmación, que decían "Juan Gatell". Una sola definición,
+  // `nombreCompleto` en lib/formato.js.
+  it("nadie vuelve a escribir el nombre delante del apellido", () => {
+    const culpables = archivos.filter((r) =>
+      /\$\{\w+\.nombre\}\s+\$\{\w+\.apellido\}/.test(sinComentarios(leer(r)))
+    );
+    expect(culpables).toEqual([]);
+  });
+});
+
 describe("la Música del evento no se descarga en el local", () => {
   // Se abre en el local, con un wifi desconocido, delante de los
   // invitados: no puede quedarse descargando. Va DENTRO del trozo de

@@ -21,7 +21,7 @@ import {
   importeEsperadoInvitado,
   resolverColaborador,
 } from "../lib/invitados";
-import { ordenarPorApellidoNombre } from "../lib/formato";
+import { ordenarPorApellidoNombre, nombreCompleto } from "../lib/formato";
 import { construirEnlaceTablon } from "../lib/url";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
 import { usePopupWindow } from "../lib/usePopupWindow";
@@ -694,19 +694,18 @@ function FilaInvitadoColaborador({
   // juntas, el pulgar puede tocar el botón de pago de un invitado equivocado
   // por error — así hay una última comprobación antes de que cuente.
   const confirmarPago = () => {
-    const nombreCompleto = `${g.nombre} ${g.apellido}`.trim();
     if (!g.pagado && !datosCompletos(g)) {
       preguntar({
         titulo: "Todavía no",
-        texto: `No se puede marcar a ${nombreCompleto} como pagado: faltan sus datos obligatorios (año de nacimiento y alergias).`,
+        texto: `No se puede marcar a ${nombreCompleto(g)} como pagado: faltan sus datos obligatorios (año de nacimiento y alergias).`,
         soloAviso: true,
       });
       return;
     }
     preguntar(
       g.pagado
-        ? { titulo: "¿Quitar el pago?", texto: nombreCompleto, rotulo: "Sí, quitarlo", alConfirmar: () => onMarcarPagado(g.id, false) }
-        : { titulo: "¿Marcar como pagado?", texto: nombreCompleto, rotulo: "Sí, pagado", peligro: false, alConfirmar: () => onMarcarPagado(g.id, true) }
+        ? { titulo: "¿Quitar el pago?", texto: nombreCompleto(g), rotulo: "Sí, quitarlo", alConfirmar: () => onMarcarPagado(g.id, false) }
+        : { titulo: "¿Marcar como pagado?", texto: nombreCompleto(g), rotulo: "Sí, pagado", peligro: false, alConfirmar: () => onMarcarPagado(g.id, true) }
     );
   };
 
@@ -731,19 +730,18 @@ function FilaInvitadoColaborador({
     : "todavía no ha pagado";
 
   const confirmarPresente = () => {
-    const nombreCompleto = `${g.nombre} ${g.apellido}`.trim();
     if (!puedeTocarLlegada) {
       preguntar({
         titulo: "Todavía no",
-        texto: `No se puede marcar la llegada de ${nombreCompleto}: ${motivoBloqueo}.`,
+        texto: `No se puede marcar la llegada de ${nombreCompleto(g)}: ${motivoBloqueo}.`,
         soloAviso: true,
       });
       return;
     }
     preguntar(
       g.presente
-        ? { titulo: "¿Quitar la llegada?", texto: nombreCompleto, rotulo: "Sí, quitarla", alConfirmar: () => onMarcarPresente(g.id, false) }
-        : { titulo: "¿Ya está aquí?", texto: nombreCompleto, rotulo: "Sí, ha llegado", peligro: false, alConfirmar: () => onMarcarPresente(g.id, true) }
+        ? { titulo: "¿Quitar la llegada?", texto: nombreCompleto(g), rotulo: "Sí, quitarla", alConfirmar: () => onMarcarPresente(g.id, false) }
+        : { titulo: "¿Ya está aquí?", texto: nombreCompleto(g), rotulo: "Sí, ha llegado", peligro: false, alConfirmar: () => onMarcarPresente(g.id, true) }
     );
   };
 
@@ -829,9 +827,9 @@ function FilaInvitadoColaborador({
           onClick={confirmarPresente}
           title={
             g.presente
-              ? `${g.nombre} ya está — toca para quitarlo`
+              ? `${nombreCompleto(g)} ya está — toca para quitarlo`
               : puedeTocarLlegada
-                ? `Marcar que ${g.nombre} ha llegado`
+                ? `Marcar que ${nombreCompleto(g)} ha llegado`
                 : `No se puede: ${motivoBloqueo}`
           }
           className="boton-3d flex items-center justify-center rounded-full flex-shrink-0"

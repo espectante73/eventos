@@ -70,7 +70,8 @@ describe("importar una lista", () => {
   it("con algunos repetidos, importa el resto y dice a quién se saltó", () => {
     const { invitados, aviso } = importarInvitados([juan], [fila("Juan", "Gatell"), fila("Luis", "Mora")]);
     expect(invitados).toHaveLength(2);
-    expect(aviso).toContain("Juan Gatell");
+    // "Apellido, Nombre" en todas partes: así se localiza a alguien aquí.
+    expect(aviso).toContain("Gatell, Juan");
   });
 
   it("una lista vacía no toca nada", () => {

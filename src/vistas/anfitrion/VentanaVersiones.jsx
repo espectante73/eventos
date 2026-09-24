@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "42.8",
+    cambios: [
+      "A las personas se las nombra «Apellido, Nombre» en toda la app, también en los avisos y en las preguntas de confirmación, que decían «Juan Gatell». El buscador acepta las dos formas: puedes escribir «Gatell, Juan» o solo «juan».",
+    ],
+  },
+  {
     version: "42.7",
     cambios: [
       "En «¿Quién lo atiende?» todos salen con su apellido y la lista va ordenada por él. Antes, quien solo era invitado con rol de trabajo salía con el nombre de pila suelto y al final de la lista.",

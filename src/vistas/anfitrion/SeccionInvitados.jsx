@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { C, inputStyle, R, T, OP } from "../../theme";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio } from "../../lib/invitados";
-import { ordenarPorApellidoNombre } from "../../lib/formato";
+import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, anioDelEvento } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
@@ -335,7 +335,10 @@ export function SeccionInvitados({
     .filter((g) => {
       if (filtros.texto) {
         const t = filtros.texto.toLowerCase();
-        const texto = `${g.nombre} ${g.apellido} ${g.grupoFamiliar || ""}`.toLowerCase();
+        // Se busca contra las dos formas: "Gatell, Juan" (como se
+        // nombra en toda la app) y el nombre suelto, para que escribir
+        // solo "juan" siga valiendo.
+        const texto = `${nombreCompleto(g)} ${g.nombre} ${g.grupoFamiliar || ""}`.toLowerCase();
         if (!texto.includes(t)) return false;
       }
       if (filtros.grupoFamiliar && g.grupoFamiliar !== filtros.grupoFamiliar) return false;
@@ -486,7 +489,7 @@ export function SeccionInvitados({
     preguntar({
       titulo: "¿Permitir esta excepción?",
       texto:
-        `${g.nombre} ${g.apellido}: «${h.titulo}».\n` +
+        `${nombreCompleto(g)}: «${h.titulo}».\n` +
         "La Revisión dejará de avisar de este caso; de los demás, no. Se puede deshacer abajo, en «Excepciones permitidas».",
       rotulo: "Sí, permitir",
       peligro: false,
@@ -1325,7 +1328,7 @@ export function SeccionInvitados({
             hallazgos={hallazgos}
             // Un hallazgo puede traer sus propios filtros (p. ej. "los de este
             // colaborador"); si no, se busca a la persona por su nombre.
-            onBuscar={(g) => setFiltros({ ...filtros, ...(g.filtros || { texto: `${g.nombre} ${g.apellido}` }) })}
+            onBuscar={(g) => setFiltros({ ...filtros, ...(g.filtros || { texto: nombreCompleto(g) }) })}
             onCerrar={cerrarRevision}
             excepciones={excepcionesRevision}
             onExcepcion={permitirExcepcion}
@@ -1804,10 +1807,10 @@ export function SeccionInvitados({
                     </Boton>
                     <BotonQuitar
                       borrar
-                      titulo={`Eliminar a ${g.nombre} ${g.apellido}`.trim()}
+                      titulo={`Eliminar a ${nombreCompleto(g)}`}
                       pregunta={{
                         titulo: "¿Eliminar de la lista?",
-                        texto: `${g.nombre} ${g.apellido}`.trim() + " se borra de la lista de invitados.",
+                        texto: nombreCompleto(g) + " se borra de la lista de invitados.",
                         rotulo: "Sí, eliminar",
                       }}
                       onClick={() => eliminarInvitado(g.id)}

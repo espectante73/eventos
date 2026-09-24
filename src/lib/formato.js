@@ -66,6 +66,22 @@ export function diasHasta(fechaISO) {
   return Math.round((objetivo - hoyUTC) / 86400000);
 }
 
+// Cómo se nombra a una persona en TODA la app: "Apellido, Nombre".
+//
+// No es una preferencia de estilo: es cómo se busca a alguien aquí. Él,
+// 2026-09-24: "los localizo por apellido, es la filosofía de la app", y
+// venía "desde su origen primitivo" -- la lista, el buscador, el
+// formulario y los desplegables ya lo hacían; lo que se salía eran los
+// avisos y las preguntas de confirmación, que decían "Jacob Barrios".
+// En un solo sitio para que no vuelva a derivar.
+export function nombreCompleto(persona) {
+  const apellido = String(persona?.apellido || "").trim();
+  const nombre = String(persona?.nombre || "").trim();
+  if (!apellido) return nombre;
+  if (!nombre) return apellido;
+  return `${apellido}, ${nombre}`;
+}
+
 export function ordenarPorApellidoNombre(lista) {
   return lista
     .slice()

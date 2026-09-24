@@ -14,6 +14,8 @@
 // venir). Quien de la familia no está confirmado todavía se queda sin mesa;
 // al confirmarlo, se sienta con los suyos (confirmarConSuFamilia).
 
+import { nombreCompleto } from "./formato";
+
 export function claveFamiliaMesa(g) {
   return String(g?.grupoFamiliar || g?.apellido || g?.id || "").trim().toLowerCase();
 }
@@ -44,7 +46,7 @@ export function asignarMesaConSuFamilia(invitados, id, numero, mesas) {
   if (!g.confirmado) {
     return {
       invitados,
-      aviso: `${g.nombre} ${g.apellido}`.trim() + " todavía no está confirmado: confírmalo antes de asignarle mesa.",
+      aviso: nombreCompleto(g) + " todavía no está confirmado: confírmalo antes de asignarle mesa.",
     };
   }
 
@@ -93,7 +95,7 @@ export function confirmarConSuFamilia(invitados, id, mesas) {
     return {
       invitados: siguiente,
       aviso:
-        `${g.nombre} ${g.apellido}`.trim() +
+        nombreCompleto(g) +
         ` ya está confirmado, pero en la mesa ${numero} de su familia no queda sitio: ` +
         "sube la capacidad de esa mesa para sentarlo con los suyos.",
     };

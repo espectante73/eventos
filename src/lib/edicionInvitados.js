@@ -20,6 +20,7 @@
 // bloquearlo sería decidir por él.
 import { uid } from "./id";
 import { claveFamiliaMesa } from "./mesas";
+import { nombreCompleto } from "./formato";
 
 // Dos personas son "la misma" si coinciden nombre y apellido, sin
 // mirar mayúsculas, tildes ni espacios de más — el mismo criterio que
@@ -106,7 +107,7 @@ export function agregarInvitado(invitados, datos) {
   const repetido = invitados.some((g) => mismaPersona(g, nuevo));
   return {
     invitados: [...invitados, nuevo],
-    aviso: repetido ? `Ojo: ya había un ${nombre} ${apellido} en la lista. Se ha añadido igual.` : "",
+    aviso: repetido ? `Ojo: ya había un ${nombreCompleto({ nombre, apellido })} en la lista. Se ha añadido igual.` : "",
   };
 }
 
@@ -129,7 +130,7 @@ export function importarInvitados(invitados, filas) {
     // Contra la lista que ya hay Y contra los de esta misma importación:
     // el texto pegado también puede traer repetidos dentro.
     const yaEsta = [...invitados, ...nuevos].some((g) => mismaPersona(g, candidato));
-    if (yaEsta) saltados.push(`${candidato.nombre} ${candidato.apellido}`.trim());
+    if (yaEsta) saltados.push(nombreCompleto(candidato));
     else nuevos.push(candidato);
   }
 
@@ -157,7 +158,7 @@ export function eliminarInvitado(invitados, id, colaboradores = []) {
     return {
       invitados,
       aviso:
-        `${g.nombre} ${g.apellido}`.trim() +
+        nombreCompleto(g) +
         ` es también el colaborador "${esColaborador.nombre}". Quítalo primero de la lista de colaboradores.`,
     };
   }
@@ -195,7 +196,7 @@ export function cambiarCampo(invitados, id, campo, valor) {
         return {
           invitados: siguiente,
           aviso:
-            `${g.nombre} ${g.apellido}`.trim() +
+            nombreCompleto(g) +
             ` pasa a ser de otra familia. Los otros ${quedan} se quedan como estaban, ` +
             "así que ya no se sentarán juntos por la regla de la familia.",
         };
