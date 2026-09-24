@@ -401,10 +401,9 @@ en la sección que se indica entre paréntesis.
     tocado nada y ese es el motivo. Modelo: `lib/mesas.js`,
     `lib/edicionInvitados.js`. Lo que solo lee o pinta puede quedarse en
     el componente.
-21. **A las personas se las nombra "Apellido, Nombre"**, en toda la app:
-    listas, desplegables, avisos y preguntas de confirmación. Así es como
-    él las busca — *"los localizo por apellido, es la filosofía de la
-    app"*, y venía de su origen. Una sola definición, `nombreCompleto` en
+21. **La identidad de una persona se muestra siempre como "Apellido,
+    Nombre"**, en toda la app: listas, desplegables, avisos y preguntas
+    de confirmación. Una sola definición, `nombreCompleto` en
     `lib/formato.js`. Lo vigila `reglas-del-proyecto.test.js`.
 22. **Una persona, varios papeles.** Invitado, colaborador y acomodador
     pueden ser el mismo. Una lista de gente se arma **con personas**, con
