@@ -289,21 +289,14 @@ en la sección que se indica entre paréntesis.
 13. **Lo que se PULSA lleva relieve; lo que es un LINK va subrayado.**
     Son dos cosas distintas, no una norma con una excepción:
     - **ACCIÓN sobre los datos** —guardar, borrar, confirmar, abrir una
-      ventana— → `Boton`: relieve, se hunde al tocarlo, clic suave y
-      vibración (v36). Incluye desplegables y títulos plegables.
-    - **LINK, que te lleva a otro sitio** —otra pantalla del login, otra
-      web— → `EnlaceTexto`: **subrayado, en gris suave**. Es el
-      **estándar de internet**: lo que cualquiera reconoce al verlo y lo
-      que un desarrollador espera encontrar. Por eso se respeta tal cual,
-      sin inventar nada.
-    Nada de texto subrayado para una ACCIÓN, y nada de pastilla con
-    relieve para un LINK. Una sola pieza para los dos usos, en
-    `components/Boton.jsx`. `EnlaceTexto` lleva `py-2` aunque se vea como
-    texto: en el móvil un link fino se falla.
-    ⚠️ Escrita así el 2026-09-23, porque la versión anterior decía "nada
-    de texto subrayado" y tres líneas después admitía el subrayado como
-    excepción. Lo vio él: **una norma que se contradice no es una norma.**
-    («Dos clases de permiso, no una»)
+      ventana— → `Boton`: relieve, se hunde al tocarlo, clic y vibración.
+      Incluye desplegables y títulos plegables.
+    - **LINK que lleva a otro sitio** —otra pantalla del login, otra
+      web— → `EnlaceTexto`: subrayado y en gris. Es el **estándar de
+      internet**, y por eso se respeta sin inventar nada.
+    Una sola pieza para los dos usos (`components/Boton.jsx`); suelto
+    lleva `py-2`, que en el móvil un link fino se falla. Lo vigila
+    `Boton.test.js`. («Dos clases de permiso, no una»)
 14. **Quitar/borrar = `BotonQuitar`**: el mismo círculo rojo en toda la
     app, 24 px a la vista y 44 px de zona de toque (el mínimo del móvil).
     X = quitar; papelera (`borrar`) = se borra para siempre. Lleva la
