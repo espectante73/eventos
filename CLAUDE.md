@@ -403,21 +403,11 @@ con la firma **anterior** exacta (tipos en el mismo orden). Ver el
 historial de `drop function if exists enviar_email(...)` en
 `supabase/schema.sql` como referencia de las tres firmas que ha tenido.
 
-⚠️ Cómo se acabó de diagnosticar el episodio del 2026-08-06 (por si se
-repite): el primer intento de `drop function` no lo arregló porque el
-propio SQL Editor de Supabase tenía contenido antiguo sin borrar en la
-misma pestaña ("Untitled query" reutilizada de una vez anterior) — al
-pulsar "Run" se re-ejecutó también un `create or replace function
-enviar_email(...)` viejo de 6 parámetros que quedaba ahí debajo, y volvió
-a dejar las dos versiones a la vez. Para pedirle al usuario que ejecute
-SQL nuevo: decirle que abra una **pestaña nueva** del editor y
-pegue ahí. Una pestaña nueva nace vacía siempre — el usuario lo señaló
-el 2026-09-06, harto de leer "borra todo el contenido" en cada tanda. El
-aviso de borrar solo tiene sentido si se REUTILIZA una pestaña ya usada,
-que es justo lo que pasó aquel día. Para diagnosticar "function is not unique" con
-certeza, esta consulta lista las firmas reales que existen de verdad en
-la base de datos (más fiable que mirar el código fuente, que solo dice
-lo que *debería* haber):
+⚠️ Todo SQL se le pasa para una **pestaña NUEVA** del editor: una
+reutilizada puede llevar debajo un `create or replace` viejo que se
+vuelve a ejecutar y deja dos versiones de la misma función. Para
+diagnosticar "function is not unique", las firmas reales que hay en la
+base (más fiable que el código, que solo dice lo que *debería* haber):
 ```sql
 select p.oid::regprocedure as firma
 from pg_proc p
@@ -427,13 +417,9 @@ where p.proname = 'nombre_funcion' and n.nspname = 'public';
 
 ### "avisoPendiente" e "invitacionEnviada" se recalculan solos (triggers), no se fijan a mano
 
-El 2026-08-06, tras varias rondas de bugs (cada uno en un sitio distinto
-donde se nos olvidaba actualizar la bandera al tocar otra parte del
-código), se identificó el patrón de fondo: la app "registraba lo que
-HACÍA" (una bandera que alguien enciende/apaga a mano en cada función)
-en vez de "leer lo que TIENE" (recalcular del estado actual cada vez).
-Eso obligaba a mantener la misma lógica sincronizada a mano en 4+ sitios
-distintos, y se desincronizaba cada vez que se tocaba solo uno.
+El principio: **leer lo que la app TIENE, no registrar lo que HACE.**
+Una bandera que cada función enciende y apaga a mano obliga a mantener la
+misma lógica en varios sitios, y se desincroniza en cuanto se toca uno.
 
 Solución: dos triggers en Postgres sobre `invitados`
 (`trg_recalcular_aviso_pendiente`, `trg_invalidar_invitacion_familia`,
@@ -541,13 +527,10 @@ sí se conceden a propósito a `anon`, porque ellas mismas comprueban el
 token dentro del SQL), aquí el permiso de ejecución en sí es parte del
 cierre de seguridad.
 
-⚠️ **El envío de emails de Supabase Auth (confirmación, recuperación de
-contraseña) tiene un límite de tasa bajo en el plan gratuito** — ya se
-alcanzó ("email rate limit exceeded") solo con las pruebas de esta
-sesión. Si hace falta dar de alta a varios colaboradores por
-autorregistro en poco tiempo, puede hacer falta escalonarlo o configurar
-un SMTP propio (p.ej. Resend, ya usado para los avisos) en Authentication
-→ Settings → SMTP Settings.
+⚠️ Los correos de Supabase Auth (confirmación, recuperar contraseña)
+salen por SMTP propio desde `acceso@mail.nexuspoint.rsvp`, no por el
+compartido de Supabase, que tiene un límite de envío muy bajo. Si
+alguna vez vuelve "email rate limit exceeded", mirar ahí primero.
 
 ⚠️ **El enlace de confirmación/recuperación de Supabase apunta a la
 "Site URL" configurada en Authentication → URL Configuration** — si no
