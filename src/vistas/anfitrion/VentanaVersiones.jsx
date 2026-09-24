@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "42.1",
+    cambios: [
+      "En la lista del colaborador, todas las filas van en columnas fijas: los nombres empiezan todos en el mismo sitio y el botón de llegada cae siempre en la misma columna, a la derecha. Si un nombre no cabe se recorta con puntos suspensivos; entero se lee al abrir la ficha.",
+      "Todos los botones de la fila miden lo mismo de alto, así que ninguno se deforma por llevar un nombre largo.",
+      "\"Pendiente de pago\" pasa a llamarse \"Pago pendiente\".",
+    ],
+  },
+  {
     version: "42",
     cambios: [
       "En el formulario del colaborador, la zona del invitado se ve resaltada con la misma pastilla dorada que el importe. Es solo para mirarla: ahí no se cambia.",

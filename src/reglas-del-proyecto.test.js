@@ -36,6 +36,29 @@ describe("norma 12: nada de ventanas del navegador", () => {
   });
 });
 
+describe("norma 7: la fila del invitado, de una sola línea y a la misma altura", () => {
+  // Él, 2026-09-24: con "Rodríguez, Natasha" la fila se deformaba y el
+  // botón de llegada dejaba de caer donde el de las filas de al lado.
+  // Las columnas son fijas y el nombre se recorta; lo que no puede
+  // volver es una altura escrita a mano, que es como se descuadran.
+  const fila = leer("src/vistas/VistaColaborador.jsx");
+
+  it("el nombre se recorta con puntos suspensivos, nunca envuelve", () => {
+    expect(fila).toMatch(/className="truncate"/);
+  });
+
+  it("las alturas de la fila salen todas de ALTO_BOTON_FILA", () => {
+    const aMano = sinComentarios(fila).match(/height: \d+,/g) || [];
+    expect(aMano).toEqual([]);
+  });
+
+  it("las columnas fijas están definidas una sola vez", () => {
+    for (const medida of ["ANCHO_PAGO", "ANCHO_DATOS", "ALTO_BOTON_FILA"]) {
+      expect((fila.match(new RegExp(`const ${medida} = `, "g")) || []).length).toBe(1);
+    }
+  });
+});
+
 describe("la Música del evento no se descarga en el local", () => {
   // Se abre en el local, con un wifi desconocido, delante de los
   // invitados: no puede quedarse descargando. Va DENTRO del trozo de

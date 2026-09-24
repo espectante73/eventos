@@ -58,6 +58,15 @@ const ETIQUETAS_CAMPOS_INVITADO = {
   conservarDatos: "Autorización para guardar sus datos",
 };
 
+// La fila de cada invitado va en COLUMNAS FIJAS, no acomodándose a lo que
+// mida cada nombre. Lo pidió él el 2026-09-24: con "Rodríguez, Natasha"
+// la fila se deformaba y el botón de llegada acababa en otro sitio que el
+// de las filas de al lado. Con las columnas fijas, todos los nombres
+// empiezan en el mismo punto y todos los checks caen en la misma columna.
+const ANCHO_PAGO = 104; // "Pago pendiente" es el rótulo más largo de esa columna
+const ANCHO_DATOS = 100; // "datos 11 de 11" es el más largo de esta
+const ALTO_BOTON_FILA = 32; // manda el círculo de llegada: todos iguales (norma 4)
+
 // Pastilla de un dato que el colaborador SOLO MIRA: el importe y la zona.
 // Una sola pieza para las dos (norma 8): si algún día se retoca el color,
 // se retoca en las dos o dejan de parecerse.
@@ -760,46 +769,62 @@ function FilaInvitadoColaborador({
         border: `1px solid ${incompleta ? "rgba(176, 0, 32, 0.7)" : C.line}`,
       }}
     >
-      <div className="flex flex-wrap items-center gap-3 p-3 text-sm">
-        {!abierto && (
-          <button onClick={confirmarPago} className="boton-3d rounded flex items-center gap-1">
-            {g.pagado ? (
-              <Stamp color={C.ink}>Pagado</Stamp>
-            ) : (
-              <span
-                className="text-xs px-2 py-0.5 rounded"
-                style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: OP.secundario }}
-              >
-                Pendiente de pago
-              </span>
-            )}
-          </button>
-        )}
-        {!faltanDatos ? (
-          <span className="flex items-center gap-1 text-xs" style={{ color: C.ink, opacity: OP.secundario }}>
-            <Check size={12} /> datos {datosRellenos} de {datosTotal}
-          </span>
-        ) : (
-          <span className="flex items-center gap-1 text-xs" style={{ color: C.wax }}>
-            <Bell size={12} /> datos {datosRellenos} de {datosTotal}
-          </span>
-        )}
+      <div className="flex items-center gap-2 p-3 text-sm">
+        {/* La columna del pago se queda aunque la ficha esté abierta y el
+            botón no se pinte: si desapareciera, el nombre de ESA fila
+            empezaría en otro sitio que el de las demás. */}
+        <div className="flex-shrink-0" style={{ width: ANCHO_PAGO }}>
+          {!abierto && (
+            <button
+              onClick={confirmarPago}
+              className="boton-3d rounded flex items-center justify-center w-full"
+              style={{ height: ALTO_BOTON_FILA }}
+            >
+              {g.pagado ? (
+                <Stamp color={C.ink}>Pagado</Stamp>
+              ) : (
+                <span
+                  className="text-xs px-2 py-0.5 rounded whitespace-nowrap"
+                  style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: OP.secundario }}
+                >
+                  Pago pendiente
+                </span>
+              )}
+            </button>
+          )}
+        </div>
+        {/* Los dos estados (al día / le faltan datos) eran dos copias de la
+            misma línea; con un ancho fijo de por medio serían dos sitios
+            donde cambiarlo (norma 8). */}
+        <span
+          className="flex items-center gap-1 text-xs flex-shrink-0 whitespace-nowrap"
+          style={{
+            width: ANCHO_DATOS,
+            color: faltanDatos ? C.wax : C.ink,
+            opacity: faltanDatos ? 1 : OP.secundario,
+          }}
+        >
+          {faltanDatos ? <Bell size={12} /> : <Check size={12} />} datos {datosRellenos} de {datosTotal}
+        </span>
         <button
           onClick={onToggleAbierto}
-          className="boton-3d rounded px-2 py-1 flex items-center gap-2 ml-auto"
-          style={{ color: C.ink }}
+          className="boton-3d rounded px-2 flex items-center gap-2 flex-1 min-w-0"
+          style={{ color: C.ink, height: ALTO_BOTON_FILA }}
         >
-          <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+          {/* Si el nombre no cabe se recorta con puntos suspensivos: entero
+              se lee al abrir la ficha. Nunca dos líneas (norma 7). */}
+          <span className="truncate" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
             {g.apellido}, {g.nombre}
           </span>
-          <span className="text-xs" style={{ color: C.gold }}>
+          <span className="text-xs flex-shrink-0 ml-auto" style={{ color: C.gold }}>
             {abierto ? "▾" : "▸"}
           </span>
         </button>
-        {/* El check de llegada, en el extremo derecho de la fila (el
-            nombre se corre un poco a la izquierda para dejarle sitio) --
-            así se marca sin desplegar el formulario, que es como se va a
-            usar el día del evento: de pie, recibiendo gente. */}
+        {/* El check de llegada cierra la fila, SIEMPRE en la misma columna
+            (él, 2026-09-24) -- así se marca sin desplegar el formulario,
+            que es como se va a usar el día del evento: de pie, recibiendo
+            gente. Este no se invierte con la mano izquierda, como el resto
+            de las filas de listas (ver CLAUDE.md, "Lo que NO se invierte"). */}
         <button
           onClick={confirmarPresente}
           title={
@@ -811,8 +836,8 @@ function FilaInvitadoColaborador({
           }
           className="boton-3d flex items-center justify-center rounded-full flex-shrink-0"
           style={{
-            width: 32,
-            height: 32,
+            width: ALTO_BOTON_FILA,
+            height: ALTO_BOTON_FILA,
             border: `2px solid ${g.presente ? C.ink : C.line}`,
             background: g.presente ? C.ink : "transparent",
             color: g.presente ? C.paper : C.line,
