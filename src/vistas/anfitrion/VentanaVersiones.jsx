@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "43.1",
+    cambios: [
+      "El filtro de la columna «Función» ya incluye «Colaborador»: llevar 10 o 12 invitados es una función del día, igual que ser acomodador. Ordenar por esa columna también los agrupa.",
+      "Y «Sin función» pasa a significar sin NINGÚN papel del día: un colaborador ya no aparece ahí, porque función tiene.",
+    ],
+  },
+  {
     version: "43",
     cambios: [
       "En la Lista de invitados, quien además es colaborador lleva un filete dorado en el borde izquierdo de su fila y el nombre en negrita. Antes era una estrellita detrás del nombre, tan pequeña y tan clara que no se veía.",

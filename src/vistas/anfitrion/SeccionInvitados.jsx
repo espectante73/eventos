@@ -359,7 +359,16 @@ export function SeccionInvitados({
       // el rol familiar. "sin" = no tiene ninguno.
       if (filtros.rolTrabajo) {
         const suyos = Array.isArray(g.rolesTrabajo) ? g.rolesTrabajo : [];
-        if (filtros.rolTrabajo === "sin" ? suyos.length > 0 : !suyos.includes(filtros.rolTrabajo)) return false;
+        const esColaborador = colaboradores.some((c) => c.invitadoId === g.id);
+        if (filtros.rolTrabajo === FILTRO_ES_COLABORADOR) {
+          if (!esColaborador) return false;
+        } else if (filtros.rolTrabajo === "sin") {
+          // "Sin función" es sin NINGÚN papel del día, y llevar invitados
+          // es uno: un colaborador nunca está sin función.
+          if (suyos.length > 0 || esColaborador) return false;
+        } else if (!suyos.includes(filtros.rolTrabajo)) {
+          return false;
+        }
       }
       if (filtros.zona && g.zona !== filtros.zona) return false;
       if (filtros.anioBoda === "con" && !g.anioBoda) return false;
@@ -415,7 +424,9 @@ export function SeccionInvitados({
           // no tienen, al final. Es como se repasa cuando buscas a los
           // acomodadores.
           case "rolTrabajo": {
-            const suyos = Array.isArray(g.rolesTrabajo) ? [...g.rolesTrabajo].sort() : [];
+            const suyos = Array.isArray(g.rolesTrabajo) ? [...g.rolesTrabajo] : [];
+            if (colaboradores.some((c) => c.invitadoId === g.id)) suyos.push("Colaborador");
+            suyos.sort();
             return suyos.length > 0 ? `0${suyos.join(",")}` : "1";
           }
           default:
@@ -472,6 +483,13 @@ export function SeccionInvitados({
 // cabecera y los filtros: si solo lo llevaran unas, sus columnas se
 // correrían 4 px y dejarían de cuadrar con las de al lado (norma 7).
 const FILETE_COLABORADOR = 4;
+
+// "Colaborador" entra en el filtro de Función como un papel más (él,
+// 2026-09-24: el filete dorado se ve, pero no se puede filtrar por él).
+// Es la norma 22: llevar 10-12 invitados es una función del día, igual
+// que ser acomodador. Va con una clave propia y no con la palabra suelta
+// para que no choque si algún día él crea un rol llamado "Colaborador".
+const FILTRO_ES_COLABORADOR = "es-colaborador";
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
@@ -1089,7 +1107,7 @@ const FILETE_COLABORADOR = 4;
                     dos, no más ancho"). Solo aparece si ya hay algún rol
                     creado — si no, sería un desplegable vacío. */}
                 <span style={{ background: tintaColumnaCabecera(11), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
-                  {rolesConocidos.length > 0 && (
+                  {(rolesConocidos.length > 0 || colaboradores.length > 0) && (
                     <select
                       value={filtros.rolTrabajo || ""}
                       onChange={(e) => setFiltros({ ...filtros, rolTrabajo: e.target.value })}
@@ -1120,6 +1138,7 @@ const FILETE_COLABORADOR = 4;
                           la palabra tiene que separarlos. Lo vio el usuario,
                           2026-09-23. */}
                       <option value="">Todos</option>
+                      <option value={FILTRO_ES_COLABORADOR}>Colaborador</option>
                       {rolesConocidos.map((r) => (
                         <option key={r} value={r}>
                           {r}
