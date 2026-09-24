@@ -356,20 +356,18 @@ en la sección que se indica entre paréntesis.
     tarjetas, paneles y formularios, **nunca en las filas de las
     tablas** — ahí mandan las normas 7 y 8. («El acabado, con una escala
     y no a ojo»)
-18. **Guardar solo lo que cambió, nunca el estado entero.** Aquí SIEMPRE
+18. **Guardar solo lo que cambió, nunca el estado entero.** Aquí siempre
     hay dos escritores posibles: un colaborador, o él mismo con el móvil
     y el Mac abiertos. Mandar la colección entera es **escribir tu copia
-    encima de lo que el otro acaba de guardar**, y se pierde sin error y
-    sin aviso: el dato vuelve atrás y nadie se entera.
+    encima de lo que el otro acaba de guardar**, y el dato vuelve atrás
+    sin que salte ningún error.
     **Cómo se hace bien** (modelo: `anfitrion_guardar_invitados`): solo
     las filas que difieren de la última verdad del servidor y, **aparte**,
     la lista completa de ids, que es lo único que el borrado necesita. Lo
     que no se manda, no se toca.
-    ⚠️ Hay escritores que no son personas: un trigger cambia una columna
-    por su cuenta, y mandar la colección entera lo deshace.
-    ⚠️ Y no vale a medias: corregido en la mitad de los sitios no protege
-    nada, solo da sensación de que está resuelto. Lo vigilan
-    `reglas-del-proyecto.test.js` y `supabase/schema.test.js`.
+    ⚠️ Y hay escritores que no son personas: un trigger cambia una
+    columna por su cuenta, y mandar la colección entera lo deshace. Lo
+    vigilan `reglas-del-proyecto.test.js` y `supabase/schema.test.js`.
 19. **Un mensaje de error dice en qué se ha podido equivocar, no solo
     que está mal.** Se nombra lo que puede fallar y lo que no importa:
     *"escribe primero tu apellido y después tu nombre; dan igual las
