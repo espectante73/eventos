@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "42.2",
+    cambios: [
+      "Cronograma: «¿Quién lo atiende?» se pliega con la misma pieza que el resto de la app, así que se abre y se ve igual que cualquier otra sección plegada.",
+      "Reinicios: la explicación de cinco líneas que había encima del formulario pasa al pie de la ventana, plegada. Lo que protege de verdad (la copia de seguridad y escribir REINICIAR) sigue saliendo al confirmar.",
+    ],
+  },
+  {
     version: "42.1",
     cambios: [
       "En la lista del colaborador, todas las filas van en columnas fijas: los nombres empiezan todos en el mismo sitio y el botón de llegada cae siempre en la misma columna, a la derecha. Si un nombre no cabe se recorta con puntos suspensivos; entero se lee al abrir la ficha.",

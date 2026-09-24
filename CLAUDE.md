@@ -272,8 +272,7 @@ en la sección que se indica entre paréntesis.
 5. **Los textos de ayuda, al pie de la ventana y plegados** (`<details>`),
    no en medio de los botones ni del formulario.
 6. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
-   protagonista y lo demás se esconde. («Filosofía de UX: todo plegado y
-   una sola cosa abierta»)
+   protagonista y lo demás se esconde.
 7. **Tablas y listas: una sola línea por fila**, todas de la misma
    altura; si no cabe, se ensancha o se recorta, nunca dos líneas. Y las
    columnas cuadran ENTRE filas: cada fila es su propia caja y no ve a
@@ -284,17 +283,14 @@ en la sección que se indica entre paréntesis.
    siempre, comparten componente o constante; no se miden por separado
    para igualarlas.
 9. **Toda ventana nueva es una `VentanaFlotante`**; si una crece mucho,
-   ventana lanzadora pequeña + una ventana por parte. («Toda UI nueva usa
-   `VentanaFlotante`»)
+   ventana lanzadora pequeña + una ventana por parte.
 10. **La Lista de invitados es la raíz**: una vista que solo reordena lo
-    que la lista ya muestra va dentro de la lista, no aparte. («La Lista
-    de invitados es la raíz…»)
+    que la lista ya muestra va dentro de la lista, no aparte.
 11. **Piezas compartidas**: botones comunes con `Boton` (principal /
     secundario / peligro, con relieve 3D al pulsar); fotos con `HuecoFoto`
     (16:9, mismo marco). Los lenguajes propios ya aprobados (pastilla de
     inicio, mando de música) se respetan tal cual. Los iconos sueltos de
     las tablas YA NO son excepción desde la v36: van con `Boton`.
-    («Accesibilidad de los botones…»)
 12. **Todo quitar o borrar pregunta antes**, en la ventana de la app
     (`usePreguntaSeguridad`), nunca con `window.alert`/`window.confirm`
     (en las ventanas emergentes rompen). («Relieve, clic y pregunta de

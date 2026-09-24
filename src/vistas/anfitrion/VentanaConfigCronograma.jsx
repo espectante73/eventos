@@ -22,12 +22,13 @@
 // principal aunque se vea dentro de la ventana emergente (mismo motivo
 // ya documentado para el portapapeles de Novedades).
 import { useState, useEffect } from "react";
-import { Printer, ChevronDown, Plus } from "lucide-react";
+import { Printer, Plus, UserCog } from "lucide-react";
 import { C, inputStyle, OP } from "../../theme";
 import { generarImagenCronograma, calcularHorasAbsolutas } from "../../lib/cronograma";
 import { resolverColaborador } from "../../lib/invitados";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar } from "../../components/PreguntaSeguridad";
+import { SeccionPlegable } from "../../components/SeccionPlegable";
 
 // Todas las horas del día en pasos de 5 minutos, en un único <select> --
 // a petición del usuario ("un único reloj, no dos relojes distintos").
@@ -318,105 +319,100 @@ export function VentanaConfigCronograma({ data, ventana }) {
               local o contratado -- gente ajena a la lista de
               invitados, como el equipo del restaurante en la Cena o un
               DJ contratado en el Baile). */}
-          <div className="mb-2 rounded" style={{ border: `1px solid ${C.line}` }}>
-            <button
-              onClick={() => setAtiendeAbierto((a) => !a)}
-              className="boton-3d w-full flex items-center justify-between gap-2 px-2 py-2 text-sm"
-              style={{ color: C.charcoal }}
+          {/* Era un plegable hecho a mano aquí dentro: mismo botón, misma
+              flecha, mismo resumen que `SeccionPlegable`. Copiado, no
+              compartido -- justo lo que prohíbe la norma 8. Se cambia por
+              la pieza de la app (2026-09-24), en modo controlado para que
+              siga abriéndose y cerrándose con su propio estado. */}
+          <div className="mb-2">
+            <SeccionPlegable
+              icono={UserCog}
+              titulo="¿Quién lo atiende?"
+              resumen={resumenAtiende}
+              abierta={atiendeAbierto}
+              onAlternar={() => setAtiendeAbierto((a) => !a)}
             >
-              <span>¿Quién lo atiende?</span>
-              <span className="flex items-center gap-1.5" style={{ opacity: OP.secundario }}>
-                <span className="text-xs">{resumenAtiende}</span>
-                <ChevronDown
-                  size={14}
-                  style={{ transform: atiendeAbierto ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
-                />
-              </span>
-            </button>
-            {atiendeAbierto && (
-              <div className="px-2 pb-2">
-                {seleccionado === 0 ? (
-                  <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-                    Automático: cada colaborador recibe a sus propios invitados —{" "}
-                    {colaboradoresConConfirmados.length === 0
-                      ? "todavía ninguno tiene confirmados."
-                      : colaboradoresConConfirmados.map((c) => c.nombre).join(", ")}
-                    .
-                  </p>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2 mb-2">
+              {seleccionado === 0 ? (
+                <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
+                  Automático: cada colaborador recibe a sus propios invitados —{" "}
+                  {colaboradoresConConfirmados.length === 0
+                    ? "todavía ninguno tiene confirmados."
+                    : colaboradoresConConfirmados.map((c) => c.nombre).join(", ")}
+                  .
+                </p>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <BotonOpcion
+                      activo={bloqueActual.tipoAtiende === "interno"}
+                      onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "interno")}
+                    >
+                      Interno
+                    </BotonOpcion>
+                    <BotonOpcion
+                      activo={bloqueActual.tipoAtiende === "externo"}
+                      onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "externo")}
+                    >
+                      Externo
+                    </BotonOpcion>
+                  </div>
+
+                  {bloqueActual.tipoAtiende === "interno" &&
+                    (colaboradores.length === 0 && invitadosConRol.length === 0 ? (
+                      <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.tenue }}>
+                        Todavía no hay ningún colaborador ni invitado con rol de trabajo.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        {colaboradores.map((c) => (
+                          <label key={c.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
+                            <input
+                              type="checkbox"
+                              checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(c.id)}
+                              onChange={() => alternarAsignado(seleccionado, c.id)}
+                            />
+                            {c.nombre}
+                          </label>
+                        ))}
+                        {invitadosConRol.map((g) => (
+                          <label key={g.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
+                            <input
+                              type="checkbox"
+                              checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(g.id)}
+                              onChange={() => alternarAsignado(seleccionado, g.id)}
+                            />
+                            {g.nombre}
+                            <span style={{ opacity: OP.secundario }}>
+                              (
+                              {g.rolesTrabajo
+                                .map((r) => (responsablesRol[r] === g.id ? `★ ${r}` : r))
+                                .join(", ")}
+                              )
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    ))}
+
+                  {bloqueActual.tipoAtiende === "externo" && (
+                    <div className="flex items-center gap-2">
                       <BotonOpcion
-                        activo={bloqueActual.tipoAtiende === "interno"}
-                        onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "interno")}
+                        activo={bloqueActual.tipoExterno === "local"}
+                        onClick={() => cambiarBloque(seleccionado, "tipoExterno", "local")}
                       >
-                        Interno
+                        Del local
                       </BotonOpcion>
                       <BotonOpcion
-                        activo={bloqueActual.tipoAtiende === "externo"}
-                        onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "externo")}
+                        activo={bloqueActual.tipoExterno === "contratado"}
+                        onClick={() => cambiarBloque(seleccionado, "tipoExterno", "contratado")}
                       >
-                        Externo
+                        Contratado
                       </BotonOpcion>
                     </div>
-
-                    {bloqueActual.tipoAtiende === "interno" &&
-                      (colaboradores.length === 0 && invitadosConRol.length === 0 ? (
-                        <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.tenue }}>
-                          Todavía no hay ningún colaborador ni invitado con rol de trabajo.
-                        </p>
-                      ) : (
-                        <div className="flex flex-col gap-1">
-                          {colaboradores.map((c) => (
-                            <label key={c.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
-                              <input
-                                type="checkbox"
-                                checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(c.id)}
-                                onChange={() => alternarAsignado(seleccionado, c.id)}
-                              />
-                              {c.nombre}
-                            </label>
-                          ))}
-                          {invitadosConRol.map((g) => (
-                            <label key={g.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
-                              <input
-                                type="checkbox"
-                                checked={Array.isArray(bloqueActual.asignados) && bloqueActual.asignados.includes(g.id)}
-                                onChange={() => alternarAsignado(seleccionado, g.id)}
-                              />
-                              {g.nombre}
-                              <span style={{ opacity: OP.secundario }}>
-                                (
-                                {g.rolesTrabajo
-                                  .map((r) => (responsablesRol[r] === g.id ? `★ ${r}` : r))
-                                  .join(", ")}
-                                )
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      ))}
-
-                    {bloqueActual.tipoAtiende === "externo" && (
-                      <div className="flex items-center gap-2">
-                        <BotonOpcion
-                          activo={bloqueActual.tipoExterno === "local"}
-                          onClick={() => cambiarBloque(seleccionado, "tipoExterno", "local")}
-                        >
-                          Del local
-                        </BotonOpcion>
-                        <BotonOpcion
-                          activo={bloqueActual.tipoExterno === "contratado"}
-                          onClick={() => cambiarBloque(seleccionado, "tipoExterno", "contratado")}
-                        >
-                          Contratado
-                        </BotonOpcion>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
+                  )}
+                </>
+              )}
+            </SeccionPlegable>
           </div>
 
           <label className="flex items-center gap-2 text-sm mb-4" style={{ color: C.charcoal }}>

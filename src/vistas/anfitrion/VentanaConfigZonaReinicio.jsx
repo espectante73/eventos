@@ -132,15 +132,31 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
 
   return (
     <>
-      <VentanaFlotante clave="config-zona-reinicio" titulo="Reinicios" onCerrar={onCerrar}>
+      <VentanaFlotante
+        clave="config-zona-reinicio"
+        titulo="Reinicios"
+        onCerrar={onCerrar}
+        // La explicación va al PIE y plegada (norma 5): ocupaba cinco
+        // líneas encima del formulario y solo se lee la primera vez. Lo
+        // que de verdad protege no es este párrafo, sino la copia de
+        // seguridad y la palabra "REINICIAR", y las dos se avisan en la
+        // ventana de confirmar, con la cuenta de a cuántos afecta.
+        acciones={
+          <details className="text-xs w-full" style={{ color: C.charcoal }}>
+            <summary className="cursor-pointer select-none" style={{ opacity: OP.secundario }}>
+              Qué hace esta ventana, y qué NO borra
+            </summary>
+            <p className="mt-2" style={{ opacity: OP.secundario }}>
+              Pone a cero campos concretos de los invitados de un colaborador (útil tras
+              pruebas, o para reutilizar la app en otro evento). Los invitados y los
+              colaboradores <strong>nunca</strong> se borran aquí — solo los campos que
+              elijas. Se descarga automáticamente una copia de seguridad de todo el evento
+              antes de ejecutar nada, y hay que escribir "REINICIAR" para confirmar.
+            </p>
+          </details>
+        }
+      >
         <AvisoDeshacer data={data} />
-        <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
-          Zona de reinicio: pone a cero campos concretos de los invitados de un colaborador
-          (útil tras pruebas, o para reutilizar la app en otro evento). Los invitados y los
-          colaboradores <strong>nunca</strong> se borran aquí — solo los campos que elijas.
-          Se descarga automáticamente una copia de seguridad de todo el evento antes de
-          ejecutar nada, y hay que escribir "REINICIAR" para confirmar.
-        </p>
         {/* TODAS las opciones dentro de desplegables, ninguna suelta --
             a petición del usuario, 2026-09-05. Antes las seis categorías
             eran seis botones sueltos y "Reiniciar avisos" un séptimo
