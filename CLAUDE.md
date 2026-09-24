@@ -505,20 +505,10 @@ recurrir como alternativa. Ver `emailDeInvitado()` y
 detectado y corregido el 2026-08-08 al probar la Fase 4 Ronda 1) —
 mismo patrón a seguir si aparece otro sitio que necesite esto.
 
-**2026-08-12: enlace-token retirado para colaboradores (Fase B resuelta
-a medias).** En pruebas en vivo se confirmó que un colaborador seguía
-pudiendo entrar con su enlace `?rol=...` antiguo aunque ya tuviera
-cuenta — el enlace nunca dejó de "funcionar" de verdad, solo dejó de
-ser el camino recomendado. Las 6 RPC `colaborador_*` ahora exigen
-además `"authUserId" = auth.uid()`: sin sesión real (el caso del enlace
-viejo), `auth.uid()` es `null` y no coincide con nada, así que esas
-funciones dejan de devolver datos — el enlace-token de colaborador ya
-NO funciona, solo el login. El enlace del **anfitrión** no se tocó
-(entonces se dejó válido a propósito, como plan B — ⚠️ RETIRADO el
-2026-09-06, ver v24.2 al final de este archivo) — su seguridad nunca
-dependió de estas 6 funciones. Ver Fase B en
-`.claude/plans/mejoras-pendientes-login-y-solidez.md` para la decisión
-pendiente que queda (qué hacer con el enlace del anfitrión).
+**2026-08-12: enlace-token de colaborador retirado.** Las 6 RPC
+`colaborador_*` exigen además `"authUserId" = auth.uid()`: sin sesión
+real, `auth.uid()` es `null` y esas funciones dejan de devolver datos.
+El enlace del **anfitrión** se retiró después, en v24.2.
 
 ⚠️ **Ese mismo cambio rompió, de rebote, la previsualización "Formularios"
 del anfitrión (App.jsx) sin que nadie lo notara hasta el 2026-08-12,
