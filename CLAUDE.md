@@ -559,7 +559,7 @@ coincide con el dominio real (`https://nexuspoint.rsvp`), el enlace del
 email lleva a una URL que no conecta ("Safari no puede abrir..."). Ya
 corregido, pero a vigilar si se cambia de dominio en el futuro.
 
-## El pulgar: la regla y cómo funciona (v35, 2026-09-19)
+## El pulgar: la regla y cómo funciona
 
 ### La regla
 
@@ -573,19 +573,11 @@ ponga a un lado lleva SIEMPRE su espejo `zurdo:` en el mismo cambio
 `zurdo:flex-row-reverse` en filas de varios botones). Sin él, la
 elección de esa persona no se aplica y el botón se queda donde caiga.
 Lo vigila `reglas-del-proyecto.test.js` (el espejo) y `mano.test.js` (el
-mecanismo). ⚠️ Lo que no caza ningún test: un elemento pulsable suelto
-que no se alinea a ningún lado — el fallo del link de GitHub.
+mecanismo).
 
-⚠️ Vale para **cualquier cosa pulsable, no solo los botones de una
-ventana**. Se rompió el 2026-09-21 con el link al proyecto de GitHub:
-metido dentro de un aviso como un `inline-flex` suelto, se fue a la
-izquierda con él teniendo elegida la derecha. Lo cazó él. La forma
-correcta es envolverlo: `<div className="flex justify-end
-zurdo:justify-start">`.
-
-Si varios botones tienen que medir lo mismo: ancho fijo común y
-alineados, no a lo ancho con el texto centrado. En Mi cuenta,
-`ANCHO_FILA_MENU` + `items-end`.
+⚠️ Lo que ningún test caza: **un pulsable suelto que no se alinea a
+ningún lado** (se rompió así el link de GitHub, dentro de un aviso). Hay
+que envolverlo: `<div className="flex justify-end zurdo:justify-start">`.
 
 ### Cómo funciona (`lib/mano.js`, una sola pieza)
 
@@ -609,11 +601,6 @@ invertido, "atrás" quedaría a la derecha de "adelante"), la X de cerrar
 de las ventanas, las filas de las listas (el check de llegada, las
 papeleras) y las filas alineadas abajo (`items-end` en una fila es
 alinear abajo, no a la derecha).
-
-**Probado por él en su móvil y aprobado a la primera** ("es exactamente
-lo que había pedido"). Lo que funcionó: antes de construir, una sola
-pregunta con dos bocetos del aspecto (norma 1) y otra sobre a quién
-preguntar. Repetir esa forma con lo nuevo que tenga aspecto propio.
 
 ## Regla de la app: ventanas lo más pequeñas posible (2026-09-18)
 
