@@ -253,9 +253,13 @@ en la sección que se indica entre paréntesis.
    acomoda a esa elección; la derecha es solo lo que sale por defecto.
    («El pulgar: la regla y cómo funciona»)
 4. **Botones del mismo grupo, todos iguales y del ancho del texto más
-   largo.** Si se añade uno, **se abrevia el rótulo; no se ensancha el
-   botón**. El modelo es el que ya esté aprobado en esa pantalla (norma
-   1). («Regla de la app: ventanas lo más pequeñas posible»)
+   largo.** En Mi cuenta el modelo es el de inicio: copia exacta de las
+   filas de "Abrir sección…" (`FilaMenu`), pastilla verde, letra dorada,
+   icono de 19 a la izquierda, ancho `ANCHO_FILA_MENU` importado (no
+   copiado). El rótulo más largo es "Mapa del sitio"; si uno pasa de ahí,
+   **se abrevia el rótulo, no se ensancha el botón**. Márgenes derecho e
+   izquierdo iguales. En otra pantalla, el modelo es el que ya esté
+   aprobado en ella (norma 1).
 5. **Los textos de ayuda, al pie de la ventana y plegados** (`<details>`),
    no en medio de los botones ni del formulario.
 6. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
@@ -637,16 +641,8 @@ que quepa (el título de la sección ya dice qué es). Al construir o
 revisar cualquier ventana, empezar por preguntarse cuánto ocupa de verdad
 lo de dentro. `ModalFlotante` acepta `ancho` para esto (720 por defecto).
 
-Y en la misma ventana, **todos** los botones (los cinco accesos y los dos
-de los formularios) son copia EXACTA de las filas del menú "Abrir
-sección…" (`FilaMenu` en MenuFlotante.jsx), que el usuario llama **"el
-modelo de inicio"**: misma clase, relleno, icono de 19 a la izquierda,
-pastilla redondeada, letra dorada. Y **la misma medida que allí**:
-`ANCHO_FILA_MENU` (ANCHO_PANEL − 12), exportada desde MenuFlotante e
-importada en MiCuenta, no copiada. El usuario pidió que ningún rótulo pase
-de "Mapa del sitio" y que el margen derecho quede tan justo como el
-izquierdo: los rótulos se abrevian ("Código app", "Errores app", "Cambiar
-clave") para caber. A la derecha, por el pulgar.
+En esa ventana los rótulos se abrevian ("Código app", "Errores app",
+"Cambiar clave") para caber en el ancho del modelo (norma 4).
 
 ⚠️ **Lección de esta tanda**: en la v34.5 los pasé a la variante
 secundaria de `Boton` (cuadrada, solo contorno) porque me pareció mejor,
