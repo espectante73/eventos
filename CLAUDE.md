@@ -830,15 +830,11 @@ usuario descartó las dos alternativas que se le propusieron — un panel
 dentro de la celda ("mucho lío") y soltar la carpeta entera de golpe
 ("tengo que escogerla, ubicarla"). No volver a proponerlas.
 
-**Ninguna tabla abierta a escritura anónima, nunca.** En septiembre
-había cuatro (`evento`, `mesas`, `fotos_familiares`, `orden_familias`)
-con una política `for all using (true) with check (true)`. Era grave, y
-no por lo obvio: `evento` guarda las PLANTILLAS de los emails
-automáticos, así que reescribirlas desde fuera es decidir el texto que
-la app manda a ~140 invitados con el remitente legítimo del anfitrión.
-La decisión original fue correcta cuando se tomó ("datos sin
-sensibilidad real") y se pudrió al crecer la tabla por debajo. Regla:
-una política de lectura pública es `for select`, nunca `for all`.
+**Ninguna tabla abierta a escritura anónima, nunca**: una política de
+lectura pública es `for select`, nunca `for all`. No es teórico:
+`evento` guarda las plantillas de los emails, y reescribirlas desde
+fuera es decidir lo que la app manda a los invitados con el remitente
+del anfitrión. Lo vigila `supabase/schema.test.js`.
 
 **El Deshacer vive en el SERVIDOR, y las copias en JSON están
 descartadas.** Él lo cerró así: *"no puedo restaurar yo... si no me vale
@@ -850,8 +846,8 @@ tablas no puedan desincronizarse (fallo que ya tuvo `novedades` durante
 meses). Solo se guarda la ÚLTIMA foto: deshacer lo de anteayer es el
 volcado diario. `lib/backup.js` y la ventana "Backup" se borraron; **no
 resucitarlas**. Si algún día se quiere un exportar/restaurar de verdad,
-primero hay que arreglar `exportarTodo` para las doce tablas
-conservando los ids.
+hay que escribirlo desde cero: para las doce tablas y conservando los
+ids.
 
 **El versionado: entero = tema nuevo, decimal = ajuste.** Un entero por
 cada funcionalidad nueva de verdad, y un decimal detrás por cada retoque
