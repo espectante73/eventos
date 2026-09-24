@@ -56,6 +56,34 @@ import {
   marcarResponsable as fijarResponsable,
 } from "../../lib/edicionInvitados";
 
+// Filete dorado pegado al borde izquierdo de la fila de quien, además de
+// invitado, es colaborador (él, 2026-09-24). Antes era una ★ detrás del
+// nombre: estaba, pero en dorado claro y de letra pequeña -- hubo que
+// ampliar una foto tres veces para verla, así que no marcaba nada.
+//
+// ⚠️ Habla por el BORDE a propósito. El FONDO ya está ocupado: es el rojo
+// que late cuando a un invitado le faltan datos. Dos señales en el mismo
+// canal se pisan; en canales distintos, una fila puede ser las dos cosas
+// y se leen las dos.
+//
+// Y lo llevan TODAS las filas, transparente cuando no toca, incluidas la
+// cabecera y los filtros: si solo lo llevaran unas, sus columnas se
+// correrían 4 px y dejarían de cuadrar con las de al lado (norma 7).
+const FILETE_COLABORADOR = 4;
+
+// "Colaborador" entra en el filtro de Función como un papel más (él,
+// 2026-09-24: el filete dorado se ve, pero no se puede filtrar por él).
+// Es la norma 22: llevar 10-12 invitados es una función del día, igual
+// que ser acomodador. Va con una clave propia y no con la palabra suelta
+// para que no choque si algún día él crea un rol llamado "Colaborador".
+const FILTRO_ES_COLABORADOR = "es-colaborador";
+
+// ⚠️ Las dos van FUERA del componente. Dentro, la lista filtrada se
+// calcula muchas líneas antes de llegar aquí, y una `const` leída antes
+// de su declaración revienta la pantalla entera ("Cannot access ... before
+// initialization"). Pasó el 2026-09-24 al filtrar por Acomodador: el lint
+// y el build lo dieron por bueno, porque solo falla al ejecutarse.
+
 export function SeccionInvitados({
   data,
   asignarColaborador,
@@ -469,27 +497,6 @@ export function SeccionInvitados({
   // iconos al final que no tienen encabezado, están ocupando espacio del
   // resto". Con una medida fija, las tres rejillas parten de lo mismo.
   const columnasTabla = "1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.75fr 0.75fr 0.7fr 100px";
-// Filete dorado pegado al borde izquierdo de la fila de quien, además de
-// invitado, es colaborador (él, 2026-09-24). Antes era una ★ detrás del
-// nombre: estaba, pero en dorado claro y de letra pequeña -- hubo que
-// ampliar una foto tres veces para verla, así que no marcaba nada.
-//
-// ⚠️ Habla por el BORDE a propósito. El FONDO ya está ocupado: es el rojo
-// que late cuando a un invitado le faltan datos. Dos señales en el mismo
-// canal se pisan; en canales distintos, una fila puede ser las dos cosas
-// y se leen las dos.
-//
-// Y lo llevan TODAS las filas, transparente cuando no toca, incluidas la
-// cabecera y los filtros: si solo lo llevaran unas, sus columnas se
-// correrían 4 px y dejarían de cuadrar con las de al lado (norma 7).
-const FILETE_COLABORADOR = 4;
-
-// "Colaborador" entra en el filtro de Función como un papel más (él,
-// 2026-09-24: el filete dorado se ve, pero no se puede filtrar por él).
-// Es la norma 22: llevar 10-12 invitados es una función del día, igual
-// que ser acomodador. Va con una clave propia y no con la palabra suelta
-// para que no choque si algún día él crea un rol llamado "Colaborador".
-const FILTRO_ES_COLABORADOR = "es-colaborador";
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y

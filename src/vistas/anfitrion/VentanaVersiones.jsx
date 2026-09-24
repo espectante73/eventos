@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "43.2",
+    cambios: [
+      "Arreglado el «Algo ha fallado» al filtrar por Acomodador en la Lista de invitados. Era un fallo mío de la versión anterior: la lista se filtraba antes de que existiera uno de los valores que necesitaba. Los datos nunca estuvieron en peligro.",
+    ],
+  },
+  {
     version: "43.1",
     cambios: [
       "El filtro de la columna «Función» ya incluye «Colaborador»: llevar 10 o 12 invitados es una función del día, igual que ser acomodador. Ordenar por esa columna también los agrupa.",
