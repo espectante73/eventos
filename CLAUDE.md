@@ -162,12 +162,9 @@ nunca al revés.
 
 # PARTE 1 — Reglas que hay que obedecer siempre
 
-## Idioma
+## 1.1 Cómo trabajar aquí
 
-Responder siempre en español al trabajar en este proyecto, salvo que se
-pida explícitamente lo contrario.
-
-## Cómo trabajar aquí
+**Siempre en español**, salvo que se pida lo contrario.
 
 **Son sobre CÓMO trabajo, no sobre cómo es la app** (para eso, las "Normas de estándar" de abajo).
 
@@ -231,7 +228,7 @@ contando lo mismo acaban contando cosas distintas — el problema que
 ya nos costó tres arreglos (los rojos copiados a mano, los trece tamaños
 de letra, la paleta del mapa).
 
-## Normas de estándar de la app
+## 1.2 Normas de estándar de la app
 
 Lo que el usuario ya ha fijado como norma, recogido en una lista a
 petición suya el 2026-09-18. **Repasarla antes de construir o retocar
@@ -376,7 +373,7 @@ en la sección que se indica entre paréntesis.
     (`lib/cronograma.js`).
 
 
-## Reglas de diseño ya decididas
+## 1.3 Reglas de diseño ya decididas
 
 Regla del reparto de `VistaAnfitrion.jsx` (agosto 2026), y sigue en pie:
 **si la lógica de una ventana no la usa nadie más, vive entera en su
@@ -538,7 +535,7 @@ coincide con el dominio real (`https://nexuspoint.rsvp`), el enlace del
 email lleva a una URL que no conecta ("Safari no puede abrir..."). Ya
 corregido, pero a vigilar si se cambia de dominio en el futuro.
 
-## El pulgar: la regla y cómo funciona
+## 1.4 El pulgar: la regla y cómo funciona
 
 ### La regla
 
@@ -581,7 +578,7 @@ de las ventanas, las filas de las listas (el check de llegada, las
 papeleras) y las filas alineadas abajo (`items-end` en una fila es
 alinear abajo, no a la derecha).
 
-## Regla de la app: ventanas lo más pequeñas posible
+## 1.5 Regla de la app: ventanas lo más pequeñas posible
 
 Pedido explícito del usuario, "tomamos nota de esto": **una ventana mide
 lo que necesita su contenido, no más**. El ejemplo que puso: en Mi cuenta
@@ -607,7 +604,7 @@ Y se repitió dos veces más (v34.6 a todo lo ancho, v34.7 a 240px centrado)
 antes de preguntar. La tercera vez, una pregunta de una línea ("¿es el
 menú de Abrir sección…?") lo resolvió a la primera. Preguntar ANTES.
 
-## Cómo se le habla al invitado: tú y USTEDES, nunca vosotros
+## 1.6 Cómo se le habla al invitado: tú y USTEDES, nunca vosotros
 
 El usuario, corrigiendo un borrador mío: *"no uso el término sentaros,
 sí uso sentarles"*. Es el español de Canarias: el plural de "tú" es
@@ -627,7 +624,7 @@ para los comentarios del código: un solo vocabulario.
 ⚠️ Las plantillas GUARDADAS en la base son suyas: si una lleva un
 "vosotros", se le avisa y lo cambia él desde "Texto emails"; no se tocan.
 
-## Backup automático de la base de datos
+## 1.7 Backup automático de la base de datos
 
 Existe un backup diario automático vía GitHub Actions
 (`.github/workflows/backup.yml`). Se ejecuta
@@ -655,7 +652,7 @@ Supabase sube de versión mayor en el futuro (revisar en Project Settings →
 Database, o en el mensaje de error si el workflow empieza a fallar de
 nuevo), hay que subir el número de esa imagen a juego.
 
-## Registro de errores con Sentry
+## 1.8 Registro de errores con Sentry
 
 Antes, un fallo en el móvil de un colaborador no dejaba rastro. Ahora
 llega a Sentry (cuenta del usuario, región **EU/Alemania** -- `.de.` en la
@@ -688,7 +685,7 @@ v34.4: enlace "Errores de la app" en Mi cuenta, solo anfitrión
 (`URL_REGISTRO_ERRORES` en constants.js). Pintar los errores DENTRO de la
 app no se hace: exigiría una clave secreta de Sentry en el navegador.
 
-## El registro de migraciones
+## 1.9 El registro de migraciones
 
 **El TEXTO del SQL ya está en git** (`schema.sql` y su
 historial), y duplicarlo sería el mismo error que descartamos con
@@ -716,7 +713,7 @@ insert into public.migraciones_aplicadas ("nombre") values ('v40-lo-que-sea')
   on conflict ("nombre") do nothing;
 ```
 
-## Comprobar si un SQL está subido, con la clave pública
+## 1.10 Comprobar si un SQL está subido, con la clave pública
 
 Yo no puedo ejecutar SQL ni tengo la clave de servicio, pero SÍ puedo
 comprobar desde fuera si lo que le paso al usuario llegó a la base --
@@ -742,7 +739,7 @@ Truco que ahorra trabajo: el editor SQL de Supabase ejecuta el script
 huella, todo lo anterior también entró. Con comprobar la última función
 del bloque basta.
 
-## Por qué es así: decisiones que no se ven en el código
+## 1.11 Por qué es así: decisiones que no se ven en el código
 
 Lo que queda cuando se tira la historia. No son anécdotas: son las
 razones por las que algo está hecho de esta manera y no de otra. **Sin
@@ -795,7 +792,7 @@ a 39). ⚠️ Se malinterpretó una vez y `VERSION_APP` saltó de 7 a 13 en
 una sola sesión. **Nunca subir el entero por defecto**: preguntarse
 antes si es tema nuevo o ajuste.
 
-## Lo que está esperando, y por qué no es un fallo
+## 1.12 Lo que está esperando, y por qué no es un fallo
 
 Cosas que llevan tiempo sin moverse **porque no toca**, no porque se
 hayan olvidado. Antes esto era una sección "Dónde lo dejamos" con fecha,
@@ -864,7 +861,7 @@ para el porqué de entonces.
 Cada entrada dice de qué sección de la PARTE 3 viene, por si hace
 falta el contexto completo.
 
-### Sesión del 2026-08-12: Modo Pruebas, seguridad, acuse en PDF, y repaso visual
+### 2.1 Sesión del 2026-08-12: Modo Pruebas, seguridad, acuse en PDF, y repaso visual
 
 **Bug de seguridad real, no solo de estilo: la previsualización
 "Formularios" del anfitrión llevaba rota desde el 12 de agosto (Fase
@@ -879,7 +876,7 @@ cualquier RPC `colaborador_*` nueva que dependa de `auth.uid()` debe
 asumir que el anfitrión puede querer "verla" sin ser esa persona --
 para eso está `vistaPrevia`, no para añadir excepciones a la propia RPC.
 
-### 2026-08-24: Fase C ampliada (sincronizar email de acceso con avisos) y Fase D (CAPTCHA)
+### 2.2 2026-08-24: Fase C ampliada (sincronizar email de acceso con avisos) y Fase D (CAPTCHA)
 
 ⚠️ **Lección de esta sesión: no dar por buenas instrucciones de
 memoria sobre la UI de un dashboard externo (Vercel, Supabase,
@@ -892,7 +889,7 @@ Management API de Supabase) en vez de narrar clics; si no queda más
 remedio que guiar por un dashboard, comprobar antes la ruta exacta
 (documentación oficial o búsqueda reciente) en vez de recordarla.
 
-### 2026-08-25 (mismo día): refuerzos sobre el tablón, tras verlo listo para ~140 personas (v6.4)
+### 2.3 2026-08-25 (mismo día): refuerzos sobre el tablón, tras verlo listo para ~140 personas (v6.4)
 
 ⚠️ **Los navegadores bloquean el audio automático sin interacción
 previa del usuario** — no hay forma de que suene sola de verdad al
@@ -909,7 +906,7 @@ visita. No hay nada que hacer desde este lado del código si eso pasa
 (haría falta la herramienta de depuración de Meta/Facebook para forzar
 un re-escaneo de esa URL en concreto).
 
-### 2026-08-25 (mismo día, tercera tanda): rediseño de Novedades + ventana de verdad (v6.5)
+### 2.4 2026-08-25 (mismo día, tercera tanda): rediseño de Novedades + ventana de verdad (v6.5)
 
 - `window.open()` + `createPortal` (React 18) sobre un `<div>` creado a
   mano dentro del `document` de esa otra ventana.
@@ -943,14 +940,14 @@ un re-escaneo de esa URL en concreto).
   "¿sigue abierta?" que reflejar ahí: la persona pudo haberla cerrado
   con la X sin que este menú se entere al momento).
 
-### 2026-08-25 (quinta tanda): acordeón de una sola + límite real explicado (WhatsApp)
+### 2.5 2026-08-25 (quinta tanda): acordeón de una sola + límite real explicado (WhatsApp)
 
 ⚠️ Mismo cuidado que en `usePopupWindow.js`: `window.open(enlaceGrupo)`
 se llama ANTES del `.then()` del portapapeles, nunca después -- si se
 abriera tras esperar esa promesa, algunos navegadores ya no lo
 considerarían una acción directa del clic original y lo bloquearían.
 
-### 2026-08-25 (sexta tanda): bug real -- los buckets de Storage llevaban vacíos desde que se crearon (v6.6)
+### 2.6 2026-08-25 (sexta tanda): bug real -- los buckets de Storage llevaban vacíos desde que se crearon (v6.6)
 
 **Arreglo:** función envoltorio `es_anfitrion()` (`security definer`,
 igual que `mi_rol()`), y las 5 políticas pasan a llamarla en vez de
@@ -963,14 +960,14 @@ para las RPC normales, y probar la subida real en vivo antes de darla
 por buena en vez de asumir que "la política parece correcta" a simple
 vista.
 
-### 2026-08-25 (séptima tanda): el botón "Enlace" copiaba lo de antes, no el enlace nuevo
+### 2.7 2026-08-25 (séptima tanda): el botón "Enlace" copiaba lo de antes, no el enlace nuevo
 
 **Lección para cualquier acción futura que combine portapapeles +
 `window.open`/navegación:** el portapapeles siempre primero. Cualquier
 cosa que pueda robar el foco de la pestaña (abrir una ventana, enviar a
 otra URL) debe ir después, nunca antes.
 
-### 2026-08-25 (octava tanda): el reordenado no bastó -- causa raíz de verdad
+### 2.8 2026-08-25 (octava tanda): el reordenado no bastó -- causa raíz de verdad
 
 **Lección para cualquier cosa nueva que se añada dentro de esta ventana
 emergente (o de cualquier otra que se construya así en el futuro) y
@@ -980,7 +977,7 @@ ventana, nunca los globales `window`/`navigator`/`document` a secas** --
 aunque el código "viva visualmente" en la ventana emergente, sigue
 ejecutándose en el realm de la pestaña principal.
 
-### 2026-08-25 (novena tanda): pregunta de acceso al tablón (v6.7)
+### 2.9 2026-08-25 (novena tanda): pregunta de acceso al tablón (v6.7)
 
 **Tercer bug real de la misma tanda: el propio guardado borraba lo que
 se estaba escribiendo al lado.** El usuario lo describió bien una vez
@@ -1023,7 +1020,7 @@ funciones de esta app que tocan una tabla entera a propósito).
 `where true` desde el principio, no esperar a que falle en
 producción.**
 
-### Ventana "Aniversarios" y las fotos fuera de la base (2026-09-17, v30)
+### 2.10 Ventana "Aniversarios" y las fotos fuera de la base (2026-09-17, v30)
 
 - **Hoja de encargo** (v31.1): dentro del mismo ZIP, un `Hoja de
   encargo.txt` con un bloque redactado por foto (nombres, año de boda,
@@ -1072,7 +1069,7 @@ un fallo de la app -- comprobarlo antes de tocar nada.
 sustitución de verdad (se escribió literal). Se recuperó del diff. Si se
 vuelve a migrar algo en bloque: comprobar el diff, no solo que compile.
 
-### Pendiente: hacer el mapa del sitio privado de verdad (aparcado el 2026-09-16)
+### 2.11 Pendiente: hacer el mapa del sitio privado de verdad (aparcado el 2026-09-16)
 
 ⚠️ **Decisión firme del 2026-09-20: se queda como está.** El usuario:
 *"lo dejamos como está hasta que vuelva a preguntar"*. No volver a
@@ -1086,7 +1083,7 @@ desplegando igual desde un repo privado. Efecto colateral a recordarle:
 para enseñárselo al desarrollador que se ofreció a revisarlo habrá que
 invitarle como colaborador.
 
-### "Mapa del sitio" en Mi cuenta, con permiso propio (2026-09-16, v29)
+### 2.12 "Mapa del sitio" en Mi cuenta, con permiso propio (2026-09-16, v29)
 
 ⚠️ Este permiso **no existe en `schema.sql`**, a diferencia de los otros
 tres. Solo decide si se enseña un enlace; la imagen la sirve la web a
@@ -1094,7 +1091,7 @@ cualquiera que sepa la URL, así que no hay nada que comprobar en la base
 de datos y `colaborador_tiene_permiso` no lo mira nunca. No es un
 descuido: es la primera clave de la app que es solo de pantalla.
 
-### El Modo Pruebas no guardaba Novedades (2026-09-17)
+### 2.13 El Modo Pruebas no guardaba Novedades (2026-09-17)
 
 ⚠️ Quedan fuera A PROPÓSITO, y conviene no "arreglarlo" sin pensar:
 - `historial_texto` y `tablon_accesos`: son registros de lo que pasó de
@@ -1105,7 +1102,7 @@ descuido: es la primera clave de la app que es solo de pantalla.
   una prueba. Se deja fuera porque la fila lleva también el token, y
   reponerla entera es más peligroso que el problema que resuelve.
 
-### No se podía salir del Modo Pruebas (2026-09-20, v37.13)
+### 2.14 No se podía salir del Modo Pruebas (2026-09-20, v37.13)
 
 **Lección, y esto vale para cualquier restauración futura**: el orden de
 inserción tiene que seguir las claves foráneas. Hoy son estas:
@@ -1114,7 +1111,7 @@ inserción tiene que seguir las claves foráneas. Hoy son estas:
 enganchan al final) y `colaboradores."invitadoId"` -> `invitados`. Al
 añadir una tabla o una clave foránea nueva, repasar `restaurar_foto`.
 
-### "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
+### 2.15 "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
 
 El texto vive en `evento."notaPrivacidad"`, se ve al pie del tablón y se
 edita en Datos del evento (v39.3 y v39.4). ⚠️ **La nota manda sobre el
@@ -1128,7 +1125,7 @@ decisiones en `textos/nota-privacidad-tablon.md`.
 foto es otra cosa y ante la duda se borra. Si algún día se quiere lo
 contrario, es una decisión suya, no un descuido que arreglar.
 
-### "Todavía no hay fecha confirmada" (2026-09-21, v39)
+### 2.16 "Todavía no hay fecha confirmada" (2026-09-21, v39)
 
 ⚠️ **A propósito NO borra la fecha escrita**, aunque él dijo "anule la
 fecha". Dos motivos, los dos reales:
@@ -1148,7 +1145,7 @@ que nadie se entere. Es el mismo tipo de trampa que las columnas nuevas
 NOT NULL rompiendo restauraciones antiguas. Quitarlo solo cuando ya no
 quede ninguna foto vieja.
 
-### Dos clases de permiso, no una (2026-09-21, v38.5)
+### 2.17 Dos clases de permiso, no una (2026-09-21, v38.5)
 
 ⚠️ El botón desaparece de "Mi cuenta" **también para el anfitrión**
 (`VistaAnfitrion` ya no pasa `mostrarRepositorio`). Es lo que se pidió, y
@@ -1168,7 +1165,7 @@ aplicarla al pie de la letra.**
 texto que la lista ya imprime. Aquí la etiqueta era correcta y la frase
 que la envolvía, no.
 
-### El mapa se quedaba viejo sin que nadie se enterara (2026-09-23)
+### 2.18 El mapa se quedaba viejo sin que nadie se enterara (2026-09-23)
 
 **Y de paso, la paleta.** El script tenía los colores **copiados a mano**
 de `theme.js`, y ya habían derivado: sus dos dorados (#A87C3A, #8A6A34)
@@ -1186,13 +1183,13 @@ con `nvm alias default v24.18.1`. **Lección: `nvm install` toca la
 configuración de su máquina, no solo la mía.** Si hace falta otra versión
 para una prueba, dejar el `default` como estaba al terminar.
 
-### El acabado, con una escala y no a ojo (2026-09-20, v38)
+### 2.19 El acabado, con una escala y no a ojo (2026-09-20, v38)
 
 **El aire**: en paneles y tarjetas sí; ⚠️ en las **filas de las tablas
 no** — con 140 invitados, una lista con más aire es una lista que no
 cabe.
 
-### El sello que late (2026-09-20, v38.1)
+### 2.20 El sello que late (2026-09-20, v38.1)
 
 ✅ **Aprobado por el usuario el 2026-09-20** ("espectacular"). Y una
 lección de método: los tres aros salieron de tres vueltas suyas seguidas
@@ -1200,7 +1197,7 @@ lección de método: los tres aros salieron de tres vueltas suyas seguidas
 tres la habría acertado yo de una: con él conviene **construir de uno en
 uno y enseñar**, no proponer el resultado final de golpe.
 
-### Se acabaron los avisos del navegador (2026-09-20, v37.12)
+### 2.21 Se acabaron los avisos del navegador (2026-09-20, v37.12)
 
 ⚠️ Sigue habiendo DOS excepciones a propósito, y no son un olvido:
 `persistNovedades` y `persistPreguntaTablon` devuelven `true`/`false` sin
@@ -1208,9 +1205,9 @@ avisar, porque `VentanaNovedades.jsx` enseña el fallo en su propia
 pantalla, junto al texto que no se ha podido guardar -- ahí se entiende
 mejor que en una ventana aparte.
 
-### "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
+### 2.22 "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
 
-### Una familia no se separa en las mesas (2026-09-19, v37)
+### 2.23 Una familia no se separa en las mesas (2026-09-19, v37)
 
 - `lib/mesas.js` es la única definición. `claveFamiliaMesa` = grupo
   familiar o, si está vacío, el apellido: la MISMA que ya usaba el
@@ -1268,7 +1265,7 @@ mejor que en una ventana aparte.
   UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
   al elegirla, sale el aviso y no se mueve nadie.
 
-### Relieve, clic y pregunta de seguridad (2026-09-19, v36)
+### 2.24 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
 
 El usuario lo probó en su iPhone: ni sonido ni vibración.
 - **Vibración**: el truco de pulsar un `<input switch>` escondido DESDE EL
@@ -1304,14 +1301,14 @@ elección de mano, la X de quitar con su pregunta y los avisos. Es decir,
 la técnica del interruptor SÍ funciona en su iOS: no volver al truco de
 pulsarlo desde el código.
 
-### Permiso "Ver el código de la app" (2026-09-18, v34.2)
+### 2.25 Permiso "Ver el código de la app" (2026-09-18, v34.2)
 
 ⚠️ Mismo caso que `mapa_sitio_ver`: **solo de pantalla**. El repositorio
 es público, así que el permiso decide quién ve el enlace, no quién entra.
 Se le dijo al usuario antes de construirlo. Si el repo pasa a privado,
 habrá que invitar al desarrollador también desde GitHub.
 
-### Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
+### 2.26 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
 
 ⚠️ **La ventana de Música NO se trocea, a propósito**: se abre en el
 local con un wifi desconocido y no puede quedarse descargando delante de
@@ -1323,13 +1320,13 @@ abierta de antes pide trozos con nombres que ya no existen. `main.jsx`
 escucha `vite:preloadError` y recarga UNA vez (marca en sessionStorage
 para no entrar en bucle si el fallo es otro, como estar sin conexión).
 
-### Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
+### 2.27 Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
 
 ⚠️ La foto se guarda **antes** de la acción, y si falla no se toca nada.
 Al revés (como estaba con la descarga) el reinicio podía ejecutarse igual
 aunque la copia no llegara a existir.
 
-### `schema.sql` reescrito desde cero (2026-09-16)
+### 2.28 `schema.sql` reescrito desde cero (2026-09-16)
 
 ⚠️ Regla que sustituye a la de antes: **no se añade nada al final de
 `schema.sql`**. Si cambia una función, se cambia en su sitio. Si cambia
@@ -1341,7 +1338,7 @@ contenedor de la tabla (`tablaRef`): si las columnas se ahogan, el texto
 se recorta antes de tiempo y la tabla se vuelve ilegible aunque
 técnicamente cumpla la regla.
 
-### 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
+### 2.29 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
 
 ⚠️ **Regla nueva: al añadir una columna a una tabla abierta a `anon`,
 releer la política de esa tabla en el mismo cambio.** No basta con que
@@ -1357,7 +1354,7 @@ del código, que dio la firma por buena**. Sin Postgres local ni
 credenciales de escritura, esa llamada anónima es la única red que hay:
 hacerla siempre antes de desplegar el cliente.
 
-### 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
+### 2.30 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
 
 ⚠️ Dónde vive esa pantalla, que Supabase la ha movido: **Authentication →
 Emails → SMTP**, o sea `/dashboard/project/<ref>/auth/smtp`. El viejo
