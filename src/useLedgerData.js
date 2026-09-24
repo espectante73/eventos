@@ -449,9 +449,23 @@ export function useLedgerData(rol) {
 
   const persistEvento = useCallback(async (next) => {
     const anterior = eventoRef.current;
+    // Norma 18: solo lo cambiado. `anterior` es lo último que se leyó del
+    // servidor; lo que no se manda, no se toca.
+    // ⚠️ Aquí no era solo cuestión de pisar lo de otro: la fila de
+    // `evento` pesa ~830 KB (la portada y la plantilla de invitación van
+    // dentro, en base64), así que mandarla entera en CADA tecla obligaba
+    // a la base a reescribir las dos imágenes, y la sentencia se cortaba
+    // sola con "canceling statement due to statement timeout". Lo
+    // encontró él el 2026-09-24 editando el Cronograma.
+    const cambios = {};
+    for (const [clave, valor] of Object.entries(next || {})) {
+      if (clave === "id") continue;
+      if (JSON.stringify(valor) !== JSON.stringify(anterior?.[clave])) cambios[clave] = valor;
+    }
+    if (Object.keys(cambios).length === 0) return;
     setEvento(next);
     eventoRef.current = next;
-    const { error } = await supabase.rpc("guardar_evento", { p_token: rol, p_fila: next });
+    const { error } = await supabase.rpc("guardar_evento", { p_token: rol, p_fila: cambios });
     if (error) {
       avisar("No se pudo guardar la configuración del evento. Se deshace el cambio en pantalla.", error);
       setEvento(anterior);

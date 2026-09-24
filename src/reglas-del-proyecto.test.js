@@ -147,6 +147,15 @@ describe("el guardado del anfitrión manda solo lo cambiado", () => {
     expect(ledger).not.toMatch(/guardar_fotos_familiares[\s\S]{0,120}p_filas:\s*filas\b/);
   });
 
+  // ⚠️ La fila de `evento` se escapó de todo lo anterior porque va sola
+  // (`p_fila`, sin ese), no en una colección. Y es la más cara de todas:
+  // lleva la portada y la plantilla de invitación en base64, ~830 KB, así
+  // que mandarla entera en cada tecla se cortaba por statement timeout.
+  it("la fila del evento también manda solo lo cambiado", () => {
+    expect(ledger).toContain("p_fila: cambios }");
+    expect(ledger).not.toMatch(/guardar_evento[\s\S]{0,120}p_fila:\s*next\b/);
+  });
+
   it("ninguna llamada de guardado manda una colección entera", () => {
     const sospechosas = [...ledger.matchAll(/p_filas:\s*(\w+)/g)].map((m) => m[1]);
     // `cambiadas` es lo correcto; cualquier otra cosa es la lista entera.

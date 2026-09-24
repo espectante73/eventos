@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "42.3",
+    cambios: [
+      "Arreglado el error \"No se pudo guardar la configuración del evento\" que salía al tocar el Cronograma: la app mandaba la ficha entera del evento (con las dos imágenes dentro, unos 830 KB) cada vez que cambiabas una letra, y la base de datos cortaba el guardado por tardar demasiado. Ahora solo se manda lo que cambia.",
+    ],
+  },
+  {
     version: "42.2",
     cambios: [
       "Cronograma: «¿Quién lo atiende?» se pliega con la misma pieza que el resto de la app, así que se abre y se ve igual que cualquier otra sección plegada.",
