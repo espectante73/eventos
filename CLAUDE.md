@@ -274,9 +274,12 @@ en la sección que se indica entre paréntesis.
 6. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
    protagonista y lo demás se esconde. («Filosofía de UX: todo plegado y
    una sola cosa abierta»)
-7. **Tablas: una sola línea por fila**, todas de la misma altura; si no
-   cabe, se ensancha o se recorta, nunca dos líneas. («Tablas: una sola
-   línea por fila…»)
+7. **Tablas y listas: una sola línea por fila**, todas de la misma
+   altura; si no cabe, se ensancha o se recorta, nunca dos líneas. Y las
+   columnas cuadran ENTRE filas: cada fila es su propia caja y no ve a
+   las de al lado, así que los anchos van fijos y definidos una sola vez,
+   no a lo que mida el contenido de cada una. Lo vigila
+   `reglas-del-proyecto.test.js`.
 8. **Una sola pieza, no sincronizar**: si dos partes tienen que coincidir
    siempre, comparten componente o constante; no se miden por separado
    para igualarlas.
