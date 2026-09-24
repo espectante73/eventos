@@ -394,13 +394,12 @@ en la sección que se indica entre paréntesis.
     código que compara: aquí `normalizar_nombre_tablon` perdona
     mayúsculas, tildes, comas y espacios, pero **no el orden**.
 20. **Lo que ESCRIBE en los datos vive en `lib/`, con pruebas.** Nunca
-    dentro de un componente: ahí no se puede probar sin dibujar la
-    pantalla entera, y lo que no se puede probar acaba rompiéndose. Son
-    funciones puras que reciben la lista y devuelven la nueva, y
-    devuelven `{ datos, aviso }` — si el aviso trae texto, NO se ha
-    tocado nada y ese es el motivo. Modelo: `lib/mesas.js`,
-    `lib/edicionInvitados.js`. Lo que solo lee o pinta puede quedarse en
-    el componente.
+    dentro de una pantalla: suelto se prueba a fondo, dentro no.
+    Devuelven la lista nueva y un `aviso`; si el aviso trae texto, o **no
+    se hizo el cambio** y ahí está el motivo, o **se hizo con una
+    salvedad** que hay que contar. Modelo: `lib/mesas.js`,
+    `lib/edicionInvitados.js`. Lo que solo lee o pinta se queda en la
+    pantalla.
 21. **La identidad de una persona se muestra siempre como "Apellido,
     Nombre"**, en toda la app: listas, desplegables, avisos y preguntas
     de confirmación. Una sola definición, `nombreCompleto` en
