@@ -120,6 +120,25 @@ export function familiasSinEmail(invitados, colaboradores) {
   return new Set([...conConfirmados].filter((clave) => !conEmail.has(clave)));
 }
 
+// El aviso de "esta familia todavía no tiene email" se lee dentro de la
+// ficha de UNA persona, así que el paréntesis tiene que hablar de ELLA.
+// Antes decía siempre "(del esposo o de la esposa)" y el usuario lo cortó
+// el 2026-09-24: "no le va a aplicar a cada uno". Cuatro casos, y cada uno
+// dice quién puede darlo de verdad:
+//   - matrimonio (O/A): basta con el de uno de los dos;
+//   - sin cónyuge (P/S): es obligatorio, no hay con quién repartirlo;
+//   - menor: a él no se le pide ninguno (ver `pideEmail`);
+//   - sin revisar (rolFamiliar vacío): todavía no se sabe, así que se
+//     pide el de un adulto sin señalar a nadie.
+export function avisoFamiliaSinEmail(g, evento) {
+  const base = "⚠ Nadie de esta familia tiene email todavía: hace falta al menos uno";
+  if (!pideEmail(g, evento)) return `${base} (el suyo no, que es menor: tiene que darlo un adulto de la familia).`;
+  if (g?.rolFamiliar === ROL_FAMILIAR.ESPOSO || g?.rolFamiliar === ROL_FAMILIAR.ESPOSA)
+    return `${base} (como mínimo el de uno de los dos).`;
+  if (!g?.rolFamiliar) return `${base} (el de un adulto de la familia).`;
+  return `${base} (en su caso es obligatorio: no hay cónyuge que pueda darlo).`;
+}
+
 // Los campos de texto que SÍ se le piden a esta persona en concreto: lo
 // que no aplica (el email de un menor, el año de boda de quien no es O ni
 // A) o lo opcional que no ha elegido, no cuenta. Así "completo" es

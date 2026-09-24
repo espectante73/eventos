@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "42",
+    cambios: [
+      "En el formulario del colaborador, la zona del invitado se ve resaltada con la misma pastilla dorada que el importe. Es solo para mirarla: ahí no se cambia.",
+      "El aviso de que a la familia le falta el email ya dice quién puede darlo: a un matrimonio le basta con el de uno de los dos, quien viene sin pareja lo tiene obligatorio, y a un menor no se le pide.",
+    ],
+  },
+  {
     version: "41.7",
     cambios: [
       "La columna nueva ya está como las demás: \"Función\" de título arriba, \"Todos\" de filtro abajo, y se puede ordenar por ella igual que por el resto.",

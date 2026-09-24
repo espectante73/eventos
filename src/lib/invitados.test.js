@@ -5,6 +5,7 @@ import {
   totalDatosInvitado,
   conEmailDeColaborador,
   familiasSinEmail,
+  avisoFamiliaSinEmail,
   pideDatosDeBoda,
   esMenorDeEdad,
   pideEmail,
@@ -286,5 +287,36 @@ describe("email: casilla Sí por defecto y al menos uno por familia", () => {
   it("el email de Colaboradores cuenta para la familia", () => {
     const raul = { id: "r", apellido: "Sierra", grupoFamiliar: "Sierra01", rolFamiliar: "suelto", confirmado: true, email: "" };
     expect(familiasSinEmail([raul], [{ id: "c", invitadoId: "r", email: "raul@a.com" }]).size).toBe(0);
+  });
+
+  // El usuario, 2026-09-24: el aviso decía siempre "(del esposo o de la
+  // esposa)" y eso no le aplica a cada uno. Este test es el que impide
+  // que vuelva a haber un solo texto para todos.
+  describe("el aviso dice quién puede dar ese email", () => {
+    const adulto = { anioNacimiento: "1970" };
+
+    it("a un matrimonio le basta con el de uno de los dos", () => {
+      for (const rol of ["esposo", "esposa"]) {
+        expect(avisoFamiliaSinEmail({ ...adulto, rolFamiliar: rol }, evento)).toContain("uno de los dos");
+      }
+    });
+
+    it("quien viene sin cónyuge (S o P) lo tiene obligatorio", () => {
+      for (const rol of ["suelto", "padre"]) {
+        expect(avisoFamiliaSinEmail({ ...adulto, rolFamiliar: rol }, evento)).toContain("obligatorio");
+      }
+    });
+
+    it("a un menor no se le pide el suyo: lo da un adulto", () => {
+      const nino = { rolFamiliar: "hijo", anioNacimiento: "2015" };
+      expect(avisoFamiliaSinEmail(nino, evento)).toContain("un adulto de la familia");
+      expect(avisoFamiliaSinEmail(nino, evento)).not.toContain("obligatorio");
+    });
+
+    it("sin revisar (rol vacío) no señala a nadie en concreto", () => {
+      const texto = avisoFamiliaSinEmail({ ...adulto, rolFamiliar: "" }, evento);
+      expect(texto).toContain("un adulto de la familia");
+      expect(texto).not.toContain("uno de los dos");
+    });
   });
 });

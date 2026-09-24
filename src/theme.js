@@ -21,6 +21,12 @@ export const C = {
   // paleta el 2026-09-23, cuando el mapa lo necesitó.
   champan: "#E8D5AE",
   champanHondo: "#D6BE8F",
+  // Dorado más claro que el de la ficha del colaborador, para que una
+  // pastilla de dato (importe, zona) se despegue del fondo. Estaba
+  // escrito a mano dentro del importe; al pedir el usuario una segunda
+  // pastilla igual (la zona, 2026-09-24) habría que copiarlo, que es
+  // justo como derivaron los rojos.
+  champanClaro: "#F2DFAE",
   charcoal: "#2B2620",
   line: "#C9BFA9",
   // Rojo de aviso/peligro y su fondo suave a juego — centralizados el

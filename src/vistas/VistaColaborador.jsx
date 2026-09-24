@@ -16,6 +16,7 @@ import {
   estadoDatos,
   eligeOpcional,
   familiasSinEmail,
+  avisoFamiliaSinEmail,
   claveFamilia,
   importeEsperadoInvitado,
   resolverColaborador,
@@ -56,6 +57,27 @@ const ETIQUETAS_CAMPOS_INVITADO = {
   sinEmail: "Email",
   conservarDatos: "Autorización para guardar sus datos",
 };
+
+// Pastilla de un dato que el colaborador SOLO MIRA: el importe y la zona.
+// Una sola pieza para las dos (norma 8): si algún día se retoca el color,
+// se retoca en las dos o dejan de parecerse.
+//
+// Colores al revés que el resto de la cabecera (fondo dorado, letra
+// verde) y un punto más de letra, a petición del usuario (2026-09-17): el
+// importe es el dato que más se consulta. El dorado es más CLARO que el
+// de la ficha para que se despegue, con un filete verde fino que la
+// recorta sobre el dorado del formulario.
+function PastillaDato({ title, children }) {
+  return (
+    <span
+      className="text-sm px-2 py-0.5 rounded font-semibold"
+      style={{ background: C.champanClaro, color: C.ink, border: `1px solid ${C.ink}` }}
+      title={title}
+    >
+      {children}
+    </span>
+  );
+}
 
 function FormularioDatos({
   invitado,
@@ -265,25 +287,9 @@ function FormularioDatos({
             datos {contarDatosRellenados(conEmailDeColaborador(form, colaboradorVinculado), foto, evento, { ...abiertos, fotoBoda: !sinFotoBoda })} de{" "}
             {totalDatosInvitado(form, evento, { ...abiertos, fotoBoda: !sinFotoBoda })}
           </span>
-          {/* Colores al revés que el resto de la cabecera (fondo dorado,
-              letra verde) y un punto más de letra, a petición del usuario
-              (2026-09-17): el importe es el dato que más se consulta. */}
-          <span
-            className="text-sm px-2 py-0.5 rounded font-semibold"
-            // Contorno verde muy fino: sobre el dorado de la ficha, el chip
-            // necesita un canto que lo recorte (usuario, 2026-09-17).
-            style={{
-              // Dorado más CLARO que el de la ficha, para que se despegue, con
-              // la letra en el mismo verde que el nombre y un filete verde
-              // fino (usuario, 2026-09-17).
-              background: "#F2DFAE",
-              color: C.ink,
-              border: `1px solid ${C.ink}`,
-            }}
-            title="Importe calculado según edad y los precios de Configuración"
-          >
+          <PastillaDato title="Importe calculado según edad y los precios de Configuración">
             € {importe.toFixed(2)}
-          </span>
+          </PastillaDato>
           {/* Borde dorado (antes el débil de boton-verde-solido) para que
               se distinga del propio fondo verde del formulario, a
               petición del usuario. */}
@@ -296,8 +302,15 @@ function FormularioDatos({
             Cerrar
           </button>
         </div>
-        <div className="text-xs mt-1" style={{ color: C.ink }}>
-          Familia {invitado.grupoFamiliar || form.apellido} · {form.zona || "sin zona"}
+        {/* La zona, resaltada con la misma pastilla que el importe (usuario,
+            2026-09-24). Es de SOLO VER: el colaborador no la cambia. Aquí
+            abajo y no arriba, para no empujar el botón Cerrar a otra línea
+            en el móvil. */}
+        <div className="text-xs mt-1 flex items-center gap-2 flex-wrap" style={{ color: C.ink }}>
+          <span>Familia {invitado.grupoFamiliar || form.apellido}</span>
+          <PastillaDato title="Zona del invitado. Solo la cambia el anfitrión.">
+            {form.zona || "Sin zona"}
+          </PastillaDato>
         </div>
       </div>
       {aviso && (
@@ -373,15 +386,16 @@ function FormularioDatos({
             )}
           </div>
         )}
-        {/* Al menos un email por familia (del esposo o la esposa; el
-            suelto, el suyo). Lo decide la base, que ve a la familia
-            entera aunque la lleven dos colaboradores. */}
+        {/* Al menos un email por familia. QUIÉN sale del aviso (depende de
+            si esta persona es cónyuge, viene sola o es menor); QUE falte lo
+            decide la base, que ve a la familia entera aunque la lleven dos
+            colaboradores. */}
         {familiaSinEmail && (
           <p
             className="text-xs font-bold inline-block px-2 py-1 rounded mt-1"
             style={{ color: C.wax, background: C.paper }}
           >
-            ⚠ Nadie de esta familia tiene email todavía: hace falta al menos uno (del esposo o de la esposa).
+            {avisoFamiliaSinEmail(form, evento)}
           </p>
         )}
       </Field>
