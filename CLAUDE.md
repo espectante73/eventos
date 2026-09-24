@@ -680,7 +680,7 @@ Supabase sube de versión mayor en el futuro (revisar en Project Settings →
 Database, o en el mensaje de error si el workflow empieza a fallar de
 nuevo), hay que subir el número de esa imagen a juego.
 
-## Registro de errores con Sentry (2026-09-18, v34.3)
+## Registro de errores con Sentry
 
 Antes, un fallo en el móvil de un colaborador no dejaba rastro. Ahora
 llega a Sentry (cuenta del usuario, región **EU/Alemania** -- `.de.` en la
@@ -704,16 +704,10 @@ pruebas.
 Coste: +31 KB comprimidos al abrir (de 125 a 156). Se aceptó: sigue
 siendo más de dos veces más ligera que antes de trocear.
 
-Comprobado enviando un evento de prueba a la dirección con `curl`:
-Sentry lo aceptó. Aparece en el panel como "Prueba de conexión…", con
-entorno "prueba"; se puede borrar.
-
-⚠️ **Ese evento de prueba mostró la IP del usuario** (85.86.x.x): Sentry
-la deduce EN SU SERVIDOR de la conexión entrante, aunque el evento no la
-traiga. `sendDefaultPii: false` no basta para eso. Hay que activar en el
-panel de Sentry: proyecto → Settings → **Security & Privacy** → "Prevent
-Storing of IP Addresses". Se le pidió al usuario el 2026-09-18; confirmar
-que lo hizo.
+⚠️ **La IP la deduce Sentry EN SU SERVIDOR**, de la conexión entrante,
+aunque el evento no la traiga: `sendDefaultPii: false` no basta. Hay que
+activar en su panel: proyecto → Settings → **Security & Privacy** →
+"Prevent Storing of IP Addresses". Pendiente de confirmar que él lo hizo.
 
 v34.4: enlace "Errores de la app" en Mi cuenta, solo anfitrión
 (`URL_REGISTRO_ERRORES` en constants.js). Pintar los errores DENTRO de la
