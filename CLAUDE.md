@@ -98,10 +98,10 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
    explicar lo obvio. De los cambios de código, solo las líneas que
    importan. (Se suma a lo de siempre: conclusión primero, lenguaje de
    andar por casa, UN solo siguiente paso.)
-3. **NO DARLE LA RAZÓN POR DEFECTO.** Si hay un error, un riesgo o un
-   mal enfoque —suyo o mío—, decirlo directamente y por qué, ANTES de
-   implementar, aunque no haya pedido revisión. Con sus palabras: *"no
-   darme la razón por defecto hace más segura tu aportación como IA"*.
+3. **"NO DARME LA RAZÓN POR DEFECTO HACE MÁS SEGURA TU APORTACIÓN COMO
+   IA."** Si hay un error, un riesgo o un mal enfoque —suyo o mío—,
+   decirlo directamente y por qué, ANTES de implementar, aunque no haya
+   pedido revisión.
 4. **`lint`, `build` y `test`: los tres, siempre.** No es rutina, cazan
    cosas distintas. `npm run lint` (`no-undef`) pilla una variable que se
    quedó sin importar al mover código — no rompe el build, revienta en el
