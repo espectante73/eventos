@@ -951,19 +951,16 @@ final. El orden de hoy lo vigila `supabase/schema.test.js`; lo que el
 test no puede prever es una tabla o una clave nueva: al añadirla,
 repasar `restaurar_foto`.
 
-### 2.8 "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
+### 2.8 "Autorizo expresamente a que guarden mis datos"
 
-El texto vive en `evento."notaPrivacidad"`, se ve al pie del tablón y se
-edita en Datos del evento (v39.3 y v39.4). ⚠️ **La nota manda sobre el
-código**: esta casilla existe porque la nota lo promete. Y ahora que el
-texto es editable, **nadie avisa si alguien lo cambia**: la ventana de
-edición lo dice en rojo, pero es lo único que hay. Historia de las
-decisiones en `textos/nota-privacidad-tablon.md`.
+⚠️ **La nota de privacidad manda sobre el código**: la casilla existe
+porque la nota lo promete. El texto vive en `evento."notaPrivacidad"` y
+es editable, así que nadie avisa si alguien lo cambia (la ventana lo
+dice en rojo, y es lo único). Porqués en `textos/nota-privacidad-tablon.md`.
 
-⚠️ **Las fotos de boda SÍ se borran**, también las de quien autorizó
-(`persistFotosFamiliares({})`). La autorización habla de "mis datos"; una
-foto es otra cosa y ante la duda se borra. Si algún día se quiere lo
-contrario, es una decisión suya, no un descuido que arreglar.
+⚠️ **Las fotos de boda SÍ se borran**, también las de quien autorizó: la
+autorización habla de "mis datos", y ante la duda una foto se borra.
+Cambiarlo es decisión suya, no un descuido que arreglar.
 
 ### 2.9 "Todavía no hay fecha confirmada" (2026-09-21, v39)
 
