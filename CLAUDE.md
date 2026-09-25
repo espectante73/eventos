@@ -1,9 +1,7 @@
 # Contexto del proyecto para Claude
 
-Este archivo viaja dentro del repositorio para que cualquier Claude que
-abra el proyecto, en cualquier máquina, tenga el mismo contexto. Se
-relee al empezar CADA conversación; el chat no, se compacta o se cierra.
-**Si algo tiene que sobrevivir, va aquí.**
+**Si algo tiene que sobrevivir, va aquí:** este archivo se relee en cada
+conversación; el chat se compacta o se cierra.
 
 **Para qué es la app:** organizar la boda del usuario **y reutilizarla
 para otros eventos**. Por eso la Zona de Reinicio es permanente. ⚠️ El
