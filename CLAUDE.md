@@ -39,6 +39,8 @@ relato.**
   a proponer. Va a la PARTE 1, en negativo.
 - De un duplicado descubierto se escribe la conclusión ("los colores
   salen de `theme.js`"), no el hallazgo.
+- **Las decisiones van aquí, no en un `DECISIONS.md` aparte**: dos
+  archivos contando lo mismo acaban contando cosas distintas.
 
 ### Cuánto motivo
 
@@ -117,12 +119,6 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
    lógica condicional enredada, ejecutarlo o repasarlo paso a paso antes
    de darlo por bueno.
 
-⚠️ **Descartado a propósito, no olvidado:** su borrador traía un punto 6,
-llevar las decisiones a un `DECISIONS.md`. Se descartó el mismo día, de
-acuerdo con él: **este archivo ya hace ese trabajo**, y dos archivos
-contando lo mismo acaban contando cosas distintas — el problema que
-ya nos costó tres arreglos (los rojos copiados a mano, los trece tamaños
-de letra, la paleta del mapa).
 
 ## 1.2 Normas de estándar de la app
 
