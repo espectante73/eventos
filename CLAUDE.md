@@ -856,9 +856,10 @@ va por el mismo camino— sí le llegó a Recibidos. Lo probará con un
 colaborador nuevo. ⚠️ El correo de INVITACIÓN nunca fue el problema: ese
 siempre llegó bien.
 
-**El mapa de la app** se queda como está hasta que él lo retome
-(2026-09-20). Ver «Pendiente: hacer el mapa del sitio privado de verdad»
-para el porqué de entonces.
+**El mapa de la app se queda público** hasta que él lo retome: no
+ofrecerlo como pendiente. Si algún día se hace privado, el primer paso
+es suyo, no del código: poner privado el repositorio en GitHub (Vercel
+despliega igual; al desarrollador que lo revisa habría que invitarle).
 
 ======================================================================
 
@@ -931,21 +932,7 @@ borra en los dos). Relee la fila en vez de fiarse de NEW, y
 fábrica solo tabula campos de texto (Ajustes → Avanzado, u Opción+Tab).
 No es un fallo de la app.
 
-### 2.6 Pendiente: hacer el mapa del sitio privado de verdad (aparcado el 2026-09-16)
-
-⚠️ **Decisión firme del 2026-09-20: se queda como está.** El usuario:
-*"lo dejamos como está hasta que vuelva a preguntar"*. No volver a
-sacarlo en las listas de pendientes ni ofrecerlo como siguiente paso —
-lo retomará él cuando quiera. Lo de abajo es el porqué, para no tener
-que reconstruir la conversación si algún día vuelve.
-
-⚠️ No empezar por el código. El primer paso es del usuario y está sin
-hacer: Settings -> Change repository visibility -> Private. Vercel sigue
-desplegando igual desde un repo privado. Efecto colateral a recordarle:
-para enseñárselo al desarrollador que se ofreció a revisarlo habrá que
-invitarle como colaborador.
-
-### 2.7 "Mapa del sitio" en Mi cuenta, con permiso propio (2026-09-16, v29)
+### 2.6 "Mapa del sitio" en Mi cuenta, con permiso propio (2026-09-16, v29)
 
 ⚠️ Este permiso **no existe en `schema.sql`**, a diferencia de los otros
 tres. Solo decide si se enseña un enlace; la imagen la sirve la web a
@@ -953,7 +940,7 @@ cualquiera que sepa la URL, así que no hay nada que comprobar en la base
 de datos y `colaborador_tiene_permiso` no lo mira nunca. No es un
 descuido: es la primera clave de la app que es solo de pantalla.
 
-### 2.8 El Modo Pruebas no guardaba Novedades (2026-09-17)
+### 2.7 El Modo Pruebas no guardaba Novedades (2026-09-17)
 
 ⚠️ Quedan fuera A PROPÓSITO, y conviene no "arreglarlo" sin pensar:
 - `historial_texto` y `tablon_accesos`: son registros de lo que pasó de
@@ -964,7 +951,7 @@ descuido: es la primera clave de la app que es solo de pantalla.
   una prueba. Se deja fuera porque la fila lleva también el token, y
   reponerla entera es más peligroso que el problema que resuelve.
 
-### 2.9 No se podía salir del Modo Pruebas (2026-09-20, v37.13)
+### 2.8 No se podía salir del Modo Pruebas (2026-09-20, v37.13)
 
 **Lección, y esto vale para cualquier restauración futura**: el orden de
 inserción tiene que seguir las claves foráneas. Hoy son estas:
@@ -973,7 +960,7 @@ inserción tiene que seguir las claves foráneas. Hoy son estas:
 enganchan al final) y `colaboradores."invitadoId"` -> `invitados`. Al
 añadir una tabla o una clave foránea nueva, repasar `restaurar_foto`.
 
-### 2.10 "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
+### 2.9 "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
 
 El texto vive en `evento."notaPrivacidad"`, se ve al pie del tablón y se
 edita en Datos del evento (v39.3 y v39.4). ⚠️ **La nota manda sobre el
@@ -987,7 +974,7 @@ decisiones en `textos/nota-privacidad-tablon.md`.
 foto es otra cosa y ante la duda se borra. Si algún día se quiere lo
 contrario, es una decisión suya, no un descuido que arreglar.
 
-### 2.11 "Todavía no hay fecha confirmada" (2026-09-21, v39)
+### 2.10 "Todavía no hay fecha confirmada" (2026-09-21, v39)
 
 ⚠️ **A propósito NO borra la fecha escrita**, aunque él dijo "anule la
 fecha". Dos motivos, los dos reales:
@@ -1007,7 +994,7 @@ que nadie se entere. Es el mismo tipo de trampa que las columnas nuevas
 NOT NULL rompiendo restauraciones antiguas. Quitarlo solo cuando ya no
 quede ninguna foto vieja.
 
-### 2.12 Dos clases de permiso, no una (2026-09-21, v38.5)
+### 2.11 Dos clases de permiso, no una (2026-09-21, v38.5)
 
 ⚠️ El botón desaparece de "Mi cuenta" **también para el anfitrión**
 (`VistaAnfitrion` ya no pasa `mostrarRepositorio`). Es lo que se pidió, y
@@ -1027,7 +1014,7 @@ aplicarla al pie de la letra.**
 texto que la lista ya imprime. Aquí la etiqueta era correcta y la frase
 que la envolvía, no.
 
-### 2.13 El mapa se quedaba viejo sin que nadie se enterara (2026-09-23)
+### 2.12 El mapa se quedaba viejo sin que nadie se enterara (2026-09-23)
 
 **Y de paso, la paleta.** El script tenía los colores **copiados a mano**
 de `theme.js`, y ya habían derivado: sus dos dorados (#A87C3A, #8A6A34)
@@ -1045,13 +1032,13 @@ con `nvm alias default v24.18.1`. **Lección: `nvm install` toca la
 configuración de su máquina, no solo la mía.** Si hace falta otra versión
 para una prueba, dejar el `default` como estaba al terminar.
 
-### 2.14 El acabado, con una escala y no a ojo (2026-09-20, v38)
+### 2.13 El acabado, con una escala y no a ojo (2026-09-20, v38)
 
 **El aire**: en paneles y tarjetas sí; ⚠️ en las **filas de las tablas
 no** — con 140 invitados, una lista con más aire es una lista que no
 cabe.
 
-### 2.15 El sello que late (2026-09-20, v38.1)
+### 2.14 El sello que late (2026-09-20, v38.1)
 
 ✅ **Aprobado por el usuario el 2026-09-20** ("espectacular"). Y una
 lección de método: los tres aros salieron de tres vueltas suyas seguidas
@@ -1059,7 +1046,7 @@ lección de método: los tres aros salieron de tres vueltas suyas seguidas
 tres la habría acertado yo de una: con él conviene **construir de uno en
 uno y enseñar**, no proponer el resultado final de golpe.
 
-### 2.16 Se acabaron los avisos del navegador (2026-09-20, v37.12)
+### 2.15 Se acabaron los avisos del navegador (2026-09-20, v37.12)
 
 ⚠️ Sigue habiendo DOS excepciones a propósito, y no son un olvido:
 `persistNovedades` y `persistPreguntaTablon` devuelven `true`/`false` sin
@@ -1067,9 +1054,9 @@ avisar, porque `VentanaNovedades.jsx` enseña el fallo en su propia
 pantalla, junto al texto que no se ha podido guardar -- ahí se entiende
 mejor que en una ventana aparte.
 
-### 2.17 "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
+### 2.16 "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
 
-### 2.18 Una familia no se separa en las mesas (2026-09-19, v37)
+### 2.17 Una familia no se separa en las mesas (2026-09-19, v37)
 
 - `lib/mesas.js` es la única definición. `claveFamiliaMesa` = grupo
   familiar o, si está vacío, el apellido: la MISMA que ya usaba el
@@ -1127,7 +1114,7 @@ mejor que en una ventana aparte.
   UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
   al elegirla, sale el aviso y no se mueve nadie.
 
-### 2.19 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
+### 2.18 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
 
 El usuario lo probó en su iPhone: ni sonido ni vibración.
 - **Vibración**: el truco de pulsar un `<input switch>` escondido DESDE EL
@@ -1163,14 +1150,14 @@ elección de mano, la X de quitar con su pregunta y los avisos. Es decir,
 la técnica del interruptor SÍ funciona en su iOS: no volver al truco de
 pulsarlo desde el código.
 
-### 2.20 Permiso "Ver el código de la app" (2026-09-18, v34.2)
+### 2.19 Permiso "Ver el código de la app" (2026-09-18, v34.2)
 
 ⚠️ Mismo caso que `mapa_sitio_ver`: **solo de pantalla**. El repositorio
 es público, así que el permiso decide quién ve el enlace, no quién entra.
 Se le dijo al usuario antes de construirlo. Si el repo pasa a privado,
 habrá que invitar al desarrollador también desde GitHub.
 
-### 2.21 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
+### 2.20 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
 
 ⚠️ **La ventana de Música NO se trocea, a propósito**: se abre en el
 local con un wifi desconocido y no puede quedarse descargando delante de
@@ -1182,13 +1169,13 @@ abierta de antes pide trozos con nombres que ya no existen. `main.jsx`
 escucha `vite:preloadError` y recarga UNA vez (marca en sessionStorage
 para no entrar en bucle si el fallo es otro, como estar sin conexión).
 
-### 2.22 Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
+### 2.21 Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
 
 ⚠️ La foto se guarda **antes** de la acción, y si falla no se toca nada.
 Al revés (como estaba con la descarga) el reinicio podía ejecutarse igual
 aunque la copia no llegara a existir.
 
-### 2.23 `schema.sql` reescrito desde cero (2026-09-16)
+### 2.22 `schema.sql` reescrito desde cero (2026-09-16)
 
 ⚠️ Regla que sustituye a la de antes: **no se añade nada al final de
 `schema.sql`**. Si cambia una función, se cambia en su sitio. Si cambia
@@ -1200,7 +1187,7 @@ contenedor de la tabla (`tablaRef`): si las columnas se ahogan, el texto
 se recorta antes de tiempo y la tabla se vuelve ilegible aunque
 técnicamente cumpla la regla.
 
-### 2.24 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
+### 2.23 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
 
 ⚠️ **Regla nueva: al añadir una columna a una tabla abierta a `anon`,
 releer la política de esa tabla en el mismo cambio.** No basta con que
@@ -1216,7 +1203,7 @@ del código, que dio la firma por buena**. Sin Postgres local ni
 credenciales de escritura, esa llamada anónima es la única red que hay:
 hacerla siempre antes de desplegar el cliente.
 
-### 2.25 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
+### 2.24 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
 
 ⚠️ Dónde vive esa pantalla, que Supabase la ha movido: **Authentication →
 Emails → SMTP**, o sea `/dashboard/project/<ref>/auth/smtp`. El viejo
