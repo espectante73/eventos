@@ -944,14 +944,12 @@ No es un fallo de la app.
   reponerla entera es más peligroso que el problema que resuelve.
 Lo vigila `supabase/schema.test.js`.
 
-### 2.7 No se podía salir del Modo Pruebas (2026-09-20, v37.13)
+### 2.7 Restaurar sigue el orden de las claves foráneas
 
-**Lección, y esto vale para cualquier restauración futura**: el orden de
-inserción tiene que seguir las claves foráneas. Hoy son estas:
-`invitados."mesa"` -> `mesas`, `invitados."colaboradorId"` ->
-`colaboradores` (por eso los invitados entran sin colaborador y se
-enganchan al final) y `colaboradores."invitadoId"` -> `invitados`. Al
-añadir una tabla o una clave foránea nueva, repasar `restaurar_foto`.
+⚠️ Mesas antes que invitados, invitados sin colaborador y enganchados al
+final. El orden de hoy lo vigila `supabase/schema.test.js`; lo que el
+test no puede prever es una tabla o una clave nueva: al añadirla,
+repasar `restaurar_foto`.
 
 ### 2.8 "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
 
