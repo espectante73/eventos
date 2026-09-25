@@ -150,3 +150,25 @@ describe("el sello del CLAUDE.md está al día", () => {
     expect(sello.huella, "CLAUDE.md cambió sin sellar: node scripts/sellar-manual.mjs").toBe(huellaDe(real));
   });
 });
+
+// Una sola forma de escribir una lista dentro de otra (él, v45.6): con
+// viñetas, para que los números sean solo de las normas y citarlas no sea
+// un lío; y sin párrafo suelto al final, que no se sabe si es de la lista.
+// Lo que haya que decir de la norma va en su frase, ANTES de la lista.
+describe("las listas de dentro, todas iguales", () => {
+  const manual = partirManual(readFileSync("CLAUDE.md", "utf-8"));
+  const secciones = [{ num: "encabezado", texto: manual.encabezado.texto }, ...manual.partes.flatMap((p) => p.secciones)];
+  const puntos = secciones.flatMap((s) =>
+    bloques(s.texto)
+      .filter((b) => b.items)
+      .flatMap((b) => b.items.map((i) => ({ ...i, num: s.num })))
+  );
+
+  it("con viñetas, nunca numeradas", () => {
+    expect(puntos.filter((i) => i.sub && i.sub.tipo !== "ul").map((i) => i.num)).toEqual([]);
+  });
+
+  it("sin párrafo suelto después de la lista", () => {
+    expect(puntos.filter((i) => i.despues).map((i) => `${i.num}: ${i.despues.slice(0, 40)}`)).toEqual([]);
+  });
+});

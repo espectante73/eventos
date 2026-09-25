@@ -131,7 +131,9 @@ paréntesis, dónde está el detalle.
    la escala, no al sitio (única salida: `escala-libre:` y el motivo al
    lado). Nunca un estilo elegido por mí: mirar cómo está resuelto lo
    que ya existe en su misma situación y, si hay duda, **preguntar en una
-   línea ANTES de tocar el aspecto**. Lo vigila `src/theme.test.js`.
+   línea ANTES de tocar el aspecto**. Y si una norma suya choca con algo
+   que cualquiera reconoce de internet, preguntar por su alcance antes
+   de aplicarla al pie de la letra. Lo vigila `src/theme.test.js`.
 2. **Ventanas tan pequeñas como su contenido**: del ancho de un móvil en
    vertical, también en el ordenador. Toda ventana nueva es una
    `VentanaFlotante`; si crece mucho, lanzadora pequeña + una ventana por
@@ -141,7 +143,9 @@ paréntesis, dónde está el detalle.
 3. **Todo al alcance del pulgar QUE ELIJA CADA UNO.** La app entera se
    acomoda a esa elección; la derecha es solo lo que sale por defecto.
    («El pulgar: la regla y cómo funciona»)
-4. **Piezas compartidas, nunca hechas a mano:**
+4. **Piezas compartidas, nunca hechas a mano.** Los lenguajes propios
+   ya aprobados —pastilla de inicio, mando de música— se respetan tal
+   cual. Lo vigila `Boton.test.js`.
    - **Lo que se PULSA** —guardar, borrar, abrir una ventana, un
      desplegable, un título plegable, los iconos sueltos de las tablas—
      → `Boton`: relieve, se hunde al tocarlo, clic y vibración.
@@ -154,11 +158,6 @@ paréntesis, dónde está el detalle.
    - **Los botones de un mismo grupo**, todos iguales y del ancho del más
      largo; si un rótulo no cabe, **se abrevia, no se ensancha**. En Mi
      cuenta son copia de las filas de "Abrir sección…" (`ANCHO_FILA_MENU`).
-   Los lenguajes propios ya aprobados —pastilla de inicio, mando de
-   música— se respetan tal cual. Lo vigila `Boton.test.js`.
-   ⚠️ Si una norma suya choca con algo que cualquiera reconoce de
-   internet, **preguntar por su alcance antes de aplicarla al pie de la
-   letra.**
 5. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
    protagonista. Los textos de ayuda también: al pie de la ventana y
    plegados (`<details>`), nunca entre los botones. Todo panel que se abre
@@ -185,23 +184,23 @@ paréntesis, dónde está el detalle.
     **construir de uno en uno y enseñar**, no el resultado final de
     golpe.
 11. **Lo que en la vida real va junto —una pareja, una familia— la app
-    lo mantiene junto SOLA:**
-    1. un dato compartido vale para todos (el año de boda); una acción
-       sobre uno se aplica a todos (la mesa de la familia);
-    2. si no se puede cumplir entera, no se toca nada y se avisa con la
-       cifra concreta ("son 4 y quedan 2 sitios"), en una ventana que se
-       vea;
-    3. si quien escribe puede ser un colaborador que guarda una sola
-       ficha, la regla va en la BASE (trigger), no solo en la pantalla;
-    4. lo que ya estaba mal lo ENCUENTRA la Revisión, no se arregla a
-       escondidas. ⚠️ Esto protege DECISIONES suyas, no la fontanería:
-       mover un archivo de sitio se hace sin preguntar;
-    5. las excepciones que él marca quedan fuera;
-    6. ⚠️ hay reglas suyas POR ENCIMA: cada colaborador lleva de 10 a 12
-       invitados, así que un matrimonio PUEDE tener dos colaboradores.
-       No avisar de eso ni "juntarlos".
-    Ante un dato nuevo: **¿debería ir junto con el de alguien más?**
-    («Un matrimonio comparte año y foto de boda»)
+    lo mantiene junto SOLA.** Ante un dato nuevo, preguntarse si debería
+    ir junto con el de alguien más («Un matrimonio comparte año y foto
+    de boda»).
+    - un dato compartido vale para todos (el año de boda); una acción
+      sobre uno se aplica a todos (la mesa de la familia);
+    - si no se puede cumplir entera, no se toca nada y se avisa con la
+      cifra concreta ("son 4 y quedan 2 sitios"), en una ventana que se
+      vea;
+    - si quien escribe puede ser un colaborador que guarda una sola
+      ficha, la regla va en la BASE (trigger), no solo en la pantalla;
+    - lo que ya estaba mal lo ENCUENTRA la Revisión, no se arregla a
+      escondidas. ⚠️ Esto protege DECISIONES suyas, no la fontanería:
+      mover un archivo de sitio se hace sin preguntar;
+    - las excepciones que él marca quedan fuera;
+    - ⚠️ hay reglas suyas POR ENCIMA: cada colaborador lleva de 10 a 12
+      invitados, así que un matrimonio PUEDE tener dos colaboradores.
+      No avisar de eso ni "juntarlos".
 12. **Guardar solo lo que cambió, nunca el estado entero.** Siempre hay
     dos escritores posibles —un colaborador, o él con el móvil y el Mac
     abiertos— y a veces un trigger: mandar la colección entera escribe tu
