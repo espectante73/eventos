@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "45.4",
+    cambios: [
+      "Diseño app: en la cabecera de la ventana, dos sellos verde y dorado con el total de palabras del documento y el día y la hora de su último cambio.",
+    ],
+  },
+  {
     version: "45.3",
     cambios: [
       "En Novedades, si un cambio no se puede guardar (por ejemplo, sin conexión), ahora sale un aviso dentro de la ventana. Antes la lista volvía a como estaba sin decir nada, y lo escrito desaparecía sin explicación.",

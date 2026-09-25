@@ -15,9 +15,22 @@ import { C, R, T, OP } from "../theme";
 import { ModalFlotante } from "./VentanaFlotante";
 import { SeccionPlegable } from "./SeccionPlegable";
 import { partirManual, bloques, trozosEnLinea } from "../lib/manual";
+import sello from "../lib/manual-sello.json";
 
 const manual = partirManual(textoDiseno);
 const miles = (n) => n.toLocaleString("es-ES");
+
+// La hora del último cambio del documento, en hora de Canarias. Sale de
+// manual-sello.json (scripts/sellar-manual.mjs), no de la hora de
+// construir la app: un despliegue sin tocar el documento no la mueve.
+const cambiado = new Date(sello.cambiado).toLocaleString("es-ES", {
+  timeZone: "Atlantic/Canary",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
 
 function EnLinea({ texto }) {
   return trozosEnLinea(texto).map((t, i) => {
@@ -77,10 +90,13 @@ export default function ModalDiseno({ onCerrar }) {
   const alternar = (clave) => setAbierta((a) => (a === clave ? null : clave));
 
   return (
-    <ModalFlotante titulo="Diseño de la app" onCerrar={onCerrar}>
+    <ModalFlotante
+      titulo="Diseño de la app"
+      onCerrar={onCerrar}
+      sellos={[`${miles(manual.palabras)} palabras`, cambiado]}
+    >
       <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
-        El documento con el que se construye la app · {miles(manual.palabras)} palabras. Se actualiza solo con
-        cada versión.
+        El documento con el que se construye la app. Se actualiza solo con cada versión.
       </p>
       <div className="flex flex-col gap-2 text-sm" style={{ color: C.charcoal }}>
         <SeccionPlegable

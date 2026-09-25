@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { partirManual, bloques, trozosEnLinea, contarPalabras } from "./manual";
+import { huellaDe } from "../../scripts/huellaManual.mjs";
+import sello from "./manual-sello.json";
 
 const ejemplo = `# Título
 
@@ -99,5 +101,15 @@ describe("CLAUDE.md sigue numerado, sin saltos", () => {
     const p2 = texto.slice(texto.indexOf("# PARTE 2"));
     expect(p1.match(/^## (?!1\.\d+ ).+$/gm) || []).toEqual([]);
     expect(p2.match(/^### (?!2\.\d+ ).+$/gm) || []).toEqual([]);
+  });
+});
+
+// La cabecera de "Diseño app" enseña la hora del último cambio. Sale de
+// manual-sello.json, y solo es verdad si se selló DESPUÉS de tocar el
+// documento: igual que el mapa, regenerarlo es parte del cambio.
+describe("el sello del CLAUDE.md está al día", () => {
+  it("la huella coincide (si no: node scripts/sellar-manual.mjs)", () => {
+    const real = readFileSync("CLAUDE.md", "utf-8");
+    expect(sello.huella, "CLAUDE.md cambió sin sellar: node scripts/sellar-manual.mjs").toBe(huellaDe(real));
   });
 });

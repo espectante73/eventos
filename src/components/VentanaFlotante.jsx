@@ -4,14 +4,14 @@
 // App.jsx en el reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
-import { C, S } from "../theme";
+import { C, S, R, T } from "../theme";
 
 // Ventana flotante genérica: independiente de qué secciones estén plegadas,
 // para que Imprimir/Canciones/Alergias y los avisos de mesas funcionen siempre.
 // `ancho`: ancho máximo de la caja. 720 es el de siempre y sirve para
 // formularios y listas; el visor del mapa pide más sitio porque enseña
 // una imagen apaisada (ver MapaSitio.jsx).
-export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitulo, ancho = 720 }) {
+export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitulo, ancho = 720, sellos }) {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") onCerrar();
@@ -57,12 +57,31 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
           className="panel-flotante-cristal flex items-center justify-between px-4 py-3 rounded-t-lg"
           style={{ borderBottom: "none" }}
         >
-          <h3
-            className="text-lg"
-            style={{ fontFamily: "'Fraunces', serif", color: colorTitulo || C.goldClaro, fontWeight: 700 }}
-          >
-            {titulo}
-          </h3>
+          <div className="flex items-center gap-2 flex-wrap" style={{ minWidth: 0 }}>
+            <h3
+              className="text-lg"
+              style={{ fontFamily: "'Fraunces', serif", color: colorTitulo || C.goldClaro, fontWeight: 700 }}
+            >
+              {titulo}
+            </h3>
+            {/* `sellos`: datos cortos junto al título, en pastilla verde y
+                dorada (p. ej. palabras y hora del cambio en "Diseño app"). */}
+            {sellos?.map((s) => (
+              <span
+                key={s}
+                className="px-2.5 py-0.5 whitespace-nowrap"
+                style={{
+                  background: C.ink,
+                  color: C.goldClaro,
+                  border: `1px solid ${C.gold}`,
+                  borderRadius: R.redondo,
+                  fontSize: T.pequeno,
+                }}
+              >
+                {s}
+              </span>
+            ))}
+          </div>
           <button onClick={onCerrar} title="Cerrar" aria-label="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
             <X size={18} />
           </button>
