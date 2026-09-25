@@ -912,54 +912,24 @@ pregunta y la respuesta del tablón.)
 true`. Supabase rechaza los que no lo llevan. Lo vigila
 `supabase/schema.test.js`.
 
-### 2.5 Ventana "Aniversarios" y las fotos fuera de la base (2026-09-17, v30)
+### 2.5 El año de boda, compartido entre los cónyuges
 
-- **Hoja de encargo** (v31.1): dentro del mismo ZIP, un `Hoja de
-  encargo.txt` con un bloque redactado por foto (nombres, año de boda,
-  años que cumplen) para copiar y pegar en ChatGPT. ⚠️ Regla del usuario:
-  **solo se incluye si los datos están COMPLETOS** -- con un año a medias
-  la instrucción saldría mal y el fallo se repetiría en las 48. Si falta
-  algo, la app dice quiénes y ofrece bajar solo las fotos.
+La foto de boda es POR FAMILIA, pero el año es una columna de CADA
+invitado: el cónyuge se quedaba sin año o con otro distinto. Se arregla
+**en la base**, no en la pantalla, porque el colaborador guarda una
+ficha cada vez y el otro cónyuge puede ni estar en su lista: el
+disparador `trg_igualar_anio_boda_pareja` copia el año al cónyuge (y lo
+borra en los dos). Relee la fila en vez de fiarse de NEW, y
+`pg_trigger_depth() > 1` corta su propia cadena.
+- ⚠️ No mover el año a `fotos_familiares`, aunque sería "una sola
+  pieza": obliga a cambiar ~8 archivos que leen `g.anioBoda`, y el
+  disparador ya garantiza que sean iguales.
+- ⚠️ La **hoja de encargo** de las fotos solo se incluye si los datos
+  están COMPLETOS: con un año a medias, el fallo se repetiría en las 48.
 
-**El año de boda, compartido entre los cónyuges (2026-09-19, v36.2)**.
-Lo cazó el usuario: la foto de boda es POR FAMILIA (`fotos_familiares`),
-así que al subirla en la ficha de un cónyuge aparece en la del otro; el
-año, en cambio, es una columna de CADA invitado (`invitados.anioBoda`), y
-el otro se quedaba sin año o con uno distinto. `matrimoniosDeInvitados`
-tapaba el hueco con `primeroNoVacio(esposo, esposa)`, pero el contador
-"datos X de Y" y la columna de la lista seguían viendo el vacío, y con
-dos años distintos ganaba el del esposo sin avisar.
-- Arreglo en la BASE, no en la pantalla: el colaborador guarda UNA ficha
-  cada vez (`colaborador_guardar_invitado`), y su cónyuge puede ni estar
-  en su lista. Trigger `invitados_anio_boda_pareja` →
-  `trg_igualar_anio_boda_pareja()`: al cambiar el año de un esposo/esposa
-  se copia al otro de la misma familia (mismo criterio de familia que
-  `lib/matrimonios.js`). Si alguien se estrena como cónyuge sin año, toma
-  el de su pareja. Borrar el año lo borra en los dos.
-- ⚠️ Los valores guardados son "esposo"/"esposa"; la O y la A son solo lo
-  que se ve en la lista.
-- Relee la fila en vez de fiarse de NEW: en el guardado de muchas filas
-  del anfitrión, otra pasada del mismo trigger puede haberla cambiado ya.
-  `pg_trigger_depth() > 1` corta la cadena de su propia copia.
-- Se descartó mover el año a `fotos_familiares` (lo más "una sola pieza"):
-  obligaba a cambiar ~8 archivos que leen `g.anioBoda` a diez semanas de
-  la boda. La regla de la base garantiza lo mismo: siempre iguales.
-- `useLedgerData.js`: tras guardar un cambio de año, el colaborador
-  recarga su lista para que la ficha de la pareja lo enseñe al momento.
-- SQL dado al usuario el 2026-09-19, con un arreglo de una vez (rellena
-  el año que falte con el de la pareja, sin generar avisos) y una consulta
-  que lista las parejas con dos años DISTINTOS, si las hubiera.
-- **Ejecutado y probado por el usuario el 2026-09-19**: con la primera
-  pareja, antes del SQL el año estaba solo en uno; después, en los dos.
-
-⚠️ Si el usuario dice que "el tabulador no pasa por los botones": es
-**Safari**, que de fábrica solo tabula entre campos de texto (Ajustes →
-Avanzado → "Pulsar Tab para resaltar cada elemento"; o Opción+Tab). No es
-un fallo de la app -- comprobarlo antes de tocar nada.
-
-⚠️ Al migrar se perdió el texto de 3 botones por un `\1` que no era una
-sustitución de verdad (se escribió literal). Se recuperó del diff. Si se
-vuelve a migrar algo en bloque: comprobar el diff, no solo que compile.
+⚠️ Si "el tabulador no pasa por los botones": es **Safari**, que de
+fábrica solo tabula campos de texto (Ajustes → Avanzado, u Opción+Tab).
+No es un fallo de la app.
 
 ### 2.6 Pendiente: hacer el mapa del sitio privado de verdad (aparcado el 2026-09-16)
 
