@@ -21,17 +21,17 @@ describe("Diseño app", () => {
     expect(seccion("1.1 ")).toBeTruthy();
     expect(seccion("2.1 ")).toBeTruthy();
     // Plegado: el texto de dentro de la 1.1 no está pintado.
-    expect(html).not.toContain("Verificar antes de afirmar");
+    expect(html).not.toContain("Comprobar en la fuente");
     vista.desmontar();
   });
 
   it("al abrir una sección se ve su texto, y al abrir otra se cierra la primera", () => {
     const vista = montar(<ModalDiseno onCerrar={() => {}} />);
     vista.pulsar(seccion("1.1 "));
-    expect(document.body.innerHTML).toContain("Verificar antes de afirmar");
+    expect(document.body.innerHTML).toContain("Comprobar en la fuente");
     vista.pulsar(seccion("1.2 "));
     const html = document.body.innerHTML;
-    expect(html).not.toContain("Verificar antes de afirmar");
+    expect(html).not.toContain("Comprobar en la fuente");
     expect(html).toContain("Estandarizar");
     vista.desmontar();
   });
