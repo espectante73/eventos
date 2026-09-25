@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "45.7",
+    cambios: [
+      "Reinicios y Borrado total decían \"se descargará una copia de seguridad\" y \"no se puede deshacer\". Las dos cosas eran falsas desde la v34: ya no se descarga nada, se guarda una copia en el servidor y se puede deshacer con el botón «Deshacer» de la misma ventana.",
+    ],
+  },
+  {
     version: "45.6",
     cambios: [
       "Diseño app: cuando una norma lleva una lista dentro, ahora sale con sangría debajo de su norma, y la numeración sigue seguida (antes volvía a empezar en 1 y era un lío citar un número).",

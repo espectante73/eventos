@@ -150,8 +150,8 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
               Pone a cero campos concretos de los invitados de un colaborador (útil tras
               pruebas, o para reutilizar la app en otro evento). Los invitados y los
               colaboradores <strong>nunca</strong> se borran aquí — solo los campos que
-              elijas. Se descarga automáticamente una copia de seguridad de todo el evento
-              antes de ejecutar nada, y hay que escribir "REINICIAR" para confirmar.
+              elijas. Antes de ejecutar nada se guarda una copia de todo el evento, para
+              poder deshacerlo, y hay que escribir "REINICIAR" para confirmar.
             </p>
           </details>
         }
@@ -322,8 +322,8 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
             .
           </p>
           <p className="text-xs mb-3" style={{ color: C.wax }}>
-            Se descargará antes una copia de seguridad completa del evento. Esta acción no se
-            puede deshacer desde la app.
+            Antes se guarda una copia de todo el evento: si te equivocas, pulsa
+            «Deshacer» en esta misma ventana (solo se guarda la última acción).
           </p>
           <Field label='Escribe "REINICIAR" para confirmar'>
             <TextInput
@@ -365,8 +365,8 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
             ningún email ya enviado de verdad.
           </p>
           <p className="text-xs mb-3" style={{ color: C.wax }}>
-            Se descargará antes una copia de seguridad completa del evento. Esta acción no se
-            puede deshacer desde la app.
+            Antes se guarda una copia de todo el evento: si te equivocas, pulsa
+            «Deshacer» en esta misma ventana (solo se guarda la última acción).
           </p>
           <Field label='Escribe "AVISOS" para confirmar'>
             <TextInput

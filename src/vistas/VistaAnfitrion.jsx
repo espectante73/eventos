@@ -375,7 +375,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         <VentanaCuentas data={data} onCerrar={() => toggle("cuentas")} />
       )}
 
-      {/* Copia de seguridad */}
       {/* Configuración ya no tiene ventana propia: se abre directo desde el
           submenú "Configuración" de "Abrir sección…" (ver DesplegableSecciones.jsx) */}
       {abierto["config-datos-evento"] && (

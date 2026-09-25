@@ -347,6 +347,16 @@ describe("la Música del evento viene cargada, no a trozos", () => {
 
 describe("el Deshacer: la foto va ANTES, y si falla no se toca nada", () => {
   // Al revés, la acción se ejecutaba aunque la copia no llegara a existir.
+  // Las ventanas que guardan la foto no pueden decir que no se puede
+  // deshacer, ni prometer una descarga que ya no existe: lo decían tres,
+  // y asustaban a quien iba a pulsar.
+  it("ninguna ventana que guarda la foto dice que no se puede deshacer", () => {
+    const mal = archivos
+      .filter((r) => leer(r).includes("guardarFotoDeshacer("))
+      .filter((r) => /no se puede deshacer|se descargar[aá]/i.test(leer(r)));
+    expect(mal).toEqual([]);
+  });
+
   it("cada foto va seguida de «si no se guardó, parar»", () => {
     const usos = archivos
       .map((r) => [r, leer(r)])

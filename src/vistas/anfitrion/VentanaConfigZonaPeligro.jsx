@@ -1,7 +1,7 @@
 // Sub-ventana de Configuración: BORRAR TODO el contenido de la app, con
-// doble confirmación nativa y copia de seguridad automática antes de
-// borrar. Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08
-// (Fase 4, Ronda 2).
+// doble confirmación y la foto del Deshacer guardada antes de borrar.
+// Las fotos de boda salen de la lista pero sus archivos se quedan en el
+// cajón, así que Deshacer lo devuelve todo.
 import { Trash2 } from "lucide-react";
 import { C } from "../../theme";
 import { AvisoDeshacer } from "../../components/AvisoDeshacer";
@@ -49,12 +49,8 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
     });
 
   const borrarTodoElContenido = async () => {
-    // El contenido del backup se captura YA (antes de borrar nada), pero
-    // el DISPARO de la descarga se deja para el final, después de lanzar
-    // el borrado — en móvil (sobre todo iOS), un <a download> hacia un
-    // blob: puede navegar la propia pestaña en vez de descargar sin más;
-    // si eso pasara antes de esta llamada, la página se recargaría y el
-    // borrado ni siquiera llegaría a intentarse.
+    // La foto del Deshacer, ANTES de borrar nada; si no se guarda, no se
+    // borra.
     const guardada = await guardarFotoDeshacer("Borrado total");
     if (!guardada) return;
     persistEvento({
@@ -113,7 +109,9 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
       <AvisoDeshacer data={data} />
       <p className="text-xs mb-2" style={{ color: C.wax, fontWeight: 700 }}>
         ⚠ Zona de peligro: esto borra evento, colaboradores, invitados, mesas y fotos —
-        todo el contenido de la aplicación. No se puede deshacer.
+        todo el contenido de la aplicación. Antes se guarda una copia: si te
+        equivocas, pulsa «Deshacer» en esta misma ventana (solo se guarda la
+        última acción).
       </p>
       {conAutorizacion.length > 0 && (
         <p className="text-xs mb-2" style={{ color: C.charcoal }}>
