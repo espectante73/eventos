@@ -71,3 +71,17 @@ describe("el mapa está al día", () => {
     expect(png.length).toBeGreaterThan(10000);
   });
 });
+
+// La paleta del mapa estuvo copiada a mano y derivó: dos dorados que no
+// existían en la app. Ahora sale de theme.js; aquí se vigila que no
+// vuelva a escribirse un color suelto (el blanco no es de la paleta).
+describe("la paleta del mapa sale de theme.js", () => {
+  it("ningún color escrito a mano en el script", () => {
+    const sueltos = script
+      .split("\n")
+      .filter((l) => !l.trim().startsWith("//"))
+      .flatMap((l) => l.match(/#[0-9A-Fa-f]{6}\b|rgba?\(\s*\d/g) || [])
+      .filter((c) => c.toUpperCase() !== "#FFFFFF");
+    expect(sueltos).toEqual([]);
+  });
+});

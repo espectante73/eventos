@@ -976,23 +976,12 @@ resto que quitar**: una foto de Deshacer o de Modo Pruebas anterior la
 trae, y sin esa línea la fecha provisional se les escaparía a los
 invitados. Lo vigila `reglas-del-proyecto.test.js`.
 
-### 2.10 El mapa se quedaba viejo sin que nadie se enterara (2026-09-23)
+### 2.10 `nvm install` cambia su Mac, no solo la prueba
 
-**Y de paso, la paleta.** El script tenía los colores **copiados a mano**
-de `theme.js`, y ya habían derivado: sus dos dorados (#A87C3A, #8A6A34)
-no existen en la app (`C.gold` es #B08D57). Misma historia que los rojos
-y los tamaños de letra. Ahora la paleta sale de `theme.js`, y las tres
-tintas oscuras se calculan a partir de `C.ink` en vez de escribirse.
-⚠️ Los dos dorados se quedan como estaban **de momento**: cambiarlos
-cambia una imagen que él ya aprobó, así que está preguntado. Al
-contestar, o pasan a `TEMA.gold` o se anota aquí el porqué.
-
-⚠️ **Node, roto de rebote.** El `nvm install 20` del 2026-09-20 (para
-reproducir el fallo de GitHub) dejó el alias `default` en `lts/*`, que no
-resolvía a nada: en un terminal nuevo no había `node` ni `npm`. Corregido
-con `nvm alias default v24.18.1`. **Lección: `nvm install` toca la
-configuración de su máquina, no solo la mía.** Si hace falta otra versión
-para una prueba, dejar el `default` como estaba al terminar.
+⚠️ Instalar otra versión de Node para una prueba dejó el alias `default`
+apuntando a nada, y en un terminal nuevo no había `node` ni `npm`. Al
+terminar, dejar el `default` como estaba (hoy `v24.18.1`; se mira con
+`nvm alias default`).
 
 ### 2.11 El acabado, con una escala y no a ojo (2026-09-20, v38)
 

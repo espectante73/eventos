@@ -116,9 +116,16 @@ const C = {
   champan: TEMA.champan,
   granate: TEMA.wax,
 };
-const linea = "rgba(31,58,46,0.20)";
-const lineaFirme = "rgba(31,58,46,0.34)";
-const tenue = "rgba(31,58,46,0.62)";
+// Un color de la paleta, transparente. Así las líneas y los rellenos
+// suaves también salen de theme.js (lo vigila dibujar-mapa.test.js).
+function velado(hex, opacidad) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${opacidad})`;
+}
+
+const linea = velado(TEMA.ink, 0.2);
+const lineaFirme = velado(TEMA.ink, 0.34);
+const tenue = velado(TEMA.ink, 0.62);
 
 const c = createCanvas(W, H);
 const x = c.getContext("2d");
@@ -202,9 +209,9 @@ const ALTO = 58, SALTO = 71;
 // tipo: "normal" | "abre" | "rojoFuerte" | "rojoSuave"
 function entrada(cx, cy, nombre, { tipo = "normal", fuera = false } = {}) {
   let fondo = "#FFFFFF", borde = linea;
-  if (tipo === "abre") { fondo = "rgba(168,124,58,0.10)"; borde = C.oro; }
-  if (tipo === "rojoFuerte") { fondo = "rgba(140,47,57,0.13)"; borde = C.granate; }
-  if (tipo === "rojoSuave") { fondo = "rgba(140,47,57,0.06)"; borde = C.granate; }
+  if (tipo === "abre") { fondo = velado(C.oro, 0.1); borde = C.oro; }
+  if (tipo === "rojoFuerte") { fondo = velado(C.granate, 0.13); borde = C.granate; }
+  if (tipo === "rojoSuave") { fondo = velado(C.granate, 0.06); borde = C.granate; }
 
   // Contorno propio en cada entrada: sobre papel, un relleno casi blanco
   // sin borde no se distingue del fondo -- es justo lo que se quería evitar.
@@ -236,7 +243,7 @@ function entrada(cx, cy, nombre, { tipo = "normal", fuera = false } = {}) {
 
 // --- Columna 1 ---
 tituloNivel(COLS[0], 268, "Primer nivel");
-x.fillStyle = "rgba(168,124,58,0.12)";
+x.fillStyle = velado(C.oro, 0.12);
 redondeado(COLS[0], 292, 196, 44, 22); x.fill();
 x.strokeStyle = lineaFirme; x.lineWidth = 1;
 redondeado(COLS[0], 292, 196, 44, 22); x.stroke();
@@ -313,7 +320,7 @@ x.font = inter(15); x.fillStyle = tenue;
 x.fillText("Se abre fuera del navegador", px, 1022);
 px += x.measureText("Se abre fuera del navegador").width + 44;
 
-x.fillStyle = "rgba(140,47,57,0.22)"; x.fillRect(px, 1008, 16, 16);
+x.fillStyle = velado(C.granate, 0.22); x.fillRect(px, 1008, 16, 16);
 x.fillStyle = C.granate; x.fillRect(px, 1008, 2.5, 16);
 px += 16 + 12;
 x.fillStyle = tenue; x.fillText("Sin vuelta atrás", px, 1022);
