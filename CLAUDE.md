@@ -809,8 +809,9 @@ true`. Supabase rechaza los que no lo llevan. Lo vigila
 
 ### 2.5 Un matrimonio comparte año y foto de boda
 
-Para eso existen los papeles **O (esposo) y A (esposa)** dentro de una
-familia: **lo que rellena uno sale ya en la ficha del otro.**
+Es el **administrador** quien declara el matrimonio, al poner a dos
+personas de la misma familia los papeles **O (esposo) y A (esposa)**.
+Desde ese momento, **lo que rellena uno sale ya en la ficha del otro.**
 - La **foto** es una por familia, así que ya es la misma.
 - El **año** es de cada invitado, y lo iguala la BASE
   (`trg_igualar_anio_boda_pareja`), no la pantalla: el colaborador
