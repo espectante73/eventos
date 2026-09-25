@@ -76,8 +76,6 @@ regla siga siendo verdad, así que el guardia es de mano:
 
 ## 1.1 Cómo trabajar aquí
 
-**Siempre en español**, salvo que se pida lo contrario.
-
 **Son sobre CÓMO trabajo, no sobre cómo es la app** (para eso, las "Normas de estándar" de abajo).
 
 1. **Comprobar en la fuente, nunca de memoria.** El código, la versión
@@ -110,6 +108,7 @@ regla siga siendo verdad, así que el guardia es de mano:
 6. **Comprobar los cálculos.** En cálculos, algoritmos de varios pasos o
    lógica condicional enredada, ejecutarlo o repasarlo paso a paso antes
    de darlo por bueno.
+7. **Siempre en español**, salvo que se pida lo contrario.
 
 
 ## 1.2 Normas de estándar de la app
@@ -123,7 +122,8 @@ regla siga siendo verdad, así que el guardia es de mano:
    que ya existe en su misma situación y, si hay duda, **preguntar en una
    línea ANTES de tocar el aspecto**. Y si una norma suya choca con algo
    que cualquiera reconoce de internet, preguntar por su alcance antes
-   de aplicarla al pie de la letra. Lo vigila `src/theme.test.js`.
+   de aplicarla al pie de la letra. Las medidas las vigila
+   `src/theme.test.js`; los colores, todavía no (ver 1.12).
 2. **Ventanas tan pequeñas como su contenido**: del ancho de un móvil en
    vertical, también en el ordenador. Toda ventana nueva es una
    `VentanaFlotante`; si crece mucho, lanzadora pequeña + una ventana por
@@ -458,6 +458,10 @@ Cosas que no se mueven **porque no toca**. No ofrecerlas como pendiente.
   y no a spam. El de recuperar contraseña, que va por el mismo camino, sí
   llega; lo probará con un colaborador nuevo. El de invitación siempre
   llegó bien.
+- **Colores escritos a mano en algunas pantallas** (Portada, Cuentas,
+  Mesas, Progreso…): incumplen la norma 1 de la 1.2 y ninguna prueba los
+  vigila todavía. Pasarlos a `theme.js` y poner la prueba es una tarea
+  aparte. El mando de Música no cuenta: su estilo propio está aprobado.
 - **El mapa de la app se queda público** hasta que él lo retome. Si se
   hace privado, el primer paso es suyo: poner privado el repositorio en
   GitHub (Vercel despliega igual; al desarrollador que lo revisa habría
@@ -539,8 +543,8 @@ invitados. Lo vigila `reglas-del-proyecto.test.js`.
 
 ⚠️ Instalar otra versión de Node para una prueba dejó el alias `default`
 apuntando a nada, y en un terminal nuevo no había `node` ni `npm`. Al
-terminar, dejar el `default` como estaba (hoy `v24.18.1`; se mira con
-`nvm alias default`).
+terminar, dejar el `default` como estaba: mirarlo con `nvm alias
+default` ANTES de instalar.
 
 ### 2.9 Algo raro con un botón SOLO en el iPhone
 
