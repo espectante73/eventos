@@ -15,7 +15,7 @@ datos»).
    las que sin él parecerían mejorables. Se lee antes de tocar nada.
 2. **PARTE 2 — Trampas ya pagadas**: errores que pueden repetirse y
    **no se pueden vigilar con un test**. Si se puede, se pone el test
-   (regla 6 de «Cómo trabajar aquí»).
+   (regla 5 de «Cómo trabajar aquí»).
 
 ⚠️ **Se lee también dentro de la app** (Mi cuenta → «Diseño app»). Por
 eso la numeración 1.x / 2.x no puede saltarse (lo vigila
@@ -88,22 +88,17 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
 
 **Son sobre CÓMO trabajo, no sobre cómo es la app** (para eso, las "Normas de estándar" de abajo).
 
-1. **Verificar antes de afirmar.** Nada del código (función, archivo,
-   ruta) ni de los paneles de otras empresas (Vercel, Supabase…, que
-   cambian a menudo) se da por cierto sin abrirlo y comprobarlo. Si no
-   se puede, decirlo. Y si hay línea de comandos o API, usarla en vez de
-   narrar clics.
-2. **Versiones reales, no de memoria.** Antes de sugerir sintaxis o
-   comportamiento de una librería, leer la versión instalada
-   (`package.json`, lockfile). Si la tarea depende de documentación
-   externa o de una API de terceros que pudo cambiar, consultarla en vez
-   de responder de memoria.
-3. **Concisión.** La mínima extensión necesaria. **Sin resúmenes finales
+1. **Comprobar en la fuente, nunca de memoria.** El código, la versión
+   instalada de cada librería (`package.json`) y los paneles o API de
+   otras empresas (cambian a menudo) se abren y se comprueban antes de
+   afirmar nada. Si no se puede, decirlo. Si hay línea de comandos o
+   API, usarla en vez de narrar clics.
+2. **Concisión.** La mínima extensión necesaria. **Sin resúmenes finales
    salvo que los pida**, sin repetir código que ya está a la vista, sin
    explicar lo obvio. De los cambios de código, solo las líneas que
    importan. (Se suma a lo de siempre: conclusión primero, lenguaje de
    andar por casa, UN solo siguiente paso.)
-4. **Evaluación honesta.** Si hay un error, un riesgo o un mal enfoque
+3. **Evaluación honesta.** Si hay un error, un riesgo o un mal enfoque
    —suyo o mío—, decirlo directamente y por qué, aunque no haya pedido
    revisión. **No estar de acuerdo por defecto.** Señalarlo ANTES de
    implementar, no después.
@@ -113,7 +108,7 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
    leyendo como ser innecesariamente difícil, y entonces desaparece.
    Contradecirle no es un roce, es de lo que depende que pueda fiarse de
    lo que le digo.
-5. **`lint`, `build` y `test`: los tres, siempre.** No es rutina, cazan
+4. **`lint`, `build` y `test`: los tres, siempre.** No es rutina, cazan
    cosas distintas. `npm run lint` (`no-undef`) pilla una variable que se
    quedó sin importar al mover código — no rompe el build, revienta en el
    navegador la primera vez que alguien toca esa rama. Y `npm run build`
@@ -122,7 +117,7 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
    Rollup comprueba que el módulo de origen lo exporte de verdad). Pasó
    con `calcularEdad` importado de `lib/formato` en vez de
    `lib/invitados`.
-6. **Al arreglar un fallo, dejar un vigilante.** Una trampa que pueda
+5. **Al arreglar un fallo, dejar un vigilante.** Una trampa que pueda
    tener un test, **lo tiene**: escribir el test es parte de arreglar el
    fallo, no un extra para después. Solo se queda como texto en la PARTE
    2 la que NO se puede probar, y entonces se dice por qué (vive en
@@ -135,7 +130,7 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
    escriba un color a mano. Esa puerta es más ancha de lo que parece:
    **antes de dar una trampa por no comprobable, buscar qué archivo
    delataría el fallo.**
-7. **Comprobar los cálculos.** En cálculos, algoritmos de varios pasos o
+6. **Comprobar los cálculos.** En cálculos, algoritmos de varios pasos o
    lógica condicional enredada, ejecutarlo o repasarlo paso a paso antes
    de darlo por bueno.
 
