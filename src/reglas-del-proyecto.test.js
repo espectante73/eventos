@@ -196,7 +196,6 @@ describe("cada pantalla tiene una prueba que la dibuja", () => {
     "VentanaInvitaciones",
     "VentanaMesas",
     "VentanaMusicaEvento",
-    "VentanaNovedades",
     "VentanaPermisos",
     "VentanaProgreso",
     "VentanaVersiones",

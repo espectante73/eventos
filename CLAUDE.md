@@ -987,17 +987,9 @@ apuntando a nada, y en un terminal nuevo no había `node` ni `npm`. Al
 terminar, dejar el `default` como estaba (hoy `v24.18.1`; se mira con
 `nvm alias default`).
 
-### 2.11 Se acabaron los avisos del navegador (2026-09-20, v37.12)
+### 2.11 "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
 
-⚠️ Sigue habiendo DOS excepciones a propósito, y no son un olvido:
-`persistNovedades` y `persistPreguntaTablon` devuelven `true`/`false` sin
-avisar, porque `VentanaNovedades.jsx` enseña el fallo en su propia
-pantalla, junto al texto que no se ha podido guardar -- ahí se entiende
-mejor que en una ventana aparte.
-
-### 2.12 "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
-
-### 2.13 Una familia no se separa en las mesas (2026-09-19, v37)
+### 2.12 Una familia no se separa en las mesas (2026-09-19, v37)
 
 - `lib/mesas.js` es la única definición. `claveFamiliaMesa` = grupo
   familiar o, si está vacío, el apellido: la MISMA que ya usaba el
@@ -1055,7 +1047,7 @@ mejor que en una ventana aparte.
   UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
   al elegirla, sale el aviso y no se mueve nadie.
 
-### 2.14 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
+### 2.13 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
 
 El usuario lo probó en su iPhone: ni sonido ni vibración.
 - **Vibración**: el truco de pulsar un `<input switch>` escondido DESDE EL
@@ -1091,7 +1083,7 @@ elección de mano, la X de quitar con su pregunta y los avisos. Es decir,
 la técnica del interruptor SÍ funciona en su iOS: no volver al truco de
 pulsarlo desde el código.
 
-### 2.15 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
+### 2.14 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
 
 ⚠️ **La ventana de Música NO se trocea, a propósito**: se abre en el
 local con un wifi desconocido y no puede quedarse descargando delante de
@@ -1103,13 +1095,13 @@ abierta de antes pide trozos con nombres que ya no existen. `main.jsx`
 escucha `vite:preloadError` y recarga UNA vez (marca en sessionStorage
 para no entrar en bucle si el fallo es otro, como estar sin conexión).
 
-### 2.16 Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
+### 2.15 Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
 
 ⚠️ La foto se guarda **antes** de la acción, y si falla no se toca nada.
 Al revés (como estaba con la descarga) el reinicio podía ejecutarse igual
 aunque la copia no llegara a existir.
 
-### 2.17 `schema.sql` reescrito desde cero (2026-09-16)
+### 2.16 `schema.sql` reescrito desde cero (2026-09-16)
 
 ⚠️ Regla que sustituye a la de antes: **no se añade nada al final de
 `schema.sql`**. Si cambia una función, se cambia en su sitio. Si cambia
@@ -1121,7 +1113,7 @@ contenedor de la tabla (`tablaRef`): si las columnas se ahogan, el texto
 se recorta antes de tiempo y la tabla se vuelve ilegible aunque
 técnicamente cumpla la regla.
 
-### 2.18 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
+### 2.17 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
 
 ⚠️ **Regla nueva: al añadir una columna a una tabla abierta a `anon`,
 releer la política de esa tabla en el mismo cambio.** No basta con que
@@ -1137,7 +1129,7 @@ del código, que dio la firma por buena**. Sin Postgres local ni
 credenciales de escritura, esa llamada anónima es la única red que hay:
 hacerla siempre antes de desplegar el cliente.
 
-### 2.19 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
+### 2.18 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
 
 ⚠️ Dónde vive esa pantalla, que Supabase la ha movido: **Authentication →
 Emails → SMTP**, o sea `/dashboard/project/<ref>/auth/smtp`. El viejo

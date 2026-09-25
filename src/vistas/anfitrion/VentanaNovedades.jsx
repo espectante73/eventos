@@ -251,6 +251,14 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
   // copiarlo a mano. Antes era un prompt() del navegador, que la norma 12
   // prohíbe: en una ventana emergente sale donde no debe o se cuelga.
   const [copiaFallida, setCopiaFallida] = useState(false);
+  // Si un guardado falla, persistNovedades devuelve la lista a como
+  // estaba y avisa SOLO con su false: el aviso es cosa de esta ventana.
+  // Sin él, lo escrito desaparecía sin que nadie dijera nada.
+  const [guardadoFallido, setGuardadoFallido] = useState(false);
+  const guardar = async (lista) => {
+    const ok = await persistNovedades(lista);
+    setGuardadoFallido(!ok);
+  };
   // Pie plegado por defecto -- a petición del usuario, 2026-08-27, para
   // no tener siempre a la vista la pregunta de acceso/WhatsApp/ocultar
   // fecha. Y ni siquiera se muestra si soloTexto: es exclusivo del
@@ -323,16 +331,16 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
       // (antes era FAQ): invierte el criterio de la v6.8.
       esNovedad: true,
     };
-    persistNovedades([nueva, ...novedades]);
+    guardar([nueva, ...novedades]);
     setIdExpandido(nueva.id);
   };
 
   const cambiar = (siguiente) => {
-    persistNovedades(novedades.map((n) => (n.id === siguiente.id ? siguiente : n)));
+    guardar(novedades.map((n) => (n.id === siguiente.id ? siguiente : n)));
   };
 
   const eliminar = (id) => {
-    persistNovedades(novedades.filter((n) => n.id !== id));
+    guardar(novedades.filter((n) => n.id !== id));
   };
 
   // Copia el enlace del tablón Y abre el grupo de WhatsApp en un solo
@@ -431,6 +439,20 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
               <b className="select-all break-all" style={{ color: C.ink }}>{enlace}</b>
             </span>
             <button onClick={() => setCopiaFallida(false)} aria-label="Cerrar aviso" style={{ color: C.charcoal }}>
+              ×
+            </button>
+          </div>
+        )}
+        {guardadoFallido && (
+          <div
+            className="rounded px-3 py-2 text-xs flex items-start gap-2"
+            style={{ background: C.avisoFondo, border: `1px solid ${C.peligro}`, color: C.charcoal }}
+          >
+            <span className="flex-1">
+              No se ha podido guardar el último cambio y la lista ha vuelto a como estaba.
+              Suele ser la conexión: comprueba que tienes internet y vuelve a hacerlo.
+            </span>
+            <button onClick={() => setGuardadoFallido(false)} aria-label="Cerrar aviso" style={{ color: C.charcoal }}>
               ×
             </button>
           </div>

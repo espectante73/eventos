@@ -757,10 +757,10 @@ export function useLedgerData(rol) {
   // ya existentes -- vuelve a comprobar el permiso por su cuenta en el
   // servidor, no se fía de lo que el cliente ya deshabilitó en pantalla.
   //
-  // Deliberadamente NO usa avisar(): esta función la llama
-  // VentanaNovedades.jsx, que enseña el fallo dentro de su propia
-  // pantalla -- ver el porqué en persistPreguntaTablon(), unas líneas
-  // más abajo (mismo motivo).
+  // Deliberadamente NO usa avisar(): devuelve true/false y
+  // VentanaNovedades.jsx enseña el fallo dentro de su propia pantalla
+  // (`guardadoFallido`) -- mismo motivo que persistPreguntaTablon(), unas
+  // líneas más abajo.
   const persistNovedades = useCallback(
     async (next) => {
       const anterior = novedadesRef.current;

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "45.3",
+    cambios: [
+      "En Novedades, si un cambio no se puede guardar (por ejemplo, sin conexión), ahora sale un aviso dentro de la ventana. Antes la lista volvía a como estaba sin decir nada, y lo escrito desaparecía sin explicación.",
+    ],
+  },
+  {
     version: "45.2",
     cambios: [
       "En Novedades, si el navegador no deja copiar el enlace, ahora sale un aviso dentro de la ventana con el enlace a la vista para copiarlo a mano. Antes salía una ventanita del navegador, que en las ventanas emergentes puede colgarse.",
