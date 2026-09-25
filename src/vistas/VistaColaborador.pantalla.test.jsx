@@ -5,7 +5,7 @@
 // tarde y por WhatsApp.
 //
 // Comprueba que se PUEDE ver, no cómo se ve (para eso sigue haciendo
-// falta su captura, norma 15).
+// falta su captura, norma 10).
 import { describe, it, expect } from "vitest";
 import { montar, dibujarYSoltar } from "../pruebas/dibujar";
 import { VistaColaborador } from "./VistaColaborador";

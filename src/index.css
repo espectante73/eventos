@@ -113,7 +113,7 @@ button:disabled > .interruptor-haptico {
    botón "Abrir formulario"). Mismo latido que la ficha incompleta y al
    mismo ritmo: es el mismo aviso, contado en vez de suelto. Late el
    SELLO, no el botón -- el botón es la pastilla de cristal sobre la foto,
-   lenguaje ya aprobado (norma 11), y el dorado de la app es adorno, no
+   lenguaje ya aprobado (norma 4), y el dorado de la app es adorno, no
    alarma (decidido con el usuario el 2026-09-20). */
 @keyframes latido-sello {
   0%,

@@ -9,7 +9,7 @@
 //
 // Esto es lo que faltaba: montar la sección con datos de mentira y pasar
 // por CADA valor de CADA filtro. No comprueba cómo se ve (para eso sigue
-// haciendo falta su captura, norma 15); comprueba que se puede ver.
+// haciendo falta su captura, norma 10); comprueba que se puede ver.
 import { describe, it, expect } from "vitest";
 import { dibujarYSoltar } from "../../pruebas/dibujar";
 import { SeccionInvitados } from "./SeccionInvitados";

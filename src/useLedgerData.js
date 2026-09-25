@@ -81,7 +81,7 @@ export function useLedgerData(rol) {
   // las tres líneas, y una columna nueva había que acordarse de añadirla
   // en los tres.
   // La última verdad del servidor, para no mandar de vuelta filas que no
-  // hemos tocado (norma 18). Los colaboradores suben la foto de boda: si
+  // hemos tocado (norma 12). Los colaboradores suben la foto de boda: si
   // el anfitrión reenviara la colección entera con su copia, borraría la
   // que acaban de subir.
   const fotosServidorRef = useRef({});
@@ -449,7 +449,7 @@ export function useLedgerData(rol) {
 
   const persistEvento = useCallback(async (next) => {
     const anterior = eventoRef.current;
-    // Norma 18: solo lo cambiado. `anterior` es lo último que se leyó del
+    // Norma 12: solo lo cambiado. `anterior` es lo último que se leyó del
     // servidor; lo que no se manda, no se toca.
     // ⚠️ Aquí no era solo cuestión de pisar lo de otro: la fila de
     // `evento` pesa ~830 KB (la portada y la plantilla de invitación van
@@ -481,7 +481,7 @@ export function useLedgerData(rol) {
     const anterior = mesasRef.current;
     setMesas(next);
     mesasRef.current = next;
-    // Norma 18: solo lo cambiado. `anterior` es lo último que se leyó
+    // Norma 12: solo lo cambiado. `anterior` es lo último que se leyó
     // del servidor; lo que no se manda, no se toca.
     const yaEstaba = Object.fromEntries(anterior.map((x) => [x.numero, JSON.stringify(x)]));
     const cambiadas = next.filter((x) => yaEstaba[x.numero] !== JSON.stringify(x));
@@ -515,7 +515,7 @@ export function useLedgerData(rol) {
       urlBodaFinal: bodaFinal[grupoFamiliar] || "",
       sinFotoBoda: Boolean(sinBoda[grupoFamiliar]),
     }));
-    // Norma 18: solo lo que difiere de lo que tiene el servidor. Esta
+    // Norma 12: solo lo que difiere de lo que tiene el servidor. Esta
     // función no borra lo que no llega, pero SÍ reescribe las cuatro
     // columnas de cada fila que se manda — mandarlas todas era pisar con
     // una copia vieja la foto que un colaborador acabara de subir.
@@ -596,7 +596,7 @@ export function useLedgerData(rol) {
       invitacionEnviada: Boolean(datos.invitacionEnviada),
       invitacionEnviadaEn: datos.invitacionEnviadaEn || null,
     }));
-    // Norma 18. Aquí hay un segundo escritor que no es una persona: el
+    // Norma 12. Aquí hay un segundo escritor que no es una persona: el
     // trigger `invitados_invalidar_invitacion` pone `invitacionEnviada`
     // a false solo. Mandar la colección entera lo deshacía.
     const yaEstaba = Object.fromEntries(
@@ -628,7 +628,7 @@ export function useLedgerData(rol) {
       setColaboradores(next);
       colaboradoresRef.current = next;
       if (!esAnfitrion) return; // Un colaborador nunca modifica la lista de colaboradores.
-      // Norma 18: solo lo cambiado. `anterior` es lo último que se leyó
+      // Norma 12: solo lo cambiado. `anterior` es lo último que se leyó
       // del servidor; lo que no se manda, no se toca.
       const yaEstaba = Object.fromEntries(anterior.map((x) => [x.id, JSON.stringify(x)]));
       const cambiadas = next.filter((x) => yaEstaba[x.id] !== JSON.stringify(x));
@@ -652,7 +652,7 @@ export function useLedgerData(rol) {
       setGastos(next);
       gastosRef.current = next;
       if (!esAnfitrion) return; // Estado de cuentas: solo el anfitrión lo toca.
-      // Norma 18: solo lo cambiado. `anterior` es lo último que se leyó
+      // Norma 12: solo lo cambiado. `anterior` es lo último que se leyó
       // del servidor; lo que no se manda, no se toca.
       const yaEstaba = Object.fromEntries(anterior.map((x) => [x.id, JSON.stringify(x)]));
       const cambiadas = next.filter((x) => yaEstaba[x.id] !== JSON.stringify(x));
@@ -766,7 +766,7 @@ export function useLedgerData(rol) {
       const anterior = novedadesRef.current;
       setNovedades(next);
       novedadesRef.current = next;
-      // Norma 18. Aquí hay dos escritores de verdad: el anfitrión y un
+      // Norma 12. Aquí hay dos escritores de verdad: el anfitrión y un
       // colaborador con el permiso "novedades_editar". Mandar la lista
       // entera reescribía el título y el cuerpo de TODAS las novedades
       // con la copia de quien guardara último.

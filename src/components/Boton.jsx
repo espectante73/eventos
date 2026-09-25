@@ -92,7 +92,7 @@ export const Boton = forwardRef(function Boton({
 
 // ---------- El link de texto ----------
 //
-// Norma 13: lo que se PULSA lleva relieve; lo que es un LINK va
+// Norma 4: lo que se PULSA lleva relieve; lo que es un LINK va
 // subrayado. Son dos cosas distintas, no una regla con una excepción.
 //
 //   ACCIÓN sobre los datos  -> `Boton`, con relieve.

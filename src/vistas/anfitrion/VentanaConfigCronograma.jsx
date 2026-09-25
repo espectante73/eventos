@@ -327,7 +327,7 @@ export function VentanaConfigCronograma({ data, ventana }) {
               DJ contratado en el Baile). */}
           {/* Era un plegable hecho a mano aquí dentro: mismo botón, misma
               flecha, mismo resumen que `SeccionPlegable`. Copiado, no
-              compartido -- justo lo que prohíbe la norma 8. Se cambia por
+              compartido -- justo lo que prohíbe la norma 7. Se cambia por
               la pieza de la app (2026-09-24), en modo controlado para que
               siga abriéndose y cerrándose con su propio estado. */}
           <div className="mb-2">

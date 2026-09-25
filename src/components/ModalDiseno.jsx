@@ -6,7 +6,7 @@
 // documento del momento. Y va en su propio trozo (se carga con lazy() en
 // MiCuenta.jsx): pesa lo suyo y solo se descarga al abrirlo.
 //
-// Todo plegado y una sola sección abierta (norma 6), con la misma pieza
+// Todo plegado y una sola sección abierta (norma 5), con la misma pieza
 // que el resto de la app (SeccionPlegable). El resumen de cada una es lo
 // que pesa: así se ve de un vistazo dónde está el grueso.
 import { useState } from "react";

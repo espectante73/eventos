@@ -68,7 +68,7 @@ const ANCHO_DATOS = 100; // "datos 11 de 11" es el más largo de esta
 const ALTO_BOTON_FILA = 32; // manda el círculo de llegada: todos iguales (norma 4)
 
 // Pastilla de un dato que el colaborador SOLO MIRA: el importe y la zona.
-// Una sola pieza para las dos (norma 8): si algún día se retoca el color,
+// Una sola pieza para las dos (norma 7): si algún día se retoca el color,
 // se retoca en las dos o dejan de parecerse.
 //
 // Colores al revés que el resto de la cabecera (fondo dorado, letra
@@ -793,7 +793,7 @@ function FilaInvitadoColaborador({
         </div>
         {/* Los dos estados (al día / le faltan datos) eran dos copias de la
             misma línea; con un ancho fijo de por medio serían dos sitios
-            donde cambiarlo (norma 8). */}
+            donde cambiarlo (norma 7). */}
         <span
           className="flex items-center gap-1 text-xs flex-shrink-0 whitespace-nowrap"
           style={{
@@ -810,7 +810,7 @@ function FilaInvitadoColaborador({
           style={{ color: C.ink, height: ALTO_BOTON_FILA }}
         >
           {/* Si el nombre no cabe se recorta con puntos suspensivos: entero
-              se lee al abrir la ficha. Nunca dos líneas (norma 7). */}
+              se lee al abrir la ficha. Nunca dos líneas (norma 6). */}
           <span className="truncate" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
             {g.apellido}, {g.nombre}
           </span>
@@ -879,7 +879,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
     : new Set(data.familiasSinEmailServidor || []);
   const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
-  // Avisos en la ventana de la app, no en la del navegador (norma 12).
+  // Avisos en la ventana de la app, no en la del navegador (norma 9).
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   const aviso = (titulo, texto) => preguntar({ titulo, texto, soloAviso: true });
   // Permisos extra (más allá de sus invitados asignados), concedidos por
@@ -1098,7 +1098,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               vez. Antes se anunciaba aquí y el botón estaba escondido en
               "Mi cuenta", así que había que buscarlo.
           (Aquí hubo un rodeo: primero se puso con relieve, y dos días
-          después la norma 13 se reescribió para decir que un link va
+          después la norma 4 se reescribió para decir que un link va
           subrayado. Ahora lo está.) */}
       {(permisosDeEdicion.length > 0 || puedeVerRepositorio) && (
         <div className="p-4 rounded text-sm" style={{ background: C.peligro, color: "#fff" }}>
@@ -1113,7 +1113,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                permiso y otro repetía "GitHub" en un botón aparte. El
                permiso y la forma de usarlo son la misma cosa, así que se
                dicen una sola vez.
-               Norma 13: es un LINK, así que va subrayado y sin
+               Norma 4: es un LINK, así que va subrayado y sin
                relieve. Al ir dentro de la frase tampoco puede irse al
                lado del pulgar -- es texto, no un acceso suelto. */
             <p style={{ fontWeight: 600 }} className={permisosDeEdicion.length > 0 ? "mt-2" : ""}>

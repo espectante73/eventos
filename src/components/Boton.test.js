@@ -32,7 +32,7 @@ describe("estilosBoton", () => {
   });
 });
 
-// El link de texto: la norma 13, que separa acciones de links.
+// El link de texto: la norma 4, que separa acciones de links.
 // Una ACCIÓN sobre los datos lleva relieve; un LINK que te lleva a otro
 // sitio (otra pantalla del login, otra web) va subrayado.
 describe("EnlaceTexto", () => {

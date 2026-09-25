@@ -10,7 +10,7 @@
 // cuenta y las dos de cambiarla). Cuatro copias del mismo ojo acabarían
 // siendo cuatro ojos distintos.
 //
-// ⚠️ El ojo NO lleva relieve, a diferencia de lo que pide la norma 13.
+// ⚠️ El ojo NO lleva relieve, a diferencia de lo que pide la norma 4.
 // Es el mismo caso que los links del login: un icono dentro del campo es
 // el estándar de internet, el que cualquiera reconoce. Una pastilla con
 // relieve metida dentro de un input se vería como un error.

@@ -1,6 +1,6 @@
 // La ventana "Diseño app" (Mi cuenta), dibujada de verdad con el
 // CLAUDE.md real: que se abre, que todo empieza plegado y que solo hay
-// UNA sección abierta a la vez (norma 6).
+// UNA sección abierta a la vez (norma 5).
 import { describe, it, expect } from "vitest";
 import { montar } from "../pruebas/dibujar";
 import ModalDiseno from "./ModalDiseno";

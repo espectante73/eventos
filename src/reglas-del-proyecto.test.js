@@ -29,7 +29,7 @@ const leer = (r) => readFileSync(r, "utf-8");
 const sinComentarios = (t) =>
   t.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
 
-describe("norma 12: nada de ventanas del navegador", () => {
+describe("norma 9: nada de ventanas del navegador", () => {
   // Bloquean el navegador, y desde una ventana emergente salen en la
   // pestaña equivocada y la dejan colgada. Se migraron todas en la
   // v37.12; el guardia impide que vuelva a colarse una.
@@ -42,7 +42,7 @@ describe("norma 12: nada de ventanas del navegador", () => {
   });
 });
 
-describe("norma 7: la fila del invitado, de una sola línea y a la misma altura", () => {
+describe("norma 6: la fila del invitado, de una sola línea y a la misma altura", () => {
   // Él, 2026-09-24: con "Rodríguez, Natasha" la fila se deformaba y el
   // botón de llegada dejaba de caer donde el de las filas de al lado.
   // Las columnas son fijas y el nombre se recorta; lo que no puede
@@ -65,7 +65,7 @@ describe("norma 7: la fila del invitado, de una sola línea y a la misma altura"
   });
 });
 
-describe("norma 21: a las personas se las nombra Apellido, Nombre", () => {
+describe("norma 15: a las personas se las nombra Apellido, Nombre", () => {
   // Él, 2026-09-24: "los localizo por apellido, es la filosofía de la
   // app", y venía "desde su origen primitivo". La lista, el buscador y
   // los desplegables ya lo hacían; se salían los avisos y las preguntas
@@ -114,7 +114,7 @@ describe("norma 3: lo que se alinea a la derecha lleva su espejo zurdo", () => {
   // ⚠️ Dos casos que NO son fallo y por eso se saltan:
   //   · en una columna (`flex-col`), `justify-end` significa ABAJO, no a
   //     la derecha;
-  //   · el mando de música tiene lenguaje propio aprobado (norma 11).
+  //   · el mando de música tiene lenguaje propio aprobado (norma 4).
   //
   // ⚠️ Y lo que este guardia NO caza: un elemento pulsable suelto que no
   // se alinea a ningún lado. Ese fue justo el fallo del link de GitHub, y
@@ -136,7 +136,7 @@ describe("norma 3: lo que se alinea a la derecha lleva su espejo zurdo", () => {
   });
 });
 
-describe("norma 16: una sola definición de familia", () => {
+describe("norma 11: una sola definición de familia", () => {
   // La norma lo prometía y no era verdad: había CUATRO. Tres copiadas
   // palabra por palabra (matrimonios, revisión, invitados) y una
   // distinta (mesas, que añade el id). Lo destapó él el 2026-09-24
@@ -306,7 +306,7 @@ describe("el guardado del anfitrión manda solo lo cambiado", () => {
     expect(ledger).toContain("p_ids: next.map((g) => g.id)");
   });
 
-  // Norma 18, los otros dos sitios con más de un escritor. El usuario es
+  // Norma 12, los otros dos sitios con más de un escritor. El usuario es
   // anfitrión Y colaborador a la vez (lleva 10 invitados suyos), así que
   // puede tener el móvil y el portátil escribiendo a la vez él solo.
   it("las novedades también mandan solo lo cambiado", () => {
@@ -358,5 +358,29 @@ describe("el Deshacer: la foto va ANTES, y si falla no se toca nada", () => {
         expect(trozo.slice(0, 200), ruta).toMatch(/if \(!guardada\)\s*(return|\{[^}]*return)/);
       }
     }
+  });
+});
+
+describe("toda cita a una norma apunta a una que existe", () => {
+  // Las normas de 1.2 se citan por número en el código ("norma 12"). Si
+  // se juntan o se quitan, una cita vieja apuntaría a otra norma, o a
+  // ninguna, sin que nada lo dijera.
+  it("ningún «norma N» pasa del número de normas de 1.2", () => {
+    const manual = leer("CLAUDE.md");
+    const seccion = manual.slice(manual.indexOf("## 1.2 "), manual.indexOf("## 1.3 "));
+    const total = [...seccion.matchAll(/^(\d+)\. \*\*/gm)].length;
+    expect(total).toBeGreaterThan(10);
+    const fuera = [];
+    const reunir = (dir) => {
+      for (const n of readdirSync(dir)) {
+        const r = join(dir, n);
+        if (statSync(r).isDirectory()) reunir(r);
+        else if (/\.(jsx?|mjs|css|sql)$/.test(n))
+          for (const m of leer(r).matchAll(/\b[Nn]orma (\d+)\b/g))
+            if (+m[1] < 1 || +m[1] > total) fuera.push(`${r}: norma ${m[1]}`);
+      }
+    };
+    ["src", "scripts", "supabase"].forEach(reunir);
+    expect(fuera).toEqual([]);
   });
 });

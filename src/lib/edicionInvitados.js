@@ -186,7 +186,7 @@ export function cambiarCampo(invitados, id, campo, valor) {
   // persona, y de eso dependen la mesa (una familia no se separa), los
   // matrimonios y el acceso al tablón. Es legítimo —el hijo mayor con
   // otro apellido— pero no debe pasar sin que se vea. Se hace y se
-  // avisa con la cifra, como manda la norma 16.
+  // avisa con la cifra, como manda la norma 11.
   if (campo === "apellido" || campo === "grupoFamiliar") {
     const antes = claveFamiliaMesa(g);
     const ahora = claveFamiliaMesa(siguiente.find((x) => x.id === id));

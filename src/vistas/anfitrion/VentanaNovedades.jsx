@@ -248,7 +248,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
   } = data;
   const [copiado, setCopiado] = useState(false);
   // Si el navegador no deja copiar, el enlace se enseña aquí para
-  // copiarlo a mano. Antes era un prompt() del navegador, que la norma 12
+  // copiarlo a mano. Antes era un prompt() del navegador, que la norma 9
   // prohíbe: en una ventana emergente sale donde no debe o se cuelga.
   const [copiaFallida, setCopiaFallida] = useState(false);
   // Si un guardado falla, persistNovedades devuelve la lista a como

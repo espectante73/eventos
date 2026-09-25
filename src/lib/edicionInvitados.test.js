@@ -142,7 +142,7 @@ describe("cambiar un campo suelto", () => {
     expect(aviso).toContain("desconocido");
   });
 
-  // Norma 16: cambiar el apellido saca a esa persona de su familia, y de
+  // Norma 11: cambiar el apellido saca a esa persona de su familia, y de
   // eso dependen la mesa, los matrimonios y el acceso al tablón. Es
   // legítimo (el hijo mayor con otro apellido), pero no en silencio.
   it("cambiar el grupo familiar avisa con cuántos se quedan atrás", () => {

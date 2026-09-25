@@ -236,7 +236,7 @@ export function VistaTablon({ token }) {
     });
     setComprobando(false);
     if (esCorrecta !== true) {
-      // Norma 19: se dice EN QUÉ se ha podido equivocar. Lo que compara
+      // Norma 13: se dice EN QUÉ se ha podido equivocar. Lo que compara
       // la base (normalizar_nombre_tablon) perdona mayúsculas, tildes,
       // comas y espacios de más — pero NO el orden: apellido primero.
       // Antes solo ponía "Respuesta incorrecta", y el invitado no tenía
@@ -518,7 +518,7 @@ export function VistaTablon({ token }) {
           {/* Al pie, discreto y sin competir con las novedades: la nota de
               privacidad (usuario, 2026-09-21, eligiendo entre sección
               plegada, link al pie o texto abierto). Link subrayado, no
-              botón: te lleva a otro sitio, no hace nada (norma 13, ver
+              botón: te lleva a otro sitio, no hace nada (norma 4, ver
               EnlaceTexto). Y al lado del pulgar. */}
           <div className="flex justify-end zurdo:justify-start mt-6">
             <EnlaceTexto onClick={() => setNotaAbierta(true)}>{TITULO_NOTA_PRIVACIDAD}</EnlaceTexto>

@@ -68,12 +68,12 @@ import {
 //
 // Y lo llevan TODAS las filas, transparente cuando no toca, incluidas la
 // cabecera y los filtros: si solo lo llevaran unas, sus columnas se
-// correrían 4 px y dejarían de cuadrar con las de al lado (norma 7).
+// correrían 4 px y dejarían de cuadrar con las de al lado (norma 6).
 const FILETE_COLABORADOR = 4;
 
 // "Colaborador" entra en el filtro de Función como un papel más (él,
 // 2026-09-24: el filete dorado se ve, pero no se puede filtrar por él).
-// Es la norma 22: llevar 10-12 invitados es una función del día, igual
+// Es la norma 16: llevar 10-12 invitados es una función del día, igual
 // que ser acomodador. Va con una clave propia y no con la palabra suelta
 // para que no choque si algún día él crea un rol llamado "Colaborador".
 const FILTRO_ES_COLABORADOR = "es-colaborador";

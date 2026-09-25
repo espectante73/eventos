@@ -13,7 +13,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { T, R, S, OP } from "./theme";
 
-// ⚠️ El mando de Música tiene lenguaje propio YA APROBADO (norma 11 del
+// ⚠️ El mando de Música tiene lenguaje propio YA APROBADO (norma 4 del
 // CLAUDE.md): paleta oscura suya, teclas con su relieve. No entra.
 const FUERA = ["vistas/anfitrion/VentanaMusicaEvento.jsx"];
 

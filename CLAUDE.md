@@ -125,150 +125,108 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
 **Repasarlas antes de construir o retocar cualquier pantalla.** Entre
 paréntesis, dónde está el detalle.
 
-1. **Estandarizar = usar el modelo aprobado de la app**: la paleta, las
-   letras y las medidas de `theme.js` y las piezas compartidas (normas
-   11 y 17). Nunca un estilo elegido por mí. Si hay duda de cuál aplica,
-   preguntar en una línea ANTES de tocar el aspecto.
+1. **Estandarizar = usar el modelo aprobado de la app.** Colores, letras,
+   redondeos, sombras y transparencias salen de `theme.js` (`C`, `T`,
+   `R`, `S`, `OP`), nunca escritos a mano; si falta un valor, se añade a
+   la escala, no al sitio (única salida: `escala-libre:` y el motivo al
+   lado). Nunca un estilo elegido por mí: mirar cómo está resuelto lo
+   que ya existe en su misma situación y, si hay duda, **preguntar en una
+   línea ANTES de tocar el aspecto**. Lo vigila `src/theme.test.js`.
 2. **Ventanas tan pequeñas como su contenido**: del ancho de un móvil en
-   vertical, también en el ordenador.
+   vertical, también en el ordenador. Toda ventana nueva es una
+   `VentanaFlotante`; si crece mucho, lanzadora pequeña + una ventana por
+   parte. ⚠️ Las que se usan **mientras se mira otra cosa** —Novedades,
+   Cronograma, Música, Lista de invitados— son ventanas de verdad del
+   sistema (`usePopupWindow`).
 3. **Todo al alcance del pulgar QUE ELIJA CADA UNO.** La app entera se
    acomoda a esa elección; la derecha es solo lo que sale por defecto.
    («El pulgar: la regla y cómo funciona»)
-4. **Botones del mismo grupo, todos iguales y del ancho del texto más
-   largo.** En Mi cuenta el modelo es el de inicio: copia exacta de las
-   filas de "Abrir sección…" (`FilaMenu`), pastilla verde, letra dorada,
-   icono de 19 a la izquierda, ancho `ANCHO_FILA_MENU` importado (no
-   copiado). El rótulo más largo es "Mapa del sitio"; si uno pasa de ahí,
-   **se abrevia el rótulo, no se ensancha el botón**. Márgenes derecho e
-   izquierdo iguales. En otra pantalla, el modelo es el que ya esté
-   aprobado en ella (norma 1).
-5. **Los textos de ayuda, al pie de la ventana y plegados** (`<details>`),
-   no en medio de los botones ni del formulario.
-6. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
-   protagonista y lo demás se esconde. Y todo panel que se abre tiene su
-   **salida ARRIBA y a la vista**, y salir deja la pantalla como estaba
-   (la Revisión dejaba la lista filtrada para siempre).
-7. **Tablas y listas: una sola línea por fila**, todas de la misma
-   altura; si no cabe, se ensancha o se recorta, nunca dos líneas. Y los
-   anchos de las columnas van **fijos y definidos una sola vez**: cada
-   fila es su propia caja y no ve a las de al lado. Lo vigila
-   `reglas-del-proyecto.test.js`, de momento solo en la fila del
-   colaborador. ⚠️ Y sin aire extra en las filas (en paneles y tarjetas
-   sí): con 140 invitados, una lista con más aire es una lista que no
-   cabe.
-8. **Una sola pieza, no sincronizar**: si dos sitios tienen que decir
-   siempre lo mismo —un componente, una constante, una función—,
-   comparten la definición. Nunca dos copias mantenidas iguales a mano:
-   **derivan sin que nadie lo vea**.
-9. **Toda ventana nueva es una `VentanaFlotante`**; si crece mucho,
-   lanzadora pequeña + una ventana por parte. ⚠️ Excepción: las que se
-   usan **mientras se mira otra cosa** —Novedades, Cronograma, Música,
-   Lista de invitados— son ventanas de verdad del sistema
-   (`usePopupWindow`).
-10. **Una vista que solo reordena o filtra lo que la Lista de invitados
-    ya muestra va DENTRO de la lista, no aparte**: la lista es la raíz.
-11. **Piezas compartidas**: los botones con `Boton` (principal /
-    secundario / peligro), las fotos con `HuecoFoto` (16:9, mismo marco),
-    y también los iconos sueltos de las tablas. Los lenguajes propios ya
-    aprobados —pastilla de inicio, mando de música— se respetan tal cual.
-12. **Todo quitar o borrar pregunta antes**, en la ventana de la app
-    (`usePreguntaSeguridad`), nunca con `window.alert`, `window.confirm`
-    ni `prompt` (en las ventanas emergentes rompen). Lo vigila
-    `reglas-del-proyecto.test.js`.
-13. **Lo que se PULSA lleva relieve; lo que es un LINK va subrayado.**
-    Son dos cosas distintas, no una norma con una excepción:
-    - **ACCIÓN sobre los datos** —guardar, borrar, confirmar, abrir una
-      ventana— → `Boton`: relieve, se hunde al tocarlo, clic y vibración.
-      Incluye desplegables y títulos plegables.
-    - **LINK que lleva a otro sitio** —otra pantalla del login, otra
-      web— → `EnlaceTexto`: subrayado y en gris. Es el **estándar de
-      internet**, y por eso se respeta sin inventar nada.
-    Una sola pieza para los dos usos (`components/Boton.jsx`); suelto
-    lleva `py-2`, que en el móvil un link fino se falla. Lo vigila
-    `Boton.test.js`.
-    ⚠️ Nació hablando de acciones y yo la apliqué a un link de login. Si
-    una norma suya choca con algo que cualquiera reconoce de internet,
-    **preguntar por su alcance antes de aplicarla al pie de la letra.**
-14. **Quitar/borrar = `BotonQuitar`**: el mismo círculo rojo en toda la
-    app, 24 px a la vista y 44 px de zona de toque (el mínimo del móvil).
-    X = quitar; papelera (`borrar`) = se borra para siempre. Lleva la
-    pregunta dentro.
-15. **Pedir la captura ANTES de decir que un cambio de aspecto está
-    hecho**: no está hecho hasta que él lo ha visto. Mejor del móvil.
-    Decir "hecho" sobre algo que no se ha visto es afirmar sin comprobar,
-    justo lo que prohíbe la regla 1 de «Cómo trabajar aquí».
-    ⚠️ Y antes de escribir el cambio: **mirar cómo está resuelto lo que
-    ya existe al lado** — el de su misma situación, no el primero que se
-    parezca.
-    Y **construir de uno en uno y enseñar**, no el resultado final de
-    golpe: los tres aros del sello salieron de tres vueltas suyas, y
-    ninguna la habría acertado yo de una.
-16. **Lo que en la vida real va junto —una pareja, una familia— la app
+4. **Piezas compartidas, nunca hechas a mano:**
+   - **Lo que se PULSA** —guardar, borrar, abrir una ventana, un
+     desplegable, un título plegable, los iconos sueltos de las tablas—
+     → `Boton`: relieve, se hunde al tocarlo, clic y vibración.
+   - **Lo que es un LINK** a otro sitio —otra pantalla del login, otra
+     web— → `EnlaceTexto`: subrayado y en gris, el estándar de internet.
+     Suelto lleva `py-2`: en el móvil un link fino se falla.
+   - **Quitar o borrar** → `BotonQuitar`: el mismo círculo rojo, 24 px a
+     la vista y 44 de toque. X = quitar; papelera = para siempre.
+   - **Las fotos** → `HuecoFoto` (16:9, mismo marco).
+   - **Los botones de un mismo grupo**, todos iguales y del ancho del más
+     largo; si un rótulo no cabe, **se abrevia, no se ensancha**. En Mi
+     cuenta son copia de las filas de "Abrir sección…" (`ANCHO_FILA_MENU`).
+   Los lenguajes propios ya aprobados —pastilla de inicio, mando de
+   música— se respetan tal cual. Lo vigila `Boton.test.js`.
+   ⚠️ Si una norma suya choca con algo que cualquiera reconoce de
+   internet, **preguntar por su alcance antes de aplicarla al pie de la
+   letra.**
+5. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
+   protagonista. Los textos de ayuda también: al pie de la ventana y
+   plegados (`<details>`), nunca entre los botones. Todo panel que se abre
+   tiene su **salida ARRIBA y a la vista**, y salir deja la pantalla como
+   estaba.
+6. **Tablas y listas: una sola línea por fila**, todas de la misma altura
+   y sin aire extra (con 140 invitados, una lista con aire no cabe). Si
+   no cabe, se ensancha o se recorta, nunca dos líneas. Los anchos de las
+   columnas, **fijos y definidos una sola vez**. Lo vigila
+   `reglas-del-proyecto.test.js` en la fila del colaborador.
+7. **Una sola pieza, no sincronizar**: si dos sitios tienen que decir
+   siempre lo mismo —un componente, una constante, una función, qué es
+   una familia (`claveFamilia`), cómo se nombra a alguien
+   (`nombreCompleto`)—, comparten la definición. Dos copias mantenidas a
+   mano **derivan sin que nadie lo vea**.
+8. **Una vista que solo reordena o filtra lo que la Lista de invitados
+   ya muestra va DENTRO de la lista, no aparte**: la lista es la raíz.
+9. **Quitar o borrar pregunta antes**, en la ventana de la app
+   (`usePreguntaSeguridad`; `BotonQuitar` ya la lleva dentro), nunca con
+   `window.alert`, `window.confirm` ni `prompt`: en las ventanas
+   emergentes rompen. Lo vigila `reglas-del-proyecto.test.js`.
+10. **No está hecho hasta que él lo ha visto**: pedir la captura (mejor
+    del móvil) ANTES de decir que un cambio de aspecto está hecho. Y
+    **construir de uno en uno y enseñar**, no el resultado final de
+    golpe.
+11. **Lo que en la vida real va junto —una pareja, una familia— la app
     lo mantiene junto SOLA:**
-    1. un dato compartido vale para todos (el año de boda de la pareja);
-       una acción sobre uno se aplica a todos (la mesa de la familia);
-    2. UNA sola definición de "familia": `claveFamilia` en
-       `lib/invitados.js`, nunca una copia por archivo. La única variante
-       es `claveFamiliaMesa`, que añade el id y dice por qué;
-    3. si no se puede cumplir entera, no se hace a medias: no se toca
-       nada y se avisa con la cifra concreta ("son 4 y quedan 2 sitios"),
-       en una ventana que se vea;
-    4. si quien escribe puede ser un colaborador que solo guarda una
+    1. un dato compartido vale para todos (el año de boda); una acción
+       sobre uno se aplica a todos (la mesa de la familia);
+    2. si no se puede cumplir entera, no se toca nada y se avisa con la
+       cifra concreta ("son 4 y quedan 2 sitios"), en una ventana que se
+       vea;
+    3. si quien escribe puede ser un colaborador que guarda una sola
        ficha, la regla va en la BASE (trigger), no solo en la pantalla;
-    5. lo que ya estaba mal de antes lo ENCUENTRA la Revisión; no se
-       arregla a escondidas. ⚠️ Protege DECISIONES suyas, no la
-       fontanería: cambiar un archivo de sitio se hace y ya, sin
-       preguntar (él, 2026-09-24);
-    6. las excepciones que él marca quedan fuera por diseño;
-    7. ⚠️ y hay reglas suyas POR ENCIMA: cada colaborador lleva entre 10
-       y 12 invitados ("el mismo peso de responsabilidad"), así que un
-       matrimonio PUEDE tener dos colaboradores distintos. No avisar de
-       eso ni "juntarlos";
-    8. y la regla lleva sus pruebas automáticas.
+    4. lo que ya estaba mal lo ENCUENTRA la Revisión, no se arregla a
+       escondidas. ⚠️ Esto protege DECISIONES suyas, no la fontanería:
+       mover un archivo de sitio se hace sin preguntar;
+    5. las excepciones que él marca quedan fuera;
+    6. ⚠️ hay reglas suyas POR ENCIMA: cada colaborador lleva de 10 a 12
+       invitados, así que un matrimonio PUEDE tener dos colaboradores.
+       No avisar de eso ni "juntarlos".
     Ante un dato nuevo: **¿debería ir junto con el de alguien más?**
     («Un matrimonio comparte año y foto de boda»)
-
-17. **Los valores del acabado salen de `theme.js`, nunca a mano.** Tamaño
-    de letra (`T`), redondeo (`R`), sombra (`S`) y transparencia (`OP`).
-    Un número suelto pone en rojo `src/theme.test.js`. Si hace falta uno
-    que no está, se añade a la
-    escala, no al sitio; la única salida es marcar la línea con
-    `escala-libre:` y el motivo al lado.
-18. **Guardar solo lo que cambió, nunca el estado entero.** Aquí siempre
-    hay dos escritores posibles: un colaborador, o él mismo con el móvil
-    y el Mac abiertos. Mandar la colección entera es **escribir tu copia
-    encima de lo que el otro acaba de guardar**, y el dato vuelve atrás
-    sin que salte ningún error.
-    **Cómo se hace bien** (modelo: `anfitrion_guardar_invitados`): solo
-    las filas que difieren de la última verdad del servidor y, **aparte**,
-    la lista completa de ids, que es lo único que el borrado necesita. Lo
-    que no se manda, no se toca.
-    ⚠️ Y hay escritores que no son personas: un trigger cambia una
-    columna por su cuenta, y mandar la colección entera lo deshace. Lo
-    vigilan `reglas-del-proyecto.test.js` y `supabase/schema.test.js`.
-19. **Un mensaje de error dice en qué se ha podido equivocar, no solo
-    que está mal.** Se nombra lo que puede fallar y lo que no importa:
-    *"escribe primero tu apellido y después tu nombre; dan igual las
-    mayúsculas y las tildes"*. El motivo técnico va aparte, en letra
-    pequeña (`detalle` de `PreguntaSeguridad`). ⚠️ Antes de escribir un
-    "no importa", mirar el código que compara: `normalizar_nombre_tablon`
-    perdona mayúsculas, tildes, comas y espacios, pero **no el orden**.
-20. **Lo que ESCRIBE en los datos vive en `lib/`, con pruebas.** Nunca
-    dentro de una pantalla: suelto se prueba a fondo, dentro no.
-    Devuelven la lista nueva y un `aviso`; si el aviso trae texto, o **no
-    se hizo el cambio** y ahí está el motivo, o **se hizo con una
-    salvedad** que hay que contar. Modelo: `lib/mesas.js`,
-    `lib/edicionInvitados.js`. Lo que solo lee o pinta se queda en la
-    pantalla.
-21. **La identidad de una persona se muestra siempre como "Apellido,
-    Nombre"**, en toda la app: listas, desplegables, avisos y preguntas
-    de confirmación. Una sola definición, `nombreCompleto` en
-    `lib/formato.js`. Lo vigila `reglas-del-proyecto.test.js`.
-22. **Una persona, varios papeles.** Invitado, colaborador y acomodador
-    pueden ser el mismo. Una lista de gente se arma **con personas**, con
-    sus papeles al lado; nunca pegando una fuente detrás de otra, que
-    duplica a quien está en las dos. Modelo: `personasAsignables`
-    (`lib/cronograma.js`).
+12. **Guardar solo lo que cambió, nunca el estado entero.** Siempre hay
+    dos escritores posibles —un colaborador, o él con el móvil y el Mac
+    abiertos— y a veces un trigger: mandar la colección entera escribe tu
+    copia encima de lo que el otro acaba de guardar, sin ningún error.
+    Modelo: `anfitrion_guardar_invitados` (las filas cambiadas y, aparte,
+    la lista de ids para el borrado). Lo vigilan
+    `reglas-del-proyecto.test.js` y `supabase/schema.test.js`.
+13. **Un mensaje de error dice en qué se ha podido equivocar**, y qué no
+    importa: *"escribe primero tu apellido y después tu nombre; dan igual
+    las mayúsculas y las tildes"*. El motivo técnico, aparte y en pequeño
+    (`detalle` de `PreguntaSeguridad`). ⚠️ Antes de escribir un "no
+    importa", mirar el código que compara: `normalizar_nombre_tablon` no
+    perdona el orden.
+14. **Lo que ESCRIBE en los datos vive en `lib/`, con pruebas**, nunca
+    dentro de una pantalla. Devuelve la lista nueva y un `aviso`: si trae
+    texto, o no se hizo el cambio (y ahí está el motivo) o se hizo con
+    una salvedad que hay que contar. Modelo: `lib/mesas.js`. Lo que solo
+    lee o pinta se queda en la pantalla.
+15. **Una persona se nombra siempre "Apellido, Nombre"**: en listas,
+    desplegables, avisos y preguntas (`nombreCompleto`). Lo vigila
+    `reglas-del-proyecto.test.js`.
+16. **Una persona, varios papeles** (invitado, colaborador, acomodador).
+    Una lista de gente se arma con personas y sus papeles al lado, nunca
+    pegando una fuente tras otra, que duplica a quien está en las dos.
+    Modelo: `personasAsignables` (`lib/cronograma.js`).
 
 
 ## 1.3 Reglas de diseño ya decididas

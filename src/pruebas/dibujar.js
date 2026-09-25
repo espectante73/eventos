@@ -1,5 +1,5 @@
 // Dibujar un componente dentro de una prueba. UNA sola receta para todo
-// el proyecto (norma 8).
+// el proyecto (norma 7).
 //
 // Antes había CUATRO, tres de ellas copiadas entre sí: `Boton.test.js`,
 // `Widgets.test.js` y `PreguntaSeguridad.test.js` repetían las mismas

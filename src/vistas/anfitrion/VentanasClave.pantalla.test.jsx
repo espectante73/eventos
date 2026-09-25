@@ -72,7 +72,7 @@ describe("el Cronograma se puede dibujar", () => {
 
   // Aquí vivía el fallo de los nombres duplicados: la lista se armaba
   // pegando colaboradores e invitados con rol, y quien era las dos cosas
-  // salía dos veces (norma 22).
+  // salía dos veces (norma 16).
   it("al desplegar «¿Quién lo atiende?», cada persona sale UNA vez", () => {
     const vista = montar(<VentanaConfigCronograma data={data} ventana={null} />);
     // El primer bloque (Recepción) lo atienden los colaboradores solos,

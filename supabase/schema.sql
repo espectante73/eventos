@@ -1115,7 +1115,7 @@ end;
 $$;
 
 -- Guarda la lista de colaboradores y sus permisos.
--- ⚠️ Norma 18: p_filas son solo los cambiados; p_ids, los que deben quedar.
+-- ⚠️ Norma 12: p_filas son solo los cambiados; p_ids, los que deben quedar.
 CREATE FUNCTION public.anfitrion_guardar_colaboradores(p_token uuid, p_filas jsonb, p_ids uuid[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
@@ -1191,7 +1191,7 @@ end;
 $$;
 
 -- Guarda la lista de gastos.
--- ⚠️ Norma 18: p_filas son solo los cambiados; p_ids, los que deben quedar.
+-- ⚠️ Norma 12: p_filas son solo los cambiados; p_ids, los que deben quedar.
 CREATE FUNCTION public.anfitrion_guardar_gastos(p_token uuid, p_filas jsonb, p_ids uuid[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
@@ -1285,7 +1285,7 @@ end;
 $$;
 
 -- Guarda las mesas y su posición en el plano.
--- ⚠️ Norma 18: p_filas son solo las cambiadas; p_numeros, las que deben quedar.
+-- ⚠️ Norma 12: p_filas son solo las cambiadas; p_numeros, las que deben quedar.
 CREATE FUNCTION public.anfitrion_guardar_mesas(p_token uuid, p_filas jsonb, p_numeros integer[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
@@ -1313,7 +1313,7 @@ end;
 $$;
 
 -- Guarda las novedades del tablón.
--- ⚠️ Norma 18: p_filas son SOLO las novedades cambiadas. El borrado usa
+-- ⚠️ Norma 12: p_filas son SOLO las novedades cambiadas. El borrado usa
 -- p_ids, la lista completa de las que deben quedar.
 CREATE FUNCTION public.anfitrion_guardar_novedades(p_token uuid, p_filas jsonb, p_ids uuid[]) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
