@@ -53,6 +53,12 @@ export function partirManual(texto) {
 }
 
 // De texto a bloques: párrafo, título, lista, lista numerada, código.
+//
+// Una lista puede llevar otra DENTRO de un punto (norma 4, norma 11): se
+// reconoce por la sangría. Cada punto es { texto, sub, despues }: `sub`,
+// la lista de dentro; `despues`, el texto con sangría que sigue a esa
+// lista y es del punto de fuera. Sin esto, la lista de dentro partía la
+// de fuera y la numeración volvía a empezar en 1.
 export function bloques(texto) {
   const salida = [];
   let parrafo = [];
@@ -88,14 +94,21 @@ export function bloques(texto) {
       salida.push({ tipo: "titulo", texto: linea.replace(/^#+\s*/, "") });
       continue;
     }
-    const vineta = linea.match(/^\s*[-•] (.*)$/);
-    const numero = linea.match(/^\s{0,4}(\d+)\. (.*)$/);
-    if (vineta || numero) {
+    const marca = linea.match(/^(\s*)(?:([-•])|(\d+)\.) (.*)$/);
+    const sangria = linea.length - linea.trimStart().length;
+    const punto = lista && lista.items[lista.items.length - 1];
+    if (marca) {
+      const tipo = marca[2] ? "ul" : "ol";
+      // Con sangría y dentro de una lista: es un punto de la lista de dentro.
+      if (punto && sangria >= 2) {
+        if (!punto.sub) punto.sub = { tipo, inicio: Number(marca[3]) || 1, sangria, items: [] };
+        punto.sub.items.push({ texto: marca[4] });
+        continue;
+      }
       cerrarParrafo();
-      const tipo = vineta ? "ul" : "ol";
       if (lista && lista.tipo !== tipo) cerrarLista();
-      if (!lista) lista = { tipo, items: [] };
-      lista.items.push(vineta ? vineta[1] : numero[2]);
+      if (!lista) lista = { tipo, inicio: Number(marca[3]) || 1, items: [] };
+      lista.items.push({ texto: marca[4] });
       continue;
     }
     if (!linea.trim()) {
@@ -103,8 +116,15 @@ export function bloques(texto) {
       cerrarLista();
       continue;
     }
-    if (lista && /^\s{2,}\S/.test(linea)) {
-      lista.items[lista.items.length - 1] += " " + linea.trim();
+    if (punto && sangria >= 2) {
+      const sub = punto.sub;
+      if (sub && sangria > sub.sangria && !punto.despues) {
+        sub.items[sub.items.length - 1].texto += " " + linea.trim();
+      } else if (sub) {
+        punto.despues = (punto.despues ? punto.despues + " " : "") + linea.trim();
+      } else {
+        punto.texto += " " + linea.trim();
+      }
       continue;
     }
     cerrarLista();

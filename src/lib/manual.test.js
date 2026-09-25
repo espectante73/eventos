@@ -67,7 +67,44 @@ describe("bloques y trozos en línea", () => {
 
   it("una línea con sangría sigue al punto de la lista", () => {
     const [lista] = bloques("- primera parte\n  y su continuación");
-    expect(lista.items).toEqual(["primera parte y su continuación"]);
+    expect(lista.items.map((i) => i.texto)).toEqual(["primera parte y su continuación"]);
+  });
+
+  // La norma 4 lleva viñetas dentro y la 11 una lista numerada: antes
+  // partían la lista de fuera y la numeración volvía a empezar en 1.
+  it("una lista dentro de un punto no parte la de fuera", () => {
+    const texto = [
+      "4. **Piezas:**",
+      "   - botón",
+      "     con relieve",
+      "   - link",
+      "   Y lo de después.",
+      "5. **Plegado.**",
+      "11. **Junto:**",
+      "    1. un dato",
+      "       compartido",
+      "    2. otro",
+      "    Ante un dato nuevo.",
+      "12. **Guardar.**",
+    ].join("\n");
+    const [lista, ...resto] = bloques(texto);
+    expect(resto).toEqual([]);
+    expect(lista.inicio).toBe(4);
+    expect(lista.items.map((i) => i.texto)).toEqual(["**Piezas:**", "**Plegado.**", "**Junto:**", "**Guardar.**"]);
+    expect(lista.items[0].sub.items.map((i) => i.texto)).toEqual(["botón con relieve", "link"]);
+    expect(lista.items[0].despues).toBe("Y lo de después.");
+    expect(lista.items[2].sub.tipo).toBe("ol");
+    expect(lista.items[2].sub.items.map((i) => i.texto)).toEqual(["un dato compartido", "otro"]);
+    expect(lista.items[2].despues).toBe("Ante un dato nuevo.");
+  });
+
+  it("con el documento real, las normas de 1.2 van de la 1 a la última sin volver a empezar", () => {
+    const manual = partirManual(readFileSync("CLAUDE.md", "utf-8"));
+    const s12 = manual.partes[0].secciones.find((s) => s.num === "1.2");
+    const listas = bloques(s12.texto).filter((b) => b.tipo === "ol");
+    expect(listas).toHaveLength(1);
+    expect(listas[0].inicio).toBe(1);
+    expect(listas[0].items.length).toBeGreaterThan(10);
   });
 
   it("negrita, cursiva y código dentro del texto", () => {

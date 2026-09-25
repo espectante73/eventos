@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "45.6",
+    cambios: [
+      "Diseño app: cuando una norma lleva una lista dentro, ahora sale con sangría debajo de su norma, y la numeración sigue seguida (antes volvía a empezar en 1 y era un lío citar un número).",
+    ],
+  },
+  {
     version: "45.5",
     cambios: [
       "Diseño app: los sellos salen de la cabecera y van debajo de la primera frase, que ahora es grande y en negrita, en una sola línea.",

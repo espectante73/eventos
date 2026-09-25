@@ -46,6 +46,28 @@ function EnLinea({ texto }) {
   });
 }
 
+// Una lista, y dentro de cada punto su propia lista con sangría (norma 4,
+// norma 11). `start`: una lista numerada sigue desde su número real.
+function Lista({ lista, dentro = false }) {
+  const Etiqueta = lista.tipo;
+  const estilo = lista.tipo === "ul" ? (dentro ? "list-[circle]" : "list-disc") : "list-decimal";
+  return (
+    <Etiqueta start={lista.tipo === "ol" ? lista.inicio : undefined} className={`${estilo} pl-5 my-2 space-y-1`}>
+      {lista.items.map((item, j) => (
+        <li key={j}>
+          <EnLinea texto={item.texto} />
+          {item.sub && <Lista lista={item.sub} dentro />}
+          {item.despues && (
+            <p className="mt-1">
+              <EnLinea texto={item.despues} />
+            </p>
+          )}
+        </li>
+      ))}
+    </Etiqueta>
+  );
+}
+
 function Texto({ texto }) {
   return bloques(texto).map((b, i) => {
     if (b.tipo === "titulo")
@@ -64,18 +86,7 @@ function Texto({ texto }) {
           {b.texto}
         </pre>
       );
-    if (b.tipo === "ul" || b.tipo === "ol") {
-      const Lista = b.tipo;
-      return (
-        <Lista key={i} className={`${b.tipo === "ul" ? "list-disc" : "list-decimal"} pl-5 my-2 space-y-1`}>
-          {b.items.map((item, j) => (
-            <li key={j}>
-              <EnLinea texto={item} />
-            </li>
-          ))}
-        </Lista>
-      );
-    }
+    if (b.tipo === "ul" || b.tipo === "ol") return <Lista key={i} lista={b} />;
     return (
       <p key={i} className="my-2">
         <EnLinea texto={b.texto} />

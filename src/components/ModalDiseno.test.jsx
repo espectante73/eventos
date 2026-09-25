@@ -33,6 +33,10 @@ describe("Diseño app", () => {
     const html = document.body.innerHTML;
     expect(html).not.toContain("Comprobar en la fuente");
     expect(html).toContain("Estandarizar");
+    // Las normas de 1.2, en UNA lista numerada: la de dentro de la 4 no
+    // la parte (antes volvía a empezar en 1).
+    const abierta = document.body.querySelectorAll("ol");
+    expect([...abierta].filter((ol) => !ol.parentElement.closest("ol")).length).toBe(1);
     vista.desmontar();
   });
 });
