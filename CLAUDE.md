@@ -864,22 +864,16 @@ para el porqué de entonces.
 
 # PARTE 2 — Trampas ya pagadas
 
-### 2.1 2026-08-25 (mismo día): refuerzos sobre el tablón, tras verlo listo para ~140 personas (v6.4)
+### 2.1 El tablón: música y miniatura de WhatsApp
 
-⚠️ **Los navegadores bloquean el audio automático sin interacción
-previa del usuario** — no hay forma de que suene sola de verdad al
-abrir la página. Se resolvió con un botón flotante visible (nunca un
-intento silencioso de `audio.play()` en el `useEffect` inicial, que
-fallaría y podría confundirse con un fallo real) — el primer clic de
-cada visitante activa la música a partir de ahí.
+⚠️ **El navegador no deja sonar audio sin un toque previo.** Por eso la
+música del tablón va en un botón visible; nunca un `audio.play()` al
+abrir, que fallaría en silencio y parecería un fallo de la app.
 
-⚠️ **Aviso ya dejado por escrito en la propia ventana de Configuración**:
-si el anfitrión reemplaza la foto más tarde, un enlace YA compartido
-antes puede tardar en actualizarse en WhatsApp — cachean la miniatura
-por su cuenta la primera vez que alguien pega el enlace, no en cada
-visita. No hay nada que hacer desde este lado del código si eso pasa
-(haría falta la herramienta de depuración de Meta/Facebook para forzar
-un re-escaneo de esa URL en concreto).
+⚠️ **WhatsApp guarda la miniatura de un enlace** la primera vez que
+alguien lo pega. Si se cambia la foto después, los enlaces ya
+compartidos siguen con la vieja un tiempo, y desde el código no se
+puede forzar. La ventana de Configuración ya lo avisa.
 
 ### 2.2 2026-08-25 (mismo día, tercera tanda): rediseño de Novedades + ventana de verdad (v6.5)
 
