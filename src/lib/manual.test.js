@@ -179,7 +179,7 @@ describe("las listas de dentro, todas iguales", () => {
 });
 
 // Las reglas de la PARTE 1 van numeradas dentro de su sección, del 1
-// seguido (norma de escritura 6): así se citan ("1.6, regla 3") y la app
+// seguido (encabezado, PARTE 1): así se citan ("1.6, regla 3") y la app
 // las cuenta. La 1.12 no son reglas, sino cosas en espera: van con viñetas.
 describe("las reglas de la PARTE 1, numeradas y contadas", () => {
   const manual = partirManual(readFileSync("CLAUDE.md", "utf-8"));
@@ -207,5 +207,21 @@ describe("las reglas de la PARTE 1, numeradas y contadas", () => {
   it("el total de la PARTE 1 es la suma de sus secciones", () => {
     expect(parte1.reglas).toBe(parte1.secciones.reduce((s, x) => s + contarReglas(x.texto), 0));
     expect(parte1.reglas).toBeGreaterThan(40);
+  });
+});
+
+// La app solo dibuja párrafos, listas, código, títulos, negrita y
+// cursiva. Una cita (">"), una tabla ("|") o un enlace saldrían tal cual,
+// con sus signos: pasó con las dos citas del encabezado.
+describe("el CLAUDE.md solo usa lo que la app sabe dibujar", () => {
+  it("sin citas, tablas ni enlaces (fuera de los bloques de código)", () => {
+    const lineas = readFileSync("CLAUDE.md", "utf-8").split("\n");
+    let enCodigo = false;
+    const mal = [];
+    lineas.forEach((l, i) => {
+      if (l.trim().startsWith("```")) enCodigo = !enCodigo;
+      else if (!enCodigo && (/^\s*[>|]/.test(l) || /\]\(/.test(l))) mal.push(`${i + 1}: ${l.slice(0, 40)}`);
+    });
+    expect(mal).toEqual([]);
   });
 });

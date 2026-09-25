@@ -26,7 +26,7 @@ function trocear(texto, patron) {
 }
 
 // Las reglas de una sección son sus puntos NUMERADOS de primer nivel
-// (norma de escritura 6 del encabezado). Las viñetas no cuentan: son
+// (encabezado, PARTE 1). Las viñetas no cuentan: son
 // detalle de una regla, o cosas en espera (la 1.12).
 export function contarReglas(texto) {
   return bloques(texto)

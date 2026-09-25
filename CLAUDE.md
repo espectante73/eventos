@@ -4,87 +4,64 @@
 conversación; el chat se compacta o se cierra.
 
 **Para qué es la app:** organizar la boda del usuario **y reutilizarla
-para otros eventos**. Por eso la Zona de Reinicio es permanente. ⚠️ El
+para otros eventos**; por eso la Zona de Reinicio es permanente. ⚠️ El
 día que OTRA persona organice su evento con ella, deja de ser una
 actividad personal suya (ver «Autorizo expresamente a que guarden mis
 datos»).
 
 ## Cómo está ordenado este archivo, y qué se guarda
 
-1. **PARTE 1 — Reglas que hay que obedecer siempre**, con el porqué de
-   las que sin él parecerían mejorables. Se lee antes de tocar nada.
-2. **PARTE 2 — Trampas ya pagadas**: errores que pueden repetirse y
-   **no se pueden vigilar con un test**. Si se puede, se pone el test
-   (regla 5 de «Cómo trabajar aquí»).
+1. **PARTE 1 — Reglas que hay que obedecer siempre**, numeradas dentro
+   de su sección: se citan ("1.6, regla 3") y la app las cuenta. Lo que
+   no es una regla (la 1.12) va con viñetas. Se lee antes de tocar nada.
+2. **PARTE 2 — Trampas ya pagadas**: errores que pueden repetirse y **no
+   se pueden vigilar con un test**. Si se puede, el test ES el registro
+   (regla 5 de «Cómo trabajar aquí») y la trampa se borra; también
+   cuando el código que la permitía ya no existe. Cada una, de 3 a 8
+   líneas: si crece, se ha colado relato.
 
-⚠️ **Se lee también dentro de la app** (Mi cuenta → «Diseño app»). Por
-eso la numeración 1.x / 2.x no puede saltarse (lo vigila
-`lib/manual.test.js`), solo se pintan párrafos, listas, código, títulos,
-negrita y cursiva, y **tras cada cambio se sella**: `node
-scripts/sellar-manual.mjs`.
+⚠️ **Se lee también dentro de la app** (Mi cuenta → «Diseño app»): la
+numeración no puede saltarse (lo vigila `lib/manual.test.js`), solo se
+dibujan párrafos, listas, código, títulos, negrita y cursiva, y **tras
+cada cambio se sella**: `node scripts/sellar-manual.mjs`.
 
 ### Qué entra
 
-> **Si borro esto, ¿qué error repetiría o qué decisión desharía?**
-
-- Una regla, o el porqué de algo → **PARTE 1**.
-- Un error repetible sin test que lo impida → **PARTE 2**.
-- Ninguno → **no se escribe.** El código lo cuenta, git guarda cómo se
-  llegó y los tests vigilan lo demás.
-
-Dicho como él: **o es una norma, o es una trampa corregida. Lo demás es
-relato.**
+**Si borro esto, ¿qué error repetiría o qué decisión desharía?** Si
+ninguno, no se escribe: el código lo cuenta, git guarda cómo se llegó y
+los tests vigilan lo demás. Dicho como él: **o es una norma, o es una
+trampa corregida. Lo demás es relato.**
 
 - **Un "no" suyo razonado ES una norma**: si no se conoce, se la vuelvo
-  a proponer. Va a la PARTE 1, en negativo.
-- De un duplicado descubierto se escribe la conclusión ("los colores
-  salen de `theme.js`"), no el hallazgo.
+  a proponer.
 - **Las decisiones van aquí, no en un `DECISIONS.md` aparte**: dos
   archivos contando lo mismo acaban contando cosas distintas.
-- **Una trampa se borra cuando hoy es imposible caer en ella**: un test
-  lo impide o el código que lo permitía ya no existe. No vale que sea
-  antigua ni que "ya estemos avisados".
+- **Nada que se presente como "el presente"** (estado, versión, próximos
+  pasos): nace caducando. La versión vive en `src/constants.js` y la
+  fecha en la base.
 
 ### Cuánto motivo
 
-> **El motivo se guarda cuando su ausencia provoca un error.**
+**El motivo se guarda cuando su ausencia provoca un error.**
 
 - **La conclusión**, siempre.
 - **El motivo**, solo si sin él alguien —yo— la desharía creyendo que
   simplifica. Basta una línea: *"las fotos viven fuera de la base: son
   100 y se descargarían todas en cada apertura"*.
-- **El camino, nunca**: los pros y contras que se pesaron no se
-  escriben. Solo si alguien ya resbaló por él, una frase con dónde.
-
-### Cómo se escribe
-
-1. **Si un fallo se cierra con un test, el test ES el registro.**
-2. **Nada que se presente como "el presente"**: estado, versión,
-   próximos pasos. Nace caducando. La versión vive en
-   `src/constants.js` y la fecha en la base.
-3. **Un ⚠ va solo**, nunca dentro de un relato: ahí nadie lo lee.
-4. **Corto**: una trampa, de 3 a 8 líneas. Si crece, se ha colado
-   relato.
-5. Al terminar algo, **preguntarse si hace falta escribirlo**.
-6. **En la PARTE 1, cada regla va numerada dentro de su sección**, del 1
-   seguido: así se cita ("1.6, regla 3") y la app las cuenta. Lo que no
-   es una regla (la 1.12) va con viñetas.
+- **El camino, nunca.** Solo si alguien ya resbaló por él, una frase con
+  dónde.
 
 ### Las normas también se pudren
 
-La app cambia y la norma no; una norma nueva choca con una vieja; o la
-norma describe un estado en vez de un criterio. **Un test no puede
-vigilar que una regla siga siendo verdad**, así que el guardia es de
-mano:
+El texto sigue a la realidad: **este archivo encoge cuando la APP se
+simplifica**, no al editar el texto. Y un test no puede vigilar que una
+regla siga siendo verdad, así que el guardia es de mano:
 
 - **Al tocar una zona**, releer su norma ANTES de escribir código, y
   corregirla en el mismo cambio si ya no es verdad.
 - **Al escribir una norma**, buscar si otra dice lo contrario.
 - ⚠️ **Al BORRAR código, borrar su norma en el mismo cambio.** Una regla
   falsa es peor que ninguna.
-
-Y la consecuencia: **este archivo encoge cuando la APP se simplifica**,
-no al editar el texto. El texto sigue a la realidad, nunca al revés.
 
 ======================================================================
 
@@ -128,14 +105,12 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
 
 ## 1.2 Normas de estándar de la app
 
-**Repasarlas antes de construir o retocar cualquier pantalla.** Entre
-paréntesis, dónde está el detalle.
+**Repasarlas antes de construir o retocar cualquier pantalla.**
 
-1. **Estandarizar = usar el modelo aprobado de la app.** Colores, letras,
-   redondeos, sombras y transparencias salen de `theme.js` (`C`, `T`,
-   `R`, `S`, `OP`), nunca escritos a mano; si falta un valor, se añade a
-   la escala, no al sitio (única salida: `escala-libre:` y el motivo al
-   lado). Nunca un estilo elegido por mí: mirar cómo está resuelto lo
+1. **Estandarizar = usar el modelo aprobado de la app.** Colores y
+   medidas salen de `theme.js`, nunca escritos a mano; si falta un valor,
+   se añade a la escala, no al sitio (única salida: `escala-libre:` y el
+   motivo al lado). Nunca un estilo elegido por mí: mirar cómo está resuelto lo
    que ya existe en su misma situación y, si hay duda, **preguntar en una
    línea ANTES de tocar el aspecto**. Y si una norma suya choca con algo
    que cualquiera reconoce de internet, preguntar por su alcance antes
@@ -152,14 +127,13 @@ paréntesis, dónde está el detalle.
 4. **Piezas compartidas, nunca hechas a mano.** Los lenguajes propios
    ya aprobados —pastilla de inicio, mando de música— se respetan tal
    cual. Lo vigila `Boton.test.js`.
-   - **Lo que se PULSA** —guardar, borrar, abrir una ventana, un
-     desplegable, un título plegable, los iconos sueltos de las tablas—
-     → `Boton`: relieve, se hunde al tocarlo, clic y vibración.
+   - **Lo que se PULSA** (también desplegables, títulos plegables e
+     iconos de las tablas) → `Boton`: relieve, clic y vibración.
    - **Lo que es un LINK** a otro sitio —otra pantalla del login, otra
      web— → `EnlaceTexto`: subrayado y en gris, el estándar de internet.
      Suelto lleva `py-2`: en el móvil un link fino se falla.
-   - **Quitar o borrar** → `BotonQuitar`: el mismo círculo rojo, 24 px a
-     la vista y 44 de toque. X = quitar; papelera = para siempre.
+   - **Quitar o borrar** → `BotonQuitar`, el mismo círculo rojo en toda
+     la app. X = quitar; papelera = para siempre.
    - **Las fotos** → `HuecoFoto` (16:9, mismo marco).
    - **Los botones de un mismo grupo**, todos iguales y del ancho del más
      largo; si un rótulo no cabe, **se abrevia, no se ensancha**. En Mi
@@ -211,8 +185,7 @@ paréntesis, dónde está el detalle.
     dos escritores posibles —un colaborador, o él con el móvil y el Mac
     abiertos— y a veces un trigger: mandar la colección entera escribe tu
     copia encima de lo que el otro acaba de guardar, sin ningún error.
-    Modelo: `anfitrion_guardar_invitados` (las filas cambiadas y, aparte,
-    la lista de ids para el borrado). Lo vigilan
+    Modelo: `anfitrion_guardar_invitados`. Lo vigilan
     `reglas-del-proyecto.test.js` y `supabase/schema.test.js`.
 13. **Un mensaje de error dice en qué se ha podido equivocar**, y qué no
     importa: *"escribe primero tu apellido y después tu nombre; dan igual
