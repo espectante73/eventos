@@ -344,3 +344,19 @@ describe("la Música del evento viene cargada, no a trozos", () => {
     expect(vista).not.toMatch(/lazy\([^)]*VentanaMusicaEvento/);
   });
 });
+
+describe("el Deshacer: la foto va ANTES, y si falla no se toca nada", () => {
+  // Al revés, la acción se ejecutaba aunque la copia no llegara a existir.
+  it("cada foto va seguida de «si no se guardó, parar»", () => {
+    const usos = archivos
+      .map((r) => [r, leer(r)])
+      .filter(([, texto]) => texto.includes("await guardarFotoDeshacer("));
+    expect(usos.length).toBeGreaterThan(0);
+    for (const [ruta, texto] of usos) {
+      const trozos = texto.split("await guardarFotoDeshacer(").slice(1);
+      for (const trozo of trozos) {
+        expect(trozo.slice(0, 200), ruta).toMatch(/if \(!guardada\)\s*(return|\{[^}]*return)/);
+      }
+    }
+  });
+});
