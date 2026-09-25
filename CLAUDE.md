@@ -272,7 +272,7 @@ en la cabecera de `lib/mano.js`.
    papeleras) y las filas alineadas abajo (`items-end` en una fila es
    alinear abajo, no a la derecha).
 
-## 1.5 Cómo se le habla al invitado: tú y USTEDES, nunca vosotros
+## 1.5 "Tú y ustedes" en la app
 
 Español de Canarias, en todo lo que lee un invitado o un colaborador. Lo
 vigila `reglas-del-proyecto.test.js`.
