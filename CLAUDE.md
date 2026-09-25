@@ -742,6 +742,10 @@ curl -s -X POST "$VITE_SUPABASE_URL/rest/v1/rpc/<funcion>" \
   `42501` es que la tabla no deja leer a `anon` (no dice nada de la
   columna: hay que mirar por otro lado).
 
+⚠️ **Antes de desplegar el cliente que usa una función nueva, llamarla
+así con un token falso.** Sin Postgres local, es la única red: una vez
+cazó un `text = uuid` que la revisión del código había dado por bueno.
+
 Truco que ahorra trabajo: el editor SQL de Supabase ejecuta el script
 **entero en una transacción**. Si la ÚLTIMA sentencia del bloque dejó su
 huella, todo lo anterior también entró. Con comprobar la última función
@@ -779,6 +783,9 @@ lectura pública es `for select`, nunca `for all`. No es teórico:
 `evento` guarda las plantillas de los emails, y reescribirlas desde
 fuera es decidir lo que la app manda a los invitados con el remitente
 del anfitrión. Lo vigila `supabase/schema.test.js`.
+⚠️ Lo que el test no ve: **una columna nueva en una tabla de lectura
+pública la lee cualquiera**. Antes de añadirla, preguntarse si es
+privada.
 
 **El Deshacer vive en el SERVIDOR, y las copias en JSON están
 descartadas.** Él lo cerró así: *"no puedo restaurar yo... si no me vale
@@ -999,23 +1006,7 @@ mete dentro de cada `<button>` para que vibre (el porqué y sus efectos,
 en su cabecera). Se apaga quitando la llamada a `vigilarBotones`. Y no
 volver al truco de pulsarlo desde el código: iOS 26.5 lo cerró.
 
-### 2.12 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
-
-⚠️ **Regla nueva: al añadir una columna a una tabla abierta a `anon`,
-releer la política de esa tabla en el mismo cambio.** No basta con que
-la decisión fuera buena el día que se tomó.
-
-⚠️ **El fallo que se coló y por qué:** las 4 funciones se escribieron con
-`p_token text`, pero `anfitrion_secreto.token` es `uuid` y todas las
-funciones anteriores declaran `p_token uuid`. Falló al primer intento
-(`42883: operator does not exist: text = uuid`) y hubo que rehacerlas
-con el `drop function` de rigor. Lo cazó una llamada de prueba con token
-falso contra la base real, antes de subir el código — **no la revisión
-del código, que dio la firma por buena**. Sin Postgres local ni
-credenciales de escritura, esa llamada anónima es la única red que hay:
-hacerla siempre antes de desplegar el cliente.
-
-### 2.13 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
+### 2.12 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
 
 ⚠️ Dónde vive esa pantalla, que Supabase la ha movido: **Authentication →
 Emails → SMTP**, o sea `/dashboard/project/<ref>/auth/smtp`. El viejo
