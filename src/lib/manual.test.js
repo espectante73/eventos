@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { partirManual, bloques, trozosEnLinea, contarPalabras, contarReglas } from "./manual";
+import { partirManual, bloques, trozosEnLinea, contarPalabras, contarReglas, hayQueRepasar, UMBRAL_REPASAR } from "./manual";
 import { huellaDe } from "../../scripts/huellaManual.mjs";
 import sello from "./manual-sello.json";
 
@@ -317,5 +317,18 @@ describe("salvaguardas del CLAUDE.md", () => {
 
   it("el sello guarda las palabras de verdad", () => {
     expect(sello.palabras).toBe(manual.palabras);
+  });
+});
+
+describe("la alarma de repasar", () => {
+  const hoy = new Date("2026-09-25T12:00:00Z");
+  const sello = (cambio) => ({ dia: "2026-09-25", palabrasInicioDia: 4000, palabras: 4000 + cambio });
+  it(`salta al pasar de ${UMBRAL_REPASAR} palabras en el día`, () => {
+    expect(hayQueRepasar(sello(UMBRAL_REPASAR), hoy)).toBe(false);
+    expect(hayQueRepasar(sello(UMBRAL_REPASAR + 1), hoy)).toBe(true);
+  });
+  it("no salta si encoge, ni si el cambio fue otro día", () => {
+    expect(hayQueRepasar(sello(-900), hoy)).toBe(false);
+    expect(hayQueRepasar(sello(900), new Date("2026-09-26T12:00:00Z"))).toBe(false);
   });
 });

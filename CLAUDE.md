@@ -67,7 +67,12 @@ regla siga siendo verdad, así que el guardia es de mano:
 
 - **Al tocar una zona**, releer su norma ANTES de escribir código, y
   corregirla en el mismo cambio si ya no es verdad.
-- **Al escribir una norma**, buscar si otra dice lo contrario.
+- **Al escribir o cambiar una regla**, compararla antes con todo el
+  documento: ¿hay otra que diga **lo mismo o lo contrario**? Ninguna
+  prueba lo ve; lo hago yo, leyendo.
+- **Si el sello de «Diseño app» se pone rojo** («hoy +180 · repasar»: más
+  de 150 palabras en un día), leer lo nuevo buscando repeticiones y
+  contradicciones antes de seguir.
 - ⚠️ **Al BORRAR código, borrar su norma en el mismo cambio.** Una regla
   falsa es peor que ninguna.
 

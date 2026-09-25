@@ -167,3 +167,22 @@ export function trozosEnLinea(texto) {
   if (ultimo < String(texto || "").length) salida.push({ tipo: "texto", texto: texto.slice(ultimo) });
   return salida;
 }
+
+// La alarma de "repasar" (encabezado del CLAUDE.md): si el documento
+// crece más de esto en un día, el sello se pone rojo. Las repeticiones
+// casi siempre llegan con crecimiento; leerlas con entendimiento es cosa
+// de Claude, la alarma solo avisa de que toca.
+export const UMBRAL_REPASAR = 150;
+
+// Palabras que subió (+) o bajó (−) el documento HOY, en hora de
+// Canarias, según el sello (scripts/sellar-manual.mjs). null si hoy no se
+// ha tocado.
+export function cambioDeHoy(sello, ahora = new Date()) {
+  const hoy = ahora.toLocaleDateString("sv-SE", { timeZone: "Atlantic/Canary" });
+  if (!sello || sello.dia !== hoy) return null;
+  return (sello.palabras ?? 0) - (sello.palabrasInicioDia ?? sello.palabras ?? 0);
+}
+
+export function hayQueRepasar(sello, ahora = new Date()) {
+  return (cambioDeHoy(sello, ahora) ?? 0) > UMBRAL_REPASAR;
+}

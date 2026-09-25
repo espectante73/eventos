@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "46.4",
+    cambios: [
+      "Diseño app avisa cuando toca repasar el documento: si crece más de 150 palabras en un día, el sello de palabras se pone rojo (\"hoy +180 · repasar\") y el botón \"Diseño app\" de Mi cuenta lleva un puntito rojo. El repaso lo hace Claude leyendo, buscando ideas repetidas o contrarias.",
+    ],
+  },
+  {
     version: "46.3",
     cambios: [
       "Diseño app: la frase de arriba pasa a ser \"Documento para construir la app\", más corta, y ya cabe en una línea.",

@@ -14,7 +14,7 @@ import textoDiseno from "../../CLAUDE.md?raw";
 import { C, R, T, OP } from "../theme";
 import { ModalFlotante } from "./VentanaFlotante";
 import { SeccionPlegable } from "./SeccionPlegable";
-import { partirManual, bloques, trozosEnLinea } from "../lib/manual";
+import { partirManual, bloques, trozosEnLinea, cambioDeHoy, hayQueRepasar } from "../lib/manual";
 import sello from "../lib/manual-sello.json";
 
 const manual = partirManual(textoDiseno);
@@ -34,14 +34,13 @@ function cabeceraDeParte(parte) {
 // La hora del último cambio del documento, en hora de Canarias. Sale de
 // manual-sello.json (scripts/sellar-manual.mjs), no de la hora de
 // construir la app: un despliegue sin tocar el documento no la mueve.
-// Lo que subió o bajó HOY ("hoy +24", "hoy −18"): la señal de que el
-// documento engorda. Sale del sello (scripts/sellar-manual.mjs), que
-// cuenta por días en hora de Canarias; si hoy no se ha tocado, no sale.
+// Lo que subió o bajó HOY ("hoy +24", "hoy −18"); si pasa del umbral,
+// "· repasar" y el sello en rojo. La cuenta vive en lib/manual.js.
 export function diferenciaDeHoy(sello, ahora = new Date()) {
-  const hoy = ahora.toLocaleDateString("sv-SE", { timeZone: "Atlantic/Canary" });
-  const cambio = (sello.palabras ?? 0) - (sello.palabrasInicioDia ?? sello.palabras ?? 0);
-  if (sello.dia !== hoy || cambio === 0) return "";
-  return ` (hoy ${cambio > 0 ? "+" : "−"}${miles(Math.abs(cambio))})`;
+  const cambio = cambioDeHoy(sello, ahora);
+  if (!cambio) return "";
+  const texto = ` (hoy ${cambio > 0 ? "+" : "−"}${miles(Math.abs(cambio))})`;
+  return hayQueRepasar(sello, ahora) ? `${texto} · repasar` : texto;
 }
 
 const cambiado = new Date(sello.cambiado).toLocaleString("es-ES", {
@@ -128,14 +127,15 @@ export default function ModalDiseno({ onCerrar }) {
       </p>
       {/* Los dos sellos, en UNA línea (él, v45.5: en la cabecera se partían). */}
       <div className="flex gap-2 my-2">
-        {[`${miles(manual.palabras)} palabras${diferenciaDeHoy(sello)}`, cambiado].map((s) => (
+        {[`${miles(manual.palabras)} palabras${diferenciaDeHoy(sello)}`, cambiado].map((s, n) => (
           <span
             key={s}
             className="px-2.5 py-0.5 whitespace-nowrap"
             style={{
-              background: C.ink,
-              color: C.goldClaro,
-              border: `1px solid ${C.gold}`,
+              // El de palabras, en rojo si hay que repasar: que se vea sin buscarlo.
+              background: n === 0 && hayQueRepasar(sello) ? C.peligro : C.ink,
+              color: n === 0 && hayQueRepasar(sello) ? C.paper : C.goldClaro,
+              border: `1px solid ${n === 0 && hayQueRepasar(sello) ? C.peligro : C.gold}`,
               borderRadius: R.redondo,
               fontSize: T.pequeno,
             }}

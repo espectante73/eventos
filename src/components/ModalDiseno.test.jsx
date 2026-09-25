@@ -54,6 +54,12 @@ describe("el sello dice lo que cambió HOY", () => {
   it("si bajó: hoy −18", () => {
     expect(diferenciaDeHoy({ ...sello, palabras: 4515 }, new Date("2026-09-25T08:00:00Z"))).toBe(" (hoy −18)");
   });
+  it("si crece más de 150 en el día: «· repasar»", () => {
+    expect(diferenciaDeHoy({ ...sello, palabras: 4713 }, new Date("2026-09-25T20:00:00Z"))).toBe(" (hoy +180) · repasar");
+  });
+  it("encoger mucho no es alarma", () => {
+    expect(diferenciaDeHoy({ ...sello, palabras: 4000 }, new Date("2026-09-25T20:00:00Z"))).toBe(" (hoy −533)");
+  });
   it("otro día, o sin cambio, no sale nada", () => {
     expect(diferenciaDeHoy(sello, new Date("2026-09-26T09:00:00Z"))).toBe("");
     expect(diferenciaDeHoy({ ...sello, palabrasInicioDia: 4557 }, new Date("2026-09-25T09:00:00Z"))).toBe("");

@@ -30,6 +30,8 @@ const ModalDiseno = lazy(() => import("./ModalDiseno"));
 import { CampoContrasena } from "./CampoContrasena";
 import { URL_REGISTRO_ERRORES } from "../constants";
 import { useMano, MANO } from "../lib/mano";
+import { hayQueRepasar } from "../lib/manual";
+import selloManual from "../lib/manual-sello.json";
 
 // `onCerrarSesion`/`enlaceTablon`: antes eran botones sueltos junto a
 // este en la cabecera de Portada.jsx -- a petición del usuario,
@@ -289,6 +291,16 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                   title="Leer el documento con el que se construye la app"
                 >
                   <BookOpen {...ICONO} /> Diseño app
+                  {/* Puntito rojo si el documento creció tanto hoy que toca
+                      repasarlo (lib/manual.js): el aviso sale aquí, sin
+                      tener que abrir la ventana para verlo. */}
+                  {hayQueRepasar(selloManual) && (
+                    <span
+                      aria-label="Hay que repasar el documento"
+                      className="rounded-full"
+                      style={{ width: 8, height: 8, background: C.peligro, marginLeft: 4 }}
+                    />
+                  )}
                 </button>
               )}
               {/* ⚠️ Aquí había un botón "Código app" y se quitó el
