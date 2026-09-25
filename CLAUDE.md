@@ -264,7 +264,9 @@ en la sección que se indica entre paréntesis.
 5. **Los textos de ayuda, al pie de la ventana y plegados** (`<details>`),
    no en medio de los botones ni del formulario.
 6. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
-   protagonista y lo demás se esconde.
+   protagonista y lo demás se esconde. Y todo panel que se abre tiene su
+   **salida ARRIBA y a la vista**, y salir deja la pantalla como estaba
+   (la Revisión dejaba la lista filtrada para siempre).
 7. **Tablas y listas: una sola línea por fila**, todas de la misma
    altura; si no cabe, se ensancha o se recorta, nunca dos líneas. Y los
    anchos de las columnas van **fijos y definidos una sola vez**: cada
@@ -343,8 +345,7 @@ en la sección que se indica entre paréntesis.
        eso ni "juntarlos";
     8. y la regla lleva sus pruebas automáticas.
     Ante un dato nuevo: **¿debería ir junto con el de alguien más?**
-    («Una familia no se separa en las mesas», «El año de boda,
-    compartido entre los cónyuges»)
+    («El año de boda, compartido entre los cónyuges»)
 
 17. **Los valores del acabado salen de `theme.js`, nunca a mano.** Tamaño
     de letra (`T`), redondeo (`R`), sombra (`S`) y transparencia (`OP`).
@@ -958,6 +959,10 @@ final. El orden de hoy lo vigila `supabase/schema.test.js`; lo que el
 test no puede prever es una tabla o una clave nueva: al añadirla,
 repasar `restaurar_foto`.
 
+⚠️ **Una columna nueva va SIN `not null`**: una foto guardada antes de
+existir la trae vacía, `jsonb_populate_recordset` pone NULL y reponerla
+fallaría. La app trata el vacío como "ninguno".
+
 ### 2.8 "Autorizo expresamente a que guarden mis datos"
 
 ⚠️ **La nota de privacidad manda sobre el código**: la casilla existe
@@ -987,65 +992,7 @@ apuntando a nada, y en un terminal nuevo no había `node` ni `npm`. Al
 terminar, dejar el `default` como estaba (hoy `v24.18.1`; se mira con
 `nvm alias default`).
 
-### 2.11 Una familia no se separa en las mesas (2026-09-19, v37)
-
-- `lib/mesas.js` es la única definición. `claveFamiliaMesa` = grupo
-  familiar o, si está vacío, el apellido: la MISMA que ya usaba el
-  "Auto-asignar", que ahora la importa en vez de tener su copia.
-- `asignarMesaConSuFamilia`: poner la mesa a uno la pone a toda su familia
-  CONFIRMADA; quitarla, la quita a todos. Si no caben todos, no se sienta
-  a nadie y se avisa ("son 4 y solo quedan 2 sitios"). Los no confirmados
-  se quedan sin mesa (la mesa es sitio real).
-- `confirmarConSuFamilia`: al confirmar a alguien cuya familia ya está en
-  una mesa, se sienta con ella si cabe; si no, se confirma igual, sin mesa,
-  y se avisa. Desconfirmar no toca ninguna mesa.
-- Los avisos salen con `preguntar({ soloAviso: true })`, en medio de la
-  pantalla: el aviso de arriba de la lista no se ve desde la fila 100.
-- La Revisión gana "Familia repartida en varias mesas", para lo que se
-  repartió a mano antes de la regla.
-- v37.1: y "Matrimonio con uno confirmado y el otro no" (la O y la A son
-  solo para quien viene con su pareja). El aviso de "colaboradores
-  distintos" que se le propuso lo RECHAZÓ el usuario: ver la norma 16.
-- v37.2: "Colaboradores fuera del reparto (10 a 12 invitados)", tipo
-  pendiente. `INVITADOS_POR_COLABORADOR` en `revisionInvitados.js` es la
-  única cifra. Cuenta TODOS los asignados (confirmados o no), y no avisa
-  de quien tiene 0 (el desarrollador, dado de alta solo para ver el
-  código, o un reparto sin empezar). Cada botón del hallazgo es un
-  colaborador ("Ana: 14") que filtra la lista por él: un hallazgo puede
-  traer `etiqueta` y `filtros` propios, y `InformeInvitados`/`onBuscar`
-  los usan si vienen.
-- v37.3: el usuario no podía SALIR de la Revisión: tocar el título solo la
-  plegaba (y al tocarlo otra vez se abría), y el único "Cerrar" estaba al
-  final de todos los avisos. Ahora "Cerrar" va en la fila del título, del
-  lado del pulgar. Y al cerrar, la lista vuelve a los filtros que tenía
-  al abrir la Revisión (`filtrosAntesDeRevision` en SeccionInvitados): un
-  nombre pulsado en el informe la dejaba filtrada para siempre. También
-  si se cierra la ventana de la lista con la Revisión abierta.
-  ⚠️ Lección general: todo panel que se abre tiene que tener su salida
-  ARRIBA y a la vista, y salir deja la pantalla como estaba.
-- v37.4: **excepciones**. El caso real: una madre con S dentro del grupo
-  Gatell01 de su hija, a propósito, para sentarse juntas; la Revisión lo
-  daba por error sin dejar aceptarlo. El usuario quiere que SIGA avisando
-  ("en líneas generales esto sería un error") pero poder dar por bueno
-  ESE caso. Se guarda en el propio invitado: `invitados.excepcionesRevision`
-  (jsonb, lista de claves de aviso aceptadas). `revisarConExcepciones`
-  devuelve los avisos sin las aceptadas y la lista de aceptadas; la
-  Revisión pone "Excepción" junto a cada nombre (pregunta antes) y, al
-  pie y plegado, "Excepciones permitidas" con su X para quitarlas. Solo
-  para invitados: los colaboradores del reparto no llevan el botón.
-  ⚠️ La columna es SIN "not null" a propósito: una foto de Deshacer o del
-  Modo Pruebas anterior a la columna la trae vacía, y con "not null"
-  reponerla fallaría (`jsonb_populate_recordset` pone NULL en lo que falta).
-  Lo mismo aplica a cualquier columna nueva que se añada.
-  SQL: `alter table` + la función `anfitrion_guardar_invitados` con la
-  columna (dado al usuario el 2026-09-19). Sin ese SQL, la excepción se
-  pierde al recargar. **Ejecutado y probado por el usuario el mismo
-  día**: la excepción de Gatell01 se guarda y sigue tras recargar.
-- ⚠️ El desplegable de mesa sigue desactivando solo las mesas llenas para
-  UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
-  al elegirla, sale el aviso y no se mueve nadie.
-
-### 2.12 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
+### 2.11 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
 
 El usuario lo probó en su iPhone: ni sonido ni vibración.
 - **Vibración**: el truco de pulsar un `<input switch>` escondido DESDE EL
@@ -1081,7 +1028,7 @@ elección de mano, la X de quitar con su pregunta y los avisos. Es decir,
 la técnica del interruptor SÍ funciona en su iOS: no volver al truco de
 pulsarlo desde el código.
 
-### 2.13 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
+### 2.12 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
 
 ⚠️ **La ventana de Música NO se trocea, a propósito**: se abre en el
 local con un wifi desconocido y no puede quedarse descargando delante de
@@ -1093,13 +1040,13 @@ abierta de antes pide trozos con nombres que ya no existen. `main.jsx`
 escucha `vite:preloadError` y recarga UNA vez (marca en sessionStorage
 para no entrar en bucle si el fallo es otro, como estar sin conexión).
 
-### 2.14 Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
+### 2.13 Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
 
 ⚠️ La foto se guarda **antes** de la acción, y si falla no se toca nada.
 Al revés (como estaba con la descarga) el reinicio podía ejecutarse igual
 aunque la copia no llegara a existir.
 
-### 2.15 `schema.sql` reescrito desde cero (2026-09-16)
+### 2.14 `schema.sql` reescrito desde cero (2026-09-16)
 
 ⚠️ Regla que sustituye a la de antes: **no se añade nada al final de
 `schema.sql`**. Si cambia una función, se cambia en su sitio. Si cambia
@@ -1111,7 +1058,7 @@ contenedor de la tabla (`tablaRef`): si las columnas se ahogan, el texto
 se recorta antes de tiempo y la tabla se vuelve ilegible aunque
 técnicamente cumpla la regla.
 
-### 2.16 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
+### 2.15 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
 
 ⚠️ **Regla nueva: al añadir una columna a una tabla abierta a `anon`,
 releer la política de esa tabla en el mismo cambio.** No basta con que
@@ -1127,7 +1074,7 @@ del código, que dio la firma por buena**. Sin Postgres local ni
 credenciales de escritura, esa llamada anónima es la única red que hay:
 hacerla siempre antes de desplegar el cliente.
 
-### 2.17 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
+### 2.16 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
 
 ⚠️ Dónde vive esa pantalla, que Supabase la ha movido: **Authentication →
 Emails → SMTP**, o sea `/dashboard/project/<ref>/auth/smtp`. El viejo
