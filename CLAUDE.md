@@ -962,25 +962,16 @@ dice en rojo, y es lo único). Porqués en `textos/nota-privacidad-tablon.md`.
 autorización habla de "mis datos", y ante la duda una foto se borra.
 Cambiarlo es decisión suya, no un descuido que arreglar.
 
-### 2.9 "Todavía no hay fecha confirmada" (2026-09-21, v39)
+### 2.9 "Todavía no hay fecha confirmada"
 
-⚠️ **A propósito NO borra la fecha escrita**, aunque él dijo "anule la
-fecha". Dos motivos, los dos reales:
-- el **año** se sigue usando para calcular los aniversarios de los 48
-  matrimonios (`anioDelEvento`); borrarlo vaciaría esa columna entera;
-- si mañana se confirma ese mismo día, no hay que volver a teclearlo.
-Lo que hace la casilla es dejar de **enseñarla**. El formulario lo dice
-en voz alta cuando está marcada, para que no parezca que se ha perdido.
+⚠️ **La casilla NO borra la fecha escrita, solo deja de enseñarla**: el
+año se sigue usando para los aniversarios (`anioDelEvento`), y si se
+confirma ese mismo día no hay que volver a teclearlo.
 
-⚠️ **`VistaTablon.jsx` sigue respetando `tablonOcultarFecha`, y eso NO es
-un resto que quitar sin pensarlo.** Se puso para cubrir la ventana entre
-el despliegue y el SQL, pero se queda por un motivo mejor: **una foto de
-Deshacer o de Modo Pruebas anterior a la migración** trae
-`tablonOcultarFecha = true` y `fechaSinConfirmar` vacío. Al restaurarla,
-sin esa línea, la fecha provisional se les escaparía a los invitados sin
-que nadie se entere. Es el mismo tipo de trampa que las columnas nuevas
-NOT NULL rompiendo restauraciones antiguas. Quitarlo solo cuando ya no
-quede ninguna foto vieja.
+⚠️ `VistaTablon.jsx` sigue respetando `tablonOcultarFecha` y **no es un
+resto que quitar**: una foto de Deshacer o de Modo Pruebas anterior la
+trae, y sin esa línea la fecha provisional se les escaparía a los
+invitados. Lo vigila `reglas-del-proyecto.test.js`.
 
 ### 2.10 Dos clases de permiso, no una (2026-09-21, v38.5)
 
