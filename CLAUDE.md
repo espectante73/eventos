@@ -900,48 +900,17 @@ fotos desde que se crearon. Se pregunta a través de `es_anfitrion()`,
 y se prueba una subida real antes de darla por buena. Lo vigila
 `supabase/schema.test.js`.
 
-### 2.4 2026-08-25 (novena tanda): pregunta de acceso al tablón (v6.7)
+### 2.4 Dos que borraban o fallaban en silencio al guardar
 
-**Tercer bug real de la misma tanda: el propio guardado borraba lo que
-se estaba escribiendo al lado.** El usuario lo describió bien una vez
-se le pidió explicarlo despacio: "el guardado automático nos traiciona,
-al saltar de la ventana pregunta a la de respuesta guarda pero no me
-da tiempo a escribir la respuesta". Causa: `pregunta`/`respuesta`
-(y también `enlaceWhatsapp`, mismo patrón) se inicializaban con
-`useState(prop)` PERO además llevaban un `useEffect` que los
-volvía a copiar cada vez que la prop cambiaba. Secuencia real: se sale
-del campo "pregunta" (onBlur) → se guarda con la `respuesta` de ESE
-momento (la vieja, antes de tocarla) → eso actualiza `data` en el hook
-→ `VistaAnfitrion.jsx` repinta la ventana entera (mismo mecanismo de
-`actualizar()` de siempre) → el `useEffect` de sincronización se
-dispara con la prop ya actualizada → sobrescribe el campo "respuesta"
-justo cuando la persona empezaba a teclear en él. Arreglado quitando
-esos `useEffect` de sincronización sin más: se inicializan una sola
-vez al montar y se guardan al salir del campo (`onBlur`), igual que ya
-hacía `NovedadCard` sin este problema. **Lección para cualquier campo
-de texto nuevo dentro de esta ventana (o de cualquier otra que se
-repinte a sí misma tras guardar): NUNCA "recopiar desde la prop" con un
-`useEffect` en cada cambio -- inicializar solo al montar** (con
-`useState(prop)`, sin más), o el propio guardado puede acabar
-borrando lo que la persona esté escribiendo al lado.
+⚠️ **Un campo de texto nunca se vuelve a copiar de su prop con un
+`useEffect`**: se inicializa una vez al montar (`useState(prop)`) y se
+guarda al salir del campo. Si no, el propio guardado repinta la
+ventana y borra lo que se está escribiendo al lado. (Pasó en la
+pregunta y la respuesta del tablón.)
 
-**Cuarto bug de la misma tanda -- este sí de fondo, no de la ventana
-emergente: `anfitrion_guardar_pregunta_tablon` fallaba SIEMPRE.**
-Confirmado probando la función directamente por `curl` (con un token
-falso, para comprobar solo que existe sin necesitar el de verdad): la
-función SÍ existía (la migración se había pegado bien), así que el
-fallo tenía que estar dentro de su propio cuerpo. Causa: su
-`update tablon_secreto set ...` no llevaba `WHERE` -- y este proyecto
-tiene activada la protección real contra `UPDATE`/`DELETE` sin filtro
-(ver la regla "Supabase exige WHERE en todo UPDATE/DELETE" más arriba
-en este mismo archivo, ya documentada desde el 2026-08-12 por el mismo
-motivo en las funciones de Modo Pruebas) -- se me olvidó aplicarla
-aquí. Arreglado añadiendo `where true` (mismo criterio que el resto de
-funciones de esta app que tocan una tabla entera a propósito).
-**Lección que ya estaba escrita y aun así se repitió: cualquier
-`UPDATE`/`DELETE` nuevo sin una condición real por columna necesita
-`where true` desde el principio, no esperar a que falle en
-producción.**
+⚠️ **Todo UPDATE/DELETE lleva WHERE**; para la tabla entera, `where
+true`. Supabase rechaza los que no lo llevan. Lo vigila
+`supabase/schema.test.js`.
 
 ### 2.5 Ventana "Aniversarios" y las fotos fuera de la base (2026-09-17, v30)
 

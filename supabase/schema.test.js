@@ -90,6 +90,26 @@ describe("nada abierto a escritura anónima", () => {
   });
 });
 
+describe("todo UPDATE y DELETE lleva WHERE", () => {
+  // Supabase rechaza un UPDATE/DELETE sin filtro. La función de la
+  // pregunta del tablón fallaba SIEMPRE por eso. Si de verdad se quiere
+  // tocar la tabla entera, se escribe \`where true\`, a propósito.
+  const sentencias = (texto) =>
+    [...texto.replace(/--[^\n]*/g, "").matchAll(/\b(?:update\s+(?:public\.)?"?\w+"?\s+set\b|delete\s+from\s+\S+)[^;]*;/gi)].map((m) => m[0]);
+  const sinWhere = (texto) => sentencias(texto).filter((t) => !/\bwhere\b/i.test(t));
+
+  it("en schema.sql no hay ninguno sin WHERE", () => {
+    expect(sentencias(sql).length).toBeGreaterThan(20);
+    expect(sinWhere(sql)).toEqual([]);
+  });
+
+  it("el guardia caza uno sin WHERE (y deja pasar el que lo lleva)", () => {
+    expect(sinWhere("update tablon_secreto set pregunta = 'x';")).toHaveLength(1);
+    expect(sinWhere("update tablon_secreto set pregunta = 'x' where true;")).toHaveLength(0);
+    expect(sinWhere("insert into t values (1) on conflict (id) do update set a = 1;")).toHaveLength(0);
+  });
+});
+
 describe("una política nunca mira una tabla cerrada a pelo", () => {
   // Los cajones de fotos llevaron vacíos desde que se crearon: sus
   // políticas consultaban directamente una tabla cerrada, y eso falla en
