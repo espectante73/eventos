@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { partirManual, bloques, trozosEnLinea, contarPalabras } from "./manual";
+import { partirManual, bloques, trozosEnLinea, contarPalabras, contarReglas } from "./manual";
 import { huellaDe } from "../../scripts/huellaManual.mjs";
 import sello from "./manual-sello.json";
 
@@ -175,5 +175,37 @@ describe("las listas de dentro, todas iguales", () => {
 
   it("sin párrafo suelto después de la lista", () => {
     expect(puntos.filter((i) => i.despues).map((i) => `${i.num}: ${i.despues.slice(0, 40)}`)).toEqual([]);
+  });
+});
+
+// Las reglas de la PARTE 1 van numeradas dentro de su sección, del 1
+// seguido (norma de escritura 6): así se citan ("1.6, regla 3") y la app
+// las cuenta. La 1.12 no son reglas, sino cosas en espera: van con viñetas.
+describe("las reglas de la PARTE 1, numeradas y contadas", () => {
+  const manual = partirManual(readFileSync("CLAUDE.md", "utf-8"));
+  const [parte1] = manual.partes;
+
+  it("cuenta los puntos numerados, no las viñetas", () => {
+    expect(contarReglas("1. **Una.**\n   - detalle\n2. **Dos.**\n\n- en espera")).toBe(2);
+  });
+
+  it("cada sección tiene reglas, salvo «Lo que está esperando»", () => {
+    const sinReglas = parte1.secciones.filter((s) => contarReglas(s.texto) === 0).map((s) => s.num);
+    expect(sinReglas).toEqual(["1.12"]);
+  });
+
+  it("dentro de cada sección van del 1 seguido, aunque haya código en medio", () => {
+    for (const s of parte1.secciones) {
+      let siguiente = 1;
+      for (const b of bloques(s.texto).filter((x) => x.tipo === "ol")) {
+        expect(b.inicio, `${s.num}: esperaba la regla ${siguiente}`).toBe(siguiente);
+        siguiente += b.items.length;
+      }
+    }
+  });
+
+  it("el total de la PARTE 1 es la suma de sus secciones", () => {
+    expect(parte1.reglas).toBe(parte1.secciones.reduce((s, x) => s + contarReglas(x.texto), 0));
+    expect(parte1.reglas).toBeGreaterThan(40);
   });
 });

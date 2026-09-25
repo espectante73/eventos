@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "45.10",
+    cambios: [
+      "Diseño app: las reglas de la Parte 1 van numeradas dentro de cada sección (se puede citar \"1.6, regla 3\"), y la app las cuenta: \"PARTE 1 — 12 secciones\" y debajo \"63 reglas que hay que obedecer siempre\".",
+    ],
+  },
+  {
     version: "45.9",
     cambios: [
       "Diseño app: el título de cada parte lleva la cifra dentro y todo en una línea: \"PARTE 1 — 12 secciones de reglas que hay que obedecer siempre · 3284 palabras\" y \"PARTE 2 — 10 trampas ya pagadas · 759 palabras\".",

@@ -18,7 +18,8 @@ describe("Diseño app", () => {
     expect(html).toContain("2026");
     expect(html).toContain("PARTE 1");
     expect(html).toContain("PARTE 2");
-    expect(html).toMatch(/PARTE 1 — \d+ secciones de reglas que hay que obedecer siempre/);
+    expect(html).toMatch(/PARTE 1 — \d+ secciones/);
+    expect(html).toMatch(/\d+ reglas que hay que obedecer siempre/);
     expect(html).toMatch(/PARTE 2 — \d+ trampas ya pagadas/);
     expect(html).toMatch(/· [\d.]+ palabras/);
     expect(seccion("1.1 ")).toBeTruthy();

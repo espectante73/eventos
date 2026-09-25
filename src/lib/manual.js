@@ -25,6 +25,15 @@ function trocear(texto, patron) {
   });
 }
 
+// Las reglas de una sección son sus puntos NUMERADOS de primer nivel
+// (norma de escritura 6 del encabezado). Las viñetas no cuentan: son
+// detalle de una regla, o cosas en espera (la 1.12).
+export function contarReglas(texto) {
+  return bloques(texto)
+    .filter((b) => b.tipo === "ol")
+    .reduce((s, b) => s + b.items.length, 0);
+}
+
 // El documento tiene tres trozos: el encabezado (cómo está ordenado), la
 // PARTE 1 (reglas, secciones "## 1.N") y la PARTE 2 (trampas, "### 2.N").
 export function partirManual(texto) {
@@ -41,7 +50,11 @@ export function partirManual(texto) {
   const partes = [
     { titulo: titulo(p1), secciones: trocear(p1, /^## (1\.\d+) (.+)$/gm) },
     { titulo: titulo(p2), secciones: trocear(p2, /^### (2\.\d+) (.+)$/gm) },
-  ].map((p) => ({ ...p, palabras: p.secciones.reduce((s, x) => s + x.palabras, 0) }));
+  ].map((p) => ({
+    ...p,
+    palabras: p.secciones.reduce((s, x) => s + x.palabras, 0),
+    reglas: p.secciones.reduce((s, x) => s + contarReglas(x.texto), 0),
+  }));
   return {
     encabezado: {
       texto: encabezado.split("\n").slice(1).join("\n").replace(/\n=+\s*$/, "").trimEnd(),

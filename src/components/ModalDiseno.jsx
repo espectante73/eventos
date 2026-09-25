@@ -20,14 +20,15 @@ import sello from "../lib/manual-sello.json";
 const manual = partirManual(textoDiseno);
 const miles = (n) => n.toLocaleString("es-ES");
 
-// "PARTE 1 — Reglas que…" → "PARTE 1 — 12 secciones de reglas que…";
-// "PARTE 2 — Trampas ya pagadas" → "PARTE 2 — 10 trampas ya pagadas".
-// En la Parte 1 cada sección agrupa varias reglas: "12 reglas" sería falso.
-function tituloConCifra(parte) {
+// La Parte 1, en dos líneas: "PARTE 1 — 12 secciones" y debajo "63
+// reglas que hay que obedecer siempre" (él, v46). La Parte 2, en una:
+// "PARTE 2 — 10 trampas ya pagadas". Las cifras se cuentan solas.
+function cabeceraDeParte(parte) {
   const [cabeza, resto = ""] = parte.titulo.split(" — ");
   const nombre = resto.charAt(0).toLowerCase() + resto.slice(1);
   const n = parte.secciones.length;
-  return `${cabeza} — ${n} ${nombre.startsWith("trampas") ? "" : "secciones de "}${nombre}`;
+  if (nombre.startsWith("trampas")) return { titulo: `${cabeza} — ${n} ${nombre}`, debajo: null };
+  return { titulo: `${cabeza} — ${n} secciones`, debajo: `${parte.reglas} ${nombre}` };
 }
 
 // La hora del último cambio del documento, en hora de Canarias. Sale de
@@ -147,15 +148,19 @@ export default function ModalDiseno({ onCerrar }) {
         </SeccionPlegable>
         {manual.partes.map((parte) => (
           <div key={parte.titulo} className="flex flex-col gap-2">
-            {/* Todo en una línea, con la cifra dentro del título: "PARTE 1 —
-                12 secciones de reglas…", "PARTE 2 — 10 trampas ya pagadas".
-                Antes "12 · 3284" se leía como una sola cifra. */}
-            <p className="mt-3" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600, fontSize: T.normal }}>
-              {tituloConCifra(parte)}
-              <span className="ml-2 text-xs" style={{ fontFamily: "inherit", color: C.charcoal, opacity: OP.secundario, fontWeight: 400 }}>
-                · {miles(parte.palabras)} palabras
-              </span>
-            </p>
+            <div className="mt-3">
+              <p style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600, fontSize: T.normal }}>
+                {cabeceraDeParte(parte).titulo}
+                <span className="ml-2 text-xs" style={{ fontFamily: "inherit", color: C.charcoal, opacity: OP.secundario, fontWeight: 400 }}>
+                  · {miles(parte.palabras)} palabras
+                </span>
+              </p>
+              {cabeceraDeParte(parte).debajo && (
+                <p style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontSize: T.normal }}>
+                  {cabeceraDeParte(parte).debajo}
+                </p>
+              )}
+            </div>
             {parte.secciones.map((s) => (
               <SeccionPlegable
                 key={s.num}

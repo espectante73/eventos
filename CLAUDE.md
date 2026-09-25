@@ -66,6 +66,9 @@ relato.**
 4. **Corto**: una trampa, de 3 a 8 líneas. Si crece, se ha colado
    relato.
 5. Al terminar algo, **preguntarse si hace falta escribirlo**.
+6. **En la PARTE 1, cada regla va numerada dentro de su sección**, del 1
+   seguido: así se cita ("1.6, regla 3") y la app las cuenta. Lo que no
+   es una regla (la 1.12) va con viñetas.
 
 ### Las normas también se pudren
 
@@ -233,111 +236,106 @@ paréntesis, dónde está el detalle.
 
 ## 1.3 Cómo está hecha por dentro
 
-**El reparto del código.** Si la lógica de una ventana no la usa nadie
-más, vive entera en su propio fichero bajo `src/vistas/anfitrion/`. Si la
-comparten dos o más, se queda en el cascarón (`VistaAnfitrion.jsx`) y se
-pasa como prop, nunca duplicada.
-
-**El anfitrión ve la pantalla de un colaborador sin ser él**
-(`vistaPrevia` en `App.jsx`): se le pasan los datos que ya tiene
-cargados y `VistaColaborador` los filtra. Las funciones `colaborador_*`
-exigen la sesión de ESE colaborador (`auth.uid()`), así que una nueva no
-necesita ninguna excepción para el anfitrión: para eso está
-`vistaPrevia`.
-
-**El email de un invitado está en dos sitios**: su ficha o, si es
-colaborador, el registro de colaboradores. Siempre con
-`emailDeInvitado()` (`lib/useMotorInvitaciones.js`), nunca con
-`invitado.email` a secas.
-
-### Los avisos pendientes se recalculan solos
-
-**Leer lo que la app TIENE, no registrar lo que HACE.** `avisoPendiente`
-e `invitacionEnviada` los recalculan dos triggers de `invitados`
-(`trg_recalcular_aviso_pendiente`, `trg_invalidar_invitacion_familia`).
-Ninguna función los pone a mano, salvo estas:
-
-- `anfitrion_avisar_colaborador`: el "ya avisé" de verdad.
-- `anfitrion_resetear_avisos`: los vuelve a encender para repetir una
-  prueba.
-- Las funciones en que el COLABORADOR cambia sus propios datos
-  (`colaborador_guardar_invitado`, `colaborador_marcar_pagado`…) llaman
-  antes a `set_config('eventos.recalculo_aviso_activo', 'off', true)`,
-  para no avisarle de su propio cambio. Una nueva de ese tipo, también.
-
-### Un reinicio nuevo
-
-- Por `id` de invitado explícito y acotado (modelo:
-  `anfitrion_resetear_por_invitados`).
-- `avisoPendiente` solo se apaga si la categoría desasigna al
-  colaborador; en las demás vuelve a `("colaboradorId" is not null)`,
-  para poder repetir una prueba sin reasignar.
-- Palabra de confirmación exacta, y la foto del Deshacer ANTES (lo
-  vigila `reglas-del-proyecto.test.js`).
-- "Invitación enviada" y "foto familiar" son **por familia**: con
-  alcance "un invitado" no aplican.
+1. **El reparto del código.** Si la lógica de una ventana no la usa nadie
+   más, vive entera en su propio fichero bajo `src/vistas/anfitrion/`. Si
+   la comparten dos o más, se queda en el cascarón (`VistaAnfitrion.jsx`)
+   y se pasa como prop, nunca duplicada.
+2. **El anfitrión ve la pantalla de un colaborador sin ser él**
+   (`vistaPrevia` en `App.jsx`): se le pasan los datos que ya tiene
+   cargados y `VistaColaborador` los filtra. Las funciones `colaborador_*`
+   exigen la sesión de ESE colaborador (`auth.uid()`), así que una nueva
+   no necesita ninguna excepción para el anfitrión.
+3. **El email de un invitado está en dos sitios**: su ficha o, si es
+   colaborador, el registro de colaboradores. Siempre con
+   `emailDeInvitado()` (`lib/useMotorInvitaciones.js`), nunca con
+   `invitado.email` a secas.
+4. **Los avisos pendientes se recalculan solos: leer lo que la app TIENE,
+   no registrar lo que HACE.** `avisoPendiente` e `invitacionEnviada` los
+   recalculan dos triggers de `invitados` (`trg_recalcular_aviso_pendiente`,
+   `trg_invalidar_invitacion_familia`). Ninguna función los pone a mano,
+   salvo estas:
+   - `anfitrion_avisar_colaborador`: el "ya avisé" de verdad.
+   - `anfitrion_resetear_avisos`: los vuelve a encender para repetir una
+     prueba.
+   - Las funciones en que el COLABORADOR cambia sus propios datos
+     (`colaborador_guardar_invitado`, `colaborador_marcar_pagado`…) llaman
+     antes a `set_config('eventos.recalculo_aviso_activo', 'off', true)`,
+     para no avisarle de su propio cambio. Una nueva de ese tipo, también.
+5. **Un reinicio nuevo:**
+   - por `id` de invitado explícito y acotado (modelo:
+     `anfitrion_resetear_por_invitados`);
+   - `avisoPendiente` solo se apaga si la categoría desasigna al
+     colaborador; en las demás vuelve a `("colaboradorId" is not null)`,
+     para poder repetir una prueba sin reasignar;
+   - palabra de confirmación exacta, y la foto del Deshacer ANTES (lo
+     vigila `reglas-del-proyecto.test.js`);
+   - "invitación enviada" y "foto familiar" son **por familia**: con
+     alcance "un invitado" no aplican.
 
 ## 1.4 El pulgar: la regla y cómo funciona
 
-**Todo lo pulsable que se ponga a un lado lleva SIEMPRE su espejo
-`zurdo:`** en el mismo cambio (`justify-end zurdo:justify-start`,
-`items-end zurdo:items-start`, `zurdo:flex-row-reverse` en filas de
-varios botones). Sin él, la elección de esa persona no se aplica. Lo
-vigilan `reglas-del-proyecto.test.js` y `mano.test.js`; cómo funciona,
+Lo vigilan `reglas-del-proyecto.test.js` y `mano.test.js`; cómo funciona,
 en la cabecera de `lib/mano.js`.
 
-⚠️ Lo que ningún test caza: **un pulsable suelto que no se alinea a
-ningún lado**. Hay que envolverlo: `<div className="flex justify-end
-zurdo:justify-start">`.
-
-⚠️ **Lo que NO se invierte, a propósito**: el mando de la música (con él
-invertido, "atrás" quedaría a la derecha de "adelante"), la X de cerrar
-de las ventanas, las filas de las listas (el check de llegada, las
-papeleras) y las filas alineadas abajo (`items-end` en una fila es
-alinear abajo, no a la derecha).
+1. **Todo lo pulsable que se ponga a un lado lleva SIEMPRE su espejo
+   `zurdo:`** en el mismo cambio (`justify-end zurdo:justify-start`,
+   `items-end zurdo:items-start`, `zurdo:flex-row-reverse` en filas de
+   varios botones). Sin él, la elección de esa persona no se aplica.
+2. **Un pulsable suelto que no se alinea a ningún lado se envuelve**:
+   `<div className="flex justify-end zurdo:justify-start">`. Esto no lo
+   caza ningún test.
+3. **Lo que NO se invierte, a propósito**: el mando de la música (con él
+   invertido, "atrás" quedaría a la derecha de "adelante"), la X de cerrar
+   de las ventanas, las filas de las listas (el check de llegada, las
+   papeleras) y las filas alineadas abajo (`items-end` en una fila es
+   alinear abajo, no a la derecha).
 
 ## 1.5 Cómo se le habla al invitado: tú y USTEDES, nunca vosotros
 
-Español de Canarias, en todo lo que lee un invitado o un colaborador:
-- Singular **tú** ("tus datos"); plural **ustedes / les / su**
-  ("sentarles", "sus fotos").
-- ❌ Nunca vosotros, vuestro, -áis, -éis, os.
-- **Tilde**, no "acento", cuando se habla de lo que alguien escribe.
-- Las plantillas guardadas en la base son suyas: se le avisa, no se tocan.
+Español de Canarias, en todo lo que lee un invitado o un colaborador. Lo
+vigila `reglas-del-proyecto.test.js`.
 
-Lo vigila `reglas-del-proyecto.test.js`.
+1. **Singular tú** ("tus datos"); **plural ustedes / les / su**
+   ("sentarles", "sus fotos").
+2. ❌ **Nunca vosotros**, vuestro, -áis, -éis, os.
+3. **Tilde**, no "acento", cuando se habla de lo que alguien escribe.
+4. **Las plantillas guardadas en la base son suyas**: se le avisa, no se
+   tocan.
 
 ## 1.6 El SQL que se le pasa
 
-Yo no ejecuto SQL: se le da como texto y él lo ejecuta en una **pestaña
-NUEVA** del editor de Supabase (una reutilizada puede llevar debajo un
-`create or replace` viejo que se vuelve a ejecutar).
-
-- **Cada bloque termina apuntándose** en `migraciones_aplicadas`:
-  `schema.sql` dice cómo debería ser la base, no qué ha ejecutado él. Un
-  bloque sin su línea deja el registro mintiendo.
-- **Cambiar los parámetros de una función que ya existe**: antes del
-  `create or replace`, `drop function if exists nombre(tipos, viejos)`
-  con la firma anterior exacta.
-- **Una función nueva que dependa de `auth.uid()` lleva `revoke execute
-  ... from public`**: Postgres da permiso de ejecución a todos por
-  defecto. `schema.sql` no guarda estos permisos, así que el `revoke` va
-  en el SQL que se le pasa. (`mi_rol` responde sin sesión, aunque
-  vacío.)
-- **Todo UPDATE/DELETE lleva WHERE** (para la tabla entera, `where
-  true`): Supabase rechaza los que no. Y `schema.sql` es un plano: cada
-  cambio en su sitio, nada añadido al final. Lo vigila
-  `supabase/schema.test.js`.
+1. **Yo no ejecuto SQL: se le da como texto, para una pestaña NUEVA** del
+   editor de Supabase. Una reutilizada puede llevar debajo un `create or
+   replace` viejo que se vuelve a ejecutar.
+2. **Cada bloque termina apuntándose** en `migraciones_aplicadas`:
+   `schema.sql` dice cómo debería ser la base, no qué ha ejecutado él. Un
+   bloque sin su línea deja el registro mintiendo.
 
 ```sql
 insert into public.migraciones_aplicadas ("nombre") values ('v40-lo-que-sea')
   on conflict ("nombre") do nothing;
 ```
 
-### Comprobar desde fuera si está subido
-
-Con la clave pública, sin ver ningún dato: la API distingue "no existe"
-de "no tienes permiso".
+3. **Cambiar los parámetros de una función que ya existe**: antes del
+   `create or replace`, `drop function if exists nombre(tipos, viejos)`
+   con la firma anterior exacta.
+4. **Una función nueva que dependa de `auth.uid()` lleva `revoke execute
+   ... from public`**: Postgres da permiso de ejecución a todos por
+   defecto. `schema.sql` no guarda estos permisos, así que el `revoke` va
+   en el SQL que se le pasa. (`mi_rol` responde sin sesión, aunque vacío.)
+5. **Todo UPDATE/DELETE lleva WHERE** (para la tabla entera, `where
+   true`): Supabase rechaza los que no. Y `schema.sql` es un plano: cada
+   cambio en su sitio, nada añadido al final. Lo vigila
+   `supabase/schema.test.js`.
+6. **Comprobar desde fuera si está subido, con la clave pública**, sin
+   ver ningún dato (la API distingue "no existe" de "no tienes permiso"):
+   - `PGRST202` → **no está subido**. `42501` → **está subido**, y el
+     `revoke` funciona.
+   - Una columna: `/rest/v1/<tabla>?select=<columna>&limit=1`. `42703` es
+     que no existe; `42501`, que la tabla no deja leer a `anon`.
+   - Lo aplicado: `GET /rest/v1/migraciones_aplicadas?select=nombre,aplicadaEn&order=aplicadaEn.desc`.
+   - El editor ejecuta el bloque entero en una transacción: si dejó huella
+     la ÚLTIMA sentencia, entró todo.
 
 ```bash
 set -a; . ./.env; set +a          # VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY
@@ -345,18 +343,10 @@ curl -s -X POST "$VITE_SUPABASE_URL/rest/v1/rpc/<funcion>" \
   -H "apikey: $VITE_SUPABASE_ANON_KEY" -H "Content-Type: application/json" -d '{}'
 ```
 
-- `PGRST202` → **no está subido**. `42501` → **está subido**, y el
-  `revoke` funciona.
-- Una columna: `/rest/v1/<tabla>?select=<columna>&limit=1`. `42703` es
-  que no existe; `42501`, que la tabla no deja leer a `anon`.
-- Lo aplicado: `GET /rest/v1/migraciones_aplicadas?select=nombre,aplicadaEn&order=aplicadaEn.desc`.
-- El editor ejecuta el bloque entero en una transacción: si dejó huella
-  la ÚLTIMA sentencia, entró todo.
-- ⚠️ **Antes de desplegar el cliente que usa una función nueva,
-  llamarla así con un token falso.** Sin Postgres local, es la única
-  red.
-
-Para "function is not unique", las firmas que hay de verdad en la base:
+7. **Antes de desplegar el cliente que usa una función nueva, llamarla así
+   con un token falso.** Sin Postgres local, es la única red.
+8. **"function is not unique": mirar las firmas que hay de verdad en la
+   base**, no en el código.
 
 ```sql
 select p.oid::regprocedure as firma
@@ -367,109 +357,103 @@ where p.proname = 'nombre_funcion' and n.nspname = 'public';
 
 ## 1.7 El Deshacer
 
-**Vive en el SERVIDOR, y las copias en JSON están descartadas.** Él lo
-cerró así: *"no puedo restaurar yo... si no me vale para eso, no le veo
-utilidad"*. `foto_de_datos()` y `restaurar_foto()` son los ÚNICOS sitios
-donde se hace la foto y donde se repone; el Modo Pruebas usa esas
-mismas. Solo se guarda la ÚLTIMA foto: lo de anteayer está en el volcado
-diario. `lib/backup.js` y la ventana "Backup" **no se resucitan**; un
-exportar/restaurar de verdad habría que escribirlo desde cero, con todas
-las tablas y conservando los ids.
-
-- **Quedan fuera a propósito**: `historial_texto` y `tablon_accesos` (es
-  historia real), `anfitriones`, `anfitrion_secreto` y `config_secretos`
-  (cuentas y llaves: vaciarlas dejaría a todos fuera) y `tablon_secreto`
-  (la fila lleva también el token).
-- **Restaurar sigue el orden de las claves foráneas**: mesas antes que
-  invitados; invitados sin colaborador y enganchados al final. Una tabla
-  o una clave nueva obliga a repasar `restaurar_foto`.
-- **Una columna nueva va SIN `not null`**: una foto guardada antes de
-  existir la trae vacía, y reponerla fallaría.
-
 Lo vigila `supabase/schema.test.js`.
+
+1. **Vive en el SERVIDOR, y las copias en JSON están descartadas.** Él lo
+   cerró así: *"no puedo restaurar yo... si no me vale para eso, no le veo
+   utilidad"*.
+2. **`foto_de_datos()` y `restaurar_foto()` son los ÚNICOS sitios** donde
+   se hace la foto y donde se repone; el Modo Pruebas usa esas mismas.
+3. **Solo se guarda la ÚLTIMA foto**: lo de anteayer está en el volcado
+   diario.
+4. **`lib/backup.js` y la ventana "Backup" no se resucitan.** Un
+   exportar/restaurar de verdad habría que escribirlo desde cero, con
+   todas las tablas y conservando los ids.
+5. **Quedan fuera a propósito**: `historial_texto` y `tablon_accesos` (es
+   historia real), `anfitriones`, `anfitrion_secreto` y `config_secretos`
+   (cuentas y llaves: vaciarlas dejaría a todos fuera) y `tablon_secreto`
+   (la fila lleva también el token).
+6. **Restaurar sigue el orden de las claves foráneas**: mesas antes que
+   invitados; invitados sin colaborador y enganchados al final. Una tabla o
+   una clave nueva obliga a repasar `restaurar_foto`.
+7. **Una columna nueva va SIN `not null`**: una foto guardada antes de
+   existir la trae vacía, y reponerla fallaría.
 
 ## 1.8 Los correos
 
-- Los de **Supabase Auth** (confirmar cuenta, recuperar contraseña) salen
-  por SMTP propio desde `acceso@mail.nexuspoint.rsvp` (Authentication →
-  Emails → SMTP; comprobar la ruta antes de dársela). El compartido de
-  Supabase tiene un límite muy bajo: si vuelve "email rate limit
-  exceeded", mirar ahí.
-- Su enlace apunta a la **Site URL** (Authentication → URL
-  Configuration): si no es `https://nexuspoint.rsvp`, el enlace no abre.
-  A vigilar si cambia el dominio.
-- **Un aviso que no llega**: mirar primero "Avisos enviados"
-  (`avisos_enviados`) y los logs de Resend, y probar con el botón
-  "Probar" junto al email del colaborador. No dar por roto el código sin
-  descartar la configuración o la plantilla.
-- **Sin confirmar**: si el correo de confirmar cuenta llega ya a
-  Recibidos y no a spam. El de recuperar contraseña, que va por el mismo
-  camino, sí llega; lo probará con un colaborador nuevo. El de
-  invitación siempre llegó bien.
+1. **Los de Supabase Auth** (confirmar cuenta, recuperar contraseña)
+   **salen por SMTP propio** desde `acceso@mail.nexuspoint.rsvp`
+   (Authentication → Emails → SMTP; comprobar la ruta antes de dársela).
+   El compartido de Supabase tiene un límite muy bajo: si vuelve "email
+   rate limit exceeded", mirar ahí.
+2. **Su enlace apunta a la Site URL** (Authentication → URL
+   Configuration): si no es `https://nexuspoint.rsvp`, el enlace no abre.
+   A vigilar si cambia el dominio.
+3. **Un aviso que no llega**: mirar primero "Avisos enviados"
+   (`avisos_enviados`) y los logs de Resend, y probar con el botón
+   "Probar" junto al email del colaborador. No dar por roto el código sin
+   descartar la configuración o la plantilla.
 
 ## 1.9 Backup automático de la base de datos
 
-Cada día, GitHub Actions (`.github/workflows/backup.yml`) hace un volcado
-de la base; también se lanza a mano (Actions → "Run workflow"). Se guarda
-como **artifact** de esa ejecución (90 días), **nunca en un commit**: el
-repositorio es público y la base guarda secretos. Por eso además excluye
-los datos de `config_secretos` y `anfitrion_secreto`. Si el "secret
-scanning" de GitHub bloquea algo, es la señal correcta.
-
-- Necesita el secreto `SUPABASE_DB_URL` con la cadena **"Session
-  pooler"** (la "Direct connection" es solo IPv6 y GitHub no llega).
-- ⚠️ `pg_dump` tiene que ser de versión igual o mayor que el Postgres de
-  Supabase (imagen `postgres:17`). Si falla con "server version
-  mismatch", subir ese número.
+1. **Cada día, GitHub Actions hace un volcado de la base**
+   (`.github/workflows/backup.yml`; también a mano: Actions → "Run
+   workflow"). Se guarda como **artifact** de esa ejecución (90 días),
+   **nunca en un commit**: el repositorio es público y la base guarda
+   secretos. Por eso además excluye los datos de `config_secretos` y
+   `anfitrion_secreto`. Si el "secret scanning" de GitHub bloquea algo, es
+   la señal correcta.
+2. **Necesita el secreto `SUPABASE_DB_URL` con la cadena "Session
+   pooler"**: la "Direct connection" es solo IPv6 y GitHub no llega.
+3. ⚠️ **`pg_dump` tiene que ser de versión igual o mayor que el Postgres
+   de Supabase** (imagen `postgres:17`). Si falla con "server version
+   mismatch", subir ese número.
 
 ## 1.10 Registro de errores con Sentry
 
-Los fallos del móvil de cualquiera llegan a Sentry (región EU, `.de.`
-en la dirección). `lib/registroErrores.js` lo arranca desde `main.jsx`,
-y el `ErrorBoundary` informa. La dirección (`VITE_SENTRY_DSN`) no es
-secreta: está en Vercel y en `.env` (la CLI de Vercel la recibe con
-`--value`, no por stdin).
+Los fallos del móvil de cualquiera llegan a Sentry (región EU, `.de.` en
+la dirección). `lib/registroErrores.js` lo arranca desde `main.jsx`, y el
+`ErrorBoundary` informa. La dirección (`VITE_SENTRY_DSN`) no es secreta:
+está en Vercel y en `.env` (la CLI de Vercel la recibe con `--value`, no
+por stdin).
 
-- ⚠️ **Sin datos de invitados** (decidido con él): `sendDefaultPii:
-  false`, sin grabación ni rendimiento, y `limpiarEvento` quita usuario,
-  cabeceras, cuerpo y **las consultas de las URLs** (el enlace del
-  tablón lleva la llave). Lo vigila `registroErrores.test.js`.
-- ⚠️ **La IP la deduce Sentry en su servidor**: tiene que estar activado
-  en su panel Settings → Security & Privacy → "Prevent Storing of IP
-  Addresses".
-- Pesa +31 KB al abrir, y se aceptó.
-- Los errores se ven con "Errores app" en Mi cuenta (solo anfitrión).
-  Pintarlos dentro de la app exigiría una clave secreta de Sentry en el
-  navegador.
+1. ⚠️ **Sin datos de invitados** (decidido con él): `sendDefaultPii:
+   false`, sin grabación ni rendimiento, y `limpiarEvento` quita usuario,
+   cabeceras, cuerpo y **las consultas de las URLs** (el enlace del tablón
+   lleva la llave). Lo vigila `registroErrores.test.js`.
+2. ⚠️ **La IP la deduce Sentry en su servidor**: tiene que estar activado
+   en su panel Settings → Security & Privacy → "Prevent Storing of IP
+   Addresses".
+3. **Pesa +31 KB al abrir, y se aceptó.**
+4. **Los errores se ven con "Errores app" en Mi cuenta** (solo
+   anfitrión), nunca dentro de la app: exigiría una clave secreta de
+   Sentry en el navegador.
 
 ## 1.11 Por qué es así: decisiones que no se ven en el código
 
-**Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.**
+Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
 
-**Las imágenes viven FUERA de la base**, en los cajones del almacén; en
-la base solo va la ruta. Son ~100 fotos: metidas en una columna, la app
-se las descargaría TODAS en cada apertura, también el día del evento con
-el wifi del local. Vale para cualquier imagen, también la portada y la
-plantilla de invitación. Lo vigila `reglas-del-proyecto.test.js`.
-
-**La ventana "Aniversarios" no es una vista duplicada** (norma 8): no
-reordena la lista, es una zona de TRABAJO para ir cargando ~50 fotos a lo
-largo de semanas. Él descartó las dos alternativas —un panel dentro de
-la celda ("mucho lío") y soltar la carpeta entera de golpe ("tengo que
-escogerla, ubicarla")—. No volver a proponerlas.
-
-**Ninguna tabla abierta a escritura anónima, nunca**: una política de
-lectura pública es `for select`, nunca `for all`. `evento` guarda las
-plantillas de los emails, y reescribirlas desde fuera es decidir lo que
-la app manda a los invitados con el remitente del anfitrión. Lo vigila
-`supabase/schema.test.js`. ⚠️ Lo que el test no ve: **una columna nueva
-en una tabla de lectura pública la lee cualquiera**. Antes de añadirla,
-preguntarse si es privada.
-
-**El versionado: entero = tema nuevo, decimal = ajuste** (38, 38.1,
-38.2… hasta el siguiente tema, que pasa a 39). ⚠️ Se malinterpretó una
-vez y `VERSION_APP` saltó de 7 a 13 en una sesión. **Nunca subir el
-entero por defecto.**
+1. **Las imágenes viven FUERA de la base**, en los cajones del almacén; en
+   la base solo va la ruta. Son ~100 fotos: metidas en una columna, la app
+   se las descargaría TODAS en cada apertura, también el día del evento
+   con el wifi del local. Vale para cualquier imagen, también la portada y
+   la plantilla de invitación. Lo vigila `reglas-del-proyecto.test.js`.
+2. **La ventana "Aniversarios" no es una vista duplicada** (norma 8): no
+   reordena la lista, es una zona de TRABAJO para ir cargando ~50 fotos a
+   lo largo de semanas. Él descartó las dos alternativas —un panel dentro
+   de la celda ("mucho lío") y soltar la carpeta entera de golpe ("tengo
+   que escogerla, ubicarla")—. No volver a proponerlas.
+3. **Ninguna tabla abierta a escritura anónima, nunca**: una política de
+   lectura pública es `for select`, nunca `for all`. `evento` guarda las
+   plantillas de los emails, y reescribirlas desde fuera es decidir lo que
+   la app manda a los invitados con el remitente del anfitrión. Lo vigila
+   `supabase/schema.test.js`. ⚠️ Lo que el test no ve: **una columna nueva
+   en una tabla de lectura pública la lee cualquiera**. Antes de añadirla,
+   preguntarse si es privada.
+4. **El versionado: entero = tema nuevo, decimal = ajuste** (38, 38.1,
+   38.2… hasta el siguiente tema, que pasa a 39). ⚠️ Se malinterpretó una
+   vez y `VERSION_APP` saltó de 7 a 13 en una sesión. **Nunca subir el
+   entero por defecto.**
 
 ## 1.12 Lo que está esperando, y por qué no es un fallo
 
@@ -486,6 +470,10 @@ Cosas que no se mueven **porque no toca**. No ofrecerlas como pendiente.
   bloque (nombre de archivo con ChatGPT) la hará cuando las tenga.
 - **La prueba del local** —la tele, la cortinilla y la música con el
   wifi de allí— es para cerca del evento, y la fecha ni está fijada.
+- **Sin confirmar si el correo de confirmar cuenta llega ya a Recibidos**
+  y no a spam. El de recuperar contraseña, que va por el mismo camino, sí
+  llega; lo probará con un colaborador nuevo. El de invitación siempre
+  llegó bien.
 - **El mapa de la app se queda público** hasta que él lo retome. Si se
   hace privado, el primer paso es suyo: poner privado el repositorio en
   GitHub (Vercel despliega igual; al desarrollador que lo revisa habría
