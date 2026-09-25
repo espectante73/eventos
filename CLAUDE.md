@@ -122,10 +122,9 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
 
 ## 1.2 Normas de estándar de la app
 
-Lo que el usuario ya ha fijado como norma, recogido en una lista a
-petición suya el 2026-09-18. **Repasarla antes de construir o retocar
-cualquier pantalla.** El detalle y el porqué de cada una está más abajo,
-en la sección que se indica entre paréntesis.
+**Repasarlas antes de construir o retocar cualquier pantalla.** Entre
+paréntesis, dónde está el detalle.
+
 1. **"Estandarizar" es con SU modelo.** El estilo que él nombra o el que
    ya está aprobado en esa pantalla; nunca uno elegido por mí. Si no está
    claro cuál es, **preguntar en una línea ANTES de tocar el aspecto**.
