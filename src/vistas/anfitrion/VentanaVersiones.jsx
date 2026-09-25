@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "45.8",
+    cambios: [
+      "Diseño app: bajo el título de cada parte pone ahora \"12 secciones · 3284 palabras\" y \"10 trampas · 759 palabras\", en su propia línea (antes \"12 · 3284\" se leía como una sola cifra). Y el total de arriba es la suma exacta de las partes.",
+    ],
+  },
+  {
     version: "45.7",
     cambios: [
       "Reinicios y Borrado total decían \"se descargará una copia de seguridad\" y \"no se puede deshacer\". Las dos cosas eran falsas desde la v34: ya no se descarga nada, se guarda una copia en el servidor y se puede deshacer con el botón «Deshacer» de la misma ventana.",

@@ -52,6 +52,11 @@ describe("partirManual", () => {
     expect(m.partes[0].secciones[0].palabras).toBe(contarPalabras("## 1.1 Primera\n\nUna regla."));
   });
 
+  it("el total es la suma exacta del encabezado y las partes", () => {
+    const m = partirManual(readFileSync("CLAUDE.md", "utf-8"));
+    expect(m.palabras).toBe(m.encabezado.palabras + m.partes.reduce((s, p) => s + p.palabras, 0));
+  });
+
   it("un texto sin partes no revienta", () => {
     expect(() => partirManual("solo texto")).not.toThrow();
     expect(partirManual("").partes).toEqual([]);

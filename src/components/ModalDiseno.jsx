@@ -137,12 +137,17 @@ export default function ModalDiseno({ onCerrar }) {
         </SeccionPlegable>
         {manual.partes.map((parte) => (
           <div key={parte.titulo} className="flex flex-col gap-2">
-            <p className="mt-3" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600, fontSize: T.normal }}>
-              {parte.titulo}
-              <span className="ml-2 text-xs" style={{ fontFamily: "inherit", color: C.charcoal, opacity: OP.secundario, fontWeight: 400 }}>
-                {parte.secciones.length} · {miles(parte.palabras)} palabras
-              </span>
-            </p>
+            <div className="mt-3">
+              <p style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600, fontSize: T.normal }}>
+                {parte.titulo}
+              </p>
+              {/* En su propia línea y con su nombre: "12 · 3284" junto al
+                  título se leía como una sola cifra. */}
+              <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
+                {parte.secciones.length} {parte.titulo.includes("PARTE 2") ? "trampas" : "secciones"} ·{" "}
+                {miles(parte.palabras)} palabras
+              </p>
+            </div>
             {parte.secciones.map((s) => (
               <SeccionPlegable
                 key={s.num}

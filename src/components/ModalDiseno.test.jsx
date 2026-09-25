@@ -18,6 +18,8 @@ describe("Diseño app", () => {
     expect(html).toContain("2026");
     expect(html).toContain("PARTE 1");
     expect(html).toContain("PARTE 2");
+    expect(html).toMatch(/\d+ secciones · [\d.]+ palabras/);
+    expect(html).toMatch(/\d+ trampas · [\d.]+ palabras/);
     expect(seccion("1.1 ")).toBeTruthy();
     expect(seccion("2.1 ")).toBeTruthy();
     // Plegado: el texto de dentro de la 1.1 no está pintado.

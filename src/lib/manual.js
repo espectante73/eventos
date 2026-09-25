@@ -48,7 +48,10 @@ export function partirManual(texto) {
       palabras: contarPalabras(encabezado.replace(/\n=+\s*$/, "")),
     },
     partes,
-    palabras: contarPalabras(t),
+    // El total es la SUMA de lo que se enseña (encabezado + cada parte):
+    // contado aparte, los títulos de las partes y las líneas de iguales
+    // lo hacían no cuadrar con las cifras de abajo.
+    palabras: contarPalabras(encabezado.replace(/\n=+\s*$/, "")) + partes.reduce((s, p) => s + p.palabras, 0),
   };
 }
 
