@@ -105,19 +105,14 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
 4. **`lint`, `build` y `test`: los tres, siempre.** Cada uno caza lo que
    los otros no ven: el lint, una variable sin importar; el build, un
    import traído del archivo equivocado.
-5. **Al arreglar un fallo, dejar un vigilante.** Una trampa que pueda
-   tener un test, **lo tiene**: escribir el test es parte de arreglar el
-   fallo, no un extra para después. Solo se queda como texto en la PARTE
-   2 la que NO se puede probar, y entonces se dice por qué (vive en
-   Supabase, en el iPhone, en su Mac o en el panel de otra empresa).
-   ⚠️ **No hace falta que el test ejecute la app: se puede probar el
-   TEXTO del proyecto.** `supabase/schema.test.js` comprueba que
-   `restaurar_foto` inserte las mesas antes que los invitados y que
-   ninguna política sea `for all`; `src/reglas-del-proyecto.test.js`,
-   que no vuelva un `window.alert`; `src/theme.test.js`, que no se
-   escriba un color a mano. Esa puerta es más ancha de lo que parece:
-   **antes de dar una trampa por no comprobable, buscar qué archivo
-   delataría el fallo.**
+5. **Al arreglar un fallo, dejar un vigilante.** Si se puede probar, el
+   test es parte del arreglo. Solo queda como texto en la PARTE 2 lo que
+   no, diciendo dónde vive (Supabase, el iPhone, su Mac, el panel de
+   otra empresa).
+   ⚠️ **Un test también puede leer el TEXTO del proyecto**, sin ejecutar
+   la app (`supabase/schema.test.js`, `src/reglas-del-proyecto.test.js`,
+   `src/theme.test.js`). Antes de dar un fallo por no comprobable,
+   buscar qué archivo lo delataría.
 6. **Comprobar los cálculos.** En cálculos, algoritmos de varios pasos o
    lógica condicional enredada, ejecutarlo o repasarlo paso a paso antes
    de darlo por bueno.
