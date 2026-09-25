@@ -90,13 +90,30 @@ export default function ModalDiseno({ onCerrar }) {
   const alternar = (clave) => setAbierta((a) => (a === clave ? null : clave));
 
   return (
-    <ModalFlotante
-      titulo="Diseño de la app"
-      onCerrar={onCerrar}
-      sellos={[`${miles(manual.palabras)} palabras`, cambiado]}
-    >
+    <ModalFlotante titulo="Diseño de la app" onCerrar={onCerrar}>
+      <p style={{ color: C.ink, fontSize: T.destacado, fontWeight: 700 }}>
+        El documento con el que se construye la app.
+      </p>
+      {/* Los dos sellos, en UNA línea (él, v45.5: en la cabecera se partían). */}
+      <div className="flex gap-2 my-2">
+        {[`${miles(manual.palabras)} palabras`, cambiado].map((s) => (
+          <span
+            key={s}
+            className="px-2.5 py-0.5 whitespace-nowrap"
+            style={{
+              background: C.ink,
+              color: C.goldClaro,
+              border: `1px solid ${C.gold}`,
+              borderRadius: R.redondo,
+              fontSize: T.pequeno,
+            }}
+          >
+            {s}
+          </span>
+        ))}
+      </div>
       <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
-        El documento con el que se construye la app. Se actualiza solo con cada versión.
+        Se actualiza solo con cada versión.
       </p>
       <div className="flex flex-col gap-2 text-sm" style={{ color: C.charcoal }}>
         <SeccionPlegable

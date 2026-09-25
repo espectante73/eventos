@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "45.5",
+    cambios: [
+      "Diseño app: los sellos salen de la cabecera y van debajo de la primera frase, que ahora es grande y en negrita, en una sola línea.",
+    ],
+  },
+  {
     version: "45.4",
     cambios: [
       "Diseño app: en la cabecera de la ventana, dos sellos verde y dorado con el total de palabras del documento y el día y la hora de su último cambio.",
