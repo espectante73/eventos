@@ -1,168 +1,84 @@
 # Contexto del proyecto para Claude
 
-Este archivo viaja dentro del repositorio (a diferencia de la memoria
-personal de Claude Code, que vive en la Mac de cada usuario) para que
-cualquier instancia de Claude Code que abra este proyecto — en cualquier
-máquina — tenga el mismo contexto de fondo. Actualízalo cuando algo aquí
-quede desactualizado; no dejes que se pudra como pasó con el README.
+Este archivo viaja dentro del repositorio para que cualquier Claude que
+abra el proyecto, en cualquier máquina, tenga el mismo contexto. Se
+relee al empezar CADA conversación; el chat no, se compacta o se cierra.
+**Si algo tiene que sobrevivir, va aquí.**
 
-⚠️ **Aquí no hay ninguna sección de "estado actual", y es a propósito.**
-Había una y llegó a mentir durante siete semanas (decía "v6.0" con la app
-en la v39 y una fecha de boda que ya no existía). La versión vive en
-`src/constants.js` y la fecha en la base de datos; una copia aquí se
-pudre siempre. Lo mismo vale para "próximos pasos": nace caducando.
-**Si algo se presenta como el presente, tiene que salir de donde viva el
-dato, no de este archivo.** (Decidido con el usuario el 2026-09-23, al
-encontrarla él: *"esto es historia, no una norma, y no aplica"*.)
+**Para qué es la app:** organizar la boda del usuario **y reutilizarla
+para otros eventos**. Por eso la Zona de Reinicio es permanente. ⚠️ El
+día que OTRA persona organice su evento con ella, deja de ser una
+actividad personal suya (ver «Autorizo expresamente a que guarden mis
+datos»).
 
-**Para qué se hizo esta app, que sí es estable:** organizar la boda del
-usuario, **y reutilizarla para otros eventos** con pequeñas adaptaciones.
-No es de un solo uso — por eso la Zona de Reinicio es una función
-permanente y no un SQL de usar y tirar. ⚠️ Tiene una consecuencia legal
-que él ya conoce: el día que OTRA persona organice su evento con esta
-app, deja de ser una actividad personal suya (ver «Autorizo expresamente
-a que guarden mis datos»).
+## Cómo está ordenado este archivo, y qué se guarda
 
-## Cómo está ordenado este archivo, y qué se guarda a partir de ahora
+1. **PARTE 1 — Reglas que hay que obedecer siempre**, con el porqué de
+   las que sin él parecerían mejorables. Se lee antes de tocar nada.
+2. **PARTE 2 — Trampas ya pagadas**: errores que pueden repetirse y
+   **no se pueden vigilar con un test**. Si se puede, se pone el test
+   (regla 6 de «Cómo trabajar aquí»).
 
-Dos partes, y se usan de forma distinta:
+⚠️ **Se lee también dentro de la app** (Mi cuenta → «Diseño app»). Por
+eso la numeración 1.x / 2.x no puede saltarse (lo vigila
+`lib/manual.test.js`), solo se pintan párrafos, listas, código, títulos,
+negrita y cursiva, y **tras cada cambio se sella**: `node
+scripts/sellar-manual.mjs`.
 
-1. **PARTE 1 — Reglas que hay que obedecer siempre.** Se lee antes de
-   tocar nada. Incluye «Por qué es así», que son las razones por las que
-   algo está hecho de una manera y no de otra.
-2. **PARTE 2 — Trampas ya pagadas.** Errores que costaron tiempo real.
-   Cada una está aquí porque es lo único que impide repetirla.
-
-⚠️ **Este archivo se lee también dentro de la app** (Mi cuenta →
-«Diseño app»), plegado por secciones. Por eso la numeración 1.x / 2.x
-no puede saltarse (lo vigila `lib/manual.test.js`), y solo se pintan
-párrafos, listas, código, títulos, negrita y cursiva: una tabla o un
-enlace saldrían como texto plano.
-
-⚠️ Una trampa entra aquí **solo si no se le puede poner un test**. Si se
-le puede, se le pone: es la regla 6 de «Cómo trabajar aquí».
-
-Hubo una PARTE 3 con la historia — cómo se llegó hasta aquí — y **se
-borró el 2026-09-23**, de acuerdo con el usuario. De sus 6.000 palabras,
-1.800 eran reglas disfrazadas de relato (están arriba, en «Por qué es
-así») y el resto era crónica: *"ese día pasó esto, se probó aquello"*.
-Él lo resumió bien: *"si dicen las razones de por qué algo se hace,
-entonces son reglas"*. **Lo borrado sigue entero en el historial de
-git**, recuperable con un comando.
-
-### La regla, a partir de ahora
-
-La app va a seguir creciendo, así que este archivo volverá a engordar si
-no hay un criterio. Es este, y es una sola pregunta antes de escribir un
-párrafo:
+### Qué entra
 
 > **Si borro esto, ¿qué error repetiría o qué decisión desharía?**
 
-- ¿Una regla, o el porqué de que algo sea así? → **PARTE 1**.
-- ¿Un error que puede repetirse y **no hay test que lo impida**? →
-  **PARTE 2**.
-- ¿Ninguno de los dos? → **no se escribe.** El código ya lo cuenta, git
-  guarda cómo se llegó, y los tests vigilan lo que se puede vigilar.
+- Una regla, o el porqué de algo → **PARTE 1**.
+- Un error repetible sin test que lo impida → **PARTE 2**.
+- Ninguno → **no se escribe.** El código lo cuenta, git guarda cómo se
+  llegó y los tests vigilan lo demás.
 
-Dicho como lo dijo él, que es más corto: **o es una norma de la app, o
-es una trampa corregida que explica por qué algo se hace así. Todo lo
-que salga de ahí es relato, y por tanto innecesario.**
+Dicho como él: **o es una norma, o es una trampa corregida. Lo demás es
+relato.**
 
-⚠️ **Un "no" razonado suyo ES una norma**, aunque no lo parezca. Lo
-planteó él el 2026-09-23 y tiene razón: después de pesar juntos los pros
-y los contras, la conclusión *"esto no se hace así, y este es el
-motivo"* cumple todo lo que cumple una norma — es una decisión y no un
-suceso, vale hacia adelante, no caduca, y **si no se conoce se
-incumple**, que es la prueba de fuego: se la vuelvo a proponer. El mapa
-que se queda público, el `DECISIONS.md` que no se hizo, las dos
-alternativas de Aniversarios que rechazó: todo eso va a la PARTE 1, en
-negativo, no a ningún cajón aparte.
+- **Un "no" suyo razonado ES una norma**: si no se conoce, se la vuelvo
+  a proponer. Va a la PARTE 1, en negativo.
+- De un duplicado descubierto se escribe la conclusión ("los colores
+  salen de `theme.js`"), no el hallazgo.
 
-Lo mismo con un duplicado que se descubre. El hallazgo es relato ("los
-rojos estaban copiados a mano"); la conclusión es la norma ("los colores
-salen de `theme.js`, nunca escritos en el sitio").
-
-### Y cuánto motivo se escribe
+### Cuánto motivo
 
 > **El motivo se guarda cuando su ausencia provoca un error.**
 
-Suya, el 2026-09-23, y resuelve la duda de siempre: cuánto de lo que
-razonamos juntos hay que dejar escrito. Tres líneas:
+- **La conclusión**, siempre.
+- **El motivo**, solo si sin él alguien —yo— la desharía creyendo que
+  simplifica. Basta una línea: *"las fotos viven fuera de la base: son
+  100 y se descargarían todas en cada apertura"*.
+- **El camino, nunca**: los pros y contras que se pesaron no se
+  escriben. Solo si alguien ya resbaló por él, una frase con dónde.
 
-- **La conclusión** se guarda siempre. Es el "igual a".
-- **El motivo**, solo si sin él la conclusión parece arbitraria o
-  mejorable y alguien —yo— la va a deshacer creyendo que simplifica.
-  *"Las fotos viven fuera de la base"* leído solo suena a complicación
-  innecesaria; con cinco palabras detrás (*son 100 y se descargarían
-  todas en cada apertura*) ya nadie la toca. Esa línea no es relato: es
-  lo que protege la conclusión.
-- **El camino se tira siempre.** Los pros y los contras que se pesaron
-  no se escriben. Era justo lo que yo venía haciendo al revés: contar el
-  razonamiento entero y dejar la conclusión enterrada al final.
+### Cómo se escribe
 
-⚠️ Única excepción, y es una frase, no una página: **si alguien ya se
-equivocó por ese camino, se escribe dónde está el resbalón.** Como el
-versionado: "6.10 es 7" se entendió mal y `VERSION_APP` saltó de 7 a 13
-en una sesión.
-
-Y cuatro reglas que salen de esta criba, cada una de un error real:
-
-1. **Si un fallo se cierra con un test, el test ES el registro.** No se
-   escribe además su historia. Pasó con las mesas, la escala del
-   acabado, los permisos y el mapa: el relato sobraba desde el día uno.
-2. **Nada que se presente como "el presente"** — estado, versión,
-   próximos pasos. Nace caducando. Había una sección «Estado actual» que
-   mintió durante siete semanas. El dato vive donde vive: la versión en
-   `src/constants.js`, la fecha en la base.
-3. **Una advertencia dentro de un relato no protege a nadie.** Si algo
-   merece un ⚠, va **solo**, en la PARTE 2. Enterrada en una historia,
-   nadie la lee y además impide podar esa historia.
-4. **Corto.** Una entrada de la PARTE 2 son de 3 a 8 líneas: qué pasó,
-   dónde y qué no repetir. Si crece más, es que se ha colado relato.
-
-⚠️ Y al terminar algo: **preguntarse si hace falta escribirlo, no darlo
-por hecho.** La mitad de lo que se borró en la criba lo escribí yo
-creyendo que ayudaba.
-
-⚠️ **Este archivo se relee al empezar CADA conversación. El chat no:** se
-compacta o se cierra y desaparece. De ahí el error fácil de cometer —
-explicarle algo importante en la conversación, quedarse tranquilo porque
-"ya está dicho", y perderlo. **Si tiene que sobrevivir, va aquí. Si se
-queda en el chat, no existe.**
+1. **Si un fallo se cierra con un test, el test ES el registro.**
+2. **Nada que se presente como "el presente"**: estado, versión,
+   próximos pasos. Nace caducando. La versión vive en
+   `src/constants.js` y la fecha en la base.
+3. **Un ⚠ va solo**, nunca dentro de un relato: ahí nadie lo lee.
+4. **Corto**: una trampa, de 3 a 8 líneas. Si crece, se ha colado
+   relato.
+5. Al terminar algo, **preguntarse si hace falta escribirlo**.
 
 ### Las normas también se pudren
 
-Lo planteó él el 2026-09-23: a medida que la app se concrete, parte de
-lo guardado habrá que cambiarlo. Cierto, y el mismo día pasó tres veces
-— la norma del pulgar llevaba desfasada desde la v35, la 13 se
-contradecía a sí misma, y «Estado actual» mentía desde hacía siete
-semanas.
+La app cambia y la norma no; una norma nueva choca con una vieja; o la
+norma describe un estado en vez de un criterio. **Un test no puede
+vigilar que una regla siga siendo verdad**, así que el guardia es de
+mano:
 
-Se pudren de tres maneras: la app cambia y la norma no; una norma nueva
-choca con una vieja que nadie miró; o la norma describe un estado en vez
-de un criterio.
+- **Al tocar una zona**, releer su norma ANTES de escribir código, y
+  corregirla en el mismo cambio si ya no es verdad.
+- **Al escribir una norma**, buscar si otra dice lo contrario.
+- ⚠️ **Al BORRAR código, borrar su norma en el mismo cambio.** Una regla
+  falsa es peor que ninguna.
 
-⚠️ **Las tres las encontró ÉL leyendo, ninguna yo.** Un test vigila que
-el código cumpla una regla, pero **no puede vigilar que la regla siga
-siendo verdad**. Así que el guardia es de mano, y va en dos momentos:
-
-- **Al tocar una zona de la app**, releer su norma ANTES de escribir
-  código. Si ya no describe lo que hay, se corrige en el mismo cambio.
-- **Al escribir una norma nueva**, buscar si ya existe otra que diga lo
-  contrario. Eso es justo lo que falló con la 13.
-- ⚠️ **Al BORRAR código, borrar su norma en el mismo cambio.** Si
-  desaparece el botón, la función o la ventana que una regla vigilaba,
-  esa regla deja de proteger y pasa a mentir. Pasó con `lib/backup.js`:
-  se borró en la v34 y su trampa siguió seis días diciendo que "sigue en
-  uso". Una regla falsa es peor que ninguna — me haría proteger algo que
-  no existe.
-
-⚠️ **Y la consecuencia buena, que la vio él (2026-09-23): este archivo
-encoge cuando la APP se simplifica, no cuando se edita el texto.** Si
-dos conceptos se funden, sobra una de sus dos reglas; si una función
-desaparece, sobra su trampa entera. Igual que un test lo encoge porque
-la app es más segura. En los tres casos el texto sigue a la realidad, y
-nunca al revés.
+Y la consecuencia: **este archivo encoge cuando la APP se simplifica**,
+no al editar el texto. El texto sigue a la realidad, nunca al revés.
 
 ======================================================================
 
