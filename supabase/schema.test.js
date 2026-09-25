@@ -90,6 +90,19 @@ describe("nada abierto a escritura anónima", () => {
   });
 });
 
+describe("la foto del Deshacer deja fuera lo que no se repone", () => {
+  // Historia real (historial_texto, tablon_accesos) y cuentas y llaves
+  // (anfitriones, anfitrion_secreto, config_secretos, tablon_secreto).
+  // Reponerlas borraría lo que pasó o dejaría a todo el mundo fuera.
+  it("foto_de_datos no incluye ninguna", () => {
+    const i = sql.indexOf("FUNCTION public.foto_de_datos");
+    const cuerpo = sql.slice(i, sql.indexOf("$$;", sql.indexOf("AS $$", i)));
+    const dentro = ["historial_texto", "tablon_accesos", "anfitriones", "anfitrion_secreto", "config_secretos", "tablon_secreto"]
+      .filter((t) => cuerpo.includes(t));
+    expect(dentro).toEqual([]);
+  });
+});
+
 describe("todo UPDATE y DELETE lleva WHERE", () => {
   // Supabase rechaza un UPDATE/DELETE sin filtro. La función de la
   // pregunta del tablón fallaba SIEMPRE por eso. Si de verdad se quiere

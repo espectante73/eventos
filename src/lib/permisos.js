@@ -30,8 +30,9 @@ export const PERMISOS = {
   // Enseña en "Mi cuenta" el diseño de la app (CLAUDE.md, el documento
   // con el que se construye). Se llamó "normas" una hora y se cambió:
   // chocaba con las "Normas de estándar" de dentro del documento, y un
-  // colaborador podía leerlo como normas del evento. Solo de pantalla, como el mapa: el archivo
-  // ya es público en GitHub, así que no hay nada que proteger en la base
+  // colaborador podía leerlo como normas del evento. Solo de pantalla,
+  // como el mapa: el archivo ya es público en GitHub, así que no hay nada
+  // que proteger en la base
   // (usuario, 2026-09-24: "quiero poder dar permiso de ver").
   DISENO_VER: "diseno_ver",
 };
