@@ -394,3 +394,12 @@ describe("toda cita a una norma apunta a una que existe", () => {
     expect(fuera).toEqual([]);
   });
 });
+
+describe("el versionado: tras el .9 viene el siguiente entero", () => {
+  // Regla suya (1.11, regla 4): 45.9 → 46, nunca 45.10. Las antiguas del
+  // historial (30.16, 37.13…) son de antes de la regla y se quedan.
+  it("la versión actual no pasa del .9", () => {
+    const version = leer("src/constants.js").match(/VERSION_APP = "([^"]+)"/)[1];
+    expect(version).toMatch(/^\d+(\.[1-9])?$/);
+  });
+});

@@ -451,9 +451,10 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
    en una tabla de lectura pública la lee cualquiera**. Antes de añadirla,
    preguntarse si es privada.
 4. **El versionado: entero = tema nuevo, decimal = ajuste** (38, 38.1,
-   38.2… hasta el siguiente tema, que pasa a 39). ⚠️ Se malinterpretó una
-   vez y `VERSION_APP` saltó de 7 a 13 en una sesión. **Nunca subir el
-   entero por defecto.**
+   38.2… hasta el siguiente tema, que pasa a 39). **Nunca subir el entero
+   por defecto**, y **tras el .9 viene el siguiente entero**: 45.9 → 46,
+   nunca 45.10. Es provisional: cuando la app esté probada y aprobada, se
+   renumera desde la versión 1. Lo vigila `reglas-del-proyecto.test.js`.
 
 ## 1.12 Lo que está esperando, y por qué no es un fallo
 

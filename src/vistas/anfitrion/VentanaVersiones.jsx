@@ -42,7 +42,7 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
-    version: "45.10",
+    version: "46",
     cambios: [
       "Diseño app: las reglas de la Parte 1 van numeradas dentro de cada sección (se puede citar \"1.6, regla 3\"), y la app las cuenta: \"PARTE 1 — 12 secciones\" y debajo \"63 reglas que hay que obedecer siempre\".",
     ],
