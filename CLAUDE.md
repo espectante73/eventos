@@ -228,7 +228,7 @@ en la sección que se indica entre paréntesis.
        eso ni "juntarlos";
     8. y la regla lleva sus pruebas automáticas.
     Ante un dato nuevo: **¿debería ir junto con el de alguien más?**
-    («El año de boda, compartido entre los cónyuges»)
+    («Un matrimonio comparte año y foto de boda»)
 
 17. **Los valores del acabado salen de `theme.js`, nunca a mano.** Tamaño
     de letra (`T`), redondeo (`R`), sombra (`S`) y transparencia (`OP`).
@@ -807,24 +807,18 @@ pregunta y la respuesta del tablón.)
 true`. Supabase rechaza los que no lo llevan. Lo vigila
 `supabase/schema.test.js`.
 
-### 2.5 El año de boda, compartido entre los cónyuges
+### 2.5 Un matrimonio comparte año y foto de boda
 
-La foto de boda es POR FAMILIA, pero el año es una columna de CADA
-invitado: el cónyuge se quedaba sin año o con otro distinto. Se arregla
-**en la base**, no en la pantalla, porque el colaborador guarda una
-ficha cada vez y el otro cónyuge puede ni estar en su lista: el
-disparador `trg_igualar_anio_boda_pareja` copia el año al cónyuge (y lo
-borra en los dos). Relee la fila en vez de fiarse de NEW, y
-`pg_trigger_depth() > 1` corta su propia cadena.
-- ⚠️ No mover el año a `fotos_familiares`, aunque sería "una sola
-  pieza": obliga a cambiar ~8 archivos que leen `g.anioBoda`, y el
-  disparador ya garantiza que sean iguales.
-- ⚠️ La **hoja de encargo** de las fotos solo se incluye si los datos
-  están COMPLETOS: con un año a medias, el fallo se repetiría en las 48.
+Para eso existen los papeles **O (esposo) y A (esposa)** dentro de una
+familia: **lo que rellena uno sale ya en la ficha del otro.**
+- La **foto** es una por familia, así que ya es la misma.
+- El **año** es de cada invitado, y lo iguala la BASE
+  (`trg_igualar_anio_boda_pareja`), no la pantalla: el colaborador
+  guarda una ficha cada vez, y el cónyuge puede ni estar en su lista.
 
-⚠️ Si "el tabulador no pasa por los botones": es **Safari**, que de
-fábrica solo tabula campos de texto (Ajustes → Avanzado, u Opción+Tab).
-No es un fallo de la app.
+⚠️ No mover el año a `fotos_familiares`, aunque parezca "una sola
+pieza": obliga a cambiar una decena de archivos que leen `g.anioBoda`, y
+el disparador ya los mantiene iguales.
 
 ### 2.6 Lo que el Deshacer y el Modo Pruebas dejan fuera, a propósito
 
@@ -885,3 +879,7 @@ mete dentro de cada `<button>` para que vibre (el porqué y sus efectos,
 en su cabecera). Se apaga quitando la llamada a `vigilarBotones`. Y no
 volver al truco de pulsarlo desde el código: iOS 26.5 lo cerró.
 
+### 2.12 "El tabulador no pasa por los botones"
+
+⚠️ Es **Safari**, que de fábrica solo tabula campos de texto (Ajustes →
+Avanzado, u Opción+Tab). No es un fallo de la app.
