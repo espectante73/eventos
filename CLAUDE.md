@@ -291,9 +291,9 @@ en la sección que se indica entre paréntesis.
     y también los iconos sueltos de las tablas. Los lenguajes propios ya
     aprobados —pastilla de inicio, mando de música— se respetan tal cual.
 12. **Todo quitar o borrar pregunta antes**, en la ventana de la app
-    (`usePreguntaSeguridad`), nunca con `window.alert`/`window.confirm`
-    (en las ventanas emergentes rompen). («Relieve, clic y pregunta de
-    seguridad»)
+    (`usePreguntaSeguridad`), nunca con `window.alert`, `window.confirm`
+    ni `prompt` (en las ventanas emergentes rompen). Lo vigila
+    `reglas-del-proyecto.test.js`.
 13. **Lo que se PULSA lleva relieve; lo que es un LINK va subrayado.**
     Son dos cosas distintas, no una norma con una excepción:
     - **ACCIÓN sobre los datos** —guardar, borrar, confirmar, abrir una
@@ -992,41 +992,12 @@ apuntando a nada, y en un terminal nuevo no había `node` ni `npm`. Al
 terminar, dejar el `default` como estaba (hoy `v24.18.1`; se mira con
 `nvm alias default`).
 
-### 2.11 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
+### 2.11 Algo raro con un botón SOLO en el iPhone
 
-El usuario lo probó en su iPhone: ni sonido ni vibración.
-- **Vibración**: el truco de pulsar un `<input switch>` escondido DESDE EL
-  CÓDIGO lo cerró Apple en **iOS 26.5** (comprobado en la documentación
-  de varias librerías, sep. 2026). Lo único que sigue funcionando es que
-  el DEDO toque un interruptor nativo. `respuestaTactil.js` mete, solo en
-  el iPhone (táctil y sin `navigator.vibrate`), un
-  `<input type="checkbox" switch class="interruptor-haptico">` invisible
-  dentro de CADA `<button>` (un `MutationObserver` lo pone también en los
-  que aparecen después). Cubre el botón (`opacity: 0`, `clip-path` para
-  que el toque no se salga de la forma) y el toque sigue subiendo al
-  botón, así que su `onClick` funciona igual. Técnica de
-  github.com/m1ckc3s/project-fathom, probada allí en aparato real.
-  ⚠️ Consecuencias a recordar:
-  - Solo en `<button>`: dentro de un enlace, una etiqueta de subir foto o
-    un `<summary>`, el interruptor les robaría la acción (se toca el
-    interruptor y el navegador ya no sigue el enlace ni abre el archivo).
-  - Un botón `type="submit"`: el navegador ya no envía el formulario solo
-    (el que recibe el toque es el interruptor). Se envía a mano con
-    `form.requestSubmit(boton)` en el mismo escuchador.
-  - Si un botón no está posicionado, se le pone `position: relative`
-    (si no, el interruptor cubriría otra cosa).
-  - Si algo raro pasa con un botón SOLO en el iPhone, sospechar de esto
-    primero. Se apaga quitando la llamada a `vigilarBotones`.
-- **Sonido**: el primer clic era un pitido a volumen 0,05, inaudible en el
-  altavoz del móvil. Ahora es un golpe de ruido filtrado de 12 ms a 0,6.
-  El iPhone lo calla con el interruptor de silencio (igual que el
-  teclado): es lo correcto, no se fuerza con `navigator.audioSession`.
-
-**Probado por el usuario en su iPhone el 2026-09-19 y aprobado**: la
-vibración funciona (el interruptor invisible dentro de cada botón), la
-elección de mano, la X de quitar con su pregunta y los avisos. Es decir,
-la técnica del interruptor SÍ funciona en su iOS: no volver al truco de
-pulsarlo desde el código.
+⚠️ Sospechar primero del interruptor invisible que `lib/respuestaTactil.js`
+mete dentro de cada `<button>` para que vibre (el porqué y sus efectos,
+en su cabecera). Se apaga quitando la llamada a `vigilarBotones`. Y no
+volver al truco de pulsarlo desde el código: iOS 26.5 lo cerró.
 
 ### 2.12 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
 
