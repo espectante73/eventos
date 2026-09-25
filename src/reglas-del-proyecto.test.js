@@ -94,7 +94,7 @@ describe("Mi cuenta recibe todo lo que sabe mostrar", () => {
   });
 });
 
-describe("1.6: tú y ustedes, nunca vosotros", () => {
+describe("1.5: tú y ustedes, nunca vosotros", () => {
   // Español de Canarias. Solo palabras que no tienen otra lectura, para
   // que el guardia no salte en falso. Las plantillas que él guarda en la
   // base no las ve este test: son suyas y las cambia él.

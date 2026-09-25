@@ -130,8 +130,7 @@ paréntesis, dónde está el detalle.
    11 y 17). Nunca un estilo elegido por mí. Si hay duda de cuál aplica,
    preguntar en una línea ANTES de tocar el aspecto.
 2. **Ventanas tan pequeñas como su contenido**: del ancho de un móvil en
-   vertical, también en el ordenador. («Regla de la app: ventanas lo más
-   pequeñas posible»)
+   vertical, también en el ordenador.
 3. **Todo al alcance del pulgar QUE ELIJA CADA UNO.** La app entera se
    acomoda a esa elección; la derecha es solo lo que sale por defecto.
    («El pulgar: la regla y cómo funciona»)
@@ -479,33 +478,7 @@ de las ventanas, las filas de las listas (el check de llegada, las
 papeleras) y las filas alineadas abajo (`items-end` en una fila es
 alinear abajo, no a la derecha).
 
-## 1.5 Regla de la app: ventanas lo más pequeñas posible
-
-Pedido explícito del usuario, "tomamos nota de esto": **una ventana mide
-lo que necesita su contenido, no más**. El ejemplo que puso: en Mi cuenta
-solo hay una contraseña de 8-12 caracteres y un email de unos 20; no
-necesita una ventana grande. Del ancho de un móvil en vertical, **también
-en el ordenador**.
-
-Aplicado en Mi cuenta: primero `ancho={400}`, y tras ver una captura del
-móvil el usuario la quiso aún más estrecha -- quedó en `ancho={300}`, con
-el texto de ayuda de la contraseña acortado a "Mínimo 8 caracteres" para
-que quepa (el título de la sección ya dice qué es). Al construir o
-revisar cualquier ventana, empezar por preguntarse cuánto ocupa de verdad
-lo de dentro.
-
-En esa ventana los rótulos se abrevian ("Código app", "Errores app",
-"Cambiar clave") para caber en el ancho del modelo (norma 4).
-
-⚠️ **Lección de esta tanda**: en la v34.5 los pasé a la variante
-secundaria de `Boton` (cuadrada, solo contorno) porque me pareció mejor,
-y dejé los de los formularios a medida de su texto. El usuario lo había
-pedido con el estilo de inicio y todos iguales, y lo tuvo que señalar.
-Y se repitió dos veces más (v34.6 a todo lo ancho, v34.7 a 240px centrado)
-antes de preguntar. La tercera vez, una pregunta de una línea ("¿es el
-menú de Abrir sección…?") lo resolvió a la primera. Preguntar ANTES.
-
-## 1.6 Cómo se le habla al invitado: tú y USTEDES, nunca vosotros
+## 1.5 Cómo se le habla al invitado: tú y USTEDES, nunca vosotros
 
 Español de Canarias, en todo lo que lee un invitado o un colaborador:
 - Singular **tú** ("tus datos"); plural **ustedes / les / su**
@@ -516,7 +489,7 @@ Español de Canarias, en todo lo que lee un invitado o un colaborador:
 
 Lo vigila `reglas-del-proyecto.test.js`.
 
-## 1.7 Backup automático de la base de datos
+## 1.6 Backup automático de la base de datos
 
 Existe un backup diario automático vía GitHub Actions
 (`.github/workflows/backup.yml`). Se ejecuta
@@ -544,7 +517,7 @@ Supabase sube de versión mayor en el futuro (revisar en Project Settings →
 Database, o en el mensaje de error si el workflow empieza a fallar de
 nuevo), hay que subir el número de esa imagen a juego.
 
-## 1.8 Registro de errores con Sentry
+## 1.7 Registro de errores con Sentry
 
 Antes, un fallo en el móvil de un colaborador no dejaba rastro. Ahora
 llega a Sentry (cuenta del usuario, región **EU/Alemania** -- `.de.` en la
@@ -577,7 +550,7 @@ v34.4: enlace "Errores de la app" en Mi cuenta, solo anfitrión
 (`URL_REGISTRO_ERRORES` en constants.js). Pintar los errores DENTRO de la
 app no se hace: exigiría una clave secreta de Sentry en el navegador.
 
-## 1.9 El registro de migraciones
+## 1.8 El registro de migraciones
 
 **El TEXTO del SQL ya está en git** (`schema.sql` y su
 historial), y duplicarlo sería el mismo error que descartamos con
@@ -605,7 +578,7 @@ insert into public.migraciones_aplicadas ("nombre") values ('v40-lo-que-sea')
   on conflict ("nombre") do nothing;
 ```
 
-## 1.10 Comprobar si un SQL está subido, con la clave pública
+## 1.9 Comprobar si un SQL está subido, con la clave pública
 
 Yo no puedo ejecutar SQL ni tengo la clave de servicio, pero SÍ puedo
 comprobar desde fuera si lo que le paso al usuario llegó a la base --
@@ -635,7 +608,7 @@ Truco que ahorra trabajo: el editor SQL de Supabase ejecuta el script
 huella, todo lo anterior también entró. Con comprobar la última función
 del bloque basta.
 
-## 1.11 Por qué es así: decisiones que no se ven en el código
+## 1.10 Por qué es así: decisiones que no se ven en el código
 
 Lo que queda cuando se tira la historia. No son anécdotas: son las
 razones por las que algo está hecho de esta manera y no de otra. **Sin
@@ -691,7 +664,7 @@ a 39). ⚠️ Se malinterpretó una vez y `VERSION_APP` saltó de 7 a 13 en
 una sola sesión. **Nunca subir el entero por defecto**: preguntarse
 antes si es tema nuevo o ajuste.
 
-## 1.12 Lo que está esperando, y por qué no es un fallo
+## 1.11 Lo que está esperando, y por qué no es un fallo
 
 Cosas que llevan tiempo sin moverse **porque no toca**, no porque se
 hayan olvidado. Antes esto era una sección "Dónde lo dejamos" con fecha,
