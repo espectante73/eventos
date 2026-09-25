@@ -544,7 +544,9 @@ cierre de seguridad.
 ⚠️ Los correos de Supabase Auth (confirmación, recuperar contraseña)
 salen por SMTP propio desde `acceso@mail.nexuspoint.rsvp`, no por el
 compartido de Supabase, que tiene un límite de envío muy bajo. Si
-alguna vez vuelve "email rate limit exceeded", mirar ahí primero.
+alguna vez vuelve "email rate limit exceeded", mirar ahí primero:
+**Authentication → Emails → SMTP** (Supabase ya la movió una vez;
+comprobar la ruta antes de dársela).
 
 ⚠️ **El enlace de confirmación/recuperación de Supabase apunta a la
 "Site URL" configurada en Authentication → URL Configuration** — si no
@@ -1006,8 +1008,3 @@ mete dentro de cada `<button>` para que vibre (el porqué y sus efectos,
 en su cabecera). Se apaga quitando la llamada a `vigilarBotones`. Y no
 volver al truco de pulsarlo desde el código: iOS 26.5 lo cerró.
 
-### 2.12 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
-
-⚠️ Dónde vive esa pantalla, que Supabase la ha movido: **Authentication →
-Emails → SMTP**, o sea `/dashboard/project/<ref>/auth/smtp`. El viejo
-`/settings/auth` ya no lleva ahí.
