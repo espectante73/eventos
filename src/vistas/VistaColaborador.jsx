@@ -22,6 +22,7 @@ import {
   resolverColaborador,
 } from "../lib/invitados";
 import { ordenarPorApellidoNombre, nombreCompleto } from "../lib/formato";
+import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { construirEnlaceTablon } from "../lib/url";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
 import { usePopupWindow } from "../lib/usePopupWindow";
@@ -678,6 +679,9 @@ function FilaInvitadoColaborador({
   onCambiarFotoFamiliar,
   onMarcarPagado,
   onMarcarPresente,
+  // La familia entera (norma 11): pedirla y marcarla. Del almacén de datos.
+  obtenerFamilia,
+  marcarFamilia,
   evento,
   fotosFamiliares,
   fotosSinBoda = {},
@@ -696,7 +700,31 @@ function FilaInvitadoColaborador({
   // Confirmación siempre (marcar Y quitar): con todas las filas cerradas muy
   // juntas, el pulgar puede tocar el botón de pago de un invitado equivocado
   // por error — así hay una última comprobación antes de que cuente.
-  const confirmarPago = () => {
+  // Si hay alguien más de la familia a quien cambiar, pregunta "¿es para
+  // toda la familia?", Sí o No (norma 11), y devuelve true. Si no hay nadie
+  // más, false: sigue la pregunta de siempre, solo por esta persona.
+  const preguntarPorLaFamilia = async (campo, valor, marcarSolo) => {
+    if (!obtenerFamilia || !marcarFamilia) return false;
+    const familia = await obtenerFamilia(g);
+    const p = preguntaFamilia(familia, campo, valor, { evento, marcadoAbierto });
+    if (p.aCambiar.length <= 1) return false;
+    const titulos = {
+      pagado: valor ? `¿El pago es para toda la familia ${g.apellido}?` : `¿Quitar el pago a toda la familia ${g.apellido}?`,
+      presente: valor ? `¿Ha llegado toda la familia ${g.apellido}?` : `¿Quitar la llegada a toda la familia ${g.apellido}?`,
+    };
+    preguntar({
+      titulo: titulos[campo],
+      texto: textoPreguntaFamilia(p, campo, valor, evento),
+      rotulo: "Sí",
+      peligro: valor ? false : undefined,
+      sinPrincipal: !p.puedeTodos,
+      alConfirmar: () => marcarFamilia(g, campo, valor),
+      otra: { rotulo: "No", alConfirmar: () => marcarSolo(g.id, valor) },
+    });
+    return true;
+  };
+
+  const confirmarPago = async () => {
     if (!g.pagado && !datosCompletos(g)) {
       preguntar({
         titulo: "Todavía no",
@@ -705,6 +733,7 @@ function FilaInvitadoColaborador({
       });
       return;
     }
+    if (await preguntarPorLaFamilia("pagado", !g.pagado, onMarcarPagado)) return;
     preguntar(
       g.pagado
         ? { titulo: "¿Quitar el pago?", texto: nombreCompleto(g), rotulo: "Sí, quitarlo", alConfirmar: () => onMarcarPagado(g.id, false) }
@@ -732,7 +761,7 @@ function FilaInvitadoColaborador({
     ? "le faltan datos obligatorios (año de nacimiento y alergias)"
     : "todavía no ha pagado";
 
-  const confirmarPresente = () => {
+  const confirmarPresente = async () => {
     if (!puedeTocarLlegada) {
       preguntar({
         titulo: "Todavía no",
@@ -741,6 +770,7 @@ function FilaInvitadoColaborador({
       });
       return;
     }
+    if (await preguntarPorLaFamilia("presente", !g.presente, onMarcarPresente)) return;
     preguntar(
       g.presente
         ? { titulo: "¿Quitar la llegada?", texto: nombreCompleto(g), rotulo: "Sí, quitarla", alConfirmar: () => onMarcarPresente(g.id, false) }
@@ -1372,6 +1402,8 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   onCambiarFotoFamiliar={cambiarFotoFamiliar}
                   onMarcarPagado={marcarPagado}
                   onMarcarPresente={marcarPresente}
+                  obtenerFamilia={data.obtenerFamilia}
+                  marcarFamilia={data.marcarFamilia}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   fotosSinBoda={fotosSinBoda || {}}
@@ -1405,6 +1437,8 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   onCambiarFotoFamiliar={cambiarFotoFamiliar}
                   onMarcarPagado={marcarPagado}
                   onMarcarPresente={marcarPresente}
+                  obtenerFamilia={data.obtenerFamilia}
+                  marcarFamilia={data.marcarFamilia}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   fotosSinBoda={fotosSinBoda || {}}

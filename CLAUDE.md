@@ -183,7 +183,10 @@ regla siga siendo verdad, así que el guardia es de mano:
     ir junto con el de alguien más («Un matrimonio comparte año y foto
     de boda»).
     - un dato compartido vale para todos (el año de boda); una acción
-      sobre uno se aplica a todos (la mesa de la familia);
+      sobre uno se aplica a todos (la mesa de la familia) o, si puede
+      haber excepciones, **se pregunta con Sí/No si es para toda la
+      familia**, aunque parte la lleve otro colaborador (el pago y la
+      llegada, al marcar y al deshacer);
     - si no se puede cumplir entera, no se toca nada y se avisa con la
       cifra concreta ("son 4 y quedan 2 sitios"), en una ventana que se
       vea;

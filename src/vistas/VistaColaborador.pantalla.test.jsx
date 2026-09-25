@@ -7,6 +7,7 @@
 // Comprueba que se PUEDE ver, no cómo se ve (para eso sigue haciendo
 // falta su captura, norma 10).
 import { describe, it, expect } from "vitest";
+import { act } from "react";
 import { montar, dibujarYSoltar } from "../pruebas/dibujar";
 import { VistaColaborador } from "./VistaColaborador";
 import { ROL_FAMILIAR } from "../lib/rolFamiliar";
@@ -163,5 +164,43 @@ describe("la pantalla del colaborador se puede dibujar", () => {
         />
       )
     ).not.toThrow();
+  });
+});
+
+// El pago para toda la familia (norma 11): al tocar "Pago pendiente" de
+// uno, si hay más de su familia, pregunta "¿toda la familia?" con Sí y No.
+describe("el pago pregunta por la familia", () => {
+  const hermano = (id, nombre, extra = {}) => ({
+    id, nombre, apellido: "Ruiz", grupoFamiliar: "Ruiz01", rolFamiliar: ROL_FAMILIAR.HIJO,
+    colaboradorId: "c1", confirmado: true, pagado: false, anioNacimiento: "2010", alergias: "No",
+    email: "r@r.com", cancion: "Una", conservarDatos: true, ...extra,
+  });
+  const familia = [hermano("r1", "Ana"), hermano("r2", "Luis", { colaboradorId: "c2" })];
+  const marcadas = [];
+  const datos = {
+    ...data,
+    invitados: [...invitados, familia[0]],
+    obtenerFamilia: async () =>
+      familia.map((m) => ({ ...m, datosCompletos: true, pagado: false, presente: false })),
+    marcarFamilia: async (g, campo, valor) => marcadas.push([g.id, campo, valor]),
+  };
+
+  it("sale «¿El pago es para toda la familia Ruiz?» con Sí y No, y el Sí marca a todos", async () => {
+    const vista = montar(
+      <VistaColaborador data={datos} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+    );
+    const botones = () => [...document.body.querySelectorAll("button")];
+    vista.pulsar(botones().find((b) => b.textContent.includes("Abrir formulario")));
+    const pago = botones().find((b) => b.textContent.includes("Pago pendiente"));
+    expect(pago, "no hay ninguna fila con el pago a la vista").toBeTruthy();
+    await act(async () => pago.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    const html = document.body.innerHTML;
+    expect(html).toContain("¿El pago es para toda la familia Ruiz?");
+    expect(html).toContain("Total:");
+    const si = botones().find((b) => b.textContent.trim() === "Sí");
+    expect(botones().some((b) => b.textContent.trim() === "No")).toBe(true);
+    await act(async () => si.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(marcadas).toEqual([["r1", "pagado", true]]);
+    vista.desmontar();
   });
 });

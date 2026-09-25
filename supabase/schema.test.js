@@ -182,3 +182,23 @@ describe("schema.sql es un plano, no un diario", () => {
     expect(repetidos).toEqual([]);
   });
 });
+
+describe("marcar a toda la familia: o todos o ninguno (norma 11)", () => {
+  const cuerpo = cuerpoDe("colaborador_marcar_familia");
+
+  it("comprueba que quien marca es ese colaborador", () => {
+    expect(cuerpo).toContain("colaborador_puede_actuar(p_colaborador_id)");
+    expect(cuerpo).toContain('"colaboradorId" = p_colaborador_id');
+  });
+
+  it("si uno de la familia no cumple, sale ANTES de tocar a nadie", () => {
+    const comprobacion = cuerpo.indexOf("if found then");
+    const primerUpdate = cuerpo.indexOf("update invitados");
+    expect(comprobacion).toBeGreaterThan(-1);
+    expect(comprobacion).toBeLessThan(primerUpdate);
+  });
+
+  it("no le avisa al colaborador de su propio cambio", () => {
+    expect(cuerpo).toContain("set_config('eventos.recalculo_aviso_activo', 'off', true)");
+  });
+});

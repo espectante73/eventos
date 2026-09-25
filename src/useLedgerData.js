@@ -3,6 +3,7 @@ import { supabase } from "./supabaseClient";
 import { avisoEnPantalla } from "./lib/avisos";
 import { useCanalAsistencia } from "./lib/useCanalAsistencia";
 import { C } from "./theme";
+import { familiaDe, comoMiembro } from "./lib/familiaCobroLlegada";
 
 const EVENTO_POR_DEFECTO = {
   nombre: "",
@@ -1059,6 +1060,55 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol, avisarLlegada, cargarFamiliasSinEmail]
   );
 
+  // El pago y la llegada para TODA la familia (norma 11). El anfitrión
+  // tiene la lista entera; el colaborador solo la suya, y un cónyuge puede
+  // llevarlo otro colaborador: se lo pide a la base, que también es quien
+  // marca a todos de una vez (o a ninguno). Ver lib/familiaCobroLlegada.js.
+  const obtenerFamilia = useCallback(
+    async (g) => {
+      if (esAnfitrion) return familiaDe(invitadosRef.current, g);
+      const { data, error } = await supabase.rpc("colaborador_familia_de", {
+        p_colaborador_id: rol,
+        p_invitado_id: g.id,
+      });
+      // Sin la familia (o sin la función subida) se pregunta solo por él.
+      if (error || !data?.length) return [comoMiembro(g)];
+      return data;
+    },
+    [esAnfitrion, rol]
+  );
+
+  // Devuelve true si se marcó a toda la familia.
+  const marcarFamilia = useCallback(
+    async (g, campo, valor) => {
+      const anterior = invitadosRef.current;
+      if (esAnfitrion) {
+        const ids = new Set(familiaDe(anterior, g).map((m) => m.id));
+        await persistInvitados(anterior.map((x) => (ids.has(x.id) ? { ...x, [campo]: valor } : x)));
+        return true;
+      }
+      const { data, error } = await supabase.rpc("colaborador_marcar_familia", {
+        p_colaborador_id: rol,
+        p_invitado_id: g.id,
+        p_campo: campo,
+        p_valor: valor,
+      });
+      if (error || !data?.length) {
+        avisar("No se pudo marcar a toda la familia: no se ha cambiado a nadie.", error);
+        return false;
+      }
+      // Solo se pintan los suyos: los que lleva otro colaborador no están
+      // en su lista, y a ese le llegarán al recargar.
+      const porId = Object.fromEntries(data.map((x) => [x.id, x]));
+      const next = anterior.map((x) => (porId[x.id] ? { ...x, [campo]: porId[x.id][campo] } : x));
+      setInvitados(next);
+      invitadosRef.current = next;
+      if (campo === "presente") data.forEach((x) => avisarLlegada(x.id, Boolean(x.presente)));
+      return true;
+    },
+    [esAnfitrion, rol, persistInvitados, avisarLlegada]
+  );
+
   const avisarColaborador = useCallback(
     async (colaboradorId) => {
       if (!esAnfitrion) return;
@@ -1303,5 +1353,7 @@ export function useLedgerData(rol) {
     persistPreguntaTablon,
     accesosTablonSospechosos,
     obtenerHistorialTexto,
+    obtenerFamilia,
+    marcarFamilia,
   };
 }

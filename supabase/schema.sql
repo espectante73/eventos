@@ -1787,6 +1787,90 @@ begin
 end;
 $$;
 
+-- La familia de un invitado, para la pregunta "¿es para toda la familia?"
+-- del pago y la llegada (norma 11). Devuelve los CONFIRMADOS de su misma
+-- familia (grupo familiar o, si está vacío, el apellido: lib/invitados.js,
+-- claveFamilia), aunque parte la lleve OTRO colaborador (un matrimonio
+-- puede tener dos). Solo lo que hace falta para preguntar: nombre, año de
+-- nacimiento (para el importe), si tiene los datos obligatorios, y si ya
+-- ha pagado o llegado. Nada de alergias ni contacto.
+CREATE FUNCTION public.colaborador_familia_de(p_colaborador_id uuid, p_invitado_id uuid)
+    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "datosCompletos" boolean, pagado boolean, presente boolean)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_familia text;
+begin
+  if not colaborador_puede_actuar(p_colaborador_id) then
+    return;
+  end if;
+  select lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) into v_familia
+  from invitados i
+  where i."id" = p_invitado_id and i."colaboradorId" = p_colaborador_id;
+  if coalesce(v_familia, '') = '' then
+    return;
+  end if;
+  return query
+    select i."id", i."nombre", i."apellido", i."anioNacimiento",
+      (coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> ''),
+      coalesce(i."pagado", false), coalesce(i."presente", false)
+    from invitados i
+    where i."confirmado" = true
+      and lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) = v_familia;
+end;
+$$;
+
+-- Marcar el pago o la llegada a TODA la familia de un invitado suyo, de una
+-- vez: o todos o ninguno (norma 11). Hace las mismas comprobaciones que
+-- colaborador_marcar_pagado / colaborador_marcar_presente, para cada uno:
+-- si uno no cumple, no se toca a nadie. Deshacer (p_valor false) no se
+-- bloquea nunca: un error hay que poder corregirlo.
+CREATE FUNCTION public.colaborador_marcar_familia(p_colaborador_id uuid, p_invitado_id uuid, p_campo text, p_valor boolean)
+    RETURNS SETOF public.invitados
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_familia text;
+  v_ids uuid[];
+begin
+  if p_campo not in ('pagado', 'presente') or not colaborador_puede_actuar(p_colaborador_id) then
+    return;
+  end if;
+  select lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) into v_familia
+  from invitados i
+  where i."id" = p_invitado_id and i."colaboradorId" = p_colaborador_id;
+  if coalesce(v_familia, '') = '' then
+    return;
+  end if;
+  select array_agg(i."id") into v_ids
+  from invitados i
+  where i."confirmado" = true
+    and lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) = v_familia;
+
+  if p_valor then
+    if p_campo = 'presente' and not coalesce((select "asistenciaAbierta" from evento limit 1), false) then
+      return;
+    end if;
+    perform 1 from invitados i
+    where i."id" = any(v_ids)
+      and (coalesce(i."anioNacimiento", '') = '' or coalesce(i."alergias", '') = ''
+           or (p_campo = 'presente' and coalesce(i."pagado", false) = false));
+    if found then
+      return;
+    end if;
+  end if;
+
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
+  if p_campo = 'pagado' then
+    return query update invitados i set "pagado" = p_valor where i."id" = any(v_ids) returning i.*;
+  else
+    return query update invitados i set "presente" = p_valor where i."id" = any(v_ids) returning i.*;
+  end if;
+end;
+$$;
+
 -- El colaborador ve su propia ficha y sus permisos.
 CREATE FUNCTION public.colaborador_mi_perfil(p_colaborador_id uuid) RETURNS SETOF public.colaboradores
     LANGUAGE sql SECURITY DEFINER

@@ -26,6 +26,11 @@ import { Boton } from "./Boton";
 //   peligro  false para una pregunta que no borra nada (botón verde)
 //   soloAviso  true = no hay nada que confirmar, solo un "Entendido"
 //              (p. ej. "no se puede marcar como pagado: faltan datos")
+//   otra    { rotulo, alConfirmar }: una SEGUNDA respuesta en vez de
+//            "Cancelar" (el "No" de "¿toda la familia?", norma 11). Cancelar
+//            es entonces la ✕ de la ventana.
+//   sinPrincipal  true = la respuesta principal no se puede elegir (sale
+//            apagada): p. ej. "Sí, toda la familia" cuando alguien no puede.
 //   detalle  el motivo técnico, en letra pequeña (lo que dice la base de
 //            datos cuando algo falla). Sin esto, un "no se pudo" no se
 //            puede ni diagnosticar ni contar: pasó el 2026-09-20 con la
@@ -56,6 +61,7 @@ export function usePreguntaSeguridad() {
           <>
           <Boton
             variante={pendiente.peligro === false ? "principal" : "peligro"}
+            disabled={pendiente.sinPrincipal}
             onClick={() => {
               const { alConfirmar } = pendiente;
               cerrar();
@@ -64,7 +70,19 @@ export function usePreguntaSeguridad() {
           >
             {pendiente.rotulo || "Sí, quitar"}
           </Boton>
-          <Boton onClick={cerrar}>Cancelar</Boton>
+          {pendiente.otra ? (
+            <Boton
+              onClick={() => {
+                const { otra } = pendiente;
+                cerrar();
+                otra.alConfirmar?.();
+              }}
+            >
+              {pendiente.otra.rotulo}
+            </Boton>
+          ) : (
+            <Boton onClick={cerrar}>Cancelar</Boton>
+          )}
           </>
           )}
         </div>
