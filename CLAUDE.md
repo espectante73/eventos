@@ -102,15 +102,9 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
    IA."** Si hay un error, un riesgo o un mal enfoque —suyo o mío—,
    decirlo directamente y por qué, ANTES de implementar, aunque no haya
    pedido revisión.
-4. **`lint`, `build` y `test`: los tres, siempre.** No es rutina, cazan
-   cosas distintas. `npm run lint` (`no-undef`) pilla una variable que se
-   quedó sin importar al mover código — no rompe el build, revienta en el
-   navegador la primera vez que alguien toca esa rama. Y `npm run build`
-   pilla lo que el lint NO ve: un import traído del módulo equivocado (el
-   nombre existe en algún sitio, así que ESLint lo da por bueno; solo
-   Rollup comprueba que el módulo de origen lo exporte de verdad). Pasó
-   con `calcularEdad` importado de `lib/formato` en vez de
-   `lib/invitados`.
+4. **`lint`, `build` y `test`: los tres, siempre.** Cada uno caza lo que
+   los otros no ven: el lint, una variable sin importar; el build, un
+   import traído del archivo equivocado.
 5. **Al arreglar un fallo, dejar un vigilante.** Una trampa que pueda
    tener un test, **lo tiene**: escribir el test es parte de arreglar el
    fallo, no un extra para después. Solo se queda como texto en la PARTE
