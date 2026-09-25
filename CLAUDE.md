@@ -24,8 +24,9 @@ datos»).
 entero, **5.000 palabras como mucho** (pasar de ahí lo decide él);
 **ninguna fecha**, que casi siempre es relato; y **todo archivo o función
 que se nombra existe de verdad**, así que borrar código sin borrar su
-regla se pone en rojo solo. Lo que no ve ninguna prueba —duplicados y
-relato— se repasa leyendo.
+regla se pone en rojo solo; y **ninguna frase copiada en dos secciones**.
+Lo que no ve ninguna prueba —la misma idea dicha con otras palabras, y
+el relato— se repasa leyendo.
 
 ⚠️ **Se lee también dentro de la app** (Mi cuenta → «Diseño app»): la
 numeración no puede saltarse (lo vigila `lib/manual.test.js`), solo se

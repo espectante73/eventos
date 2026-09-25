@@ -291,6 +291,30 @@ describe("salvaguardas del CLAUDE.md", () => {
     expect(nombres.filter((n) => !codigo.includes(n))).toEqual([]);
   });
 
+  // Una frase copiada en dos secciones: 8 palabras seguidas iguales. No
+  // cuentan los punteros («…», que repiten un título a propósito) ni la
+  // coletilla "Lo vigila `…`". La MISMA idea dicha con otras palabras no
+  // la ve: eso sigue siendo cosa de leer.
+  it("ninguna frase copiada en dos secciones", () => {
+    const secciones = prosa
+      .split(/\n(?=#{1,3} )/)
+      .map((s) => s.split("\n").slice(1).join("\n"))
+      .map((s) => s.replace(/«[^»]*»/g, " ").replace(/Lo vigila[n]?[^.]*\./g, " "));
+    const palabrasDe = (s) => s.toLowerCase().match(/[a-záéíóúñü0-9_]+/g) || [];
+    const N = 8;
+    const vistas = new Map();
+    const copiadas = [];
+    secciones.forEach((s, i) => {
+      const w = palabrasDe(s);
+      for (let k = 0; k + N <= w.length; k++) {
+        const trozo = w.slice(k, k + N).join(" ");
+        if (vistas.has(trozo) && vistas.get(trozo) !== i) copiadas.push(trozo);
+        else if (!vistas.has(trozo)) vistas.set(trozo, i);
+      }
+    });
+    expect([...new Set(copiadas)]).toEqual([]);
+  });
+
   it("el sello guarda las palabras de verdad", () => {
     expect(sello.palabras).toBe(manual.palabras);
   });
