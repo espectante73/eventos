@@ -168,3 +168,17 @@ describe("el token del anfitrión siempre es uuid", () => {
     expect(sql).not.toMatch(/p_token\s+text/i);
   });
 });
+
+describe("schema.sql es un plano, no un diario", () => {
+  // Antes se apuntaba cada cambio al final y había funciones repetidas
+  // hasta cinco veces: al ir a tocar una, era fácil copiar la vieja. Si
+  // cambia algo, se cambia en su sitio (cabecera de schema.sql).
+  it("cada tabla y cada función aparecen una sola vez", () => {
+    const nombres = [...sql.matchAll(/^create (?:or replace )?(function|table) (?:if not exists )?([\w."]+)/gim)].map(
+      (m) => `${m[1].toLowerCase()} ${m[2].toLowerCase().replace(/"/g, "")}`
+    );
+    expect(nombres.length).toBeGreaterThan(20);
+    const repetidos = nombres.filter((n, i) => nombres.indexOf(n) !== i);
+    expect(repetidos).toEqual([]);
+  });
+});

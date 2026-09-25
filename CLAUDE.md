@@ -999,19 +999,7 @@ mete dentro de cada `<button>` para que vibre (el porqué y sus efectos,
 en su cabecera). Se apaga quitando la llamada a `vigilarBotones`. Y no
 volver al truco de pulsarlo desde el código: iOS 26.5 lo cerró.
 
-### 2.12 `schema.sql` reescrito desde cero (2026-09-16)
-
-⚠️ Regla que sustituye a la de antes: **no se añade nada al final de
-`schema.sql`**. Si cambia una función, se cambia en su sitio. Si cambia
-una columna, se cambia dentro de su `create table` y se anota aquí la
-migración que hay que ejecutar en la base real.
-
-⚠️ **Al añadir una columna nueva**, subir también el `minWidth` del
-contenedor de la tabla (`tablaRef`): si las columnas se ahogan, el texto
-se recorta antes de tiempo y la tabla se vuelve ilegible aunque
-técnicamente cumpla la regla.
-
-### 2.13 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
+### 2.12 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
 
 ⚠️ **Regla nueva: al añadir una columna a una tabla abierta a `anon`,
 releer la política de esa tabla en el mismo cambio.** No basta con que
@@ -1027,7 +1015,7 @@ del código, que dio la firma por buena**. Sin Postgres local ni
 credenciales de escritura, esa llamada anónima es la única red que hay:
 hacerla siempre antes de desplegar el cliente.
 
-### 2.14 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
+### 2.13 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
 
 ⚠️ Dónde vive esa pantalla, que Supabase la ha movido: **Authentication →
 Emails → SMTP**, o sea `/dashboard/project/<ref>/auth/smtp`. El viejo
