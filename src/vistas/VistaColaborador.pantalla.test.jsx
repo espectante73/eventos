@@ -99,11 +99,10 @@ describe("la pantalla del colaborador se puede dibujar", () => {
   });
 
   // Las rondas (él, v46.5): con datos a medias la fila solo lleva
-  // "0 de 6" y el nombre; sin la palabra "datos", sin pago ni check.
-  it("una fila con datos a medias enseña solo «N de M» y el nombre", () => {
+  // "datos 0 de 6" y el nombre; ni pago ni check hasta completarlos.
+  it("una fila con datos a medias enseña «datos N de M» y el nombre", () => {
     const html = abrirFormulario();
-    expect(html).not.toMatch(/datos \d+ de \d+/);
-    expect(html).toMatch(/>\d+ de \d+</);
+    expect(html).toMatch(/datos \d+ de \d+/);
   });
 
   it("recién estrenado, sin ningún invitado asignado todavía", () => {

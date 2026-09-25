@@ -64,7 +64,7 @@ const ETIQUETAS_CAMPOS_INVITADO = {
 // de las filas de al lado. Con las columnas fijas, todos los nombres
 // empiezan en el mismo punto y todos los checks caen en la misma columna.
 // La columna de la izquierda enseña lo de la RONDA en que está el
-// invitado (él, v46.5): primero los datos ("0 de 6"), después el pago.
+// invitado (él, v46.5): primero los datos ("datos 0 de 6"), después el pago.
 // Una ronda no adelanta a la anterior, así que nunca hacen falta las dos
 // a la vez, y el nombre gana el sitio que ocupaba la otra columna.
 const ANCHO_PAGO = 104; // "Pago pendiente" es el rótulo más largo de esa columna
@@ -777,8 +777,8 @@ function FilaInvitadoColaborador({
             empezaría en otro sitio que el de las demás. */}
         <div className="flex-shrink-0" style={{ width: ANCHO_PAGO }}>
           {faltanDatos ? (
-            <span className="text-xs whitespace-nowrap" style={{ color: C.wax }}>
-              {datosRellenos} de {datosTotal}
+            <span className="flex items-center gap-1 text-xs whitespace-nowrap" style={{ color: C.wax }}>
+              <Bell size={12} /> datos {datosRellenos} de {datosTotal}
             </span>
           ) : (
             !abierto && (

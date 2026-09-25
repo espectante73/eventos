@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "46.6",
+    cambios: [
+      "Formulario del colaborador: vuelven la campana y la palabra \"datos\" (\"datos 0 de 6\"). Con el nombre ya entero, caben.",
+    ],
+  },
+  {
     version: "46.5",
     cambios: [
       "Formulario del colaborador: cada fila enseña solo lo de su ronda. Con datos a medias, \"0 de 6\" y el nombre (sin campana ni la palabra \"datos\"); el pago y el check de llegada aparecen cuando los datos están completos. El nombre ya cabe entero.",
