@@ -311,9 +311,8 @@ Al construir un reinicio nuevo:
   (imprescindible para repetir una prueba completa con el mismo
   colaborador).
 - Pedir escribir una palabra de confirmación exacta (no un simple clic) y
-  descargar automáticamente una copia de seguridad completa del evento
-  (JSON) antes de ejecutar — nunca ejecutar un reinicio en bloque sin ese
-  respaldo.
+  guardar ANTES la foto del Deshacer; si no se guarda, no se ejecuta (lo
+  vigila `reglas-del-proyecto.test.js`).
 - "Invitación enviada" y "foto familiar" son datos **por familia**
   (`grupoFamiliar`, con reserva a `apellido`), no por invitado individual —
   si el alcance elegido es "un invitado en concreto", esas dos categorías
