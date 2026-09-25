@@ -125,13 +125,13 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
 **Repasarlas antes de construir o retocar cualquier pantalla.** Entre
 paréntesis, dónde está el detalle.
 
-1. **"Estandarizar" es con SU modelo.** El estilo que él nombra o el que
-   ya está aprobado en esa pantalla; nunca uno elegido por mí. Si no está
-   claro cuál es, **preguntar en una línea ANTES de tocar el aspecto**.
-   («Regla de la app: ventanas lo más pequeñas posible»)
-2. **Ventanas tan pequeñas como su contenido.** Del ancho de un móvil en
-   vertical, también en el ordenador. `ModalFlotante` acepta `ancho`.
-   (misma sección)
+1. **Estandarizar = usar el modelo aprobado de la app**: la paleta, las
+   letras y las medidas de `theme.js` y las piezas compartidas (normas
+   11 y 17). Nunca un estilo elegido por mí. Si hay duda de cuál aplica,
+   preguntar en una línea ANTES de tocar el aspecto.
+2. **Ventanas tan pequeñas como su contenido**: del ancho de un móvil en
+   vertical, también en el ordenador. («Regla de la app: ventanas lo más
+   pequeñas posible»)
 3. **Todo al alcance del pulgar QUE ELIJA CADA UNO.** La app entera se
    acomoda a esa elección; la derecha es solo lo que sale por defecto.
    («El pulgar: la regla y cómo funciona»)
