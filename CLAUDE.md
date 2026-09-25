@@ -875,39 +875,12 @@ alguien lo pega. Si se cambia la foto después, los enlaces ya
 compartidos siguen con la vieja un tiempo, y desde el código no se
 puede forzar. La ventana de Configuración ya lo avisa.
 
-### 2.2 2026-08-25 (mismo día, tercera tanda): rediseño de Novedades + ventana de verdad (v6.5)
+### 2.2 Ventanas de verdad del sistema (Novedades, Cronograma, Música, Lista)
 
-- `window.open()` + `createPortal` (React 18) sobre un `<div>` creado a
-  mano dentro del `document` de esa otra ventana.
-- ⚠️ **`abrir()` tiene que llamarse de forma SÍNCRONA dentro del propio
-  clic que la dispara** — de ahí que `DesplegableSecciones.jsx` reciba
-  la función `abrir` ya lista (subida desde `VistaAnfitrion.jsx`, a
-  través de `Portada.jsx`) y la llame directamente como `onClick`, en
-  vez de pasar por un `toggle(clave)` + estado + `useEffect` como el
-  resto de ventanas — un `useEffect` corre DESPUÉS del evento de clic
-  original, y ahí ya no cuenta como "acción directa del usuario" para
-  Safari y otros navegadores exigentes con las ventanas emergentes:
-  las bloquearían en silencio.
-- Los estilos (Tailwind compilado + `index.css`, que a su vez trae la
-  fuente de Google Fonts por `@import`) se copian a mano
-  (`querySelectorAll('link[rel="stylesheet"], style')` +
-  `cloneNode(true)`) al `<head>` de la ventana nueva — sin esto, el
-  contenido se vería sin ningún estilo (esa ventana arranca con un
-  `document` completamente en blanco, no comparte nada con la
-  pestaña).
-- Detecta que la persona cierre la ventana a mano (la X del sistema
-  operativo) escuchando `beforeunload` — sin esto, `abrir()` pensaría
-  que la ventana seguía abierta y no crearía una nueva la próxima vez
-  que se pulsara "Novedades" en el menú.
-- Como ya no es una VentanaFlotante, `VentanaNovedades.jsx` perdió el
-  prop `onCerrar` (no hace falta: la ventana del sistema operativo ya
-  trae su propio cierre) y su cabecera propia dejó de ser arrastrable
-  (tampoco hace falta: se mueve como cualquier ventana normal).
-- `DesplegableSecciones.jsx`: la entrada "Novedades" es un caso
-  especial dentro del `.map` de `ORDEN_VENTANAS` — no lleva el
-  prefijo "✓ " que sí llevan las demás (no hay ningún estado fiable de
-  "¿sigue abierta?" que reflejar ahí: la persona pudo haberla cerrado
-  con la X sin que este menú se entere al momento).
+⚠️ `abrir()` tiene que llamarse **dentro del propio clic**, sin pasar por
+un estado y un `useEffect`: si no, Safari la bloquea en silencio. Lo
+demás (copiar los estilos, saber si se cerró) está explicado en
+`lib/usePopupWindow.js`.
 
 ### 2.3 2026-08-25 (quinta tanda): acordeón de una sola + límite real explicado (WhatsApp)
 
