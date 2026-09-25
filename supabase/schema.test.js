@@ -90,6 +90,17 @@ describe("nada abierto a escritura anónima", () => {
   });
 });
 
+describe("una política nunca mira una tabla cerrada a pelo", () => {
+  // Los cajones de fotos llevaron vacíos desde que se crearon: sus
+  // políticas consultaban directamente una tabla cerrada, y eso falla en
+  // silencio. Se arregló pasando por es_anfitrion() (security definer).
+  it("ninguna política consulta anfitrion_secreto, anfitriones, config_secretos ni tablon_secreto", () => {
+    const politicas = [...sql.matchAll(/CREATE POLICY[^;]+;/gi)].map((m) => m[0]);
+    const culpables = politicas.filter((p) => /anfitrion_secreto|anfitriones|config_secretos|tablon_secreto/.test(p));
+    expect(culpables).toEqual([]);
+  });
+});
+
 describe("el anfitrión no pisa lo que rellena un colaborador", () => {
   // 2026-09-23. El guardado del anfitrión mandaba la lista ENTERA y la
   // función borraba a quien no viniera en ella. Su pantalla puede llevar

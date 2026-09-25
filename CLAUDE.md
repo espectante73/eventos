@@ -892,18 +892,13 @@ enseguida, **sin esperar** a que acabe la copia; si se espera, ya no
 cuenta como clic y el navegador lo bloquea. (Botón del grupo de WhatsApp
 en Novedades.)
 
-### 2.3 2026-08-25 (sexta tanda): bug real -- los buckets de Storage llevaban vacíos desde que se crearon (v6.6)
+### 2.3 Políticas que necesitan saber si eres el anfitrión
 
-**Arreglo:** función envoltorio `es_anfitrion()` (`security definer`,
-igual que `mi_rol()`), y las 5 políticas pasan a llamarla en vez de
-consultar la tabla directamente. **Lección para cualquier política de
-RLS futura que necesite comprobar algo contra una tabla cerrada
-(`anfitrion_secreto`, `anfitriones`, `config_secretos`...): nunca
-consultarla directamente desde la política -- envolverla siempre en una
-función `security definer` primero,** exactamente igual que ya se hace
-para las RPC normales, y probar la subida real en vivo antes de darla
-por buena en vez de asumir que "la política parece correcta" a simple
-vista.
+⚠️ Una política de seguridad (RLS) **nunca consulta directamente una
+tabla cerrada**: falla en silencio. Así llevaron vacíos los cajones de
+fotos desde que se crearon. Se pregunta a través de `es_anfitrion()`,
+y se prueba una subida real antes de darla por buena. Lo vigila
+`supabase/schema.test.js`.
 
 ### 2.4 2026-08-25 (novena tanda): pregunta de acceso al tablón (v6.7)
 
