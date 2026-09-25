@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "45.2",
+    cambios: [
+      "En Novedades, si el navegador no deja copiar el enlace, ahora sale un aviso dentro de la ventana con el enlace a la vista para copiarlo a mano. Antes salía una ventanita del navegador, que en las ventanas emergentes puede colgarse.",
+    ],
+  },
+  {
     version: "45.1",
     cambios: [
       "Ahora sí aparece «Diseño app» en Mi cuenta. En la 45 estaba construido pero no se veía: el aviso de mostrarlo se perdía por el camino.",

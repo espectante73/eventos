@@ -247,6 +247,10 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
     accesosTablonSospechosos,
   } = data;
   const [copiado, setCopiado] = useState(false);
+  // Si el navegador no deja copiar, el enlace se enseña aquí para
+  // copiarlo a mano. Antes era un prompt() del navegador, que la norma 12
+  // prohíbe: en una ventana emergente sale donde no debe o se cuelga.
+  const [copiaFallida, setCopiaFallida] = useState(false);
   // Pie plegado por defecto -- a petición del usuario, 2026-08-27, para
   // no tener siempre a la vista la pregunta de acceso/WhatsApp/ocultar
   // fecha. Y ni siquiera se muestra si soloTexto: es exclusivo del
@@ -361,7 +365,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
         setCopiado(true);
         setTimeout(() => setCopiado(false), 2500);
       },
-      () => ventanaPropia.prompt("Copia el enlace manualmente:", enlace)
+      () => setCopiaFallida(true)
     );
     if (evento.enlaceGrupoWhatsapp) {
       ventanaPropia.open(evento.enlaceGrupoWhatsapp, "_blank", "noopener,noreferrer");
@@ -417,6 +421,20 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
       </div>
 
       <div className="p-4 space-y-2" style={{ flex: 1, overflowY: "auto" }}>
+        {copiaFallida && (
+          <div
+            className="rounded px-3 py-2 text-xs flex items-start gap-2"
+            style={{ background: C.avisoFondo, border: `1px solid ${C.peligro}`, color: C.charcoal }}
+          >
+            <span className="flex-1">
+              No se ha podido copiar solo. Selecciona el enlace y cópialo tú:{" "}
+              <b className="select-all break-all" style={{ color: C.ink }}>{enlace}</b>
+            </span>
+            <button onClick={() => setCopiaFallida(false)} aria-label="Cerrar aviso" style={{ color: C.charcoal }}>
+              ×
+            </button>
+          </div>
+        )}
         {novedades.map((n) => (
           <NovedadCard
             key={n.id}

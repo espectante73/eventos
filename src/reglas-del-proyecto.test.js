@@ -34,7 +34,10 @@ describe("norma 12: nada de ventanas del navegador", () => {
   // pestaña equivocada y la dejan colgada. Se migraron todas en la
   // v37.12; el guardia impide que vuelva a colarse una.
   it("ni window.alert ni window.confirm ni window.prompt", () => {
-    const culpables = archivos.filter((r) => /window\.(alert|confirm|prompt)\s*\(/.test(sinComentarios(leer(r))));
+    // Cualquier objeto, no solo `window`: dentro de una ventana emergente
+    // se llama desde SU window (`ventanaPropia.prompt(...)`), y así se
+    // coló uno en Novedades que el guardia no veía (2026-09-25).
+    const culpables = archivos.filter((r) => /\.(alert|confirm|prompt)\s*\(/.test(sinComentarios(leer(r))));
     expect(culpables).toEqual([]);
   });
 });
