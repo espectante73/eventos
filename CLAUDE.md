@@ -96,7 +96,9 @@ regla siga siendo verdad, así que el guardia es de mano:
    pedido revisión.
 4. **`lint`, `build` y `test`: los tres, siempre.** Cada uno caza lo que
    los otros no ven: el lint, una variable sin importar; el build, un
-   import traído del archivo equivocado.
+   import traído del archivo equivocado. Y git no deja subir con el lint
+   o las pruebas en rojo (`.githooks/pre-push`; en una máquina nueva,
+   activarlo con `git config core.hooksPath .githooks`).
 5. **Al arreglar un fallo, dejar un vigilante.** Si se puede probar, el
    test es parte del arreglo. Solo queda como texto en la PARTE 2 lo que
    no, diciendo dónde vive (Supabase, el iPhone, su Mac, el panel de

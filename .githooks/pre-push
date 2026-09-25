@@ -1,0 +1,8 @@
+#!/bin/sh
+# Freno antes de subir a GitHub: si el lint o las pruebas fallan, no sale
+# nada. Antes dependía de que quien subía mirara bien el resultado, y una
+# vez subió con una prueba en rojo (GitHub mandó el correo de fallo).
+# Se activa una vez por máquina: git config core.hooksPath .githooks
+set -e
+npm run lint --silent
+npm test --silent
