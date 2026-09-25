@@ -34,10 +34,15 @@ function cabeceraDeParte(parte) {
 // La hora del último cambio del documento, en hora de Canarias. Sale de
 // manual-sello.json (scripts/sellar-manual.mjs), no de la hora de
 // construir la app: un despliegue sin tocar el documento no la mueve.
-// Cuánto creció o encogió con el último cambio ("+120", "−40"): la señal
-// de que el documento engorda. Sale del sello, no se calcula aquí.
-const cambio = (sello.palabras ?? 0) - (sello.palabrasAntes ?? sello.palabras ?? 0);
-const diferencia = cambio === 0 ? "" : ` (${cambio > 0 ? "+" : "−"}${miles(Math.abs(cambio))})`;
+// Lo que subió o bajó HOY ("hoy +24", "hoy −18"): la señal de que el
+// documento engorda. Sale del sello (scripts/sellar-manual.mjs), que
+// cuenta por días en hora de Canarias; si hoy no se ha tocado, no sale.
+export function diferenciaDeHoy(sello, ahora = new Date()) {
+  const hoy = ahora.toLocaleDateString("sv-SE", { timeZone: "Atlantic/Canary" });
+  const cambio = (sello.palabras ?? 0) - (sello.palabrasInicioDia ?? sello.palabras ?? 0);
+  if (sello.dia !== hoy || cambio === 0) return "";
+  return ` (hoy ${cambio > 0 ? "+" : "−"}${miles(Math.abs(cambio))})`;
+}
 
 const cambiado = new Date(sello.cambiado).toLocaleString("es-ES", {
   timeZone: "Atlantic/Canary",
@@ -123,7 +128,7 @@ export default function ModalDiseno({ onCerrar }) {
       </p>
       {/* Los dos sellos, en UNA línea (él, v45.5: en la cabecera se partían). */}
       <div className="flex gap-2 my-2">
-        {[`${miles(manual.palabras)} palabras${diferencia}`, cambiado].map((s) => (
+        {[`${miles(manual.palabras)} palabras${diferenciaDeHoy(sello)}`, cambiado].map((s) => (
           <span
             key={s}
             className="px-2.5 py-0.5 whitespace-nowrap"

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "46.2",
+    cambios: [
+      "Diseño app: el sello de palabras dice lo que subió o bajó el documento en el día, con \"hoy\" delante: por ejemplo \"4557 palabras (hoy −7777)\". Cada día empieza de cero, en hora de Canarias; si ese día no se toca, no sale nada.",
+    ],
+  },
+  {
     version: "46.1",
     cambios: [
       "Diseño app: el sello de palabras dice cuánto creció o encogió el documento con el último cambio, por ejemplo \"4533 palabras (−4)\". Es la señal de que engorda.",
