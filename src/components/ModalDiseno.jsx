@@ -20,6 +20,16 @@ import sello from "../lib/manual-sello.json";
 const manual = partirManual(textoDiseno);
 const miles = (n) => n.toLocaleString("es-ES");
 
+// "PARTE 1 — Reglas que…" → "PARTE 1 — 12 secciones de reglas que…";
+// "PARTE 2 — Trampas ya pagadas" → "PARTE 2 — 10 trampas ya pagadas".
+// En la Parte 1 cada sección agrupa varias reglas: "12 reglas" sería falso.
+function tituloConCifra(parte) {
+  const [cabeza, resto = ""] = parte.titulo.split(" — ");
+  const nombre = resto.charAt(0).toLowerCase() + resto.slice(1);
+  const n = parte.secciones.length;
+  return `${cabeza} — ${n} ${nombre.startsWith("trampas") ? "" : "secciones de "}${nombre}`;
+}
+
 // La hora del último cambio del documento, en hora de Canarias. Sale de
 // manual-sello.json (scripts/sellar-manual.mjs), no de la hora de
 // construir la app: un despliegue sin tocar el documento no la mueve.
@@ -137,17 +147,15 @@ export default function ModalDiseno({ onCerrar }) {
         </SeccionPlegable>
         {manual.partes.map((parte) => (
           <div key={parte.titulo} className="flex flex-col gap-2">
-            <div className="mt-3">
-              <p style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600, fontSize: T.normal }}>
-                {parte.titulo}
-              </p>
-              {/* En su propia línea y con su nombre: "12 · 3284" junto al
-                  título se leía como una sola cifra. */}
-              <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-                {parte.secciones.length} {parte.titulo.includes("PARTE 2") ? "trampas" : "secciones"} ·{" "}
-                {miles(parte.palabras)} palabras
-              </p>
-            </div>
+            {/* Todo en una línea, con la cifra dentro del título: "PARTE 1 —
+                12 secciones de reglas…", "PARTE 2 — 10 trampas ya pagadas".
+                Antes "12 · 3284" se leía como una sola cifra. */}
+            <p className="mt-3" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600, fontSize: T.normal }}>
+              {tituloConCifra(parte)}
+              <span className="ml-2 text-xs" style={{ fontFamily: "inherit", color: C.charcoal, opacity: OP.secundario, fontWeight: 400 }}>
+                · {miles(parte.palabras)} palabras
+              </span>
+            </p>
             {parte.secciones.map((s) => (
               <SeccionPlegable
                 key={s.num}

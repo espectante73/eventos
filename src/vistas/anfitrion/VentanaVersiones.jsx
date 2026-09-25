@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "45.9",
+    cambios: [
+      "Diseño app: el título de cada parte lleva la cifra dentro y todo en una línea: \"PARTE 1 — 12 secciones de reglas que hay que obedecer siempre · 3284 palabras\" y \"PARTE 2 — 10 trampas ya pagadas · 759 palabras\".",
+    ],
+  },
+  {
     version: "45.8",
     cambios: [
       "Diseño app: bajo el título de cada parte pone ahora \"12 secciones · 3284 palabras\" y \"10 trampas · 759 palabras\", en su propia línea (antes \"12 · 3284\" se leía como una sola cifra). Y el total de arriba es la suma exacta de las partes.",
