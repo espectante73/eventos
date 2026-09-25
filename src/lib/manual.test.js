@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 import { partirManual, bloques, trozosEnLinea, contarPalabras, contarReglas } from "./manual";
 import { huellaDe } from "../../scripts/huellaManual.mjs";
 import sello from "./manual-sello.json";
@@ -223,5 +224,74 @@ describe("el CLAUDE.md solo usa lo que la app sabe dibujar", () => {
       else if (!enCodigo && (/^\s*[>|]/.test(l) || /\]\(/.test(l))) mal.push(`${i + 1}: ${l.slice(0, 40)}`);
     });
     expect(mal).toEqual([]);
+  });
+});
+
+// Las salvaguardas del documento (encabezado del CLAUDE.md). Sin ellas
+// volvió a engordar solo: de 15.000 a 30.000 palabras en una semana, con
+// reglas que hablaban de archivos y funciones que ya no existían.
+describe("salvaguardas del CLAUDE.md", () => {
+  const texto = readFileSync("CLAUDE.md", "utf-8");
+  const manual = partirManual(texto);
+  // Fuera de los bloques de código: ahí van ejemplos, no citas.
+  const prosa = texto.replace(/```[\s\S]*?```/g, "");
+  const citas = [...prosa.matchAll(/`([^`\n]+)`/g)].map((m) => m[1]);
+
+  // Pasar de aquí es una decisión suya, no algo que ocurre sin darse cuenta.
+  const TECHO = 5000;
+  it(`el documento entero, ${TECHO} palabras como mucho`, () => {
+    expect(manual.palabras, "subir el techo lo decide él").toBeLessThanOrEqual(TECHO);
+  });
+
+  it("cada trampa, 8 líneas como mucho", () => {
+    const largas = manual.partes[1].secciones
+      .map((s) => [s.num, s.texto.split("\n").filter((l) => l.trim()).length])
+      .filter(([, n]) => n > 8);
+    expect(largas).toEqual([]);
+  });
+
+  it("ninguna fecha: casi siempre es relato", () => {
+    expect(texto.match(/\b20\d\d-\d\d-\d\d\b/g) || []).toEqual([]);
+  });
+
+  // Todo el proyecto, para buscar lo que el documento nombra.
+  const archivos = (function reunir(dir = ".", acc = []) {
+    for (const n of readdirSync(dir)) {
+      if (["node_modules", ".git", "dist"].includes(n)) continue;
+      const r = join(dir, n);
+      if (statSync(r).isDirectory()) reunir(r, acc);
+      else acc.push(r);
+    }
+    return acc;
+  })();
+
+  // Nombrados A PROPÓSITO en negativo: "no se hace", "no se resucita".
+  const QUE_NO_EXISTEN_A_PROPOSITO = ["DECISIONS.md", "lib/backup.js"];
+
+  it("todo archivo que nombra existe", () => {
+    const faltan = [...new Set(citas.filter((c) => /^[\w./-]+\.(jsx?|mjs|sql|ya?ml|md|css|json)$/.test(c)))]
+      .filter((f) => !QUE_NO_EXISTEN_A_PROPOSITO.includes(f))
+      .filter((f) => !archivos.some((r) => r === f || r.endsWith("/" + f)));
+    expect(faltan).toEqual([]);
+  });
+
+  it("toda función que nombra existe", () => {
+    const codigo = archivos
+      .filter((r) => /\.(jsx?|mjs|sql)$/.test(r) && !r.endsWith(".test.js") && !r.endsWith(".test.jsx"))
+      .map((r) => readFileSync(r, "utf-8"))
+      .join("\n");
+    const nombres = [
+      ...new Set(
+        citas
+          .map((c) => c.match(/^([A-Za-z_]\w*)\(\)$/)?.[1] ?? (/^[a-z]+(_[a-z0-9]+)+$/.test(c) ? c : null))
+          .filter(Boolean)
+      ),
+    ];
+    expect(nombres.length).toBeGreaterThan(20);
+    expect(nombres.filter((n) => !codigo.includes(n))).toEqual([]);
+  });
+
+  it("el sello guarda las palabras de verdad", () => {
+    expect(sello.palabras).toBe(manual.palabras);
   });
 });

@@ -20,6 +20,13 @@ datos»).
    cuando el código que la permitía ya no existe. Cada una, de 3 a 8
    líneas: si crece, se ha colado relato.
 
+⚠️ **Salvaguardas automáticas** (`lib/manual.test.js`): el documento
+entero, **5.000 palabras como mucho** (pasar de ahí lo decide él);
+**ninguna fecha**, que casi siempre es relato; y **todo archivo o función
+que se nombra existe de verdad**, así que borrar código sin borrar su
+regla se pone en rojo solo. Lo que no ve ninguna prueba —duplicados y
+relato— se repasa leyendo.
+
 ⚠️ **Se lee también dentro de la app** (Mi cuenta → «Diseño app»): la
 numeración no puede saltarse (lo vigila `lib/manual.test.js`), solo se
 dibujan párrafos, listas, código, títulos, negrita y cursiva, y **tras
@@ -471,20 +478,13 @@ puede forzar. La ventana de Configuración ya lo avisa.
 
 ### 2.2 Ventanas de verdad del sistema (Novedades, Cronograma, Música, Lista)
 
-⚠️ `abrir()` tiene que llamarse **dentro del propio clic**, sin pasar por
-un estado y un `useEffect`: si no, Safari la bloquea en silencio. Lo
-demás (copiar los estilos, saber si se cerró) está explicado en
-`lib/usePopupWindow.js`.
-
-⚠️ **Dentro de esas ventanas, usar SU `window`** (el que da
-`usePopupWindow`), nunca `window`/`navigator`/`document` a secas: el
-código corre en la pestaña principal, y el portapapeles o un
-`window.open` se rechazan en silencio porque el foco lo tiene la otra.
-
-⚠️ **Copiar y abrir en el mismo clic:** empezar a copiar primero y abrir
-enseguida, **sin esperar** a que acabe la copia; si se espera, ya no
-cuenta como clic y el navegador lo bloquea. (Botón del grupo de WhatsApp
-en Novedades.)
+⚠️ **El navegador solo deja abrir una ventana o copiar DENTRO del clic, y
+en la ventana que tiene el foco.** Por eso: `abrir()` se llama en el
+propio clic, nunca a través de un estado y un `useEffect` (Safari la
+bloquea en silencio); dentro de esas ventanas se usa SU `window` (el de
+`usePopupWindow`), nunca `window` a secas; y para copiar y abrir, se
+empieza a copiar y se abre enseguida, **sin esperar** a la copia. El
+resto, en `lib/usePopupWindow.js`.
 
 ### 2.3 Políticas que necesitan saber si eres el anfitrión
 
@@ -502,17 +502,14 @@ guardado repinta la ventana y borra lo que se está escribiendo al lado.
 
 ### 2.5 Un matrimonio comparte año y foto de boda
 
-Es el **administrador** quien declara el matrimonio, al poner a dos
-personas de la misma familia los papeles **O (esposo) y A (esposa)**.
-Desde ese momento, **lo que rellena uno sale ya en la ficha del otro.**
-- La **foto** es una por familia, así que ya es la misma.
-- El **año** es de cada invitado, y lo iguala la BASE
-  (`trg_igualar_anio_boda_pareja`), no la pantalla: el colaborador
-  guarda una ficha cada vez, y el cónyuge puede ni estar en su lista.
-
-⚠️ No mover el año a `fotos_familiares`, aunque parezca "una sola
-pieza": obliga a cambiar una decena de archivos que leen `g.anioBoda`, y
-el disparador ya los mantiene iguales.
+Es el **administrador** quien declara el matrimonio, con los papeles
+**O (esposo) y A (esposa)** en la misma familia; desde ese momento **lo
+que rellena uno sale ya en la ficha del otro**. La foto es una por
+familia; el año, que es de cada invitado, lo iguala la BASE
+(`trg_igualar_anio_boda_pareja`), porque el colaborador guarda una ficha
+cada vez. ⚠️ No mover el año a `fotos_familiares` "por ser una sola
+pieza": obliga a cambiar una decena de archivos, y el disparador ya los
+mantiene iguales.
 
 ### 2.6 "Autorizo expresamente a que guarden mis datos"
 

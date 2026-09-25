@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "46.1",
+    cambios: [
+      "Diseño app: el sello de palabras dice cuánto creció o encogió el documento con el último cambio, por ejemplo \"4533 palabras (−4)\". Es la señal de que engorda.",
+      "El documento tiene salvaguardas automáticas: 5.000 palabras como mucho, ninguna trampa de más de 8 líneas, ninguna fecha, y todo archivo o función que nombra tiene que existir.",
+    ],
+  },
+  {
     version: "46",
     cambios: [
       "Diseño app: las reglas de la Parte 1 van numeradas dentro de cada sección (se puede citar \"1.6, regla 3\"), y la app las cuenta: \"PARTE 1 — 12 secciones\" y debajo \"63 reglas que hay que obedecer siempre\".",

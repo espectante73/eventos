@@ -14,7 +14,7 @@ describe("Diseño app", () => {
     const html = document.body.innerHTML;
     expect(html).toContain("Diseño de la app");
     // Los sellos de la cabecera: palabras y hora del último cambio.
-    expect(html).toMatch(/[\d.]+ palabras/);
+    expect(html).toMatch(/[\d.]+ palabras( \([+−][\d.]+\))?/);
     expect(html).toContain("2026");
     expect(html).toContain("PARTE 1");
     expect(html).toContain("PARTE 2");
