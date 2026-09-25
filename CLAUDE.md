@@ -882,14 +882,17 @@ un estado y un `useEffect`: si no, Safari la bloquea en silencio. Lo
 demás (copiar los estilos, saber si se cerró) está explicado en
 `lib/usePopupWindow.js`.
 
-### 2.3 2026-08-25 (quinta tanda): acordeón de una sola + límite real explicado (WhatsApp)
+⚠️ **Dentro de esas ventanas, usar SU `window`** (el que da
+`usePopupWindow`), nunca `window`/`navigator`/`document` a secas: el
+código corre en la pestaña principal, y el portapapeles o un
+`window.open` se rechazan en silencio porque el foco lo tiene la otra.
 
-⚠️ Mismo cuidado que en `usePopupWindow.js`: `window.open(enlaceGrupo)`
-se llama ANTES del `.then()` del portapapeles, nunca después -- si se
-abriera tras esperar esa promesa, algunos navegadores ya no lo
-considerarían una acción directa del clic original y lo bloquearían.
+⚠️ **Copiar y abrir en el mismo clic:** empezar a copiar primero y abrir
+enseguida, **sin esperar** a que acabe la copia; si se espera, ya no
+cuenta como clic y el navegador lo bloquea. (Botón del grupo de WhatsApp
+en Novedades.)
 
-### 2.4 2026-08-25 (sexta tanda): bug real -- los buckets de Storage llevaban vacíos desde que se crearon (v6.6)
+### 2.3 2026-08-25 (sexta tanda): bug real -- los buckets de Storage llevaban vacíos desde que se crearon (v6.6)
 
 **Arreglo:** función envoltorio `es_anfitrion()` (`security definer`,
 igual que `mi_rol()`), y las 5 políticas pasan a llamarla en vez de
@@ -902,24 +905,7 @@ para las RPC normales, y probar la subida real en vivo antes de darla
 por buena en vez de asumir que "la política parece correcta" a simple
 vista.
 
-### 2.5 2026-08-25 (séptima tanda): el botón "Enlace" copiaba lo de antes, no el enlace nuevo
-
-**Lección para cualquier acción futura que combine portapapeles +
-`window.open`/navegación:** el portapapeles siempre primero. Cualquier
-cosa que pueda robar el foco de la pestaña (abrir una ventana, enviar a
-otra URL) debe ir después, nunca antes.
-
-### 2.6 2026-08-25 (octava tanda): el reordenado no bastó -- causa raíz de verdad
-
-**Lección para cualquier cosa nueva que se añada dentro de esta ventana
-emergente (o de cualquier otra que se construya así en el futuro) y
-que dependa de "qué ventana tiene el foco" (portapapeles, notificaciones,
-`window.open` en cadena...): usar siempre el objeto `window` de ESA
-ventana, nunca los globales `window`/`navigator`/`document` a secas** --
-aunque el código "viva visualmente" en la ventana emergente, sigue
-ejecutándose en el realm de la pestaña principal.
-
-### 2.7 2026-08-25 (novena tanda): pregunta de acceso al tablón (v6.7)
+### 2.4 2026-08-25 (novena tanda): pregunta de acceso al tablón (v6.7)
 
 **Tercer bug real de la misma tanda: el propio guardado borraba lo que
 se estaba escribiendo al lado.** El usuario lo describió bien una vez
@@ -962,7 +948,7 @@ funciones de esta app que tocan una tabla entera a propósito).
 `where true` desde el principio, no esperar a que falle en
 producción.**
 
-### 2.8 Ventana "Aniversarios" y las fotos fuera de la base (2026-09-17, v30)
+### 2.5 Ventana "Aniversarios" y las fotos fuera de la base (2026-09-17, v30)
 
 - **Hoja de encargo** (v31.1): dentro del mismo ZIP, un `Hoja de
   encargo.txt` con un bloque redactado por foto (nombres, año de boda,
@@ -1011,7 +997,7 @@ un fallo de la app -- comprobarlo antes de tocar nada.
 sustitución de verdad (se escribió literal). Se recuperó del diff. Si se
 vuelve a migrar algo en bloque: comprobar el diff, no solo que compile.
 
-### 2.9 Pendiente: hacer el mapa del sitio privado de verdad (aparcado el 2026-09-16)
+### 2.6 Pendiente: hacer el mapa del sitio privado de verdad (aparcado el 2026-09-16)
 
 ⚠️ **Decisión firme del 2026-09-20: se queda como está.** El usuario:
 *"lo dejamos como está hasta que vuelva a preguntar"*. No volver a
@@ -1025,7 +1011,7 @@ desplegando igual desde un repo privado. Efecto colateral a recordarle:
 para enseñárselo al desarrollador que se ofreció a revisarlo habrá que
 invitarle como colaborador.
 
-### 2.10 "Mapa del sitio" en Mi cuenta, con permiso propio (2026-09-16, v29)
+### 2.7 "Mapa del sitio" en Mi cuenta, con permiso propio (2026-09-16, v29)
 
 ⚠️ Este permiso **no existe en `schema.sql`**, a diferencia de los otros
 tres. Solo decide si se enseña un enlace; la imagen la sirve la web a
@@ -1033,7 +1019,7 @@ cualquiera que sepa la URL, así que no hay nada que comprobar en la base
 de datos y `colaborador_tiene_permiso` no lo mira nunca. No es un
 descuido: es la primera clave de la app que es solo de pantalla.
 
-### 2.11 El Modo Pruebas no guardaba Novedades (2026-09-17)
+### 2.8 El Modo Pruebas no guardaba Novedades (2026-09-17)
 
 ⚠️ Quedan fuera A PROPÓSITO, y conviene no "arreglarlo" sin pensar:
 - `historial_texto` y `tablon_accesos`: son registros de lo que pasó de
@@ -1044,7 +1030,7 @@ descuido: es la primera clave de la app que es solo de pantalla.
   una prueba. Se deja fuera porque la fila lleva también el token, y
   reponerla entera es más peligroso que el problema que resuelve.
 
-### 2.12 No se podía salir del Modo Pruebas (2026-09-20, v37.13)
+### 2.9 No se podía salir del Modo Pruebas (2026-09-20, v37.13)
 
 **Lección, y esto vale para cualquier restauración futura**: el orden de
 inserción tiene que seguir las claves foráneas. Hoy son estas:
@@ -1053,7 +1039,7 @@ inserción tiene que seguir las claves foráneas. Hoy son estas:
 enganchan al final) y `colaboradores."invitadoId"` -> `invitados`. Al
 añadir una tabla o una clave foránea nueva, repasar `restaurar_foto`.
 
-### 2.13 "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
+### 2.10 "Autorizo expresamente a que guarden mis datos" (2026-09-21, v39.2)
 
 El texto vive en `evento."notaPrivacidad"`, se ve al pie del tablón y se
 edita en Datos del evento (v39.3 y v39.4). ⚠️ **La nota manda sobre el
@@ -1067,7 +1053,7 @@ decisiones en `textos/nota-privacidad-tablon.md`.
 foto es otra cosa y ante la duda se borra. Si algún día se quiere lo
 contrario, es una decisión suya, no un descuido que arreglar.
 
-### 2.14 "Todavía no hay fecha confirmada" (2026-09-21, v39)
+### 2.11 "Todavía no hay fecha confirmada" (2026-09-21, v39)
 
 ⚠️ **A propósito NO borra la fecha escrita**, aunque él dijo "anule la
 fecha". Dos motivos, los dos reales:
@@ -1087,7 +1073,7 @@ que nadie se entere. Es el mismo tipo de trampa que las columnas nuevas
 NOT NULL rompiendo restauraciones antiguas. Quitarlo solo cuando ya no
 quede ninguna foto vieja.
 
-### 2.15 Dos clases de permiso, no una (2026-09-21, v38.5)
+### 2.12 Dos clases de permiso, no una (2026-09-21, v38.5)
 
 ⚠️ El botón desaparece de "Mi cuenta" **también para el anfitrión**
 (`VistaAnfitrion` ya no pasa `mostrarRepositorio`). Es lo que se pidió, y
@@ -1107,7 +1093,7 @@ aplicarla al pie de la letra.**
 texto que la lista ya imprime. Aquí la etiqueta era correcta y la frase
 que la envolvía, no.
 
-### 2.16 El mapa se quedaba viejo sin que nadie se enterara (2026-09-23)
+### 2.13 El mapa se quedaba viejo sin que nadie se enterara (2026-09-23)
 
 **Y de paso, la paleta.** El script tenía los colores **copiados a mano**
 de `theme.js`, y ya habían derivado: sus dos dorados (#A87C3A, #8A6A34)
@@ -1125,13 +1111,13 @@ con `nvm alias default v24.18.1`. **Lección: `nvm install` toca la
 configuración de su máquina, no solo la mía.** Si hace falta otra versión
 para una prueba, dejar el `default` como estaba al terminar.
 
-### 2.17 El acabado, con una escala y no a ojo (2026-09-20, v38)
+### 2.14 El acabado, con una escala y no a ojo (2026-09-20, v38)
 
 **El aire**: en paneles y tarjetas sí; ⚠️ en las **filas de las tablas
 no** — con 140 invitados, una lista con más aire es una lista que no
 cabe.
 
-### 2.18 El sello que late (2026-09-20, v38.1)
+### 2.15 El sello que late (2026-09-20, v38.1)
 
 ✅ **Aprobado por el usuario el 2026-09-20** ("espectacular"). Y una
 lección de método: los tres aros salieron de tres vueltas suyas seguidas
@@ -1139,7 +1125,7 @@ lección de método: los tres aros salieron de tres vueltas suyas seguidas
 tres la habría acertado yo de una: con él conviene **construir de uno en
 uno y enseñar**, no proponer el resultado final de golpe.
 
-### 2.19 Se acabaron los avisos del navegador (2026-09-20, v37.12)
+### 2.16 Se acabaron los avisos del navegador (2026-09-20, v37.12)
 
 ⚠️ Sigue habiendo DOS excepciones a propósito, y no son un olvido:
 `persistNovedades` y `persistPreguntaTablon` devuelven `true`/`false` sin
@@ -1147,9 +1133,9 @@ avisar, porque `VentanaNovedades.jsx` enseña el fallo en su propia
 pantalla, junto al texto que no se ha podido guardar -- ahí se entiende
 mejor que en una ventana aparte.
 
-### 2.20 "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
+### 2.17 "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
 
-### 2.21 Una familia no se separa en las mesas (2026-09-19, v37)
+### 2.18 Una familia no se separa en las mesas (2026-09-19, v37)
 
 - `lib/mesas.js` es la única definición. `claveFamiliaMesa` = grupo
   familiar o, si está vacío, el apellido: la MISMA que ya usaba el
@@ -1207,7 +1193,7 @@ mejor que en una ventana aparte.
   UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
   al elegirla, sale el aviso y no se mueve nadie.
 
-### 2.22 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
+### 2.19 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
 
 El usuario lo probó en su iPhone: ni sonido ni vibración.
 - **Vibración**: el truco de pulsar un `<input switch>` escondido DESDE EL
@@ -1243,14 +1229,14 @@ elección de mano, la X de quitar con su pregunta y los avisos. Es decir,
 la técnica del interruptor SÍ funciona en su iOS: no volver al truco de
 pulsarlo desde el código.
 
-### 2.23 Permiso "Ver el código de la app" (2026-09-18, v34.2)
+### 2.20 Permiso "Ver el código de la app" (2026-09-18, v34.2)
 
 ⚠️ Mismo caso que `mapa_sitio_ver`: **solo de pantalla**. El repositorio
 es público, así que el permiso decide quién ve el enlace, no quién entra.
 Se le dijo al usuario antes de construirlo. Si el repo pasa a privado,
 habrá que invitar al desarrollador también desde GitHub.
 
-### 2.24 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
+### 2.21 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
 
 ⚠️ **La ventana de Música NO se trocea, a propósito**: se abre en el
 local con un wifi desconocido y no puede quedarse descargando delante de
@@ -1262,13 +1248,13 @@ abierta de antes pide trozos con nombres que ya no existen. `main.jsx`
 escucha `vite:preloadError` y recarga UNA vez (marca en sessionStorage
 para no entrar en bucle si el fallo es otro, como estar sin conexión).
 
-### 2.25 Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
+### 2.22 Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
 
 ⚠️ La foto se guarda **antes** de la acción, y si falla no se toca nada.
 Al revés (como estaba con la descarga) el reinicio podía ejecutarse igual
 aunque la copia no llegara a existir.
 
-### 2.26 `schema.sql` reescrito desde cero (2026-09-16)
+### 2.23 `schema.sql` reescrito desde cero (2026-09-16)
 
 ⚠️ Regla que sustituye a la de antes: **no se añade nada al final de
 `schema.sql`**. Si cambia una función, se cambia en su sitio. Si cambia
@@ -1280,7 +1266,7 @@ contenedor de la tabla (`tablaRef`): si las columnas se ahogan, el texto
 se recorta antes de tiempo y la tabla se vuelve ilegible aunque
 técnicamente cumpla la regla.
 
-### 2.27 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
+### 2.24 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
 
 ⚠️ **Regla nueva: al añadir una columna a una tabla abierta a `anon`,
 releer la política de esa tabla en el mismo cambio.** No basta con que
@@ -1296,7 +1282,7 @@ del código, que dio la firma por buena**. Sin Postgres local ni
 credenciales de escritura, esa llamada anónima es la única red que hay:
 hacerla siempre antes de desplegar el cliente.
 
-### 2.28 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
+### 2.25 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
 
 ⚠️ Dónde vive esa pantalla, que Supabase la ha movido: **Authentication →
 Emails → SMTP**, o sea `/dashboard/project/<ref>/auth/smtp`. El viejo
