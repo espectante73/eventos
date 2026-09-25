@@ -88,16 +88,11 @@ no al editar el texto. El texto sigue a la realidad, nunca al revés.
 
 **Son sobre CÓMO trabajo, no sobre cómo es la app** (para eso, las "Normas de estándar" de abajo).
 
-1. **Verificar antes de afirmar.** No usar una función, método, import o
-   parámetro que no se haya visto en este código sin abrir el archivo o
-   la dependencia y comprobar que existe. Si no se puede comprobar,
-   decirlo en vez de suponerlo. No inventar nombres de archivo, rutas ni
-   APIs internas: buscarlos primero.
-   ⚠️ Vale igual para los **paneles de otras empresas** (Vercel,
-   Supabase, Cloudflare…): cambian a menudo, y una ruta de menús dada de
-   memoria le hace perder tiempo. Si hay línea de comandos o API oficial,
-   hacerlo con ella en vez de narrar clics; si no, comprobar la ruta
-   antes de dársela.
+1. **Verificar antes de afirmar.** Nada del código (función, archivo,
+   ruta) ni de los paneles de otras empresas (Vercel, Supabase…, que
+   cambian a menudo) se da por cierto sin abrirlo y comprobarlo. Si no
+   se puede, decirlo. Y si hay línea de comandos o API, usarla en vez de
+   narrar clics.
 2. **Versiones reales, no de memoria.** Antes de sugerir sintaxis o
    comportamiento de una librería, leer la versión instalada
    (`package.json`, lockfile). Si la tarea depende de documentación
