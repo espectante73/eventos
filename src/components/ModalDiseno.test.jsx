@@ -13,6 +13,7 @@ describe("Diseño app", () => {
     const vista = montar(<ModalDiseno onCerrar={() => {}} />);
     const html = document.body.innerHTML;
     expect(html).toContain("Diseño de la app");
+    expect(html).toContain("Documento para construir la app");
     // Los sellos de la cabecera: palabras y hora del último cambio.
     expect(html).toMatch(/[\d.]+ palabras( \(hoy [+−][\d.]+\))?/);
     expect(html).toContain("2026");

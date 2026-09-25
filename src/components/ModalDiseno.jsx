@@ -124,7 +124,7 @@ export default function ModalDiseno({ onCerrar }) {
   return (
     <ModalFlotante titulo="Diseño de la app" onCerrar={onCerrar}>
       <p style={{ color: C.ink, fontSize: T.destacado, fontWeight: 700 }}>
-        El documento con el que se construye la app.
+        Documento para construir la app
       </p>
       {/* Los dos sellos, en UNA línea (él, v45.5: en la cabecera se partían). */}
       <div className="flex gap-2 my-2">
