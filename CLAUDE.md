@@ -840,12 +840,6 @@ de allí— es **para bastante más cerca del evento**, dicho por él
 (2026-09-20). Y la fecha ni siquiera está fijada. No listarla entre lo
 pendiente de ahora ni ofrecerla como siguiente paso.
 
-**⏳ ENCARGO ABIERTO: repasar las 30 trampas (2.1 a 2.30) una a una**,
-con el mismo método que las normas: comprobar contra el código si siguen
-siendo verdad, buscar si repiten algo de la PARTE 1, y convertir en test
-lo que se pueda. En la PARTE 1 salió que la mitad de lo repasado estaba
-desactualizado o mentía.
-
 **Adelgazar la PARTE 2 convirtiendo trampas en tests** (idea suya). A medida que la app se concrete, algunas
 trampas dejarán de poder ocurrir y su párrafo podrá quedarse en una
 línea: *"lo vigila tal test"*. El documento adelgaza **como
