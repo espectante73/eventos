@@ -715,11 +715,13 @@ function FilaInvitadoColaborador({
     preguntar({
       titulo: titulos[campo],
       texto: textoPreguntaFamilia(p, campo, valor, evento),
-      rotulo: "Sí",
+      // Como en toda la app, el botón dice lo que hace ("Sí, pagado"): un
+      // "Sí" pelado era inventado (norma 1).
+      rotulo: "Sí, toda la familia",
       peligro: valor ? false : undefined,
       sinPrincipal: !p.puedeTodos,
       alConfirmar: () => marcarFamilia(g, campo, valor),
-      otra: { rotulo: "No", alConfirmar: () => marcarSolo(g.id, valor) },
+      otra: { rotulo: `No, solo ${g.nombre}`, alConfirmar: () => marcarSolo(g.id, valor) },
     });
     return true;
   };

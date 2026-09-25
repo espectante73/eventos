@@ -185,7 +185,7 @@ describe("el pago pregunta por la familia", () => {
     marcarFamilia: async (g, campo, valor) => marcadas.push([g.id, campo, valor]),
   };
 
-  it("sale «¿El pago es para toda la familia Ruiz?» con Sí y No, y el Sí marca a todos", async () => {
+  it("sale «¿El pago es para toda la familia Ruiz?», y «Sí, toda la familia» marca a todos", async () => {
     const vista = montar(
       <VistaColaborador data={datos} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
     );
@@ -197,8 +197,9 @@ describe("el pago pregunta por la familia", () => {
     const html = document.body.innerHTML;
     expect(html).toContain("¿El pago es para toda la familia Ruiz?");
     expect(html).toContain("Total:");
-    const si = botones().find((b) => b.textContent.trim() === "Sí");
-    expect(botones().some((b) => b.textContent.trim() === "No")).toBe(true);
+    // Los botones dicen lo que hacen, como en toda la app.
+    const si = botones().find((b) => b.textContent.trim() === "Sí, toda la familia");
+    expect(botones().some((b) => b.textContent.trim() === "No, solo Ana")).toBe(true);
     await act(async () => si.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(marcadas).toEqual([["r1", "pagado", true]]);
     vista.desmontar();

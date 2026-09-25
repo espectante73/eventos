@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "47.1",
+    cambios: [
+      "La pregunta de la familia, con botones como los de toda la app: \"Sí, toda la familia\" y \"No, solo Juan\", en vez de un \"Sí\" y un \"No\" pelados.",
+    ],
+  },
+  {
     version: "47",
     cambios: [
       "Pago y llegada para toda la familia: al marcar (o quitar) el pago o la llegada de uno, la app pregunta si es para toda la familia, con Sí o No. Al cobrar enseña lo que paga cada uno y el total. Vale aunque un cónyuge lo lleve otro colaborador: a ese le aparecerá ya pagado o llegado. Si alguien de la familia todavía no puede (le faltan datos, o no ha pagado para la llegada), lo dice y solo deja marcar a esa persona.",
