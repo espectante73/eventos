@@ -453,8 +453,9 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
 4. **El versionado: entero = tema nuevo, decimal = ajuste** (38, 38.1,
    38.2… hasta el siguiente tema, que pasa a 39). **Nunca subir el entero
    por defecto**, y **tras el .9 viene el siguiente entero**: 45.9 → 46,
-   nunca 45.10. Es provisional: cuando la app esté probada y aprobada, se
-   renumera desde la versión 1. Lo vigila `reglas-del-proyecto.test.js`.
+   nunca 45.10. Es provisional: se renumera desde la versión 1 **cuando él
+   lo diga**, después de usar todas las partes de la app sin fallo. No lo
+   propongo yo. Lo vigila `reglas-del-proyecto.test.js`.
 
 ## 1.12 Lo que está esperando, y por qué no es un fallo
 
