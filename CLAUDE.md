@@ -300,7 +300,10 @@ en la sección que se indica entre paréntesis.
       internet**, y por eso se respeta sin inventar nada.
     Una sola pieza para los dos usos (`components/Boton.jsx`); suelto
     lleva `py-2`, que en el móvil un link fino se falla. Lo vigila
-    `Boton.test.js`. («Dos clases de permiso, no una»)
+    `Boton.test.js`.
+    ⚠️ Nació hablando de acciones y yo la apliqué a un link de login. Si
+    una norma suya choca con algo que cualquiera reconoce de internet,
+    **preguntar por su alcance antes de aplicarla al pie de la letra.**
 14. **Quitar/borrar = `BotonQuitar`**: el mismo círculo rojo en toda la
     app, 24 px a la vista y 44 px de zona de toque (el mínimo del móvil).
     X = quitar; papelera (`borrar`) = se borra para siempre. Lleva la
@@ -973,27 +976,7 @@ resto que quitar**: una foto de Deshacer o de Modo Pruebas anterior la
 trae, y sin esa línea la fecha provisional se les escaparía a los
 invitados. Lo vigila `reglas-del-proyecto.test.js`.
 
-### 2.10 Dos clases de permiso, no una (2026-09-21, v38.5)
-
-⚠️ El botón desaparece de "Mi cuenta" **también para el anfitrión**
-(`VistaAnfitrion` ya no pasa `mostrarRepositorio`). Es lo que se pidió, y
-el anfitrión tiene el repositorio en su propio ordenador.
-
-**La lección de toda esta tanda, que es la que vale para mañana**: una
-norma suya tiene un ÁMBITO, y el ámbito no siempre está escrito. La 13
-nació con los botones 3D y hablaba de acciones; yo la apliqué a un link
-de login, que es una convención universal de internet, y quedó mal. Fue
-él quien lo vio: *"no me acuerdo en qué momento te puse esa norma, pero
-en todas las páginas web oficialmente se ve como un link subrayado"*.
-Cuando una norma suya choca de frente con algo que cualquiera reconoce
-de internet, el choque es la señal: **preguntar por el alcance antes de
-aplicarla al pie de la letra.**
-
-**Lección general**: al añadir una clave a una lista existente, leer el
-texto que la lista ya imprime. Aquí la etiqueta era correcta y la frase
-que la envolvía, no.
-
-### 2.11 El mapa se quedaba viejo sin que nadie se enterara (2026-09-23)
+### 2.10 El mapa se quedaba viejo sin que nadie se enterara (2026-09-23)
 
 **Y de paso, la paleta.** El script tenía los colores **copiados a mano**
 de `theme.js`, y ya habían derivado: sus dos dorados (#A87C3A, #8A6A34)
@@ -1011,13 +994,13 @@ con `nvm alias default v24.18.1`. **Lección: `nvm install` toca la
 configuración de su máquina, no solo la mía.** Si hace falta otra versión
 para una prueba, dejar el `default` como estaba al terminar.
 
-### 2.12 El acabado, con una escala y no a ojo (2026-09-20, v38)
+### 2.11 El acabado, con una escala y no a ojo (2026-09-20, v38)
 
 **El aire**: en paneles y tarjetas sí; ⚠️ en las **filas de las tablas
 no** — con 140 invitados, una lista con más aire es una lista que no
 cabe.
 
-### 2.13 El sello que late (2026-09-20, v38.1)
+### 2.12 El sello que late (2026-09-20, v38.1)
 
 ✅ **Aprobado por el usuario el 2026-09-20** ("espectacular"). Y una
 lección de método: los tres aros salieron de tres vueltas suyas seguidas
@@ -1025,7 +1008,7 @@ lección de método: los tres aros salieron de tres vueltas suyas seguidas
 tres la habría acertado yo de una: con él conviene **construir de uno en
 uno y enseñar**, no proponer el resultado final de golpe.
 
-### 2.14 Se acabaron los avisos del navegador (2026-09-20, v37.12)
+### 2.13 Se acabaron los avisos del navegador (2026-09-20, v37.12)
 
 ⚠️ Sigue habiendo DOS excepciones a propósito, y no son un olvido:
 `persistNovedades` y `persistPreguntaTablon` devuelven `true`/`false` sin
@@ -1033,9 +1016,9 @@ avisar, porque `VentanaNovedades.jsx` enseña el fallo en su propia
 pantalla, junto al texto que no se ha podido guardar -- ahí se entiende
 mejor que en una ventana aparte.
 
-### 2.15 "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
+### 2.14 "Datos X de Y": completo es siempre N de N (2026-09-19, v37.5)
 
-### 2.16 Una familia no se separa en las mesas (2026-09-19, v37)
+### 2.15 Una familia no se separa en las mesas (2026-09-19, v37)
 
 - `lib/mesas.js` es la única definición. `claveFamiliaMesa` = grupo
   familiar o, si está vacío, el apellido: la MISMA que ya usaba el
@@ -1093,7 +1076,7 @@ mejor que en una ventana aparte.
   UNA persona. Una mesa con 1 hueco sale elegible para una familia de 3;
   al elegirla, sale el aviso y no se mueve nadie.
 
-### 2.17 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
+### 2.16 Relieve, clic y pregunta de seguridad (2026-09-19, v36)
 
 El usuario lo probó en su iPhone: ni sonido ni vibración.
 - **Vibración**: el truco de pulsar un `<input switch>` escondido DESDE EL
@@ -1129,7 +1112,7 @@ elección de mano, la X de quitar con su pregunta y los avisos. Es decir,
 la técnica del interruptor SÍ funciona en su iOS: no volver al truco de
 pulsarlo desde el código.
 
-### 2.18 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
+### 2.17 Peso de la app: de 1.196 KB a 443 KB al abrir (2026-09-18, v34.1)
 
 ⚠️ **La ventana de Música NO se trocea, a propósito**: se abre en el
 local con un wifi desconocido y no puede quedarse descargando delante de
@@ -1141,13 +1124,13 @@ abierta de antes pide trozos con nombres que ya no existen. `main.jsx`
 escucha `vite:preloadError` y recarga UNA vez (marca en sessionStorage
 para no entrar en bucle si el fallo es otro, como estar sin conexión).
 
-### 2.19 Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
+### 2.18 Deshacer de verdad, y fuera las copias en JSON (2026-09-17, v34)
 
 ⚠️ La foto se guarda **antes** de la acción, y si falla no se toca nada.
 Al revés (como estaba con la descarga) el reinicio podía ejecutarse igual
 aunque la copia no llegara a existir.
 
-### 2.20 `schema.sql` reescrito desde cero (2026-09-16)
+### 2.19 `schema.sql` reescrito desde cero (2026-09-16)
 
 ⚠️ Regla que sustituye a la de antes: **no se añade nada al final de
 `schema.sql`**. Si cambia una función, se cambia en su sitio. Si cambia
@@ -1159,7 +1142,7 @@ contenedor de la tabla (`tablaRef`): si las columnas se ahogan, el texto
 se recorta antes de tiempo y la tabla se vuelve ilegible aunque
 técnicamente cumpla la regla.
 
-### 2.21 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
+### 2.20 2026-09-06 (v24): agujero real de escritura anónima, encontrado y cerrado
 
 ⚠️ **Regla nueva: al añadir una columna a una tabla abierta a `anon`,
 releer la política de esa tabla en el mismo cambio.** No basta con que
@@ -1175,7 +1158,7 @@ del código, que dio la firma por buena**. Sin Postgres local ni
 credenciales de escritura, esa llamada anónima es la única red que hay:
 hacerla siempre antes de desplegar el cliente.
 
-### 2.22 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
+### 2.21 2026-09-06/07 (v24.2): retirado el enlace ?rol= y rotado el token
 
 ⚠️ Dónde vive esa pantalla, que Supabase la ha movido: **Authentication →
 Emails → SMTP**, o sea `/dashboard/project/<ref>/auth/smtp`. El viejo

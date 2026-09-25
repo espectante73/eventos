@@ -68,9 +68,7 @@ export function Portada({
   // marcado el permiso "Ver el mapa del sitio" (lib/permisos.js).
   // Portada no lo decide, se lo dan hecho -- igual que enlaceTablon.
   mostrarMapaSitio,
-  // Igual que mostrarMapaSitio: Portada no decide, recibe el booleano.
-  mostrarRepositorio,
-  // "Diseño app" en Mi cuenta: lo mismo, Portada solo lo pasa.
+  // "Diseño app" en Mi cuenta: igual que mostrarMapaSitio, Portada solo lo pasa.
   mostrarDiseno,
   // Solo lo pasa VistaAnfitrion: el panel de errores es cosa del anfitrión.
   mostrarErrores,
@@ -181,7 +179,6 @@ export function Portada({
               onCerrarSesion={onCerrarSesion}
               enlaceTablon={enlaceTablon}
               mostrarMapaSitio={mostrarMapaSitio}
-              mostrarRepositorio={mostrarRepositorio}
               mostrarDiseno={mostrarDiseno}
               mostrarErrores={mostrarErrores}
             />
