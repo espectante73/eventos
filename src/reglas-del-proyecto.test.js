@@ -334,3 +334,13 @@ describe("el guardado del anfitrión manda solo lo cambiado", () => {
     expect([...new Set(sospechosas)]).toEqual(["cambiadas"]);
   });
 });
+
+describe("la Música del evento viene cargada, no a trozos", () => {
+  // Se abre en el local con un wifi desconocido: si se descargara al
+  // pulsarla, podría quedarse cargando delante de los invitados.
+  it("VistaAnfitrion la importa directamente, sin lazy", () => {
+    const vista = leer("src/vistas/VistaAnfitrion.jsx");
+    expect(vista).toMatch(/^import \{ VentanaMusicaEvento \} from/m);
+    expect(vista).not.toMatch(/lazy\([^)]*VentanaMusicaEvento/);
+  });
+});

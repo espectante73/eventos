@@ -17,6 +17,10 @@ import { VentanaAniversarios } from "./anfitrion/VentanaAniversarios";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaPermisos } from "./anfitrion/VentanaPermisos";
 import { VentanaConfigCronograma } from "./anfitrion/VentanaConfigCronograma";
+// ⚠️ La Música NO se trocea (nada de lazy): se abre en el local, con un
+// wifi desconocido, y no puede quedarse descargando delante de los
+// invitados. Viene con esta vista, que ya se carga al entrar. Lo vigila
+// reglas-del-proyecto.test.js.
 import { VentanaMusicaEvento } from "./anfitrion/VentanaMusicaEvento";
 import { guardarAspecto, ASPECTO_POR_DEFECTO } from "../lib/temasMusica";
 import { ErrorBoundary } from "../components/ErrorBoundary";
