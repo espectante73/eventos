@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "46.5",
+    cambios: [
+      "Formulario del colaborador: cada fila enseña solo lo de su ronda. Con datos a medias, \"0 de 6\" y el nombre (sin campana ni la palabra \"datos\"); el pago y el check de llegada aparecen cuando los datos están completos. El nombre ya cabe entero.",
+    ],
+  },
+  {
     version: "46.4",
     cambios: [
       "Diseño app avisa cuando toca repasar el documento: si crece más de 150 palabras en un día, el sello de palabras se pone rojo (\"hoy +180 · repasar\") y el botón \"Diseño app\" de Mi cuenta lleva un puntito rojo. El repaso lo hace Claude leyendo, buscando ideas repetidas o contrarias.",

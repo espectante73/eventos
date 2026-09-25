@@ -63,8 +63,11 @@ const ETIQUETAS_CAMPOS_INVITADO = {
 // la fila se deformaba y el botón de llegada acababa en otro sitio que el
 // de las filas de al lado. Con las columnas fijas, todos los nombres
 // empiezan en el mismo punto y todos los checks caen en la misma columna.
+// La columna de la izquierda enseña lo de la RONDA en que está el
+// invitado (él, v46.5): primero los datos ("0 de 6"), después el pago.
+// Una ronda no adelanta a la anterior, así que nunca hacen falta las dos
+// a la vez, y el nombre gana el sitio que ocupaba la otra columna.
 const ANCHO_PAGO = 104; // "Pago pendiente" es el rótulo más largo de esa columna
-const ANCHO_DATOS = 100; // "datos 11 de 11" es el más largo de esta
 const ALTO_BOTON_FILA = 32; // manda el círculo de llegada: todos iguales (norma 4)
 
 // Pastilla de un dato que el colaborador SOLO MIRA: el importe y la zona.
@@ -768,42 +771,36 @@ function FilaInvitadoColaborador({
       }}
     >
       <div className="flex items-center gap-2 p-3 text-sm">
-        {/* La columna del pago se queda aunque la ficha esté abierta y el
+        {/* Ronda 1 (faltan datos): "0 de 6", que solo se lee. Después, el
+            pago. La columna se queda aunque la ficha esté abierta y el
             botón no se pinte: si desapareciera, el nombre de ESA fila
             empezaría en otro sitio que el de las demás. */}
         <div className="flex-shrink-0" style={{ width: ANCHO_PAGO }}>
-          {!abierto && (
-            <button
-              onClick={confirmarPago}
-              className="boton-3d rounded flex items-center justify-center w-full"
-              style={{ height: ALTO_BOTON_FILA }}
-            >
-              {g.pagado ? (
-                <Stamp color={C.ink}>Pagado</Stamp>
-              ) : (
-                <span
-                  className="text-xs px-2 py-0.5 rounded whitespace-nowrap"
-                  style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: OP.secundario }}
-                >
-                  Pago pendiente
-                </span>
-              )}
-            </button>
+          {faltanDatos ? (
+            <span className="text-xs whitespace-nowrap" style={{ color: C.wax }}>
+              {datosRellenos} de {datosTotal}
+            </span>
+          ) : (
+            !abierto && (
+              <button
+                onClick={confirmarPago}
+                className="boton-3d rounded flex items-center justify-center w-full"
+                style={{ height: ALTO_BOTON_FILA }}
+              >
+                {g.pagado ? (
+                  <Stamp color={C.ink}>Pagado</Stamp>
+                ) : (
+                  <span
+                    className="text-xs px-2 py-0.5 rounded whitespace-nowrap"
+                    style={{ border: `1px dashed ${C.line}`, color: C.charcoal, opacity: OP.secundario }}
+                  >
+                    Pago pendiente
+                  </span>
+                )}
+              </button>
+            )
           )}
         </div>
-        {/* Los dos estados (al día / le faltan datos) eran dos copias de la
-            misma línea; con un ancho fijo de por medio serían dos sitios
-            donde cambiarlo (norma 7). */}
-        <span
-          className="flex items-center gap-1 text-xs flex-shrink-0 whitespace-nowrap"
-          style={{
-            width: ANCHO_DATOS,
-            color: faltanDatos ? C.wax : C.ink,
-            opacity: faltanDatos ? 1 : OP.secundario,
-          }}
-        >
-          {faltanDatos ? <Bell size={12} /> : <Check size={12} />} datos {datosRellenos} de {datosTotal}
-        </span>
         <button
           onClick={onToggleAbierto}
           className="boton-3d rounded px-2 flex items-center gap-2 flex-1 min-w-0"
@@ -823,6 +820,8 @@ function FilaInvitadoColaborador({
             que es como se va a usar el día del evento: de pie, recibiendo
             gente. Este no se invierte con la mano izquierda, como el resto
             de las filas de listas (ver CLAUDE.md, "Lo que NO se invierte"). */}
+        {/* El check, solo con los datos completos: antes no se puede usar. */}
+        {!faltanDatos && (
         <button
           onClick={confirmarPresente}
           title={
@@ -845,6 +844,7 @@ function FilaInvitadoColaborador({
         >
           <Check size={18} strokeWidth={3} />
         </button>
+        )}
       </div>
       {abierto && (
         // Verde detrás de la tarjeta dorada, misma idea que el cuerpo de la

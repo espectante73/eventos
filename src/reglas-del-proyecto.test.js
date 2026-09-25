@@ -59,7 +59,7 @@ describe("norma 6: la fila del invitado, de una sola línea y a la misma altura"
   });
 
   it("las columnas fijas están definidas una sola vez", () => {
-    for (const medida of ["ANCHO_PAGO", "ANCHO_DATOS", "ALTO_BOTON_FILA"]) {
+    for (const medida of ["ANCHO_PAGO", "ALTO_BOTON_FILA"]) {
       expect((fila.match(new RegExp(`const ${medida} = `, "g")) || []).length).toBe(1);
     }
   });
