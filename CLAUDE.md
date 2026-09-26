@@ -453,6 +453,10 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
    nunca 45.10. Es provisional: se renumera desde la versión 1 **cuando él
    lo diga**, después de usar todas las partes de la app sin fallo. No lo
    propongo yo. Lo vigila `reglas-del-proyecto.test.js`.
+5. **El sello «PAGADO» va dentro de la plantilla, no lo dibuja la app**:
+   rojo, gastado e inclinado, arriba a la izquierda. Nunca miente porque
+   la invitación solo se genera cuando toda la familia ha pagado y tiene
+   mesa (`listaParaInvitacion`). Una plantilla nueva tiene que traerlo.
 
 ## 1.12 Lo que está esperando, y por qué no es un fallo
 
