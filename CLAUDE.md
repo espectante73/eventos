@@ -117,9 +117,10 @@ regla siga siendo verdad, así que el guardia es de mano:
 7. **Siempre en español**, salvo que se pida lo contrario.
 8. **Antes de tocar una pantalla, releer las normas de 1.2** y decir en
    la propuesta cuáles se han comprobado. Lo fuerza un portero
-   (`scripts/portero-normas.mjs`, en `.claude/settings.json`): la
-   primera vez en cada sesión no deja modificar una pantalla sin
-   enseñarlas.
+   (`scripts/portero-normas.mjs`): la primera vez en cada sesión no deja
+   modificar una pantalla sin enseñarlas. Está en `.claude/settings.json`
+   y, como él abre Claude Code desde su carpeta personal, también en la
+   configuración general de su Mac (`~/.claude/settings.json`).
 
 
 ## 1.2 Normas de estándar de la app

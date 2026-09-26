@@ -23,11 +23,16 @@ if (process.argv.includes("--olvidar")) {
   process.exit(0);
 }
 
+const raiz = join(dirname(fileURLToPath(import.meta.url)), "..");
 const ruta = String(entrada.tool_input?.file_path || "");
-const esPantalla = /\/src\/(vistas|components)\/|\/src\/index\.css$/.test(ruta) && !/\.test\.[jt]sx?$/.test(ruta);
+// Solo las pantallas de ESTE proyecto: el portero también está en la
+// configuración general de Claude Code, y no debe tocar otros proyectos.
+const esPantalla =
+  ruta.startsWith(raiz + "/src/") &&
+  /\/src\/(vistas|components)\/|\/src\/index\.css$/.test(ruta) &&
+  !/\.test\.[jt]sx?$/.test(ruta);
 if (!esPantalla || existsSync(marca)) process.exit(0);
 
-const raiz = join(dirname(fileURLToPath(import.meta.url)), "..");
 const manual = readFileSync(join(raiz, "CLAUDE.md"), "utf-8");
 const normas = manual.slice(manual.indexOf("## 1.2 "), manual.indexOf("## 1.3 ")).trim();
 
