@@ -106,7 +106,7 @@ export function useMotorInvitaciones(data) {
         : mesas.length > 1
         ? `Mesas: ${mesas.join(", ")} · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`
         : // Sin mesa solo pasa en Modo Pruebas: que se lea, no que parezca un fallo (él, v49.1).
-          `Sin mesa asignada · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`;
+          `Sin mesa · ${cantidad} ${cantidad === 1 ? "invitado" : "invitados"}`;
     // Colaborador de la familia -- será la primera cara amiga que vean
     // al llegar a Recepción, así que la invitación ya se lo dice de
     // antemano. Se toma del primer confirmado (todos los miembros de

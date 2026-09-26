@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "49.2",
+    cambios: [
+      "La invitación de una familia sin mesa dice \"Sin mesa\", más corto: \"Sin mesa asignada\" no cabía en el recuadro.",
+    ],
+  },
+  {
     version: "49.1",
     cambios: [
       "Modo Pruebas: al pulsarlo sale directamente la pregunta (activar o desactivar), sin la ventana de antes. Y la invitación de una familia sin mesa dice \"Sin mesa asignada\" en vez de dejar el hueco vacío.",
