@@ -115,23 +115,22 @@ regla siga siendo verdad, así que el guardia es de mano:
    lógica condicional enredada, ejecutarlo o repasarlo paso a paso antes
    de darlo por bueno.
 7. **Siempre en español**, salvo que se pida lo contrario.
-8. **Antes de tocar una pantalla, releer las normas de 1.2** y decir en
-   la propuesta cuáles se han comprobado. Lo fuerza
-   `scripts/portero-normas.mjs`, puesto en `.claude/settings.json` y en
-   `~/.claude/settings.json` (él abre Claude Code desde su carpeta
-   personal).
 
 
 ## 1.2 Normas de estándar de la app
 
-**Repasarlas antes de construir o retocar cualquier pantalla.**
+**Repasarlas antes de construir o retocar cualquier pantalla**, y decir
+en la propuesta cuáles se han comprobado. Lo fuerza
+`scripts/portero-normas.mjs` (en `.claude/settings.json` y en
+`~/.claude/settings.json`: él abre Claude Code desde su carpeta personal).
 
 1. **Estandarizar = usar el modelo aprobado de la app.** Colores y
    medidas salen de `theme.js`, nunca escritos a mano; si falta un valor,
    se añade a la escala, no al sitio (única salida: `escala-libre:` y el
-   motivo al lado). Nunca un estilo elegido por mí: mirar cómo está resuelto lo
-   que ya existe en su misma situación y, si hay duda, **preguntar en una
-   línea ANTES de tocar el aspecto**. Y si una norma suya choca con algo
+   motivo al lado). Nunca un estilo elegido por mí: mirar cómo está
+   resuelto lo que ya existe en su misma situación y, si hay duda,
+   **preguntar en una línea ANTES de tocar el aspecto**. **Un texto o una
+   función que él no ha pedido, nunca sin preguntar.** Y si una norma suya choca con algo
    que cualquiera reconoce de internet, preguntar por su alcance antes
    de aplicarla al pie de la letra. Las medidas las vigila
    `src/theme.test.js`; los colores, todavía no (ver 1.12).
