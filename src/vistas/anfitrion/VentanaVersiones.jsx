@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "47.2",
+    cambios: [
+      "Antes de subir una plantilla de invitación, la app pregunta si lleva el sello PAGADO: la plantilla DEBE traerlo dibujado, porque la app no lo añade.",
+    ],
+  },
+  {
     version: "47.1",
     cambios: [
       "La pregunta de la familia, con botones como los de toda la app: \"Sí, toda la familia\" y \"No, solo Juan\", en vez de un \"Sí\" y un \"No\" pelados.",

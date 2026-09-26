@@ -10,7 +10,7 @@
 // también lo usa — moverlo aquí lo habría duplicado en dos sitios.
 // generarImagenParaFamilia y modoCalibracion tampoco son exclusivos de
 // esta ventana por el mismo motivo.
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Check, Mail, Image as ImageIcon, ChevronUp, ChevronDown } from "lucide-react";
 import { C, inputStyle, T, OP } from "../../theme";
 import { resolverColaborador } from "../../lib/invitados";
@@ -20,7 +20,7 @@ import { Field } from "../../components/Formulario";
 import { GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
-import { Boton, estilosBoton } from "../../components/Boton";
+import { Boton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { avisoEnPantalla } from "../../lib/avisos";
 
@@ -43,6 +43,7 @@ export function VentanaInvitaciones({
   const [nombreCarpetaInvitaciones, setNombreCarpetaInvitaciones] = useState(null);
   const [subiendoPlantillaInvitacion, setSubiendoPlantillaInvitacion] = useState(false);
   const [errorPlantillaInvitacion, setErrorPlantillaInvitacion] = useState("");
+  const inputPlantillaRef = useRef(null);
 
   useEffect(() => {
     if (!window.showDirectoryPicker) return;
@@ -244,19 +245,31 @@ export function VentanaInvitaciones({
                   style={{ width: 40, height: 60, border: `1px solid ${C.line}` }}
                 />
               )}
-              <label
-                className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer"
-                style={estilosBoton("secundario", "pequeno")}
+              {/* Antes de elegir el archivo, la pregunta del sello: la app
+                  no lo dibuja (CLAUDE.md 1.11), así que una plantilla sin
+                  él saca invitaciones sin "PAGADO". */}
+              <Boton
+                tamano="pequeno"
+                disabled={subiendoPlantillaInvitacion}
+                onClick={() =>
+                  preguntar({
+                    titulo: "¿Lleva el sello PAGADO?",
+                    texto: "La plantilla DEBE traer dibujado el sello PAGADO, rojo y arriba a la izquierda. La app no lo añade.",
+                    rotulo: "Sí, lo lleva",
+                    peligro: false,
+                    alConfirmar: () => inputPlantillaRef.current?.click(),
+                  })
+                }
               >
                 {subiendoPlantillaInvitacion ? "Procesando…" : "Subir archivo desde el dispositivo"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={onSeleccionarArchivoPlantillaInvitacion}
-                  disabled={subiendoPlantillaInvitacion}
-                  className="sr-only"
-                />
-              </label>
+              </Boton>
+              <input
+                ref={inputPlantillaRef}
+                type="file"
+                accept="image/*"
+                onChange={onSeleccionarArchivoPlantillaInvitacion}
+                className="sr-only"
+              />
               {evento.imagenInvitacion && (
                 <Boton
                   tamano="pequeno"
