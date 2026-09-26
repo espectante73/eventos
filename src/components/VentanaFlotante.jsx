@@ -167,7 +167,14 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
   // última — así la recién abierta (o la que se acaba de pulsar) queda
   // siempre por delante, en vez de que unas pocas queden ancladas arriba.
   const [zIndex, setZIndex] = useState(() => ++contadorZIndexVentanas);
-  const traerAlFrente = () => setZIndex(++contadorZIndexVentanas);
+  // Solo si el toque cae DENTRO de la ventana. Una pregunta que ella abre
+  // (usePreguntaSeguridad) se pinta en el <body>, pero React le pasa sus
+  // toques igual: la ventana se ponía delante y la tapaba justo al
+  // pulsarla, y sus botones "no hacían nada" (Invitaciones, 47.4).
+  const traerAlFrente = (e) => {
+    if (e && !e.currentTarget.contains(e.target)) return;
+    setZIndex(++contadorZIndexVentanas);
+  };
   const ventanaRef = useRef(null);
   // Offset entre el punto donde se agarra la cabecera y la esquina de la
   // ventana — así no "salta" al primer píxel del ratón al empezar a arrastrar.

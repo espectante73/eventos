@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "47.4",
+    cambios: [
+      "Arreglado: los botones de las preguntas (\"Sí, quitarla\", \"Sí, lo lleva\"...) no hacían nada en el ordenador. Al apretarlos, la ventana de detrás se ponía delante y tapaba la pregunta. Vale para todas las ventanas.",
+    ],
+  },
+  {
     version: "47.3",
     cambios: [
       "Arreglado en Invitaciones: \"Quitar y usar la plantilla incluida\" pulsaba también \"Subir\", y subir no llegaba a abrir el archivo. El mismo fallo podía darse en la portada, la imagen de WhatsApp, las plantillas de email y la foto de boda: arreglado en todas a la vez.",
