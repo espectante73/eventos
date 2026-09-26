@@ -402,4 +402,9 @@ describe("el versionado: tras el .9 viene el siguiente entero", () => {
     const version = leer("src/constants.js").match(/VERSION_APP = "([^"]+)"/)[1];
     expect(version).toMatch(/^\d+(\.[1-9])?$/);
   });
+
+  it("el rótulo de campo (Field) no es un <label>: reenviaría el toque al primer botón de dentro", () => {
+    const field = leer("src/components/Formulario.jsx").split("export function Field")[1].split("\nexport ")[0];
+    expect(field).not.toMatch(/<label/);
+  });
 });

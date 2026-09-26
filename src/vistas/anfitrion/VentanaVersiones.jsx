@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "47.3",
+    cambios: [
+      "Arreglado en Invitaciones: \"Quitar y usar la plantilla incluida\" pulsaba también \"Subir\", y subir no llegaba a abrir el archivo. El mismo fallo podía darse en la portada, la imagen de WhatsApp, las plantillas de email y la foto de boda: arreglado en todas a la vez.",
+    ],
+  },
+  {
     version: "47.2",
     cambios: [
       "Antes de subir una plantilla de invitación, la app pregunta si lleva el sello PAGADO: la plantilla DEBE traerlo dibujado, porque la app no lo añade.",

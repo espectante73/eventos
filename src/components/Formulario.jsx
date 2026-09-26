@@ -2,6 +2,7 @@
 // sección (plegable o no), etiqueta+contenido de un campo, y el input de
 // texto con el estilo estándar. Movidos fuera de App.jsx en el reparto del
 // 2026-08-08 (ver CLAUDE.md).
+import { useId } from "react";
 import { C, inputStyle } from "../theme";
 
 export function SectionTitle({ icon: Icon, children, onToggle, compacto }) {
@@ -40,10 +41,16 @@ export function SectionTitle({ icon: Icon, children, onToggle, compacto }) {
   );
 }
 
+// Un <div> con nombre, NO un <label>: dentro de un <label> el navegador
+// reenvía el toque al primer botón o casilla que haya, así que pulsar
+// "Quitar" pulsaba también "Subir" (Invitaciones, 47.3). El nombre sigue
+// llegando al lector de pantalla por aria-labelledby.
 export function Field({ label, children }) {
+  const id = useId();
   return (
-    <label className="flex flex-col gap-1 text-sm">
+    <div role="group" aria-labelledby={id} className="flex flex-col gap-1 text-sm">
       <span
+        id={id}
         className="uppercase tracking-wide text-xs"
         style={{
           // El color va por variable CSS para que una pantalla pueda
@@ -59,7 +66,7 @@ export function Field({ label, children }) {
         {label}
       </span>
       {children}
-    </label>
+    </div>
   );
 }
 
