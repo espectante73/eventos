@@ -116,11 +116,10 @@ regla siga siendo verdad, así que el guardia es de mano:
    de darlo por bueno.
 7. **Siempre en español**, salvo que se pida lo contrario.
 8. **Antes de tocar una pantalla, releer las normas de 1.2** y decir en
-   la propuesta cuáles se han comprobado. Lo fuerza un portero
-   (`scripts/portero-normas.mjs`): la primera vez en cada sesión no deja
-   modificar una pantalla sin enseñarlas. Está en `.claude/settings.json`
-   y, como él abre Claude Code desde su carpeta personal, también en la
-   configuración general de su Mac (`~/.claude/settings.json`).
+   la propuesta cuáles se han comprobado. Lo fuerza
+   `scripts/portero-normas.mjs`, puesto en `.claude/settings.json` y en
+   `~/.claude/settings.json` (él abre Claude Code desde su carpeta
+   personal).
 
 
 ## 1.2 Normas de estándar de la app
@@ -453,10 +452,9 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
    nunca 45.10. Es provisional: se renumera desde la versión 1 **cuando él
    lo diga**, después de usar todas las partes de la app sin fallo. No lo
    propongo yo. Lo vigila `reglas-del-proyecto.test.js`.
-5. **La plantilla de invitación DEBE traer dibujado el sello «PAGADO»**
-   (rojo, gastado, inclinado, arriba a la izquierda): la app no lo dibuja,
-   y antes de subir una lo pregunta. Nunca miente: solo se genera la
-   invitación de una familia pagada y con mesa (`listaParaInvitacion`).
+5. **La plantilla de invitación DEBE traer dibujado el sello «PAGADO»**:
+   la app no lo dibuja, y lo pregunta antes de subir una. Nunca miente:
+   solo hay invitación con toda la familia pagada y con mesa.
 
 ## 1.12 Lo que está esperando, y por qué no es un fallo
 
