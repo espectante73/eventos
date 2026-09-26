@@ -161,7 +161,6 @@ CREATE TABLE public.colaboradores (
     "authUserId" uuid,
     "dineroRecogidoEn" timestamp with time zone,
     "dineroRecogidoImporte" numeric,
-    "habilitadoEnPruebas" boolean DEFAULT true NOT NULL,
     "emailSincronizadoEn" timestamp with time zone,
     permisos jsonb DEFAULT '[]'::jsonb NOT NULL
 );
@@ -486,12 +485,22 @@ CREATE FUNCTION public.tablon_verificar_token(p_token uuid) RETURNS boolean
     SET search_path TO 'public', 'pg_temp'
     AS $$ select p_token = (select "token" from tablon_secreto limit 1); $$;
 
+-- ¿Está activo el Modo Pruebas? Una sola definición (v49): mientras lo
+-- está, ningún colaborador puede escribir nada (las tres funciones de
+-- abajo) y los correos van solo al anfitrión (enviar_email).
+CREATE FUNCTION public.modo_pruebas_activo() RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select coalesce((select "modoPruebasActivo" from evento limit 1), false);
+$$;
+
 -- ¿El colaborador conectado tiene este permiso concreto?
 CREATE FUNCTION public.colaborador_tiene_permiso(p_clave text) RETURNS boolean
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-  select exists (
+  select not modo_pruebas_activo() and exists (
     select 1 from colaboradores c
     where c."authUserId" = auth.uid()
       and c."permisos" ? p_clave
@@ -503,14 +512,10 @@ CREATE FUNCTION public.colaborador_puede_actuar(p_colaborador_id uuid) RETURNS b
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-  select exists (
+  select not modo_pruebas_activo() and exists (
     select 1 from colaboradores c
     where c."id" = p_colaborador_id
       and c."authUserId" = auth.uid()
-      and (
-        not coalesce((select "modoPruebasActivo" from evento limit 1), false)
-        or c."habilitadoEnPruebas"
-      )
   );
 $$;
 
@@ -519,7 +524,7 @@ CREATE FUNCTION public.colaborador_puede_editar_novedades(p_colaborador_id uuid)
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-  select exists (
+  select not modo_pruebas_activo() and exists (
     select 1 from colaboradores c
     where c."id" = p_colaborador_id
       and c."authUserId" = auth.uid()
@@ -681,13 +686,24 @@ CREATE FUNCTION public.enviar_email(p_para text, p_asunto text, p_html text, p_a
 declare
   v_id bigint;
   v_request_id bigint;
+  v_para text := p_para;
+  v_asunto text := p_asunto;
 begin
-  if p_para is null or trim(p_para) = '' then
+  -- Modo Pruebas: todo correo va SOLO al anfitrión, y el asunto dice a
+  -- quién habría ido. También el que no tiene destinatario: se prueba
+  -- igual.
+  if modo_pruebas_activo() then
+    v_asunto := '[PRUEBA] para ' || coalesce(nullif(trim(p_para), ''), '(sin email)')
+      || ' — ' || p_asunto;
+    v_para := (select "emailAnfitrion" from evento limit 1);
+  end if;
+
+  if v_para is null or trim(v_para) = '' then
     return;
   end if;
 
   insert into avisos_enviados ("destinatario", "asunto", "tipo")
-  values (p_para, p_asunto, p_tipo)
+  values (v_para, v_asunto, p_tipo)
   returning "id" into v_id;
 
   v_request_id := net.http_post(
@@ -698,8 +714,8 @@ begin
     ),
     body := jsonb_build_object(
       'from', coalesce(p_remitente, (select "emailRemitente" from config_secretos limit 1)),
-      'to', p_para,
-      'subject', p_asunto,
+      'to', v_para,
+      'subject', v_asunto,
       'html', p_html
     ) || case
       when p_adjunto_base64 is not null and trim(p_adjunto_base64) <> '' then
@@ -811,7 +827,8 @@ begin
   v_es_anfitrion := p_token is not distinct from (select "token" from anfitrion_secreto limit 1);
 
   if not v_es_anfitrion
-     and not exists (select 1 from colaboradores c where c."authUserId" = auth.uid())
+     and (modo_pruebas_activo()
+          or not exists (select 1 from colaboradores c where c."authUserId" = auth.uid()))
   then
     raise exception 'No autorizado para guardar fotos familiares';
   end if;
@@ -877,8 +894,9 @@ $$;
 -- El anfitrión (los novios)
 -- ------------------------------------------------------------
 
--- Hace una foto de los datos y entra en modo pruebas.
-CREATE FUNCTION public.anfitrion_activar_modo_pruebas(p_token uuid, p_colaborador_ids_habilitados uuid[]) RETURNS void
+-- Hace una foto de los datos y entra en modo pruebas. Los colaboradores
+-- quedan todos fuera (modo_pruebas_activo): no se elige a nadie.
+CREATE FUNCTION public.anfitrion_activar_modo_pruebas(p_token uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -891,7 +909,6 @@ begin
   values (true, foto_de_datos(), now())
   on conflict ("id") do update set "datos" = excluded."datos", "creadoEn" = excluded."creadoEn";
 
-  update colaboradores set "habilitadoEnPruebas" = ("id" = any(p_colaborador_ids_habilitados)) where true;
   update evento set "modoPruebasActivo" = true where true;
 end;
 $$;

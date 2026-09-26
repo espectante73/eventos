@@ -336,6 +336,27 @@ export default function App() {
     );
   }
 
+  // Modo Pruebas: los colaboradores no entran (v49). Así nadie trabaja de
+  // verdad sobre datos que se van a restaurar. La base también se lo
+  // impide (modo_pruebas_activo en schema.sql). El anfitrión sí entra, y
+  // ve su vista de colaborador desde Formularios. Texto del usuario.
+  if (data.evento?.modoPruebasActivo && !data.esAnfitrion) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
+      >
+        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+          <h1 className="text-xl mb-2" style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}>
+            Modo pruebas
+          </h1>
+          <p className="text-sm" style={{ color: C.charcoal, opacity: OP.secundario }}>
+            Se restaurará en unos minutos.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Visible para CUALQUIER rol (evento es de acceso abierto) — no solo el
   // anfitrión: si un colaborador entra mientras está activo, también debe

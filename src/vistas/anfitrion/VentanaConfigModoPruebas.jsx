@@ -2,12 +2,13 @@
 // reales sabiendo que se puede volver todo atrás de un golpe. Activar
 // guarda una foto completa de los datos operativos; desactivar la
 // restaura entera (reset global de TODO lo hecho mientras estuvo
-// activo, no solo lo tocado en esta sesión). Mientras está activo, toda
-// la app (para cualquier rol, no solo el anfitrión) se ve con un aviso
-// rojo — ver App.jsx. Añadida el 2026-08-12, a petición del usuario.
+// activo, no solo lo tocado en esta sesión). Mientras está activo, el
+// anfitrión ve la app con un aviso rojo y sin requisitos de datos
+// (lib/modoPruebas.js), los colaboradores solo ven "Modo pruebas" (App.jsx)
+// y los correos le llegan solo a él (enviar_email en schema.sql).
 import { useState } from "react";
 import { FlaskConical } from "lucide-react";
-import { C, OP } from "../../theme";
+import { C } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
@@ -15,31 +16,12 @@ import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 export function VentanaConfigModoPruebas({ data, onCerrar }) {
   const {
     evento,
-    colaboradores,
     activarModoPruebas,
     desactivarModoPruebas,
     guardarFotoDeshacer,
   } = data;
   const [ejecutando, setEjecutando] = useState(false);
-  // Por defecto todos habilitados -- lo normal es que el propio
-  // anfitrión sea quien más prueba, así que "todos pueden seguir
-  // actuando" es el punto de partida más cómodo; se desmarca a quien no
-  // deba tocar nada real mientras dura la prueba.
-  const [habilitados, setHabilitados] = useState(() => new Set(colaboradores.map((c) => c.id)));
-
   const activo = Boolean(evento.modoPruebasActivo);
-
-  const alternarHabilitado = (id) => {
-    setHabilitados((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const marcarTodos = () => setHabilitados(new Set(colaboradores.map((c) => c.id)));
-  const desmarcarTodos = () => setHabilitados(new Set());
 
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
@@ -62,7 +44,7 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
 
   const activar = async () => {
     setEjecutando(true);
-    await activarModoPruebas(Array.from(habilitados));
+    await activarModoPruebas();
     // activarModoPruebas() recarga la página al terminar -- no hace
     // falta poner ejecutando a false, este componente ya no seguirá
     // montado.
@@ -91,11 +73,9 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
             🧪 Modo Pruebas ACTIVO
           </p>
           <p className="text-xs" style={{ color: C.charcoal }}>
-            Toda la app se ve con un aviso rojo mientras tanto (también para tus colaboradores).
+            Toda la app se ve con un aviso rojo mientras tanto.
             Al desactivarlo se restaura TODO exactamente a como estaba al activarlo — deshace
-            cualquier cambio hecho desde entonces, sea de prueba o real (incluido lo que haya
-            hecho un colaborador de verdad mientras tanto). Se descarga antes una copia de
-            seguridad del estado actual, por si hace falta recuperar algo a mano.
+            cualquier cambio hecho desde entonces.
           </p>
         </div>
         <Boton variante="peligro" onClick={pedirDesactivar} disabled={ejecutando}>
@@ -108,52 +88,9 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
 
   return (
     <VentanaFlotante clave="config-modo-pruebas" titulo="Modo pruebas" onCerrar={onCerrar}>
-      <div className="flex mb-3">
-        <div className="flex-1 min-w-0 pr-4">
-          <p className="text-sm mb-1" style={{ color: C.charcoal }}>
-            Guarda una foto de todo ahora mismo; al desactivarlo, vuelve a ella entera.
-          </p>
-          <p className="text-xs" style={{ color: C.wax }}>
-            ⚠ Los cambios reales de tus colaboradores mientras tanto también se perderán.
-          </p>
-        </div>
-        {colaboradores.length > 0 && (
-          <>
-            <div className="w-px my-1 self-stretch" style={{ background: C.line, opacity: OP.linea }} />
-            <div className="flex-1 min-w-0 pl-4">
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <p className="text-xs" style={{ color: C.line }}>
-                  Colaboradores habilitados durante la prueba:
-                </p>
-                <div className="flex items-center gap-1.5 whitespace-nowrap">
-                  <Boton tamano="pequeno" onClick={marcarTodos}>
-                    Todos
-                  </Boton>
-                  <Boton tamano="pequeno" onClick={desmarcarTodos}>
-                    Ninguno
-                  </Boton>
-                </div>
-              </div>
-              <div className="space-y-1">
-                {colaboradores.map((c) => (
-                  <label
-                    key={c.id}
-                    className="flex items-center justify-end zurdo:flex-row-reverse gap-2 text-sm py-0.5"
-                    style={{ color: C.charcoal }}
-                  >
-                    {c.nombre}
-                    <input
-                      type="checkbox"
-                      checked={habilitados.has(c.id)}
-                      onChange={() => alternarHabilitado(c.id)}
-                    />
-                  </label>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-      </div>
+      <p className="text-sm mb-3" style={{ color: C.charcoal }}>
+        Guarda una foto de todo ahora mismo; al desactivarlo, vuelve a ella entera.
+      </p>
       <div className="flex justify-end zurdo:justify-start">
         <Boton variante="peligro" onClick={pedirActivar} disabled={ejecutando}>
           <FlaskConical size={16} /> Activar Modo Pruebas

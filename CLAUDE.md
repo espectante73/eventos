@@ -359,6 +359,9 @@ Lo vigila `supabase/schema.test.js`.
    utilidad"*.
 2. **`foto_de_datos()` y `restaurar_foto()` son los ÚNICOS sitios** donde
    se hace la foto y donde se repone; el Modo Pruebas usa esas mismas.
+   Mientras está activo, `requisitosActivos` (app) y
+   `modo_pruebas_activo()` (base) saltan los requisitos de datos, dejan
+   fuera a los colaboradores y mandan los correos solo al anfitrión.
 3. **Solo se guarda la ÚLTIMA foto**: lo de anteayer está en el volcado
    diario.
 4. **`lib/backup.js` y la ventana "Backup" no se resucitan.** Un

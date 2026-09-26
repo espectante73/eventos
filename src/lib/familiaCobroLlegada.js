@@ -7,6 +7,7 @@
 // todos a la vez: o todos o ninguno.
 import { claveFamilia, datosCompletos, importeEsperadoInvitado } from "./invitados";
 import { nombreCompleto } from "./formato";
+import { requisitosActivos } from "./modoPruebas";
 
 // Un miembro de la familia con lo justo para preguntar. Es lo mismo que
 // devuelve colaborador_familia_de, para que el anfitrión (que tiene la
@@ -44,7 +45,8 @@ const MOTIVO = {
 // no haría nada, así que el "Sí" no se ofrece.
 export function preguntaFamilia(miembros, campo, valor, { evento, marcadoAbierto = true } = {}) {
   const aCambiar = miembros.filter((m) => m[campo] !== valor);
-  const bloqueados = valor
+  // En Modo Pruebas nadie queda bloqueado (lib/modoPruebas.js).
+  const bloqueados = valor && requisitosActivos(evento)
     ? aCambiar
         .map((m) => {
           if (campo === "presente" && !marcadoAbierto) return { m, motivo: MOTIVO.cerrado };

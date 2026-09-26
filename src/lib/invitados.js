@@ -4,6 +4,7 @@
 // del 2026-08-08 (ver CLAUDE.md).
 import { parsePrecio } from "./formato";
 import { ROL_FAMILIAR } from "./rolFamiliar";
+import { requisitosActivos } from "./modoPruebas";
 
 export function datosCompletos(g) {
   // Únicos datos obligatorios: año de nacimiento y alergias (aunque la
@@ -227,6 +228,14 @@ export function importeEsperadoInvitado(g, evento) {
   if (!isNaN(desde) && edad < desde) return 0;
   if (!isNaN(hasta) && edad < hasta) return precioNino;
   return precioAdulto;
+}
+
+// Una familia recibe la invitación cuando todos sus confirmados han pagado
+// y tienen mesa. En Modo Pruebas basta con un confirmado.
+export function familiaListaParaInvitacion(confirmados, evento) {
+  if (confirmados.length === 0) return false;
+  if (!requisitosActivos(evento)) return true;
+  return confirmados.every((m) => m.pagado && m.mesa);
 }
 
 // La asignación de colaborador es siempre manual y exclusiva del Anfitrión.

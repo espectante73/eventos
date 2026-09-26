@@ -9,7 +9,8 @@
 // tener que duplicar el filtro en dos sitios.
 import { useState } from "react";
 import { generarInvitacionImagen } from "./imagenInvitacion";
-import { resolverColaborador } from "./invitados";
+import { resolverColaborador, familiaListaParaInvitacion } from "./invitados";
+import { requisitosActivos } from "./modoPruebas";
 import { avisoEnPantalla } from "./avisos";
 
 export function useMotorInvitaciones(data) {
@@ -46,10 +47,7 @@ export function useMotorInvitaciones(data) {
           confirmados,
           invitacionEnviada: Boolean(ordenFamiliares[clave]?.invitacionEnviada),
           invitacionEnviadaEn: ordenFamiliares[clave]?.invitacionEnviadaEn || null,
-          listaParaInvitacion:
-            confirmados.length > 0 &&
-            confirmados.every((m) => m.pagado) &&
-            confirmados.every((m) => m.mesa),
+          listaParaInvitacion: familiaListaParaInvitacion(confirmados, evento),
         };
       })
       .filter((f) => f.listaParaInvitacion);
@@ -121,7 +119,8 @@ export function useMotorInvitaciones(data) {
 
   const abrirPreviewInvitacion = async (familia) => {
     const destinatario = destinatarioConEmail(familia);
-    if (!destinatario?.email) {
+    // En Modo Pruebas el correo va al anfitrión, así que se prueba igual.
+    if (!destinatario?.email && requisitosActivos(evento)) {
       avisoEnPantalla(
         "Ninguno de los confirmados de esta familia tiene email guardado. " +
           "Rellena el de alguno de ellos (en su formulario de datos) para poder enviarle la invitación.",

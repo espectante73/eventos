@@ -888,11 +888,10 @@ export function useLedgerData(rol) {
   // reconciliando estado optimista con lo que de verdad quedó en la base
   // de datos.
   const activarModoPruebas = useCallback(
-    async (colaboradorIdsHabilitados) => {
+    async () => {
       if (!esAnfitrion) return false;
       const { error } = await supabase.rpc("anfitrion_activar_modo_pruebas", {
         p_token: rol,
-        p_colaborador_ids_habilitados: colaboradorIdsHabilitados,
       });
       if (error) {
         avisar("No se pudo activar el Modo Pruebas.", error);

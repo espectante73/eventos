@@ -407,4 +407,12 @@ describe("el versionado: tras el .9 viene el siguiente entero", () => {
     const field = leer("src/components/Formulario.jsx").split("export function Field")[1].split("\nexport ")[0];
     expect(field).not.toMatch(/<label/);
   });
+
+  it("en Modo Pruebas los colaboradores no entran, y los requisitos los decide una sola pieza", () => {
+    expect(leer("src/App.jsx")).toMatch(/modoPruebasActivo && !data\.esAnfitrion/);
+    for (const f of ["src/vistas/VistaColaborador.jsx", "src/vistas/anfitrion/VentanaInvitaciones.jsx", "src/lib/useMotorInvitaciones.js", "src/lib/familiaCobroLlegada.js", "src/lib/invitados.js"]) {
+      expect(leer(f), f).toMatch(/requisitosActivos\(/);
+    }
+  });
 });
+

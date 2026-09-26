@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "49",
+    cambios: [
+      "Modo Pruebas para probarlo todo: mientras está activo puedes enviar la invitación sin pago, mesa ni email, marcar el pago sin datos y la llegada sin datos, sin pago y con las llegadas cerradas. Todos los correos te llegan solo a ti, con \"[PRUEBA] para …\" en el asunto. Los colaboradores solo ven \"Modo pruebas. Se restaurará en unos minutos.\" Ya no hay que elegir qué colaboradores siguen trabajando.",
+    ],
+  },
+  {
     version: "48",
     cambios: [
       "Ubicación del evento en el correo de la invitación: en Configuración → Datos del evento, debajo de Dirección, hay un campo nuevo, \"Enlace de Google Maps\". Con él puesto, el correo de la invitación lleva un botón \"Ubicación del evento\" que abre el restaurante en Google Maps. Vacío, sale sin botón.",

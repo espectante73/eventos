@@ -23,6 +23,7 @@ import {
 } from "../lib/invitados";
 import { ordenarPorApellidoNombre, nombreCompleto } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
+import { requisitosActivos } from "../lib/modoPruebas";
 import { construirEnlaceTablon } from "../lib/url";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
 import { usePopupWindow } from "../lib/usePopupWindow";
@@ -726,8 +727,11 @@ function FilaInvitadoColaborador({
     return true;
   };
 
+  // En Modo Pruebas no se exige nada de antes (lib/modoPruebas.js).
+  const exigir = requisitosActivos(evento);
+
   const confirmarPago = async () => {
-    if (!g.pagado && !datosCompletos(g)) {
+    if (exigir && !g.pagado && !datosCompletos(g)) {
       preguntar({
         titulo: "Todavía no",
         texto: `No se puede marcar a ${nombreCompleto(g)} como pagado: faltan sus datos obligatorios (año de nacimiento y alergias).`,
@@ -756,7 +760,7 @@ function FilaInvitadoColaborador({
   // Desmarcar nunca se bloquea: un error hay que poder deshacerlo,
   // incluso con el marcado ya cerrado.
   const marcadoAbierto = Boolean(evento.asistenciaAbierta);
-  const puedeTocarLlegada = g.presente || (marcadoAbierto && datosCompletos(g) && g.pagado);
+  const puedeTocarLlegada = g.presente || !exigir || (marcadoAbierto && datosCompletos(g) && g.pagado);
   const motivoBloqueo = !marcadoAbierto
     ? "el anfitrión todavía no ha abierto el control de llegadas"
     : !datosCompletos(g)
@@ -808,7 +812,7 @@ function FilaInvitadoColaborador({
             botón no se pinte: si desapareciera, el nombre de ESA fila
             empezaría en otro sitio que el de las demás. */}
         <div className="flex-shrink-0" style={{ width: ANCHO_PAGO }}>
-          {faltanDatos ? (
+          {faltanDatos && exigir ? (
             <span className="flex items-center gap-1 text-xs whitespace-nowrap" style={{ color: C.wax }}>
               <Bell size={12} /> datos {datosRellenos} de {datosTotal}
             </span>
@@ -852,8 +856,9 @@ function FilaInvitadoColaborador({
             que es como se va a usar el día del evento: de pie, recibiendo
             gente. Este no se invierte con la mano izquierda, como el resto
             de las filas de listas (ver CLAUDE.md, "Lo que NO se invierte"). */}
-        {/* El check, solo con los datos completos: antes no se puede usar. */}
-        {!faltanDatos && (
+        {/* El check, solo con los datos completos: antes no se puede usar
+            (salvo en Modo Pruebas). */}
+        {(!faltanDatos || !exigir) && (
         <button
           onClick={confirmarPresente}
           title={
@@ -1092,13 +1097,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
 
   const formatoEuro = (n) => `€ ${n.toFixed(2)}`;
 
-  // Bloqueado por el anfitrión durante el Modo Pruebas (ver
-  // colaborador_puede_actuar en schema.sql) -- los guardados que intente
-  // ya se deshacen solos en pantalla (persistInvitados), pero sin este
-  // aviso el mensaje de error genérico ("¿sigue asignado a ti este
-  // invitado?") confundiría más de lo que explica.
-  const bloqueadoEnPruebas = Boolean(evento.modoPruebasActivo) && colaborador.habilitadoEnPruebas === false;
-
   // Aviso permanente (no un aviso puntual de "algo nuevo") mientras el
   // colaborador tenga CUALQUIER permiso extra concedido -- a petición del
   // usuario, 2026-08-27: hasta ahora un permiso nuevo no generaba ningún
@@ -1115,12 +1113,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
 
   return (
     <div className="space-y-8">
-      {bloqueadoEnPruebas && (
-        <div className="p-4 rounded text-sm font-semibold" style={{ background: C.peligro, color: "#fff" }}>
-          🧪 El anfitrión ha activado el Modo Pruebas y te ha dejado fuera por ahora: no podrás
-          guardar datos, marcar pagos ni confirmar nada hasta que lo desactive.
-        </div>
-      )}
       {/* El aviso de permisos. El usuario lo quiere mantener (2026-09-21):
           es lo primero que se ve y ahí se entera uno de lo que puede
           hacer. Dos partes distintas a propósito:

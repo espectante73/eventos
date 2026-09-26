@@ -202,3 +202,27 @@ describe("marcar a toda la familia: o todos o ninguno (norma 11)", () => {
     expect(cuerpo).toContain("set_config('eventos.recalculo_aviso_activo', 'off', true)");
   });
 });
+
+// Modo Pruebas (v49): los colaboradores quedan fuera y los correos van solo
+// al anfitrión. Si una de estas puertas olvida la comprobación, un
+// colaborador trabajaría sobre datos que se van a restaurar.
+describe("Modo Pruebas en la base", () => {
+  it("toda puerta de escritura de colaborador comprueba modo_pruebas_activo()", () => {
+    for (const f of ["colaborador_puede_actuar", "colaborador_tiene_permiso", "colaborador_puede_editar_novedades", "guardar_fotos_familiares"]) {
+      expect(cuerpoDe(f), f).toMatch(/modo_pruebas_activo\(\)/);
+    }
+  });
+
+  it("en pruebas, el correo va al anfitrión y el asunto dice a quién iba", () => {
+    const f = cuerpoDe("enviar_email");
+    expect(f).toMatch(/if modo_pruebas_activo\(\) then/);
+    expect(f).toMatch(/v_para := \(select "emailAnfitrion" from evento/);
+    expect(f).toMatch(/'to', v_para/);
+    expect(f).toMatch(/'subject', v_asunto/);
+  });
+
+  it("ya no queda la lista de colaboradores habilitados", () => {
+    expect(sql).not.toMatch(/habilitadoEnPruebas/);
+  });
+});
+

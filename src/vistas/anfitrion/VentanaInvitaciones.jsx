@@ -14,6 +14,7 @@ import { useState, useEffect, useRef } from "react";
 import { Check, Mail, Image as ImageIcon, ChevronUp, ChevronDown } from "lucide-react";
 import { C, inputStyle, T, OP } from "../../theme";
 import { resolverColaborador } from "../../lib/invitados";
+import { requisitosActivos } from "../../lib/modoPruebas";
 import { redimensionarImagenArchivo, guardarArchivoInvitacion, obtenerCarpetaInvitaciones, leerHandleCarpeta } from "../../lib/descargas";
 import { guardarImagenEvento, IMAGEN_EVENTO } from "../../lib/imagenesEvento";
 import { Field } from "../../components/Formulario";
@@ -132,7 +133,8 @@ export function VentanaInvitaciones({
     const saltados = [];
     for (const familia of familiasPendientesDeEnviar) {
       const destinatario = destinatarioConEmail(familia);
-      if (!destinatario?.email) {
+      // En Modo Pruebas el correo va al anfitrión: no se salta a nadie.
+      if (!destinatario?.email && requisitosActivos(evento)) {
         saltados.push(`${familia.apellido} (sin email)`);
         continue;
       }
