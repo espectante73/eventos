@@ -115,6 +115,11 @@ regla siga siendo verdad, así que el guardia es de mano:
    lógica condicional enredada, ejecutarlo o repasarlo paso a paso antes
    de darlo por bueno.
 7. **Siempre en español**, salvo que se pida lo contrario.
+8. **Antes de tocar una pantalla, releer las normas de 1.2** y decir en
+   la propuesta cuáles se han comprobado. Lo fuerza un portero
+   (`scripts/portero-normas.mjs`, en `.claude/settings.json`): la
+   primera vez en cada sesión no deja modificar una pantalla sin
+   enseñarlas.
 
 
 ## 1.2 Normas de estándar de la app
