@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "49.1",
+    cambios: [
+      "Modo Pruebas: al pulsarlo sale directamente la pregunta (activar o desactivar), sin la ventana de antes. Y la invitación de una familia sin mesa dice \"Sin mesa asignada\" en vez de dejar el hueco vacío.",
+    ],
+  },
+  {
     version: "49",
     cambios: [
       "Modo Pruebas para probarlo todo: mientras está activo puedes enviar la invitación sin pago, mesa ni email, marcar el pago sin datos y la llegada sin datos, sin pago y con las llegadas cerradas. Todos los correos te llegan solo a ti, con \"[PRUEBA] para …\" en el asunto. Los colaboradores solo ven \"Modo pruebas. Se restaurará en unos minutos.\" Ya no hay que elegir qué colaboradores siguen trabajando.",

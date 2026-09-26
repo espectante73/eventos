@@ -29,6 +29,8 @@ import { Boton } from "./Boton";
 //   otra    { rotulo, alConfirmar }: una SEGUNDA respuesta en vez de
 //            "Cancelar" (el "No" de "¿toda la familia?", norma 11). Cancelar
 //            es entonces la ✕ de la ventana.
+//   alCancelar  lo que pasa al cancelar (Cancelar o la ✕): p. ej. cerrar
+//            el Modo Pruebas, que es solo esta pregunta.
 //   sinPrincipal  true = la respuesta principal no se puede elegir (sale
 //            apagada): p. ej. "Sí, toda la familia" cuando alguien no puede.
 //   detalle  el motivo técnico, en letra pequeña (lo que dice la base de
@@ -38,6 +40,11 @@ import { Boton } from "./Boton";
 export function usePreguntaSeguridad() {
   const [pendiente, setPendiente] = useState(null);
   const cerrar = () => setPendiente(null);
+  const cancelar = () => {
+    const alCancelar = pendiente?.alCancelar;
+    cerrar();
+    alCancelar?.();
+  };
   // La ventana se pinta directamente en el <body>, no donde está el botón:
   // dentro de una fila de tabla heredaría el "una sola línea" y el recorte
   // de la celda. `ancla` dice en qué documento: el de la pestaña o el de
@@ -47,7 +54,7 @@ export function usePreguntaSeguridad() {
   const ventana = pendiente && (
     <ModalFlotante
       titulo={pendiente.titulo}
-      onCerrar={cerrar}
+      onCerrar={cancelar}
       ancho={320}
       acciones={
         // A la derecha, por el pulgar; en espejo con la mano izquierda. Así
@@ -81,7 +88,7 @@ export function usePreguntaSeguridad() {
               {pendiente.otra.rotulo}
             </Boton>
           ) : (
-            <Boton onClick={cerrar}>Cancelar</Boton>
+            <Boton onClick={cancelar}>Cancelar</Boton>
           )}
           </>
           )}
