@@ -199,6 +199,16 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
             placeholder="Calle, número, municipio"
           />
         </Field>
+        {/* Junto a la dirección: es un dato del lugar (norma 11). El
+            correo de la invitación lo pone como botón "Ubicación del
+            evento" (anfitrion_enviar_invitacion_familia); vacío, sin botón. */}
+        <Field label="Enlace de Google Maps">
+          <TextInput
+            value={evento.enlaceMapa || ""}
+            onChange={(e) => persistEvento({ ...evento, enlaceMapa: e.target.value.trim() })}
+            placeholder="https://maps.app.goo.gl/…"
+          />
+        </Field>
       </div>
 
       {/* Todo lo que sigue estaba antes suelto (las dos imágenes) o en su

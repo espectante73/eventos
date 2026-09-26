@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "48",
+    cambios: [
+      "Ubicación del evento en el correo de la invitación: en Configuración → Datos del evento, debajo de Dirección, hay un campo nuevo, \"Enlace de Google Maps\". Con él puesto, el correo de la invitación lleva un botón \"Ubicación del evento\" que abre el restaurante en Google Maps. Vacío, sale sin botón.",
+    ],
+  },
+  {
     version: "47.5",
     cambios: [
       "Invitaciones: el texto de arriba dice ahora solo lo que hace: \"Cuando han pagado, genera la invitación familiar con su mesa ya asignada. Se envía al email de la familia registrado en la app.\"",

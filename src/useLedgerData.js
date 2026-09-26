@@ -14,6 +14,7 @@ const EVENTO_POR_DEFECTO = {
   imagenInvitacion: "/invitacion-defecto.jpg",
   lugar: "",
   direccion: "",
+  enlaceMapa: "",
   precioAdulto: "",
   precioNino: "",
   edadNinoDesde: "2",

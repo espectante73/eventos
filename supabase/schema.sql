@@ -67,6 +67,9 @@ CREATE TABLE public.evento (
     "imagenInvitacion" text DEFAULT '/invitacion-defecto.jpg'::text NOT NULL,
     lugar text DEFAULT ''::text NOT NULL,
     direccion text DEFAULT ''::text NOT NULL,
+    -- El enlace de «Compartir» de Google Maps del lugar (v48). Vacío = el
+    -- correo de la invitación sale sin el botón "Ubicación del evento".
+    "enlaceMapa" text DEFAULT ''::text NOT NULL,
     "precioAdulto" text DEFAULT ''::text NOT NULL,
     "precioNino" text DEFAULT ''::text NOT NULL,
     "edadNinoDesde" text DEFAULT '2'::text NOT NULL,
@@ -754,7 +757,7 @@ declare
   v_claves text[];
   v_sets text;
   v_permitidas text[] := array[
-    'nombre', 'fecha', 'hora', 'lugar', 'direccion', 'imagen',
+    'nombre', 'fecha', 'hora', 'lugar', 'direccion', 'enlaceMapa', 'imagen',
     'ocultarTituloEnImagen', 'emailAnfitrion', 'urlPublica',
     'precioAdulto', 'precioNino', 'edadNinoDesde', 'edadNinoHasta',
     'plantillaAsignacion', 'plantillaDatosCompletados',
@@ -1054,13 +1057,30 @@ CREATE FUNCTION public.anfitrion_enviar_invitacion_familia(p_token uuid, p_email
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
+declare
+  v_mapa text;
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
 
+  -- El botón "Ubicación del evento", con el mismo aspecto que los de los
+  -- demás correos. Solo con un enlace https sin comillas ni espacios: va
+  -- pegado dentro del HTML.
+  select coalesce("enlaceMapa", '') into v_mapa from evento limit 1;
+
   perform enviar_email(
-    p_email, p_asunto, p_html, 'invitacion.png', p_imagen_base64,
+    p_email, p_asunto,
+    p_html ||
+    case
+      when v_mapa ~ '^https://[^"<>[:space:]]+$' then
+        '<div style="margin-top:18px;"><a href="' || v_mapa ||
+        '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
+        'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
+        'font-weight:600;font-family:sans-serif;">Ubicación del evento</a></div>'
+      else ''
+    end,
+    'invitacion.png', p_imagen_base64,
     (select "emailRemitenteFamilia" from config_secretos limit 1),
     'invitacion'
   );
