@@ -216,16 +216,11 @@ export function VentanaInvitaciones({
           ))}
         </div>
 
-        {/* ⚠️ Este texto decía "un artefacto de Claude no puede enviar
-            correos automáticamente". Era verdad cuando la app vivía
-            dentro de un artefacto; desde que es una web con Resend los
-            manda ella sola, y aquí mismo hay un botón "Enviar por email".
-            Llevaba meses mintiendo (visto por el usuario, 2026-09-23). */}
+        {/* Texto escrito por el usuario, palabra por palabra. La
+            invitación va solo por email: no añadir otras vías. */}
         <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
-          Solo aparecen aquí las familias en las que <strong>todos</strong> sus confirmados
-          ya han pagado. De cada una se genera su imagen, con el apellido familiar y los
-          nombres. Puedes enviarla por email desde aquí, o descargarla para mandarla tú
-          por WhatsApp.
+          Cuando han pagado, genera la invitación familiar con su mesa ya asignada. Se envía
+          al email de la familia registrado en la app.
         </p>
         {/* Plegado (norma: todo plegado y una sola cosa abierta). Es un
             ajuste que se toca una vez y luego estorba: lo que se viene a

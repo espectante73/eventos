@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "47.5",
+    cambios: [
+      "Invitaciones: el texto de arriba dice ahora solo lo que hace: \"Cuando han pagado, genera la invitación familiar con su mesa ya asignada. Se envía al email de la familia registrado en la app.\"",
+    ],
+  },
+  {
     version: "47.4",
     cambios: [
       "Arreglado: los botones de las preguntas (\"Sí, quitarla\", \"Sí, lo lleva\"...) no hacían nada en el ordenador. Al apretarlos, la ventana de detrás se ponía delante y tapaba la pregunta. Vale para todas las ventanas.",
