@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "50.4",
+    cambios: [
+      "Formulario del colaborador: al pulsar Guardar con algo sin rellenar, la pantalla va al primer dato que falta y deja el cursor ahí; cada dato que falta late en rojo hasta rellenarlo, y junto a Guardar pone \"Faltan datos por rellenar\".",
+    ],
+  },
+  {
     version: "50.3",
     cambios: [
       "Formulario del colaborador: arriba, en pequeño, la familia y los datos que faltan. Debajo, el nombre con su zona (letra un punto más grande) y el importe en el extremo derecho, al revés de color (dorado sobre verde), para que no compitan.",

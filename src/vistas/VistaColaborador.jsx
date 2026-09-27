@@ -2,7 +2,7 @@
 // fila resumen en la lista, y la vista completa (pendientes/completos,
 // aviso al anfitrión al terminar). Movida tal cual desde App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bell, Calendar, Check, ChevronDown, ClipboardList, Euro, Mail, Megaphone, Send, User, UserCog } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
@@ -125,6 +125,7 @@ function FormularioDatos({
   // Tras un "Guardar" con obligatorios vacíos, se pintan en rojo (y se
   // van apagando según se rellenan).
   const [intentado, setIntentado] = useState(false);
+  const formularioRef = useRef(null);
   const [guardando, setGuardando] = useState(false);
   // Ninguna casilla marcada por defecto: si no se ha tocado nada, "alergias"
   // se queda vacío de verdad (no cuenta como respondido en "datos X de Y"
@@ -218,8 +219,14 @@ function FormularioDatos({
     datosCambiados || Boolean(fotoNueva) || foto !== (fotoFamiliar || "") || sinFoto !== sinFotoBoda;
 
   const guardar = async () => {
-    if (faltanObligatorios(form, evento, opcionesEmail).length) {
+    const pendientes = faltanObligatorios(form, evento, opcionesEmail);
+    if (pendientes.length) {
       setIntentado(true);
+      // Al primero que falta: se lleva la pantalla hasta él y el cursor
+      // dentro (él, v50.4). Los demás laten igual, hasta rellenarlos.
+      const campo = formularioRef.current?.querySelector(`[data-campo="${pendientes[0]}"]`);
+      campo?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+      campo?.querySelector("input")?.focus({ preventScroll: true });
       return;
     }
     let rutaFoto = foto;
@@ -255,8 +262,10 @@ function FormularioDatos({
     });
   };
 
-  // Un obligatorio vacío tras "Guardar": etiqueta y borde en rojo.
+  // Un obligatorio vacío tras "Guardar": etiqueta y borde en rojo, y late
+  // con el mismo latido de las fichas incompletas (.ficha-incompleta).
   const enRojo = (campo) => (faltan.includes(campo) ? { "--etiqueta-campo": C.wax } : undefined);
+  const latido = (campo) => (faltan.includes(campo) ? "ficha-incompleta rounded" : undefined);
   const bordeRojo = (campo) => (faltan.includes(campo) ? { borderColor: C.wax } : {});
 
   const reconstruirAlergias = (sel) => {
@@ -292,6 +301,7 @@ function FormularioDatos({
       // La clase `formulario-dorado` solo existe para teñir de verde las
       // etiquetas de los campos, que Field pinta en dorado para el resto de
       // pantallas (de fondo claro) y aquí serían invisibles.
+      ref={formularioRef}
       className="formulario-dorado p-4 rounded space-y-2"
       style={{
         background: DORADO.fondo,
@@ -329,7 +339,7 @@ function FormularioDatos({
           del usuario, 2026-09-17). Es el dato del que dependen los demás:
           si la persona es menor, el email ni se pide. Con el email arriba,
           el formulario empezaba preguntando algo que a veces sobra. */}
-      <div style={enRojo("anioNacimiento")}>
+      <div data-campo="anioNacimiento" className={latido("anioNacimiento")} style={enRojo("anioNacimiento")}>
       <Field label="Año nac. *">
         <TextInput
           value={form.anioNacimiento}
@@ -340,7 +350,7 @@ function FormularioDatos({
         />
       </Field>
       </div>
-      <div style={enRojo("email")}>
+      <div data-campo="email" className={latido("email")} style={enRojo("email")}>
       <Field label={pideEmailAqui ? "Email *" : "Email"}>
         {colaboradorVinculado ? (
           <div>
@@ -508,7 +518,7 @@ function FormularioDatos({
           </div>
         </div>
       ))}
-      <div>
+      <div data-campo="alergias" className={latido("alergias")}>
         <span
           className="text-xs uppercase block mb-1"
           style={{ color: faltan.includes("alergias") ? C.wax : C.ink, fontFamily: "'IBM Plex Mono', monospace" }}
@@ -589,9 +599,17 @@ function FormularioDatos({
       {/* "* Campos obligatorios", al pie y sin fondo (él, v50.1), en el
           lado contrario a los botones: no gasta una línea más. */}
       <div className="flex items-center justify-between gap-2 pt-1 zurdo:flex-row-reverse">
-        <span className="text-xs" style={{ color: C.ink }}>
-          * Campos obligatorios
-        </span>
+        {/* Tras un "Guardar" con algo vacío, aquí mismo, junto al botón
+            que se acaba de pulsar, y en rojo mientras falte algo (él, v50.4). */}
+        {faltan.length ? (
+          <span className="text-xs font-semibold" style={{ color: C.wax }}>
+            Faltan datos por rellenar
+          </span>
+        ) : (
+          <span className="text-xs" style={{ color: C.ink }}>
+            * Campos obligatorios
+          </span>
+        )}
         <div className="grid grid-cols-2 gap-2">
           <Boton variante="principal" onClick={guardar} disabled={guardando}>
             {guardando ? "Guardando…" : "Guardar"}

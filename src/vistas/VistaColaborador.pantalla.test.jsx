@@ -255,6 +255,22 @@ describe("el formulario: Guardar y Cancelar", () => {
     vista.desmontar();
   });
 
+  // v50.4: el cursor va al primero que falta, y lo que falta late en rojo
+  // hasta rellenarlo.
+  it("«Guardar» lleva el cursor al primero que falta, y lo que falta late", () => {
+    const { vista } = abrirOmar();
+    vista.pulsar(boton("Guardar"));
+    const email = document.body.querySelector('[data-campo="email"]');
+    const alergias = document.body.querySelector('[data-campo="alergias"]');
+    expect(email.contains(document.activeElement)).toBe(true);
+    expect(email.className).toContain("ficha-incompleta");
+    expect(alergias.className).toContain("ficha-incompleta");
+    expect(document.body.textContent).toContain("Faltan datos por rellenar");
+    escribir(vista, document.body.querySelector('input[placeholder="Otra (máx. 15)"]'), "Marisco");
+    expect(document.body.querySelector('[data-campo="alergias"]').className ?? "").not.toContain("ficha-incompleta");
+    vista.desmontar();
+  });
+
   it("con todo lo obligatorio, «Guardar» sube una vez y cierra", () => {
     const { vista, guardados } = abrirOmar();
     escribir(vista, document.body.querySelector('input[placeholder="correo@ejemplo.com"]'), "omar@ejemplo.com");
