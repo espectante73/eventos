@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "50.2",
+    cambios: [
+      "Formulario del colaborador: \"Familia …\" arriba del todo, en letra pequeña, y la zona al lado del nombre.",
+    ],
+  },
+  {
     version: "50.1",
     cambios: [
       "Formulario del colaborador: \"* Campos obligatorios\" pasa al pie, sin fondo, junto a Guardar y Cancelar.",

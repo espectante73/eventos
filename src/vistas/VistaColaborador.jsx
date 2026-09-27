@@ -300,26 +300,25 @@ function FormularioDatos({
     >
       {ventanaPregunta}
       <div>
+        {/* La familia, arriba del todo, pequeña y suelta; y la zona al lado
+            del nombre (él, v50.2). La zona es de SOLO VER: el colaborador no
+            la cambia. */}
+        <span className="text-xs block" style={{ color: C.ink }}>
+          Familia {invitado.grupoFamiliar || form.apellido}
+        </span>
         <div className="flex items-center gap-2 flex-wrap">
           <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
             {form.apellido}, {form.nombre}
           </span>
+          <PastillaDato title="Zona del invitado. Solo la cambia el anfitrión.">
+            {form.zona || "Sin zona"}
+          </PastillaDato>
           <span className="text-xs" style={{ color: C.ink }}>
             datos {contarDatosRellenados(conEmailDeColaborador(form, colaboradorVinculado), hayFoto ? foto || "nueva" : "", evento, { ...abiertos, fotoBoda: !sinFoto })} de{" "}
             {totalDatosInvitado(form, evento, { ...abiertos, fotoBoda: !sinFoto })}
           </span>
           <PastillaDato title="Importe calculado según edad y los precios de Configuración">
             € {importe.toFixed(2)}
-          </PastillaDato>
-        </div>
-        {/* La zona, resaltada con la misma pastilla que el importe (usuario,
-            2026-09-24). Es de SOLO VER: el colaborador no la cambia. Aquí
-            abajo y no arriba, para no empujar el botón Cerrar a otra línea
-            en el móvil. */}
-        <div className="text-xs mt-1 flex items-center gap-2 flex-wrap" style={{ color: C.ink }}>
-          <span>Familia {invitado.grupoFamiliar || form.apellido}</span>
-          <PastillaDato title="Zona del invitado. Solo la cambia el anfitrión.">
-            {form.zona || "Sin zona"}
           </PastillaDato>
         </div>
       </div>
