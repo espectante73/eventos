@@ -541,18 +541,20 @@ function FormularioDatos({
           termina de rellenar, como en cualquier web. Del mismo ancho
           (norma 4) y, como en la pregunta estándar, "Cancelar" en el borde
           del lado del pulgar elegido (norma 3). */}
-      {/* "* Campos obligatorios", al pie y sin fondo (él, v50.1), en el
+      {/* "* Obligatorios", al pie y sin fondo (él, v50.1), en el
           lado contrario a los botones: no gasta una línea más. */}
       <div className="flex items-center justify-between gap-2 pt-1 zurdo:flex-row-reverse">
         {/* Tras un "Guardar" con algo vacío, aquí mismo, junto al botón
             que se acaba de pulsar, y en rojo mientras falte algo (él, v50.4). */}
+        {/* Abreviados para caber en UNA línea junto a los botones, también
+            en el móvil (norma 6: si no cabe, se abrevia; él, v52.3). */}
         {faltan.length ? (
-          <span className="text-xs font-semibold" style={{ color: C.wax }}>
-            Faltan datos por rellenar
+          <span className="text-xs font-semibold whitespace-nowrap" style={{ color: C.wax }}>
+            Faltan datos
           </span>
         ) : (
-          <span className="text-xs" style={{ color: C.ink }}>
-            * Campos obligatorios
+          <span className="text-xs whitespace-nowrap" style={{ color: C.ink }}>
+            * Obligatorios
           </span>
         )}
         <div className="grid grid-cols-2 gap-2">

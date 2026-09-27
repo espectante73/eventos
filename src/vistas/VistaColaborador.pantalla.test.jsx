@@ -256,11 +256,11 @@ describe("el formulario: Guardar y Cancelar", () => {
     return { vista, guardados };
   }
 
-  it("arriba solo «* Campos obligatorios», sin «Cerrar» ni el aviso largo del email", () => {
+  it("al pie «* Obligatorios», sin «Cerrar» ni el aviso largo del email", () => {
     const { vista } = abrirOmar();
     const html = vista.html;
     vista.desmontar();
-    expect(html).toContain("* Campos obligatorios");
+    expect(html).toContain("* Obligatorios");
     expect(html).not.toContain("Nadie de esta familia tiene email");
     expect(boton("Cerrar")).toBeFalsy();
     // Su familia no tiene email y él es esposo: le toca, con asterisco.
@@ -286,7 +286,7 @@ describe("el formulario: Guardar y Cancelar", () => {
     expect(document.body.querySelector('[data-apartado="datos"]').className).toContain("ficha-incompleta");
     // Alergias sigue cerrado (uno abierto a la vez), pero late igual.
     expect(document.body.querySelector('[data-apartado="alergias"]').className).toContain("ficha-incompleta");
-    expect(document.body.textContent).toContain("Faltan datos por rellenar");
+    expect(document.body.textContent).toContain("Faltan datos");
     escribirOtraAlergia(vista, "Marisco");
     expect(document.body.querySelector('[data-apartado="alergias"]').className ?? "").not.toContain("ficha-incompleta");
     vista.desmontar();
