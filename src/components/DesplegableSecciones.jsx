@@ -237,9 +237,8 @@ export function BotonAbrirSeccion({ opciones, sello = 0, posicion = null }) {
           style={posicion || undefined}
           title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
         >
-          {/* El sello, a la izquierda del texto (él, v51.1). */}
-          <Seal count={sello} late />
           Abrir sección…
+          <Seal count={sello} late />
         </button>
       )}
     />

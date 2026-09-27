@@ -98,6 +98,19 @@ function useMantenerDentroDePantalla(activo, ref, pos, setPos) {
   }, [activo, pos?.top, pos?.bottom, pos?.left, pos?.right]);
 }
 
+// El sello de una fila (`opcion.sello`: fichas incompletas, v51): a la
+// derecha, como en "Abrir sección…", pero MONTADO sobre el final del texto
+// (él, v51.2, excepción a propósito). Pegado detrás del texto, el borde del
+// menú lo cortaba.
+function SelloFila({ count }) {
+  if (!count) return null;
+  return (
+    <span className="absolute right-2 top-1/2 -translate-y-1/2 flex">
+      <Seal count={count} late />
+    </span>
+  );
+}
+
 // Una fila del panel: rótulo de grupo (no clicable), acción directa, o
 // disparador de un submenú anidado (se abre hacia la izquierda de la
 // propia fila, sin cerrar el panel padre — igual patrón que un menú de
@@ -190,7 +203,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
           // Sin flecha (a petición del usuario, 2026-08-18: "a ver cómo
           // queda") -- ya no hace falta justify-between al no haber un
           // segundo elemento que empujar al extremo opuesto.
-          className="boton-3d boton-flotante-imagen flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap"
+          className="boton-3d boton-flotante-imagen relative flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap"
           style={{
             color: C.goldClaro,
             ...(abierto ? { background: "rgba(239,233,222,0.12)" } : {}),
@@ -199,9 +212,9 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
             borderRadius: R.redondo,
           }}
         >
-          <Seal count={opcion.sello} late />
           {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
           {opcion.etiqueta}
+          <SelloFila count={opcion.sello} />
         </button>
         {abierto &&
           pos &&
@@ -258,7 +271,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
       // boton-flotante-imagen) -- a petición del usuario. Redondeado
       // como un botón de la portada (a petición del usuario anterior):
       // margen a los lados + radio grande para TODAS las filas.
-      className="boton-3d boton-flotante-imagen flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap"
+      className="boton-3d boton-flotante-imagen relative flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap"
       style={{
         color: opcion.color || C.goldClaro,
         ...(opcion.fondo ? { background: opcion.fondo } : {}),
@@ -273,12 +286,9 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
         if (opcion.fondo) e.currentTarget.style.filter = "none";
       }}
     >
-      {/* `sello`: el número de fichas incompletas (v51), el mismo que
-          lleva el botón que abre el menú. A la izquierda (él, v51.1): a la
-          derecha lo cortaba el borde del menú. */}
-      <Seal count={opcion.sello} late />
       {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
       <span>{opcion.etiqueta}</span>
+      <SelloFila count={opcion.sello} />
     </button>
   );
 }

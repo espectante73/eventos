@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "51.2",
+    cambios: [
+      "El sello rojo vuelve a la derecha, como en \"Abrir sección…\". En las líneas del menú va montado sobre el final del texto, para que el borde no lo corte.",
+    ],
+  },
+  {
     version: "51.1",
     cambios: [
       "El sello rojo va a la izquierda, en el botón \"Abrir sección…\" y en las líneas del menú: a la derecha lo cortaba el borde.",
