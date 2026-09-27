@@ -37,7 +37,8 @@ function etiquetasDelScript(nombre) {
 
 describe("el plano de la aplicación lista las mismas secciones que el menú", () => {
   it("primer nivel: las secciones de \"Abrir sección...\"", () => {
-    const enLaApp = ORDEN_VENTANAS.map((clave) => ETIQUETAS_VENTANAS[clave]);
+    // "Mi cuenta" no es una ventana flotante, pero vive en el menú (v51).
+    const enLaApp = [...ORDEN_VENTANAS.map((clave) => ETIQUETAS_VENTANAS[clave]), "Mi cuenta"];
     expect(etiquetasDelScript("nivel1").sort()).toEqual([...enLaApp].sort());
   });
 

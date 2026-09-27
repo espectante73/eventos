@@ -255,10 +255,11 @@ const nivel1 = [
   ["Aniversarios", {}],
   ["Colaboradores", { tipo: "abre" }],
   ["Configuración", { tipo: "abre" }],
-  ["Cuentas", {}],
+  ["Contabilidad", {}],
   ["Invitaciones", {}],
   ["Invitados", { fuera: true }],
   ["Mesas", {}],
+  ["Mi cuenta", {}],
   ["Música", { fuera: true }],
   ["Novedades", { fuera: true }],
 ];

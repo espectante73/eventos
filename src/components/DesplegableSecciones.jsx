@@ -76,6 +76,12 @@ export const SUBMENU_CONFIGURACION = [
   { id: "versiones", etiqueta: "Versiones", icono: History },
 ];
 
+// "Mi cuenta" es una línea especial, pero no de peligro (él, v51.3): relleno
+// champán y letra verde, con el mismo contorno dorado que las demás. El
+// rojo se queda para lo que borra (Borrado total, Modo pruebas). La misma
+// en el menú del anfitrión y en el del colaborador (norma 7).
+export const ESTILO_MI_CUENTA = { fondo: C.champanClaro, color: C.ink };
+
 // `posicion`: dónde flota el botón dentro de su contenedor (por defecto,
 // esquina inferior derecha) -- Portada.jsx lo reposiciona sobre la propia
 // imagen ("a los pies de la pareja", a petición del usuario, 2026-08-12),
@@ -209,6 +215,7 @@ export function DesplegableSecciones({
       etiqueta: "Mi cuenta",
       icono: UserCog,
       onClick: abrirMiCuenta,
+      ...ESTILO_MI_CUENTA,
     });
   }
 

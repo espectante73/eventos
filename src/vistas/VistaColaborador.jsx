@@ -36,7 +36,7 @@ import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
 import { SeccionPlegable } from "../components/SeccionPlegable";
-import { BotonAbrirSeccion } from "../components/DesplegableSecciones";
+import { BotonAbrirSeccion, ESTILO_MI_CUENTA } from "../components/DesplegableSecciones";
 import { Boton, estilosBoton, EnlaceTexto } from "../components/Boton";
 import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
 import { Portada } from "../components/Portada";
@@ -1216,7 +1216,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 puedeEditarDatosEvento && { id: "datos-evento", etiqueta: "Datos evento", icono: Calendar, onClick: () => setVentanaDatosEventoAbierta(true) },
                 { id: "formulario", etiqueta: "Formulario", icono: ClipboardList, onClick: () => setFormularioAbierto(true), sello: pendientes.length },
                 puedeEnviarInvitaciones && { id: "invitaciones", etiqueta: "Invitaciones", icono: Send, onClick: () => setVentanaInvitacionesAbierta(true) },
-                onCerrarSesion && { id: "mi-cuenta", etiqueta: "Mi cuenta", icono: UserCog, onClick: () => setMiCuentaAbierta(true) },
+                onCerrarSesion && { id: "mi-cuenta", etiqueta: "Mi cuenta", icono: UserCog, onClick: () => setMiCuentaAbierta(true), ...ESTILO_MI_CUENTA },
                 puedeEditarNovedades && { id: "novedades", etiqueta: "Novedades", icono: Megaphone, onClick: abrirNovedades },
               ].filter(Boolean)}
             />
@@ -1300,7 +1300,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
 
             <SeccionPlegable
               icono={Euro}
-              titulo="Estado de cuentas"
+              titulo="Contabilidad"
               resumen={`Pendiente ${formatoEuro(importePendiente)}`}
               abierta={abiertoId === "cuentas"}
               onAlternar={() => setAbiertoId((a) => (hayFicha(a) ? a : a === "cuentas" ? null : "cuentas"))}

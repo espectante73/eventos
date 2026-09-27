@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "51.3",
+    cambios: [
+      "\"Cuentas\" se llama ahora \"Contabilidad\", en el menú, en su ventana y en el panel del colaborador: así no se confunde con \"Mi cuenta\". Y \"Mi cuenta\" se distingue en el menú con fondo champán y letra verde, sin el rojo, que se queda para lo que borra.",
+    ],
+  },
+  {
     version: "51.2",
     cambios: [
       "El sello rojo vuelve a la derecha, como en \"Abrir sección…\". En las líneas del menú va montado sobre el final del texto, para que el borde no lo corte.",

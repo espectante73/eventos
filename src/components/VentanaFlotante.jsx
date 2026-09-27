@@ -120,7 +120,8 @@ export const ETIQUETAS_VENTANAS = {
   mesas: "Mesas",
   invitaciones: "Invitaciones",
   invitados: "Invitados",
-  cuentas: "Cuentas",
+  // "Contabilidad" (antes "Cuentas"): se confundía con "Mi cuenta" (él, v51.3).
+  cuentas: "Contabilidad",
   configuracion: "Configuración",
   versiones: "Versiones",
   novedades: "Novedades",

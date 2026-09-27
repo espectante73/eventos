@@ -1,4 +1,4 @@
-// Cronograma y Estado de cuentas, DIBUJADAS de verdad.
+// Cronograma y Contabilidad, DIBUJADAS de verdad.
 //
 // Las otras dos que faltaban tras la Lista de invitados y la pantalla del
 // colaborador: el Cronograma porque es la que más se toca, y Cuentas
@@ -97,12 +97,12 @@ describe("el Cronograma se puede dibujar", () => {
   });
 });
 
-describe("Estado de cuentas se puede dibujar", () => {
+describe("Contabilidad se puede dibujar", () => {
   const dibujar = (extra = {}) =>
     dibujarYSoltar(<VentanaCuentas data={{ ...data, ...extra }} onCerrar={() => {}} />);
 
   it("con sus tres partes plegadas", () => {
-    expect(dibujar()).toContain("Estado de cuentas");
+    expect(dibujar()).toContain("Contabilidad");
   });
 
   it("sin gastos y sin colaboradores tampoco se cae", () => {

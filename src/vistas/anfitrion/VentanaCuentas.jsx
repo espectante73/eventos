@@ -206,7 +206,7 @@ export function VentanaCuentas({ data, onCerrar }) {
 
   return (
     <>
-    <VentanaFlotante clave="cuentas" titulo="Estado de cuentas" onCerrar={onCerrar}>
+    <VentanaFlotante clave="cuentas" titulo="Contabilidad" onCerrar={onCerrar}>
       <div className="space-y-2">
       <SeccionPlegable
         icono={Calculator}
