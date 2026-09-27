@@ -2,7 +2,7 @@
 // sección (plegable o no), etiqueta+contenido de un campo, y el input de
 // texto con el estilo estándar. Movidos fuera de App.jsx en el reparto del
 // 2026-08-08 (ver CLAUDE.md).
-import { useId } from "react";
+import { useId, useRef, useLayoutEffect } from "react";
 import { C, inputStyle } from "../theme";
 
 export function SectionTitle({ icon: Icon, children, onToggle, compacto }) {
@@ -73,3 +73,30 @@ export function Field({ label, children }) {
 export function TextInput(props) {
   return <input {...props} style={{ ...inputStyle, ...props.style }} />;
 }
+
+// Un campo de texto cuyo valor vive en la pestaña PRINCIPAL pero que se
+// pinta en una ventana aparte (usePopupWindow: otro root de React, que se
+// repinta un instante después). Controlado de la forma normal, en ese
+// instante React lo devuelve al texto anterior, y una tilde -- que se
+// escribe en dos pasos, "´" y luego la vocal -- se pierde a medias (él,
+// v51.4: "no puedo poner una tilde" en el Buscar de la Lista).
+// Aquí el campo es del navegador mientras se escribe; lo que cambie desde
+// fuera (la Revisión rellena un nombre) se aplica solo si no tiene el
+// cursor, así que no pisa nada de lo que se está escribiendo (trampa 2.4).
+export function TextInputEnVentanaAparte({ value, onCambio, style, ...resto }) {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const campo = ref.current;
+    if (campo && campo.ownerDocument.activeElement !== campo && campo.value !== (value || "")) campo.value = value || "";
+  });
+  return (
+    <input
+      ref={ref}
+      defaultValue={value || ""}
+      onChange={(e) => onCambio(e.target.value)}
+      style={{ ...inputStyle, ...style }}
+      {...resto}
+    />
+  );
+}
+

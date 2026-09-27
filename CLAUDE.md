@@ -506,12 +506,12 @@ puede forzar. La ventana de Configuración ya lo avisa.
 ### 2.2 Ventanas de verdad del sistema (Novedades, Cronograma, Música, Lista)
 
 ⚠️ **El navegador solo deja abrir una ventana o copiar DENTRO del clic, y
-en la ventana que tiene el foco.** Por eso: `abrir()` se llama en el
-propio clic, nunca a través de un estado y un `useEffect` (Safari la
-bloquea en silencio); dentro de esas ventanas se usa SU `window` (el de
-`usePopupWindow`), nunca `window` a secas; y para copiar y abrir, se
-empieza a copiar y se abre enseguida, **sin esperar** a la copia. El
-resto, en `lib/usePopupWindow.js`.
+en la ventana con el foco.** `abrir()`, en el propio clic, nunca vía un
+estado y un `useEffect` (Safari la bloquea en silencio); dentro, SU
+`window` (el de `usePopupWindow`); para copiar y abrir, se abre sin
+esperar a la copia. Un campo cuyo valor vive en la pestaña principal va
+con `TextInputEnVentanaAparte`, o pierde las tildes. El resto, en
+`lib/usePopupWindow.js`.
 
 ### 2.3 Políticas que necesitan saber si eres el anfitrión
 

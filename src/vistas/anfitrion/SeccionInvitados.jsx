@@ -35,7 +35,7 @@ import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, anioDelEvento } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
-import { TextInput } from "../../components/Formulario";
+import { TextInput, TextInputEnVentanaAparte } from "../../components/Formulario";
 import { EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { MenuFlotante } from "../../components/MenuFlotante";
@@ -835,9 +835,9 @@ export function SeccionInvitados({
                     recuadro por columna, a petición del usuario,
                     2026-08-20. */}
                 <span style={{ background: tintaColumnaCabecera(0), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
-                  <TextInput
+                  <TextInputEnVentanaAparte
                     value={filtros.texto}
-                    onChange={(e) => setFiltros({ ...filtros, texto: e.target.value })}
+                    onCambio={(texto) => setFiltros({ ...filtros, texto })}
                     placeholder="Buscar..."
                     style={{
                       border: "none",

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "51.4",
+    cambios: [
+      "Arreglado: en la Lista de invitados abierta en su ventana aparte, el \"Buscar...\" no dejaba escribir tildes. La tilde se escribe en dos pasos y la ventana principal devolvía el campo atrás justo en medio.",
+    ],
+  },
+  {
     version: "51.3",
     cambios: [
       "\"Cuentas\" se llama ahora \"Contabilidad\", en el menú, en su ventana y en el panel del colaborador: así no se confunde con \"Mi cuenta\". Y \"Mi cuenta\" se distingue en el menú con fondo champán y letra verde, sin el rojo, que se queda para lo que borra.",
