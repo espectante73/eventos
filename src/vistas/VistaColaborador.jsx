@@ -326,6 +326,7 @@ function FormularioDatos({
           de él depende si se pide email (a un menor, no). */}
       <div data-apartado="datos" className={latido("anioNacimiento", "email")}>
         <SeccionPlegable
+          sencilla
           titulo={esMenorDeEdad(form, evento) ? "Año nac. *" : `Año nac. * · Email${pideEmailAqui ? " *" : ""}`}
           resumen={[form.anioNacimiento, colaboradorVinculado ? colaboradorVinculado.email : form.email].filter(Boolean).join(" · ")}
           abierta={apartado === "datos"}
@@ -381,12 +382,15 @@ function FormularioDatos({
           desmarca, guarda que no tienen, y Aniversarios lo usa. */}
       {pideDatosDeBoda(form) && (
         <SeccionPlegable
+          sencilla
           titulo="Boda"
           resumen={[form.anioBoda, hayFoto ? "con foto" : sinFoto ? "sin foto" : ""].filter(Boolean).join(" · ")}
           abierta={apartado === "boda"}
           onAlternar={() => alternarApartado("boda")}
         >
-          <div className="flex items-start gap-6 flex-wrap">
+          {/* Todo en UNA línea (él, v52.1): el año, y a su lado "Foto boda",
+              su casilla y el recuadro de la foto, a la misma altura. */}
+          <div className="flex items-end gap-3">
             <Field label="Año boda">
               <TextInput
                 value={form.anioBoda}
@@ -397,39 +401,39 @@ function FormularioDatos({
                 style={{ width: 64 }}
               />
             </Field>
-            <Field label="Foto boda">
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                className="uppercase text-xs whitespace-nowrap"
+                style={{ color: "var(--etiqueta-campo)", fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" }}
+              >
+                Foto boda
+              </span>
               <label
-                className="flex items-center gap-1 text-sm mb-1"
+                className="flex items-center gap-1 text-sm whitespace-nowrap"
                 style={{ color: C.ink }}
                 title={hayFoto ? "Con la foto ya puesta no se puede marcar que no tienen: quítala primero" : undefined}
               >
                 <input type="checkbox" checked={!sinFoto} disabled={hayFoto} onChange={() => setSinFoto(!sinFoto)} />
                 Sí
               </label>
-              {sinFoto ? (
-                <span className="text-xs italic" style={{ color: C.ink }}>
-                  No tienen foto de boda.
-                </span>
-              ) : (
-                <>
-                  <HuecoFoto
-                    titulo="Foto de boda"
-                    enlace={enlaceFoto}
-                    ocupada={hayFoto}
-                    subiendo={guardando && Boolean(fotoNueva)}
-                    onElegir={elegirFoto}
-                    onQuitar={() => setQuitandoFoto(true)}
-                    onVer={() => setVerFoto(true)}
-                  />
-                  {errorFoto && (
-                    <p className="text-xs" style={{ color: C.wax }}>
-                      {errorFoto}
-                    </p>
-                  )}
-                </>
+              {!sinFoto && (
+                <HuecoFoto
+                  titulo="Foto de boda"
+                  enlace={enlaceFoto}
+                  ocupada={hayFoto}
+                  subiendo={guardando && Boolean(fotoNueva)}
+                  onElegir={elegirFoto}
+                  onQuitar={() => setQuitandoFoto(true)}
+                  onVer={() => setVerFoto(true)}
+                />
               )}
-            </Field>
+            </div>
           </div>
+          {errorFoto && (
+            <p className="text-xs" style={{ color: C.wax }}>
+              {errorFoto}
+            </p>
+          )}
         </SeccionPlegable>
       )}
 
@@ -440,6 +444,7 @@ function FormularioDatos({
         { campo: "observaciones", titulo: "Observaciones", placeholder: "Cualquier detalle adicional" },
       ].map(({ campo, titulo, placeholder }) => (
         <SeccionPlegable
+          sencilla
           key={campo}
           titulo={titulo}
           resumen={form[campo] || ""}
@@ -457,6 +462,7 @@ function FormularioDatos({
 
       <div data-apartado="alergias" className={latido("alergias")}>
         <SeccionPlegable
+          sencilla
           titulo="Alergias *"
           resumen={form.alergias || ""}
           abierta={apartado === "alergias"}
@@ -502,6 +508,7 @@ function FormularioDatos({
           no es un permiso. Y NO cuenta en "datos X de Y": es una decisión
           suya, no un dato. */}
       <SeccionPlegable
+          sencilla
         titulo="Después del evento"
         resumen={form.conservarDatos ? "Autorizado" : ""}
         abierta={apartado === "despues"}

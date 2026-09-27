@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "52.1",
+    cambios: [
+      "Formulario del colaborador: los apartados vuelven al aspecto de antes, solo con una flecha grande en el lado del pulgar (sin tarjetas ni colores nuevos), y toda la línea se toca. En Boda, el año, la casilla y el recuadro de la foto van en una sola línea.",
+    ],
+  },
+  {
     version: "52",
     cambios: [
       "Formulario del colaborador en seis apartados plegados, uno abierto a la vez: Año nac. · Email, Boda (solo a esposo o esposa), Canción, Observaciones, Alergias y Después del evento. Cerrado, cada uno enseña lo que tiene. Fuera las casillas \"Sí\": lo que no es obligatorio y se deja vacío no cuenta en \"datos X de Y\". En Alergias, \"Otras\" abre su campo. Al guardar con algo obligatorio vacío, se abre su apartado.",
