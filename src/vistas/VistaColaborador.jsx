@@ -8,11 +8,8 @@ import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
 import {
   datosCompletos,
-  contarDatosRellenados,
-  totalDatosInvitado,
   pideDatosDeBoda,
   esMenorDeEdad,
-  conEmailDeColaborador,
   estadoDatos,
   eligeOpcional,
   familiasSinEmail,
@@ -311,28 +308,25 @@ function FormularioDatos({
     >
       {ventanaPregunta}
       <div>
-        {/* Arriba, pequeño y suelto: la familia y los datos que faltan. Debajo,
-            el nombre con su zona, y el importe en el extremo derecho (él,
-            v50.3). La zona es de SOLO VER: el colaborador no la cambia. */}
+        {/* Arriba, pequeño y suelto: la familia, y el importe en el extremo
+            derecho. Debajo, el nombre, más grande, con su zona (él, v50.5).
+            "datos X de Y" no va aquí: ya lo dice la fila, justo encima. La
+            zona es de SOLO VER: el colaborador no la cambia. */}
         <div className="text-xs flex items-center gap-3 flex-wrap" style={{ color: C.ink }}>
           <span>Familia {invitado.grupoFamiliar || form.apellido}</span>
-          <span>
-            datos {contarDatosRellenados(conEmailDeColaborador(form, colaboradorVinculado), hayFoto ? foto || "nueva" : "", evento, { ...abiertos, fotoBoda: !sinFoto })} de{" "}
-            {totalDatosInvitado(form, evento, { ...abiertos, fotoBoda: !sinFoto })}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap mt-1">
-          <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
-            {form.apellido}, {form.nombre}
-          </span>
-          <PastillaDato title="Zona del invitado. Solo la cambia el anfitrión.">
-            {form.zona || "Sin zona"}
-          </PastillaDato>
           <span className="ml-auto">
             <PastillaDato destacado title="Importe calculado según edad y los precios de Configuración">
               € {importe.toFixed(2)}
             </PastillaDato>
           </span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap mt-1">
+          <span className="text-lg" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
+            {form.apellido}, {form.nombre}
+          </span>
+          <PastillaDato title="Zona del invitado. Solo la cambia el anfitrión.">
+            {form.zona || "Sin zona"}
+          </PastillaDato>
         </div>
       </div>
       {/* El año de nacimiento va EL PRIMERO, antes del email (a petición

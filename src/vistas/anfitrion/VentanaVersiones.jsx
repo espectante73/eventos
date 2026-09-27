@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "50.5",
+    cambios: [
+      "Formulario del colaborador: fuera el \"datos X de Y\" repetido (ya lo dice la fila). El importe sube a la línea de la familia, y el nombre del invitado gana tamaño.",
+    ],
+  },
+  {
     version: "50.4",
     cambios: [
       "Formulario del colaborador: al pulsar Guardar con algo sin rellenar, la pantalla va al primer dato que falta y deja el cursor ahí; cada dato que falta late en rojo hasta rellenarlo, y junto a Guardar pone \"Faltan datos por rellenar\".",
