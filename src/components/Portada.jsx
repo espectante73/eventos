@@ -63,6 +63,12 @@ export function Portada({
   onCambiarRol,
   anfitrionToken,
   onCerrarSesion,
+  // "Mi cuenta" abierta desde el menú del colaborador (v50.6): { abierta,
+  // onCerrar }. El anfitrión la abre desde su "Abrir sección…" (aquí).
+  miCuenta = null,
+  // El sello del anfitrión como colaborador (v50.6), para su "Abrir sección…".
+  sello = 0,
+  miColaboradorId = null,
   // true = enseñar el enlace "Mapa del sitio" dentro de "Mi cuenta".
   // Siempre para el anfitrión; para un colaborador, solo si le han
   // marcado el permiso "Ver el mapa del sitio" (lib/permisos.js).
@@ -104,6 +110,7 @@ export function Portada({
   botonExtra,
 }) {
   const [form, setForm] = useState(evento);
+  const [miCuentaAbierta, setMiCuentaAbierta] = useState(false);
   useEffect(() => setForm(evento), [evento]);
   // Móvil manejado con la izquierda (lib/mano.js): los botones que flotan
   // sobre la foto se van al borde izquierdo.
@@ -173,6 +180,9 @@ export function Portada({
             del anfitrión) -- sirve igual para el anfitrión que para
             cualquier colaborador logueado, sin tocar nada en
             VistaColaborador.jsx (Fase C, 2026-08-21). */}
+        {/* "Mi cuenta" se abre desde "Abrir sección…", el del anfitrión y
+            el del colaborador (él, v50.6: todos los botones en un solo
+            sitio). Aquí solo queda su ventana. */}
         {onCerrarSesion && (
           <div className="absolute top-4 right-4 zurdo:right-auto zurdo:left-4">
             <MiCuenta
@@ -181,6 +191,7 @@ export function Portada({
               mostrarMapaSitio={mostrarMapaSitio}
               mostrarDiseno={mostrarDiseno}
               mostrarErrores={mostrarErrores}
+              {...(miCuenta || (editable && toggle ? { abierta: miCuentaAbierta, onCerrar: () => setMiCuentaAbierta(false) } : {}))}
             />
           </div>
         )}
@@ -201,6 +212,9 @@ export function Portada({
             abrirCronograma={abrirCronograma}
             abrirMusicaEvento={abrirMusicaEvento}
             abrirInvitados={abrirInvitados}
+            abrirMiCuenta={onCerrarSesion ? () => setMiCuentaAbierta(true) : null}
+            sello={sello}
+            miColaboradorId={miColaboradorId}
             posicion={alPieDeLaFoto}
           />
         )}

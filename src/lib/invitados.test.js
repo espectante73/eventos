@@ -7,6 +7,8 @@ import {
   familiasSinEmail,
   emailObligatorio,
   faltanObligatorios,
+  colaboradorConEmail,
+  fichasIncompletasDe,
   pideDatosDeBoda,
   esMenorDeEdad,
   pideEmail,
@@ -321,4 +323,33 @@ describe("email: casilla Sí por defecto y al menos uno por familia", () => {
       expect(faltanObligatorios({ ...adulto, rolFamiliar: "esposo" }, evento)).toEqual([]);
     });
   });
+
+  // v50.6: el anfitrión también es colaborador, y su sello cuenta igual.
+  describe("el sello del anfitrión como colaborador", () => {
+    const colaboradores = [
+      { id: "c1", email: "Benito@Correo.es" },
+      { id: "c2", email: "otra@correo.es" },
+    ];
+
+    it("se le reconoce por su email, sin mirar mayúsculas", () => {
+      expect(colaboradorConEmail(colaboradores, "benito@correo.es")?.id).toBe("c1");
+      expect(colaboradorConEmail(colaboradores, "")).toBe(null);
+      expect(colaboradorConEmail(colaboradores, "nadie@correo.es")).toBe(null);
+    });
+
+    it("si su email está en dos colaboradores, en ninguno (mejor sin sello que con el de otro)", () => {
+      expect(colaboradorConEmail([...colaboradores, { id: "c3", email: "benito@correo.es" }], "benito@correo.es")).toBe(null);
+    });
+
+    it("cuenta solo sus confirmados incompletos", () => {
+      const invitados = [
+        { id: "a", colaboradorId: "c1", confirmado: true, anioNacimiento: "", alergias: "" },
+        { id: "b", colaboradorId: "c1", confirmado: false, anioNacimiento: "", alergias: "" },
+        { id: "c", colaboradorId: "c2", confirmado: true, anioNacimiento: "", alergias: "" },
+      ];
+      const ids = fichasIncompletasDe("c1", { invitados, colaboradores, evento }).map((g) => g.id);
+      expect(ids).toEqual(["a"]);
+    });
+  });
 });
+

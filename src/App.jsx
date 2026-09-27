@@ -442,6 +442,7 @@ export default function App() {
         {data.esAnfitrion && !vistaPrevia ? (
           <VistaAnfitrion
             data={data}
+            emailSesion={session?.user?.email || ""}
             setRol={cambiarVistaPrevia}
             anfitrionToken={anfitrionToken}
             onCerrarSesion={session ? () => supabase.auth.signOut() : null}

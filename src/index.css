@@ -110,7 +110,7 @@ button:disabled > .interruptor-haptico {
 }
 
 /* El sello rojo con el número de fichas que faltan (Seal en Widgets.jsx,
-   botón "Abrir formulario"). Mismo latido que la ficha incompleta y al
+   botón "Abrir sección…"). Mismo latido que la ficha incompleta y al
    mismo ritmo: es el mismo aviso, contado en vez de suelto. Late el
    SELLO, no el botón -- el botón es la pastilla de cristal sobre la foto,
    lenguaje ya aprobado (norma 4), y el dorado de la app es adorno, no

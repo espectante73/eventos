@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "51",
+    cambios: [
+      "Todos los botones en un solo sitio: \"Abrir sección…\". El anfitrión tiene dentro \"Mi cuenta\", en su orden alfabético. El colaborador tiene ahora su propio \"Abrir sección…\" con Formulario, Mi cuenta y, si tiene permiso, Datos evento, Invitaciones y Novedades; el sello rojo de sus fichas incompletas late encima del botón. El anfitrión, que también es colaborador, ve el suyo en su botón (se le reconoce por su email).",
+    ],
+  },
+  {
     version: "50.5",
     cambios: [
       "Formulario del colaborador: fuera el \"datos X de Y\" repetido (ya lo dice la fila). El importe sube a la línea de la familia, y el nombre del invitado gana tamaño.",

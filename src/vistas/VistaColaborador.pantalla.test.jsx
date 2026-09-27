@@ -53,6 +53,14 @@ const data = {
   novedades: [],
 };
 
+// El formulario se abre desde "Abrir sección…" → "Formulario" (v50.6),
+// que además es el camino real de cualquier colaborador.
+function abrirPorMenu(vista) {
+  const botones = () => [...document.body.querySelectorAll("button")];
+  vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
+  vista.pulsar(botones().find((b) => b.textContent.trim().replace(/\d+$/, "") === "Formulario"));
+}
+
 const dibujar = (extra = {}) =>
   dibujarYSoltar(
     <VistaColaborador
@@ -79,10 +87,7 @@ function abrirFormulario(extra = {}) {
       onCerrarSesion={() => {}}
     />
   );
-  const boton = [...vista.contenedor.querySelectorAll("button")].find((b) =>
-    b.textContent.includes("Abrir formulario")
-  );
-  if (boton) vista.pulsar(boton);
+  abrirPorMenu(vista);
   const html = vista.html;
   vista.desmontar();
   return html;
@@ -127,10 +132,7 @@ describe("la pantalla del colaborador se puede dibujar", () => {
         onCerrarSesion={() => {}}
       />
     );
-    const abrir = [...vista.contenedor.querySelectorAll("button")].find((b) =>
-      b.textContent.includes("Abrir formulario")
-    );
-    vista.pulsar(abrir);
+    abrirPorMenu(vista);
     const ficha = [...vista.contenedor.querySelectorAll("button")].find((b) =>
       b.textContent.includes("Pacheco, Omar")
     );
@@ -190,7 +192,7 @@ describe("el pago pregunta por la familia", () => {
       <VistaColaborador data={datos} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
     );
     const botones = () => [...document.body.querySelectorAll("button")];
-    vista.pulsar(botones().find((b) => b.textContent.includes("Abrir formulario")));
+    abrirPorMenu(vista);
     const pago = botones().find((b) => b.textContent.includes("Pago pendiente"));
     expect(pago, "no hay ninguna fila con el pago a la vista").toBeTruthy();
     await act(async () => pago.dispatchEvent(new MouseEvent("click", { bubbles: true })));
@@ -231,7 +233,7 @@ describe("el formulario: Guardar y Cancelar", () => {
         onCerrarSesion={() => {}}
       />
     );
-    vista.pulsar(botones().find((b) => b.textContent.includes("Abrir formulario")));
+    abrirPorMenu(vista);
     vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Omar")));
     return { vista, guardados };
   }
@@ -315,6 +317,38 @@ describe("el formulario: Guardar y Cancelar", () => {
     vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Lucía")));
     vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Omar")));
     expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]').value).toBe("Marisco");
+    vista.desmontar();
+  });
+});
+
+// v50.6: el colaborador tiene su "Abrir sección…", con el sello de sus
+// fichas incompletas encima y solo sus líneas dentro.
+describe("el «Abrir sección…» del colaborador", () => {
+  const botones = () => [...document.body.querySelectorAll("button")];
+  const montarVista = (extra = {}) =>
+    montar(
+      <VistaColaborador data={{ ...data, ...extra }} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+    );
+
+  it("lleva el sello encima, y ya no hay botones sueltos", () => {
+    const vista = montarVista();
+    const abrir = botones().find((b) => b.textContent.includes("Abrir sección"));
+    expect(abrir.textContent).toMatch(/\d/); // el número del sello
+    expect(botones().some((b) => b.textContent.includes("Abrir formulario"))).toBe(false);
+    expect(botones().some((b) => b.textContent.trim().endsWith("Mi cuenta"))).toBe(false);
+    vista.desmontar();
+  });
+
+  it("dentro: Formulario y Mi cuenta; lo de permiso, solo con permiso", () => {
+    const vista = montarVista();
+    vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
+    const nombres = botones().map((b) => b.textContent.trim().replace(/\d+$/, ""));
+    expect(nombres).toContain("Formulario");
+    expect(nombres).toContain("Mi cuenta");
+    expect(nombres).not.toContain("Datos evento");
+    expect(nombres).not.toContain("Invitaciones");
+    vista.pulsar(botones().find((b) => b.textContent.trim() === "Mi cuenta"));
+    expect(document.body.textContent).toContain("Cerrar sesión");
     vista.desmontar();
   });
 });

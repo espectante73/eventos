@@ -127,8 +127,13 @@ function PreguntaMano() {
   );
 }
 
-export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarDiseno, mostrarErrores }) {
-  const [abierta, setAbierta] = useState(false);
+// `abierta` + `onCerrar`: la abre otro (el anfitrión, desde "Abrir
+// sección…", v50.6) y aquí no se pinta botón. Sin ellos, el botón de
+// siempre (los colaboradores, que no tienen ese menú).
+export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarDiseno, mostrarErrores, abierta: abiertaFuera, onCerrar }) {
+  const desdeFuera = abiertaFuera !== undefined;
+  const [abiertaAqui, setAbierta] = useState(false);
+  const abierta = desdeFuera ? abiertaFuera : abiertaAqui;
   const [mapaAbierto, setMapaAbierto] = useState(false);
   const [disenoAbierto, setDisenoAbierto] = useState(false);
   const [nuevaContrasena, setNuevaContrasena] = useState("");
@@ -142,7 +147,8 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
   const { tactil } = useMano();
 
   const cerrar = () => {
-    setAbierta(false);
+    if (desdeFuera) onCerrar?.();
+    else setAbierta(false);
     setNuevaContrasena("");
     setNuevoEmail("");
     setAvisoContrasena(null);
@@ -190,13 +196,15 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
 
   return (
     <>
-      <button
-        onClick={() => setAbierta(true)}
-        className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
-        title="Cambiar mi contraseña o mi email de acceso"
-      >
-        <UserCog size={16} /> Mi cuenta
-      </button>
+      {!desdeFuera && (
+        <button
+          onClick={() => setAbierta(true)}
+          className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
+          title="Cambiar mi contraseña o mi email de acceso"
+        >
+          <UserCog size={16} /> Mi cuenta
+        </button>
+      )}
 
       <PreguntaMano />
 

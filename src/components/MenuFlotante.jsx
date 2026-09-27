@@ -15,6 +15,7 @@ import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { C, R, OP } from "../theme";
 import { esZurdo } from "../lib/mano";
+import { Seal } from "./Widgets";
 
 // Margen mínimo respecto al borde de la ventana, y altura mínima aunque
 // haya poco hueco (por debajo de esto, mejor dejar que se salga un poco
@@ -200,6 +201,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
         >
           {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
           {opcion.etiqueta}
+          <Seal count={opcion.sello} late />
         </button>
         {abierto &&
           pos &&
@@ -273,6 +275,9 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
     >
       {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
       <span>{opcion.etiqueta}</span>
+      {/* `sello`: el número de fichas incompletas (v50.6), el mismo que
+          lleva el botón que abre el menú. */}
+      <Seal count={opcion.sello} late />
     </button>
   );
 }

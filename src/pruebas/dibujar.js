@@ -15,6 +15,13 @@ import { createRoot } from "react-dom/client";
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+// El navegador de pruebas no mide nada: todo sale a 0, pegado al borde,
+// y los menús (MenuFlotante) se recolocarían sin fin para "meterse en
+// pantalla". Medidas normales, lejos de los bordes.
+if (typeof Element !== "undefined") {
+  Element.prototype.getBoundingClientRect = () => ({ left: 100, right: 200, top: 100, bottom: 200, width: 100, height: 100, x: 100, y: 100 });
+}
+
 export function montar(elemento) {
   const contenedor = document.createElement("div");
   document.body.appendChild(contenedor);

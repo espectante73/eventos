@@ -35,7 +35,7 @@ import {
   Heart,
 } from "lucide-react";
 import { C } from "../theme";
-import { UserSolido } from "./Widgets";
+import { UserSolido, Seal } from "./Widgets";
 import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "./VentanaFlotante";
 import { MenuFlotante } from "./MenuFlotante";
 
@@ -91,6 +91,13 @@ export function DesplegableSecciones({
   abrirCronograma,
   abrirMusicaEvento,
   abrirInvitados,
+  // "Mi cuenta" del anfitrión vive aquí, entre las demás (v50.6). Abre la
+  // ventana de siempre (MiCuenta.jsx). Sin sesión real no hay.
+  abrirMiCuenta = null,
+  // Las fichas incompletas del anfitrión como colaborador (v50.6), y a
+  // cuál de los colaboradores corresponde: su línea en Formularios lo lleva.
+  sello = 0,
+  miColaboradorId = null,
   posicion = { bottom: 8, right: 8 },
 }) {
   const opciones = ORDEN_VENTANAS.map((clave) => {
@@ -134,6 +141,9 @@ export function DesplegableSecciones({
         id: clave,
         etiqueta: ETIQUETAS_VENTANAS[clave],
         icono: ICONOS_VENTANAS[clave],
+        // El sello marca el camino hasta tu formulario: Colaboradores →
+        // Formularios → tu nombre.
+        sello,
         submenu: [
           {
             id: "colaboradores-datos",
@@ -145,6 +155,7 @@ export function DesplegableSecciones({
             id: "colaboradores-formularios",
             etiqueta: "Formularios",
             icono: Eye,
+            sello,
             submenu: [
               { id: "rol-anfitrion", etiqueta: "Anfitrión", icono: UserSolido, onClick: () => onCambiarRol(anfitrionToken) },
               ...colaboradores.map((c) => ({
@@ -152,6 +163,7 @@ export function DesplegableSecciones({
                 etiqueta: c.nombre,
                 icono: User,
                 onClick: () => onCambiarRol(c.id),
+                sello: c.id === miColaboradorId ? sello : 0,
               })),
             ],
           },
@@ -190,6 +202,25 @@ export function DesplegableSecciones({
     };
   });
 
+  // En su sitio del orden alfabético: detrás de "Mesas", delante de "Música".
+  if (abrirMiCuenta) {
+    opciones.splice(opciones.findIndex((o) => o.id === "mesas") + 1, 0, {
+      id: "miCuenta",
+      etiqueta: "Mi cuenta",
+      icono: UserCog,
+      onClick: abrirMiCuenta,
+    });
+  }
+
+  return <BotonAbrirSeccion opciones={opciones} sello={sello} posicion={posicion} />;
+}
+
+// El botón "Abrir sección…" y su menú: UNA pieza para el anfitrión y el
+// colaborador (él, v50.6: todos los botones en un solo sitio). `sello`:
+// las fichas incompletas de quien lo usa, latiendo encima del botón para
+// que se vean con todo cerrado. `posicion`: flota sobre la foto (el
+// anfitrión); sin ella, va en la columna de la portada (el colaborador).
+export function BotonAbrirSeccion({ opciones, sello = 0, posicion = null }) {
   return (
     <MenuFlotante
       anchor="right"
@@ -202,11 +233,12 @@ export function DesplegableSecciones({
           // (index.css) lleva el fondo/letra/relieve -- a petición del
           // usuario, los dos botones que flotan sobre la imagen deben
           // verse como un mismo par, no dos estilos distintos.
-          className="boton-3d boton-flotante-imagen cristal-difuminado absolute px-4 py-3 rounded-full text-sm font-medium"
-          style={posicion}
+          className={`boton-3d boton-flotante-imagen cristal-difuminado ${posicion ? "absolute" : ""} flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium`}
+          style={posicion || undefined}
           title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
         >
           Abrir sección…
+          <Seal count={sello} late />
         </button>
       )}
     />

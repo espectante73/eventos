@@ -15,6 +15,7 @@ import {
   familiasSinEmail,
   emailObligatorio,
   faltanObligatorios,
+  fichasIncompletasDe,
   claveFamilia,
   importeEsperadoInvitado,
   resolverColaborador,
@@ -30,11 +31,12 @@ import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso, esDeEdicion } from "../lib/
 import { generarImagenCronograma } from "../lib/cronograma";
 import { C, R, T, OP, DORADO } from "../theme";
 import { URL_REPOSITORIO } from "../constants";
-import { Seal, Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
+import { Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, Field, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
 import { SeccionPlegable } from "../components/SeccionPlegable";
+import { BotonAbrirSeccion } from "../components/DesplegableSecciones";
 import { Boton, estilosBoton, EnlaceTexto } from "../components/Boton";
 import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
 import { Portada } from "../components/Portada";
@@ -964,11 +966,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
 
   // Pantalla de inicio: la misma Portada que ve el anfitrión (sin sus 3
   // recuadros de estadísticas, que no viven aquí sino en VistaAnfitrion.jsx),
-  // con un único botón "Abrir formulario" en vez del desplegable "Abrir
-  // sección…" -- a petición del usuario, 2026-08-18. Todo lo que antes iba
-  // siempre visible (resumen + listas de invitados) pasa a esta ventana,
-  // que se abre con ese botón.
+  // con su propio "Abrir sección…" (v51). El resumen y las listas de
+  // invitados viven en "Formulario", que se abre desde ahí.
   const [formularioAbierto, setFormularioAbierto] = useState(false);
+  const [miCuentaAbierta, setMiCuentaAbierta] = useState(false);
   const [abiertoId, setAbiertoId] = useState(null);
   // Mientras un invitado está abierto, se queda fijo en la sección donde
   // estaba al abrirlo (pendiente o completo), aunque sus datos cambien
@@ -987,13 +988,12 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // rojo, lib/invitados.js). Antes estas secciones solo miraban los datos
   // obligatorios (año de nacimiento y alergias), y una ficha podía estar en
   // "completados" y en rojo a la vez.
-  const incompletaDe = (g) =>
-    estadoDatos(g, {
-      evento,
-      foto: fotosFamiliares[g.grupoFamiliar || ""],
-      sinFotoBoda: Boolean(fotosSinBoda?.[g.grupoFamiliar || ""]),
-      colaboradorVinculado: colaboradores.find((c) => c.invitadoId === g.id),
-    }).incompleta;
+  // La misma cuenta que el sello del anfitrión cuando él también es
+  // colaborador (fichasIncompletasDe, lib/invitados.js).
+  const idsIncompletas = new Set(
+    fichasIncompletasDe(colaboradorId, { invitados, colaboradores, evento, fotosFamiliares, fotosSinBoda }).map((g) => g.id)
+  );
+  const incompletaDe = (g) => idsIncompletas.has(g.id);
   const esPendiente = (g) => (g.id === abiertoId ? pendienteAlAbrir : incompletaDe(g));
   const pendientes = confirmados.filter(esPendiente);
   const completos = confirmados.filter((g) => !esPendiente(g));
@@ -1169,16 +1169,15 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       {/* Misma Portada que ve el anfitrión (imagen + franja fecha/hora/
           lugar en vivo) -- sin sus 3 recuadros de estadísticas (Lista
           global/Tentativa/Confirmados: esos son del evento entero, viven
-          aparte en VistaAnfitrion.jsx, no aquí). En vez del desplegable
-          "Abrir sección…" (editable+toggle, que no se pasan aquí a
-          propósito), un único botón que abre el formulario -- a petición
-          del usuario, 2026-08-18. */}
+          aparte en VistaAnfitrion.jsx, no aquí). Su "Abrir sección…" va en
+          botonExtra, con solo sus líneas (v51). */}
       <Portada
         evento={evento}
         onCerrarSesion={onCerrarSesion}
         enlaceTablon={enlaceTablon}
         mostrarMapaSitio={puedeVerMapaSitio}
         mostrarDiseno={tienePermiso(colaborador, PERMISOS.DISENO_VER)}
+        miCuenta={{ abierta: miCuentaAbierta, onCerrar: () => setMiCuentaAbierta(false) }}
         botonExtra={
           <>
             {esAnfitrionOriginal && (
@@ -1207,40 +1206,20 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 )}
               />
             )}
-            {puedeEditarNovedades && (
-              <button
-                onClick={abrirNovedades}
-                className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
-                title="Permiso especial concedido por el anfitrión: editar el texto de las novedades"
-              >
-                <Megaphone size={16} /> Editar Novedades
-              </button>
-            )}
-            {puedeEditarDatosEvento && (
-              <button
-                onClick={() => setVentanaDatosEventoAbierta(true)}
-                className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
-                title="Permiso especial concedido por el anfitrión: editar los datos del evento, textos de email incluidos"
-              >
-                <Calendar size={16} /> Datos evento
-              </button>
-            )}
-            {puedeEnviarInvitaciones && (
-              <button
-                onClick={() => setVentanaInvitacionesAbierta(true)}
-                className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
-                title="Permiso especial concedido por el anfitrión: enviar invitaciones a confirmados y pagados"
-              >
-                <Send size={16} /> Invitaciones
-              </button>
-            )}
-            <button
-              onClick={() => setFormularioAbierto(true)}
-              className="boton-3d boton-flotante-imagen cristal-difuminado flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
-            >
-              Abrir formulario
-              <Seal count={pendientes.length} late />
-            </button>
+            {/* Todo en un solo botón, como el del anfitrión (él, v50.6),
+                con el sello de sus fichas incompletas encima: se ve con
+                todo cerrado. Solo sus líneas, en orden alfabético; las de
+                permiso, solo si lo tiene. */}
+            <BotonAbrirSeccion
+              sello={pendientes.length}
+              opciones={[
+                puedeEditarDatosEvento && { id: "datos-evento", etiqueta: "Datos evento", icono: Calendar, onClick: () => setVentanaDatosEventoAbierta(true) },
+                { id: "formulario", etiqueta: "Formulario", icono: ClipboardList, onClick: () => setFormularioAbierto(true), sello: pendientes.length },
+                puedeEnviarInvitaciones && { id: "invitaciones", etiqueta: "Invitaciones", icono: Send, onClick: () => setVentanaInvitacionesAbierta(true) },
+                onCerrarSesion && { id: "mi-cuenta", etiqueta: "Mi cuenta", icono: UserCog, onClick: () => setMiCuentaAbierta(true) },
+                puedeEditarNovedades && { id: "novedades", etiqueta: "Novedades", icono: Megaphone, onClick: abrirNovedades },
+              ].filter(Boolean)}
+            />
           </>
         }
       />

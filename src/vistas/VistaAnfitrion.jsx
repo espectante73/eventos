@@ -26,6 +26,7 @@ import { guardarAspecto, ASPECTO_POR_DEFECTO } from "../lib/temasMusica";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
+import { colaboradorConEmail, fichasIncompletasDe } from "../lib/invitados";
 import { VentanaConfigModoPruebas } from "./anfitrion/VentanaConfigModoPruebas";
 import { VentanaConfigZonaReinicio } from "./anfitrion/VentanaConfigZonaReinicio";
 import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
@@ -42,8 +43,12 @@ const VentanaVersiones = lazy(() =>
   import("./anfitrion/VentanaVersiones").then((m) => ({ default: m.VentanaVersiones }))
 );
 
-export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion }) {
+export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, emailSesion = "" }) {
   const { evento, colaboradores, invitados, persistInvitados, tokenTablon } = data;
+  // El anfitrión también es colaborador: sus fichas incompletas le laten
+  // en "Abrir sección…" (él, v50.6). Se le reconoce por su email de acceso.
+  const miColaborador = colaboradorConEmail(colaboradores, emailSesion);
+  const misFichasIncompletas = miColaborador ? fichasIncompletasDe(miColaborador.id, data).length : 0;
   const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
   // Ventana Novedades: ventana de verdad del sistema operativo, no una
   // VentanaFlotante -- ver lib/usePopupWindow.js. `abrir` se pasa hasta
@@ -301,6 +306,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion })
         abrirCronograma={abrirCronograma}
         abrirMusicaEvento={abrirMusicaEvento}
         abrirInvitados={abrirInvitados}
+        sello={misFichasIncompletas}
+        miColaboradorId={miColaborador?.id || null}
       />
 
       {/* Los 3 recuadros de resumen (Lista global/Tentativa/Confirmados)

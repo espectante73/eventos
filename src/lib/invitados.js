@@ -145,6 +145,34 @@ export function faltanObligatorios(g, evento, opciones = {}) {
   return faltan;
 }
 
+// Las fichas incompletas de un colaborador: sus confirmados que no están
+// en "N de N" (estadoDatos). Una sola cuenta para su sello, el suyo cuando
+// lo mira el anfitrión y el del anfitrión cuando también es colaborador
+// (v50.6).
+export function fichasIncompletasDe(colaboradorId, { invitados, colaboradores, evento, fotosFamiliares, fotosSinBoda }) {
+  return (invitados || []).filter(
+    (g) =>
+      g.confirmado &&
+      resolverColaborador(g, colaboradores || [])?.id === colaboradorId &&
+      estadoDatos(g, {
+        evento,
+        foto: fotosFamiliares?.[g.grupoFamiliar || ""],
+        sinFotoBoda: Boolean(fotosSinBoda?.[g.grupoFamiliar || ""]),
+        colaboradorVinculado: (colaboradores || []).find((c) => c.invitadoId === g.id),
+      }).incompleta
+  );
+}
+
+// El colaborador que tiene este email (el del anfitrión, que también es
+// colaborador). Si hay más de uno, ninguno: mejor sin sello que con los
+// avisos de otro.
+export function colaboradorConEmail(colaboradores, email) {
+  const buscado = String(email || "").trim().toLowerCase();
+  if (!buscado) return null;
+  const iguales = (colaboradores || []).filter((c) => String(c.email || "").trim().toLowerCase() === buscado);
+  return iguales.length === 1 ? iguales[0] : null;
+}
+
 // Los campos de texto que SÍ se le piden a esta persona en concreto: lo
 // que no aplica (el email de un menor, el año de boda de quien no es O ni
 // A) o lo opcional que no ha elegido, no cuenta. Así "completo" es
