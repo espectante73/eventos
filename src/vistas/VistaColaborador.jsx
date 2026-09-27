@@ -31,7 +31,7 @@ import { generarImagenCronograma } from "../lib/cronograma";
 import { C, R, T, OP, DORADO } from "../theme";
 import { URL_REPOSITORIO } from "../constants";
 import { Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
-import { SectionTitle, Field, TextInput } from "../components/Formulario";
+import { SectionTitle, TextInput } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
 import { SeccionPlegable } from "../components/SeccionPlegable";
@@ -91,6 +91,12 @@ function PastillaDato({ title, children, destacado = false }) {
       {children}
     </span>
   );
+}
+
+// Línea suave entre apartados del formulario, sin llegar a los bordes (él,
+// v52.2).
+function LineaEntreApartados() {
+  return <div className="mx-3" style={{ borderTop: `1px solid ${C.ink}`, opacity: OP.linea }} />;
 }
 
 // En qué apartado plegado vive cada obligatorio: "Guardar" abre ese.
@@ -240,7 +246,6 @@ function FormularioDatos({
 
   // Un obligatorio vacío tras "Guardar": etiqueta y borde en rojo, y late
   // con el mismo latido de las fichas incompletas (.ficha-incompleta).
-  const enRojo = (campo) => (faltan.includes(campo) ? { "--etiqueta-campo": C.wax } : undefined);
   // Late el APARTADO que tiene algo pendiente, también cerrado.
   const latido = (...campos) => (campos.some((c) => faltan.includes(c)) ? "ficha-incompleta rounded-lg" : undefined);
   const bordeRojo = (campo) => (faltan.includes(campo) ? { borderColor: C.wax } : {});
@@ -333,21 +338,20 @@ function FormularioDatos({
           onAlternar={() => alternarApartado("datos")}
         >
           <div className="flex items-start gap-3">
-            <div data-campo="anioNacimiento" style={enRojo("anioNacimiento")}>
-              <Field label="Año nac. *">
-                <TextInput
-                  value={form.anioNacimiento}
-                  onChange={(e) => setForm({ ...form, anioNacimiento: e.target.value })}
-                  placeholder="1988"
-                  maxLength={4}
-                  inputMode="numeric"
-                  style={{ width: 64, ...bordeRojo("anioNacimiento") }}
-                />
-              </Field>
+            {/* Sin rótulos dentro: ya los dice el apartado (él, v52.2). */}
+            <div data-campo="anioNacimiento">
+              <TextInput
+                value={form.anioNacimiento}
+                onChange={(e) => setForm({ ...form, anioNacimiento: e.target.value })}
+                placeholder="1988"
+                maxLength={4}
+                inputMode="numeric"
+                aria-label="Año de nacimiento"
+                style={{ width: 64, ...bordeRojo("anioNacimiento") }}
+              />
             </div>
             {!esMenorDeEdad(form, evento) && (
-              <div data-campo="email" className="flex-1 min-w-0" style={enRojo("email")}>
-                <Field label={pideEmailAqui ? "Email *" : "Email"}>
+              <div data-campo="email" className="flex-1 min-w-0">
                   {colaboradorVinculado ? (
                     <div>
                       <div
@@ -366,11 +370,11 @@ function FormularioDatos({
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
                       placeholder="correo@ejemplo.com"
                       inputMode="email"
+                      aria-label="Email"
                       className="w-full"
                       style={bordeRojo("email")}
                     />
                   )}
-                </Field>
               </div>
             )}
           </div>
@@ -380,6 +384,7 @@ function FormularioDatos({
       {/* Boda: solo a quien viene con su pareja (O o A). A los demás, ni
           se enseña (él, v52). La casilla "Sí" de la foto se queda: si se
           desmarca, guarda que no tienen, y Aniversarios lo usa. */}
+      {pideDatosDeBoda(form) && <LineaEntreApartados />}
       {pideDatosDeBoda(form) && (
         <SeccionPlegable
           sencilla
@@ -390,17 +395,16 @@ function FormularioDatos({
         >
           {/* Todo en UNA línea (él, v52.1): el año, y a su lado "Foto boda",
               su casilla y el recuadro de la foto, a la misma altura. */}
-          <div className="flex items-end gap-3">
-            <Field label="Año boda">
-              <TextInput
-                value={form.anioBoda}
-                onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
-                placeholder="2015"
-                maxLength={4}
-                inputMode="numeric"
-                style={{ width: 64 }}
-              />
-            </Field>
+          <div className="flex items-center gap-3">
+            <TextInput
+              value={form.anioBoda}
+              onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
+              placeholder="2015"
+              maxLength={4}
+              inputMode="numeric"
+              aria-label="Año de boda"
+              style={{ width: 64 }}
+            />
             <div className="flex items-center gap-2 min-w-0">
               <span
                 className="uppercase text-xs whitespace-nowrap"
@@ -442,7 +446,8 @@ function FormularioDatos({
       {[
         { campo: "cancion", titulo: "Canción", placeholder: "Título — Artista" },
         { campo: "observaciones", titulo: "Observaciones", placeholder: "Cualquier detalle adicional" },
-      ].map(({ campo, titulo, placeholder }) => (
+      ].map(({ campo, titulo, placeholder }) => [
+        <LineaEntreApartados key={`linea-${campo}`} />,
         <SeccionPlegable
           sencilla
           key={campo}
@@ -457,9 +462,10 @@ function FormularioDatos({
             placeholder={placeholder}
             className="w-full"
           />
-        </SeccionPlegable>
-      ))}
+        </SeccionPlegable>,
+      ])}
 
+      <LineaEntreApartados />
       <div data-apartado="alergias" className={latido("alergias")}>
         <SeccionPlegable
           sencilla
@@ -507,8 +513,9 @@ function FormularioDatos({
           ⚠️ DESMARCADA por defecto: un permiso que viene dado de fábrica
           no es un permiso. Y NO cuenta en "datos X de Y": es una decisión
           suya, no un dato. */}
+      <LineaEntreApartados />
       <SeccionPlegable
-          sencilla
+        sencilla
         titulo="Después del evento"
         resumen={form.conservarDatos ? "Autorizado" : ""}
         abierta={apartado === "despues"}

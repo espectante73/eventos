@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "52.2",
+    cambios: [
+      "Formulario del colaborador: al abrir un apartado ya no se repite su encabezado dentro, y una línea suave separa los apartados.",
+    ],
+  },
+  {
     version: "52.1",
     cambios: [
       "Formulario del colaborador: los apartados vuelven al aspecto de antes, solo con una flecha grande en el lado del pulgar (sin tarjetas ni colores nuevos), y toda la línea se toca. En Boda, el año, la casilla y el recuadro de la foto van en una sola línea.",
