@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "51.1",
+    cambios: [
+      "El sello rojo va a la izquierda, en el botón \"Abrir sección…\" y en las líneas del menú: a la derecha lo cortaba el borde.",
+    ],
+  },
+  {
     version: "51",
     cambios: [
       "Todos los botones en un solo sitio: \"Abrir sección…\". El anfitrión tiene dentro \"Mi cuenta\", en su orden alfabético. El colaborador tiene ahora su propio \"Abrir sección…\" con Formulario, Mi cuenta y, si tiene permiso, Datos evento, Invitaciones y Novedades; el sello rojo de sus fichas incompletas late encima del botón. El anfitrión, que también es colaborador, ve el suyo en su botón (se le reconoce por su email).",

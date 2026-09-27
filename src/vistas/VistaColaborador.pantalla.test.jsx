@@ -58,7 +58,7 @@ const data = {
 function abrirPorMenu(vista) {
   const botones = () => [...document.body.querySelectorAll("button")];
   vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
-  vista.pulsar(botones().find((b) => b.textContent.trim().replace(/\d+$/, "") === "Formulario"));
+  vista.pulsar(botones().find((b) => b.textContent.trim().replace(/^\d+|\d+$/g, "") === "Formulario"));
 }
 
 const dibujar = (extra = {}) =>
@@ -342,7 +342,7 @@ describe("el «Abrir sección…» del colaborador", () => {
   it("dentro: Formulario y Mi cuenta; lo de permiso, solo con permiso", () => {
     const vista = montarVista();
     vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
-    const nombres = botones().map((b) => b.textContent.trim().replace(/\d+$/, ""));
+    const nombres = botones().map((b) => b.textContent.trim().replace(/^\d+|\d+$/g, ""));
     expect(nombres).toContain("Formulario");
     expect(nombres).toContain("Mi cuenta");
     expect(nombres).not.toContain("Datos evento");

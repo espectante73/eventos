@@ -199,9 +199,9 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
             borderRadius: R.redondo,
           }}
         >
+          <Seal count={opcion.sello} late />
           {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
           {opcion.etiqueta}
-          <Seal count={opcion.sello} late />
         </button>
         {abierto &&
           pos &&
@@ -273,11 +273,12 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
         if (opcion.fondo) e.currentTarget.style.filter = "none";
       }}
     >
+      {/* `sello`: el número de fichas incompletas (v51), el mismo que
+          lleva el botón que abre el menú. A la izquierda (él, v51.1): a la
+          derecha lo cortaba el borde del menú. */}
+      <Seal count={opcion.sello} late />
       {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
       <span>{opcion.etiqueta}</span>
-      {/* `sello`: el número de fichas incompletas (v50.6), el mismo que
-          lleva el botón que abre el menú. */}
-      <Seal count={opcion.sello} late />
     </button>
   );
 }
