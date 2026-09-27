@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "50.3",
+    cambios: [
+      "Formulario del colaborador: arriba, en pequeño, la familia y los datos que faltan. Debajo, el nombre con su zona (letra un punto más grande) y el importe en el extremo derecho, al revés de color (dorado sobre verde), para que no compitan.",
+    ],
+  },
+  {
     version: "50.2",
     cambios: [
       "Formulario del colaborador: \"Familia …\" arriba del todo, en letra pequeña, y la zona al lado del nombre.",

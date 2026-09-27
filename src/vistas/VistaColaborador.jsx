@@ -73,20 +73,21 @@ const ETIQUETAS_CAMPOS_INVITADO = {
 const ANCHO_PAGO = 104; // "Pago pendiente" es el rótulo más largo de esa columna
 const ALTO_BOTON_FILA = 32; // manda el círculo de llegada: todos iguales (norma 4)
 
-// Pastilla de un dato que el colaborador SOLO MIRA: el importe y la zona.
-// Una sola pieza para las dos (norma 7): si algún día se retoca el color,
-// se retoca en las dos o dejan de parecerse.
-//
-// Colores al revés que el resto de la cabecera (fondo dorado, letra
-// verde) y un punto más de letra, a petición del usuario (2026-09-17): el
-// importe es el dato que más se consulta. El dorado es más CLARO que el
-// de la ficha para que se despegue, con un filete verde fino que la
-// recorta sobre el dorado del formulario.
-function PastillaDato({ title, children }) {
+// Pastilla de un dato que el colaborador SOLO MIRA: la zona y el importe.
+// Una sola pieza para las dos (norma 7), pero distintas a propósito (él,
+// v50.3): iguales competían por la atención.
+//   - la zona: dorado claro con filete verde, un punto más de letra;
+//   - el importe (`destacado`): al revés, letra dorada sobre verde, en el
+//     extremo derecho. Es el dato que más se consulta.
+function PastillaDato({ title, children, destacado = false }) {
   return (
     <span
-      className="text-sm px-2 py-0.5 rounded font-semibold"
-      style={{ background: C.champanClaro, color: C.ink, border: `1px solid ${C.ink}` }}
+      className={`${destacado ? "text-sm" : "text-base"} px-2 py-0.5 rounded font-semibold whitespace-nowrap`}
+      style={
+        destacado
+          ? { background: C.ink, color: C.goldClaro, border: `1px solid ${C.ink}` }
+          : { background: C.champanClaro, color: C.ink, border: `1px solid ${C.ink}` }
+      }
       title={title}
     >
       {children}
@@ -300,26 +301,28 @@ function FormularioDatos({
     >
       {ventanaPregunta}
       <div>
-        {/* La familia, arriba del todo, pequeña y suelta; y la zona al lado
-            del nombre (él, v50.2). La zona es de SOLO VER: el colaborador no
-            la cambia. */}
-        <span className="text-xs block" style={{ color: C.ink }}>
-          Familia {invitado.grupoFamiliar || form.apellido}
-        </span>
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Arriba, pequeño y suelto: la familia y los datos que faltan. Debajo,
+            el nombre con su zona, y el importe en el extremo derecho (él,
+            v50.3). La zona es de SOLO VER: el colaborador no la cambia. */}
+        <div className="text-xs flex items-center gap-3 flex-wrap" style={{ color: C.ink }}>
+          <span>Familia {invitado.grupoFamiliar || form.apellido}</span>
+          <span>
+            datos {contarDatosRellenados(conEmailDeColaborador(form, colaboradorVinculado), hayFoto ? foto || "nueva" : "", evento, { ...abiertos, fotoBoda: !sinFoto })} de{" "}
+            {totalDatosInvitado(form, evento, { ...abiertos, fotoBoda: !sinFoto })}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap mt-1">
           <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
             {form.apellido}, {form.nombre}
           </span>
           <PastillaDato title="Zona del invitado. Solo la cambia el anfitrión.">
             {form.zona || "Sin zona"}
           </PastillaDato>
-          <span className="text-xs" style={{ color: C.ink }}>
-            datos {contarDatosRellenados(conEmailDeColaborador(form, colaboradorVinculado), hayFoto ? foto || "nueva" : "", evento, { ...abiertos, fotoBoda: !sinFoto })} de{" "}
-            {totalDatosInvitado(form, evento, { ...abiertos, fotoBoda: !sinFoto })}
+          <span className="ml-auto">
+            <PastillaDato destacado title="Importe calculado según edad y los precios de Configuración">
+              € {importe.toFixed(2)}
+            </PastillaDato>
           </span>
-          <PastillaDato title="Importe calculado según edad y los precios de Configuración">
-            € {importe.toFixed(2)}
-          </PastillaDato>
         </div>
       </div>
       {/* El año de nacimiento va EL PRIMERO, antes del email (a petición
