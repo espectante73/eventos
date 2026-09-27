@@ -5,6 +5,7 @@
 import { parsePrecio } from "./formato";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 import { requisitosActivos } from "./modoPruebas";
+import { emailValido } from "./validacion";
 
 export function datosCompletos(g) {
   // Únicos datos obligatorios: año de nacimiento y alergias (aunque la
@@ -121,23 +122,27 @@ export function familiasSinEmail(invitados, colaboradores) {
   return new Set([...conConfirmados].filter((clave) => !conEmail.has(clave)));
 }
 
-// El aviso de "esta familia todavía no tiene email" se lee dentro de la
-// ficha de UNA persona, así que el paréntesis tiene que hablar de ELLA.
-// Antes decía siempre "(del esposo o de la esposa)" y el usuario lo cortó
-// el 2026-09-24: "no le va a aplicar a cada uno". Cuatro casos, y cada uno
-// dice quién puede darlo de verdad:
-//   - matrimonio (O/A): basta con el de uno de los dos;
-//   - sin cónyuge (P/S): es obligatorio, no hay con quién repartirlo;
-//   - menor: a él no se le pide ninguno (ver `pideEmail`);
-//   - sin revisar (rolFamiliar vacío): todavía no se sabe, así que se
-//     pide el de un adulto sin señalar a nadie.
-export function avisoFamiliaSinEmail(g, evento) {
-  const base = "⚠ Nadie de esta familia tiene email todavía: hace falta al menos uno";
-  if (!pideEmail(g, evento)) return `${base} (el suyo no, que es menor: tiene que darlo un adulto de la familia).`;
-  if (g?.rolFamiliar === ROL_FAMILIAR.ESPOSO || g?.rolFamiliar === ROL_FAMILIAR.ESPOSA)
-    return `${base} (como mínimo el de uno de los dos).`;
-  if (!g?.rolFamiliar) return `${base} (el de un adulto de la familia).`;
-  return `${base} (en su caso es obligatorio: no hay cónyuge que pueda darlo).`;
+// ¿Tiene que dar email ESTA persona? Al menos uno por familia: quien viene
+// solo (S), siempre; si nadie de la familia lo tiene todavía, quien puede
+// darlo por ella (ROLES_CON_EMAIL_FAMILIAR: los dos cónyuges, hasta que uno
+// lo ponga). A los demás no: su email no cuenta para la familia. Al menor
+// no se le pide, y el de quien también es colaborador se edita en
+// Colaboradores.
+export function emailObligatorio(g, evento, { familiaSinEmail = false, colaboradorVinculado = null } = {}) {
+  if (colaboradorVinculado || !pideEmail(g, evento)) return false;
+  if (g?.rolFamiliar === ROL_FAMILIAR.SUELTO) return true;
+  return familiaSinEmail && ROLES_CON_EMAIL_FAMILIAR.includes(g?.rolFamiliar);
+}
+
+// Los obligatorios que faltan en el formulario del colaborador (v50): sin
+// ellos, "Guardar" no guarda y los marca en rojo. Devuelve sus nombres de
+// campo, en el orden del formulario.
+export function faltanObligatorios(g, evento, opciones = {}) {
+  const faltan = [];
+  if (!String(g?.anioNacimiento || "").trim()) faltan.push("anioNacimiento");
+  if (emailObligatorio(g, evento, opciones) && !emailValido(String(g?.email || "").trim())) faltan.push("email");
+  if (!String(g?.alergias || "").trim()) faltan.push("alergias");
+  return faltan;
 }
 
 // Los campos de texto que SÍ se le piden a esta persona en concreto: lo

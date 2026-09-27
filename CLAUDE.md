@@ -161,7 +161,7 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    protagonista. Los textos de ayuda también: al pie de la ventana y
    plegados (`<details>`), nunca entre los botones. Todo panel que se abre
    tiene su **salida ARRIBA y a la vista**, y salir deja la pantalla como
-   estaba.
+   estaba; un formulario, al final: **«Guardar» y «Cancelar»**.
 6. **Tablas y listas: una sola línea por fila**, todas de la misma altura
    y sin aire extra (con 140 invitados, una lista con aire no cabe). Si
    no cabe, se ensancha o se recorta, nunca dos líneas. Los anchos de las
@@ -177,7 +177,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 9. **Quitar o borrar pregunta antes**, en la ventana de la app
    (`usePreguntaSeguridad`; `BotonQuitar` ya la lleva dentro), nunca con
    `window.alert`, `window.confirm` ni `prompt`: en las ventanas
-   emergentes rompen. Lo vigila `reglas-del-proyecto.test.js`.
+   emergentes rompen. Lo vigila `reglas-del-proyecto.test.js`. Descartar
+   lo escrito: «¿Descartar los cambios?», «Sí, descartar» / «Seguir
+   editando».
 10. **No está hecho hasta que él lo ha visto**: pedir la captura (mejor
     del móvil) ANTES de decir que un cambio de aspecto está hecho. Y
     **construir de uno en uno y enseñar**, no el resultado final de
@@ -522,7 +524,7 @@ y se prueba una subida real antes de darla por buena. Lo vigila
 ### 2.4 Un campo de texto no se recopia de su prop
 
 ⚠️ **Nunca con un `useEffect`**: se inicializa una vez al montar
-(`useState(prop)`) y se guarda al salir del campo. Si no, el propio
+(`useState(prop)`) y se guarda al salir del campo o con «Guardar». Si no, el propio
 guardado repinta la ventana y borra lo que se está escribiendo al lado.
 
 ### 2.5 Un matrimonio comparte año y foto de boda

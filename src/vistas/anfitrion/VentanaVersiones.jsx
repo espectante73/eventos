@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "50",
+    cambios: [
+      "Formulario del colaborador más simple: arriba solo \"* Campos obligatorios\"; el email lleva asterisco cuando le toca a esa persona, en vez del aviso largo. Lo escrito no se sube hasta pulsar \"Guardar\", al final del formulario, y \"Guardar\" no deja subirlo sin los obligatorios: los marca en rojo. \"Cancelar\" pregunta \"¿Descartar los cambios?\" y no sube nada. Ya no hay botón \"Cerrar\" arriba, y con una ficha abierta solo se sale por esos dos botones.",
+    ],
+  },
+  {
     version: "49.2",
     cambios: [
       "La invitación de una familia sin mesa dice \"Sin mesa\", más corto: \"Sin mesa asignada\" no cabía en el recuadro.",

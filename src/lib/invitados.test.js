@@ -5,7 +5,8 @@ import {
   totalDatosInvitado,
   conEmailDeColaborador,
   familiasSinEmail,
-  avisoFamiliaSinEmail,
+  emailObligatorio,
+  faltanObligatorios,
   pideDatosDeBoda,
   esMenorDeEdad,
   pideEmail,
@@ -289,34 +290,35 @@ describe("email: casilla Sí por defecto y al menos uno por familia", () => {
     expect(familiasSinEmail([raul], [{ id: "c", invitadoId: "r", email: "raul@a.com" }]).size).toBe(0);
   });
 
-  // El usuario, 2026-09-24: el aviso decía siempre "(del esposo o de la
-  // esposa)" y eso no le aplica a cada uno. Este test es el que impide
-  // que vuelva a haber un solo texto para todos.
-  describe("el aviso dice quién puede dar ese email", () => {
-    const adulto = { anioNacimiento: "1970" };
+  // v50: el formulario del colaborador no guarda sin los obligatorios, y
+  // el email lo es solo para quien puede darlo por la familia.
+  describe("los obligatorios del formulario", () => {
+    const adulto = { anioNacimiento: "1970", alergias: "No", email: "" };
 
-    it("a un matrimonio le basta con el de uno de los dos", () => {
-      for (const rol of ["esposo", "esposa"]) {
-        expect(avisoFamiliaSinEmail({ ...adulto, rolFamiliar: rol }, evento)).toContain("uno de los dos");
+    it("quien viene solo (S) siempre tiene que dar email", () => {
+      expect(emailObligatorio({ ...adulto, rolFamiliar: "suelto" }, evento)).toBe(true);
+    });
+
+    it("en una familia sin email, los dos cónyuges y el padre o madre sin pareja", () => {
+      for (const rol of ["esposo", "esposa", "padre"]) {
+        expect(emailObligatorio({ ...adulto, rolFamiliar: rol }, evento, { familiaSinEmail: true })).toBe(true);
+        expect(emailObligatorio({ ...adulto, rolFamiliar: rol }, evento, { familiaSinEmail: false })).toBe(false);
       }
     });
 
-    it("quien viene sin cónyuge (S o P) lo tiene obligatorio", () => {
-      for (const rol of ["suelto", "padre"]) {
-        expect(avisoFamiliaSinEmail({ ...adulto, rolFamiliar: rol }, evento)).toContain("obligatorio");
-      }
+    it("al menor, a quien no puede darlo por la familia y al colaborador vinculado, no", () => {
+      const sin = { familiaSinEmail: true };
+      expect(emailObligatorio({ rolFamiliar: "hijo", anioNacimiento: "2015" }, evento, sin)).toBe(false);
+      expect(emailObligatorio({ ...adulto, rolFamiliar: "hijo" }, evento, sin)).toBe(false);
+      expect(emailObligatorio({ ...adulto, rolFamiliar: "" }, evento, sin)).toBe(false);
+      expect(emailObligatorio({ ...adulto, rolFamiliar: "suelto" }, evento, { colaboradorVinculado: { email: "" } })).toBe(false);
     });
 
-    it("a un menor no se le pide el suyo: lo da un adulto", () => {
-      const nino = { rolFamiliar: "hijo", anioNacimiento: "2015" };
-      expect(avisoFamiliaSinEmail(nino, evento)).toContain("un adulto de la familia");
-      expect(avisoFamiliaSinEmail(nino, evento)).not.toContain("obligatorio");
-    });
-
-    it("sin revisar (rol vacío) no señala a nadie en concreto", () => {
-      const texto = avisoFamiliaSinEmail({ ...adulto, rolFamiliar: "" }, evento);
-      expect(texto).toContain("un adulto de la familia");
-      expect(texto).not.toContain("uno de los dos");
+    it("dice qué falta, en el orden del formulario", () => {
+      expect(faltanObligatorios({ rolFamiliar: "suelto" }, evento)).toEqual(["anioNacimiento", "email", "alergias"]);
+      expect(faltanObligatorios({ ...adulto, rolFamiliar: "suelto", email: "no-es-un-email" }, evento)).toEqual(["email"]);
+      expect(faltanObligatorios({ ...adulto, rolFamiliar: "suelto", email: "a@b.es" }, evento)).toEqual([]);
+      expect(faltanObligatorios({ ...adulto, rolFamiliar: "esposo" }, evento)).toEqual([]);
     });
   });
 });

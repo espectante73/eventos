@@ -205,3 +205,100 @@ describe("el pago pregunta por la familia", () => {
     vista.desmontar();
   });
 });
+
+// El formulario de la ficha (él, v50): nada sube hasta "Guardar", que no
+// guarda sin los obligatorios; "Cancelar" descarta, preguntando antes; y
+// mientras está abierto, no se sale por ningún otro sitio.
+describe("el formulario: Guardar y Cancelar", () => {
+  const botones = () => [...document.body.querySelectorAll("button")];
+  const boton = (t) => botones().find((b) => b.textContent.trim() === t);
+  const escribir = (vista, input, valor) =>
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, valor);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+  // Omar: esposo, sin alergias, y su familia no tiene email.
+  function abrirOmar() {
+    const guardados = [];
+    const vista = montar(
+      <VistaColaborador
+        data={{ ...data, persistInvitados: (lista) => guardados.push(lista) }}
+        colaboradorId="c1"
+        esAnfitrionOriginal={false}
+        setRol={() => {}}
+        anfitrionToken={null}
+        onCerrarSesion={() => {}}
+      />
+    );
+    vista.pulsar(botones().find((b) => b.textContent.includes("Abrir formulario")));
+    vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Omar")));
+    return { vista, guardados };
+  }
+
+  it("arriba solo «* Campos obligatorios», sin «Cerrar» ni el aviso largo del email", () => {
+    const { vista } = abrirOmar();
+    const html = vista.html;
+    vista.desmontar();
+    expect(html).toContain("* Campos obligatorios");
+    expect(html).not.toContain("Nadie de esta familia tiene email");
+    expect(boton("Cerrar")).toBeFalsy();
+    // Su familia no tiene email y él es esposo: le toca, con asterisco.
+    expect(html).toContain("Email *");
+  });
+
+  it("sin los obligatorios, «Guardar» no guarda y la ficha sigue abierta", () => {
+    const { vista, guardados } = abrirOmar();
+    vista.pulsar(boton("Guardar"));
+    expect(guardados).toHaveLength(0);
+    expect(boton("Guardar")).toBeTruthy();
+    vista.desmontar();
+  });
+
+  it("con todo lo obligatorio, «Guardar» sube una vez y cierra", () => {
+    const { vista, guardados } = abrirOmar();
+    escribir(vista, document.body.querySelector('input[placeholder="correo@ejemplo.com"]'), "omar@ejemplo.com");
+    escribir(vista, document.body.querySelector('input[placeholder="Otra (máx. 15)"]'), "Marisco");
+    expect(guardados).toHaveLength(0); // escribir no sube nada
+    vista.pulsar(boton("Guardar"));
+    expect(guardados).toHaveLength(1);
+    const omar = guardados[0].find((g) => g.id === "g2");
+    expect(omar.email).toBe("omar@ejemplo.com");
+    expect(omar.alergias).toBe("Marisco");
+    expect(boton("Guardar")).toBeFalsy();
+    vista.desmontar();
+  });
+
+  it("«Cancelar» con algo escrito pregunta «¿Descartar los cambios?»", () => {
+    const { vista, guardados } = abrirOmar();
+    escribir(vista, document.body.querySelector('input[placeholder="Otra (máx. 15)"]'), "Marisco");
+    vista.pulsar(boton("Cancelar"));
+    expect(document.body.textContent).toContain("¿Descartar los cambios?");
+    // "Seguir editando" vuelve al formulario con lo escrito.
+    vista.pulsar(boton("Seguir editando"));
+    expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]').value).toBe("Marisco");
+    // "Sí, descartar" cierra sin subir nada.
+    vista.pulsar(boton("Cancelar"));
+    vista.pulsar(boton("Sí, descartar"));
+    expect(guardados).toHaveLength(0);
+    expect(boton("Guardar")).toBeFalsy();
+    vista.desmontar();
+  });
+
+  it("«Cancelar» sin cambios cierra sin preguntar", () => {
+    const { vista } = abrirOmar();
+    vista.pulsar(boton("Cancelar"));
+    expect(document.body.textContent).not.toContain("¿Descartar los cambios?");
+    expect(boton("Guardar")).toBeFalsy();
+    vista.desmontar();
+  });
+
+  it("con la ficha abierta, tocar otra fila no la cierra (se perdería lo escrito)", () => {
+    const { vista } = abrirOmar();
+    escribir(vista, document.body.querySelector('input[placeholder="Otra (máx. 15)"]'), "Marisco");
+    vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Lucía")));
+    vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Omar")));
+    expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]').value).toBe("Marisco");
+    vista.desmontar();
+  });
+});

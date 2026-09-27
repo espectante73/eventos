@@ -2,7 +2,7 @@
 // fila resumen en la lista, y la vista completa (pendientes/completos,
 // aviso al anfitrión al terminar). Movida tal cual desde App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Bell, Calendar, Check, ChevronDown, ClipboardList, Euro, Mail, Megaphone, Send, User, UserCog } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
@@ -16,7 +16,8 @@ import {
   estadoDatos,
   eligeOpcional,
   familiasSinEmail,
-  avisoFamiliaSinEmail,
+  emailObligatorio,
+  faltanObligatorios,
   claveFamilia,
   importeEsperadoInvitado,
   resolverColaborador,
@@ -109,8 +110,21 @@ function FormularioDatos({
   // Nadie de la familia tiene email (regla: al menos uno por familia).
   familiaSinEmail = false,
 }) {
+  // Todo lo que se escribe se queda AQUÍ, en la pantalla, hasta pulsar
+  // "Guardar" (él, v50): así "Cancelar" puede descartarlo de verdad, y
+  // "Guardar" no deja subir una ficha sin sus obligatorios. Lo que no se
+  // ha tocado no se manda, así que lo que puso otro colaborador (el año
+  // o la foto de boda del cónyuge) no se pisa.
   const [form, setForm] = useState(invitado);
   const [foto, setFoto] = useState(fotoFamiliar || "");
+  // La foto elegida espera aquí, sin subir: subirla pisaría la de la
+  // familia en el almacén aunque luego se cancelara.
+  const [fotoNueva, setFotoNueva] = useState(null); // { archivo, vista } | null
+  const [sinFoto, setSinFoto] = useState(sinFotoBoda);
+  // Tras un "Guardar" con obligatorios vacíos, se pintan en rojo (y se
+  // van apagando según se rellenan).
+  const [intentado, setIntentado] = useState(false);
+  const [guardando, setGuardando] = useState(false);
   // Ninguna casilla marcada por defecto: si no se ha tocado nada, "alergias"
   // se queda vacío de verdad (no cuenta como respondido en "datos X de Y"
   // hasta que el colaborador marque algo, aunque sea "No" explícitamente).
@@ -146,19 +160,12 @@ function FormularioDatos({
     if (!abiertos[campo]) {
       setAbiertos({ ...abiertos, [campo]: true });
       // Vuelve a pedirse: se guarda su "sí".
-      if (campoNo && form[campoNo]) {
-        const nuevo = { ...form, [campoNo]: false };
-        setForm(nuevo);
-        revisarYGuardar(nuevo);
-      }
+      if (campoNo && form[campoNo]) setForm({ ...form, [campoNo]: false });
       return;
     }
     const cerrar = () => {
       setAbiertos((a) => ({ ...a, [campo]: false }));
-      const nuevo = { ...form, [campo]: "", ...(campoNo ? { [campoNo]: true } : {}) };
-      if (JSON.stringify(nuevo) === JSON.stringify(form)) return;
-      setForm(nuevo);
-      revisarYGuardar(nuevo);
+      setForm({ ...form, [campo]: "", ...(campoNo ? { [campoNo]: true } : {}) });
     };
     if (String(form[campo] || "").trim() === "") cerrar();
     else
@@ -169,74 +176,87 @@ function FormularioDatos({
         alConfirmar: cerrar,
       });
   };
-  const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [errorFoto, setErrorFoto] = useState("");
   // `foto` guarda lo que va a la base: desde el 2026-09-17 una RUTA del
   // cajón "fotos-matrimonios" (antes, la foto entera en base64). Para
   // enseñarla hace falta un enlace temporal; useEnlaceFoto lo pide solo si
   // es una ruta, y deja pasar tal cual lo antiguo o un enlace pegado.
-  const enlaceFoto = useEnlaceFoto(foto);
+  const enlaceGuardado = useEnlaceFoto(foto);
+  const enlaceFoto = fotoNueva ? fotoNueva.vista : enlaceGuardado;
+  const hayFoto = Boolean(fotoNueva || foto);
   // Ver la foto en grande, y confirmar antes de quitarla: mismo trato que en
   // Aniversarios, donde borrar una foto pide confirmación.
   const [verFoto, setVerFoto] = useState(false);
   const [quitandoFoto, setQuitandoFoto] = useState(false);
-  const [aviso, setAviso] = useState("");
-  const avisoTimeout = useRef(null);
   useEffect(() => setForm(invitado), [invitado.id]);
   useEffect(() => setFoto(fotoFamiliar || ""), [fotoFamiliar, invitado.id]);
   useEffect(() => setAlergiaSel(parsearAlergias(invitado.alergias)), [invitado.id]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => setAbiertos(opcionalesDe(invitado)), [invitado.id]);
-  useEffect(() => () => clearTimeout(avisoTimeout.current), []);
+  // La vista previa de una foto elegida es un enlace local: se suelta al
+  // cambiarla o al cerrar el formulario.
+  useEffect(() => () => fotoNueva && URL.revokeObjectURL(fotoNueva.vista), [fotoNueva]);
 
-  const mostrarAviso = (texto) => {
-    setAviso(texto);
-    clearTimeout(avisoTimeout.current);
-    avisoTimeout.current = setTimeout(() => setAviso(""), 3000);
-  };
-
-  // Cada campo se guarda solo al salir de él (igual que el resto de la
-  // app) — sin botón "Guardar". El aviso dice exactamente qué campo(s)
-  // cambiaron, o "Sin cambios" si el valor era el mismo de antes.
-  const revisarYGuardar = (formActualizado) => {
-    const cambiados = Object.keys(ETIQUETAS_CAMPOS_INVITADO).filter(
-      (campo) => (formActualizado[campo] || "") !== (invitado[campo] || "")
-    );
-    if (cambiados.length === 0) {
-      mostrarAviso("Sin cambios.");
-      return;
-    }
-    onGuardar(formActualizado);
-    mostrarAviso(`Guardado: ${cambiados.map((c) => ETIQUETAS_CAMPOS_INVITADO[c]).join(", ")}.`);
-  };
-
-  const guardarFoto = (nuevaFoto) => {
-    if ((nuevaFoto || "") === (fotoFamiliar || "")) {
-      mostrarAviso("Sin cambios.");
-      return;
-    }
-    if (onCambiarFotoFamiliar) onCambiarFotoFamiliar(invitado.grupoFamiliar, nuevaFoto);
-    mostrarAviso(nuevaFoto ? "Guardado: foto familiar." : "Foto familiar eliminada.");
-  };
-
-  const subirArchivoFoto = async (file) => {
+  const elegirFoto = (file) => {
     if (!file) return;
     setErrorFoto("");
-    setSubiendoFoto(true);
-    try {
-      // Al almacén, como ORIGINAL (se guarda grande: el anfitrión la pasará
-      // por la plantilla con otra IA). Mismo nombre de archivo que usa
-      // Aniversarios para esta familia, así volver a subir la reemplaza.
-      const familia = invitado.grupoFamiliar || invitado.apellido || "";
-      const ruta = await subirFotoMatrimonio(file, familia, CARPETA.BODA);
-      setFoto(ruta);
-      guardarFoto(ruta);
-    } catch (_) {
-      setErrorFoto("No se ha podido procesar la imagen. Prueba con otra o pega un enlace.");
-    } finally {
-      setSubiendoFoto(false);
-    }
+    setFotoNueva({ archivo: file, vista: URL.createObjectURL(file) });
   };
+  const quitarFoto = () => {
+    setFotoNueva(null);
+    setFoto("");
+  };
+
+  const opcionesEmail = { familiaSinEmail, colaboradorVinculado };
+  const pideEmailAqui = emailObligatorio(form, evento, opcionesEmail);
+  const faltan = intentado ? faltanObligatorios(form, evento, opcionesEmail) : [];
+  const datosCambiados = Object.keys(ETIQUETAS_CAMPOS_INVITADO).some(
+    (campo) => (form[campo] || "") !== (invitado[campo] || "")
+  );
+  const hayCambios =
+    datosCambiados || Boolean(fotoNueva) || foto !== (fotoFamiliar || "") || sinFoto !== sinFotoBoda;
+
+  const guardar = async () => {
+    if (faltanObligatorios(form, evento, opcionesEmail).length) {
+      setIntentado(true);
+      return;
+    }
+    let rutaFoto = foto;
+    if (fotoNueva) {
+      setGuardando(true);
+      try {
+        // Al almacén, como ORIGINAL (se guarda grande: el anfitrión la
+        // pasará por la plantilla con otra IA). Mismo nombre de archivo que
+        // usa Aniversarios para esta familia, así volver a subir la reemplaza.
+        const familia = invitado.grupoFamiliar || invitado.apellido || "";
+        rutaFoto = await subirFotoMatrimonio(fotoNueva.archivo, familia, CARPETA.BODA);
+      } catch (_) {
+        setErrorFoto("No se ha podido procesar la imagen. Prueba con otra.");
+        setGuardando(false);
+        return;
+      }
+    }
+    if (datosCambiados) onGuardar(form);
+    if (rutaFoto !== (fotoFamiliar || "")) onCambiarFotoFamiliar?.(invitado.grupoFamiliar, rutaFoto);
+    if (sinFoto !== sinFotoBoda) onCambiarSinFotoBoda?.(invitado.grupoFamiliar, sinFoto);
+    onCerrar();
+  };
+
+  // "Cancelar" no sube nada. Si había algo escrito, pregunta antes: lo
+  // descarta (norma 9, con la fórmula de internet).
+  const cancelar = () => {
+    if (!hayCambios) return onCerrar();
+    preguntar({
+      titulo: "¿Descartar los cambios?",
+      rotulo: "Sí, descartar",
+      alConfirmar: onCerrar,
+      otra: { rotulo: "Seguir editando" },
+    });
+  };
+
+  // Un obligatorio vacío tras "Guardar": etiqueta y borde en rojo.
+  const enRojo = (campo) => (faltan.includes(campo) ? { "--etiqueta-campo": C.wax } : undefined);
+  const bordeRojo = (campo) => (faltan.includes(campo) ? { borderColor: C.wax } : {});
 
   const reconstruirAlergias = (sel) => {
     if (sel.no) return "No";
@@ -250,16 +270,12 @@ function FormularioDatos({
   const marcarNo = () => {
     const next = { no: true, gluten: false, lactosa: false, otras: "" };
     setAlergiaSel(next);
-    const actualizado = { ...form, alergias: reconstruirAlergias(next) };
-    setForm(actualizado);
-    revisarYGuardar(actualizado);
+    setForm({ ...form, alergias: reconstruirAlergias(next) });
   };
   const alternarAlergia = (clave) => {
     const next = { ...alergiaSel, no: false, [clave]: !alergiaSel[clave] };
     setAlergiaSel(next);
-    const actualizado = { ...form, alergias: reconstruirAlergias(next) };
-    setForm(actualizado);
-    revisarYGuardar(actualizado);
+    setForm({ ...form, alergias: reconstruirAlergias(next) });
   };
   const cambiarOtras = (valor) => {
     const texto = valor.slice(0, 15);
@@ -275,7 +291,7 @@ function FormularioDatos({
       // La clase `formulario-dorado` solo existe para teñir de verde las
       // etiquetas de los campos, que Field pinta en dorado para el resto de
       // pantallas (de fondo claro) y aquí serían invisibles.
-      className="formulario-dorado p-4 rounded space-y-3"
+      className="formulario-dorado p-4 rounded space-y-2"
       style={{
         background: DORADO.fondo,
         boxShadow: DORADO.relieve,
@@ -290,7 +306,7 @@ function FormularioDatos({
         className="text-xs font-bold inline-block px-2 py-1 rounded"
         style={{ color: C.wax, background: C.paper }}
       >
-        * campos obligatorios (año nacimiento y alergias)
+        * Campos obligatorios
       </p>
       <div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -298,23 +314,12 @@ function FormularioDatos({
             {form.apellido}, {form.nombre}
           </span>
           <span className="text-xs" style={{ color: C.ink }}>
-            datos {contarDatosRellenados(conEmailDeColaborador(form, colaboradorVinculado), foto, evento, { ...abiertos, fotoBoda: !sinFotoBoda })} de{" "}
-            {totalDatosInvitado(form, evento, { ...abiertos, fotoBoda: !sinFotoBoda })}
+            datos {contarDatosRellenados(conEmailDeColaborador(form, colaboradorVinculado), hayFoto ? foto || "nueva" : "", evento, { ...abiertos, fotoBoda: !sinFoto })} de{" "}
+            {totalDatosInvitado(form, evento, { ...abiertos, fotoBoda: !sinFoto })}
           </span>
           <PastillaDato title="Importe calculado según edad y los precios de Configuración">
             € {importe.toFixed(2)}
           </PastillaDato>
-          {/* Borde dorado (antes el débil de boton-verde-solido) para que
-              se distinga del propio fondo verde del formulario, a
-              petición del usuario. */}
-          <button
-            onClick={onCerrar}
-            // Con la mano izquierda (lib/mano.js), delante del nombre.
-            className="boton-3d boton-verde-solido ml-auto zurdo:ml-0 zurdo:order-first px-4 py-2 rounded-full text-sm font-semibold"
-            style={{ border: `1px solid ${C.goldClaro}` }}
-          >
-            Cerrar
-          </button>
         </div>
         {/* La zona, resaltada con la misma pastilla que el importe (usuario,
             2026-09-24). Es de SOLO VER: el colaborador no la cambia. Aquí
@@ -327,29 +332,23 @@ function FormularioDatos({
           </PastillaDato>
         </div>
       </div>
-      {aviso && (
-        <span
-          className="inline-block text-xs px-2 py-0.5 rounded"
-          style={{ background: C.ink, color: C.paper }}
-        >
-          {aviso}
-        </span>
-      )}
       {/* El año de nacimiento va EL PRIMERO, antes del email (a petición
           del usuario, 2026-09-17). Es el dato del que dependen los demás:
           si la persona es menor, el email ni se pide. Con el email arriba,
           el formulario empezaba preguntando algo que a veces sobra. */}
+      <div style={enRojo("anioNacimiento")}>
       <Field label="Año nac. *">
         <TextInput
           value={form.anioNacimiento}
           onChange={(e) => setForm({ ...form, anioNacimiento: e.target.value })}
-          onBlur={() => revisarYGuardar(form)}
           placeholder="1988"
           maxLength={4}
-          style={{ width: 90 }}
+          style={{ width: 90, ...bordeRojo("anioNacimiento") }}
         />
       </Field>
-      <Field label="Email">
+      </div>
+      <div style={enRojo("email")}>
+      <Field label={pideEmailAqui ? "Email *" : "Email"}>
         {colaboradorVinculado ? (
           <div>
             <div
@@ -389,9 +388,9 @@ function FormularioDatos({
               <TextInput
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                onBlur={() => revisarYGuardar(form)}
-                placeholder={form.rolFamiliar === "suelto" ? "Obligatorio: viene solo" : "correo@ejemplo.com"}
+                placeholder="correo@ejemplo.com"
                 className="w-full"
+                style={bordeRojo("email")}
               />
             ) : (
               <span className="text-xs italic" style={{ color: C.ink }}>
@@ -400,19 +399,8 @@ function FormularioDatos({
             )}
           </div>
         )}
-        {/* Al menos un email por familia. QUIÉN sale del aviso (depende de
-            si esta persona es cónyuge, viene sola o es menor); QUE falte lo
-            decide la base, que ve a la familia entera aunque la lleven dos
-            colaboradores. */}
-        {familiaSinEmail && (
-          <p
-            className="text-xs font-bold inline-block px-2 py-1 rounded mt-1"
-            style={{ color: C.wax, background: C.paper }}
-          >
-            {avisoFamiliaSinEmail(form, evento)}
-          </p>
-        )}
       </Field>
+      </div>
       <div>
         {/* gap-6 (antes 3): el botón de subir foto quedaba pegado al año de
             boda -- a petición del usuario, 2026-09-17. */}
@@ -423,7 +411,6 @@ function FormularioDatos({
             <TextInput
               value={form.anioBoda}
               onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
-              onBlur={() => revisarYGuardar(form)}
               placeholder="2015"
               maxLength={4}
               style={{ width: 90 }}
@@ -438,17 +425,17 @@ function FormularioDatos({
             <label
               className="flex items-center gap-1 text-sm mb-1"
               style={{ color: C.ink }}
-              title={foto ? "Con la foto ya puesta no se puede marcar que no tienen: quítala primero" : undefined}
+              title={hayFoto ? "Con la foto ya puesta no se puede marcar que no tienen: quítala primero" : undefined}
             >
               <input
                 type="checkbox"
-                checked={!sinFotoBoda}
-                disabled={Boolean(foto)}
-                onChange={() => onCambiarSinFotoBoda?.(invitado.grupoFamiliar, !sinFotoBoda)}
+                checked={!sinFoto}
+                disabled={hayFoto}
+                onChange={() => setSinFoto(!sinFoto)}
               />
               Sí
             </label>
-            {sinFotoBoda ? (
+            {sinFoto ? (
               <span className="text-xs italic" style={{ color: C.ink }}>
                 No tienen foto de boda.
               </span>
@@ -462,9 +449,9 @@ function FormularioDatos({
             <HuecoFoto
               titulo="Foto de boda"
               enlace={enlaceFoto}
-              ocupada={Boolean(foto)}
-              subiendo={subiendoFoto}
-              onElegir={subirArchivoFoto}
+              ocupada={hayFoto}
+              subiendo={guardando && Boolean(fotoNueva)}
+              onElegir={elegirFoto}
               onQuitar={() => setQuitandoFoto(true)}
               onVer={() => setVerFoto(true)}
             />
@@ -519,7 +506,6 @@ function FormularioDatos({
               <TextInput
                 value={form[campo] || ""}
                 onChange={(e) => setForm({ ...form, [campo]: e.target.value })}
-                onBlur={() => revisarYGuardar(form)}
                 placeholder={placeholder}
                 className="flex-1"
                 style={{ minWidth: 160 }}
@@ -532,7 +518,7 @@ function FormularioDatos({
       <div>
         <span
           className="text-xs uppercase block mb-1"
-          style={{ color: C.ink, fontFamily: "'IBM Plex Mono', monospace" }}
+          style={{ color: faltan.includes("alergias") ? C.wax : C.ink, fontFamily: "'IBM Plex Mono', monospace" }}
         >
           Alergias *
         </span>
@@ -560,7 +546,6 @@ function FormularioDatos({
           <TextInput
             value={alergiaSel.otras}
             onChange={(e) => cambiarOtras(e.target.value)}
-            onBlur={() => revisarYGuardar(form)}
             placeholder="Otra (máx. 15)"
             maxLength={15}
             style={{ maxWidth: 140 }}
@@ -592,11 +577,7 @@ function FormularioDatos({
           <input
             type="checkbox"
             checked={Boolean(form.conservarDatos)}
-            onChange={(e) => {
-              const siguiente = { ...form, conservarDatos: e.target.checked };
-              setForm(siguiente);
-              revisarYGuardar(siguiente);
-            }}
+            onChange={(e) => setForm({ ...form, conservarDatos: e.target.checked })}
             className="flex-shrink-0 mt-0.5"
           />
           <span>
@@ -606,6 +587,21 @@ function FormularioDatos({
             </span>
           </span>
         </label>
+      </div>
+
+      {/* La única salida del formulario (él, v50): al final, donde se
+          termina de rellenar, como en cualquier web. Del mismo ancho
+          (norma 4) y, como en la pregunta estándar, "Cancelar" en el borde
+          del lado del pulgar elegido (norma 3). */}
+      <div className="flex justify-end zurdo:justify-start pt-1">
+        <div className="grid grid-cols-2 gap-2">
+          <Boton variante="principal" onClick={guardar} disabled={guardando}>
+            {guardando ? "Guardando…" : "Guardar"}
+          </Boton>
+          <Boton onClick={cancelar} disabled={guardando} className="zurdo:order-first">
+            Cancelar
+          </Boton>
+        </div>
       </div>
 
       {/* Foto de boda en grande, y el cambio desde ahí: igual que en
@@ -623,18 +619,17 @@ function FormularioDatos({
             className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer mt-3"
             style={estilosBoton("principal", "normal")}
           >
-            {subiendoFoto ? "Procesando…" : "Cambiar foto"}
+            Cambiar foto
             <input
               type="file"
               accept="image/*"
               className="sr-only"
-              disabled={subiendoFoto}
               onChange={(e) => {
                 const file = e.target.files && e.target.files[0];
                 e.target.value = "";
                 if (!file) return;
                 setVerFoto(false);
-                subirArchivoFoto(file);
+                elegirFoto(file);
               }}
             />
           </label>
@@ -652,8 +647,7 @@ function FormularioDatos({
                 variante="peligro"
                 onClick={() => {
                   setQuitandoFoto(false);
-                  setFoto("");
-                  guardarFoto("");
+                  quitarFoto();
                 }}
               >
                 Sí, quitarla
@@ -675,6 +669,7 @@ function FilaInvitadoColaborador({
   g,
   abierto,
   onToggleAbierto,
+  onCerrarFicha,
   onGuardar,
   fotoFamiliar,
   onCambiarFotoFamiliar,
@@ -894,7 +889,7 @@ function FilaInvitadoColaborador({
             fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
             onCambiarFotoFamiliar={onCambiarFotoFamiliar}
             importe={importe}
-            onCerrar={onToggleAbierto}
+            onCerrar={onCerrarFicha}
             colaboradorVinculado={colaboradorVinculado}
             sinFotoBoda={sinFotoBoda}
             onCambiarSinFotoBoda={onCambiarSinFotoBoda}
@@ -1038,14 +1033,19 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // Una ficha de invitado abierta (no los paneles): en el móvil pasa a ser
   // la protagonista y se esconde todo lo demás -- "para ver otra cosa hay
   // que cerrarla", como pidió el usuario.
-  const fichaAbierta = Boolean(abiertoId) && abiertoId !== "perfil" && abiertoId !== "cuentas";
+  const hayFicha = (a) => Boolean(a) && a !== "perfil" && a !== "cuentas";
+  const fichaAbierta = hayFicha(abiertoId);
 
+  // Con una ficha abierta, solo se sale por "Guardar" o "Cancelar" (v50):
+  // lo escrito todavía no ha subido, y abrir otra ficha o panel lo
+  // perdería sin preguntar.
   const toggleAbierto = (g) =>
     setAbiertoId((actual) => {
-      if (actual === g.id) return null;
+      if (hayFicha(actual)) return actual;
       setPendienteAlAbrir(incompletaDe(g));
       return g.id;
     });
+  const cerrarFicha = () => setAbiertoId(null);
 
   // El aviso al anfitrión ya no se dispara solo (eso mandaba demasiados
   // emails durante el trabajo normal) — el colaborador lo confirma él
@@ -1274,7 +1274,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               titulo="Tus datos"
               resumen={`${gruposFamiliaresACargo.length} familia${gruposFamiliaresACargo.length === 1 ? "" : "s"}`}
               abierta={abiertoId === "perfil"}
-              onAlternar={() => setAbiertoId((a) => (a === "perfil" ? null : "perfil"))}
+              onAlternar={() => setAbiertoId((a) => (hayFicha(a) ? a : a === "perfil" ? null : "perfil"))}
             >
           <div className="flex items-center justify-between">
             <div>
@@ -1314,7 +1314,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               titulo="Estado de cuentas"
               resumen={`Pendiente ${formatoEuro(importePendiente)}`}
               abierta={abiertoId === "cuentas"}
-              onAlternar={() => setAbiertoId((a) => (a === "cuentas" ? null : "cuentas"))}
+              onAlternar={() => setAbiertoId((a) => (hayFicha(a) ? a : a === "cuentas" ? null : "cuentas"))}
             >
           <div
             className="grid grid-cols-3 gap-1.5 mt-2 pt-2"
@@ -1391,6 +1391,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   g={g}
                   abierto={abiertoId === g.id}
                   onToggleAbierto={() => toggleAbierto(g)}
+                  onCerrarFicha={cerrarFicha}
                   onGuardar={guardar}
                   fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
                   onCambiarFotoFamiliar={cambiarFotoFamiliar}
@@ -1426,6 +1427,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   g={g}
                   abierto={abiertoId === g.id}
                   onToggleAbierto={() => toggleAbierto(g)}
+                  onCerrarFicha={cerrarFicha}
                   onGuardar={guardar}
                   fotoFamiliar={fotosFamiliares[g.grupoFamiliar || ""]}
                   onCambiarFotoFamiliar={cambiarFotoFamiliar}
