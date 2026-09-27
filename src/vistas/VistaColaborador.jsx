@@ -299,15 +299,6 @@ function FormularioDatos({
       }}
     >
       {ventanaPregunta}
-      {/* Fondo propio (antes el rojo iba directo sobre el verde oscuro
-          del formulario -- poco legible, rojo sobre verde oscuro) -- a
-          petición del usuario. */}
-      <p
-        className="text-xs font-bold inline-block px-2 py-1 rounded"
-        style={{ color: C.wax, background: C.paper }}
-      >
-        * Campos obligatorios
-      </p>
       <div>
         <div className="flex items-center gap-2 flex-wrap">
           <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
@@ -593,7 +584,12 @@ function FormularioDatos({
           termina de rellenar, como en cualquier web. Del mismo ancho
           (norma 4) y, como en la pregunta estándar, "Cancelar" en el borde
           del lado del pulgar elegido (norma 3). */}
-      <div className="flex justify-end zurdo:justify-start pt-1">
+      {/* "* Campos obligatorios", al pie y sin fondo (él, v50.1), en el
+          lado contrario a los botones: no gasta una línea más. */}
+      <div className="flex items-center justify-between gap-2 pt-1 zurdo:flex-row-reverse">
+        <span className="text-xs" style={{ color: C.ink }}>
+          * Campos obligatorios
+        </span>
         <div className="grid grid-cols-2 gap-2">
           <Boton variante="principal" onClick={guardar} disabled={guardando}>
             {guardando ? "Guardando…" : "Guardar"}
