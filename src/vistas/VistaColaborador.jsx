@@ -99,6 +99,10 @@ function LineaEntreApartados() {
   return <div className="mx-3" style={{ borderTop: `1px solid ${C.ink}`, opacity: OP.linea }} />;
 }
 
+// Las cajas de un año: justo para 4 cifras. Estrechas a propósito, para
+// que la línea de Boda (año, casilla y foto) quepa en el móvil (norma 6).
+const ANCHO_ANIO = 56;
+
 // En qué apartado plegado vive cada obligatorio: "Guardar" abre ese.
 const APARTADO_DE = { anioNacimiento: "datos", email: "datos", alergias: "alergias" };
 
@@ -347,7 +351,7 @@ function FormularioDatos({
                 maxLength={4}
                 inputMode="numeric"
                 aria-label="Año de nacimiento"
-                style={{ width: 64, ...bordeRojo("anioNacimiento") }}
+                style={{ width: ANCHO_ANIO, ...bordeRojo("anioNacimiento") }}
               />
             </div>
             {!esMenorDeEdad(form, evento) && (
@@ -395,7 +399,7 @@ function FormularioDatos({
         >
           {/* Todo en UNA línea (él, v52.1): el año, y a su lado "Foto boda",
               su casilla y el recuadro de la foto, a la misma altura. */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <TextInput
               value={form.anioBoda}
               onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
@@ -403,9 +407,9 @@ function FormularioDatos({
               maxLength={4}
               inputMode="numeric"
               aria-label="Año de boda"
-              style={{ width: 64 }}
+              style={{ width: ANCHO_ANIO }}
             />
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
               <span
                 className="uppercase text-xs whitespace-nowrap"
                 style={{ color: "var(--etiqueta-campo)", fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" }}

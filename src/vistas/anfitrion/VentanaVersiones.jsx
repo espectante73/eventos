@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "52.4",
+    cambios: [
+      "Formulario del colaborador: en Boda, el recuadro de la foto ya no se sale por la derecha en el móvil (cajas del año más estrechas y menos hueco).",
+    ],
+  },
+  {
     version: "52.3",
     cambios: [
       "Formulario del colaborador: al pie, \"* Obligatorios\" y, si falta algo, \"Faltan datos\", abreviados para que quepan en una línea junto a Guardar y Cancelar también en el móvil.",
