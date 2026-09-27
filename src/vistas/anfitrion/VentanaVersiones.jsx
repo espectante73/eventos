@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "52",
+    cambios: [
+      "Formulario del colaborador en seis apartados plegados, uno abierto a la vez: Año nac. · Email, Boda (solo a esposo o esposa), Canción, Observaciones, Alergias y Después del evento. Cerrado, cada uno enseña lo que tiene. Fuera las casillas \"Sí\": lo que no es obligatorio y se deja vacío no cuenta en \"datos X de Y\". En Alergias, \"Otras\" abre su campo. Al guardar con algo obligatorio vacío, se abre su apartado.",
+    ],
+  },
+  {
     version: "51.4",
     cambios: [
       "Arreglado: en la Lista de invitados abierta en su ventana aparte, el \"Buscar...\" no dejaba escribir tildes. La tilde se escribe en dos pasos y la ventana principal devolvía el campo atrás justo en medio.",

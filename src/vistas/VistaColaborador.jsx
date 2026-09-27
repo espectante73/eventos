@@ -11,7 +11,6 @@ import {
   pideDatosDeBoda,
   esMenorDeEdad,
   estadoDatos,
-  eligeOpcional,
   familiasSinEmail,
   emailObligatorio,
   faltanObligatorios,
@@ -94,6 +93,9 @@ function PastillaDato({ title, children, destacado = false }) {
   );
 }
 
+// En qué apartado plegado vive cada obligatorio: "Guardar" abre ese.
+const APARTADO_DE = { anioNacimiento: "datos", email: "datos", alergias: "alergias" };
+
 function FormularioDatos({
   invitado,
   evento,
@@ -125,6 +127,15 @@ function FormularioDatos({
   // van apagando según se rellenan).
   const [intentado, setIntentado] = useState(false);
   const formularioRef = useRef(null);
+  // El campo al que llevar el cursor, en cuanto su apartado ya está abierto.
+  const [enfocar, setEnfocar] = useState(null);
+  useEffect(() => {
+    if (!enfocar) return;
+    const campo = formularioRef.current?.querySelector(`[data-campo="${enfocar}"]`);
+    campo?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    campo?.querySelector("input")?.focus({ preventScroll: true });
+    setEnfocar(null);
+  }, [enfocar]);
   const [guardando, setGuardando] = useState(false);
   // Ninguna casilla marcada por defecto: si no se ha tocado nada, "alergias"
   // se queda vacío de verdad (no cuenta como respondido en "datos X de Y"
@@ -139,44 +150,13 @@ function FormularioDatos({
     };
   };
   const [alergiaSel, setAlergiaSel] = useState(() => parsearAlergias(invitado.alergias));
-  // Canción y observaciones: casilla "Sí" (usuario, 2026-09-19). Sin marcar
-  // es "no": plegada y fuera de la cuenta de datos. Nace marcada solo si ya
-  // hay texto guardado.
-  // Canción: marcada por defecto, salvo que se haya guardado que no
-  // (`sinCancion`). Observaciones: solo si ya tiene texto. Mismo criterio
-  // que la cuenta (eligeOpcional, lib/invitados.js).
-  const opcionalesDe = (g) => ({
-    cancion: eligeOpcional(g, "cancion"),
-    observaciones: eligeOpcional(g, "observaciones"),
-    email: eligeOpcional(g, "email"),
-  });
-  const [abiertos, setAbiertos] = useState(() => opcionalesDe(invitado));
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
-  // Desmarcar con algo escrito borra lo escrito: por eso pregunta antes.
-  // Los que nacen marcados guardan su "no" aparte (canción, email); las
-  // observaciones, con quedarse vacías.
-  const CAMPO_NO = { cancion: "sinCancion", email: "sinEmail" };
-  const alternarOpcional = (campo) => {
-    const campoNo = CAMPO_NO[campo];
-    if (!abiertos[campo]) {
-      setAbiertos({ ...abiertos, [campo]: true });
-      // Vuelve a pedirse: se guarda su "sí".
-      if (campoNo && form[campoNo]) setForm({ ...form, [campoNo]: false });
-      return;
-    }
-    const cerrar = () => {
-      setAbiertos((a) => ({ ...a, [campo]: false }));
-      setForm({ ...form, [campo]: "", ...(campoNo ? { [campoNo]: true } : {}) });
-    };
-    if (String(form[campo] || "").trim() === "") cerrar();
-    else
-      preguntar({
-        titulo: { cancion: "¿Quitar la canción?", email: "¿Quitar el email?" }[campo] || "¿Quitar las observaciones?",
-        texto: form[campo],
-        rotulo: "Sí, quitar",
-        alConfirmar: cerrar,
-      });
-  };
+  // Seis apartados plegados, con flecha, y uno solo abierto a la vez
+  // (norma 5; él, v52). Al abrir la ficha, todos cerrados.
+  const [apartado, setApartado] = useState(null);
+  const alternarApartado = (id) => setApartado((a) => (a === id ? null : id));
+  // "Otras" en alergias: su campo solo sale marcada (un plegado dentro de otro).
+  const [conOtras, setConOtras] = useState(() => Boolean(parsearAlergias(invitado.alergias).otras));
   const [errorFoto, setErrorFoto] = useState("");
   // `foto` guarda lo que va a la base: desde el 2026-09-17 una RUTA del
   // cajón "fotos-matrimonios" (antes, la foto entera en base64). Para
@@ -192,8 +172,6 @@ function FormularioDatos({
   useEffect(() => setForm(invitado), [invitado.id]);
   useEffect(() => setFoto(fotoFamiliar || ""), [fotoFamiliar, invitado.id]);
   useEffect(() => setAlergiaSel(parsearAlergias(invitado.alergias)), [invitado.id]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => setAbiertos(opcionalesDe(invitado)), [invitado.id]);
   // La vista previa de una foto elegida es un enlace local: se suelta al
   // cambiarla o al cerrar el formulario.
   useEffect(() => () => fotoNueva && URL.revokeObjectURL(fotoNueva.vista), [fotoNueva]);
@@ -221,11 +199,10 @@ function FormularioDatos({
     const pendientes = faltanObligatorios(form, evento, opcionesEmail);
     if (pendientes.length) {
       setIntentado(true);
-      // Al primero que falta: se lleva la pantalla hasta él y el cursor
-      // dentro (él, v50.4). Los demás laten igual, hasta rellenarlos.
-      const campo = formularioRef.current?.querySelector(`[data-campo="${pendientes[0]}"]`);
-      campo?.scrollIntoView?.({ behavior: "smooth", block: "center" });
-      campo?.querySelector("input")?.focus({ preventScroll: true });
+      // Se abre el apartado del primero que falta, y la pantalla y el
+      // cursor van a él (él, v50.4 y v52). Los demás laten igual.
+      setApartado(APARTADO_DE[pendientes[0]]);
+      setEnfocar(pendientes[0]);
       return;
     }
     let rutaFoto = foto;
@@ -264,7 +241,8 @@ function FormularioDatos({
   // Un obligatorio vacío tras "Guardar": etiqueta y borde en rojo, y late
   // con el mismo latido de las fichas incompletas (.ficha-incompleta).
   const enRojo = (campo) => (faltan.includes(campo) ? { "--etiqueta-campo": C.wax } : undefined);
-  const latido = (campo) => (faltan.includes(campo) ? "ficha-incompleta rounded" : undefined);
+  // Late el APARTADO que tiene algo pendiente, también cerrado.
+  const latido = (...campos) => (campos.some((c) => faltan.includes(c)) ? "ficha-incompleta rounded-lg" : undefined);
   const bordeRojo = (campo) => (faltan.includes(campo) ? { borderColor: C.wax } : {});
 
   const reconstruirAlergias = (sel) => {
@@ -277,6 +255,7 @@ function FormularioDatos({
   };
 
   const marcarNo = () => {
+    setConOtras(false);
     const next = { no: true, gluten: false, lactosa: false, otras: "" };
     setAlergiaSel(next);
     setForm({ ...form, alergias: reconstruirAlergias(next) });
@@ -285,6 +264,17 @@ function FormularioDatos({
     const next = { ...alergiaSel, no: false, [clave]: !alergiaSel[clave] };
     setAlergiaSel(next);
     setForm({ ...form, alergias: reconstruirAlergias(next) });
+  };
+  const alternarOtras = () => {
+    if (conOtras) {
+      cambiarOtras("");
+      setConOtras(false);
+      return;
+    }
+    const next = { ...alergiaSel, no: false };
+    setAlergiaSel(next);
+    setForm({ ...form, alergias: reconstruirAlergias(next) });
+    setConOtras(true);
   };
   const cambiarOtras = (valor) => {
     const texto = valor.slice(0, 15);
@@ -331,247 +321,192 @@ function FormularioDatos({
           </PastillaDato>
         </div>
       </div>
-      {/* El año de nacimiento va EL PRIMERO, antes del email (a petición
-          del usuario, 2026-09-17). Es el dato del que dependen los demás:
-          si la persona es menor, el email ni se pide. Con el email arriba,
-          el formulario empezaba preguntando algo que a veces sobra. */}
-      <div data-campo="anioNacimiento" className={latido("anioNacimiento")} style={enRojo("anioNacimiento")}>
-      <Field label="Año nac. *">
-        <TextInput
-          value={form.anioNacimiento}
-          onChange={(e) => setForm({ ...form, anioNacimiento: e.target.value })}
-          placeholder="1988"
-          maxLength={4}
-          style={{ width: 90, ...bordeRojo("anioNacimiento") }}
-        />
-      </Field>
+      {/* Seis apartados plegados, uno abierto a la vez (él, v52). Cerrado,
+          cada uno enseña lo que tiene. El año de nacimiento va EL PRIMERO:
+          de él depende si se pide email (a un menor, no). */}
+      <div data-apartado="datos" className={latido("anioNacimiento", "email")}>
+        <SeccionPlegable
+          titulo={esMenorDeEdad(form, evento) ? "Año nac. *" : `Año nac. * · Email${pideEmailAqui ? " *" : ""}`}
+          resumen={[form.anioNacimiento, colaboradorVinculado ? colaboradorVinculado.email : form.email].filter(Boolean).join(" · ")}
+          abierta={apartado === "datos"}
+          onAlternar={() => alternarApartado("datos")}
+        >
+          <div className="flex items-start gap-3">
+            <div data-campo="anioNacimiento" style={enRojo("anioNacimiento")}>
+              <Field label="Año nac. *">
+                <TextInput
+                  value={form.anioNacimiento}
+                  onChange={(e) => setForm({ ...form, anioNacimiento: e.target.value })}
+                  placeholder="1988"
+                  maxLength={4}
+                  inputMode="numeric"
+                  style={{ width: 64, ...bordeRojo("anioNacimiento") }}
+                />
+              </Field>
+            </div>
+            {!esMenorDeEdad(form, evento) && (
+              <div data-campo="email" className="flex-1 min-w-0" style={enRojo("email")}>
+                <Field label={pideEmailAqui ? "Email *" : "Email"}>
+                  {colaboradorVinculado ? (
+                    <div>
+                      <div
+                        className="w-full px-2 py-1.5 rounded text-sm truncate"
+                        style={{ background: C.paperDark, color: C.charcoal, opacity: OP.secundario }}
+                      >
+                        {colaboradorVinculado.email || "sin registrar"}
+                      </div>
+                      <span className="text-xs italic" style={{ color: C.ink }}>
+                        Se edita en Colaboradores, no aquí.
+                      </span>
+                    </div>
+                  ) : (
+                    <TextInput
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="correo@ejemplo.com"
+                      inputMode="email"
+                      className="w-full"
+                      style={bordeRojo("email")}
+                    />
+                  )}
+                </Field>
+              </div>
+            )}
+          </div>
+        </SeccionPlegable>
       </div>
-      <div data-campo="email" className={latido("email")} style={enRojo("email")}>
-      <Field label={pideEmailAqui ? "Email *" : "Email"}>
-        {colaboradorVinculado ? (
-          <div>
-            <div
-              className="w-full px-2 py-1.5 rounded text-sm"
-              style={{ background: C.paperDark, color: C.charcoal, opacity: OP.secundario }}
-            >
-              {colaboradorVinculado.email || "sin registrar"}
-            </div>
-            <span className="text-xs italic" style={{ color: C.ink }}>
-              Se edita en Colaboradores, no aquí.
-            </span>
-          </div>
-        ) : esMenorDeEdad(form, evento) ? (
-          <div>
-            <div
-              className="w-full px-2 py-1.5 rounded text-sm"
-              style={{ background: C.paperDark, color: C.charcoal, opacity: OP.secundario }}
-            >
-              {form.email || "—"}
-            </div>
-            <span className="text-xs italic" style={{ color: C.ink }}>
-              Solo pedimos email a mayores de edad.
-            </span>
-          </div>
-        ) : (
-          // Casilla "Sí" marcada por defecto (usuario, 2026-09-19), salvo
-          // para quien viene solo (S): ahí el email es obligatorio y no hay
-          // casilla.
-          <div>
-            {form.rolFamiliar !== "suelto" && (
-              <label className="flex items-center gap-1 text-sm mb-1" style={{ color: C.ink }}>
-                <input type="checkbox" checked={abiertos.email} onChange={() => alternarOpcional("email")} />
+
+      {/* Boda: solo a quien viene con su pareja (O o A). A los demás, ni
+          se enseña (él, v52). La casilla "Sí" de la foto se queda: si se
+          desmarca, guarda que no tienen, y Aniversarios lo usa. */}
+      {pideDatosDeBoda(form) && (
+        <SeccionPlegable
+          titulo="Boda"
+          resumen={[form.anioBoda, hayFoto ? "con foto" : sinFoto ? "sin foto" : ""].filter(Boolean).join(" · ")}
+          abierta={apartado === "boda"}
+          onAlternar={() => alternarApartado("boda")}
+        >
+          <div className="flex items-start gap-6 flex-wrap">
+            <Field label="Año boda">
+              <TextInput
+                value={form.anioBoda}
+                onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
+                placeholder="2015"
+                maxLength={4}
+                inputMode="numeric"
+                style={{ width: 64 }}
+              />
+            </Field>
+            <Field label="Foto boda">
+              <label
+                className="flex items-center gap-1 text-sm mb-1"
+                style={{ color: C.ink }}
+                title={hayFoto ? "Con la foto ya puesta no se puede marcar que no tienen: quítala primero" : undefined}
+              >
+                <input type="checkbox" checked={!sinFoto} disabled={hayFoto} onChange={() => setSinFoto(!sinFoto)} />
                 Sí
               </label>
-            )}
-            {abiertos.email ? (
-              <TextInput
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="correo@ejemplo.com"
-                className="w-full"
-                style={bordeRojo("email")}
-              />
-            ) : (
-              <span className="text-xs italic" style={{ color: C.ink }}>
-                No da email.
-              </span>
-            )}
-          </div>
-        )}
-      </Field>
-      </div>
-      <div>
-        {/* gap-6 (antes 3): el botón de subir foto quedaba pegado al año de
-            boda -- a petición del usuario, 2026-09-17. */}
-        <div className="flex items-start gap-10 flex-wrap">
-          {pideDatosDeBoda(form) ? (
-            <>
-          <Field label="Año boda">
-            <TextInput
-              value={form.anioBoda}
-              onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
-              placeholder="2015"
-              maxLength={4}
-              style={{ width: 90 }}
-            />
-          </Field>
-          <Field label="Foto boda">
-            {/* Casilla "Sí", MARCADA por defecto (usuario, 2026-09-19): lo
-                normal es que haya foto. Desmarcada = ese matrimonio no tiene,
-                la foto deja de contar en "datos X de Y" y Aniversarios lo
-                enseña. Con la foto ya puesta no se puede desmarcar: primero
-                hay que quitarla. */}
-            <label
-              className="flex items-center gap-1 text-sm mb-1"
-              style={{ color: C.ink }}
-              title={hayFoto ? "Con la foto ya puesta no se puede marcar que no tienen: quítala primero" : undefined}
-            >
-              <input
-                type="checkbox"
-                checked={!sinFoto}
-                disabled={hayFoto}
-                onChange={() => setSinFoto(!sinFoto)}
-              />
-              Sí
-            </label>
-            {sinFoto ? (
-              <span className="text-xs italic" style={{ color: C.ink }}>
-                No tienen foto de boda.
-              </span>
-            ) : (
-            <>
-            {/* La misma pieza que la ventana Aniversarios (HuecoFoto): 16:9,
-                se toca para subir, y con foto ya puesta se abre en grande.
-                Antes había aquí un botón "Subir foto" y una miniatura
-                cuadrada de 32px: otra forma de hacer lo mismo. Unificado a
-                petición del usuario, 2026-09-17. */}
-            <HuecoFoto
-              titulo="Foto de boda"
-              enlace={enlaceFoto}
-              ocupada={hayFoto}
-              subiendo={guardando && Boolean(fotoNueva)}
-              onElegir={elegirFoto}
-              onQuitar={() => setQuitandoFoto(true)}
-              onVer={() => setVerFoto(true)}
-            />
-            {errorFoto && (
-              <p className="text-xs" style={{ color: C.wax }}>
-                {errorFoto}
-              </p>
-            )}
-            </>
-            )}
-          </Field>
-            </>
-          ) : (
-            /* Ni esposo ni esposa: el año de boda y la foto de boda no
-               aplican. Se deja el hueco con el motivo, en vez de que el
-               campo desaparezca sin explicación -- si no, parece que
-               falta algo o que la app se ha roto. */
-            <Field label="Boda">
-              <div
-                className="px-2 py-1.5 rounded text-sm"
-                style={{ background: C.paperDark, color: C.charcoal, opacity: OP.secundario }}
-              >
-                No aplica
-              </div>
-              <span className="text-xs italic" style={{ color: C.ink }}>
-                El año y la foto de boda solo se piden a quien viene con su pareja.
-              </span>
+              {sinFoto ? (
+                <span className="text-xs italic" style={{ color: C.ink }}>
+                  No tienen foto de boda.
+                </span>
+              ) : (
+                <>
+                  <HuecoFoto
+                    titulo="Foto de boda"
+                    enlace={enlaceFoto}
+                    ocupada={hayFoto}
+                    subiendo={guardando && Boolean(fotoNueva)}
+                    onElegir={elegirFoto}
+                    onQuitar={() => setQuitandoFoto(true)}
+                    onVer={() => setVerFoto(true)}
+                  />
+                  {errorFoto && (
+                    <p className="text-xs" style={{ color: C.wax }}>
+                      {errorFoto}
+                    </p>
+                  )}
+                </>
+              )}
             </Field>
-          )}
-        </div>
-      </div>
-      {/* Canción y observaciones: casilla "Sí", con el mismo aspecto que
-          las de alergias de aquí abajo. Sin marcar = "no": no cuenta en
-          "datos X de Y". Marcada, aparece el campo y cuenta. */}
+          </div>
+        </SeccionPlegable>
+      )}
+
+      {/* Canción y observaciones: sin casilla "Sí" (él, v52). Vacías no
+          cuentan en "datos X de Y": no son obligatorias. */}
       {[
         { campo: "cancion", titulo: "Canción", placeholder: "Título — Artista" },
         { campo: "observaciones", titulo: "Observaciones", placeholder: "Cualquier detalle adicional" },
       ].map(({ campo, titulo, placeholder }) => (
-        <div key={campo}>
-          <span
-            className="text-xs uppercase block mb-1"
-            style={{ color: C.ink, fontFamily: "'IBM Plex Mono', monospace" }}
-          >
-            {titulo}
-          </span>
-          <div className="flex flex-wrap items-center gap-3">
+        <SeccionPlegable
+          key={campo}
+          titulo={titulo}
+          resumen={form[campo] || ""}
+          abierta={apartado === campo}
+          onAlternar={() => alternarApartado(campo)}
+        >
+          <TextInput
+            value={form[campo] || ""}
+            onChange={(e) => setForm({ ...form, [campo]: e.target.value })}
+            placeholder={placeholder}
+            className="w-full"
+          />
+        </SeccionPlegable>
+      ))}
+
+      <div data-apartado="alergias" className={latido("alergias")}>
+        <SeccionPlegable
+          titulo="Alergias *"
+          resumen={form.alergias || ""}
+          abierta={apartado === "alergias"}
+          onAlternar={() => alternarApartado("alergias")}
+        >
+          <div data-campo="alergias" className="flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
-              <input type="checkbox" checked={abiertos[campo]} onChange={() => alternarOpcional(campo)} />
-              Sí
+              <input type="checkbox" checked={alergiaSel.no} onChange={marcarNo} />
+              No
             </label>
-            {abiertos[campo] && (
+            <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
+              <input type="checkbox" checked={alergiaSel.gluten} onChange={() => alternarAlergia("gluten")} />
+              Gluten
+            </label>
+            <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
+              <input type="checkbox" checked={alergiaSel.lactosa} onChange={() => alternarAlergia("lactosa")} />
+              Lactosa
+            </label>
+            <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
+              <input type="checkbox" checked={conOtras} onChange={alternarOtras} />
+              Otras
+            </label>
+            {conOtras && (
               <TextInput
-                value={form[campo] || ""}
-                onChange={(e) => setForm({ ...form, [campo]: e.target.value })}
-                placeholder={placeholder}
-                className="flex-1"
-                style={{ minWidth: 160 }}
-                autoFocus={!String(form[campo] || "").trim()}
+                value={alergiaSel.otras}
+                onChange={(e) => cambiarOtras(e.target.value)}
+                placeholder="Otra (máx. 15)"
+                maxLength={15}
+                style={{ maxWidth: 140 }}
+                autoFocus
               />
             )}
           </div>
-        </div>
-      ))}
-      <div data-campo="alergias" className={latido("alergias")}>
-        <span
-          className="text-xs uppercase block mb-1"
-          style={{ color: faltan.includes("alergias") ? C.wax : C.ink, fontFamily: "'IBM Plex Mono', monospace" }}
-        >
-          Alergias *
-        </span>
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
-            <input type="checkbox" checked={alergiaSel.no} onChange={marcarNo} />
-            No
-          </label>
-          <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
-            <input
-              type="checkbox"
-              checked={alergiaSel.gluten}
-              onChange={() => alternarAlergia("gluten")}
-            />
-            Gluten
-          </label>
-          <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
-            <input
-              type="checkbox"
-              checked={alergiaSel.lactosa}
-              onChange={() => alternarAlergia("lactosa")}
-            />
-            Lactosa
-          </label>
-          <TextInput
-            value={alergiaSel.otras}
-            onChange={(e) => cambiarOtras(e.target.value)}
-            placeholder="Otra (máx. 15)"
-            maxLength={15}
-            style={{ maxWidth: 140 }}
-          />
-        </div>
+        </SeccionPlegable>
       </div>
 
       {/* Permiso para conservar los datos después del evento (usuario,
           2026-09-21). Lo pide la propia nota de privacidad del tablón:
           "se eliminarán, salvo que tú autorices expresamente que los
           guarde para otra ocasión; el colaborador te lo preguntará y
-          dejará constancia". La frase es la suya, palabra por palabra
-          ("autorizo expresamente"): esto es la constancia de una
-          autorización, no una preferencia.
-          ⚠️ DESMARCADA por defecto, a diferencia de canción o foto de
-          boda: un permiso que viene dado de fábrica no es un permiso.
-          Tiene que marcarlo quien contesta, no quien rellena.
-          ⚠️ Y NO cuenta en "datos X de Y": no es un dato del invitado,
-          es una decisión suya. Si contara, una ficha parecería
-          incompleta por no haber dicho que sí. */}
-      <div>
-        <span
-          className="text-xs uppercase block mb-1"
-          style={{ color: C.ink, fontFamily: "'IBM Plex Mono', monospace" }}
-        >
-          Después del evento
-        </span>
+          dejará constancia". La frase es la suya, palabra por palabra.
+          ⚠️ DESMARCADA por defecto: un permiso que viene dado de fábrica
+          no es un permiso. Y NO cuenta en "datos X de Y": es una decisión
+          suya, no un dato. */}
+      <SeccionPlegable
+        titulo="Después del evento"
+        resumen={form.conservarDatos ? "Autorizado" : ""}
+        abierta={apartado === "despues"}
+        onAlternar={() => alternarApartado("despues")}
+      >
         <label className="flex items-start gap-2 text-sm cursor-pointer" style={{ color: C.ink }}>
           <input
             type="checkbox"
@@ -586,7 +521,7 @@ function FormularioDatos({
             </span>
           </span>
         </label>
-      </div>
+      </SeccionPlegable>
 
       {/* La única salida del formulario (él, v50): al final, donde se
           termina de rellenar, como en cualquier web. Del mismo ancho

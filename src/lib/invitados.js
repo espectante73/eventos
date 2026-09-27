@@ -64,32 +64,11 @@ export function pideEmail(g, evento) {
   return !esMenorDeEdad(g, evento);
 }
 
-// Canción y observaciones llevan una casilla "Sí" en el formulario
-// (usuario, 2026-09-19): "lo obligado es marcar sí o no". Marcada, aparece
-// el campo y cuenta; sin marcar, se pliega y NO cuenta.
-// - Canción: "Sí" POR DEFECTO. Por eso su "no" hay que guardarlo aparte
-//   (`sinCancion`): sin él, una canción vacía es "falta ponerla".
-// - Observaciones: "No" por defecto. "Sí" es simplemente tener texto.
-// `abiertos` ({ cancion, observaciones }): lo que el formulario tiene
-// marcado ahora mismo; sin él, se deduce de lo guardado.
-export const CAMPOS_OPCIONALES = ["cancion", "observaciones"];
-
-export function eligeOpcional(g, campo, abiertos) {
-  // Quien viene solo (S) tiene que dar email: para él no hay "no".
-  if (campo === "email" && g?.rolFamiliar === ROL_FAMILIAR.SUELTO) return true;
-  if (abiertos && campo in abiertos) return Boolean(abiertos[campo]);
-  if (String(g?.[campo] || "").trim() !== "") return true;
-  if (campo === "cancion") return !g?.sinCancion;
-  if (campo === "email") return !g?.sinEmail;
-  return false;
-}
-
 // ---------- Email: al menos uno por familia (usuario, 2026-09-19) ----------
-// El email lleva casilla "Sí" MARCADA por defecto (se guarda su "no" en
-// `sinEmail`), salvo para quien viene solo (S): ahí es obligatorio. Y cada
-// familia necesita al menos UN email de un adulto (esposo, esposa, padre o
-// madre sin pareja, o el propio suelto); si no hay ninguno, el colaborador
-// ve un aviso.
+// Quien viene solo (S) tiene que darlo. Y cada familia necesita al menos
+// UN email de un adulto (esposo, esposa, padre o madre sin pareja, o el
+// propio suelto); si no hay ninguno, el formulario no guarda sin él
+// (emailObligatorio).
 // ⚠️ Esta regla está DOS veces, a propósito: aquí (el anfitrión ve a toda
 // la familia) y en SQL, `colaborador_familias_sin_email` (el colaborador
 // solo ve a SUS invitados, y un matrimonio puede tener dos colaboradores).
@@ -173,16 +152,18 @@ export function colaboradorConEmail(colaboradores, email) {
   return iguales.length === 1 ? iguales[0] : null;
 }
 
-// Los campos de texto que SÍ se le piden a esta persona en concreto: lo
-// que no aplica (el email de un menor, el año de boda de quien no es O ni
-// A) o lo opcional que no ha elegido, no cuenta. Así "completo" es
-// siempre "N de N", sea quien sea.
-export function camposQueAplican(g, evento, abiertos) {
+const relleno = (g, campo) => String(g?.[campo] || "").trim() !== "";
+
+// Lo que cuenta en "datos X de Y" (él, v52): lo obligatorio SIEMPRE -- año
+// de nacimiento, alergias y el email de quien viene solo --; lo demás, solo
+// si se ha rellenado. Vacío y no obligatorio no cuenta. Así una ficha está
+// completa en cuanto tiene lo obligatorio, sea quien sea.
+export function camposQueAplican(g, evento) {
   return CAMPOS_DATOS_INVITADO.filter((campo) => {
-    if (campo === "anioBoda") return pideDatosDeBoda(g);
-    if (campo === "email") return pideEmail(g, evento) && eligeOpcional(g, "email", abiertos);
-    if (CAMPOS_OPCIONALES.includes(campo)) return eligeOpcional(g, campo, abiertos);
-    return true;
+    if (campo === "anioNacimiento" || campo === "alergias") return true;
+    if (campo === "email") return pideEmail(g, evento) && (g?.rolFamiliar === ROL_FAMILIAR.SUELTO || relleno(g, "email"));
+    if (campo === "anioBoda") return pideDatosDeBoda(g) && relleno(g, campo);
+    return relleno(g, campo);
   });
 }
 
@@ -196,32 +177,24 @@ export function conEmailDeColaborador(g, colaboradorVinculado) {
   return { ...g, email: colaboradorVinculado.email || "" };
 }
 
-// La foto de boda se pide a O y A, SALVO que el colaborador haya marcado
-// que ese matrimonio no tiene (usuario, 2026-09-19). Al revés que canción y
-// observaciones, su casilla "Sí" nace MARCADA: lo normal es que la haya.
-// `abiertos.fotoBoda === false` = marcado que no tienen.
-export function pideFotoBoda(g, abiertos) {
-  return pideDatosDeBoda(g) && abiertos?.fotoBoda !== false;
+// La foto de boda, como lo demás que no es obligatorio: cuenta si está.
+export function totalDatosInvitado(g, evento, foto) {
+  return camposQueAplican(g, evento).length + (pideDatosDeBoda(g) && foto ? 1 : 0);
 }
 
-// El "de M" del contador, ajustado a esta persona.
-export function totalDatosInvitado(g, evento, abiertos) {
-  return camposQueAplican(g, evento, abiertos).length + (pideFotoBoda(g, abiertos) ? 1 : 0);
-}
-
-export function contarDatosRellenados(g, foto, evento, abiertos) {
-  const rellenos = camposQueAplican(g, evento, abiertos).filter((c) => String(g[c] || "").trim() !== "").length;
-  return rellenos + (pideFotoBoda(g, abiertos) && foto ? 1 : 0);
+export function contarDatosRellenados(g, foto, evento) {
+  const rellenos = camposQueAplican(g, evento).filter((c) => relleno(g, c)).length;
+  return rellenos + (pideDatosDeBoda(g) && foto ? 1 : 0);
 }
 
 // "Datos X de Y" de una ficha y si está INCOMPLETA (no está en N de N). Una
 // sola definición para toda la vista del colaborador (usuario, 2026-09-19):
 // la fila en rojo, la sección INCOMPLETOS, el contador de "Abrir
 // formulario" y el aviso "Datos completos" al anfitrión.
-export function estadoDatos(g, { evento, foto, sinFotoBoda = false, colaboradorVinculado } = {}) {
-  const opciones = { fotoBoda: !sinFotoBoda };
-  const rellenos = contarDatosRellenados(conEmailDeColaborador(g, colaboradorVinculado), foto, evento, opciones);
-  const total = totalDatosInvitado(g, evento, opciones);
+export function estadoDatos(g, { evento, foto, colaboradorVinculado } = {}) {
+  const conEmail = conEmailDeColaborador(g, colaboradorVinculado);
+  const rellenos = contarDatosRellenados(conEmail, foto, evento);
+  const total = totalDatosInvitado(conEmail, evento, foto);
   return { rellenos, total, incompleta: rellenos < total };
 }
 

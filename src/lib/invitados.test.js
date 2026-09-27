@@ -205,44 +205,30 @@ describe("esMenorDeEdad / pideEmail", () => {
 describe("totalDatosInvitado", () => {
   const evento = { fecha: "2026-11-13" };
 
-  // Canción "Sí" por defecto; observaciones "No" por defecto (2026-09-19).
-  it("a un esposo adulto se le piden 6: año nac., año boda, email, canción, alergias y foto", () => {
-    expect(totalDatosInvitado({ rolFamiliar: "esposo", anioNacimiento: "1990" }, evento)).toBe(6);
+  // v52 (él): lo obligatorio cuenta siempre; lo demás, solo si se ha
+  // rellenado. Vacío y no obligatorio no cuenta.
+  it("vacío, a cualquiera se le piden solo los obligatorios: año de nacimiento y alergias", () => {
+    expect(totalDatosInvitado({ rolFamiliar: "esposo", anioNacimiento: "1990" }, evento)).toBe(2);
+    expect(totalDatosInvitado({ rolFamiliar: "hijo", anioNacimiento: "2015" }, evento)).toBe(2);
   });
 
-  it("a un hijo menor se le piden 3: año nac., canción y alergias (nada de boda ni email)", () => {
-    expect(totalDatosInvitado({ rolFamiliar: "hijo", anioNacimiento: "2015" }, evento)).toBe(3);
+  it("quien viene solo (S) suma el email, que para él es obligatorio", () => {
+    expect(totalDatosInvitado({ rolFamiliar: "suelto", anioNacimiento: "1990" }, evento)).toBe(3);
   });
 
-  it("a un suelto adulto se le piden 4: año nac., email, canción y alergias", () => {
-    expect(totalDatosInvitado({ rolFamiliar: "suelto", anioNacimiento: "1990" }, evento)).toBe(4);
-  });
-
-  it("la canción cuenta salvo que se marque que no (sinCancion); las observaciones, solo si se eligen", () => {
-    const nino = { rolFamiliar: "hijo", anioNacimiento: "2015" };
-    expect(totalDatosInvitado({ ...nino, sinCancion: true }, evento)).toBe(2);
-    expect(totalDatosInvitado({ ...nino, observaciones: "Silla alta" }, evento)).toBe(4);
-    expect(totalDatosInvitado(nino, evento, { cancion: false, observaciones: true })).toBe(3);
-    // Canción marcada (por defecto) pero vacía: cuenta como pendiente.
-    expect(contarDatosRellenados({ ...nino, alergias: "No" }, false, evento)).toBe(2);
-    expect(totalDatosInvitado({ ...nino, alergias: "No" }, evento)).toBe(3);
+  it("lo que no es obligatorio cuenta en cuanto se rellena (y ya está relleno)", () => {
+    const nino = { rolFamiliar: "hijo", anioNacimiento: "2015", alergias: "No" };
+    expect(totalDatosInvitado({ ...nino, cancion: "Bamboleo", observaciones: "Silla alta" }, evento)).toBe(4);
+    expect(contarDatosRellenados({ ...nino, cancion: "Bamboleo", observaciones: "Silla alta" }, "", evento)).toBe(4);
   });
 
   it("una alergia fuera de las tres de siempre (Melocotón) cuenta como contestada", () => {
-    const casado = {
-      rolFamiliar: "esposo",
-      anioNacimiento: "1960",
-      anioBoda: "1985",
-      email: "a@a.com",
-      alergias: "Melocotón",
-      sinCancion: true,
-    };
-    // Sin canción (marcado que no) ni observaciones: 5 de 5 (foto incluida).
+    const casado = { rolFamiliar: "esposo", anioNacimiento: "1960", anioBoda: "1985", email: "a@a.com", alergias: "Melocotón" };
     expect(contarDatosRellenados(casado, "ruta/foto.jpg", evento)).toBe(5);
-    expect(totalDatosInvitado(casado, evento)).toBe(5);
+    expect(totalDatosInvitado(casado, evento, "ruta/foto.jpg")).toBe(5);
   });
 
-  it("un invitado que es colaborador: su email de Colaboradores cuenta (4 de 4, no 3 de 4)", () => {
+  it("un invitado que es colaborador: su email de Colaboradores cuenta", () => {
     const raul = { rolFamiliar: "suelto", anioNacimiento: "1975", alergias: "No", email: "", cancion: "Bamboleo" };
     const comoColaborador = { id: "c1", invitadoId: "raul", email: "raul@ejemplo.com" };
     expect(contarDatosRellenados(raul, false, evento)).toBe(3);
@@ -251,33 +237,20 @@ describe("totalDatosInvitado", () => {
     expect(conEmailDeColaborador(raul, undefined)).toBe(raul);
   });
 
-  it("un matrimonio sin foto de boda (casilla desmarcada) no cuenta la foto", () => {
-    const casado = { rolFamiliar: "esposa", anioNacimiento: "1962", anioBoda: "1985", email: "b@b.com", alergias: "No", sinCancion: true };
-    expect(contarDatosRellenados(casado, "", evento)).toBe(4);
-    expect(totalDatosInvitado(casado, evento)).toBe(5);
-    expect(contarDatosRellenados(casado, "", evento, { fotoBoda: false })).toBe(4);
-    expect(totalDatosInvitado(casado, evento, { fotoBoda: false })).toBe(4);
+  it("la foto de boda cuenta si está; sin ella, la ficha sigue completa", () => {
+    const casada = { rolFamiliar: "esposa", anioNacimiento: "1962", anioBoda: "1985", alergias: "No" };
+    expect(contarDatosRellenados(casada, "", evento)).toBe(totalDatosInvitado(casada, evento, ""));
+    expect(totalDatosInvitado(casada, evento, "ruta/foto.jpg")).toBe(4);
   });
 
-  it("un niño con todo lo suyo contestado sale completo: N de N", () => {
-    const nino = { rolFamiliar: "hijo", anioNacimiento: "2015", alergias: "No", sinCancion: true };
+  it("con lo obligatorio contestado, la ficha sale completa: N de N", () => {
+    const nino = { rolFamiliar: "hijo", anioNacimiento: "2015", alergias: "No" };
     expect(contarDatosRellenados(nino, false, evento)).toBe(totalDatosInvitado(nino, evento));
   });
 });
 
-describe("email: casilla Sí por defecto y al menos uno por familia", () => {
+describe("email: al menos uno por familia", () => {
   const evento = { fecha: "2026-11-13" };
-
-  it("un adulto puede decir que no da email: deja de contar", () => {
-    const esposa = { rolFamiliar: "esposa", anioNacimiento: "1970", sinCancion: true };
-    expect(totalDatosInvitado(esposa, evento)).toBe(5);
-    expect(totalDatosInvitado({ ...esposa, sinEmail: true }, evento)).toBe(4);
-  });
-
-  it("quien viene solo (S) tiene que darlo: su 'no' no vale", () => {
-    const suelto = { rolFamiliar: "suelto", anioNacimiento: "1970", sinEmail: true, sinCancion: true };
-    expect(totalDatosInvitado(suelto, evento)).toBe(3);
-  });
 
   it("una familia sin ningún email de un adulto se señala; con uno basta", () => {
     const esposo = { id: "o", apellido: "Abreu", grupoFamiliar: "Abreu01", rolFamiliar: "esposo", confirmado: true, email: "" };

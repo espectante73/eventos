@@ -193,7 +193,11 @@ describe("el pago pregunta por la familia", () => {
     );
     const botones = () => [...document.body.querySelectorAll("button")];
     abrirPorMenu(vista);
-    const pago = botones().find((b) => b.textContent.includes("Pago pendiente"));
+    // El de la familia Ruiz: con la cuenta de v52, otros también tienen ya
+    // su "Pago pendiente" (Jacob, por ejemplo).
+    const pago = botones().find(
+      (b) => b.textContent.includes("Pago pendiente") && b.parentElement.parentElement.textContent.includes("Ruiz")
+    );
     expect(pago, "no hay ninguna fila con el pago a la vista").toBeTruthy();
     await act(async () => pago.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     const html = document.body.innerHTML;
@@ -219,6 +223,20 @@ describe("el formulario: Guardar y Cancelar", () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, valor);
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
+
+  // Los campos viven en apartados plegados (v52): hay que abrirlos.
+  const abrirApartado = (vista, titulo) =>
+    vista.pulsar(botones().find((b) => b.textContent.trim().startsWith(titulo)));
+  const escribirEmail = (vista, valor) => {
+    abrirApartado(vista, "Año nac.");
+    escribir(vista, document.body.querySelector('input[placeholder="correo@ejemplo.com"]'), valor);
+  };
+  const escribirOtraAlergia = (vista, valor) => {
+    abrirApartado(vista, "Alergias");
+    const otras = [...document.body.querySelectorAll("label")].find((l) => l.textContent.trim() === "Otras");
+    vista.pulsar(otras.querySelector("input"));
+    escribir(vista, document.body.querySelector('input[placeholder="Otra (máx. 15)"]'), valor);
+  };
 
   // Omar: esposo, sin alergias, y su familia no tiene email.
   function abrirOmar() {
@@ -259,24 +277,25 @@ describe("el formulario: Guardar y Cancelar", () => {
 
   // v50.4: el cursor va al primero que falta, y lo que falta late en rojo
   // hasta rellenarlo.
-  it("«Guardar» lleva el cursor al primero que falta, y lo que falta late", () => {
+  it("«Guardar» abre el apartado del primero que falta, lleva el cursor y lo que falta late", () => {
     const { vista } = abrirOmar();
     vista.pulsar(boton("Guardar"));
     const email = document.body.querySelector('[data-campo="email"]');
-    const alergias = document.body.querySelector('[data-campo="alergias"]');
+    expect(email, "el apartado del email tenía que abrirse solo").toBeTruthy();
     expect(email.contains(document.activeElement)).toBe(true);
-    expect(email.className).toContain("ficha-incompleta");
-    expect(alergias.className).toContain("ficha-incompleta");
+    expect(document.body.querySelector('[data-apartado="datos"]').className).toContain("ficha-incompleta");
+    // Alergias sigue cerrado (uno abierto a la vez), pero late igual.
+    expect(document.body.querySelector('[data-apartado="alergias"]').className).toContain("ficha-incompleta");
     expect(document.body.textContent).toContain("Faltan datos por rellenar");
-    escribir(vista, document.body.querySelector('input[placeholder="Otra (máx. 15)"]'), "Marisco");
-    expect(document.body.querySelector('[data-campo="alergias"]').className ?? "").not.toContain("ficha-incompleta");
+    escribirOtraAlergia(vista, "Marisco");
+    expect(document.body.querySelector('[data-apartado="alergias"]').className ?? "").not.toContain("ficha-incompleta");
     vista.desmontar();
   });
 
   it("con todo lo obligatorio, «Guardar» sube una vez y cierra", () => {
     const { vista, guardados } = abrirOmar();
-    escribir(vista, document.body.querySelector('input[placeholder="correo@ejemplo.com"]'), "omar@ejemplo.com");
-    escribir(vista, document.body.querySelector('input[placeholder="Otra (máx. 15)"]'), "Marisco");
+    escribirEmail(vista, "omar@ejemplo.com");
+    escribirOtraAlergia(vista, "Marisco");
     expect(guardados).toHaveLength(0); // escribir no sube nada
     vista.pulsar(boton("Guardar"));
     expect(guardados).toHaveLength(1);
@@ -289,7 +308,7 @@ describe("el formulario: Guardar y Cancelar", () => {
 
   it("«Cancelar» con algo escrito pregunta «¿Descartar los cambios?»", () => {
     const { vista, guardados } = abrirOmar();
-    escribir(vista, document.body.querySelector('input[placeholder="Otra (máx. 15)"]'), "Marisco");
+    escribirOtraAlergia(vista, "Marisco");
     vista.pulsar(boton("Cancelar"));
     expect(document.body.textContent).toContain("¿Descartar los cambios?");
     // "Seguir editando" vuelve al formulario con lo escrito.
@@ -303,6 +322,41 @@ describe("el formulario: Guardar y Cancelar", () => {
     vista.desmontar();
   });
 
+  // v52: seis apartados plegados, uno abierto a la vez; Boda solo O y A.
+  it("todo cerrado al abrir, y uno solo abierto a la vez", () => {
+    const { vista } = abrirOmar();
+    expect(document.body.querySelector('input[placeholder="correo@ejemplo.com"]')).toBeFalsy();
+    abrirApartado(vista, "Año nac.");
+    expect(document.body.querySelector('input[placeholder="correo@ejemplo.com"]')).toBeTruthy();
+    abrirApartado(vista, "Canción");
+    expect(document.body.querySelector('input[placeholder="correo@ejemplo.com"]')).toBeFalsy();
+    expect(document.body.querySelector('input[placeholder="Título — Artista"]')).toBeTruthy();
+    vista.desmontar();
+  });
+
+  it("«Boda» sale al esposo, no a quien no viene con pareja", () => {
+    const { vista } = abrirOmar();
+    expect(botones().some((b) => b.textContent.trim().startsWith("Boda"))).toBe(true);
+    vista.desmontar();
+    const otra = montar(
+      <VistaColaborador data={data} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+    );
+    abrirPorMenu(otra);
+    otra.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Lucía")));
+    expect(botones().some((b) => b.textContent.trim().startsWith("Boda"))).toBe(false);
+    otra.desmontar();
+  });
+
+  it("en Alergias, el campo de «Otras» solo sale al marcarla", () => {
+    const { vista } = abrirOmar();
+    abrirApartado(vista, "Alergias");
+    expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]')).toBeFalsy();
+    const otras = [...document.body.querySelectorAll("label")].find((l) => l.textContent.trim() === "Otras");
+    vista.pulsar(otras.querySelector("input"));
+    expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]')).toBeTruthy();
+    vista.desmontar();
+  });
+
   it("«Cancelar» sin cambios cierra sin preguntar", () => {
     const { vista } = abrirOmar();
     vista.pulsar(boton("Cancelar"));
@@ -313,7 +367,7 @@ describe("el formulario: Guardar y Cancelar", () => {
 
   it("con la ficha abierta, tocar otra fila no la cierra (se perdería lo escrito)", () => {
     const { vista } = abrirOmar();
-    escribir(vista, document.body.querySelector('input[placeholder="Otra (máx. 15)"]'), "Marisco");
+    escribirOtraAlergia(vista, "Marisco");
     vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Lucía")));
     vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Omar")));
     expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]').value).toBe("Marisco");
