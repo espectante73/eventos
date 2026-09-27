@@ -147,7 +147,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    ya aprobados —pastilla de inicio, mando de música— se respetan tal
    cual. Lo vigila `Boton.test.js`.
    - **Lo que se PULSA** (también desplegables, títulos plegables e
-     iconos de las tablas) → `Boton`: relieve, clic y vibración.
+     iconos de las tablas) → `Boton`: relieve, clic y vibración. Salvo
+     los apartados de un formulario: su rótulo y una flecha grande, nada
+     más (`SeccionPlegable sencilla`).
    - **Lo que es un LINK** a otro sitio —otra pantalla del login, otra
      web— → `EnlaceTexto`: subrayado y en gris, el estándar de internet.
      Suelto lleva `py-2`: en el móvil un link fino se falla.
@@ -166,7 +168,10 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    y sin aire extra (con 140 invitados, una lista con aire no cabe). Si
    no cabe, se ensancha o se recorta, nunca dos líneas. Los anchos de las
    columnas, **fijos y definidos una sola vez**. Lo vigila
-   `reglas-del-proyecto.test.js` en la fila del colaborador.
+   `reglas-del-proyecto.test.js` en la fila del colaborador. **En un
+   formulario, igual:** lo que va junto (rótulo, casilla, campo o foto)
+   en una sola línea; si no cabe, se estrecha, nunca se apila. Ninguna
+   prueba lo ve: se mira en su captura.
 7. **Una sola pieza, no sincronizar**: si dos sitios tienen que decir
    siempre lo mismo —un componente, una constante, una función, qué es
    una familia (`claveFamilia`), cómo se nombra a alguien
