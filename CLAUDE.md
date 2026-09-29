@@ -399,22 +399,20 @@ Lo vigila `supabase/schema.test.js`.
 
 ## 1.10 Registro de errores con Sentry
 
-Los fallos del móvil de cualquiera llegan a Sentry (región EU, `.de.` en
-la dirección). `lib/registroErrores.js` lo arranca desde `main.jsx`, y el
-`ErrorBoundary` informa. La dirección (`VITE_SENTRY_DSN`) no es secreta:
+Los fallos de cualquiera llegan a Sentry (región EU); lo arranca
+`lib/registroErrores.js`. Su dirección (`VITE_SENTRY_DSN`) no es secreta:
 está en Vercel y en `.env`.
 
-1. ⚠️ **Sin datos de invitados** (decidido con él): `sendDefaultPii:
-   false`, sin grabación ni rendimiento, y `limpiarEvento` quita usuario,
-   cabeceras, cuerpo y **las consultas de las URLs** (el enlace del tablón
-   lleva la llave). Lo vigila `registroErrores.test.js`.
+1. ⚠️ **Sin datos de invitados** (decidido con él): nada personal, ni las
+   consultas de las URLs (el enlace del tablón lleva la llave). Lo vigila
+   `registroErrores.test.js`.
 2. ⚠️ **La IP la deduce Sentry en su servidor**: tiene que estar activado
    en su panel Settings → Security & Privacy → "Prevent Storing of IP
    Addresses".
-3. **Pesa +31 KB al abrir, y se aceptó.**
-4. **Los errores se ven con "Errores app" en Mi cuenta** (solo
-   anfitrión), nunca dentro de la app: exigiría una clave secreta de
-   Sentry en el navegador.
+3. **Pesa +31 KB al abrir**: aceptado.
+4. **Los errores se ven en Sentry** («Errores app», en Mi cuenta, solo
+   anfitrión), nunca dentro de la app: exigiría una clave secreta en el
+   navegador.
 
 ## 1.11 Por qué es así: decisiones que no se ven en el código
 
