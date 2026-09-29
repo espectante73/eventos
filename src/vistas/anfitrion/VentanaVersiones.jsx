@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "53.2",
+    cambios: [
+      "Arreglado: tras crear la cuenta, al pulsar \"Ya la he confirmado — entrar\" el formulario volvía sin la comprobación de seguridad y el botón \"Entrar\" no hacía nada. Le pasaba a todo colaborador nuevo.",
+    ],
+  },
+  {
     version: "53.1",
     cambios: [
       "Si el servidor no contesta al abrir la app, a los 8 segundos lo dice (\"El servidor tarda en responder. Inténtalo en un momento.\") con un botón \"Volver a intentar\". Y ya no dice, en falso, que la cuenta no está vinculada cuando lo que pasa es que el servidor no responde.",

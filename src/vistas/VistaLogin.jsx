@@ -76,8 +76,14 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
   // del control de React, el segundo montaje dejaba DOS widgets
   // superpuestos sobre el mismo <div> en local. En el build de
   // producción real (sin StrictMode) esto nunca llegaba a notarse.
+  //
+  // ⚠️ Y se vuelve a montar al volver de "Tu cuenta ya está creada" (él,
+  // v53.2): esa pantalla sustituye al formulario entero, caja del captcha
+  // incluida. Montado una sola vez, al pulsar "Ya la he confirmado —
+  // entrar" el formulario volvía SIN captcha, y "Entrar" se quedaba
+  // bloqueado sin decir nada. Le pasaba a todo colaborador nuevo.
   useEffect(() => {
-    if (!TURNSTILE_SITE_KEY) return;
+    if (!TURNSTILE_SITE_KEY || cuentaCreada) return;
     let cancelado = false;
     const montar = () => {
       if (cancelado || !window.turnstile || !cajaCaptchaRef.current) return;
@@ -106,8 +112,9 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
         window.turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;
       }
+      setCaptchaToken("");
     };
-  }, []);
+  }, [cuentaCreada]);
 
   // El token de Turnstile es de un solo uso y caduca a los pocos
   // minutos -- se pide uno nuevo tras cada intento, con o sin éxito.
