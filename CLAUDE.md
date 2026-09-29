@@ -369,18 +369,16 @@ Lo vigila `supabase/schema.test.js`.
 
 ## 1.8 Los correos
 
-1. **Los de Supabase Auth** (confirmar cuenta, recuperar contraseña)
-   **salen por SMTP propio** desde `acceso@mail.nexuspoint.rsvp`
-   (Authentication → Emails → SMTP; comprobar la ruta antes de dársela).
-   El compartido de Supabase tiene un límite muy bajo: si vuelve "email
-   rate limit exceeded", mirar ahí.
-2. **Su enlace apunta a la Site URL** (Authentication → URL
-   Configuration): si no es `https://nexuspoint.rsvp`, el enlace no abre.
-   A vigilar si cambia el dominio.
-3. **Un aviso que no llega**: mirar primero "Avisos enviados"
-   (`avisos_enviados`) y los logs de Resend, y probar con el botón
-   "Probar" junto al email del colaborador. No dar por roto el código sin
-   descartar la configuración o la plantilla.
+1. **Los de Supabase Auth** (confirmar cuenta, recuperar contraseña) salen
+   por **SMTP propio** (`acceso@mail.nexuspoint.rsvp`; Authentication →
+   Emails → SMTP). El compartido de Supabase tiene un límite muy bajo: si
+   vuelve "email rate limit exceeded", mirar ahí.
+2. **Su enlace lleva a la Site URL** (Authentication → URL Configuration),
+   que tiene que ser `https://nexuspoint.rsvp`. Se comprueba desde fuera:
+   un `/auth/v1/verify` con un token falso redirige a ella.
+3. **Un aviso que no llega:** mirar antes "Avisos enviados", los logs de
+   Resend y el botón "Probar" junto al email del colaborador. No dar por
+   roto el código sin descartar la configuración o la plantilla.
 
 ## 1.9 Backup automático de la base de datos
 
