@@ -226,3 +226,24 @@ describe("Modo Pruebas en la base", () => {
   });
 });
 
+// v53.4: el acceso de anfitrión no se da SOLO nunca. Antes, una cuenta
+// nueva con el correo de "Email anfitrión" se hacía anfitriona, y ese campo
+// lo podía cambiar un colaborador con permiso: se hacía anfitrión él mismo.
+describe("el acceso de anfitrión", () => {
+  it("ninguna función de la base mete a nadie en anfitriones", () => {
+    expect(sql).not.toMatch(/insert into anfitriones/i);
+  });
+
+  it("un colaborador no puede cambiar el «Email anfitrión»", () => {
+    const permitidas = cuerpoDe("guardar_evento").match(/v_permitidas text\[\] := array\[([\s\S]*?)\];/)[1];
+    expect(permitidas).not.toMatch(/emailAnfitrion/);
+  });
+
+  it("al entrar, una cuenta ya existente se une a su ficha por su correo CONFIRMADO", () => {
+    const f = cuerpoDe("mi_rol");
+    expect(f).toMatch(/update colaboradores c/);
+    expect(f).toMatch(/email_confirmed_at is not null/);
+    expect(f).toMatch(/c\."authUserId" is null/);
+  });
+});
+

@@ -457,6 +457,18 @@ begin
     return;
   end if;
 
+  -- Una cuenta que ya existía antes que su ficha de colaborador (de otra
+  -- prueba, o dada de alta después) se une aquí, al entrar, por su correo
+  -- CONFIRMADO (v53.4). Antes solo se unía al crear la cuenta, y si la
+  -- ficha llegaba después se quedaba "sin acceso" para siempre.
+  update colaboradores c
+  set "authUserId" = auth.uid()
+  where c."authUserId" is null
+    and lower(c."email") = (
+      select lower(u.email) from auth.users u
+      where u.id = auth.uid() and u.email_confirmed_at is not null
+    );
+
   return query
     select 'colaborador'::text, c."id"
     from colaboradores c
@@ -774,7 +786,7 @@ declare
   v_sets text;
   v_permitidas text[] := array[
     'nombre', 'fecha', 'hora', 'lugar', 'direccion', 'enlaceMapa', 'imagen',
-    'ocultarTituloEnImagen', 'emailAnfitrion', 'urlPublica',
+    'ocultarTituloEnImagen', 'urlPublica',
     'precioAdulto', 'precioNino', 'edadNinoDesde', 'edadNinoHasta',
     'plantillaAsignacion', 'plantillaDatosCompletados',
     'plantillaPagoRegistrado', 'plantillaInvitacionFamilia',
@@ -2020,14 +2032,13 @@ CREATE FUNCTION public.vincular_cuenta_nueva() RETURNS trigger
     SET search_path TO 'public', 'pg_temp'
     AS $$
 begin
-  if lower(new.email) = lower((select "emailAnfitrion" from evento limit 1)) then
-    insert into anfitriones ("authUserId") values (new.id)
-    on conflict do nothing;
-  else
-    update colaboradores
-    set "authUserId" = new.id
-    where lower("email") = lower(new.email);
-  end if;
+  -- NUNCA da acceso de anfitrión (v53.4). Antes, una cuenta nueva con el
+  -- mismo correo que "Email anfitrión" pasaba a ser anfitriona, y ese campo
+  -- lo podía cambiar un colaborador con permiso: se hacía anfitrión él
+  -- mismo. Hay un solo anfitrión, y se añade a mano.
+  update colaboradores
+  set "authUserId" = new.id
+  where lower("email") = lower(new.email);
   return new;
 end;
 $$;
