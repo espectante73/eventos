@@ -430,27 +430,23 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
 
 ## 1.12 Lo que está esperando, y por qué no es un fallo
 
-Cosas que no se mueven **porque no toca**. No ofrecerlas como pendiente.
+No se mueve porque no toca: no ofrecerlo como pendiente.
 
-- ✅ **La licencia está decidida**: privada, todos los derechos
-  reservados, como pone el README. Cerrado.
-- **La hoja de encargo de las fotos** necesita el año de boda, y casi
-  ningún matrimonio lo tiene todavía. Lo rellenan los colaboradores con
-  la foto.
-- **Las pocas mesas de hoy no son las del evento**: serán 12-14, y el
-  reparto se hace cuando estén TODAS las confirmaciones.
-- **Las fotos terminadas van después**, y la prueba de subirlas en
-  bloque (nombre de archivo con ChatGPT) la hará cuando las tenga.
-- **La prueba del local** —la tele, la cortinilla y la música con el
-  wifi de allí— es para cerca del evento, y la fecha ni está fijada.
-- **Colores escritos a mano en algunas pantallas** (Portada, Cuentas,
-  Mesas, Progreso…): incumplen la norma 1 de la 1.2 y ninguna prueba los
-  vigila todavía. Pasarlos a `theme.js` y poner la prueba es una tarea
-  aparte. El mando de Música no cuenta: su estilo propio está aprobado.
-- **El mapa de la app se queda público** hasta que él lo retome. Si se
-  hace privado, el primer paso es suyo: poner privado el repositorio en
-  GitHub (Vercel despliega igual; al desarrollador que lo revisa habría
-  que invitarle).
+- ✅ **Licencia**: privada, todos los derechos reservados (README). Cerrado.
+- **La hoja de encargo de las fotos** espera al año de boda, que rellenan
+  los colaboradores con la foto.
+- **Mesas**: las de ahora no son las del evento (serán 12-14); se
+  reparten con TODAS las confirmaciones.
+- **Las fotos terminadas y su subida en bloque** (nombre de archivo con
+  ChatGPT): cuando las tenga.
+- **La prueba del local** (tele, cortinilla y música con su wifi): cerca
+  del evento, y la fecha no está fijada.
+- **Colores escritos a mano** (Portada, Contabilidad, Mesas, Progreso…):
+  incumplen la norma 1 de la 1.2; pasarlos a `theme.js`, con su prueba,
+  es tarea aparte. El mando de Música no cuenta: su estilo está aprobado.
+- **El mapa de la app sigue público** hasta que él lo retome. Para hacerlo
+  privado, primero él pone privado el repositorio en GitHub (Vercel
+  despliega igual; al desarrollador que lo revisa habría que invitarle).
 
 ======================================================================
 
