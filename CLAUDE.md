@@ -14,23 +14,17 @@ datos»).
 1. **PARTE 1 — Reglas que hay que obedecer siempre**, numeradas dentro
    de su sección: se citan ("1.6, regla 3") y la app las cuenta. Lo que
    no es una regla (la 1.12) va con viñetas. Se lee antes de tocar nada.
-2. **PARTE 2 — Trampas ya pagadas**: errores que pueden repetirse y **no
-   se pueden vigilar con un test**. Si se puede, el test ES el registro
-   (regla 5 de «Cómo trabajar aquí») y la trampa se borra; también
-   cuando el código que la permitía ya no existe. Cada una, de 3 a 8
-   líneas: si crece, se ha colado relato.
+2. **PARTE 2 — Trampas ya pagadas** que **no se pueden vigilar con un
+   test** (regla 5 de «Cómo trabajar aquí»). Cada una, de 3 a 8 líneas:
+   si crece, se ha colado relato.
 
-⚠️ **Salvaguardas automáticas** (`lib/manual.test.js`): el documento
-entero, **5.000 palabras como mucho** (pasar de ahí lo decide él);
-**ninguna fecha**, que casi siempre es relato; y **todo archivo o función
-que se nombra existe de verdad**, así que borrar código sin borrar su
-regla se pone en rojo solo; y **ninguna frase copiada en dos secciones**.
-Lo que no ve ninguna prueba —la misma idea dicha con otras palabras, y
-el relato— se repasa leyendo.
+⚠️ **Salvaguardas automáticas** (`lib/manual.test.js`): **5.000 palabras
+como mucho** (pasar de ahí lo decide él), **ninguna fecha**, **todo
+archivo o función que se nombra existe de verdad** y **ninguna frase
+copiada en dos secciones**.
 
-⚠️ **Se lee también dentro de la app** (Mi cuenta → «Diseño app»): la
-numeración no puede saltarse (lo vigila `lib/manual.test.js`), solo se
-dibujan párrafos, listas, código, títulos, negrita y cursiva, y **tras
+⚠️ **Se lee también dentro de la app** (Mi cuenta → «Diseño app»): solo
+se dibujan párrafos, listas, código, títulos, negrita y cursiva, y **tras
 cada cambio se sella**: `node scripts/sellar-manual.mjs`.
 
 ### Qué entra
@@ -98,10 +92,8 @@ regla siga siendo verdad, así que el guardia es de mano:
    IA."** Si hay un error, un riesgo o un mal enfoque —suyo o mío—,
    decirlo directamente y por qué, ANTES de implementar, aunque no haya
    pedido revisión.
-4. **`lint`, `build` y `test`: los tres, siempre.** Cada uno caza lo que
-   los otros no ven: el lint, una variable sin importar; el build, un
-   import traído del archivo equivocado. Y git no deja subir con el lint
-   o las pruebas en rojo (`.githooks/pre-push`; en una máquina nueva,
+4. **`lint`, `build` y `test`: los tres, siempre**: cada uno caza lo que
+   los otros no ven. Y git no deja subir con el lint o las pruebas en rojo (`.githooks/pre-push`; en una máquina nueva,
    activarlo con `git config core.hooksPath .githooks`).
 5. **Al arreglar un fallo, dejar un vigilante.** Si se puede probar, el
    test es parte del arreglo. Solo queda como texto en la PARTE 2 lo que
@@ -170,8 +162,7 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    columnas, **fijos y definidos una sola vez**. Lo vigila
    `reglas-del-proyecto.test.js` en la fila del colaborador. **En un
    formulario, igual:** lo que va junto (rótulo, casilla, campo o foto)
-   en una sola línea; si no cabe, se estrecha, nunca se apila. Ninguna
-   prueba lo ve: se mira en su captura.
+   en una sola línea; si no cabe, se estrecha, nunca se apila.
 7. **Una sola pieza, no sincronizar**: si dos sitios tienen que decir
    siempre lo mismo —un componente, una constante, una función, qué es
    una familia (`claveFamilia`), cómo se nombra a alguien
@@ -210,10 +201,10 @@ en la propuesta cuáles se han comprobado. Lo fuerza
     - ⚠️ hay reglas suyas POR ENCIMA: cada colaborador lleva de 10 a 12
       invitados, así que un matrimonio PUEDE tener dos colaboradores.
       No avisar de eso ni "juntarlos".
-12. **Guardar solo lo que cambió, nunca el estado entero.** Siempre hay
-    dos escritores posibles —un colaborador, o él con el móvil y el Mac
-    abiertos— y a veces un trigger: mandar la colección entera escribe tu
-    copia encima de lo que el otro acaba de guardar, sin ningún error.
+12. **Guardar solo lo que cambió, nunca el estado entero**: con dos
+    escritores a la vez (un colaborador, él en el móvil y el Mac, un
+    trigger), la colección entera pisa en silencio lo que el otro acaba
+    de guardar.
     Modelo: `anfitrion_guardar_invitados`. Lo vigilan
     `reglas-del-proyecto.test.js` y `supabase/schema.test.js`.
 13. **Un mensaje de error dice en qué se ha podido equivocar**, y qué no
@@ -361,9 +352,8 @@ where p.proname = 'nombre_funcion' and n.nspname = 'public';
 
 Lo vigila `supabase/schema.test.js`.
 
-1. **Vive en el SERVIDOR, y las copias en JSON están descartadas.** Él lo
-   cerró así: *"no puedo restaurar yo... si no me vale para eso, no le veo
-   utilidad"*.
+1. **Vive en el SERVIDOR, y las copias en JSON están descartadas**: él no
+   puede restaurarlas, así que no le sirven.
 2. **`foto_de_datos()` y `restaurar_foto()` son los ÚNICOS sitios** donde
    se hace la foto y donde se repone; el Modo Pruebas usa esas mismas.
    Mientras está activo, `requisitosActivos` (app) y
@@ -445,9 +435,8 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
    la plantilla de invitación. Lo vigila `reglas-del-proyecto.test.js`.
 2. **La ventana "Aniversarios" no es una vista duplicada** (norma 8): no
    reordena la lista, es una zona de TRABAJO para ir cargando ~50 fotos a
-   lo largo de semanas. Él descartó las dos alternativas —un panel dentro
-   de la celda ("mucho lío") y soltar la carpeta entera de golpe ("tengo
-   que escogerla, ubicarla")—. No volver a proponerlas.
+   lo largo de semanas. Él descartó un panel dentro de la celda y soltar
+   la carpeta entera de golpe: no volver a proponerlos.
 3. **Ninguna tabla abierta a escritura anónima, nunca**: una política de
    lectura pública es `for select`, nunca `for all`. `evento` guarda las
    plantillas de los emails, y reescribirlas desde fuera es decidir lo que
@@ -455,10 +444,9 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
    `supabase/schema.test.js`. ⚠️ Lo que el test no ve: **una columna nueva
    en una tabla de lectura pública la lee cualquiera**. Antes de añadirla,
    preguntarse si es privada.
-4. **El versionado: entero = tema nuevo, decimal = ajuste** (38, 38.1,
-   38.2… hasta el siguiente tema, que pasa a 39). **Nunca subir el entero
-   por defecto**, y **tras el .9 viene el siguiente entero**: 45.9 → 46,
-   nunca 45.10. Es provisional: se renumera desde la versión 1 **cuando él
+4. **El versionado: entero = tema nuevo, decimal = ajuste.** **Nunca
+   subir el entero por defecto**, y **tras el .9 viene el siguiente
+   entero** (45.9 → 46, nunca 45.10). Es provisional: se renumera desde la versión 1 **cuando él
    lo diga**, después de usar todas las partes de la app sin fallo. No lo
    propongo yo. Lo vigila `reglas-del-proyecto.test.js`.
 5. **La plantilla de invitación DEBE traer dibujado el sello «PAGADO»**:
@@ -517,8 +505,7 @@ con `TextInputEnVentanaAparte`, o pierde las tildes. El resto, en
 ### 2.3 Políticas que necesitan saber si eres el anfitrión
 
 ⚠️ Una política de seguridad (RLS) **nunca consulta directamente una
-tabla cerrada**: falla en silencio. Así llevaron vacíos los cajones de
-fotos desde que se crearon. Se pregunta a través de `es_anfitrion()`,
+tabla cerrada**: falla en silencio. Se pregunta a través de `es_anfitrion()`,
 y se prueba una subida real antes de darla por buena. Lo vigila
 `supabase/schema.test.js`.
 
