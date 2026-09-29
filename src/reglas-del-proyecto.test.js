@@ -184,7 +184,6 @@ describe("cada pantalla tiene una prueba que la dibuja", () => {
   const SIN_PRUEBA_TODAVIA = [
     "VentanaInvitacionesColaborador",
     "VistaAnfitrion",
-    "VistaLogin",
     "VistaNuevaContrasena",
     "VistaTablon",
     "VentanaAniversarios",

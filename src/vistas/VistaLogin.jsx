@@ -30,6 +30,7 @@ import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { Boton, EnlaceTexto } from "../components/Boton";
 import { CampoContrasena } from "../components/CampoContrasena";
+import { errorDelEnlace, limpiarErrorDelEnlace, esCorreoSinConfirmar } from "../lib/enlaceAuth";
 
 const TITULOS = { entrar: "Entrar", crear: "Crear cuenta", recuperar: "Recuperar contraseña" };
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
@@ -40,7 +41,16 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
   const [password, setPassword] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
-  const [aviso, setAviso] = useState("");
+  // Si se llega desde un enlace de correo caducado o ya usado, se dice
+  // nada más entrar (él, v53): antes no salía nada.
+  const [aviso, setAviso] = useState(() =>
+    errorDelEnlace ? "El enlace ha caducado o ya se usó. Entra con tu email y tu contraseña." : ""
+  );
+  useEffect(() => limpiarErrorDelEnlace(), []);
+  // El email que ha intentado entrar sin haber confirmado su correo: ofrece
+  // pedir otro correo de confirmación (él, v53). Sin esto se quedaba
+  // atascado: "Email o contraseña incorrectos" con la contraseña buena.
+  const [sinConfirmar, setSinConfirmar] = useState("");
   // Cuenta creada y pendiente de confirmar. Es una PANTALLA entera, no un
   // aviso debajo del formulario: el usuario contó (2026-09-23) que sus
   // colaboradores creaban la cuenta y "se les quedaba la pantalla como si
@@ -112,6 +122,7 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
     setModo(siguiente);
     setError("");
     setAviso("");
+    setSinConfirmar("");
   };
 
   const entrar = async (e) => {
@@ -126,7 +137,33 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
     });
     setCargando(false);
     reiniciarCaptcha();
-    if (errLogin) setError("Email o contraseña incorrectos.");
+    if (!errLogin) return;
+    // Norma 13: el error dice lo que ha pasado de verdad.
+    if (esCorreoSinConfirmar(errLogin)) {
+      setSinConfirmar(email);
+      setError("Todavía no has confirmado tu correo. Busca el correo de confirmación (mira también en spam).");
+    } else {
+      setError("Email o contraseña incorrectos.");
+    }
+  };
+
+  const reenviarConfirmacion = async () => {
+    setError("");
+    setAviso("");
+    setCargando(true);
+    const { error: errReenvio } = await supabase.auth.resend({
+      type: "signup",
+      email: sinConfirmar,
+      ...(TURNSTILE_SITE_KEY ? { options: { captchaToken } } : {}),
+    });
+    setCargando(false);
+    reiniciarCaptcha();
+    if (errReenvio) {
+      setError(`No se pudo reenviar el correo de confirmación: ${errReenvio.message || JSON.stringify(errReenvio)}`);
+      return;
+    }
+    setAviso(`Te hemos enviado otro correo de confirmación a ${sinConfirmar}. Mira también en spam.`);
+    setSinConfirmar("");
   };
 
   const crearCuenta = async (e) => {
@@ -313,6 +350,16 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
           <p className="text-sm mb-3" style={{ color: C.wax }}>
             {error}
           </p>
+        )}
+        {modo === "entrar" && sinConfirmar && sinConfirmar === email && (
+          <Boton
+            className="w-full mb-3"
+            onClick={reenviarConfirmacion}
+            disabled={cargando || !captchaListo}
+            titulo={captchaListo ? undefined : "Espera a que cargue la comprobación de seguridad"}
+          >
+            Reenviar correo de confirmación
+          </Boton>
         )}
         {aviso && (
           <p className="text-sm mb-3" style={{ color: C.ink }}>

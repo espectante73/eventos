@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "53",
+    cambios: [
+      "Entrar con el correo sin confirmar: en vez de \"Email o contraseña incorrectos\", la app dice que falta confirmar el correo y ofrece \"Reenviar correo de confirmación\". Y si se llega desde un enlace de correo caducado o ya usado, lo dice al entrar.",
+    ],
+  },
+  {
     version: "52.4",
     cambios: [
       "Formulario del colaborador: en Boda, el recuadro de la foto ya no se sale por la derecha en el móvil (cajas del año más estrechas y menos hueco).",
