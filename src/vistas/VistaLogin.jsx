@@ -150,7 +150,12 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
       setSinConfirmar(email);
       setError("Todavía no has confirmado tu correo. Busca el correo de confirmación (mira también en spam).");
     } else {
-      setError("Email o contraseña incorrectos.");
+      // Norma 13: qué hacer, sin decir si el correo tiene cuenta. Supabase
+      // contesta lo mismo en los dos casos a propósito, para que nadie
+      // averigüe qué correos están registrados (él, v53.6).
+      setError(
+        "Email o contraseña incorrectos. Si todavía no tienes cuenta, pulsa «Crear cuenta»; si no recuerdas la contraseña, pulsa «He olvidado mi contraseña»."
+      );
     }
   };
 

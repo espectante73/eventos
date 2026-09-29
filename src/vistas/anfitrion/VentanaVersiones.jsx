@@ -42,9 +42,21 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "53.6",
+    cambios: [
+      "Al fallar la entrada, el mensaje dice qué hacer: si todavía no tienes cuenta, \"Crear cuenta\"; si no recuerdas la contraseña, \"He olvidado mi contraseña\". Sin decir si el correo está registrado, para que nadie pueda averiguarlo.",
+    ],
+  },
+  {
     version: "53.5",
     cambios: [
       "Al eliminar un colaborador se borra también su cuenta de acceso (nunca la del anfitrión, ni una que use otra ficha), y la pregunta de eliminar lo avisa. El Deshacer sigue funcionando: la ficha vuelve, y la cuenta se une sola cuando esa persona la vuelva a crear.",
+    ],
+  },
+  {
+    version: "53.4",
+    cambios: [
+      "Seguridad: una cuenta nueva ya nunca se hace anfitriona sola, y un colaborador no puede cambiar el \"Email anfitrión\". Y una cuenta que ya existía se une sola a su ficha de colaborador al entrar, si el correo coincide y está confirmado.",
     ],
   },
   {
