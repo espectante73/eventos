@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "53.7",
+    cambios: [
+      "Al publicarse una versión nueva con la app abierta, mientras se recarga sola sale \"Abriendo…\" en vez de un error (el que llegaba a Sentry).",
+    ],
+  },
+  {
     version: "53.6",
     cambios: [
       "Al fallar la entrada, el mensaje dice qué hacer: si todavía no tienes cuenta, \"Crear cuenta\"; si no recuerdas la contraseña, \"He olvidado mi contraseña\". Sin decir si el correo está registrado, para que nadie pueda averiguarlo.",

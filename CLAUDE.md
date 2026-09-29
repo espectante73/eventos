@@ -480,10 +480,6 @@ Cosas que no se mueven **porque no toca**. No ofrecerlas como pendiente.
   bloque (nombre de archivo con ChatGPT) la hará cuando las tenga.
 - **La prueba del local** —la tele, la cortinilla y la música con el
   wifi de allí— es para cerca del evento, y la fecha ni está fijada.
-- **Sin confirmar si el correo de confirmar cuenta llega ya a Recibidos**
-  y no a spam. El de recuperar contraseña, que va por el mismo camino, sí
-  llega; lo probará con un colaborador nuevo. El de invitación siempre
-  llegó bien.
 - **Colores escritos a mano en algunas pantallas** (Portada, Cuentas,
   Mesas, Progreso…): incumplen la norma 1 de la 1.2 y ninguna prueba los
   vigila todavía. Pasarlos a `theme.js` y poner la prueba es una tarea

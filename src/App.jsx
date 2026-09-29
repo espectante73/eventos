@@ -16,8 +16,15 @@ import { VistaTablon } from "./vistas/VistaTablon";
 // ⚠️ La ventana de Música NO se trocea aparte a propósito: se abre en el
 // local, con un wifi desconocido, y no puede quedarse descargando delante
 // de todo el mundo. Va dentro de VistaAnfitrion, que carga al entrar.
-const VistaAnfitrion = lazy(() => import("./vistas/VistaAnfitrion").then((m) => ({ default: m.VistaAnfitrion })));
-const VistaColaborador = lazy(() => import("./vistas/VistaColaborador").then((m) => ({ default: m.VistaColaborador })));
+// Si falta el trozo porque se acaba de publicar una versión nueva, main.jsx
+// ya está recargando la página (vite:preloadError) y el trozo llega vacío:
+// mientras tanto, la pantalla de carga en vez de un error. Ese error era el
+// "undefined no es un objeto (evaluando 'e.VistaColaborador')" que llegaba
+// a Sentry (v53.7).
+const cargarVista = (importar, nombre) =>
+  lazy(() => importar().then((m) => ({ default: m?.[nombre] ?? PantallaCargando })));
+const VistaAnfitrion = cargarVista(() => import("./vistas/VistaAnfitrion"), "VistaAnfitrion");
+const VistaColaborador = cargarVista(() => import("./vistas/VistaColaborador"), "VistaColaborador");
 
 // ---------- Red de seguridad ante errores inesperados ----------
 
