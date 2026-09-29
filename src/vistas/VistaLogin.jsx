@@ -201,6 +201,14 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
     // deja sesión abierta todavía — hay que avisar de que revise su
     // correo. Si no está activada, la sesión ya queda abierta sola y
     // App.jsx pasa a la app en cuanto detecte el cambio.
+    // Email que YA tenía cuenta: Supabase responde como si todo fuera bien
+    // pero no envía nada (lo delata una lista de identidades vacía). Se
+    // comprueba solo y se dice, en la pantalla de entrar (él, v53.3).
+    if (data?.user?.identities?.length === 0) {
+      cambiarModo("entrar");
+      setError("Ese email ya tiene cuenta. Entra con tu contraseña o pulsa «He olvidado mi contraseña».");
+      return;
+    }
     if (!data.session) setCuentaCreada(email);
   };
 

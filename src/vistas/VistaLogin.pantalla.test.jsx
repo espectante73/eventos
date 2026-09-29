@@ -7,6 +7,7 @@ import { montar } from "../pruebas/dibujar";
 
 const llamadas = { resend: [] };
 let respuestaLogin = { error: null };
+let respuestaAlta = { data: {}, error: null };
 vi.mock("../supabaseClient", () => ({
   supabase: {
     auth: {
@@ -15,7 +16,7 @@ vi.mock("../supabaseClient", () => ({
         llamadas.resend.push(datos);
         return { error: null };
       },
-      signUp: async () => ({ data: {}, error: null }),
+      signUp: async () => respuestaAlta,
       resetPasswordForEmail: async () => ({ error: null }),
     },
   },
@@ -77,3 +78,31 @@ describe("entrar con el correo sin confirmar", () => {
     vista.desmontar();
   });
 });
+
+// v53.3: el email ya tenía cuenta. Supabase no envía nada y responde como
+// si todo fuera bien; la app lo nota sola y lo dice.
+describe("crear cuenta con un email que ya la tiene", () => {
+  it("no dice «Tu cuenta ya está creada»: pasa a Entrar y avisa de que ya tiene cuenta", async () => {
+    respuestaAlta = { data: { session: null, user: { identities: [] } }, error: null };
+    const vista = montar(<VistaLogin modoInicial="crear" />);
+    escribir(vista.contenedor.querySelector('input[type="email"]'), "ya@correo.es");
+    escribir(vista.contenedor.querySelector('input[type="password"]'), "contraseña-larga");
+    await act(async () => vista.contenedor.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+    expect(vista.contenedor.textContent).not.toContain("Tu cuenta ya está creada");
+    expect(vista.contenedor.textContent).toContain("Ese email ya tiene cuenta");
+    expect(vista.contenedor.querySelector("h1").textContent).toBe("Entrar");
+    expect(vista.contenedor.querySelector('input[type="email"]').value).toBe("ya@correo.es");
+    vista.desmontar();
+  });
+
+  it("con un email nuevo, sigue saliendo «Tu cuenta ya está creada»", async () => {
+    respuestaAlta = { data: { session: null, user: { identities: [{ id: "1" }] } }, error: null };
+    const vista = montar(<VistaLogin modoInicial="crear" />);
+    escribir(vista.contenedor.querySelector('input[type="email"]'), "nuevo@correo.es");
+    escribir(vista.contenedor.querySelector('input[type="password"]'), "contraseña-larga");
+    await act(async () => vista.contenedor.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+    expect(vista.contenedor.textContent).toContain("Tu cuenta ya está creada");
+    vista.desmontar();
+  });
+});
+

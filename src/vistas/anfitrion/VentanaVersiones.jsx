@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "53.3",
+    cambios: [
+      "Crear cuenta con un email que ya la tiene: la app lo comprueba sola y lo dice (\"Ese email ya tiene cuenta. Entra con tu contraseña o pulsa «He olvidado mi contraseña».\"), en vez de decir que la cuenta está creada sin haber enviado nada.",
+    ],
+  },
+  {
     version: "53.2",
     cambios: [
       "Arreglado: tras crear la cuenta, al pulsar \"Ya la he confirmado — entrar\" el formulario volvía sin la comprobación de seguridad y el botón \"Entrar\" no hacía nada. Le pasaba a todo colaborador nuevo.",
