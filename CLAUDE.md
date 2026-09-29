@@ -53,23 +53,6 @@ trampa corregida. Lo demás es relato.**
 - **El camino, nunca.** Solo si alguien ya resbaló por él, una frase con
   dónde.
 
-### Las normas también se pudren
-
-El texto sigue a la realidad: **este archivo encoge cuando la APP se
-simplifica**, no al editar el texto. Y un test no puede vigilar que una
-regla siga siendo verdad, así que el guardia es de mano:
-
-- **Al tocar una zona**, releer su norma ANTES de escribir código, y
-  corregirla en el mismo cambio si ya no es verdad.
-- **Al escribir o cambiar una regla**, compararla antes con todo el
-  documento: ¿hay otra que diga **lo mismo o lo contrario**? Ninguna
-  prueba lo ve; lo hago yo, leyendo.
-- **Si el sello de «Diseño app» se pone rojo** («hoy +180 · repasar»: más
-  de 150 palabras en un día), leer lo nuevo buscando repeticiones y
-  contradicciones antes de seguir.
-- ⚠️ **Al BORRAR código, borrar su norma en el mismo cambio.** Una regla
-  falsa es peor que ninguna.
-
 ======================================================================
 
 # PARTE 1 — Reglas que hay que obedecer siempre
@@ -89,9 +72,13 @@ regla siga siendo verdad, así que el guardia es de mano:
    importan. (Se suma a lo de siempre: conclusión primero, lenguaje de
    andar por casa, UN solo siguiente paso.)
 3. **"NO DARME LA RAZÓN POR DEFECTO HACE MÁS SEGURA TU APORTACIÓN COMO
-   IA."** Si hay un error, un riesgo o un mal enfoque —suyo o mío—,
-   decirlo directamente y por qué, ANTES de implementar, aunque no haya
-   pedido revisión.
+   IA."** **Antes de implementar algo nuevo, explicarle en sencillo** qué
+   se va a hacer, qué de lo ya hecho toca, si choca con algo (un error, un
+   riesgo, un mal enfoque, suyo o mío) y cómo queda más simple; y esperar
+   su «sí». Arreglar lo que está roto a la vista no espera: se arregla y
+   se le cuenta. Y en el mismo cambio, su norma: lo nuevo se escribe
+   dentro de la que actualiza, y la que el cambio deja falsa se corrige o
+   se borra.
 4. **`lint`, `build` y `test`: los tres, siempre**: cada uno caza lo que
    los otros no ven. Y git no deja subir con el lint o las pruebas en rojo (`.githooks/pre-push`; en una máquina nueva,
    activarlo con `git config core.hooksPath .githooks`).
