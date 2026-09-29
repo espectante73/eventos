@@ -401,29 +401,26 @@ está en Vercel y en `.env`.
 
 ## 1.11 Por qué es así: decisiones que no se ven en el código
 
-Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
+Sin esto escrito, yo las desharía creyendo que mejoro algo.
 
-1. **Las imágenes viven FUERA de la base**, en los cajones del almacén; en
-   la base solo va la ruta. Son ~100 fotos: metidas en una columna, la app
-   se las descargaría TODAS en cada apertura, también el día del evento
-   con el wifi del local. Vale para cualquier imagen, también la portada y
-   la plantilla de invitación. Lo vigila `reglas-del-proyecto.test.js`.
-2. **La ventana "Aniversarios" no es una vista duplicada** (norma 8): no
-   reordena la lista, es una zona de TRABAJO para ir cargando ~50 fotos a
-   lo largo de semanas. Él descartó un panel dentro de la celda y soltar
-   la carpeta entera de golpe: no volver a proponerlos.
-3. **Ninguna tabla abierta a escritura anónima, nunca**: una política de
-   lectura pública es `for select`, nunca `for all`. `evento` guarda las
-   plantillas de los emails, y reescribirlas desde fuera es decidir lo que
-   la app manda a los invitados con el remitente del anfitrión. Lo vigila
-   `supabase/schema.test.js`. ⚠️ Lo que el test no ve: **una columna nueva
-   en una tabla de lectura pública la lee cualquiera**. Antes de añadirla,
+1. **Las imágenes viven FUERA de la base** (en ella, solo la ruta): son
+   ~100 fotos, y en una columna la app las descargaría TODAS en cada
+   apertura, también con el wifi del local. Vale para toda imagen. Lo
+   vigila `reglas-del-proyecto.test.js`.
+2. **"Aniversarios" no es una vista duplicada** (norma 8): es una zona de
+   TRABAJO para ir cargando ~50 fotos durante semanas. Él descartó un
+   panel dentro de la celda y soltar la carpeta entera: no volver a
+   proponerlos.
+3. **Ninguna tabla abierta a escritura anónima**: la lectura pública es
+   `for select`, nunca `for all` (`evento` guarda las plantillas de los
+   emails, que salen con su remitente). Lo vigila
+   `supabase/schema.test.js`. ⚠️ Lo que no ve: una columna nueva en una
+   tabla de lectura pública la lee cualquiera; antes de añadirla,
    preguntarse si es privada.
-4. **El versionado: entero = tema nuevo, decimal = ajuste.** **Nunca
-   subir el entero por defecto**, y **tras el .9 viene el siguiente
-   entero** (45.9 → 46, nunca 45.10). Es provisional: se renumera desde la versión 1 **cuando él
-   lo diga**, después de usar todas las partes de la app sin fallo. No lo
-   propongo yo. Lo vigila `reglas-del-proyecto.test.js`.
+4. **Versionado: entero = tema nuevo, decimal = ajuste.** Nunca subir el
+   entero por defecto, y tras el .9 viene el siguiente entero (45.9 →
+   46). Se renumera desde la 1 solo cuando él lo diga, tras usar toda la
+   app sin fallo. Lo vigila `reglas-del-proyecto.test.js`.
 5. **La plantilla de invitación DEBE traer dibujado el sello «PAGADO»**:
    la app no lo dibuja, y lo pregunta antes de subir una. Nunca miente:
    solo hay invitación con toda la familia pagada y con mesa.
