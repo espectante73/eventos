@@ -251,7 +251,7 @@ describe("el acceso de anfitrión", () => {
 // seguros; y el Deshacer no puede romperse por una cuenta que ya no existe.
 describe("borrar la cuenta al eliminar un colaborador", () => {
   it("solo se borra con los dos seguros: nunca la del anfitrión ni una que use otra ficha", () => {
-    const f = cuerpoDe("anfitrion_guardar_colaboradores");
+    const f = cuerpoDe("eliminar_colaboradores");
     const borrado = f.slice(f.indexOf("delete from auth.users"));
     expect(borrado).toMatch(/not exists \(select 1 from anfitriones a where a\."authUserId" = u\.id\)/);
     expect(borrado).toMatch(/not exists \(select 1 from colaboradores c where c\."authUserId" = u\.id\)/);
@@ -265,6 +265,26 @@ describe("borrar la cuenta al eliminar un colaborador", () => {
   it("restaurar una foto no falla por la cuenta de un colaborador que ya no existe", () => {
     const f = cuerpoDe("restaurar_foto");
     expect(f).toMatch(/elem - 'authUserId'/);
+  });
+});
+
+// v53.8: un colaborador existe porque se eligió de la Lista de invitados.
+// Borrarlo desde la Lista lo elimina del todo, por la MISMA pieza que
+// eliminarlo desde Colaboradores.
+describe("eliminar a un colaborador desde la Lista de invitados", () => {
+  it("los dos caminos usan la misma pieza, eliminar_colaboradores", () => {
+    expect(cuerpoDe("anfitrion_guardar_colaboradores")).toMatch(/perform eliminar_colaboradores\(/);
+    expect(cuerpoDe("anfitrion_guardar_invitados")).toMatch(/perform eliminar_colaboradores\(/);
+  });
+
+  it("borrar invitados elimina antes a los colaboradores que eran esos invitados", () => {
+    const f = cuerpoDe("anfitrion_guardar_invitados");
+    expect(f.indexOf("perform eliminar_colaboradores(")).toBeLessThan(f.indexOf("delete from invitados"));
+    expect(f).toMatch(/c\."invitadoId" = any\(p_ids\)/);
+  });
+
+  it("nadie de fuera puede llamar a la pieza que borra cuentas", () => {
+    expect(sql).toMatch(/REVOKE EXECUTE ON FUNCTION public\.eliminar_colaboradores\(uuid\[\]\) FROM public, anon, authenticated;/);
   });
 });
 

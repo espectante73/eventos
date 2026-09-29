@@ -654,6 +654,36 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.foto_de_datos() FROM public, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.restaurar_foto(jsonb) FROM public, anon, authenticated;
 
+-- Elimina colaboradores y sus cuentas de acceso. UNA sola pieza para los
+-- dos caminos (v53.8): eliminarlo desde Colaboradores, o borrar su invitado
+-- desde la Lista (un colaborador solo existe como invitado elegido de la
+-- lista). Sus invitados asignados se quedan sin colaborador (la clave
+-- foránea lo pone a nulo). Dos seguros: NUNCA la cuenta del anfitrión, y
+-- nunca una que otra ficha siga usando. Ayudante interno: nadie de fuera
+-- puede llamarla.
+CREATE FUNCTION public.eliminar_colaboradores(p_ids uuid[]) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_cuentas uuid[];
+begin
+  with borrados as (
+    delete from colaboradores c where c."id" = any(coalesce(p_ids, '{}'))
+    returning c."authUserId"
+  )
+  select array_agg(distinct b."authUserId") into v_cuentas
+  from borrados b
+  where b."authUserId" is not null;
+
+  delete from auth.users u
+  where u.id = any(coalesce(v_cuentas, '{}'))
+    and not exists (select 1 from anfitriones a where a."authUserId" = u.id)
+    and not exists (select 1 from colaboradores c where c."authUserId" = u.id);
+end;
+$$;
+REVOKE EXECUTE ON FUNCTION public.eliminar_colaboradores(uuid[]) FROM public, anon, authenticated;
+
 -- Guarda la foto justo antes de una acción destructiva. `p_accion` es el
 -- texto que verá el usuario en el botón ("Reinicio de pagos", etc.).
 CREATE FUNCTION public.anfitrion_guardar_foto_deshacer(p_token uuid, p_accion text) RETURNS void
@@ -1185,7 +1215,6 @@ CREATE FUNCTION public.anfitrion_guardar_colaboradores(p_token uuid, p_filas jso
 declare
   r record;
   resumen text;
-  v_cuentas uuid[];
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
@@ -1249,21 +1278,10 @@ begin
 
   if p_ids is not null then
     -- Al eliminar un colaborador se borra también su cuenta de acceso (él,
-    -- v53.5): no queda viva una cuenta con su email y su contraseña, ni se
-    -- puede colar en otra ficha con ese email. Dos seguros: NUNCA la del
-    -- anfitrión, y nunca si otra ficha la sigue usando.
-    with borrados as (
-      delete from colaboradores c where not (c."id" = any(p_ids))
-      returning c."authUserId"
-    )
-    select array_agg(distinct b."authUserId") into v_cuentas
-    from borrados b
-    where b."authUserId" is not null;
-
-    delete from auth.users u
-    where u.id = any(coalesce(v_cuentas, '{}'))
-      and not exists (select 1 from anfitriones a where a."authUserId" = u.id)
-      and not exists (select 1 from colaboradores c where c."authUserId" = u.id);
+    -- v53.5): eliminar_colaboradores, con sus dos seguros.
+    perform eliminar_colaboradores(array(
+      select c."id" from colaboradores c where not (c."id" = any(p_ids))
+    ));
   end if;
 end;
 $$;
@@ -1357,6 +1375,13 @@ begin
   -- Solo se borra si de verdad llega la lista de quién debe quedar: un
   -- p_ids nulo por error no puede vaciar la tabla.
   if p_ids is not null then
+    -- Un invitado que es colaborador se elimina del todo desde la Lista (él,
+    -- v53.8): también como colaborador, con su cuenta. Sus invitados quedan
+    -- pendientes de colaborador. En el mismo guardado: todo o nada.
+    perform eliminar_colaboradores(array(
+      select c."id" from colaboradores c
+      where c."invitadoId" is not null and not (c."invitadoId" = any(p_ids))
+    ));
     delete from invitados g where not (g."id" = any(p_ids));
   end if;
 end;

@@ -48,6 +48,7 @@ import {
   agregarInvitado as crearInvitado,
   importarInvitados as importarFilas,
   eliminarInvitado as borrarInvitado,
+  PREGUNTA_ELIMINAR_COLABORADOR_DESDE_INVITADOS,
   cambiarCampo,
   alternarRolTrabajo as alternarRol,
   alternarExcluidoTablon as alternarTablon,
@@ -1859,7 +1860,10 @@ export function SeccionInvitados({
                       titulo={`Eliminar a ${nombreCompleto(g)}`}
                       pregunta={{
                         titulo: "¿Eliminar de la lista?",
-                        texto: nombreCompleto(g) + " se borra de la lista de invitados.",
+                        // Si es colaborador, se elimina del todo (v53.8).
+                        texto: colaboradores.some((c) => c.invitadoId === g.id)
+                          ? PREGUNTA_ELIMINAR_COLABORADOR_DESDE_INVITADOS
+                          : nombreCompleto(g) + " se borra de la lista de invitados.",
                         rotulo: "Sí, eliminar",
                       }}
                       onClick={() => eliminarInvitado(g.id)}

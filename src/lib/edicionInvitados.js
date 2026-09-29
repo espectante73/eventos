@@ -146,24 +146,34 @@ export function importarInvitados(invitados, filas) {
   };
 }
 
-// Eliminar. ⚠️ Si ese invitado es además un colaborador, borrarlo le
-// deja la cuenta sin su ficha (la base pone su `invitadoId` a nulo sin
-// avisar). Eso no se hace en silencio: no se borra y se dice por qué.
+// Eliminar. Si ese invitado es además colaborador, se elimina DEL TODO (él,
+// v53.8): la persona, su ficha de colaborador y su cuenta de acceso (eso lo
+// hace la base en el mismo guardado, anfitrion_guardar_invitados). Sus
+// invitados asignados se quedan pendientes de colaborador, como las
+// personas de una mesa que se quita, y el aviso dice quiénes.
 export function eliminarInvitado(invitados, id, colaboradores = []) {
   const g = invitados.find((x) => x.id === id);
   if (!g) return { invitados, aviso: "" };
 
-  const esColaborador = (colaboradores || []).find((c) => c.invitadoId === id);
-  if (esColaborador) {
-    return {
-      invitados,
-      aviso:
-        nombreCompleto(g) +
-        ` es también el colaborador "${esColaborador.nombre}". Quítalo primero de la lista de colaboradores.`,
-    };
-  }
-  return { invitados: invitados.filter((x) => x.id !== id), aviso: "" };
+  const comoColaborador = (colaboradores || []).find((c) => c.invitadoId === id);
+  const pendientes = comoColaborador
+    ? invitados.filter((x) => x.id !== id && x.colaboradorId === comoColaborador.id)
+    : [];
+  const idsPendientes = new Set(pendientes.map((x) => x.id));
+  const siguiente = invitados
+    .filter((x) => x.id !== id)
+    .map((x) => (idsPendientes.has(x.id) ? { ...x, colaboradorId: null } : x));
+
+  const aviso = pendientes.length
+    ? "Pendientes de asignar colaborador:\n" + pendientes.map(nombreCompleto).sort((a, b) => a.localeCompare(b, "es")).join("\n")
+    : "";
+  return { invitados: siguiente, aviso };
 }
+
+// La pregunta antes de eliminar a un invitado que es colaborador. Texto del
+// usuario, palabra por palabra (v53.8).
+export const PREGUNTA_ELIMINAR_COLABORADOR_DESDE_INVITADOS =
+  "Si eliminas a este colaborador desde invitados, eliminas al invitado y su función de colaborador. Todos los invitados asociados a él estarán pendientes de que se les asigne un nuevo colaborador.";
 
 // ---------- Cambiar un campo suelto ----------
 //

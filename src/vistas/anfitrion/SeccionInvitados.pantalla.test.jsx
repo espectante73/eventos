@@ -11,7 +11,7 @@
 // por CADA valor de CADA filtro. No comprueba cómo se ve (para eso sigue
 // haciendo falta su captura, norma 10); comprueba que se puede ver.
 import { describe, it, expect } from "vitest";
-import { dibujarYSoltar } from "../../pruebas/dibujar";
+import { dibujarYSoltar, montar } from "../../pruebas/dibujar";
 import { SeccionInvitados } from "./SeccionInvitados";
 import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
 
@@ -144,3 +144,34 @@ describe("la Lista de invitados se puede dibujar", () => {
     ).not.toThrow();
   });
 });
+
+// v53.8: borrar desde la Lista a quien es colaborador lo elimina del todo;
+// antes de hacerlo, la pregunta lo dice con el texto del usuario.
+describe("eliminar desde la Lista a quien es colaborador", () => {
+  it("la pregunta avisa de que se elimina también su función de colaborador", () => {
+    const vista = montar(
+      <SeccionInvitados
+        data={data}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante={null}
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+    const papelera = [...document.body.querySelectorAll("button")].find(
+      (b) => (b.getAttribute("aria-label") || b.title || "") === "Eliminar a Barrios, Jacob"
+    );
+    expect(papelera, "no encuentro la papelera de Jacob").toBeTruthy();
+    vista.pulsar(papelera);
+    expect(document.body.textContent).toContain(
+      "Si eliminas a este colaborador desde invitados, eliminas al invitado y su función de colaborador."
+    );
+    vista.desmontar();
+  });
+});
+

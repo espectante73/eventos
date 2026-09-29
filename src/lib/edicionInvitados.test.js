@@ -92,13 +92,25 @@ describe("eliminar un invitado", () => {
     expect(invitados).toHaveLength(2);
   });
 
-  // Si además es colaborador, borrarlo le deja la cuenta sin ficha y la
-  // base lo hace en silencio.
-  it("no borra a quien además es colaborador: avisa y no toca nada", () => {
-    const colaboradores = [{ id: "c1", nombre: "Juan G.", invitadoId: "1" }];
+  // v53.8: si además es colaborador, se elimina del todo, y sus invitados
+  // quedan pendientes de colaborador (la ficha y la cuenta las borra la base).
+  it("a quien además es colaborador lo elimina, y sus invitados quedan pendientes de colaborador", () => {
+    const colaboradores = [{ id: "c1", nombre: "Gatell, Juan", invitadoId: "1" }];
+    const luis = { id: "3", nombre: "Luis", apellido: "Abreu", colaboradorId: "c1" };
+    const eva = { id: "4", nombre: "Eva", apellido: "Pérez", colaboradorId: "c2" };
+    const { invitados, aviso } = eliminarInvitado([juan, { ...ana, colaboradorId: "c1" }, luis, eva], "1", colaboradores);
+    expect(invitados.map((g) => g.id)).toEqual(["2", "3", "4"]);
+    expect(invitados.find((g) => g.id === "2").colaboradorId).toBe(null);
+    expect(invitados.find((g) => g.id === "3").colaboradorId).toBe(null);
+    expect(invitados.find((g) => g.id === "4").colaboradorId).toBe("c2");
+    expect(aviso).toBe("Pendientes de asignar colaborador:\nAbreu, Luis\nGatell, Ana");
+  });
+
+  it("un colaborador sin invitados asignados se elimina sin más aviso", () => {
+    const colaboradores = [{ id: "c1", nombre: "Gatell, Juan", invitadoId: "1" }];
     const { invitados, aviso } = eliminarInvitado([juan, ana], "1", colaboradores);
-    expect(invitados).toHaveLength(2);
-    expect(aviso).toContain("colaborador");
+    expect(invitados).toEqual([ana]);
+    expect(aviso).toBe("");
   });
 });
 

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "53.8",
+    cambios: [
+      "Eliminar desde la Lista de invitados a quien es colaborador lo elimina del todo: la persona, su función de colaborador y su cuenta de acceso. Sus invitados quedan pendientes de un colaborador nuevo, y la app dice quiénes. Antes no dejaba borrarlo.",
+    ],
+  },
+  {
     version: "53.7",
     cambios: [
       "Al publicarse una versión nueva con la app abierta, mientras se recarga sola sale \"Abriendo…\" en vez de un error (el que llegaba a Sentry).",
