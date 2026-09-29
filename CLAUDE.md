@@ -18,7 +18,7 @@ datos»).
    test** (regla 5 de «Cómo trabajar aquí»). Cada una, de 3 a 8 líneas:
    si crece, se ha colado relato.
 
-⚠️ **Salvaguardas automáticas** (`lib/manual.test.js`): **5.000 palabras
+⚠️ **Salvaguardas automáticas** (`lib/manual.test.js`): **4.557 palabras
 como mucho** (pasar de ahí lo decide él), **ninguna fecha**, **todo
 archivo o función que se nombra existe de verdad** y **ninguna frase
 copiada en dos secciones**.
