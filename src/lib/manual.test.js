@@ -238,7 +238,7 @@ describe("salvaguardas del CLAUDE.md", () => {
   const citas = [...prosa.matchAll(/`([^`\n]+)`/g)].map((m) => m[1]);
 
   // Pasar de aquí es una decisión suya, no algo que ocurre sin darse cuenta.
-  const TECHO = 4557; // Fijado por él tras el repaso: cada norma nueva se compensa recortando otra.
+  const TECHO = 4500; // Fijado por él tras el repaso: cada norma nueva se compensa recortando otra.
   it(`el documento entero, ${TECHO} palabras como mucho`, () => {
     expect(manual.palabras, "subir el techo lo decide él").toBeLessThanOrEqual(TECHO);
   });
