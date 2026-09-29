@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "53.1",
+    cambios: [
+      "Si el servidor no contesta al abrir la app, a los 8 segundos lo dice (\"El servidor tarda en responder. Inténtalo en un momento.\") con un botón \"Volver a intentar\". Y ya no dice, en falso, que la cuenta no está vinculada cuando lo que pasa es que el servidor no responde.",
+    ],
+  },
+  {
     version: "53",
     cambios: [
       "Entrar con el correo sin confirmar: en vez de \"Email o contraseña incorrectos\", la app dice que falta confirmar el correo y ofrece \"Reenviar correo de confirmación\". Y si se llega desde un enlace de correo caducado o ya usado, lo dice al entrar.",

@@ -5,6 +5,8 @@ import { supabase, supabaseConfigurado } from "./supabaseClient";
 import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl } from "./lib/url";
 import { C, OP, S } from "./theme";
 import { VistaLogin } from "./vistas/VistaLogin";
+import { PantallaCargando } from "./components/PantallaCargando";
+import { esFalloDelServidor } from "./lib/servidor";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
 import { VistaTablon } from "./vistas/VistaTablon";
 
@@ -105,6 +107,9 @@ export default function App() {
   // tal cual — así se puede diagnosticar un fallo de login sin depender de
   // que quien lo prueba sepa abrir las herramientas de desarrollador.
   const [errorMiRol, setErrorMiRol] = useState(null);
+  // mi_rol() no ha podido ni preguntarse: el servidor no contesta. NO es
+  // "cuenta sin vincular" -- eso decía la app antes, y era falso (v53.1).
+  const [servidorSinRespuesta, setServidorSinRespuesta] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => setSession(s));
@@ -121,8 +126,16 @@ export default function App() {
     let cancelado = false;
     if (!session) return; // Sin sesión: manda el enlace-token de siempre.
     (async () => {
-      const { data: filas, error } = await supabase.rpc("mi_rol");
+      const respuesta = await supabase.rpc("mi_rol");
+      const { data: filas, error } = respuesta;
       if (cancelado) return;
+      if (esFalloDelServidor(respuesta)) {
+        // eslint-disable-next-line no-console
+        console.error("El servidor no contesta al resolver mi_rol():", error);
+        setServidorSinRespuesta(true);
+        return;
+      }
+      setServidorSinRespuesta(false);
       if (error) {
         // eslint-disable-next-line no-console
         console.error("Error al resolver mi_rol():", error);
@@ -234,14 +247,7 @@ export default function App() {
   }
 
   if (session === undefined) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: C.paper, color: C.ink, fontFamily: "'Fraunces', serif" }}
-      >
-        Abriendo el libro de invitados…
-      </div>
-    );
+    return <PantallaCargando />;
   }
 
   // Enlace antiguo (?rol=...) sin sesión: ya no da acceso a nadie -- ni a
@@ -325,15 +331,8 @@ export default function App() {
     );
   }
 
-  if (!data.loaded || esAnfitrionOriginal === null) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: C.paper, color: C.ink, fontFamily: "'Fraunces', serif" }}
-      >
-        Abriendo el libro de invitados…
-      </div>
-    );
+  if (servidorSinRespuesta || !data.loaded || esAnfitrionOriginal === null) {
+    return <PantallaCargando sinRespuesta={servidorSinRespuesta} />;
   }
 
   // Modo Pruebas: los colaboradores no entran (v49). Así nadie trabaja de
@@ -477,19 +476,6 @@ export default function App() {
         )}
         </Suspense>
       </div>
-    </div>
-  );
-}
-
-// La misma pantalla de carga de siempre, ahora también mientras llega el
-// trozo de la vista (anfitrión o colaborador) que se descarga a demanda.
-function PantallaCargando() {
-  return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{ background: C.paper, color: C.ink, fontFamily: "'Fraunces', serif" }}
-    >
-      Abriendo el libro de invitados…
     </div>
   );
 }
