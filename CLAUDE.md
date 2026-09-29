@@ -184,23 +184,22 @@ en la propuesta cuáles se han comprobado. Lo fuerza
     lo mantiene junto SOLA.** Ante un dato nuevo, preguntarse si debería
     ir junto con el de alguien más («Un matrimonio comparte año y foto
     de boda»).
-    - un dato compartido vale para todos (el año de boda); una acción
-      sobre uno se aplica a todos (la mesa de la familia) o, si puede
-      haber excepciones, **se pregunta con Sí/No si es para toda la
-      familia**, aunque parte la lleve otro colaborador (el pago y la
-      llegada, al marcar y al deshacer);
+    - un dato compartido vale para todos (el año de boda); una acción,
+      para todos (la mesa de la familia) o, si puede haber excepciones,
+      **se pregunta con Sí/No si es para toda la familia**, aunque parte
+      la lleve otro colaborador (el pago y la llegada, también al
+      deshacer);
     - si no se puede cumplir entera, no se toca nada y se avisa con la
-      cifra concreta ("son 4 y quedan 2 sitios"), en una ventana que se
-      vea;
-    - si quien escribe puede ser un colaborador que guarda una sola
-      ficha, la regla va en la BASE (trigger), no solo en la pantalla;
+      cifra ("son 4 y quedan 2 sitios");
+    - si puede escribir un colaborador, que guarda ficha a ficha, la
+      regla va en la BASE (trigger);
     - lo que ya estaba mal lo ENCUENTRA la Revisión, no se arregla a
-      escondidas. ⚠️ Esto protege DECISIONES suyas, no la fontanería:
-      mover un archivo de sitio se hace sin preguntar;
+      escondidas (protege decisiones suyas; mover un archivo de sitio no
+      se pregunta);
     - las excepciones que él marca quedan fuera;
-    - ⚠️ hay reglas suyas POR ENCIMA: cada colaborador lleva de 10 a 12
-      invitados, así que un matrimonio PUEDE tener dos colaboradores.
-      No avisar de eso ni "juntarlos".
+    - ⚠️ por encima, sus reglas: cada colaborador lleva de 10 a 12
+      invitados, así que un matrimonio PUEDE tener dos colaboradores. No
+      avisar de eso ni "juntarlos".
 12. **Guardar solo lo que cambió, nunca el estado entero**: con dos
     escritores a la vez (un colaborador, él en el móvil y el Mac, un
     trigger), la colección entera pisa en silencio lo que el otro acaba
@@ -245,15 +244,11 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 4. **Los avisos pendientes se recalculan solos: leer lo que la app TIENE,
    no registrar lo que HACE.** `avisoPendiente` e `invitacionEnviada` los
    recalculan dos triggers de `invitados` (`trg_recalcular_aviso_pendiente`,
-   `trg_invalidar_invitacion_familia`). Ninguna función los pone a mano,
-   salvo estas:
-   - `anfitrion_avisar_colaborador`: el "ya avisé" de verdad.
-   - `anfitrion_resetear_avisos`: los vuelve a encender para repetir una
-     prueba.
-   - Las funciones en que el COLABORADOR cambia sus propios datos
-     (`colaborador_guardar_invitado`, `colaborador_marcar_pagado`…) llaman
-     antes a `set_config('eventos.recalculo_aviso_activo', 'off', true)`,
-     para no avisarle de su propio cambio. Una nueva de ese tipo, también.
+   `trg_invalidar_invitacion_familia`). Solo los tocan a mano
+   `anfitrion_avisar_colaborador` y `anfitrion_resetear_avisos`. Toda
+   función en que el COLABORADOR cambia sus datos llama antes a
+   `set_config('eventos.recalculo_aviso_activo', 'off', true)`, para no
+   avisarle de su propio cambio.
 5. **Un reinicio nuevo:**
    - por `id` de invitado explícito y acotado (modelo:
      `anfitrion_resetear_por_invitados`);
@@ -301,8 +296,7 @@ vigila `reglas-del-proyecto.test.js`.
    editor de Supabase. Una reutilizada puede llevar debajo un `create or
    replace` viejo que se vuelve a ejecutar.
 2. **Cada bloque termina apuntándose** en `migraciones_aplicadas`:
-   `schema.sql` dice cómo debería ser la base, no qué ha ejecutado él. Un
-   bloque sin su línea deja el registro mintiendo.
+   `schema.sql` dice cómo debería ser la base, no qué ha ejecutado él.
 
 ```sql
 insert into public.migraciones_aplicadas ("nombre") values ('v40-lo-que-sea')
@@ -320,8 +314,7 @@ insert into public.migraciones_aplicadas ("nombre") values ('v40-lo-que-sea')
    true`): Supabase rechaza los que no. Y `schema.sql` es un plano: cada
    cambio en su sitio, nada añadido al final. Lo vigila
    `supabase/schema.test.js`.
-6. **Comprobar desde fuera si está subido, con la clave pública**, sin
-   ver ningún dato (la API distingue "no existe" de "no tienes permiso"):
+6. **Comprobar desde fuera si está subido, con la clave pública**:
    - `PGRST202` → **no está subido**. `42501` → **está subido**, y el
      `revoke` funciona.
    - Una columna: `/rest/v1/<tabla>?select=<columna>&limit=1`. `42703` es
@@ -409,8 +402,7 @@ Lo vigila `supabase/schema.test.js`.
 Los fallos del móvil de cualquiera llegan a Sentry (región EU, `.de.` en
 la dirección). `lib/registroErrores.js` lo arranca desde `main.jsx`, y el
 `ErrorBoundary` informa. La dirección (`VITE_SENTRY_DSN`) no es secreta:
-está en Vercel y en `.env` (la CLI de Vercel la recibe con `--value`, no
-por stdin).
+está en Vercel y en `.env`.
 
 1. ⚠️ **Sin datos de invitados** (decidido con él): `sendDefaultPii:
    false`, sin grabación ni rendimiento, y `limpiarEvento` quita usuario,
