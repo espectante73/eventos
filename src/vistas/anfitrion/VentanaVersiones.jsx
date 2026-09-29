@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "53.5",
+    cambios: [
+      "Al eliminar un colaborador se borra también su cuenta de acceso (nunca la del anfitrión, ni una que use otra ficha), y la pregunta de eliminar lo avisa. El Deshacer sigue funcionando: la ficha vuelve, y la cuenta se une sola cuando esa persona la vuelva a crear.",
+    ],
+  },
+  {
     version: "53.3",
     cambios: [
       "Crear cuenta con un email que ya la tiene: la app lo comprueba sola y lo dice (\"Ese email ya tiene cuenta. Entra con tu contraseña o pulsa «He olvidado mi contraseña».\"), en vez de decir que la cuenta está creada sin haber enviado nada.",

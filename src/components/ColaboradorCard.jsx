@@ -142,7 +142,8 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
             titulo="Eliminar colaborador"
             pregunta={{
               titulo: "¿Eliminar este colaborador?",
-              texto: `${c.nombre || "Sin nombre"} deja de estar en Colaboradores.`,
+              // Y su cuenta de acceso se borra con ella (v53.5, schema.sql).
+              texto: `${c.nombre || "Sin nombre"} deja de estar en Colaboradores y se borra su cuenta de acceso.`,
               rotulo: "Sí, eliminar",
             }}
             onClick={() => onEliminar(c.id)}

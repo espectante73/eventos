@@ -616,8 +616,21 @@ begin
      from jsonb_array_elements(coalesce(p_datos->'invitados', '[]'::jsonb)) elem)
   );
 
+  -- Una ficha vuelve SIN cuenta si su cuenta ya no existe (se borra al
+  -- eliminar al colaborador, v53.5): con ella, la clave foránea rechazaría
+  -- la restauración entera. Al volver a crear la cuenta, se une sola.
   insert into colaboradores
-  select * from jsonb_populate_recordset(null::colaboradores, coalesce(p_datos->'colaboradores', '[]'::jsonb));
+  select * from jsonb_populate_recordset(
+    null::colaboradores,
+    (select coalesce(jsonb_agg(
+       case
+         when elem->>'authUserId' is null
+           or exists (select 1 from auth.users u where u.id = (elem->>'authUserId')::uuid)
+         then elem
+         else elem - 'authUserId'
+       end), '[]'::jsonb)
+     from jsonb_array_elements(coalesce(p_datos->'colaboradores', '[]'::jsonb)) elem)
+  );
 
   update invitados i set "colaboradorId" = (elem->>'colaboradorId')::uuid
   from jsonb_array_elements(coalesce(p_datos->'invitados', '[]'::jsonb)) elem
@@ -1172,6 +1185,7 @@ CREATE FUNCTION public.anfitrion_guardar_colaboradores(p_token uuid, p_filas jso
 declare
   r record;
   resumen text;
+  v_cuentas uuid[];
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
@@ -1234,7 +1248,22 @@ begin
         "permisos" = excluded."permisos";
 
   if p_ids is not null then
-    delete from colaboradores c where not (c."id" = any(p_ids));
+    -- Al eliminar un colaborador se borra también su cuenta de acceso (él,
+    -- v53.5): no queda viva una cuenta con su email y su contraseña, ni se
+    -- puede colar en otra ficha con ese email. Dos seguros: NUNCA la del
+    -- anfitrión, y nunca si otra ficha la sigue usando.
+    with borrados as (
+      delete from colaboradores c where not (c."id" = any(p_ids))
+      returning c."authUserId"
+    )
+    select array_agg(distinct b."authUserId") into v_cuentas
+    from borrados b
+    where b."authUserId" is not null;
+
+    delete from auth.users u
+    where u.id = any(coalesce(v_cuentas, '{}'))
+      and not exists (select 1 from anfitriones a where a."authUserId" = u.id)
+      and not exists (select 1 from colaboradores c where c."authUserId" = u.id);
   end if;
 end;
 $$;

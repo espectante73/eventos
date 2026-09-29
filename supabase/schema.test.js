@@ -247,3 +247,24 @@ describe("el acceso de anfitrión", () => {
   });
 });
 
+// v53.5: al eliminar un colaborador se borra su cuenta de acceso, con dos
+// seguros; y el Deshacer no puede romperse por una cuenta que ya no existe.
+describe("borrar la cuenta al eliminar un colaborador", () => {
+  it("solo se borra con los dos seguros: nunca la del anfitrión ni una que use otra ficha", () => {
+    const f = cuerpoDe("anfitrion_guardar_colaboradores");
+    const borrado = f.slice(f.indexOf("delete from auth.users"));
+    expect(borrado).toMatch(/not exists \(select 1 from anfitriones a where a\."authUserId" = u\.id\)/);
+    expect(borrado).toMatch(/not exists \(select 1 from colaboradores c where c\."authUserId" = u\.id\)/);
+  });
+
+  it("ninguna otra función borra cuentas de acceso", () => {
+    const veces = (sql.match(/delete from auth\.users/gi) || []).length;
+    expect(veces).toBe(1);
+  });
+
+  it("restaurar una foto no falla por la cuenta de un colaborador que ya no existe", () => {
+    const f = cuerpoDe("restaurar_foto");
+    expect(f).toMatch(/elem - 'authUserId'/);
+  });
+});
+
