@@ -9,49 +9,19 @@
 // tener que duplicar el filtro en dos sitios.
 import { useState } from "react";
 import { generarInvitacionImagen } from "./imagenInvitacion";
-import { resolverColaborador, familiaListaParaInvitacion } from "./invitados";
+import { resolverColaborador } from "./invitados";
+import { familiasDelEvento, mesasYCantidad } from "./familiasInvitacion";
 import { requisitosActivos } from "./modoPruebas";
 import { avisoEnPantalla } from "./avisos";
 
 export function useMotorInvitaciones(data) {
   const { evento, colaboradores, invitados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia } = data;
 
-  // Si el anfitrión reordenó los nombres a mano (p.ej. esposo primero),
-  // se respeta ese orden; los que falten en él (recién confirmados) van
-  // al final, en su orden normal.
-  const ordenarConfirmados = (confirmados, ordenIds) => {
-    if (!ordenIds || ordenIds.length === 0) return confirmados;
-    const porId = Object.fromEntries(confirmados.map((m) => [m.id, m]));
-    const ordenados = ordenIds.map((id) => porId[id]).filter(Boolean);
-    const idsOrdenados = new Set(ordenIds);
-    const resto = confirmados.filter((m) => !idsOrdenados.has(m.id));
-    return [...ordenados, ...resto];
-  };
-
-  const familiasListasParaInvitacion = (() => {
-    const grupos = {};
-    invitados.forEach((g) => {
-      const clave = g.grupoFamiliar || g.apellido || g.id;
-      (grupos[clave] = grupos[clave] || []).push(g);
-    });
-    return Object.entries(grupos)
-      .map(([clave, miembros]) => {
-        const confirmados = ordenarConfirmados(
-          miembros.filter((m) => m.confirmado),
-          ordenFamiliares[clave]?.orden
-        );
-        const apellido = miembros[0].apellido || clave;
-        return {
-          clave,
-          apellido,
-          confirmados,
-          invitacionEnviada: Boolean(ordenFamiliares[clave]?.invitacionEnviada),
-          invitacionEnviadaEn: ordenFamiliares[clave]?.invitacionEnviadaEn || null,
-          listaParaInvitacion: familiaListaParaInvitacion(confirmados, evento),
-        };
-      })
-      .filter((f) => f.listaParaInvitacion);
-  })();
+  // Las familias con invitación: la familia entera pagada y con mesa
+  // (lib/familiasInvitacion.js, la misma pieza que la lista de acomodadores).
+  const familiasListasParaInvitacion = familiasDelEvento(invitados, ordenFamiliares, evento).filter(
+    (f) => f.listaParaInvitacion
+  );
 
   // El email de un invitado puede vivir en su propio registro, o -si ese
   // invitado es también colaborador- en el registro de colaboradores (se
@@ -95,8 +65,7 @@ export function useMotorInvitaciones(data) {
       // Si falla la carga, se sigue igualmente con la fuente de reserva.
     }
     const nombres = familia.confirmados.map((m) => m.nombre);
-    const cantidad = familia.confirmados.length;
-    const mesas = [...new Set(familia.confirmados.map((m) => m.mesa).filter(Boolean))];
+    const { mesas, cantidad } = mesasYCantidad(familia);
     // "Mesa:"/"Mesas:" con dos puntos -- a petición del usuario,
     // 2026-08-27, para que coincida con "Barrios:"/"Colab.:" (las 3
     // etiquetas de la invitación llevan dos puntos por igual).

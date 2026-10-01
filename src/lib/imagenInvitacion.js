@@ -2,7 +2,8 @@
 // líneas, justificado de texto, cuadrícula de calibración y el dibujo final
 // sobre la plantilla. Sin estado de React — movida fuera de App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
-import { formatearFecha, formatearDiaSemana, listaConY } from "./formato";
+import { formatearFecha, formatearDiaSemana } from "./formato";
+import { lineaFamilia } from "./familiasInvitacion";
 
 function partirLineas(ctx, texto, maxWidth) {
   const palabras = texto.split(" ");
@@ -236,7 +237,7 @@ export function generarInvitacionImagen(
           const bloques = [];
           ctx.font = fuenteNombres;
           bloques.push({
-            lineas: partirLineas(ctx, `${apellidoFamilia}: ${listaConY(nombresMiembros)}`, anchoDisponible),
+            lineas: partirLineas(ctx, lineaFamilia(apellidoFamilia, nombresMiembros), anchoDisponible),
             font: fuenteNombres,
             fontBold: fuenteNombresNegrita,
             fontSizePx: tamNombres,

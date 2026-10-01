@@ -28,6 +28,7 @@ import {
   Star,
   ShieldOff,
   ClipboardCheck,
+  Download,
 } from "lucide-react";
 import { C, inputStyle, R, T, OP } from "../../theme";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio } from "../../lib/invitados";
@@ -35,6 +36,7 @@ import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, anioDelEvento } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
+import { descargarListasAcomodadores } from "../../lib/pdfAcomodadores";
 import { TextInput, TextInputEnVentanaAparte } from "../../components/Formulario";
 import { EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
@@ -335,6 +337,22 @@ export function SeccionInvitados({
         g.alergias,
       ]);
       descargarCSV(`alergias-${evento.nombre || "evento"}.csv`, ["Invitado", "Mesa", "Alergia"], filas);
+    }
+  };
+
+  // Las dos listas para acomodadores, por mesa y por familia, de una vez
+  // (él, v54.1): dos PDF descargados, sin preguntar el orden.
+  const descargarAcomodadores = async () => {
+    try {
+      const familias = await descargarListasAcomodadores({ invitados, ordenFamiliares: data.ordenFamiliares });
+      if (!familias) preguntar({ titulo: "Todavía no", texto: "No hay ninguna familia confirmada.", soloAviso: true });
+    } catch (error) {
+      preguntar({
+        titulo: "No se pudo",
+        texto: "No se pudieron descargar las listas para acomodadores. Vuelve a intentarlo.",
+        detalle: error?.message,
+        soloAviso: true,
+      });
     }
   };
 
@@ -1940,6 +1958,11 @@ export function SeccionInvitados({
               <Boton variante="secundario" onClick={exportarPanelActivoCSV}>
                 <Copy size={14} /> Exportar CSV
               </Boton>
+              {panelFlotante === "tabla" && (
+                <Boton variante="secundario" onClick={descargarAcomodadores}>
+                  <Download size={14} /> Lista para acomodadores
+                </Boton>
+              )}
               <span className="text-xs ml-auto" style={{ color: C.charcoal, opacity: OP.secundario }}>
                 Si no se abre el diálogo de impresión, usa Cmd/Ctrl+P.
               </span>

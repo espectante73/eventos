@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "54.1",
+    cambios: [
+      "Lista para acomodadores: en Lista de invitados → Imprimir, el botón \"Lista para acomodadores\" descarga dos PDF a la vez, uno ordenado por mesa y otro por familia. Una línea por familia, con la misma etiqueta que su invitación: el icono de la mesa y su número, el de persona y cuántos son, y la familia con sus nombres. Sin mesa, la mesa tachada en rojo. Hecho para imprimir en hoja blanca.",
+    ],
+  },
+  {
     version: "54",
     cambios: [
       "Cuando un invitado está pagado, su ficha se cierra para el colaborador: ya no la puede abrir ni ver, y en su lugar sale un candado. Sobre esos datos ya se han sacado las listas de canciones, edades y alergias, así que solo el anfitrión los cambia. Si el colaborador quita el pago (una devolución), la ficha se vuelve a abrir.",

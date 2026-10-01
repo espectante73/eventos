@@ -175,3 +175,32 @@ describe("eliminar desde la Lista a quien es colaborador", () => {
   });
 });
 
+
+// Las dos listas para acomodadores salen del Imprimir de la Lista (él,
+// v54.1): sin pantalla nueva, y solo ahí, no en canciones ni alergias.
+describe("Imprimir: la lista para acomodadores", () => {
+  const conPanel = (panelFlotante) =>
+    dibujarYSoltar(
+      <SeccionInvitados
+        data={data}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante={panelFlotante}
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+
+  it("el botón está en el Imprimir de la lista de invitados", () => {
+    expect(conPanel("tabla")).toContain("Lista para acomodadores");
+  });
+
+  it("y no en el de canciones ni en el de alergias", () => {
+    expect(conPanel("canciones")).not.toContain("Lista para acomodadores");
+    expect(conPanel("alergias")).not.toContain("Lista para acomodadores");
+  });
+});
