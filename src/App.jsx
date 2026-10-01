@@ -3,6 +3,7 @@ import { LogOut } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase, supabaseConfigurado } from "./supabaseClient";
 import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl } from "./lib/url";
+import { esVistaMusica } from "./lib/ventanaMusica";
 import { C, OP, S } from "./theme";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { PantallaCargando } from "./components/PantallaCargando";
@@ -25,6 +26,9 @@ const cargarVista = (importar, nombre) =>
   lazy(() => importar().then((m) => ({ default: m?.[nombre] ?? PantallaCargando })));
 const VistaAnfitrion = cargarVista(() => import("./vistas/VistaAnfitrion"), "VistaAnfitrion");
 const VistaColaborador = cargarVista(() => import("./vistas/VistaColaborador"), "VistaColaborador");
+// Del MISMO trozo que VistaAnfitrion (que la reexporta): el navegador ya
+// lo tiene de abrir la app, y en el local no se queda descargando.
+const PaginaMusica = cargarVista(() => import("./vistas/VistaAnfitrion"), "PaginaMusica");
 
 // ---------- Red de seguridad ante errores inesperados ----------
 
@@ -41,6 +45,8 @@ export default function App() {
   // VistaTablon.jsx). No es una `const` en el orden de hooks -- es una
   // simple lectura de la URL, igual que emailCrearCuenta.
   const tokenTablon = getTokenTablonFromUrl();
+  // ?musica -- la ventana de Música como página propia (lib/ventanaMusica.js).
+  const vistaMusica = esVistaMusica();
   // ?rol=<token> YA NO DA ACCESO A NADIE (2026-09-06, v24.2). Era el
   // último resto del enlace-token: el de colaborador se retiró en agosto,
   // pero el del anfitrión se dejó vivo "como plan B". Un token dentro de
@@ -361,6 +367,16 @@ export default function App() {
           </p>
         </div>
       </div>
+    );
+  }
+
+  // ?musica: solo Música, a pantalla entera, sin cabecera ni banners. Solo
+  // el anfitrión; cualquier otro ve su vista de siempre.
+  if (vistaMusica && data.esAnfitrion) {
+    return (
+      <Suspense fallback={<PantallaCargando />}>
+        <PaginaMusica data={data} />
+      </Suspense>
     );
   }
 

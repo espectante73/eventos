@@ -115,8 +115,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    vertical, también en el ordenador. Toda ventana nueva es una
    `VentanaFlotante`; si crece mucho, lanzadora pequeña + una ventana por
    parte. ⚠️ Las que se usan **mientras se mira otra cosa** —Novedades,
-   Cronograma, Música, Lista de invitados— son ventanas de verdad del
-   sistema (`usePopupWindow`).
+   Cronograma, Lista de invitados— son ventanas de verdad del sistema
+   (`usePopupWindow`); Música, una página propia (`lib/ventanaMusica.js`)
+   que sigue sonando y obedeciendo aunque se cierre la app.
 3. **Todo al alcance del pulgar QUE ELIJA CADA UNO.** La app entera se
    acomoda a esa elección; la derecha es solo lo que sale por defecto
    (ver 1.4).

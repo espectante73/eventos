@@ -8,6 +8,9 @@ import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { X } from "lucide-react";
 import { construirEnlaceTablon } from "../lib/url";
 import { usePopupWindow } from "../lib/usePopupWindow";
+import { abrirVentanaMusica } from "../lib/ventanaMusica";
+// La página de Música (?musica) viaja en el trozo de esta vista: ver App.jsx.
+export { PaginaMusica } from "./PaginaMusica";
 import { nombreCompleto } from "../lib/formato";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { C, T, R } from "../theme";
@@ -87,35 +90,18 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     if (cronogramaAbierta) actualizarCronograma(<VentanaConfigCronograma data={data} ventana={ventanaCronograma} />);
   }, [cronogramaAbierta, actualizarCronograma, data, ventanaCronograma]);
 
-  // Ventana "Música del evento" (2026-08-31): mismo patrón de ventana de
-  // verdad, y aquí es especialmente importante -- va a estar abierta
-  // toda la noche sonando por los altavoces, así que conviene poder
-  // moverla a otra pantalla y dejarla en paz. Necesita `ventana` para
-  // el Wake Lock (ventana.navigator, nunca navigator a secas).
-  const {
-    abrir: abrirMusicaPopup,
-    actualizar: actualizarMusicaEvento,
-    abierta: musicaEventoAbierta,
-    ventana: ventanaMusicaEvento,
-    // Ancha a propósito: en el Mac esta ventana es un puesto de control
-    // de dos columnas (bloques a un lado, reproductor y pistas al otro).
-  } = usePopupWindow({ nombreVentana: "musica-evento", ancho: 940, alto: 800 });
+  // "Música del evento" es una página propia (?musica, v56,
+  // lib/ventanaMusica.js): va a estar abierta toda la noche sonando por
+  // los altavoces, y no puede depender de esta pestaña. Si se cierra la
+  // app, sigue sonando y obedeciendo al mando; y Música trae al frente la
+  // misma, nunca un segundo reproductor.
 
-  // En el móvil, la música NO se abre como ventana aparte. Dos motivos,
-  // los dos comprobados en vivo (2026-09-01): Safari en iOS trae el
-  // bloqueo de ventanas emergentes activado de fábrica, así que pulsar
-  // "Música" no hacía absolutamente nada -- sin aviso, sin error, sin
-  // nada; y aunque se permita, ahí una "ventana" es otra pestaña a
-  // pantalla completa, que no aporta nada frente a mostrarla en la
-  // misma página. El mando a distancia vive en el móvil: no puede
-  // depender de un permiso del navegador.
   // La Lista de invitados también sale del navegador: es la ventana más
   // importante de la app y se quiere lo más grande posible, con las
   // columnas y sus filtros de un vistazo (petición del usuario,
-  // 2026-09-04). Misma decisión que Música: en un aparato táctil no se
-  // intenta -- allí una "ventana" es otra pestaña y encima Safari las
-  // bloquea de fábrica -- y ahí se queda como ventana flotante dentro
-  // de la página, que es como ha funcionado hasta hoy.
+  // 2026-09-04). En un aparato táctil no se intenta -- allí una
+  // "ventana" es otra pestaña y encima Safari las bloquea de fábrica --
+  // y ahí se queda como ventana flotante dentro de la página.
   const {
     abrir: abrirInvitadosPopup,
     actualizar: actualizarInvitados,
@@ -123,6 +109,11 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     ventana: ventanaInvitados,
   } = usePopupWindow({ nombreVentana: "lista-invitados", ancho: 1280, alto: 900 });
 
+  // En el móvil, Música va en su propia pestaña: el mando no tapa la app
+  // y se pasa de una a otra con el botón de pestañas. Si el navegador no
+  // deja abrirla (Safari en iOS bloquea de fábrica las ventanas
+  // emergentes, y pulsar Música no hacía nada, 2026-09-01), se queda
+  // dentro de esta página como antes de v56: nunca se queda en nada.
   const [musicaEnPagina, setMusicaEnPagina] = useState(false);
   const abrirMusicaEvento = useCallback(() => {
     // ⚠️ La pregunta es qué APARATO es, no cuánto mide la ventana. El
@@ -133,27 +124,10 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     // none` es cierto en un móvil o tablet y falso en un portátil, mida
     // lo que mida la ventana.
     const esTactil = window.matchMedia?.("(pointer: coarse) and (hover: none)").matches;
-    // `abrirMusicaPopup()` devuelve false si el navegador la bloqueó
-    // (Safari en iOS lo hace de fábrica): ese caso también cae aquí, en
-    // vez de quedarse en nada.
-    if (esTactil || !abrirMusicaPopup()) setMusicaEnPagina(true);
-  }, [abrirMusicaPopup]);
-  useEffect(() => {
-    // Con su propio Error Boundary: si algo revienta ahí dentro, esta
-    // ventana es un root de React aparte (createRoot en el documento de
-    // la emergente), así que el de la pestaña principal no la cubre --
-    // se quedaría en blanco sin decir nada. El botón de rescate devuelve
-    // el aspecto a como venía de fábrica, que es de lo poco que se puede
-    // dejar en mal estado desde aquí.
-    if (musicaEventoAbierta)
-      actualizarMusicaEvento(
-        <ErrorBoundary ventana={ventanaMusicaEvento} alReiniciar={() => guardarAspecto(ASPECTO_POR_DEFECTO)}>
-          <VentanaMusicaEvento data={data} ventana={ventanaMusicaEvento} />
-        </ErrorBoundary>
-      );
-  }, [musicaEventoAbierta, actualizarMusicaEvento, data, ventanaMusicaEvento]);
+    if (!abrirVentanaMusica({ esTactil })) setMusicaEnPagina(true);
+  }, []);
 
-  // Se repinta con cada refresco de datos, igual que Música: la ventana
+  // Se repinta con cada refresco de datos: la ventana
   // es un root de React aparte y no se entera sola de que `data` cambió.
   // Con su Error Boundary propio: el de la pestaña principal no cubre
   // ese root, y sin él un fallo ahí dentro sería una ventana en blanco.

@@ -62,6 +62,7 @@ import {
 } from "lucide-react";
 import { calcularHorasAbsolutas } from "../../lib/cronograma";
 import { useMandoMusica } from "../../lib/useMandoMusica";
+import { rolRecordado, recordarRol } from "../../lib/ventanaMusica";
 import {
   porcentajeAVolumen,
   ajustarPorcentaje,
@@ -162,8 +163,18 @@ export function VentanaMusicaEvento({ data, ventana }) {
 
   // "sin-definir" hasta que alguien declare que este aparato es el que
   // suena. Cualquier otro dispositivo que abra esta ventana se queda
-  // como mando (no emite sonido, solo manda órdenes).
-  const [rol, setRol] = useState("sin-definir");
+  // como mando (no emite sonido, solo manda órdenes). Un móvil que ya
+  // fue mando lo recuerda y no vuelve a preguntar (v56); el que suena
+  // siempre pregunta: ese primer clic es el que desbloquea el audio.
+  const esTactil = Boolean(ventana?.matchMedia?.("(pointer: coarse) and (hover: none)")?.matches);
+  const [rol, setRolEstado] = useState(() => (rolRecordado(esTactil) === "mando" ? "mando" : "sin-definir"));
+  const setRol = useCallback(
+    (nuevo) => {
+      setRolEstado(nuevo);
+      recordarRol(nuevo, esTactil);
+    },
+    [esTactil]
+  );
   // DOS conceptos distintos, y confundirlos fue un bug real (2026-08-31):
   // `seleccionado` es el bloque que estás MIRANDO (para comprobar que
   // tiene pista, ver su hora...), y `bloqueSonando` es el que de verdad

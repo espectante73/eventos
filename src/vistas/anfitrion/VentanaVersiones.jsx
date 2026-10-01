@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "56",
+    cambios: [
+      "Música del evento es ahora una página propia. Si se cierra la app, la música sigue sonando y el mando la sigue manejando. Al pulsar Música otra vez sale al frente la misma ventana, nunca un segundo reproductor: antes, al volver a abrirla, sonaban dos canciones a destiempo.",
+      "Si por error se abre una segunda Música en el mismo aparato, avisa de que ya está abierta y no suena.",
+      "En el móvil, el mando se abre en su propia pestaña: la app queda en la otra y se pasa de una a otra con el botón de pestañas del navegador. Y el móvil recuerda que es el mando: ya no lo pregunta cada vez.",
+    ],
+  },
+  {
     version: "55",
     cambios: [
       "El mando de la música y el aviso de llegadas ya no aceptan a nadie sin sesión. Antes, cualquiera que conociera el nombre del canal podía pausar la música, cambiarla o meter llegadas falsas en el recuento. Ahora el mando solo obedece al anfitrión, y las llegadas, al anfitrión y a los colaboradores.",

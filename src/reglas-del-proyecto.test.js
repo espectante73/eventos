@@ -193,7 +193,6 @@ describe("cada pantalla tiene una prueba que la dibuja", () => {
     "VentanaConfigZonaReinicio",
     "VentanaInvitaciones",
     "VentanaMesas",
-    "VentanaMusicaEvento",
     "VentanaPermisos",
     "VentanaProgreso",
     "VentanaVersiones",
@@ -236,6 +235,13 @@ describe("la Música del evento no se descarga en el local", () => {
   it("VentanaMusicaEvento no se carga con lazy()", () => {
     const culpables = archivos.filter((r) => /lazy\s*\([^)]*Musica/i.test(leer(r)));
     expect(culpables).toEqual([]);
+  });
+
+  // Desde v56 Música es una página propia (?musica): sale del MISMO trozo
+  // que VistaAnfitrion, que el navegador ya tiene de abrir la app.
+  it("la página de Música sale del trozo de VistaAnfitrion", () => {
+    expect(leer("src/App.jsx")).toMatch(/cargarVista\(\(\) => import\("\.\/vistas\/VistaAnfitrion"\), "PaginaMusica"\)/);
+    expect(leer("src/vistas/VistaAnfitrion.jsx")).toMatch(/export \{ PaginaMusica \} from "\.\/PaginaMusica"/);
   });
 });
 
