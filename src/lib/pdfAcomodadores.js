@@ -5,8 +5,9 @@
 // Una línea por familia (norma 6), para que el acomodador siga cada
 // familia con el ojo; la columna por la que se ordena, primero. Delante
 // de cada número su icono, para no leer dos números seguidos ("5 3") y
-// confundirlos. Cuantas menos palabras, mejor: sin mesa, la mesa tachada
-// en rojo y nada más. Hoja blanca y tinta oscura, trazo grueso: se
+// confundirlos. Cuantas menos palabras, mejor: sin mesa, un «NO» en rojo
+// en lugar del icono (él, v54.2: la mesa tachada repetida en cada fila era
+// el mismo icono otra vez). Hoja blanca y tinta oscura, trazo grueso: se
 // imprime en papel normal, también en blanco y negro.
 import { C } from "../theme";
 import { filasAcomodadores } from "./familiasInvitacion";
@@ -35,6 +36,12 @@ const COLUMNAS = {
   mesa: { mesa: 0, cantidad: ANCHO_MESA + SEPARACION, familia: ANCHO_MESA + ANCHO_CANTIDAD + 2 * SEPARACION },
   familia: { familia: 0, mesa: ANCHO_FAMILIA + SEPARACION, cantidad: ANCHO_FAMILIA + ANCHO_MESA + 2 * SEPARACION },
 };
+
+export const SIN_MESA = "NO";
+// Safari guardaba solo la segunda de dos descargas seguidas (v54.1: le
+// llegó "por familia" dos veces y "por mesa" ninguna). Con un respiro
+// entre una y otra, cada una se descarga por su lado.
+const PAUSA_ENTRE_DESCARGAS = 1500;
 
 export const TITULOS = { mesa: "Lista para acomodadores · por mesa", familia: "Lista para acomodadores · por familia" };
 
@@ -75,14 +82,15 @@ function dibujarLista(pdf, filas, orden, iconos) {
     const base = y + ALTO_FILA / 2 + LETRA * 0.35;
     const arribaIcono = y + (ALTO_FILA - ICONO) / 2;
     const xMesa = MARGEN + col.mesa;
-    pdf.addImage(iconos.mesa, "PNG", xMesa, arribaIcono, ICONO, ICONO);
     if (f.mesas.length) {
+      pdf.addImage(iconos.mesa, "PNG", xMesa, arribaIcono, ICONO, ICONO);
       pdf.text(recortar(pdf, f.mesas.join(", "), ANCHO_MESA - HUECO_ICONO), xMesa + HUECO_ICONO, base);
     } else {
-      // Sin mesa: la mesa tachada en rojo, sin palabras (él, v54.1).
-      pdf.setDrawColor(C.peligro);
-      pdf.setLineWidth(1.6);
-      pdf.line(xMesa - 1, arribaIcono + ICONO + 1, xMesa + ICONO + 1, arribaIcono - 1);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(C.peligro);
+      pdf.text(SIN_MESA, xMesa, base);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(C.ink);
     }
     pdf.addImage(iconos.persona, "PNG", MARGEN + col.cantidad, arribaIcono, ICONO, ICONO);
     pdf.text(String(f.cantidad), MARGEN + col.cantidad + HUECO_ICONO, base);
@@ -91,7 +99,7 @@ function dibujarLista(pdf, filas, orden, iconos) {
 }
 
 // Devuelve cuántas familias salen: con 0 no se descarga nada.
-export async function descargarListasAcomodadores({ invitados, ordenFamiliares }) {
+export async function descargarListasAcomodadores({ invitados, ordenFamiliares, pausa = PAUSA_ENTRE_DESCARGAS }) {
   const porOrden = {
     mesa: filasAcomodadores(invitados, ordenFamiliares, "mesa"),
     familia: filasAcomodadores(invitados, ordenFamiliares, "familia"),
@@ -101,6 +109,7 @@ export async function descargarListasAcomodadores({ invitados, ordenFamiliares }
   const { jsPDF } = await import("jspdf");
   const iconos = await iconosAcomodadores(C.ink);
   for (const orden of ["mesa", "familia"]) {
+    if (orden === "familia") await new Promise((r) => setTimeout(r, pausa));
     const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
     dibujarLista(pdf, porOrden[orden], orden, iconos);
     descargarBlob(`acomodadores-por-${orden}.pdf`, pdf.output("blob"));

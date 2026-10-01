@@ -9,29 +9,32 @@ vi.mock("jspdf", () => ({
   jsPDF: class {
     constructor() {
       this.textos = [];
-      this.rayas = [];
-      this.colorRaya = null;
+      this.colores = [];
+      this.imagenes = 0;
+      this.colorTexto = null;
       hojas.push(this);
     }
     setFont() {}
     setFontSize() {}
-    setTextColor() {}
+    setTextColor(c) { this.colorTexto = c; }
     setFillColor() {}
     setLineWidth() {}
-    setDrawColor(c) { this.colorRaya = c; }
-    line(...p) { this.rayas.push([this.colorRaya, ...p]); }
+    setDrawColor() {}
+    line() {}
     rect() {}
-    addImage() {}
+    addImage() { this.imagenes += 1; }
     addPage() {}
     getTextWidth(t) { return t.length * 5; }
-    text(t) { this.textos.push(t); }
+    text(t) { this.textos.push(t); this.colores.push(this.colorTexto); }
     output() { return "blob"; }
   },
 }));
 vi.mock("./iconosPdf", () => ({ iconosAcomodadores: async () => ({ mesa: "m", persona: "p" }) }));
 vi.mock("./descargas", () => ({ descargarBlob: (nombre) => descargas.push(nombre) }));
 
-const { descargarListasAcomodadores, TITULOS } = await import("./pdfAcomodadores");
+const { descargarListasAcomodadores: descargar, TITULOS, SIN_MESA } = await import("./pdfAcomodadores");
+// Sin el respiro entre descargas: aquí no hay navegador que lo necesite.
+const descargarListasAcomodadores = (datos) => descargar({ ...datos, pausa: 0 });
 const { C } = await import("../theme");
 
 const inv = (id, nombre, apellido, mesa) => ({ id, nombre, apellido, grupoFamiliar: apellido, mesa, confirmado: true });
@@ -50,10 +53,13 @@ describe("descargarListasAcomodadores", () => {
     expect(hojas[1].textos).toEqual([TITULOS.familia, "3", "2", "Ruiz: Ana y Luis"]);
   });
 
-  it("sin mesa: ninguna palabra, la mesa tachada en rojo", async () => {
+  it("sin mesa: «NO» en rojo en lugar del icono de la mesa", async () => {
     await descargarListasAcomodadores({ invitados: [inv("1", "Sara", "Sosa", null)] });
-    expect(hojas[0].textos).toEqual([TITULOS.mesa, "1", "Sosa: Sara"]);
-    expect(hojas[0].rayas.some(([color]) => color === C.peligro)).toBe(true);
+    const hoja = hojas[0];
+    expect(hoja.textos).toEqual([TITULOS.mesa, SIN_MESA, "1", "Sosa: Sara"]);
+    expect(hoja.colores[1]).toBe(C.peligro);
+    expect(hoja.colores[2]).toBe(C.ink);
+    expect(hoja.imagenes).toBe(1); // solo el de persona
   });
 
   it("si no cabe, se recorta con «…» en su línea", async () => {

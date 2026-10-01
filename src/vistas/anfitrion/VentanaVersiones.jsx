@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "54.2",
+    cambios: [
+      "Lista para acomodadores: ahora sí llegan los dos PDF, por mesa y por familia (el navegador guardaba solo el segundo). Sin mesa, un \"NO\" en rojo en lugar del icono de la mesa tachado.",
+    ],
+  },
+  {
     version: "54.1",
     cambios: [
       "Lista para acomodadores: en Lista de invitados → Imprimir, el botón \"Lista para acomodadores\" descarga dos PDF a la vez, uno ordenado por mesa y otro por familia. Una línea por familia, con la misma etiqueta que su invitación: el icono de la mesa y su número, el de persona y cuántos son, y la familia con sus nombres. Sin mesa, la mesa tachada en rojo. Hecho para imprimir en hoja blanca.",
