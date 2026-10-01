@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "56.1",
+    cambios: [
+      "Música en una ventana ancha y baja: los cuadros de los momentos ya no pisan la tarjeta del reproductor (un nombre largo, como \"Sentar invitados y Cena\", los ensanchaba), y la fila de la cortinilla ya no se sale de la tarjeta del volumen: si no cabe, la tarjeta crece.",
+    ],
+  },
+  {
     version: "56",
     cambios: [
       "Música del evento es ahora una página propia. Si se cierra la app, la música sigue sonando y el mando la sigue manejando. Al pulsar Música otra vez sale al frente la misma ventana, nunca un segundo reproductor: antes, al volver a abrirla, sonaban dos canciones a destiempo.",

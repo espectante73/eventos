@@ -1182,7 +1182,11 @@ export function VentanaMusicaEvento({ data, ventana }) {
   );
 
   const cuadriculaBloques = (
-    <div ref={rejillaRef} className="grid gap-3" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+    // `minmax(0, 1fr)`: una columna nunca pasa de su tercio. Con `1fr` a
+    // secas, un nombre largo ("Sentar invitados y Cena", tres líneas)
+    // pedía más alto, la proporción lo convertía en más ancho, y la
+    // rejilla pisaba la tarjeta de al lado (él, captura de v56).
+    <div ref={rejillaRef} className="grid gap-3" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
       {bloques.map((b, i) => {
         const esActual = i === seleccionado;
         const suenaAqui = i === bloqueSonando;
@@ -1199,6 +1203,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
               // letra ni perder superficie donde tocar.
               aspectRatio: "1 / 0.82",
               minHeight: M.bloque,
+              // Ancho = su columna, siempre; y todos los de una fila, del
+              // alto del más alto (un nombre largo ya no deja uno distinto).
+              width: "100%",
+              alignSelf: "stretch",
               borderRadius: 14,
               transition: SUAVE,
               ...tecla(esActual),
@@ -1262,11 +1270,11 @@ export function VentanaMusicaEvento({ data, ventana }) {
     ) : null;
 
   const reproductor = (
-    // Mismo motivo que en controlVolumen: llena la altura que le mida el
-    // efecto de armonía visual, y centra su contenido dentro.
+    // Mismo motivo que en controlVolumen: llena el alto que le mida el
+    // efecto de armonía visual (flex: 1), y centra su contenido dentro.
     <div
       className="px-4 pt-3 pb-4 flex flex-col justify-center"
-      style={{ ...tarjeta, height: "100%" }}
+      style={{ ...tarjeta, flex: 1 }}
     >
       {pistaActual ? (
         <>
@@ -1445,10 +1453,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // De ahí que la fila de abajo mida `M.play - 4`: es lo que hace falta
   // para igualar el alto del botón de play y su fila.
   const controlVolumen = (
-    // height 100%: cuando el panel recibe una altura medida (ver el
-    // efecto de armonía visual), el contenido tiene que llenarla. Sin
-    // altura asignada, el 100% se resuelve como "lo que ocupe".
-    <div className="flex flex-col gap-3 px-3 py-3" style={{ ...tarjeta, height: "100%" }}>
+    // flex: 1: cuando el panel recibe un alto mínimo medido (ver el
+    // efecto de armonía visual), la tarjeta lo llena; si su contenido
+    // necesita más, el panel crece. Sin alto asignado, ocupa lo justo.
+    <div className="flex flex-col gap-3 px-3 py-3" style={{ ...tarjeta, flex: 1 }}>
       <div className="flex items-center gap-2.5">
         <button
           onClick={hacer("silencio")}
@@ -1795,7 +1803,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // limpia que antes -- se reordena una vez y no se vuelve a ver.
   const conAsa = (clave, contenido) => {
     const posicion = aspecto.orden.indexOf(clave);
-    if (!organizando) return <div key={clave} style={{ height: "100%" }}>{contenido}</div>;
+    if (!organizando) return <div key={clave} style={{ flex: 1, display: "flex", flexDirection: "column" }}>{contenido}</div>;
     return (
       <div
         key={clave}
@@ -2120,7 +2128,14 @@ export function VentanaMusicaEvento({ data, ventana }) {
                   style={{
                     flex: `1 1 ${ANCHO_MINIMO_PANEL[clave]}px`,
                     minWidth: ANCHO_MINIMO_PANEL[clave],
-                    ...(alturasPanel[clave] ? { height: alturasPanel[clave] } : {}),
+                    // Altura MÍNIMA, no fija: si el contenido cabe, la
+                    // tarjeta llega justo a la par de los bloques; si
+                    // necesita más (el Volumen con la cortinilla, en una
+                    // ventana ancha y baja), crece en vez de salirse de su
+                    // tarjeta (él, captura de v56).
+                    ...(alturasPanel[clave] ? { minHeight: alturasPanel[clave] } : {}),
+                    display: "flex",
+                    flexDirection: "column",
                   }}
                 >
                   {conAsa(clave, contenidoPanel[clave])}
