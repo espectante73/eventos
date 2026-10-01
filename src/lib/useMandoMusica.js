@@ -145,8 +145,11 @@ export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
     function montar() {
       if (!vivo) return;
       try {
+        // `private`: sin sesión de anfitrión no se entra (v55, la política
+        // está en schema.sql, puede_usar_canal). Antes cualquiera con la
+        // clave pública podía unirse y mandar órdenes.
         const canal = supabase.channel(NOMBRE_CANAL, {
-          config: { broadcast: { self: false } },
+          config: { private: true, broadcast: { self: false } },
         });
 
         canal.on("presence", { event: "sync" }, () => {

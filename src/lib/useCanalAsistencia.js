@@ -57,7 +57,10 @@ export function useCanalAsistencia(onLlegada) {
       // comparte cliente con la pestaña principal. Con `self: false` ese
       // caso no recibía nada. Aplicar dos veces el mismo cambio no hace
       // daño: es fijar un booleano al mismo valor.
-      const canal = supabase.channel(NOMBRE_CANAL, { config: { broadcast: { self: true } } });
+      // `private`: solo el anfitrión y los colaboradores (v55, schema.sql,
+      // puede_usar_canal). Antes cualquiera con la clave pública podía
+      // escuchar las llegadas o meter llegadas falsas en el recuento.
+      const canal = supabase.channel(NOMBRE_CANAL, { config: { private: true, broadcast: { self: true } } });
       canal.on("broadcast", { event: "llegada" }, ({ payload }) => {
         if (payload?.id) onLlegadaRef.current?.(payload.id, Boolean(payload.presente));
       });

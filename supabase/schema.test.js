@@ -10,7 +10,7 @@
 // Si alguno se pone en rojo, no es un capricho de estilo: es ese mismo
 // fallo volviendo.
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -301,5 +301,46 @@ describe("la ficha pagada, cerrada al colaborador", () => {
     expect(f).toMatch(/c\."authUserId" = auth\.uid\(\)/);
     expect(f).toMatch(/i\."rolFamiliar" in \('esposo', 'esposa'\)/);
     expect(f).toMatch(/and not coalesce\(i\."pagado", false\)/);
+  });
+});
+
+// Los canales en vivo, privados (v55): sin sesión no se entra. Un canal
+// nuevo que no fuera privado, o que no tuviera su permiso aquí, o se
+// quedaría abierto a cualquiera o no conectaría nunca.
+describe("los canales en vivo, solo con sesión y permiso", () => {
+  const src = join(aqui, "..", "src");
+  const conCanal = [];
+  const buscar = (dir) => {
+    for (const n of readdirSync(dir)) {
+      const r = join(dir, n);
+      if (statSync(r).isDirectory()) buscar(r);
+      else if (/\.jsx?$/.test(n) && !/\.test\./.test(n) && readFileSync(r, "utf-8").includes("supabase.channel(")) conCanal.push(r);
+    }
+  };
+  buscar(src);
+
+  it("hay canales que mirar (si no, el buscador está roto)", () => {
+    expect(conCanal.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("todo canal se abre con private: true", () => {
+    for (const r of conCanal) {
+      const llamadas = readFileSync(r, "utf-8").match(/supabase\.channel\([^)]*\)/gs) || [];
+      for (const l of llamadas) expect(l, r).toMatch(/private: true/);
+    }
+  });
+
+  it("y cada uno tiene su permiso en puede_usar_canal", () => {
+    const permisos = cuerpoDe("puede_usar_canal");
+    for (const r of conCanal) {
+      const nombre = readFileSync(r, "utf-8").match(/NOMBRE_CANAL = "([^"]+)"/)?.[1];
+      expect(nombre, r).toBeTruthy();
+      expect(permisos, nombre).toContain(`'${nombre}'`);
+    }
+  });
+
+  it("las políticas de realtime.messages preguntan a puede_usar_canal, solo con sesión", () => {
+    expect(sql).toMatch(/CREATE POLICY canales_leer ON realtime\.messages FOR SELECT TO authenticated[^;]*puede_usar_canal/);
+    expect(sql).toMatch(/CREATE POLICY canales_escribir ON realtime\.messages FOR INSERT TO authenticated[^;]*puede_usar_canal/);
   });
 });

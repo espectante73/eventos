@@ -446,6 +446,25 @@ CREATE FUNCTION public.es_anfitrion() RETURNS boolean
   select exists (select 1 from anfitriones a where a."authUserId" = auth.uid());
 $$;
 
+-- Quién puede usar cada canal en vivo (v55). Los canales son privados: sin
+-- sesión no se entra, y con sesión solo quien le toca. Un canal nuevo que
+-- no esté aquí no conecta: se añade su nombre (lo vigila schema.test.js).
+CREATE FUNCTION public.puede_usar_canal(p_canal text) RETURNS boolean
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select case p_canal
+    -- El mando de la música: solo el anfitrión.
+    when 'musica-evento' then es_anfitrion()
+    -- Las llegadas del día: el anfitrión y los colaboradores.
+    when 'asistencia-evento' then es_anfitrion()
+      or exists (select 1 from colaboradores c where c."authUserId" = auth.uid())
+    else false
+  end;
+$$;
+REVOKE EXECUTE ON FUNCTION public.puede_usar_canal(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.puede_usar_canal(text) TO authenticated;
+
 -- Devuelve el papel de quien está conectado: anfitrión, colaborador o nadie.
 CREATE FUNCTION public.mi_rol() RETURNS TABLE(rol text, token uuid)
     LANGUAGE plpgsql SECURITY DEFINER
@@ -2404,6 +2423,14 @@ CREATE POLICY og_imagen_lectura_publica ON storage.objects FOR SELECT USING ((bu
 CREATE POLICY og_imagen_solo_anfitrion_reemplaza ON storage.objects FOR UPDATE TO authenticated USING (((bucket_id = 'og-imagen'::text) AND public.es_anfitrion())) WITH CHECK (((bucket_id = 'og-imagen'::text) AND public.es_anfitrion()));
 
 CREATE POLICY og_imagen_solo_anfitrion_sube ON storage.objects FOR INSERT TO authenticated WITH CHECK (((bucket_id = 'og-imagen'::text) AND public.es_anfitrion()));
+
+-- Los canales en vivo (mando de la música, llegadas), solo para quien
+-- puede_usar_canal deja. Además, en el panel de Supabase (Realtime →
+-- Settings) está apagado "Allow public access": sin eso, un canal
+-- público con el mismo nombre seguiría abierto a cualquiera.
+CREATE POLICY canales_leer ON realtime.messages FOR SELECT TO authenticated USING (((realtime.messages.extension = ANY (ARRAY['broadcast'::text, 'presence'::text])) AND public.puede_usar_canal((SELECT realtime.topic()))));
+
+CREATE POLICY canales_escribir ON realtime.messages FOR INSERT TO authenticated WITH CHECK (((realtime.messages.extension = ANY (ARRAY['broadcast'::text, 'presence'::text])) AND public.puede_usar_canal((SELECT realtime.topic()))));
 
 
 

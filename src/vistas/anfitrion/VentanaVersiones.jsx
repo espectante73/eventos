@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "55",
+    cambios: [
+      "El mando de la música y el aviso de llegadas ya no aceptan a nadie sin sesión. Antes, cualquiera que conociera el nombre del canal podía pausar la música, cambiarla o meter llegadas falsas en el recuento. Ahora el mando solo obedece al anfitrión, y las llegadas, al anfitrión y a los colaboradores.",
+    ],
+  },
+  {
     version: "54.3",
     cambios: [
       "Lista para acomodadores: al terminar, la app avisa de que las dos listas se han descargado y de dónde están. Ya no pasa en silencio.",
