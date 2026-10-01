@@ -24,6 +24,9 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase } from "../supabaseClient";
 
 const NOMBRE_CANAL = "musica-evento";
+// La pantalla de la tele (v58): misma pieza, su propio canal. Cada canal
+// tiene su permiso en la base (puede_usar_canal, schema.sql).
+export const CANAL_VIDEO = "video-evento";
 const ESPERA_REINTENTO = 4000;
 // Si en este tiempo no ha llegado nada del otro aparato Y el canal no
 // está unido, se da por caído. 12s da margen de sobra: el reproductor
@@ -46,7 +49,7 @@ function anunciarse(canal, rol) {
   }
 }
 
-export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
+export function useMandoMusica({ onOrden, onEstado, rol, canal: nombreCanal = NOMBRE_CANAL } = {}) {
   const canalRef = useRef(null);
   const reintentoRef = useRef(null);
   const [conectado, setConectado] = useState(false);
@@ -148,7 +151,7 @@ export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
         // `private`: sin sesión de anfitrión no se entra (v55, la política
         // está en schema.sql, puede_usar_canal). Antes cualquiera con la
         // clave pública podía unirse y mandar órdenes.
-        const canal = supabase.channel(NOMBRE_CANAL, {
+        const canal = supabase.channel(nombreCanal, {
           config: { private: true, broadcast: { self: false } },
         });
 
@@ -277,6 +280,7 @@ export function useMandoMusica({ onOrden, onEstado, rol } = {}) {
     // (canal enganchado) se queda para el diagnóstico de por qué no.
     hayReproductor: otrosAparatos.includes("reproductor"),
     hayMando: otrosAparatos.includes("mando"),
+    hayPantalla: otrosAparatos.includes("pantalla"),
     enviarOrden,
     enviarEstado,
   };

@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import {
+  esVistaPantalla,
+  abrirVentanaPantalla,
+  NOMBRE_VENTANA_PANTALLA,
+  despuesDe,
+  parteRecordada,
+  recordarParte,
   esVistaMusica,
   abrirVentanaMusica,
   cogerCerrojoMusica,
@@ -88,5 +94,34 @@ describe("el móvil recuerda que es el mando", () => {
   it("en el Mac, nunca: tiene que poder elegir siempre ser el que suena", () => {
     recordarRol("mando", false);
     expect(rolRecordado(false)).toBe(null);
+  });
+});
+
+describe("la pantalla de la tele (?pantalla)", () => {
+  it("se reconoce por su dirección", () => {
+    expect(esVistaPantalla("?pantalla=1")).toBe(true);
+    expect(esVistaPantalla("?musica=1")).toBe(false);
+  });
+
+  it("si ya está abierta, la trae al frente sin recargarla", () => {
+    const yaAbierta = ventanaFalsa("?pantalla=1");
+    const hrefAntes = yaAbierta.location.href;
+    const llamadas = [];
+    abrirVentanaPantalla({ abrir: (...a) => (llamadas.push(a), yaAbierta), url: "https://nexuspoint.rsvp/?pantalla=1" });
+    expect(yaAbierta.location.href).toBe(hrefAntes);
+    expect(llamadas[0][1]).toBe(NOMBRE_VENTANA_PANTALLA);
+  });
+
+  it("el logo no termina nunca; las fotos, al terminar, vuelven al logo", () => {
+    expect(despuesDe("logo")).toBe(null);
+    expect(despuesDe("fotos1")).toBe("logo");
+    expect(despuesDe("fotos2")).toBe("logo");
+  });
+
+  it("cada aparato recuerda su pestaña de Multimedia", () => {
+    localStorage.clear();
+    expect(parteRecordada()).toBe("audio");
+    recordarParte("video");
+    expect(parteRecordada()).toBe("video");
   });
 });

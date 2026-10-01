@@ -3,7 +3,7 @@ import { LogOut } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase, supabaseConfigurado } from "./supabaseClient";
 import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl } from "./lib/url";
-import { esVistaMusica } from "./lib/ventanaMusica";
+import { esVistaMusica, esVistaPantalla } from "./lib/ventanaMusica";
 import { PERMISOS, tienePermiso } from "./lib/permisos";
 import { C, OP, S } from "./theme";
 import { VistaLogin } from "./vistas/VistaLogin";
@@ -31,6 +31,8 @@ const VistaColaborador = cargarVista(() => import("./vistas/VistaColaborador"), 
 // Del MISMO trozo que VistaAnfitrion (que la reexporta): el navegador ya
 // lo tiene de abrir la app, y en el local no se queda descargando.
 const PaginaMusica = cargarVista(() => import("./vistas/VistaAnfitrion"), "PaginaMusica");
+// La pantalla de la tele (?pantalla, v58), del mismo trozo.
+const PaginaPantalla = cargarVista(() => import("./vistas/VistaAnfitrion"), "PaginaPantalla");
 
 // ---------- Red de seguridad ante errores inesperados ----------
 
@@ -49,6 +51,7 @@ export default function App() {
   const tokenTablon = getTokenTablonFromUrl();
   // ?musica -- la ventana de Música como página propia (lib/ventanaMusica.js).
   const vistaMusica = esVistaMusica();
+  const vistaPantalla = esVistaPantalla();
   // ?rol=<token> YA NO DA ACCESO A NADIE (2026-09-06, v24.2). Era el
   // último resto del enlace-token: el de colaborador se retiró en agosto,
   // pero el del anfitrión se dejó vivo "como plan B". Un token dentro de
@@ -397,6 +400,15 @@ export default function App() {
   // la base lo comprueba también al entrar en el canal, puede_usar_canal).
   const puedeMultimedia =
     data.esAnfitrion || tienePermiso(data.colaboradores.find((c) => c.id === rol), PERMISOS.MULTIMEDIA);
+
+  // ?pantalla: solo el vídeo de la tele, a pantalla completa (v58).
+  if (vistaPantalla && puedeMultimedia) {
+    return (
+      <Suspense fallback={<PantallaCargando />}>
+        <PaginaPantalla />
+      </Suspense>
+    );
+  }
 
   // ?musica: solo Música, a pantalla entera, sin cabecera ni banners.
   // Cualquier otro ve su vista de siempre.

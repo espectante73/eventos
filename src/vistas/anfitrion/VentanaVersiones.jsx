@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "58",
+    cambios: [
+      "Vídeo en Multimedia: arriba, dos pestañas, Audio (la música, como hasta ahora) y Vídeo. En Vídeo, tres botones: Logo, Fotos 1 y Fotos 2, con el que está en pantalla marcado. La música no se corta al cambiar de pestaña.",
+      "La pantalla de la tele es una página propia: en el ordenador conectado a la tele, Multimedia → Vídeo → \"Abrir la pantalla\", se arrastra a la tele y se pulsa \"Pantalla completa\". El logo se ve en bucle desde el primer momento; Fotos 1 y Fotos 2 entran con un fundido, se ven una vez y vuelven solas al logo. Siempre en silencio: el sonido llegará en el paso 2.",
+      "Los tres vídeos se cargan una vez en ese mismo ordenador (Multimedia → Vídeo → Vídeos de este ordenador) y quedan guardados en su navegador: esa noche no se descarga nada.",
+      "Solo el anfitrión y quien tenga el permiso Multimedia pueden manejar la pantalla.",
+    ],
+  },
+  {
     version: "57.3",
     cambios: [
       "La sección \"Música\" se llama ahora \"Multimedia\", con un icono de pantalla con el botón de reproducir: hoy maneja el sonido, y cuando se haga el vídeo irá dentro, en dos partes (Audio y Vídeo). Cambia en \"Abrir sección\" (anfitrión y colaborador), en la barra de cuadraditos del móvil y en el título de la ventana.",

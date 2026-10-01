@@ -332,11 +332,11 @@ describe("los canales en vivo, solo con sesión y permiso", () => {
 
   it("y cada uno tiene su permiso en puede_usar_canal", () => {
     const permisos = cuerpoDe("puede_usar_canal");
-    for (const r of conCanal) {
-      const nombre = readFileSync(r, "utf-8").match(/NOMBRE_CANAL = "([^"]+)"/)?.[1];
-      expect(nombre, r).toBeTruthy();
-      expect(permisos, nombre).toContain(`'${nombre}'`);
-    }
+    // Todos los nombres de canal de esos archivos ("…-evento"), no solo
+    // el primero: useMandoMusica abre también el del vídeo (v58).
+    const nombres = conCanal.flatMap((r) => [...readFileSync(r, "utf-8").matchAll(/= "([a-z]+-evento)"/g)].map((m) => m[1]));
+    expect(nombres).toEqual(expect.arrayContaining(["musica-evento", "asistencia-evento", "video-evento"]));
+    for (const nombre of nombres) expect(permisos, nombre).toContain(`'${nombre}'`);
   });
 
   it("al mando de la música entra el anfitrión y quien tenga el permiso Multimedia", () => {

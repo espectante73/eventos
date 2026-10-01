@@ -25,26 +25,30 @@
 // descuido -- no cambiar esto a `ventana.indexedDB` pensando que es un
 // olvido.
 const NOMBRE_BD = "eventos-musica";
-const ALMACEN = "pistas";
+// Dos cajones en la misma base: las pistas de la música y los vídeos de
+// la pantalla (v58). Aparte, para que la música no cuente un vídeo como
+// una pista suya. La versión 2 crea el de vídeos sin tocar las pistas.
+const PISTAS = "pistas";
+const VIDEOS = "videos";
 
 function abrirBD() {
   return new Promise((resolve, reject) => {
-    const peticion = indexedDB.open(NOMBRE_BD, 1);
+    const peticion = indexedDB.open(NOMBRE_BD, 2);
     peticion.onupgradeneeded = () => {
       const bd = peticion.result;
-      if (!bd.objectStoreNames.contains(ALMACEN)) bd.createObjectStore(ALMACEN);
+      for (const cajon of [PISTAS, VIDEOS]) if (!bd.objectStoreNames.contains(cajon)) bd.createObjectStore(cajon);
     };
     peticion.onsuccess = () => resolve(peticion.result);
     peticion.onerror = () => reject(peticion.error);
   });
 }
 
-function conAlmacen(modo, trabajo) {
+function conAlmacen(cajon, modo, trabajo) {
   return abrirBD().then(
     (bd) =>
       new Promise((resolve, reject) => {
-        const transaccion = bd.transaction(ALMACEN, modo);
-        const peticion = trabajo(transaccion.objectStore(ALMACEN));
+        const transaccion = bd.transaction(cajon, modo);
+        const peticion = trabajo(transaccion.objectStore(cajon));
         peticion.onsuccess = () => resolve(peticion.result);
         peticion.onerror = () => reject(peticion.error);
         transaccion.oncomplete = () => bd.close();
@@ -52,26 +56,29 @@ function conAlmacen(modo, trabajo) {
   );
 }
 
-// `clave` es el índice del bloque (0-8) o la cadena "cortinilla".
-export function guardarPista(clave, archivo) {
-  return conAlmacen("readwrite", (almacen) =>
+const guardar = (cajon, clave, archivo) =>
+  conAlmacen(cajon, "readwrite", (almacen) =>
     almacen.put({ nombre: archivo.name, tipo: archivo.type, datos: archivo }, String(clave))
   );
-}
 
-export function borrarPista(clave) {
-  return conAlmacen("readwrite", (almacen) => almacen.delete(String(clave)));
-}
+// `clave` es el índice del bloque (0-8) o la cadena "cortinilla".
+export const guardarPista = (clave, archivo) => guardar(PISTAS, clave, archivo);
+export const borrarPista = (clave) => conAlmacen(PISTAS, "readwrite", (almacen) => almacen.delete(String(clave)));
+export const leerTodasLasPistas = () => leerTodo(PISTAS);
+
+// Los vídeos de la pantalla: "logo", "fotos1", "fotos2".
+export const guardarVideo = (clave, archivo) => guardar(VIDEOS, clave, archivo);
+export const leerTodosLosVideos = () => leerTodo(VIDEOS);
 
 // Devuelve { clave: { nombre, datos } } con todo lo guardado. Quien lo
 // llame se encarga de convertir `datos` en una URL reproducible (y de
 // liberarla después) -- esta capa no sabe nada de ventanas ni de audio.
-export function leerTodasLasPistas() {
+function leerTodo(cajon) {
   return abrirBD().then(
     (bd) =>
       new Promise((resolve, reject) => {
-        const transaccion = bd.transaction(ALMACEN, "readonly");
-        const almacen = transaccion.objectStore(ALMACEN);
+        const transaccion = bd.transaction(cajon, "readonly");
+        const almacen = transaccion.objectStore(cajon);
         const resultado = {};
         const cursor = almacen.openCursor();
         cursor.onsuccess = () => {

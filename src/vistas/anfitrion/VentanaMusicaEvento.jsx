@@ -59,10 +59,12 @@ import {
   Trash2,
   Check,
   RotateCcw,
+  MonitorPlay,
 } from "lucide-react";
 import { calcularHorasAbsolutas } from "../../lib/cronograma";
 import { useMandoMusica } from "../../lib/useMandoMusica";
-import { rolRecordado, recordarRol } from "../../lib/ventanaMusica";
+import { rolRecordado, recordarRol, parteRecordada, recordarParte } from "../../lib/ventanaMusica";
+import { PanelVideo } from "./PanelVideo";
 import {
   porcentajeAVolumen,
   ajustarPorcentaje,
@@ -182,6 +184,14 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // otro bloque para echarle un vistazo cortaba la música, y volver al
   // que sonaba lo hacía empezar desde cero. Ahora mirar no toca el
   // sonido: solo el botón de play cambia lo que suena.
+  // Multimedia tiene dos partes (v58): Audio (todo lo de abajo) y Vídeo
+  // (PanelVideo.jsx). Cada aparato recuerda la suya. Al pasar a Vídeo, lo
+  // de Audio se oculta pero sigue montado: la música no se corta.
+  const [parte, setParteEstado] = useState(parteRecordada);
+  const setParte = (nueva) => {
+    setParteEstado(nueva);
+    recordarParte(nueva);
+  };
   const [seleccionado, setSeleccionado] = useState(0);
   const [bloqueSonando, setBloqueSonando] = useState(null);
   const [sonando, setSonando] = useState(false);
@@ -2062,7 +2072,31 @@ export function VentanaMusicaEvento({ data, ventana }) {
         </span>
       </div>
 
-      <div className="px-4 py-3" style={{ flex: 1, overflowY: "auto" }}>
+      {/* Audio | Vídeo: las dos partes de Multimedia, en teclas como las
+          del resto del mando. */}
+      <div className="flex gap-2 px-4 pt-3" style={{ flexShrink: 0 }}>
+        {[
+          { clave: "audio", texto: "Audio", Icono: Music },
+          { clave: "video", texto: "Vídeo", Icono: MonitorPlay },
+        ].map(({ clave, texto, Icono }) => (
+          <button
+            key={clave}
+            onClick={() => setParte(clave)}
+            aria-pressed={parte === clave}
+            className="flex-1 flex items-center justify-center gap-2"
+            style={{ minHeight: 44, borderRadius: 12, ...tecla(parte === clave), color: parte === clave ? P.texto : P.tenue, fontWeight: 600, fontSize: M.texto, transition: SUAVE }}
+          >
+            <Icono size={16} /> {texto}
+          </button>
+        ))}
+      </div>
+
+      {parte === "video" && (
+        <div className="px-4 py-3" style={{ flex: 1, overflowY: "auto" }}>
+          <PanelVideo P={P} tecla={tecla} tarjeta={tarjeta} M={M} SUAVE={SUAVE} esTactil={esTactil} preguntar={preguntar} />
+        </div>
+      )}
+      <div className="px-4 py-3" style={{ flex: 1, overflowY: "auto", display: parte === "video" ? "none" : undefined }}>
         {rol === "sin-definir" && (
           <div className="flex flex-col gap-3" style={{ maxWidth: 420, margin: "0 auto" }}>
             <p className="text-center mb-1" style={{ color: P.tenue, fontSize: M.texto }}>

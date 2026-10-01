@@ -15,7 +15,8 @@ import { T, R, S, OP } from "./theme";
 
 // ⚠️ El mando de Música tiene lenguaje propio YA APROBADO (norma 4 del
 // CLAUDE.md): paleta oscura suya, teclas con su relieve. No entra.
-const FUERA = ["vistas/anfitrion/VentanaMusicaEvento.jsx"];
+// PanelVideo (v58) es el mismo mando, en su parte de Vídeo: mismo lenguaje.
+const FUERA = ["vistas/anfitrion/VentanaMusicaEvento.jsx", "vistas/anfitrion/PanelVideo.jsx"];
 
 function archivosDeLaApp(dir = "src", encontrados = []) {
   for (const nombre of readdirSync(dir)) {

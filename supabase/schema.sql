@@ -457,6 +457,8 @@ CREATE FUNCTION public.puede_usar_canal(p_canal text) RETURNS boolean
     -- El mando de la música: el anfitrión y el colaborador con el
     -- permiso Multimedia (v57.2).
     when 'musica-evento' then es_anfitrion() or colaborador_tiene_permiso('multimedia')
+    -- La pantalla de la tele (v58): los mismos que la música.
+    when 'video-evento' then es_anfitrion() or colaborador_tiene_permiso('multimedia')
     -- Las llegadas del día: el anfitrión y los colaboradores.
     when 'asistencia-evento' then es_anfitrion()
       or exists (select 1 from colaboradores c where c."authUserId" = auth.uid())

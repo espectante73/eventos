@@ -10,6 +10,7 @@ import { usePopupWindow } from "../lib/usePopupWindow";
 import { abrirMusica } from "../lib/ventanaMusica";
 // La página de Música (?musica) viaja en el trozo de esta vista: ver App.jsx.
 export { PaginaMusica } from "./PaginaMusica";
+export { PaginaPantalla } from "./PaginaPantalla";
 import { nombreCompleto } from "../lib/formato";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { C } from "../theme";

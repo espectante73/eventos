@@ -7,6 +7,7 @@ import { act } from "react";
 import { montar } from "../pruebas/dibujar";
 
 vi.mock("../lib/useMandoMusica", () => ({
+  CANAL_VIDEO: "video-evento",
   useMandoMusica: () => ({
     conectado: true,
     estadoCanal: "SUBSCRIBED",
@@ -17,7 +18,12 @@ vi.mock("../lib/useMandoMusica", () => ({
     enviarEstado: () => {},
   }),
 }));
-vi.mock("../lib/almacenPistas", () => ({ guardarPista: async () => {}, leerTodasLasPistas: async () => ({}) }));
+vi.mock("../lib/almacenPistas", () => ({
+  guardarPista: async () => {},
+  leerTodasLasPistas: async () => ({}),
+  guardarVideo: async () => {},
+  leerTodosLosVideos: async () => ({ logo: { nombre: "logo.mp4" } }),
+}));
 vi.mock("../lib/fondoMusica", async (original) => ({ ...(await original()), leerFondo: async () => null }));
 
 const { PaginaMusica } = await import("./PaginaMusica");
@@ -72,6 +78,26 @@ describe("la página de Música", () => {
     } finally {
       window.matchMedia = matchMediaAntes;
     }
+  });
+
+  // Multimedia → Vídeo (PanelVideo, v58): los tres botones y, en el
+  // ordenador, los vídeos de este Mac y abrir la pantalla.
+  it("la pestaña Vídeo: Logo, Fotos 1 y Fotos 2, y los vídeos de este ordenador (PanelVideo)", async () => {
+    conCerrojos(true);
+    let vista;
+    await act(async () => {
+      vista = montar(<PaginaMusica data={data} />);
+    });
+    const boton = (texto) => [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === texto);
+    await act(async () => boton("Vídeo").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    const texto = document.body.textContent;
+    for (const t of ["Logo", "Fotos 1", "Fotos 2", "Vídeos de este ordenador", "logo.mp4", "Abrir la pantalla", "La pantalla no está abierta"]) {
+      expect(texto).toContain(t);
+    }
+    // Sin pantalla abierta, un botón lo dice en vez de no hacer nada.
+    await act(async () => boton("Fotos 1").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(document.body.textContent).toContain("Ábrela en el ordenador de la tele");
+    vista.desmontar();
   });
 
   it("si ya hay otra abierta, lo dice y no monta un segundo reproductor", async () => {
