@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "57.3",
+    cambios: [
+      "La sección \"Música\" se llama ahora \"Multimedia\", con un icono de pantalla con el botón de reproducir: hoy maneja el sonido, y cuando se haga el vídeo irá dentro, en dos partes (Audio y Vídeo). Cambia en \"Abrir sección\" (anfitrión y colaborador), en la barra de cuadraditos del móvil y en el título de la ventana.",
+    ],
+  },
+  {
     version: "57.2",
     cambios: [
       "Permiso nuevo, \"Multimedia\": el colaborador que lo tenga ve Música en su \"Abrir sección\" y maneja la música con el mando desde su propia cuenta, sin la del anfitrión. Uno solo para música y vídeo; quién lleva qué lo acuerdan entre ellos.",

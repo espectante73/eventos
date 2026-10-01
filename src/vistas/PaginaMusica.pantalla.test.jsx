@@ -77,7 +77,7 @@ describe("la página de Música", () => {
   it("si ya hay otra abierta, lo dice y no monta un segundo reproductor", async () => {
     conCerrojos(false);
     const texto = await dibujar();
-    expect(texto).toContain("Música ya está abierta");
+    expect(texto).toContain("Multimedia ya está abierta");
     expect(texto).not.toContain("¿Qué papel tiene este aparato?");
   });
 });

@@ -2,7 +2,7 @@
 // sección…" (DesplegableSecciones.jsx) y en la barra de ventanas del
 // móvil (BarraVentanas.jsx). Una sola pieza: si cambia aquí, cambia en
 // los dos sitios.
-import { Heart, Users, Settings, Wallet, Mail, List, Utensils, Music, Megaphone, KeyRound, ClipboardList } from "lucide-react";
+import { Heart, Users, Settings, Wallet, Mail, List, Utensils, MonitorPlay, Megaphone, KeyRound, ClipboardList } from "lucide-react";
 
 export const ICONOS_VENTANAS = {
   aniversarios: Heart,
@@ -13,7 +13,8 @@ export const ICONOS_VENTANAS = {
   invitaciones: Mail,
   invitados: List,
   mesas: Utensils,
-  musicaEvento: Music,
+  // Multimedia: una pantalla con su botón de reproducir, sonido e imagen.
+  musicaEvento: MonitorPlay,
   novedades: Megaphone,
   permisos: KeyRound,
 };

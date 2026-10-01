@@ -439,7 +439,7 @@ describe("el «Abrir sección…» del colaborador", () => {
   });
 
   // El permiso Multimedia (v57.2): Música, solo a quien lo tiene.
-  it("«Música», solo con el permiso Multimedia", () => {
+  it("«Multimedia», solo con su permiso", () => {
     const nombresCon = (permisos) => {
       const vista = montarVista({ colaboradores: [{ ...colaboradores[0], permisos }] });
       vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
@@ -447,8 +447,8 @@ describe("el «Abrir sección…» del colaborador", () => {
       vista.desmontar();
       return nombres;
     };
-    expect(nombresCon([])).not.toContain("Música");
-    expect(nombresCon(["multimedia"])).toContain("Música");
+    expect(nombresCon([])).not.toContain("Multimedia");
+    expect(nombresCon(["multimedia"])).toContain("Multimedia");
   });
 });
 

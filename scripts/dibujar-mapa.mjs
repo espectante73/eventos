@@ -260,7 +260,7 @@ const nivel1 = [
   ["Invitados", { fuera: true }],
   ["Mesas", {}],
   ["Mi cuenta", {}],
-  ["Música", { fuera: true }],
+  ["Multimedia", { fuera: true }],
   ["Novedades", { fuera: true }],
 ];
 for (const [n, o] of nivel1) { entrada(COLS[0], y, n, o); y += SALTO; }

@@ -25,7 +25,7 @@ export const ALTO_BARRA = SEPARACION_ABAJO + TAM_CUADRITO + HUECO_X + TAMANO_BOT
 // Las ventanas que pueden ir en la barra. El icono, el del menú.
 export const VENTANAS_MOVIL = {
   formulario: { clave: "formulario", titulo: "Formulario", icono: ICONOS_VENTANAS.formulario },
-  musica: { clave: "musica", titulo: "Música", icono: ICONOS_VENTANAS.musicaEvento },
+  musica: { clave: "musica", titulo: "Multimedia", icono: ICONOS_VENTANAS.musicaEvento },
 };
 const INICIO = { clave: "inicio", titulo: "Inicio", icono: Home };
 

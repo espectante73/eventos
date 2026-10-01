@@ -1887,7 +1887,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
       {esReproductor ? <Smartphone size={18} style={{ flexShrink: 0, marginTop: 2 }} /> : <Speaker size={18} style={{ flexShrink: 0, marginTop: 2 }} />}
       <span>
         {esReproductor
-          ? "Canal listo, pero el mando todavía no está. Abre \"Música del evento\" en el móvil y elige Mando a distancia."
+          ? "Canal listo, pero el mando todavía no está. Abre \"Multimedia\" en el móvil y elige Mando a distancia."
           : "Canal listo, pero el ordenador todavía no está. Ábrelo en el Mac y márcalo como el aparato que reproduce."}
       </span>
     </div>
@@ -2015,7 +2015,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
         style={{ flexShrink: 0, minHeight: 52, borderBottom: `1px solid ${P.linea}` }}
       >
         <h3 style={{ fontFamily: "'Fraunces', serif", color: P.texto, fontWeight: 600, fontSize: M.titulo, letterSpacing: "-0.01em", flexShrink: 0 }}>
-          Música
+          Multimedia
         </h3>
         {rol !== "sin-definir" && (
           <div className="flex items-center gap-2 min-w-0">

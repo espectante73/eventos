@@ -116,7 +116,7 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    `VentanaFlotante`; si crece mucho, lanzadora pequeña + una ventana por
    parte. ⚠️ Las que se usan **mientras se mira otra cosa** —Novedades,
    Cronograma, Lista de invitados— son ventanas de verdad del sistema
-   (`usePopupWindow`); Música, en el ordenador, una página propia
+   (`usePopupWindow`); Multimedia, en el ordenador, una página propia
    (`lib/ventanaMusica.js`) que sigue sonando aunque se cierre la app; en
    el móvil, dentro de la app, con la barra de ventanas (`BarraVentanas`).
 3. **Todo al alcance del pulgar QUE ELIJA CADA UNO.** La app entera se

@@ -126,7 +126,8 @@ export const ETIQUETAS_VENTANAS = {
   versiones: "Versiones",
   novedades: "Novedades",
   permisos: "Permisos",
-  musicaEvento: "Música",
+  // "Multimedia" (antes "Música"): sonido hoy y vídeo después (él, v57.3).
+  musicaEvento: "Multimedia",
 };
 
 // Ventana flotante independiente y no bloqueante: a diferencia de

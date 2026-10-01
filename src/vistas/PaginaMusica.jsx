@@ -17,7 +17,7 @@ export function PaginaMusica({ data, comoPagina = true }) {
   const [libre, setLibre] = useState(null);
   useEffect(() => cogerCerrojoMusica(setLibre), []);
   useEffect(() => {
-    if (comoPagina) document.title = "Música del evento";
+    if (comoPagina) document.title = "Multimedia del evento";
   }, [comoPagina]);
 
   if (libre === null) return <PantallaCargando />;
@@ -31,7 +31,7 @@ export function PaginaMusica({ data, comoPagina = true }) {
       >
         <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
           <h1 className="text-xl mb-2" style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}>
-            Música ya está abierta
+            Multimedia ya está abierta
           </h1>
           <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: OP.secundario }}>
             En otra ventana de este aparato. Usa esa: dos a la vez sonarían a destiempo.

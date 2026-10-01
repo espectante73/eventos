@@ -10,7 +10,7 @@ const evento = { nombre: "La boda", fecha: "2026-11-13", hora: "18:00", lugar: "
 const botones = () => [...document.body.querySelectorAll("button")];
 const boton = (t) => botones().find((b) => b.textContent.trim().endsWith(t));
 
-it("anfitrión: «Mi cuenta» está en «Abrir sección…», entre Mesas y Música, y abre su ventana", () => {
+it("anfitrión: «Mi cuenta» está en «Abrir sección…», entre Mesas y Multimedia, y abre su ventana", () => {
   const vista = montar(
     <Portada evento={evento} editable abierto={{}} toggle={() => {}} colaboradores={[]} onCerrarSesion={() => {}} />
   );
@@ -20,7 +20,7 @@ it("anfitrión: «Mi cuenta» está en «Abrir sección…», entre Mesas y Mús
   const i = nombres.findIndex((n) => n.endsWith("Mi cuenta"));
   expect(i).toBeGreaterThan(-1);
   expect(nombres[i - 1]).toMatch(/Mesas$/);
-  expect(nombres[i + 1]).toMatch(/Música$/);
+  expect(nombres[i + 1]).toMatch(/Multimedia$/);
   vista.pulsar(botones()[i]);
   expect(document.body.textContent).toContain("Cerrar sesión");
   vista.desmontar();

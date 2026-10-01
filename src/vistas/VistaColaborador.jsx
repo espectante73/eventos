@@ -1201,7 +1201,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 { id: "formulario", etiqueta: "Formulario", icono: ICONOS_VENTANAS.formulario, onClick: abrirFormulario, sello: pendientes.length },
                 puedeEnviarInvitaciones && { id: "invitaciones", etiqueta: "Invitaciones", icono: Send, onClick: () => setVentanaInvitacionesAbierta(true) },
                 onCerrarSesion && { id: "mi-cuenta", etiqueta: "Mi cuenta", icono: UserCog, onClick: () => setMiCuentaAbierta(true), ...ESTILO_MI_CUENTA },
-                puedeMultimedia && { id: "musica", etiqueta: "Música", icono: ICONOS_VENTANAS.musicaEvento, onClick: () => abrirMusica(abrirMusicaDentro) },
+                puedeMultimedia && { id: "musica", etiqueta: "Multimedia", icono: ICONOS_VENTANAS.musicaEvento, onClick: () => abrirMusica(abrirMusicaDentro) },
                 puedeEditarNovedades && { id: "novedades", etiqueta: "Novedades", icono: Megaphone, onClick: abrirNovedades },
               ].filter(Boolean)}
             />

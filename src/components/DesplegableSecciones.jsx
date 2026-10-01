@@ -187,7 +187,7 @@ export function DesplegableSecciones({
     };
   });
 
-  // En su sitio del orden alfabético: detrás de "Mesas", delante de "Música".
+  // En su sitio del orden alfabético: detrás de "Mesas", delante de "Multimedia".
   if (abrirMiCuenta) {
     opciones.splice(opciones.findIndex((o) => o.id === "mesas") + 1, 0, {
       id: "miCuenta",
