@@ -16,7 +16,7 @@ import { leerTodosLosVideos } from "../lib/almacenPistas";
 import { cogerCerrojoMusica, NOMBRE_VENTANA_PANTALLA, VIDEOS, VIDEO_REPOSO, despuesDe } from "../lib/ventanaMusica";
 import { PantallaCargando } from "../components/PantallaCargando";
 import { Boton } from "../components/Boton";
-import { C, T, OP } from "../theme";
+import { C, T, R, OP } from "../theme";
 
 const FUNDIDO = 1500; // ms que tarda un vídeo en fundirse con el siguiente
 const LATIDO_ESTADO = 3000; // cada cuánto le cuenta al mando qué se ve
@@ -167,11 +167,15 @@ function Reproductor() {
         <Aviso titulo="Falta el vídeo del logo" texto="Cárgalo en Multimedia → Vídeo, en este mismo ordenador." />
       )}
       {!completa && (
-        <div className="absolute left-0 right-0 bottom-0 flex flex-col items-center gap-2 pb-6" style={{ color: C.paper }}>
-          <p style={{ fontSize: T.normal, opacity: OP.secundario }}>Arrastra esta ventana a la tele y pulsa:</p>
-          <Boton variante="principal" oscuro onClick={ponerCompleta}>
-            Pantalla completa
-          </Boton>
+        <div className="absolute left-0 right-0 bottom-0 flex justify-center pb-6">
+          {/* Sobre un fondo oscuro: el logo es claro, y el texto claro
+              encima no se leía (él, captura de v58). */}
+          <div className="flex flex-col items-center gap-2 px-5 py-3" style={{ background: "rgba(0, 0, 0, 0.62)", borderRadius: R.caja, color: C.paper }}>
+            <p style={{ fontSize: T.normal }}>Arrastra esta ventana a la tele y pulsa:</p>
+            <Boton variante="principal" oscuro onClick={ponerCompleta}>
+              Pantalla completa
+            </Boton>
+          </div>
         </div>
       )}
     </div>

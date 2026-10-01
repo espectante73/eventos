@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "58.1",
+    cambios: [
+      "Pantalla de la tele: \"Arrastra esta ventana a la tele y pulsa\" y el botón \"Pantalla completa\" van sobre un fondo oscuro. Encima del logo, que es claro, el texto no se leía.",
+    ],
+  },
+  {
     version: "58",
     cambios: [
       "Vídeo en Multimedia: arriba, dos pestañas, Audio (la música, como hasta ahora) y Vídeo. En Vídeo, tres botones: Logo, Fotos 1 y Fotos 2, con el que está en pantalla marcado. La música no se corta al cambiar de pestaña.",
