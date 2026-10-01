@@ -438,3 +438,56 @@ describe("el «Abrir sección…» del colaborador", () => {
     vista.desmontar();
   });
 });
+
+// En el móvil, el formulario va a pantalla entera en la barra de ventanas
+// (él, v57.1); en el ordenador, sigue siendo una ventana flotante.
+describe("el formulario en la barra de ventanas del móvil", () => {
+  const conTactil = (fn) => {
+    const antes = window.matchMedia;
+    window.matchMedia = () => ({ matches: true });
+    try {
+      return fn();
+    } finally {
+      window.matchMedia = antes;
+    }
+  };
+  const barraDe = (extra = {}) => ({
+    delante: "inicio",
+    formularioEnBarra: false,
+    abrirFormulario: () => {},
+    cerrarFormulario: () => {},
+    ...extra,
+  });
+
+  it("en el móvil, «Formulario» lo manda a la barra", () =>
+    conTactil(() => {
+      const abiertos = [];
+      const vista = montar(
+        <VistaColaborador data={data} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} barra={barraDe({ abrirFormulario: () => abiertos.push(1) })} />
+      );
+      abrirPorMenu(vista);
+      expect(abiertos).toEqual([1]);
+      vista.desmontar();
+    }));
+
+  it("en la barra y delante, se dibuja a pantalla entera; detrás, sigue montado pero oculto", () =>
+    conTactil(() => {
+      const dibujarCon = (delante) => {
+        const vista = montar(
+          <VistaColaborador data={data} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} barra={barraDe({ formularioEnBarra: true, delante })} />
+        );
+        const ventana = document.body.querySelector(".ventana-fija");
+        const capa = ventana?.parentElement;
+        const resultado = { hay: Boolean(ventana), oculta: capa?.style.display === "none", texto: document.body.textContent };
+        vista.desmontar();
+        return resultado;
+      };
+      const delante = dibujarCon("formulario");
+      expect(delante.hay).toBe(true);
+      expect(delante.oculta).toBe(false);
+      expect(delante.texto).toContain("Tus datos");
+      const detras = dibujarCon("inicio");
+      expect(detras.hay).toBe(true);
+      expect(detras.oculta).toBe(true);
+    }));
+});

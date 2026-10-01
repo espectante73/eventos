@@ -37,6 +37,8 @@ import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
 import { SeccionPlegable } from "../components/SeccionPlegable";
 import { BotonAbrirSeccion, ESTILO_MI_CUENTA } from "../components/DesplegableSecciones";
+import { CapaBarra } from "../components/BarraVentanas";
+import { ICONOS_VENTANAS } from "../lib/iconosVentanas";
 import { Boton, estilosBoton, EnlaceTexto } from "../components/Boton";
 import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
 import { Portada } from "../components/Portada";
@@ -886,7 +888,9 @@ function FilaInvitadoColaborador({
   );
 }
 
-export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken, onCerrarSesion }) {
+// `barra`: en el móvil, el formulario va a pantalla entera en la barra de
+// ventanas (App.jsx, BarraVentanas.jsx), con su cuadradito (él, v57.1).
+export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken, onCerrarSesion, barra }) {
   const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, fotosSinBoda, persistFotosSinBoda, evento, ordenFamiliares, tokenTablon } = data;
   // Familias sin ningún email: el colaborador lo recibe de la base; el
   // anfitrión (vista previa "Formularios") lo calcula con la lista entera.
@@ -941,6 +945,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // con su propio "Abrir sección…" (v51). El resumen y las listas de
   // invitados viven en "Formulario", que se abre desde ahí.
   const [formularioAbierto, setFormularioAbierto] = useState(false);
+  const enBarra = Boolean(barra) && Boolean(window.matchMedia?.("(pointer: coarse) and (hover: none)")?.matches);
+  const formularioVisible = enBarra ? barra.formularioEnBarra : formularioAbierto;
+  const abrirFormulario = enBarra ? barra.abrirFormulario : () => setFormularioAbierto(true);
+  const cerrarFormulario = enBarra ? barra.cerrarFormulario : () => setFormularioAbierto(false);
   const [miCuentaAbierta, setMiCuentaAbierta] = useState(false);
   const [abiertoId, setAbiertoId] = useState(null);
   // Mientras un invitado está abierto, se queda fijo en la sección donde
@@ -1186,7 +1194,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               sello={pendientes.length}
               opciones={[
                 puedeEditarDatosEvento && { id: "datos-evento", etiqueta: "Datos evento", icono: Calendar, onClick: () => setVentanaDatosEventoAbierta(true) },
-                { id: "formulario", etiqueta: "Formulario", icono: ClipboardList, onClick: () => setFormularioAbierto(true), sello: pendientes.length },
+                { id: "formulario", etiqueta: "Formulario", icono: ICONOS_VENTANAS.formulario, onClick: abrirFormulario, sello: pendientes.length },
                 puedeEnviarInvitaciones && { id: "invitaciones", etiqueta: "Invitaciones", icono: Send, onClick: () => setVentanaInvitacionesAbierta(true) },
                 onCerrarSesion && { id: "mi-cuenta", etiqueta: "Mi cuenta", icono: UserCog, onClick: () => setMiCuentaAbierta(true), ...ESTILO_MI_CUENTA },
                 puedeEditarNovedades && { id: "novedades", etiqueta: "Novedades", icono: Megaphone, onClick: abrirNovedades },
@@ -1218,11 +1226,13 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         />
       )}
 
-      {formularioAbierto && (
+      {formularioVisible && (
+        <CapaBarra activa={enBarra} delante={barra?.delante === "formulario"}>
         <VentanaFlotante
           clave="formulario-colaborador"
           titulo={colaborador.nombre}
-          onCerrar={() => setFormularioAbierto(false)}
+          onCerrar={cerrarFormulario}
+          fijo={enBarra}
         >
           {/* Todo plegado al abrir y solo una cosa abierta a la vez, como en
               Novedades -- filosofía única de la app, a petición del usuario
@@ -1413,6 +1423,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             </div>
           </section>
         </VentanaFlotante>
+        </CapaBarra>
       )}
 
       {ventanaPregunta}

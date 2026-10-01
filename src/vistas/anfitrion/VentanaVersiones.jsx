@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "57.1",
+    cambios: [
+      "En el móvil, el Formulario se abre a pantalla entera, como Música, y entra en la barra de ventanas con su cuadradito: casita, formulario y Música, y se pasa de uno a otro con un toque. Lo que tengas a medias en el formulario no se pierde al cambiar.",
+      "El anfitrión que vuelve a su vista puede seguir tocando el cuadradito del formulario: la app vuelve sola a la vista de ese colaborador.",
+    ],
+  },
+  {
     version: "57",
     cambios: [
       "Barra de ventanas en el móvil: al abrir Música aparecen abajo, del lado del pulgar, una casita (volver al inicio) y un cuadradito con la nota de Música. Tocar uno lo pone delante; se ve una sola pantalla a la vez y el mando sigue conectado aunque no esté delante.",

@@ -7,7 +7,7 @@ import { esVistaMusica } from "./lib/ventanaMusica";
 import { C, OP, S } from "./theme";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { PantallaCargando } from "./components/PantallaCargando";
-import { BarraVentanas, ALTO_BARRA } from "./components/BarraVentanas";
+import { BarraVentanas, CapaBarra, ALTO_BARRA } from "./components/BarraVentanas";
 import { esFalloDelServidor } from "./lib/servidor";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
 import { VistaTablon } from "./vistas/VistaTablon";
@@ -100,6 +100,14 @@ export default function App() {
   const cerrarVentanaMovil = useCallback((clave) => {
     setVentanasMovil((v) => v.filter((c) => c !== clave));
     setDelante((d) => (d === clave ? "inicio" : d));
+  }, []);
+  // El formulario es el de UN colaborador: se recuerda cuál, para que su
+  // cuadradito lo traiga aunque el anfitrión haya vuelto a su vista.
+  const [formularioDe, setFormularioDe] = useState(null);
+  const abrirFormularioDentro = useCallback((colaboradorId) => {
+    setFormularioDe(colaboradorId);
+    setVentanasMovil((v) => (v.includes("formulario") ? v : [...v, "formulario"]));
+    setDelante("formulario");
   }, []);
   const cambiarVistaPrevia = (destino) => {
     setVistaPrevia(destino === anfitrionToken ? null : destino);
@@ -447,7 +455,9 @@ export default function App() {
       <div
         className="max-w-4xl mx-auto px-4 py-6"
         style={{
-          display: delante === "inicio" ? undefined : "none",
+          // El formulario vive DENTRO de la vista del colaborador: con él
+          // delante, la vista sigue montada y él la cubre entera.
+          display: delante === "musica" ? "none" : undefined,
           paddingBottom: ventanasMovil.length ? ALTO_BARRA : undefined,
         }}
       >
@@ -496,6 +506,12 @@ export default function App() {
           <VistaColaborador
             data={data}
             colaboradorId={vistaPrevia}
+            barra={{
+              delante,
+              formularioEnBarra: ventanasMovil.includes("formulario") && formularioDe === vistaPrevia,
+              abrirFormulario: () => abrirFormularioDentro(vistaPrevia),
+              cerrarFormulario: () => cerrarVentanaMovil("formulario"),
+            }}
             esAnfitrionOriginal={esAnfitrionOriginal}
             setRol={cambiarVistaPrevia}
             anfitrionToken={anfitrionToken}
@@ -505,6 +521,12 @@ export default function App() {
           <VistaColaborador
             data={data}
             colaboradorId={rol}
+            barra={{
+              delante,
+              formularioEnBarra: ventanasMovil.includes("formulario") && formularioDe === rol,
+              abrirFormulario: () => abrirFormularioDentro(rol),
+              cerrarFormulario: () => cerrarVentanaMovil("formulario"),
+            }}
             esAnfitrionOriginal={esAnfitrionOriginal}
             setRol={setRol}
             anfitrionToken={anfitrionToken}
@@ -526,17 +548,24 @@ export default function App() {
           a pantalla entera. Cerrada la vista no se desmonta: el mando
           sigue conectado mientras esté en la barra. */}
       {ventanasMovil.includes("musica") && data.esAnfitrion && (
-        <div
-          className="fixed left-0 right-0"
-          style={{ top: alturaBanners, bottom: ALTO_BARRA, zIndex: 40, display: delante === "musica" ? undefined : "none" }}
-        >
+        <CapaBarra activa delante={delante === "musica"} arriba={alturaBanners}>
           <Suspense fallback={<PantallaCargando />}>
             <PaginaMusica data={data} comoPagina={false} />
           </Suspense>
-        </div>
+        </CapaBarra>
       )}
       {ventanasMovil.length > 0 && (
-        <BarraVentanas abiertas={ventanasMovil} delante={delante} onElegir={setDelante} onCerrar={cerrarVentanaMovil} />
+        <BarraVentanas
+          abiertas={ventanasMovil}
+          delante={delante}
+          onElegir={(clave) => {
+            // El anfitrión pudo volver a su vista: el formulario es de un
+            // colaborador, así que se vuelve a la de ese colaborador.
+            if (clave === "formulario" && data.esAnfitrion && vistaPrevia !== formularioDe) setVistaPrevia(formularioDe);
+            setDelante(clave);
+          }}
+          onCerrar={cerrarVentanaMovil}
+        />
       )}
     </div>
   );

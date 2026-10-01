@@ -24,6 +24,7 @@ export const ALTO_BARRA = SEPARACION_ABAJO + TAM_CUADRITO + HUECO_X + TAMANO_BOT
 
 // Las ventanas que pueden ir en la barra. El icono, el del menú.
 export const VENTANAS_MOVIL = {
+  formulario: { clave: "formulario", titulo: "Formulario", icono: ICONOS_VENTANAS.formulario },
   musica: { clave: "musica", titulo: "Música", icono: ICONOS_VENTANAS.musicaEvento },
 };
 const INICIO = { clave: "inicio", titulo: "Inicio", icono: Home };
@@ -70,6 +71,18 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// Una ventana de la barra, a pantalla entera: de arriba hasta la barra.
+// Fuera de la barra (el ordenador) no envuelve nada. La que no está
+// delante se oculta sin desmontarse: no pierde lo escrito ni la conexión.
+export function CapaBarra({ activa, delante, arriba = 0, children }) {
+  if (!activa) return children;
+  return (
+    <div className="fixed left-0 right-0" style={{ top: arriba, bottom: ALTO_BARRA, zIndex: 40, display: delante ? undefined : "none" }}>
+      {children}
     </div>
   );
 }
