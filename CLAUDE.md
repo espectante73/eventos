@@ -203,6 +203,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 16. **Una persona, varios papeles** (invitado, colaborador, acomodador).
     Una lista de gente se arma con cada persona una vez y sus papeles al
     lado. Modelo: `personasAsignables` (`lib/cronograma.js`).
+17. **Nada en silencio**: lo que pasa fuera de la pantalla (una descarga,
+    un envío) acaba con un aviso de lo hecho y de dónde está, o empieza
+    con una pregunta que él confirma.
 
 
 ## 1.3 Cómo está hecha por dentro

@@ -10,10 +10,15 @@
 // Esto es lo que faltaba: montar la sección con datos de mentira y pasar
 // por CADA valor de CADA filtro. No comprueba cómo se ve (para eso sigue
 // haciendo falta su captura, norma 10); comprueba que se puede ver.
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import { act } from "react";
 import { dibujarYSoltar, montar } from "../../pruebas/dibujar";
 import { SeccionInvitados } from "./SeccionInvitados";
 import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
+
+// Los PDF de verdad no se fabrican aquí (jsdom no dibuja): basta saber que
+// la pantalla avisa al terminar.
+vi.mock("../../lib/pdfAcomodadores", () => ({ descargarListasAcomodadores: async () => 3 }));
 
 const evento = { fecha: "2026-11-13", precioAdulto: "45", precioNino: "20", edadNinoDesde: "3", edadNinoHasta: "12" };
 
@@ -197,6 +202,28 @@ describe("Imprimir: la lista para acomodadores", () => {
 
   it("el botón está en el Imprimir de la lista de invitados", () => {
     expect(conPanel("tabla")).toContain("Lista para acomodadores");
+  });
+
+  it("al terminar avisa de que se han descargado y dónde están (norma 17)", async () => {
+    const vista = montar(
+      <SeccionInvitados
+        data={data}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante="tabla"
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+    const boton = [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Lista para acomodadores"));
+    await act(async () => boton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(document.body.textContent).toContain("Listas descargadas");
+    expect(document.body.textContent).toContain("carpeta de Descargas");
+    vista.desmontar();
   });
 
   it("y no en el de canciones ni en el de alergias", () => {

@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "54.3",
+    cambios: [
+      "Lista para acomodadores: al terminar, la app avisa de que las dos listas se han descargado y de dónde están. Ya no pasa en silencio.",
+      "Las hojas llevan tres cabeceras: \"Familia\", el icono de la mesa y el de persona. En las filas quedan solo los números, y la columna del medio va en un tono muy suave para distinguir las tres.",
+    ],
+  },
+  {
     version: "54.2",
     cambios: [
       "Lista para acomodadores: ahora sí llegan los dos PDF, por mesa y por familia (el navegador guardaba solo el segundo). Sin mesa, un \"NO\" en rojo en lugar del icono de la mesa tachado.",

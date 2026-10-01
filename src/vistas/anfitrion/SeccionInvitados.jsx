@@ -345,7 +345,16 @@ export function SeccionInvitados({
   const descargarAcomodadores = async () => {
     try {
       const familias = await descargarListasAcomodadores({ invitados, ordenFamiliares: data.ordenFamiliares });
-      if (!familias) preguntar({ titulo: "Todavía no", texto: "No hay ninguna familia confirmada.", soloAviso: true });
+      // Nada en silencio (norma 17): la descarga pasa fuera de la pantalla.
+      preguntar(
+        familias
+          ? {
+              titulo: "Listas descargadas",
+              texto: "acomodadores-por-mesa.pdf\nacomodadores-por-familia.pdf\nLas tienes en tu carpeta de Descargas.",
+              soloAviso: true,
+            }
+          : { titulo: "Todavía no", texto: "No hay ninguna familia confirmada.", soloAviso: true }
+      );
     } catch (error) {
       preguntar({
         titulo: "No se pudo",

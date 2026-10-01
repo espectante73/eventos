@@ -49,17 +49,23 @@ describe("descargarListasAcomodadores", () => {
     const n = await descargarListasAcomodadores({ invitados: [inv("1", "Ana", "Ruiz", 3), inv("2", "Luis", "Ruiz", 3)] });
     expect(n).toBe(1);
     expect(descargas).toEqual(["acomodadores-por-mesa.pdf", "acomodadores-por-familia.pdf"]);
-    expect(hojas[0].textos).toEqual([TITULOS.mesa, "3", "2", "Ruiz: Ana y Luis"]);
-    expect(hojas[1].textos).toEqual([TITULOS.familia, "3", "2", "Ruiz: Ana y Luis"]);
+    // La columna por la que se ordena, primero.
+    expect(hojas[0].textos).toEqual([TITULOS.mesa, "Familia", "3", "2", "Ruiz: Ana y Luis"]);
+    expect(hojas[1].textos).toEqual([TITULOS.familia, "Familia", "Ruiz: Ana y Luis", "3", "2"]);
   });
 
-  it("sin mesa: «NO» en rojo en lugar del icono de la mesa", async () => {
+  it("los iconos, solo en la cabecera: en las filas, solo números", async () => {
+    await descargarListasAcomodadores({ invitados: [inv("1", "Ana", "Ruiz", 3), inv("2", "Eva", "Sosa", 4), inv("3", "Iván", "Toledo", 5)] });
+    expect(hojas[0].imagenes).toBe(2);
+    expect(hojas[1].imagenes).toBe(2);
+  });
+
+  it("sin mesa: «NO» en rojo", async () => {
     await descargarListasAcomodadores({ invitados: [inv("1", "Sara", "Sosa", null)] });
     const hoja = hojas[0];
-    expect(hoja.textos).toEqual([TITULOS.mesa, SIN_MESA, "1", "Sosa: Sara"]);
-    expect(hoja.colores[1]).toBe(C.peligro);
-    expect(hoja.colores[2]).toBe(C.ink);
-    expect(hoja.imagenes).toBe(1); // solo el de persona
+    expect(hoja.textos).toEqual([TITULOS.mesa, "Familia", SIN_MESA, "1", "Sosa: Sara"]);
+    expect(hoja.colores[2]).toBe(C.peligro);
+    expect(hoja.colores[3]).toBe(C.ink);
   });
 
   it("si no cabe, se recorta con «…» en su línea", async () => {

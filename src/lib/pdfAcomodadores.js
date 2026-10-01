@@ -3,11 +3,11 @@
 // imprimir: el navegador solo saca un PDF por cada impresión.
 //
 // Una línea por familia (norma 6), para que el acomodador siga cada
-// familia con el ojo; la columna por la que se ordena, primero. Delante
-// de cada número su icono, para no leer dos números seguidos ("5 3") y
-// confundirlos. Cuantas menos palabras, mejor: sin mesa, un «NO» en rojo
-// en lugar del icono (él, v54.2: la mesa tachada repetida en cada fila era
-// el mismo icono otra vez). Hoja blanca y tinta oscura, trazo grueso: se
+// familia con el ojo; la columna por la que se ordena, primero. Arriba,
+// tres cabeceras: «Familia» y, en vez de palabras, el icono de la mesa y
+// el de persona (él, v54.3); en las filas, solo los números. Sin mesa, un
+// «NO» en rojo. Filas alternas en gris y la columna del medio con un tono
+// muy suave, para distinguir las tres. Hoja blanca y tinta oscura: se
 // imprime en papel normal, también en blanco y negro.
 import { C } from "../theme";
 import { filasAcomodadores } from "./familiasInvitacion";
@@ -18,24 +18,35 @@ import { descargarBlob } from "./descargas";
 const PAGINA_ALTO = 841.89;
 const MARGEN = 40;
 const ANCHO_UTIL = 595.28 - 2 * MARGEN;
-const ARRIBA_FILAS = 84;
+const ARRIBA_TABLA = 78; // la fila de las cabeceras
 const ALTO_FILA = 22;
 const LETRA = 11;
 const ICONO = 13;
-const HUECO_ICONO = 18; // del icono al número
-const FONDO_ALTERNO = "#F2F2F2"; // una fila sí y otra no: guía al ojo sin tapar nada en gris
+const RELLENO = 6; // del borde de la columna al texto de la familia
+
+// Los fondos: fila sí, fila no, en gris; y la columna del medio, un tono
+// más, muy suave, en todas las filas (también en las grises).
+const FONDO = {
+  fila: "#F2F2F2",
+  columna: "#F8F8F8",
+  columnaEnFila: "#EAEAEA",
+};
 
 // Los anchos de las columnas, definidos una sola vez (norma 6).
-const ANCHO_MESA = 70;
-const ANCHO_CANTIDAD = 45;
-const SEPARACION = 6;
-const ANCHO_FAMILIA = ANCHO_UTIL - ANCHO_MESA - ANCHO_CANTIDAD - 2 * SEPARACION;
+const ANCHO = { mesa: 50, cantidad: 50 };
+ANCHO.familia = ANCHO_UTIL - ANCHO.mesa - ANCHO.cantidad;
 
-// Dónde empieza cada columna según el orden: la que ordena, primero.
-const COLUMNAS = {
-  mesa: { mesa: 0, cantidad: ANCHO_MESA + SEPARACION, familia: ANCHO_MESA + ANCHO_CANTIDAD + 2 * SEPARACION },
-  familia: { familia: 0, mesa: ANCHO_FAMILIA + SEPARACION, cantidad: ANCHO_FAMILIA + ANCHO_MESA + 2 * SEPARACION },
-};
+// El orden de las columnas: la que ordena, primero.
+const ORDEN_COLUMNAS = { mesa: ["mesa", "cantidad", "familia"], familia: ["familia", "mesa", "cantidad"] };
+
+function columnas(orden) {
+  let x = MARGEN;
+  return ORDEN_COLUMNAS[orden].map((nombre, i) => {
+    const c = { nombre, x, ancho: ANCHO[nombre], centro: x + ANCHO[nombre] / 2, medio: i === 1 };
+    x += ANCHO[nombre];
+    return c;
+  });
+}
 
 export const SIN_MESA = "NO";
 // Safari guardaba solo la segunda de dos descargas seguidas (v54.1: le
@@ -53,48 +64,63 @@ function recortar(pdf, texto, ancho) {
   return `${corto.trimEnd()}…`;
 }
 
-function cabecera(pdf, orden) {
+function fondos(pdf, cols, y, gris) {
+  for (const c of cols) {
+    const color = c.medio ? (gris ? FONDO.columnaEnFila : FONDO.columna) : gris ? FONDO.fila : null;
+    if (!color) continue;
+    pdf.setFillColor(color);
+    pdf.rect(c.x, y, c.ancho, ALTO_FILA, "F");
+  }
+}
+
+// El título de la hoja y la fila de cabeceras, en cada página.
+function cabecera(pdf, orden, cols, iconos) {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(14);
   pdf.setTextColor(C.ink);
   pdf.text(TITULOS[orden], MARGEN, 52);
-  pdf.setDrawColor(C.line);
-  pdf.setLineWidth(0.5);
-  pdf.line(MARGEN, 64, MARGEN + ANCHO_UTIL, 64);
-  pdf.setFont("helvetica", "normal");
   pdf.setFontSize(LETRA);
+  fondos(pdf, cols, ARRIBA_TABLA, false);
+  const base = ARRIBA_TABLA + ALTO_FILA / 2 + LETRA * 0.35;
+  const arribaIcono = ARRIBA_TABLA + (ALTO_FILA - ICONO) / 2;
+  for (const c of cols) {
+    if (c.nombre === "familia") pdf.text("Familia", c.x + RELLENO, base);
+    else pdf.addImage(c.nombre === "mesa" ? iconos.mesa : iconos.persona, "PNG", c.centro - ICONO / 2, arribaIcono, ICONO, ICONO);
+  }
+  pdf.setDrawColor(C.ink);
+  pdf.setLineWidth(0.8);
+  pdf.line(MARGEN, ARRIBA_TABLA + ALTO_FILA, MARGEN + ANCHO_UTIL, ARRIBA_TABLA + ALTO_FILA);
+  pdf.setFont("helvetica", "normal");
 }
 
 function dibujarLista(pdf, filas, orden, iconos) {
-  const col = COLUMNAS[orden];
-  const porPagina = Math.floor((PAGINA_ALTO - ARRIBA_FILAS - MARGEN) / ALTO_FILA);
-  cabecera(pdf, orden);
+  const cols = columnas(orden);
+  const arriba = ARRIBA_TABLA + ALTO_FILA;
+  const porPagina = Math.floor((PAGINA_ALTO - arriba - MARGEN) / ALTO_FILA);
+  cabecera(pdf, orden, cols, iconos);
   filas.forEach((f, i) => {
     if (i > 0 && i % porPagina === 0) {
       pdf.addPage();
-      cabecera(pdf, orden);
+      cabecera(pdf, orden, cols, iconos);
     }
-    const y = ARRIBA_FILAS + (i % porPagina) * ALTO_FILA;
-    if (i % 2) {
-      pdf.setFillColor(FONDO_ALTERNO);
-      pdf.rect(MARGEN, y, ANCHO_UTIL, ALTO_FILA, "F");
-    }
+    const y = arriba + (i % porPagina) * ALTO_FILA;
+    fondos(pdf, cols, y, i % 2 === 1);
     const base = y + ALTO_FILA / 2 + LETRA * 0.35;
-    const arribaIcono = y + (ALTO_FILA - ICONO) / 2;
-    const xMesa = MARGEN + col.mesa;
-    if (f.mesas.length) {
-      pdf.addImage(iconos.mesa, "PNG", xMesa, arribaIcono, ICONO, ICONO);
-      pdf.text(recortar(pdf, f.mesas.join(", "), ANCHO_MESA - HUECO_ICONO), xMesa + HUECO_ICONO, base);
-    } else {
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(C.peligro);
-      pdf.text(SIN_MESA, xMesa, base);
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(C.ink);
+    for (const c of cols) {
+      if (c.nombre === "mesa" && !f.mesas.length) {
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(C.peligro);
+        pdf.text(SIN_MESA, c.centro, base, { align: "center" });
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(C.ink);
+      } else if (c.nombre === "mesa") {
+        pdf.text(recortar(pdf, f.mesas.join(", "), c.ancho - 4), c.centro, base, { align: "center" });
+      } else if (c.nombre === "cantidad") {
+        pdf.text(String(f.cantidad), c.centro, base, { align: "center" });
+      } else {
+        pdf.text(recortar(pdf, f.linea, c.ancho - 2 * RELLENO), c.x + RELLENO, base);
+      }
     }
-    pdf.addImage(iconos.persona, "PNG", MARGEN + col.cantidad, arribaIcono, ICONO, ICONO);
-    pdf.text(String(f.cantidad), MARGEN + col.cantidad + HUECO_ICONO, base);
-    pdf.text(recortar(pdf, f.linea, ANCHO_FAMILIA), MARGEN + col.familia, base);
   });
 }
 
