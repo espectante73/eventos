@@ -345,7 +345,7 @@ export function SeccionInvitados({
   const descargarAcomodadores = async () => {
     try {
       const familias = await descargarListasAcomodadores({ invitados, ordenFamiliares: data.ordenFamiliares });
-      // Nada en silencio (norma 17): la descarga pasa fuera de la pantalla.
+      // Avisa al terminar (norma 9): la descarga pasa fuera de la pantalla.
       preguntar(
         familias
           ? {

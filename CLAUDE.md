@@ -156,8 +156,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 8. **Una vista que solo reordena o filtra lo que la Lista de invitados
    ya muestra va DENTRO de la lista**: la lista es la raíz.
 9. **Quitar o borrar pregunta antes**, en la ventana de la app
-   (`usePreguntaSeguridad`; `BotonQuitar` ya la lleva dentro). Lo vigila
-   `reglas-del-proyecto.test.js`. Descartar lo escrito: «¿Descartar los
+   (`usePreguntaSeguridad`; `BotonQuitar` ya la lleva dentro); lo que
+   pasa fuera de la pantalla (una descarga, un envío) avisa en ella al
+   terminar, y dónde está. Lo vigila `reglas-del-proyecto.test.js`. Descartar lo escrito: «¿Descartar los
    cambios?», «Sí, descartar» / «Seguir editando».
 10. **Está hecho cuando él lo ha visto**: pedir la captura (mejor del
     móvil) ANTES de dar por hecho un cambio de aspecto. Y construir de
@@ -203,9 +204,6 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 16. **Una persona, varios papeles** (invitado, colaborador, acomodador).
     Una lista de gente se arma con cada persona una vez y sus papeles al
     lado. Modelo: `personasAsignables` (`lib/cronograma.js`).
-17. **Nada en silencio**: lo que pasa fuera de la pantalla (una descarga,
-    un envío) acaba con un aviso de lo hecho y de dónde está, o empieza
-    con una pregunta que él confirma.
 
 
 ## 1.3 Cómo está hecha por dentro

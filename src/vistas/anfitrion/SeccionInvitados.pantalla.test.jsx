@@ -204,7 +204,7 @@ describe("Imprimir: la lista para acomodadores", () => {
     expect(conPanel("tabla")).toContain("Lista para acomodadores");
   });
 
-  it("al terminar avisa de que se han descargado y dónde están (norma 17)", async () => {
+  it("al terminar avisa de que se han descargado y dónde están (norma 9)", async () => {
     const vista = montar(
       <SeccionInvitados
         data={data}
