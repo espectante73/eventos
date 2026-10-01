@@ -5,7 +5,6 @@
 // dividir su interior es un cambio aparte, deliberadamente pospuesto (ver
 // CLAUDE.md, Fase 4).
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
-import { X } from "lucide-react";
 import { construirEnlaceTablon } from "../lib/url";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { abrirVentanaMusica } from "../lib/ventanaMusica";
@@ -13,7 +12,7 @@ import { abrirVentanaMusica } from "../lib/ventanaMusica";
 export { PaginaMusica } from "./PaginaMusica";
 import { nombreCompleto } from "../lib/formato";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
-import { C, T, R } from "../theme";
+import { C } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
 import { VentanaAniversarios } from "./anfitrion/VentanaAniversarios";
@@ -24,8 +23,6 @@ import { VentanaConfigCronograma } from "./anfitrion/VentanaConfigCronograma";
 // wifi desconocido, y no puede quedarse descargando delante de los
 // invitados. Viene con esta vista, que ya se carga al entrar. Lo vigila
 // reglas-del-proyecto.test.js.
-import { VentanaMusicaEvento } from "./anfitrion/VentanaMusicaEvento";
-import { guardarAspecto, ASPECTO_POR_DEFECTO } from "../lib/temasMusica";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { VentanaProgreso } from "./anfitrion/VentanaProgreso";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
@@ -46,7 +43,10 @@ const VentanaVersiones = lazy(() =>
   import("./anfitrion/VentanaVersiones").then((m) => ({ default: m.VentanaVersiones }))
 );
 
-export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, emailSesion = "" }) {
+// `abrirMusicaDentro`: Música dentro de la app, con la barra de ventanas
+// del móvil (App.jsx). Vive allí y no aquí para seguir abierta al pasar a
+// otra vista (el formulario del colaborador).
+export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, emailSesion = "", abrirMusicaDentro }) {
   const { evento, colaboradores, invitados, persistInvitados, tokenTablon } = data;
   // El anfitrión también es colaborador: sus fichas incompletas le laten
   // en "Abrir sección…" (él, v50.6). Se le reconoce por su email de acceso.
@@ -109,12 +109,10 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     ventana: ventanaInvitados,
   } = usePopupWindow({ nombreVentana: "lista-invitados", ancho: 1280, alto: 900 });
 
-  // En el móvil, Música va en su propia pestaña: el mando no tapa la app
-  // y se pasa de una a otra con el botón de pestañas. Si el navegador no
-  // deja abrirla (Safari en iOS bloquea de fábrica las ventanas
-  // emergentes, y pulsar Música no hacía nada, 2026-09-01), se queda
-  // dentro de esta página como antes de v56: nunca se queda en nada.
-  const [musicaEnPagina, setMusicaEnPagina] = useState(false);
+  // En el móvil, Música se abre DENTRO de la app, a pantalla entera, con
+  // la barra de ventanas para volver al inicio o a otra (v57). En v56 se
+  // probó en una pestaña aparte: no había forma de volver. En el Mac, si
+  // el navegador bloquea la ventana, también cae dentro: nunca en nada.
   const abrirMusicaEvento = useCallback(() => {
     // ⚠️ La pregunta es qué APARATO es, no cuánto mide la ventana. El
     // primer intento miraba `innerWidth < 820` y se llevó por delante el
@@ -124,8 +122,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     // none` es cierto en un móvil o tablet y falso en un portátil, mida
     // lo que mida la ventana.
     const esTactil = window.matchMedia?.("(pointer: coarse) and (hover: none)").matches;
-    if (!abrirVentanaMusica({ esTactil })) setMusicaEnPagina(true);
-  }, []);
+    if (esTactil || !abrirVentanaMusica()) abrirMusicaDentro?.();
+  }, [abrirMusicaDentro]);
 
   // Se repinta con cada refresco de datos: la ventana
   // es un root de React aparte y no se entera sola de que `data` cambió.
@@ -443,34 +441,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
         </ModalFlotante>
       )}
 
-      {/* Música del evento DENTRO de la página: el camino del móvil (y
-          el de reserva si el navegador bloquea las ventanas emergentes).
-          Ocupa la pantalla entera porque es un mando a distancia: se usa
-          de pie, con una mano y sin mirar mucho. Lleva su propio Error
-          Boundary igual que la versión en ventana aparte. */}
-      {musicaEnPagina && (
-        <div className="fixed inset-0 flex flex-col" style={{ zIndex: 2000, background: C.ink }}>
-          <div
-            className="flex items-center justify-between px-3"
-            style={{ minHeight: 44, flexShrink: 0, background: C.ink, color: C.goldClaro }}
-          >
-            <span style={{ fontFamily: "'Fraunces', serif", fontSize: T.normal, fontWeight: 600 }}>Música del evento</span>
-            <button
-              onClick={() => setMusicaEnPagina(false)}
-              className="boton-3d flex items-center justify-center"
-              style={{ width: 40, height: 40, borderRadius: R.caja, color: C.goldClaro }}
-              title="Cerrar" aria-label="Cerrar"
-            >
-              <X size={20} />
-            </button>
-          </div>
-          <div style={{ flex: 1, minHeight: 0 }}>
-            <ErrorBoundary alReiniciar={() => guardarAspecto(ASPECTO_POR_DEFECTO)}>
-              <VentanaMusicaEvento data={data} ventana={window} />
-            </ErrorBoundary>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

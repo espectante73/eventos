@@ -252,7 +252,9 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
         // 88vh (no 80vh): más aprovechado en una pantalla vertical de
         // móvil -- mismo valor que ya usa ModalFlotante, antes iban
         // distintos sin motivo real.
-        maxHeight: fijo ? "100%" : tam ? undefined : "88vh",
+        // Menos el hueco de la barra de ventanas del móvil cuando se ve
+        // (BarraVentanas.jsx): así no le tapa los botones de abajo.
+        maxHeight: fijo ? "100%" : tam ? undefined : "calc(88vh - var(--hueco-barra-ventanas, 0px))",
         boxShadow: fijo ? "none" : S.flotanteOscura,
         top: fijo ? undefined : pos.top,
         left: fijo ? undefined : pos.left,

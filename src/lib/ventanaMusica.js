@@ -20,11 +20,13 @@ export function urlMusica(lugar = window.location) {
   return `${lugar.origin}${lugar.pathname}?musica=1`;
 }
 
-// ⚠️ Dentro del propio clic, nunca tras un await (CLAUDE.md 2.2): si no,
-// Safari la bloquea en silencio. Devuelve false si el navegador no deja.
-export function abrirVentanaMusica({ esTactil, abrir = (...a) => window.open(...a), url = urlMusica() }) {
+// Solo en el ordenador: en el móvil, Música va dentro de la app, con la
+// barra de ventanas (App.jsx). ⚠️ Dentro del propio clic, nunca tras un
+// await (CLAUDE.md 2.2): si no, Safari la bloquea en silencio. Devuelve
+// false si el navegador no deja.
+export function abrirVentanaMusica({ abrir = (...a) => window.open(...a), url = urlMusica() } = {}) {
   // Por su nombre: si ya está abierta, el navegador devuelve ESA ventana.
-  const ventana = abrir("", NOMBRE_VENTANA_MUSICA, esTactil ? undefined : "width=940,height=800");
+  const ventana = abrir("", NOMBRE_VENTANA_MUSICA, "width=940,height=800");
   if (!ventana) return false;
   let yaEsMusica = false;
   try {

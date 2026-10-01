@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "57",
+    cambios: [
+      "Barra de ventanas en el móvil: al abrir Música aparecen abajo, del lado del pulgar, una casita (volver al inicio) y un cuadradito con la nota de Música. Tocar uno lo pone delante; se ve una sola pantalla a la vez y el mando sigue conectado aunque no esté delante.",
+      "Encima de cada cuadradito, su X para cerrarlo, separada del icono para no tocarla sin querer; pregunta antes de cerrar. La casita no se cierra.",
+      "En el móvil, Música ya no se abre en una pestaña aparte del navegador: va dentro de la app, igual de grande. En el ordenador sigue siendo su ventana propia.",
+    ],
+  },
+  {
     version: "56.1",
     cambios: [
       "Música en una ventana ancha y baja: los cuadros de los momentos ya no pisan la tarjeta del reproductor (un nombre largo, como \"Sentar invitados y Cena\", los ensanchaba), y la fila de la cortinilla ya no se sale de la tarjeta del volumen: si no cabe, la tarjeta crece.",

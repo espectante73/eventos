@@ -10,13 +10,15 @@ import { Boton } from "../components/Boton";
 import { guardarAspecto, ASPECTO_POR_DEFECTO } from "../lib/temasMusica";
 import { cogerCerrojoMusica } from "../lib/ventanaMusica";
 
-export function PaginaMusica({ data }) {
+// `comoPagina`: abierta como página propia (?musica) cambia el título de la
+// pestaña; dentro de la app (el móvil, con la barra de ventanas), no.
+export function PaginaMusica({ data, comoPagina = true }) {
   // null mientras se comprueba; false si ya hay otra Música abierta aquí.
   const [libre, setLibre] = useState(null);
   useEffect(() => cogerCerrojoMusica(setLibre), []);
   useEffect(() => {
-    document.title = "Música del evento";
-  }, []);
+    if (comoPagina) document.title = "Música del evento";
+  }, [comoPagina]);
 
   if (libre === null) return <PantallaCargando />;
 
@@ -44,7 +46,7 @@ export function PaginaMusica({ data }) {
     );
 
   return (
-    <div style={{ height: "100dvh" }}>
+    <div style={{ height: "100%" }}>
       <ErrorBoundary alReiniciar={() => guardarAspecto(ASPECTO_POR_DEFECTO)}>
         <VentanaMusicaEvento data={data} ventana={window} />
       </ErrorBoundary>

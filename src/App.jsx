@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { LogOut } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase, supabaseConfigurado } from "./supabaseClient";
@@ -7,6 +7,7 @@ import { esVistaMusica } from "./lib/ventanaMusica";
 import { C, OP, S } from "./theme";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { PantallaCargando } from "./components/PantallaCargando";
+import { BarraVentanas, ALTO_BARRA } from "./components/BarraVentanas";
 import { esFalloDelServidor } from "./lib/servidor";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
 import { VistaTablon } from "./vistas/VistaTablon";
@@ -87,6 +88,19 @@ export default function App() {
   // `colaboradorId` (ya lo hacía así) en vez de pedir un juego de datos
   // nuevo y más estrecho.
   const [vistaPrevia, setVistaPrevia] = useState(null);
+  // La barra de ventanas del móvil (v57, BarraVentanas.jsx): qué ventanas
+  // hay abiertas y cuál está delante ("inicio" = la app). Vive aquí, y no
+  // en una vista, para seguir abierta al pasar de una vista a otra.
+  const [ventanasMovil, setVentanasMovil] = useState([]);
+  const [delante, setDelante] = useState("inicio");
+  const abrirMusicaDentro = useCallback(() => {
+    setVentanasMovil((v) => (v.includes("musica") ? v : [...v, "musica"]));
+    setDelante("musica");
+  }, []);
+  const cerrarVentanaMovil = useCallback((clave) => {
+    setVentanasMovil((v) => v.filter((c) => c !== clave));
+    setDelante((d) => (d === clave ? "inicio" : d));
+  }, []);
   const cambiarVistaPrevia = (destino) => {
     setVistaPrevia(destino === anfitrionToken ? null : destino);
   };
@@ -428,7 +442,15 @@ export default function App() {
           </button>
         </div>
       )}
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      {/* Con otra ventana delante (Música), la app se oculta entera: una
+          sola pantalla a la vez, y sus ventanas flotantes no asoman. */}
+      <div
+        className="max-w-4xl mx-auto px-4 py-6"
+        style={{
+          display: delante === "inicio" ? undefined : "none",
+          paddingBottom: ventanasMovil.length ? ALTO_BARRA : undefined,
+        }}
+      >
         {/* Para el anfitrión, "Cerrar sesión" vive DENTRO de la cabecera
             (Portada); para un colaborador (real o previsualizado), dentro
             de su propio recuadro de datos (VistaColaborador) -- se pasa
@@ -468,6 +490,7 @@ export default function App() {
             setRol={cambiarVistaPrevia}
             anfitrionToken={anfitrionToken}
             onCerrarSesion={session ? () => supabase.auth.signOut() : null}
+            abrirMusicaDentro={abrirMusicaDentro}
           />
         ) : data.esAnfitrion && vistaPrevia ? (
           <VistaColaborador
@@ -499,6 +522,22 @@ export default function App() {
         )}
         </Suspense>
       </div>
+      {/* Música dentro de la app (móvil): la misma página que en el Mac,
+          a pantalla entera. Cerrada la vista no se desmonta: el mando
+          sigue conectado mientras esté en la barra. */}
+      {ventanasMovil.includes("musica") && data.esAnfitrion && (
+        <div
+          className="fixed left-0 right-0"
+          style={{ top: alturaBanners, bottom: ALTO_BARRA, zIndex: 40, display: delante === "musica" ? undefined : "none" }}
+        >
+          <Suspense fallback={<PantallaCargando />}>
+            <PaginaMusica data={data} comoPagina={false} />
+          </Suspense>
+        </div>
+      )}
+      {ventanasMovil.length > 0 && (
+        <BarraVentanas abiertas={ventanasMovil} delante={delante} onElegir={setDelante} onCerrar={cerrarVentanaMovil} />
+      )}
     </div>
   );
 }

@@ -29,30 +29,25 @@ describe("abrirVentanaMusica", () => {
   it("si ya está abierta, la trae al frente SIN recargarla (cortaría la música)", () => {
     const yaAbierta = ventanaFalsa("?musica=1");
     const hrefAntes = yaAbierta.location.href;
-    expect(abrirVentanaMusica({ esTactil: false, abrir: () => yaAbierta, url: URL })).toBe(true);
+    expect(abrirVentanaMusica({ abrir: () => yaAbierta, url: URL })).toBe(true);
     expect(yaAbierta.location.href).toBe(hrefAntes);
     expect(yaAbierta.enfocada).toBe(true);
   });
 
   it("si es nueva (o una vieja de antes de v56), carga la de Música", () => {
     const nueva = ventanaFalsa("");
-    abrirVentanaMusica({ esTactil: false, abrir: () => nueva, url: URL });
+    abrirVentanaMusica({ abrir: () => nueva, url: URL });
     expect(nueva.location.href).toBe(URL);
   });
 
-  it("la busca por su nombre; en el Mac, con su tamaño, y en el móvil, como pestaña", () => {
+  it("la busca por su nombre, con su tamaño", () => {
     const llamadas = [];
-    const abrir = (...a) => (llamadas.push(a), ventanaFalsa(""));
-    abrirVentanaMusica({ esTactil: false, abrir, url: URL });
-    abrirVentanaMusica({ esTactil: true, abrir, url: URL });
-    expect(llamadas).toEqual([
-      ["", NOMBRE_VENTANA_MUSICA, "width=940,height=800"],
-      ["", NOMBRE_VENTANA_MUSICA, undefined],
-    ]);
+    abrirVentanaMusica({ abrir: (...a) => (llamadas.push(a), ventanaFalsa("")), url: URL });
+    expect(llamadas).toEqual([["", NOMBRE_VENTANA_MUSICA, "width=940,height=800"]]);
   });
 
   it("si el navegador la bloquea, devuelve false (y la app la abre dentro)", () => {
-    expect(abrirVentanaMusica({ esTactil: true, abrir: () => null, url: URL })).toBe(false);
+    expect(abrirVentanaMusica({ abrir: () => null, url: URL })).toBe(false);
   });
 });
 

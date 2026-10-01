@@ -342,10 +342,13 @@ describe("el guardado del anfitrión manda solo lo cambiado", () => {
 describe("la Música del evento viene cargada, no a trozos", () => {
   // Se abre en el local con un wifi desconocido: si se descargara al
   // pulsarla, podría quedarse cargando delante de los invitados.
-  it("VistaAnfitrion la importa directamente, sin lazy", () => {
-    const vista = leer("src/vistas/VistaAnfitrion.jsx");
-    expect(vista).toMatch(/^import \{ VentanaMusicaEvento \} from/m);
-    expect(vista).not.toMatch(/lazy\([^)]*VentanaMusicaEvento/);
+  // Desde v57 va por PaginaMusica, que VistaAnfitrion reexporta: sigue en
+  // el mismo trozo, ya descargado al abrir la app.
+  it("viaja en el trozo de VistaAnfitrion, sin lazy", () => {
+    expect(leer("src/vistas/VistaAnfitrion.jsx")).toMatch(/^export \{ PaginaMusica \} from "\.\/PaginaMusica"/m);
+    const pagina = leer("src/vistas/PaginaMusica.jsx");
+    expect(pagina).toMatch(/^import \{ VentanaMusicaEvento \} from/m);
+    expect(pagina).not.toMatch(/lazy\(/);
   });
 });
 

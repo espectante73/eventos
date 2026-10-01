@@ -13,12 +13,6 @@
 //   su formulario (sustituye a la barra ancha de arriba que existía
 //   antes en App.jsx, ahora eliminada — reparto del 2026-08-09).
 import {
-  Users,
-  Settings,
-  Wallet,
-  Mail,
-  List,
-  Utensils,
   Gauge,
   History,
   UserCog,
@@ -28,30 +22,15 @@ import {
   FlaskConical,
   RotateCcw,
   Trash2,
-  Megaphone,
-  Music,
   KeyRound,
   Clock3,
-  Heart,
 } from "lucide-react";
 import { C } from "../theme";
 import { UserSolido, Seal } from "./Widgets";
 import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "./VentanaFlotante";
 import { MenuFlotante } from "./MenuFlotante";
 
-// Un icono por sección, para ubicarla de un vistazo en la lista.
-const ICONOS_VENTANAS = {
-  aniversarios: Heart,
-  colaboradores: Users,
-  configuracion: Settings,
-  cuentas: Wallet,
-  invitaciones: Mail,
-  invitados: List,
-  mesas: Utensils,
-  musicaEvento: Music,
-  novedades: Megaphone,
-  permisos: KeyRound,
-};
+import { ICONOS_VENTANAS } from "../lib/iconosVentanas";
 
 // Submenú de "Configuración": cada parte se abre en su propia ventana,
 // igual que antes — solo cambia cómo se llega hasta ella. "Modo
