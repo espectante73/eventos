@@ -339,6 +339,10 @@ describe("los canales en vivo, solo con sesión y permiso", () => {
     }
   });
 
+  it("al mando de la música entra el anfitrión y quien tenga el permiso Multimedia", () => {
+    expect(cuerpoDe("puede_usar_canal")).toMatch(/when 'musica-evento' then es_anfitrion\(\) or colaborador_tiene_permiso\('multimedia'\)/);
+  });
+
   it("las políticas de realtime.messages preguntan a puede_usar_canal, solo con sesión", () => {
     expect(sql).toMatch(/CREATE POLICY canales_leer ON realtime\.messages FOR SELECT TO authenticated[^;]*puede_usar_canal/);
     expect(sql).toMatch(/CREATE POLICY canales_escribir ON realtime\.messages FOR INSERT TO authenticated[^;]*puede_usar_canal/);

@@ -38,6 +38,7 @@ import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
 import { SeccionPlegable } from "../components/SeccionPlegable";
 import { BotonAbrirSeccion, ESTILO_MI_CUENTA } from "../components/DesplegableSecciones";
 import { CapaBarra } from "../components/BarraVentanas";
+import { abrirMusica } from "../lib/ventanaMusica";
 import { ICONOS_VENTANAS } from "../lib/iconosVentanas";
 import { Boton, estilosBoton, EnlaceTexto } from "../components/Boton";
 import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
@@ -890,7 +891,9 @@ function FilaInvitadoColaborador({
 
 // `barra`: en el móvil, el formulario va a pantalla entera en la barra de
 // ventanas (App.jsx, BarraVentanas.jsx), con su cuadradito (él, v57.1).
-export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken, onCerrarSesion, barra }) {
+// `abrirMusicaDentro`: con el permiso Multimedia, Música dentro de la app
+// (móvil, o si el navegador bloquea su ventana), igual que el anfitrión.
+export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, setRol, anfitrionToken, onCerrarSesion, barra, abrirMusicaDentro }) {
   const { colaboradores, invitados, persistInvitados, fotosFamiliares, persistFotosFamiliares, fotosSinBoda, persistFotosSinBoda, evento, ordenFamiliares, tokenTablon } = data;
   // Familias sin ningún email: el colaborador lo recibe de la base; el
   // anfitrión (vista previa "Formularios") lo calcula con la lista entera.
@@ -934,6 +937,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // antes de cada envío.
   const puedeEditarDatosEvento = tienePermiso(colaborador, PERMISOS.DATOS_EVENTO_EDITAR);
   const puedeEnviarInvitaciones = tienePermiso(colaborador, PERMISOS.INVITACIONES_ENVIAR);
+  const puedeMultimedia = tienePermiso(colaborador, PERMISOS.MULTIMEDIA);
   const puedeVerMapaSitio = tienePermiso(colaborador, PERMISOS.MAPA_SITIO_VER);
   const puedeVerRepositorio = tienePermiso(colaborador, PERMISOS.REPOSITORIO_VER);
   const [ventanaDatosEventoAbierta, setVentanaDatosEventoAbierta] = useState(false);
@@ -1197,6 +1201,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 { id: "formulario", etiqueta: "Formulario", icono: ICONOS_VENTANAS.formulario, onClick: abrirFormulario, sello: pendientes.length },
                 puedeEnviarInvitaciones && { id: "invitaciones", etiqueta: "Invitaciones", icono: Send, onClick: () => setVentanaInvitacionesAbierta(true) },
                 onCerrarSesion && { id: "mi-cuenta", etiqueta: "Mi cuenta", icono: UserCog, onClick: () => setMiCuentaAbierta(true), ...ESTILO_MI_CUENTA },
+                puedeMultimedia && { id: "musica", etiqueta: "Música", icono: ICONOS_VENTANAS.musicaEvento, onClick: () => abrirMusica(abrirMusicaDentro) },
                 puedeEditarNovedades && { id: "novedades", etiqueta: "Novedades", icono: Megaphone, onClick: abrirNovedades },
               ].filter(Boolean)}
             />

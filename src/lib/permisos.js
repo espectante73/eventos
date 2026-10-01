@@ -35,6 +35,11 @@ export const PERMISOS = {
   // que proteger en la base
   // (usuario, 2026-09-24: "quiero poder dar permiso de ver").
   DISENO_VER: "diseno_ver",
+  // Manejar la música (y el vídeo, cuando exista) desde el mando, con su
+  // propia cuenta (él, v57.2). UNO para los dos, a propósito: lo más
+  // sencillo y estable; quién lleva qué lo acuerdan entre ellos. Lo
+  // comprueba la base al entrar en el canal (puede_usar_canal).
+  MULTIMEDIA: "multimedia",
 };
 
 // Etiquetas legibles, para VentanaPermisos.jsx -- un objeto en vez de un
@@ -47,6 +52,7 @@ export const ETIQUETAS_PERMISOS = {
   [PERMISOS.MAPA_SITIO_VER]: "Ver el mapa del sitio (dónde está cada cosa en la app)",
   [PERMISOS.REPOSITORIO_VER]: "Ver el proyecto en GitHub",
   [PERMISOS.DISENO_VER]: "Ver el diseño de la app (cómo se construye)",
+  [PERMISOS.MULTIMEDIA]: "Multimedia: manejar la música y el vídeo con el mando",
 };
 
 // ⚠️ Hay DOS clases de permiso, y confundirlas ya dio un fallo real

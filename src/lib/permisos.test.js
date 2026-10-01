@@ -17,10 +17,12 @@ describe("los dos tipos de permiso", () => {
     expect(esDeEdicion(PERMISOS.MAPA_SITIO_VER)).toBe(false);
   });
 
-  it("editar novedades, datos del evento y enviar invitaciones SÍ lo son", () => {
+  it("editar novedades, datos del evento, enviar invitaciones y multimedia SÍ lo son", () => {
     expect(esDeEdicion(PERMISOS.NOVEDADES_EDITAR)).toBe(true);
     expect(esDeEdicion(PERMISOS.DATOS_EVENTO_EDITAR)).toBe(true);
     expect(esDeEdicion(PERMISOS.INVITACIONES_ENVIAR)).toBe(true);
+    // Manejar la música en plena boda es responsabilidad: va en el aviso rojo.
+    expect(esDeEdicion(PERMISOS.MULTIMEDIA)).toBe(true);
   });
 
   it("la lista de vista solo contiene permisos que existen", () => {

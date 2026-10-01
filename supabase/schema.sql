@@ -454,8 +454,9 @@ CREATE FUNCTION public.puede_usar_canal(p_canal text) RETURNS boolean
     SET search_path TO 'public', 'pg_temp'
     AS $$
   select case p_canal
-    -- El mando de la música: solo el anfitrión.
-    when 'musica-evento' then es_anfitrion()
+    -- El mando de la música: el anfitrión y el colaborador con el
+    -- permiso Multimedia (v57.2).
+    when 'musica-evento' then es_anfitrion() or colaborador_tiene_permiso('multimedia')
     -- Las llegadas del día: el anfitrión y los colaboradores.
     when 'asistencia-evento' then es_anfitrion()
       or exists (select 1 from colaboradores c where c."authUserId" = auth.uid())

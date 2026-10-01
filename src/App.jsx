@@ -4,6 +4,7 @@ import { useLedgerData } from "./useLedgerData";
 import { supabase, supabaseConfigurado } from "./supabaseClient";
 import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl } from "./lib/url";
 import { esVistaMusica } from "./lib/ventanaMusica";
+import { PERMISOS, tienePermiso } from "./lib/permisos";
 import { C, OP, S } from "./theme";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { PantallaCargando } from "./components/PantallaCargando";
@@ -392,9 +393,14 @@ export default function App() {
     );
   }
 
-  // ?musica: solo Música, a pantalla entera, sin cabecera ni banners. Solo
-  // el anfitrión; cualquier otro ve su vista de siempre.
-  if (vistaMusica && data.esAnfitrion) {
+  // Música: el anfitrión y el colaborador con permiso Multimedia (v57.2;
+  // la base lo comprueba también al entrar en el canal, puede_usar_canal).
+  const puedeMultimedia =
+    data.esAnfitrion || tienePermiso(data.colaboradores.find((c) => c.id === rol), PERMISOS.MULTIMEDIA);
+
+  // ?musica: solo Música, a pantalla entera, sin cabecera ni banners.
+  // Cualquier otro ve su vista de siempre.
+  if (vistaMusica && puedeMultimedia) {
     return (
       <Suspense fallback={<PantallaCargando />}>
         <PaginaMusica data={data} />
@@ -512,6 +518,7 @@ export default function App() {
               abrirFormulario: () => abrirFormularioDentro(vistaPrevia),
               cerrarFormulario: () => cerrarVentanaMovil("formulario"),
             }}
+            abrirMusicaDentro={abrirMusicaDentro}
             esAnfitrionOriginal={esAnfitrionOriginal}
             setRol={cambiarVistaPrevia}
             anfitrionToken={anfitrionToken}
@@ -527,6 +534,7 @@ export default function App() {
               abrirFormulario: () => abrirFormularioDentro(rol),
               cerrarFormulario: () => cerrarVentanaMovil("formulario"),
             }}
+            abrirMusicaDentro={abrirMusicaDentro}
             esAnfitrionOriginal={esAnfitrionOriginal}
             setRol={setRol}
             anfitrionToken={anfitrionToken}
@@ -547,7 +555,7 @@ export default function App() {
       {/* Música dentro de la app (móvil): la misma página que en el Mac,
           a pantalla entera. Cerrada la vista no se desmonta: el mando
           sigue conectado mientras esté en la barra. */}
-      {ventanasMovil.includes("musica") && data.esAnfitrion && (
+      {ventanasMovil.includes("musica") && puedeMultimedia && (
         <CapaBarra activa delante={delante === "musica"} arriba={alturaBanners}>
           <Suspense fallback={<PantallaCargando />}>
             <PaginaMusica data={data} comoPagina={false} />

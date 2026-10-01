@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "57.2",
+    cambios: [
+      "Permiso nuevo, \"Multimedia\": el colaborador que lo tenga ve Música en su \"Abrir sección\" y maneja la música con el mando desde su propia cuenta, sin la del anfitrión. Uno solo para música y vídeo; quién lleva qué lo acuerdan entre ellos.",
+    ],
+  },
+  {
     version: "57.1",
     cambios: [
       "En el móvil, el Formulario se abre a pantalla entera, como Música, y entra en la barra de ventanas con su cuadradito: casita, formulario y Música, y se pasa de uno a otro con un toque. Lo que tengas a medias en el formulario no se pierde al cambiar.",

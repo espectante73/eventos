@@ -41,6 +41,16 @@ export function abrirVentanaMusica({ abrir = (...a) => window.open(...a), url = 
   return true;
 }
 
+// El botón Música, para el anfitrión y para el colaborador con permiso:
+// en el ordenador, su página propia; en el móvil (o si el navegador
+// bloquea la ventana), dentro de la app con la barra de ventanas. La
+// pregunta es qué APARATO es, no cuánto mide la ventana: con el navegador
+// a media pantalla, el Mac también mide poco (2026-09-01).
+export function abrirMusica(abrirDentro) {
+  const esTactil = Boolean(window.matchMedia?.("(pointer: coarse) and (hover: none)")?.matches);
+  if (esTactil || !abrirVentanaMusica()) abrirDentro?.();
+}
+
 // Una sola página de Música por aparato: la segunda no monta reproductor
 // (dos sonarían a destiempo). El cerrojo del navegador se suelta solo al
 // cerrar la página. Sin cerrojos (navegador antiguo), se deja pasar.

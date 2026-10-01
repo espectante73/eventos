@@ -437,6 +437,19 @@ describe("el «Abrir sección…» del colaborador", () => {
     expect(document.body.textContent).toContain("Cerrar sesión");
     vista.desmontar();
   });
+
+  // El permiso Multimedia (v57.2): Música, solo a quien lo tiene.
+  it("«Música», solo con el permiso Multimedia", () => {
+    const nombresCon = (permisos) => {
+      const vista = montarVista({ colaboradores: [{ ...colaboradores[0], permisos }] });
+      vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
+      const nombres = botones().map((b) => b.textContent.trim().replace(/^\d+|\d+$/g, ""));
+      vista.desmontar();
+      return nombres;
+    };
+    expect(nombresCon([])).not.toContain("Música");
+    expect(nombresCon(["multimedia"])).toContain("Música");
+  });
 });
 
 // En el móvil, el formulario va a pantalla entera en la barra de ventanas

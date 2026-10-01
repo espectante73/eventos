@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { construirEnlaceTablon } from "../lib/url";
 import { usePopupWindow } from "../lib/usePopupWindow";
-import { abrirVentanaMusica } from "../lib/ventanaMusica";
+import { abrirMusica } from "../lib/ventanaMusica";
 // La página de Música (?musica) viaja en el trozo de esta vista: ver App.jsx.
 export { PaginaMusica } from "./PaginaMusica";
 import { nombreCompleto } from "../lib/formato";
@@ -113,17 +113,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   // la barra de ventanas para volver al inicio o a otra (v57). En v56 se
   // probó en una pestaña aparte: no había forma de volver. En el Mac, si
   // el navegador bloquea la ventana, también cae dentro: nunca en nada.
-  const abrirMusicaEvento = useCallback(() => {
-    // ⚠️ La pregunta es qué APARATO es, no cuánto mide la ventana. El
-    // primer intento miraba `innerWidth < 820` y se llevó por delante el
-    // caso normal del Mac: con el navegador a media pantalla, el
-    // ordenador también daba menos de 820 y perdía su ventana aparte
-    // (2026-09-01, reportado al momento). `pointer: coarse` + `hover:
-    // none` es cierto en un móvil o tablet y falso en un portátil, mida
-    // lo que mida la ventana.
-    const esTactil = window.matchMedia?.("(pointer: coarse) and (hover: none)").matches;
-    if (esTactil || !abrirVentanaMusica()) abrirMusicaDentro?.();
-  }, [abrirMusicaDentro]);
+  const abrirMusicaEvento = useCallback(() => abrirMusica(abrirMusicaDentro), [abrirMusicaDentro]);
 
   // Se repinta con cada refresco de datos: la ventana
   // es un root de React aparte y no se entera sola de que `data` cambió.
