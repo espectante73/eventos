@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "54",
+    cambios: [
+      "Cuando un invitado está pagado, su ficha se cierra para el colaborador: ya no la puede abrir ni ver, y en su lugar sale un candado. Sobre esos datos ya se han sacado las listas de canciones, edades y alergias, así que solo el anfitrión los cambia. Si el colaborador quita el pago (una devolución), la ficha se vuelve a abrir.",
+      "La foto de boda se cierra cuando la pareja ha pagado, y un colaborador solo puede subir la de sus propios matrimonios.",
+      "Al marcar el pago, la pregunta avisa: \"Después ya no podrás cambiar sus datos ni su foto.\"",
+    ],
+  },
+  {
     version: "53.8",
     cambios: [
       "Eliminar desde la Lista de invitados a quien es colaborador lo elimina del todo: la persona, su función de colaborador y su cuenta de acceso. Sus invitados quedan pendientes de un colaborador nuevo, y la app dice quiénes. Antes no dejaba borrarlo.",

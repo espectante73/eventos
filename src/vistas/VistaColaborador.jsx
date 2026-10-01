@@ -3,7 +3,7 @@
 // aviso al anfitrión al terminar). Movida tal cual desde App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
-import { Bell, Calendar, Check, ChevronDown, ClipboardList, Euro, Mail, Megaphone, Send, User, UserCog } from "lucide-react";
+import { Bell, Calendar, Check, ChevronDown, ClipboardList, Euro, Lock, Mail, Megaphone, Send, User, UserCog } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
 import {
@@ -18,6 +18,7 @@ import {
   claveFamilia,
   importeEsperadoInvitado,
   resolverColaborador,
+  fichaCerradaAlColaborador,
 } from "../lib/invitados";
 import { ordenarPorApellidoNombre, nombreCompleto } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
@@ -70,6 +71,8 @@ const ETIQUETAS_CAMPOS_INVITADO = {
 // a la vez, y el nombre gana el sitio que ocupaba la otra columna.
 const ANCHO_PAGO = 104; // "Pago pendiente" es el rótulo más largo de esa columna
 const ALTO_BOTON_FILA = 32; // manda el círculo de llegada: todos iguales (norma 4)
+// Al marcar el pago, una vez o para toda la familia (él, v54).
+const AVISO_CIERRE_AL_PAGAR = "Después ya no podrás cambiar sus datos ni su foto.";
 
 // Pastilla de un dato que el colaborador SOLO MIRA: la zona y el importe.
 // Una sola pieza para las dos (norma 7), pero distintas a propósito (él,
@@ -677,7 +680,9 @@ function FilaInvitadoColaborador({
     };
     preguntar({
       titulo: titulos[campo],
-      texto: textoPreguntaFamilia(p, campo, valor, evento),
+      texto:
+        textoPreguntaFamilia(p, campo, valor, evento) +
+        (campo === "pagado" && valor ? `\n${AVISO_CIERRE_AL_PAGAR}` : ""),
       // Como en toda la app, el botón dice lo que hace ("Sí, pagado"): un
       // "Sí" pelado era inventado (norma 1).
       rotulo: "Sí, toda la familia",
@@ -705,9 +710,21 @@ function FilaInvitadoColaborador({
     preguntar(
       g.pagado
         ? { titulo: "¿Quitar el pago?", texto: nombreCompleto(g), rotulo: "Sí, quitarlo", alConfirmar: () => onMarcarPagado(g.id, false) }
-        : { titulo: "¿Marcar como pagado?", texto: nombreCompleto(g), rotulo: "Sí, pagado", peligro: false, alConfirmar: () => onMarcarPagado(g.id, true) }
+        : { titulo: "¿Marcar como pagado?", texto: `${nombreCompleto(g)}\n${AVISO_CIERRE_AL_PAGAR}`, rotulo: "Sí, pagado", peligro: false, alConfirmar: () => onMarcarPagado(g.id, true) }
     );
   };
+
+  // Pagado, la ficha ya no se abre (lib/invitados.js, fichaCerradaAlColaborador).
+  // Si ya estaba abierta (la pagó el anfitrión mientras tanto) no se le
+  // cierra de golpe: lo escrito se perdería sin aviso, y al guardar la base
+  // lo rechaza con su motivo.
+  const cerrada = fichaCerradaAlColaborador(g) && !abierto;
+  const avisarCerrada = () =>
+    preguntar({
+      titulo: "Datos cerrados",
+      texto: `${nombreCompleto(g)} ya ha pagado: sus datos quedan cerrados. Si hay que cambiar algo, díselo al anfitrión.`,
+      soloAviso: true,
+    });
 
   // Asistencia el día del evento (2026-09-06). Con confirmación, por el
   // mismo motivo que el pago: las filas van muy juntas y un dedo puede
@@ -800,7 +817,7 @@ function FilaInvitadoColaborador({
           )}
         </div>
         <button
-          onClick={onToggleAbierto}
+          onClick={cerrada ? avisarCerrada : onToggleAbierto}
           className="boton-3d rounded px-2 flex items-center gap-2 flex-1 min-w-0"
           style={{ color: C.ink, height: ALTO_BOTON_FILA }}
         >
@@ -810,7 +827,7 @@ function FilaInvitadoColaborador({
             {g.apellido}, {g.nombre}
           </span>
           <span className="text-xs flex-shrink-0 ml-auto" style={{ color: C.gold }}>
-            {abierto ? "▾" : "▸"}
+            {cerrada ? <Lock size={12} aria-label="Datos cerrados" /> : abierto ? "▾" : "▸"}
           </span>
         </button>
         {/* El check de llegada cierra la fila, SIEMPRE en la misma columna

@@ -210,6 +210,38 @@ describe("el pago pregunta por la familia", () => {
     expect(marcadas).toEqual([["r1", "pagado", true]]);
     vista.desmontar();
   });
+
+  it("la pregunta avisa de que, pagado, ya no podrá cambiar sus datos", async () => {
+    const vista = montar(
+      <VistaColaborador data={datos} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+    );
+    const botones = () => [...document.body.querySelectorAll("button")];
+    abrirPorMenu(vista);
+    const pago = botones().find(
+      (b) => b.textContent.includes("Pago pendiente") && b.parentElement.parentElement.textContent.includes("Ruiz")
+    );
+    await act(async () => pago.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(document.body.innerHTML).toContain("Después ya no podrás cambiar sus datos ni su foto.");
+    vista.desmontar();
+  });
+});
+
+// Pagado, la ficha se cierra al colaborador (él, v54): ni se abre ni se ve.
+describe("la ficha pagada, cerrada", () => {
+  it("tocar el nombre avisa «Datos cerrados» y no abre el formulario", () => {
+    const vista = montar(
+      <VistaColaborador data={data} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+    );
+    abrirPorMenu(vista);
+    // Míriam ya ha pagado.
+    const nombre = [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Pacheco, Míriam"));
+    vista.pulsar(nombre);
+    const html = document.body.innerHTML;
+    expect(html).toContain("Datos cerrados");
+    expect(html).toContain("díselo al anfitrión");
+    expect(html).not.toContain("Guardar");
+    vista.desmontar();
+  });
 });
 
 // El formulario de la ficha (él, v50): nada sube hasta "Guardar", que no

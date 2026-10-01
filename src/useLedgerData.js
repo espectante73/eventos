@@ -1049,7 +1049,7 @@ export function useLedgerData(rol) {
           p_cambios: cambiado,
         });
         if (error || !data || data.length === 0) {
-          avisar("No se pudieron guardar los datos (¿sigue asignado a ti este invitado?). Se deshace el cambio en pantalla.", error);
+          avisar("No se pudieron guardar los datos: puede que ya esté pagado (sus datos quedan cerrados) o que ya no esté asignado a ti. Se deshace el cambio en pantalla.", error);
           setInvitados(anterior);
           invitadosRef.current = anterior;
         } else if (previo && (previo.email !== cambiado.email || previo.sinEmail !== cambiado.sinEmail)) {

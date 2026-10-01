@@ -15,6 +15,16 @@ export function datosCompletos(g) {
   return Boolean(g.anioNacimiento) && Boolean(g.alergias);
 }
 
+// Con el pago, la ficha se cierra al colaborador (él, v54): sobre esos
+// datos ya se han sacado las listas de canciones, edades y alergias, y el
+// día de la acreditación nadie debe abrirlos con prisas. Solo el anfitrión
+// los cambia. Quitar el pago la vuelve a abrir A PROPÓSITO: el colaborador
+// puede devolver el dinero (alguien que enferma), y no es una puerta que
+// cerrar. Lo mismo comprueba la base en colaborador_guardar_invitado.
+export function fichaCerradaAlColaborador(g) {
+  return Boolean(g?.pagado);
+}
+
 // Los 6 campos de texto que rellena el colaborador, más la foto familiar
 // (que vive aparte, en fotosFamiliares). El pago no cuenta aquí — tiene
 // su propia insignia ("Pagado"/"Pendiente de pago") aparte.

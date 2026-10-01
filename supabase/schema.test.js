@@ -288,3 +288,18 @@ describe("eliminar a un colaborador desde la Lista de invitados", () => {
   });
 });
 
+
+// Pagado, los datos ya solo los cambia el anfitrión (él, v54). La pantalla
+// no abre la ficha; esto es lo que de verdad lo impide.
+describe("la ficha pagada, cerrada al colaborador", () => {
+  it("colaborador_guardar_invitado no toca a un invitado pagado", () => {
+    expect(cuerpoDe("colaborador_guardar_invitado")).toMatch(/and not coalesce\("pagado", false\)/);
+  });
+
+  it("la foto de boda: solo de sus matrimonios, y mientras la pareja no haya pagado", () => {
+    const f = cuerpoDe("guardar_fotos_familiares");
+    expect(f).toMatch(/c\."authUserId" = auth\.uid\(\)/);
+    expect(f).toMatch(/i\."rolFamiliar" in \('esposo', 'esposa'\)/);
+    expect(f).toMatch(/and not coalesce\(i\."pagado", false\)/);
+  });
+});

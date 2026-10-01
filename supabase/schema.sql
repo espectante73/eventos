@@ -888,6 +888,25 @@ begin
     raise exception 'No autorizado para guardar fotos familiares';
   end if;
 
+  -- Un colaborador, solo la foto de SUS matrimonios, y mientras su
+  -- esposo o esposa no haya pagado: la foto es de la pareja y se cierra
+  -- con ella (él, v54). Antes cualquier colaborador podía escribir la de
+  -- cualquier familia.
+  if not v_es_anfitrion and exists (
+    select 1 from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
+    where coalesce(v->>'grupoFamiliar', '') <> ''
+      and not exists (
+        select 1 from invitados i
+        join colaboradores c on c."id" = i."colaboradorId"
+        where c."authUserId" = auth.uid()
+          and i."grupoFamiliar" = v->>'grupoFamiliar'
+          and i."rolFamiliar" in ('esposo', 'esposa')
+          and not coalesce(i."pagado", false)
+      )
+  ) then
+    raise exception 'La foto de boda de esa familia ya está cerrada: la pareja ha pagado, o no es de tus invitados';
+  end if;
+
   -- La de aniversario y la de boda con plantilla solo las toca el
   -- anfitrión. Un colaborador guarda la original de boda (la que sube en
   -- su formulario) sin poder pisar las otras, aunque las mande vacías.
@@ -1782,7 +1801,10 @@ begin
     "sinCancion"     = coalesce((p_cambios->>'sinCancion')::boolean, "sinCancion"),
     "sinEmail"       = coalesce((p_cambios->>'sinEmail')::boolean, "sinEmail"),
     "conservarDatos" = coalesce((p_cambios->>'conservarDatos')::boolean, "conservarDatos")
+  -- Pagado, sus datos ya solo los cambia el anfitrión (él, v54): sobre
+  -- ellos se han sacado las listas, y la acreditación no los abre.
   where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+    and not coalesce("pagado", false)
   returning *;
 end;
 $$;

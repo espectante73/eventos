@@ -17,6 +17,7 @@ import {
   edadPromedio,
   importeEsperadoInvitado,
   resolverColaborador,
+  fichaCerradaAlColaborador,
   parseImport,
 } from "./invitados";
 
@@ -326,3 +327,13 @@ describe("email: al menos uno por familia", () => {
   });
 });
 
+
+// Pagado, la ficha se cierra al colaborador; quitar el pago (una
+// devolución) la vuelve a abrir, a propósito (él, v54).
+describe("fichaCerradaAlColaborador", () => {
+  it("cerrada con el pago, abierta sin él", () => {
+    expect(fichaCerradaAlColaborador({ pagado: true })).toBe(true);
+    expect(fichaCerradaAlColaborador({ pagado: false })).toBe(false);
+    expect(fichaCerradaAlColaborador({})).toBe(false);
+  });
+});
