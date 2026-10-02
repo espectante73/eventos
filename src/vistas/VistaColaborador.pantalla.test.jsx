@@ -338,6 +338,24 @@ describe("el formulario: Guardar y Cancelar", () => {
     vista.desmontar();
   });
 
+  // El caso de Daniel Luis (v58.2): con lo obligatorio ya relleno, escribir
+  // solo la canción y pulsar «Guardar» la sube. Lucía: menor, con año y
+  // alergias, sin pagar.
+  it("con lo obligatorio completo, escribir solo la canción y «Guardar» la sube", () => {
+    const guardados = [];
+    const vista = montar(
+      <VistaColaborador data={{ ...data, persistInvitados: (lista) => guardados.push(lista) }} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+    );
+    abrirPorMenu(vista);
+    vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Lucía")));
+    abrirApartado(vista, "Canción");
+    escribir(vista, document.body.querySelector('input[placeholder="Título — Artista"]'), "Bailando — Enrique Iglesias");
+    vista.pulsar(boton("Guardar"));
+    expect(guardados).toHaveLength(1);
+    expect(guardados[0].find((g) => g.id === "g4").cancion).toBe("Bailando — Enrique Iglesias");
+    vista.desmontar();
+  });
+
   it("«Cancelar» con algo escrito pregunta «¿Descartar los cambios?»", () => {
     const { vista, guardados } = abrirOmar();
     escribirOtraAlergia(vista, "Marisco");
