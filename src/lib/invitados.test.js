@@ -352,6 +352,11 @@ describe("faltanObligatorios: la foto de boda", () => {
   it("a quien no es del matrimonio no se le pide", () => {
     expect(faltanObligatorios({ ...esposo, rolFamiliar: "hijo" }, evento, { fotoBoda: { hay: false, sinFoto: false } })).not.toContain("fotoBoda");
   });
+  it("foto y año en bloque: con foto, sin año, falta el año", () => {
+    const sinAnio = { ...esposo, anioBoda: "" };
+    expect(faltanObligatorios(sinAnio, evento, { fotoBoda: { hay: true, sinFoto: false } })).toContain("anioBoda");
+    expect(faltanObligatorios({ ...sinAnio, anioBoda: "2010" }, evento, { fotoBoda: { hay: true, sinFoto: false } })).not.toContain("anioBoda");
+  });
   it("sin pedírsela (lo ya guardado, las cuentas), no cuenta", () => {
     expect(faltanObligatorios(esposo, evento)).not.toContain("fotoBoda");
   });

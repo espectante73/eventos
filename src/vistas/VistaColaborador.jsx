@@ -116,7 +116,7 @@ function SeparadorCeldas() {
 const ANCHO_ANIO = 56;
 
 // En qué apartado plegado vive cada obligatorio: "Guardar" abre ese.
-const APARTADO_DE = { anioNacimiento: "datos", email: "datos", fotoBoda: "boda", alergias: "alergias" };
+const APARTADO_DE = { anioNacimiento: "datos", email: "datos", anioBoda: "boda", fotoBoda: "boda", alergias: "alergias" };
 
 function FormularioDatos({
   invitado,
@@ -229,6 +229,13 @@ function FormularioDatos({
         preguntar({
           titulo: "No se puede guardar",
           texto: "Falta la foto de boda: súbela, o marca «No» si no tienen.",
+          soloAviso: true,
+        });
+      // Foto y año, en bloque (él, v58.3).
+      else if (pendientes.includes("anioBoda"))
+        preguntar({
+          titulo: "No se puede guardar",
+          texto: "Falta el año de boda: con la foto, va su año.",
           soloAviso: true,
         });
       // Se abre el apartado del primero que falta, y la pantalla y el
@@ -412,7 +419,7 @@ function FormularioDatos({
           usa, y sin ninguna de las dos no se guarda (v58.2). */}
       {pideDatosDeBoda(form) && <LineaEntreApartados />}
       {pideDatosDeBoda(form) && (
-        <div data-apartado="boda" className={latido("fotoBoda")}>
+        <div data-apartado="boda" className={latido("fotoBoda", "anioBoda")}>
         <SeccionPlegable
           sencilla
           titulo="Boda"
@@ -425,7 +432,7 @@ function FormularioDatos({
               Repartidas a lo ancho, como tres ideas (él, v58.3): el año y
               el «No» se centran en lo que sobra; la foto, en medio. */}
           <div className="flex items-center py-1">
-            <div className="flex-1 flex justify-center">
+            <div data-campo="anioBoda" className="flex-1 flex justify-center">
               <TextInput
                 value={form.anioBoda}
                 onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
@@ -433,7 +440,7 @@ function FormularioDatos({
                 maxLength={4}
                 inputMode="numeric"
                 aria-label="Año de boda"
-                style={{ width: ANCHO_ANIO }}
+                style={{ width: ANCHO_ANIO, ...bordeRojo("anioBoda") }}
               />
             </div>
             <SeparadorCeldas />

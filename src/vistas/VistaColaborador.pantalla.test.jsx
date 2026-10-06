@@ -380,6 +380,26 @@ describe("el formulario: Guardar y Cancelar", () => {
     vista.desmontar();
   });
 
+  // Él, v58.3: foto y año en bloque. Con foto y sin año, no guarda.
+  it("con foto de boda y sin año: no guarda y avisa", () => {
+    const guardados = [];
+    const sinAnio = invitados.map((g) => (g.grupoFamiliar === "Pacheco01" ? { ...g, anioBoda: "" } : g));
+    const vista = montar(
+      <VistaColaborador
+        data={{ ...data, invitados: sinAnio, fotosFamiliares: { Pacheco01: "https://ejemplo.com/boda.jpg" }, persistInvitados: (lista) => guardados.push(lista) }}
+        colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}}
+      />
+    );
+    abrirPorMenu(vista);
+    vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Omar")));
+    escribirEmail(vista, "omar@ejemplo.com");
+    escribirOtraAlergia(vista, "Marisco");
+    vista.pulsar(boton("Guardar"));
+    expect(guardados).toHaveLength(0);
+    expect(document.body.textContent).toContain("Falta el año de boda: con la foto, va su año.");
+    vista.desmontar();
+  });
+
   it("«Cancelar» con algo escrito pregunta «¿Descartar los cambios?»", () => {
     const { vista, guardados } = abrirOmar();
     escribirOtraAlergia(vista, "Marisco");

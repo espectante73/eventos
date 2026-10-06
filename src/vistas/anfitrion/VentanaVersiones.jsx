@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "58.4",
+    cambios: [
+      "Foto y año de boda, en bloque: con la foto puesta, Guardar exige el año. Avisa \"Falta el año de boda: con la foto, va su año\", abre el apartado Boda y marca el año en rojo.",
+    ],
+  },
+  {
     version: "58.3",
     cambios: [
       "Formulario, apartado Boda: las tres celdas (año | foto de boda | No) se reparten a lo ancho, con más aire alrededor de las rayas.",
