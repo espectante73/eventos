@@ -324,10 +324,19 @@ describe("el formulario: Guardar y Cancelar", () => {
     vista.desmontar();
   });
 
+  // La foto de boda de Omar (esposo): «No», que no tienen (v58.2).
+  // Si Guardar ya abrió el apartado, no se vuelve a pulsar: lo cerraría.
+  const marcarSinFotoBoda = (vista) => {
+    const casilla = () => [...document.body.querySelectorAll("label")].find((l) => l.title === "No tienen foto de boda");
+    if (!casilla()) abrirApartado(vista, "Boda");
+    vista.pulsar(casilla().querySelector("input"));
+  };
+
   it("con todo lo obligatorio, «Guardar» sube una vez y cierra", () => {
     const { vista, guardados } = abrirOmar();
     escribirEmail(vista, "omar@ejemplo.com");
     escribirOtraAlergia(vista, "Marisco");
+    marcarSinFotoBoda(vista);
     expect(guardados).toHaveLength(0); // escribir no sube nada
     vista.pulsar(boton("Guardar"));
     expect(guardados).toHaveLength(1);
@@ -353,6 +362,21 @@ describe("el formulario: Guardar y Cancelar", () => {
     vista.pulsar(boton("Guardar"));
     expect(guardados).toHaveLength(1);
     expect(guardados[0].find((g) => g.id === "g4").cancion).toBe("Bailando — Enrique Iglesias");
+    vista.desmontar();
+  });
+
+  // Él, v58.2: un matrimonio sin foto y sin «No» no se guarda, y se dice.
+  it("matrimonio sin foto de boda ni «No»: no guarda y avisa", () => {
+    const { vista, guardados } = abrirOmar();
+    escribirEmail(vista, "omar@ejemplo.com");
+    escribirOtraAlergia(vista, "Marisco");
+    vista.pulsar(boton("Guardar"));
+    expect(guardados).toHaveLength(0);
+    expect(document.body.textContent).toContain("Falta la foto de boda: súbela, o marca «No» si no tienen.");
+    vista.pulsar(boton("Entendido"));
+    marcarSinFotoBoda(vista);
+    vista.pulsar(boton("Guardar"));
+    expect(guardados).toHaveLength(1);
     vista.desmontar();
   });
 

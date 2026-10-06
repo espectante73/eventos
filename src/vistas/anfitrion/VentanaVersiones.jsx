@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "58.2",
+    cambios: [
+      "Formulario, apartado Boda: tres celdas separadas por una raya, año | foto de boda | No. La casilla \"Sí\" pasa a ser \"No\" (no tienen foto): \"Sí\" marcado sin foto confundía. Con «No» marcado, el hueco de la foto desaparece.",
+      "Un matrimonio ya no se guarda sin la foto de boda o sin «No» marcado: Guardar avisa \"Falta la foto de boda: súbela, o marca «No» si no tienen\" y abre el apartado. Lo ya guardado no se toca.",
+    ],
+  },
+  {
     version: "58.1",
     cambios: [
       "Pantalla de la tele: \"Arrastra esta ventana a la tele y pulsa\" y el botón \"Pantalla completa\" van sobre un fondo oscuro. Encima del logo, que es claro, el texto no se leía.",

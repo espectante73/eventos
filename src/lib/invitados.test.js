@@ -337,3 +337,22 @@ describe("fichaCerradaAlColaborador", () => {
     expect(fichaCerradaAlColaborador({})).toBe(false);
   });
 });
+
+// La foto de boda al guardar (él, v58.2): un matrimonio, con foto o «No».
+describe("faltanObligatorios: la foto de boda", () => {
+  const esposo = { anioNacimiento: "1980", alergias: "No", rolFamiliar: "esposo", email: "a@a.com" };
+  const evento = {};
+  it("sin foto y sin «No», falta", () => {
+    expect(faltanObligatorios(esposo, evento, { fotoBoda: { hay: false, sinFoto: false } })).toContain("fotoBoda");
+  });
+  it("con foto, o con «No», no falta", () => {
+    expect(faltanObligatorios(esposo, evento, { fotoBoda: { hay: true, sinFoto: false } })).not.toContain("fotoBoda");
+    expect(faltanObligatorios(esposo, evento, { fotoBoda: { hay: false, sinFoto: true } })).not.toContain("fotoBoda");
+  });
+  it("a quien no es del matrimonio no se le pide", () => {
+    expect(faltanObligatorios({ ...esposo, rolFamiliar: "hijo" }, evento, { fotoBoda: { hay: false, sinFoto: false } })).not.toContain("fotoBoda");
+  });
+  it("sin pedírsela (lo ya guardado, las cuentas), no cuenta", () => {
+    expect(faltanObligatorios(esposo, evento)).not.toContain("fotoBoda");
+  });
+});

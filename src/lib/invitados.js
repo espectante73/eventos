@@ -126,10 +126,16 @@ export function emailObligatorio(g, evento, { familiaSinEmail = false, colaborad
 // Los obligatorios que faltan en el formulario del colaborador (v50): sin
 // ellos, "Guardar" no guarda y los marca en rojo. Devuelve sus nombres de
 // campo, en el orden del formulario.
+// `opciones.fotoBoda` ({ hay, sinFoto }): la foto de boda de un matrimonio,
+// subida o marcado «No» (no tienen). Solo la exige el Guardar del
+// formulario (él, v58.2): lo ya guardado no se toca, y no cuenta en
+// "datos X de Y", donde la foto suma solo si está.
 export function faltanObligatorios(g, evento, opciones = {}) {
   const faltan = [];
   if (!String(g?.anioNacimiento || "").trim()) faltan.push("anioNacimiento");
   if (emailObligatorio(g, evento, opciones) && !emailValido(String(g?.email || "").trim())) faltan.push("email");
+  const foto = opciones.fotoBoda;
+  if (foto && pideDatosDeBoda(g) && !foto.hay && !foto.sinFoto) faltan.push("fotoBoda");
   if (!String(g?.alergias || "").trim()) faltan.push("alergias");
   return faltan;
 }

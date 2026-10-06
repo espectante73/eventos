@@ -105,12 +105,18 @@ function LineaEntreApartados() {
   return <div className="mx-3" style={{ borderTop: `1px solid ${C.ink}`, opacity: OP.linea }} />;
 }
 
+// Raya vertical entre las celdas de una misma línea (él, v58.2: año |
+// foto de boda | No), del mismo trazo que la línea entre apartados.
+function SeparadorCeldas() {
+  return <span aria-hidden="true" style={{ alignSelf: "stretch", borderLeft: `1px solid ${C.ink}`, opacity: OP.linea }} />;
+}
+
 // Las cajas de un año: justo para 4 cifras. Estrechas a propósito, para
-// que la línea de Boda (año, casilla y foto) quepa en el móvil (norma 6).
+// que la línea de Boda (año, foto y casilla) quepa en el móvil (norma 6).
 const ANCHO_ANIO = 56;
 
 // En qué apartado plegado vive cada obligatorio: "Guardar" abre ese.
-const APARTADO_DE = { anioNacimiento: "datos", email: "datos", alergias: "alergias" };
+const APARTADO_DE = { anioNacimiento: "datos", email: "datos", fotoBoda: "boda", alergias: "alergias" };
 
 function FormularioDatos({
   invitado,
@@ -121,8 +127,8 @@ function FormularioDatos({
   importe,
   onCerrar,
   colaboradorVinculado,
-  // La familia ha marcado que NO tiene foto de boda (casilla "Sí"
-  // desmarcada). Es de la familia, como la foto: vale para los dos.
+  // La familia ha marcado que NO tiene foto de boda (casilla «No»). Es de
+  // la familia, como la foto: vale para los dos.
   sinFotoBoda = false,
   onCambiarSinFotoBoda,
   // Nadie de la familia tiene email (regla: al menos uno por familia).
@@ -204,7 +210,9 @@ function FormularioDatos({
 
   const opcionesEmail = { familiaSinEmail, colaboradorVinculado };
   const pideEmailAqui = emailObligatorio(form, evento, opcionesEmail);
-  const faltan = intentado ? faltanObligatorios(form, evento, opcionesEmail) : [];
+  // Para Guardar, también la foto de boda: subida o «No» (él, v58.2).
+  const opcionesGuardar = { ...opcionesEmail, fotoBoda: { hay: hayFoto, sinFoto } };
+  const faltan = intentado ? faltanObligatorios(form, evento, opcionesGuardar) : [];
   const datosCambiados = Object.keys(ETIQUETAS_CAMPOS_INVITADO).some(
     (campo) => (form[campo] || "") !== (invitado[campo] || "")
   );
@@ -212,9 +220,17 @@ function FormularioDatos({
     datosCambiados || Boolean(fotoNueva) || foto !== (fotoFamiliar || "") || sinFoto !== sinFotoBoda;
 
   const guardar = async () => {
-    const pendientes = faltanObligatorios(form, evento, opcionesEmail);
+    const pendientes = faltanObligatorios(form, evento, opcionesGuardar);
     if (pendientes.length) {
       setIntentado(true);
+      // La foto, con su aviso (él, v58.2): sin él no se entendía por qué
+      // no guardaba una ficha con todo lo demás relleno.
+      if (pendientes.includes("fotoBoda"))
+        preguntar({
+          titulo: "No se puede guardar",
+          texto: "Falta la foto de boda: súbela, o marca «No» si no tienen.",
+          soloAviso: true,
+        });
       // Se abre el apartado del primero que falta, y la pantalla y el
       // cursor van a él (él, v50.4 y v52). Los demás laten igual.
       setApartado(APARTADO_DE[pendientes[0]]);
@@ -392,10 +408,11 @@ function FormularioDatos({
       </div>
 
       {/* Boda: solo a quien viene con su pareja (O o A). A los demás, ni
-          se enseña (él, v52). La casilla "Sí" de la foto se queda: si se
-          desmarca, guarda que no tienen, y Aniversarios lo usa. */}
+          se enseña (él, v52). La foto, o «No» si no tienen: Aniversarios lo
+          usa, y sin ninguna de las dos no se guarda (v58.2). */}
       {pideDatosDeBoda(form) && <LineaEntreApartados />}
       {pideDatosDeBoda(form) && (
+        <div data-apartado="boda" className={latido("fotoBoda")}>
         <SeccionPlegable
           sencilla
           titulo="Boda"
@@ -403,9 +420,9 @@ function FormularioDatos({
           abierta={apartado === "boda"}
           onAlternar={() => alternarApartado("boda")}
         >
-          {/* Todo en UNA línea (él, v52.1): el año, y a su lado "Foto boda",
-              su casilla y el recuadro de la foto, a la misma altura. */}
-          <div className="flex items-center gap-2">
+          {/* Todo en UNA línea (él, v52.1), en tres celdas separadas por
+              una raya (v58.2): el año | "Foto boda" y su recuadro | «No». */}
+          <div className="flex items-center gap-1.5">
             <TextInput
               value={form.anioBoda}
               onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
@@ -415,23 +432,17 @@ function FormularioDatos({
               aria-label="Año de boda"
               style={{ width: ANCHO_ANIO }}
             />
-            <div className="flex items-center gap-1.5 min-w-0">
+            <SeparadorCeldas />
+            <div data-campo="fotoBoda" className="flex items-center gap-1.5 min-w-0">
               <span
                 className="uppercase text-xs whitespace-nowrap"
-                style={{ color: "var(--etiqueta-campo)", fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" }}
+                style={{ color: faltan.includes("fotoBoda") ? C.wax : "var(--etiqueta-campo)", fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" }}
               >
                 Foto boda
               </span>
-              <label
-                className="flex items-center gap-1 text-sm whitespace-nowrap"
-                style={{ color: C.ink }}
-                title={hayFoto ? "Con la foto ya puesta no se puede marcar que no tienen: quítala primero" : undefined}
-              >
-                <input type="checkbox" checked={!sinFoto} disabled={hayFoto} onChange={() => setSinFoto(!sinFoto)} />
-                Sí
-              </label>
               {!sinFoto && (
                 <HuecoFoto
+                  ajustada
                   titulo="Foto de boda"
                   enlace={enlaceFoto}
                   ocupada={hayFoto}
@@ -442,6 +453,15 @@ function FormularioDatos({
                 />
               )}
             </div>
+            <SeparadorCeldas />
+            <label
+              className="flex items-center gap-1 text-sm whitespace-nowrap"
+              style={{ color: C.ink }}
+              title={hayFoto ? "Con la foto ya puesta no se puede marcar que no tienen: quítala primero" : "No tienen foto de boda"}
+            >
+              <input type="checkbox" checked={sinFoto} disabled={hayFoto} onChange={() => setSinFoto(!sinFoto)} />
+              No
+            </label>
           </div>
           {errorFoto && (
             <p className="text-xs" style={{ color: C.wax }}>
@@ -449,6 +469,7 @@ function FormularioDatos({
             </p>
           )}
         </SeccionPlegable>
+        </div>
       )}
 
       {/* Canción y observaciones: sin casilla "Sí" (él, v52). Vacías no

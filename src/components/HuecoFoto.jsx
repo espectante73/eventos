@@ -49,7 +49,9 @@ export const ANCHO_COL = ANCHO_MINIATURA + 12;
 // Un recuadro de foto: la miniatura si la hay, o un hueco gris. El botón de
 // subir es la propia etiqueta del <input file>, así se pulsa en cualquier
 // punto del recuadro.
-export function HuecoFoto({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, onVer, soloLectura, marca }) {
+// `ajustada`: sin la columna de Aniversarios alrededor (ANCHO_COL), solo el
+// marco: en la línea de Boda del formulario cada píxel cuenta (norma 6).
+export function HuecoFoto({ titulo, enlace, ocupada, subiendo, onElegir, onQuitar, onVer, soloLectura, marca, ajustada = false }) {
   const id = `foto-${titulo}-${Math.random().toString(36).slice(2, 8)}`;
   // Qué hace pinchar el recuadro (2026-09-17, a petición del usuario):
   //   - con foto ya visible -> la abre en grande (onVer); cambiarla se hace
@@ -60,7 +62,7 @@ export function HuecoFoto({ titulo, enlace, ocupada, subiendo, onElegir, onQuita
   const accion = enlace ? "ver" : !soloLectura && !ocupada ? "subir" : "nada";
   const Etiqueta = accion === "ver" ? "button" : accion === "subir" ? "label" : "div";
   return (
-    <div className="flex justify-center" style={{ width: ANCHO_COL, flexShrink: 0 }}>
+    <div className="flex justify-center" style={{ width: ajustada ? ANCHO_MINIATURA : ANCHO_COL, flexShrink: 0 }}>
     <div className="relative" style={{ width: ANCHO_MINIATURA, height: ALTO_MINIATURA }}>
       <Etiqueta
         {...(accion === "ver" ? { type: "button", onClick: onVer } : {})}
