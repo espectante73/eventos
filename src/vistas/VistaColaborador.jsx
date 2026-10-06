@@ -421,19 +421,23 @@ function FormularioDatos({
           onAlternar={() => alternarApartado("boda")}
         >
           {/* Todo en UNA línea (él, v52.1), en tres celdas separadas por
-              una raya (v58.2): el año | "Foto boda" y su recuadro | «No». */}
-          <div className="flex items-center gap-1.5">
-            <TextInput
-              value={form.anioBoda}
-              onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
-              placeholder="2015"
-              maxLength={4}
-              inputMode="numeric"
-              aria-label="Año de boda"
-              style={{ width: ANCHO_ANIO }}
-            />
+              una raya (v58.2): el año | "Foto boda" y su recuadro | «No».
+              Repartidas a lo ancho, como tres ideas (él, v58.3): el año y
+              el «No» se centran en lo que sobra; la foto, en medio. */}
+          <div className="flex items-center py-1">
+            <div className="flex-1 flex justify-center">
+              <TextInput
+                value={form.anioBoda}
+                onChange={(e) => setForm({ ...form, anioBoda: e.target.value })}
+                placeholder="2015"
+                maxLength={4}
+                inputMode="numeric"
+                aria-label="Año de boda"
+                style={{ width: ANCHO_ANIO }}
+              />
+            </div>
             <SeparadorCeldas />
-            <div data-campo="fotoBoda" className="flex items-center gap-1.5 min-w-0">
+            <div data-campo="fotoBoda" className="flex items-center gap-1.5 px-2.5 flex-shrink-0">
               <span
                 className="uppercase text-xs whitespace-nowrap"
                 style={{ color: faltan.includes("fotoBoda") ? C.wax : "var(--etiqueta-campo)", fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" }}
@@ -454,14 +458,16 @@ function FormularioDatos({
               )}
             </div>
             <SeparadorCeldas />
-            <label
-              className="flex items-center gap-1 text-sm whitespace-nowrap"
-              style={{ color: C.ink }}
-              title={hayFoto ? "Con la foto ya puesta no se puede marcar que no tienen: quítala primero" : "No tienen foto de boda"}
-            >
-              <input type="checkbox" checked={sinFoto} disabled={hayFoto} onChange={() => setSinFoto(!sinFoto)} />
-              No
-            </label>
+            <div className="flex-1 flex justify-center">
+              <label
+                className="flex items-center gap-1 text-sm whitespace-nowrap"
+                style={{ color: C.ink }}
+                title={hayFoto ? "Con la foto ya puesta no se puede marcar que no tienen: quítala primero" : "No tienen foto de boda"}
+              >
+                <input type="checkbox" checked={sinFoto} disabled={hayFoto} onChange={() => setSinFoto(!sinFoto)} />
+                No
+              </label>
+            </div>
           </div>
           {errorFoto && (
             <p className="text-xs" style={{ color: C.wax }}>

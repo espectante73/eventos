@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "58.3",
+    cambios: [
+      "Formulario, apartado Boda: las tres celdas (año | foto de boda | No) se reparten a lo ancho, con más aire alrededor de las rayas.",
+    ],
+  },
+  {
     version: "58.2",
     cambios: [
       "Formulario, apartado Boda: tres celdas separadas por una raya, año | foto de boda | No. La casilla \"Sí\" pasa a ser \"No\" (no tienen foto): \"Sí\" marcado sin foto confundía. Con «No» marcado, el hueco de la foto desaparece.",
