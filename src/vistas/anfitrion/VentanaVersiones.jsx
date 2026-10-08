@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "58.5",
+    cambios: [
+      "Invitados → Acciones: sus opciones salen ahora en un panel que se queda abierto mientras trabajas. Elegir una opción o tocar fuera no lo cierra; su X sí, y la ventana de Invitados sigue abierta. Cerrar Invitados lo cierra también.",
+      "El panel se mueve manteniéndolo pulsado y arrastrando, para apartarlo cuando tape al invitado que editas, y recuerda dónde lo dejaste. Un toque en una opción la usa, como siempre.",
+    ],
+  },
+  {
     version: "58.4",
     cambios: [
       "Foto y año de boda, en bloque: con la foto puesta, Guardar exige el año. Avisa \"Falta el año de boda: con la foto, va su año\", abre el apartado Boda y marca el año en rojo.",

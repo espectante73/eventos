@@ -231,3 +231,36 @@ describe("Imprimir: la lista para acomodadores", () => {
     expect(conPanel("alergias")).not.toContain("Lista para acomodadores");
   });
 });
+
+// Las Acciones, en un panel que se queda abierto (él, v58.5): elegir una
+// opción no lo cierra; su X lo cierra a él solo, no la ventana.
+describe("las Acciones de Invitados, en su panel", () => {
+  it("se queda abierto al elegir una opción, y su X lo cierra sin cerrar la ventana", () => {
+    let cerrada = false;
+    const vista = montar(
+      <SeccionInvitados
+        data={data}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante={null}
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => (cerrada = true)}
+        fijo
+      />
+    );
+    const botones = () => [...document.body.querySelectorAll("button")];
+    vista.pulsar(botones().find((b) => b.textContent.includes("Acciones")));
+    const cerrarPanel = () => botones().find((b) => b.getAttribute("aria-label") === "Cerrar Acciones");
+    expect(cerrarPanel()).toBeTruthy();
+    vista.pulsar(botones().find((b) => b.textContent.trim() === "Añadir invitado"));
+    expect(cerrarPanel(), "elegir una opción no cierra el panel").toBeTruthy();
+    expect(botones().some((b) => b.textContent.trim() === "✓ Añadir invitado")).toBe(true);
+    vista.pulsar(cerrarPanel());
+    expect(cerrarPanel()).toBeFalsy();
+    expect(cerrada).toBe(false);
+    vista.desmontar();
+  });
+});

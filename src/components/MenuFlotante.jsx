@@ -13,7 +13,8 @@
 // tiene por la imagen de cabecera).
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { C, R, OP } from "../theme";
+import { X } from "lucide-react";
+import { C, R, OP, S, T } from "../theme";
 import { esZurdo } from "../lib/mano";
 import { Seal } from "./Widgets";
 
@@ -37,6 +38,26 @@ const ALTO_MINIMO = 120;
 // saliendo más ancho que antes de este repaso): 173px. -15px otra vez
 // (a petición del usuario): 158px.
 const ANCHO_PANEL = 158;
+// Cuánto hay que mover el dedo para que un toque pase a ser un arrastre
+// (panel persistente): por debajo, es un toque y la opción se usa.
+const UMBRAL_ARRASTRE = 6;
+
+// Dónde dejó cada uno el panel persistente, en este aparato.
+function posicionGuardada(clave) {
+  try {
+    const p = JSON.parse(localStorage.getItem(`panel-${clave}`) || "null");
+    return Number.isFinite(p?.top) && Number.isFinite(p?.left) ? p : null;
+  } catch {
+    return null;
+  }
+}
+function guardarPosicion(clave, p) {
+  try {
+    localStorage.setItem(`panel-${clave}`, JSON.stringify(p));
+  } catch {
+    // Sin almacenamiento: la próxima vez sale junto al botón, nada más.
+  }
+}
 // Ancho real de cada fila (el panel menos 6px de margen a cada lado).
 // Exportado para que Mi cuenta use EXACTAMENTE la misma medida que el menú
 // "Abrir sección…", en vez de una copia del número (2026-09-18).
@@ -301,7 +322,13 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
 // botón (cae hacia arriba), "bottom-left" lo abre justo debajo del
 // botón pegado a su izquierda, "left" lo abre hacia el lado izquierdo
 // del botón (mismo borde superior, sin caer arriba ni abajo).
-export function MenuFlotante({ render, opciones, anchor = "right" }) {
+// `persistente` ({ titulo, clave }): el panel SE QUEDA ABIERTO mientras se
+// trabaja (él, v58.5, las Acciones de Invitados). Tocar fuera o elegir una
+// opción no lo cierra: solo su X o el mismo botón. Un toque en una opción
+// la usa; mantener pulsado y mover lo arrastra, y recuerda dónde se dejó
+// (`clave`). Vive DENTRO de la ventana que lo abre, no en <body>: así
+// cerrarla lo cierra, y queda por debajo de sus preguntas y modales.
+export function MenuFlotante({ render, opciones, anchor = "right", persistente = null }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState(null);
   // Cuál de las filas de nivel superior tiene su submenú abierto (ver el
@@ -340,8 +367,67 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
         maxHeight: alturaMaximaDisponible(r.bottom, false, win),
       });
     }
+    const guardada = persistente && posicionGuardada(persistente.clave);
+    if (guardada) setPos((p) => ({ top: guardada.top, left: guardada.left, maxHeight: p?.maxHeight }));
     setOpen(true);
   };
+
+  // ---------- El panel que se queda (persistente) ----------
+  const arrastre = useRef(null);
+  const acabaDeArrastrar = useRef(false);
+  const dentroDeLaVentana = (top, left) => {
+    const el = listaRef.current;
+    const { win } = realmDe(el);
+    const r = el.getBoundingClientRect();
+    return {
+      top: Math.min(Math.max(MARGEN_BORDE, top), Math.max(MARGEN_BORDE, win.innerHeight - r.height - MARGEN_BORDE)),
+      left: Math.min(Math.max(MARGEN_BORDE, left), Math.max(MARGEN_BORDE, win.innerWidth - r.width - MARGEN_BORDE)),
+    };
+  };
+  // Una posición guardada en otra pantalla más grande podría quedar fuera.
+  useLayoutEffect(() => {
+    if (!persistente || !open || !listaRef.current || pos?.top === undefined || pos?.left === undefined) return;
+    const d = dentroDeLaVentana(pos.top, pos.left);
+    if (d.top !== pos.top || d.left !== pos.left) setPos((p) => ({ ...p, ...d }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, pos?.top, pos?.left]);
+  const manejadoresArrastre = persistente
+    ? {
+        onPointerDown: (e) => {
+          if (e.button > 0 || e.target.closest?.("[data-cerrar-panel]")) return;
+          const r = listaRef.current.getBoundingClientRect();
+          arrastre.current = { x: e.clientX, y: e.clientY, top: r.top, left: r.left, movido: false };
+        },
+        onPointerMove: (e) => {
+          const a = arrastre.current;
+          if (!a) return;
+          const dx = e.clientX - a.x;
+          const dy = e.clientY - a.y;
+          if (!a.movido) {
+            if (Math.hypot(dx, dy) < UMBRAL_ARRASTRE) return;
+            a.movido = true;
+            e.currentTarget.setPointerCapture?.(e.pointerId);
+          }
+          setPos((p) => ({ ...dentroDeLaVentana(a.top + dy, a.left + dx), maxHeight: p?.maxHeight }));
+        },
+        onPointerUp: () => {
+          const a = arrastre.current;
+          arrastre.current = null;
+          if (!a?.movido) return;
+          acabaDeArrastrar.current = true;
+          const r = listaRef.current.getBoundingClientRect();
+          guardarPosicion(persistente.clave, { top: r.top, left: r.left });
+        },
+        onPointerCancel: () => (arrastre.current = null),
+        // Soltar tras arrastrar no es elegir la opción que quedó debajo.
+        onClickCapture: (e) => {
+          if (!acabaDeArrastrar.current) return;
+          acabaDeArrastrar.current = false;
+          e.stopPropagation();
+          e.preventDefault();
+        },
+      }
+    : {};
 
   // Al cerrar el menú entero, se olvida cuál de las filas tenía su
   // submenú abierto -- si no, al reabrir esa fila quedaría con el estilo
@@ -352,7 +438,8 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
   }, [open]);
 
   useEffect(() => {
-    if (!open) return;
+    // El persistente no se cierra al tocar fuera: solo su X o el botón.
+    if (!open || persistente) return;
     // Un submenú anidado (ver FilaMenu arriba) vive en SU PROPIO portal --
     // otro hijo directo de document.body, no un descendiente DOM de
     // listaRef -- así que un clic dentro de él no pasa el .contains() de
@@ -383,8 +470,57 @@ export function MenuFlotante({ render, opciones, anchor = "right" }) {
   return (
     <>
       {render({ ref: botonRef, open, toggle: () => (open ? setOpen(false) : abrir()) })}
+      {open && pos && persistente && (
+        <div
+          ref={listaRef}
+          data-menu-panel
+          className="fixed rounded-xl overflow-y-auto select-none"
+          style={{
+            ...pos,
+            width: ANCHO_PANEL,
+            maxWidth: "calc(100vw - 2rem)",
+            // Por encima de la lista, por debajo de sus preguntas y modales.
+            zIndex: 30,
+            background: C.ink,
+            border: `1px solid ${C.gold}`,
+            boxShadow: S.flotanteOscura,
+            touchAction: "none",
+            cursor: "grab",
+          }}
+          {...manejadoresArrastre}
+        >
+          <div className="flex items-center justify-between pl-3 pr-1 pt-1">
+            <span style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700, fontSize: T.normal }}>
+              {persistente.titulo}
+            </span>
+            {/* La misma X que las ventanas de la app. Cierra el panel, nunca
+                la ventana de detrás. */}
+            <button
+              data-cerrar-panel
+              onClick={() => setOpen(false)}
+              title="Cerrar"
+              aria-label={`Cerrar ${persistente.titulo}`}
+              className="boton-3d rounded-full p-1.5"
+              style={{ color: C.goldClaro }}
+            >
+              <X size={18} />
+            </button>
+          </div>
+          {opciones.map((o) => (
+            <FilaMenu
+              key={o.id}
+              opcion={o}
+              cerrarTodo={() => {}}
+              abierto={abiertoId === o.id}
+              onAbrir={() => setAbiertoId(o.id)}
+              onCerrarPropio={() => setAbiertoId(null)}
+            />
+          ))}
+        </div>
+      )}
       {open &&
         pos &&
+        !persistente &&
         createPortal(
           <div
             ref={listaRef}

@@ -1337,8 +1337,11 @@ export function SeccionInvitados({
                 app -- a petición del usuario, 2026-08-20.
                 `opcionesMenuInvitados` se construye más arriba, junto al
                 resto de estado de esta ventana. */}
+            {/* Persistente (él, v58.5): las opciones se quedan abiertas en
+                su panel mientras se trabaja, y se puede apartar arrastrando. */}
             <MenuFlotante
               anchor="bottom-left"
+              persistente={{ titulo: "Acciones", clave: "acciones-invitados" }}
               opciones={opcionesMenuInvitados}
               render={({ ref, toggle }) => (
                 <Boton
