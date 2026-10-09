@@ -367,7 +367,11 @@ describe("el estado de las cuentas de los colaboradores", () => {
     expect(sql).toMatch(/REVOKE EXECUTE ON FUNCTION public\.anfitrion_estado_cuentas\(uuid\) FROM PUBLIC, anon;/);
   });
 
-  it("al anfitrión que también es colaborador se le reconoce por su cuenta de anfitrión", () => {
-    expect(cuerpoDe("anfitrion_estado_cuentas")).toMatch(/from anfitriones a/);
+  // Una persona, dos papeles (norma 16): la llave se une a su ficha de
+  // colaborador ANTES de devolver "anfitrion", no se queda sin ella.
+  it("al entrar, el anfitrión que también es colaborador queda unido a su ficha", () => {
+    const f = cuerpoDe("mi_rol");
+    expect(f.indexOf("update colaboradores c")).toBeGreaterThan(-1);
+    expect(f.indexOf("update colaboradores c")).toBeLessThan(f.indexOf("from anfitriones a"));
   });
 });

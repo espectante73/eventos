@@ -474,15 +474,14 @@ CREATE FUNCTION public.mi_rol() RETURNS TABLE(rol text, token uuid)
     SET search_path TO 'public', 'pg_temp'
     AS $$
 begin
-  if exists (select 1 from anfitriones a where a."authUserId" = auth.uid()) then
-    return query select 'anfitrion'::text, s."token" from anfitrion_secreto s limit 1;
-    return;
-  end if;
-
   -- Una cuenta que ya existía antes que su ficha de colaborador (de otra
   -- prueba, o dada de alta después) se une aquí, al entrar, por su correo
   -- CONFIRMADO (v53.4). Antes solo se unía al crear la cuenta, y si la
   -- ficha llegaba después se quedaba "sin acceso" para siempre.
+  -- Va ANTES de mirar si es el anfitrión (v58.8): el anfitrión que también
+  -- es colaborador es UNA persona con dos papeles (norma 16), y su ficha de
+  -- colaborador lleva su llave como la de cualquiera. Antes se quedaba sin
+  -- ella y la app tenía que reconocerle por el correo en cada sitio.
   update colaboradores c
   set "authUserId" = auth.uid()
   where c."authUserId" is null
@@ -490,6 +489,11 @@ begin
       select lower(u.email) from auth.users u
       where u.id = auth.uid() and u.email_confirmed_at is not null
     );
+
+  if exists (select 1 from anfitriones a where a."authUserId" = auth.uid()) then
+    return query select 'anfitrion'::text, s."token" from anfitrion_secreto s limit 1;
+    return;
+  end if;
 
   return query
     select 'colaborador'::text, c."id"
@@ -1262,19 +1266,12 @@ begin
     return;
   end if;
 
-  -- El anfitrión que también es colaborador entra SIEMPRE con su cuenta de
-  -- anfitrión, que no se une a su ficha de colaborador: se le reconoce por
-  -- el correo (v58.8). Sin esto salía "sin cuenta" y no era verdad.
+  -- El anfitrión que también es colaborador lleva su llave en su ficha
+  -- como cualquiera desde v58.8 (mi_rol): aquí no hace falta nada aparte.
   return query
   select c."id", u.id is not null, u.last_sign_in_at
   from colaboradores c
-  left join auth.users u on u.id = coalesce(
-    c."authUserId",
-    (select a."authUserId" from anfitriones a
-       join auth.users ua on ua.id = a."authUserId"
-       where lower(ua.email) = lower(c."email") and c."email" <> ''
-       limit 1)
-  );
+  left join auth.users u on u.id = c."authUserId";
 end;
 $$;
 REVOKE EXECUTE ON FUNCTION public.anfitrion_estado_cuentas(uuid) FROM PUBLIC, anon;

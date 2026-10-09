@@ -44,7 +44,7 @@ const HISTORIAL_VERSIONES = [
   {
     version: "58.8",
     cambios: [
-      "Progreso de recopilación: el anfitrión que también es colaborador ya no sale como \"sin cuenta\". Entra con su cuenta de anfitrión, y su recuadro dice cuándo entró con ella.",
+      "El anfitrión que también es colaborador queda unido a su ficha de colaborador al entrar, como cualquier colaborador: una persona con dos papeles. En Progreso de recopilación ya no sale como \"sin cuenta\"; su recuadro dice cuándo entró.",
     ],
   },
   {
