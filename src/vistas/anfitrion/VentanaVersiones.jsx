@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "58.6",
+    cambios: [
+      "Corregido: el botón \"Abrir formulario\" del correo de aviso a un colaborador (\"Tus invitados asignados\") llevaba un enlace viejo. Quien lo abría sin haber iniciado sesión veía \"No tienes acceso\". Ahora lleva a la app, donde inicia sesión con su cuenta.",
+    ],
+  },
+  {
     version: "58.5",
     cambios: [
       "Invitados → Acciones: sus opciones salen ahora en un panel que se queda abierto mientras trabajas. Elegir una opción o tocar fuera no lo cierra; su X sí, y la ventana de Invitados sigue abierta. Cerrar Invitados lo cierra también.",

@@ -1079,7 +1079,10 @@ begin
       when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
       else
         '<div style="margin-top:18px;"><a href="' ||
-        (select "urlPublica" from evento limit 1) || '?rol=' || p_colaborador_id::text ||
+        -- Sin '?rol=' (v58.6): ese enlace-token se retiró en agosto de 2026
+        -- y llevaba a la pantalla "No tienes acceso" a quien abría el
+        -- correo sin sesión. Ya se quitó del otro aviso el 2026-09-23.
+        (select "urlPublica" from evento limit 1) ||
         '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
         'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
         'font-weight:600;font-family:sans-serif;">Abrir formulario</a></div>'

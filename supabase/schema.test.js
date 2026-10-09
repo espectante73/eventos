@@ -348,3 +348,12 @@ describe("los canales en vivo, solo con sesión y permiso", () => {
     expect(sql).toMatch(/CREATE POLICY canales_escribir ON realtime\.messages FOR INSERT TO authenticated[^;]*puede_usar_canal/);
   });
 });
+
+// El enlace-token ?rol= se retiró en agosto de 2026: el que lo abre sin
+// sesión ve "No tienes acceso". Se coló en dos correos, de uno en uno
+// (2026-09-23 y v58.6). Ningún correo de la base puede volver a llevarlo.
+describe("ningún correo lleva el enlace viejo ?rol=", () => {
+  it("ni una sola vez en schema.sql", () => {
+    expect(sql).not.toMatch(/'\?rol='/);
+  });
+});
