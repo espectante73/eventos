@@ -366,4 +366,8 @@ describe("el estado de las cuentas de los colaboradores", () => {
     expect(cuerpoDe("anfitrion_estado_cuentas")).toMatch(/if p_token is distinct from \(select "token" from anfitrion_secreto/);
     expect(sql).toMatch(/REVOKE EXECUTE ON FUNCTION public\.anfitrion_estado_cuentas\(uuid\) FROM PUBLIC, anon;/);
   });
+
+  it("al anfitrión que también es colaborador se le reconoce por su cuenta de anfitrión", () => {
+    expect(cuerpoDe("anfitrion_estado_cuentas")).toMatch(/from anfitriones a/);
+  });
 });

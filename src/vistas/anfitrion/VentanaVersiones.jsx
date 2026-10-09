@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "58.8",
+    cambios: [
+      "Progreso de recopilación: el anfitrión que también es colaborador ya no sale como \"sin cuenta\". Entra con su cuenta de anfitrión, y su recuadro dice cuándo entró con ella.",
+    ],
+  },
+  {
     version: "58.7",
     cambios: [
       "Progreso de recopilación: en el recuadro de cada colaborador, una línea nueva con su cuenta. Si la tiene, cuándo entró por última vez (\"hoy\", \"ayer\", \"hace 5 d\"); si todavía no se ha dado de alta, \"sin cuenta\" en rojo. Se actualiza al abrir la ventana y cada minuto.",

@@ -1262,10 +1262,19 @@ begin
     return;
   end if;
 
+  -- El anfitrión que también es colaborador entra SIEMPRE con su cuenta de
+  -- anfitrión, que no se une a su ficha de colaborador: se le reconoce por
+  -- el correo (v58.8). Sin esto salía "sin cuenta" y no era verdad.
   return query
   select c."id", u.id is not null, u.last_sign_in_at
   from colaboradores c
-  left join auth.users u on u.id = c."authUserId";
+  left join auth.users u on u.id = coalesce(
+    c."authUserId",
+    (select a."authUserId" from anfitriones a
+       join auth.users ua on ua.id = a."authUserId"
+       where lower(ua.email) = lower(c."email") and c."email" <> ''
+       limit 1)
+  );
 end;
 $$;
 REVOKE EXECUTE ON FUNCTION public.anfitrion_estado_cuentas(uuid) FROM PUBLIC, anon;
