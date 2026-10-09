@@ -358,3 +358,12 @@ describe("ningún correo lleva el enlace viejo ?rol=", () => {
     expect(sinComentarios).not.toMatch(/'\?rol='/);
   });
 });
+
+// Si cada colaborador tiene cuenta y cuándo entró (v58.7): lee auth.users,
+// así que solo con la llave del anfitrión, y nadie de fuera la puede llamar.
+describe("el estado de las cuentas de los colaboradores", () => {
+  it("pide la llave del anfitrión y no la puede usar anon", () => {
+    expect(cuerpoDe("anfitrion_estado_cuentas")).toMatch(/if p_token is distinct from \(select "token" from anfitrion_secreto/);
+    expect(sql).toMatch(/REVOKE EXECUTE ON FUNCTION public\.anfitrion_estado_cuentas\(uuid\) FROM PUBLIC, anon;/);
+  });
+});

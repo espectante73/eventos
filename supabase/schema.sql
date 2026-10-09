@@ -1250,6 +1250,27 @@ begin
 end;
 $$;
 
+-- Quién de los colaboradores tiene ya su cuenta, y cuándo entró por última
+-- vez (v58.7, Progreso de recopilación). auth.users no se lee desde el
+-- navegador: solo el anfitrión, por aquí. Únicamente esos dos datos.
+CREATE FUNCTION public.anfitrion_estado_cuentas(p_token uuid) RETURNS TABLE("colaboradorId" uuid, "tieneCuenta" boolean, "ultimaEntrada" timestamp with time zone)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+
+  return query
+  select c."id", u.id is not null, u.last_sign_in_at
+  from colaboradores c
+  left join auth.users u on u.id = c."authUserId";
+end;
+$$;
+REVOKE EXECUTE ON FUNCTION public.anfitrion_estado_cuentas(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.anfitrion_estado_cuentas(uuid) TO authenticated;
+
 -- Guarda la lista de colaboradores y sus permisos.
 -- ⚠️ Norma 12: p_filas son solo los cambiados; p_ids, los que deben quedar.
 CREATE FUNCTION public.anfitrion_guardar_colaboradores(p_token uuid, p_filas jsonb, p_ids uuid[]) RETURNS void

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "58.7",
+    cambios: [
+      "Progreso de recopilación: en el recuadro de cada colaborador, una línea nueva con su cuenta. Si la tiene, cuándo entró por última vez (\"hoy\", \"ayer\", \"hace 5 d\"); si todavía no se ha dado de alta, \"sin cuenta\" en rojo. Se actualiza al abrir la ventana y cada minuto.",
+    ],
+  },
+  {
     version: "58.6",
     cambios: [
       "Corregido: el botón \"Abrir formulario\" del correo de aviso a un colaborador (\"Tus invitados asignados\") llevaba un enlace viejo. Quien lo abría sin haber iniciado sesión veía \"No tienes acceso\". Ahora lleva a la app, donde inicia sesión con su cuenta.",

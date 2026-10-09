@@ -280,7 +280,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
 
       {/* Progreso de recopilación */}
       {abierto.progreso && (
-        <VentanaProgreso data={data} onCerrar={() => toggle("progreso")} />
+        <VentanaProgreso data={data} anfitrionToken={anfitrionToken} onCerrar={() => toggle("progreso")} />
       )}
 
       {/* Colaboradores: "Datos Colab." abre esta ventana; "Formularios" no

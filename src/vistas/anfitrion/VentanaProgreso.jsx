@@ -8,14 +8,17 @@
 // uno por métrica, que no era la idea). Y de canciones registradas.
 // Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4,
 // Ronda 1).
-import { ClipboardList, Euro, Mail, Music } from "lucide-react";
-import { C, OP } from "../../theme";
+import { ClipboardList, Euro, Mail, Music, UserCheck, UserX } from "lucide-react";
+import { C, OP, T } from "../../theme";
+import { useEstadoCuentas, textoUltimaEntrada } from "../../lib/estadoCuentas";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
 import { BarraCompacta } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
-export function VentanaProgreso({ data, onCerrar }) {
+// `anfitrionToken`: para leer si cada colaborador tiene ya cuenta (v58.7).
+export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
   const { invitados, colaboradores, ordenFamiliares } = data;
+  const cuentas = useEstadoCuentas(anfitrionToken);
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
 
   return (
@@ -95,6 +98,18 @@ export function VentanaProgreso({ data, onCerrar }) {
               <BarraCompacta icono={ClipboardList} completado={completosDatos} total={suyos.length} color={C.ink} />
               <BarraCompacta icono={Euro} completado={pagados} total={suyos.length} color={C.gold} />
               <BarraCompacta icono={Mail} completado={familiasConInvitacion} total={familias.length} color={C.wax} />
+              {/* Su cuenta: cuándo entró por última vez, o «sin cuenta» en
+                  rojo (él, v58.7). Una sola línea, como las barras. */}
+              {cuentas[c.id] && (
+                <div
+                  className="flex items-center gap-1.5 whitespace-nowrap"
+                  style={{ fontSize: T.micro, color: cuentas[c.id].tieneCuenta ? C.ink : C.peligro, fontFamily: "'IBM Plex Mono', monospace" }}
+                  title={cuentas[c.id].tieneCuenta ? "Tiene cuenta: última entrada" : "Todavía no ha creado su cuenta"}
+                >
+                  {cuentas[c.id].tieneCuenta ? <UserCheck size={14} style={{ flexShrink: 0 }} /> : <UserX size={14} style={{ flexShrink: 0 }} />}
+                  {cuentas[c.id].tieneCuenta ? textoUltimaEntrada(cuentas[c.id].ultimaEntrada) : "sin cuenta"}
+                </div>
+              )}
             </div>
           );
         })}
