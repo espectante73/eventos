@@ -372,6 +372,7 @@ describe("el estado de las cuentas de los colaboradores", () => {
   it("la última entrada es el último USO (la sesión renovada), no la última contraseña", () => {
     const f = cuerpoDe("anfitrion_estado_cuentas");
     expect(f).toMatch(/auth\.sessions/);
+    expect(f).toMatch(/max\(s\.refreshed_at\)/);
     expect(f).toMatch(/auth\.refresh_tokens/);
   });
 

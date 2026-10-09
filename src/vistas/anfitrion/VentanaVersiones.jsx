@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "59",
+    cambios: [
+      "Progreso de recopilación: la fecha de uso de cada colaborador sale ahora del dato más fiable de Supabase, la hora exacta en que su sesión se renovó. Eso solo pasa con la app abierta y a la vista: al abrirla, y cada hora mientras sigue delante.",
+    ],
+  },
+  {
     version: "58.9",
     cambios: [
       "Progreso de recopilación: la fecha de cada colaborador es ahora la última vez que USÓ la app, no la última vez que escribió su contraseña. Como la sesión se queda abierta días, antes decía \"hace 50 d\" de quien entraba a diario.",

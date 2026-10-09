@@ -1272,11 +1272,15 @@ begin
   -- escribió la contraseña (v58.9): la sesión se queda abierta días, y
   -- last_sign_in_at a secas decía "hace 50 d" de quien entra a diario. Su
   -- sesión se renueva sola al abrir la app y cada hora mientras está
-  -- abierta: esa renovación es la huella de uso.
+  -- abierta Y A LA VISTA (supabase-js para con la pestaña oculta): esa
+  -- renovación es la huella de uso. La guarda Supabase en
+  -- sessions.refreshed_at, en UTC y sin zona (v59, comprobado en su código:
+  -- tokens/service.go); las otras dos quedan de respaldo.
   return query
   select c."id", u.id is not null,
     greatest(
       u.last_sign_in_at,
+      (select max(s.refreshed_at) from auth.sessions s where s.user_id = u.id) at time zone 'UTC',
       (select max(s.updated_at) from auth.sessions s where s.user_id = u.id),
       (select max(rt.updated_at) from auth.refresh_tokens rt where rt.user_id = u.id::text)
     )
