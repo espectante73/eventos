@@ -369,6 +369,12 @@ describe("el estado de las cuentas de los colaboradores", () => {
 
   // Una persona, dos papeles (norma 16): la llave se une a su ficha de
   // colaborador ANTES de devolver "anfitrion", no se queda sin ella.
+  it("la última entrada es el último USO (la sesión renovada), no la última contraseña", () => {
+    const f = cuerpoDe("anfitrion_estado_cuentas");
+    expect(f).toMatch(/auth\.sessions/);
+    expect(f).toMatch(/auth\.refresh_tokens/);
+  });
+
   it("al entrar, el anfitrión que también es colaborador queda unido a su ficha", () => {
     const f = cuerpoDe("mi_rol");
     expect(f.indexOf("update colaboradores c")).toBeGreaterThan(-1);

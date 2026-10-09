@@ -1268,8 +1268,18 @@ begin
 
   -- El anfitrión que también es colaborador lleva su llave en su ficha
   -- como cualquiera desde v58.8 (mi_rol): aquí no hace falta nada aparte.
+  -- La última entrada es la última vez que USÓ la app, no la última vez que
+  -- escribió la contraseña (v58.9): la sesión se queda abierta días, y
+  -- last_sign_in_at a secas decía "hace 50 d" de quien entra a diario. Su
+  -- sesión se renueva sola al abrir la app y cada hora mientras está
+  -- abierta: esa renovación es la huella de uso.
   return query
-  select c."id", u.id is not null, u.last_sign_in_at
+  select c."id", u.id is not null,
+    greatest(
+      u.last_sign_in_at,
+      (select max(s.updated_at) from auth.sessions s where s.user_id = u.id),
+      (select max(rt.updated_at) from auth.refresh_tokens rt where rt.user_id = u.id::text)
+    )
   from colaboradores c
   left join auth.users u on u.id = c."authUserId";
 end;

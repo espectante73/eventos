@@ -104,7 +104,7 @@ export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
                 <div
                   className="flex items-center gap-1.5 whitespace-nowrap"
                   style={{ fontSize: T.micro, color: cuentas[c.id].tieneCuenta ? C.ink : C.peligro, fontFamily: "'IBM Plex Mono', monospace" }}
-                  title={cuentas[c.id].tieneCuenta ? "Tiene cuenta: última entrada" : "Todavía no ha creado su cuenta"}
+                  title={cuentas[c.id].tieneCuenta ? "Tiene cuenta: última vez que usó la app" : "Todavía no ha creado su cuenta"}
                 >
                   {cuentas[c.id].tieneCuenta ? <UserCheck size={14} style={{ flexShrink: 0 }} /> : <UserX size={14} style={{ flexShrink: 0 }} />}
                   {cuentas[c.id].tieneCuenta ? textoUltimaEntrada(cuentas[c.id].ultimaEntrada) : "sin cuenta"}

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "58.9",
+    cambios: [
+      "Progreso de recopilación: la fecha de cada colaborador es ahora la última vez que USÓ la app, no la última vez que escribió su contraseña. Como la sesión se queda abierta días, antes decía \"hace 50 d\" de quien entraba a diario.",
+    ],
+  },
+  {
     version: "58.8",
     cambios: [
       "El anfitrión que también es colaborador queda unido a su ficha de colaborador al entrar, como cualquier colaborador: una persona con dos papeles. En Progreso de recopilación ya no sale como \"sin cuenta\"; su recuadro dice cuándo entró.",
