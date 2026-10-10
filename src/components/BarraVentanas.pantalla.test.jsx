@@ -42,7 +42,7 @@ describe("la barra de ventanas", () => {
     vista.pulsar(boton("Cerrar Multimedia"));
     expect(document.body.textContent).toContain("¿Cerrar Multimedia?");
     expect(llamadas.cerrar).toEqual([]);
-    const si = [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "Sí, cerrar");
+    const si = [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "Sí");
     await act(async () => si.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(llamadas.cerrar).toEqual(["musica"]);
     vista.desmontar();

@@ -29,6 +29,18 @@ const leer = (r) => readFileSync(r, "utf-8");
 const sinComentarios = (t) =>
   t.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
 
+// Norma 9 (él, v59.1): las preguntas se responden «Sí» / «No». Solo lo que
+// borra para siempre lleva verbo, para no borrar por un «Sí» con prisas.
+describe("norma 9: «Sí» / «No», con verbo solo lo que borra para siempre", () => {
+  const CON_VERBO = ["Sí, eliminar", "Sí, borrar todo", "Sí, borrarla", "Sí, descartar", "Sí, restaurar"];
+  it("ningún «Sí, …» fuera de los que borran para siempre", () => {
+    const fuera = archivos.flatMap((r) =>
+      [...leer(r).matchAll(/rotulo: "(Sí, [^"]+)"/g)].map((m) => m[1]).filter((t) => !CON_VERBO.includes(t)).map((t) => `${r}: ${t}`)
+    );
+    expect(fuera).toEqual([]);
+  });
+});
+
 describe("norma 9: nada de ventanas del navegador", () => {
   // Bloquean el navegador, y desde una ventana emergente salen en la
   // pestaña equivocada y la dejan colgada. Se migraron todas en la

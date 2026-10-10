@@ -323,7 +323,7 @@ export function VentanaCuentas({ data, onCerrar }) {
                         preguntar({
                           titulo: "¿Deshacer la recogida?",
                           texto: `El dinero de ${c.nombre} volverá a constar como no recogido.`,
-                          rotulo: "Sí, deshacer",
+                          rotulo: "Sí",
                           alConfirmar: () => deshacerRecogidaColaborador(c.id),
                         })
                       }
@@ -412,7 +412,7 @@ export function VentanaCuentas({ data, onCerrar }) {
               pregunta={{
                 titulo: "¿Quitar este gasto?",
                 texto: [g.concepto, g.importe && `${g.importe} €`].filter(Boolean).join(" · ") || "Gasto sin concepto.",
-                rotulo: "Sí, quitarlo",
+                rotulo: "Sí",
               }}
               onClick={() => eliminarGasto(g.id)}
             />

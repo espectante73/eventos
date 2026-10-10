@@ -28,7 +28,7 @@ export function BuscadorInvitado({ invitados, invitadoId, onSeleccionar, placeho
           pregunta={{
             titulo: "¿Quitar la selección?",
             texto: `${seleccionado.apellido}, ${seleccionado.nombre}`,
-            rotulo: "Sí, quitarla",
+            rotulo: "Sí",
           }}
           onClick={() => {
             onSeleccionar("");

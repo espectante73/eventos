@@ -52,7 +52,7 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar }) {
             {clave !== "inicio" && (
               <BotonQuitar
                 titulo={`Cerrar ${titulo}`}
-                pregunta={{ titulo: `¿Cerrar ${titulo}?`, rotulo: "Sí, cerrar", peligro: false }}
+                pregunta={{ titulo: `¿Cerrar ${titulo}?`, rotulo: "Sí", peligro: false }}
                 onClick={() => onCerrar(clave)}
               />
             )}

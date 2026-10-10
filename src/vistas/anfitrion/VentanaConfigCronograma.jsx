@@ -270,10 +270,10 @@ export function VentanaConfigCronograma({ data, ventana }) {
             lo atendía.
           </p>
           <Boton variante="peligro" tamano="pequeno" onClick={quitarBloque}>
-            Quitar
+            Sí
           </Boton>
           <Boton variante="secundario" tamano="pequeno" onClick={() => setConfirmandoQuitar(false)}>
-            Cancelar
+            No
           </Boton>
         </div>
       )}

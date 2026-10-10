@@ -46,7 +46,7 @@ export function VentanaConfigModoPruebas({ data, onCerrar }) {
         : {
             titulo: "¿Activar Modo Pruebas?",
             texto: "Se guarda una foto completa de los datos actuales del evento. Podrás volver a este estado exacto en cualquier momento apagando el Modo Pruebas.",
-            rotulo: "Sí, activar",
+            rotulo: "Sí",
             peligro: false,
             alConfirmar: activar,
             alCancelar: onCerrar,

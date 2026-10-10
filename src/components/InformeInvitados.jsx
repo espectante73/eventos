@@ -160,7 +160,7 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
                   pregunta={{
                     titulo: "¿Quitar la excepción?",
                     texto: `La Revisión volverá a avisar de ${nombreCompleto(persona)}: «${titulo}».`,
-                    rotulo: "Sí, quitarla",
+                    rotulo: "Sí",
                   }}
                   onClick={() => onQuitarExcepcion(persona, clave)}
                 />

@@ -558,7 +558,7 @@ export function SeccionInvitados({
       texto:
         `${nombreCompleto(g)}: «${h.titulo}».\n` +
         "La Revisión dejará de avisar de este caso; de los demás, no. Se puede deshacer abajo, en «Excepciones permitidas».",
-      rotulo: "Sí, permitir",
+      rotulo: "Sí",
       peligro: false,
       alConfirmar: () => persistInvitados(marcarExcepcion(invitados, g.id, h.clave).invitados),
     });

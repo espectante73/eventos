@@ -252,7 +252,7 @@ export function VentanaInvitaciones({
                   preguntar({
                     titulo: "¿Lleva el sello PAGADO?",
                     texto: "La plantilla DEBE traer dibujado el sello PAGADO, rojo y arriba a la izquierda. La app no lo añade.",
-                    rotulo: "Sí, lo lleva",
+                    rotulo: "Sí",
                     peligro: false,
                     alConfirmar: () => inputPlantillaRef.current?.click(),
                   })
@@ -274,7 +274,7 @@ export function VentanaInvitaciones({
                     preguntar({
                       titulo: "¿Quitar la plantilla?",
                       texto: "Se usará la plantilla incluida en la app.",
-                      rotulo: "Sí, quitarla",
+                      rotulo: "Sí",
                       alConfirmar: () => persistEvento({ ...evento, imagenInvitacion: "" }),
                     })
                   }

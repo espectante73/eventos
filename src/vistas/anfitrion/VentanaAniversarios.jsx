@@ -466,9 +466,10 @@ export function VentanaAniversarios({ data, onCerrar }) {
                   quitar(tipo, matrimonio.familia);
                 }}
               >
+                {/* Con verbo: borra el archivo de verdad (norma 9). */}
                 Sí, quitarla
               </Boton>
-              <Boton onClick={() => setPorQuitar(null)}>Cancelar</Boton>
+              <Boton onClick={() => setPorQuitar(null)}>No</Boton>
             </>
           }
         >

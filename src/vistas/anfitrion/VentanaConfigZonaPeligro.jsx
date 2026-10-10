@@ -38,7 +38,7 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
               conAutorizacion.length === 1 ? "invitado que autorizó" : "invitados que autorizaron"
             } guardar sus datos, con su nombre y sus datos personales. Se les quita todo lo de este evento: mesa, pago, confirmación y colaborador.`
           : "\n\nNadie ha autorizado que se guarden sus datos, así que no se queda ninguno."),
-      rotulo: "Sí, continuar",
+      rotulo: "Sí",
       alConfirmar: () =>
         preguntar({
           titulo: "Última confirmación",

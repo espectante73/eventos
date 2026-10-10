@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "59.1",
+    cambios: [
+      "Texto simplificado en los botones de las preguntas: ahora se responde «Sí» o «No» (antes «Sí, quitarla», «Sí, toda la familia», «Cancelar»…). Solo lo que borra para siempre sigue diciendo qué borra («Sí, eliminar», «Sí, borrar todo», «Sí, descartar»), para no borrar nada por un «Sí» con prisas.",
+    ],
+  },
+  {
     version: "59",
     cambios: [
       "Progreso de recopilación: la fecha de uso de cada colaborador sale ahora del dato más fiable de Supabase, la hora exacta en que su sesión se renovó. Eso solo pasa con la app abierta y a la vista: al abrirla, y cada hora mientras sigue delante.",

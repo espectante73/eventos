@@ -19,22 +19,22 @@ describe("BotonQuitar", () => {
 
   it("pulsarlo NO borra: primero pregunta", () => {
     const quitar = vi.fn();
-    pintar({ titulo: "Quitar esta mesa", pregunta: { titulo: "¿Quitar la mesa 3?", rotulo: "Sí, quitarla" }, onClick: quitar });
+    pintar({ titulo: "Quitar esta mesa", pregunta: { titulo: "¿Quitar la mesa 3?", rotulo: "Sí" }, onClick: quitar });
     pulsar(document.querySelector('[aria-label="Quitar esta mesa"]'));
     expect(quitar).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain("¿Quitar la mesa 3?");
   });
 
-  it("con «Sí» se quita, y con «Cancelar» no", () => {
+  it("con «Sí» se quita, y con «No» no", () => {
     const quitar = vi.fn();
-    pintar({ titulo: "Quitar", pregunta: { titulo: "¿Seguro?", rotulo: "Sí, quitarla" }, onClick: quitar });
+    pintar({ titulo: "Quitar", pregunta: { titulo: "¿Seguro?", rotulo: "Sí" }, onClick: quitar });
     pulsar(document.querySelector('[aria-label="Quitar"]'));
-    pulsar(botonCon("Cancelar"));
+    pulsar(botonCon("No"));
     expect(quitar).not.toHaveBeenCalled();
     expect(document.body.textContent).not.toContain("¿Seguro?");
 
     pulsar(document.querySelector('[aria-label="Quitar"]'));
-    pulsar(botonCon("Sí, quitarla"));
+    pulsar(botonCon("Sí"));
     expect(quitar).toHaveBeenCalledTimes(1);
   });
 

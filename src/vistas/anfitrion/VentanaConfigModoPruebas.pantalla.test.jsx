@@ -26,17 +26,17 @@ async function abrir(evento) {
   return llamadas;
 }
 
-it("apagado: sale directamente la pregunta de activar, y Cancelar cierra", async () => {
+it("apagado: sale directamente la pregunta de activar, y «No» cierra", async () => {
   const llamadas = await abrir({ modoPruebasActivo: false });
   expect(document.body.textContent).toContain("¿Activar Modo Pruebas?");
   expect(document.body.textContent).not.toContain("Guarda una foto de todo ahora mismo");
-  await act(async () => boton("Cancelar").click());
+  await act(async () => boton("No").click());
   expect(llamadas).toEqual(["cerrar"]);
 });
 
-it("apagado: «Sí, activar» lo activa", async () => {
+it("apagado: «Sí» lo activa", async () => {
   const llamadas = await abrir({ modoPruebasActivo: false });
-  await act(async () => boton("Sí, activar").click());
+  await act(async () => boton("Sí").click());
   expect(llamadas).toEqual(["activar"]);
 });
 

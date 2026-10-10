@@ -160,8 +160,10 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 9. **Quitar o borrar pregunta antes**, en la ventana de la app
    (`usePreguntaSeguridad`; `BotonQuitar` ya la lleva dentro); lo que
    pasa fuera de la pantalla (una descarga, un envío) avisa en ella al
-   terminar, y dónde está. Lo vigila `reglas-del-proyecto.test.js`. Descartar lo escrito: «¿Descartar los
-   cambios?», «Sí, descartar» / «Seguir editando».
+   terminar, y dónde está. Lo vigila `reglas-del-proyecto.test.js`. Se
+   responde «Sí» / «No»; solo lo que borra para siempre dice qué borra
+   («Sí, eliminar»), como en internet. Descartar lo escrito: «¿Descartar
+   los cambios?», «Sí, descartar» / «No».
 10. **Está hecho cuando él lo ha visto**: pedir la captura (mejor del
     móvil) ANTES de dar por hecho un cambio de aspecto. Y construir de
     uno en uno, enseñando cada paso.

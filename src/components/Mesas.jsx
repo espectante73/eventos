@@ -71,7 +71,7 @@ export function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapaci
               texto: ocupados > 0
                 ? `Tiene ${ocupados} invitado${ocupados !== 1 ? "s" : ""}: volverán a quedar sin mesa. No se borra a nadie.`
                 : "Está vacía.",
-              rotulo: "Sí, quitarla",
+              rotulo: "Sí",
             }}
             onClick={onEliminar}
             style={{ position: "absolute", top: -3, right: -3 }}
@@ -101,7 +101,7 @@ export function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapaci
             preguntar({
               titulo: `¿Vaciar la mesa ${m.numero}?`,
               texto: `${ocupados} invitado${ocupados !== 1 ? "s" : ""} volverán a quedar sin mesa. No se borra a nadie.`,
-              rotulo: "Sí, vaciarla",
+              rotulo: "Sí",
               alConfirmar: onVaciar,
             })
           }

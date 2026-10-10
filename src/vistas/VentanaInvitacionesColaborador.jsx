@@ -39,7 +39,7 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
     preguntar({
       titulo: "¿Tienes ya el dinero?",
       texto: `Confirma que ya tienes en tu poder el dinero de "${familia.apellido}". Solo se genera y envía la invitación si confirmas.`,
-      rotulo: "Sí, lo tengo",
+      rotulo: "Sí",
       peligro: false,
       alConfirmar: () => abrirPreviewInvitacion(familia),
     });

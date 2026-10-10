@@ -254,7 +254,7 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
                     preguntar({
                       titulo: "¿Quitar la imagen de portada?",
                       texto: "Se usará la imagen incluida en la app.",
-                      rotulo: "Sí, quitarla",
+                      rotulo: "Sí",
                       alConfirmar: () => persistEvento({ ...evento, imagen: "/cabecera-defecto.jpg" }),
                     })
                   }

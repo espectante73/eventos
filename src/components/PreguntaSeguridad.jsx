@@ -11,7 +11,9 @@
 // Sustituye a window.confirm, prohibido en la app (en una ventana emergente
 // sale en la pestaña equivocada y la deja colgada). El aspecto es el de la
 // pregunta de "¿Quitar la foto?" de Aniversarios, la ya aprobada: título
-// con la pregunta, una línea de texto, "Sí, …" en rojo y "Cancelar".
+// con la pregunta, una línea de texto, "Sí" en rojo y "No". Respuestas
+// cortas (él, v59.1, norma 9): solo lo que borra para siempre dice qué
+// borra ("Sí, eliminar"), como en internet.
 import { useState, useRef, forwardRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Trash2 } from "lucide-react";
@@ -22,7 +24,8 @@ import { Boton } from "./Boton";
 // preguntar({ titulo, texto, rotulo, peligro, alConfirmar })
 //   titulo   la pregunta ("¿Quitar la mesa 3?")
 //   texto    una línea con lo que va a pasar (opcional)
-//   rotulo   el botón de aceptar ("Sí, quitarla")
+//   rotulo   el botón de aceptar: "Sí" por defecto; con verbo solo lo que
+//            borra para siempre ("Sí, eliminar"), norma 9
 //   peligro  false para una pregunta que no borra nada (botón verde)
 //   soloAviso  true = no hay nada que confirmar, solo un "Entendido"
 //              (p. ej. "no se puede marcar como pagado: faltan datos")
@@ -58,7 +61,7 @@ export function usePreguntaSeguridad() {
       ancho={320}
       acciones={
         // A la derecha, por el pulgar; en espejo con la mano izquierda. Así
-        // "Cancelar" queda en el borde, lo más fácil de acertar.
+        // "No" queda en el borde, lo más fácil de acertar.
         <div className="flex gap-2 w-full justify-end zurdo:flex-row-reverse">
           {pendiente.soloAviso ? (
             <Boton variante="principal" onClick={cerrar}>
@@ -75,7 +78,7 @@ export function usePreguntaSeguridad() {
               alConfirmar?.();
             }}
           >
-            {pendiente.rotulo || "Sí, quitar"}
+            {pendiente.rotulo || "Sí"}
           </Boton>
           {pendiente.otra ? (
             <Boton
@@ -88,7 +91,7 @@ export function usePreguntaSeguridad() {
               {pendiente.otra.rotulo}
             </Boton>
           ) : (
-            <Boton onClick={cancelar}>Cancelar</Boton>
+            <Boton onClick={cancelar}>No</Boton>
           )}
           </>
           )}

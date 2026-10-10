@@ -273,7 +273,7 @@ function FormularioDatos({
       titulo: "¿Descartar los cambios?",
       rotulo: "Sí, descartar",
       alConfirmar: onCerrar,
-      otra: { rotulo: "Seguir editando" },
+      otra: { rotulo: "No" },
     });
   };
 
@@ -657,9 +657,9 @@ function FormularioDatos({
                   quitarFoto();
                 }}
               >
-                Sí, quitarla
+                Sí
               </Boton>
-              <Boton onClick={() => setQuitandoFoto(false)}>Cancelar</Boton>
+              <Boton onClick={() => setQuitandoFoto(false)}>No</Boton>
             </>
           }
         >
@@ -720,13 +720,12 @@ function FilaInvitadoColaborador({
       texto:
         textoPreguntaFamilia(p, campo, valor, evento) +
         (campo === "pagado" && valor ? `\n${AVISO_CIERRE_AL_PAGAR}` : ""),
-      // Como en toda la app, el botón dice lo que hace ("Sí, pagado"): un
-      // "Sí" pelado era inventado (norma 1).
-      rotulo: "Sí, toda la familia",
+      // «Sí» / «No» (él, v59.1, norma 9): la pregunta ya dice qué se hace.
+      rotulo: "Sí",
       peligro: valor ? false : undefined,
       sinPrincipal: !p.puedeTodos,
       alConfirmar: () => marcarFamilia(g, campo, valor),
-      otra: { rotulo: `No, solo ${g.nombre}`, alConfirmar: () => marcarSolo(g.id, valor) },
+      otra: { rotulo: "No", alConfirmar: () => marcarSolo(g.id, valor) },
     });
     return true;
   };
@@ -746,8 +745,8 @@ function FilaInvitadoColaborador({
     if (await preguntarPorLaFamilia("pagado", !g.pagado, onMarcarPagado)) return;
     preguntar(
       g.pagado
-        ? { titulo: "¿Quitar el pago?", texto: nombreCompleto(g), rotulo: "Sí, quitarlo", alConfirmar: () => onMarcarPagado(g.id, false) }
-        : { titulo: "¿Marcar como pagado?", texto: `${nombreCompleto(g)}\n${AVISO_CIERRE_AL_PAGAR}`, rotulo: "Sí, pagado", peligro: false, alConfirmar: () => onMarcarPagado(g.id, true) }
+        ? { titulo: "¿Quitar el pago?", texto: nombreCompleto(g), rotulo: "Sí", alConfirmar: () => onMarcarPagado(g.id, false) }
+        : { titulo: "¿Marcar como pagado?", texto: `${nombreCompleto(g)}\n${AVISO_CIERRE_AL_PAGAR}`, rotulo: "Sí", peligro: false, alConfirmar: () => onMarcarPagado(g.id, true) }
     );
   };
 
@@ -795,8 +794,8 @@ function FilaInvitadoColaborador({
     if (await preguntarPorLaFamilia("presente", !g.presente, onMarcarPresente)) return;
     preguntar(
       g.presente
-        ? { titulo: "¿Quitar la llegada?", texto: nombreCompleto(g), rotulo: "Sí, quitarla", alConfirmar: () => onMarcarPresente(g.id, false) }
-        : { titulo: "¿Ya está aquí?", texto: nombreCompleto(g), rotulo: "Sí, ha llegado", peligro: false, alConfirmar: () => onMarcarPresente(g.id, true) }
+        ? { titulo: "¿Quitar la llegada?", texto: nombreCompleto(g), rotulo: "Sí", alConfirmar: () => onMarcarPresente(g.id, false) }
+        : { titulo: "¿Ya está aquí?", texto: nombreCompleto(g), rotulo: "Sí", peligro: false, alConfirmar: () => onMarcarPresente(g.id, true) }
     );
   };
 
