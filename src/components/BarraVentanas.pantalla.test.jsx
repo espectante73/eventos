@@ -4,6 +4,7 @@ import { describe, it, expect } from "vitest";
 import { act } from "react";
 import { montar } from "../pruebas/dibujar";
 import { BarraVentanas, ALTO_BARRA } from "./BarraVentanas";
+import { marcarSinGuardar } from "../lib/cambiosSinGuardar";
 
 function dibujar(props = {}) {
   const llamadas = { elegir: [], cerrar: [] };
@@ -45,6 +46,20 @@ describe("la barra de ventanas", () => {
     const si = [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "Sí");
     await act(async () => si.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(llamadas.cerrar).toEqual(["musica"]);
+    vista.desmontar();
+  });
+
+  // v61.2: con una ficha a medio escribir, cerrar el formulario la perdería.
+  it("con algo sin guardar en el formulario, su X pregunta «¿Descartar los cambios?»", async () => {
+    const { vista, llamadas, boton } = dibujar({ abiertas: ["formulario"], delante: "formulario" });
+    marcarSinGuardar("formulario", true);
+    await act(async () => {});
+    vista.pulsar(boton("Cerrar Formulario"));
+    expect(document.body.textContent).toContain("¿Descartar los cambios?");
+    const si = [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "Sí, descartar");
+    await act(async () => si.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(llamadas.cerrar).toEqual(["formulario"]);
+    marcarSinGuardar("formulario", false);
     vista.desmontar();
   });
 

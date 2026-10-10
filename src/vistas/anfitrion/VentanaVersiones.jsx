@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "61.2",
+    cambios: [
+      "Cerrar el formulario con una ficha a medio escribir ya no pierde lo escrito sin avisar: tanto la X de la ventana como la X de su cuadradito en la barra del móvil preguntan «¿Descartar los cambios?», igual que «Cancelar».",
+    ],
+  },
+  {
     version: "61.1",
     cambios: [
       "El aviso rojo del pago pendiente se puede tocar en cualquier momento, no solo al vencer: pregunta «¿Ha pagado…?» y con «Sí» queda acreditado el pago. Con «No», «¿Va a ir a la fiesta?»: «No» lo deja en «No asiste»; «Sí», si el plazo sigue en curso, lo deja como está sin gastar otro plazo, y si ya venció, empieza uno nuevo.",

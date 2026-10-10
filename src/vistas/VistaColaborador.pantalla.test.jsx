@@ -517,6 +517,21 @@ describe("el formulario: Guardar y Cancelar", () => {
     vista.desmontar();
   });
 
+  // v61.2: la X de la ventana, igual que «Cancelar».
+  it("la X del formulario con algo escrito pregunta «¿Descartar los cambios?»", () => {
+    const { vista, guardados } = abrirOmar();
+    escribirOtraAlergia(vista, "Marisco");
+    vista.pulsar(document.body.querySelector('button[aria-label="Cerrar"]'));
+    expect(document.body.textContent).toContain("¿Descartar los cambios?");
+    vista.pulsar(boton("No"));
+    expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]').value).toBe("Marisco");
+    vista.pulsar(document.body.querySelector('button[aria-label="Cerrar"]'));
+    vista.pulsar(boton("Sí, descartar"));
+    expect(guardados).toHaveLength(0);
+    expect(boton("Guardar")).toBeFalsy();
+    vista.desmontar();
+  });
+
   // v52: seis apartados plegados, uno abierto a la vez; Boda solo O y A.
   it("todo cerrado al abrir, y uno solo abierto a la vez", () => {
     const { vista } = abrirOmar();

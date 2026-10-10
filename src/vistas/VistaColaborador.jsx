@@ -24,6 +24,7 @@ import { ordenarPorApellidoNombre, nombreCompleto } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
 import { estadoImpago, textoAvisoImpago, fechaCorta, PLAZOS_MAX } from "../lib/impagos";
+import { marcarSinGuardar, haySinGuardar, PREGUNTA_DESCARTAR } from "../lib/cambiosSinGuardar";
 import { requisitosActivos } from "../lib/modoPruebas";
 import { construirEnlaceTablon } from "../lib/url";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
@@ -220,6 +221,10 @@ function FormularioDatos({
   );
   const hayCambios =
     datosCambiados || Boolean(fotoNueva) || foto !== (fotoFamiliar || "") || sinFoto !== sinFotoBoda;
+  // Cerrar el formulario desde fuera (su X, la de la barra) también
+  // pregunta si hay algo sin guardar (v61.2, lib/cambiosSinGuardar.js).
+  useEffect(() => marcarSinGuardar("formulario", hayCambios), [hayCambios]);
+  useEffect(() => () => marcarSinGuardar("formulario", false), []);
 
   const guardar = async () => {
     const pendientes = faltanObligatorios(form, evento, opcionesGuardar);
@@ -272,8 +277,7 @@ function FormularioDatos({
   const cancelar = () => {
     if (!hayCambios) return onCerrar();
     preguntar({
-      titulo: "¿Descartar los cambios?",
-      rotulo: "Sí, descartar",
+      ...PREGUNTA_DESCARTAR,
       alConfirmar: onCerrar,
       otra: { rotulo: "No" },
     });
@@ -1257,7 +1261,12 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const enBarra = Boolean(barra) && Boolean(window.matchMedia?.("(pointer: coarse) and (hover: none)")?.matches);
   const formularioVisible = enBarra ? barra.formularioEnBarra : formularioAbierto;
   const abrirFormulario = enBarra ? barra.abrirFormulario : () => setFormularioAbierto(true);
-  const cerrarFormulario = enBarra ? barra.cerrarFormulario : () => setFormularioAbierto(false);
+  const cerrarSinPreguntar = enBarra ? barra.cerrarFormulario : () => setFormularioAbierto(false);
+  // Con una ficha a medio escribir, «¿Descartar los cambios?» antes.
+  const cerrarFormulario = () =>
+    haySinGuardar("formulario")
+      ? preguntar({ ...PREGUNTA_DESCARTAR, alConfirmar: cerrarSinPreguntar })
+      : cerrarSinPreguntar();
   const [miCuentaAbierta, setMiCuentaAbierta] = useState(false);
   const [abiertoId, setAbiertoId] = useState(null);
   // Mientras un invitado está abierto, se queda fijo en la sección donde

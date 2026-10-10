@@ -13,6 +13,7 @@ import { Boton } from "./Boton";
 import { BotonQuitar, TAMANO_BOTON_QUITAR } from "./PreguntaSeguridad";
 import { C } from "../theme";
 import { ICONOS_VENTANAS } from "../lib/iconosVentanas";
+import { useSinGuardar, PREGUNTA_DESCARTAR } from "../lib/cambiosSinGuardar";
 
 // Al menos 44, el mínimo del dedo; algo más, que se usa de pie y deprisa.
 export const TAM_CUADRITO = 52;
@@ -30,6 +31,8 @@ export const VENTANAS_MOVIL = {
 const INICIO = { clave: "inicio", titulo: "Inicio", icono: Home };
 
 export function BarraVentanas({ abiertas, delante, onElegir, onCerrar }) {
+  // Con algo escrito sin guardar, su X pregunta si se descarta (v61.2).
+  const haySinGuardar = useSinGuardar();
   // Mientras se ve, las ventanas flotantes dejan su hueco abajo.
   useEffect(() => {
     const raiz = document.documentElement;
@@ -52,7 +55,7 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar }) {
             {clave !== "inicio" && (
               <BotonQuitar
                 titulo={`Cerrar ${titulo}`}
-                pregunta={{ titulo: `¿Cerrar ${titulo}?`, rotulo: "Sí", peligro: false }}
+                pregunta={haySinGuardar(clave) ? PREGUNTA_DESCARTAR : { titulo: `¿Cerrar ${titulo}?`, rotulo: "Sí", peligro: false }}
                 onClick={() => onCerrar(clave)}
               />
             )}
