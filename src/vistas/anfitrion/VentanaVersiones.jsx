@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "61.3",
+    cambios: [
+      "Las preguntas sin texto (como «¿Descartar los cambios?») ya no dejan una franja vacía entre el título y los botones.",
+    ],
+  },
+  {
     version: "61.2",
     cambios: [
       "Cerrar el formulario con una ficha a medio escribir ya no pierde lo escrito sin avisar: tanto la X de la ventana como la X de su cuadradito en la barra del móvil preguntan «¿Descartar los cambios?», igual que «Cancelar».",

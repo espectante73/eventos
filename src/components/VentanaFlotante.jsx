@@ -2,7 +2,7 @@
 // no bloqueante (VentanaFlotante) — la base de toda la navegación por
 // secciones de la app (Mesas, Avisos, Configuración...). Movidas fuera de
 // App.jsx en el reparto del 2026-08-08 (ver CLAUDE.md).
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Children } from "react";
 import { X } from "lucide-react";
 import { C, S } from "../theme";
 
@@ -12,6 +12,7 @@ import { C, S } from "../theme";
 // formularios y listas; el visor del mapa pide más sitio porque enseña
 // una imagen apaisada (ver MapaSitio.jsx).
 export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitulo, ancho = 720 }) {
+  const hayCuerpo = Children.toArray(children).some((c) => c !== "");
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") onCerrar();
@@ -67,13 +68,17 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
             <X size={18} />
           </button>
         </div>
-        <div className="p-4 modal-flotante-cuerpo" style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain" }}>
-          {children}
-        </div>
+        {/* Sin nada dentro (una pregunta sin texto, «¿Descartar los
+            cambios?»), sin cuerpo: dejaba una franja vacía (v61.3). */}
+        {hayCuerpo && (
+          <div className="p-4 modal-flotante-cuerpo" style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain" }}>
+            {children}
+          </div>
+        )}
         {acciones && (
           <div
             className="flex items-center gap-2 px-4 py-3 flex-wrap"
-            style={{ borderTop: `1px solid ${C.line}` }}
+            style={{ borderTop: hayCuerpo ? `1px solid ${C.line}` : undefined }}
           >
             {acciones}
           </div>

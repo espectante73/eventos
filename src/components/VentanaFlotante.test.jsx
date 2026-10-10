@@ -5,7 +5,7 @@
 import { it, expect } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act } from "react";
-import { VentanaFlotante } from "./VentanaFlotante";
+import { VentanaFlotante, ModalFlotante } from "./VentanaFlotante";
 import { usePreguntaSeguridad } from "./PreguntaSeguridad";
 import { Boton } from "./Boton";
 
@@ -36,4 +36,18 @@ it("la pregunta sigue delante de su ventana al apretarla, y su botón funciona",
   expect(capa(boton("Sí, hazlo"))).toBeGreaterThan(capa(boton("Abrir")));
   await act(async () => boton("Sí, hazlo").click());
   expect(confirmado).toBe(true);
+});
+
+// v61.3: una pregunta sin texto («¿Descartar los cambios?») dejaba una
+// franja vacía entre el título y los botones.
+it("una ventana de pregunta sin texto no deja franja vacía", async () => {
+  const caja = document.createElement("div");
+  document.body.appendChild(caja);
+  const raiz = createRoot(caja);
+  await act(async () => raiz.render(<ModalFlotante titulo="¿Descartar?" onCerrar={() => {}} acciones={<Boton>No</Boton>}>{false}{undefined}</ModalFlotante>));
+  expect(document.querySelector(".modal-flotante-cuerpo")).toBeNull();
+  await act(async () => raiz.render(<ModalFlotante titulo="¿Quitar?" onCerrar={() => {}}>Algo</ModalFlotante>));
+  expect(document.querySelector(".modal-flotante-cuerpo").textContent).toBe("Algo");
+  await act(async () => raiz.unmount());
+  caja.remove();
 });
