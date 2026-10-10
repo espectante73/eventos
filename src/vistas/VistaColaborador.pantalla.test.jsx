@@ -279,12 +279,46 @@ describe("el pago y la llegada, por familias (v60)", () => {
     vista.desmontar();
   });
 
+  // Tocar el aviso, en cualquier momento (él, v61.1).
+  const avisoLuis = () => botones().find((b) => b.textContent.includes("Ruiz, Luis:"));
+
+  it("en plazo, tocar el aviso deja acreditar el pago", async () => {
+    const { vista, elegidas } = montarRuiz({ pagoPendienteHasta: "2999-01-01", plazosPago: 1 });
+    await act(async () => {});
+    await pulsarAsync(avisoLuis());
+    expect(document.body.textContent).toContain("¿Ha pagado Ruiz, Luis?");
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "Sí"));
+    expect(elegidas).toEqual([["r1", ["r2"], "pagado", true]]);
+    vista.desmontar();
+  });
+
+  it("en plazo, «No ha pagado» y «Sí va»: se queda como está, sin gastar otro plazo", async () => {
+    const { vista, respuestas } = montarRuiz({ pagoPendienteHasta: "2999-01-01", plazosPago: 1 });
+    await act(async () => {});
+    await pulsarAsync(avisoLuis());
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "No"));
+    expect(document.body.textContent).toContain("sigue con su pago pendiente");
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "Sí"));
+    expect(respuestas).toEqual([]);
+    vista.desmontar();
+  });
+
+  it("en plazo, cambiar la respuesta a «No»: «No asiste»", async () => {
+    const { vista, respuestas } = montarRuiz({ pagoPendienteHasta: "2999-01-01", plazosPago: 1 });
+    await act(async () => {});
+    await pulsarAsync(avisoLuis());
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "No"));
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "No"));
+    expect(respuestas).toEqual([["r1", "r2", false]]);
+    vista.desmontar();
+  });
+
   it("el último plazo vencido: tocar el aviso pregunta, y solo deja «No»", async () => {
     const { vista, respuestas } = montarRuiz({ pagoPendienteHasta: "2020-01-01", plazosPago: 3 });
     await act(async () => {});
-    const aviso = botones().find((b) => b.textContent.includes("Ruiz, Luis: último plazo vencido"));
-    expect(aviso, "el aviso en rojo, que se puede tocar").toBeTruthy();
-    await pulsarAsync(aviso);
+    expect(avisoLuis().textContent).toContain("Ruiz, Luis: último plazo vencido");
+    await pulsarAsync(avisoLuis());
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "No"));
     expect(document.body.textContent).toContain("Ya no quedan plazos");
     expect(botones().find((b) => b.textContent.trim() === "Sí").disabled).toBe(true);
     await pulsarAsync(botones().find((b) => b.textContent.trim() === "No"));

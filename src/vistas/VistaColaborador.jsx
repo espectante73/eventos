@@ -23,7 +23,7 @@ import {
 import { ordenarPorApellidoNombre, nombreCompleto } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
-import { estadoImpago, textoAvisoImpago, PLAZOS_MAX } from "../lib/impagos";
+import { estadoImpago, textoAvisoImpago, fechaCorta, PLAZOS_MAX } from "../lib/impagos";
 import { requisitosActivos } from "../lib/modoPruebas";
 import { construirEnlaceTablon } from "../lib/url";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
@@ -937,8 +937,9 @@ function FilaInvitadoColaborador({
 // Tocar el nombre la abre: sus miembros, y cada uno de los suyos abre su
 // ficha mientras no haya pagado (renderMiembro).
 // El que no paga con su familia (él, v61): se pregunta si va a ir a la
-// fiesta; con «Sí», su aviso en rojo bajo la fila hasta que pague, y al
-// vencer el plazo, tocarlo vuelve a preguntar (lib/impagos.js).
+// fiesta; con «Sí», su aviso en rojo bajo la fila hasta que pague. Tocarlo,
+// en cualquier momento, deja acreditar el pago o cambiar la respuesta
+// (v61.1, lib/impagos.js).
 const TEXTO_IMPAGO =
   "Sí: queda su pago pendiente una semana; si no paga, te volveremos a preguntar.\nNo: queda como «No asiste» y deja libre su sitio en la mesa.";
 const TEXTO_SIN_PLAZOS = `Ya no quedan plazos (${PLAZOS_MAX} semanas): solo se puede marcar «No asiste».`;
@@ -999,16 +1000,23 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
     });
 
   // «¿Va a ir a la fiesta?», uno detrás de otro. La ✕ salta al siguiente.
+  // Con su plazo en curso, «Sí» lo deja como está: no gasta otro plazo.
   const preguntarImpago = ([m, ...resto]) => {
     if (!m) return;
-    const sinPlazos = (Number(m.plazosPago) || 0) >= PLAZOS_MAX;
+    const e = estadoImpago(m);
+    const enCurso = e && !e.vencido;
+    const sinPlazos = !enCurso && (Number(m.plazosPago) || 0) >= PLAZOS_MAX;
     const responder = (va) => async () => {
-      await responderImpago(rep, m.id, va);
+      if (!(va && enCurso)) await responderImpago(rep, m.id, va);
       preguntarImpago(resto);
     };
     preguntar({
       titulo: `¿${nombreCompleto(m)} va a ir a la fiesta?`,
-      texto: sinPlazos ? TEXTO_SIN_PLAZOS : TEXTO_IMPAGO,
+      texto: sinPlazos
+        ? TEXTO_SIN_PLAZOS
+        : enCurso
+          ? `Sí: sigue con su pago pendiente hasta el ${fechaCorta(e.hasta)}.\nNo: queda como «No asiste» y deja libre su sitio en la mesa.`
+          : TEXTO_IMPAGO,
       rotulo: "Sí",
       peligro: false,
       sinPrincipal: sinPlazos,
@@ -1027,6 +1035,20 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
     if (campo === "pagado" && valor && responderImpago) {
       preguntarImpago(cambian.filter((m) => !marcados.has(m.id) && !(estadoImpago(m) && !estadoImpago(m).vencido)));
     }
+  };
+
+  // Tocar su aviso: primero «¿Ha pagado?»; con «No», «¿Va a ir?».
+  const atenderImpago = (m) => {
+    const p = preguntaFamilia([m], "pagado", true, { evento, marcadoAbierto });
+    preguntar({
+      titulo: `¿Ha pagado ${nombreCompleto(m)}?`,
+      texto: `${textoPreguntaFamilia(p, "pagado", true, evento)}\n${AVISO_CIERRE_AL_PAGAR}`,
+      rotulo: "Sí",
+      peligro: false,
+      sinPrincipal: !p.puedeTodos,
+      alConfirmar: () => marcarMiembros(rep, [m.id], "pagado", true),
+      otra: { rotulo: "No", alConfirmar: () => preguntarImpago([m]) },
+    });
   };
 
   const impagos = familia.miembros.filter((m) => estadoImpago(m));
@@ -1089,28 +1111,22 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
         </button>
       </div>
 
-      {impagos.map((m) => {
-        const vencido = estadoImpago(m).vencido;
-        const linea = (
+      {impagos.map((m) => (
+        // Vencido, en negrita: hay que volver a preguntar.
+        <button
+          key={m.id}
+          onClick={() => atenderImpago(m)}
+          className="boton-3d flex items-center gap-2 w-full px-3 text-xs text-left"
+          style={{
+            background: C.avisoFondo,
+            color: C.peligro,
+            height: ALTO_BOTON_FILA,
+            fontWeight: estadoImpago(m).vencido ? 600 : undefined,
+          }}
+        >
           <span className="truncate">⚠ {textoAvisoImpago(m)}</span>
-        );
-        const estilo = { background: C.avisoFondo, color: C.peligro, height: ALTO_BOTON_FILA };
-        // Vencido: tocarlo vuelve a preguntar. En plazo, solo se lee.
-        return vencido ? (
-          <button
-            key={m.id}
-            onClick={() => preguntarImpago([m])}
-            className="boton-3d flex items-center gap-2 w-full px-3 text-xs text-left"
-            style={{ ...estilo, fontWeight: 600 }}
-          >
-            {linea}
-          </button>
-        ) : (
-          <div key={m.id} className="flex items-center px-3 text-xs" style={estilo}>
-            {linea}
-          </div>
-        );
-      })}
+        </button>
+      ))}
 
       {eligiendo && (
         // Elegir quién: cada uno con su ✓ o ✕, la cuenta arriba, y al pie

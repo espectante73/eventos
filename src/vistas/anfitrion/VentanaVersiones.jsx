@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "61.1",
+    cambios: [
+      "El aviso rojo del pago pendiente se puede tocar en cualquier momento, no solo al vencer: pregunta «¿Ha pagado…?» y con «Sí» queda acreditado el pago. Con «No», «¿Va a ir a la fiesta?»: «No» lo deja en «No asiste»; «Sí», si el plazo sigue en curso, lo deja como está sin gastar otro plazo, y si ya venció, empieza uno nuevo.",
+    ],
+  },
+  {
     version: "61",
     cambios: [
       "Al cobrar a una familia sin que paguen todos, por cada uno que no paga se pregunta «¿Va a ir a la fiesta?». «Sí»: su pago queda pendiente una semana, con un aviso en rojo bajo su familia. «No»: queda como «No asiste», deja de contar como confirmado y libera su sitio en la mesa.",
