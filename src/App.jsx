@@ -30,6 +30,8 @@ const VistaAnfitrion = cargarVista(() => import("./vistas/VistaAnfitrion"), "Vis
 const VistaColaborador = cargarVista(() => import("./vistas/VistaColaborador"), "VistaColaborador");
 // Del MISMO trozo que VistaAnfitrion (que la reexporta): el navegador ya
 // lo tiene de abrir la app, y en el local no se queda descargando.
+// El letrero rojo del Modo Pruebas: una línea, y este es su alto.
+const ALTO_LETRERO = 40;
 const PaginaMusica = cargarVista(() => import("./vistas/VistaAnfitrion"), "PaginaMusica");
 // La pantalla de la tele (?pantalla, v58), del mismo trozo.
 const PaginaPantalla = cargarVista(() => import("./vistas/VistaAnfitrion"), "PaginaPantalla");
@@ -425,7 +427,7 @@ export default function App() {
   // saber que todo lo que haga puede deshacerse al desactivarlo (ver
   // VentanaConfigModoPruebas.jsx).
   const modoPruebas = Boolean(data.evento?.modoPruebasActivo);
-  const alturaBanners = (modoPruebas ? 40 : 0) + (hayNuevaVersion ? 44 : 0);
+  const alturaBanners = (modoPruebas ? ALTO_LETRERO : 0) + (hayNuevaVersion ? 44 : 0);
 
   return (
     <div
@@ -441,17 +443,20 @@ export default function App() {
     >
       {modoPruebas && (
         <div
-          className="fixed left-0 right-0 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold"
-          style={{ top: 0, background: C.peligro, color: "#fff", zIndex: 61, boxShadow: S.flotante }}
+          className="fixed left-0 right-0 flex items-center justify-center gap-2 px-4 text-sm font-semibold"
+          // Una sola línea y de 40 de alto, lo que le reserva alturaBanners:
+          // en el móvil ocupaba dos y tapaba lo de debajo (v60.1, norma 6:
+          // si no cabe, se recorta).
+          style={{ top: 0, height: ALTO_LETRERO, background: C.peligro, color: "#fff", zIndex: 61, boxShadow: S.flotante }}
         >
-          🧪 MODO PRUEBAS ACTIVO — todo lo que se haga se restaurará al desactivarlo
+          <span className="truncate">🧪 MODO PRUEBAS ACTIVO — todo lo que se haga se restaurará al desactivarlo</span>
         </div>
       )}
       {hayNuevaVersion && (
         <div
           className="fixed left-0 right-0 flex items-center justify-between gap-3 px-4 py-2 text-sm"
           style={{
-            top: modoPruebas ? 40 : 0,
+            top: modoPruebas ? ALTO_LETRERO : 0,
             background: C.wax,
             color: "#fff",
             zIndex: 60,
@@ -529,6 +534,8 @@ export default function App() {
               formularioEnBarra: ventanasMovil.includes("formulario") && formularioDe === vistaPrevia,
               abrirFormulario: () => abrirFormularioDentro(vistaPrevia),
               cerrarFormulario: () => cerrarVentanaMovil("formulario"),
+              // Debajo de los letreros de arriba (Modo Pruebas, versión nueva).
+              arriba: alturaBanners,
             }}
             abrirMusicaDentro={abrirMusicaDentro}
             esAnfitrionOriginal={esAnfitrionOriginal}
@@ -545,6 +552,8 @@ export default function App() {
               formularioEnBarra: ventanasMovil.includes("formulario") && formularioDe === rol,
               abrirFormulario: () => abrirFormularioDentro(rol),
               cerrarFormulario: () => cerrarVentanaMovil("formulario"),
+              // Debajo de los letreros de arriba (Modo Pruebas, versión nueva).
+              arriba: alturaBanners,
             }}
             abrirMusicaDentro={abrirMusicaDentro}
             esAnfitrionOriginal={esAnfitrionOriginal}

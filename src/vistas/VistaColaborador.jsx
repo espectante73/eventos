@@ -1491,7 +1491,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       )}
 
       {formularioVisible && (
-        <CapaBarra activa={enBarra} delante={barra?.delante === "formulario"}>
+        <CapaBarra activa={enBarra} delante={barra?.delante === "formulario"} arriba={barra?.arriba || 0}>
         <VentanaFlotante
           clave="formulario-colaborador"
           titulo={colaborador.nombre}

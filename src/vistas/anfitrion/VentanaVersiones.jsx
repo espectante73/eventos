@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "60.1",
+    cambios: [
+      "En el móvil, el formulario a pantalla entera empieza debajo del letrero rojo del Modo Pruebas (y del de versión nueva): antes le tapaba el título. Y el letrero ocupa siempre una sola línea; si no cabe, se recorta el final.",
+    ],
+  },
+  {
     version: "60",
     cambios: [
       "Cobrar y acreditar, por familias. En el formulario del colaborador, las familias con los datos ya completos pasan a «Familias»: una fila por familia con su pago («Pago · 188 €» o el sello «Pagado»), su nombre y su llegada. Quien viene solo es su propia familia. Las que aún tienen datos a medias siguen persona a persona en «Incompletos».",
