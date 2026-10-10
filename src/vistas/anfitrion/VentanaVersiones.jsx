@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "60.2",
+    cambios: [
+      "Los botones «Sí» y «No» de las preguntas ocupan ahora todo el ancho de la ventana, a partes iguales, y tienen la altura mínima del dedo. Con el texto corto habían encogido al ancho de una palabra y costaba acertar.",
+    ],
+  },
+  {
     version: "60.1",
     cambios: [
       "En el móvil, el formulario a pantalla entera empieza debajo del letrero rojo del Modo Pruebas (y del de versión nueva): antes le tapaba el título. Y el letrero ocupa siempre una sola línea; si no cabe, se recorta el final.",

@@ -40,6 +40,9 @@ import { Boton } from "./Boton";
 //            datos cuando algo falla). Sin esto, un "no se pudo" no se
 //            puede ni diagnosticar ni contar: pasó el 2026-09-20 con la
 //            salida del Modo Pruebas.
+// El mínimo para acertar con el dedo, también con prisas.
+const ALTO_RESPUESTA = 44;
+
 export function usePreguntaSeguridad() {
   const [pendiente, setPendiente] = useState(null);
   const cerrar = () => setPendiente(null);
@@ -61,8 +64,11 @@ export function usePreguntaSeguridad() {
       ancho={320}
       acciones={
         // A la derecha, por el pulgar; en espejo con la mano izquierda. Así
-        // "No" queda en el borde, lo más fácil de acertar.
-        <div className="flex gap-2 w-full justify-end zurdo:flex-row-reverse">
+        // "No" queda en el borde, lo más fácil de acertar. Los dos a partes
+        // iguales y a todo el ancho, como «Guardar»/«Cancelar» (norma 4), y
+        // de 44 de alto, el mínimo del dedo: con «Sí»/«No» a secas habían
+        // encogido al ancho de una palabra (él, v60.2).
+        <div className={`${pendiente.soloAviso ? "flex justify-end" : "grid grid-cols-2"} gap-2 w-full zurdo:flex-row-reverse`}>
           {pendiente.soloAviso ? (
             <Boton variante="principal" onClick={cerrar}>
               Entendido
@@ -72,6 +78,7 @@ export function usePreguntaSeguridad() {
           <Boton
             variante={pendiente.peligro === false ? "principal" : "peligro"}
             disabled={pendiente.sinPrincipal}
+            style={{ minHeight: ALTO_RESPUESTA }}
             onClick={() => {
               const { alConfirmar } = pendiente;
               cerrar();
@@ -82,6 +89,8 @@ export function usePreguntaSeguridad() {
           </Boton>
           {pendiente.otra ? (
             <Boton
+              style={{ minHeight: ALTO_RESPUESTA }}
+              className="zurdo:order-first"
               onClick={() => {
                 const { otra } = pendiente;
                 cerrar();
@@ -91,7 +100,9 @@ export function usePreguntaSeguridad() {
               {pendiente.otra.rotulo}
             </Boton>
           ) : (
-            <Boton onClick={cancelar}>No</Boton>
+            <Boton onClick={cancelar} style={{ minHeight: ALTO_RESPUESTA }} className="zurdo:order-first">
+              No
+            </Boton>
           )}
           </>
           )}
