@@ -578,12 +578,19 @@ describe("el formulario en la barra de ventanas del móvil", () => {
         );
         const ventana = document.body.querySelector(".ventana-fija");
         const capa = ventana?.parentElement;
-        const resultado = { hay: Boolean(ventana), oculta: capa?.style.display === "none", texto: document.body.textContent };
+        const resultado = {
+          hay: Boolean(ventana),
+          oculta: capa?.style.display === "none",
+          texto: document.body.textContent,
+          desplaza: ventana?.querySelector(".ventana-cuerpo")?.style.overflowY,
+        };
         vista.desmontar();
         return resultado;
       };
       const delante = dibujarCon("formulario");
       expect(delante.hay).toBe(true);
+      // Su cuerpo desplaza: si no, lo de abajo (y «Guardar») no se alcanza.
+      expect(delante.desplaza).toBe("auto");
       expect(delante.oculta).toBe(false);
       expect(delante.texto).toContain("Tus datos");
       const detras = dibujarCon("inicio");

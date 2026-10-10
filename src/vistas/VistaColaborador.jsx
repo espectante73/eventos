@@ -1497,6 +1497,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           titulo={colaborador.nombre}
           onCerrar={cerrarFormulario}
           fijo={enBarra}
+          desplazaCuerpo
         >
           {/* Todo plegado al abrir y solo una cosa abierta a la vez, como en
               Novedades -- filosofía única de la app, a petición del usuario

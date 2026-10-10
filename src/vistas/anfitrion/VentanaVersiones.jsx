@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "60.3",
+    cambios: [
+      "En el móvil, el formulario a pantalla entera se puede volver a desplazar: no dejaba bajar, y lo de abajo (por ejemplo «Guardar» y «Cancelar» al elegir quién paga en una familia) quedaba fuera de la pantalla.",
+    ],
+  },
+  {
     version: "60.2",
     cambios: [
       "Los botones «Sí» y «No» de las preguntas ocupan ahora todo el ancho de la ventana, a partes iguales, y tienen la altura mínima del dedo. Con el texto corto habían encogido al ancho de una palabra y costaba acertar.",
