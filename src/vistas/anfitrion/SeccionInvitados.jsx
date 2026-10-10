@@ -316,7 +316,7 @@ export function SeccionInvitados({
           g.zona || "",
           col ? col.nombre : "",
           g.mesa ?? "",
-          g.confirmado ? "Sí" : "Sin confirmar",
+          g.confirmado ? "Sí" : g.noAsiste ? "No asiste" : "Sin confirmar",
           g.confirmado ? (g.pagado ? "Sí" : "No") : "",
         ];
       });
@@ -438,7 +438,8 @@ export function SeccionInvitados({
       if (filtros.mesa === "sin" && g.mesa) return false;
       if (filtros.mesa && filtros.mesa !== "sin" && String(g.mesa || "") !== filtros.mesa) return false;
       if (filtros.confirmado === "confirmado" && !g.confirmado) return false;
-      if (filtros.confirmado === "tentativa" && g.confirmado) return false;
+      if (filtros.confirmado === "tentativa" && (g.confirmado || g.noAsiste)) return false;
+      if (filtros.confirmado === "noAsiste" && !g.noAsiste) return false;
       if (filtros.datos === "completo" && !(g.confirmado && datosCompletos(g))) return false;
       if (filtros.datos === "pendiente" && (!g.confirmado || datosCompletos(g))) return false;
       if (filtros.presente === "si" && !g.presente) return false;
@@ -587,6 +588,9 @@ export function SeccionInvitados({
   const mostrarLlegada = hoyEsElEvento || totalPresentes > 0;
   const totalInvitados = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
+  // Los que dijeron que no van (él, v61: al cobrar a su familia, o sin
+  // pagar a tiempo): ni confirmados ni por confirmar.
+  const noAsistenCount = invitados.filter((g) => !g.confirmado && g.noAsiste).length;
   const edadMedia = edadPromedio(invitadosOrdenados, evento);
   // "Lista global" -> "Previstos" y "Tentativa" -> "Sin confirmar":
   // nombres más precisos, a petición del usuario 2026-08-20 -- el
@@ -596,8 +600,9 @@ export function SeccionInvitados({
   // exactamente eso, quien de ese total no ha confirmado todavía.
   const resumen = [
     { label: "Previstos", value: totalInvitados },
-    { label: "Sin confirmar", value: totalInvitados - confirmadosCount },
+    { label: "Sin confirmar", value: totalInvitados - confirmadosCount - noAsistenCount },
     { label: "Confirmados", value: confirmadosCount },
+    ...(noAsistenCount ? [{ label: "No asisten", value: noAsistenCount }] : []),
     // Edad media como recuadro más, en vez del texto suelto que llevaba
     // antes justo debajo del título -- a petición del usuario,
     // 2026-08-20.
@@ -1067,6 +1072,7 @@ export function SeccionInvitados({
                     <option value="">Todos</option>
                     <option value="confirmado">Confirmado</option>
                     <option value="tentativa">Sin confirmar</option>
+                    {noAsistenCount > 0 && <option value="noAsiste">No asiste</option>}
                   </select>
                 </span>
                 <span style={{ background: tintaColumnaCabecera(8), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
@@ -1789,6 +1795,12 @@ export function SeccionInvitados({
                     >
                       {g.confirmado ? (
                         <Check size={20} style={{ color: C.ink }} />
+                      ) : g.noAsiste ? (
+                        // Dijo que no va (v61): se distingue del que aún no
+                        // ha contestado. Tocarlo lo vuelve a confirmar.
+                        <span className="text-xs font-bold italic uppercase whitespace-nowrap" style={{ color: C.peligro }}>
+                          No asiste
+                        </span>
                       ) : (
                         <span
                           className="text-xs font-bold italic uppercase"
@@ -2038,7 +2050,7 @@ export function SeccionInvitados({
                       </span>
                       <span>{col ? col.nombre : "—"}</span>
                       <span>{g.mesa ?? "—"}</span>
-                      <span>{g.confirmado ? "Sí" : "Sin confirmar"}</span>
+                      <span>{g.confirmado ? "Sí" : g.noAsiste ? "No asiste" : "Sin confirmar"}</span>
                       <span>{g.confirmado ? (g.pagado ? "Sí" : "No") : "—"}</span>
                     </div>
                   );

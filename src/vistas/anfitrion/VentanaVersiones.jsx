@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "61",
+    cambios: [
+      "Al cobrar a una familia sin que paguen todos, por cada uno que no paga se pregunta «¿Va a ir a la fiesta?». «Sí»: su pago queda pendiente una semana, con un aviso en rojo bajo su familia. «No»: queda como «No asiste», deja de contar como confirmado y libera su sitio en la mesa.",
+      "Si vence el plazo, el aviso lo dice y al tocarlo se vuelve a preguntar. Como mucho 3 plazos: después solo se puede marcar «No asiste», y en Progreso el anfitrión ve «último plazo vencido» en ese colaborador.",
+      "En la Lista de invitados, quien no asiste se ve como «No asiste» (en rojo), aparte de los que todavía no han confirmado, con su propio recuadro y su opción en el filtro. Tocarlo lo vuelve a confirmar.",
+    ],
+  },
+  {
     version: "60.4",
     cambios: [
       "En el móvil, el formulario a pantalla entera se ve como una ventana: ocupa todo el alto, con sus bordes a los lados y su X arriba para cerrarla. La barra de cuadraditos flota encima de su parte de abajo, y el contenido se puede subir por encima de ella.",

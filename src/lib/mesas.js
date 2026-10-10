@@ -79,7 +79,9 @@ export function confirmarConSuFamilia(invitados, id, mesas) {
   const g = invitados.find((x) => x.id === id);
   if (!g) return { invitados, aviso: "" };
   const confirmado = !g.confirmado;
-  const siguiente = invitados.map((x) => (x.id === id ? { ...x, confirmado } : x));
+  // Confirmar a quien dijo que no iba lo quita de «No asiste» (también lo
+  // hace la base, trg_pago_y_asistencia).
+  const siguiente = invitados.map((x) => (x.id === id ? { ...x, confirmado, ...(confirmado ? { noAsiste: false } : {}) } : x));
   if (!confirmado || g.mesa) return { invitados: siguiente, aviso: "" };
 
   const clave = claveFamiliaMesa(g);

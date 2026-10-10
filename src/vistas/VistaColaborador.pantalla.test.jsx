@@ -180,13 +180,16 @@ describe("el pago y la llegada, por familias (v60)", () => {
   // Luis lo lleva OTRO colaborador: la familia se ve entera igual.
   const familia = [hermano("r1", "Ana"), hermano("r2", "Luis", { colaboradorId: "c2" })];
   const comoMiembros = familia.map((m) => ({ ...m, datosCompletos: true, presente: false, esMio: m.colaboradorId === "c1" }));
-  const montarRuiz = () => {
+  // `luis`: lo que traiga Luis de más (su pago pendiente, v61).
+  const montarRuiz = (luis = {}) => {
     const marcadas = [];
     const elegidas = [];
+    const respuestas = [];
     const datos = {
       ...data,
       invitados: [...invitados, familia[0]],
-      obtenerMisFamilias: async () => [...comoMiembros, ...invitados.filter((g) => g.colaboradorId === "c1").map((g) => ({ ...g, datosCompletos: Boolean(g.anioNacimiento && g.alergias), esMio: true }))],
+      responderImpago: async (g, id, va) => respuestas.push([g.id, id, va]),
+      obtenerMisFamilias: async () => [...comoMiembros.map((m) => (m.id === "r2" ? { ...m, ...luis } : m)), ...invitados.filter((g) => g.colaboradorId === "c1").map((g) => ({ ...g, datosCompletos: Boolean(g.anioNacimiento && g.alergias), esMio: true }))],
       marcarFamilia: async (g, campo, valor) => marcadas.push([g.id, campo, valor]),
       marcarMiembros: async (g, ids, campo, valor) => elegidas.push([g.id, ids, campo, valor]),
     };
@@ -194,7 +197,7 @@ describe("el pago y la llegada, por familias (v60)", () => {
       <VistaColaborador data={datos} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
     );
     abrirPorMenu(vista);
-    return { vista, marcadas, elegidas };
+    return { vista, marcadas, elegidas, respuestas };
   };
   const botones = () => [...document.body.querySelectorAll("button")];
   const pulsarAsync = (b) => act(async () => b.dispatchEvent(new MouseEvent("click", { bubbles: true })));
@@ -247,6 +250,45 @@ describe("el pago y la llegada, por familias (v60)", () => {
     expect(document.body.textContent).toContain("1 de 2");
     await pulsarAsync(botones().find((b) => b.textContent.trim() === "Guardar"));
     expect(elegidas).toEqual([["r1", ["r1"], "pagado", true]]);
+    vista.desmontar();
+  });
+
+  // El que no paga con su familia (él, v61).
+  it("al guardar el cobro, por el que no paga: «¿va a ir a la fiesta?», Sí/No", async () => {
+    const { vista, respuestas } = montarRuiz();
+    await act(async () => {});
+    await pulsarAsync(pagoRuiz());
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "No"));
+    await pulsarAsync(botones().find((b) => b.getAttribute("aria-label") === "Ruiz, Luis: sí"));
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "Guardar"));
+    expect(document.body.textContent).toContain("¿Ruiz, Luis va a ir a la fiesta?");
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "No"));
+    expect(respuestas).toEqual([["r1", "r2", false]]);
+    vista.desmontar();
+  });
+
+  it("con su plazo en curso, su aviso en rojo y no se le vuelve a preguntar", async () => {
+    const { vista } = montarRuiz({ pagoPendienteHasta: "2999-01-01", plazosPago: 1 });
+    await act(async () => {});
+    expect(document.body.textContent).toContain("Ruiz, Luis: pago pendiente hasta el");
+    await pulsarAsync(pagoRuiz());
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "No"));
+    await pulsarAsync(botones().find((b) => b.getAttribute("aria-label") === "Ruiz, Luis: sí"));
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "Guardar"));
+    expect(document.body.textContent).not.toContain("va a ir a la fiesta?");
+    vista.desmontar();
+  });
+
+  it("el último plazo vencido: tocar el aviso pregunta, y solo deja «No»", async () => {
+    const { vista, respuestas } = montarRuiz({ pagoPendienteHasta: "2020-01-01", plazosPago: 3 });
+    await act(async () => {});
+    const aviso = botones().find((b) => b.textContent.includes("Ruiz, Luis: último plazo vencido"));
+    expect(aviso, "el aviso en rojo, que se puede tocar").toBeTruthy();
+    await pulsarAsync(aviso);
+    expect(document.body.textContent).toContain("Ya no quedan plazos");
+    expect(botones().find((b) => b.textContent.trim() === "Sí").disabled).toBe(true);
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "No"));
+    expect(respuestas).toEqual([["r1", "r2", false]]);
     vista.desmontar();
   });
 });

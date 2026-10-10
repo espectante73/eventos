@@ -8,10 +8,11 @@
 // uno por métrica, que no era la idea). Y de canciones registradas.
 // Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4,
 // Ronda 1).
-import { ClipboardList, Euro, Mail, Music, UserCheck, UserX } from "lucide-react";
+import { AlertTriangle, ClipboardList, Euro, Mail, Music, UserCheck, UserX } from "lucide-react";
 import { C, OP, T } from "../../theme";
 import { useEstadoCuentas, textoUltimaEntrada } from "../../lib/estadoCuentas";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
+import { impagosVencidos } from "../../lib/impagos";
 import { BarraCompacta } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 
@@ -86,6 +87,7 @@ export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
           const familiasConInvitacion = familias.filter(
             (f) => ordenFamiliares[f]?.invitacionEnviada
           ).length;
+          const impagos = impagosVencidos(suyos);
           return (
             <div key={c.id} className="rounded p-2" style={{ background: C.paperDark }}>
               <div
@@ -108,6 +110,24 @@ export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
                 >
                   {cuentas[c.id].tieneCuenta ? <UserCheck size={14} style={{ flexShrink: 0 }} /> : <UserX size={14} style={{ flexShrink: 0 }} />}
                   {cuentas[c.id].tieneCuenta ? textoUltimaEntrada(cuentas[c.id].ultimaEntrada) : "sin cuenta"}
+                </div>
+              )}
+              {/* Pagos con el plazo vencido (él, v61): el último ya solo
+                  deja «No asiste», y eso lo tiene que saber él. */}
+              {impagos.vencidos > 0 && (
+                <div
+                  className="flex items-center gap-1.5 whitespace-nowrap"
+                  style={{ fontSize: T.micro, color: C.peligro, fontFamily: "'IBM Plex Mono', monospace" }}
+                  title="Invitados que dijeron que van, con el plazo de pago vencido"
+                >
+                  <AlertTriangle size={14} style={{ flexShrink: 0 }} />
+                  {impagos.ultimos > 0
+                    ? impagos.ultimos === 1
+                      ? "último plazo vencido"
+                      : `${impagos.ultimos} últimos plazos`
+                    : impagos.vencidos === 1
+                      ? "1 pago vencido"
+                      : `${impagos.vencidos} pagos vencidos`}
                 </div>
               )}
             </div>

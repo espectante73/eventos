@@ -183,6 +183,42 @@ describe("schema.sql es un plano, no un diario", () => {
   });
 });
 
+describe("el que no paga con su familia (v61)", () => {
+  const cuerpo = cuerpoDe("colaborador_responder_impago");
+
+  it("solo ese colaborador, y solo alguien confirmado y sin pagar de SU familia", () => {
+    expect(cuerpo).toContain("colaborador_puede_actuar(p_colaborador_id)");
+    expect(cuerpo).toContain('"colaboradorId" = p_colaborador_id');
+    expect(cuerpo).toMatch(/"confirmado" = true and coalesce\(i\."pagado", false\) = false/);
+    expect(cuerpo).toContain("= v_familia");
+  });
+
+  it("«Sí»: una semana, y como mucho 3 plazos", () => {
+    expect(cuerpo).toContain("current_date + 7");
+    expect(cuerpo).toMatch(/coalesce\(i\."plazosPago", 0\) < 3/);
+  });
+
+  it("«No»: deja de estar confirmado y libera su mesa", () => {
+    expect(cuerpo).toMatch(/"noAsiste" = true, "confirmado" = false, "mesa" = null/);
+  });
+
+  it("no le avisa al colaborador de su propio cambio", () => {
+    expect(cuerpo).toContain("set_config('eventos.recalculo_aviso_activo', 'off', true)");
+  });
+
+  it("pagar borra el plazo y volver a confirmar quita «No asiste», lo guarde quien lo guarde", () => {
+    const disparador = cuerpoDe("trg_pago_y_asistencia");
+    expect(disparador).toMatch(/if new\."pagado" then[\s\S]*"pagoPendienteHasta" := null/);
+    expect(disparador).toMatch(/if new\."confirmado" then\s+new\."noAsiste" := false/);
+    expect(sql).toMatch(/CREATE TRIGGER invitados_pago_y_asistencia BEFORE INSERT OR UPDATE ON public\.invitados/);
+  });
+
+  it("el anfitrión guarda las columnas nuevas", () => {
+    const guardar = cuerpoDe("anfitrion_guardar_invitados");
+    for (const c of ['"noAsiste"', '"pagoPendienteHasta"', '"plazosPago"']) expect(guardar).toContain(c);
+  });
+});
+
 describe("marcar a toda la familia: o todos o ninguno (norma 11)", () => {
   // Desde v60 marca la pieza común, colaborador_marcar_miembros (toda la
   // familia, o los elegidos): las comprobaciones viven ahí.

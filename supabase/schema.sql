@@ -149,7 +149,14 @@ CREATE TABLE public.invitados (
     -- el "Borrado total" la respeta. Sin marcar = se borra.
     -- Nullable a propósito, como el resto de columnas nuevas: una foto de
     -- Deshacer anterior a esta columna tiene que poder restaurarse.
-    "conservarDatos" boolean DEFAULT false
+    "conservarDatos" boolean DEFAULT false,
+    -- Cobro por familias, paso 2 (v61). Quien no paga con su familia: o «No
+    -- asiste» (contestó que no viene: sale de confirmados y de su mesa), o
+    -- pago pendiente hasta una fecha, con como mucho 3 plazos de una semana
+    -- (él). Sin "not null", como las demás columnas nuevas.
+    "noAsiste" boolean DEFAULT false,
+    "pagoPendienteHasta" date,
+    "plazosPago" integer DEFAULT 0
 );
 
 -- Quién ayuda a recoger datos y qué permisos tiene cada uno.
@@ -1423,7 +1430,7 @@ begin
     "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
     "cancion","alergias","observaciones","pagado","rolesTrabajo",
     "excluidoTablon","rolFamiliar","presente","excepcionesRevision","sinCancion","sinEmail",
-    "conservarDatos"
+    "conservarDatos","noAsiste","pagoPendienteHasta","plazosPago"
   )
   select
     (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
@@ -1440,7 +1447,10 @@ begin
     coalesce(f->'excepcionesRevision', '[]'::jsonb),
     coalesce((f->>'sinCancion')::boolean, false),
     coalesce((f->>'sinEmail')::boolean, false),
-    coalesce((f->>'conservarDatos')::boolean, false)
+    coalesce((f->>'conservarDatos')::boolean, false),
+    coalesce((f->>'noAsiste')::boolean, false),
+    nullif(f->>'pagoPendienteHasta', '')::date,
+    coalesce((f->>'plazosPago')::integer, 0)
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update set
     "nombre"=excluded."nombre", "apellido"=excluded."apellido",
@@ -1455,7 +1465,10 @@ begin
     "excepcionesRevision"=excluded."excepcionesRevision",
     "sinCancion"=excluded."sinCancion",
     "sinEmail"=excluded."sinEmail",
-    "conservarDatos"=excluded."conservarDatos";
+    "conservarDatos"=excluded."conservarDatos",
+    "noAsiste"=excluded."noAsiste",
+    "pagoPendienteHasta"=excluded."pagoPendienteHasta",
+    "plazosPago"=excluded."plazosPago";
 
   -- Solo se borra si de verdad llega la lista de quién debe quedar: un
   -- p_ids nulo por error no puede vaciar la tabla.
@@ -2100,7 +2113,7 @@ CREATE FUNCTION public.colaborador_mi_perfil(p_colaborador_id uuid) RETURNS SETO
 -- años (importe y aniversario), papel en la familia, si tiene sus datos
 -- obligatorios y si ha pagado o llegado. Nada de alergias ni contacto.
 CREATE FUNCTION public.colaborador_mis_familias(p_colaborador_id uuid)
-    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "anioBoda" text, "grupoFamiliar" text, "rolFamiliar" text, "datosCompletos" boolean, pagado boolean, presente boolean, "esMio" boolean)
+    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "anioBoda" text, "grupoFamiliar" text, "rolFamiliar" text, "datosCompletos" boolean, pagado boolean, presente boolean, "esMio" boolean, "pagoPendienteHasta" date, "plazosPago" integer)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -2117,7 +2130,8 @@ begin
     select i."id", i."nombre", i."apellido", i."anioNacimiento", i."anioBoda", i."grupoFamiliar", i."rolFamiliar",
       (coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> ''),
       coalesce(i."pagado", false), coalesce(i."presente", false),
-      i."colaboradorId" is not distinct from p_colaborador_id
+      i."colaboradorId" is not distinct from p_colaborador_id,
+      i."pagoPendienteHasta", coalesce(i."plazosPago", 0)
     from invitados i
     where i."confirmado" = true
       and lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) in (select m.clave from mias m where m.clave <> '');
@@ -2141,6 +2155,55 @@ CREATE FUNCTION public.colaborador_mis_invitados(p_colaborador_id uuid) RETURNS 
       where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
     );
 $$;
+
+-- El que no paga con su familia (v61): «¿va a ir a la fiesta?». Sí: pago
+-- pendiente otra semana, como mucho 3 plazos (él). No: «No asiste» -- deja
+-- de estar confirmado y libera su mesa. Aunque lo lleve otro colaborador
+-- (norma 11), con un invitado suyo de la misma familia (p_invitado_id).
+CREATE FUNCTION public.colaborador_responder_impago(p_colaborador_id uuid, p_invitado_id uuid, p_id uuid, p_va boolean)
+    RETURNS SETOF public.invitados
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_familia text;
+begin
+  if not colaborador_puede_actuar(p_colaborador_id) then
+    return;
+  end if;
+  select lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) into v_familia
+  from invitados i
+  where i."id" = p_invitado_id and i."colaboradorId" = p_colaborador_id;
+  if coalesce(v_familia, '') = '' then
+    return;
+  end if;
+  -- Solo alguien confirmado y sin pagar de ESA familia.
+  perform 1 from invitados i
+  where i."id" = p_id and i."confirmado" = true and coalesce(i."pagado", false) = false
+    and lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) = v_familia;
+  if not found then
+    return;
+  end if;
+
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
+  if p_va then
+    -- Pasados los 3 plazos ya no se aplaza más: solo «No asiste».
+    return query
+      update invitados i
+      set "pagoPendienteHasta" = current_date + 7, "plazosPago" = coalesce(i."plazosPago", 0) + 1
+      where i."id" = p_id and coalesce(i."plazosPago", 0) < 3
+      returning i.*;
+  else
+    return query
+      update invitados i
+      set "noAsiste" = true, "confirmado" = false, "mesa" = null, "pagoPendienteHasta" = null
+      where i."id" = p_id
+      returning i.*;
+  end if;
+end;
+$$;
+REVOKE EXECUTE ON FUNCTION public.colaborador_responder_impago(uuid, uuid, uuid, boolean) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.colaborador_responder_impago(uuid, uuid, uuid, boolean) TO authenticated;
 
 -- El colaborador lee la llave del tablón para poder compartir el enlace.
 CREATE FUNCTION public.colaborador_obtener_token_tablon(p_colaborador_id uuid) RETURNS uuid
@@ -2338,6 +2401,24 @@ begin
 end;
 $$;
 
+-- Lo que va solo con el pago y la confirmación (v61), venga de quien venga
+-- (colaborador o anfitrión): al pagar desaparece el pago pendiente y sus
+-- plazos; al volver a confirmar a alguien, deja de ser «No asiste».
+CREATE FUNCTION public.trg_pago_y_asistencia() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+begin
+  if new."pagado" then
+    new."pagoPendienteHasta" := null;
+    new."plazosPago" := 0;
+  end if;
+  if new."confirmado" then
+    new."noAsiste" := false;
+  end if;
+  return new;
+end;
+$$;
+
 -- Si cambian los datos de un invitado, marca la invitación de su familia como caducada.
 CREATE FUNCTION public.trg_invalidar_invitacion_familia() RETURNS trigger
     LANGUAGE plpgsql
@@ -2408,6 +2489,8 @@ $$;
 CREATE TRIGGER invitados_anio_boda_pareja AFTER INSERT OR UPDATE OF "anioBoda", "rolFamiliar", "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_igualar_anio_boda_pareja();
 
 CREATE TRIGGER invitados_invalidar_invitacion AFTER INSERT OR UPDATE OF confirmado, pagado, mesa, "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_invalidar_invitacion_familia();
+
+CREATE TRIGGER invitados_pago_y_asistencia BEFORE INSERT OR UPDATE ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_pago_y_asistencia();
 
 CREATE TRIGGER invitados_recalcular_aviso BEFORE INSERT OR UPDATE ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_recalcular_aviso_pendiente();
 

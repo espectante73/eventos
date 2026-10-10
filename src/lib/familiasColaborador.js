@@ -5,7 +5,8 @@
 import { claveFamilia, importeEsperadoInvitado, pideDatosDeBoda } from "./invitados";
 
 // Un miembro: { id, nombre, apellido, anioNacimiento, anioBoda,
-// grupoFamiliar, rolFamiliar, datosCompletos, pagado, presente, esMio }.
+// grupoFamiliar, rolFamiliar, datosCompletos, pagado, presente, esMio,
+// pagoPendienteHasta, plazosPago }.
 // Lo da la base (colaborador_mis_familias) o, al anfitrión, su lista.
 
 // ¿Está cerrada la recogida de datos de la familia? Todos con sus datos
@@ -79,5 +80,7 @@ export function miembrosDesdeLista(invitados, colaboradorId, datosCompletos) {
       pagado: Boolean(g.pagado),
       presente: Boolean(g.presente),
       esMio: g.colaboradorId === colaboradorId,
+      pagoPendienteHasta: g.pagoPendienteHasta || null,
+      plazosPago: Number(g.plazosPago) || 0,
     }));
 }

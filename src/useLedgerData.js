@@ -5,6 +5,7 @@ import { useCanalAsistencia } from "./lib/useCanalAsistencia";
 import { C } from "./theme";
 import { familiaDe, comoMiembro } from "./lib/familiaCobroLlegada";
 import { miembrosDesdeLista } from "./lib/familiasColaborador";
+import { respuestaImpago } from "./lib/impagos";
 import { datosCompletos } from "./lib/invitados";
 
 const EVENTO_POR_DEFECTO = {
@@ -1156,6 +1157,43 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol, persistInvitados, avisarLlegada]
   );
 
+  // El que no paga con su familia: «¿va a ir a la fiesta?» (v61,
+  // lib/impagos.js). Sí: pago pendiente otra semana (como mucho 3 plazos);
+  // No: «No asiste». Devuelve true si se hizo.
+  const responderImpago = useCallback(
+    async (g, id, va) => {
+      const anterior = invitadosRef.current;
+      if (esAnfitrion) {
+        const objetivo = anterior.find((x) => x.id === id);
+        const cambios = objetivo && respuestaImpago(objetivo, va);
+        if (!cambios) {
+          avisar("Ya no quedan plazos: solo se puede marcar «No asiste».");
+          return false;
+        }
+        await persistInvitados(anterior.map((x) => (x.id === id ? { ...x, ...cambios } : x)));
+        return true;
+      }
+      const { data, error } = await supabase.rpc("colaborador_responder_impago", {
+        p_colaborador_id: rol,
+        p_invitado_id: g.id,
+        p_id: id,
+        p_va: va,
+      });
+      if (error || !data?.length) {
+        avisar("No se pudo guardar la respuesta: no se ha cambiado nada.", error);
+        return false;
+      }
+      // Lista nueva siempre: así se vuelven a pedir sus familias, también si
+      // el que no paga lo lleva otro colaborador.
+      const porId = Object.fromEntries(data.map((x) => [x.id, x]));
+      const next = anterior.map((x) => (porId[x.id] ? { ...x, ...porId[x.id] } : x));
+      setInvitados(next);
+      invitadosRef.current = next;
+      return true;
+    },
+    [esAnfitrion, rol, persistInvitados]
+  );
+
   // Las familias del colaborador, completas (v60, lib/familiasColaborador.js):
   // el anfitrión las saca de su lista; el colaborador se las pide a la base.
   // Sin la función subida todavía, solo sus propios invitados.
@@ -1417,5 +1455,6 @@ export function useLedgerData(rol) {
     marcarFamilia,
     marcarMiembros,
     obtenerMisFamilias,
+    responderImpago,
   };
 }

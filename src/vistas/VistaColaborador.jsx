@@ -23,6 +23,7 @@ import {
 import { ordenarPorApellidoNombre, nombreCompleto } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
+import { estadoImpago, textoAvisoImpago, PLAZOS_MAX } from "../lib/impagos";
 import { requisitosActivos } from "../lib/modoPruebas";
 import { construirEnlaceTablon } from "../lib/url";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
@@ -935,10 +936,16 @@ function FilaInvitadoColaborador({
 // mismas columnas que la fila de invitado (ANCHO_PAGO, ALTO_BOTON_FILA).
 // Tocar el nombre la abre: sus miembros, y cada uno de los suyos abre su
 // ficha mientras no haya pagado (renderMiembro).
+// El que no paga con su familia (él, v61): se pregunta si va a ir a la
+// fiesta; con «Sí», su aviso en rojo bajo la fila hasta que pague, y al
+// vencer el plazo, tocarlo vuelve a preguntar (lib/impagos.js).
+const TEXTO_IMPAGO =
+  "Sí: queda su pago pendiente una semana; si no paga, te volveremos a preguntar.\nNo: queda como «No asiste» y deja libre su sitio en la mesa.";
+const TEXTO_SIN_PLAZOS = `Ya no quedan plazos (${PLAZOS_MAX} semanas): solo se puede marcar «No asiste».`;
 const sinCentimos = (n) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n || 0);
 
-function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, abierta, onAlternar, renderMiembro, oculta }) {
+function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responderImpago, abierta, onAlternar, renderMiembro, oculta }) {
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   // Eligiendo a quién: { campo, valor, cambian: [...], marcados: Set }.
   const [eligiendo, setEligiendo] = useState(null);
@@ -991,11 +998,38 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, abierta, 
       return { ...e, marcados };
     });
 
-  const guardarEleccion = async () => {
-    const ids = [...eligiendo.marcados];
-    if (ids.length) await marcarMiembros(rep, ids, eligiendo.campo, eligiendo.valor);
-    setEligiendo(null);
+  // «¿Va a ir a la fiesta?», uno detrás de otro. La ✕ salta al siguiente.
+  const preguntarImpago = ([m, ...resto]) => {
+    if (!m) return;
+    const sinPlazos = (Number(m.plazosPago) || 0) >= PLAZOS_MAX;
+    const responder = (va) => async () => {
+      await responderImpago(rep, m.id, va);
+      preguntarImpago(resto);
+    };
+    preguntar({
+      titulo: `¿${nombreCompleto(m)} va a ir a la fiesta?`,
+      texto: sinPlazos ? TEXTO_SIN_PLAZOS : TEXTO_IMPAGO,
+      rotulo: "Sí",
+      peligro: false,
+      sinPrincipal: sinPlazos,
+      alConfirmar: responder(true),
+      otra: { rotulo: "No", alConfirmar: responder(false) },
+      alCancelar: () => preguntarImpago(resto),
+    });
   };
+
+  const guardarEleccion = async () => {
+    const { campo, valor, cambian, marcados } = eligiendo;
+    const ids = [...marcados];
+    if (ids.length) await marcarMiembros(rep, ids, campo, valor);
+    setEligiendo(null);
+    // Al cobrar, por los que no pagan; quien tiene su plazo en curso, no.
+    if (campo === "pagado" && valor && responderImpago) {
+      preguntarImpago(cambian.filter((m) => !marcados.has(m.id) && !(estadoImpago(m) && !estadoImpago(m).vencido)));
+    }
+  };
+
+  const impagos = familia.miembros.filter((m) => estadoImpago(m));
 
   const totalElegido = eligiendo?.campo === "pagado" && eligiendo.valor
     ? familia.miembros.filter((m) => eligiendo.marcados.has(m.id)).reduce((s, m) => s + importeEsperadoInvitado(m, evento), 0)
@@ -1054,6 +1088,29 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, abierta, 
           <Check size={18} strokeWidth={3} />
         </button>
       </div>
+
+      {impagos.map((m) => {
+        const vencido = estadoImpago(m).vencido;
+        const linea = (
+          <span className="truncate">⚠ {textoAvisoImpago(m)}</span>
+        );
+        const estilo = { background: C.avisoFondo, color: C.peligro, height: ALTO_BOTON_FILA };
+        // Vencido: tocarlo vuelve a preguntar. En plazo, solo se lee.
+        return vencido ? (
+          <button
+            key={m.id}
+            onClick={() => preguntarImpago([m])}
+            className="boton-3d flex items-center gap-2 w-full px-3 text-xs text-left"
+            style={{ ...estilo, fontWeight: 600 }}
+          >
+            {linea}
+          </button>
+        ) : (
+          <div key={m.id} className="flex items-center px-3 text-xs" style={estilo}>
+            {linea}
+          </div>
+        );
+      })}
 
       {eligiendo && (
         // Elegir quién: cada uno con su ✓ o ✕, la cuenta arriba, y al pie
@@ -1667,6 +1724,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   evento={evento}
                   marcarFamilia={data.marcarFamilia}
                   marcarMiembros={data.marcarMiembros}
+                  responderImpago={data.responderImpago}
                   abierta={familiaAbierta === f.clave || f.miembros.some((m) => m.id === abiertoId)}
                   onAlternar={() => setFamiliaAbierta((a) => (a === f.clave ? null : f.clave))}
                   oculta={fichaAbierta && !f.miembros.some((m) => m.id === abiertoId)}
