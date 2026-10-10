@@ -583,6 +583,7 @@ describe("el formulario en la barra de ventanas del móvil", () => {
           oculta: capa?.style.display === "none",
           texto: document.body.textContent,
           desplaza: ventana?.querySelector(".ventana-cuerpo")?.style.overflowY,
+          conX: Boolean(ventana?.querySelector('button[aria-label="Cerrar"]')),
         };
         vista.desmontar();
         return resultado;
@@ -591,6 +592,8 @@ describe("el formulario en la barra de ventanas del móvil", () => {
       expect(delante.hay).toBe(true);
       // Su cuerpo desplaza: si no, lo de abajo (y «Guardar») no se alcanza.
       expect(delante.desplaza).toBe("auto");
+      // Y se cierra desde arriba, como toda ventana (norma 5).
+      expect(delante.conX).toBe(true);
       expect(delante.oculta).toBe(false);
       expect(delante.texto).toContain("Tus datos");
       const detras = dibujarCon("inicio");

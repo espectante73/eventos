@@ -78,10 +78,23 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar }) {
 // Una ventana de la barra, a pantalla entera: de arriba hasta la barra.
 // Fuera de la barra (el ordenador) no envuelve nada. La que no está
 // delante se oculta sin desmontarse: no pierde lo escrito ni la conexión.
-export function CapaBarra({ activa, delante, arriba = 0, children }) {
+// `marco`: una ventana de la app (el formulario) llega hasta abajo del todo,
+// con un poco de margen a los lados para que se vean sus bordes; la barra
+// flota encima y la ventana le deja el hueco dentro (VentanaFlotante
+// pantallaEntera). Multimedia, sin marco: es una página entera.
+export function CapaBarra({ activa, delante, arriba = 0, marco = false, children }) {
   if (!activa) return children;
   return (
-    <div className="fixed left-0 right-0" style={{ top: arriba, bottom: ALTO_BARRA, zIndex: 40, display: delante ? undefined : "none" }}>
+    <div
+      className="fixed left-0 right-0"
+      style={{
+        top: arriba,
+        bottom: marco ? 0 : ALTO_BARRA,
+        ...(marco ? { padding: "6px 6px 0" } : {}),
+        zIndex: 40,
+        display: delante ? undefined : "none",
+      }}
+    >
       {children}
     </div>
   );

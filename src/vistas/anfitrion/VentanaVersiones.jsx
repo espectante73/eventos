@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "60.4",
+    cambios: [
+      "En el móvil, el formulario a pantalla entera se ve como una ventana: ocupa todo el alto, con sus bordes a los lados y su X arriba para cerrarla. La barra de cuadraditos flota encima de su parte de abajo, y el contenido se puede subir por encima de ella.",
+    ],
+  },
+  {
     version: "60.3",
     cambios: [
       "En el móvil, el formulario a pantalla entera se puede volver a desplazar: no dejaba bajar, y lo de abajo (por ejemplo «Guardar» y «Cancelar» al elegir quién paga en una familia) quedaba fuera de la pantalla.",

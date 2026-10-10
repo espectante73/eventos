@@ -154,11 +154,13 @@ export const ETIQUETAS_VENTANAS = {
 // `fondoCuerpo`: color de fondo opcional solo para el cuerpo (debajo de la
 // cabecera). Sin él, el marfil de siempre. Lo usa Aniversarios, que pinta
 // sus filas doradas sobre el verde de la app (2026-09-17).
-// `desplazaCuerpo` (con `fijo`): el cuerpo desplaza como en cualquier
-// ventana. La Lista de invitados no lo lleva (desplaza su tabla, para dejar
-// la cabecera quieta); el formulario a pantalla entera del móvil, sí (v60.3:
-// sin él no se llegaba a lo de abajo, ni a «Guardar»).
-export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo, fijo, fondoCuerpo, desplazaCuerpo = false }) {
+// `pantallaEntera` (con `fijo`): la ventana del móvil a pantalla entera
+// (el formulario en la barra de ventanas). Se ve como ventana -bordes, X
+// arriba (norma 5)-, su cuerpo desplaza y deja abajo el hueco de la barra,
+// que flota encima (él, v60.3-60.4). La Lista de invitados en su ventana del
+// sistema no lo lleva: la cierra el sistema y desplaza su tabla, para dejar
+// la cabecera quieta.
+export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo, fijo, fondoCuerpo, pantallaEntera = false }) {
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
   // "left" fijo (no en cascada como antes): todas las ventanas nacen
   // alineadas al mismo borde izquierdo, a petición del usuario -- el
@@ -242,12 +244,12 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
   return (
     <div
       ref={ventanaRef}
-      className={fijo ? "ventana-fija flex flex-col" : "fixed rounded-lg flex flex-col"}
+      className={fijo ? `ventana-fija flex flex-col${pantallaEntera ? " rounded-t-lg" : ""}` : "fixed rounded-lg flex flex-col"}
       onMouseDownCapture={fijo ? undefined : traerAlFrente}
       onTouchStartCapture={fijo ? undefined : traerAlFrente}
       style={{
         background: C.paper,
-        border: fijo ? "none" : `1px solid ${C.line}`,
+        border: fijo && !pantallaEntera ? "none" : `1px solid ${C.line}`,
         // calc(100vw - 48px) (no 2rem/32px): con "left" ahora fijo en
         // 16px, esto deja un margen visible mayor a la derecha (32px) --
         // ventana claramente más estrecha que la pantalla, no pegada de
@@ -260,7 +262,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
         // Menos el hueco de la barra de ventanas del móvil cuando se ve
         // (BarraVentanas.jsx): así no le tapa los botones de abajo.
         maxHeight: fijo ? "100%" : tam ? undefined : "calc(88vh - var(--hueco-barra-ventanas, 0px))",
-        boxShadow: fijo ? "none" : S.flotanteOscura,
+        boxShadow: fijo && !pantallaEntera ? "none" : S.flotanteOscura,
         top: fijo ? undefined : pos.top,
         left: fijo ? undefined : pos.left,
         zIndex: fijo ? undefined : zIndex,
@@ -273,7 +275,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       }}
     >
       <div
-        className={fijo ? "panel-flotante-cristal select-none" : "panel-flotante-cristal rounded-t-lg cursor-move select-none"}
+        className={fijo ? `panel-flotante-cristal select-none${pantallaEntera ? " rounded-t-lg" : ""}` : "panel-flotante-cristal rounded-t-lg cursor-move select-none"}
         style={{ touchAction: "none" }}
         onMouseDown={fijo ? undefined : iniciarArrastre}
         onTouchStart={fijo ? undefined : iniciarArrastre}
@@ -294,7 +296,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
             {/* En modo fijo cierra la ventana del sistema operativo, no
                 este panel: poner aquí una X propia dejaría dos botones
                 de cerrar, uno al lado del otro. */}
-            {!fijo && (
+            {(!fijo || pantallaEntera) && (
               <button onClick={onCerrar} title="Cerrar" aria-label="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
                 <X size={18} />
               </button>
@@ -320,9 +322,16 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       <div
         className="ventana-cuerpo p-4"
         style={
-          fijo && !desplazaCuerpo
+          fijo && !pantallaEntera
             ? { flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
-            : { flex: 1, minHeight: 0, overflowY: "auto", ...(fondoCuerpo ? { background: fondoCuerpo } : {}) }
+            : {
+                flex: 1,
+                minHeight: 0,
+                overflowY: "auto",
+                ...(fondoCuerpo ? { background: fondoCuerpo } : {}),
+                // Lo último se puede subir por encima de la barra que flota.
+                ...(pantallaEntera ? { paddingBottom: "calc(1rem + var(--hueco-barra-ventanas, 0px))" } : {}),
+              }
         }
       >
         {children}

@@ -1491,13 +1491,13 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       )}
 
       {formularioVisible && (
-        <CapaBarra activa={enBarra} delante={barra?.delante === "formulario"} arriba={barra?.arriba || 0}>
+        <CapaBarra activa={enBarra} delante={barra?.delante === "formulario"} arriba={barra?.arriba || 0} marco>
         <VentanaFlotante
           clave="formulario-colaborador"
           titulo={colaborador.nombre}
           onCerrar={cerrarFormulario}
           fijo={enBarra}
-          desplazaCuerpo
+          pantallaEntera={enBarra}
         >
           {/* Todo plegado al abrir y solo una cosa abierta a la vez, como en
               Novedades -- filosofía única de la app, a petición del usuario
