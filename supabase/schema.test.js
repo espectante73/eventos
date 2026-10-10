@@ -184,7 +184,17 @@ describe("schema.sql es un plano, no un diario", () => {
 });
 
 describe("marcar a toda la familia: o todos o ninguno (norma 11)", () => {
-  const cuerpo = cuerpoDe("colaborador_marcar_familia");
+  // Desde v60 marca la pieza común, colaborador_marcar_miembros (toda la
+  // familia, o los elegidos): las comprobaciones viven ahí.
+  const cuerpo = cuerpoDe("colaborador_marcar_miembros");
+
+  it("marcar a toda la familia pasa por la misma pieza que marcar a los elegidos", () => {
+    expect(cuerpoDe("colaborador_marcar_familia")).toMatch(/colaborador_marcar_miembros\(/);
+  });
+
+  it("solo los de esa familia: un id de fuera se ignora", () => {
+    expect(cuerpo).toMatch(/i\."id" = any\(coalesce\(p_ids, '\{\}'\)\)/);
+  });
 
   it("comprueba que quien marca es ese colaborador", () => {
     expect(cuerpo).toContain("colaborador_puede_actuar(p_colaborador_id)");

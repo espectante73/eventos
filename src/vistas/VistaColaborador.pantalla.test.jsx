@@ -171,57 +171,82 @@ describe("la pantalla del colaborador se puede dibujar", () => {
 
 // El pago para toda la familia (norma 11): al tocar "Pago pendiente" de
 // uno, si hay más de su familia, pregunta "¿toda la familia?" con Sí y No.
-describe("el pago pregunta por la familia", () => {
+describe("el pago y la llegada, por familias (v60)", () => {
   const hermano = (id, nombre, extra = {}) => ({
     id, nombre, apellido: "Ruiz", grupoFamiliar: "Ruiz01", rolFamiliar: ROL_FAMILIAR.HIJO,
     colaboradorId: "c1", confirmado: true, pagado: false, anioNacimiento: "2010", alergias: "No",
     email: "r@r.com", cancion: "Una", conservarDatos: true, ...extra,
   });
+  // Luis lo lleva OTRO colaborador: la familia se ve entera igual.
   const familia = [hermano("r1", "Ana"), hermano("r2", "Luis", { colaboradorId: "c2" })];
-  const marcadas = [];
-  const datos = {
-    ...data,
-    invitados: [...invitados, familia[0]],
-    obtenerFamilia: async () =>
-      familia.map((m) => ({ ...m, datosCompletos: true, pagado: false, presente: false })),
-    marcarFamilia: async (g, campo, valor) => marcadas.push([g.id, campo, valor]),
-  };
-
-  it("sale «¿El pago es para toda la familia Ruiz?», y «Sí» marca a todos", async () => {
+  const comoMiembros = familia.map((m) => ({ ...m, datosCompletos: true, presente: false, esMio: m.colaboradorId === "c1" }));
+  const montarRuiz = () => {
+    const marcadas = [];
+    const elegidas = [];
+    const datos = {
+      ...data,
+      invitados: [...invitados, familia[0]],
+      obtenerMisFamilias: async () => [...comoMiembros, ...invitados.filter((g) => g.colaboradorId === "c1").map((g) => ({ ...g, datosCompletos: Boolean(g.anioNacimiento && g.alergias), esMio: true }))],
+      marcarFamilia: async (g, campo, valor) => marcadas.push([g.id, campo, valor]),
+      marcarMiembros: async (g, ids, campo, valor) => elegidas.push([g.id, ids, campo, valor]),
+    };
     const vista = montar(
       <VistaColaborador data={datos} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
     );
-    const botones = () => [...document.body.querySelectorAll("button")];
     abrirPorMenu(vista);
-    // El de la familia Ruiz: con la cuenta de v52, otros también tienen ya
-    // su "Pago pendiente" (Jacob, por ejemplo).
-    const pago = botones().find(
-      (b) => b.textContent.includes("Pago pendiente") && b.parentElement.parentElement.textContent.includes("Ruiz")
-    );
-    expect(pago, "no hay ninguna fila con el pago a la vista").toBeTruthy();
-    await act(async () => pago.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    return { vista, marcadas, elegidas };
+  };
+  const botones = () => [...document.body.querySelectorAll("button")];
+  const pulsarAsync = (b) => act(async () => b.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  const pagoRuiz = () => botones().find((b) => b.textContent.startsWith("Pago ·") && b.parentElement.parentElement.textContent.includes("Ruiz"));
+
+  it("con los datos cerrados, la familia va en una fila con su pago", async () => {
+    const { vista } = montarRuiz();
+    await act(async () => {});
+    expect(document.body.textContent).toContain("Familias");
+    expect(pagoRuiz(), "la fila de los Ruiz con «Pago ·»").toBeTruthy();
+    // Los Pacheco tienen datos a medias (Omar): siguen persona a persona.
+    expect(botones().some((b) => b.textContent.includes("Pacheco, Omar"))).toBe(true);
+    vista.desmontar();
+  });
+
+  it("«¿Pagan todos los Ruiz?»: «Sí» marca a toda la familia", async () => {
+    const { vista, marcadas } = montarRuiz();
+    await act(async () => {});
+    await pulsarAsync(pagoRuiz());
     const html = document.body.innerHTML;
-    expect(html).toContain("¿El pago es para toda la familia Ruiz?");
+    expect(html).toContain("¿Pagan todos los Ruiz?");
     expect(html).toContain("Total:");
-    // Los botones dicen lo que hacen, como en toda la app.
-    const si = botones().find((b) => b.textContent.trim() === "Sí");
+    expect(html).toContain("Después ya no podrás cambiar sus datos ni su foto.");
     expect(botones().some((b) => b.textContent.trim() === "No")).toBe(true);
-    await act(async () => si.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "Sí"));
     expect(marcadas).toEqual([["r1", "pagado", true]]);
     vista.desmontar();
   });
 
-  it("la pregunta avisa de que, pagado, ya no podrá cambiar sus datos", async () => {
-    const vista = montar(
-      <VistaColaborador data={datos} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
-    );
-    const botones = () => [...document.body.querySelectorAll("button")];
-    abrirPorMenu(vista);
-    const pago = botones().find(
-      (b) => b.textContent.includes("Pago pendiente") && b.parentElement.parentElement.textContent.includes("Ruiz")
-    );
-    await act(async () => pago.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    expect(document.body.innerHTML).toContain("Después ya no podrás cambiar sus datos ni su foto.");
+  it("tocar el nombre abre la familia; su miembro abre su ficha y el de otro colaborador solo se ve", async () => {
+    const { vista } = montarRuiz();
+    await act(async () => {});
+    const nombreFamilia = botones().find((b) => b.textContent.startsWith("Ruiz") && b.textContent.includes("▸"));
+    await pulsarAsync(nombreFamilia);
+    expect(document.body.textContent).toContain("Ruiz, Luis");
+    expect(botones().some((b) => b.textContent.includes("Ruiz, Luis"))).toBe(false);
+    await pulsarAsync(botones().find((b) => b.textContent.includes("Ruiz, Ana")));
+    expect(botones().some((b) => b.textContent.trim() === "Guardar")).toBe(true);
+    vista.desmontar();
+  });
+
+  it("«No»: la familia se abre para elegir quién, y «Guardar» marca a los elegidos", async () => {
+    const { vista, elegidas } = montarRuiz();
+    await act(async () => {});
+    await pulsarAsync(pagoRuiz());
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "No"));
+    expect(document.body.textContent).toContain("2 de 2");
+    // Luis no paga: se le quita.
+    await pulsarAsync(botones().find((b) => b.getAttribute("aria-label") === "Ruiz, Luis: sí"));
+    expect(document.body.textContent).toContain("1 de 2");
+    await pulsarAsync(botones().find((b) => b.textContent.trim() === "Guardar"));
+    expect(elegidas).toEqual([["r1", ["r1"], "pagado", true]]);
     vista.desmontar();
   });
 });

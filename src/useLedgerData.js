@@ -4,6 +4,8 @@ import { avisoEnPantalla } from "./lib/avisos";
 import { useCanalAsistencia } from "./lib/useCanalAsistencia";
 import { C } from "./theme";
 import { familiaDe, comoMiembro } from "./lib/familiaCobroLlegada";
+import { miembrosDesdeLista } from "./lib/familiasColaborador";
+import { datosCompletos } from "./lib/invitados";
 
 const EVENTO_POR_DEFECTO = {
   nombre: "",
@@ -1122,6 +1124,51 @@ export function useLedgerData(rol) {
     [esAnfitrion, rol, persistInvitados, avisarLlegada]
   );
 
+  // Marcar a VARIOS de la familia, los elegidos (v60: "No" a «¿pagan
+  // todos?»). Misma forma que marcarFamilia; la base hace las mismas
+  // comprobaciones (colaborador_marcar_miembros). Devuelve true si se hizo.
+  const marcarMiembros = useCallback(
+    async (g, ids, campo, valor) => {
+      const anterior = invitadosRef.current;
+      const elegidos = new Set(ids);
+      if (esAnfitrion) {
+        await persistInvitados(anterior.map((x) => (elegidos.has(x.id) ? { ...x, [campo]: valor } : x)));
+        return true;
+      }
+      const { data, error } = await supabase.rpc("colaborador_marcar_miembros", {
+        p_colaborador_id: rol,
+        p_invitado_id: g.id,
+        p_ids: ids,
+        p_campo: campo,
+        p_valor: valor,
+      });
+      if (error || !data?.length) {
+        avisar("No se pudo marcar a los elegidos: no se ha cambiado a nadie.", error);
+        return false;
+      }
+      const porId = Object.fromEntries(data.map((x) => [x.id, x]));
+      const next = anterior.map((x) => (porId[x.id] ? { ...x, [campo]: porId[x.id][campo] } : x));
+      setInvitados(next);
+      invitadosRef.current = next;
+      if (campo === "presente") data.forEach((x) => avisarLlegada(x.id, Boolean(x.presente)));
+      return true;
+    },
+    [esAnfitrion, rol, persistInvitados, avisarLlegada]
+  );
+
+  // Las familias del colaborador, completas (v60, lib/familiasColaborador.js):
+  // el anfitrión las saca de su lista; el colaborador se las pide a la base.
+  // Sin la función subida todavía, solo sus propios invitados.
+  const obtenerMisFamilias = useCallback(
+    async (colaboradorId) => {
+      if (esAnfitrion) return miembrosDesdeLista(invitadosRef.current, colaboradorId, datosCompletos);
+      const { data, error } = await supabase.rpc("colaborador_mis_familias", { p_colaborador_id: rol });
+      if (error || !Array.isArray(data)) return miembrosDesdeLista(invitadosRef.current, colaboradorId, datosCompletos);
+      return data;
+    },
+    [esAnfitrion, rol]
+  );
+
   const avisarColaborador = useCallback(
     async (colaboradorId) => {
       if (!esAnfitrion) return;
@@ -1368,5 +1415,7 @@ export function useLedgerData(rol) {
     obtenerHistorialTexto,
     obtenerFamilia,
     marcarFamilia,
+    marcarMiembros,
+    obtenerMisFamilias,
   };
 }

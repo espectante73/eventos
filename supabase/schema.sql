@@ -2023,6 +2023,27 @@ CREATE FUNCTION public.colaborador_marcar_familia(p_colaborador_id uuid, p_invit
     SET search_path TO 'public', 'pg_temp'
     AS $$
 declare
+  v_ids uuid[];
+begin
+  -- Toda la familia: los mismos que colaborador_marcar_miembros, con todos
+  -- dentro (v60). Una sola pieza hace las comprobaciones y marca.
+  select array_agg(f.id) into v_ids from colaborador_familia_de(p_colaborador_id, p_invitado_id) f;
+  return query select * from colaborador_marcar_miembros(p_colaborador_id, p_invitado_id, v_ids, p_campo, p_valor);
+end;
+$$;
+
+-- Marcar el pago o la llegada a VARIOS de la familia de un invitado suyo,
+-- los elegidos (v60: "No" a «¿pagan todos?» y se elige quién). Aunque
+-- alguno lo lleve otro colaborador (norma 11). Las mismas comprobaciones
+-- que colaborador_marcar_pagado / colaborador_marcar_presente, para cada
+-- uno: si uno no cumple, no se toca a nadie. Deshacer (p_valor false) no
+-- se bloquea nunca: un error hay que poder corregirlo.
+CREATE FUNCTION public.colaborador_marcar_miembros(p_colaborador_id uuid, p_invitado_id uuid, p_ids uuid[], p_campo text, p_valor boolean)
+    RETURNS SETOF public.invitados
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
   v_familia text;
   v_ids uuid[];
 begin
@@ -2035,10 +2056,15 @@ begin
   if coalesce(v_familia, '') = '' then
     return;
   end if;
+  -- Solo los de ESA familia: un id de fuera se ignora.
   select array_agg(i."id") into v_ids
   from invitados i
   where i."confirmado" = true
-    and lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) = v_familia;
+    and lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) = v_familia
+    and i."id" = any(coalesce(p_ids, '{}'));
+  if v_ids is null then
+    return;
+  end if;
 
   if p_valor then
     if p_campo = 'presente' and not coalesce((select "asistenciaAbierta" from evento limit 1), false) then
@@ -2067,6 +2093,40 @@ CREATE FUNCTION public.colaborador_mi_perfil(p_colaborador_id uuid) RETURNS SETO
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$ select * from colaboradores where "id" = p_colaborador_id; $$;
+
+-- Las familias del colaborador, completas (v60): para cobrar y acreditar
+-- por familia ve también a los miembros que lleva otro colaborador (un
+-- matrimonio puede tener dos). Lo justo para agrupar y cobrar: nombre,
+-- años (importe y aniversario), papel en la familia, si tiene sus datos
+-- obligatorios y si ha pagado o llegado. Nada de alergias ni contacto.
+CREATE FUNCTION public.colaborador_mis_familias(p_colaborador_id uuid)
+    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "anioBoda" text, "grupoFamiliar" text, "rolFamiliar" text, "datosCompletos" boolean, pagado boolean, presente boolean, "esMio" boolean)
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if not colaborador_puede_actuar(p_colaborador_id) then
+    return;
+  end if;
+  return query
+    with mias as (
+      select distinct lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) as clave
+      from invitados i
+      where i."colaboradorId" = p_colaborador_id and i."confirmado" = true
+    )
+    select i."id", i."nombre", i."apellido", i."anioNacimiento", i."anioBoda", i."grupoFamiliar", i."rolFamiliar",
+      (coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> ''),
+      coalesce(i."pagado", false), coalesce(i."presente", false),
+      i."colaboradorId" is not distinct from p_colaborador_id
+    from invitados i
+    where i."confirmado" = true
+      and lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) in (select m.clave from mias m where m.clave <> '');
+end;
+$$;
+REVOKE EXECUTE ON FUNCTION public.colaborador_mis_familias(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.colaborador_mis_familias(uuid) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.colaborador_marcar_miembros(uuid, uuid, uuid[], text, boolean) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.colaborador_marcar_miembros(uuid, uuid, uuid[], text, boolean) TO authenticated;
 
 -- El colaborador ve solo los invitados que le tocan.
 CREATE FUNCTION public.colaborador_mis_invitados(p_colaborador_id uuid) RETURNS SETOF public.invitados

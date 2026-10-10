@@ -3,7 +3,7 @@
 // aviso al anfitrión al terminar). Movida tal cual desde App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
-import { Bell, Calendar, Check, ChevronDown, ClipboardList, Euro, Lock, Mail, Megaphone, Send, User, UserCog } from "lucide-react";
+import { Bell, Calendar, Check, ChevronDown, ClipboardList, Euro, Lock, Mail, Megaphone, Send, User, UserCog, X } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
 import {
@@ -22,6 +22,7 @@ import {
 } from "../lib/invitados";
 import { ordenarPorApellidoNombre, nombreCompleto } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
+import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
 import { requisitosActivos } from "../lib/modoPruebas";
 import { construirEnlaceTablon } from "../lib/url";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
@@ -695,6 +696,9 @@ function FilaInvitadoColaborador({
   // la abierta sea lo único en pantalla; en escritorio sigue viéndose la
   // lista entera, que ahí sí cabe (usuario, 2026-09-17).
   oculta,
+  // `enFamilia`: dentro de su familia ya cerrada (v60). Solo el nombre, para
+  // abrir su ficha: el pago y la llegada van por familia (FilaFamilia).
+  enFamilia = false,
 }) {
   const importe = importeEsperadoInvitado(g, evento);
   // Las preguntas en la ventana de la app, no en la del navegador (norma).
@@ -826,6 +830,7 @@ function FilaInvitadoColaborador({
             pago. La columna se queda aunque la ficha esté abierta y el
             botón no se pinte: si desapareciera, el nombre de ESA fila
             empezaría en otro sitio que el de las demás. */}
+        {!enFamilia && (
         <div className="flex-shrink-0" style={{ width: ANCHO_PAGO }}>
           {faltanDatos && exigir ? (
             <span className="flex items-center gap-1 text-xs whitespace-nowrap" style={{ color: C.wax }}>
@@ -852,6 +857,7 @@ function FilaInvitadoColaborador({
             )
           )}
         </div>
+        )}
         <button
           onClick={cerrada ? avisarCerrada : onToggleAbierto}
           className="boton-3d rounded px-2 flex items-center gap-2 flex-1 min-w-0"
@@ -873,7 +879,7 @@ function FilaInvitadoColaborador({
             de las filas de listas (ver CLAUDE.md, "Lo que NO se invierte"). */}
         {/* El check, solo con los datos completos: antes no se puede usar
             (salvo en Modo Pruebas). */}
-        {(!faltanDatos || !exigir) && (
+        {!enFamilia && (!faltanDatos || !exigir) && (
         <button
           onClick={confirmarPresente}
           title={
@@ -915,6 +921,199 @@ function FilaInvitadoColaborador({
             onCambiarSinFotoBoda={onCambiarSinFotoBoda}
             familiaSinEmail={familiaSinEmail}
           />
+        </div>
+      )}
+      {ventanaPregunta}
+    </div>
+  );
+}
+
+// ---------- La fila de una FAMILIA (él, v60) ----------
+// Con los datos de la familia cerrados, cobrar y acreditar van por familia:
+// una fila con el pago (o el sello), su nombre y la llegada. Un toque
+// pregunta «¿todos?», Sí o No; con «No» se abre para elegir quién. Las
+// mismas columnas que la fila de invitado (ANCHO_PAGO, ALTO_BOTON_FILA).
+// Tocar el nombre la abre: sus miembros, y cada uno de los suyos abre su
+// ficha mientras no haya pagado (renderMiembro).
+const sinCentimos = (n) =>
+  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n || 0);
+
+function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, abierta, onAlternar, renderMiembro, oculta }) {
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
+  // Eligiendo a quién: { campo, valor, cambian: [...], marcados: Set }.
+  const [eligiendo, setEligiendo] = useState(null);
+  const rep = familia.representante;
+  const exigir = requisitosActivos(evento);
+  const marcadoAbierto = Boolean(evento.asistenciaAbierta);
+  const uno = familia.miembros.length === 1;
+
+  const preguntarTodos = (campo, valor) => {
+    if (!rep) return;
+    if (campo === "presente" && valor && exigir && !marcadoAbierto) {
+      preguntar({ titulo: "Todavía no", texto: "El anfitrión todavía no ha abierto el control de llegadas.", soloAviso: true });
+      return;
+    }
+    const p = preguntaFamilia(familia.miembros, campo, valor, { evento, marcadoAbierto });
+    const quien = uno ? nombreCompleto(familia.miembros[0]) : `los ${familia.etiqueta}`;
+    const titulos = {
+      pagado: valor ? (uno ? `¿Ha pagado ${quien}?` : `¿Pagan todos ${quien}?`) : `¿Quitar el pago a ${uno ? quien : `toda la familia ${familia.etiqueta}`}?`,
+      presente: valor ? (uno ? `¿Ha llegado ${quien}?` : `¿Han llegado todos ${quien}?`) : `¿Quitar la llegada a ${uno ? quien : `toda la familia ${familia.etiqueta}`}?`,
+    };
+    preguntar({
+      titulo: titulos[campo],
+      texto: textoPreguntaFamilia(p, campo, valor, evento) + (campo === "pagado" && valor ? `\n${AVISO_CIERRE_AL_PAGAR}` : ""),
+      rotulo: "Sí",
+      peligro: valor ? false : undefined,
+      sinPrincipal: !p.puedeTodos,
+      alConfirmar: () => marcarFamilia(rep, campo, valor),
+      // «No» con uno solo es no hacer nada; con varios, elegir quién.
+      ...(uno
+        ? {}
+        : {
+            otra: {
+              rotulo: "No",
+              alConfirmar: () => {
+                const bloqueados = new Set(p.bloqueados.map((b) => b.m.id));
+                const cambian = p.aCambiar.filter((m) => !bloqueados.has(m.id));
+                setEligiendo({ campo, valor, cambian, bloqueados, marcados: new Set(cambian.map((m) => m.id)) });
+                if (!abierta) onAlternar();
+              },
+            },
+          }),
+    });
+  };
+
+  const alternarMarcado = (id) =>
+    setEligiendo((e) => {
+      const marcados = new Set(e.marcados);
+      if (marcados.has(id)) marcados.delete(id);
+      else marcados.add(id);
+      return { ...e, marcados };
+    });
+
+  const guardarEleccion = async () => {
+    const ids = [...eligiendo.marcados];
+    if (ids.length) await marcarMiembros(rep, ids, eligiendo.campo, eligiendo.valor);
+    setEligiendo(null);
+  };
+
+  const totalElegido = eligiendo?.campo === "pagado" && eligiendo.valor
+    ? familia.miembros.filter((m) => eligiendo.marcados.has(m.id)).reduce((s, m) => s + importeEsperadoInvitado(m, evento), 0)
+    : null;
+
+  return (
+    <div className={`rounded ${oculta ? "hidden sm:block" : ""}`} style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+      <div className="flex items-center gap-2 p-3 text-sm">
+        <div className="flex-shrink-0" style={{ width: ANCHO_PAGO }}>
+          <button
+            onClick={() => preguntarTodos("pagado", !familia.todosPagados)}
+            className="boton-3d rounded flex items-center justify-center w-full"
+            style={{ height: ALTO_BOTON_FILA }}
+          >
+            {familia.todosPagados ? (
+              <Stamp color={C.ink}>Pagado</Stamp>
+            ) : (
+              <span
+                className="text-xs px-2 py-0.5 rounded whitespace-nowrap"
+                style={{ border: `1px dashed ${C.line}`, color: C.charcoal }}
+              >
+                Pago · {sinCentimos(familia.totalPorPagar)}
+              </span>
+            )}
+          </button>
+        </div>
+        <button
+          onClick={onAlternar}
+          className="boton-3d rounded px-2 flex items-center gap-2 flex-1 min-w-0"
+          style={{ color: C.ink, height: ALTO_BOTON_FILA }}
+        >
+          <span className="truncate" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+            {familia.etiqueta}
+          </span>
+          <span className="text-xs flex-shrink-0" style={{ color: C.charcoal, opacity: OP.secundario }}>
+            {familia.miembros.length}
+          </span>
+          <span className="text-xs flex-shrink-0 ml-auto" style={{ color: C.gold }}>
+            {abierta ? "▾" : "▸"}
+          </span>
+        </button>
+        {/* La llegada de la familia, en la misma columna que la de cada
+            invitado: así se marca sin abrir nada, de pie y recibiendo. */}
+        <button
+          onClick={() => preguntarTodos("presente", !familia.todosPresentes)}
+          title={familia.todosPresentes ? "Han llegado todos — toca para quitarlo" : "Marcar la llegada de la familia"}
+          className="boton-3d flex items-center justify-center rounded-full flex-shrink-0"
+          style={{
+            width: ALTO_BOTON_FILA,
+            height: ALTO_BOTON_FILA,
+            border: `2px solid ${familia.todosPresentes ? C.ink : C.line}`,
+            background: familia.todosPresentes ? C.ink : "transparent",
+            color: familia.todosPresentes ? C.paper : C.line,
+          }}
+        >
+          <Check size={18} strokeWidth={3} />
+        </button>
+      </div>
+
+      {eligiendo && (
+        // Elegir quién: cada uno con su ✓ o ✕, la cuenta arriba, y al pie
+        // «Guardar» y «Cancelar» (norma 5).
+        <div className="px-3 pb-3 pt-2" style={{ background: C.ink, color: C.paper }}>
+          <div className="flex items-center justify-between text-xs mb-1" style={{ fontFamily: "'IBM Plex Mono', monospace", color: C.goldClaro }}>
+            <span>{totalElegido !== null ? sinCentimos(totalElegido) : ""}</span>
+            <span>
+              {eligiendo.marcados.size} de {eligiendo.cambian.length}
+            </span>
+          </div>
+          {familia.miembros.map((m) => {
+            const cambia = eligiendo.cambian.some((x) => x.id === m.id);
+            const marcado = eligiendo.marcados.has(m.id);
+            return (
+              <div key={m.id} className="flex items-center justify-between gap-2 py-1.5" style={{ borderBottom: `1px solid ${C.gold}33` }}>
+                <span className="truncate" style={{ opacity: cambia ? 1 : OP.tenue }}>{nombreCompleto(m)}</span>
+                <button
+                  onClick={() => cambia && alternarMarcado(m.id)}
+                  disabled={!cambia}
+                  aria-pressed={marcado}
+                  aria-label={`${nombreCompleto(m)}: ${marcado ? "sí" : "no"}`}
+                  className="boton-3d flex items-center justify-center rounded-full flex-shrink-0"
+                  style={{
+                    width: ALTO_BOTON_FILA,
+                    height: ALTO_BOTON_FILA,
+                    background: !cambia ? "transparent" : marcado ? C.goldClaro : C.peligro,
+                    color: !cambia ? C.goldClaro : marcado ? C.ink : "#fff",
+                    border: !cambia ? `1px solid ${C.gold}` : "none",
+                    opacity: cambia ? 1 : OP.tenue,
+                  }}
+                >
+                  {marcado || !cambia ? <Check size={16} strokeWidth={3} /> : <X size={16} strokeWidth={3} />}
+                </button>
+              </div>
+            );
+          })}
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            <Boton variante="principal" oscuro onClick={guardarEleccion}>
+              Guardar
+            </Boton>
+            <Boton oscuro onClick={() => setEligiendo(null)} className="zurdo:order-first">
+              Cancelar
+            </Boton>
+          </div>
+        </div>
+      )}
+
+      {abierta && !eligiendo && (
+        <div className="px-3 pb-3 space-y-2">
+          {familia.miembros.map((m) =>
+            m.esMio ? (
+              renderMiembro(m.id)
+            ) : (
+              // Lo lleva otro colaborador: se ve, pero su ficha no es suya.
+              <div key={m.id} className="px-2 text-sm truncate" style={{ color: C.charcoal, opacity: OP.secundario }}>
+                {nombreCompleto(m)}
+              </div>
+            )
+          )}
         </div>
       )}
       {ventanaPregunta}
@@ -1017,6 +1216,32 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const pagados = confirmados.filter((g) => g.pagado);
   const noPagados = confirmados.filter((g) => !g.pagado);
 
+  // ---------- Por familias (él, v60) ----------
+  // Las familias con los datos cerrados se cobran y acreditan juntas; los
+  // demás siguen persona a persona en «Incompletos». La familia entera,
+  // también los que lleva otro colaborador, la da la base
+  // (data.obtenerMisFamilias); mientras llega, la lista propia.
+  const miembrosLocales = miembrosDesdeLista(invitados, colaboradorId, datosCompletos);
+  const [miembrosServidor, setMiembrosServidor] = useState(null);
+  const obtenerMisFamilias = data.obtenerMisFamilias;
+  useEffect(() => {
+    if (!obtenerMisFamilias) return undefined;
+    let vivo = true;
+    obtenerMisFamilias(colaboradorId).then((m) => vivo && setMiembrosServidor(m || null));
+    return () => {
+      vivo = false;
+    };
+  }, [obtenerMisFamilias, colaboradorId, invitados]);
+  const familias = agruparFamilias(miembrosServidor || miembrosLocales, { fotosFamiliares, fotosSinBoda: fotosSinBoda || {}, incompletas: idsIncompletas }, evento).filter(
+    (f) => f.cerrada && f.representante
+  );
+  const idsEnFamilia = new Set(familias.flatMap((f) => f.miembros.filter((m) => m.esMio).map((m) => m.id)));
+  // La ficha abierta se queda donde estaba al abrirla, aunque al guardar su
+  // familia se cierre (mismo criterio que pendienteAlAbrir).
+  const [enRecogidaAlAbrir, setEnRecogidaAlAbrir] = useState(null);
+  const enRecogida = confirmados.filter((g) => (g.id === abiertoId && enRecogidaAlAbrir !== null ? enRecogidaAlAbrir : !idsEnFamilia.has(g.id)));
+  const [familiaAbierta, setFamiliaAbierta] = useState(null);
+
   // Solo confirmados: los tentativa nunca deben nombrarse al colaborador
   // (mismo criterio que el email de "Tus invitados asignados", ver
   // anfitrion_avisar_colaborador) -- no levantar sospechas sobre la
@@ -1070,6 +1295,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
     setAbiertoId((actual) => {
       if (hayFicha(actual)) return actual;
       setPendienteAlAbrir(incompletaDe(g));
+      setEnRecogidaAlAbrir(!idsEnFamilia.has(g.id));
       return g.id;
     });
   const cerrarFicha = () => setAbiertoId(null);
@@ -1394,7 +1620,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               </button>
             </div>
             <div className="space-y-2">
-              {ordenarPorApellidoNombre(pendientes).map((g) => (
+              {ordenarPorApellidoNombre(enRecogida).map((g) => (
                 <FilaInvitadoColaborador
                   key={g.id}
                   g={g}
@@ -1417,7 +1643,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   oculta={fichaAbierta && abiertoId !== g.id}
                 />
               ))}
-              {pendientes.length === 0 && !fichaAbierta && (
+              {enRecogida.length === 0 && !fichaAbierta && (
                 <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
                   Ninguna ficha incompleta.
                 </p>
@@ -1425,15 +1651,31 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             </div>
           </section>
 
+          {/* Con los datos cerrados, por FAMILIAS (él, v60): cobrar y
+              acreditar van por familia; la ficha de cada uno se abre desde
+              su familia mientras no haya pagado. */}
           <section className={`mt-8 ${fichaAbierta ? "mt-2" : ""}`}>
             <div className={fichaAbierta ? "hidden sm:block" : ""}>
-              <SectionTitle icon={Check}>Invitados COMPLETADOS</SectionTitle>
+              <SectionTitle icon={Check}>Familias</SectionTitle>
             </div>
             <div className="space-y-2">
-              {ordenarPorApellidoNombre(completos).map((g) => (
-                <FilaInvitadoColaborador
-                  key={g.id}
-                  g={g}
+              {familias.map((f) => (
+                <FilaFamilia
+                  key={f.clave}
+                  familia={f}
+                  evento={evento}
+                  marcarFamilia={data.marcarFamilia}
+                  marcarMiembros={data.marcarMiembros}
+                  abierta={familiaAbierta === f.clave || f.miembros.some((m) => m.id === abiertoId)}
+                  onAlternar={() => setFamiliaAbierta((a) => (a === f.clave ? null : f.clave))}
+                  oculta={fichaAbierta && !f.miembros.some((m) => m.id === abiertoId)}
+                  renderMiembro={(id) => {
+                    const g = confirmados.find((x) => x.id === id);
+                    return g ? (
+                      <FilaInvitadoColaborador
+                        key={g.id}
+                        enFamilia
+                        g={g}
                   abierto={abiertoId === g.id}
                   onToggleAbierto={() => toggleAbierto(g)}
                   onCerrarFicha={cerrarFicha}
@@ -1450,12 +1692,15 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   onCambiarSinFotoBoda={cambiarSinFotoBoda}
                   familiaSinEmail={familiasSinEmailAhora.has(claveFamilia(g))}
                   colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
-                  oculta={fichaAbierta && abiertoId !== g.id}
+                        oculta={fichaAbierta && abiertoId !== g.id}
+                      />
+                    ) : null;
+                  }}
                 />
               ))}
-              {completos.length === 0 && !fichaAbierta && (
+              {familias.length === 0 && !fichaAbierta && (
                 <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
-                  Todavía ningún invitado con datos completos.
+                  Todavía ninguna familia con los datos completos.
                 </p>
               )}
             </div>

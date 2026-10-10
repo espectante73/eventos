@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "60",
+    cambios: [
+      "Cobrar y acreditar, por familias. En el formulario del colaborador, las familias con los datos ya completos pasan a «Familias»: una fila por familia con su pago («Pago · 188 €» o el sello «Pagado»), su nombre y su llegada. Quien viene solo es su propia familia. Las que aún tienen datos a medias siguen persona a persona en «Incompletos».",
+      "Al tocar el pago o la llegada de una familia: «¿Pagan todos?» o «¿Han llegado todos?», Sí o No. Con «No» la familia se abre para elegir quién, cada uno con su ✓ o ✕ y la cuenta arriba («1 de 2»), y se guarda con «Guardar».",
+      "Tocar el nombre de una familia enseña a sus miembros; los suyos abren su ficha, por si hay que corregir algo antes de pagar. La familia se ve entera aunque algún miembro lo lleve otro colaborador.",
+    ],
+  },
+  {
     version: "59.1",
     cambios: [
       "Texto simplificado en los botones de las preguntas: ahora se responde «Sí» o «No» (antes «Sí, quitarla», «Sí, toda la familia», «Cancelar»…). Solo lo que borra para siempre sigue diciendo qué borra («Sí, eliminar», «Sí, borrar todo», «Sí, descartar»), para no borrar nada por un «Sí» con prisas.",

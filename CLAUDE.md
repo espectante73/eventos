@@ -170,7 +170,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 11. **Lo que en la vida real va junto —una pareja, una familia— la app
     lo mantiene junto SOLA.** Ante un dato nuevo, preguntarse si debería
     ir junto con el de alguien más («Un matrimonio comparte año y foto
-    de boda»).
+    de boda»). Los datos se recogen persona a persona; cerrados los de una
+    familia, cobrar y acreditar van por familia (quien viene solo es la
+    suya).
     - un dato compartido vale para todos (el año de boda); una acción,
       para todos (la mesa de la familia) o, si puede haber excepciones,
       **se pregunta con Sí/No si es para toda la familia**, aunque parte
