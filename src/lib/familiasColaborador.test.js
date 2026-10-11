@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { familiaCerrada, agruparFamilias, miembrosDesdeLista } from "./familiasColaborador";
+import { familiaCerrada, faltaParaCerrar, agruparFamilias, miembrosDesdeLista } from "./familiasColaborador";
 import { datosCompletos } from "./invitados";
 
 const m = (id, nombre, extra = {}) => ({
@@ -7,6 +7,29 @@ const m = (id, nombre, extra = {}) => ({
   anioNacimiento: "1990", anioBoda: "", datosCompletos: true, pagado: false, presente: false, esMio: true, ...extra,
 });
 const evento = { precioAdulto: "47", precioNino: "20", edadNinoDesde: "3", edadNinoHasta: "12", fecha: "2026-11-13" };
+
+// v62.6: lo que falta, en palabras, para la línea roja de «Incompletos».
+describe("faltaParaCerrar", () => {
+  const pareja = [m("1", "Ana", { rolFamiliar: "esposa" }), m("2", "Luis", { rolFamiliar: "esposo" })];
+
+  it("los datos de otro de la familia, con su nombre", () => {
+    expect(faltaParaCerrar([m("1", "Ana"), m("2", "Luis", { datosCompletos: false })])).toEqual(["Faltan los datos de Medina, Luis"]);
+    expect(faltaParaCerrar([m("1", "Ana", { datosCompletos: false }), m("2", "Luis", { datosCompletos: false }), m("3", "Eva", { datosCompletos: false })])).toEqual([
+      "Faltan los datos de Medina, Ana; Medina, Luis y Medina, Eva",
+    ]);
+  });
+
+  it("matrimonio: la foto de boda o «No»; con foto, el año", () => {
+    expect(faltaParaCerrar(pareja)).toEqual(["Falta la foto de boda, o marcar «No»"]);
+    expect(faltaParaCerrar(pareja, { fotosFamiliares: { Medina01: "ruta" } })).toEqual(["Falta el año de boda"]);
+    expect(faltaParaCerrar(pareja, { fotosSinBoda: { Medina01: true } })).toEqual([]);
+  });
+
+  it("nada que falte es lo mismo que cerrada", () => {
+    expect(faltaParaCerrar([m("1", "Ana")])).toEqual([]);
+    expect(familiaCerrada([m("1", "Ana")])).toBe(true);
+  });
+});
 
 describe("familiaCerrada", () => {
   it("todos con sus datos: cerrada; uno a medias: no", () => {

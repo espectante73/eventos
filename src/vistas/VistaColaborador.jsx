@@ -704,6 +704,9 @@ function FilaInvitadoColaborador({
   // `enFamilia`: dentro de su familia ya cerrada (v60). Solo el nombre, para
   // abrir su ficha: el pago y la llegada van por familia (FilaFamilia).
   enFamilia = false,
+  // Lo que le falta a su familia para pasar a «Familias» (v62.6): si sus
+  // datos ya están, la fila lo dice en rojo debajo.
+  faltaFamilia = [],
 }) {
   const importe = importeEsperadoInvitado(g, evento);
   // Las preguntas en la ventana de la app, no en la del navegador (norma).
@@ -916,6 +919,7 @@ function FilaInvitadoColaborador({
         </button>
         )}
       </div>
+      {!abierto && !faltanDatos && faltaFamilia.map((texto) => <LineaAvisoFila key={texto}>{texto}</LineaAvisoFila>)}
       {abierto && (
         // Verde detrás de la tarjeta dorada, misma idea que el cuerpo de la
         // ventana Aniversarios.
@@ -936,6 +940,28 @@ function FilaInvitadoColaborador({
         </div>
       )}
       {ventanaPregunta}
+    </div>
+  );
+}
+
+// Una línea de aviso bajo una fila (el pago pendiente, lo que le falta a la
+// familia): a todo el ancho, en rosa y en una sola línea (norma 6). Con
+// `onClick` se puede tocar; `fuerte`, en negrita (vencido).
+function LineaAvisoFila({ children, onClick, fuerte }) {
+  const estilo = { background: C.avisoFondo, color: C.peligro, height: ALTO_BOTON_FILA, fontWeight: fuerte ? 600 : undefined };
+  const dentro = (
+    <>
+      <AlertTriangle size={14} style={{ flexShrink: 0 }} aria-hidden />
+      <span className="truncate">{children}</span>
+    </>
+  );
+  return onClick ? (
+    <button onClick={onClick} className="boton-3d flex items-center gap-2 w-full px-3 text-xs text-left" style={estilo}>
+      {dentro}
+    </button>
+  ) : (
+    <div className="flex items-center gap-2 px-3 text-xs" style={estilo}>
+      {dentro}
     </div>
   );
 }
@@ -1122,20 +1148,9 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
 
       {impagos.map((m) => (
         // Vencido, en negrita: hay que volver a preguntar.
-        <button
-          key={m.id}
-          onClick={() => atenderImpago(m)}
-          className="boton-3d flex items-center gap-2 w-full px-3 text-xs text-left"
-          style={{
-            background: C.avisoFondo,
-            color: C.peligro,
-            height: ALTO_BOTON_FILA,
-            fontWeight: estadoImpago(m).vencido ? 600 : undefined,
-          }}
-        >
-          <AlertTriangle size={14} style={{ flexShrink: 0 }} aria-hidden />
-          <span className="truncate">{textoAvisoImpago(m)}</span>
-        </button>
+        <LineaAvisoFila key={m.id} onClick={() => atenderImpago(m)} fuerte={estadoImpago(m).vencido}>
+          {textoAvisoImpago(m)}
+        </LineaAvisoFila>
       ))}
 
       {eligiendo && (
@@ -1320,9 +1335,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       vivo = false;
     };
   }, [obtenerMisFamilias, colaboradorId, invitados]);
-  const familias = agruparFamilias(miembrosServidor || miembrosLocales, { fotosFamiliares, fotosSinBoda: fotosSinBoda || {}, incompletas: idsIncompletas }, evento).filter(
-    (f) => f.cerrada && f.representante
-  );
+  const todasFamilias = agruparFamilias(miembrosServidor || miembrosLocales, { fotosFamiliares, fotosSinBoda: fotosSinBoda || {}, incompletas: idsIncompletas }, evento);
+  const familias = todasFamilias.filter((f) => f.cerrada && f.representante);
+  // Lo que le falta a la familia de cada uno, para su línea roja (v62.6).
+  const faltaPorId = new Map(todasFamilias.flatMap((f) => f.miembros.map((m) => [m.id, f.falta])));
   const idsEnFamilia = new Set(familias.flatMap((f) => f.miembros.filter((m) => m.esMio).map((m) => m.id)));
   // La ficha abierta se queda donde estaba al abrirla, aunque al guardar su
   // familia se cierre (mismo criterio que pendienteAlAbrir).
@@ -1713,6 +1729,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 <FilaInvitadoColaborador
                   key={g.id}
                   g={g}
+                  faltaFamilia={faltaPorId.get(g.id)}
                   abierto={abiertoId === g.id}
                   onToggleAbierto={() => toggleAbierto(g)}
                   onCerrarFicha={cerrarFicha}

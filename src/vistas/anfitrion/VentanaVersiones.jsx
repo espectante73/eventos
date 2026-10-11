@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "62.6",
+    cambios: [
+      "En «Incompletos», quien ya tiene todos sus datos pero sigue ahí dice debajo, en rojo, qué le falta a su familia para pasar a «Familias»: «Falta la foto de boda, o marcar «No»», «Falta el año de boda» o «Faltan los datos de (Apellido, Nombre)». Antes la fila parecía completa y no se sabía por qué no avanzaba.",
+    ],
+  },
+  {
     version: "62.5",
     cambios: [
       "El número de «Incompletos» cuenta las fichas que se ven en la sección: también a quien ya tiene sus datos pero su familia todavía no está cerrada (por ejemplo, un matrimonio sin foto de boda ni «No»). Antes solo contaba las de datos a medias, y podía salir sin número con fichas debajo.",

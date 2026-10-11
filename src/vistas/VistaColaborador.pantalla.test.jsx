@@ -116,6 +116,14 @@ describe("la pantalla del colaborador se puede dibujar", () => {
     expect(html).toMatch(/<button[^>]*>(<[^>]+>)*\s*Avisar/);
   });
 
+  // v62.6: con sus datos ya puestos, la fila dice en rojo qué le falta a
+  // su familia (aquí, Omar, que los tiene a medias).
+  it("quien ya tiene sus datos dice qué le falta a su familia", () => {
+    const html = abrirFormulario();
+    const veces = (html.match(/Faltan los datos de Pacheco, Omar/g) || []).length;
+    expect(veces, "en las filas de Lucía y Míriam, no en la de Omar").toBe(2);
+  });
+
   // Las rondas (él, v46.5): con datos a medias la fila solo lleva
   // "datos 0 de 6" y el nombre; ni pago ni check hasta completarlos.
   it("una fila con datos a medias enseña «datos N de M» y el nombre", () => {

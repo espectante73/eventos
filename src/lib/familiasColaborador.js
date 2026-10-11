@@ -3,24 +3,39 @@
 // acreditar van por unidad familiar, también quien viene solo (es su
 // propia familia). Aquí se arman esas familias; la pantalla las pinta.
 import { claveFamilia, importeEsperadoInvitado, pideDatosDeBoda } from "./invitados";
+import { nombreCompleto } from "./formato";
 
 // Un miembro: { id, nombre, apellido, anioNacimiento, anioBoda,
 // grupoFamiliar, rolFamiliar, datosCompletos, pagado, presente, esMio,
 // pagoPendienteHasta, plazosPago }.
 // Lo da la base (colaborador_mis_familias) o, al anfitrión, su lista.
 
-// ¿Está cerrada la recogida de datos de la familia? Todos con sus datos
-// obligatorios, ninguna ficha suya a medias y, si hay matrimonio, la foto
-// de boda o «No» (y con foto, su año: v58.2-58.4, en bloque).
-export function familiaCerrada(miembros, { fotosFamiliares = {}, fotosSinBoda = {}, incompletas = new Set() } = {}) {
-  if (!miembros.length) return false;
-  if (miembros.some((m) => !m.datosCompletos || (m.esMio && incompletas.has(m.id)))) return false;
+// Lo que le falta a la familia para cerrar la recogida de datos, en
+// palabras (v62.6): todos con sus datos obligatorios, ninguna ficha suya a
+// medias y, si hay matrimonio, la foto de boda o «No» (y con foto, su año:
+// v58.2-58.4, en bloque). La pantalla lo enseña bajo la fila de quien ya
+// tiene los suyos y no sabía por qué seguía en «Incompletos».
+export function faltaParaCerrar(miembros, { fotosFamiliares = {}, fotosSinBoda = {}, incompletas = new Set() } = {}) {
+  const falta = [];
+  const aMedias = miembros.filter((m) => !m.datosCompletos || (m.esMio && incompletas.has(m.id))).map(nombreCompleto);
+  if (aMedias.length) {
+    const quienes = aMedias.length === 1 ? aMedias[0] : `${aMedias.slice(0, -1).join("; ")} y ${aMedias.at(-1)}`;
+    falta.push(`Faltan los datos de ${quienes}`);
+  }
   const matrimonio = miembros.filter(pideDatosDeBoda);
-  if (!matrimonio.length) return true;
-  const grupo = miembros[0].grupoFamiliar || "";
-  const foto = fotosFamiliares[grupo];
-  if (!foto && !fotosSinBoda[grupo]) return false;
-  return !foto || matrimonio.every((m) => String(m.anioBoda || "").trim());
+  if (matrimonio.length) {
+    const grupo = miembros[0].grupoFamiliar || "";
+    const foto = fotosFamiliares[grupo];
+    if (!foto && !fotosSinBoda[grupo]) falta.push("Falta la foto de boda, o marcar «No»");
+    else if (foto && !matrimonio.every((m) => String(m.anioBoda || "").trim())) falta.push("Falta el año de boda");
+  }
+  return falta;
+}
+
+// ¿Está cerrada? Sale de lo mismo que lo que falta: nunca dicen cosas
+// distintas (norma 7).
+export function familiaCerrada(miembros, opciones) {
+  return miembros.length > 0 && faltaParaCerrar(miembros, opciones).length === 0;
 }
 
 // Las familias del colaborador, en orden alfabético. `etiqueta` es el
@@ -37,12 +52,14 @@ export function agruparFamilias(miembros, opciones = {}, evento) {
   const familias = [...porClave.entries()].map(([clave, lista]) => {
     const ordenados = [...lista].sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", "es"));
     const porPagar = ordenados.filter((m) => !m.pagado);
+    const falta = faltaParaCerrar(ordenados, opciones);
     return {
       clave,
       apellido: ordenados[0].apellido || clave,
       grupoFamiliar: ordenados[0].grupoFamiliar || "",
       miembros: ordenados,
-      cerrada: familiaCerrada(ordenados, opciones),
+      falta,
+      cerrada: falta.length === 0,
       porPagar,
       totalPorPagar: porPagar.reduce((s, m) => s + importeEsperadoInvitado(m, evento), 0),
       todosPagados: porPagar.length === 0,
