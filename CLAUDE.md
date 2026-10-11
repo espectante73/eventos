@@ -143,7 +143,8 @@ en la propuesta cuáles se han comprobado. Lo fuerza
      suelto deja más aire).
 5. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
    protagonista, y lo que se abre encima aclara el fondo con `VELO`: tras
-   una ventana que atender, todo; tras un menú, sus botones y un dedo. Los textos de ayuda, al pie y
+   una ventana que atender, todo; tras un menú, sus botones y un dedo
+   que se desvanece. Los textos de ayuda, al pie y
    plegados (`<details>`). Todo panel tiene su **salida ARRIBA y a la
    vista**, y salir deja la pantalla como estaba; un formulario acaba en
    **«Guardar» y «Cancelar»**.

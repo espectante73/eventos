@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "63.7",
+    cambios: [
+      "El velo de «Abrir sección…» ya no tiene el borde marcado, que parecía una caja pegada: se desvanece poco a poco a lo largo del margen, como un halo alrededor de los botones.",
+    ],
+  },
+  {
     version: "63.6",
     cambios: [
       "Al desplegar «Abrir sección…», el velo esmerilado ya no cubre toda la portada: solo queda detrás de los botones, con un margen del grosor de un dedo. El resto se sigue viendo nítido.",

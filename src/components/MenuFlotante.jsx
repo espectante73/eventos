@@ -343,7 +343,9 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
   const botonRef = useRef(null);
   const listaRef = useRef(null);
   // El velo, solo detrás de los botones y un dedo alrededor (él, v63.6: a
-  // pantalla entera era excesivo). Se mide el panel ya dibujado.
+  // pantalla entera era excesivo), desvaneciéndose a lo largo de ese dedo
+  // (v63.7: con el borde marcado parecía una caja pegada). Se mide el panel
+  // ya dibujado; junto al borde de la pantalla, el margen que quepa.
   const [marcoVelo, setMarcoVelo] = useState(null);
   useLayoutEffect(() => {
     if (!open || persistente || !pos || !listaRef.current) {
@@ -354,11 +356,21 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
     const { win } = realmDe(botonRef.current);
     const top = Math.max(0, r.top - DEDO);
     const left = Math.max(0, r.left - DEDO);
+    const derecha = Math.min(win.innerWidth, r.right + DEDO);
+    const abajo = Math.min(win.innerHeight, r.bottom + DEDO);
+    // Opaco donde están los botones, transparente en el borde del margen.
+    const fundido = (dir, inicio, fin) =>
+      `linear-gradient(${dir}, transparent, black ${inicio}px, black calc(100% - ${fin}px), transparent)`;
+    const mascara = `${fundido("to right", r.left - left, derecha - r.right)}, ${fundido("to bottom", r.top - top, abajo - r.bottom)}`;
     setMarcoVelo({
       top,
       left,
-      width: Math.min(win.innerWidth, r.right + DEDO) - left,
-      height: Math.min(win.innerHeight, r.bottom + DEDO) - top,
+      width: derecha - left,
+      height: abajo - top,
+      maskImage: mascara,
+      WebkitMaskImage: mascara,
+      maskComposite: "intersect",
+      WebkitMaskComposite: "source-in",
     });
   }, [open, pos, persistente]);
 
@@ -549,7 +561,7 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
           <>
           {/* El velo claro esmerilado detrás de los botones (él, v63.5-63.6).
               Tocarlo es tocar fuera: cierra. */}
-          {marcoVelo && <div data-velo-menu className="fixed rounded-3xl" style={{ ...marcoVelo, ...VELO, zIndex: 9998 }} />}
+          {marcoVelo && <div data-velo-menu className="fixed" style={{ ...marcoVelo, ...VELO, zIndex: 9998 }} />}
           <div
             ref={listaRef}
             data-menu-panel
