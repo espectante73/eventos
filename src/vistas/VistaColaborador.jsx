@@ -3,7 +3,7 @@
 // aviso al anfitrión al terminar). Movida tal cual desde App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
-import { Bell, Calendar, Check, ChevronDown, ClipboardList, Euro, Lock, Mail, Megaphone, Send, User, UserCog, X } from "lucide-react";
+import { AlertTriangle, Bell, Calendar, Check, ChevronDown, ChevronRight, ClipboardList, Euro, Lock, Mail, Megaphone, Send, User, UserCog, X } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
 import {
@@ -873,8 +873,15 @@ function FilaInvitadoColaborador({
           <span className="truncate" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
             {g.apellido}, {g.nombre}
           </span>
-          <span className="text-xs flex-shrink-0 ml-auto" style={{ color: C.gold }}>
-            {cerrada ? <Lock size={12} aria-label="Datos cerrados" /> : abierto ? "▾" : "▸"}
+          {/* Flechas dibujadas, del tamaño del candado (v62). */}
+          <span className="flex flex-shrink-0 ml-auto" style={{ color: C.gold }}>
+            {cerrada ? (
+              <Lock size={14} aria-label="Datos cerrados" />
+            ) : abierto ? (
+              <ChevronDown size={14} aria-label="Abierta" />
+            ) : (
+              <ChevronRight size={14} aria-label="Cerrada" />
+            )}
           </span>
         </button>
         {/* El check de llegada cierra la fila, SIEMPRE en la misma columna
@@ -1091,8 +1098,8 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
           <span className="text-xs flex-shrink-0" style={{ color: C.charcoal, opacity: OP.secundario }}>
             {familia.miembros.length}
           </span>
-          <span className="text-xs flex-shrink-0 ml-auto" style={{ color: C.gold }}>
-            {abierta ? "▾" : "▸"}
+          <span className="flex flex-shrink-0 ml-auto" style={{ color: C.gold }}>
+            {abierta ? <ChevronDown size={14} aria-label="Abierta" /> : <ChevronRight size={14} aria-label="Cerrada" />}
           </span>
         </button>
         {/* La llegada de la familia, en la misma columna que la de cada
@@ -1126,7 +1133,8 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
             fontWeight: estadoImpago(m).vencido ? 600 : undefined,
           }}
         >
-          <span className="truncate">⚠ {textoAvisoImpago(m)}</span>
+          <AlertTriangle size={14} style={{ flexShrink: 0 }} aria-hidden />
+          <span className="truncate">{textoAvisoImpago(m)}</span>
         </button>
       ))}
 

@@ -223,7 +223,8 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
 
       {panelFlotante === "avisosMesas" && (
         <ModalFlotante
-          titulo="⚠ Familias sin mesa completa"
+          titulo="Familias sin mesa completa"
+          iconoTitulo={AlertTriangle}
           colorTitulo={C.wax}
           onCerrar={() => setPanelFlotante(null)}
         >

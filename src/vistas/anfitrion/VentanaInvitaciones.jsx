@@ -24,6 +24,7 @@ import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { Boton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { avisoEnPantalla } from "../../lib/avisos";
+import { LineaAviso } from "../../components/LineaAviso";
 
 export function VentanaInvitaciones({
   data,
@@ -532,9 +533,9 @@ export function VentanaInvitaciones({
                       Se enviará a: {destinatario.nombre} — {destinatario.email}
                     </div>
                   ) : (
-                    <div className="text-xs" style={{ color: C.wax }}>
-                      ⚠ Sin email — esta familia se saltará
-                    </div>
+                    <LineaAviso className="text-xs">
+                      Sin email — esta familia se saltará
+                    </LineaAviso>
                   )}
                 </li>
               );

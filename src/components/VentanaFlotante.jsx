@@ -11,7 +11,8 @@ import { C, S } from "../theme";
 // `ancho`: ancho máximo de la caja. 720 es el de siempre y sirve para
 // formularios y listas; el visor del mapa pide más sitio porque enseña
 // una imagen apaisada (ver MapaSitio.jsx).
-export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitulo, ancho = 720 }) {
+// `iconoTitulo`: un icono delante del título (el triángulo de un aviso, v62).
+export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720 }) {
   const hayCuerpo = Children.toArray(children).some((c) => c !== "");
   useEffect(() => {
     const onKey = (e) => {
@@ -59,9 +60,10 @@ export function ModalFlotante({ titulo, onCerrar, children, acciones, colorTitul
           style={{ borderBottom: "none" }}
         >
           <h3
-            className="text-lg"
+            className="text-lg flex items-center gap-2"
             style={{ fontFamily: "'Fraunces', serif", color: colorTitulo || C.goldClaro, fontWeight: 700 }}
           >
+            {IconoTitulo && <IconoTitulo size={18} style={{ flexShrink: 0 }} aria-hidden />}
             {titulo}
           </h3>
           <button onClick={onCerrar} title="Cerrar" aria-label="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>

@@ -37,6 +37,7 @@ import {
 } from "../../lib/fotosAlmacen";
 import { crearZip } from "../../lib/zip";
 import { descargarBlob } from "../../lib/descargas";
+import { LineaAviso } from "../../components/LineaAviso";
 
 // Aire entre las dos columnas, con un adorno en medio (ver Separador).
 const SEPARACION_COLUMNAS = 44;
@@ -309,9 +310,10 @@ export function VentanaAniversarios({ data, onCerrar }) {
       )}
 
       {error && (
-        <p className="text-xs mb-2" style={{ color: C.avisoFondo }}>
-          ⚠ {error}
-        </p>
+        // Rosa claro: el cuerpo de esta ventana es verde oscuro.
+        <LineaAviso className="text-xs mb-2" style={{ color: C.avisoFondo }}>
+          {error}
+        </LineaAviso>
       )}
 
       {matrimonios.length === 0 && (

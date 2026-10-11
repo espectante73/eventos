@@ -13,7 +13,7 @@
 // tiene por la imagen de cabecera).
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { C, R, OP, S, T } from "../theme";
 import { esZurdo } from "../lib/mano";
 import { Seal } from "./Widgets";
@@ -234,6 +234,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
           }}
         >
           {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
+          {opcion.marcado && <Check size={15} style={{ flexShrink: 0 }} aria-label="abierta" />}
           {opcion.etiqueta}
           <SelloFila count={opcion.sello} />
         </button>
@@ -308,6 +309,8 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
       }}
     >
       {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
+      {/* `marcado`: lo que ya está abierto, con el visto dibujado (v62). */}
+      {opcion.marcado && <Check size={15} style={{ flexShrink: 0 }} aria-label="abierta" />}
       <span>{opcion.etiqueta}</span>
       <SelloFila count={opcion.sello} />
     </button>

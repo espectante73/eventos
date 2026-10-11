@@ -10,7 +10,7 @@
 // la monta ANTES de tocar nada de sesión/login en cuanto detecta
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause } from "lucide-react";
+import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause, ArrowLeft } from "lucide-react";
 import { C, inputStyle, OP, S } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, valorFechaEvento } from "../lib/formato";
@@ -380,8 +380,9 @@ export function VistaTablon({ token }) {
         </div>
 
         <div className="flex items-center gap-2 mb-4">
-          <a href="/" className="text-xs underline" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            ← Volver a la web
+          <a href="/" className="text-xs underline inline-flex items-center gap-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
+            <ArrowLeft size={13} aria-hidden />
+            Volver a la web
           </a>
         </div>
 

@@ -16,6 +16,7 @@ import { emailValido } from "../../lib/validacion";
 import { euros } from "../../lib/formato";
 import { Boton, estilosBoton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
+import { LineaAviso } from "../../components/LineaAviso";
 
 // Miniatura que WhatsApp/Facebook muestran al pegar cualquier enlace de
 // esta web (login, tablón...) -- a petición del usuario, 2026-08-25. Es
@@ -370,9 +371,9 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
             />
           </Field>
           {evento.emailAnfitrion && !emailValido(evento.emailAnfitrion) && (
-            <p className="text-xs mt-1" style={{ color: C.wax }}>
-              ⚠ No parece un email válido — revísalo, o te quedarás sin avisos sin que nadie lo note.
-            </p>
+            <LineaAviso className="text-xs mt-1">
+              No parece un email válido — revísalo, o te quedarás sin avisos sin que nadie lo note.
+            </LineaAviso>
           )}
         </SeccionPlegable>
 
@@ -410,11 +411,11 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
             Es lo que lee el invitado al pulsar «{TITULO_NOTA_PRIVACIDAD}» al pie del tablón.
             Admite HTML sencillo, o usa los botones de formato. Se guarda al salir del campo.
           </p>
-          <p className="text-xs mb-2" style={{ color: C.wax }}>
-            ⚠ Si cambias lo que aquí se promete (los 3 meses, la autorización para guardar los
+          <LineaAviso className="text-xs mb-2">
+            Si cambias lo que aquí se promete (los 3 meses, la autorización para guardar los
             datos, el borrado de una foto ya entregada), acuérdate de que la app tiene que poder
             cumplirlo: eso no se ajusta solo.
-          </p>
+          </LineaAviso>
           <TextoEditableEvento
             label="Texto de la nota"
             valor={evento.notaPrivacidad || NOTA_PRIVACIDAD_POR_DEFECTO}

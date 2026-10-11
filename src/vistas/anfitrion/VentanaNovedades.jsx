@@ -23,6 +23,7 @@ import { BotonHistorial } from "../../components/HistorialTexto";
 import { FondoMusicalTablon } from "../../components/FondoMusicalTablon";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar } from "../../components/PreguntaSeguridad";
+import { LineaAviso } from "../../components/LineaAviso";
 
 // Añade "prefijo" al principio de cada línea tocada por la selección
 // actual (o solo la línea del cursor, si no hay nada seleccionado) --
@@ -509,9 +510,9 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
           />
         </div>
         {errorPregunta && (
-          <p className="text-xs" style={{ color: C.wax }}>
-            ⚠ {errorPregunta}
-          </p>
+          <LineaAviso className="text-xs">
+            {errorPregunta}
+          </LineaAviso>
         )}
         {accesosTablonSospechosos.length > 0 && (
           <div className="flex items-start gap-2 p-2 rounded text-xs" style={{ background: C.avisoFondo, color: C.peligro }}>

@@ -642,7 +642,8 @@ export function SeccionInvitados({
       // lista ocupaba sitio siempre. El número va en la etiqueta para
       // que un fallo se vea sin tener que abrir el menú -- si no, un
       // informe escondido es un informe que nadie mira.
-      etiqueta: (mostrarRevision ? "✓ " : "") + "Revisión" + (erroresRevision ? ` (${erroresRevision})` : ""),
+      etiqueta: "Revisión" + (erroresRevision ? ` (${erroresRevision})` : ""),
+      marcado: mostrarRevision,
       icono: ClipboardCheck,
       ...(erroresRevision ? { fondo: C.peligro, color: "#fff" } : {}),
       onClick: () => (mostrarRevision ? cerrarRevision() : abrirRevision()),
@@ -663,19 +664,22 @@ export function SeccionInvitados({
       : []),
     {
       id: "anadir",
-      etiqueta: (mostrarAnadir ? "✓ " : "") + "Añadir invitado",
+      etiqueta: "Añadir invitado",
+      marcado: mostrarAnadir,
       icono: Plus,
       onClick: () => setMostrarAnadir((v) => !v),
     },
     {
       id: "editar",
-      etiqueta: (modoEdicion ? "✓ " : "") + (modoEdicion ? "Terminar edición" : "Editar"),
+      etiqueta: modoEdicion ? "Terminar edición" : "Editar",
+      marcado: modoEdicion,
       icono: Pencil,
       onClick: () => setModoEdicion((v) => !v),
     },
     {
       id: "importar",
-      etiqueta: (mostrarImport ? "✓ " : "") + "Importar",
+      etiqueta: "Importar",
+      marcado: mostrarImport,
       icono: Copy,
       onClick: () => setMostrarImport((v) => !v),
     },
@@ -1726,9 +1730,10 @@ export function SeccionInvitados({
                       !colaboradores.find((c) => c.id === g.colaboradorId)?.email && (
                         <span
                           title="Este colaborador no tiene email guardado — no recibirá el aviso de esta asignación"
+                          className="flex"
                           style={{ color: C.wax, flexShrink: 0 }}
                         >
-                          ⚠
+                          <AlertTriangle size={14} aria-label="Sin email" />
                         </span>
                       )}
                   </span>
@@ -1970,8 +1975,9 @@ export function SeccionInvitados({
               ? "Lista de invitados"
               : panelFlotante === "canciones"
               ? `Canciones para bailar — ${evento.nombre || "Evento"}`
-              : `⚠ Alergias — ${evento.nombre || "Evento"}`
+              : `Alergias — ${evento.nombre || "Evento"}`
           }
+          iconoTitulo={panelFlotante === "alergias" ? AlertTriangle : undefined}
           colorTitulo={panelFlotante === "alergias" ? C.wax : C.ink}
           onCerrar={() => setPanelFlotante(null)}
           acciones={

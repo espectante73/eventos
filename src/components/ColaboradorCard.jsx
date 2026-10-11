@@ -12,6 +12,7 @@ import { Seal, GrupoFamiliarInput } from "./Widgets";
 import { BuscadorInvitado } from "./BuscadorInvitado";
 import { Boton } from "./Boton";
 import { BotonQuitar } from "./PreguntaSeguridad";
+import { LineaAviso } from "./LineaAviso";
 
 export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin, onConfirmarEmailActualizado, onAvisar }) {
   const [relevando, setRelevando] = useState(false);
@@ -181,10 +182,10 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
         )}
       </div>
       {c.email && !emailValido(c.email) && (
-        <p className="text-xs mt-1" style={{ color: C.wax }}>
-          ⚠ No parece un email válido — revísalo antes de que este colaborador se quede sin
+        <LineaAviso className="text-xs mt-1">
+          No parece un email válido — revísalo antes de que este colaborador se quede sin
           avisos sin que nadie lo note.
-        </p>
+        </LineaAviso>
       )}
 
       {/* "Avisar ahora" vivía en la ventana Avisos, en una lista aparte de
@@ -227,24 +228,24 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
         </div>
       )}
       {resultadoPrueba === "ok" && (
-        <p className="text-xs mt-1" style={{ color: C.ink }}>
-          ✓ Email de prueba enviado — confirma con el colaborador que le ha llegado.
-        </p>
+        <LineaAviso tipo="ok" className="text-xs mt-1">
+          Email de prueba enviado — confirma con el colaborador que le ha llegado.
+        </LineaAviso>
       )}
       {resultadoPrueba === "error" && (
-        <p className="text-xs mt-1" style={{ color: C.wax }}>
-          ⚠ No se pudo enviar el email de prueba. Mira "Avisos enviados" o los logs de Resend.
-        </p>
+        <LineaAviso className="text-xs mt-1">
+          No se pudo enviar el email de prueba. Mira "Avisos enviados" o los logs de Resend.
+        </LineaAviso>
       )}
       {resultadoInvitacion === "ok" && (
-        <p className="text-xs mt-1" style={{ color: C.ink }}>
-          ✓ Invitación de acceso enviada — confirma con el colaborador que le ha llegado.
-        </p>
+        <LineaAviso tipo="ok" className="text-xs mt-1">
+          Invitación de acceso enviada — confirma con el colaborador que le ha llegado.
+        </LineaAviso>
       )}
       {resultadoInvitacion === "error" && (
-        <p className="text-xs mt-1" style={{ color: C.wax }}>
-          ⚠ No se pudo enviar la invitación de acceso. Mira "Avisos enviados" o los logs de Resend.
-        </p>
+        <LineaAviso className="text-xs mt-1">
+          No se pudo enviar la invitación de acceso. Mira "Avisos enviados" o los logs de Resend.
+        </LineaAviso>
       )}
         </>
       )}

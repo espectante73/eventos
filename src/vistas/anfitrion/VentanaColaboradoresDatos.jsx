@@ -15,7 +15,7 @@
 // historial viven ahora aquí; lo de invitaciones se quedó donde ya
 // estaba y Avisos desapareció del menú.
 import { useState } from "react";
-import { Plus, Mail, DoorOpen, DoorClosed } from "lucide-react";
+import { Plus, Mail, DoorOpen, DoorClosed, Check, X, CircleHelp } from "lucide-react";
 import { C, OP } from "../../theme";
 import { uid } from "../../lib/id";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
@@ -296,7 +296,9 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
                 <EncabezadoOrdenable columna="fecha" orden={ordenAvisos} onClick={cambiarOrdenAvisos}>
                   Fecha
                 </EncabezadoOrdenable>
-                <span title="¿Resend confirmó el envío?" style={{ color: C.gold }}>✓?</span>
+                <span title="¿Resend confirmó el envío?" className="flex" style={{ color: C.gold }}>
+                  <CircleHelp size={14} aria-label="¿Confirmado?" />
+                </span>
                 <EncabezadoOrdenable columna="tipo" orden={ordenAvisos} onClick={cambiarOrdenAvisos}>
                   Tipo
                 </EncabezadoOrdenable>
@@ -323,9 +325,16 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
                           ? "Resend lo rechazó — revisa la clave o el remitente"
                           : "Todavía sin confirmar (se comprueba solo cada minuto)"
                       }
+                      className="flex"
                       style={{ color: a.exito === true ? C.ink : a.exito === false ? C.wax : C.line }}
                     >
-                      {a.exito === true ? "✓" : a.exito === false ? "✗" : "?"}
+                      {a.exito === true ? (
+                        <Check size={14} aria-label="Aceptado" />
+                      ) : a.exito === false ? (
+                        <X size={14} aria-label="Rechazado" />
+                      ) : (
+                        <CircleHelp size={14} aria-label="Sin confirmar" />
+                      )}
                     </span>
                     <span style={{ color: C.charcoal, opacity: OP.secundario }}>
                       {ETIQUETA_TIPO_AVISO[a.tipo] || a.tipo}

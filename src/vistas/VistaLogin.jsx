@@ -31,6 +31,7 @@ import { emailValido } from "../lib/validacion";
 import { Boton, EnlaceTexto } from "../components/Boton";
 import { CampoContrasena } from "../components/CampoContrasena";
 import { errorDelEnlace, limpiarErrorDelEnlace, esCorreoSinConfirmar } from "../lib/enlaceAuth";
+import { LineaAviso } from "../components/LineaAviso";
 
 const TITULOS = { entrar: "Entrar", crear: "Crear cuenta", recuperar: "Recuperar contraseña" };
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
@@ -275,13 +276,13 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
             Te hemos enviado un correo a <b style={{ color: C.ink }}>{cuentaCreada}</b>. Ábrelo y
             pulsa el enlace para confirmarla.
           </p>
-          <p
+          <LineaAviso
             className="text-sm mb-4 p-3 rounded"
-            style={{ color: C.wax, background: C.avisoFondo, border: `1px solid ${C.wax}`, lineHeight: 1.5 }}
+            style={{ background: C.avisoFondo, border: `1px solid ${C.wax}`, lineHeight: 1.5 }}
           >
-            ⚠ <b>Mira en la carpeta de spam</b>: el primer correo suele caer ahí. Márcalo como
+            <b>Mira en la carpeta de spam</b>: el primer correo suele caer ahí. Márcalo como
             “No es spam” y así los siguientes te llegarán bien.
-          </p>
+          </LineaAviso>
           <p className="text-sm mb-4" style={{ color: C.charcoal, lineHeight: 1.5 }}>
             Cuando lo hayas confirmado, vuelve aquí y entra con tu contraseña.
           </p>
@@ -316,10 +317,10 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
             </p>
             {/* Avisado ANTES de crear la cuenta, no solo después: así se
                 sabe que hay que ir a buscarlo (usuario, 2026-09-23). */}
-            <p className="text-xs mb-3" style={{ color: C.wax }}>
-              ⚠ Después te llegará un correo para confirmar la cuenta. Suele caer en spam:
+            <LineaAviso className="text-xs mb-3">
+              Después te llegará un correo para confirmar la cuenta. Suele caer en spam:
               míralo ahí si no lo ves.
-            </p>
+            </LineaAviso>
           </>
         )}
         {modo === "recuperar" && (
@@ -349,9 +350,9 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
             muestra o no, para que el hueco antes del siguiente campo
             sea el mismo en los dos casos. */}
         {email && !emailValido(email) ? (
-          <p className="text-xs mb-2" style={{ color: C.wax }}>
-            ⚠ No parece un email válido.
-          </p>
+          <LineaAviso className="text-xs mb-2">
+            No parece un email válido.
+          </LineaAviso>
         ) : (
           <div className="mb-2" />
         )}

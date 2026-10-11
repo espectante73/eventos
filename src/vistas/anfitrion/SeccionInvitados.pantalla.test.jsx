@@ -257,7 +257,7 @@ describe("las Acciones de Invitados, en su panel", () => {
     expect(cerrarPanel()).toBeTruthy();
     vista.pulsar(botones().find((b) => b.textContent.trim() === "Añadir invitado"));
     expect(cerrarPanel(), "elegir una opción no cierra el panel").toBeTruthy();
-    expect(botones().some((b) => b.textContent.trim() === "✓ Añadir invitado")).toBe(true);
+    expect(botones().some((b) => b.textContent.trim() === "Añadir invitado" && b.querySelector('[aria-label="abierta"]'))).toBe(true);
     vista.pulsar(cerrarPanel());
     expect(cerrarPanel()).toBeFalsy();
     expect(cerrada).toBe(false);

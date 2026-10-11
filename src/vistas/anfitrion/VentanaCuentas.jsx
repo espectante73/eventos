@@ -4,7 +4,7 @@
 // balance. Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08
 // (Fase 4, Ronda 4).
 import { useState } from "react";
-import { Plus, Mail, Undo2, Calculator, Users, Receipt } from "lucide-react";
+import { Plus, Mail, Undo2, Calculator, Users, Receipt, Check } from "lucide-react";
 import { C, T, OP } from "../../theme";
 import { importeEsperadoInvitado, resolverColaborador } from "../../lib/invitados";
 import { parsePrecio, formatearFecha, ordenarPorApellidoNombre, euros } from "../../lib/formato";
@@ -304,10 +304,11 @@ export function VentanaCuentas({ data, onCerrar }) {
                 ) : recogido ? (
                   <>
                     <span
-                      className="text-xs px-2 py-1 rounded"
+                      className="text-xs px-2 py-1 rounded inline-flex items-center gap-1"
                       style={{ background: "#E3E9AE", color: C.ink }}
                     >
-                      ✓ Recogido {euros(c.dineroRecogidoImporte || 0)} el{" "}
+                      <Check size={13} style={{ flexShrink: 0 }} aria-hidden />
+                      Recogido {euros(c.dineroRecogidoImporte || 0)} el{" "}
                       {formatearFecha(String(c.dineroRecogidoEn).slice(0, 10))}
                     </span>
                     <Boton variante="secundario" tamano="pequeno" onClick={() => reenviarAcuse(c)} disabled={enviandoId === c.id || !c.email} titulo="Reenviar el acuse por email otra vez">

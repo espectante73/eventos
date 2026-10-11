@@ -16,6 +16,7 @@ import { C, OP } from "../theme";
 import { supabase } from "../supabaseClient";
 import { estilosBoton } from "./Boton";
 import { BotonQuitar } from "./PreguntaSeguridad";
+import { LineaAviso } from "./LineaAviso";
 
 const BUCKET = "musica-ambiental";
 
@@ -83,9 +84,9 @@ export function FondoMusicalTablon() {
       </label>
 
       {error && (
-        <p className="text-xs mb-2" style={{ color: C.wax }}>
-          ⚠ {error}
-        </p>
+        <LineaAviso className="text-xs mb-2">
+          {error}
+        </LineaAviso>
       )}
 
       {pistas === null ? (

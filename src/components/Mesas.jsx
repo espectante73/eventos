@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { C, inputStyle, T, OP } from "../theme";
 import { Boton } from "./Boton";
 import { BotonQuitar, usePreguntaSeguridad } from "./PreguntaSeguridad";
+import { LineaAviso } from "./LineaAviso";
 
 // Mesa redonda con sillas alrededor (número de sillas = capacidad, con un
 // máximo visual para no amontonarlas si la capacidad es muy alta). El
@@ -89,9 +90,9 @@ export function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapaci
         {ocupados}/{m.capacidad}
       </div>
       {tieneAlergias && (
-        <div className="text-xs" style={{ color: C.wax, fontWeight: 700 }}>
-          ⚠ alergias
-        </div>
+        <LineaAviso className="text-xs" style={{ fontWeight: 700 }}>
+          alergias
+        </LineaAviso>
       )}
       {onVaciar && ocupados > 0 && (
         <Boton

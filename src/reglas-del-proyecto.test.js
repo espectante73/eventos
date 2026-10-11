@@ -41,6 +41,24 @@ describe("los importes, todos con euros()", () => {
   });
 });
 
+// Iconos dibujados, no símbolos de teclado (v62): junto a los de la app se
+// veían de otro tamaño y grosor. Avisos con LineaAviso; títulos, iconoTitulo;
+// menús, `marcado`. (Novedades de versión cuenta la historia: fuera.)
+describe("iconos: los dibujados, no ⚠ ✓ ✗ ▸ ▾", () => {
+  it("ningún símbolo de teclado en lo que se ve", () => {
+    const simbolos = /[⚠✓✗✕▸▾]/;
+    const fuera = archivos
+      .filter((r) => !r.endsWith("VentanaVersiones.jsx"))
+      .flatMap((r) =>
+        sinComentarios(leer(r).replace(/\/\*[\s\S]*?\*\//g, ""))
+          .split("\n")
+          .filter((l) => simbolos.test(l))
+          .map((l) => `${r}: ${l.trim()}`)
+      );
+    expect(fuera).toEqual([]);
+  });
+});
+
 // Norma 9 (él, v59.1): las preguntas se responden «Sí» / «No». Solo lo que
 // borra para siempre lleva verbo, para no borrar por un «Sí» con prisas.
 describe("norma 9: «Sí» / «No», con verbo solo lo que borra para siempre", () => {

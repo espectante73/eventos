@@ -132,7 +132,8 @@ export function DesplegableSecciones({
         submenu: [
           {
             id: "colaboradores-datos",
-            etiqueta: (abierto["colaboradores-datos"] ? "✓ " : "") + "Datos Colab.",
+            etiqueta: "Datos Colab.",
+            marcado: Boolean(abierto["colaboradores-datos"]),
             icono: UserCog,
             onClick: () => toggle("colaboradores-datos"),
           },
@@ -163,14 +164,15 @@ export function DesplegableSecciones({
         // "Cronograma" abre una ventana de verdad del sistema operativo
         // (ver lib/usePopupWindow.js), igual que Novedades/Logística --
         // a petición del usuario, 2026-08-29. Por eso no pasa por
-        // "toggle(s.id)" ni lleva el prefijo "✓ " (mismo motivo: no hay
+        // "toggle(s.id)" ni lleva el visto de abierta (mismo motivo: no hay
         // estado fiable de "sigue abierta" que reflejar aquí).
         submenu: SUBMENU_CONFIGURACION.map((s) =>
           s.id === "config-cronograma"
             ? { id: s.id, etiqueta: s.etiqueta, icono: s.icono, onClick: abrirCronograma }
             : {
                 id: s.id,
-                etiqueta: (abierto[s.id] ? "✓ " : "") + s.etiqueta,
+                etiqueta: s.etiqueta,
+                marcado: Boolean(abierto[s.id]),
                 icono: s.icono,
                 color: s.color,
                 fondo: s.fondo,
@@ -181,7 +183,8 @@ export function DesplegableSecciones({
     }
     return {
       id: clave,
-      etiqueta: (abierto[clave] ? "✓ " : "") + ETIQUETAS_VENTANAS[clave],
+      etiqueta: ETIQUETAS_VENTANAS[clave],
+      marcado: Boolean(abierto[clave]),
       icono: ICONOS_VENTANAS[clave],
       onClick: () => toggle(clave),
     };

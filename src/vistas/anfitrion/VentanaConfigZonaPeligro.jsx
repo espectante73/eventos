@@ -8,6 +8,7 @@ import { AvisoDeshacer } from "../../components/AvisoDeshacer";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
+import { LineaAviso } from "../../components/LineaAviso";
 
 export function VentanaConfigZonaPeligro({ data, onCerrar }) {
   const {
@@ -107,12 +108,12 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
   return (
     <VentanaFlotante clave="config-zona-peligro" titulo="Borrado total" onCerrar={onCerrar}>
       <AvisoDeshacer data={data} />
-      <p className="text-xs mb-2" style={{ color: C.wax, fontWeight: 700 }}>
-        ⚠ Zona de peligro: esto borra evento, colaboradores, invitados, mesas y fotos —
+      <LineaAviso className="text-xs mb-2" style={{ fontWeight: 700 }}>
+        Zona de peligro: esto borra evento, colaboradores, invitados, mesas y fotos —
         todo el contenido de la aplicación. Antes se guarda una copia: si te
         equivocas, pulsa «Deshacer» en esta misma ventana (solo se guarda la
         última acción).
-      </p>
+      </LineaAviso>
       {conAutorizacion.length > 0 && (
         <p className="text-xs mb-2" style={{ color: C.charcoal }}>
           Se quedarán <b>{conAutorizacion.length}</b>{" "}

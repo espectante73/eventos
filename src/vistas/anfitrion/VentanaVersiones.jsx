@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "62",
+    cambios: [
+      "Aspecto más profesional, 1.ª parte: los símbolos de teclado (⚠, ✓, ▸, ▾, ✗) se cambian por iconos dibujados, los mismos del resto de la app. Los avisos llevan su triángulo o su visto delante, el menú marca lo que está abierto con un visto, y las filas del formulario llevan flechas del tamaño del candado.",
+    ],
+  },
+  {
     version: "61.4",
     cambios: [
       "Todos los importes de la app se escriben igual, como en España: «47 €», y con coma solo si hay céntimos, «47,50 €». Antes convivían tres formatos («€ 141.00», «47,00 €» y «47 €»). También en el acuse de recibo y en Cuentas.",

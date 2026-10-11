@@ -230,7 +230,7 @@ describe("el pago y la llegada, por familias (v60)", () => {
   it("tocar el nombre abre la familia; su miembro abre su ficha y el de otro colaborador solo se ve", async () => {
     const { vista } = montarRuiz();
     await act(async () => {});
-    const nombreFamilia = botones().find((b) => b.textContent.startsWith("Ruiz") && b.textContent.includes("▸"));
+    const nombreFamilia = botones().find((b) => b.textContent.startsWith("Ruiz") && b.querySelector("[aria-label=\"Cerrada\"]"));
     await pulsarAsync(nombreFamilia);
     expect(document.body.textContent).toContain("Ruiz, Luis");
     expect(botones().some((b) => b.textContent.includes("Ruiz, Luis"))).toBe(false);

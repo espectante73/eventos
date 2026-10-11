@@ -32,6 +32,7 @@ import { URL_REGISTRO_ERRORES } from "../constants";
 import { useMano, MANO } from "../lib/mano";
 import { hayQueRepasar } from "../lib/manual";
 import selloManual from "../lib/manual-sello.json";
+import { LineaAviso } from "./LineaAviso";
 
 // `onCerrarSesion`/`enlaceTablon`: antes eran botones sueltos junto a
 // este en la cabecera de Portada.jsx -- a petición del usuario,
@@ -354,10 +355,9 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               required
             />
             {avisoContrasena && (
-              <p className="text-xs mb-2" style={{ color: avisoContrasena.tipo === "ok" ? C.ink : C.wax }}>
-                {avisoContrasena.tipo === "ok" ? "✓ " : "⚠ "}
+              <LineaAviso tipo={avisoContrasena.tipo === "ok" ? "ok" : "error"} className="text-xs mb-2">
                 {avisoContrasena.texto}
-              </p>
+              </LineaAviso>
             )}
             <div className="flex justify-end zurdo:justify-start">
             <button type="submit" disabled={guardandoContrasena} className={CLASE_BOTON_INICIO} style={{ ...ESTILO_BOTON_INICIO, opacity: guardandoContrasena ? OP.secundario : 1 }}>
@@ -381,10 +381,9 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
               required
             />
             {avisoEmail && (
-              <p className="text-xs mb-2" style={{ color: avisoEmail.tipo === "ok" ? C.ink : C.wax }}>
-                {avisoEmail.tipo === "ok" ? "✓ " : "⚠ "}
+              <LineaAviso tipo={avisoEmail.tipo === "ok" ? "ok" : "error"} className="text-xs mb-2">
                 {avisoEmail.texto}
-              </p>
+              </LineaAviso>
             )}
             <div className="flex justify-end zurdo:justify-start">
             <button type="submit" disabled={guardandoEmail} className={CLASE_BOTON_INICIO} style={{ ...ESTILO_BOTON_INICIO, opacity: guardandoEmail ? OP.secundario : 1 }}>
