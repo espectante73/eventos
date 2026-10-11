@@ -255,9 +255,9 @@ describe("las Acciones de Invitados, en su panel", () => {
     vista.pulsar(botones().find((b) => b.textContent.includes("Acciones")));
     const cerrarPanel = () => botones().find((b) => b.getAttribute("aria-label") === "Cerrar Acciones");
     expect(cerrarPanel()).toBeTruthy();
-    vista.pulsar(botones().find((b) => b.textContent.trim() === "Añadir invitado"));
+    vista.pulsar(botones().find((b) => b.textContent.trim() === "Añadir"));
     expect(cerrarPanel(), "elegir una opción no cierra el panel").toBeTruthy();
-    expect(botones().some((b) => b.textContent.trim() === "Añadir invitado" && b.getAttribute("aria-pressed") === "true")).toBe(true);
+    expect(botones().some((b) => b.textContent.trim() === "Añadir" && b.getAttribute("aria-pressed") === "true")).toBe(true);
     vista.pulsar(cerrarPanel());
     expect(cerrarPanel()).toBeFalsy();
     expect(cerrada).toBe(false);

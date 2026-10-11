@@ -665,7 +665,7 @@ export function SeccionInvitados({
       : []),
     {
       id: "anadir",
-      etiqueta: "Añadir invitado",
+      etiqueta: "Añadir",
       marcado: mostrarAnadir,
       // La persona con «+», no el «+» suelto: el «+» ocupa menos de su
       // cuadrado y dejaba más hueco hasta el texto que los demás (v62.2).
