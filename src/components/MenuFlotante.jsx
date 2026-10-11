@@ -299,7 +299,8 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
       style={{
         color: opcion.marcado ? C.ink : opcion.color || C.goldClaro,
         ...(opcion.fondo ? { background: opcion.fondo } : {}),
-        ...(opcion.marcado ? { background: DORADO.fondo, fontWeight: 600 } : {}),
+        // Solo el color: en negrita el texto se ensancha y llega al borde.
+        ...(opcion.marcado ? { background: DORADO.fondo } : {}),
         margin: "5px 6px",
         width: "calc(100% - 12px)",
         borderRadius: R.redondo,

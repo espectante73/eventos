@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "62.2",
+    cambios: [
+      "«Añadir invitado», en «Acciones»: el icono es ahora una persona con «+», que deja el mismo hueco hasta el texto que los demás (el «+» suelto dejaba más). Y al estar abierta, la opción solo cambia de color, sin negrita, para que el texto no llegue al borde.",
+    ],
+  },
+  {
     version: "62.1",
     cambios: [
       "En los menús («Acciones», «Abrir sección…»), lo que está abierto ya no lleva un visto añadido que sacaba el texto del botón: se pinta en dorado con la letra verde.",

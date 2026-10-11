@@ -20,6 +20,7 @@ import {
   Music,
   AlertTriangle,
   Plus,
+  UserPlus,
   Pencil,
   Copy,
   Printer,
@@ -666,7 +667,9 @@ export function SeccionInvitados({
       id: "anadir",
       etiqueta: "Añadir invitado",
       marcado: mostrarAnadir,
-      icono: Plus,
+      // La persona con «+», no el «+» suelto: el «+» ocupa menos de su
+      // cuadrado y dejaba más hueco hasta el texto que los demás (v62.2).
+      icono: UserPlus,
       onClick: () => setMostrarAnadir((v) => !v),
     },
     {
