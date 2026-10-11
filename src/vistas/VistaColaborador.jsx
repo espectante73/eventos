@@ -3,27 +3,14 @@
 // aviso al anfitrión al terminar). Movida tal cual desde App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
-import { AlertTriangle, Bell, Calendar, Check, ChevronDown, ChevronRight, ClipboardList, Euro, Lock, Mail, Megaphone, Send, User, UserCog, X } from "lucide-react";
+import { Bell, Calendar, Check, ChevronDown, ChevronRight, ClipboardList, Euro, Lock, Mail, Megaphone, Send, User, UserCog, X } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
-import {
-  datosCompletos,
-  pideDatosDeBoda,
-  esMenorDeEdad,
-  estadoDatos,
-  familiasSinEmail,
-  emailObligatorio,
-  faltanObligatorios,
-  fichasIncompletasDe,
-  claveFamilia,
-  importeEsperadoInvitado,
-  resolverColaborador,
-  fichaCerradaAlColaborador,
-} from "../lib/invitados";
-import { ordenarPorApellidoNombre, nombreCompleto, euros } from "../lib/formato";
+import { datosCompletos, pideDatosDeBoda, esMenorDeEdad, estadoDatos, familiasSinEmail, emailObligatorio, faltanObligatorios, fichasIncompletasDe, claveFamilia, importeEsperadoInvitado, resolverColaborador, fichaCerradaAlColaborador, comoColaborador } from "../lib/invitados";
+import { ordenarPorApellidoNombre, nombreCompleto, euros, fechaCorta } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
-import { estadoImpago, textoAvisoImpago, fechaCorta, PLAZOS_MAX } from "../lib/impagos";
+import { estadoImpago, textoAvisoImpago, PLAZOS_MAX } from "../lib/impagos";
 import { marcarSinGuardar, haySinGuardar, PREGUNTA_DESCARTAR } from "../lib/cambiosSinGuardar";
 import { requisitosActivos } from "../lib/modoPruebas";
 import { construirEnlaceTablon } from "../lib/url";
@@ -49,6 +36,7 @@ import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
 import { VentanaInvitacionesColaborador } from "./VentanaInvitacionesColaborador";
+import { LineaAvisoFila } from "../components/LineaAviso";
 
 // ---------- Colaborador view ----------
 
@@ -919,7 +907,7 @@ function FilaInvitadoColaborador({
         </button>
         )}
       </div>
-      {!abierto && !faltanDatos && faltaFamilia.map((texto) => <LineaAvisoFila key={texto}>{texto}</LineaAvisoFila>)}
+      {!abierto && !faltanDatos && faltaFamilia.map((texto) => <LineaAvisoFila key={texto} alto={ALTO_BOTON_FILA}>{texto}</LineaAvisoFila>)}
       {abierto && (
         // Verde detrás de la tarjeta dorada, misma idea que el cuerpo de la
         // ventana Aniversarios.
@@ -940,28 +928,6 @@ function FilaInvitadoColaborador({
         </div>
       )}
       {ventanaPregunta}
-    </div>
-  );
-}
-
-// Una línea de aviso bajo una fila (el pago pendiente, lo que le falta a la
-// familia): a todo el ancho, en rosa y en una sola línea (norma 6). Con
-// `onClick` se puede tocar; `fuerte`, en negrita (vencido).
-function LineaAvisoFila({ children, onClick, fuerte }) {
-  const estilo = { background: C.avisoFondo, color: C.peligro, height: ALTO_BOTON_FILA, fontWeight: fuerte ? 600 : undefined };
-  const dentro = (
-    <>
-      <AlertTriangle size={14} style={{ flexShrink: 0 }} aria-hidden />
-      <span className="truncate">{children}</span>
-    </>
-  );
-  return onClick ? (
-    <button onClick={onClick} className="boton-3d flex items-center gap-2 w-full px-3 text-xs text-left" style={estilo}>
-      {dentro}
-    </button>
-  ) : (
-    <div className="flex items-center gap-2 px-3 text-xs" style={estilo}>
-      {dentro}
     </div>
   );
 }
@@ -1148,7 +1114,7 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
 
       {impagos.map((m) => (
         // Vencido, en negrita: hay que volver a preguntar.
-        <LineaAvisoFila key={m.id} onClick={() => atenderImpago(m)} fuerte={estadoImpago(m).vencido}>
+        <LineaAvisoFila key={m.id} onClick={() => atenderImpago(m)} fuerte={estadoImpago(m).vencido} alto={ALTO_BOTON_FILA}>
           {textoAvisoImpago(m)}
         </LineaAvisoFila>
       ))}
@@ -1745,7 +1711,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   fotosSinBoda={fotosSinBoda || {}}
                   onCambiarSinFotoBoda={cambiarSinFotoBoda}
                   familiaSinEmail={familiasSinEmailAhora.has(claveFamilia(g))}
-                  colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
+                  colaboradorVinculado={comoColaborador(g, colaboradores)}
                   oculta={fichaAbierta && abiertoId !== g.id}
                 />
               ))}
@@ -1798,7 +1764,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   fotosSinBoda={fotosSinBoda || {}}
                   onCambiarSinFotoBoda={cambiarSinFotoBoda}
                   familiaSinEmail={familiasSinEmailAhora.has(claveFamilia(g))}
-                  colaboradorVinculado={colaboradores.find((c) => c.invitadoId === g.id)}
+                  colaboradorVinculado={comoColaborador(g, colaboradores)}
                         oculta={fichaAbierta && abiertoId !== g.id}
                       />
                     ) : null;

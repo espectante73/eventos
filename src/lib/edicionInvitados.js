@@ -21,6 +21,7 @@
 import { uid } from "./id";
 import { claveFamiliaMesa } from "./mesas";
 import { nombreCompleto } from "./formato";
+import { comoColaborador } from "./invitados";
 
 // Dos personas son "la misma" si coinciden nombre y apellido, sin
 // mirar mayúsculas, tildes ni espacios de más — el mismo criterio que
@@ -155,9 +156,9 @@ export function eliminarInvitado(invitados, id, colaboradores = []) {
   const g = invitados.find((x) => x.id === id);
   if (!g) return { invitados, aviso: "" };
 
-  const comoColaborador = (colaboradores || []).find((c) => c.invitadoId === id);
-  const pendientes = comoColaborador
-    ? invitados.filter((x) => x.id !== id && x.colaboradorId === comoColaborador.id)
+  const suCuenta = comoColaborador(g, colaboradores);
+  const pendientes = suCuenta
+    ? invitados.filter((x) => x.id !== id && x.colaboradorId === suCuenta.id)
     : [];
   const idsPendientes = new Set(pendientes.map((x) => x.id));
   const siguiente = invitados

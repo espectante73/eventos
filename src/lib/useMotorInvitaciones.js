@@ -9,7 +9,7 @@
 // tener que duplicar el filtro en dos sitios.
 import { useState } from "react";
 import { generarInvitacionImagen } from "./imagenInvitacion";
-import { resolverColaborador } from "./invitados";
+import { resolverColaborador, comoColaborador } from "./invitados";
 import { familiasDelEvento, mesasYCantidad } from "./familiasInvitacion";
 import { requisitosActivos } from "./modoPruebas";
 import { avisoEnPantalla } from "./avisos";
@@ -29,7 +29,7 @@ export function useMotorInvitaciones(data) {
   // propósito). Para saber la dirección real de alguien hay que mirar
   // los dos sitios.
   const emailDeInvitado = (miembro) =>
-    miembro.email || colaboradores.find((c) => c.invitadoId === miembro.id)?.email || "";
+    miembro.email || comoColaborador(miembro, colaboradores)?.email || "";
 
   // El destinatario del email de invitación no tiene por qué ser el primero
   // del orden de nombres (ese orden es solo para el texto de la propia

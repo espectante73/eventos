@@ -42,6 +42,13 @@ export function formatearFecha(fechaISO) {
 // local podría desplazarla al día anterior/siguiente según dónde se abra
 // la app — usando Date.UTC para construir y getUTCDay() para leer, el
 // resultado no depende de la zona horaria de quien mira la pantalla.
+// "17 oct", corto para caber en una línea (los plazos de pago).
+export function fechaCorta(iso) {
+  const [a, m, d] = String(iso || "").split("-").map(Number);
+  if (!a) return "";
+  return new Date(a, m - 1, d).toLocaleDateString("es-ES", { day: "numeric", month: "short" }).replace(".", "");
+}
+
 export function formatearDiaSemana(fechaISO) {
   if (!fechaISO) return "";
   const partes = fechaISO.split("-").map((p) => parseInt(p, 10));

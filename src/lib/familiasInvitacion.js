@@ -3,7 +3,7 @@
 // (useMotorInvitaciones) y la lista impresa de acomodadores (él, v54.1),
 // para que digan siempre lo mismo (norma 7).
 import { listaConY } from "./formato";
-import { familiaListaParaInvitacion } from "./invitados";
+import { familiaListaParaInvitacion, comoColaborador } from "./invitados";
 
 // Si el anfitrión reordenó los nombres a mano (p.ej. esposo primero),
 // se respeta ese orden; los que falten en él (recién confirmados) van
@@ -64,7 +64,6 @@ const esAcomodador = (g) => (g.rolesTrabajo || []).some((r) => /^acomodador/i.te
 // últimos. Colaborador = su cuenta enlazada a su ficha (`invitadoId`); los
 // que no lo están los encuentra la Revisión.
 export function filasAcomodadores(invitados, ordenFamiliares, colaboradores = []) {
-  const deColaborador = new Set(colaboradores.map((c) => c.invitadoId).filter(Boolean));
   const filas = familiasDelEvento(invitados, ordenFamiliares)
     .filter((f) => f.confirmados.length > 0)
     .map((f) => ({
@@ -72,7 +71,7 @@ export function filasAcomodadores(invitados, ordenFamiliares, colaboradores = []
       apellido: f.apellido,
       linea: lineaFamilia(f.apellido, f.confirmados.map((m) => m.nombre)),
       ...mesasYCantidad(f),
-      equipo: f.confirmados.some((m) => deColaborador.has(m.id) || esAcomodador(m)),
+      equipo: f.confirmados.some((m) => comoColaborador(m, colaboradores) || esAcomodador(m)),
     }))
     .sort((a, b) => a.apellido.localeCompare(b.apellido, "es"));
   return { principal: filas.filter((f) => !f.equipo), equipo: filas.filter((f) => f.equipo) };

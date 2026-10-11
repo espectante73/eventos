@@ -13,7 +13,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Check, Mail, Image as ImageIcon, ChevronUp, ChevronDown } from "lucide-react";
 import { C, inputStyle, T, OP } from "../../theme";
-import { resolverColaborador } from "../../lib/invitados";
+import { resolverColaborador, comoColaborador } from "../../lib/invitados";
 import { requisitosActivos } from "../../lib/modoPruebas";
 import { redimensionarImagenArchivo, guardarArchivoInvitacion, obtenerCarpetaInvitaciones, leerHandleCarpeta } from "../../lib/descargas";
 import { guardarImagenEvento, IMAGEN_EVENTO } from "../../lib/imagenesEvento";
@@ -438,9 +438,7 @@ export function VentanaInvitaciones({
                     // edita solo en Colaboradores (igual que en su propio
                     // formulario de datos) — aquí se muestra de solo
                     // lectura, no un campo editable que parecería vacío.
-                    const colaboradorVinculado = colaboradores.find(
-                      (c) => c.invitadoId === m.id
-                    );
+                    const colaboradorVinculado = comoColaborador(m, colaboradores);
                     return (
                       <div
                         key={m.id}

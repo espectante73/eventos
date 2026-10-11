@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { respuestaImpago, estadoImpago, textoAvisoImpago, impagosVencidos, fechaCorta, PLAZOS_MAX } from "./impagos";
+import { respuestaImpago, estadoImpago, textoAvisoImpago, impagosVencidos, PLAZOS_MAX } from "./impagos";
+import { fechaCorta } from "./formato";
 
 const hoy = new Date(2026, 9, 10, 12, 0); // 10 de octubre
 

@@ -105,7 +105,7 @@ export function familiasSinEmail(invitados, colaboradores) {
     if (g.confirmado) conConfirmados.add(clave);
     if (!ROLES_CON_EMAIL_FAMILIAR.includes(g.rolFamiliar)) continue;
     // El de su ficha O el de Colaboradores: igual que en la función SQL.
-    const vinculado = (colaboradores || []).find((c) => c.invitadoId === g.id);
+    const vinculado = comoColaborador(g, colaboradores);
     if (String(g.email || "").trim() || String(vinculado?.email || "").trim()) conEmail.add(clave);
   }
   return new Set([...conConfirmados].filter((clave) => !conEmail.has(clave)));
@@ -155,7 +155,7 @@ export function fichasIncompletasDe(colaboradorId, { invitados, colaboradores, e
         evento,
         foto: fotosFamiliares?.[g.grupoFamiliar || ""],
         sinFotoBoda: Boolean(fotosSinBoda?.[g.grupoFamiliar || ""]),
-        colaboradorVinculado: (colaboradores || []).find((c) => c.invitadoId === g.id),
+        colaboradorVinculado: comoColaborador(g, colaboradores),
       }).incompleta
   );
 }
@@ -263,6 +263,13 @@ export function familiaListaParaInvitacion(confirmados, evento) {
 }
 
 // La asignación de colaborador es siempre manual y exclusiva del Anfitrión.
+// La cuenta de colaborador de ESTE invitado, si lo es: la que tiene su
+// ficha enlazada (`invitadoId`). No confundir con resolverColaborador, que
+// es quien le lleva a él.
+export function comoColaborador(g, colaboradores) {
+  return (colaboradores || []).find((c) => c.invitadoId && c.invitadoId === g?.id) || null;
+}
+
 export function resolverColaborador(g, colaboradores) {
   if (!g.colaboradorId) return null;
   return colaboradores.find((c) => c.id === g.colaboradorId) || null;

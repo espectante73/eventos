@@ -32,7 +32,7 @@ import {
   Download,
 } from "lucide-react";
 import { C, inputStyle, R, T, OP, conAlfa } from "../../theme";
-import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio } from "../../lib/invitados";
+import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, anioDelEvento } from "../../lib/matrimonios";
@@ -416,7 +416,7 @@ export function SeccionInvitados({
       // el rol familiar. "sin" = no tiene ninguno.
       if (filtros.rolTrabajo) {
         const suyos = Array.isArray(g.rolesTrabajo) ? g.rolesTrabajo : [];
-        const esColaborador = colaboradores.some((c) => c.invitadoId === g.id);
+        const esColaborador = comoColaborador(g, colaboradores);
         if (filtros.rolTrabajo === FILTRO_ES_COLABORADOR) {
           if (!esColaborador) return false;
         } else if (filtros.rolTrabajo === "sin") {
@@ -483,7 +483,7 @@ export function SeccionInvitados({
           // acomodadores.
           case "rolTrabajo": {
             const suyos = Array.isArray(g.rolesTrabajo) ? [...g.rolesTrabajo] : [];
-            if (colaboradores.some((c) => c.invitadoId === g.id)) suyos.push("Colaborador");
+            if (comoColaborador(g, colaboradores)) suyos.push("Colaborador");
             suyos.sort();
             return suyos.length > 0 ? `0${suyos.join(",")}` : "1";
           }
@@ -1568,7 +1568,7 @@ export function SeccionInvitados({
                     gridTemplateColumns: columnasTabla,
                     background: i % 2 ? C.paperDark : C.blanco,
                     borderLeft: `${FILETE_COLABORADOR}px solid ${
-                      colaboradores.some((c) => c.invitadoId === g.id) ? C.gold : "transparent"
+                      comoColaborador(g, colaboradores) ? C.gold : "transparent"
                     }`,
                     fontFamily: "'Inter', sans-serif",
                     color: C.charcoal,
@@ -1594,12 +1594,12 @@ export function SeccionInvitados({
                       <>
                         <span
                           style={
-                            colaboradores.some((c) => c.invitadoId === g.id)
+                            comoColaborador(g, colaboradores)
                               ? { fontWeight: 600 }
                               : undefined
                           }
                           title={
-                            colaboradores.some((c) => c.invitadoId === g.id)
+                            comoColaborador(g, colaboradores)
                               ? "También es colaborador"
                               : undefined
                           }
@@ -1911,7 +1911,7 @@ export function SeccionInvitados({
                       pregunta={{
                         titulo: "¿Eliminar de la lista?",
                         // Si es colaborador, se elimina del todo (v53.8).
-                        texto: colaboradores.some((c) => c.invitadoId === g.id)
+                        texto: comoColaborador(g, colaboradores)
                           ? PREGUNTA_ELIMINAR_COLABORADOR_DESDE_INVITADOS
                           : nombreCompleto(g) + " se borra de la lista de invitados.",
                         rotulo: "Sí, eliminar",

@@ -5,7 +5,7 @@
 // Lo mismo hace la base para el colaborador (colaborador_responder_impago);
 // esto es para el anfitrión, que guarda la lista entera, y para pintar.
 
-import { nombreCompleto } from "./formato";
+import { nombreCompleto, fechaCorta } from "./formato";
 
 export const PLAZOS_MAX = 3;
 const DIAS_PLAZO = 7;
@@ -40,13 +40,6 @@ export function estadoImpago(g, ahora = new Date()) {
     vencido: g.pagoPendienteHasta < hoyISO(ahora),
     quedanPlazos: plazo < PLAZOS_MAX,
   };
-}
-
-// "17 oct", corto para caber en una línea.
-export function fechaCorta(iso) {
-  const [a, m, d] = String(iso || "").split("-").map(Number);
-  if (!a) return "";
-  return new Date(a, m - 1, d).toLocaleDateString("es-ES", { day: "numeric", month: "short" }).replace(".", "");
 }
 
 // La línea del aviso, en la fila de su familia.
