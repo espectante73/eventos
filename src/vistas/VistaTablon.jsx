@@ -19,6 +19,7 @@ import { EnlaceTexto } from "../components/Boton";
 import { NotaPrivacidad } from "../components/NotaPrivacidad";
 import { TITULO_NOTA_PRIVACIDAD } from "../constants";
 import { uid } from "../lib/id";
+import { leerEvento } from "../lib/leerEvento";
 
 const BUCKET_MUSICA = "musica-ambiental";
 
@@ -129,15 +130,16 @@ export function VistaTablon({ token }) {
   // el acceso por nombre.
   const cargarContenido = useCallback(
     async () => {
-      const [{ data: eventoFilas }, { data: novedadesFilas }] = await Promise.all([
-        supabase.from("evento").select("*").limit(1),
+      // El evento, sin lo privado (lib/leerEvento.js, v63).
+      const [eventoLeido, { data: novedadesFilas }] = await Promise.all([
+        leerEvento(supabase),
         supabase.rpc("tablon_listar_novedades", {
           p_token: token,
           p_respuesta: respuestaVerificadaRef.current,
           p_dispositivo_id: dispositivoIdRef.current,
         }),
       ]);
-      setEvento(eventoFilas && eventoFilas[0] ? eventoFilas[0] : null);
+      setEvento(eventoLeido);
       setNovedades(novedadesFilas || []);
       // Todas plegadas por defecto (ni siquiera la más reciente se abre
       // sola) -- a petición del usuario, 2026-08-25. Sigue habiendo como

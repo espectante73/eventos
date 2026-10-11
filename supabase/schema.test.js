@@ -65,6 +65,28 @@ describe("restaurar_foto: el orden sigue las claves foráneas", () => {
   });
 });
 
+// v63: el enlace del grupo de WhatsApp es el primer filtro para llegar al
+// tablón; con la tabla abierta, cualquiera lo leía sin pasar por la app.
+describe("el evento no se lee directamente", () => {
+  it("evento sin política de lectura pública, y sin permiso de lectura", () => {
+    expect(sql).not.toMatch(/CREATE POLICY\s+\w+\s+ON\s+public\.evento\s+FOR\s+SELECT/i);
+    expect(sql).toContain("REVOKE SELECT ON public.evento FROM anon, authenticated;");
+  });
+
+  it("evento_publico quita lo privado", () => {
+    const f = cuerpoDe("evento_publico");
+    expect(f).toContain("- 'enlaceGrupoWhatsapp'");
+    expect(f).toContain("- 'emailAnfitrion'");
+  });
+
+  it("entero solo al anfitrión; el enlace, al colaborador con permiso de Novedades", () => {
+    expect(cuerpoDe("anfitrion_evento")).toMatch(/p_token is distinct from \(select "token" from anfitrion_secreto/);
+    const enlace = cuerpoDe("colaborador_enlace_whatsapp");
+    expect(enlace).toContain("colaborador_puede_actuar(p_colaborador_id)");
+    expect(enlace).toContain("colaborador_tiene_permiso('novedades_editar')");
+  });
+});
+
 describe("nada abierto a escritura anónima", () => {
   // 2026-09-06: cuatro tablas tenían `for all using (true) with check
   // (true)`. `evento` guarda las plantillas de los emails automáticos:

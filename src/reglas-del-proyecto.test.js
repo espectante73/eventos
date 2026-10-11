@@ -74,6 +74,18 @@ describe("norma 4: en los menús, iconos que llenan su cuadrado", () => {
   });
 });
 
+// v63: el evento se lee a través del servidor (lib/leerEvento.js), que
+// quita lo privado. Leer la tabla directamente solo queda ahí, de reserva
+// mientras el SQL no esté subido.
+describe("el evento, solo por leerEvento", () => {
+  it("nadie más lee la tabla evento", () => {
+    const fuera = archivos
+      .filter((r) => !r.endsWith("leerEvento.js"))
+      .filter((r) => /from\(\s*["']evento["']\s*\)/.test(sinComentarios(leer(r))));
+    expect(fuera).toEqual([]);
+  });
+});
+
 // Norma 9 (él, v59.1): las preguntas se responden «Sí» / «No». Solo lo que
 // borra para siempre lleva verbo, para no borrar por un «Sí» con prisas.
 describe("norma 9: «Sí» / «No», con verbo solo lo que borra para siempre", () => {

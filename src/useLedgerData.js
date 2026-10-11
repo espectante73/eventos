@@ -7,6 +7,7 @@ import { familiaDe, comoMiembro } from "./lib/familiaCobroLlegada";
 import { miembrosDesdeLista } from "./lib/familiasColaborador";
 import { respuestaImpago } from "./lib/impagos";
 import { datosCompletos } from "./lib/invitados";
+import { leerEvento } from "./lib/leerEvento";
 
 const EVENTO_POR_DEFECTO = {
   nombre: "",
@@ -256,7 +257,9 @@ export function useLedgerData(rol) {
       }
 
       if (perfil && perfil.length > 0) {
-        const { data: eventoFilas } = await supabase.from("evento").select("*").limit(1);
+        // Sin lo privado (lib/leerEvento.js, v63); el enlace del grupo, más
+        // abajo, solo con el permiso de Novedades.
+        const eventoLeido = await leerEvento(supabase);
         const { data: fotosFilas } = await supabase.from("fotos_familiares").select("*");
         const { data: misInvitados, error: errInv } = await supabase.rpc(
           "colaborador_mis_invitados",
@@ -278,9 +281,13 @@ export function useLedgerData(rol) {
         const { data: novedadesColaborador } = tienePermisoNovedades
           ? await supabase.rpc("colaborador_listar_novedades", { p_colaborador_id: rol })
           : { data: null };
+        // Para abrir el grupo y pegar las Novedades: solo a quien las publica.
+        const { data: enlaceGrupo } = tienePermisoNovedades
+          ? await supabase.rpc("colaborador_enlace_whatsapp", { p_colaborador_id: rol })
+          : { data: null };
 
         if (cancelado) return;
-        if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
+        if (eventoLeido) setEvento(enlaceGrupo ? { ...eventoLeido, enlaceGrupoWhatsapp: enlaceGrupo } : eventoLeido);
         repartirFilasDeFotos(fotosFilas);
         setColaboradores(perfil);
         if (!errInv) setInvitados(misInvitados || []);
@@ -303,7 +310,8 @@ export function useLedgerData(rol) {
       }
 
       if (esValido === true) {
-        const { data: eventoFilas } = await supabase.from("evento").select("*").limit(1);
+        // Entero: es el anfitrión (lib/leerEvento.js, v63).
+        const eventoLeido = await leerEvento(supabase, "anfitrion_evento", { p_token: rol });
         const { data: fotosFilas } = await supabase.from("fotos_familiares").select("*");
         const { data: todosColaboradores, error: errCol } = await supabase.rpc(
           "anfitrion_listar_colaboradores",
@@ -363,7 +371,7 @@ export function useLedgerData(rol) {
         );
 
         if (cancelado) return;
-        if (eventoFilas && eventoFilas[0]) setEvento(eventoFilas[0]);
+        if (eventoLeido) setEvento(eventoLeido);
         repartirFilasDeFotos(fotosFilas);
         if (!errCol) setColaboradores(todosColaboradores || []);
         if (!errInv) setInvitados(todosInvitados || []);

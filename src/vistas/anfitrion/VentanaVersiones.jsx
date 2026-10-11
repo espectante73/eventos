@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "63",
+    cambios: [
+      "Seguridad: los datos del evento ya no se pueden leer directamente de la base sin pasar por la app. El enlace del grupo de WhatsApp (el primer filtro para llegar al tablón) y el email del anfitrión solo los da el servidor al anfitrión y, el enlace, al colaborador que publica las Novedades. Para los invitados y en pantalla no cambia nada.",
+    ],
+  },
+  {
     version: "62.7",
     cambios: [
       "Aspecto más profesional, 3.ª parte (por dentro): los colores escritos a mano en las pantallas salen ahora todos del archivo central de colores de la app, también los translúcidos, el acuse de recibo y la lista de acomodadores. En pantalla no cambia nada, pero ya no pueden aparecer tonos «casi iguales». Una prueba avisa si alguien vuelve a escribir un color a mano. El mando de Música conserva su paleta propia.",

@@ -851,6 +851,46 @@ $$;
 -- Datos compartidos del evento
 -- ------------------------------------------------------------
 
+-- Los datos del evento que puede ver cualquiera (v63): portada, login y
+-- tablón. Sin lo privado: el enlace del grupo de WhatsApp (el primer filtro
+-- para llegar al tablón) y el email del anfitrión. Una columna nueva sale
+-- aquí sola: si es privada, se quita también aquí.
+CREATE FUNCTION public.evento_publico() RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select to_jsonb(e) - 'enlaceGrupoWhatsapp' - 'emailAnfitrion' from evento e limit 1;
+$$;
+
+-- El evento entero, para el anfitrión.
+CREATE FUNCTION public.anfitrion_evento(p_token uuid) RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return null;
+  end if;
+  return (select to_jsonb(e) from evento e limit 1);
+end;
+$$;
+
+-- El enlace del grupo de WhatsApp, al colaborador que publica las
+-- Novedades: lo necesita para abrir el grupo y pegarlas.
+CREATE FUNCTION public.colaborador_enlace_whatsapp(p_colaborador_id uuid) RETURNS text
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if not colaborador_puede_actuar(p_colaborador_id) or not colaborador_tiene_permiso('novedades_editar') then
+    return null;
+  end if;
+  return (select "enlaceGrupoWhatsapp" from evento limit 1);
+end;
+$$;
+REVOKE EXECUTE ON FUNCTION public.colaborador_enlace_whatsapp(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.colaborador_enlace_whatsapp(uuid) TO authenticated;
+
 -- Guarda los datos de la boda (nombre, fecha, lugar, precios, plantillas).
 CREATE FUNCTION public.guardar_evento(p_token uuid, p_fila jsonb) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -2536,7 +2576,11 @@ alter table public.deshacer_snapshot enable row level security;
 alter table public.modo_pruebas_snapshot enable row level security;
 alter table public.migraciones_aplicadas enable row level security;
 
-CREATE POLICY lectura_publica ON public.evento FOR SELECT USING (true);
+-- `evento` NO se lee directamente (v63): guarda el enlace del grupo de
+-- WhatsApp, el primer filtro para llegar al tablón, y el email del
+-- anfitrión. Se lee con evento_publico() (sin eso), anfitrion_evento()
+-- (entero) y colaborador_enlace_whatsapp() (el enlace, con permiso).
+REVOKE SELECT ON public.evento FROM anon, authenticated;
 
 CREATE POLICY lectura_publica ON public.fotos_familiares FOR SELECT USING (true);
 

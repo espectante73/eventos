@@ -421,7 +421,10 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
    reciben los invitados con el remitente del anfitrión. Lo vigila
    `supabase/schema.test.js`. ⚠️ Lo que no ve: una columna nueva en una
    tabla de lectura pública la lee cualquiera; antes de añadirla,
-   preguntarse si es privada.
+   preguntarse si es privada. `evento` ya no se lee directamente: lo da
+   el servidor (`leerEvento`), y `evento_publico` quita el enlace del
+   grupo de WhatsApp —el primer filtro del tablón— y el email del
+   anfitrión. Una columna privada nueva se quita también ahí.
 4. **Versionado: entero = tema nuevo, decimal = ajuste.** Nunca subir el
    entero por defecto, y tras el .9 viene el siguiente entero (45.9 →
    46). Se renumera desde la 1 cuando él lo diga (no lo propongo yo),
