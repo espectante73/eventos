@@ -83,6 +83,21 @@ describe("el evento, solo por leerEvento", () => {
   });
 });
 
+// v63.3: las cabeceras de protección de la web (vercel.json). Sin
+// frame-ancestors, otra página podía meter la app dentro de la suya y
+// engañar con clics; con la llave del tablón en la dirección, el referrer
+// no debe mandarla fuera.
+describe("cabeceras de protección (vercel.json)", () => {
+  it("ninguna web ajena puede meter la app en un marco; nosniff y referrer", () => {
+    const cabeceras = JSON.parse(leer("vercel.json")).headers.find((h) => h.source === "/(.*)").headers;
+    const valor = (k) => cabeceras.find((h) => h.key === k)?.value;
+    expect(valor("X-Frame-Options")).toBe("SAMEORIGIN");
+    expect(valor("Content-Security-Policy")).toContain("frame-ancestors 'self'");
+    expect(valor("X-Content-Type-Options")).toBe("nosniff");
+    expect(valor("Referrer-Policy")).toBe("strict-origin-when-cross-origin");
+  });
+});
+
 // Norma 9 (él, v59.1): las preguntas se responden «Sí» / «No». Solo lo que
 // borra para siempre lleva verbo, para no borrar por un «Sí» con prisas.
 describe("norma 9: «Sí» / «No», con verbo solo lo que borra para siempre", () => {

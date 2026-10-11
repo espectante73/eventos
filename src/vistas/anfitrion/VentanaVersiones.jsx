@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "63.3",
+    cambios: [
+      "Seguridad: la pieza que usa el generador de PDF, actualizada (tenía un fallo conocido); en lo que llega a la web ya no queda ninguno. Y la web lleva sus cabeceras de protección: ninguna otra página puede meter la app dentro de la suya para engañar con clics. En pantalla no cambia nada.",
+    ],
+  },
+  {
     version: "63.2",
     cambios: [
       "Seguridad: sin cuenta ya no se ven los grupos familiares (los apellidos de las familias invitadas), ni si tienen foto de boda, ni a cuáles se les ha enviado la invitación. Las fotos por familia las ven el anfitrión y sus colaboradores; el orden de las familias, solo el anfitrión. En pantalla no cambia nada.",
