@@ -138,6 +138,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    - **Los botones de un mismo grupo**, todos iguales y del ancho del más
      largo; si un rótulo no cabe, se abrevia. En Mi cuenta copian las
      filas de "Abrir sección…" (`ANCHO_FILA_MENU`).
+   - **Icono y texto, siempre el mismo hueco**: lo pone la pieza (`Boton`,
+     `MenuFlotante`), nunca a mano. En un grupo, iconos que llenan su
+     cuadrado igual: el «+» suelto deja más aire (`UserPlus` en su lugar).
 5. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
    protagonista. Los textos de ayuda también: al pie de la ventana y
    plegados (`<details>`). Todo panel que se abre tiene su **salida

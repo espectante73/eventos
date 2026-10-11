@@ -59,6 +59,21 @@ describe("iconos: los dibujados, no ⚠ ✓ ✗ ▸ ▾", () => {
   });
 });
 
+// Norma 4 (él, v62.2): icono y texto, el mismo hueco en todo un grupo. El
+// hueco lo pone la pieza; lo que se escapa es un icono que no llena su
+// cuadrado: el «+» suelto dejaba más aire hasta el texto en «Acciones».
+describe("norma 4: en los menús, iconos que llenan su cuadrado", () => {
+  it("ninguna opción de menú con un icono pequeño (+, −, ✓, X)", () => {
+    const fuera = archivos.flatMap((r) =>
+      sinComentarios(leer(r))
+        .split("\n")
+        .filter((l) => /icono: (Plus|Minus|Check|X)\b/.test(l))
+        .map((l) => `${r}: ${l.trim()}`)
+    );
+    expect(fuera).toEqual([]);
+  });
+});
+
 // Norma 9 (él, v59.1): las preguntas se responden «Sí» / «No». Solo lo que
 // borra para siempre lleva verbo, para no borrar por un «Sí» con prisas.
 describe("norma 9: «Sí» / «No», con verbo solo lo que borra para siempre", () => {
