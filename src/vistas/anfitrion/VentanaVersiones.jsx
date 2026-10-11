@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "62.5",
+    cambios: [
+      "El número de «Incompletos» cuenta las fichas que se ven en la sección: también a quien ya tiene sus datos pero su familia todavía no está cerrada (por ejemplo, un matrimonio sin foto de boda ni «No»). Antes solo contaba las de datos a medias, y podía salir sin número con fichas debajo.",
+    ],
+  },
+  {
     version: "62.4",
     cambios: [
       "Aspecto más profesional, 2.ª parte: en el formulario del colaborador, «Invitados INCOMPLETOS (2)» pasa a «Incompletos (2)», en una sola línea y con el mismo título que «Familias». El botón de al lado, que era una píldora hecha a mano con el texto «Datos completos», es ahora el botón de la app con el avión de papel y el texto «Avisar», que dice lo que hace. Los dos botones de su ventana también son los de la app, a todo el ancho.",

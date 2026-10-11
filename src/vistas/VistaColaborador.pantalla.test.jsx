@@ -105,9 +105,13 @@ describe("la pantalla del colaborador se puede dibujar", () => {
   });
 
   // v62.4: la cabecera con las piezas de la app, como «Familias».
-  it("«Incompletos (N)» en una línea, con su botón «Avisar»", () => {
+  it("«Incompletos (N)» en una línea, con su botón «Avisar»; N, las filas que se ven", () => {
     const html = abrirFormulario();
-    expect(html).toMatch(/Incompletos \(\d+\)/);
+    // Cada fila de la sección lleva su pago (pendiente o el sello) o «datos N de M».
+    const seccion = html.slice(html.indexOf("Incompletos ("), html.indexOf("Familias"));
+    const filas = (seccion.match(/datos \d+ de \d+|Pago pendiente|Pagado/g) || []).length;
+    expect(filas).toBeGreaterThan(0);
+    expect(html).toContain(`Incompletos (${filas})`);
     expect(html).not.toContain("INCOMPLETOS");
     expect(html).toMatch(/<button[^>]*>(<[^>]+>)*\s*Avisar/);
   });

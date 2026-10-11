@@ -1703,7 +1703,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   </Boton>
                 }
               >
-                Incompletos{pendientes.length > 0 && ` (${pendientes.length})`}
+                {/* Cuenta las filas que se ven: también quien tiene sus datos
+                    pero su familia aún no está cerrada (v62.5). */}
+                Incompletos{enRecogida.length > 0 && ` (${enRecogida.length})`}
               </SectionTitle>
             </div>
             <div className="space-y-2">
