@@ -9,7 +9,7 @@
 // tener que duplicar el filtro en dos sitios.
 import { useState } from "react";
 import { generarInvitacionImagen } from "./imagenInvitacion";
-import { resolverColaborador, comoColaborador } from "./invitados";
+import { resolverColaborador, emailDeInvitado } from "./invitados";
 import { familiasDelEvento, mesasYCantidad } from "./familiasInvitacion";
 import { requisitosActivos } from "./modoPruebas";
 import { avisoEnPantalla } from "./avisos";
@@ -23,13 +23,8 @@ export function useMotorInvitaciones(data) {
     (f) => f.listaParaInvitacion
   );
 
-  // El email de un invitado puede vivir en su propio registro, o -si ese
-  // invitado es también colaborador- en el registro de colaboradores (se
-  // edita solo ahí; el campo de su propia ficha se queda vacío a
-  // propósito). Para saber la dirección real de alguien hay que mirar
-  // los dos sitios.
-  const emailDeInvitado = (miembro) =>
-    miembro.email || comoColaborador(miembro, colaboradores)?.email || "";
+  // Ficha o cuenta de colaborador: lib/invitados.js.
+  const emailDe = (miembro) => emailDeInvitado(miembro, colaboradores);
 
   // El destinatario del email de invitación no tiene por qué ser el primero
   // del orden de nombres (ese orden es solo para el texto de la propia
@@ -37,8 +32,8 @@ export function useMotorInvitaciones(data) {
   // email (propio o de su colaborador vinculado), sea cual sea su posición.
   const destinatarioConEmail = (familia) => {
     const elegido =
-      familia.confirmados.find((m) => emailDeInvitado(m)) || familia.confirmados[0];
-    return elegido ? { ...elegido, email: emailDeInvitado(elegido) } : elegido;
+      familia.confirmados.find((m) => emailDe(m)) || familia.confirmados[0];
+    return elegido ? { ...elegido, email: emailDe(elegido) } : elegido;
   };
 
   const marcarInvitacionEnviada = (clave) => {
@@ -131,7 +126,7 @@ export function useMotorInvitaciones(data) {
 
   return {
     familiasListasParaInvitacion,
-    emailDeInvitado,
+    emailDeInvitado: emailDe,
     destinatarioConEmail,
     marcarInvitacionEnviada,
     descargando,

@@ -104,9 +104,7 @@ export function familiasSinEmail(invitados, colaboradores) {
     if (!clave) continue;
     if (g.confirmado) conConfirmados.add(clave);
     if (!ROLES_CON_EMAIL_FAMILIAR.includes(g.rolFamiliar)) continue;
-    // El de su ficha O el de Colaboradores: igual que en la función SQL.
-    const vinculado = comoColaborador(g, colaboradores);
-    if (String(g.email || "").trim() || String(vinculado?.email || "").trim()) conEmail.add(clave);
+    if (emailDeInvitado(g, colaboradores)) conEmail.add(clave);
   }
   return new Set([...conConfirmados].filter((clave) => !conEmail.has(clave)));
 }
@@ -268,6 +266,13 @@ export function familiaListaParaInvitacion(confirmados, evento) {
 // es quien le lleva a él.
 export function comoColaborador(g, colaboradores) {
   return (colaboradores || []).find((c) => c.invitadoId && c.invitadoId === g?.id) || null;
+}
+
+// El email de verdad de un invitado: el de su ficha o, si es colaborador,
+// el de su cuenta (se edita solo ahí; su ficha se deja vacía a propósito).
+// Igual que en las funciones SQL.
+export function emailDeInvitado(g, colaboradores) {
+  return String(g?.email || "").trim() || String(comoColaborador(g, colaboradores)?.email || "").trim();
 }
 
 export function resolverColaborador(g, colaboradores) {

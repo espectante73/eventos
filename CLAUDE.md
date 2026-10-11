@@ -109,9 +109,8 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    copia de cómo está resuelto lo mismo en la app y, si hay duda, **se
    pregunta en una línea ANTES de tocarlo**. Si una norma suya choca con
    algo que cualquiera reconoce de internet, preguntar por su alcance.
-   Medidas y colores los vigila `src/theme.test.js`; un translúcido sale
-   de la paleta con `conAlfa`. `index.css` no puede leer `theme.js`: lo
-   que copia lleva al lado `= theme.js C.nombre`, y el test lo compara.
+   Medidas y colores los vigila `src/theme.test.js` (un translúcido, con
+   `conAlfa`; lo que copia `index.css`, con `= theme.js C.nombre` al lado).
 2. **Ventanas tan pequeñas como su contenido**: del ancho de un móvil en
    vertical, también en el ordenador. Toda ventana nueva es una
    `VentanaFlotante`; si crece mucho, lanzadora pequeña + una ventana por
@@ -139,9 +138,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    - **Los botones de un mismo grupo**, todos iguales y del ancho del más
      largo; si un rótulo no cabe, se abrevia. En Mi cuenta copian las
      filas de "Abrir sección…" (`ANCHO_FILA_MENU`).
-   - **Icono y texto, siempre el mismo hueco**: lo pone la pieza (`Boton`,
-     `MenuFlotante`), nunca a mano. En un grupo, iconos que llenan su
-     cuadrado igual: el «+» suelto deja más aire (`UserPlus` en su lugar).
+   - **Icono y texto, mismo hueco**: lo pone la pieza (`Boton`,
+     `MenuFlotante`), con iconos que llenan su cuadrado (`UserPlus`: el «+»
+     suelto deja más aire).
 5. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
    protagonista. Los textos de ayuda también: al pie de la ventana y
    plegados (`<details>`). Todo panel que se abre tiene su **salida
@@ -157,9 +156,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 7. **Una sola pieza, no sincronizar**: si dos sitios tienen que decir
    siempre lo mismo —un componente, una constante, una función, qué es
    una familia (`claveFamilia`), cómo se nombra a alguien
-   (`nombreCompleto`) o se escribe un importe (`euros`)—, comparten la
-   definición. Dos copias mantenidas a
-   mano **derivan sin que nadie lo vea**.
+   (`nombreCompleto`), su email (`emailDeInvitado`: el de su ficha o, si
+   es colaborador, el de su cuenta) o un importe (`euros`)—, comparten la
+   definición: dos copias a mano **derivan sin que nadie lo vea**.
 8. **Una vista que solo reordena o filtra lo que la Lista de invitados
    ya muestra va DENTRO de la lista**: la lista es la raíz.
 9. **Quitar o borrar pregunta antes**, en la ventana de la app
@@ -228,11 +227,7 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    cargados y `VistaColaborador` los filtra. Las funciones `colaborador_*`
    exigen la sesión de ESE colaborador (`auth.uid()`), así que una nueva
    no necesita ninguna excepción para el anfitrión.
-3. **El email de un invitado está en dos sitios**: su ficha o, si es
-   colaborador, el registro de colaboradores. Siempre con
-   `emailDeInvitado()` (`lib/useMotorInvitaciones.js`), nunca con
-   `invitado.email` a secas.
-4. **Los avisos pendientes se recalculan solos: leer lo que la app TIENE,
+3. **Los avisos pendientes se recalculan solos: leer lo que la app TIENE,
    no registrar lo que HACE.** `avisoPendiente` e `invitacionEnviada` los
    recalculan dos triggers de `invitados` (`trg_recalcular_aviso_pendiente`,
    `trg_invalidar_invitacion_familia`). Solo los tocan a mano
@@ -240,7 +235,7 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    función en que el COLABORADOR cambia sus datos llama antes a
    `set_config('eventos.recalculo_aviso_activo', 'off', true)`, para no
    avisarle de su propio cambio.
-5. **Un reinicio nuevo:**
+4. **Un reinicio nuevo:**
    - por `id` de invitado explícito y acotado (modelo:
      `anfitrion_resetear_por_invitados`);
    - `avisoPendiente` solo se apaga si la categoría desasigna al
@@ -299,8 +294,8 @@ insert into public.migraciones_aplicadas ("nombre") values ('v40-lo-que-sea')
    con la firma anterior exacta.
 4. **Una función nueva que dependa de `auth.uid()` lleva `revoke execute
    ... from public`**: Postgres da permiso de ejecución a todos por
-   defecto. `schema.sql` no guarda estos permisos, así que el `revoke` va
-   en el SQL que se le pasa. (`mi_rol` responde sin sesión, aunque vacío.)
+   defecto. Va en el SQL que se le pasa y, junto a la función, en
+   `schema.sql`. (`mi_rol` responde sin sesión, aunque vacío.)
 5. **Todo UPDATE/DELETE lleva WHERE** (para la tabla entera, `where
    true`): Supabase rechaza los que no. Y `schema.sql` es un plano: cada
    cambio en su sitio, nada añadido al final. Lo vigila
@@ -415,16 +410,14 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
    reordena la lista, es una zona de TRABAJO para ir cargando ~50 fotos
    durante semanas. Él descartó un panel dentro de la celda y soltar la
    carpeta entera: no volver a proponerlos.
-3. **Ninguna tabla abierta a escritura anónima**: una política de
-   lectura pública es `for select`, nunca `for all`. `evento` guarda las
-   plantillas de los emails: reescribirlas desde fuera es decidir lo que
-   reciben los invitados con el remitente del anfitrión. Lo vigila
-   `supabase/schema.test.js`. ⚠️ Lo que no ve: una columna nueva en una
-   tabla de lectura pública la lee cualquiera; antes de añadirla,
-   preguntarse si es privada. `evento` ya no se lee directamente: lo da
-   el servidor (`leerEvento`), y `evento_publico` quita el enlace del
-   grupo de WhatsApp —el primer filtro del tablón— y el email del
-   anfitrión. Una columna privada nueva se quita también ahí.
+3. **Sin cuenta, solo se lee, y lo justo** (lo vigila
+   `supabase/schema.test.js`). Las políticas públicas, solo `for select`:
+   `evento` guarda las plantillas de los emails, y reescribirlas desde
+   fuera es hablar a los invitados con el remitente del anfitrión.
+   `evento` lo da el servidor (`leerEvento`); `evento_publico` quita el
+   enlace del grupo de WhatsApp —el primer filtro del tablón— y el email
+   del anfitrión. ⚠️ Lo que no ve: una columna nueva de `evento` la ve
+   cualquiera; si es privada, se quita ahí.
 4. **Versionado: entero = tema nuevo, decimal = ajuste.** Nunca subir el
    entero por defecto, y tras el .9 viene el siguiente entero (45.9 →
    46). Se renumera desde la 1 cuando él lo diga (no lo propongo yo),
