@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "62.1",
+    cambios: [
+      "En los menús («Acciones», «Abrir sección…»), lo que está abierto ya no lleva un visto añadido que sacaba el texto del botón: se pinta en dorado con la letra verde.",
+    ],
+  },
+  {
     version: "62",
     cambios: [
       "Aspecto más profesional, 1.ª parte: los símbolos de teclado (⚠, ✓, ▸, ▾, ✗) se cambian por iconos dibujados, los mismos del resto de la app. Los avisos llevan su triángulo o su visto delante, el menú marca lo que está abierto con un visto, y las filas del formulario llevan flechas del tamaño del candado.",

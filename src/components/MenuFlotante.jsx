@@ -13,8 +13,8 @@
 // tiene por la imagen de cabecera).
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { Check, X } from "lucide-react";
-import { C, R, OP, S, T } from "../theme";
+import { X } from "lucide-react";
+import { C, R, OP, S, T, DORADO } from "../theme";
 import { esZurdo } from "../lib/mano";
 import { Seal } from "./Widgets";
 
@@ -234,7 +234,6 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
           }}
         >
           {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
-          {opcion.marcado && <Check size={15} style={{ flexShrink: 0 }} aria-label="abierta" />}
           {opcion.etiqueta}
           <SelloFila count={opcion.sello} />
         </button>
@@ -294,9 +293,13 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
       // como un botón de la portada (a petición del usuario anterior):
       // margen a los lados + radio grande para TODAS las filas.
       className="boton-3d boton-flotante-imagen relative flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap"
+      // `marcado`: lo que ya está abierto se pinta en dorado, con la letra
+      // verde (él, v62.1: un icono más empujaba el texto fuera del botón).
+      aria-pressed={opcion.marcado === undefined ? undefined : Boolean(opcion.marcado)}
       style={{
-        color: opcion.color || C.goldClaro,
+        color: opcion.marcado ? C.ink : opcion.color || C.goldClaro,
         ...(opcion.fondo ? { background: opcion.fondo } : {}),
+        ...(opcion.marcado ? { background: DORADO.fondo, fontWeight: 600 } : {}),
         margin: "5px 6px",
         width: "calc(100% - 12px)",
         borderRadius: R.redondo,
@@ -309,8 +312,6 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
       }}
     >
       {opcion.icono && <opcion.icono size={19} style={{ flexShrink: 0, opacity: OP.secundario }} />}
-      {/* `marcado`: lo que ya está abierto, con el visto dibujado (v62). */}
-      {opcion.marcado && <Check size={15} style={{ flexShrink: 0 }} aria-label="abierta" />}
       <span>{opcion.etiqueta}</span>
       <SelloFila count={opcion.sello} />
     </button>
