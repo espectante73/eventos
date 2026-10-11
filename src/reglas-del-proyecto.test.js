@@ -75,13 +75,10 @@ describe("norma 4: en los menús, iconos que llenan su cuadrado", () => {
 });
 
 // v63: el evento se lee a través del servidor (lib/leerEvento.js), que
-// quita lo privado. Leer la tabla directamente solo queda ahí, de reserva
-// mientras el SQL no esté subido.
+// quita lo privado. La tabla está cerrada: leerla directamente fallaría.
 describe("el evento, solo por leerEvento", () => {
-  it("nadie más lee la tabla evento", () => {
-    const fuera = archivos
-      .filter((r) => !r.endsWith("leerEvento.js"))
-      .filter((r) => /from\(\s*["']evento["']\s*\)/.test(sinComentarios(leer(r))));
+  it("nadie lee la tabla evento", () => {
+    const fuera = archivos.filter((r) => /from\(\s*["']evento["']\s*\)/.test(sinComentarios(leer(r))));
     expect(fuera).toEqual([]);
   });
 });

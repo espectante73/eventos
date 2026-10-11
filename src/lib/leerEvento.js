@@ -6,15 +6,7 @@
 //   anfitrion_evento(p_token)   el anfitrión, entero
 // y el colaborador de Novedades pide aparte el enlace
 // (colaborador_enlace_whatsapp, en useLedgerData).
-//
-// Mientras el SQL de la v63 no esté subido, la función no existe
-// (PGRST202) y se lee como antes, para no dejar la app en blanco.
 export async function leerEvento(supabase, funcion = "evento_publico", parametros = {}) {
   const { data, error } = await supabase.rpc(funcion, parametros);
-  if (!error) return data || null;
-  if (error.code === "PGRST202") {
-    const { data: filas } = await supabase.from("evento").select("*").limit(1);
-    return filas?.[0] || null;
-  }
-  return null;
+  return error ? null : data || null;
 }

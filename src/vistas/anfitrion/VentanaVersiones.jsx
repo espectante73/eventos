@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "63.1",
+    cambios: [
+      "Con el SQL ya subido y todo comprobado, la app deja de tener la reserva de leer el evento como antes: ahora solo lo pide al servidor.",
+    ],
+  },
+  {
     version: "63",
     cambios: [
       "Seguridad: los datos del evento ya no se pueden leer directamente de la base sin pasar por la app. El enlace del grupo de WhatsApp (el primer filtro para llegar al tablón) y el email del anfitrión solo los da el servidor al anfitrión y, el enlace, al colaborador que publica las Novedades. Para los invitados y en pantalla no cambia nada.",

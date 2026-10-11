@@ -34,11 +34,9 @@ describe("leerEvento (v63): el evento, a través del servidor", () => {
     expect(await leerEvento(s, "anfitrion_evento", { p_token: "x" })).toMatchObject({ emailAnfitrion: "a@a.es" });
   });
 
-  it("sin el SQL subido (PGRST202), como antes; con otro error, nada", async () => {
-    const sinSubir = falso({ rpc: { data: null, error: { code: "PGRST202" } }, tabla: [{ nombre: "Boda" }] });
-    expect(await leerEvento(sinSubir)).toEqual({ nombre: "Boda" });
-    const otro = falso({ rpc: { data: null, error: { code: "42501" } }, tabla: [{ nombre: "Boda" }] });
-    expect(await leerEvento(otro)).toBe(null);
-    expect(otro.llamadas.some(([q]) => q === "tabla")).toBe(false);
+  it("con un error, nada: la tabla ya no se lee directamente", async () => {
+    const s = falso({ rpc: { data: null, error: { code: "42501" } }, tabla: [{ nombre: "Boda" }] });
+    expect(await leerEvento(s)).toBe(null);
+    expect(s.llamadas.some(([q]) => q === "tabla")).toBe(false);
   });
 });
