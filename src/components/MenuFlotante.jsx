@@ -14,7 +14,7 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { C, R, OP, S, T, DORADO, VELO, conAlfa } from "../theme";
+import { C, R, OP, S, T, DORADO, VELO, DEDO, conAlfa } from "../theme";
 import { esZurdo } from "../lib/mano";
 import { Seal } from "./Widgets";
 
@@ -342,6 +342,25 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
   const [abiertoId, setAbiertoId] = useState(null);
   const botonRef = useRef(null);
   const listaRef = useRef(null);
+  // El velo, solo detrás de los botones y un dedo alrededor (él, v63.6: a
+  // pantalla entera era excesivo). Se mide el panel ya dibujado.
+  const [marcoVelo, setMarcoVelo] = useState(null);
+  useLayoutEffect(() => {
+    if (!open || persistente || !pos || !listaRef.current) {
+      setMarcoVelo(null);
+      return;
+    }
+    const r = listaRef.current.getBoundingClientRect();
+    const { win } = realmDe(botonRef.current);
+    const top = Math.max(0, r.top - DEDO);
+    const left = Math.max(0, r.left - DEDO);
+    setMarcoVelo({
+      top,
+      left,
+      width: Math.min(win.innerWidth, r.right + DEDO) - left,
+      height: Math.min(win.innerHeight, r.bottom + DEDO) - top,
+    });
+  }, [open, pos, persistente]);
 
   const abrir = () => {
     const r = botonRef.current.getBoundingClientRect();
@@ -528,9 +547,9 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
         !persistente &&
         createPortal(
           <>
-          {/* El velo claro esmerilado detrás del menú (él, v63.5), como
-              detrás de una ventana. Tocarlo es tocar fuera: cierra. */}
-          <div data-velo-menu className="fixed inset-0" style={{ ...VELO, zIndex: 9998 }} />
+          {/* El velo claro esmerilado detrás de los botones (él, v63.5-63.6).
+              Tocarlo es tocar fuera: cierra. */}
+          {marcoVelo && <div data-velo-menu className="fixed rounded-3xl" style={{ ...marcoVelo, ...VELO, zIndex: 9998 }} />}
           <div
             ref={listaRef}
             data-menu-panel

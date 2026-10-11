@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "63.6",
+    cambios: [
+      "Al desplegar «Abrir sección…», el velo esmerilado ya no cubre toda la portada: solo queda detrás de los botones, con un margen del grosor de un dedo. El resto se sigue viendo nítido.",
+    ],
+  },
+  {
     version: "63.5",
     cambios: [
       "Lo que se abre encima ya no oscurece la pantalla: la aclara con un velo marfil esmerilado, como un cristal. Vale para las ventanas que hay que atender (Mi cuenta, las preguntas Sí/No, los avisos, Imprimir…) y para el menú «Abrir sección…» al desplegarlo. Las ventanas que se mueven y el panel «Acciones» de la Lista siguen sin velo, para trabajar con lo de detrás.",

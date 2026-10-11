@@ -17,7 +17,7 @@
 import { useState, useRef, forwardRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Trash2 } from "lucide-react";
-import { C, OP } from "../theme";
+import { C, OP, DEDO } from "../theme";
 import { ModalFlotante } from "./VentanaFlotante";
 import { Boton } from "./Boton";
 
@@ -41,7 +41,7 @@ import { Boton } from "./Boton";
 //            puede ni diagnosticar ni contar: pasó el 2026-09-20 con la
 //            salida del Modo Pruebas.
 // El mínimo para acertar con el dedo, también con prisas.
-export const ALTO_RESPUESTA = 44;
+export const ALTO_RESPUESTA = DEDO;
 
 export function usePreguntaSeguridad() {
   const [pendiente, setPendiente] = useState(null);

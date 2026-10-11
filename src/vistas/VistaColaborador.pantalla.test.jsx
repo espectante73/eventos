@@ -614,14 +614,18 @@ describe("el «Abrir sección…» del colaborador", () => {
       <VistaColaborador data={{ ...data, ...extra }} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
     );
 
-  // v63.5: al desplegarse, el velo claro esmerilado detrás; tocarlo cierra.
-  it("desplegado, pone el velo claro detrás", () => {
+  // v63.5-63.6: al desplegarse, el velo claro esmerilado detrás de los
+  // botones y un dedo alrededor, no en toda la pantalla; tocarlo cierra.
+  it("desplegado, pone el velo claro detrás de sus botones", () => {
     const vista = montarVista();
     vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
     const velo = document.body.querySelector("[data-velo-menu]");
     expect(velo, "el velo del menú").toBeTruthy();
     expect(velo.style.background).toBe("rgba(239, 233, 222, 0.55)");
     vista.desmontar();
+    // No a pantalla entera: a la medida de los botones.
+    expect(velo.classList.contains("inset-0")).toBe(false);
+    expect(velo.style.width).not.toBe("");
   });
 
   it("lleva el sello encima, y ya no hay botones sueltos", () => {

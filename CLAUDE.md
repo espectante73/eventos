@@ -59,7 +59,7 @@ trampa corregida. Lo demás es relato.**
 
 ## 1.1 Cómo trabajar aquí
 
-**Son sobre CÓMO trabajo, no sobre cómo es la app** (para eso, las "Normas de estándar" de abajo).
+**Sobre CÓMO trabajo**; cómo es la app, en la 1.2.
 
 1. **Comprobar en la fuente, nunca de memoria.** El código, la versión
    instalada de cada librería (`package.json`) y los paneles o API de
@@ -142,8 +142,8 @@ en la propuesta cuáles se han comprobado. Lo fuerza
      `MenuFlotante`), con iconos que llenan su cuadrado (`UserPlus`: el «+»
      suelto deja más aire).
 5. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
-   protagonista, y lo que se abre encima (una ventana que atender, un menú
-   desplegado) aclara el fondo con `VELO`. Los textos de ayuda, al pie y
+   protagonista, y lo que se abre encima aclara el fondo con `VELO`: tras
+   una ventana que atender, todo; tras un menú, sus botones y un dedo. Los textos de ayuda, al pie y
    plegados (`<details>`). Todo panel tiene su **salida ARRIBA y a la
    vista**, y salir deja la pantalla como estaba; un formulario acaba en
    **«Guardar» y «Cancelar»**.

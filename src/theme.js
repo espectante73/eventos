@@ -79,6 +79,9 @@ export function conAlfa(hex, alfa) {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alfa})`;
 }
 
+// El dedo: lo mínimo para acertarle con él (44, como piden Apple y Google).
+export const DEDO = 44;
+
 // El velo detrás de lo que se abre encima (él, v63.5): una ventana que hay
 // que atender o un menú desplegado. El marfil de la app, translúcido y
 // esmerilado: aclara el fondo en vez de oscurecerlo.
