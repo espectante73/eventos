@@ -453,6 +453,15 @@ CREATE FUNCTION public.es_anfitrion() RETURNS boolean
   select exists (select 1 from anfitriones a where a."authUserId" = auth.uid());
 $$;
 
+-- ¿El conectado es uno de los colaboradores? (v63.2) Para las políticas,
+-- que no pueden mirar `colaboradores` directamente (está cerrada).
+CREATE FUNCTION public.es_colaborador() RETURNS boolean
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select exists (select 1 from colaboradores c where c."authUserId" = auth.uid());
+$$;
+
 -- Quién puede usar cada canal en vivo (v55). Los canales son privados: sin
 -- sesión no se entra, y con sesión solo quien le toca. Un canal nuevo que
 -- no esté aquí no conecta: se añade su nombre (lo vigila schema.test.js).
@@ -2582,14 +2591,19 @@ alter table public.migraciones_aplicadas enable row level security;
 -- (entero) y colaborador_enlace_whatsapp() (el enlace, con permiso).
 REVOKE SELECT ON public.evento FROM anon, authenticated;
 
-CREATE POLICY lectura_publica ON public.fotos_familiares FOR SELECT USING (true);
+-- Solo el equipo (v63.2): sin cuenta se veían los apellidos de las
+-- familias invitadas. Las fotos por familia, el anfitrión y sus
+-- colaboradores; el orden de las familias, solo el anfitrión.
+CREATE POLICY lectura_equipo ON public.fotos_familiares FOR SELECT TO authenticated USING ((public.es_anfitrion() OR public.es_colaborador()));
+REVOKE SELECT ON public.fotos_familiares FROM anon;
 
 CREATE POLICY lectura_publica ON public.mesas FOR SELECT USING (true);
 
-CREATE POLICY lectura_publica ON public.orden_familias FOR SELECT USING (true);
+CREATE POLICY lectura_anfitrion ON public.orden_familias FOR SELECT TO authenticated USING (public.es_anfitrion());
+REVOKE SELECT ON public.orden_familias FROM anon;
 
--- La quinta de lectura pública: el registro de migraciones. No es para
--- la web, es para poder comprobar desde fuera qué SQL está ejecutado.
+-- De lectura pública quedan las mesas y el registro de migraciones. Este
+-- no es para la web: es para comprobar desde fuera qué SQL está ejecutado.
 CREATE POLICY lectura_publica ON public.migraciones_aplicadas FOR SELECT USING (true);
 
 

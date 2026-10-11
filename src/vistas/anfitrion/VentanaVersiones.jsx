@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "63.2",
+    cambios: [
+      "Seguridad: sin cuenta ya no se ven los grupos familiares (los apellidos de las familias invitadas), ni si tienen foto de boda, ni a cuáles se les ha enviado la invitación. Las fotos por familia las ven el anfitrión y sus colaboradores; el orden de las familias, solo el anfitrión. En pantalla no cambia nada.",
+    ],
+  },
+  {
     version: "63.1",
     cambios: [
       "Con el SQL ya subido y todo comprobado, la app deja de tener la reserva de leer el evento como antes: ahora solo lo pide al servidor.",

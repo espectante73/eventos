@@ -87,6 +87,21 @@ describe("el evento no se lee directamente", () => {
   });
 });
 
+// v63.2: sin cuenta se veían los apellidos de las familias invitadas.
+describe("las familias, solo para el equipo", () => {
+  it("fotos por familia: anfitrión y colaboradores; orden: solo el anfitrión", () => {
+    expect(sql).not.toMatch(/ON public\.(fotos_familiares|orden_familias) FOR SELECT USING \(true\)/);
+    expect(sql).toMatch(/ON public\.fotos_familiares FOR SELECT TO authenticated USING \(\(public\.es_anfitrion\(\) OR public\.es_colaborador\(\)\)\)/);
+    expect(sql).toMatch(/ON public\.orden_familias FOR SELECT TO authenticated USING \(public\.es_anfitrion\(\)\)/);
+  });
+
+  it("es_colaborador mira la cuenta conectada, sin abrir la tabla", () => {
+    const f = cuerpoDe("es_colaborador");
+    expect(f).toContain("SECURITY DEFINER");
+    expect(f).toContain('c."authUserId" = auth.uid()');
+  });
+});
+
 describe("nada abierto a escritura anónima", () => {
   // 2026-09-06: cuatro tablas tenían `for all using (true) with check
   // (true)`. `evento` guarda las plantillas de los emails automáticos:
