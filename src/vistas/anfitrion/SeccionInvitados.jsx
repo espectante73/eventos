@@ -37,7 +37,7 @@ import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, anioDelEvento } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
-import { descargarListasAcomodadores } from "../../lib/pdfAcomodadores";
+import { descargarListaAcomodadores, ARCHIVO as ARCHIVO_ACOMODADORES } from "../../lib/pdfAcomodadores";
 import { TextInput, TextInputEnVentanaAparte } from "../../components/Formulario";
 import { EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
@@ -341,17 +341,17 @@ export function SeccionInvitados({
     }
   };
 
-  // Las dos listas para acomodadores, por mesa y por familia, de una vez
-  // (él, v54.1): dos PDF descargados, sin preguntar el orden.
+  // La lista para acomodadores (él, v54.1; desde la v63.4, un solo PDF por
+  // familia con el equipo al final): se descarga sin preguntar.
   const descargarAcomodadores = async () => {
     try {
-      const familias = await descargarListasAcomodadores({ invitados, ordenFamiliares: data.ordenFamiliares });
+      const familias = await descargarListaAcomodadores({ invitados, ordenFamiliares: data.ordenFamiliares, colaboradores });
       // Avisa al terminar (norma 9): la descarga pasa fuera de la pantalla.
       preguntar(
         familias
           ? {
-              titulo: "Listas descargadas",
-              texto: "acomodadores-por-mesa.pdf\nacomodadores-por-familia.pdf\nLas tienes en tu carpeta de Descargas.",
+              titulo: "Lista descargada",
+              texto: `${ARCHIVO_ACOMODADORES}\nLa tienes en tu carpeta de Descargas.`,
               soloAviso: true,
             }
           : { titulo: "Todavía no", texto: "No hay ninguna familia confirmada.", soloAviso: true }
@@ -359,7 +359,7 @@ export function SeccionInvitados({
     } catch (error) {
       preguntar({
         titulo: "No se pudo",
-        texto: "No se pudieron descargar las listas para acomodadores. Vuelve a intentarlo.",
+        texto: "No se pudo descargar la lista para acomodadores. Vuelve a intentarlo.",
         detalle: error?.message,
         soloAviso: true,
       });

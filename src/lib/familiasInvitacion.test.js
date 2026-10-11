@@ -32,25 +32,27 @@ describe("la etiqueta de la familia, la misma que la invitación", () => {
   });
 });
 
-describe("la lista para acomodadores", () => {
-  it("por familia: una fila por familia confirmada, de la A a la Z", () => {
-    const filas = filasAcomodadores(invitados, {}, "familia");
-    expect(filas.map((f) => f.apellido)).toEqual(["Álvarez", "Fariña", "Ruiz", "Sosa"]);
-    expect(filas[1]).toMatchObject({ linea: "Fariña: Benito, Meritxell y Pablo", mesas: [5], cantidad: 3 });
+describe("la lista para acomodadores (v63.4)", () => {
+  it("una fila por familia confirmada, de la A a la Z", () => {
+    const { principal, equipo } = filasAcomodadores(invitados, {});
+    expect(principal.map((f) => f.apellido)).toEqual(["Álvarez", "Fariña", "Ruiz", "Sosa"]);
+    expect(equipo).toEqual([]);
+    expect(principal[1]).toMatchObject({ linea: "Fariña: Benito, Meritxell y Pablo", mesas: [5], cantidad: 3 });
   });
 
-  it("por mesa: de la 1 en adelante, la repartida en cada una de sus mesas y sin mesa al final", () => {
-    const filas = filasAcomodadores(invitados, {}, "mesa");
-    expect(filas.map((f) => [f.mesaOrden, f.apellido])).toEqual([
-      [2, "Ruiz"],
-      [5, "Fariña"],
-      [5, "Ruiz"],
-      [6, "Álvarez"],
-      [null, "Sosa"],
-    ]);
+  it("al final, aparte, las familias de colaboradores y de acomodadores", () => {
+    const conAcomodador = invitados.map((g) => (g.id === "s1" ? { ...g, rolesTrabajo: ["Acomodadora"] } : g));
+    const { principal, equipo } = filasAcomodadores(conAcomodador, {}, [{ id: "c1", invitadoId: "f2" }]);
+    expect(principal.map((f) => f.apellido)).toEqual(["Álvarez", "Ruiz"]);
+    expect(equipo.map((f) => f.apellido)).toEqual(["Fariña", "Sosa"]);
+  });
+
+  it("otro papel de trabajo no cuenta; un colaborador sin ficha enlazada, tampoco", () => {
+    const cocina = invitados.map((g) => (g.id === "s1" ? { ...g, rolesTrabajo: ["Cocina"] } : g));
+    expect(filasAcomodadores(cocina, {}, [{ id: "c2", invitadoId: null }]).equipo).toEqual([]);
   });
 
   it("sin nadie confirmado, ninguna fila", () => {
-    expect(filasAcomodadores([inv("x", "X", "X", "X01", 1, { confirmado: false })], {}, "mesa")).toEqual([]);
+    expect(filasAcomodadores([inv("x", "X", "X", "X01", 1, { confirmado: false })], {})).toEqual({ principal: [], equipo: [] });
   });
 });

@@ -1,4 +1,4 @@
-// Los dos PDF de acomodadores, con jsPDF simulado: se comprueba QUÉ se
+// El PDF de acomodadores, con jsPDF simulado: se comprueba QUÉ se
 // escribe y se descarga, no cómo se ve (para eso, su captura: norma 10).
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -32,9 +32,7 @@ vi.mock("jspdf", () => ({
 vi.mock("./iconosPdf", () => ({ iconosAcomodadores: async () => ({ mesa: "m", persona: "p" }) }));
 vi.mock("./descargas", () => ({ descargarBlob: (nombre) => descargas.push(nombre) }));
 
-const { descargarListasAcomodadores: descargar, TITULOS, SIN_MESA } = await import("./pdfAcomodadores");
-// Sin el respiro entre descargas: aquí no hay navegador que lo necesite.
-const descargarListasAcomodadores = (datos) => descargar({ ...datos, pausa: 0 });
+const { descargarListaAcomodadores, TITULO, TITULO_EQUIPO, SIN_MESA } = await import("./pdfAcomodadores");
 const { C } = await import("../theme");
 
 const inv = (id, nombre, apellido, mesa) => ({ id, nombre, apellido, grupoFamiliar: apellido, mesa, confirmado: true });
@@ -44,39 +42,45 @@ beforeEach(() => {
   hojas.length = 0;
 });
 
-describe("descargarListasAcomodadores", () => {
-  it("descarga los dos, por mesa y por familia, sin preguntar", async () => {
-    const n = await descargarListasAcomodadores({ invitados: [inv("1", "Ana", "Ruiz", 3), inv("2", "Luis", "Ruiz", 3)] });
+describe("descargarListaAcomodadores (v63.4: uno solo, por familia)", () => {
+  it("descarga uno, por familia, sin preguntar", async () => {
+    const n = await descargarListaAcomodadores({ invitados: [inv("1", "Ana", "Ruiz", 3), inv("2", "Luis", "Ruiz", 3)] });
     expect(n).toBe(1);
-    expect(descargas).toEqual(["acomodadores-por-mesa.pdf", "acomodadores-por-familia.pdf"]);
-    // La columna por la que se ordena, primero.
-    expect(hojas[0].textos).toEqual([TITULOS.mesa, "Familia", "3", "2", "Ruiz: Ana y Luis"]);
-    expect(hojas[1].textos).toEqual([TITULOS.familia, "Familia", "Ruiz: Ana y Luis", "3", "2"]);
+    expect(descargas).toEqual(["acomodadores.pdf"]);
+    expect(hojas).toHaveLength(1);
+    expect(hojas[0].textos).toEqual([TITULO, "Familia", "Ruiz: Ana y Luis", "3", "2"]);
+  });
+
+  it("el equipo, al final y con su título", async () => {
+    const invitados = [inv("1", "Ana", "Ruiz", 3), { ...inv("2", "Eva", "Abreu", 4), rolesTrabajo: ["acomodador"] }, inv("3", "Iván", "Toledo", 5)];
+    const n = await descargarListaAcomodadores({ invitados, colaboradores: [{ id: "c", invitadoId: "3" }] });
+    expect(n).toBe(3);
+    const t = hojas[0].textos;
+    expect(t.indexOf("Ruiz: Ana")).toBeLessThan(t.indexOf(TITULO_EQUIPO));
+    expect(t.slice(t.indexOf(TITULO_EQUIPO))).toEqual([TITULO_EQUIPO, "Abreu: Eva", "4", "1", "Toledo: Iván", "5", "1"]);
   });
 
   it("los iconos, solo en la cabecera: en las filas, solo números", async () => {
-    await descargarListasAcomodadores({ invitados: [inv("1", "Ana", "Ruiz", 3), inv("2", "Eva", "Sosa", 4), inv("3", "Iván", "Toledo", 5)] });
+    await descargarListaAcomodadores({ invitados: [inv("1", "Ana", "Ruiz", 3), inv("2", "Eva", "Sosa", 4), inv("3", "Iván", "Toledo", 5)] });
     expect(hojas[0].imagenes).toBe(2);
-    expect(hojas[1].imagenes).toBe(2);
   });
 
   it("sin mesa: «NO» en rojo", async () => {
-    await descargarListasAcomodadores({ invitados: [inv("1", "Sara", "Sosa", null)] });
+    await descargarListaAcomodadores({ invitados: [inv("1", "Sara", "Sosa", null)] });
     const hoja = hojas[0];
-    expect(hoja.textos).toEqual([TITULOS.mesa, "Familia", SIN_MESA, "1", "Sosa: Sara"]);
-    expect(hoja.colores[2]).toBe(C.peligro);
-    expect(hoja.colores[3]).toBe(C.ink);
+    expect(hoja.textos).toEqual([TITULO, "Familia", "Sosa: Sara", SIN_MESA, "1"]);
+    expect(hoja.colores[3]).toBe(C.peligro);
+    expect(hoja.colores[4]).toBe(C.ink);
   });
 
   it("si no cabe, se recorta con «…» en su línea", async () => {
     const largos = ["Francisco Javier", "María del Carmen", "Alejandro", "Lucía", "Guillermo", "Inmaculada"];
-    await descargarListasAcomodadores({ invitados: largos.map((n, i) => inv(String(i), n, "Hernández-Rodríguez", 4)) });
-    const linea = hojas[0].textos.at(-1);
-    expect(linea.endsWith("…")).toBe(true);
+    await descargarListaAcomodadores({ invitados: largos.map((n, i) => inv(String(i), n, "Hernández-Rodríguez", 4)) });
+    expect(hojas[0].textos[2].endsWith("…")).toBe(true);
   });
 
   it("sin familias confirmadas, no descarga nada", async () => {
-    expect(await descargarListasAcomodadores({ invitados: [] })).toBe(0);
+    expect(await descargarListaAcomodadores({ invitados: [] })).toBe(0);
     expect(descargas).toEqual([]);
   });
 });

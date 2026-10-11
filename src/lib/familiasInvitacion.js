@@ -54,12 +54,17 @@ export function mesasYCantidad(familia) {
   };
 }
 
-// Las filas de la lista de acomodadores: una por familia con algún
-// confirmado, haya pagado o no. Por mesa, de la 1 en adelante (la familia
-// repartida sale en cada una de sus mesas, y las que no tienen mesa, al
-// final); por familia, de la A a la Z.
-export function filasAcomodadores(invitados, ordenFamiliares, orden) {
-  const comparar = (a, b) => a.apellido.localeCompare(b.apellido, "es");
+// ¿Trabaja de acomodador? El papel lo escribe él a mano en la Lista
+// («Acomodador», «acomodadora», «Acomodadores»): vale todo lo que empiece así.
+const esAcomodador = (g) => (g.rolesTrabajo || []).some((r) => /^acomodador/i.test(String(r).trim()));
+
+// La lista para acomodadores (él, v63.4): una fila por familia con algún
+// confirmado, haya pagado o no, de la A a la Z. Aparte, el EQUIPO: las
+// familias de los colaboradores y de los acomodadores, que se sientan los
+// últimos. Colaborador = su cuenta enlazada a su ficha (`invitadoId`); los
+// que no lo están los encuentra la Revisión.
+export function filasAcomodadores(invitados, ordenFamiliares, colaboradores = []) {
+  const deColaborador = new Set(colaboradores.map((c) => c.invitadoId).filter(Boolean));
   const filas = familiasDelEvento(invitados, ordenFamiliares)
     .filter((f) => f.confirmados.length > 0)
     .map((f) => ({
@@ -67,10 +72,8 @@ export function filasAcomodadores(invitados, ordenFamiliares, orden) {
       apellido: f.apellido,
       linea: lineaFamilia(f.apellido, f.confirmados.map((m) => m.nombre)),
       ...mesasYCantidad(f),
-    }));
-  if (orden === "familia") return filas.sort(comparar);
-  const numero = (m) => (m == null ? Infinity : Number(m));
-  return filas
-    .flatMap((f) => (f.mesas.length ? f.mesas : [null]).map((m) => ({ ...f, mesaOrden: m })))
-    .sort((a, b) => numero(a.mesaOrden) - numero(b.mesaOrden) || comparar(a, b));
+      equipo: f.confirmados.some((m) => deColaborador.has(m.id) || esAcomodador(m)),
+    }))
+    .sort((a, b) => a.apellido.localeCompare(b.apellido, "es"));
+  return { principal: filas.filter((f) => !f.equipo), equipo: filas.filter((f) => f.equipo) };
 }

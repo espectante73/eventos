@@ -18,7 +18,7 @@ import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
 
 // Los PDF de verdad no se fabrican aquí (jsdom no dibuja): basta saber que
 // la pantalla avisa al terminar.
-vi.mock("../../lib/pdfAcomodadores", () => ({ descargarListasAcomodadores: async () => 3 }));
+vi.mock("../../lib/pdfAcomodadores", () => ({ descargarListaAcomodadores: async () => 3, ARCHIVO: "acomodadores.pdf" }));
 
 const evento = { fecha: "2026-11-13", precioAdulto: "45", precioNino: "20", edadNinoDesde: "3", edadNinoHasta: "12" };
 
@@ -221,7 +221,7 @@ describe("Imprimir: la lista para acomodadores", () => {
     );
     const boton = [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Lista para acomodadores"));
     await act(async () => boton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    expect(document.body.textContent).toContain("Listas descargadas");
+    expect(document.body.textContent).toContain("Lista descargada");
     expect(document.body.textContent).toContain("carpeta de Descargas");
     vista.desmontar();
   });

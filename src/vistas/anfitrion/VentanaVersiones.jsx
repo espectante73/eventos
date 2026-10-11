@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "63.4",
+    cambios: [
+      "La lista para acomodadores es ahora un solo PDF, por familia (el de por mesa desaparece): primero todas las familias de la A a la Z y, aparte y al final, «EQUIPO · se sientan al final», con las familias de los colaboradores y de los acomodadores, que son las últimas en sentarse.",
+    ],
+  },
+  {
     version: "63.3",
     cambios: [
       "Seguridad: la pieza que usa el generador de PDF, actualizada (tenía un fallo conocido); en lo que llega a la web ya no queda ninguno. Y la web lleva sus cabeceras de protección: ninguna otra página puede meter la app dentro de la suya para engañar con clics. En pantalla no cambia nada.",
