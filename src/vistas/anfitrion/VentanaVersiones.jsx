@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "62.4",
+    cambios: [
+      "Aspecto más profesional, 2.ª parte: en el formulario del colaborador, «Invitados INCOMPLETOS (2)» pasa a «Incompletos (2)», en una sola línea y con el mismo título que «Familias». El botón de al lado, que era una píldora hecha a mano con el texto «Datos completos», es ahora el botón de la app con el avión de papel y el texto «Avisar», que dice lo que hace. Los dos botones de su ventana también son los de la app, a todo el ancho.",
+    ],
+  },
+  {
     version: "62.3",
     cambios: [
       "En «Acciones», «Añadir invitado» pasa a decir solo «Añadir»: el icono de la persona con «+» ya dice que es un invitado.",

@@ -44,7 +44,7 @@ import { CapaBarra } from "../components/BarraVentanas";
 import { abrirMusica } from "../lib/ventanaMusica";
 import { ICONOS_VENTANAS } from "../lib/iconosVentanas";
 import { Boton, estilosBoton, EnlaceTexto } from "../components/Boton";
-import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
+import { usePreguntaSeguridad, ALTO_RESPUESTA } from "../components/PreguntaSeguridad";
 import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
@@ -1403,7 +1403,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
     if (pendientes.length > 0) {
       aviso(
         "Todavía no",
-        `Hay ${pendientes.length} ficha${pendientes.length !== 1 ? "s" : ""} incompleta${pendientes.length !== 1 ? "s" : ""} (en rojo, en INCOMPLETOS).`
+        `Hay ${pendientes.length} ficha${pendientes.length !== 1 ? "s" : ""} incompleta${pendientes.length !== 1 ? "s" : ""} (en rojo, en «Incompletos»).`
       );
       return;
     }
@@ -1692,20 +1692,19 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           </div>
 
           <section className={`mt-8 ${fichaAbierta ? "mt-2" : ""}`}>
-            <div className={`flex items-center justify-between mb-4 pb-2 ${fichaAbierta ? "hidden sm:flex" : ""}`} style={{ borderBottom: `1.5px solid ${C.line}` }}>
-              <h2
-                className="flex items-center gap-2 text-xl"
-                style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}
+            {/* La misma pieza que «Familias», en una línea; «Avisar» abre la
+                ventana para avisar al anfitrión de que ha terminado (v62.4). */}
+            <div className={fichaAbierta ? "hidden sm:block" : ""}>
+              <SectionTitle
+                icon={Bell}
+                accion={
+                  <Boton variante="principal" onClick={() => setMostrarConfirmar(true)}>
+                    <Send size={14} /> Avisar
+                  </Boton>
+                }
               >
-                <Bell size={18} strokeWidth={2} />
-                Invitados INCOMPLETOS {pendientes.length > 0 && `(${pendientes.length})`}
-              </h2>
-              <button
-                onClick={() => setMostrarConfirmar(true)}
-                className="boton-3d boton-verde-solido px-4 py-2 rounded-full text-sm font-semibold"
-              >
-                Datos completos
-              </button>
+                Incompletos{pendientes.length > 0 && ` (${pendientes.length})`}
+              </SectionTitle>
             </div>
             <div className="space-y-2">
               {ordenarPorApellidoNombre(enRecogida).map((g) => (
@@ -1811,36 +1810,27 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             <li>Con el pago hecho: {pagados.length} de {confirmados.length}</li>
           </ul>
           <div className="space-y-2">
-            <button
+            {/* Los de la app, a todo el ancho y de la altura del dedo, como
+                «Sí»/«No» (v62.4). Verde cuando está todo; si no, se puede
+                pulsar igual y dice qué falta. */}
+            <Boton
+              variante={pendientes.length === 0 && confirmados.length > 0 ? "principal" : "secundario"}
               onClick={confirmarDatosCompletos}
               disabled={enviandoDatos}
-              className={
-                "w-full px-3 py-2 rounded-full text-sm font-medium" +
-                (pendientes.length === 0 && confirmados.length > 0 ? " boton-3d boton-verde-solido" : "")
-              }
-              style={
-                pendientes.length === 0 && confirmados.length > 0
-                  ? undefined
-                  : { background: C.line, color: C.charcoal }
-              }
+              className="w-full"
+              style={{ minHeight: ALTO_RESPUESTA }}
             >
               {enviandoDatos ? "Enviando…" : "Confirmar datos completos y avisar"}
-            </button>
-            <button
+            </Boton>
+            <Boton
+              variante={noPagados.length === 0 && confirmados.length > 0 ? "principal" : "secundario"}
               onClick={confirmarPagosCompletos}
               disabled={enviandoPagos}
-              className={
-                "w-full px-3 py-2 rounded-full text-sm font-medium" +
-                (noPagados.length === 0 && confirmados.length > 0 ? " boton-3d boton-verde-solido" : "")
-              }
-              style={
-                noPagados.length === 0 && confirmados.length > 0
-                  ? undefined
-                  : { background: C.line, color: C.charcoal }
-              }
+              className="w-full"
+              style={{ minHeight: ALTO_RESPUESTA }}
             >
               {enviandoPagos ? "Enviando…" : "Confirmar pagos completos y avisar"}
-            </button>
+            </Boton>
           </div>
         </ModalFlotante>
       )}

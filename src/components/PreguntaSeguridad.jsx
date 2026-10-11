@@ -41,7 +41,7 @@ import { Boton } from "./Boton";
 //            puede ni diagnosticar ni contar: pasó el 2026-09-20 con la
 //            salida del Modo Pruebas.
 // El mínimo para acertar con el dedo, también con prisas.
-const ALTO_RESPUESTA = 44;
+export const ALTO_RESPUESTA = 44;
 
 export function usePreguntaSeguridad() {
   const [pendiente, setPendiente] = useState(null);

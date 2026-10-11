@@ -5,7 +5,9 @@
 import { useId, useRef, useLayoutEffect } from "react";
 import { C, inputStyle } from "../theme";
 
-export function SectionTitle({ icon: Icon, children, onToggle, compacto }) {
+// `accion`: un botón al otro lado del título, en la misma línea y sobre la
+// misma raya («Avisar», junto a «Incompletos»; él, v62.4).
+export function SectionTitle({ icon: Icon, children, onToggle, compacto, accion }) {
   const plegable = typeof onToggle === "function";
   const contenido = (
     <>
@@ -32,6 +34,19 @@ export function SectionTitle({ icon: Icon, children, onToggle, compacto }) {
       >
         {contenido}
       </button>
+    );
+  }
+  if (accion) {
+    return (
+      <div
+        className="flex items-center justify-between gap-2 mb-4 pb-2 zurdo:flex-row-reverse"
+        style={{ borderBottom: estilo.borderBottom }}
+      >
+        <h2 className="flex items-center gap-2 text-xl min-w-0" style={{ ...estilo, borderBottom: undefined }}>
+          {contenido}
+        </h2>
+        {accion}
+      </div>
     );
   }
   return (

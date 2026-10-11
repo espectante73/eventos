@@ -104,6 +104,14 @@ describe("la pantalla del colaborador se puede dibujar", () => {
     expect(html).toContain("Pacheco, Lucía");
   });
 
+  // v62.4: la cabecera con las piezas de la app, como «Familias».
+  it("«Incompletos (N)» en una línea, con su botón «Avisar»", () => {
+    const html = abrirFormulario();
+    expect(html).toMatch(/Incompletos \(\d+\)/);
+    expect(html).not.toContain("INCOMPLETOS");
+    expect(html).toMatch(/<button[^>]*>(<[^>]+>)*\s*Avisar/);
+  });
+
   // Las rondas (él, v46.5): con datos a medias la fila solo lleva
   // "datos 0 de 6" y el nombre; ni pago ni check hasta completarlos.
   it("una fila con datos a medias enseña «datos N de M» y el nombre", () => {
