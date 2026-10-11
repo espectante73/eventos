@@ -92,6 +92,20 @@ export function ordenarPorApellidoNombre(lista) {
     );
 }
 
+// Un importe, escrito igual en toda la app (él, v61.4): como en España,
+// "47 €", y con coma solo si hay céntimos: "47,50 €". Acepta lo que se
+// escribe a mano ("47,5").
+export function euros(n) {
+  const valor = typeof n === "number" ? n : parsePrecio(n);
+  const conCentimos = Math.round(valor * 100) % 100 !== 0;
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: conCentimos ? 2 : 0,
+    maximumFractionDigits: 2,
+  }).format(valor || 0);
+}
+
 export function parsePrecio(valor) {
   if (!valor) return 0;
   const limpio = String(valor)

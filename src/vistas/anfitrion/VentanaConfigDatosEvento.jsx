@@ -13,6 +13,7 @@ import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { PlantillasEmail, TextoEditableEvento } from "../../components/PlantillasEmail";
 import { NOTA_PRIVACIDAD_POR_DEFECTO, TITULO_NOTA_PRIVACIDAD } from "../../constants";
 import { emailValido } from "../../lib/validacion";
+import { euros } from "../../lib/formato";
 import { Boton, estilosBoton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 
@@ -327,7 +328,7 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
         <SeccionPlegable
           icono={Euro}
           titulo="Precios"
-          resumen={`${evento.precioAdulto || "—"} € adulto · ${evento.precioNino || "—"} € niño`}
+          resumen={`${evento.precioAdulto ? euros(evento.precioAdulto) : "—"} adulto · ${evento.precioNino ? euros(evento.precioNino) : "—"} niño`}
         >
           <div className="space-y-3 pt-1">
             <GrupoPrecio

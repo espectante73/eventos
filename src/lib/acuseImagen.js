@@ -18,13 +18,8 @@
 // es exactamente el tamaño final. El anfitrión confirmó que cada acuse
 // lleva como mucho 12-14 invitados, así que el diseño da por hecho ese
 // máximo (sitio de sobra) en vez de recalcular alturas dinámicas.
-import { formatearFecha } from "./formato";
+import { formatearFecha, euros } from "./formato";
 
-const formatoEuro = (n) =>
-  (typeof n === "number" ? n : parseFloat(n) || 0).toLocaleString("es-ES", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }) + " €";
 
 // Medidas reales de un A4 vertical, en puntos (1pt = 1/72").
 const PAGINA_ANCHO = 595.28;
@@ -170,7 +165,7 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
       ctx.fillStyle = COLOR.charcoal;
       ctx.fillText(`${it.apellido}, ${it.nombre}`, X_IZQ, y);
       ctx.textAlign = "right";
-      ctx.fillText(formatoEuro(it.importe), X_DER, y);
+      ctx.fillText(euros(it.importe), X_DER, y);
       y += ALTO_FILA;
     });
   }
@@ -193,7 +188,7 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
   ctx.fillStyle = COLOR.wax;
   ctx.fillText("TOTAL ENTREGADO", CENTRO, y - 12);
   ctx.font = "bold 30px 'Fraunces', serif";
-  ctx.fillText(formatoEuro(total), CENTRO, y + 22);
+  ctx.fillText(euros(total), CENTRO, y + 22);
   y += ALTO_CAJA_TOTAL / 2 + 30 + hueco; // hueco C
 
   // ---------- Fecha y firma ----------

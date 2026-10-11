@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Plus, Mail, Undo2, Calculator, Users, Receipt } from "lucide-react";
 import { C, T, OP } from "../../theme";
 import { importeEsperadoInvitado, resolverColaborador } from "../../lib/invitados";
-import { parsePrecio, formatearFecha, ordenarPorApellidoNombre } from "../../lib/formato";
+import { parsePrecio, formatearFecha, ordenarPorApellidoNombre, euros } from "../../lib/formato";
 import { uid } from "../../lib/id";
 import { construirAsuntoAcuse, construirHtmlAcuse } from "../../lib/acuseRecogida";
 import { generarPdfAcuse } from "../../lib/acuseImagen";
@@ -76,8 +76,6 @@ export function VentanaCuentas({ data, onCerrar }) {
     .filter((g) => g.pagado)
     .reduce((s, g) => s + parsePrecio(g.importe), 0);
   const balance = recaudado - gastosPagados;
-  const formato = (n) =>
-    n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // Invitados confirmados y ya pagados de un colaborador — es tanto el
   // desglose del acuse como la base del importe total a confirmar.
@@ -211,14 +209,14 @@ export function VentanaCuentas({ data, onCerrar }) {
       <SeccionPlegable
         icono={Calculator}
         titulo="Resumen"
-        resumen={`Balance ${formato(balance)} €`}
+        resumen={`Balance ${euros(balance)}`}
         abierta={seccionAbierta === "resumen"}
         onAlternar={() => alternar("resumen")}
       >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 mt-2">
         <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.ink }}>
-            {formato(recaudado)} €
+            {euros(recaudado)}
           </div>
           <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
             Recaudado
@@ -226,7 +224,7 @@ export function VentanaCuentas({ data, onCerrar }) {
         </div>
         <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.charcoal }}>
-            {formato(pendienteCobro)} €
+            {euros(pendienteCobro)}
           </div>
           <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
             Pendiente de cobro
@@ -234,7 +232,7 @@ export function VentanaCuentas({ data, onCerrar }) {
         </div>
         <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.wax }}>
-            {formato(totalGastos)} €
+            {euros(totalGastos)}
           </div>
           <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
             Total gastos
@@ -245,7 +243,7 @@ export function VentanaCuentas({ data, onCerrar }) {
           style={{ background: balance >= 0 ? "#E3E9AE" : "#F0D3C8", border: `1px solid ${C.line}` }}
         >
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.ink }}>
-            {formato(balance)} €
+            {euros(balance)}
           </div>
           <div className="text-xs uppercase" style={{ color: C.charcoal, fontFamily: "'IBM Plex Mono', monospace" }}>
             Balance (recaudado − gastos pagados)
@@ -279,7 +277,7 @@ export function VentanaCuentas({ data, onCerrar }) {
               >
                 <div className="flex-1" style={{ minWidth: 160 }}>
                   <div style={{ color: C.ink, fontWeight: 600 }}>
-                    Recaudado por {c.nombre}: {formato(importeSuyo)} €
+                    Recaudado por {c.nombre}: {euros(importeSuyo)}
                   </div>
                   {!c.email && (
                     <div className="text-xs" style={{ color: C.wax }}>
@@ -309,7 +307,7 @@ export function VentanaCuentas({ data, onCerrar }) {
                       className="text-xs px-2 py-1 rounded"
                       style={{ background: "#E3E9AE", color: C.ink }}
                     >
-                      ✓ Recogido {formato(c.dineroRecogidoImporte || 0)} € el{" "}
+                      ✓ Recogido {euros(c.dineroRecogidoImporte || 0)} el{" "}
                       {formatearFecha(String(c.dineroRecogidoEn).slice(0, 10))}
                     </span>
                     <Boton variante="secundario" tamano="pequeno" onClick={() => reenviarAcuse(c)} disabled={enviandoId === c.id || !c.email} titulo="Reenviar el acuse por email otra vez">
@@ -364,7 +362,7 @@ export function VentanaCuentas({ data, onCerrar }) {
       <SeccionPlegable
         icono={Receipt}
         titulo="Gastos"
-        resumen={`${gastos.length} · ${formato(totalGastos)} €`}
+        resumen={`${gastos.length} · ${euros(totalGastos)}`}
         abierta={seccionAbierta === "gastos"}
         onAlternar={() => alternar("gastos")}
       >
@@ -411,7 +409,7 @@ export function VentanaCuentas({ data, onCerrar }) {
               titulo="Quitar este gasto"
               pregunta={{
                 titulo: "¿Quitar este gasto?",
-                texto: [g.concepto, g.importe && `${g.importe} €`].filter(Boolean).join(" · ") || "Gasto sin concepto.",
+                texto: [g.concepto, g.importe && euros(g.importe)].filter(Boolean).join(" · ") || "Gasto sin concepto.",
                 rotulo: "Sí",
               }}
               onClick={() => eliminarGasto(g.id)}
@@ -448,7 +446,7 @@ export function VentanaCuentas({ data, onCerrar }) {
             <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
               Importe a confirmar
             </p>
-            <p className="text-sm mb-3" style={{ color: C.ink }}>{formato(previewAcuse.importe)} €</p>
+            <p className="text-sm mb-3" style={{ color: C.ink }}>{euros(previewAcuse.importe)}</p>
           </>
         )}
         <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>

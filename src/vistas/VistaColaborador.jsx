@@ -20,7 +20,7 @@ import {
   resolverColaborador,
   fichaCerradaAlColaborador,
 } from "../lib/invitados";
-import { ordenarPorApellidoNombre, nombreCompleto } from "../lib/formato";
+import { ordenarPorApellidoNombre, nombreCompleto, euros } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
 import { estadoImpago, textoAvisoImpago, fechaCorta, PLAZOS_MAX } from "../lib/impagos";
@@ -352,7 +352,7 @@ function FormularioDatos({
           <span>Familia {invitado.grupoFamiliar || form.apellido}</span>
           <span className="ml-auto">
             <PastillaDato destacado title="Importe calculado según edad y los precios de Configuración">
-              € {importe.toFixed(2)}
+              {euros(importe)}
             </PastillaDato>
           </span>
         </div>
@@ -947,8 +947,6 @@ function FilaInvitadoColaborador({
 const TEXTO_IMPAGO =
   "Sí: queda su pago pendiente una semana; si no paga, te volveremos a preguntar.\nNo: queda como «No asiste» y deja libre su sitio en la mesa.";
 const TEXTO_SIN_PLAZOS = `Ya no quedan plazos (${PLAZOS_MAX} semanas): solo se puede marcar «No asiste».`;
-const sinCentimos = (n) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n || 0);
 
 function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responderImpago, abierta, onAlternar, renderMiembro, oculta }) {
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
@@ -1077,7 +1075,7 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
                 className="text-xs px-2 py-0.5 rounded whitespace-nowrap"
                 style={{ border: `1px dashed ${C.line}`, color: C.charcoal }}
               >
-                Pago · {sinCentimos(familia.totalPorPagar)}
+                Pago · {euros(familia.totalPorPagar)}
               </span>
             )}
           </button>
@@ -1137,7 +1135,7 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
         // «Guardar» y «Cancelar» (norma 5).
         <div className="px-3 pb-3 pt-2" style={{ background: C.ink, color: C.paper }}>
           <div className="flex items-center justify-between text-xs mb-1" style={{ fontFamily: "'IBM Plex Mono', monospace", color: C.goldClaro }}>
-            <span>{totalElegido !== null ? sinCentimos(totalElegido) : ""}</span>
+            <span>{totalElegido !== null ? euros(totalElegido) : ""}</span>
             <span>
               {eligiendo.marcados.size} de {eligiendo.cambian.length}
             </span>
@@ -1430,7 +1428,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
 
   if (!colaborador) return null;
 
-  const formatoEuro = (n) => `€ ${n.toFixed(2)}`;
 
   // Aviso permanente (no un aviso puntual de "algo nuevo") mientras el
   // colaborador tenga CUALQUIER permiso extra concedido -- a petición del
@@ -1630,7 +1627,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             <SeccionPlegable
               icono={Euro}
               titulo="Contabilidad"
-              resumen={`Pendiente ${formatoEuro(importePendiente)}`}
+              resumen={`Pendiente ${euros(importePendiente)}`}
               abierta={abiertoId === "cuentas"}
               onAlternar={() => setAbiertoId((a) => (hayFicha(a) ? a : a === "cuentas" ? null : "cuentas"))}
             >
@@ -1646,19 +1643,19 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             <div className="h-full rounded p-2 text-center" style={{ background: C.paperDark }}>
               <div className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>Importe total</div>
               <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700, fontSize: T.normal }}>
-                {formatoEuro(importeEsperado)}
+                {euros(importeEsperado)}
               </div>
             </div>
             <div className="h-full rounded p-2 text-center" style={{ background: C.ink }}>
               <div className="text-xs" style={{ color: "#fff", opacity: OP.secundario }}>Cobrado</div>
               <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: T.normal }}>
-                {formatoEuro(importeCobrado)}
+                {euros(importeCobrado)}
               </div>
             </div>
             <div className="h-full rounded p-2 text-center" style={{ background: C.wax }}>
               <div className="text-xs" style={{ color: "#fff", opacity: OP.secundario }}>Pendiente</div>
               <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: T.normal }}>
-                {formatoEuro(importePendiente)}
+                {euros(importePendiente)}
               </div>
             </div>
             {/* Solo el número se centra en el hueco que le queda -- el

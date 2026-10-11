@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY, valorFechaEvento, TEXTO_SIN_FECHA } from "./formato";
+import { formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY, valorFechaEvento, TEXTO_SIN_FECHA, euros } from "./formato";
 
 describe("formatearFecha", () => {
   it("convierte ISO a formato largo en español", () => {
@@ -80,5 +80,22 @@ describe("valorFechaEvento", () => {
     const evento = { fecha: "2026-11-27", fechaSinConfirmar: true };
     expect(valorFechaEvento(evento)).toBe(TEXTO_SIN_FECHA);
     expect(evento.fecha).toBe("2026-11-27");
+  });
+});
+
+// Un importe, igual en toda la app (él, v61.4).
+describe("euros", () => {
+  const sinRaros = (t) => t.replace(/\s/g, " ");
+  it("como en España: el símbolo detrás y, sin céntimos, sin decimales", () => {
+    expect(sinRaros(euros(47))).toBe("47 €");
+    expect(sinRaros(euros(110))).toBe("110 €");
+  });
+  it("con céntimos, con coma y dos decimales", () => {
+    expect(sinRaros(euros(47.5))).toBe("47,50 €");
+    expect(sinRaros(euros("35,5"))).toBe("35,50 €");
+  });
+  it("vacío o raro, cero", () => {
+    expect(sinRaros(euros(undefined))).toBe("0 €");
+    expect(sinRaros(euros("abc"))).toBe("0 €");
   });
 });

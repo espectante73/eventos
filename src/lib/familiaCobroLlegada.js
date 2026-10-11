@@ -6,7 +6,7 @@
 // (colaborador_marcar_familia), que hace las mismas comprobaciones para
 // todos a la vez: o todos o ninguno.
 import { claveFamilia, datosCompletos, importeEsperadoInvitado } from "./invitados";
-import { nombreCompleto } from "./formato";
+import { nombreCompleto, euros } from "./formato";
 import { requisitosActivos } from "./modoPruebas";
 
 // Un miembro de la familia con lo justo para preguntar. Es lo mismo que
@@ -60,9 +60,6 @@ export function preguntaFamilia(miembros, campo, valor, { evento, marcadoAbierto
     campo === "pagado" && valor ? aCambiar.reduce((s, m) => s + importeEsperadoInvitado(m, evento), 0) : null;
   return { aCambiar, bloqueados, total, puedeTodos: bloqueados.length === 0 };
 }
-
-export const euros = (n) =>
-  new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(n || 0);
 
 // El texto de la pregunta, una línea por persona ("Apellido, Nombre",
 // norma 15), el total al cobrar y, si alguien lo impide, quién y por qué

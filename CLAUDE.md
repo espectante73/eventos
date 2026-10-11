@@ -153,7 +153,8 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 7. **Una sola pieza, no sincronizar**: si dos sitios tienen que decir
    siempre lo mismo —un componente, una constante, una función, qué es
    una familia (`claveFamilia`), cómo se nombra a alguien
-   (`nombreCompleto`)—, comparten la definición. Dos copias mantenidas a
+   (`nombreCompleto`) o se escribe un importe (`euros`)—, comparten la
+   definición. Dos copias mantenidas a
    mano **derivan sin que nadie lo vea**.
 8. **Una vista que solo reordena o filtra lo que la Lista de invitados
    ya muestra va DENTRO de la lista**: la lista es la raíz.

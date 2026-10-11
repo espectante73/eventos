@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "61.4",
+    cambios: [
+      "Todos los importes de la app se escriben igual, como en España: «47 €», y con coma solo si hay céntimos, «47,50 €». Antes convivían tres formatos («€ 141.00», «47,00 €» y «47 €»). También en el acuse de recibo y en Cuentas.",
+    ],
+  },
+  {
     version: "61.3",
     cambios: [
       "Las preguntas sin texto (como «¿Descartar los cambios?») ya no dejan una franja vacía entre el título y los botones.",

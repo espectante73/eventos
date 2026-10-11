@@ -29,6 +29,18 @@ const leer = (r) => readFileSync(r, "utf-8");
 const sinComentarios = (t) =>
   t.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
 
+// Un importe se escribe siempre con euros() (lib/formato.js, v61.4): había
+// tres formatos a la vez ("€ 141.00", "47,00 €", "47 €").
+describe("los importes, todos con euros()", () => {
+  it("nadie pega el € a mano junto a un número", () => {
+    const aMano = /€\s*\{|\}\s*€|toFixed\(2\)\}?\s*€|€\s*\$\{/;
+    const fuera = archivos
+      .filter((r) => !r.endsWith("VentanaVersiones.jsx"))
+      .flatMap((r) => sinComentarios(leer(r)).split("\n").filter((l) => aMano.test(l)).map((l) => `${r}: ${l.trim()}`));
+    expect(fuera).toEqual([]);
+  });
+});
+
 // Norma 9 (él, v59.1): las preguntas se responden «Sí» / «No». Solo lo que
 // borra para siempre lleva verbo, para no borrar por un «Sí» con prisas.
 describe("norma 9: «Sí» / «No», con verbo solo lo que borra para siempre", () => {

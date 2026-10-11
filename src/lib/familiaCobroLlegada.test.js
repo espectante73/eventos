@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { familiaDe, preguntaFamilia, textoPreguntaFamilia, euros } from "./familiaCobroLlegada";
+import { familiaDe, preguntaFamilia, textoPreguntaFamilia } from "./familiaCobroLlegada";
 
 const evento = { fecha: "2026-11-13", precioAdulto: "45", precioNino: "20", edadNinoDesde: "3", edadNinoHasta: "12" };
 const g = (id, nombre, extra = {}) => ({
@@ -48,7 +48,4 @@ describe("la familia para el pago y la llegada", () => {
     expect(p.total).toBeNull();
   });
 
-  it("los euros, en formato de aquí: 110,00 €", () => {
-    expect(euros(110).replace(/\s/g, " ")).toBe("110,00 €");
-  });
 });
