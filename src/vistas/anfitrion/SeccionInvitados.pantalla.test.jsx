@@ -257,6 +257,8 @@ describe("las Acciones de Invitados, en su panel", () => {
     expect(cerrarPanel()).toBeTruthy();
     vista.pulsar(botones().find((b) => b.textContent.trim() === "Añadir"));
     expect(cerrarPanel(), "elegir una opción no cierra el panel").toBeTruthy();
+    // Se trabaja con la lista detrás: sin velo (v63.5).
+    expect(document.body.querySelector("[data-velo-menu]")).toBeNull();
     expect(botones().some((b) => b.textContent.trim() === "Añadir" && b.getAttribute("aria-pressed") === "true")).toBe(true);
     vista.pulsar(cerrarPanel());
     expect(cerrarPanel()).toBeFalsy();

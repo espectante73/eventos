@@ -614,6 +614,16 @@ describe("el «Abrir sección…» del colaborador", () => {
       <VistaColaborador data={{ ...data, ...extra }} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
     );
 
+  // v63.5: al desplegarse, el velo claro esmerilado detrás; tocarlo cierra.
+  it("desplegado, pone el velo claro detrás", () => {
+    const vista = montarVista();
+    vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
+    const velo = document.body.querySelector("[data-velo-menu]");
+    expect(velo, "el velo del menú").toBeTruthy();
+    expect(velo.style.background).toBe("rgba(239, 233, 222, 0.55)");
+    vista.desmontar();
+  });
+
   it("lleva el sello encima, y ya no hay botones sueltos", () => {
     const vista = montarVista();
     const abrir = botones().find((b) => b.textContent.includes("Abrir sección"));

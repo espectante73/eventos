@@ -61,8 +61,6 @@ export const C = {
   champanTinta: "#7A5C24",
   // El papel del plano de mesas.
   papelPlano: "#F7F4EA",
-  // La sombra cálida de la escala S y del velo detrás de una ventana.
-  sombra: "#1F190F",
   // El control de llegadas abierto, en vivo.
   enVivo: "#7FC99A",
   // El verde de WhatsApp: es su marca, así se reconoce el botón.
@@ -80,6 +78,15 @@ export function conAlfa(hex, alfa) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alfa})`;
 }
+
+// El velo detrás de lo que se abre encima (él, v63.5): una ventana que hay
+// que atender o un menú desplegado. El marfil de la app, translúcido y
+// esmerilado: aclara el fondo en vez de oscurecerlo.
+export const VELO = {
+  background: conAlfa(C.paper, 0.55),
+  backdropFilter: "blur(6px)",
+  WebkitBackdropFilter: "blur(6px)",
+};
 
 // El degradado verde de los paneles oscuros, escrito igual en cuatro sitios.
 export const FONDO_VERDE = `linear-gradient(180deg, ${C.ink} 0%, ${C.verdeHondo} 100%)`;

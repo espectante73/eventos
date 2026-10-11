@@ -142,10 +142,11 @@ en la propuesta cuáles se han comprobado. Lo fuerza
      `MenuFlotante`), con iconos que llenan su cuadrado (`UserPlus`: el «+»
      suelto deja más aire).
 5. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
-   protagonista. Los textos de ayuda también: al pie de la ventana y
-   plegados (`<details>`). Todo panel que se abre tiene su **salida
-   ARRIBA y a la vista**, y salir deja la pantalla como estaba; un
-   formulario acaba en **«Guardar» y «Cancelar»**.
+   protagonista, y lo que se abre encima (una ventana que atender, un menú
+   desplegado) aclara el fondo con `VELO`. Los textos de ayuda, al pie y
+   plegados (`<details>`). Todo panel tiene su **salida ARRIBA y a la
+   vista**, y salir deja la pantalla como estaba; un formulario acaba en
+   **«Guardar» y «Cancelar»**.
 6. **Tablas y listas: una sola línea por fila**, todas de la misma altura
    y sin aire extra (con 140 invitados, una lista con aire no cabe). Si
    no cabe, se ensancha o se recorta. Los anchos de las columnas, **fijos
@@ -362,9 +363,9 @@ Lo vigila `supabase/schema.test.js`.
 2. **Su enlace lleva a la Site URL** (Authentication → URL Configuration),
    que tiene que ser `https://nexuspoint.rsvp`. Se comprueba desde fuera:
    un `/auth/v1/verify` con un token falso redirige a ella.
-3. **Un aviso que no llega:** mirar antes "Avisos enviados", los logs de
-   Resend y el botón "Probar" junto al email del colaborador. No dar por
-   roto el código sin descartar la configuración o la plantilla.
+3. **Un aviso que no llega:** antes de tocar el código, mirar "Avisos
+   enviados", los logs de Resend y el botón "Probar" junto al email del
+   colaborador.
 
 ## 1.9 Backup automático de la base de datos
 

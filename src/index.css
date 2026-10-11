@@ -377,7 +377,14 @@ label:has(> input[type="file"].sr-only:focus-visible) {
      media en blanco antes de que empezara lo impreso. */
   .oculto-al-imprimir { display: none !important; }
 
-  .modal-flotante-fondo { position: static !important; }
+  .modal-flotante-fondo {
+    position: static !important;
+    /* El velo esmerilado no se imprime: sin él, el desenfoque haría de
+       caja a lo «fixed» de dentro y emborronaría la hoja. */
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
   .modal-flotante-caja { max-height: none !important; }
   .modal-flotante-cuerpo { overflow: visible !important; flex: none !important; }
 

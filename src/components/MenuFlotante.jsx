@@ -14,7 +14,7 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { C, R, OP, S, T, DORADO, conAlfa } from "../theme";
+import { C, R, OP, S, T, DORADO, VELO, conAlfa } from "../theme";
 import { esZurdo } from "../lib/mano";
 import { Seal } from "./Widgets";
 
@@ -527,6 +527,10 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
         pos &&
         !persistente &&
         createPortal(
+          <>
+          {/* El velo claro esmerilado detrás del menú (él, v63.5), como
+              detrás de una ventana. Tocarlo es tocar fuera: cierra. */}
+          <div data-velo-menu className="fixed inset-0" style={{ ...VELO, zIndex: 9998 }} />
           <div
             ref={listaRef}
             data-menu-panel
@@ -554,7 +558,8 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
                 onCerrarPropio={() => setAbiertoId(null)}
               />
             ))}
-          </div>,
+          </div>
+          </>,
           realmDe(botonRef.current).doc.body
         )}
     </>

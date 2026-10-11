@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "63.5",
+    cambios: [
+      "Lo que se abre encima ya no oscurece la pantalla: la aclara con un velo marfil esmerilado, como un cristal. Vale para las ventanas que hay que atender (Mi cuenta, las preguntas Sí/No, los avisos, Imprimir…) y para el menú «Abrir sección…» al desplegarlo. Las ventanas que se mueven y el panel «Acciones» de la Lista siguen sin velo, para trabajar con lo de detrás.",
+    ],
+  },
+  {
     version: "63.4",
     cambios: [
       "La lista para acomodadores es ahora un solo PDF, por familia (el de por mesa desaparece): primero todas las familias de la A a la Z y, aparte y al final, «EQUIPO · se sientan al final», con las familias de los colaboradores y de los acomodadores, que son las últimas en sentarse.",
