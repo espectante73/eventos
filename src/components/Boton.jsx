@@ -40,7 +40,7 @@ export function estilosBoton(variante = "secundario", tamano = "normal", oscuro 
     secundario: oscuro
       ? { background: "transparent", color: C.goldClaro, border: `1px solid ${C.gold}` }
       : { background: "transparent", color: C.ink, border: `1px solid ${C.ink}` },
-    peligro: { background: C.wax, color: "#fff", border: "1px solid transparent" },
+    peligro: { background: C.wax, color: C.blanco, border: "1px solid transparent" },
   };
   return { ...base, ...(colores[variante] || colores.secundario), borderRadius: R.caja };
 }

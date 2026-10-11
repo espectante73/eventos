@@ -109,8 +109,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    copia de cómo está resuelto lo mismo en la app y, si hay duda, **se
    pregunta en una línea ANTES de tocarlo**. Si una norma suya choca con
    algo que cualquiera reconoce de internet, preguntar por su alcance.
-   Las medidas las vigila `src/theme.test.js`; los colores, todavía no
-   (ver 1.12).
+   Medidas y colores los vigila `src/theme.test.js`; un translúcido sale
+   de la paleta con `conAlfa`. `index.css` no puede leer `theme.js`: lo
+   que copia lleva al lado `= theme.js C.nombre`, y el test lo compara.
 2. **Ventanas tan pequeñas como su contenido**: del ancho de un móvil en
    vertical, también en el ordenador. Toda ventana nueva es una
    `VentanaFlotante`; si crece mucho, lanzadora pequeña + una ventana por
@@ -442,9 +443,6 @@ No se mueve porque no toca: no ofrecerlo como pendiente.
   ChatGPT): cuando las tenga.
 - **La prueba del local** (tele, cortinilla y música con su wifi): cerca
   del evento, y la fecha no está fijada.
-- **Colores escritos a mano** (Portada, Contabilidad, Mesas, Progreso…):
-  incumplen la norma 1 de la 1.2; pasarlos a `theme.js`, con su prueba,
-  es tarea aparte. El mando de Música no cuenta: su estilo está aprobado.
 - **El mapa de la app sigue público** hasta que él lo retome. Para hacerlo
   privado, primero él pone privado el repositorio en GitHub (Vercel
   despliega igual; al desarrollador que lo revisa habría que invitarle).

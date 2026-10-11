@@ -92,7 +92,7 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
   };
 
   return (
-    <div className="rounded" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+    <div className="rounded" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
       <div className="flex items-center gap-2 p-3">
         <button
           onClick={onAlternar}
@@ -528,7 +528,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
           </div>
         )}
         <div className="flex items-center gap-2">
-          <MessageCircle size={14} style={{ color: "#25D366", flexShrink: 0 }} />
+          <MessageCircle size={14} style={{ color: C.whatsapp, flexShrink: 0 }} />
           <input
             value={enlaceWhatsapp}
             onChange={(e) => setEnlaceWhatsapp(e.target.value)}
@@ -548,8 +548,8 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             onClick={(e) => !evento.enlaceGrupoWhatsapp && e.preventDefault()}
             className="text-xs px-2 py-1.5 rounded whitespace-nowrap flex items-center gap-1"
             style={{
-              background: evento.enlaceGrupoWhatsapp ? "#25D366" : C.line,
-              color: evento.enlaceGrupoWhatsapp ? "#fff" : C.charcoal,
+              background: evento.enlaceGrupoWhatsapp ? C.whatsapp : C.line,
+              color: evento.enlaceGrupoWhatsapp ? C.blanco : C.charcoal,
               opacity: evento.enlaceGrupoWhatsapp ? 1 : OP.secundario,
               cursor: evento.enlaceGrupoWhatsapp ? "pointer" : "not-allowed",
             }}

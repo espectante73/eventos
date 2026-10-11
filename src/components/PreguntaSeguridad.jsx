@@ -189,7 +189,7 @@ export const BotonQuitar = forwardRef(function BotonQuitar(
           width: TAMANO_BOTON_QUITAR,
           height: TAMANO_BOTON_QUITAR,
           background: C.wax,
-          color: "#fff",
+          color: C.blanco,
           opacity: disabled ? OP.apagado : 1,
           cursor: disabled ? "not-allowed" : "pointer",
           ...style,

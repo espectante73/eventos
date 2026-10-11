@@ -37,6 +37,59 @@ export const C = {
   // prueba de que copiar hexadecimales a mano deriva solo con el tiempo.
   peligro: "#B00020",
   avisoFondo: "#FBEAEC",
+  // El reposo del latido de una ficha incompleta (.ficha-incompleta, en
+  // index.css), un poco más rojo que avisoFondo.
+  incompletaFondo: "#F9DADF",
+
+  // ---- Subidos aquí en v62.7 (él: «aspecto más profesional»): estaban
+  // escritos a mano en las pantallas, con el MISMO valor. ----
+  blanco: "#FFFFFF",
+  negro: "#000000",
+  // El verde del final del degradado de los paneles oscuros (Portada,
+  // Progreso, login, tablón) y el oliva del fondo de la Portada sin foto.
+  verdeHondo: "#24402F",
+  oliva: "#5C6B3F",
+  // «Todo bien» y «cuidado», en suave: mesa con sitio o llena, balance
+  // positivo o negativo, dinero recogido.
+  okFondo: "#E3E9AE",
+  cuidadoFondo: "#F0D3C8",
+  // Un aviso que solo informa (el email cambiado de un colaborador).
+  infoFondo: "#EAF2EC",
+  // El fondo del total en el acuse de recibo.
+  waxSuave: "#F0D9CE",
+  // El icono de imagen sobre el champán de los marcos de foto.
+  champanTinta: "#7A5C24",
+  // El papel del plano de mesas.
+  papelPlano: "#F7F4EA",
+  // La sombra cálida de la escala S y del velo detrás de una ventana.
+  sombra: "#1F190F",
+  // El control de llegadas abierto, en vivo.
+  enVivo: "#7FC99A",
+  // El verde de WhatsApp: es su marca, así se reconoce el botón.
+  whatsapp: "#25D366",
+  // El modo de calibrar la invitación: magenta, para que no se confunda
+  // con nada de la plantilla.
+  calibracion: "#C2006B",
+  calibracionLinea: "#DC0078",
+  calibracionFondo: "#FDECF3",
+};
+
+// Un color de la paleta, transparente: conAlfa(C.ink, 0.07) es el verde de
+// la app al 7 %. Así un tono translúcido sigue saliendo de la paleta.
+export function conAlfa(hex, alfa) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alfa})`;
+}
+
+// El degradado verde de los paneles oscuros, escrito igual en cuatro sitios.
+export const FONDO_VERDE = `linear-gradient(180deg, ${C.ink} 0%, ${C.verdeHondo} 100%)`;
+
+// Los grises de lo que se imprime en una hoja en blanco (las listas de
+// acomodadores): filas y columnas alternas, flojos para no gastar tinta.
+export const IMPRESION = {
+  fila: "#F2F2F2",
+  columna: "#F8F8F8",
+  columnaEnFila: "#EAEAEA",
 };
 
 // ---------- La escala del acabado (2026-09-20) ----------
@@ -104,7 +157,7 @@ export const DORADO = {
 };
 
 export const inputStyle = {
-  background: "#fff",
+  background: C.blanco,
   border: `1px solid ${C.line}`,
   borderRadius: R.caja,
   padding: "6px 9px",

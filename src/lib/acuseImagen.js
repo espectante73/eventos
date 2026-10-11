@@ -19,6 +19,7 @@
 // lleva como mucho 12-14 invitados, así que el diseño da por hecho ese
 // máximo (sitio de sobra) en vez de recalcular alturas dinámicas.
 import { formatearFecha, euros } from "./formato";
+import { C, conAlfa } from "../theme";
 
 
 // Medidas reales de un A4 vertical, en puntos (1pt = 1/72").
@@ -29,17 +30,6 @@ const X_IZQ = MARGEN;
 const X_DER = PAGINA_ANCHO - MARGEN;
 const CENTRO = PAGINA_ANCHO / 2;
 
-// Paleta de la app (theme.js) -- repetida aquí en vez de importada porque
-// este archivo dibuja en un <canvas> 2D, no en JSX/CSS.
-const COLOR = {
-  paper: "#EFE9DE",
-  ink: "#1F3A2E",
-  charcoal: "#2B2620",
-  gold: "#B08D57",
-  wax: "#8C2F39",
-  line: "#C9BFA9",
-  waxSuave: "#F0D9CE", // fondo del bloque de total
-};
 
 // Se dibuja a 2x de resolución (misma medida física en pt, el doble de
 // píxeles) para que el texto salga nítido en pantalla/impresión, en vez
@@ -83,9 +73,9 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
   // página (0..595.28 de ancho, 0..841.89 de alto) -- el font-size que
   // se ponga es el tamaño de letra final en el PDF, sin sorpresas.
 
-  ctx.fillStyle = COLOR.paper;
+  ctx.fillStyle = C.paper;
   ctx.fillRect(0, 0, PAGINA_ANCHO, PAGINA_ALTO);
-  ctx.strokeStyle = COLOR.ink;
+  ctx.strokeStyle = C.ink;
   ctx.lineWidth = 1.5;
   ctx.strokeRect(24, 24, PAGINA_ANCHO - 48, PAGINA_ALTO - 48);
 
@@ -102,21 +92,21 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
   // cambia el tamaño/estilo de la letra, no la posición.
   ctx.textAlign = "center";
   ctx.font = "34px 'Alex Brush', cursive";
-  ctx.fillStyle = COLOR.gold;
+  ctx.fillStyle = C.gold;
   ctx.fillText(evento?.nombre || "Evento", CENTRO, y);
   y += 34;
 
   ctx.font = "bold 32px 'Fraunces', serif";
-  ctx.fillStyle = COLOR.ink;
+  ctx.fillStyle = C.ink;
   ctx.fillText("Recibo de entrega", CENTRO, y);
   y += 40;
 
   ctx.font = "600 16px 'Inter', sans-serif";
-  ctx.fillStyle = COLOR.charcoal;
+  ctx.fillStyle = C.charcoal;
   ctx.fillText(`Colaborador: ${colaborador.nombre}`, CENTRO, y);
   y += 34;
 
-  ctx.strokeStyle = COLOR.gold;
+  ctx.strokeStyle = C.gold;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(X_IZQ, y);
@@ -132,13 +122,13 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
 
   ctx.textAlign = "left";
   ctx.font = "bold 10px 'Inter', sans-serif";
-  ctx.fillStyle = COLOR.gold;
+  ctx.fillStyle = C.gold;
   ctx.fillText("INVITADO", X_IZQ, y);
   ctx.textAlign = "right";
   ctx.fillText("IMPORTE", X_DER, y);
   y += 10;
 
-  ctx.strokeStyle = COLOR.line;
+  ctx.strokeStyle = C.line;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(X_IZQ, y);
@@ -149,7 +139,7 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
   if (items.length === 0) {
     ctx.textAlign = "center";
     ctx.font = "italic 13px 'Inter', sans-serif";
-    ctx.fillStyle = COLOR.charcoal;
+    ctx.fillStyle = C.charcoal;
     ctx.fillText("(sin invitados con pago registrado)", CENTRO, y);
     y += ALTO_FILA;
   } else {
@@ -157,12 +147,12 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
       // Fila cebra: una franja muy suave detrás de las filas pares, para
       // que el ojo siga la línea sin necesitar rayas verticales.
       if (i % 2 === 0) {
-        ctx.fillStyle = "rgba(176, 141, 87, 0.07)";
+        ctx.fillStyle = conAlfa(C.gold, 0.07);
         ctx.fillRect(X_IZQ - 8, y - 15, X_DER - X_IZQ + 16, ALTO_FILA);
       }
       ctx.textAlign = "left";
       ctx.font = "12.5px 'Inter', sans-serif";
-      ctx.fillStyle = COLOR.charcoal;
+      ctx.fillStyle = C.charcoal;
       ctx.fillText(`${it.apellido}, ${it.nombre}`, X_IZQ, y);
       ctx.textAlign = "right";
       ctx.fillText(euros(it.importe), X_DER, y);
@@ -171,7 +161,7 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
   }
 
   y += 4;
-  ctx.strokeStyle = COLOR.line;
+  ctx.strokeStyle = C.line;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(X_IZQ, y);
@@ -181,11 +171,11 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
 
   // ---------- Bloque de total ----------
   const ALTO_CAJA_TOTAL = 62;
-  ctx.fillStyle = COLOR.waxSuave;
+  ctx.fillStyle = C.waxSuave;
   ctx.fillRect(X_IZQ, y - ALTO_CAJA_TOTAL / 2 - 6, X_DER - X_IZQ, ALTO_CAJA_TOTAL);
   ctx.textAlign = "center";
   ctx.font = "bold 12px 'Inter', sans-serif";
-  ctx.fillStyle = COLOR.wax;
+  ctx.fillStyle = C.wax;
   ctx.fillText("TOTAL ENTREGADO", CENTRO, y - 12);
   ctx.font = "bold 30px 'Fraunces', serif";
   ctx.fillText(euros(total), CENTRO, y + 22);
@@ -193,7 +183,7 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
 
   // ---------- Fecha y firma ----------
   ctx.font = "13px 'Inter', sans-serif";
-  ctx.fillStyle = COLOR.charcoal;
+  ctx.fillStyle = C.charcoal;
   ctx.fillText(`Fecha: ${formatearFecha(fechaISO) || fechaISO || "—"}`, CENTRO, y);
   y += 22;
 
@@ -210,7 +200,7 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
   const yPie1 = PAGINA_ALTO - 78;
   const yPie2 = yPie1 + 16;
 
-  ctx.strokeStyle = COLOR.line;
+  ctx.strokeStyle = C.line;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(X_IZQ, yPie1 - 20);
@@ -218,7 +208,7 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
   ctx.stroke();
 
   ctx.font = "italic 10.5px 'Inter', sans-serif";
-  ctx.fillStyle = COLOR.charcoal;
+  ctx.fillStyle = C.charcoal;
   ctx.globalAlpha = 0.75;
   ctx.fillText("Documento generado automáticamente por la app de invitados del evento", CENTRO, yPie1);
   ctx.fillText("como comprobante de la entrega — consérvalo para tu propia seguridad.", CENTRO, yPie2);

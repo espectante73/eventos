@@ -38,7 +38,7 @@
 // de Invitaciones.
 import { useState, useEffect } from "react";
 import { Calendar, Clock, MapPin, Image as ImageIcon } from "lucide-react";
-import { C } from "../theme";
+import { C, FONDO_VERDE, conAlfa } from "../theme";
 import { VERSION_APP } from "../constants";
 import { valorFechaEvento } from "../lib/formato";
 import { DesplegableSecciones } from "./DesplegableSecciones";
@@ -156,7 +156,7 @@ export function Portada({
             className="w-full flex items-center justify-center"
             style={{
               aspectRatio: "3 / 4",
-              background: `linear-gradient(135deg, #24402F 0%, #5C6B3F 45%, #B08D57 100%)`,
+              background: `linear-gradient(135deg, ${C.verdeHondo} 0%, ${C.oliva} 45%, ${C.gold} 100%)`,
             }}
           >
             <ImageIcon color={C.paper} size={30} strokeWidth={1.3} />
@@ -166,7 +166,7 @@ export function Portada({
         <span
           // Con la mano izquierda cambia de esquina con "Mi cuenta".
           className="absolute top-4 left-4 zurdo:left-auto zurdo:right-4 text-xs px-2 py-1 rounded"
-          style={{ background: "rgba(255,255,255,0.7)", color: C.charcoal, fontFamily: "'IBM Plex Mono', monospace" }}
+          style={{ background: conAlfa(C.blanco, 0.7), color: C.charcoal, fontFamily: "'IBM Plex Mono', monospace" }}
         >
           v{VERSION_APP}
         </span>
@@ -233,14 +233,14 @@ export function Portada({
       <div
         className="relative rounded-b-lg px-4 py-5"
         style={{
-          background: "linear-gradient(180deg, #1F3A2E 0%, #24402F 100%)",
-          borderTop: "1px solid rgba(176,141,87,0.4)",
+          background: FONDO_VERDE,
+          borderTop: `1px solid ${conAlfa(C.gold, 0.4)}`,
         }}
       >
         {!form.ocultarTituloEnImagen && (
           <h1
             className="text-2xl mb-2"
-            style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700 }}
+            style={{ fontFamily: "'Fraunces', serif", color: C.blanco, fontWeight: 700 }}
           >
             {form.nombre || (editable ? "Nombre del evento" : "Evento sin nombre")}
           </h1>
@@ -283,7 +283,7 @@ export function Portada({
 // funciona igual de bien sobre claro que sobre oscuro.
 export function InfoItem({ icon: Icon, label, value, claro }) {
   const lineas = (Array.isArray(value) ? value : [value]).filter(Boolean);
-  const colorValor = claro ? "rgba(255,255,255,0.92)" : C.charcoal;
+  const colorValor = claro ? conAlfa(C.blanco, 0.92) : C.charcoal;
   return (
     <div className="flex items-start gap-2">
       <Icon size={16} style={{ color: C.gold }} className="mt-0.5" />

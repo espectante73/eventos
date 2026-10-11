@@ -3,7 +3,7 @@
 // relevar/eliminar. Movida fuera de App.jsx en el reparto del 2026-08-08
 // (ver CLAUDE.md).
 import { useState } from "react";
-import { Send, Repeat, Mail } from "lucide-react";
+import { Send, Repeat, Mail, Info } from "lucide-react";
 import { C, inputStyle, T, OP } from "../theme";
 import { resolverColaborador, datosCompletos } from "../lib/invitados";
 import { ordenarPorApellidoNombre, formatearFecha } from "../lib/formato";
@@ -72,7 +72,7 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
 
   if (relevando) {
     return (
-      <div className="p-4 rounded space-y-2" style={{ background: "#fff", border: `1px solid ${C.wax}` }}>
+      <div className="p-4 rounded space-y-2" style={{ background: C.blanco, border: `1px solid ${C.wax}` }}>
         <div className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Elegir quién releva a <strong>{c.nombre}</strong>. Los datos ya recopilados de sus
           invitados no se pierden; solo cambia quién sigue a cargo.
@@ -100,7 +100,7 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
   return (
     <div
       className="p-4 rounded"
-      style={{ background: "#fff", border: `1px solid ${C.line}` }}
+      style={{ background: C.blanco, border: `1px solid ${C.line}` }}
     >
       <div className="flex items-center justify-between">
         <button
@@ -216,11 +216,14 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
       {c.emailSincronizadoEn && (
         <div
           className="flex items-center justify-between gap-2 mt-2 px-2 py-1 rounded"
-          style={{ background: "#EAF2EC" }}
+          style={{ background: C.infoFondo }}
         >
-          <span className="text-xs" style={{ color: C.ink }}>
-            ℹ {c.nombre} cambió su email de acceso el {formatearFecha(String(c.emailSincronizadoEn).slice(0, 10))} —
+          <span className="text-xs flex items-start gap-1.5" style={{ color: C.ink }}>
+            <Info size="1.25em" style={{ flexShrink: 0, marginTop: "0.1em" }} aria-hidden />
+            <span>
+            {c.nombre} cambió su email de acceso el {formatearFecha(String(c.emailSincronizadoEn).slice(0, 10))} —
             los avisos ya le llegan a esta dirección nueva.
+            </span>
           </span>
           <Boton tamano="pequeno" onClick={() => onConfirmarEmailActualizado(c.id)}>
             Entendido

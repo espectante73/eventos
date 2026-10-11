@@ -340,7 +340,7 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
               className="boton-3d px-3 py-2 rounded text-sm font-medium"
               style={{
                 background: rPalabra.trim().toUpperCase() === "REINICIAR" ? C.wax : C.line,
-                color: "#fff",
+                color: C.blanco,
               }}
             >
               {rEjecutando ? "Reiniciando…" : "Confirmar reinicio"}
@@ -383,7 +383,7 @@ export function VentanaConfigZonaReinicio({ data, onCerrar }) {
               className="boton-3d px-3 py-2 rounded text-sm font-medium"
               style={{
                 background: palabraAvisos.trim().toUpperCase() === "AVISOS" ? C.wax : C.line,
-                color: "#fff",
+                color: C.blanco,
               }}
             >
               {reiniciandoAvisos ? "Reiniciando…" : "Confirmar reinicio"}

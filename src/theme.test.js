@@ -11,7 +11,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { T, R, S, OP } from "./theme";
+import { T, R, S, OP, C, conAlfa } from "./theme";
 
 // ⚠️ El mando de Música tiene lenguaje propio YA APROBADO (norma 4 del
 // CLAUDE.md): paleta oscura suya, teclas con su relieve. No entra.
@@ -102,5 +102,47 @@ describe("la escala es corta a propósito", () => {
   it("los tonos van de más visible a menos, sin repetirse", () => {
     const valores = Object.values(OP);
     expect(valores).toEqual([...new Set(valores)].sort((a, b) => b - a));
+  });
+});
+
+// Los colores, de C (v62.7, él: «aspecto más profesional»). Había 205
+// escritos a mano en 21 pantallas, casi todos copias exactas de la paleta:
+// así es como derivan los tonos «casi iguales» (ya pasó con los rojos).
+// Un translúcido también sale de la paleta: conAlfa(C.ink, 0.07).
+// Fuera: theme.js (donde se definen), las paletas del mando de Música
+// (temasMusica.js, estilo aprobado) y lo de FUERA.
+describe("los colores no se escriben a mano", () => {
+  function codigo(dir = "src", acc = []) {
+    for (const n of readdirSync(dir)) {
+      const r = join(dir, n);
+      if (statSync(r).isDirectory()) codigo(r, acc);
+      else if (/\.jsx?$/.test(n) && !/\.test\./.test(n) && !["theme.js", "temasMusica.js"].includes(n)) acc.push(r);
+    }
+    return acc.filter((r) => !FUERA.some((f) => r.endsWith(f)));
+  }
+
+  it("ningún color suelto en el código: se elige de C (o conAlfa)", () => {
+    const color = /#[0-9A-Fa-f]{6}\b|#[0-9A-Fa-f]{3}\b|rgba?\(/;
+    const fallos = codigo().flatMap((r) =>
+      readFileSync(r, "utf-8")
+        .split("\n")
+        .map((l, i) => [l, i])
+        .filter(([l]) => !/^\s*(\/\/|\*|\/\*)/.test(l) && color.test(l))
+        .map(([l, i]) => `${r}:${i + 1} -> ${l.trim()}`)
+    );
+    expect(fallos).toEqual([]);
+  });
+
+  it("conAlfa da el color de la paleta, transparente", () => {
+    expect(conAlfa(C.ink, 0.07)).toBe("rgba(31, 58, 46, 0.07)");
+  });
+
+  // index.css no puede leer theme.js: lo que copia de la paleta lleva al
+  // lado «= theme.js C.nombre», y aquí se comprueba que sigue igual.
+  it("index.css: cada copia de la paleta sigue siendo igual", () => {
+    const css = readFileSync("src/index.css", "utf-8");
+    const copias = [...css.matchAll(/(#[0-9A-Fa-f]{6})\b[^\n]*= theme\.js C\.(\w+)/g)];
+    expect(copias.length).toBeGreaterThan(4);
+    for (const [, hex, nombre] of copias) expect(`${nombre}: ${hex.toUpperCase()}`).toBe(`${nombre}: ${C[nombre]}`);
   });
 });

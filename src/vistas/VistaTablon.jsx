@@ -11,7 +11,7 @@
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause, ArrowLeft } from "lucide-react";
-import { C, inputStyle, OP, S } from "../theme";
+import { C, inputStyle, OP, S, FONDO_VERDE } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, valorFechaEvento } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
@@ -32,7 +32,7 @@ function AvisoNoCompartir() {
   return (
     <div
       className="flex items-start gap-2.5 rounded-lg px-4 py-3.5"
-      style={{ background: C.peligro, color: "#fff" }}
+      style={{ background: C.peligro, color: C.blanco }}
     >
       <Lock size={19} style={{ flexShrink: 0, marginTop: 4 }} />
       <div>
@@ -278,7 +278,7 @@ export function VistaTablon({ token }) {
         className="min-h-screen flex items-center justify-center px-4"
         style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
       >
-        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <h1 className="text-xl mb-2" style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}>
             Enlace no válido
           </h1>
@@ -304,7 +304,7 @@ export function VistaTablon({ token }) {
         <form
           onSubmit={enviarRespuesta}
           className="w-full p-6 rounded-lg"
-          style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: S.flotante }}
+          style={{ background: C.blanco, border: `1px solid ${C.line}`, boxShadow: S.flotante }}
         >
           <div className="flex items-center gap-2 mb-3" style={{ color: C.gold }}>
             <Lock size={18} />
@@ -389,10 +389,10 @@ export function VistaTablon({ token }) {
         {evento && (
           <div
             className="rounded-lg px-5 py-5 mb-6"
-            style={{ background: "linear-gradient(180deg, #1F3A2E 0%, #24402F 100%)" }}
+            style={{ background: FONDO_VERDE }}
           >
             {evento.nombre && (
-              <h1 className="text-2xl mb-3" style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700 }}>
+              <h1 className="text-2xl mb-3" style={{ fontFamily: "'Fraunces', serif", color: C.blanco, fontWeight: 700 }}>
                 {evento.nombre}
               </h1>
             )}
@@ -443,7 +443,7 @@ export function VistaTablon({ token }) {
           {novedades.map((n) => {
             const abierta = idAbierto === n.id;
             return (
-              <div key={n.id} className="rounded-lg overflow-hidden" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+              <div key={n.id} className="rounded-lg overflow-hidden" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
                 {/* La etiqueta se va a la derecha, donde estaba la
                     fecha, y la fecha baja dentro del apartado abierto --
                     a petición del usuario, 2026-09-14. Motivo: con la

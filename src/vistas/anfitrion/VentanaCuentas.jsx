@@ -214,7 +214,7 @@ export function VentanaCuentas({ data, onCerrar }) {
         onAlternar={() => alternar("resumen")}
       >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 mt-2">
-        <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+        <div className="p-2 rounded text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.ink }}>
             {euros(recaudado)}
           </div>
@@ -222,7 +222,7 @@ export function VentanaCuentas({ data, onCerrar }) {
             Recaudado
           </div>
         </div>
-        <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+        <div className="p-2 rounded text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.charcoal }}>
             {euros(pendienteCobro)}
           </div>
@@ -230,7 +230,7 @@ export function VentanaCuentas({ data, onCerrar }) {
             Pendiente de cobro
           </div>
         </div>
-        <div className="p-2 rounded text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+        <div className="p-2 rounded text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.wax }}>
             {euros(totalGastos)}
           </div>
@@ -240,7 +240,7 @@ export function VentanaCuentas({ data, onCerrar }) {
         </div>
         <div
           className="p-2 rounded text-center"
-          style={{ background: balance >= 0 ? "#E3E9AE" : "#F0D3C8", border: `1px solid ${C.line}` }}
+          style={{ background: balance >= 0 ? C.okFondo : C.cuidadoFondo, border: `1px solid ${C.line}` }}
         >
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.ink }}>
             {euros(balance)}
@@ -273,7 +273,7 @@ export function VentanaCuentas({ data, onCerrar }) {
               <div
                 key={c.id}
                 className="flex flex-wrap items-center gap-2 p-2 rounded"
-                style={{ background: "#fff", border: `1px solid ${C.line}` }}
+                style={{ background: C.blanco, border: `1px solid ${C.line}` }}
               >
                 <div className="flex-1" style={{ minWidth: 160 }}>
                   <div style={{ color: C.ink, fontWeight: 600 }}>
@@ -305,7 +305,7 @@ export function VentanaCuentas({ data, onCerrar }) {
                   <>
                     <span
                       className="text-xs px-2 py-1 rounded inline-flex items-center gap-1"
-                      style={{ background: "#E3E9AE", color: C.ink }}
+                      style={{ background: C.okFondo, color: C.ink }}
                     >
                       <Check size={13} style={{ flexShrink: 0 }} aria-hidden />
                       Recogido {euros(c.dineroRecogidoImporte || 0)} el{" "}
@@ -377,7 +377,7 @@ export function VentanaCuentas({ data, onCerrar }) {
           <div
             key={g.id}
             className="flex flex-wrap items-center gap-2 p-2 rounded"
-            style={{ background: "#fff", border: `1px solid ${C.line}` }}
+            style={{ background: C.blanco, border: `1px solid ${C.line}` }}
           >
             <TextInput
               value={g.concepto}

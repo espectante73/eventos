@@ -29,7 +29,7 @@ export function PaginaMusica({ data, comoPagina = true }) {
         className="min-h-screen flex items-center justify-center px-4"
         style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
       >
-        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <h1 className="text-xl mb-2" style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}>
             Multimedia ya está abierta
           </h1>

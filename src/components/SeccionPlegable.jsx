@@ -67,7 +67,7 @@ export function SeccionPlegable({
   }
 
   return (
-    <div className="rounded-lg overflow-hidden" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+    <div className="rounded-lg overflow-hidden" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
       <button
         onClick={() => setAbierta((a) => !a)}
         className="boton-3d w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left"

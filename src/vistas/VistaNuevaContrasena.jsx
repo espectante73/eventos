@@ -44,7 +44,7 @@ export function VistaNuevaContrasena({ onListo }) {
       <form
         onSubmit={guardar}
         className="w-full max-w-sm p-6 rounded-lg"
-        style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: S.flotante }}
+        style={{ background: C.blanco, border: `1px solid ${C.line}`, boxShadow: S.flotante }}
       >
         <h1
           className="text-xl mb-4 text-center"

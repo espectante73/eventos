@@ -4,7 +4,7 @@
 // App.jsx en el reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef, Children } from "react";
 import { X } from "lucide-react";
-import { C, S } from "../theme";
+import { C, S, conAlfa } from "../theme";
 
 // Ventana flotante genérica: independiente de qué secciones estén plegadas,
 // para que Imprimir/Canciones/Alergias y los avisos de mesas funcionen siempre.
@@ -41,7 +41,7 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
       // por el usuario, 2026-08-29 (ver también el comentario de
       // #zona-imprimible en index.css).
       className="fixed inset-0 flex items-center justify-center p-4 modal-flotante-fondo"
-      style={{ background: "rgba(31,25,15,0.55)", zIndex }}
+      style={{ background: conAlfa(C.sombra, 0.55), zIndex }}
       onClick={onCerrar}
     >
       <div

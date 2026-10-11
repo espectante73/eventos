@@ -45,7 +45,7 @@ import { ICONOS_VENTANAS } from "../lib/iconosVentanas";
 // plano de la aplicación (public/mapa-de-la-aplicacion.png) sigue listando
 // las mismas secciones que el menú real.
 export const SUBMENU_CONFIGURACION = [
-  { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2, fondo: "#B00020", color: C.paper },
+  { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2, fondo: C.peligro, color: C.paper },
   { id: "config-cronograma", etiqueta: "Cronograma", icono: Clock3 },
   { id: "config-datos-evento", etiqueta: "Datos evento", icono: Calendar },
   { id: "config-modo-pruebas", etiqueta: "Modo pruebas", icono: FlaskConical, fondo: C.wax, color: C.paper },

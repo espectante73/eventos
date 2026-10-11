@@ -49,7 +49,7 @@ export class ErrorBoundary extends React.Component {
       >
         <div
           className="max-w-md w-full p-6 rounded-lg text-center"
-          style={{ background: "#fff", border: `1px solid ${C.line}` }}
+          style={{ background: C.blanco, border: `1px solid ${C.line}` }}
         >
           <h1
             className="text-xl mb-2"

@@ -104,7 +104,7 @@ export function FondoMusicalTablon() {
             <div
               key={p.name}
               className="flex items-center justify-between gap-2 px-2 py-1.5 rounded"
-              style={{ background: "#fff", border: `1px solid ${C.line}` }}
+              style={{ background: C.blanco, border: `1px solid ${C.line}` }}
             >
               <span className="flex items-center gap-1.5 text-xs truncate" style={{ color: C.charcoal }}>
                 <Music size={13} style={{ color: C.gold, flexShrink: 0 }} />

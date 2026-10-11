@@ -97,7 +97,7 @@ button:disabled > .interruptor-haptico {
 @keyframes latido-incompleta {
   0%,
   100% {
-    background-color: #f9dadf;
+    background-color: #f9dadf; /* = theme.js C.incompletaFondo */
     box-shadow: 0 0 0 0 rgba(176, 0, 32, 0);
   }
   50% {
@@ -179,7 +179,7 @@ button:disabled > .interruptor-haptico {
 .formulario-dorado {
   /* El MISMO verde del nombre (theme.js C.ink), sin atenuar: sobre dorado
      cualquier opacidad apaga la letra. La lee Formulario.jsx. */
-  --etiqueta-campo: #1F3A2E;
+  --etiqueta-campo: #1F3A2E; /* = theme.js C.ink */
 }
 
 /* ---------- Foco de teclado (accesibilidad, 2026-09-17) ----------
@@ -460,7 +460,7 @@ label:has(> input[type="file"].sr-only:focus-visible) {
   }
 }
 .bloque-sonando {
-  border-color: var(--oro-borde, #D9B778) !important;
+  border-color: var(--oro-borde, #D9B778) !important; /* = theme.js C.goldClaro */
   animation: latido-bloque 2.4s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {

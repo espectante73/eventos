@@ -5,7 +5,7 @@ import { supabase, supabaseConfigurado } from "./supabaseClient";
 import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl } from "./lib/url";
 import { esVistaMusica, esVistaPantalla } from "./lib/ventanaMusica";
 import { PERMISOS, tienePermiso } from "./lib/permisos";
-import { C, OP, S } from "./theme";
+import { C, OP, S, conAlfa } from "./theme";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { PantallaCargando } from "./components/PantallaCargando";
 import { BarraVentanas, CapaBarra, ALTO_BARRA } from "./components/BarraVentanas";
@@ -256,7 +256,7 @@ export default function App() {
         className="min-h-screen flex items-center justify-center px-4"
         style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
       >
-        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <h1
             className="text-xl mb-2"
             style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}
@@ -308,7 +308,7 @@ export default function App() {
         className="min-h-screen flex items-center justify-center px-4"
         style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
       >
-        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <h1
             className="text-xl mb-2"
             style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}
@@ -347,7 +347,7 @@ export default function App() {
         className="min-h-screen flex items-center justify-center px-4"
         style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
       >
-        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <p className="text-sm mb-4" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Tu cuenta ha iniciado sesión correctamente, pero todavía no está
             vinculada a ningún acceso (ni anfitrión ni colaborador). Pide al
@@ -386,7 +386,7 @@ export default function App() {
         className="min-h-screen flex items-center justify-center px-4"
         style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
       >
-        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+        <div className="max-w-md w-full p-6 rounded-lg text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <h1 className="text-xl mb-2" style={{ fontFamily: "'Fraunces', serif", color: C.wax, fontWeight: 700 }}>
             Modo pruebas
           </h1>
@@ -435,7 +435,7 @@ export default function App() {
       style={{
         background: C.paper,
         backgroundImage:
-          "repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(31,58,46,0.05) 28px)",
+          `repeating-linear-gradient(to bottom, transparent, transparent 27px, ${conAlfa(C.ink, 0.05)} 28px)`,
         paddingTop: alturaBanners,
         border: modoPruebas ? `6px solid ${C.peligro}` : "none",
         boxSizing: "border-box",
@@ -447,7 +447,7 @@ export default function App() {
           // Una sola línea y de 40 de alto, lo que le reserva alturaBanners:
           // en el móvil ocupaba dos y tapaba lo de debajo (v60.1, norma 6:
           // si no cabe, se recorta).
-          style={{ top: 0, height: ALTO_LETRERO, background: C.peligro, color: "#fff", zIndex: 61, boxShadow: S.flotante }}
+          style={{ top: 0, height: ALTO_LETRERO, background: C.peligro, color: C.blanco, zIndex: 61, boxShadow: S.flotante }}
         >
           <span className="truncate">🧪 MODO PRUEBAS ACTIVO — todo lo que se haga se restaurará al desactivarlo</span>
         </div>
@@ -458,7 +458,7 @@ export default function App() {
           style={{
             top: modoPruebas ? ALTO_LETRERO : 0,
             background: C.wax,
-            color: "#fff",
+            color: C.blanco,
             zIndex: 60,
             boxShadow: S.flotante,
           }}
@@ -467,7 +467,7 @@ export default function App() {
           <button
             onClick={() => window.location.reload()}
             className="boton-3d px-3 py-1 rounded font-medium whitespace-nowrap"
-            style={{ background: "#fff", color: C.wax }}
+            style={{ background: C.blanco, color: C.wax }}
           >
             Actualizar
           </button>

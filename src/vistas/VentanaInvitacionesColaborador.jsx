@@ -64,7 +64,7 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
               <div
                 key={f.clave}
                 className="flex items-center justify-between gap-2 p-4 rounded"
-                style={{ background: "#fff", border: `1px solid ${C.line}` }}
+                style={{ background: C.blanco, border: `1px solid ${C.line}` }}
               >
                 <div className="min-w-0">
                   <div className="truncate" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>

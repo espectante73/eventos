@@ -14,7 +14,7 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { C, R, OP, S, T, DORADO } from "../theme";
+import { C, R, OP, S, T, DORADO, conAlfa } from "../theme";
 import { esZurdo } from "../lib/mano";
 import { Seal } from "./Widgets";
 
@@ -227,7 +227,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
           className="boton-3d boton-flotante-imagen relative flex items-center gap-2 text-left px-3 py-2 text-sm whitespace-nowrap"
           style={{
             color: C.goldClaro,
-            ...(abierto ? { background: "rgba(239,233,222,0.12)" } : {}),
+            ...(abierto ? { background: conAlfa(C.paper, 0.12) } : {}),
             margin: "5px 6px",
             width: "calc(100% - 12px)",
             borderRadius: R.redondo,

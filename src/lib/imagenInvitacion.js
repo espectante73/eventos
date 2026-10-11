@@ -4,6 +4,7 @@
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { formatearFecha, formatearDiaSemana } from "./formato";
 import { lineaFamilia } from "./familiasInvitacion";
+import { C, conAlfa } from "../theme";
 
 function partirLineas(ctx, texto, maxWidth) {
   const palabras = texto.split(" ");
@@ -55,13 +56,13 @@ function dibujarCuadriculaCalibracion(ctx, W, H) {
 
   const dibujarEtiqueta = (texto, x, y) => {
     const ancho = ctx.measureText(texto).width;
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillStyle = conAlfa(C.blanco, 0.85);
     ctx.fillRect(x, y, ancho + 4, 18);
-    ctx.fillStyle = "#C2006B";
+    ctx.fillStyle = C.calibracion;
     ctx.fillText(texto, x + 2, y + 1);
   };
 
-  ctx.strokeStyle = "rgba(220,0,120,0.5)";
+  ctx.strokeStyle = conAlfa(C.calibracionLinea, 0.5);
   for (let i = 1; i < 20; i++) {
     const frac = i * 0.05;
     const x = Math.round(frac * W);
@@ -163,7 +164,7 @@ export function generarInvitacionImagen(
           // 2026-08-27: se veía "muy gruesa" para el poco espacio de este
           // recuadro.
           if (fechaValor || diaSemanaValor) {
-            ctx.fillStyle = "#1F3A2E";
+            ctx.fillStyle = C.ink;
             if (fechaValor) {
               ctx.font = `${tamFecha}px 'Fraunces', serif`;
               ctx.fillText(fechaValor, x, DATOS.yFechaValor * H);
@@ -176,7 +177,7 @@ export function generarInvitacionImagen(
 
           if (horaValor) {
             ctx.font = `${tamFecha}px 'Fraunces', serif`;
-            ctx.fillStyle = "#1F3A2E";
+            ctx.fillStyle = C.ink;
             // -10 -- a petición del usuario, 2026-08-27: la hora sube un poco.
             ctx.fillText(horaValor, x, DATOS.yHoraValor * H - 10);
           }
@@ -187,7 +188,7 @@ export function generarInvitacionImagen(
             // va más grande que el resto de la dirección -- pedido
             // explícito del usuario.
             const tamLugarNombre = Math.round(W * 0.027);
-            ctx.fillStyle = "#1F3A2E";
+            ctx.fillStyle = C.ink;
             const lineHeight = Math.round(H * 0.024);
             const xLugar = x - 3;
             // Bloque completo (nombre del lugar + dirección) subido 20px --
@@ -302,7 +303,7 @@ export function generarInvitacionImagen(
           // rectas) sobresalía de las esquinas redondeadas de este
           // recuadro. Solo el texto, directamente sobre el fondo que ya
           // hay.
-          ctx.fillStyle = "#1F3A2E";
+          ctx.fillStyle = C.ink;
           bloques.forEach((b) => {
             b.lineas.forEach((linea, i) => {
               const y = cursorY + i * b.lineHeight;
@@ -346,8 +347,8 @@ export function generarInvitacionImagen(
           canvas.height = 1414; // proporción vertical, como si fuera para móvil
           const ctx = canvas.getContext("2d");
           const g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-          g.addColorStop(0, "#24402F");
-          g.addColorStop(1, "#B08D57");
+          g.addColorStop(0, C.verdeHondo);
+          g.addColorStop(1, C.gold);
           ctx.fillStyle = g;
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           dibujarTextoYResolver(canvas, ctx);

@@ -10,7 +10,7 @@
 // entrada más del menú.
 import { useRef } from "react";
 import { Printer } from "lucide-react";
-import { C, OP } from "../theme";
+import { C, OP, conAlfa } from "../theme";
 import { MesaPlano } from "./Mesas";
 import { Boton } from "./Boton";
 
@@ -66,9 +66,9 @@ export function PlanoMesas({ data, ocupacionMesa }) {
           className="relative w-full rounded"
           style={{
             aspectRatio: "594 / 420",
-            background: "#F7F4EA",
+            background: C.papelPlano,
             backgroundImage:
-              "linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px)",
+              `linear-gradient(${conAlfa(C.negro, 0.05)} 1px, transparent 1px), linear-gradient(90deg, ${conAlfa(C.negro, 0.05)} 1px, transparent 1px)`,
             backgroundSize: "5% 5%",
             border: `1px solid ${C.line}`,
           }}

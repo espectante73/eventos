@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createElement } from "react";
 import { montar } from "../pruebas/dibujar";
 import { estilosBoton, EnlaceTexto } from "./Boton";
+import { C } from "../theme";
 
 // La pieza existe para que no vuelva a haber 12 tamaños distintos: estas
 // pruebas fijan que cada variante y cada tamaño tengan un único aspecto.
@@ -13,8 +14,8 @@ describe("estilosBoton", () => {
   });
 
   it("el peligro es rojo y con letra blanca, en cualquier fondo", () => {
-    expect(estilosBoton("peligro").background).toBe("#8C2F39");
-    expect(estilosBoton("peligro", "pequeno", true).color).toBe("#fff");
+    expect(estilosBoton("peligro").background).toBe(C.wax);
+    expect(estilosBoton("peligro", "pequeno", true).color).toBe(C.blanco);
   });
 
   it("sobre fondo oscuro cambia para que se vea", () => {

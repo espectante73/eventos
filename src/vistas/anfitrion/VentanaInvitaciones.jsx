@@ -329,7 +329,7 @@ export function VentanaInvitaciones({
 
         <label
           className="mb-4 flex items-center gap-2 text-xs p-2 rounded cursor-pointer"
-          style={{ background: modoCalibracion ? "#FDECF3" : C.paperDark, border: `1px dashed ${C.line}` }}
+          style={{ background: modoCalibracion ? C.calibracionFondo : C.paperDark, border: `1px dashed ${C.line}` }}
         >
           <input
             type="checkbox"
@@ -445,7 +445,7 @@ export function VentanaInvitaciones({
                       <div
                         key={m.id}
                         className="flex items-center gap-2 px-2 py-1 rounded text-xs"
-                        style={{ background: "#fff", border: `1px solid ${C.line}` }}
+                        style={{ background: C.blanco, border: `1px solid ${C.line}` }}
                       >
                         <span style={{ color: C.ink, minWidth: 90 }}>{m.nombre}</span>
                         <Boton

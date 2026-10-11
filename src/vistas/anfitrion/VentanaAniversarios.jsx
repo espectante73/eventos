@@ -17,7 +17,7 @@
 // y enlaces temporales.
 import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
-import { C, R, T, OP, S, DORADO } from "../../theme";
+import { C, R, T, OP, S, DORADO, conAlfa } from "../../theme";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton, estilosBoton } from "../../components/Boton";
 import { HuecoFoto, ANCHO_COL, ALTO_MINIATURA, estiloMarcoFoto } from "../../components/HuecoFoto";
@@ -53,7 +53,7 @@ function BandaCabecera({ children, aviso = 0 }) {
         width: ANCHO_COL,
         flexShrink: 0,
         color: C.goldClaro,
-        background: "rgba(255,255,255,0.07)",
+        background: conAlfa(C.blanco, 0.07),
         borderRadius: `${R.caja}px ${R.caja}px 0 0`,
       }}
     >

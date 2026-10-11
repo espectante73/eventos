@@ -5,7 +5,7 @@
 // del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect } from "react";
 import { User } from "lucide-react";
-import { C, inputStyle, R, T, S, OP } from "../theme";
+import { C, inputStyle, R, T, S, OP, conAlfa } from "../theme";
 
 // "Icono de usuario sólido" (relleno) para distinguir al Anfitrión de
 // cada colaborador (icono de contorno normal, el mismo User sin
@@ -34,7 +34,7 @@ export function Seal({ count, size = 22, late = false }) {
         // sobre fotos y sobre filas doradas, y el rojo solo no siempre
         // se recorta bien del fondo. Va en TODOS los sellos, no solo en
         // el que late: el sello es una sola pieza.
-        border: "1px solid rgba(255, 255, 255, 0.92)",
+        border: `1px solid ${conAlfa(C.blanco, 0.92)}`,
         // Con latido, la sombra la pone la animación: si se queda aquí,
         // gana esta y el halo no se ve.
         ...(late ? {} : { boxShadow: S.sutil }),
@@ -155,7 +155,7 @@ export function BarraCompacta({ icono: Icono, completado, total, color, claro })
       <span
         style={{
           fontSize: T.micro,
-          color: claro ? "rgba(255,255,255,0.9)" : C.charcoal,
+          color: claro ? conAlfa(C.blanco, 0.9) : C.charcoal,
           opacity: claro ? 1 : OP.secundario,
           fontFamily: "'IBM Plex Mono', monospace",
           minWidth: 30,
@@ -184,7 +184,7 @@ export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, 
       onClick={() => onClick(columna)}
       className="boton-3d rounded flex items-center justify-center gap-1 w-full"
       style={{
-        borderRight: sinDivisor ? "none" : `1px solid ${claro ? "rgba(255,255,255,0.25)" : C.line}`,
+        borderRight: sinDivisor ? "none" : `1px solid ${claro ? conAlfa(C.blanco, 0.25) : C.line}`,
         // En la variante `claro` (barra verde de Invitados), TODAS las
         // columnas van del mismo dorado -- antes la columna activa
         // (Invitado, al ser el orden por defecto) se veía en un color

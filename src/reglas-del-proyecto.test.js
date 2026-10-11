@@ -44,9 +44,9 @@ describe("los importes, todos con euros()", () => {
 // Iconos dibujados, no símbolos de teclado (v62): junto a los de la app se
 // veían de otro tamaño y grosor. Avisos con LineaAviso; títulos, iconoTitulo;
 // menús, `marcado`. (Novedades de versión cuenta la historia: fuera.)
-describe("iconos: los dibujados, no ⚠ ✓ ✗ ▸ ▾", () => {
+describe("iconos: los dibujados, no ⚠ ✓ ✗ ▸ ▾ ℹ", () => {
   it("ningún símbolo de teclado en lo que se ve", () => {
-    const simbolos = /[⚠✓✗✕▸▾]/;
+    const simbolos = /[⚠✓✗✕▸▾ℹ]/;
     const fuera = archivos
       .filter((r) => !r.endsWith("VentanaVersiones.jsx"))
       .flatMap((r) =>

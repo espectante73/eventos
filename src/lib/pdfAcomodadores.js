@@ -9,7 +9,7 @@
 // «NO» en rojo. Filas alternas en gris y la columna del medio con un tono
 // muy suave, para distinguir las tres. Hoja blanca y tinta oscura: se
 // imprime en papel normal, también en blanco y negro.
-import { C } from "../theme";
+import { C, IMPRESION } from "../theme";
 import { filasAcomodadores } from "./familiasInvitacion";
 import { iconosAcomodadores } from "./iconosPdf";
 import { descargarBlob } from "./descargas";
@@ -24,13 +24,8 @@ const LETRA = 11;
 const ICONO = 13;
 const RELLENO = 6; // del borde de la columna al texto de la familia
 
-// Los fondos: fila sí, fila no, en gris; y la columna del medio, un tono
-// más, muy suave, en todas las filas (también en las grises).
-const FONDO = {
-  fila: "#F2F2F2",
-  columna: "#F8F8F8",
-  columnaEnFila: "#EAEAEA",
-};
+// Los fondos (IMPRESION, en theme.js): fila sí, fila no, en gris; y la
+// columna del medio, un tono más, muy suave, en todas las filas.
 
 // Los anchos de las columnas, definidos una sola vez (norma 6).
 const ANCHO = { mesa: 50, cantidad: 50 };
@@ -66,7 +61,7 @@ function recortar(pdf, texto, ancho) {
 
 function fondos(pdf, cols, y, gris) {
   for (const c of cols) {
-    const color = c.medio ? (gris ? FONDO.columnaEnFila : FONDO.columna) : gris ? FONDO.fila : null;
+    const color = c.medio ? (gris ? IMPRESION.columnaEnFila : IMPRESION.columna) : gris ? IMPRESION.fila : null;
     if (!color) continue;
     pdf.setFillColor(color);
     pdf.rect(c.x, y, c.ancho, ALTO_FILA, "F");

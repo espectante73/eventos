@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "62.7",
+    cambios: [
+      "Aspecto más profesional, 3.ª parte (por dentro): los colores escritos a mano en las pantallas salen ahora todos del archivo central de colores de la app, también los translúcidos, el acuse de recibo y la lista de acomodadores. En pantalla no cambia nada, pero ya no pueden aparecer tonos «casi iguales». Una prueba avisa si alguien vuelve a escribir un color a mano. El mando de Música conserva su paleta propia.",
+      "El aviso de «cambió su email de acceso» en Datos Colab. lleva el icono dibujado de información en vez del símbolo de teclado.",
+    ],
+  },
+  {
     version: "62.6",
     cambios: [
       "En «Incompletos», quien ya tiene todos sus datos pero sigue ahí dice debajo, en rojo, qué le falta a su familia para pasar a «Familias»: «Falta la foto de boda, o marcar «No»», «Falta el año de boda» o «Faltan los datos de (Apellido, Nombre)». Antes la fila parecía completa y no se sabía por qué no avanzaba.",

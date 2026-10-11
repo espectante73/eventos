@@ -9,7 +9,7 @@
 // Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4,
 // Ronda 1).
 import { AlertTriangle, ClipboardList, Euro, Mail, Music, UserCheck, UserX } from "lucide-react";
-import { C, OP, T } from "../../theme";
+import { C, OP, T, FONDO_VERDE } from "../../theme";
 import { useEstadoCuentas, textoUltimaEntrada } from "../../lib/estadoCuentas";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
 import { impagosVencidos } from "../../lib/impagos";
@@ -41,7 +41,7 @@ export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
       <div
         className="rounded p-3 mb-1"
         style={{
-          background: "linear-gradient(180deg, #1F3A2E 0%, #24402F 100%)",
+          background: FONDO_VERDE,
           border: `1px solid ${C.gold}`,
           marginTop: -14,
           marginLeft: -14,

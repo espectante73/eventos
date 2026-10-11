@@ -25,7 +25,7 @@
 // no está configurada (proyecto clonado en local sin Turnstile todavía),
 // sencillamente no se pinta ni se exige -- no bloquea el login de nadie.
 import { useState, useEffect, useRef } from "react";
-import { C, inputStyle, OP, S } from "../theme";
+import { C, inputStyle, OP, S, FONDO_VERDE } from "../theme";
 import { supabase } from "../supabaseClient";
 import { emailValido } from "../lib/validacion";
 import { Boton, EnlaceTexto } from "../components/Boton";
@@ -257,14 +257,14 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
         // datos de la Portada) en vez del fondo crema plano de antes --
         // el recuadro blanco del formulario queda "flotando" encima, a
         // petición del usuario.
-        background: "linear-gradient(180deg, #1F3A2E 0%, #24402F 100%)",
+        background: FONDO_VERDE,
         fontFamily: "'Inter', sans-serif",
       }}
     >
       {cuentaCreada ? (
         <div
           className="w-full max-w-sm p-6 rounded-lg"
-          style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: S.flotante }}
+          style={{ background: C.blanco, border: `1px solid ${C.line}`, boxShadow: S.flotante }}
         >
           <h1
             className="text-xl mb-3 text-center"
@@ -301,7 +301,7 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
       <form
         onSubmit={enviar}
         className="w-full max-w-sm p-6 rounded-lg"
-        style={{ background: "#fff", border: `1px solid ${C.line}`, boxShadow: S.flotante }}
+        style={{ background: C.blanco, border: `1px solid ${C.line}`, boxShadow: S.flotante }}
       >
         <h1
           className="text-xl mb-4 text-center"

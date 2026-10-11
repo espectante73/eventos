@@ -31,7 +31,7 @@ import {
   ClipboardCheck,
   Download,
 } from "lucide-react";
-import { C, inputStyle, R, T, OP } from "../../theme";
+import { C, inputStyle, R, T, OP, conAlfa } from "../../theme";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
@@ -538,7 +538,7 @@ export function SeccionInvitados({
   // arriba/abajo respectivamente) hace que las dos lean como un único
   // recuadro que "incluye nombre y filtro" -- a petición del usuario,
   // 2026-08-20.
-  const tintaColumnaCabecera = (idx) => (idx % 2 === 1 ? "rgba(255,255,255,0.07)" : "transparent");
+  const tintaColumnaCabecera = (idx) => (idx % 2 === 1 ? conAlfa(C.blanco, 0.07) : "transparent");
 
   const idsSueltos = new Set(conyugesSueltos(invitados).map((g) => g.id));
   // Los años que cumplen EL DÍA DEL EVENTO, no hoy: es el número que va
@@ -646,7 +646,7 @@ export function SeccionInvitados({
       etiqueta: "Revisión" + (erroresRevision ? ` (${erroresRevision})` : ""),
       marcado: mostrarRevision,
       icono: ClipboardCheck,
-      ...(erroresRevision ? { fondo: C.peligro, color: "#fff" } : {}),
+      ...(erroresRevision ? { fondo: C.peligro, color: C.blanco } : {}),
       onClick: () => (mostrarRevision ? cerrarRevision() : abrirRevision()),
     },
     ...(invitados.length > 0
@@ -658,7 +658,7 @@ export function SeccionInvitados({
             etiqueta: "Alergias",
             icono: AlertTriangle,
             fondo: C.wax,
-            color: "#fff",
+            color: C.blanco,
             onClick: () => setPanelFlotante("alergias"),
           },
         ]
@@ -1245,7 +1245,7 @@ export function SeccionInvitados({
             {mostrarLlegada && (
               <div
                 className="flex items-center gap-4 rounded px-3 py-1"
-                style={{ border: `2px solid ${C.goldClaro}`, background: "rgba(0,0,0,0.12)" }}
+                style={{ border: `2px solid ${C.goldClaro}`, background: conAlfa(C.negro, 0.12) }}
               >
                 {[
                   { etiqueta: "Ya están", valor: totalPresentes, color: C.ink },
@@ -1261,7 +1261,7 @@ export function SeccionInvitados({
                     <div
                       className="rounded px-2 inline-block"
                       style={{
-                        background: "rgba(239,233,222,0.95)",
+                        background: conAlfa(C.paper, 0.95),
                         color: m.color,
                         fontFamily: "'Fraunces', serif",
                         fontWeight: 700,
@@ -1280,8 +1280,8 @@ export function SeccionInvitados({
                 <span
                   className="rounded px-1.5 py-0.5 text-[9px] uppercase self-center whitespace-nowrap"
                   style={{
-                    background: asistenciaEnVivo ? "#7FC99A" : C.peligro,
-                    color: asistenciaEnVivo ? C.ink : "#fff",
+                    background: asistenciaEnVivo ? C.enVivo : C.peligro,
+                    color: asistenciaEnVivo ? C.ink : C.blanco,
                     fontFamily: "'IBM Plex Mono', monospace",
                     fontWeight: 700,
                     letterSpacing: "0.04em",
@@ -1303,7 +1303,7 @@ export function SeccionInvitados({
                     className="rounded px-1.5 py-0.5 text-[9px] uppercase self-center whitespace-nowrap"
                     style={{
                       background: C.peligro,
-                      color: "#fff",
+                      color: C.blanco,
                       fontFamily: "'IBM Plex Mono', monospace",
                       fontWeight: 700,
                       letterSpacing: "0.04em",
@@ -1333,7 +1333,7 @@ export function SeccionInvitados({
                     <div
                       className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
                       style={{
-                        background: s.alerta ? C.avisoFondo : "rgba(239,233,222,0.92)",
+                        background: s.alerta ? C.avisoFondo : conAlfa(C.paper, 0.92),
                         color: s.alerta ? C.peligro : C.ink,
                         fontFamily: "'Fraunces', serif",
                       }}
@@ -1460,7 +1460,7 @@ export function SeccionInvitados({
         {mostrarImport && (
           <div
             className="p-4 rounded mb-4"
-            style={{ background: "#fff", border: `1px dashed ${C.gold}` }}
+            style={{ background: C.blanco, border: `1px dashed ${C.gold}` }}
           >
             <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
               Pega tus filas en el orden Grupo familiar, Apellido, Nombre, Colaborador, Zona —
@@ -1499,7 +1499,7 @@ export function SeccionInvitados({
           className="rounded"
           style={{
             border: `1px solid ${C.line}`,
-            background: "#fff",
+            background: C.blanco,
             // Este contenedor es el que desplaza, en los dos ejes: por
             // eso la cabecera pegajosa de dentro funciona. En ventana
             // propia ocupa todo el alto que quede; dentro de la página
@@ -1535,7 +1535,7 @@ export function SeccionInvitados({
               // impares -- las pares quedan transparentes, dejando ver el
               // zebra de la fila tal cual.
               const celda = (idx, extra) => ({
-                background: idx % 2 === 1 ? "rgba(31,58,46,0.07)" : "transparent",
+                background: idx % 2 === 1 ? conAlfa(C.ink, 0.07) : "transparent",
                 display: "flex",
                 alignItems: "center",
                 // Datos alineados a la izquierda de su celda, con el
@@ -1566,7 +1566,7 @@ export function SeccionInvitados({
                   className="grid text-sm fila-una-linea"
                   style={{
                     gridTemplateColumns: columnasTabla,
-                    background: i % 2 ? C.paperDark : "#fff",
+                    background: i % 2 ? C.paperDark : C.blanco,
                     borderLeft: `${FILETE_COLABORADOR}px solid ${
                       colaboradores.some((c) => c.invitadoId === g.id) ? C.gold : "transparent"
                     }`,
@@ -1638,7 +1638,7 @@ export function SeccionInvitados({
                           appearance: "none",
                           WebkitAppearance: "none",
                           MozAppearance: "none",
-                          background: idsSueltos.has(g.id) ? C.avisoFondo : "rgba(31,58,46,0.06)",
+                          background: idsSueltos.has(g.id) ? C.avisoFondo : conAlfa(C.ink, 0.06),
                           borderRadius: R.caja,
                           padding: "2px 0",
                           fontSize: T.pequeno,
@@ -2041,7 +2041,7 @@ export function SeccionInvitados({
                       className="grid px-2 py-1.5 text-sm fila-una-linea"
                       style={{
                         gridTemplateColumns: "1.3fr 1fr 0.8fr 0.8fr 1fr 0.6fr 0.9fr 0.8fr",
-                        background: i % 2 ? C.paperDark : "#fff",
+                        background: i % 2 ? C.paperDark : C.blanco,
                         color: C.charcoal,
                       }}
                     >
@@ -2094,7 +2094,7 @@ export function SeccionInvitados({
                       className="grid px-2 py-2 text-sm"
                       style={{
                         gridTemplateColumns: "1.5fr 0.6fr 2fr",
-                        background: i % 2 ? C.paperDark : "#fff",
+                        background: i % 2 ? C.paperDark : C.blanco,
                         color: C.charcoal,
                       }}
                     >
@@ -2135,7 +2135,7 @@ export function SeccionInvitados({
                     className="grid px-2 py-2 text-sm"
                     style={{
                       gridTemplateColumns: "1.5fr 0.6fr 2fr",
-                      background: i % 2 ? "#FBEAEA" : "#fff",
+                      background: i % 2 ? C.avisoFondo : C.blanco,
                       color: C.charcoal,
                       fontWeight: 600,
                     }}

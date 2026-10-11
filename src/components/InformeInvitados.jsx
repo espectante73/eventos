@@ -34,7 +34,7 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
   return (
     <div
       className="rounded mb-3"
-      style={{ border: `1px solid ${errores.length ? C.peligro : C.line}`, background: "#fff" }}
+      style={{ border: `1px solid ${errores.length ? C.peligro : C.line}`, background: C.blanco }}
     >
       {/* Arriba, siempre a la vista: plegar (el título) y SALIR ("Cerrar").
           Antes el título solo plegaba -- al tocarlo otra vez volvía a
@@ -96,7 +96,7 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
                   className="rounded px-1.5"
                   style={{
                     background: h.tipo === "error" ? C.peligro : C.ink,
-                    color: "#fff",
+                    color: C.blanco,
                     fontFamily: "'IBM Plex Mono', monospace",
                     fontSize: T.pequeno,
                   }}

@@ -246,7 +246,7 @@ export function generarImagenCronograma(horaInicio, bloques) {
   canvas.width = ANCHO;
   canvas.height = alto;
   const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = C.blanco;
   ctx.fillRect(0, 0, ANCHO, alto);
 
   let y = MARGEN;

@@ -210,7 +210,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
           className="boton-3d flex items-center gap-2 px-3 rounded-lg text-sm font-medium whitespace-nowrap"
           style={{
             border: `1px solid ${evento.asistenciaAbierta ? C.ink : C.line}`,
-            background: evento.asistenciaAbierta ? C.ink : "#fff",
+            background: evento.asistenciaAbierta ? C.ink : C.blanco,
             color: evento.asistenciaAbierta ? C.paper : C.charcoal,
           }}
           title={
@@ -386,7 +386,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
                   {g.avisoPendiente && g.confirmado && (
                     <span
                       className="text-xs ml-2 px-1.5 py-0.5 rounded"
-                      style={{ background: C.wax, color: "#fff" }}
+                      style={{ background: C.wax, color: C.blanco }}
                     >
                       nuevo — se incluye en el email
                     </span>

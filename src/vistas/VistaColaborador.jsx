@@ -32,7 +32,7 @@ import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso, esDeEdicion } from "../lib/permisos";
 import { generarImagenCronograma } from "../lib/cronograma";
-import { C, R, T, OP, DORADO } from "../theme";
+import { C, R, T, OP, DORADO, conAlfa } from "../theme";
 import { URL_REPOSITORIO } from "../constants";
 import { Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, TextInput } from "../components/Formulario";
@@ -829,8 +829,8 @@ function FilaInvitadoColaborador({
       className={`rounded ${oculta ? "hidden sm:block" : ""}${incompleta ? " ficha-incompleta" : ""}`}
       style={{
         // El tono de reposo del latido (.ficha-incompleta en index.css).
-        background: incompleta ? "#F9DADF" : "#fff",
-        border: `1px solid ${incompleta ? "rgba(176, 0, 32, 0.7)" : C.line}`,
+        background: incompleta ? C.incompletaFondo : C.blanco,
+        border: `1px solid ${incompleta ? conAlfa(C.peligro, 0.7) : C.line}`,
       }}
     >
       <div className="flex items-center gap-2 p-3 text-sm">
@@ -1093,7 +1093,7 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
     : null;
 
   return (
-    <div className={`rounded ${oculta ? "hidden sm:block" : ""}`} style={{ background: "#fff", border: `1px solid ${C.line}` }}>
+    <div className={`rounded ${oculta ? "hidden sm:block" : ""}`} style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
       <div className="flex items-center gap-2 p-3 text-sm">
         <div className="flex-shrink-0" style={{ width: ANCHO_PAGO }}>
           <button
@@ -1179,7 +1179,7 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
                     width: ALTO_BOTON_FILA,
                     height: ALTO_BOTON_FILA,
                     background: !cambia ? "transparent" : marcado ? C.goldClaro : C.peligro,
-                    color: !cambia ? C.goldClaro : marcado ? C.ink : "#fff",
+                    color: !cambia ? C.goldClaro : marcado ? C.ink : C.blanco,
                     border: !cambia ? `1px solid ${C.gold}` : "none",
                     opacity: cambia ? 1 : OP.tenue,
                   }}
@@ -1481,7 +1481,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           después la norma 4 se reescribió para decir que un link va
           subrayado. Ahora lo está.) */}
       {(permisosDeEdicion.length > 0 || puedeVerRepositorio) && (
-        <div className="p-4 rounded text-sm" style={{ background: C.peligro, color: "#fff" }}>
+        <div className="p-4 rounded text-sm" style={{ background: C.peligro, color: C.blanco }}>
           {permisosDeEdicion.length > 0 && (
             <p style={{ fontWeight: 600 }}>
               🔑 Tienes permisos de edición: {permisosDeEdicion.map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ")}.
@@ -1671,14 +1671,14 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               </div>
             </div>
             <div className="h-full rounded p-2 text-center" style={{ background: C.ink }}>
-              <div className="text-xs" style={{ color: "#fff", opacity: OP.secundario }}>Cobrado</div>
-              <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: T.normal }}>
+              <div className="text-xs" style={{ color: C.blanco, opacity: OP.secundario }}>Cobrado</div>
+              <div style={{ fontFamily: "'Fraunces', serif", color: C.blanco, fontWeight: 700, fontSize: T.normal }}>
                 {euros(importeCobrado)}
               </div>
             </div>
             <div className="h-full rounded p-2 text-center" style={{ background: C.wax }}>
-              <div className="text-xs" style={{ color: "#fff", opacity: OP.secundario }}>Pendiente</div>
-              <div style={{ fontFamily: "'Fraunces', serif", color: "#fff", fontWeight: 700, fontSize: T.normal }}>
+              <div className="text-xs" style={{ color: C.blanco, opacity: OP.secundario }}>Pendiente</div>
+              <div style={{ fontFamily: "'Fraunces', serif", color: C.blanco, fontWeight: 700, fontSize: T.normal }}>
                 {euros(importePendiente)}
               </div>
             </div>

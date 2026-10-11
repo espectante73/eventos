@@ -53,7 +53,7 @@ export function BotonHistorial({ obtenerHistorial, onRestaurar }) {
       {abierto && (
         <div
           className="absolute z-10 mt-1 rounded shadow-lg"
-          style={{ background: "#fff", border: `1px solid ${C.line}`, width: 260, right: 0 }}
+          style={{ background: C.blanco, border: `1px solid ${C.line}`, width: 260, right: 0 }}
         >
           {cargando && (
             <p className="text-xs p-2" style={{ color: C.charcoal, opacity: OP.secundario }}>

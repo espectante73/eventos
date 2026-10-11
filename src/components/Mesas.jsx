@@ -48,7 +48,7 @@ export function MesaRedonda({ m, ocupados, lleno, tieneAlergias, onCambiarCapaci
             height: diametro,
             left: (lienzo - diametro) / 2,
             top: (lienzo - diametro) / 2,
-            background: lleno || tieneAlergias ? "#F0D3C8" : "#E3E9AE",
+            background: lleno || tieneAlergias ? C.cuidadoFondo : C.okFondo,
             border: `2px solid ${tieneAlergias || lleno ? C.wax : C.line}`,
           }}
         >
@@ -211,7 +211,7 @@ export function MesaPlano({ m, ocupados, canvasRef, onMover }) {
           height: diametro,
           left: (lienzoMesa - diametro) / 2,
           top: (lienzoMesa - diametro) / 2,
-          background: "#E3E9AE",
+          background: C.okFondo,
           border: `2px solid ${C.line}`,
         }}
       >
