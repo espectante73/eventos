@@ -15,6 +15,7 @@ import { useMandoMusica, CANAL_VIDEO } from "../lib/useMandoMusica";
 import { leerTodosLosVideos } from "../lib/almacenPistas";
 import { cogerCerrojoMusica, NOMBRE_VENTANA_PANTALLA, VIDEOS, VIDEO_REPOSO, despuesDe } from "../lib/ventanaMusica";
 import { PantallaCargando } from "../components/PantallaCargando";
+import { useSesionSiempreViva } from "../lib/sesionViva";
 import { Boton } from "../components/Boton";
 import { C, T, R, OP, conAlfa } from "../theme";
 
@@ -32,6 +33,8 @@ function Aviso({ titulo, texto, children }) {
 }
 
 export function PaginaPantalla() {
+  // La tele, toda la noche y sin nadie delante (lib/sesionViva.js).
+  useSesionSiempreViva();
   // Una sola pantalla por aparato: dos a la vez se pisarían el mando.
   const [libre, setLibre] = useState(null);
   useEffect(() => cogerCerrojoMusica(setLibre, undefined, NOMBRE_VENTANA_PANTALLA), []);

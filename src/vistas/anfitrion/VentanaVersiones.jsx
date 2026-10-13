@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "64.6",
+    cambios: [
+      "El reproductor de Multimedia en el ordenador ya no se desconecta y vuelve cuando queda detrás de otras ventanas: su sesión se renueva también por detrás (caducaba cada hora y el mando perdía la conexión), y el latido que mantiene viva la conexión no se frena aunque la página no se vea. Lo mismo para la página de la pantalla.",
+    ],
+  },
+  {
     version: "64.5",
     cambios: [
       "La Revisión de la Lista busca sola, entre todos los invitados (confirmados o no), lo que está mal escrito y te enseña solo esos:",

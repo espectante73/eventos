@@ -9,10 +9,13 @@ import { PantallaCargando } from "../components/PantallaCargando";
 import { Boton } from "../components/Boton";
 import { guardarAspecto, ASPECTO_POR_DEFECTO } from "../lib/temasMusica";
 import { cogerCerrojoMusica } from "../lib/ventanaMusica";
+import { useSesionSiempreViva } from "../lib/sesionViva";
 
 // `comoPagina`: abierta como página propia (?musica) cambia el título de la
 // pestaña; dentro de la app (el móvil, con la barra de ventanas), no.
 export function PaginaMusica({ data, comoPagina = true }) {
+  // Como página propia suena por detrás de otras ventanas (lib/sesionViva.js).
+  useSesionSiempreViva(comoPagina);
   // null mientras se comprueba; false si ya hay otra Música abierta aquí.
   const [libre, setLibre] = useState(null);
   useEffect(() => cogerCerrojoMusica(setLibre), []);

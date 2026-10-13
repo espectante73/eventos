@@ -16,7 +16,13 @@ if (!supabaseConfigurado) {
   );
 }
 
+// `worker`: el latido que mantiene viva la conexión en vivo (el mando, las
+// llegadas) sale de un hilo aparte, que el navegador no frena aunque la
+// página no se vea (v64.6: el reproductor del Mac, por detrás de otras
+// ventanas, se desconectaba y volvía). Donde no hay hilos (las pruebas), el
+// latido de siempre.
 export const supabase = createClient(
   supabaseUrl || "https://placeholder.supabase.co",
-  supabaseAnonKey || "clave-de-relleno"
+  supabaseAnonKey || "clave-de-relleno",
+  { realtime: { worker: typeof Worker !== "undefined" } }
 );
