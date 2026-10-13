@@ -27,6 +27,7 @@ import {
   subirFotoMatrimonio,
   borrarFotoMatrimonio,
   enlacesTemporales,
+  rutaMiniatura,
   esRutaAlmacen,
   bytesDeFoto,
   nombreDescargaBoda,
@@ -147,7 +148,9 @@ export function VentanaAniversarios({ data, onCerrar }) {
     () =>
       matrimonios
         .flatMap((m) => [fotosAniversario?.[m.familia], fotosBodaFinal?.[m.familia], fotosFamiliares?.[m.familia]])
-        .filter(esRutaAlmacen),
+        .filter(esRutaAlmacen)
+        // Con su miniatura (v64.7): la 4K solo se baja al ampliarla.
+        .flatMap((r) => [r, rutaMiniatura(r)].filter(Boolean)),
     [matrimonios, fotosAniversario, fotosBodaFinal, fotosFamiliares]
   );
   useEffect(() => {
@@ -163,6 +166,8 @@ export function VentanaAniversarios({ data, onCerrar }) {
   // Lo que va en el <img> para un valor guardado: enlace temporal si es una
   // ruta del cajón; tal cual si es una foto antigua en base64 o un enlace.
   const verFoto = (valor) => (esRutaAlmacen(valor) ? enlaces[valor] || "" : valor || "");
+  // En las filas, la miniatura; si no la tiene (subida antes), la grande.
+  const verMiniatura = (valor) => enlaces[rutaMiniatura(valor)] || verFoto(valor);
 
   const faltanAniversario = matrimonios.filter((m) => !fotosAniversario?.[m.familia]).length;
   // Los que no tienen foto de boda (marcado por el colaborador) no tienen
@@ -361,7 +366,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
                   original es del colaborador y se conserva. */}
               <HuecoFoto
                 titulo="Boda"
-                enlace={verFoto(final || original)}
+                enlace={verMiniatura(final || original)}
                 ocupada={Boolean(final)}
                 soloLectura={!final}
                 // "No tienen": el colaborador marcó que ese matrimonio no
@@ -374,7 +379,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
               <Separador />
               <HuecoFoto
                 titulo="Aniversario"
-                enlace={verFoto(aniversario)}
+                enlace={verMiniatura(aniversario)}
                 ocupada={Boolean(aniversario)}
                 subiendo={subiendo === `aniversario:${m.familia}`}
                 onElegir={(file) => subir("aniversario", m.familia, file)}

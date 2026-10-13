@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "64.7",
+    cambios: [
+      "Las fotos terminadas de Aniversarios (boda con plantilla y aniversario) se guardan ahora en 4K (hasta 3840×2160), con más calidad. Cada una lleva además una copia pequeña para las filas de la ventana, que así sigue abriendo rápido; la 4K se ve al ampliarla. Las ya subidas siguen en Full HD hasta que se vuelvan a subir.",
+    ],
+  },
+  {
     version: "64.6",
     cambios: [
       "El reproductor de Multimedia en el ordenador ya no se desconecta y vuelve cuando queda detrás de otras ventanas: su sesión se renueva también por detrás (caducaba cada hora y el mando perdía la conexión), y el latido que mantiene viva la conexión no se frena aunque la página no se vea. Lo mismo para la página de la pantalla.",

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  rutaMiniatura,
   nombreArchivoFamilia,
   esRutaAlmacen,
   nombreDescargaBoda,
@@ -109,5 +110,17 @@ describe("hojaDeEncargo", () => {
   it("escribe un bloque por matrimonio", () => {
     const t = hojaDeEncargo([uno, { ...uno, familia: "Ruiz01" }]);
     expect(t.match(/Monta esta foto/g)).toHaveLength(2);
+  });
+});
+
+// v64.7: las terminadas, en 4K, con su miniatura para las filas de
+// Aniversarios; la original de boda no lleva.
+describe("rutaMiniatura", () => {
+  it("las terminadas llevan su miniatura; la original de boda y lo que no es del cajón, no", () => {
+    expect(rutaMiniatura("aniversario/medina01.jpg")).toBe("miniaturas/aniversario/medina01.jpg");
+    expect(rutaMiniatura("boda-final/medina01.jpg")).toBe("miniaturas/boda-final/medina01.jpg");
+    expect(rutaMiniatura("boda/medina01.jpg")).toBe("");
+    expect(rutaMiniatura("data:image/jpeg;base64,xx")).toBe("");
+    expect(rutaMiniatura("")).toBe("");
   });
 });

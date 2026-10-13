@@ -17,13 +17,20 @@ import { supabase } from "../supabaseClient";
 export const CUBO_FOTOS = "fotos-matrimonios";
 
 // Las fotos se proyectan en una pantalla 16:9, así que se guardan para que
-// quepan en 1920x1080 (Full HD), sin deformarlas ni recortarlas. Antes se
-// limitaba el LADO LARGO a 1080, y una foto apaisada se quedaba en
-// ~1080x608: poco para una pantalla. Corregido el 2026-09-17. Cada foto
-// ronda los 400-600 KB; 100 fotos caben de sobra en el almacén gratuito.
-const ANCHO_MAXIMO = 1920;
-const ALTO_MAXIMO = 1080;
+// quepan en esa caja, sin deformarlas ni recortarlas (antes se limitaba el
+// lado largo, y una apaisada se quedaba corta para una pantalla).
+//
+// ⚠️ Las TERMINADAS (boda con plantilla y aniversario) van en 4K desde la
+// v64.7 (él: «las quiero en 4K», unas 50): hasta 3840x2160 y algo más de
+// calidad. Como la ventana Aniversarios las enseña todas a la vez, cada una
+// lleva además su MINIATURA (carpeta miniaturas/) para las filas; la 4K
+// solo se pide al ampliarla.
+const ANCHO_MAXIMO = 3840;
+const ALTO_MAXIMO = 2160;
 const CALIDAD = 0.85;
+const CALIDAD_4K = 0.9;
+const ANCHO_MINIATURA = 640;
+const ALTO_MINIATURA_ALMACEN = 360;
 // La ORIGINAL de boda que sube el colaborador se guarda más grande: no va a
 // la pantalla tal cual, sino que el anfitrión la descarga y la pasa por otra
 // IA que la monta en una plantilla. Cuanto más detalle llegue, mejor sale
@@ -41,7 +48,7 @@ export const CARPETA = { BODA: "boda", BODA_FINAL: "boda-final", ANIVERSARIO: "a
 // Reduce la foto para que quepa en ANCHO_MAXIMO x ALTO_MAXIMO manteniendo su
 // forma. Nunca la agranda. No se usa redimensionarImagenArchivo (descargas.js)
 // porque esa limita solo el lado más largo, y aquí importa la caja 16:9.
-function reducirImagen(file, anchoMax, altoMax) {
+function reducirImagen(file, anchoMax, altoMax, calidad = CALIDAD) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -57,7 +64,7 @@ function reducirImagen(file, anchoMax, altoMax) {
       canvas.toBlob(
         (blob) => (blob ? resolve(blob) : reject(new Error("No se pudo preparar la imagen"))),
         "image/jpeg",
-        CALIDAD
+        calidad
       );
     };
     img.onerror = () => {
@@ -86,21 +93,29 @@ export function nombreArchivoFamilia(familia) {
 // en la base. `carpeta`: ver CARPETA. La original de boda se reduce menos
 // (LADO_ORIGINAL en cualquier sentido); las que van a pantalla, a 1920x1080.
 export async function subirFotoMatrimonio(file, familia, carpeta = CARPETA.ANIVERSARIO) {
-  const blob =
-    carpeta === CARPETA.BODA
-      ? await reducirImagen(file, LADO_ORIGINAL, LADO_ORIGINAL)
-      : await reducirImagen(file, ANCHO_MAXIMO, ALTO_MAXIMO);
   const ruta = `${carpeta}/${nombreArchivoFamilia(familia)}.jpg`;
-  const { error } = await supabase.storage
-    .from(CUBO_FOTOS)
-    .upload(ruta, blob, { contentType: "image/jpeg", upsert: true });
-  if (error) throw error;
+  const subir = async (destino, blob) => {
+    const { error } = await supabase.storage.from(CUBO_FOTOS).upload(destino, blob, { contentType: "image/jpeg", upsert: true });
+    if (error) throw error;
+  };
+  if (carpeta === CARPETA.BODA) {
+    await subir(ruta, await reducirImagen(file, LADO_ORIGINAL, LADO_ORIGINAL));
+    return ruta;
+  }
+  await subir(ruta, await reducirImagen(file, ANCHO_MAXIMO, ALTO_MAXIMO, CALIDAD_4K));
+  await subir(rutaMiniatura(ruta), await reducirImagen(file, ANCHO_MINIATURA, ALTO_MINIATURA_ALMACEN));
   return ruta;
+}
+
+// La miniatura de una terminada, para las filas de Aniversarios. Las de
+// antes de la v64.7 no la tienen: quien pinta usa entonces la grande.
+export function rutaMiniatura(ruta) {
+  return esRutaAlmacen(ruta) && !ruta.startsWith(`${CARPETA.BODA}/`) ? `miniaturas/${ruta}` : "";
 }
 
 export async function borrarFotoMatrimonio(ruta) {
   if (!ruta) return;
-  const { error } = await supabase.storage.from(CUBO_FOTOS).remove([ruta]);
+  const { error } = await supabase.storage.from(CUBO_FOTOS).remove([ruta, rutaMiniatura(ruta)].filter(Boolean));
   if (error) throw error;
 }
 
