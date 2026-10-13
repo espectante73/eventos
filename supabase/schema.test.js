@@ -103,6 +103,16 @@ describe("las familias, solo para el equipo", () => {
 });
 
 // v64: en el tablón, cada invitado ve quién le atiende antes del evento.
+describe("el tablón dice con qué nombre se ha entrado (v64.2)", () => {
+  const f = cuerpoDe("tablon_quien_soy");
+  it("con la llave y el mismo nombre que el acceso, como «Apellido, Nombre», y solo si es uno", () => {
+    expect(f).toContain('p_token = (select "token" from tablon_secreto');
+    expect(f).toContain("normalizar_nombre_tablon(p_respuesta)");
+    expect(f).toContain("count(*) = 1");
+    expect(f).toContain(`i."apellido" || ', ' || i."nombre"`);
+  });
+});
+
 describe("el tablón dice a cada uno su colaborador", () => {
   const f = cuerpoDe("tablon_mi_colaborador");
   it("con la llave del tablón y el mismo nombre que el acceso", () => {

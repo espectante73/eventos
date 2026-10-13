@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "64.2",
+    cambios: [
+      "En el tablón, arriba y en pequeño: «Has entrado como Apellido, Nombre» y un botón «Cambiar». Al tocarlo, ese móvil olvida el nombre y lo vuelve a preguntar: así, en un móvil que comparte la familia, cada uno puede entrar con el suyo y ver a su colaborador.",
+    ],
+  },
+  {
     version: "64.1",
     cambios: [
       "«Tu colaborador» en el tablón, bien resaltado: tarjeta propia en el dorado de la app, justo debajo de la fecha, la hora y el lugar, con el nombre en grande.",

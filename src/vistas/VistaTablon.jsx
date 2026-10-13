@@ -15,7 +15,7 @@ import { C, inputStyle, OP, S, T, FONDO_VERDE, DORADO } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, valorFechaEvento } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
-import { EnlaceTexto } from "../components/Boton";
+import { Boton, EnlaceTexto } from "../components/Boton";
 import { NotaPrivacidad } from "../components/NotaPrivacidad";
 import { TITULO_NOTA_PRIVACIDAD } from "../constants";
 import { uid } from "../lib/id";
@@ -55,6 +55,8 @@ export function VistaTablon({ token }) {
   const [evento, setEvento] = useState(null);
   // El nombre de su colaborador ("Apellido, Nombre"), o vacío (v64).
   const [miColaborador, setMiColaborador] = useState("");
+  // Con qué nombre ha entrado, para poder cambiarlo (v64.2).
+  const [quienSoy, setQuienSoy] = useState("");
   const [novedades, setNovedades] = useState([]);
   // Solo una novedad abierta a la vez -- a petición del usuario: con 5+
   // novedades, tenerlas todas desplegadas de golpe (o ir abriendo varias
@@ -134,7 +136,7 @@ export function VistaTablon({ token }) {
     async () => {
       // El evento, sin lo privado (lib/leerEvento.js, v63), y quién le
       // atiende (v64): su colaborador, por el nombre con el que ha entrado.
-      const [eventoLeido, { data: novedadesFilas }, { data: colaboradorSuyo }] = await Promise.all([
+      const [eventoLeido, { data: novedadesFilas }, { data: colaboradorSuyo }, { data: nombreSuyo }] = await Promise.all([
         leerEvento(supabase),
         supabase.rpc("tablon_listar_novedades", {
           p_token: token,
@@ -142,9 +144,11 @@ export function VistaTablon({ token }) {
           p_dispositivo_id: dispositivoIdRef.current,
         }),
         supabase.rpc("tablon_mi_colaborador", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
+        supabase.rpc("tablon_quien_soy", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
       ]);
       setEvento(eventoLeido);
       setMiColaborador(colaboradorSuyo || "");
+      setQuienSoy(nombreSuyo || respuestaVerificadaRef.current);
       setNovedades(novedadesFilas || []);
       // Todas plegadas por defecto (ni siquiera la más reciente se abre
       // sola) -- a petición del usuario, 2026-08-25. Sigue habiendo como
@@ -266,6 +270,22 @@ export function VistaTablon({ token }) {
 
   const alternar = (id) => {
     setIdAbierto((actual) => (actual === id ? null : id));
+  };
+
+  // En un móvil que comparte la familia, cada uno entra con su nombre y ve
+  // a su colaborador (v64.2): «Cambiar» olvida el nombre guardado aquí y
+  // lo vuelve a preguntar.
+  const cambiarDeNombre = () => {
+    try {
+      window.localStorage.removeItem(claveLocalStorage);
+    } catch (_) {
+      // Sin almacenamiento, no había nada guardado.
+    }
+    respuestaVerificadaRef.current = "";
+    setRespuestaEscrita("");
+    setMiColaborador("");
+    setQuienSoy("");
+    setEstado("bloqueado");
   };
 
   if (estado === "cargando") {
@@ -392,6 +412,17 @@ export function VistaTablon({ token }) {
             Volver a la web
           </a>
         </div>
+
+        {quienSoy && (
+          <div className="flex items-center justify-between gap-2 mb-4 zurdo:flex-row-reverse">
+            <span className="text-xs min-w-0 truncate" style={{ color: C.charcoal }}>
+              Has entrado como <b>{quienSoy}</b>
+            </span>
+            <Boton tamano="pequeno" onClick={cambiarDeNombre}>
+              Cambiar
+            </Boton>
+          </div>
+        )}
 
         {evento && (
           <div
