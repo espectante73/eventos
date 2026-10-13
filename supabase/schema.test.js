@@ -104,6 +104,16 @@ describe("las familias, solo para el equipo", () => {
 
 // v64: en el tablón, cada invitado ve quién le atiende antes del evento.
 // v64-64.3: en el tablón, quién ha entrado y quién le atiende.
+// comoElTablon (lib/revisionInvitados.js) copia esta regla para avisar de
+// los apellidos que no dejarían entrar: si cambia aquí, se cambia allí.
+describe("normalizar_nombre_tablon, la regla que copia la Revisión", () => {
+  it("sin comas ni espacios de más, sin tildes y en minúscula", () => {
+    expect(cuerpoDe("normalizar_nombre_tablon")).toContain(
+      "trim(lower(unaccent(regexp_replace(coalesce(p_texto, ''), '[,\\s]+', ' ', 'g'))))"
+    );
+  });
+});
+
 describe("el tablón: quién ha entrado y su colaborador", () => {
   const f = cuerpoDe("tablon_quien_soy");
   it("con la llave y el mismo nombre que el acceso, y solo si es una persona", () => {

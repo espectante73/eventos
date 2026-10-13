@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "64.5",
+    cambios: [
+      "La Revisión de la Lista busca sola, entre todos los invitados (confirmados o no), lo que está mal escrito y te enseña solo esos:",
+      "«Apellido distinto al de su familia»: el apellido de la ficha no coincide con el de su grupo (Medinas en Medina01). Con eso no podrían entrar al tablón. Mayúsculas, tildes y espacios no cuentan, igual que en el tablón.",
+      "«Familias con el apellido casi igual»: dos grupos a una sola letra (Gonzalez01 y Gonzales02).",
+      "«Nombres que parecen mal escritos»: a una letra de un nombre habitual, con la sugerencia (Pedo · ¿Pedro?). Si alguno está bien, se marca la excepción y deja de salir.",
+    ],
+  },
+  {
     version: "64.4",
     cambios: [
       "El recordatorio al colaborador en el tablón dice ahora: «Recuerda: eres colaborador. Entra con tu cuenta e introduce los datos de tus invitados en el formulario».",

@@ -280,3 +280,46 @@ describe("la misma persona, dos veces en la lista", () => {
     expect(claves(revisarInvitados([uno, otro]))).not.toContain("invitadoRepetido");
   });
 });
+
+// v64.5: lo que impide entrar al tablón o huele a errata.
+describe("apellidos y nombres mal escritos", () => {
+  it("apellido distinto al de su familia; lo que el tablón perdona no cuenta", () => {
+    const mal = persona({ nombre: "Ana", apellido: "Medinas", grupoFamiliar: "Medina01" });
+    const bien = [
+      persona({ nombre: "Luis", apellido: "medína", grupoFamiliar: "Medina01" }),
+      persona({ nombre: "Rui", apellido: "Gonçalves", grupoFamiliar: "Goncalves01" }),
+    ];
+    const h = buscar(revisarInvitados([mal, ...bien]), "apellidoDistintoFamilia");
+    expect(h.personas.map((g) => g.id)).toEqual([mal.id]);
+    expect(h.personas[0].detalle).toBe("familia Medina01");
+  });
+
+  it("familias con el apellido a una letra: aviso, no error", () => {
+    const h = buscar(
+      revisarInvitados([
+        persona({ nombre: "Ana", apellido: "Gonzalez", grupoFamiliar: "Gonzalez01" }),
+        persona({ nombre: "Luis", apellido: "Gonzales", grupoFamiliar: "Gonzales02" }),
+      ]),
+      "familiasCasiIguales"
+    );
+    expect(h.tipo).toBe("pendiente");
+    expect(h.personas).toHaveLength(2);
+  });
+
+  it("un nombre a una letra de uno habitual, con la sugerencia; los bien escritos y los repetidos, no", () => {
+    const pedo = persona({ nombre: "Pedo" });
+    const h = buscar(
+      revisarInvitados([
+        pedo,
+        persona({ nombre: "Gyul" }),
+        persona({ nombre: "María del Carmen" }),
+        persona({ nombre: "Yeray" }),
+        persona({ nombre: "Lusa" }),
+        persona({ nombre: "Lusa" }),
+      ]),
+      "nombreMalEscrito"
+    );
+    expect(h.personas.map((g) => g.id)).toEqual([pedo.id]);
+    expect(h.personas[0].detalle).toBe("¿Pedro?");
+  });
+});

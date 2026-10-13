@@ -16,6 +16,7 @@ import { ROL_FAMILIAR } from "./rolFamiliar";
 import { calcularEdad, familiasSinEmail, claveFamilia, ROLES_CON_EMAIL_FAMILIAR } from "./invitados";
 import { conyugesSueltos, matrimoniosDeInvitados } from "./matrimonios";
 import { colaboradoresSinFichaEnlazada, mismaPersona } from "./edicionInvitados";
+import { NOMBRES_HABITUALES } from "./nombresHabituales";
 
 // Quién necesita a un adulto suyo al lado en la mesa.
 //
@@ -70,6 +71,48 @@ function agruparPorFamilia(invitados) {
 // `tipo` separa lo que está MAL de lo que solo está pendiente: un hijo
 // sin adulto es un error de datos, y un confirmado sin mesa es trabajo
 // que queda. Mezclarlos haría que el informe cansara y se ignorara.
+// Como compara el tablón (normalizar_nombre_tablon, en la base; si cambia
+// allí, supabase/schema.test.js avisa de cambiarlo aquí): ni
+// mayúsculas, ni tildes (tampoco la ç o la ñ), ni comas ni espacios de más.
+export function comoElTablon(texto) {
+  return String(texto || "")
+    .replace(/[,\s]+/g, " ")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+// El apellido de una familia: su grupo sin el número ("Medina01" -> "Medina").
+export const apellidoDelGrupo = (grupo) => String(grupo || "").replace(/\s*\d+\s*$/, "").trim();
+
+// ¿Se diferencian en una sola letra (una cambiada, de más o de menos, o
+// dos seguidas al revés)?
+export function unaLetraDeDiferencia(a, b) {
+  if (a === b || Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i += 1;
+  if (a.length === b.length)
+    return a.slice(i + 1) === b.slice(i + 1) || (a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2));
+  return a.length > b.length ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1);
+}
+
+// Los nombres habituales, por cómo los compara el tablón -> bien escritos.
+const HABITUALES = new Map(NOMBRES_HABITUALES.map((n) => [comoElTablon(n), n]));
+const PARTICULAS = new Set(["de", "del", "la", "las", "los", "y"]);
+
+// Si un nombre parece mal escrito, a cuál se parece: no es habitual (ni se
+// repite en la lista, que lo da por bueno) y se queda a una letra de uno
+// que sí lo es. Por palabras: «María del Carmn» -> «Carmen».
+export function nombreParecido(nombre, conocidos = new Set()) {
+  for (const palabra of comoElTablon(nombre).split(" ")) {
+    if (palabra.length < 3 || PARTICULAS.has(palabra) || HABITUALES.has(palabra) || conocidos.has(palabra)) continue;
+    const parecidos = [...HABITUALES.keys()].filter((h) => unaLetraDeDiferencia(palabra, h));
+    if (parecidos.length) return parecidos.slice(0, 2).map((h) => HABITUALES.get(h));
+  }
+  return null;
+}
+
 function hallazgo(clave, titulo, ayuda, personas, tipo = "error") {
   return { clave, titulo, ayuda, tipo, personas };
 }
@@ -355,13 +398,85 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
       )
     );
 
+  // El apellido de cada uno, contra el de su familia (él, v64.5). En el
+  // tablón se entra con el apellido de la ficha, y la invitación enseña el
+  // de la familia: si no coinciden, esa persona no puede entrar. Se compara
+  // como el tablón, así que solo sale lo que de verdad fallaría. Confirmados
+  // o no: mejor corregirlo antes de que confirmen.
+  const apellidoDistinto = invitados
+    .filter((g) => {
+      const familia = apellidoDelGrupo(g.grupoFamiliar);
+      return familia && comoElTablon(g.apellido) !== comoElTablon(familia);
+    })
+    .map((g) => ({ ...g, detalle: `familia ${g.grupoFamiliar}` }));
+  if (apellidoDistinto.length)
+    hallazgos.push(
+      hallazgo(
+        "apellidoDistintoFamilia",
+        "Apellido distinto al de su familia",
+        "En el tablón se entra con el apellido de la ficha, y la invitación enseña el de la familia: así no podrá entrar. Corrige el que esté mal escrito.",
+        apellidoDistinto
+      )
+    );
+
+  // Familias cuyo apellido se diferencia en una sola letra (v64.5):
+  // «Gonzalez01» y «Gonzales02» suele ser una errata. Si son familias
+  // distintas de verdad, se marca la excepción.
+  const unaPorApellido = new Map();
+  for (const g of invitados) {
+    const familia = comoElTablon(apellidoDelGrupo(g.grupoFamiliar));
+    if (familia.length >= 4 && !unaPorApellido.has(familia)) unaPorApellido.set(familia, g);
+  }
+  const apellidos = [...unaPorApellido.keys()];
+  const casiIguales = [];
+  apellidos.forEach((a, i) =>
+    apellidos.slice(i + 1).forEach((b) => {
+      if (!unaLetraDeDiferencia(a, b)) return;
+      const [ga, gb] = [unaPorApellido.get(a), unaPorApellido.get(b)];
+      casiIguales.push({ ...ga, detalle: `familia ${ga.grupoFamiliar} ≈ ${gb.grupoFamiliar}` });
+      casiIguales.push({ ...gb, detalle: `familia ${gb.grupoFamiliar} ≈ ${ga.grupoFamiliar}` });
+    })
+  );
+  if (casiIguales.length)
+    hallazgos.push(
+      hallazgo(
+        "familiasCasiIguales",
+        "Familias con el apellido casi igual",
+        "Una sola letra de diferencia suele ser una errata. Si son familias distintas, marca la excepción.",
+        casiIguales,
+        "pendiente"
+      )
+    );
+
+  // Nombres que a todas luces están mal escritos (él, v64.5): «Pedo» por
+  // «Pedro», «Lus» por «Luis». Una palabra que se repite en dos invitados
+  // distintos se da por buena: no es una errata, es un nombre.
+  const vecesPorPalabra = new Map();
+  for (const g of invitados)
+    for (const p of new Set(comoElTablon(g.nombre).split(" "))) vecesPorPalabra.set(p, (vecesPorPalabra.get(p) || 0) + 1);
+  const repetidas = new Set([...vecesPorPalabra].filter(([, n]) => n > 1).map(([p]) => p));
+  const nombresRaros = invitados
+    .map((g) => ({ g, parecidos: nombreParecido(g.nombre, repetidas) }))
+    .filter(({ parecidos }) => parecidos)
+    .map(({ g, parecidos }) => ({ ...g, detalle: `¿${parecidos.join("?, ¿")}?` }));
+  if (nombresRaros.length)
+    hallazgos.push(
+      hallazgo(
+        "nombreMalEscrito",
+        "Nombres que parecen mal escritos",
+        "Se quedan a una letra de un nombre habitual. Si está bien escrito, marca la excepción.",
+        nombresRaros,
+        "pendiente"
+      )
+    );
+
   // ⚠️ Aquí NO se comprueban los datos incompletos, ni quién no ha
   // pagado, ni quién está sin revisar, ni quién no tiene mesa: todo eso
   // ya son columnas de la lista, con su filtro y su cifra en la
   // cabecera. Estuvieron un rato y el usuario los quitó por duplicados
-  // (2026-09-04), con razón. Este informe se queda SOLO con lo que
-  // obliga a cruzar filas entre sí, que es lo que la lista no puede
-  // enseñar por muchas columnas que tenga.
+  // (2026-09-04), con razón. Este informe se queda SOLO con lo que la
+  // lista no puede enseñar por muchas columnas que tenga: cruzar filas
+  // entre sí, o un dato con otro (apellido y familia) o con lo habitual.
   return hallazgos;
 }
 

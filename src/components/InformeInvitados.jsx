@@ -120,6 +120,9 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
                   <span key={g.id} className="inline-flex items-center gap-1">
                     <Boton variante="secundario" tamano="pequeno" onClick={() => onBuscar(g)} titulo={g.etiqueta ? "Verlo en la lista" : "Buscarlo en la lista"}>
                       {g.etiqueta || `${g.apellido}, ${g.nombre}`}
+                      {/* `detalle`: lo que explica el aviso de esa persona
+                          («familia Medina01»), sin abrir nada (v64.5). */}
+                      {g.detalle && <span style={{ opacity: OP.secundario }}>· {g.detalle}</span>}
                     </Boton>
                     {!g.etiqueta && onExcepcion && (
                       <Boton tamano="pequeno" onClick={() => onExcepcion(g, h)} titulo="Es un caso consciente: dejar de avisar de él">
