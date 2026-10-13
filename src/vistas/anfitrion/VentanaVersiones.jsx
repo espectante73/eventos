@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "64.3",
+    cambios: [
+      "En el tablón, «Tu colaborador» sale a todos, también a quien es su propio colaborador (con «(tú)» detrás). Y a quien es colaborador le recuerda, dentro de la misma tarjeta: «Recuerda: eres colaborador. Entra con tu cuenta y revisa los formularios de tus invitados», con un enlace para entrar.",
+    ],
+  },
+  {
     version: "64.2",
     cambios: [
       "En el tablón, arriba y en pequeño: «Has entrado como Apellido, Nombre» y un botón «Cambiar». Al tocarlo, ese móvil olvida el nombre y lo vuelve a preguntar: así, en un móvil que comparte la familia, cada uno puede entrar con el suyo y ver a su colaborador.",

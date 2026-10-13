@@ -53,10 +53,9 @@ export function VistaTablon({ token }) {
   // "cargando" | "invalido" | "bloqueado" | "listo"
   const [estado, setEstado] = useState("cargando");
   const [evento, setEvento] = useState(null);
-  // El nombre de su colaborador ("Apellido, Nombre"), o vacío (v64).
-  const [miColaborador, setMiColaborador] = useState("");
-  // Con qué nombre ha entrado, para poder cambiarlo (v64.2).
-  const [quienSoy, setQuienSoy] = useState("");
+  // Quién ha entrado (tablon_quien_soy, v64-64.3): { nombre, colaborador,
+  // colaboradorEsYo, esColaborador }, o null.
+  const [yo, setYo] = useState(null);
   const [novedades, setNovedades] = useState([]);
   // Solo una novedad abierta a la vez -- a petición del usuario: con 5+
   // novedades, tenerlas todas desplegadas de golpe (o ir abriendo varias
@@ -134,21 +133,19 @@ export function VistaTablon({ token }) {
   // el acceso por nombre.
   const cargarContenido = useCallback(
     async () => {
-      // El evento, sin lo privado (lib/leerEvento.js, v63), y quién le
-      // atiende (v64): su colaborador, por el nombre con el que ha entrado.
-      const [eventoLeido, { data: novedadesFilas }, { data: colaboradorSuyo }, { data: nombreSuyo }] = await Promise.all([
+      // El evento, sin lo privado (lib/leerEvento.js, v63), y quién ha
+      // entrado (v64): su nombre y su colaborador.
+      const [eventoLeido, { data: novedadesFilas }, { data: quien }] = await Promise.all([
         leerEvento(supabase),
         supabase.rpc("tablon_listar_novedades", {
           p_token: token,
           p_respuesta: respuestaVerificadaRef.current,
           p_dispositivo_id: dispositivoIdRef.current,
         }),
-        supabase.rpc("tablon_mi_colaborador", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
         supabase.rpc("tablon_quien_soy", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
       ]);
       setEvento(eventoLeido);
-      setMiColaborador(colaboradorSuyo || "");
-      setQuienSoy(nombreSuyo || respuestaVerificadaRef.current);
+      setYo({ ...(quien || {}), nombre: quien?.nombre || respuestaVerificadaRef.current });
       setNovedades(novedadesFilas || []);
       // Todas plegadas por defecto (ni siquiera la más reciente se abre
       // sola) -- a petición del usuario, 2026-08-25. Sigue habiendo como
@@ -283,8 +280,7 @@ export function VistaTablon({ token }) {
     }
     respuestaVerificadaRef.current = "";
     setRespuestaEscrita("");
-    setMiColaborador("");
-    setQuienSoy("");
+    setYo(null);
     setEstado("bloqueado");
   };
 
@@ -413,10 +409,10 @@ export function VistaTablon({ token }) {
           </a>
         </div>
 
-        {quienSoy && (
+        {yo?.nombre && (
           <div className="flex items-center justify-between gap-2 mb-4 zurdo:flex-row-reverse">
             <span className="text-xs min-w-0 truncate" style={{ color: C.charcoal }}>
-              Has entrado como <b>{quienSoy}</b>
+              Has entrado como <b>{yo.nombre}</b>
             </span>
             <Boton tamano="pequeno" onClick={cambiarDeNombre}>
               Cambiar
@@ -468,8 +464,10 @@ export function VistaTablon({ token }) {
         )}
 
         {/* Quién le atiende antes del evento (él, v64), bien a la vista:
-            tarjeta propia en el dorado de las fichas y el nombre en grande. */}
-        {miColaborador && (
+            tarjeta propia en el dorado de las fichas y el nombre en grande.
+            Para todos, también si su colaborador es él mismo; y a quien es
+            colaborador, que entre a sus formularios (v64.3). */}
+        {yo?.colaborador && (
           <div
             className="rounded-lg px-5 py-4 mb-6 flex items-start gap-3"
             style={{ background: DORADO.fondo, boxShadow: DORADO.relieveFlotante, color: C.ink }}
@@ -479,8 +477,21 @@ export function VistaTablon({ token }) {
               <div className="text-xs uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 1 }}>
                 Tu colaborador
               </div>
-              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.titulo }}>{miColaborador}</div>
-              <p className="text-sm mt-1">Recoge tus datos y el importe de tu entrada: para cualquier duda, pregúntale.</p>
+              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.titulo }}>
+                {yo.colaborador}
+                {yo.colaboradorEsYo && " (tú)"}
+              </div>
+              {!yo.colaboradorEsYo && (
+                <p className="text-sm mt-1">Recoge tus datos y el importe de tu entrada: para cualquier duda, pregúntale.</p>
+              )}
+              {yo.esColaborador && (
+                <p className="text-sm mt-1">
+                  <b>Recuerda: eres colaborador.</b> Entra con tu cuenta y revisa los formularios de tus invitados.{" "}
+                  <EnlaceTexto href="/" enLinea color={C.ink}>
+                    Entrar
+                  </EnlaceTexto>
+                </p>
+              )}
             </div>
           </div>
         )}

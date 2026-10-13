@@ -103,27 +103,22 @@ describe("las familias, solo para el equipo", () => {
 });
 
 // v64: en el tablón, cada invitado ve quién le atiende antes del evento.
-describe("el tablón dice con qué nombre se ha entrado (v64.2)", () => {
+// v64-64.3: en el tablón, quién ha entrado y quién le atiende.
+describe("el tablón: quién ha entrado y su colaborador", () => {
   const f = cuerpoDe("tablon_quien_soy");
-  it("con la llave y el mismo nombre que el acceso, como «Apellido, Nombre», y solo si es uno", () => {
-    expect(f).toContain('p_token = (select "token" from tablon_secreto');
-    expect(f).toContain("normalizar_nombre_tablon(p_respuesta)");
-    expect(f).toContain("count(*) = 1");
-    expect(f).toContain(`i."apellido" || ', ' || i."nombre"`);
-  });
-});
-
-describe("el tablón dice a cada uno su colaborador", () => {
-  const f = cuerpoDe("tablon_mi_colaborador");
-  it("con la llave del tablón y el mismo nombre que el acceso", () => {
+  it("con la llave y el mismo nombre que el acceso, y solo si es una persona", () => {
     expect(f).toContain('p_token = (select "token" from tablon_secreto');
     expect(f).toContain('i."confirmado" = true');
     expect(f).toContain('i."excluidoTablon" = false');
     expect(f).toContain("normalizar_nombre_tablon(p_respuesta)");
+    expect(f).toContain("(select count(*) from yo) = 1");
   });
-  it("nada si su colaborador es él mismo, o si el nombre da dos colaboradores", () => {
-    expect(f).toContain('c."invitadoId" is distinct from i."id"');
-    expect(f).toContain('count(distinct c."id") = 1');
+  it("su nombre como en la lista, su colaborador aunque sea él mismo, y si es colaborador", () => {
+    expect(f).toContain(`'nombre', y."apellido" || ', ' || y."nombre"`);
+    expect(f).toContain(`'colaborador', c."nombre"`);
+    expect(f).toContain("'colaboradorEsYo'");
+    expect(f).toContain("'esColaborador'");
+    expect(f).not.toContain('is distinct from i."id"');
   });
 });
 

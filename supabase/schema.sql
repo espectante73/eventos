@@ -2322,37 +2322,34 @@ CREATE FUNCTION public.tablon_verificar_respuesta(p_token uuid, p_respuesta text
     );
 $$;
 
--- Con qué nombre ha entrado alguien al tablón (él, v64.2), escrito como en
--- la lista, «Apellido, Nombre»: para el «Has entrado como … · Cambiar» de
--- un móvil que comparte la familia. Nada si el nombre no casa con uno solo.
-CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS text
+-- Quién ha entrado al tablón (él, v64-64.3), con el mismo nombre que el
+-- acceso. Nada si el nombre no casa con una sola persona.
+--   nombre           como en la lista, «Apellido, Nombre» («Has entrado
+--                    como … · Cambiar», para un móvil que comparte la familia)
+--   colaborador      quien le atiende, también si es él mismo: que lo sepa
+--   colaboradorEsYo  su colaborador es él
+--   esColaborador    tiene cuenta de colaborador: se le recuerda entrar
+CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
     AS $$
-  select case when count(*) = 1 then min(i."apellido" || ', ' || i."nombre") end
-  from invitados i
-  where p_token = (select "token" from tablon_secreto limit 1)
-    and i."confirmado" = true
-    and i."excluidoTablon" = false
-    and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta);
-$$;
-
--- El colaborador de quien entra al tablón (él, v64): su nombre, para que
--- sepa antes del evento quién le atiende. Con la llave y el mismo nombre
--- que el acceso. Nada si no tiene, si su colaborador es él mismo o si dos
--- invitados con ese nombre tienen colaboradores distintos.
-CREATE FUNCTION public.tablon_mi_colaborador(p_token uuid, p_respuesta text) RETURNS text
-    LANGUAGE sql STABLE SECURITY DEFINER
-    SET search_path TO 'public', 'extensions', 'pg_temp'
-    AS $$
-  select case when count(distinct c."id") = 1 then min(c."nombre") end
-  from invitados i
-  join colaboradores c on c."id" = i."colaboradorId"
-  where p_token = (select "token" from tablon_secreto limit 1)
-    and i."confirmado" = true
-    and i."excluidoTablon" = false
-    and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)
-    and c."invitadoId" is distinct from i."id";
+  with yo as (
+    select i.* from invitados i
+    where p_token = (select "token" from tablon_secreto limit 1)
+      and i."confirmado" = true
+      and i."excluidoTablon" = false
+      and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)
+  )
+  select case when (select count(*) from yo) = 1 then (
+    select jsonb_build_object(
+      'nombre', y."apellido" || ', ' || y."nombre",
+      'colaborador', c."nombre",
+      'colaboradorEsYo', c."invitadoId" is not distinct from y."id",
+      'esColaborador', exists (select 1 from colaboradores cc where cc."invitadoId" = y."id")
+    )
+    from yo y
+    left join colaboradores c on c."id" = y."colaboradorId"
+  ) end;
 $$;
 
 
