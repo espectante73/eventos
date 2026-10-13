@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "63.8",
+    cambios: [
+      "Al escribir en las novedades, las FAQ y los textos largos de Configuración (plantillas de email, nota de privacidad), la ventana ya no parpadea en cada letra ni se va hacia arriba: el recuadro crece con el texto sin moverse, y escribiendo al final la ventana baja sola para que siempre se vea lo que se escribe.",
+    ],
+  },
+  {
     version: "63.7",
     cambios: [
       "El velo de «Abrir sección…» ya no tiene el borde marcado, que parecía una caja pegada: se desvanece poco a poco a lo largo del margen, como un halo alrededor de los botones.",

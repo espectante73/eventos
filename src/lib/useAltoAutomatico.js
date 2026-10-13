@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 // Hace que un <textarea> crezca hasta donde llegue su texto, en vez de
 // quedarse en las filas que tenga puestas.
@@ -36,28 +36,85 @@ import { useLayoutEffect } from "react";
 // se hacía en un momento que no llegaba nunca. En las plantillas de
 // email no pasaba porque allí se desmonta el componente entero y el
 // efecto corre al remontarlo -- de ahí que uno funcionara y el otro no.
+//
+// ⚠️ Ese «auto», hecho en CADA letra, hacía parpadear la ventana y la
+// subía: al encogerse el recuadro, la ventana perdía alto un instante, el
+// navegador la recolocaba arriba y lo que se escribía quedaba fuera de
+// la vista (él, v63.8). Ahora: si el texto crece, se estira sin encoger;
+// solo si se acorta se mide en «auto», sujetando antes el alto de lo que
+// lo rodea y dejando cada desplazamiento donde estaba. Y escribiendo al
+// final, la ventana baja con el texto.
+const MARGEN_CURSOR = 16;
+
+// Lo que se desplaza alrededor del recuadro, de dentro afuera.
+function conDesplazamiento(el) {
+  const lista = [];
+  const win = el.ownerDocument.defaultView;
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    const { overflowY } = win.getComputedStyle(p);
+    if ((overflowY === "auto" || overflowY === "scroll") && p.scrollHeight > p.clientHeight) lista.push(p);
+  }
+  const doc = el.ownerDocument.scrollingElement;
+  if (doc) lista.push(doc);
+  return lista;
+}
+
+// Escribiendo al final, que la última línea no se quede debajo del
+// borde (ni del teclado del móvil).
+function seguirAlCursor(el) {
+  const doc = el.ownerDocument;
+  if (doc.activeElement !== el || el.selectionEnd < el.value.length - 1) return;
+  const win = doc.defaultView;
+  const [contenedor] = conDesplazamiento(el);
+  if (!contenedor) return;
+  const vista = win.visualViewport;
+  const finVentana = vista ? vista.offsetTop + vista.height : win.innerHeight;
+  const finVisible = contenedor === doc.scrollingElement ? finVentana : Math.min(finVentana, contenedor.getBoundingClientRect().bottom);
+  const sobra = el.getBoundingClientRect().bottom - (finVisible - MARGEN_CURSOR);
+  if (sobra > 0) contenedor.scrollTop += sobra;
+}
+
 export function useAltoAutomatico(ref, valor, visible = true) {
+  const largoPrevio = useRef(null);
   useLayoutEffect(() => {
     const el = ref?.current;
     if (!visible || !el) return;
 
-    const ajustar = () => {
+    const ajustar = (puedeEncoger) => {
+      // El borde: con box-sizing border-box, el alto lo incluye.
+      const borde = el.offsetHeight - el.clientHeight;
+      if (!puedeEncoger) {
+        if (el.scrollHeight > el.clientHeight) el.style.height = `${el.scrollHeight + borde}px`;
+        return;
+      }
+      const padre = el.parentElement;
+      const desplazados = conDesplazamiento(el).map((c) => [c, c.scrollTop]);
+      if (padre) padre.style.minHeight = `${padre.offsetHeight}px`;
       el.style.height = "auto";
-      el.style.height = `${el.scrollHeight}px`;
+      el.style.height = `${el.scrollHeight + borde}px`;
+      if (padre) padre.style.minHeight = "";
+      desplazados.forEach(([c, arriba]) => {
+        c.scrollTop = arriba;
+      });
     };
-    ajustar();
+
+    const largo = String(valor ?? "").length;
+    const primera = largoPrevio.current === null;
+    ajustar(primera || largo < largoPrevio.current);
+    largoPrevio.current = largo;
+    seguirAlCursor(el);
 
     // Una pasada más en el siguiente fotograma: cubre el caso de que
     // los estilos lleguen sin cambiar el ancho (una fuente distinta,
     // por ejemplo, que cambia el alto de línea pero no el ancho).
-    const fotograma = requestAnimationFrame(ajustar);
+    const fotograma = requestAnimationFrame(() => ajustar(primera));
 
     let anchoPrevio = el.getBoundingClientRect().width;
     const observador = new ResizeObserver((entradas) => {
       const ancho = entradas[0]?.contentRect.width ?? 0;
       if (ancho === anchoPrevio) return;
       anchoPrevio = ancho;
-      ajustar();
+      ajustar(true);
     });
     observador.observe(el);
 
@@ -66,4 +123,9 @@ export function useAltoAutomatico(ref, valor, visible = true) {
       observador.disconnect();
     };
   }, [ref, valor, visible]);
+
+  // Al plegarse, la próxima vez se vuelve a medir desde cero.
+  useLayoutEffect(() => {
+    if (!visible) largoPrevio.current = null;
+  }, [visible]);
 }
