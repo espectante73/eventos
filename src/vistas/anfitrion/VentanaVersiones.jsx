@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "64.4",
+    cambios: [
+      "El recordatorio al colaborador en el tablón dice ahora: «Recuerda: eres colaborador. Entra con tu cuenta e introduce los datos de tus invitados en el formulario».",
+    ],
+  },
+  {
     version: "64.3",
     cambios: [
       "En el tablón, «Tu colaborador» sale a todos, también a quien es su propio colaborador (con «(tú)» detrás). Y a quien es colaborador le recuerda, dentro de la misma tarjeta: «Recuerda: eres colaborador. Entra con tu cuenta y revisa los formularios de tus invitados», con un enlace para entrar.",

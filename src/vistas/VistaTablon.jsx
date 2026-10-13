@@ -486,7 +486,7 @@ export function VistaTablon({ token }) {
               )}
               {yo.esColaborador && (
                 <p className="text-sm mt-1">
-                  <b>Recuerda: eres colaborador.</b> Entra con tu cuenta y revisa los formularios de tus invitados.{" "}
+                  <b>Recuerda: eres colaborador.</b> Entra con tu cuenta e introduce los datos de tus invitados en el formulario.{" "}
                   <EnlaceTexto href="/" enLinea color={C.ink}>
                     Entrar
                   </EnlaceTexto>
