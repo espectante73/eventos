@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "64.1",
+    cambios: [
+      "«Tu colaborador» en el tablón, bien resaltado: tarjeta propia en el dorado de la app, justo debajo de la fecha, la hora y el lugar, con el nombre en grande.",
+    ],
+  },
+  {
     version: "64",
     cambios: [
       "En el tablón, cada invitado confirmado ve quién le atiende antes del evento: «Tu colaborador: Apellido, Nombre», debajo de la fecha, la hora y el lugar, con una línea que explica que recoge sus datos y el importe de la entrada. Solo el nombre. No sale si todavía no tiene colaborador o si es él mismo.",

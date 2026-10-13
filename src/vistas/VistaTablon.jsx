@@ -11,7 +11,7 @@
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause, ArrowLeft, User } from "lucide-react";
-import { C, inputStyle, OP, S, FONDO_VERDE, conAlfa } from "../theme";
+import { C, inputStyle, OP, S, T, FONDO_VERDE, DORADO } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, valorFechaEvento } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
@@ -433,15 +433,24 @@ export function VistaTablon({ token }) {
               <InfoItem claro icon={Clock} label="Hora" value={evento.hora || "—"} />
               <InfoItem claro icon={MapPin} label="Lugar" value={evento.lugar || "—"} />
             </div>
-            {/* Quién le atiende antes del evento (él, v64). */}
-            {miColaborador && (
-              <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${conAlfa(C.gold, 0.4)}` }}>
-                <InfoItem claro icon={User} label="Tu colaborador" value={miColaborador} />
-                <p className="text-xs mt-1 ml-6" style={{ color: C.blanco, opacity: OP.secundario }}>
-                  Recoge tus datos y el importe de tu entrada: para cualquier duda, pregúntale.
-                </p>
+          </div>
+        )}
+
+        {/* Quién le atiende antes del evento (él, v64), bien a la vista:
+            tarjeta propia en el dorado de las fichas y el nombre en grande. */}
+        {miColaborador && (
+          <div
+            className="rounded-lg px-5 py-4 mb-6 flex items-start gap-3"
+            style={{ background: DORADO.fondo, boxShadow: DORADO.relieveFlotante, color: C.ink }}
+          >
+            <User size={28} className="mt-1" style={{ flexShrink: 0 }} aria-hidden />
+            <div className="min-w-0">
+              <div className="text-xs uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 1 }}>
+                Tu colaborador
               </div>
-            )}
+              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.titulo }}>{miColaborador}</div>
+              <p className="text-sm mt-1">Recoge tus datos y el importe de tu entrada: para cualquier duda, pregúntale.</p>
+            </div>
           </div>
         )}
 
