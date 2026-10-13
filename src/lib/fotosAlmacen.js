@@ -92,8 +92,36 @@ export function nombreArchivoFamilia(familia) {
 // Sube la foto y devuelve la RUTA dentro del cajón, que es lo que se guarda
 // en la base. `carpeta`: ver CARPETA. La original de boda se reduce menos
 // (LADO_ORIGINAL en cualquier sentido); las que van a pantalla, a 1920x1080.
+// Las medidas de una foto antes de subirla.
+function medidasDe(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ ancho: img.width, alto: img.height });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("No se pudo leer la imagen"));
+    };
+    img.src = url;
+  });
+}
+
+// ¿Llega a 4K? Llena la caja de 3840x2160 por algún lado (él, v64.8:
+// «ninguna debe quedar sin ser 4K»).
+export const llegaA4K = ({ ancho, alto }) => ancho >= ANCHO_MAXIMO || alto >= ALTO_MAXIMO;
+
 export async function subirFotoMatrimonio(file, familia, carpeta = CARPETA.ANIVERSARIO) {
   const ruta = `${carpeta}/${nombreArchivoFamilia(familia)}.jpg`;
+  if (carpeta !== CARPETA.BODA) {
+    const medidas = await medidasDe(file);
+    if (!llegaA4K(medidas))
+      throw new Error(
+        `Esta foto mide ${medidas.ancho}×${medidas.alto} y no llega a 4K (${ANCHO_MAXIMO} de ancho o ${ALTO_MAXIMO} de alto). Súbela desde el archivo en 4K.`
+      );
+  }
   const subir = async (destino, blob) => {
     const { error } = await supabase.storage.from(CUBO_FOTOS).upload(destino, blob, { contentType: "image/jpeg", upsert: true });
     if (error) throw error;

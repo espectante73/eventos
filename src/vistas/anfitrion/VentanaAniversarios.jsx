@@ -168,11 +168,19 @@ export function VentanaAniversarios({ data, onCerrar }) {
   const verFoto = (valor) => (esRutaAlmacen(valor) ? enlaces[valor] || "" : valor || "");
   // En las filas, la miniatura; si no la tiene (subida antes), la grande.
   const verMiniatura = (valor) => enlaces[rutaMiniatura(valor)] || verFoto(valor);
+  // Subida antes de la v64.7: está en Full HD y hay que volver a subirla en
+  // 4K (él: «ninguna debe quedar sin ser 4K»). Se sabe porque no tiene
+  // miniatura; solo cuando ya han llegado los enlaces, para no marcarlas
+  // todas mientras cargan.
+  const falta4K = (valor) => esRutaAlmacen(valor) && Boolean(enlaces[valor]) && Boolean(rutaMiniatura(valor)) && !enlaces[rutaMiniatura(valor)];
 
-  const faltanAniversario = matrimonios.filter((m) => !fotosAniversario?.[m.familia]).length;
+  // Cuentan también las que están pero en Full HD: hay que volver a subirlas.
+  const faltanAniversario = matrimonios.filter((m) => !fotosAniversario?.[m.familia] || falta4K(fotosAniversario[m.familia])).length;
   // Los que no tienen foto de boda (marcado por el colaborador) no tienen
   // nada que montar: no cuentan como "falta la plantilla".
-  const faltanPlantilla = matrimonios.filter((m) => !fotosBodaFinal?.[m.familia] && !fotosSinBoda?.[m.familia]).length;
+  const faltanPlantilla = matrimonios.filter(
+    (m) => (!fotosBodaFinal?.[m.familia] && !fotosSinBoda?.[m.familia]) || falta4K(fotosBodaFinal?.[m.familia])
+  ).length;
 
   const subir = async (tipo, familia, file) => {
     const t = TIPOS[tipo];
@@ -371,7 +379,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
                 soloLectura={!final}
                 // "No tienen": el colaborador marcó que ese matrimonio no
                 // tiene foto de boda. Así se sabe que no falta, que no hay.
-                marca={!final && original ? "Sin plantilla" : !original && fotosSinBoda?.[m.familia] ? "No tienen" : ""}
+                marca={falta4K(final) ? "Falta 4K" : !final && original ? "Sin plantilla" : !original && fotosSinBoda?.[m.familia] ? "No tienen" : ""}
                 subiendo={subiendo === `bodaFinal:${m.familia}`}
                 onQuitar={() => setPorQuitar({ matrimonio: m, tipo: "bodaFinal" })}
                 onVer={() => setEnGrande({ matrimonio: m, tipo: "boda", cual: final ? "final" : "original" })}
@@ -381,6 +389,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
                 titulo="Aniversario"
                 enlace={verMiniatura(aniversario)}
                 ocupada={Boolean(aniversario)}
+                marca={falta4K(aniversario) ? "Falta 4K" : ""}
                 subiendo={subiendo === `aniversario:${m.familia}`}
                 onElegir={(file) => subir("aniversario", m.familia, file)}
                 onQuitar={() => setPorQuitar({ matrimonio: m, tipo: "aniversario" })}

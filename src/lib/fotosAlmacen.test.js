@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   rutaMiniatura,
+  llegaA4K,
   nombreArchivoFamilia,
   esRutaAlmacen,
   nombreDescargaBoda,
@@ -122,5 +123,15 @@ describe("rutaMiniatura", () => {
     expect(rutaMiniatura("boda/medina01.jpg")).toBe("");
     expect(rutaMiniatura("data:image/jpeg;base64,xx")).toBe("");
     expect(rutaMiniatura("")).toBe("");
+  });
+});
+
+// v64.8: «ninguna debe quedar sin ser 4K».
+describe("llegaA4K", () => {
+  it("llena la caja 3840x2160 por algún lado; Full HD no", () => {
+    expect(llegaA4K({ ancho: 3840, alto: 2160 })).toBe(true);
+    expect(llegaA4K({ ancho: 4000, alto: 2000 })).toBe(true);
+    expect(llegaA4K({ ancho: 2160, alto: 3840 })).toBe(true);
+    expect(llegaA4K({ ancho: 1920, alto: 1080 })).toBe(false);
   });
 });
