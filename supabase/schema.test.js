@@ -102,6 +102,21 @@ describe("las familias, solo para el equipo", () => {
   });
 });
 
+// v64: en el tablón, cada invitado ve quién le atiende antes del evento.
+describe("el tablón dice a cada uno su colaborador", () => {
+  const f = cuerpoDe("tablon_mi_colaborador");
+  it("con la llave del tablón y el mismo nombre que el acceso", () => {
+    expect(f).toContain('p_token = (select "token" from tablon_secreto');
+    expect(f).toContain('i."confirmado" = true');
+    expect(f).toContain('i."excluidoTablon" = false');
+    expect(f).toContain("normalizar_nombre_tablon(p_respuesta)");
+  });
+  it("nada si su colaborador es él mismo, o si el nombre da dos colaboradores", () => {
+    expect(f).toContain('c."invitadoId" is distinct from i."id"');
+    expect(f).toContain('count(distinct c."id") = 1');
+  });
+});
+
 describe("nada abierto a escritura anónima", () => {
   // 2026-09-06: cuatro tablas tenían `for all using (true) with check
   // (true)`. `evento` guarda las plantillas de los emails automáticos:

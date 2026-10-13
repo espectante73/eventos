@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "64",
+    cambios: [
+      "En el tablón, cada invitado confirmado ve quién le atiende antes del evento: «Tu colaborador: Apellido, Nombre», debajo de la fecha, la hora y el lugar, con una línea que explica que recoge sus datos y el importe de la entrada. Solo el nombre. No sale si todavía no tiene colaborador o si es él mismo.",
+    ],
+  },
+  {
     version: "63.8",
     cambios: [
       "Al escribir en las novedades, las FAQ y los textos largos de Configuración (plantillas de email, nota de privacidad), la ventana ya no parpadea en cada letra ni se va hacia arriba: el recuadro crece con el texto sin moverse, y escribiendo al final la ventana baja sola para que siempre se vea lo que se escribe.",

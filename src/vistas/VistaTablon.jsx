@@ -10,8 +10,8 @@
 // la monta ANTES de tocar nada de sesión/login en cuanto detecta
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause, ArrowLeft } from "lucide-react";
-import { C, inputStyle, OP, S, FONDO_VERDE } from "../theme";
+import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause, ArrowLeft, User } from "lucide-react";
+import { C, inputStyle, OP, S, FONDO_VERDE, conAlfa } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, valorFechaEvento } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
@@ -53,6 +53,8 @@ export function VistaTablon({ token }) {
   // "cargando" | "invalido" | "bloqueado" | "listo"
   const [estado, setEstado] = useState("cargando");
   const [evento, setEvento] = useState(null);
+  // El nombre de su colaborador ("Apellido, Nombre"), o vacío (v64).
+  const [miColaborador, setMiColaborador] = useState("");
   const [novedades, setNovedades] = useState([]);
   // Solo una novedad abierta a la vez -- a petición del usuario: con 5+
   // novedades, tenerlas todas desplegadas de golpe (o ir abriendo varias
@@ -130,16 +132,19 @@ export function VistaTablon({ token }) {
   // el acceso por nombre.
   const cargarContenido = useCallback(
     async () => {
-      // El evento, sin lo privado (lib/leerEvento.js, v63).
-      const [eventoLeido, { data: novedadesFilas }] = await Promise.all([
+      // El evento, sin lo privado (lib/leerEvento.js, v63), y quién le
+      // atiende (v64): su colaborador, por el nombre con el que ha entrado.
+      const [eventoLeido, { data: novedadesFilas }, { data: colaboradorSuyo }] = await Promise.all([
         leerEvento(supabase),
         supabase.rpc("tablon_listar_novedades", {
           p_token: token,
           p_respuesta: respuestaVerificadaRef.current,
           p_dispositivo_id: dispositivoIdRef.current,
         }),
+        supabase.rpc("tablon_mi_colaborador", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
       ]);
       setEvento(eventoLeido);
+      setMiColaborador(colaboradorSuyo || "");
       setNovedades(novedadesFilas || []);
       // Todas plegadas por defecto (ni siquiera la más reciente se abre
       // sola) -- a petición del usuario, 2026-08-25. Sigue habiendo como
@@ -428,6 +433,15 @@ export function VistaTablon({ token }) {
               <InfoItem claro icon={Clock} label="Hora" value={evento.hora || "—"} />
               <InfoItem claro icon={MapPin} label="Lugar" value={evento.lugar || "—"} />
             </div>
+            {/* Quién le atiende antes del evento (él, v64). */}
+            {miColaborador && (
+              <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${conAlfa(C.gold, 0.4)}` }}>
+                <InfoItem claro icon={User} label="Tu colaborador" value={miColaborador} />
+                <p className="text-xs mt-1 ml-6" style={{ color: C.blanco, opacity: OP.secundario }}>
+                  Recoge tus datos y el importe de tu entrada: para cualquier duda, pregúntale.
+                </p>
+              </div>
+            )}
           </div>
         )}
 

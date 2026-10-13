@@ -2322,6 +2322,24 @@ CREATE FUNCTION public.tablon_verificar_respuesta(p_token uuid, p_respuesta text
     );
 $$;
 
+-- El colaborador de quien entra al tablón (él, v64): su nombre, para que
+-- sepa antes del evento quién le atiende. Con la llave y el mismo nombre
+-- que el acceso. Nada si no tiene, si su colaborador es él mismo o si dos
+-- invitados con ese nombre tienen colaboradores distintos.
+CREATE FUNCTION public.tablon_mi_colaborador(p_token uuid, p_respuesta text) RETURNS text
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+  select case when count(distinct c."id") = 1 then min(c."nombre") end
+  from invitados i
+  join colaboradores c on c."id" = i."colaboradorId"
+  where p_token = (select "token" from tablon_secreto limit 1)
+    and i."confirmado" = true
+    and i."excluidoTablon" = false
+    and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)
+    and c."invitadoId" is distinct from i."id";
+$$;
+
 
 -- ------------------------------------------------------------
 -- Funciones que disparan los avisos automáticos (triggers)
