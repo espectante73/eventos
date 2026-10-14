@@ -323,3 +323,25 @@ describe("apellidos y nombres mal escritos", () => {
     expect(h.personas[0].detalle).toBe("¿Pedro?");
   });
 });
+
+// v64.9: los datos y la escritura, solo de los confirmados: a los demás
+// todavía no se les han pedido.
+describe("datos y escritura, solo de los confirmados", () => {
+  it("un no confirmado mal escrito o con apellido distinto no sale", () => {
+    const hallazgos = revisarInvitados([
+      persona({ nombre: "Pedo", confirmado: false }),
+      persona({ nombre: "Ana", apellido: "Medinas", grupoFamiliar: "Medina01", confirmado: false }),
+    ]);
+    expect(claves(hallazgos)).not.toContain("nombreMalEscrito");
+    expect(claves(hallazgos)).not.toContain("apellidoDistintoFamilia");
+  });
+
+  it("un matrimonio sin confirmar no avisa de que le falta el año de boda", () => {
+    const sinAnio = { anioBoda: "", grupoFamiliar: "Ruiz01", apellido: "Ruiz", confirmado: false };
+    const hallazgos = revisarInvitados([
+      persona({ ...sinAnio, nombre: "Luis", rolFamiliar: ROL_FAMILIAR.ESPOSO }),
+      persona({ ...sinAnio, nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
+    ]);
+    expect(claves(hallazgos)).not.toContain("matrimonioSinAnioBoda");
+  });
+});

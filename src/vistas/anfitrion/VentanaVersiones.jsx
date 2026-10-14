@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "64.9",
+    cambios: [
+      "La Revisión de la Lista solo avisa de datos y de nombres mal escritos en los invitados confirmados: a los demás todavía no se les han pedido. Lo que depende de cómo está montada la lista (papeles, grupos, repetidos, reparto entre colaboradores) sigue mirando a todos.",
+    ],
+  },
+  {
     version: "64.8",
     cambios: [
       "Aniversarios: ninguna foto terminada se queda sin 4K. Las subidas antes en Full HD llevan encima la marca roja «Falta 4K» y cuentan en el sello de las que faltan, hasta que se vuelvan a subir. Y si se intenta subir una que no llega a 4K, no se guarda: la app dice cuánto mide y pide el archivo en 4K.",

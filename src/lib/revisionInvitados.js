@@ -384,8 +384,10 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
       )
     );
 
+  // Solo con alguno confirmado (él, v64.9): el año lo pide el colaborador
+  // al confirmar; antes es imposible tenerlo.
   const matrimoniosSinBoda = matrimoniosDeInvitados(invitados, evento.fecha)
-    .filter((m) => m.aniversario === null)
+    .filter((m) => m.aniversario === null && (m.esposo.confirmado || m.esposa.confirmado))
     .map((m) => m.esposo);
   if (matrimoniosSinBoda.length)
     hallazgos.push(
@@ -401,9 +403,11 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
   // El apellido de cada uno, contra el de su familia (él, v64.5). En el
   // tablón se entra con el apellido de la ficha, y la invitación enseña el
   // de la familia: si no coinciden, esa persona no puede entrar. Se compara
-  // como el tablón, así que solo sale lo que de verdad fallaría. Confirmados
-  // o no: mejor corregirlo antes de que confirmen.
-  const apellidoDistinto = invitados
+  // como el tablón, así que solo sale lo que de verdad fallaría. Esta y las
+  // dos de abajo, solo con los confirmados (él, v64.9): de los demás aún no
+  // se han pedido los datos.
+  const confirmados = invitados.filter((g) => g.confirmado);
+  const apellidoDistinto = confirmados
     .filter((g) => {
       const familia = apellidoDelGrupo(g.grupoFamiliar);
       return familia && comoElTablon(g.apellido) !== comoElTablon(familia);
@@ -423,7 +427,7 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
   // «Gonzalez01» y «Gonzales02» suele ser una errata. Si son familias
   // distintas de verdad, se marca la excepción.
   const unaPorApellido = new Map();
-  for (const g of invitados) {
+  for (const g of confirmados) {
     const familia = comoElTablon(apellidoDelGrupo(g.grupoFamiliar));
     if (familia.length >= 4 && !unaPorApellido.has(familia)) unaPorApellido.set(familia, g);
   }
@@ -455,7 +459,7 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
   for (const g of invitados)
     for (const p of new Set(comoElTablon(g.nombre).split(" "))) vecesPorPalabra.set(p, (vecesPorPalabra.get(p) || 0) + 1);
   const repetidas = new Set([...vecesPorPalabra].filter(([, n]) => n > 1).map(([p]) => p));
-  const nombresRaros = invitados
+  const nombresRaros = confirmados
     .map((g) => ({ g, parecidos: nombreParecido(g.nombre, repetidas) }))
     .filter(({ parecidos }) => parecidos)
     .map(({ g, parecidos }) => ({ ...g, detalle: `¿${parecidos.join("?, ¿")}?` }));
