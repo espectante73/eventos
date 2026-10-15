@@ -116,19 +116,51 @@ describe("normalizar_nombre_tablon, la regla que copia la Revisión", () => {
 
 describe("el tablón: quién ha entrado y su colaborador", () => {
   const f = cuerpoDe("tablon_quien_soy");
+  // La pieza común (v67): la usan también las funciones de las fotos.
+  const yo = cuerpoDe("tablon_invitado");
   it("con la llave y el mismo nombre que el acceso, y solo si es una persona", () => {
-    expect(f).toContain('p_token = (select "token" from tablon_secreto');
-    expect(f).toContain('i."confirmado" = true');
-    expect(f).toContain('i."excluidoTablon" = false');
-    expect(f).toContain("normalizar_nombre_tablon(p_respuesta)");
-    expect(f).toContain("(select count(*) from yo) = 1");
+    expect(yo).toContain('p_token = (select "token" from tablon_secreto');
+    expect(yo).toContain('i."confirmado" = true');
+    expect(yo).toContain('i."excluidoTablon" = false');
+    expect(yo).toContain("normalizar_nombre_tablon(p_respuesta)");
+    expect(yo).toContain("(select count(*) from candidatos) = 1");
+    expect(f).toContain("from tablon_invitado(p_token, p_respuesta) y");
   });
   it("su nombre como en la lista, su colaborador aunque sea él mismo, y si es colaborador", () => {
     expect(f).toContain(`'nombre', y."apellido" || ', ' || y."nombre"`);
     expect(f).toContain(`'colaborador', c."nombre"`);
     expect(f).toContain("'colaboradorEsYo'");
     expect(f).toContain("'esColaborador'");
-    expect(f).not.toContain('is distinct from i."id"');
+    expect(f).not.toContain('is distinct from y."id"');
+  });
+});
+
+// v67: las fotos de la fiesta. Solo las sube quien entra al tablón con su
+// nombre, con la recogida abierta y 3 por familia; nadie las ve salvo el
+// anfitrión; el almacén rechaza lo que pase de 2 MB.
+describe("las fotos de la fiesta", () => {
+  it("reservar: invitado reconocido, recogida abierta y menos de 3 por familia, sin carreras", () => {
+    const f = cuerpoDe("tablon_reservar_foto");
+    expect(f).toContain("from tablon_invitado(p_token, p_respuesta)");
+    expect(f).toContain('"fotosFiestaAbierta"');
+    expect(f).toContain("pg_advisory_xact_lock");
+    expect(f).toMatch(/\) >= 3 then/);
+    expect(f).toContain("interval '15 minutes'");
+  });
+
+  it("confirmar y quitar, solo su autor", () => {
+    expect(cuerpoDe("tablon_confirmar_foto")).toContain('f."invitadoId" = v_yo.id');
+    expect(cuerpoDe("tablon_quitar_foto")).toContain('f."invitadoId" = v_yo.id');
+  });
+
+  it("el cajón: cerrado, 2 MB, y solo sube quien reservó; ve y borra el anfitrión", () => {
+    expect(sql).toContain("values ('fotos-fiesta', 'fotos-fiesta', false, 2097152, array['image/jpeg'])");
+    expect(sql).toMatch(/fotos_fiesta_sube[\s\S]{0,140}foto_fiesta_reservada\(name\)/);
+    expect(sql).toMatch(/fotos_fiesta_ver[\s\S]{0,160}public\.es_anfitrion\(\)/);
+  });
+
+  it("la ficha entera del invitado no sale nunca por fuera", () => {
+    expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.tablon_invitado(uuid, text) FROM PUBLIC, anon, authenticated;");
   });
 });
 
@@ -164,7 +196,7 @@ describe("la foto del Deshacer deja fuera lo que no se repone", () => {
   it("foto_de_datos no incluye ninguna", () => {
     const i = sql.indexOf("FUNCTION public.foto_de_datos");
     const cuerpo = sql.slice(i, sql.indexOf("$$;", sql.indexOf("AS $$", i)));
-    const dentro = ["historial_texto", "tablon_accesos", "anfitriones", "anfitrion_secreto", "config_secretos", "tablon_secreto"]
+    const dentro = ["historial_texto", "tablon_accesos", "fotos_fiesta", "anfitriones", "anfitrion_secreto", "config_secretos", "tablon_secreto"]
       .filter((t) => cuerpo.includes(t));
     expect(dentro).toEqual([]);
   });

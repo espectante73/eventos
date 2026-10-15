@@ -345,8 +345,8 @@ Lo vigila `supabase/schema.test.js`.
 4. **`lib/backup.js` y la ventana "Backup" no se resucitan.** Un
    exportar/restaurar de verdad habría que escribirlo desde cero, con
    todas las tablas y conservando los ids.
-5. **Quedan fuera a propósito**: `historial_texto` y `tablon_accesos` (es
-   historia real), `anfitriones`, `anfitrion_secreto` y `config_secretos`
+5. **Quedan fuera a propósito**: `historial_texto`, `tablon_accesos` y
+   `fotos_fiesta` (es historia real), `anfitriones`, `anfitrion_secreto` y `config_secretos`
    (cuentas y llaves: vaciarlas dejaría a todos fuera) y `tablon_secreto`
    (la fila lleva también el token).
 6. **Restaurar sigue el orden de las claves foráneas**: mesas antes que

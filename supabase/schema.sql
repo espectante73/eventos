@@ -100,6 +100,8 @@ CREATE TABLE public.evento (
     "imprimirLugar" boolean DEFAULT true NOT NULL,
     "tablonOcultarFecha" boolean DEFAULT false NOT NULL,
     "asistenciaAbierta" boolean DEFAULT false NOT NULL,
+    -- La recogida de fotos de la fiesta, abierta (v67, «Día del evento»).
+    "fotosFiestaAbierta" boolean DEFAULT false,
     -- Cuánto suena la cortinilla por encima de la música, en puntos.
     -- La app la guarda desde la ventana de Música del evento.
     "cortinillaRealce" integer DEFAULT 15 NOT NULL,
@@ -306,6 +308,23 @@ CREATE TABLE public.tablon_accesos (
     "actualizadoEn" timestamp with time zone DEFAULT now() NOT NULL
 );
 
+-- Fotos de la fiesta (él, v67): las suben los invitados desde el tablón,
+-- 3 por familia (la clave de familia, como claveFamilia), y solo las ve el
+-- anfitrión. `subida`: el archivo ya está en el cajón; hasta entonces es
+-- una reserva que caduca en 15 minutos. `quitada`: su autor la quitó para
+-- cambiarla. Es historia real, como tablon_accesos: fuera del Deshacer.
+CREATE TABLE public.fotos_fiesta (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    "familia" text NOT NULL,
+    "invitadoId" uuid,
+    "quien" text NOT NULL,
+    "ruta" text NOT NULL,
+    "subida" boolean DEFAULT false NOT NULL,
+    "quitada" boolean DEFAULT false NOT NULL,
+    "elegida" boolean DEFAULT false NOT NULL,
+    "creadaEn" timestamp with time zone DEFAULT now() NOT NULL
+);
+
 -- Foto de los datos antes de la última acción destructiva (reinicio o
 -- borrado), para el botón "Deshacer". Una sola fila: se guarda la última.
 -- Separada de modo_pruebas_snapshot a propósito, para que salir del modo
@@ -410,6 +429,9 @@ ALTER TABLE ONLY public.tablon_accesos
 
 ALTER TABLE ONLY public.tablon_accesos
     ADD CONSTRAINT tablon_accesos_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.fotos_fiesta
+    ADD CONSTRAINT fotos_fiesta_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.tablon_secreto
     ADD CONSTRAINT tablon_secreto_pkey PRIMARY KEY (id);
@@ -2322,6 +2344,169 @@ CREATE FUNCTION public.tablon_verificar_respuesta(p_token uuid, p_respuesta text
     );
 $$;
 
+-- El invitado que entra al tablón con ese nombre (v67): uno solo,
+-- confirmado y no excluido. La pieza común de las funciones tablon_* que
+-- necesitan saber quién es. Da la ficha entera: solo para usar por dentro.
+CREATE FUNCTION public.tablon_invitado(p_token uuid, p_respuesta text) RETURNS SETOF public.invitados
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+  with candidatos as (
+    select i.* from invitados i
+    where p_token = (select "token" from tablon_secreto limit 1)
+      and i."confirmado" = true
+      and i."excluidoTablon" = false
+      and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)
+  )
+  select c.* from candidatos c where (select count(*) from candidatos) = 1;
+$$;
+REVOKE EXECUTE ON FUNCTION public.tablon_invitado(uuid, text) FROM PUBLIC, anon, authenticated;
+
+-- La clave de familia de un invitado, igual que claveFamilia en la app.
+CREATE FUNCTION public.clave_familia(p_grupo text, p_apellido text) RETURNS text
+    LANGUAGE sql IMMUTABLE
+    AS $$ select lower(trim(coalesce(nullif(p_grupo, ''), p_apellido, ''))); $$;
+
+-- Las fotos de la fiesta de su familia, para el tablón (v67): si la
+-- recogida está abierta, el máximo y cada foto subida (quién, cuándo y si
+-- es suya). Sin la foto: en el tablón no se ven.
+CREATE FUNCTION public.tablon_fotos(p_token uuid, p_respuesta text) RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+declare
+  v_yo invitados;
+  v_familia text;
+begin
+  select * into v_yo from tablon_invitado(p_token, p_respuesta);
+  if v_yo.id is null then
+    return null;
+  end if;
+  v_familia := clave_familia(v_yo."grupoFamiliar", v_yo."apellido");
+  return jsonb_build_object(
+    'abierta', coalesce((select "fotosFiestaAbierta" from evento limit 1), false),
+    'maximo', 3,
+    'fotos', coalesce((
+      select jsonb_agg(jsonb_build_object('id', f.id, 'quien', f."quien", 'creadaEn', f."creadaEn", 'mia', f."invitadoId" = v_yo.id) order by f."creadaEn")
+      from fotos_fiesta f
+      where f."familia" = v_familia and f."subida" and not f."quitada"
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+-- Reserva el sitio de una foto antes de subirla (v67): recogida abierta,
+-- invitado reconocido y su familia con menos de 3 (contando las reservas
+-- de los últimos 15 minutos). Devuelve la ruta donde subirla, o el motivo.
+CREATE FUNCTION public.tablon_reservar_foto(p_token uuid, p_respuesta text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+declare
+  v_yo invitados;
+  v_familia text;
+  v_id uuid := gen_random_uuid();
+  v_ruta text;
+begin
+  select * into v_yo from tablon_invitado(p_token, p_respuesta);
+  if v_yo.id is null then
+    return jsonb_build_object('error', 'nombre');
+  end if;
+  if not coalesce((select "fotosFiestaAbierta" from evento limit 1), false) then
+    return jsonb_build_object('error', 'cerrada');
+  end if;
+  v_familia := clave_familia(v_yo."grupoFamiliar", v_yo."apellido");
+  -- Dos móviles de la misma familia a la vez no pueden pasar de 3.
+  perform pg_advisory_xact_lock(hashtext('fotos_fiesta:' || v_familia));
+  if (select count(*) from fotos_fiesta f
+      where f."familia" = v_familia and not f."quitada"
+        and (f."subida" or f."creadaEn" > now() - interval '15 minutes')) >= 3 then
+    return jsonb_build_object('error', 'completa');
+  end if;
+  v_ruta := 'fiesta/' || v_id || '.jpg';
+  insert into fotos_fiesta (id, "familia", "invitadoId", "quien", "ruta")
+  values (v_id, v_familia, v_yo.id, v_yo."apellido" || ', ' || v_yo."nombre", v_ruta);
+  return jsonb_build_object('id', v_id, 'ruta', v_ruta);
+end;
+$$;
+
+-- Ya subida: la reserva pasa a foto (v67). Solo su autor, y solo si el
+-- archivo está de verdad en el cajón.
+CREATE FUNCTION public.tablon_confirmar_foto(p_token uuid, p_respuesta text, p_id uuid) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+declare
+  v_yo invitados;
+begin
+  select * into v_yo from tablon_invitado(p_token, p_respuesta);
+  if v_yo.id is null then
+    return false;
+  end if;
+  update fotos_fiesta f set "subida" = true
+  where f.id = p_id and f."invitadoId" = v_yo.id and not f."quitada"
+    and exists (select 1 from storage.objects o where o.bucket_id = 'fotos-fiesta' and o.name = f."ruta");
+  return found;
+end;
+$$;
+
+-- Quitar una foto suya para poner otra (v67). Devuelve la ruta: el
+-- archivo lo borra el propio móvil, que el cajón le deja borrar solo si
+-- está quitada (foto_fiesta_quitada).
+CREATE FUNCTION public.tablon_quitar_foto(p_token uuid, p_respuesta text, p_id uuid) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+declare
+  v_yo invitados;
+  v_ruta text;
+begin
+  select * into v_yo from tablon_invitado(p_token, p_respuesta);
+  if v_yo.id is null then
+    return null;
+  end if;
+  update fotos_fiesta f set "quitada" = true
+  where f.id = p_id and f."invitadoId" = v_yo.id and not f."quitada"
+  returning f."ruta" into v_ruta;
+  return v_ruta;
+end;
+$$;
+
+-- Las fotos de la fiesta, para el anfitrión (v67): las subidas y no
+-- quitadas, por familia y por orden.
+CREATE FUNCTION public.anfitrion_fotos_fiesta(p_token uuid) RETURNS SETOF public.fotos_fiesta
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    return;
+  end if;
+  return query
+    select f.* from fotos_fiesta f
+    where f."subida" and not f."quitada"
+    order by f."familia", f."creadaEn";
+end;
+$$;
+
+-- Para las políticas del cajón «fotos-fiesta» (v67): ¿esta ruta está
+-- reservada y sin subir, o quitada por su autor?
+CREATE FUNCTION public.foto_fiesta_reservada(p_ruta text) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select exists (
+    select 1 from fotos_fiesta f
+    where f."ruta" = p_ruta and not f."subida" and not f."quitada"
+      and f."creadaEn" > now() - interval '15 minutes'
+  );
+$$;
+
+CREATE FUNCTION public.foto_fiesta_quitada(p_ruta text) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$ select exists (select 1 from fotos_fiesta f where f."ruta" = p_ruta and f."quitada"); $$;
+
 -- Quién ha entrado al tablón (él, v64-64.3), con el mismo nombre que el
 -- acceso. Nada si el nombre no casa con una sola persona.
 --   nombre           como en la lista, «Apellido, Nombre» («Has entrado
@@ -2333,23 +2518,14 @@ CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS 
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
     AS $$
-  with yo as (
-    select i.* from invitados i
-    where p_token = (select "token" from tablon_secreto limit 1)
-      and i."confirmado" = true
-      and i."excluidoTablon" = false
-      and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)
+  select jsonb_build_object(
+    'nombre', y."apellido" || ', ' || y."nombre",
+    'colaborador', c."nombre",
+    'colaboradorEsYo', c."invitadoId" is not distinct from y."id",
+    'esColaborador', exists (select 1 from colaboradores cc where cc."invitadoId" = y."id")
   )
-  select case when (select count(*) from yo) = 1 then (
-    select jsonb_build_object(
-      'nombre', y."apellido" || ', ' || y."nombre",
-      'colaborador', c."nombre",
-      'colaboradorEsYo', c."invitadoId" is not distinct from y."id",
-      'esColaborador', exists (select 1 from colaboradores cc where cc."invitadoId" = y."id")
-    )
-    from yo y
-    left join colaboradores c on c."id" = y."colaboradorId"
-  ) end;
+  from tablon_invitado(p_token, p_respuesta) y
+  left join colaboradores c on c."id" = y."colaboradorId";
 $$;
 
 
@@ -2611,6 +2787,7 @@ alter table public.anfitrion_secreto enable row level security;
 alter table public.config_secretos enable row level security;
 alter table public.tablon_secreto enable row level security;
 alter table public.tablon_accesos enable row level security;
+alter table public.fotos_fiesta enable row level security;
 alter table public.deshacer_snapshot enable row level security;
 alter table public.modo_pruebas_snapshot enable row level security;
 alter table public.migraciones_aplicadas enable row level security;
@@ -2758,6 +2935,26 @@ create policy fotos_matrimonios_borra on storage.objects
     bucket_id = 'fotos-matrimonios'
     and (public.es_anfitrion() or (storage.foldername(name))[1] = 'boda')
   );
+
+-- Cajón de las fotos de la fiesta (v67): CERRADO, y el propio almacén
+-- rechaza lo que pase de 2 MB o no sea JPEG (el móvil ya las reduce antes).
+-- Sube quien tiene reservada esa ruta (tablon_reservar_foto); ve y borra
+-- el anfitrión; su autor solo puede borrar la que ha quitado.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('fotos-fiesta', 'fotos-fiesta', false, 2097152, array['image/jpeg'])
+  on conflict (id) do update set public = false, file_size_limit = 2097152, allowed_mime_types = array['image/jpeg'];
+
+create policy fotos_fiesta_sube on storage.objects
+  for insert to anon, authenticated
+  with check (bucket_id = 'fotos-fiesta' and public.foto_fiesta_reservada(name));
+
+create policy fotos_fiesta_ver on storage.objects
+  for select to anon, authenticated
+  using (bucket_id = 'fotos-fiesta' and (public.es_anfitrion() or public.foto_fiesta_quitada(name)));
+
+create policy fotos_fiesta_borra on storage.objects
+  for delete to anon, authenticated
+  using (bucket_id = 'fotos-fiesta' and (public.es_anfitrion() or public.foto_fiesta_quitada(name)));
 
 
 -- Fin del archivo.
