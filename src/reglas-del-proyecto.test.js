@@ -103,7 +103,8 @@ describe("cabeceras de protección (vercel.json)", () => {
 // cosas distintas.
 describe("el interruptor de las llegadas, en un solo sitio", () => {
   it("solo VentanaDiaEvento cambia asistenciaAbierta", () => {
-    const cambian = archivos.filter((r) => /asistenciaAbierta:\s*!/.test(sinComentarios(leer(r))));
+    // Quien escribe `asistenciaAbierta:` dentro de un evento que se guarda.
+    const cambian = archivos.filter((r) => /\.\.\.evento,\s*asistenciaAbierta:/.test(sinComentarios(leer(r))));
     expect(cambian.map((r) => r.split("/").pop())).toEqual(["VentanaDiaEvento.jsx"]);
   });
 });

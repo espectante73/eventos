@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "66.1",
+    cambios: [
+      "«Día del evento»: las llegadas ya no son una barra que parecía un cartel. Ahora es una fila con el estado a un lado («Llegadas · abiertas» en verde, o «cerradas» en rojo) y, del lado del pulgar, el botón de la app con lo que hace: «Abrir» o «Cerrar». Cerrar pregunta antes, porque los colaboradores dejarían de poder marcar a quien llega.",
+    ],
+  },
+  {
     version: "66",
     cambios: [
       "Sección nueva en «Abrir sección…», solo para el anfitrión: «Día del evento», con lo que se abre o se usa ese día. De momento, el botón de las llegadas («Llegadas: abiertas / cerradas»), que se traslada aquí desde Datos Colab. Después vendrán las fotos de la fiesta.",
