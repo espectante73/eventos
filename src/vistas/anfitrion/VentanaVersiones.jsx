@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "67.8",
+    cambios: [
+      "Tarjetas QR: el título pasa a «Sube tus fotos del evento.»",
+    ],
+  },
+  {
     version: "67.7",
     cambios: [
       "«Día del evento»: fila «Tarjetas QR» con «Descargar». Baja «tarjetas-qr.pdf»: un folio con dos tarjetas de pie para las mesas. Se corta a lo alto por la línea discontinua y cada tira se dobla a lo ancho por la de puntos; la cara de arriba va del revés para que, doblada, se lea desde los dos lados. Cada cara: «Sube tus fotos de la fiesta», el QR que abre el tablón, «Escanea el código y entra con tu apellido y tu nombre», la frase de hacerla en horizontal y el nombre del evento, con los colores del evento con discreción.",

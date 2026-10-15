@@ -16,7 +16,7 @@ import { descargarBlob } from "./descargas";
 import { FRASE_HORIZONTAL } from "./fotosFiesta";
 
 export const ARCHIVO_TARJETAS_QR = "tarjetas-qr.pdf";
-export const TITULO_TARJETA = ["Sube tus fotos", "de la fiesta"];
+export const TITULO_TARJETA = ["Sube tus fotos", "del evento."];
 // En dos líneas parejas, partidas a mano: suelta, «nombre.» quedaba sola.
 export const ENTRAR_TARJETA = ["Escanea el código y entra", "con tu apellido y tu nombre."];
 
