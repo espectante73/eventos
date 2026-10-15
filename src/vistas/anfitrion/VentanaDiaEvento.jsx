@@ -7,6 +7,7 @@
 // Cada fila separa el estado de la acción (él, v66.1: a todo lo ancho y
 // diciendo «Llegadas: abiertas» parecía un cartel, no un botón): el estado
 // en texto y, del lado del pulgar, el botón de la app con lo que hace.
+// Debajo, una línea que dice para qué es el botón, nada más (él, v67.1).
 // Las filas comparten UNA rejilla: la columna de los botones mide lo que
 // el más largo, y así todos son iguales (norma 4) sin medir nada.
 import { useEffect, useState } from "react";
@@ -95,7 +96,7 @@ export function VentanaDiaEvento({ data, onCerrar }) {
   }, [obtenerFotosFiesta, fotosAbiertas]);
 
   return (
-    <VentanaFlotante clave="diaEvento" titulo="Día del evento" onCerrar={onCerrar}>
+    <VentanaFlotante clave="diaEvento" titulo="Día del evento" onCerrar={onCerrar} ancho="min(300px, calc(100vw - 48px))">
       <div className="grid grid-cols-[1fr_auto] zurdo:grid-cols-[auto_1fr] items-center gap-x-2 gap-y-3">
         <FilaAbrirCerrar
           fila={1}
@@ -105,9 +106,7 @@ export function VentanaDiaEvento({ data, onCerrar }) {
           rotulo="Llegadas"
           onAlternar={alternarLlegadas}
         >
-          {llegadasAbiertas
-            ? "Los colaboradores pueden marcar quién ha llegado."
-            : "Ábrelas el día del evento para que los colaboradores marquen quién llega."}
+          {llegadasAbiertas ? "Cerrar para dejar de acreditar." : "Abrir para acreditar a los invitados."}
         </FilaAbrirCerrar>
         <FilaAbrirCerrar
           fila={2}
@@ -118,9 +117,7 @@ export function VentanaDiaEvento({ data, onCerrar }) {
           onAlternar={alternarFotos}
         >
           <p>
-            {fotosAbiertas
-              ? "Los invitados pueden subir fotos desde su tablón."
-              : "Ábrelas en la fiesta para que los invitados suban fotos desde su tablón."}
+            {fotosAbiertas ? "Cerrar para que dejen de subir fotos." : "Abrir para que los invitados puedan subir fotos."}
           </p>
           {fotos && <p>{cuentaFotosFiesta(fotos)}</p>}
         </FilaAbrirCerrar>

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "67.1",
+    cambios: [
+      "«Día del evento», más sencilla: la ventana es estrecha y debajo de cada fila solo dice para qué es el botón («Abrir para acreditar a los invitados», «Abrir para que los invitados puedan subir fotos»; abiertas, «Cerrar para…»).",
+    ],
+  },
+  {
     version: "67",
     cambios: [
       "Fotos de la fiesta, primer paso visible: en «Día del evento», debajo de Llegadas, la fila «Fotos · abiertas / cerradas» con su botón «Abrir» o «Cerrar» (cerrar pregunta antes) y la cuenta: «12 fotos de 5 familias». Los dos botones miden lo mismo. Por dentro, el servidor ya tiene el cajón cerrado de las fotos (2 MB y solo JPEG) y cuenta 3 por familia. La parte de subirlas desde el tablón llega en el paso siguiente.",
