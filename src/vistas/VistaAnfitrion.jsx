@@ -34,6 +34,7 @@ import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
 import { VentanaColaboradoresDatos } from "./anfitrion/VentanaColaboradoresDatos";
 import { VentanaMesas } from "./anfitrion/VentanaMesas";
 import { VentanaCuentas } from "./anfitrion/VentanaCuentas";
+import { VentanaDiaEvento } from "./anfitrion/VentanaDiaEvento";
 import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 import { Boton } from "../components/Boton";
@@ -344,6 +345,9 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
       {abierto.cuentas && (
         <VentanaCuentas data={data} onCerrar={() => toggle("cuentas")} />
       )}
+
+      {/* Día del evento: las llegadas y, después, las fotos (v66) */}
+      {abierto.diaEvento && <VentanaDiaEvento data={data} onCerrar={() => toggle("diaEvento")} />}
 
       {/* Configuración ya no tiene ventana propia: se abre directo desde el
           submenú "Configuración" de "Abrir sección…" (ver DesplegableSecciones.jsx) */}

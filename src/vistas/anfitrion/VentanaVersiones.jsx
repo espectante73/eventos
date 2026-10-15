@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "66",
+    cambios: [
+      "Sección nueva en «Abrir sección…», solo para el anfitrión: «Día del evento», con lo que se abre o se usa ese día. De momento, el botón de las llegadas («Llegadas: abiertas / cerradas»), que se traslada aquí desde Datos Colab. Después vendrán las fotos de la fiesta.",
+    ],
+  },
+  {
     version: "65",
     cambios: [
       "La cabecera de la Lista de invitados cuenta las «Familias»: las unidades familiares de toda la lista, confirmadas o no. Cuenta los grupos, no los apellidos: dos familias distintas con el mismo apellido (Abreu01 y Abreu02) son dos.",

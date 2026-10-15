@@ -98,6 +98,16 @@ describe("cabeceras de protección (vercel.json)", () => {
   });
 });
 
+// v66: las llegadas se abren y se cierran en «Día del evento», y solo ahí
+// (antes, en Datos Colab.): un interruptor en dos sitios acaba diciendo
+// cosas distintas.
+describe("el interruptor de las llegadas, en un solo sitio", () => {
+  it("solo VentanaDiaEvento cambia asistenciaAbierta", () => {
+    const cambian = archivos.filter((r) => /asistenciaAbierta:\s*!/.test(sinComentarios(leer(r))));
+    expect(cambian.map((r) => r.split("/").pop())).toEqual(["VentanaDiaEvento.jsx"]);
+  });
+});
+
 // Norma 9 (él, v59.1): las preguntas se responden «Sí» / «No». Solo lo que
 // borra para siempre lleva verbo, para no borrar por un «Sí» con prisas.
 describe("norma 9: «Sí» / «No», con verbo solo lo que borra para siempre", () => {

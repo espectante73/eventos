@@ -1302,7 +1302,7 @@ export function SeccionInvitados({
                 {/* Si el marcado está cerrado, nadie puede marcar nada:
                     tiene que decirse aquí, donde se mira el recuento, y
                     no dejar que parezca que "no llega nadie". Se abre en
-                    Colaboradores. */}
+                    «Día del evento» (v66). */}
                 {!evento.asistenciaAbierta && (
                   <span
                     className="rounded px-1.5 py-0.5 text-[9px] uppercase self-center whitespace-nowrap"
@@ -1313,7 +1313,7 @@ export function SeccionInvitados({
                       fontWeight: 700,
                       letterSpacing: "0.04em",
                     }}
-                    title="Los colaboradores no pueden marcar llegadas. Se abre en Colaboradores → Datos Colab."
+                    title="Los colaboradores no pueden marcar llegadas. Se abre en «Día del evento»."
                   >
                     Marcado cerrado
                   </span>

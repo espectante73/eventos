@@ -204,7 +204,9 @@ function tituloNivel(cx, cy, texto) {
   hairline(cx + w + 16, cy - 5, cx + COL_W);
 }
 
-const ALTO = 58, SALTO = 71;
+// 50/56 desde que el primer nivel tiene 11 secciones (Día del evento, v66):
+// con 58/71 la última pisaba la leyenda del pie.
+const ALTO = 50, SALTO = 56;
 
 // tipo: "normal" | "abre" | "rojoFuerte" | "rojoSuave"
 function entrada(cx, cy, nombre, { tipo = "normal", fuera = false } = {}) {
@@ -221,13 +223,13 @@ function entrada(cx, cy, nombre, { tipo = "normal", fuera = false } = {}) {
   x.fillStyle = borde; x.fillRect(cx, cy + 4, 3, ALTO - 8);
 
   x.font = fraunces(20); x.fillStyle = C.texto;
-  x.fillText(nombre, cx + 20, cy + 36);
+  x.fillText(nombre, cx + 20, cy + ALTO / 2 + 7);
 
   let dcha = cx + COL_W - 18;
   if (tipo === "abre") {
     x.font = fraunces(24); x.fillStyle = C.oro;
     const w = x.measureText("›").width;
-    x.fillText("›", dcha - w, cy + 37);
+    x.fillText("›", dcha - w, cy + ALTO / 2 + 8);
     dcha -= w + 14;
   }
   if (fuera) {
@@ -235,9 +237,9 @@ function entrada(cx, cy, nombre, { tipo = "normal", fuera = false } = {}) {
     const txt = "VENTANA APARTE";
     const w = anchoEspaciado(txt, 0.9) + 20;
     x.strokeStyle = linea; x.lineWidth = 1;
-    redondeado(dcha - w, cy + 20, w, 19, 3); x.stroke();
+    redondeado(dcha - w, cy + (ALTO - 19) / 2, w, 19, 3); x.stroke();
     x.fillStyle = C.oroHondo;
-    espaciado(txt, dcha - w + 10, cy + 33, 0.9);
+    espaciado(txt, dcha - w + 10, cy + (ALTO - 19) / 2 + 13, 0.9);
   }
 }
 
@@ -256,6 +258,7 @@ const nivel1 = [
   ["Colaboradores", { tipo: "abre" }],
   ["Configuración", { tipo: "abre" }],
   ["Contabilidad", {}],
+  ["Día del evento", {}],
   ["Invitaciones", {}],
   ["Invitados", { fuera: true }],
   ["Mesas", {}],

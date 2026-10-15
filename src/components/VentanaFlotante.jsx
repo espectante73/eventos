@@ -105,6 +105,7 @@ export const ORDEN_VENTANAS = [
   "colaboradores",
   "configuracion",
   "cuentas",
+  "diaEvento",
   "invitaciones",
   "invitados",
   "mesas",
@@ -129,6 +130,8 @@ export const ETIQUETAS_VENTANAS = {
   invitados: "Invitados",
   // "Contabilidad" (antes "Cuentas"): se confundía con "Mi cuenta" (él, v51.3).
   cuentas: "Contabilidad",
+  // Lo que se abre o se usa ese día: las llegadas y, después, las fotos (él, v66).
+  diaEvento: "Día del evento",
   configuracion: "Configuración",
   versiones: "Versiones",
   novedades: "Novedades",
