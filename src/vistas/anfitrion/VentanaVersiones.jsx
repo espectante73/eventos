@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "67.3",
+    cambios: [
+      "«Día del evento», fila de Llegadas: el texto pasa a «Permitir acreditar invitados.» (abiertas, «Dejar de permitir acreditar invitados.»).",
+    ],
+  },
+  {
     version: "67.2",
     cambios: [
       "«Día del evento», fila de Fotos: el texto pasa a «Permitir subir fotos.» (abiertas, «Dejar de permitir subir fotos.»).",

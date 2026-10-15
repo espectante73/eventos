@@ -106,7 +106,7 @@ export function VentanaDiaEvento({ data, onCerrar }) {
           rotulo="Llegadas"
           onAlternar={alternarLlegadas}
         >
-          {llegadasAbiertas ? "Cerrar para dejar de acreditar." : "Abrir para acreditar a los invitados."}
+          {llegadasAbiertas ? "Dejar de permitir acreditar invitados." : "Permitir acreditar invitados."}
         </FilaAbrirCerrar>
         <FilaAbrirCerrar
           fila={2}
