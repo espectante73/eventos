@@ -49,6 +49,14 @@ export function fechaCorta(iso) {
   return new Date(a, m - 1, d).toLocaleDateString("es-ES", { day: "numeric", month: "short" }).replace(".", "");
 }
 
+// "22:47", la hora de un momento guardado (las fotos de la fiesta), en la
+// hora de quien mira.
+export function horaCorta(momento) {
+  const d = new Date(momento);
+  if (!momento || Number.isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+}
+
 export function formatearDiaSemana(fechaISO) {
   if (!fechaISO) return "";
   const partes = fechaISO.split("-").map((p) => parseInt(p, 10));

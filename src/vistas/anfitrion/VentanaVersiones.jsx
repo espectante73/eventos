@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "67.4",
+    cambios: [
+      "Fotos de la fiesta en el tablón del invitado: con las fotos abiertas (en «Día del evento») le sale la tarjeta «Fotos de la fiesta» con la cuenta de su familia («Tu familia · 2 de 3»), una línea por foto subida («Medina, Ana · 22:47»), sin ver las fotos, y la papelera en las suyas para cambiarlas (pregunta antes). «Elegir foto» busca en la galería del móvil; el propio móvil la reduce a menos de 2 MB antes de subirla. Debajo, la frase: «Puedes hacerla en horizontal o en vertical; solo ten en cuenta que en horizontal se verá mejor en una pantalla.» Con las 3 de la familia, el botón desaparece.",
+    ],
+  },
+  {
     version: "67.3",
     cambios: [
       "«Día del evento», fila de Llegadas: el texto pasa a «Permitir acreditar invitados.» (abiertas, «Dejar de permitir acreditar invitados.»).",

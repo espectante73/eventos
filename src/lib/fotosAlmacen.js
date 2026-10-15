@@ -48,7 +48,7 @@ export const CARPETA = { BODA: "boda", BODA_FINAL: "boda-final", ANIVERSARIO: "a
 // Reduce la foto para que quepa en ANCHO_MAXIMO x ALTO_MAXIMO manteniendo su
 // forma. Nunca la agranda. No se usa redimensionarImagenArchivo (descargas.js)
 // porque esa limita solo el lado más largo, y aquí importa la caja 16:9.
-function reducirImagen(file, anchoMax, altoMax, calidad = CALIDAD) {
+export function reducirImagen(file, anchoMax, altoMax, calidad = CALIDAD) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();

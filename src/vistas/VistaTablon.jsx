@@ -20,6 +20,8 @@ import { NotaPrivacidad } from "../components/NotaPrivacidad";
 import { TITULO_NOTA_PRIVACIDAD } from "../constants";
 import { uid } from "../lib/id";
 import { leerEvento } from "../lib/leerEvento";
+import { subirFotoFiesta, eliminarFotoFiesta } from "../lib/fotosFiesta";
+import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 
 const BUCKET_MUSICA = "musica-ambiental";
 
@@ -57,6 +59,9 @@ export function VistaTablon({ token }) {
   // colaboradorEsYo, esColaborador }, o null.
   const [yo, setYo] = useState(null);
   const [novedades, setNovedades] = useState([]);
+  // Las fotos de la fiesta de su familia (tablon_fotos, v67.4): null si no
+  // se le reconoce; con `abierta` falso, la tarjeta no sale.
+  const [fotosFiesta, setFotosFiesta] = useState(null);
   // Solo una novedad abierta a la vez -- a petición del usuario: con 5+
   // novedades, tenerlas todas desplegadas de golpe (o ir abriendo varias
   // sin plegar las anteriores) era un muro de texto imposible de leer.
@@ -135,7 +140,7 @@ export function VistaTablon({ token }) {
     async () => {
       // El evento, sin lo privado (lib/leerEvento.js, v63), y quién ha
       // entrado (v64): su nombre y su colaborador.
-      const [eventoLeido, { data: novedadesFilas }, { data: quien }] = await Promise.all([
+      const [eventoLeido, { data: novedadesFilas }, { data: quien }, { data: fotos }] = await Promise.all([
         leerEvento(supabase),
         supabase.rpc("tablon_listar_novedades", {
           p_token: token,
@@ -143,10 +148,12 @@ export function VistaTablon({ token }) {
           p_dispositivo_id: dispositivoIdRef.current,
         }),
         supabase.rpc("tablon_quien_soy", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
+        supabase.rpc("tablon_fotos", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
       ]);
       setEvento(eventoLeido);
       setYo({ ...(quien || {}), nombre: quien?.nombre || respuestaVerificadaRef.current });
       setNovedades(novedadesFilas || []);
+      setFotosFiesta(fotos || null);
       // Todas plegadas por defecto (ni siquiera la más reciente se abre
       // sola) -- a petición del usuario, 2026-08-25. Sigue habiendo como
       // mucho una abierta a la vez (ver `alternar`, más abajo).
@@ -281,8 +288,21 @@ export function VistaTablon({ token }) {
     respuestaVerificadaRef.current = "";
     setRespuestaEscrita("");
     setYo(null);
+    setFotosFiesta(null);
     setEstado("bloqueado");
   };
+
+  // Subir o eliminar una foto de la fiesta (lib/fotosFiesta.js) y volver a
+  // leer la cuenta de su familia, que puede haber cambiado también desde
+  // otro móvil.
+  const conFotosAlDia = async (accion) => {
+    const resultado = await accion({ token, respuesta: respuestaVerificadaRef.current });
+    const { data } = await supabase.rpc("tablon_fotos", { p_token: token, p_respuesta: respuestaVerificadaRef.current });
+    setFotosFiesta(data || null);
+    return resultado;
+  };
+  const subirFoto = (archivo) => conFotosAlDia((quien) => subirFotoFiesta(supabase, { ...quien, archivo }));
+  const eliminarFoto = (id) => conFotosAlDia((quien) => eliminarFotoFiesta(supabase, { ...quien, id }));
 
   if (estado === "cargando") {
     return (
@@ -495,6 +515,8 @@ export function VistaTablon({ token }) {
             </div>
           </div>
         )}
+
+        {fotosFiesta?.abierta && <TarjetaFotosFiesta estado={fotosFiesta} onSubir={subirFoto} onEliminar={eliminarFoto} />}
 
         <h2
           className="text-sm uppercase mb-1"
