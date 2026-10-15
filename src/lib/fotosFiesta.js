@@ -7,6 +7,8 @@
 // reserva se suelta en el acto: si no, ocuparía uno de los 3 sitios hasta
 // que caduque, a los 15 minutos.
 import { reducirImagen } from "./fotosAlmacen";
+import { claveFamilia } from "./invitados";
+import { horaCorta } from "./formato";
 
 export const CUBO_FOTOS_FIESTA = "fotos-fiesta";
 export const LIMITE_FOTO_FIESTA = 2 * 1024 * 1024;
@@ -113,4 +115,46 @@ export async function eliminarFotoFiesta(supabase, { token, respuesta, id }) {
   await supabase.storage.from(CUBO_FOTOS_FIESTA).remove([ruta]);
   olvidarMiniatura(id);
   return { aviso: "" };
+}
+
+// El ZIP de las fotos, para elegirlas FUERA de la app (él, v67.6): una
+// carpeta por familia, con su nombre de la lista (grupo o apellido), y cada
+// foto con quién la subió y a qué hora: «Medina/Medina, Ana · 22.47.jpg».
+export const ARCHIVO_FOTOS_FIESTA = "Fotos de la fiesta.zip";
+const limpiarNombre = (t) => String(t || "").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim();
+
+export function nombresDescargaFotosFiesta(fotos, invitados = []) {
+  const carpetas = {};
+  for (const g of invitados) {
+    const clave = claveFamilia(g);
+    if (clave && !carpetas[clave]) carpetas[clave] = String(g.grupoFamiliar || g.apellido).trim();
+  }
+  const usados = new Set();
+  return fotos.map((f) => {
+    const base = `${limpiarNombre(carpetas[f.familia] || f.familia)}/${limpiarNombre(f.quien)} · ${horaCorta(f.creadaEn).replace(":", ".")}`;
+    let nombre = `${base}.jpg`;
+    // Dos de la misma persona en el mismo minuto: no pisar.
+    for (let i = 2; usados.has(nombre); i++) nombre = `${base} (${i}).jpg`;
+    usados.add(nombre);
+    return { ruta: f.ruta, nombre };
+  });
+}
+
+// Baja las fotos del cajón (el anfitrión puede leerlas) de 6 en 6, para no
+// pedir 200 a la vez. Devuelve los archivos para el ZIP y cuántas fallaron.
+export async function bajarFotosFiesta(supabase, fotos, invitados) {
+  const pendientes = nombresDescargaFotosFiesta(fotos, invitados);
+  const archivos = [];
+  let fallidas = 0;
+  for (let i = 0; i < pendientes.length; i += 6) {
+    await Promise.all(
+      pendientes.slice(i, i + 6).map(async ({ ruta, nombre }) => {
+        const { data, error } = await supabase.storage.from(CUBO_FOTOS_FIESTA).download(ruta);
+        if (error || !data) fallidas++;
+        else archivos.push({ nombre, datos: new Uint8Array(await data.arrayBuffer()) });
+      })
+    );
+  }
+  archivos.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+  return { archivos, fallidas };
 }

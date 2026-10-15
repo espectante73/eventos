@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, miniaturaFotoFiesta, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
+import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, miniaturaFotoFiesta, nombresDescargaFotosFiesta, bajarFotosFiesta, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
 
 // Una reducción de mentira: el tamaño que «pesaría» cada intento.
 const reducirQuePesa = (pesos) => {
@@ -137,5 +137,43 @@ describe("la miniatura, solo en el móvil que la subió (v67.5)", () => {
 
   it("si no se puede hacer, la foto se sube igual", async () => {
     expect(await subirFotoFiesta(falso({ rpc: RESPUESTAS }), { ...QUIEN, archivo: {} }, PEQUENA)).toEqual({ aviso: "" });
+  });
+});
+
+describe("el ZIP de las fotos (v67.6)", () => {
+  const foto = (id, familia, quien, hora) => ({ id, familia, quien, ruta: `fiesta/${id}.jpg`, creadaEn: `2026-11-13T${hora}:00` });
+  const INVITADOS = [
+    { grupoFamiliar: "Abreu01", apellido: "Abreu" },
+    { grupoFamiliar: "", apellido: "Medina" },
+  ];
+
+  it("una carpeta por familia, con su nombre de la lista; cada foto, quién y a qué hora", () => {
+    expect(nombresDescargaFotosFiesta([foto("1", "abreu01", "Abreu, Gustavo", "22:47"), foto("2", "medina", "Medina, Ana", "23:05")], INVITADOS)).toEqual([
+      { ruta: "fiesta/1.jpg", nombre: "Abreu01/Abreu, Gustavo · 22.47.jpg" },
+      { ruta: "fiesta/2.jpg", nombre: "Medina/Medina, Ana · 23.05.jpg" },
+    ]);
+  });
+
+  it("dos de la misma persona en el mismo minuto no se pisan; una familia que ya no está, con su clave", () => {
+    const nombres = nombresDescargaFotosFiesta([foto("1", "medina", "Medina, Ana", "22:47"), foto("2", "medina", "Medina, Ana", "22:47"), foto("3", "pérez", "Pérez, Eva", "21:00")], INVITADOS).map((n) => n.nombre);
+    expect(nombres).toEqual(["Medina/Medina, Ana · 22.47.jpg", "Medina/Medina, Ana · 22.47 (2).jpg", "pérez/Pérez, Eva · 21.00.jpg"]);
+  });
+
+  it("baja todas del cajón, ordenadas, y cuenta las que fallan", async () => {
+    const bajadas = [];
+    const s = {
+      storage: {
+        from: (cubo) => ({
+          download: async (ruta) => {
+            bajadas.push([cubo, ruta]);
+            return ruta === "fiesta/3.jpg" ? { error: { message: "no" } } : { data: new Blob(["x"]) };
+          },
+        }),
+      },
+    };
+    const { archivos, fallidas } = await bajarFotosFiesta(s, [foto("2", "medina", "Medina, Ana", "23:05"), foto("1", "abreu01", "Abreu, Gustavo", "22:47"), foto("3", "medina", "Medina, Luis", "23:10")], INVITADOS);
+    expect(archivos.map((a) => a.nombre)).toEqual(["Abreu01/Abreu, Gustavo · 22.47.jpg", "Medina/Medina, Ana · 23.05.jpg"]);
+    expect(fallidas).toBe(1);
+    expect(bajadas.every(([cubo]) => cubo === "fotos-fiesta")).toBe(true);
   });
 });

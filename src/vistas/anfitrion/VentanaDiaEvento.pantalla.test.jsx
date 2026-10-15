@@ -1,6 +1,7 @@
 // La ventana «Día del evento» (v66-67): el estado en texto y el botón con
 // lo que hace; cerrar pregunta antes. Llegadas y fotos, la misma fila.
 import { it, expect } from "vitest";
+import { act } from "react";
 import { montar } from "../../pruebas/dibujar";
 import { VentanaDiaEvento, cuentaFotosFiesta } from "./VentanaDiaEvento";
 
@@ -57,7 +58,23 @@ it("las fotos: «Abrir» las abre; «Cerrar» pregunta antes", () => {
 });
 
 it("la cuenta: fotos y familias, cada familia una vez", () => {
-  expect(cuentaFotosFiesta([])).toBe("Todavía no hay fotos.");
-  expect(cuentaFotosFiesta([{ familia: "medina" }])).toBe("1 foto de 1 familia");
-  expect(cuentaFotosFiesta([{ familia: "medina" }, { familia: "medina" }, { familia: "abreu01" }])).toBe("3 fotos de 2 familias");
+  expect(cuentaFotosFiesta([{ familia: "medina" }])).toEqual({ titulo: "1 foto", detalle: "De 1 familia, en un ZIP." });
+  expect(cuentaFotosFiesta([{ familia: "medina" }, { familia: "medina" }, { familia: "abreu01" }])).toEqual({
+    titulo: "3 fotos",
+    detalle: "De 2 familias, en un ZIP.",
+  });
+});
+
+it("«Descargar» solo sale con alguna foto", async () => {
+  const conFotos = () => Promise.resolve([{ id: "1", familia: "medina", quien: "Medina, Ana", ruta: "fiesta/1.jpg", creadaEn: "2026-11-13T22:47:00" }]);
+  const sin = montar(<VentanaDiaEvento data={{ evento: {}, persistEvento: () => {}, obtenerFotosFiesta: sinFotos }} onCerrar={() => {}} />);
+  await act(async () => {});
+  expect(boton("Descargar")).toBeUndefined();
+  sin.desmontar();
+
+  const con = montar(<VentanaDiaEvento data={{ evento: {}, persistEvento: () => {}, obtenerFotosFiesta: conFotos }} onCerrar={() => {}} />);
+  await act(async () => {});
+  expect(document.body.textContent).toContain("1 foto");
+  expect(boton("Descargar")).toBeDefined();
+  con.desmontar();
 });

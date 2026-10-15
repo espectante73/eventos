@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "67.6",
+    cambios: [
+      "«Día del evento»: con alguna foto subida, una fila nueva con la cuenta («12 fotos», «De 5 familias, en un ZIP.») y el botón «Descargar». Baja todas las fotos de la fiesta en un solo archivo, «Fotos de la fiesta.zip», con una carpeta por familia y cada foto con quién la subió y a qué hora («Medina, Ana · 22.47.jpg»). Al terminar avisa de dónde está. Se eligen fuera de la app.",
+    ],
+  },
+  {
     version: "67.5",
     cambios: [
       "Fotos de la fiesta en el tablón: cada foto que subes lleva su miniatura (en el marco 16:9 de la app), para saber cuál eliminar. Se guarda en tu propio móvil: el cajón sigue cerrado y nadie más la ve. Las de otros familiares salen con el marco vacío; si la subiste desde otro móvil o borraste los datos de Safari, también.",
