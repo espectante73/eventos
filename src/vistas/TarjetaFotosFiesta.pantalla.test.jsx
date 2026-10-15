@@ -2,7 +2,8 @@
 // su familia, una línea por foto y la papelera solo en las suyas.
 import { it, expect } from "vitest";
 import { montar } from "../pruebas/dibujar";
-import { TarjetaFotosFiesta, FRASE_HORIZONTAL } from "./TarjetaFotosFiesta";
+import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
+import { FRASE_HORIZONTAL } from "../lib/fotosFiesta";
 
 const nada = async () => ({ aviso: "" });
 const foto = (id, quien, mia) => ({ id, quien, mia, creadaEn: "2026-11-13T22:47:00" });

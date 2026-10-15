@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "67.7",
+    cambios: [
+      "«Día del evento»: fila «Tarjetas QR» con «Descargar». Baja «tarjetas-qr.pdf»: un folio con dos tarjetas de pie para las mesas. Se corta a lo alto por la línea discontinua y cada tira se dobla a lo ancho por la de puntos; la cara de arriba va del revés para que, doblada, se lea desde los dos lados. Cada cara: «Sube tus fotos de la fiesta», el QR que abre el tablón, «Escanea el código y entra con tu apellido y tu nombre», la frase de hacerla en horizontal y el nombre del evento, con los colores del evento con discreción.",
+    ],
+  },
+  {
     version: "67.6",
     cambios: [
       "«Día del evento»: con alguna foto subida, una fila nueva con la cuenta («12 fotos», «De 5 familias, en un ZIP.») y el botón «Descargar». Baja todas las fotos de la fiesta en un solo archivo, «Fotos de la fiesta.zip», con una carpeta por familia y cada foto con quién la subió y a qué hora («Medina, Ana · 22.47.jpg»). Al terminar avisa de dónde está. Se eligen fuera de la app.",

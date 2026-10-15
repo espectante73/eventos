@@ -17,12 +17,7 @@ import { BotonQuitar } from "../components/PreguntaSeguridad";
 import { LineaAviso } from "../components/LineaAviso";
 import { HuecoFoto } from "../components/HuecoFoto";
 import { horaCorta } from "../lib/formato";
-import { miniaturaFotoFiesta } from "../lib/fotosFiesta";
-
-// Su frase, pulida con él: «en UNA pantalla», no «en la pantalla» (no se
-// proyectan ese día en el local).
-export const FRASE_HORIZONTAL =
-  "Puedes hacerla en horizontal o en vertical; solo ten en cuenta que en horizontal se verá mejor en una pantalla.";
+import { miniaturaFotoFiesta, FRASE_HORIZONTAL } from "../lib/fotosFiesta";
 
 const PREGUNTA_ELIMINAR = {
   titulo: "¿Eliminar esta foto?",

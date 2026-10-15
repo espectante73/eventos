@@ -11,6 +11,12 @@ import { claveFamilia } from "./invitados";
 import { horaCorta } from "./formato";
 
 export const CUBO_FOTOS_FIESTA = "fotos-fiesta";
+
+// Su frase, pulida con él: «en UNA pantalla», no «en la pantalla» (no se
+// proyectan ese día en el local). Va junto al botón del tablón y en las
+// tarjetas QR: una sola copia.
+export const FRASE_HORIZONTAL =
+  "Puedes hacerla en horizontal o en vertical; solo ten en cuenta que en horizontal se verá mejor en una pantalla.";
 export const LIMITE_FOTO_FIESTA = 2 * 1024 * 1024;
 
 // De más a menos: lado largo y calidad. Vale la primera que quepa en 2 MB.

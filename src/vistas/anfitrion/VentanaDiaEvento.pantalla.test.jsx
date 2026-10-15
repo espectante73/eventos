@@ -65,16 +65,16 @@ it("la cuenta: fotos y familias, cada familia una vez", () => {
   });
 });
 
-it("«Descargar» solo sale con alguna foto", async () => {
+it("«Descargar» las fotos solo sale con alguna; el de las tarjetas QR, siempre", async () => {
   const conFotos = () => Promise.resolve([{ id: "1", familia: "medina", quien: "Medina, Ana", ruta: "fiesta/1.jpg", creadaEn: "2026-11-13T22:47:00" }]);
   const sin = montar(<VentanaDiaEvento data={{ evento: {}, persistEvento: () => {}, obtenerFotosFiesta: sinFotos }} onCerrar={() => {}} />);
   await act(async () => {});
-  expect(boton("Descargar")).toBeUndefined();
+  expect(botones("Descargar")).toHaveLength(1);
   sin.desmontar();
 
   const con = montar(<VentanaDiaEvento data={{ evento: {}, persistEvento: () => {}, obtenerFotosFiesta: conFotos }} onCerrar={() => {}} />);
   await act(async () => {});
   expect(document.body.textContent).toContain("1 foto");
-  expect(boton("Descargar")).toBeDefined();
+  expect(botones("Descargar")).toHaveLength(2);
   con.desmontar();
 });

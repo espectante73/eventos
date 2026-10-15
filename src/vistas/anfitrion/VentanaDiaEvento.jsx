@@ -14,7 +14,7 @@
 // Las fotos se eligen FUERA de la app (él, v67.6): aquí solo se descargan
 // todas en un ZIP, una carpeta por familia. Sin ventana para verlas.
 import { useEffect, useState } from "react";
-import { DoorOpen, DoorClosed, Camera, CameraOff, Download } from "lucide-react";
+import { DoorOpen, DoorClosed, Camera, CameraOff, Download, QrCode } from "lucide-react";
 import { C, OP } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -23,6 +23,8 @@ import { supabase } from "../../supabaseClient";
 import { crearZip } from "../../lib/zip";
 import { descargarBlob } from "../../lib/descargas";
 import { bajarFotosFiesta, ARCHIVO_FOTOS_FIESTA } from "../../lib/fotosFiesta";
+import { descargarTarjetasQr, ARCHIVO_TARJETAS_QR } from "../../lib/pdfTarjetasQr";
+import { construirEnlaceTablon } from "../../lib/url";
 
 // «12 fotos» y «De 5 familias, en un ZIP.», contando cada familia una vez.
 // En dos líneas, como las demás filas: en una no cabía junto al botón.
@@ -83,7 +85,7 @@ function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, onAlterna
 }
 
 export function VentanaDiaEvento({ data, onCerrar }) {
-  const { evento, persistEvento, obtenerFotosFiesta, invitados = [] } = data;
+  const { evento, persistEvento, obtenerFotosFiesta, invitados = [], tokenTablon } = data;
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
   const llegadasAbiertas = Boolean(evento.asistenciaAbierta);
@@ -121,6 +123,18 @@ export function VentanaDiaEvento({ data, onCerrar }) {
       vigente = false;
     };
   }, [obtenerFotosFiesta, fotosAbiertas]);
+
+  // Las tarjetas QR de las mesas (v67.7): llevan el enlace del tablón, el
+  // mismo de Mi cuenta. Avisa al terminar (norma 9).
+  const descargarTarjetas = async () => {
+    const enlace = construirEnlaceTablon(evento.urlPublica, tokenTablon);
+    if (!enlace) {
+      preguntar({ titulo: "Todavía no", texto: "Falta la dirección pública de la app, en Configuración.", soloAviso: true });
+      return;
+    }
+    await descargarTarjetasQr({ enlace, nombreEvento: evento.nombre });
+    preguntar({ titulo: "Tarjetas descargadas", texto: `${ARCHIVO_TARJETAS_QR}\nLo tienes en tu carpeta de Descargas.`, soloAviso: true });
+  };
 
   // Todas en un ZIP, y avisa al terminar (norma 9: pasa fuera de la pantalla).
   const [descargando, setDescargando] = useState(false);
@@ -167,12 +181,18 @@ export function VentanaDiaEvento({ data, onCerrar }) {
         >
           {fotosAbiertas ? "Dejar de permitir subir fotos." : "Permitir subir fotos."}
         </FilaAbrirCerrar>
+        <CeldaTexto fila={3} Icono={QrCode} titulo={<b>Tarjetas QR</b>}>
+          Para las mesas, de pie: 2 por folio.
+        </CeldaTexto>
+        <Boton onClick={descargarTarjetas} className={CELDA_BOTON} style={{ gridRow: 3 }}>
+          Descargar
+        </Boton>
         {fotos?.length > 0 && (
           <>
-            <CeldaTexto fila={3} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
+            <CeldaTexto fila={4} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
               {cuentaFotosFiesta(fotos).detalle}
             </CeldaTexto>
-            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 3 }}>
+            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 4 }}>
               {descargando ? "Preparando…" : "Descargar"}
             </Boton>
           </>
