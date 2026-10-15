@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "67.2",
+    cambios: [
+      "«Día del evento», fila de Fotos: el texto pasa a «Permitir subir fotos.» (abiertas, «Dejar de permitir subir fotos.»).",
+    ],
+  },
+  {
     version: "67.1",
     cambios: [
       "«Día del evento», más sencilla: la ventana es estrecha y debajo de cada fila solo dice para qué es el botón («Abrir para acreditar a los invitados», «Abrir para que los invitados puedan subir fotos»; abiertas, «Cerrar para…»).",

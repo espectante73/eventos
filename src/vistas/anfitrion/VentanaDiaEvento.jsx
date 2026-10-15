@@ -117,7 +117,7 @@ export function VentanaDiaEvento({ data, onCerrar }) {
           onAlternar={alternarFotos}
         >
           <p>
-            {fotosAbiertas ? "Cerrar para que dejen de subir fotos." : "Abrir para que los invitados puedan subir fotos."}
+            {fotosAbiertas ? "Dejar de permitir subir fotos." : "Permitir subir fotos."}
           </p>
           {fotos && <p>{cuentaFotosFiesta(fotos)}</p>}
         </FilaAbrirCerrar>
