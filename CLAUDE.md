@@ -293,7 +293,9 @@ insert into public.migraciones_aplicadas ("nombre") values ('v40-lo-que-sea')
 
 3. **Cambiar los parámetros de una función que ya existe**: antes del
    `create or replace`, `drop function if exists nombre(tipos, viejos)`
-   con la firma anterior exacta.
+   con la firma anterior exacta. **Si cambia lo que devuelve**, primero
+   se despliega el cliente que entiende las dos formas y luego el SQL: una
+   pantalla abierta con el viejo se cae (pasó con `tablon_quien_soy`).
 4. **Una función nueva que dependa de `auth.uid()` lleva `revoke execute
    ... from public`**: Postgres da permiso de ejecución a todos por
    defecto. Va en el SQL que se le pasa y, junto a la función, en
