@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
+import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, miniaturaFotoFiesta, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
 
 // Una reducción de mentira: el tamaño que «pesaría» cada intento.
 const reducirQuePesa = (pesos) => {
@@ -117,5 +117,25 @@ describe("eliminarFotoFiesta", () => {
     const s = falso({});
     expect((await eliminarFotoFiesta(s, { ...QUIEN, id: "f1" })).aviso).toContain("No se pudo eliminar");
     expect(s.llamadas.map((l) => l[0])).toEqual(["tablon_quitar_foto"]);
+  });
+});
+
+describe("la miniatura, solo en el móvil que la subió (v67.5)", () => {
+  const RESPUESTAS = {
+    tablon_reservar_foto: { data: { id: "m1", ruta: "fiesta/m1.jpg" } },
+    tablon_confirmar_foto: { data: true },
+    tablon_quitar_foto: { data: "fiesta/m1.jpg" },
+  };
+  const reducir = async () => new Blob(["x"], { type: "image/jpeg" });
+
+  it("se guarda al subir y se olvida al eliminar", async () => {
+    await subirFotoFiesta(falso({ rpc: RESPUESTAS }), { ...QUIEN, archivo: {} }, reducir);
+    expect(miniaturaFotoFiesta("m1")).toMatch(/^data:image\/jpeg;base64,/);
+    await eliminarFotoFiesta(falso({ rpc: RESPUESTAS }), { ...QUIEN, id: "m1" });
+    expect(miniaturaFotoFiesta("m1")).toBe("");
+  });
+
+  it("si no se puede hacer, la foto se sube igual", async () => {
+    expect(await subirFotoFiesta(falso({ rpc: RESPUESTAS }), { ...QUIEN, archivo: {} }, PEQUENA)).toEqual({ aviso: "" });
   });
 });

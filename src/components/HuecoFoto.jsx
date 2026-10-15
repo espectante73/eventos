@@ -59,7 +59,9 @@ export function HuecoFoto({ titulo, enlace, ocupada, subiendo, onElegir, onQuita
   //   - vacío y editable -> elige archivo y la sube, como siempre.
   //   - vacío y de solo lectura (boda sin subir), o foto aún cargando su
   //     enlace -> no hace nada.
-  const accion = enlace ? "ver" : !soloLectura && !ocupada ? "subir" : "nada";
+  //   - con foto pero sin `onVer` (la miniatura de las fotos de la fiesta,
+  //     v67.5) -> tampoco: no se pinta como botón algo que no hace nada.
+  const accion = enlace && onVer ? "ver" : !enlace && !soloLectura && !ocupada ? "subir" : "nada";
   const Etiqueta = accion === "ver" ? "button" : accion === "subir" ? "label" : "div";
   return (
     <div className="flex justify-center" style={{ width: ajustada ? ANCHO_MINIATURA : ANCHO_COL, flexShrink: 0 }}>

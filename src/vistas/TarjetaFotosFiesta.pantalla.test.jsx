@@ -62,3 +62,21 @@ it("eliminar pregunta antes, y con «Sí, eliminar» la elimina", () => {
   expect(eliminadas).toEqual(["1"]);
   vista.desmontar();
 });
+
+it("las suyas llevan su miniatura (guardada en su móvil); las de los demás, el marco vacío", () => {
+  window.localStorage.setItem("fotos-fiesta-miniatura-1", "data:image/jpeg;base64,eA==");
+  const vista = montar(
+    <TarjetaFotosFiesta
+      estado={{ maximo: 3, fotos: [foto("1", "Medina, Ana", true), foto("2", "Medina, Luis", false)] }}
+      onSubir={nada}
+      onEliminar={nada}
+    />
+  );
+  const imagenes = document.body.querySelectorAll("img");
+  expect(imagenes).toHaveLength(1);
+  expect(imagenes[0].getAttribute("alt")).toBe("Foto de Medina, Ana");
+  // Sin `onVer`, la miniatura no se pinta como botón.
+  expect(imagenes[0].closest("button")).toBeNull();
+  vista.desmontar();
+  window.localStorage.removeItem("fotos-fiesta-miniatura-1");
+});

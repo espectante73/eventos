@@ -33,6 +33,43 @@ const MOTIVOS = {
   cerrada: "Ya no se pueden subir fotos.",
   completa: "Tu familia ya tiene sus 3 fotos. Para cambiar una, eliminen antes otra.",
 };
+
+// La miniatura de las que sube cada uno, guardada en SU móvil (él, v67.5):
+// sin verla no sabría cuál eliminar, y el cajón sigue cerrado para todos.
+// Si la subió desde otro móvil o borró los datos del navegador, su línea
+// sale sin miniatura.
+const claveMiniatura = (id) => `fotos-fiesta-miniatura-${id}`;
+export function miniaturaFotoFiesta(id) {
+  try {
+    return window.localStorage.getItem(claveMiniatura(id)) || "";
+  } catch {
+    return "";
+  }
+}
+function olvidarMiniatura(id) {
+  try {
+    window.localStorage.removeItem(claveMiniatura(id));
+  } catch {
+    // Sin almacenamiento, no había nada guardado.
+  }
+}
+const comoDataUrl = (blob) =>
+  new Promise((resolve, reject) => {
+    const lector = new FileReader();
+    lector.onload = () => resolve(lector.result);
+    lector.onerror = () => reject(lector.error);
+    lector.readAsDataURL(blob);
+  });
+// Pequeña (cabe en 320x180, para el marco de 96 px); si falla, la foto
+// está subida igual y su línea sale sin miniatura.
+async function guardarMiniatura(id, archivo, reducir) {
+  try {
+    window.localStorage.setItem(claveMiniatura(id), await comoDataUrl(await reducir(archivo, 320, 180, 0.7)));
+  } catch {
+    // Sin miniatura: no impide nada.
+  }
+}
+
 const NO_SE_PUDO = "No se pudo subir la foto. Prueba otra vez; si sigue fallando, prueba con otra foto.";
 
 // Devuelve { aviso, detalle }: sin aviso, la foto está subida.
@@ -62,6 +99,7 @@ export async function subirFotoFiesta(supabase, { token, respuesta, archivo }, r
     await supabase.storage.from(CUBO_FOTOS_FIESTA).remove([reserva.ruta]);
     return { aviso: NO_SE_PUDO, detalle: errorConfirmar?.message || "sin confirmar" };
   }
+  await guardarMiniatura(reserva.id, archivo, reducir);
   return { aviso: "" };
 }
 
@@ -73,5 +111,6 @@ export async function eliminarFotoFiesta(supabase, { token, respuesta, id }) {
   const { data: ruta, error } = await supabase.rpc("tablon_quitar_foto", { p_token: token, p_respuesta: respuesta, p_id: id });
   if (error || !ruta) return { aviso: "No se pudo eliminar la foto. Prueba otra vez.", detalle: error?.message };
   await supabase.storage.from(CUBO_FOTOS_FIESTA).remove([ruta]);
+  olvidarMiniatura(id);
   return { aviso: "" };
 }

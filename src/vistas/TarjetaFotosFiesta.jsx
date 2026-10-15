@@ -1,7 +1,9 @@
 // Las fotos de la fiesta en el tablón (él, v67.4): solo con la recogida
 // abierta, y SIN ver las fotos. La cuenta de su familia, una línea por foto
 // («Medina, Ana · 22:47») y, en las suyas, la papelera para cambiarla por
-// otra: «tendrán muchas fotos y tendrán que elegir».
+// otra: «tendrán muchas fotos y tendrán que elegir». Para saber cuál, las
+// suyas llevan su miniatura, guardada en su propio móvil (él, v67.5); las
+// de los demás, el marco vacío, para que todas las filas midan lo mismo.
 //
 // «Elegir foto» busca en la galería (él): el campo va sin `capture`, así el
 // móvil no salta a la cámara. El menú propio del iPhone (Fototeca, Hacer
@@ -13,7 +15,9 @@ import { C, OP, T } from "../theme";
 import { estilosBoton } from "../components/Boton";
 import { BotonQuitar } from "../components/PreguntaSeguridad";
 import { LineaAviso } from "../components/LineaAviso";
+import { HuecoFoto } from "../components/HuecoFoto";
 import { horaCorta } from "../lib/formato";
+import { miniaturaFotoFiesta } from "../lib/fotosFiesta";
 
 // Su frase, pulida con él: «en UNA pantalla», no «en la pantalla» (no se
 // proyectan ese día en el local).
@@ -67,8 +71,9 @@ export function TarjetaFotosFiesta({ estado, onSubir, onEliminar }) {
         {fotos.length > 0 && (
           <ul className="mt-1">
             {fotos.map((f) => (
-              <li key={f.id} className="flex items-center justify-between gap-2 py-1 text-sm">
-                <span className="truncate">
+              <li key={f.id} className="flex items-center gap-2 py-1 text-sm">
+                <HuecoFoto titulo={`Foto de ${f.quien}`} enlace={f.mia ? miniaturaFotoFiesta(f.id) : ""} soloLectura ajustada />
+                <span className="truncate flex-1 min-w-0">
                   {f.quien} · {horaCorta(f.creadaEn)}
                 </span>
                 {f.mia && (
