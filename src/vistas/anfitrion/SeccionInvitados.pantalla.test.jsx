@@ -80,6 +80,12 @@ function dibujar(filtros = {}) {
 }
 
 describe("la Lista de invitados se puede dibujar", () => {
+  // v65: las unidades familiares, confirmadas o no (Barrios01, Pacheco01,
+  // Abrante01), para repartir las fotos del evento por familia.
+  it("la cabecera cuenta las familias", () => {
+    expect(dibujar()).toMatch(/>Familias<\/div><div[^>]*>3</);
+  });
+
   it("sin ningún filtro, con todos dentro", () => {
     const html = dibujar();
     expect(html).toContain("Barrios, Jacob");

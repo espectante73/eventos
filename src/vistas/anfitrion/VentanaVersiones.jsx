@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "65",
+    cambios: [
+      "La cabecera de la Lista de invitados cuenta las «Familias»: las unidades familiares de toda la lista, confirmadas o no. Cuenta los grupos, no los apellidos: dos familias distintas con el mismo apellido (Abreu01 y Abreu02) son dos.",
+    ],
+  },
+  {
     version: "64.9",
     cambios: [
       "La Revisión de la Lista solo avisa de datos y de nombres mal escritos en los invitados confirmados: a los demás todavía no se les han pedido. Lo que depende de cómo está montada la lista (papeles, grupos, repetidos, reparto entre colaboradores) sigue mirando a todos.",

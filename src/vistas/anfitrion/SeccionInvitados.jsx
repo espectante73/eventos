@@ -32,7 +32,7 @@ import {
   Download,
 } from "lucide-react";
 import { C, inputStyle, R, T, OP, conAlfa } from "../../theme";
-import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador } from "../../lib/invitados";
+import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, anioDelEvento } from "../../lib/matrimonios";
@@ -570,6 +570,10 @@ export function SeccionInvitados({
   // así se ven los cinco papeles a la vez, en vez de tener que filtrar
   // uno por uno para saber cuántos hay de cada.
   const totalMatrimonios = contarMatrimonios(invitados);
+  // Las unidades familiares (él, v65), confirmadas o no: los grupos, no los
+  // apellidos (Abreu01 y Abreu02 son dos). La misma clave que el resto de la
+  // app (claveFamilia).
+  const totalFamilias = new Set(invitados.map(claveFamilia).filter(Boolean)).size;
   const porRol = invitados.reduce((cuenta, g) => {
     const clave = g.rolFamiliar || "sin";
     cuenta[clave] = (cuenta[clave] || 0) + 1;
@@ -610,6 +614,7 @@ export function SeccionInvitados({
     { label: "Edad media", value: edadMedia === null ? "—" : `${edadMedia} años` },
     // Matrimonios: un esposO + una esposA dentro del mismo grupo
     // familiar (2026-09-03). Ver lib/matrimonios.js.
+    { label: "Familias", value: totalFamilias },
     { label: "Matrimonios", value: totalMatrimonios },
     // Solo aparece si hay algo que corregir: en cuanto está todo
     // emparejado, deja de ocupar sitio.
