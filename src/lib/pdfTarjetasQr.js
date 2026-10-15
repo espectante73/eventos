@@ -16,7 +16,8 @@ import { descargarBlob } from "./descargas";
 import { FRASE_HORIZONTAL } from "./fotosFiesta";
 
 export const ARCHIVO_TARJETAS_QR = "tarjetas-qr.pdf";
-export const TITULO_TARJETA = ["Sube tus fotos", "del evento."];
+// Su texto (él, v67.8), en dos líneas: a 17 cabe con aire hasta el marco.
+export const TITULO_TARJETA = ["Puedes subir hasta 3 fotos", "del evento por familia"];
 // En dos líneas parejas, partidas a mano: suelta, «nombre.» quedaba sola.
 export const ENTRAR_TARJETA = ["Escanea el código y entra", "con tu apellido y tu nombre."];
 
@@ -83,9 +84,9 @@ function dibujarCara(pdf, qr, x, y, girada, nombreEvento) {
   l.marco(x + MARCO, y + MARCO, ANCHO_CARA - 2 * MARCO, ALTO_CARA - 2 * MARCO, 6);
 
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(18);
+  pdf.setFontSize(17);
   pdf.setTextColor(C.ink);
-  l.centrado(TITULO_TARJETA, l.cx, y + 54, 21.6);
+  l.centrado(TITULO_TARJETA, l.cx, y + 54, 20.4);
 
   pdf.setLineWidth(0.8);
   l.line(l.cx - 20, y + 92, l.cx + 20, y + 92);

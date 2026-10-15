@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "67.9",
+    cambios: [
+      "Tarjetas QR: el título pasa a «Puedes subir hasta 3 fotos del evento por familia», en dos líneas y algo más pequeño para que quepa con aire hasta el marco.",
+    ],
+  },
+  {
     version: "67.8",
     cambios: [
       "Tarjetas QR: el título pasa a «Sube tus fotos del evento.»",
