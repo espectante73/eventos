@@ -1,21 +1,63 @@
 // Ventana "Día del evento" (él, v66): lo que se abre o se usa ese día, una
 // cosa por fila, solo para el anfitrión. Las llegadas vivían en Datos
 // Colab.; se TRASLADAN aquí, no se copian: un interruptor en dos sitios
-// acaba diciendo cosas distintas (norma 7). Después vendrán las fotos de la
-// fiesta, con su propia fila igual que esta.
+// acaba diciendo cosas distintas (norma 7). Las fotos de la fiesta (v67),
+// con su propia fila igual.
 //
 // Cada fila separa el estado de la acción (él, v66.1: a todo lo ancho y
 // diciendo «Llegadas: abiertas» parecía un cartel, no un botón): el estado
 // en texto y, del lado del pulgar, el botón de la app con lo que hace.
-import { DoorOpen, DoorClosed } from "lucide-react";
+// Las filas comparten UNA rejilla: la columna de los botones mide lo que
+// el más largo, y así todos son iguales (norma 4) sin medir nada.
+import { useEffect, useState } from "react";
+import { DoorOpen, DoorClosed, Camera, CameraOff } from "lucide-react";
 import { C, OP } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 
+// «12 fotos de 5 familias», contando cada familia una vez.
+export function cuentaFotosFiesta(fotos) {
+  if (!fotos.length) return "Todavía no hay fotos.";
+  const familias = new Set(fotos.map((f) => f.familia)).size;
+  const de = (n, una, varias) => `${n} ${n === 1 ? una : varias}`;
+  return `${de(fotos.length, "foto", "fotos")} de ${de(familias, "familia", "familias")}`;
+}
+
+function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, onAlternar, children }) {
+  return (
+    <>
+      <div className="col-start-1 zurdo:col-start-2 min-w-0" style={{ gridRow: fila }}>
+        <span className="flex items-center gap-2 text-sm min-w-0" style={{ color: C.ink }}>
+          {abierta ? <Icono size={16} style={{ flexShrink: 0 }} /> : <IconoCerrada size={16} style={{ flexShrink: 0 }} />}
+          <span className="truncate">
+            <b>{rotulo}</b>
+            <span style={{ color: abierta ? C.ink : C.peligro, fontWeight: 600 }}>
+              {" · "}
+              {abierta ? "abiertas" : "cerradas"}
+            </span>
+          </span>
+        </span>
+        <div className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
+          {children}
+        </div>
+      </div>
+      <Boton
+        variante={abierta ? "secundario" : "principal"}
+        onClick={onAlternar}
+        className="col-start-2 zurdo:col-start-1"
+        style={{ gridRow: fila }}
+      >
+        {abierta ? "Cerrar" : "Abrir"}
+      </Boton>
+    </>
+  );
+}
+
 export function VentanaDiaEvento({ data, onCerrar }) {
-  const { evento, persistEvento } = data;
+  const { evento, persistEvento, obtenerFotosFiesta } = data;
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
+
   const llegadasAbiertas = Boolean(evento.asistenciaAbierta);
   const fijarLlegadas = (abiertas) => persistEvento({ ...evento, asistenciaAbierta: abiertas });
   // Cerrar pregunta antes: en pleno evento, los colaboradores dejarían de
@@ -30,29 +72,58 @@ export function VentanaDiaEvento({ data, onCerrar }) {
         })
       : fijarLlegadas(true);
 
+  const fotosAbiertas = Boolean(evento.fotosFiestaAbierta);
+  const fijarFotos = (abiertas) => persistEvento({ ...evento, fotosFiestaAbierta: abiertas });
+  const alternarFotos = () =>
+    fotosAbiertas
+      ? preguntar({
+          titulo: "¿Cerrar las fotos?",
+          texto: "Los invitados dejarán de poder subir fotos desde su tablón.",
+          peligro: false,
+          alConfirmar: () => fijarFotos(false),
+        })
+      : fijarFotos(true);
+
+  // La cuenta se lee al abrir la ventana y al abrir o cerrar las fotos.
+  const [fotos, setFotos] = useState(null);
+  useEffect(() => {
+    let vigente = true;
+    obtenerFotosFiesta().then((lista) => vigente && setFotos(lista));
+    return () => {
+      vigente = false;
+    };
+  }, [obtenerFotosFiesta, fotosAbiertas]);
+
   return (
     <VentanaFlotante clave="diaEvento" titulo="Día del evento" onCerrar={onCerrar}>
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between gap-2 zurdo:flex-row-reverse">
-          <span className="flex items-center gap-2 text-sm min-w-0" style={{ color: C.ink }}>
-            {llegadasAbiertas ? <DoorOpen size={16} style={{ flexShrink: 0 }} /> : <DoorClosed size={16} style={{ flexShrink: 0 }} />}
-            <span className="truncate">
-              <b>Llegadas</b>
-              <span style={{ color: llegadasAbiertas ? C.ink : C.peligro, fontWeight: 600 }}>
-                {" · "}
-                {llegadasAbiertas ? "abiertas" : "cerradas"}
-              </span>
-            </span>
-          </span>
-          <Boton variante={llegadasAbiertas ? "secundario" : "principal"} onClick={alternarLlegadas}>
-            {llegadasAbiertas ? "Cerrar" : "Abrir"}
-          </Boton>
-        </div>
-        <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
+      <div className="grid grid-cols-[1fr_auto] zurdo:grid-cols-[auto_1fr] items-center gap-x-2 gap-y-3">
+        <FilaAbrirCerrar
+          fila={1}
+          abierta={llegadasAbiertas}
+          Icono={DoorOpen}
+          IconoCerrada={DoorClosed}
+          rotulo="Llegadas"
+          onAlternar={alternarLlegadas}
+        >
           {llegadasAbiertas
             ? "Los colaboradores pueden marcar quién ha llegado."
             : "Ábrelas el día del evento para que los colaboradores marquen quién llega."}
-        </p>
+        </FilaAbrirCerrar>
+        <FilaAbrirCerrar
+          fila={2}
+          abierta={fotosAbiertas}
+          Icono={Camera}
+          IconoCerrada={CameraOff}
+          rotulo="Fotos"
+          onAlternar={alternarFotos}
+        >
+          <p>
+            {fotosAbiertas
+              ? "Los invitados pueden subir fotos desde su tablón."
+              : "Ábrelas en la fiesta para que los invitados suban fotos desde su tablón."}
+          </p>
+          {fotos && <p>{cuentaFotosFiesta(fotos)}</p>}
+        </FilaAbrirCerrar>
       </div>
       {ventanaPregunta}
     </VentanaFlotante>

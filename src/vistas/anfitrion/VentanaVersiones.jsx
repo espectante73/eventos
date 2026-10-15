@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "67",
+    cambios: [
+      "Fotos de la fiesta, primer paso visible: en «Día del evento», debajo de Llegadas, la fila «Fotos · abiertas / cerradas» con su botón «Abrir» o «Cerrar» (cerrar pregunta antes) y la cuenta: «12 fotos de 5 familias». Los dos botones miden lo mismo. Por dentro, el servidor ya tiene el cajón cerrado de las fotos (2 MB y solo JPEG) y cuenta 3 por familia. La parte de subirlas desde el tablón llega en el paso siguiente.",
+    ],
+  },
+  {
     version: "66.1",
     cambios: [
       "«Día del evento»: las llegadas ya no son una barra que parecía un cartel. Ahora es una fila con el estado a un lado («Llegadas · abiertas» en verde, o «cerradas» en rojo) y, del lado del pulgar, el botón de la app con lo que hace: «Abrir» o «Cerrar». Cerrar pregunta antes, porque los colaboradores dejarían de poder marcar a quien llega.",

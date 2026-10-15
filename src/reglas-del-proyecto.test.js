@@ -101,10 +101,14 @@ describe("cabeceras de protección (vercel.json)", () => {
 // v66: las llegadas se abren y se cierran en «Día del evento», y solo ahí
 // (antes, en Datos Colab.): un interruptor en dos sitios acaba diciendo
 // cosas distintas.
-describe("el interruptor de las llegadas, en un solo sitio", () => {
+describe("los interruptores del día del evento, en un solo sitio", () => {
   it("solo VentanaDiaEvento cambia asistenciaAbierta", () => {
     // Quien escribe `asistenciaAbierta:` dentro de un evento que se guarda.
     const cambian = archivos.filter((r) => /\.\.\.evento,\s*asistenciaAbierta:/.test(sinComentarios(leer(r))));
+    expect(cambian.map((r) => r.split("/").pop())).toEqual(["VentanaDiaEvento.jsx"]);
+  });
+  it("y las fotos de la fiesta (v67), también solo ahí", () => {
+    const cambian = archivos.filter((r) => /\.\.\.evento,\s*fotosFiestaAbierta:/.test(sinComentarios(leer(r))));
     expect(cambian.map((r) => r.split("/").pop())).toEqual(["VentanaDiaEvento.jsx"]);
   });
 });

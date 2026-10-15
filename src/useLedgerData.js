@@ -861,6 +861,18 @@ export function useLedgerData(rol) {
     [rol]
   );
 
+  // Las fotos de la fiesta (v67), subidas y sin quitar: solo lectura. Para
+  // quien no es el anfitrión, la RPC devuelve una lista vacía.
+  const obtenerFotosFiesta = useCallback(async () => {
+    const { data, error } = await supabase.rpc("anfitrion_fotos_fiesta", { p_token: rol });
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error("No se pudieron cargar las fotos de la fiesta.", error);
+      return [];
+    }
+    return data || [];
+  }, [rol]);
+
   // "Entendido" sobre el aviso de email sincronizado (ColaboradorCard):
   // el propio colaborador cambió su email de acceso desde "Mi cuenta" y
   // eso actualizó colaboradores.email solo (trigger en schema.sql) --
@@ -1459,6 +1471,7 @@ export function useLedgerData(rol) {
     persistPreguntaTablon,
     accesosTablonSospechosos,
     obtenerHistorialTexto,
+    obtenerFotosFiesta,
     obtenerFamilia,
     marcarFamilia,
     marcarMiembros,
