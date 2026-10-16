@@ -88,6 +88,10 @@ function realmDe(nodo) {
   return { doc, win: doc.defaultView || window };
 }
 
+// El panel persistente (Acciones): todo el alto de la ventana, menos los
+// márgenes. Si aun así no caben sus botones, se desplazan con el dedo.
+const altoPersistente = (win) => win.innerHeight - 2 * MARGEN_BORDE;
+
 function alturaMaximaDisponible(ancladoY, creceHaciaArriba, win = window) {
   const disponible = creceHaciaArriba
     ? ancladoY - MARGEN_BORDE
@@ -405,6 +409,9 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
     }
     const guardada = persistente && posicionGuardada(persistente.clave);
     if (guardada) setPos((p) => ({ top: guardada.top, left: guardada.left, maxHeight: p?.maxHeight }));
+    // El persistente puede ocupar todo el alto: con el móvil en horizontal,
+    // el 60 % dejaba fuera sus últimos botones (él, v68.5).
+    if (persistente) setPos((p) => ({ ...p, maxHeight: altoPersistente(win) }));
     setOpen(true);
   };
 
@@ -420,6 +427,14 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
       left: Math.min(Math.max(MARGEN_BORDE, left), Math.max(MARGEN_BORDE, win.innerWidth - r.width - MARGEN_BORDE)),
     };
   };
+  // Al girar el móvil, el alto cambia: el panel se vuelve a ajustar.
+  useEffect(() => {
+    if (!persistente || !open || !listaRef.current) return undefined;
+    const { win } = realmDe(listaRef.current);
+    const alGirar = () => setPos((p) => (p ? { ...p, maxHeight: altoPersistente(win) } : p));
+    win.addEventListener("resize", alGirar);
+    return () => win.removeEventListener("resize", alGirar);
+  }, [open, persistente]);
   // Una posición guardada en otra pantalla más grande podría quedar fuera.
   useLayoutEffect(() => {
     if (!persistente || !open || !listaRef.current || pos?.top === undefined || pos?.left === undefined) return;
@@ -507,10 +522,14 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
     <>
       {render({ ref: botonRef, open, toggle: () => (open ? setOpen(false) : abrir()) })}
       {open && pos && persistente && (
+        // Se arrastra por su barra de título, como las ventanas de la app, y
+        // sus botones se desplazan con el dedo si no caben (él, v68.5: en
+        // horizontal no se veían todos). Antes se arrastraba desde
+        // cualquier punto, y por eso no se podía desplazar.
         <div
           ref={listaRef}
           data-menu-panel
-          className="fixed rounded-xl overflow-y-auto select-none"
+          className="fixed rounded-xl select-none flex flex-col"
           style={{
             ...pos,
             width: ANCHO_PANEL,
@@ -520,12 +539,14 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
             background: C.ink,
             border: `1px solid ${C.gold}`,
             boxShadow: S.flotanteOscura,
-            touchAction: "none",
-            cursor: "grab",
           }}
-          {...manejadoresArrastre}
         >
-          <div className="flex items-center justify-between pl-3 pr-1 pt-1">
+          <div
+            data-barra-panel
+            className="flex items-center justify-between pl-3 pr-1 pt-1 flex-shrink-0"
+            style={{ touchAction: "none", cursor: "grab" }}
+            {...manejadoresArrastre}
+          >
             <span style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700, fontSize: T.normal }}>
               {persistente.titulo}
             </span>
@@ -542,16 +563,18 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
               <X size={18} />
             </button>
           </div>
-          {opciones.map((o) => (
-            <FilaMenu
-              key={o.id}
-              opcion={o}
-              cerrarTodo={() => {}}
-              abierto={abiertoId === o.id}
-              onAbrir={() => setAbiertoId(o.id)}
-              onCerrarPropio={() => setAbiertoId(null)}
-            />
-          ))}
+          <div data-lista-panel className="overflow-y-auto min-h-0" style={{ touchAction: "pan-y" }}>
+            {opciones.map((o) => (
+              <FilaMenu
+                key={o.id}
+                opcion={o}
+                cerrarTodo={() => {}}
+                abierto={abiertoId === o.id}
+                onAbrir={() => setAbiertoId(o.id)}
+                onCerrarPropio={() => setAbiertoId(null)}
+              />
+            ))}
+          </div>
         </div>
       )}
       {open &&

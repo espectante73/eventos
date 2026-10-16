@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "68.5",
+    cambios: [
+      "Lista de invitados, con el móvil en horizontal: el panel de «Acciones» no enseñaba todos sus botones («Editar» e «Importar» quedaban escondidos y no había forma de llegar a ellos). Ahora el panel puede ocupar todo el alto de la pantalla y, si aun así no caben, sus botones se desplazan con el dedo. Se sigue arrastrando, pero desde su barra de título, como las ventanas.",
+    ],
+  },
+  {
     version: "68.4",
     cambios: [
       "Arreglado en el iPhone: al tocar un campo para escribir (por ejemplo el buscador de la Lista de invitados), Safari acercaba la pantalla y la dejaba así, con la ventana cortada y sin su X a la vista. Ya no la acerca. Ampliar con dos dedos sigue funcionando.",
