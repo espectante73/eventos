@@ -9,7 +9,8 @@
 // menor de 16, solo que las suben los mayores. Antes de la primera foto en
 // un móvil, su año de nacimiento y su número de mesa (v68.1), elegidos en
 // desplegables (v68.2): el servidor los coteja con su ficha y ese móvil
-// queda recordado.
+// queda recordado. Los DOS, siempre (v68.3): si a su ficha le falta
+// alguno, no se le ofrecen y se le dice a quién preguntar.
 //
 // «Elegir foto» busca en la galería (él): el campo va sin `capture`, así el
 // móvil no salta a la cámara. El menú propio del iPhone (Fototeca, Hacer
@@ -23,7 +24,14 @@ import { BotonQuitar } from "../components/PreguntaSeguridad";
 import { LineaAviso } from "../components/LineaAviso";
 import { HuecoFoto } from "../components/HuecoFoto";
 import { horaCorta } from "../lib/formato";
-import { miniaturaFotoFiesta, textoCompleta, FRASE_HORIZONTAL, FRASE_PERMISO_PADRES, SOLO_MAYORES_16 } from "../lib/fotosFiesta";
+import {
+  miniaturaFotoFiesta,
+  textoCompleta,
+  FRASE_HORIZONTAL,
+  FRASE_PERMISO_PADRES,
+  SOLO_MAYORES_16,
+  FALTAN_CLAVES,
+} from "../lib/fotosFiesta";
 
 // Año y mesa en una sola línea, con el botón del lado del pulgar (norma 6).
 // Con desplegables, sin teclado (él, v68.2): en el móvil abren su rueda.
@@ -160,6 +168,8 @@ export function TarjetaFotosFiesta({ estado, onSubir, onEliminar, onVerificar })
 
             {completa ? (
               <p className="text-sm mt-2">{textoCompleta(maximo)}</p>
+            ) : estado.verificado === false && estado.faltanDatos ? (
+              <p className="text-sm mt-2">{FALTAN_CLAVES}</p>
             ) : estado.verificado === false ? (
               <ConfirmarMovil anios={estado.anios} mesas={estado.mesas} onVerificar={onVerificar} />
             ) : (

@@ -202,6 +202,11 @@ describe("confirmar el móvil: año y mesa (v68.1)", () => {
     expect(s.llamadas[0][1].p_mesa).toBeNull();
   });
 
+  it("si a su ficha le falta el año o la mesa, no se confirma, y se le dice a quién preguntar", async () => {
+    const s = falso({ rpc: { tablon_verificar_foto: { data: "faltan" } } });
+    expect((await verificarFotoFiesta(s, { ...QUIEN, anio: "1975", mesa: "7" })).aviso).toContain("Pregúntale a tu colaborador");
+  });
+
   it("bloqueado tras muchos fallos; y una respuesta rara no se da por buena", async () => {
     const bloqueado = falso({ rpc: { tablon_verificar_foto: { data: "bloqueado" } } });
     expect((await verificarFotoFiesta(bloqueado, { ...QUIEN, anio: "1975", mesa: "7" })).aviso).toContain("Espera 15 minutos");

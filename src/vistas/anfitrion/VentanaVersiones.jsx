@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "68.3",
+    cambios: [
+      "Fotos de la fiesta: el año y la mesa son obligatorios los dos, siempre. Antes, si a alguien le faltaba uno en su ficha, se comprobaba solo el otro, y eso era tener un solo filtro preguntando por dos. Ahora, sin año o sin mesa en la ficha, no se puede subir y le sale: «Para subir fotos, tu ficha tiene que tener tu año de nacimiento y tu mesa. Pregúntale a tu colaborador.» Necesita el SQL «v68.3-fotos-dos-claves», que además borra las confirmaciones de prueba.",
+    ],
+  },
+  {
     version: "68.2",
     cambios: [
       "Fotos de la fiesta: el año de nacimiento y la mesa se eligen en desplegables, sin teclado (en el móvil abren su rueda). Los años van del más reciente al más antiguo de la lista de invitados, y las mesas son las que hay. Va en el mismo SQL que la v68.",

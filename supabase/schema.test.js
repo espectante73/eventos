@@ -177,8 +177,10 @@ describe("las fotos de la fiesta", () => {
     expect(cuerpoDe("tablon_reservar_foto")).toContain("if not foto_fiesta_movil_verificado(v_yo.id, p_dispositivo) then");
     const v = cuerpoDe("tablon_verificar_foto");
     expect(v).toContain("from tablon_invitado(p_token, p_respuesta)");
-    expect(v).toContain('trim(v_yo."anioNacimiento") = trim(coalesce(p_anio, \'\'))');
-    expect(v).toContain('v_yo."mesa" = p_mesa');
+    // Los DOS, siempre (él, v68.3): sin alguno en la ficha no se confirma.
+    expect(v).toContain('if not ficha_con_claves(v_yo."anioNacimiento", v_yo."mesa") then');
+    expect(v).toContain('v_acierto := trim(v_yo."anioNacimiento") = trim(coalesce(p_anio, \'\')) and v_yo."mesa" = p_mesa;');
+    expect(v).not.toMatch(/"mesa" is null or/);
     expect(v).toMatch(/not i\."acierto"[\s\S]{0,90}interval '15 minutes'\) >= 5 then/);
     expect(v).toContain("insert into fotos_fiesta_intentos");
     expect(sql).toContain("alter table public.fotos_fiesta_intentos enable row level security;");
@@ -189,7 +191,8 @@ describe("las fotos de la fiesta", () => {
     expect(f).toContain("'anios', (");
     expect(f).toContain("min(trim(i.\"anioNacimiento\")::int)");
     expect(f).toContain("'mesas', coalesce((select jsonb_agg(m.\"numero\" order by m.\"numero\") from mesas m)");
-    expect(f).not.toContain('v_yo."mesa"');
+    // Solo si la ficha TIENE las claves (sí/no), nunca cuáles son.
+    expect(f).not.toMatch(/'\w+',\s*v_yo\."(mesa|anioNacimiento)"/);
   });
 
   it("la ficha entera del invitado no sale nunca por fuera", () => {

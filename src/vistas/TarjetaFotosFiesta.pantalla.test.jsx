@@ -118,6 +118,14 @@ it("sin confirmar el móvil: año y mesa en desplegables, sin teclado, y «Confi
   vista.desmontar();
 });
 
+it("si a su ficha le falta el año o la mesa: ni desplegables ni botón, y a quién preguntar", () => {
+  const vista = montar(tarjeta({ fotos: [], verificado: false, faltanDatos: true, anios: { desde: 1950, hasta: 2010 }, mesas: [1] }));
+  expect(document.body.textContent).toContain("tu ficha tiene que tener tu año de nacimiento y tu mesa");
+  expect(document.body.querySelectorAll("select")).toHaveLength(0);
+  expect(campoFoto()).toBeNull();
+  vista.desmontar();
+});
+
 it("sin años en la lista, ofrece los últimos 100", () => {
   expect(opcionesAnios(null, 2026)).toHaveLength(101);
   expect(opcionesAnios(null, 2026)[0]).toBe(2026);

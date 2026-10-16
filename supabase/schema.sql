@@ -2411,11 +2411,18 @@ CREATE FUNCTION public.foto_fiesta_movil_verificado(p_invitado uuid, p_dispositi
   );
 $$;
 
+-- ¿Tiene su ficha las dos claves para confirmar el móvil? (v68.3, él: «la
+-- condición son año Y mesa; si no, es un solo filtro»).
+CREATE FUNCTION public.ficha_con_claves(p_anio text, p_mesa integer) RETURNS boolean
+    LANGUAGE sql IMMUTABLE
+    AS $$ select trim(coalesce(p_anio, '')) ~ '^[0-9]{4}$' and p_mesa is not null; $$;
+
 -- Confirmar en este móvil que es quien dice (v68.1): su año de nacimiento
 -- y su número de mesa contra su ficha de la lista; los datos de la ficha no
--- salen de aquí. Lo que falte en su ficha no se comprueba: no se le deja sin
--- fotos en plena fiesta. Responde 'ok', 'no', 'bloqueado' (5 fallos en 15
--- minutos con ese nombre), 'nombre' o 'movil' (el navegador no le da id).
+-- salen de aquí. Los DOS, siempre: sin alguno en su ficha no se confirma
+-- (v68.3). Responde 'ok', 'no', 'faltan' (a su ficha le falta alguno),
+-- 'bloqueado' (5 fallos en 15 minutos con ese nombre), 'nombre' o 'movil'
+-- (el navegador no le da id).
 CREATE FUNCTION public.tablon_verificar_foto(p_token uuid, p_respuesta text, p_dispositivo text, p_anio text, p_mesa integer) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
@@ -2431,14 +2438,16 @@ begin
   if coalesce(p_dispositivo, '') = '' then
     return 'movil';
   end if;
+  if not ficha_con_claves(v_yo."anioNacimiento", v_yo."mesa") then
+    return 'faltan';
+  end if;
   perform pg_advisory_xact_lock(hashtext('fotos_fiesta_intentos:' || v_yo.id));
   if (select count(*) from fotos_fiesta_intentos i
       where i."invitadoId" = v_yo.id and not i."acierto"
         and i."creadoEn" > now() - interval '15 minutes') >= 5 then
     return 'bloqueado';
   end if;
-  v_acierto := (trim(v_yo."anioNacimiento") = '' or trim(v_yo."anioNacimiento") = trim(coalesce(p_anio, '')))
-    and (v_yo."mesa" is null or v_yo."mesa" = p_mesa);
+  v_acierto := trim(v_yo."anioNacimiento") = trim(coalesce(p_anio, '')) and v_yo."mesa" = p_mesa;
   insert into fotos_fiesta_intentos ("invitadoId", "dispositivoId", "acierto")
   values (v_yo.id, p_dispositivo, v_acierto);
   return case when v_acierto then 'ok' else 'no' end;
@@ -2471,6 +2480,7 @@ begin
     'menor', coalesce(v_edad < 16, false),
     'conPermiso', coalesce(v_edad between 16 and 17, false),
     'verificado', foto_fiesta_movil_verificado(v_yo.id, p_dispositivo),
+    'faltanDatos', not ficha_con_claves(v_yo."anioNacimiento", v_yo."mesa"),
     'anios', (
       select jsonb_build_object('desde', min(trim(i."anioNacimiento")::int), 'hasta', max(trim(i."anioNacimiento")::int))
       from invitados i where trim(i."anioNacimiento") ~ '^[0-9]{4}$'

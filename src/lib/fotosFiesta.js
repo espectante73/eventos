@@ -23,6 +23,9 @@ export const FRASE_HORIZONTAL =
 // tarjetas QR.
 export const FRASE_PERMISO_PADRES = "Puedes subir la foto con el permiso de tus padres, si eres menor de edad.";
 export const SOLO_MAYORES_16 = "Las fotos las suben los mayores de 16 años.";
+// Sin año o sin mesa en su ficha no se confirma el móvil (él, v68.3: las
+// dos claves, siempre).
+export const FALTAN_CLAVES = "Para subir fotos, tu ficha tiene que tener tu año de nacimiento y tu mesa. Pregúntale a tu colaborador.";
 
 // 1,5 MB (v68): 132 personas x 2 fotos caben en el almacén gratuito (él:
 // nada de pagar). El cajón tiene el mismo tope.
@@ -63,7 +66,8 @@ const MOTIVOS = {
 // lista (tablon_verificar_foto). Los datos de la ficha no viajan al móvil.
 const RESPUESTAS_VERIFICAR = {
   ok: "",
-  no: "Revisa tu año de nacimiento (con sus 4 cifras) y tu número de mesa; la mesa la tienes en tu invitación.",
+  no: "Revisa tu año de nacimiento y tu número de mesa; la mesa la tienes en tu invitación.",
+  faltan: FALTAN_CLAVES,
   bloqueado: "Demasiados intentos con este nombre. Espera 15 minutos y vuelve a probar.",
   nombre: MOTIVOS.nombre,
   movil: "Este navegador no deja recordar tu móvil: ábrelo fuera del modo privado y vuelve a probar.",
