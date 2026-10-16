@@ -2448,8 +2448,10 @@ $$;
 -- Las fotos de la fiesta de quien entra, para el tablón (v68): si la
 -- recogida está abierta, el máximo (2), si es menor de 16 (no sube) o de
 -- 16-17 (con permiso de sus padres), si este móvil ya confirmó que es él
--- (`verificado`, v68.1) y cada foto suya subida; `mia`, que la subió ESTE
--- móvil (solo ahí se puede quitar). Sin la foto: no se ven.
+-- (`verificado`, v68.1), qué años y mesas ofrecer al confirmarlo (v68.2,
+-- él: con desplegables, sin teclado: el rango de años de la lista y sus
+-- mesas) y cada foto suya subida; `mia`, que la subió ESTE móvil (solo
+-- ahí se puede quitar). Sin la foto: no se ven.
 CREATE FUNCTION public.tablon_fotos(p_token uuid, p_respuesta text, p_dispositivo text DEFAULT NULL) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
@@ -2469,6 +2471,11 @@ begin
     'menor', coalesce(v_edad < 16, false),
     'conPermiso', coalesce(v_edad between 16 and 17, false),
     'verificado', foto_fiesta_movil_verificado(v_yo.id, p_dispositivo),
+    'anios', (
+      select jsonb_build_object('desde', min(trim(i."anioNacimiento")::int), 'hasta', max(trim(i."anioNacimiento")::int))
+      from invitados i where trim(i."anioNacimiento") ~ '^[0-9]{4}$'
+    ),
+    'mesas', coalesce((select jsonb_agg(m."numero" order by m."numero") from mesas m), '[]'::jsonb),
     'fotos', coalesce((
       select jsonb_agg(jsonb_build_object('id', f.id, 'quien', f."quien", 'creadaEn', f."creadaEn",
         'mia', f."dispositivoId" is null or f."dispositivoId" = p_dispositivo) order by f."creadaEn")

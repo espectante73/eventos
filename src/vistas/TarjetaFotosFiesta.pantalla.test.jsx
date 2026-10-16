@@ -4,7 +4,7 @@
 import { it, expect } from "vitest";
 import { act } from "react";
 import { montar } from "../pruebas/dibujar";
-import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
+import { TarjetaFotosFiesta, opcionesAnios } from "./TarjetaFotosFiesta";
 import { FRASE_HORIZONTAL, FRASE_PERMISO_PADRES } from "../lib/fotosFiesta";
 
 const nada = async () => ({ aviso: "" });
@@ -90,11 +90,11 @@ it("su miniatura, guardada en su móvil; sin ella, el marco vacío", () => {
   window.localStorage.removeItem("fotos-fiesta-miniatura-1");
 });
 
-it("sin confirmar el móvil: año y mesa en una línea, y «Confirmar» los manda", async () => {
+it("sin confirmar el móvil: año y mesa en desplegables, sin teclado, y «Confirmar» los manda", async () => {
   const enviados = [];
   const vista = montar(
     tarjeta(
-      { fotos: [], verificado: false },
+      { fotos: [], verificado: false, anios: { desde: 1950, hasta: 2010 }, mesas: [1, 2, 7] },
       {
         onVerificar: async (anio, mesa) => {
           enviados.push([anio, mesa]);
@@ -103,17 +103,22 @@ it("sin confirmar el móvil: año y mesa en una línea, y «Confirmar» los mand
       }
     )
   );
-  expect(document.body.textContent).toContain("escribe tu año de nacimiento y tu número de mesa");
+  expect(document.body.textContent).toContain("elige tu año de nacimiento y tu número de mesa");
   expect(campoFoto()).toBeNull();
-  const [anio, mesa] = document.body.querySelectorAll("input");
-  const escribir = (campo, valor) =>
-    act(() => {
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(campo, valor);
-      campo.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-  escribir(anio, "1975");
-  escribir(mesa, "7");
+  expect(document.body.querySelectorAll("input")).toHaveLength(0);
+  const [anio, mesa] = document.body.querySelectorAll("select");
+  // Del más reciente al más antiguo, tras «Año»; las mesas, las que hay.
+  expect([...anio.options].slice(0, 3).map((o) => o.textContent)).toEqual(["Año", "2010", "2009"]);
+  expect(anio.options).toHaveLength(1 + 61);
+  expect([...mesa.options].map((o) => o.textContent)).toEqual(["Mesa", "1", "2", "7"]);
+  vista.elegir(anio, "1975");
+  vista.elegir(mesa, "7");
   await act(async () => document.body.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
   expect(enviados).toEqual([["1975", "7"]]);
   vista.desmontar();
+});
+
+it("sin años en la lista, ofrece los últimos 100", () => {
+  expect(opcionesAnios(null, 2026)).toHaveLength(101);
+  expect(opcionesAnios(null, 2026)[0]).toBe(2026);
 });

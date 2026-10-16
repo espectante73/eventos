@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "68.2",
+    cambios: [
+      "Fotos de la fiesta: el año de nacimiento y la mesa se eligen en desplegables, sin teclado (en el móvil abren su rueda). Los años van del más reciente al más antiguo de la lista de invitados, y las mesas son las que hay. Va en el mismo SQL que la v68.",
+    ],
+  },
+  {
     version: "68.1",
     cambios: [
       "Fotos de la fiesta: para que nadie suba ni borre fotos haciéndose pasar por otro, la primera vez que alguien va a subir una foto desde un móvil escribe su año de nacimiento y su número de mesa. El servidor los coteja con su ficha de la lista de invitados y, si coinciden, ese móvil queda recordado. Tras 5 fallos con el mismo nombre se bloquea 15 minutos. Si a alguien le falta uno de los dos datos en su ficha, se comprueba solo el otro. Va en el mismo SQL que la v68.",

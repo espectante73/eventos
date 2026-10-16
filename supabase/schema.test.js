@@ -184,6 +184,14 @@ describe("las fotos de la fiesta", () => {
     expect(sql).toContain("alter table public.fotos_fiesta_intentos enable row level security;");
   });
 
+  it("para elegir sin teclado, el tablón recibe el rango de años de la lista y las mesas, nunca la ficha", () => {
+    const f = cuerpoDe("tablon_fotos");
+    expect(f).toContain("'anios', (");
+    expect(f).toContain("min(trim(i.\"anioNacimiento\")::int)");
+    expect(f).toContain("'mesas', coalesce((select jsonb_agg(m.\"numero\" order by m.\"numero\") from mesas m)");
+    expect(f).not.toContain('v_yo."mesa"');
+  });
+
   it("la ficha entera del invitado no sale nunca por fuera", () => {
     expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.tablon_invitado(uuid, text) FROM PUBLIC, anon, authenticated;");
   });

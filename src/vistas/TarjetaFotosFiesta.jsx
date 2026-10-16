@@ -7,8 +7,9 @@
 // móvil que la subió (`mia`): un impostor con su nombre no le borra nada.
 // A quien tiene 16 o 17 años, su frase del permiso de los padres; a un
 // menor de 16, solo que las suben los mayores. Antes de la primera foto en
-// un móvil, su año de nacimiento y su número de mesa (v68.1): el servidor
-// los coteja con su ficha y ese móvil queda recordado.
+// un móvil, su año de nacimiento y su número de mesa (v68.1), elegidos en
+// desplegables (v68.2): el servidor los coteja con su ficha y ese móvil
+// queda recordado.
 //
 // «Elegir foto» busca en la galería (él): el campo va sin `capture`, así el
 // móvil no salta a la cámara. El menú propio del iPhone (Fototeca, Hacer
@@ -25,8 +26,16 @@ import { horaCorta } from "../lib/formato";
 import { miniaturaFotoFiesta, textoCompleta, FRASE_HORIZONTAL, FRASE_PERMISO_PADRES, SOLO_MAYORES_16 } from "../lib/fotosFiesta";
 
 // Año y mesa en una sola línea, con el botón del lado del pulgar (norma 6).
-// Los rótulos van dentro del campo: fuera no caben junto al botón.
-function ConfirmarMovil({ onVerificar }) {
+// Con desplegables, sin teclado (él, v68.2): en el móvil abren su rueda.
+// Los años, del más reciente al más antiguo de la lista de invitados; las
+// mesas, las que hay. Lo que se coteja con su ficha lo decide el servidor.
+export function opcionesAnios(anios, hoy = new Date().getFullYear()) {
+  const hasta = anios?.hasta || hoy;
+  const desde = anios?.desde || hoy - 100;
+  return Array.from({ length: hasta - desde + 1 }, (_, i) => hasta - i);
+}
+
+function ConfirmarMovil({ anios, mesas = [], onVerificar }) {
   const [anio, setAnio] = useState("");
   const [mesa, setMesa] = useState("");
   const [comprobando, setComprobando] = useState(false);
@@ -42,30 +51,38 @@ function ConfirmarMovil({ onVerificar }) {
   const campo = { ...inputStyle, height: DEDO };
   return (
     <form onSubmit={confirmar} className="mt-2">
-      <p className="text-sm mb-2">Para subir fotos desde este móvil, escribe tu año de nacimiento y tu número de mesa.</p>
+      <p className="text-sm mb-2">Para subir fotos desde este móvil, elige tu año de nacimiento y tu número de mesa.</p>
       <div className="flex items-center gap-2">
-        <input
+        <select
           value={anio}
           onChange={(e) => setAnio(e.target.value)}
-          inputMode="numeric"
-          maxLength={4}
-          placeholder="Año"
           aria-label="Tu año de nacimiento"
           className="flex-1 min-w-0"
           style={campo}
           required
-        />
-        <input
+        >
+          <option value="">Año</option>
+          {opcionesAnios(anios).map((a) => (
+            <option key={a} value={a}>
+              {a}
+            </option>
+          ))}
+        </select>
+        <select
           value={mesa}
           onChange={(e) => setMesa(e.target.value)}
-          inputMode="numeric"
-          maxLength={3}
-          placeholder="Mesa"
           aria-label="Tu número de mesa"
-          className="w-20"
+          className="flex-1 min-w-0"
           style={campo}
           required
-        />
+        >
+          <option value="">Mesa</option>
+          {mesas.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
         <Boton type="submit" variante="principal" disabled={comprobando} className="zurdo:order-first">
           {comprobando ? "Comprobando…" : "Confirmar"}
         </Boton>
@@ -84,7 +101,7 @@ const PREGUNTA_ELIMINAR = {
 const estiloAyuda = { color: C.charcoal, opacity: OP.secundario };
 
 // estado: lo que da tablon_fotos ({ maximo, menor, conPermiso, verificado,
-// fotos: [{ id, creadaEn, mia }] }). onSubir(archivo), onEliminar(id) y
+// anios: { desde, hasta }, mesas, fotos: [{ id, creadaEn, mia }] }). onSubir(archivo), onEliminar(id) y
 // onVerificar(anio, mesa) devuelven { aviso }: vacío si salió bien.
 export function TarjetaFotosFiesta({ estado, onSubir, onEliminar, onVerificar }) {
   const [subiendo, setSubiendo] = useState(false);
@@ -144,7 +161,7 @@ export function TarjetaFotosFiesta({ estado, onSubir, onEliminar, onVerificar })
             {completa ? (
               <p className="text-sm mt-2">{textoCompleta(maximo)}</p>
             ) : estado.verificado === false ? (
-              <ConfirmarMovil onVerificar={onVerificar} />
+              <ConfirmarMovil anios={estado.anios} mesas={estado.mesas} onVerificar={onVerificar} />
             ) : (
               <>
                 <div className="flex justify-end zurdo:justify-start mt-3">
