@@ -54,8 +54,32 @@ const MOTIVOS = {
   nombre: "No te hemos reconocido: vuelve a entrar con tu nombre.",
   cerrada: "Ya no se pueden subir fotos.",
   menor: SOLO_MAYORES_16,
+  verificar: "Antes de subir fotos, escribe tu año de nacimiento y tu número de mesa.",
   completa: textoCompleta(2),
 };
+
+// Confirmar que es quien dice, una vez por móvil (él, v68.1): su año de
+// nacimiento y su número de mesa, que el servidor coteja con su ficha de la
+// lista (tablon_verificar_foto). Los datos de la ficha no viajan al móvil.
+const RESPUESTAS_VERIFICAR = {
+  ok: "",
+  no: "Revisa tu año de nacimiento (con sus 4 cifras) y tu número de mesa; la mesa la tienes en tu invitación.",
+  bloqueado: "Demasiados intentos con este nombre. Espera 15 minutos y vuelve a probar.",
+  nombre: MOTIVOS.nombre,
+  movil: "Este navegador no deja recordar tu móvil: ábrelo fuera del modo privado y vuelve a probar.",
+};
+
+export async function verificarFotoFiesta(supabase, { token, respuesta, dispositivo, anio, mesa }) {
+  const { data, error } = await supabase.rpc("tablon_verificar_foto", {
+    p_token: token,
+    p_respuesta: respuesta,
+    p_dispositivo: dispositivo,
+    p_anio: String(anio || "").trim(),
+    p_mesa: Number.parseInt(mesa, 10) || null,
+  });
+  if (error || !Object.hasOwn(RESPUESTAS_VERIFICAR, data || "")) return { aviso: "No se pudo comprobar. Prueba otra vez.", detalle: error?.message };
+  return { aviso: RESPUESTAS_VERIFICAR[data] };
+}
 
 // La miniatura de las que sube cada uno, guardada en SU móvil (él, v67.5):
 // sin verla no sabría cuál eliminar, y el cajón sigue cerrado para todos.

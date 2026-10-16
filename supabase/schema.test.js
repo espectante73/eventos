@@ -173,6 +173,17 @@ describe("las fotos de la fiesta", () => {
     expect(sql).toMatch(/fotos_fiesta_ver[\s\S]{0,160}public\.es_anfitrion\(\)/);
   });
 
+  it("subir pide antes confirmar el móvil: año y mesa contra su ficha, con tope de 5 fallos", () => {
+    expect(cuerpoDe("tablon_reservar_foto")).toContain("if not foto_fiesta_movil_verificado(v_yo.id, p_dispositivo) then");
+    const v = cuerpoDe("tablon_verificar_foto");
+    expect(v).toContain("from tablon_invitado(p_token, p_respuesta)");
+    expect(v).toContain('trim(v_yo."anioNacimiento") = trim(coalesce(p_anio, \'\'))');
+    expect(v).toContain('v_yo."mesa" = p_mesa');
+    expect(v).toMatch(/not i\."acierto"[\s\S]{0,90}interval '15 minutes'\) >= 5 then/);
+    expect(v).toContain("insert into fotos_fiesta_intentos");
+    expect(sql).toContain("alter table public.fotos_fiesta_intentos enable row level security;");
+  });
+
   it("la ficha entera del invitado no sale nunca por fuera", () => {
     expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.tablon_invitado(uuid, text) FROM PUBLIC, anon, authenticated;");
   });
@@ -210,7 +221,7 @@ describe("la foto del Deshacer deja fuera lo que no se repone", () => {
   it("foto_de_datos no incluye ninguna", () => {
     const i = sql.indexOf("FUNCTION public.foto_de_datos");
     const cuerpo = sql.slice(i, sql.indexOf("$$;", sql.indexOf("AS $$", i)));
-    const dentro = ["historial_texto", "tablon_accesos", "fotos_fiesta", "anfitriones", "anfitrion_secreto", "config_secretos", "tablon_secreto"]
+    const dentro = ["historial_texto", "tablon_accesos", "fotos_fiesta", "fotos_fiesta_intentos", "anfitriones", "anfitrion_secreto", "config_secretos", "tablon_secreto"]
       .filter((t) => cuerpo.includes(t));
     expect(dentro).toEqual([]);
   });

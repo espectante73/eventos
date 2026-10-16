@@ -2,6 +2,7 @@
 // 2 por persona, la papelera solo en el móvil que la subió, y lo que ven
 // los menores.
 import { it, expect } from "vitest";
+import { act } from "react";
 import { montar } from "../pruebas/dibujar";
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 import { FRASE_HORIZONTAL, FRASE_PERMISO_PADRES } from "../lib/fotosFiesta";
@@ -87,4 +88,32 @@ it("su miniatura, guardada en su móvil; sin ella, el marco vacío", () => {
   expect(imagenes[0].closest("button")).toBeNull();
   vista.desmontar();
   window.localStorage.removeItem("fotos-fiesta-miniatura-1");
+});
+
+it("sin confirmar el móvil: año y mesa en una línea, y «Confirmar» los manda", async () => {
+  const enviados = [];
+  const vista = montar(
+    tarjeta(
+      { fotos: [], verificado: false },
+      {
+        onVerificar: async (anio, mesa) => {
+          enviados.push([anio, mesa]);
+          return { aviso: "" };
+        },
+      }
+    )
+  );
+  expect(document.body.textContent).toContain("escribe tu año de nacimiento y tu número de mesa");
+  expect(campoFoto()).toBeNull();
+  const [anio, mesa] = document.body.querySelectorAll("input");
+  const escribir = (campo, valor) =>
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(campo, valor);
+      campo.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  escribir(anio, "1975");
+  escribir(mesa, "7");
+  await act(async () => document.body.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
+  expect(enviados).toEqual([["1975", "7"]]);
+  vista.desmontar();
 });

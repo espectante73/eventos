@@ -329,6 +329,20 @@ CREATE TABLE public.fotos_fiesta (
     "dispositivoId" text
 );
 
+-- Confirmar que es quien dice para subir fotos (él, v68.1: «está claro
+-- que una no es quien dice ser»): una vez por móvil, su año de nacimiento
+-- y su número de mesa, cotejados con su ficha (tablon_verificar_foto).
+-- Con un `acierto`, ese móvil queda recordado para ese invitado; 5 fallos
+-- en 15 minutos con el mismo nombre bloquean un rato. Historia real:
+-- fuera del Deshacer.
+CREATE TABLE public.fotos_fiesta_intentos (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    "invitadoId" uuid NOT NULL,
+    "dispositivoId" text NOT NULL,
+    "acierto" boolean NOT NULL,
+    "creadoEn" timestamp with time zone DEFAULT now() NOT NULL
+);
+
 -- Foto de los datos antes de la última acción destructiva (reinicio o
 -- borrado), para el botón "Deshacer". Una sola fila: se guarda la última.
 -- Separada de modo_pruebas_snapshot a propósito, para que salir del modo
@@ -436,6 +450,9 @@ ALTER TABLE ONLY public.tablon_accesos
 
 ALTER TABLE ONLY public.fotos_fiesta
     ADD CONSTRAINT fotos_fiesta_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.fotos_fiesta_intentos
+    ADD CONSTRAINT fotos_fiesta_intentos_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.tablon_secreto
     ADD CONSTRAINT tablon_secreto_pkey PRIMARY KEY (id);
@@ -2383,10 +2400,56 @@ CREATE FUNCTION public.edad_en_evento(p_anio text) RETURNS integer
   end;
 $$;
 
+-- ¿Este móvil ya confirmó que es este invitado? (v68.1)
+CREATE FUNCTION public.foto_fiesta_movil_verificado(p_invitado uuid, p_dispositivo text) RETURNS boolean
+    LANGUAGE sql STABLE
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select exists (
+    select 1 from fotos_fiesta_intentos i
+    where i."invitadoId" = p_invitado and i."dispositivoId" = p_dispositivo and i."acierto"
+  );
+$$;
+
+-- Confirmar en este móvil que es quien dice (v68.1): su año de nacimiento
+-- y su número de mesa contra su ficha de la lista; los datos de la ficha no
+-- salen de aquí. Lo que falte en su ficha no se comprueba: no se le deja sin
+-- fotos en plena fiesta. Responde 'ok', 'no', 'bloqueado' (5 fallos en 15
+-- minutos con ese nombre), 'nombre' o 'movil' (el navegador no le da id).
+CREATE FUNCTION public.tablon_verificar_foto(p_token uuid, p_respuesta text, p_dispositivo text, p_anio text, p_mesa integer) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+declare
+  v_yo invitados;
+  v_acierto boolean;
+begin
+  select * into v_yo from tablon_invitado(p_token, p_respuesta);
+  if v_yo.id is null then
+    return 'nombre';
+  end if;
+  if coalesce(p_dispositivo, '') = '' then
+    return 'movil';
+  end if;
+  perform pg_advisory_xact_lock(hashtext('fotos_fiesta_intentos:' || v_yo.id));
+  if (select count(*) from fotos_fiesta_intentos i
+      where i."invitadoId" = v_yo.id and not i."acierto"
+        and i."creadoEn" > now() - interval '15 minutes') >= 5 then
+    return 'bloqueado';
+  end if;
+  v_acierto := (trim(v_yo."anioNacimiento") = '' or trim(v_yo."anioNacimiento") = trim(coalesce(p_anio, '')))
+    and (v_yo."mesa" is null or v_yo."mesa" = p_mesa);
+  insert into fotos_fiesta_intentos ("invitadoId", "dispositivoId", "acierto")
+  values (v_yo.id, p_dispositivo, v_acierto);
+  return case when v_acierto then 'ok' else 'no' end;
+end;
+$$;
+
 -- Las fotos de la fiesta de quien entra, para el tablón (v68): si la
 -- recogida está abierta, el máximo (2), si es menor de 16 (no sube) o de
--- 16-17 (con permiso de sus padres) y cada foto suya subida; `mia`, que la
--- subió ESTE móvil (solo ahí se puede quitar). Sin la foto: no se ven.
+-- 16-17 (con permiso de sus padres), si este móvil ya confirmó que es él
+-- (`verificado`, v68.1) y cada foto suya subida; `mia`, que la subió ESTE
+-- móvil (solo ahí se puede quitar). Sin la foto: no se ven.
 CREATE FUNCTION public.tablon_fotos(p_token uuid, p_respuesta text, p_dispositivo text DEFAULT NULL) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
@@ -2405,6 +2468,7 @@ begin
     'maximo', 2,
     'menor', coalesce(v_edad < 16, false),
     'conPermiso', coalesce(v_edad between 16 and 17, false),
+    'verificado', foto_fiesta_movil_verificado(v_yo.id, p_dispositivo),
     'fotos', coalesce((
       select jsonb_agg(jsonb_build_object('id', f.id, 'quien', f."quien", 'creadaEn', f."creadaEn",
         'mia', f."dispositivoId" is null or f."dispositivoId" = p_dispositivo) order by f."creadaEn")
@@ -2416,8 +2480,9 @@ end;
 $$;
 
 -- Reserva el sitio de una foto antes de subirla (v68): recogida abierta,
--- invitado reconocido, de 16 años o más y con menos de 2 (contando las
--- reservas de los últimos 15 minutos). Apunta el móvil que la sube.
+-- invitado reconocido, de 16 años o más, con el móvil confirmado (v68.1) y
+-- con menos de 2 (contando las reservas de los últimos 15 minutos). Apunta
+-- el móvil que la sube.
 -- Devuelve la ruta donde subirla, o el motivo.
 CREATE FUNCTION public.tablon_reservar_foto(p_token uuid, p_respuesta text, p_dispositivo text DEFAULT NULL) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
@@ -2438,6 +2503,9 @@ begin
   end if;
   if coalesce(edad_en_evento(v_yo."anioNacimiento") < 16, false) then
     return jsonb_build_object('error', 'menor');
+  end if;
+  if not foto_fiesta_movil_verificado(v_yo.id, p_dispositivo) then
+    return jsonb_build_object('error', 'verificar');
   end if;
   v_familia := clave_familia(v_yo."grupoFamiliar", v_yo."apellido");
   -- Dos móviles con el mismo nombre a la vez no pueden pasar de 2.
@@ -2814,6 +2882,7 @@ alter table public.config_secretos enable row level security;
 alter table public.tablon_secreto enable row level security;
 alter table public.tablon_accesos enable row level security;
 alter table public.fotos_fiesta enable row level security;
+alter table public.fotos_fiesta_intentos enable row level security;
 alter table public.deshacer_snapshot enable row level security;
 alter table public.modo_pruebas_snapshot enable row level security;
 alter table public.migraciones_aplicadas enable row level security;

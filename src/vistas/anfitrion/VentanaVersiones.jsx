@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "68.1",
+    cambios: [
+      "Fotos de la fiesta: para que nadie suba ni borre fotos haciéndose pasar por otro, la primera vez que alguien va a subir una foto desde un móvil escribe su año de nacimiento y su número de mesa. El servidor los coteja con su ficha de la lista de invitados y, si coinciden, ese móvil queda recordado. Tras 5 fallos con el mismo nombre se bloquea 15 minutos. Si a alguien le falta uno de los dos datos en su ficha, se comprueba solo el otro. Va en el mismo SQL que la v68.",
+    ],
+  },
+  {
     version: "68",
     cambios: [
       "Fotos de la fiesta, más justas: 2 fotos por invitado de 16 años o más, en vez de 3 por familia (una familia de 4 tenía las mismas que una persona sola). En el tablón la tarjeta es personal: «Tus fotos · 1 de 2», cada una con su miniatura. Solo se puede eliminar una foto desde el móvil que la subió: quien entre con el nombre de otro no le borra nada. A quien tiene 16 o 17 años le sale además «Puedes subir la foto con el permiso de tus padres, si eres menor de edad»; a un menor de 16, «Las fotos las suben los mayores de 16 años». Cada foto pesa como mucho 1,5 MB, para caber en el almacén gratuito. Las tarjetas QR dicen «Puedes subir hasta 2 fotos del evento (mayores de 16 años)» y llevan abajo la frase del permiso. Necesita el SQL «v68-fotos-por-persona».",

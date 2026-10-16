@@ -20,7 +20,7 @@ import { NotaPrivacidad } from "../components/NotaPrivacidad";
 import { TITULO_NOTA_PRIVACIDAD } from "../constants";
 import { uid } from "../lib/id";
 import { leerEvento } from "../lib/leerEvento";
-import { subirFotoFiesta, eliminarFotoFiesta } from "../lib/fotosFiesta";
+import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta } from "../lib/fotosFiesta";
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 
 const BUCKET_MUSICA = "musica-ambiental";
@@ -307,6 +307,7 @@ export function VistaTablon({ token }) {
   };
   const subirFoto = (archivo) => conFotosAlDia((quien) => subirFotoFiesta(supabase, { ...quien, archivo }));
   const eliminarFoto = (id) => conFotosAlDia((quien) => eliminarFotoFiesta(supabase, { ...quien, id }));
+  const verificarFoto = (anio, mesa) => conFotosAlDia((quien) => verificarFotoFiesta(supabase, { ...quien, anio, mesa }));
 
   if (estado === "cargando") {
     return (
@@ -520,7 +521,7 @@ export function VistaTablon({ token }) {
           </div>
         )}
 
-        {fotosFiesta?.abierta && <TarjetaFotosFiesta estado={fotosFiesta} onSubir={subirFoto} onEliminar={eliminarFoto} />}
+        {fotosFiesta?.abierta && <TarjetaFotosFiesta estado={fotosFiesta} onSubir={subirFoto} onEliminar={eliminarFoto} onVerificar={verificarFoto} />}
 
         <h2
           className="text-sm uppercase mb-1"

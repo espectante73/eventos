@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, miniaturaFotoFiesta, nombresDescargaFotosFiesta, bajarFotosFiesta, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
+import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, miniaturaFotoFiesta, nombresDescargaFotosFiesta, bajarFotosFiesta, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
 
 // Una reducción de mentira: el tamaño que «pesaría» cada intento.
 const reducirQuePesa = (pesos) => {
@@ -183,5 +183,29 @@ describe("el ZIP de las fotos (v67.6)", () => {
     expect(archivos.map((a) => a.nombre)).toEqual(["Abreu01/Abreu, Gustavo · 22.47.jpg", "Medina/Medina, Ana · 23.05.jpg"]);
     expect(fallidas).toBe(1);
     expect(bajadas.every(([cubo]) => cubo === "fotos-fiesta")).toBe(true);
+  });
+});
+
+describe("confirmar el móvil: año y mesa (v68.1)", () => {
+  it("manda lo escrito, limpio, y con «ok» no hay aviso", async () => {
+    const s = falso({ rpc: { tablon_verificar_foto: { data: "ok" } } });
+    expect(await verificarFotoFiesta(s, { ...QUIEN, anio: " 1975 ", mesa: "7" })).toEqual({ aviso: "" });
+    expect(s.llamadas[0]).toEqual([
+      "tablon_verificar_foto",
+      { p_token: "t", p_respuesta: "Medina Ana", p_dispositivo: "d1", p_anio: "1975", p_mesa: 7 },
+    ]);
+  });
+
+  it("si no coincide, dice qué revisar y dónde está la mesa", async () => {
+    const s = falso({ rpc: { tablon_verificar_foto: { data: "no" } } });
+    expect((await verificarFotoFiesta(s, { ...QUIEN, anio: "1975", mesa: "x" })).aviso).toContain("la mesa la tienes en tu invitación");
+    expect(s.llamadas[0][1].p_mesa).toBeNull();
+  });
+
+  it("bloqueado tras muchos fallos; y una respuesta rara no se da por buena", async () => {
+    const bloqueado = falso({ rpc: { tablon_verificar_foto: { data: "bloqueado" } } });
+    expect((await verificarFotoFiesta(bloqueado, { ...QUIEN, anio: "1975", mesa: "7" })).aviso).toContain("Espera 15 minutos");
+    const raro = falso({ rpc: { tablon_verificar_foto: { data: null } } });
+    expect((await verificarFotoFiesta(raro, { ...QUIEN, anio: "1975", mesa: "7" })).aviso).toBe("No se pudo comprobar. Prueba otra vez.");
   });
 });
