@@ -24,6 +24,14 @@
 // un await, etc.) -- si no, algunos navegadores (Safari sobre todo) no
 // lo consideran una acción directa del usuario y bloquean la ventana
 // emergente en silencio, sin ningún error que avisar.
+//
+// ⚠️ Una ventana que sobrevive a su pestaña está MUERTA (él, v68.7: «no
+// filtra nada» en el Mac). Cuando sale una versión nueva, la pestaña se
+// recarga sola, pero la ventana sigue abierta con la lista de antes, ya
+// sin la app que la movía: se ve igual y no responde. Y `window.open` con
+// el mismo nombre la devolvía tal cual, con la lista muerta encima de la
+// nueva. Por eso: al irse la pestaña, se cierran sus ventanas; y al
+// abrir, una ventana con ese nombre que ya existía se vacía antes.
 import { useState, useRef, useCallback, useEffect, createElement, Fragment } from "react";
 import { createRoot } from "react-dom/client";
 import { AvisosGlobales } from "../components/AvisosGlobales.jsx";
@@ -64,6 +72,10 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
     }
     const ventana = window.open("", nombreVentana, `width=${ancho},height=${alto}`);
     if (!ventana) return false; // bloqueada por el navegador
+    // Si ya existía de una carga anterior, trae dentro lo de entonces, sin
+    // vida (ver arriba): se vacía. Una recién creada ya está vacía.
+    ventana.document.head.innerHTML = "";
+    ventana.document.body.innerHTML = "";
 
     // ⚠️ La etiqueta "viewport" hay que ponerla A MANO aquí: esta
     // ventana arranca con un <head> completamente vacío y NO hereda la
@@ -141,6 +153,15 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
   // Si el componente que usa esto se desmonta del todo (p.ej. cierre de
   // sesión), la ventana emergente no debe quedar huérfana por su cuenta.
   useEffect(() => cerrar, [cerrar]);
+  // Ni al recargarse la pestaña (una versión nueva): ahí no hay desmontaje
+  // que valga, y la ventana se quedaría muerta (ver arriba).
+  useEffect(() => {
+    const alIrse = () => {
+      if (ventanaRef.current && !ventanaRef.current.closed) ventanaRef.current.close();
+    };
+    window.addEventListener("pagehide", alIrse);
+    return () => window.removeEventListener("pagehide", alIrse);
+  }, []);
 
   return { abrir, cerrar, actualizar, abierta, ventana };
 }

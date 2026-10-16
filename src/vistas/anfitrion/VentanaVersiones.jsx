@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "68.7",
+    cambios: [
+      "Arreglado en el Mac: la Lista de invitados en su propia ventana dejaba de filtrar (ni el buscador ni ningún filtro). Cuando sale una versión nueva la pestaña se recarga sola, pero la ventana de la lista seguía abierta con la versión de antes, desconectada: se veía igual y no respondía, y al volver a abrirla salía esa misma lista muerta encima. Ahora, al recargarse la pestaña, sus ventanas se cierran, y al abrir una se vacía antes lo que hubiera de antes.",
+    ],
+  },
+  {
     version: "68.6",
     cambios: [
       "Lista de invitados en el móvil, en horizontal: la X de cerrar quedaba fuera de la ventana, empujada por los recuadros de cifras. Ahora la X está siempre a la vista (en todas las ventanas), y si las cifras no caben, se desplazan de lado con el dedo.",
