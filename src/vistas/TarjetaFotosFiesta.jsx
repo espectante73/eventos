@@ -1,9 +1,12 @@
 // Las fotos de la fiesta en el tablón (él, v67.4): solo con la recogida
-// abierta, y SIN ver las fotos. La cuenta de su familia, una línea por foto
-// («Medina, Ana · 22:47») y, en las suyas, la papelera para cambiarla por
-// otra: «tendrán muchas fotos y tendrán que elegir». Para saber cuál, las
-// suyas llevan su miniatura, guardada en su propio móvil (él, v67.5); las
-// de los demás, el marco vacío, para que todas las filas midan lo mismo.
+// abierta, y SIN ver las de los demás. Desde la v68, personal (él: «3 por
+// familia» era injusto con las grandes): 2 por persona de 16 años o más,
+// «Tus fotos · 1 de 2», una línea por foto suya con su miniatura (guardada
+// en su propio móvil, v67.5) y la papelera para cambiarla por otra:
+// «tendrán muchas fotos y tendrán que elegir». La papelera, solo en el
+// móvil que la subió (`mia`): un impostor con su nombre no le borra nada.
+// A quien tiene 16 o 17 años, su frase del permiso de los padres; a un
+// menor de 16, solo que las suben los mayores.
 //
 // «Elegir foto» busca en la galería (él): el campo va sin `capture`, así el
 // móvil no salta a la cámara. El menú propio del iPhone (Fototeca, Hacer
@@ -17,7 +20,7 @@ import { BotonQuitar } from "../components/PreguntaSeguridad";
 import { LineaAviso } from "../components/LineaAviso";
 import { HuecoFoto } from "../components/HuecoFoto";
 import { horaCorta } from "../lib/formato";
-import { miniaturaFotoFiesta, FRASE_HORIZONTAL } from "../lib/fotosFiesta";
+import { miniaturaFotoFiesta, textoCompleta, FRASE_HORIZONTAL, FRASE_PERMISO_PADRES, SOLO_MAYORES_16 } from "../lib/fotosFiesta";
 
 const PREGUNTA_ELIMINAR = {
   titulo: "¿Eliminar esta foto?",
@@ -25,12 +28,15 @@ const PREGUNTA_ELIMINAR = {
   rotulo: "Sí, eliminar",
 };
 
-// estado: lo que da tablon_fotos ({ maximo, fotos: [{ id, quien, creadaEn, mia }] }).
-// onSubir(archivo) y onEliminar(id) devuelven { aviso }: vacío si salió bien.
+const estiloAyuda = { color: C.charcoal, opacity: OP.secundario };
+
+// estado: lo que da tablon_fotos ({ maximo, menor, conPermiso, fotos: [{ id,
+// creadaEn, mia }] }). onSubir(archivo) y onEliminar(id) devuelven { aviso }:
+// vacío si salió bien.
 export function TarjetaFotosFiesta({ estado, onSubir, onEliminar }) {
   const [subiendo, setSubiendo] = useState(false);
   const [aviso, setAviso] = useState("");
-  const { fotos, maximo } = estado;
+  const { fotos, maximo, menor, conPermiso } = estado;
   const completa = fotos.length >= maximo;
 
   const alElegir = async (e) => {
@@ -59,45 +65,54 @@ export function TarjetaFotosFiesta({ estado, onSubir, onEliminar }) {
         <div className="text-xs uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 1 }}>
           Fotos de la fiesta
         </div>
-        <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado }}>
-          Tu familia · {fotos.length} de {maximo}
-        </div>
 
-        {fotos.length > 0 && (
-          <ul className="mt-1">
-            {fotos.map((f) => (
-              <li key={f.id} className="flex items-center gap-2 py-1 text-sm">
-                <HuecoFoto titulo={`Foto de ${f.quien}`} enlace={f.mia ? miniaturaFotoFiesta(f.id) : ""} soloLectura ajustada />
-                <span className="truncate flex-1 min-w-0">
-                  {f.quien} · {horaCorta(f.creadaEn)}
-                </span>
-                {f.mia && (
-                  <BotonQuitar borrar titulo="Eliminar esta foto" pregunta={PREGUNTA_ELIMINAR} onClick={() => eliminar(f.id)} />
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {completa ? (
-          <p className="text-sm mt-2">
-            Ya tienen sus {maximo} fotos. Si quieren cambiar una, eliminen antes otra.
-          </p>
+        {menor ? (
+          <p className="text-sm mt-1">{SOLO_MAYORES_16}</p>
         ) : (
           <>
-            <div className="flex justify-end zurdo:justify-start mt-3">
-              <label
-                className="boton-3d inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-medium cursor-pointer"
-                style={{ ...estilosBoton("principal", "normal"), opacity: subiendo ? OP.tenue : 1 }}
-              >
-                <ImagePlus size={15} aria-hidden />
-                {subiendo ? "Subiendo…" : "Elegir foto"}
-                <input type="file" accept="image/*" className="sr-only" disabled={subiendo} onChange={alElegir} />
-              </label>
+            <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado }}>
+              Tus fotos · {fotos.length} de {maximo}
             </div>
-            <p className="text-xs mt-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
-              {FRASE_HORIZONTAL}
-            </p>
+
+            {fotos.length > 0 && (
+              <ul className="mt-1">
+                {fotos.map((f) => (
+                  <li key={f.id} className="flex items-center gap-2 py-1 text-sm">
+                    <HuecoFoto titulo="Tu foto" enlace={miniaturaFotoFiesta(f.id)} soloLectura ajustada />
+                    <span className="truncate flex-1 min-w-0">Subida a las {horaCorta(f.creadaEn)}</span>
+                    {f.mia && (
+                      <BotonQuitar borrar titulo="Eliminar esta foto" pregunta={PREGUNTA_ELIMINAR} onClick={() => eliminar(f.id)} />
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {completa ? (
+              <p className="text-sm mt-2">{textoCompleta(maximo)}</p>
+            ) : (
+              <>
+                <div className="flex justify-end zurdo:justify-start mt-3">
+                  <label
+                    className="boton-3d inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-medium cursor-pointer"
+                    style={{ ...estilosBoton("principal", "normal"), opacity: subiendo ? OP.tenue : 1 }}
+                  >
+                    <ImagePlus size={15} aria-hidden />
+                    {subiendo ? "Subiendo…" : "Elegir foto"}
+                    <input type="file" accept="image/*" className="sr-only" disabled={subiendo} onChange={alElegir} />
+                  </label>
+                </div>
+                <p className="text-xs mt-2" style={estiloAyuda}>
+                  {FRASE_HORIZONTAL}
+                </p>
+              </>
+            )}
+
+            {conPermiso && (
+              <p className="text-xs mt-2" style={estiloAyuda}>
+                {FRASE_PERMISO_PADRES}
+              </p>
+            )}
           </>
         )}
 

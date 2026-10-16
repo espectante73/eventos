@@ -59,7 +59,7 @@ export function VistaTablon({ token }) {
   // colaboradorEsYo, esColaborador }, o null.
   const [yo, setYo] = useState(null);
   const [novedades, setNovedades] = useState([]);
-  // Las fotos de la fiesta de su familia (tablon_fotos, v67.4): null si no
+  // Sus fotos de la fiesta (tablon_fotos, v67.4-68): null si no
   // se le reconoce; con `abierta` falso, la tarjeta no sale.
   const [fotosFiesta, setFotosFiesta] = useState(null);
   // Solo una novedad abierta a la vez -- a petición del usuario: con 5+
@@ -148,7 +148,11 @@ export function VistaTablon({ token }) {
           p_dispositivo_id: dispositivoIdRef.current,
         }),
         supabase.rpc("tablon_quien_soy", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
-        supabase.rpc("tablon_fotos", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
+        supabase.rpc("tablon_fotos", {
+          p_token: token,
+          p_respuesta: respuestaVerificadaRef.current,
+          p_dispositivo: dispositivoIdRef.current,
+        }),
       ]);
       setEvento(eventoLeido);
       setYo({ ...(quien || {}), nombre: quien?.nombre || respuestaVerificadaRef.current });
@@ -293,11 +297,11 @@ export function VistaTablon({ token }) {
   };
 
   // Subir o eliminar una foto de la fiesta (lib/fotosFiesta.js) y volver a
-  // leer la cuenta de su familia, que puede haber cambiado también desde
-  // otro móvil.
+  // leer las suyas, que pueden haber cambiado también desde otro móvil.
   const conFotosAlDia = async (accion) => {
-    const resultado = await accion({ token, respuesta: respuestaVerificadaRef.current });
-    const { data } = await supabase.rpc("tablon_fotos", { p_token: token, p_respuesta: respuestaVerificadaRef.current });
+    const quien = { token, respuesta: respuestaVerificadaRef.current, dispositivo: dispositivoIdRef.current };
+    const resultado = await accion(quien);
+    const { data } = await supabase.rpc("tablon_fotos", { p_token: token, p_respuesta: quien.respuesta, p_dispositivo: quien.dispositivo });
     setFotosFiesta(data || null);
     return resultado;
   };

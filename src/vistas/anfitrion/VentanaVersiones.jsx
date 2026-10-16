@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "68",
+    cambios: [
+      "Fotos de la fiesta, más justas: 2 fotos por invitado de 16 años o más, en vez de 3 por familia (una familia de 4 tenía las mismas que una persona sola). En el tablón la tarjeta es personal: «Tus fotos · 1 de 2», cada una con su miniatura. Solo se puede eliminar una foto desde el móvil que la subió: quien entre con el nombre de otro no le borra nada. A quien tiene 16 o 17 años le sale además «Puedes subir la foto con el permiso de tus padres, si eres menor de edad»; a un menor de 16, «Las fotos las suben los mayores de 16 años». Cada foto pesa como mucho 1,5 MB, para caber en el almacén gratuito. Las tarjetas QR dicen «Puedes subir hasta 2 fotos del evento (mayores de 16 años)» y llevan abajo la frase del permiso. Necesita el SQL «v68-fotos-por-persona».",
+    ],
+  },
+  {
     version: "67.9",
     cambios: [
       "Tarjetas QR: el título pasa a «Puedes subir hasta 3 fotos del evento por familia», en dos líneas y algo más pequeño para que quepa con aire hasta el marco.",

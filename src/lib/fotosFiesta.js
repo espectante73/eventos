@@ -1,11 +1,13 @@
-// Las fotos de la fiesta desde el tablón (v67.4): 3 por familia y 2 MB como
+// Las fotos de la fiesta desde el tablón (v67.4; v68, él: 2 por persona de
+// 16 años o más, «3 por familia» era injusto con las grandes) y 1,5 MB como
 // mucho, en el cajón CERRADO «fotos-fiesta». Quien cuenta y decide es el
 // servidor (tablon_reservar_foto): aquí solo se prepara la foto y se sube.
 //
 // Subir son tres pasos: reservar el sitio (el servidor dice la ruta, o por
 // qué no), subir el archivo a esa ruta y confirmar. Si la subida falla, la
-// reserva se suelta en el acto: si no, ocuparía uno de los 3 sitios hasta
-// que caduque, a los 15 minutos.
+// reserva se suelta en el acto: si no, ocuparía uno de sus sitios hasta
+// que caduque, a los 15 minutos. Cada paso lleva el móvil (`dispositivo`):
+// solo el que la subió puede quitarla.
 import { reducirImagen } from "./fotosAlmacen";
 import { claveFamilia } from "./invitados";
 import { horaCorta } from "./formato";
@@ -17,9 +19,16 @@ export const CUBO_FOTOS_FIESTA = "fotos-fiesta";
 // tarjetas QR: una sola copia.
 export const FRASE_HORIZONTAL =
   "Puedes hacerla en horizontal o en vertical; solo ten en cuenta que en horizontal se verá mejor en una pantalla.";
-export const LIMITE_FOTO_FIESTA = 2 * 1024 * 1024;
+// Su frase para quien tiene 16 o 17 años (él, v68), en el tablón y en las
+// tarjetas QR.
+export const FRASE_PERMISO_PADRES = "Puedes subir la foto con el permiso de tus padres, si eres menor de edad.";
+export const SOLO_MAYORES_16 = "Las fotos las suben los mayores de 16 años.";
 
-// De más a menos: lado largo y calidad. Vale la primera que quepa en 2 MB.
+// 1,5 MB (v68): 132 personas x 2 fotos caben en el almacén gratuito (él:
+// nada de pagar). El cajón tiene el mismo tope.
+export const LIMITE_FOTO_FIESTA = 1.5 * 1024 * 1024;
+
+// De más a menos: lado largo y calidad. Vale la primera que quepa en el tope.
 // La foto se guarda entera, sin recortar (se verá en una pantalla 16:9).
 const INTENTOS = [
   [2560, 0.85],
@@ -33,13 +42,19 @@ export async function prepararFotoFiesta(archivo, reducir = reducirImagen) {
     const blob = await reducir(archivo, lado, lado, calidad);
     if (blob.size <= LIMITE_FOTO_FIESTA) return blob;
   }
-  throw new Error("La foto pasa de 2 MB incluso reducida");
+  throw new Error("La foto pasa de 1,5 MB incluso reducida");
 }
+
+// Con las suyas ya subidas: también si las subió desde otro móvil, que es
+// el único que puede quitarlas.
+export const textoCompleta = (maximo) =>
+  `Ya tienes tus ${maximo} fotos. Para cambiar una, elimínala desde el móvil con el que la subiste.`;
 
 const MOTIVOS = {
   nombre: "No te hemos reconocido: vuelve a entrar con tu nombre.",
   cerrada: "Ya no se pueden subir fotos.",
-  completa: "Tu familia ya tiene sus 3 fotos. Para cambiar una, eliminen antes otra.",
+  menor: SOLO_MAYORES_16,
+  completa: textoCompleta(2),
 };
 
 // La miniatura de las que sube cada uno, guardada en SU móvil (él, v67.5):
@@ -81,7 +96,7 @@ async function guardarMiniatura(id, archivo, reducir) {
 const NO_SE_PUDO = "No se pudo subir la foto. Prueba otra vez; si sigue fallando, prueba con otra foto.";
 
 // Devuelve { aviso, detalle }: sin aviso, la foto está subida.
-export async function subirFotoFiesta(supabase, { token, respuesta, archivo }, reducir = reducirImagen) {
+export async function subirFotoFiesta(supabase, { token, respuesta, dispositivo, archivo }, reducir = reducirImagen) {
   let blob;
   try {
     blob = await prepararFotoFiesta(archivo, reducir);
@@ -89,11 +104,11 @@ export async function subirFotoFiesta(supabase, { token, respuesta, archivo }, r
     return { aviso: "No se pudo leer esa foto. Prueba con otra de tu galería.", detalle: e.message };
   }
   const quien = { p_token: token, p_respuesta: respuesta };
-  const { data: reserva, error } = await supabase.rpc("tablon_reservar_foto", quien);
+  const { data: reserva, error } = await supabase.rpc("tablon_reservar_foto", { ...quien, p_dispositivo: dispositivo });
   if (error || !reserva) return { aviso: NO_SE_PUDO, detalle: error?.message };
   if (reserva.error) return { aviso: MOTIVOS[reserva.error] || NO_SE_PUDO, detalle: reserva.error };
 
-  const soltar = () => supabase.rpc("tablon_quitar_foto", { ...quien, p_id: reserva.id });
+  const soltar = () => supabase.rpc("tablon_quitar_foto", { ...quien, p_id: reserva.id, p_dispositivo: dispositivo });
   const { error: errorSubida } = await supabase.storage
     .from(CUBO_FOTOS_FIESTA)
     .upload(reserva.ruta, blob, { contentType: "image/jpeg" });
@@ -111,12 +126,17 @@ export async function subirFotoFiesta(supabase, { token, respuesta, archivo }, r
   return { aviso: "" };
 }
 
-// Elimina una foto suya: el servidor la da por quitada y devuelve la ruta;
-// el archivo lo borra este mismo móvil (el cajón solo le deja borrar las
-// quitadas). Si eso falla, la foto ya no cuenta ni se ve: solo queda el
-// archivo en el cajón.
-export async function eliminarFotoFiesta(supabase, { token, respuesta, id }) {
-  const { data: ruta, error } = await supabase.rpc("tablon_quitar_foto", { p_token: token, p_respuesta: respuesta, p_id: id });
+// Elimina una foto suya, desde el móvil que la subió: el servidor la da por
+// quitada y devuelve la ruta; el archivo lo borra este mismo móvil (el
+// cajón solo le deja borrar las quitadas). Si eso falla, la foto ya no
+// cuenta ni se ve: solo queda el archivo en el cajón.
+export async function eliminarFotoFiesta(supabase, { token, respuesta, dispositivo, id }) {
+  const { data: ruta, error } = await supabase.rpc("tablon_quitar_foto", {
+    p_token: token,
+    p_respuesta: respuesta,
+    p_id: id,
+    p_dispositivo: dispositivo,
+  });
   if (error || !ruta) return { aviso: "No se pudo eliminar la foto. Prueba otra vez.", detalle: error?.message };
   await supabase.storage.from(CUBO_FOTOS_FIESTA).remove([ruta]);
   olvidarMiniatura(id);

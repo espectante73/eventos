@@ -135,26 +135,40 @@ describe("el tablón: quién ha entrado y su colaborador", () => {
   });
 });
 
-// v67: las fotos de la fiesta. Solo las sube quien entra al tablón con su
-// nombre, con la recogida abierta y 3 por familia; nadie las ve salvo el
-// anfitrión; el almacén rechaza lo que pase de 2 MB.
+// v67-68: las fotos de la fiesta. Solo las sube quien entra al tablón con
+// su nombre, con la recogida abierta, de 16 años o más y 2 por persona;
+// solo las quita el móvil que las subió; nadie las ve salvo el anfitrión;
+// el almacén rechaza lo que pase de 1,5 MB.
 describe("las fotos de la fiesta", () => {
-  it("reservar: invitado reconocido, recogida abierta y menos de 3 por familia, sin carreras", () => {
+  it("reservar: invitado reconocido, recogida abierta, 16 o más y menos de 2 por persona, sin carreras", () => {
     const f = cuerpoDe("tablon_reservar_foto");
     expect(f).toContain("from tablon_invitado(p_token, p_respuesta)");
     expect(f).toContain('"fotosFiestaAbierta"');
-    expect(f).toContain("pg_advisory_xact_lock");
-    expect(f).toMatch(/\) >= 3 then/);
+    expect(f).toContain("edad_en_evento(v_yo.\"anioNacimiento\") < 16");
+    expect(f).toContain("hashtext('fotos_fiesta:' || v_yo.id)");
+    expect(f).toMatch(/f\."invitadoId" = v_yo\.id and not f\."quitada"[\s\S]{0,120}\) >= 2 then/);
     expect(f).toContain("interval '15 minutes'");
+    expect(f).toContain("p_dispositivo);");
   });
 
-  it("confirmar y quitar, solo su autor", () => {
+  it("confirmar, solo su autor; quitar, además, solo desde el móvil que la subió", () => {
     expect(cuerpoDe("tablon_confirmar_foto")).toContain('f."invitadoId" = v_yo.id');
-    expect(cuerpoDe("tablon_quitar_foto")).toContain('f."invitadoId" = v_yo.id');
+    const quitar = cuerpoDe("tablon_quitar_foto");
+    expect(quitar).toContain('f."invitadoId" = v_yo.id');
+    expect(quitar).toContain('f."dispositivoId" = p_dispositivo');
   });
 
-  it("el cajón: cerrado, 2 MB, y solo sube quien reservó; ve y borra el anfitrión", () => {
-    expect(sql).toContain("values ('fotos-fiesta', 'fotos-fiesta', false, 2097152, array['image/jpeg'])");
+  it("los nuevos parámetros llevan DEFAULT: un tablón abierto con la app de antes no se cae", () => {
+    for (const firma of [
+      "tablon_fotos(p_token uuid, p_respuesta text, p_dispositivo text DEFAULT NULL)",
+      "tablon_reservar_foto(p_token uuid, p_respuesta text, p_dispositivo text DEFAULT NULL)",
+      "tablon_quitar_foto(p_token uuid, p_respuesta text, p_id uuid, p_dispositivo text DEFAULT NULL)",
+    ])
+      expect(sql).toContain(`CREATE FUNCTION public.${firma}`);
+  });
+
+  it("el cajón: cerrado, 1,5 MB, y solo sube quien reservó; ve y borra el anfitrión", () => {
+    expect(sql).toContain("values ('fotos-fiesta', 'fotos-fiesta', false, 1572864, array['image/jpeg'])");
     expect(sql).toMatch(/fotos_fiesta_sube[\s\S]{0,140}foto_fiesta_reservada\(name\)/);
     expect(sql).toMatch(/fotos_fiesta_ver[\s\S]{0,160}public\.es_anfitrion\(\)/);
   });

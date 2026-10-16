@@ -45,8 +45,8 @@ vi.mock("jspdf", () => ({
 }));
 vi.mock("./descargas", () => ({ descargarBlob: (nombre) => descargas.push(nombre) }));
 
-const { descargarTarjetasQr, crearQr, TITULO_TARJETA, ENTRAR_TARJETA, ARCHIVO_TARJETAS_QR } = await import("./pdfTarjetasQr");
-const { FRASE_HORIZONTAL } = await import("./fotosFiesta");
+const { descargarTarjetasQr, crearQr, partirEnDos, TITULO_TARJETA, MAYORES_TARJETA, ENTRAR_TARJETA, ARCHIVO_TARJETAS_QR } = await import("./pdfTarjetasQr");
+const { FRASE_HORIZONTAL, FRASE_PERMISO_PADRES } = await import("./fotosFiesta");
 const { default: qrcode } = await import("qrcode-generator");
 
 const ENLACE = "https://nexuspoint.rsvp?tablon=0f8fad5b-d9cb-469f-a165-70867728950e";
@@ -56,9 +56,12 @@ describe("las tarjetas QR (v67.7)", () => {
     await descargarTarjetasQr({ enlace: ENLACE, nombreEvento: "Las Bodas de todos." });
     const hoja = hojas.at(-1);
     const cuenta = (t) => hoja.textos.filter((x) => x === t).length;
-    for (const linea of [...TITULO_TARJETA, ...ENTRAR_TARJETA, FRASE_HORIZONTAL, "Las Bodas de todos."]) expect(cuenta(linea)).toBe(4);
-    // Media hoja, del revés: título (2), entrar (2), frase y evento, por 2 caras.
-    expect(hoja.giradas).toBe(2 * 6);
+    const permiso = partirEnDos(FRASE_PERMISO_PADRES);
+    for (const linea of [...TITULO_TARJETA, MAYORES_TARJETA, ...ENTRAR_TARJETA, FRASE_HORIZONTAL, ...permiso, "Las Bodas de todos."])
+      expect(cuenta(linea)).toBe(4);
+    // Media hoja, del revés: título (2), mayores, entrar (2), horizontal,
+    // permiso (2) y evento, por 2 caras.
+    expect(hoja.giradas).toBe(2 * 9);
     expect(hoja.marcos).toBe(4);
     expect(hoja.cuadrados).toBeGreaterThan(4 * 50);
     expect(descargas).toEqual([ARCHIVO_TARJETAS_QR]);
@@ -78,5 +81,10 @@ describe("las tarjetas QR (v67.7)", () => {
       expect(qr.isDark(f + 1, c + 1)).toBe(false);
       expect(qr.isDark(f + 3, c + 3)).toBe(true);
     }
+  });
+
+  it("la frase del permiso, en dos líneas parejas", () => {
+    expect(partirEnDos(FRASE_PERMISO_PADRES)).toEqual(["Puedes subir la foto con el permiso", "de tus padres, si eres menor de edad."]);
+    expect(partirEnDos("Una")).toEqual(["Una"]);
   });
 });

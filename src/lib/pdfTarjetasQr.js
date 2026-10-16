@@ -13,11 +13,12 @@
 // cualquier tamaño de impresión.
 import { C } from "../theme";
 import { descargarBlob } from "./descargas";
-import { FRASE_HORIZONTAL } from "./fotosFiesta";
+import { FRASE_HORIZONTAL, FRASE_PERMISO_PADRES } from "./fotosFiesta";
 
 export const ARCHIVO_TARJETAS_QR = "tarjetas-qr.pdf";
-// Su texto (él, v67.8), en dos líneas: a 17 cabe con aire hasta el marco.
-export const TITULO_TARJETA = ["Puedes subir hasta 3 fotos", "del evento por familia"];
+// Su texto (él, v68: 2 por persona de 16 o más), en dos líneas parejas.
+export const TITULO_TARJETA = ["Puedes subir hasta", "2 fotos del evento"];
+export const MAYORES_TARJETA = "(mayores de 16 años)";
 // En dos líneas parejas, partidas a mano: suelta, «nombre.» quedaba sola.
 export const ENTRAR_TARJETA = ["Escanea el código y entra", "con tu apellido y tu nombre."];
 
@@ -28,7 +29,16 @@ const ANCHO_CARA = ANCHO_PAGINA / 2;
 const ALTO_CARA = ALTO_PAGINA / 2;
 const MARCO = 14; // del corte (o del doblez) al marco dorado
 const MARGEN_TEXTO = 34;
-const LADO_QR = 160;
+const LADO_QR = 150;
+
+// Dos líneas parejas, partidas por el espacio más cercano a la mitad: así
+// el final de la frase no se queda casi solo en la segunda.
+export function partirEnDos(texto) {
+  const mitad = texto.length / 2;
+  let corte = -1;
+  for (let i = 0; i < texto.length; i++) if (texto[i] === " " && (corte < 0 || Math.abs(i - mitad) < Math.abs(corte - mitad))) corte = i;
+  return corte < 0 ? [texto] : [texto.slice(0, corte), texto.slice(corte + 1)];
+}
 
 // Lo que se dibuja en una cara, en sus coordenadas de siempre; si va
 // girada, cada punto se da la vuelta alrededor del centro de la cara.
@@ -84,22 +94,27 @@ function dibujarCara(pdf, qr, x, y, girada, nombreEvento) {
   l.marco(x + MARCO, y + MARCO, ANCHO_CARA - 2 * MARCO, ALTO_CARA - 2 * MARCO, 6);
 
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(17);
+  pdf.setFontSize(18);
   pdf.setTextColor(C.ink);
-  l.centrado(TITULO_TARJETA, l.cx, y + 54, 20.4);
-
-  pdf.setLineWidth(0.8);
-  l.line(l.cx - 20, y + 92, l.cx + 20, y + 92);
-
-  dibujarQr(pdf, l, qr, l.cx - LADO_QR / 2, y + 106, LADO_QR);
+  l.centrado(TITULO_TARJETA, l.cx, y + 52, 21.6);
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(11);
-  l.centrado(ENTRAR_TARJETA, l.cx, y + 290, 14.3);
+  l.centrado([MAYORES_TARJETA], l.cx, y + 92, 0);
 
+  pdf.setLineWidth(0.8);
+  l.line(l.cx - 20, y + 104, l.cx + 20, y + 104);
+
+  dibujarQr(pdf, l, qr, l.cx - LADO_QR / 2, y + 114, LADO_QR);
+
+  l.centrado(ENTRAR_TARJETA, l.cx, y + 286, 14.3);
+
+  // Abajo, en pequeño: cómo hacerla y, para los menores, el permiso.
   pdf.setFontSize(9);
   pdf.setTextColor(C.charcoal);
-  l.centrado(pdf.splitTextToSize(FRASE_HORIZONTAL, anchoTexto), l.cx, y + 290 + ENTRAR_TARJETA.length * 15 + 10, 11.7);
+  const horizontal = pdf.splitTextToSize(FRASE_HORIZONTAL, anchoTexto);
+  l.centrado(horizontal, l.cx, y + 326, 11.7);
+  l.centrado(partirEnDos(FRASE_PERMISO_PADRES), l.cx, y + 326 + horizontal.length * 11.7 + 5, 11.7);
 
   if (nombreEvento) {
     pdf.setTextColor(C.gold);

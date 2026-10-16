@@ -308,11 +308,14 @@ CREATE TABLE public.tablon_accesos (
     "actualizadoEn" timestamp with time zone DEFAULT now() NOT NULL
 );
 
--- Fotos de la fiesta (él, v67): las suben los invitados desde el tablón,
--- 3 por familia (la clave de familia, como claveFamilia), y solo las ve el
--- anfitrión. `subida`: el archivo ya está en el cajón; hasta entonces es
--- una reserva que caduca en 15 minutos. `quitada`: su autor la quitó para
--- cambiarla. Es historia real, como tablon_accesos: fuera del Deshacer.
+-- Fotos de la fiesta (él, v67-68): las suben los invitados desde el
+-- tablón, 2 por persona de 16 años o más, y solo las ve el anfitrión.
+-- `familia` (la clave, como claveFamilia) es la carpeta del ZIP.
+-- `subida`: el archivo ya está en el cajón; hasta entonces es una reserva
+-- que caduca en 15 minutos. `quitada`: su autor la quitó para cambiarla.
+-- `dispositivoId`: el móvil que la subió, el único que puede quitarla (un
+-- impostor con su nombre no le borra nada). Es historia real, como
+-- tablon_accesos: fuera del Deshacer.
 CREATE TABLE public.fotos_fiesta (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     "familia" text NOT NULL,
@@ -322,7 +325,8 @@ CREATE TABLE public.fotos_fiesta (
     "subida" boolean DEFAULT false NOT NULL,
     "quitada" boolean DEFAULT false NOT NULL,
     "elegida" boolean DEFAULT false NOT NULL,
-    "creadaEn" timestamp with time zone DEFAULT now() NOT NULL
+    "creadaEn" timestamp with time zone DEFAULT now() NOT NULL,
+    "dispositivoId" text
 );
 
 -- Foto de los datos antes de la última acción destructiva (reinicio o
@@ -2367,38 +2371,55 @@ CREATE FUNCTION public.clave_familia(p_grupo text, p_apellido text) RETURNS text
     LANGUAGE sql IMMUTABLE
     AS $$ select lower(trim(coalesce(nullif(p_grupo, ''), p_apellido, ''))); $$;
 
--- Las fotos de la fiesta de su familia, para el tablón (v67): si la
--- recogida está abierta, el máximo y cada foto subida (quién, cuándo y si
--- es suya). Sin la foto: en el tablón no se ven.
-CREATE FUNCTION public.tablon_fotos(p_token uuid, p_respuesta text) RETURNS jsonb
+-- La edad de un invitado el año del evento, como calcularEdad en la app
+-- (sin fecha, este año). Vacía si no ha dado un año de nacimiento válido.
+CREATE FUNCTION public.edad_en_evento(p_anio text) RETURNS integer
+    LANGUAGE sql STABLE
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select case when trim(coalesce(p_anio, '')) ~ '^[0-9]{4}$' then
+    coalesce((select substring(e."fecha" from '^[0-9]{4}')::int from evento e limit 1), extract(year from now())::int)
+      - trim(p_anio)::int
+  end;
+$$;
+
+-- Las fotos de la fiesta de quien entra, para el tablón (v68): si la
+-- recogida está abierta, el máximo (2), si es menor de 16 (no sube) o de
+-- 16-17 (con permiso de sus padres) y cada foto suya subida; `mia`, que la
+-- subió ESTE móvil (solo ahí se puede quitar). Sin la foto: no se ven.
+CREATE FUNCTION public.tablon_fotos(p_token uuid, p_respuesta text, p_dispositivo text DEFAULT NULL) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
     AS $$
 declare
   v_yo invitados;
-  v_familia text;
+  v_edad integer;
 begin
   select * into v_yo from tablon_invitado(p_token, p_respuesta);
   if v_yo.id is null then
     return null;
   end if;
-  v_familia := clave_familia(v_yo."grupoFamiliar", v_yo."apellido");
+  v_edad := edad_en_evento(v_yo."anioNacimiento");
   return jsonb_build_object(
     'abierta', coalesce((select "fotosFiestaAbierta" from evento limit 1), false),
-    'maximo', 3,
+    'maximo', 2,
+    'menor', coalesce(v_edad < 16, false),
+    'conPermiso', coalesce(v_edad between 16 and 17, false),
     'fotos', coalesce((
-      select jsonb_agg(jsonb_build_object('id', f.id, 'quien', f."quien", 'creadaEn', f."creadaEn", 'mia', f."invitadoId" = v_yo.id) order by f."creadaEn")
+      select jsonb_agg(jsonb_build_object('id', f.id, 'quien', f."quien", 'creadaEn', f."creadaEn",
+        'mia', f."dispositivoId" is null or f."dispositivoId" = p_dispositivo) order by f."creadaEn")
       from fotos_fiesta f
-      where f."familia" = v_familia and f."subida" and not f."quitada"
+      where f."invitadoId" = v_yo.id and f."subida" and not f."quitada"
     ), '[]'::jsonb)
   );
 end;
 $$;
 
--- Reserva el sitio de una foto antes de subirla (v67): recogida abierta,
--- invitado reconocido y su familia con menos de 3 (contando las reservas
--- de los últimos 15 minutos). Devuelve la ruta donde subirla, o el motivo.
-CREATE FUNCTION public.tablon_reservar_foto(p_token uuid, p_respuesta text) RETURNS jsonb
+-- Reserva el sitio de una foto antes de subirla (v68): recogida abierta,
+-- invitado reconocido, de 16 años o más y con menos de 2 (contando las
+-- reservas de los últimos 15 minutos). Apunta el móvil que la sube.
+-- Devuelve la ruta donde subirla, o el motivo.
+CREATE FUNCTION public.tablon_reservar_foto(p_token uuid, p_respuesta text, p_dispositivo text DEFAULT NULL) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
     AS $$
@@ -2415,17 +2436,20 @@ begin
   if not coalesce((select "fotosFiestaAbierta" from evento limit 1), false) then
     return jsonb_build_object('error', 'cerrada');
   end if;
+  if coalesce(edad_en_evento(v_yo."anioNacimiento") < 16, false) then
+    return jsonb_build_object('error', 'menor');
+  end if;
   v_familia := clave_familia(v_yo."grupoFamiliar", v_yo."apellido");
-  -- Dos móviles de la misma familia a la vez no pueden pasar de 3.
-  perform pg_advisory_xact_lock(hashtext('fotos_fiesta:' || v_familia));
+  -- Dos móviles con el mismo nombre a la vez no pueden pasar de 2.
+  perform pg_advisory_xact_lock(hashtext('fotos_fiesta:' || v_yo.id));
   if (select count(*) from fotos_fiesta f
-      where f."familia" = v_familia and not f."quitada"
-        and (f."subida" or f."creadaEn" > now() - interval '15 minutes')) >= 3 then
+      where f."invitadoId" = v_yo.id and not f."quitada"
+        and (f."subida" or f."creadaEn" > now() - interval '15 minutes')) >= 2 then
     return jsonb_build_object('error', 'completa');
   end if;
   v_ruta := 'fiesta/' || v_id || '.jpg';
-  insert into fotos_fiesta (id, "familia", "invitadoId", "quien", "ruta")
-  values (v_id, v_familia, v_yo.id, v_yo."apellido" || ', ' || v_yo."nombre", v_ruta);
+  insert into fotos_fiesta (id, "familia", "invitadoId", "quien", "ruta", "dispositivoId")
+  values (v_id, v_familia, v_yo.id, v_yo."apellido" || ', ' || v_yo."nombre", v_ruta, p_dispositivo);
   return jsonb_build_object('id', v_id, 'ruta', v_ruta);
 end;
 $$;
@@ -2450,10 +2474,11 @@ begin
 end;
 $$;
 
--- Quitar una foto suya para poner otra (v67). Devuelve la ruta: el
--- archivo lo borra el propio móvil, que el cajón le deja borrar solo si
--- está quitada (foto_fiesta_quitada).
-CREATE FUNCTION public.tablon_quitar_foto(p_token uuid, p_respuesta text, p_id uuid) RETURNS text
+-- Quitar una foto suya para poner otra (v67), solo desde el móvil que la
+-- subió (v68; las de antes, sin móvil apuntado, desde cualquiera).
+-- Devuelve la ruta: el archivo lo borra el propio móvil, que el cajón le
+-- deja borrar solo si está quitada (foto_fiesta_quitada).
+CREATE FUNCTION public.tablon_quitar_foto(p_token uuid, p_respuesta text, p_id uuid, p_dispositivo text DEFAULT NULL) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
     AS $$
@@ -2467,6 +2492,7 @@ begin
   end if;
   update fotos_fiesta f set "quitada" = true
   where f.id = p_id and f."invitadoId" = v_yo.id and not f."quitada"
+    and (f."dispositivoId" is null or f."dispositivoId" = p_dispositivo)
   returning f."ruta" into v_ruta;
   return v_ruta;
 end;
@@ -2937,12 +2963,13 @@ create policy fotos_matrimonios_borra on storage.objects
   );
 
 -- Cajón de las fotos de la fiesta (v67): CERRADO, y el propio almacén
--- rechaza lo que pase de 2 MB o no sea JPEG (el móvil ya las reduce antes).
+-- rechaza lo que pase de 1,5 MB (v68: 132 personas x 2 caben en el plan
+-- gratuito) o no sea JPEG (el móvil ya las reduce antes).
 -- Sube quien tiene reservada esa ruta (tablon_reservar_foto); ve y borra
 -- el anfitrión; su autor solo puede borrar la que ha quitado.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('fotos-fiesta', 'fotos-fiesta', false, 2097152, array['image/jpeg'])
-  on conflict (id) do update set public = false, file_size_limit = 2097152, allowed_mime_types = array['image/jpeg'];
+values ('fotos-fiesta', 'fotos-fiesta', false, 1572864, array['image/jpeg'])
+  on conflict (id) do update set public = false, file_size_limit = 1572864, allowed_mime_types = array['image/jpeg'];
 
 create policy fotos_fiesta_sube on storage.objects
   for insert to anon, authenticated

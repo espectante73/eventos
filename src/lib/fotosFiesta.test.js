@@ -35,10 +35,10 @@ const falso = ({ rpc = {}, subida = {} }) => {
     },
   };
 };
-const QUIEN = { token: "t", respuesta: "Medina Ana" };
+const QUIEN = { token: "t", respuesta: "Medina Ana", dispositivo: "d1" };
 
 describe("prepararFotoFiesta", () => {
-  it("se queda con el primer intento que cabe en 2 MB", async () => {
+  it("se queda con el primer intento que cabe en el tope", async () => {
     const { reducir, pedidos } = reducirQuePesa([LIMITE_FOTO_FIESTA + 1, LIMITE_FOTO_FIESTA]);
     expect((await prepararFotoFiesta({}, reducir)).size).toBe(LIMITE_FOTO_FIESTA);
     expect(pedidos).toEqual([
@@ -49,7 +49,7 @@ describe("prepararFotoFiesta", () => {
 
   it("si ninguno cabe, falla", async () => {
     const { reducir } = reducirQuePesa(Array(9).fill(LIMITE_FOTO_FIESTA + 1));
-    await expect(prepararFotoFiesta({}, reducir)).rejects.toThrow("2 MB");
+    await expect(prepararFotoFiesta({}, reducir)).rejects.toThrow("1,5 MB");
   });
 });
 
@@ -63,14 +63,21 @@ describe("subirFotoFiesta", () => {
     });
     expect(await subirFotoFiesta(s, { ...QUIEN, archivo: {} }, PEQUENA)).toEqual({ aviso: "" });
     expect(s.llamadas.map((l) => l[0])).toEqual(["tablon_reservar_foto", "upload", "tablon_confirmar_foto"]);
+    expect(s.llamadas[0][1]).toEqual({ p_token: "t", p_respuesta: "Medina Ana", p_dispositivo: "d1" });
     expect(s.llamadas[1]).toEqual(["upload", "fotos-fiesta", "fiesta/f1.jpg"]);
     expect(s.llamadas[2][1]).toEqual({ p_token: "t", p_respuesta: "Medina Ana", p_id: "f1" });
   });
 
-  it("con las 3 de la familia, dice por qué y no sube nada", async () => {
+  it("con sus 2 ya subidas, dice por qué y no sube nada", async () => {
     const s = falso({ rpc: { tablon_reservar_foto: { data: { error: "completa" } } } });
     const { aviso } = await subirFotoFiesta(s, { ...QUIEN, archivo: {} }, PEQUENA);
-    expect(aviso).toContain("ya tiene sus 3 fotos");
+    expect(aviso).toBe("Ya tienes tus 2 fotos. Para cambiar una, elimínala desde el móvil con el que la subiste.");
+    expect(s.llamadas.map((l) => l[0])).toEqual(["tablon_reservar_foto"]);
+  });
+
+  it("un menor de 16 no sube nada, y se le dice por qué", async () => {
+    const s = falso({ rpc: { tablon_reservar_foto: { data: { error: "menor" } } } });
+    expect((await subirFotoFiesta(s, { ...QUIEN, archivo: {} }, PEQUENA)).aviso).toBe("Las fotos las suben los mayores de 16 años.");
     expect(s.llamadas.map((l) => l[0])).toEqual(["tablon_reservar_foto"]);
   });
 
@@ -82,7 +89,7 @@ describe("subirFotoFiesta", () => {
     const { aviso, detalle } = await subirFotoFiesta(s, { ...QUIEN, archivo: {} }, PEQUENA);
     expect(aviso).toContain("No se pudo subir");
     expect(detalle).toBe("red");
-    expect(s.llamadas.at(-1)).toEqual(["tablon_quitar_foto", { p_token: "t", p_respuesta: "Medina Ana", p_id: "f1" }]);
+    expect(s.llamadas.at(-1)).toEqual(["tablon_quitar_foto", { p_token: "t", p_respuesta: "Medina Ana", p_id: "f1", p_dispositivo: "d1" }]);
   });
 
   it("si el servidor no la confirma, la suelta y borra el archivo", async () => {
@@ -110,6 +117,7 @@ describe("eliminarFotoFiesta", () => {
   it("la da por quitada y borra su archivo", async () => {
     const s = falso({ rpc: { tablon_quitar_foto: { data: "fiesta/f1.jpg" } } });
     expect(await eliminarFotoFiesta(s, { ...QUIEN, id: "f1" })).toEqual({ aviso: "" });
+    expect(s.llamadas[0]).toEqual(["tablon_quitar_foto", { p_token: "t", p_respuesta: "Medina Ana", p_id: "f1", p_dispositivo: "d1" }]);
     expect(s.llamadas.at(-1)).toEqual(["remove", "fotos-fiesta", ["fiesta/f1.jpg"]]);
   });
 
