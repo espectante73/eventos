@@ -6,6 +6,7 @@ import "./index.css";
 import { iniciarRegistroErrores } from "./lib/registroErrores";
 import { iniciarMano } from "./lib/mano";
 import { activarRespuestaTactil } from "./lib/respuestaTactil";
+import { evitarZoomAlEscribir } from "./lib/zoomIphone";
 
 // Lo primero de todo, para que atrape también los fallos del arranque.
 iniciarRegistroErrores();
@@ -15,6 +16,8 @@ iniciarMano();
 // El clic suave y la vibración al pulsar cualquier cosa, en toda la app
 // (anfitrión, colaboradores y tablón).
 activarRespuestaTactil();
+// Que el iPhone no acerque la pantalla al tocar un campo y la deje así.
+evitarZoomAlEscribir();
 
 // Desde que la app se descarga a trozos (2026-09-18), una pestaña abierta
 // de antes de un despliegue puede pedir un trozo que ya no existe (cambia

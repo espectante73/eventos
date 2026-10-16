@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "68.4",
+    cambios: [
+      "Arreglado en el iPhone: al tocar un campo para escribir (por ejemplo el buscador de la Lista de invitados), Safari acercaba la pantalla y la dejaba así, con la ventana cortada y sin su X a la vista. Ya no la acerca. Ampliar con dos dedos sigue funcionando.",
+    ],
+  },
+  {
     version: "68.3",
     cambios: [
       "Fotos de la fiesta: el año y la mesa son obligatorios los dos, siempre. Antes, si a alguien le faltaba uno en su ficha, se comprobaba solo el otro, y eso era tener un solo filtro preguntando por dos. Ahora, sin año o sin mesa en la ficha, no se puede subir y le sale: «Para subir fotos, tu ficha tiene que tener tu año de nacimiento y tu mesa. Pregúntale a tu colaborador.» Necesita el SQL «v68.3-fotos-dos-claves», que además borra las confirmaciones de prueba.",
