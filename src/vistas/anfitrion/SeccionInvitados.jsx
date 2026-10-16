@@ -1231,6 +1231,7 @@ export function SeccionInvitados({
         // sin terminar -- señalado por el usuario, 2026-09-04.
         // 1180 de tabla + 32 de padding del cuerpo + margen.
         ancho="min(1260px, calc(100vw - 48px))"
+        llena
         extra={
           <div className="flex items-center gap-2">
             {/* Previstos/Sin confirmar/Confirmados/Edad media: mudados
@@ -1390,12 +1391,16 @@ export function SeccionInvitados({
         <div
           style={{
             marginTop: -16,
-            // En ventana propia, esta columna reparte el alto: lo que no
-            // ocupan los avisos y los formularios se lo lleva la tabla,
-            // que pasa a ser QUIEN DESPLAZA. Sin esto, quien desplazaba
-            // era el cuerpo de la ventana y la cabecera pegajosa se iba
-            // hacia arriba con la lista (2026-09-05).
-            ...(fijo ? { flex: 1, minHeight: 0, display: "flex", flexDirection: "column" } : {}),
+            // Esta columna reparte el alto: lo que no ocupan los avisos y
+            // los formularios se lo lleva la tabla, que pasa a ser QUIEN
+            // DESPLAZA. Sin esto, quien desplazaba era el cuerpo de la
+            // ventana y la cabecera pegajosa se iba hacia arriba con la
+            // lista (2026-09-05). En ventana propia y en la flotante del
+            // móvil (`llena`, v68.6), igual.
+            flex: 1,
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
           }}
         >
         {/* Se abre desde "Acciones" → Revisión; no está siempre a la
@@ -1414,7 +1419,11 @@ export function SeccionInvitados({
           </p>
         )}
 
+        {/* Con un tope y su propio desplazamiento: la tabla de debajo se
+            queda el resto del alto, y en el móvil en horizontal una
+            Revisión larga no la deja sin sitio ni se corta (v68.6). */}
         {mostrarRevision && (
+          <div style={{ maxHeight: "40vh", overflowY: "auto", flexShrink: 0 }}>
           <InformeInvitados
             hallazgos={hallazgos}
             // Un hallazgo puede traer sus propios filtros (p. ej. "los de este
@@ -1425,6 +1434,7 @@ export function SeccionInvitados({
             onExcepcion={permitirExcepcion}
             onQuitarExcepcion={quitarExcepcion}
           />
+          </div>
         )}
         {mostrarAnadir && (
         <div className="flex flex-wrap gap-2 mb-3">
@@ -1506,11 +1516,13 @@ export function SeccionInvitados({
             border: `1px solid ${C.line}`,
             background: C.blanco,
             // Este contenedor es el que desplaza, en los dos ejes: por
-            // eso la cabecera pegajosa de dentro funciona. En ventana
-            // propia ocupa todo el alto que quede; dentro de la página
-            // se queda en media pantalla, para no comerse el resto.
+            // eso la cabecera pegajosa de dentro funciona. Ocupa todo el
+            // alto que quede en la ventana, también en la flotante del
+            // móvil (`llena`, v68.6): antes ahí se quedaba en media
+            // pantalla, y en horizontal eran 4 filas.
             overflow: "auto",
-            ...(fijo ? { flex: 1, minHeight: 0 } : { maxHeight: "50vh" }),
+            flex: 1,
+            minHeight: 0,
           }}
         >
           {/* 1180 -> 1080: Safari no da siempre el ancho pedido a una

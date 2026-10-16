@@ -63,3 +63,26 @@ it("una ventana encima pone detrás el velo claro", async () => {
   await act(async () => raiz.unmount());
   caja.remove();
 });
+
+// Norma 5: la salida, arriba y a la vista. Con el móvil en horizontal, lo
+// de la cabecera de la Lista de invitados empujaba la X fuera (v68.6).
+it("la X nunca va dentro de lo que se desplaza de la cabecera, y `llena` reparte el alto", async () => {
+  const div = document.body.appendChild(document.createElement("div"));
+  await act(async () =>
+    createRoot(div).render(
+      <VentanaFlotante titulo="Lista" onCerrar={() => {}} llena extra={<span>muchas cifras</span>}>
+        <p>tabla</p>
+      </VentanaFlotante>
+    )
+  );
+  const extra = div.querySelector("[data-extra-ventana]");
+  expect(extra.className).toContain("overflow-x-auto");
+  const cerrar = div.querySelector('button[aria-label="Cerrar"]');
+  expect(extra.contains(cerrar)).toBe(false);
+  expect(cerrar.className).toContain("flex-shrink-0");
+  const ventana = div.firstElementChild;
+  expect(ventana.style.height).toContain("88vh");
+  const cuerpo = div.querySelector(".ventana-cuerpo");
+  expect(cuerpo.style.overflow).toBe("hidden");
+  expect(cuerpo.style.flexDirection).toBe("column");
+});

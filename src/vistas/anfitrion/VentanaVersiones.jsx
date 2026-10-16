@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "68.6",
+    cambios: [
+      "Lista de invitados en el móvil, en horizontal: la X de cerrar quedaba fuera de la ventana, empujada por los recuadros de cifras. Ahora la X está siempre a la vista (en todas las ventanas), y si las cifras no caben, se desplazan de lado con el dedo.",
+      "Y la lista ya no se queda en una franja de cuatro filas: ocupa todo el alto de la ventana y desplaza ella, con la cabecera quieta. La Revisión, si es larga, se desplaza en su propio recuadro.",
+    ],
+  },
+  {
     version: "68.5",
     cambios: [
       "Lista de invitados, con el móvil en horizontal: el panel de «Acciones» no enseñaba todos sus botones («Editar» e «Importar» quedaban escondidos y no había forma de llegar a ellos). Ahora el panel puede ocupar todo el alto de la pantalla y, si aun así no caben, sus botones se desplazan con el dedo. Se sigue arrastrando, pero desde su barra de título, como las ventanas.",

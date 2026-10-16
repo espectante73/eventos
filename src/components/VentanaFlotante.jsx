@@ -2,7 +2,7 @@
 // no bloqueante (VentanaFlotante) — la base de toda la navegación por
 // secciones de la app (Mesas, Avisos, Configuración...). Movidas fuera de
 // App.jsx en el reparto del 2026-08-08 (ver CLAUDE.md).
-import { useState, useEffect, useRef, Children } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, Children } from "react";
 import { X } from "lucide-react";
 import { C, S, VELO } from "../theme";
 
@@ -164,13 +164,18 @@ export const ETIQUETAS_VENTANAS = {
 // `fondoCuerpo`: color de fondo opcional solo para el cuerpo (debajo de la
 // cabecera). Sin él, el marfil de siempre. Lo usa Aniversarios, que pinta
 // sus filas doradas sobre el verde de la app (2026-09-17).
+// `llena`: sin `fijo`, la ventana ocupa su alto máximo y el cuerpo lo
+// reparte, como en una ventana del sistema: lo que lleva dentro (la tabla
+// de invitados) se queda con todo el alto que quede y desplaza ella. Sin
+// esto, en el móvil en horizontal la lista era una franja de 4 filas (él,
+// v68.6: «la lista no continúa hacia abajo»).
 // `pantallaEntera` (con `fijo`): la ventana del móvil a pantalla entera
 // (el formulario en la barra de ventanas). Se ve como ventana -bordes, X
 // arriba (norma 5)-, su cuerpo desplaza y deja abajo el hueco de la barra,
 // que flota encima (él, v60.3-60.4). La Lista de invitados en su ventana del
 // sistema no lo lleva: la cierra el sistema y desplaza su tabla, para dejar
 // la cabecera quieta.
-export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo, fijo, fondoCuerpo, pantallaEntera = false }) {
+export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo, fijo, fondoCuerpo, pantallaEntera = false, llena = false }) {
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
   // "left" fijo (no en cascada como antes): todas las ventanas nacen
   // alineadas al mismo borde izquierdo, a petición del usuario -- el
@@ -194,6 +199,12 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
     setZIndex(++contadorZIndexVentanas);
   };
   const ventanaRef = useRef(null);
+  const extraRef = useRef(null);
+  // Lo de la cabecera que no cabe empieza mostrando su final (ver abajo).
+  useLayoutEffect(() => {
+    const el = extraRef.current;
+    if (el && el.scrollWidth > el.clientWidth) el.scrollLeft = el.scrollWidth;
+  }, []);
   // Offset entre el punto donde se agarra la cabecera y la esquina de la
   // ventana — así no "salta" al primer píxel del ratón al empezar a arrastrar.
   const arrastre = useRef(null);
@@ -265,7 +276,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
         // ventana claramente más estrecha que la pantalla, no pegada de
         // borde a borde, a petición del usuario.
         width: fijo ? "100%" : tam ? tam.width : ancho || "min(620px, calc(100vw - 48px))",
-        height: fijo ? "100%" : tam ? tam.height : undefined,
+        height: fijo ? "100%" : tam ? tam.height : llena ? "calc(88vh - var(--hueco-barra-ventanas, 0px))" : undefined,
         // 88vh (no 80vh): más aprovechado en una pantalla vertical de
         // móvil -- mismo valor que ya usa ModalFlotante, antes iban
         // distintos sin motivo real.
@@ -297,17 +308,32 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
           >
             {titulo}
           </h3>
+          {/* La X, SIEMPRE a la vista (norma 5): `extra` ya no puede
+              empujarla fuera de la ventana. Si `extra` no cabe (la Lista de
+              invitados con el móvil en horizontal, él, v68.6), se desplaza
+              de lado con el dedo, y empieza mostrando su final, donde suele
+              estar su botón. */}
           <div
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 min-w-0"
             onMouseDown={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
           >
-            {extra}
+            {extra && (
+              <div ref={extraRef} data-extra-ventana className="min-w-0 overflow-x-auto" style={{ touchAction: "pan-x" }}>
+                {extra}
+              </div>
+            )}
             {/* En modo fijo cierra la ventana del sistema operativo, no
                 este panel: poner aquí una X propia dejaría dos botones
                 de cerrar, uno al lado del otro. */}
             {(!fijo || pantallaEntera) && (
-              <button onClick={onCerrar} title="Cerrar" aria-label="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
+              <button
+                onClick={onCerrar}
+                title="Cerrar"
+                aria-label="Cerrar"
+                className="boton-3d rounded-full p-1.5 flex-shrink-0"
+                style={{ color: C.goldClaro }}
+              >
                 <X size={18} />
               </button>
             )}
@@ -332,7 +358,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       <div
         className="ventana-cuerpo p-4"
         style={
-          fijo && !pantallaEntera
+          (fijo && !pantallaEntera) || (llena && !fijo)
             ? { flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
             : {
                 flex: 1,
