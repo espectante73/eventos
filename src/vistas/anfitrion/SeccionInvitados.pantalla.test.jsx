@@ -238,6 +238,35 @@ describe("Imprimir: la lista para acomodadores", () => {
   });
 });
 
+// Hasta 3 canciones por invitado (él, v69): en «Canciones», una fila por
+// canción, numerada, con el nombre solo en la primera.
+describe("las canciones, en lista", () => {
+  it("una fila numerada por canción, y el nombre solo en la primera", () => {
+    const conCanciones = {
+      ...data,
+      invitados: data.invitados.map((g) => (g.id === "g1" ? { ...g, cancion: "Bailando — Enrique Iglesias\n\nLa bamba — Ritchie Valens" } : g)),
+    };
+    const html = dibujarYSoltar(
+      <SeccionInvitados
+        data={conCanciones}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante="canciones"
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+    const panel = html.slice(html.indexOf(">Canción<"));
+    expect(panel).toContain("1. Bailando — Enrique Iglesias");
+    expect(panel).toContain("2. La bamba — Ritchie Valens");
+    expect(panel.split("Barrios, Jacob").length - 1).toBe(1);
+  });
+});
+
 // Las Acciones, en un panel que se queda abierto (él, v58.5): elegir una
 // opción no lo cierra; su X lo cierra a él solo, no la ventana.
 describe("las Acciones de Invitados, en su panel", () => {

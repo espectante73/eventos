@@ -47,6 +47,7 @@ import { revisarConExcepciones } from "../../lib/revisionInvitados";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { asignarMesaConSuFamilia, confirmarConSuFamilia } from "../../lib/mesas";
+import { cancionesDe, tieneCancion } from "../../lib/canciones";
 import {
   agregarInvitado as crearInvitado,
   importarInvitados as importarFilas,
@@ -327,9 +328,11 @@ export function SeccionInvitados({
         filas
       );
     } else if (panelFlotante === "canciones") {
-      const filas = ordenarPorApellidoNombre(
-        invitados.filter((g) => g.cancion && g.cancion.trim())
-      ).map((g) => [`${g.apellido}, ${g.nombre}`, calcularEdad(g.anioNacimiento, evento) ?? "", g.cancion]);
+      // Una línea por canción (v69: hasta 3 por invitado), con su nombre
+      // y su edad en cada una: una lista corrida para quien pinche.
+      const filas = ordenarPorApellidoNombre(invitados.filter(tieneCancion)).flatMap((g) =>
+        cancionesDe(g.cancion).map((cancion) => [nombreCompleto(g), calcularEdad(g.anioNacimiento, evento) ?? "", cancion])
+      );
       descargarCSV(`canciones-${evento.nombre || "evento"}.csv`, ["Invitado", "Edad", "Canción"], filas);
     } else if (panelFlotante === "alergias") {
       const filas = ordenarPorApellidoNombre(invitados.filter(tieneAlergiaReal)).map((g) => [
@@ -2104,10 +2107,13 @@ export function SeccionInvitados({
                   <span>Edad</span>
                   <span>Canción</span>
                 </div>
-                {ordenarPorApellidoNombre(invitados.filter((g) => g.cancion && g.cancion.trim())).map(
-                  (g, i) => (
+                {/* En lista (él, v69): una fila por canción, numerada; el
+                    nombre y la edad, solo en la primera de cada invitado.
+                    Todas las filas de la misma altura (norma 6). */}
+                {ordenarPorApellidoNombre(invitados.filter(tieneCancion)).map((g, i) =>
+                  cancionesDe(g.cancion).map((cancion, n) => (
                     <div
-                      key={g.id}
+                      key={`${g.id}-${n}`}
                       className="grid px-2 py-2 text-sm"
                       style={{
                         gridTemplateColumns: "1.5fr 0.6fr 2fr",
@@ -2115,15 +2121,15 @@ export function SeccionInvitados({
                         color: C.charcoal,
                       }}
                     >
-                      <span>
-                        {g.apellido}, {g.nombre}
+                      <span className="truncate">{n === 0 ? nombreCompleto(g) : ""}</span>
+                      <span>{n === 0 ? calcularEdad(g.anioNacimiento, evento) ?? "—" : ""}</span>
+                      <span className="truncate">
+                        {n + 1}. {cancion}
                       </span>
-                      <span>{calcularEdad(g.anioNacimiento, evento) ?? "—"}</span>
-                      <span>{g.cancion}</span>
                     </div>
-                  )
+                  ))
                 )}
-                {invitados.filter((g) => g.cancion && g.cancion.trim()).length === 0 && (
+                {invitados.filter(tieneCancion).length === 0 && (
                   <p className="text-sm italic p-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
                     Todavía nadie ha indicado una canción.
                   </p>

@@ -478,8 +478,11 @@ describe("el formulario: Guardar y Cancelar", () => {
     );
     abrirPorMenu(vista);
     vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Lucía")));
-    abrirApartado(vista, "Canción");
-    escribir(vista, document.body.querySelector('input[placeholder="Título — Artista"]'), "Bailando — Enrique Iglesias");
+    abrirApartado(vista, "Canciones");
+    // Tres huecos de «Canción» y «Artista» (v69): se rellena el primero.
+    expect(document.body.querySelectorAll('input[placeholder="Canción"]')).toHaveLength(3);
+    escribir(vista, document.body.querySelector('input[aria-label="Canción 1"]'), "Bailando");
+    escribir(vista, document.body.querySelector('input[aria-label="Artista 1"]'), "Enrique Iglesias");
     vista.pulsar(boton("Guardar"));
     expect(guardados).toHaveLength(1);
     expect(guardados[0].find((g) => g.id === "g4").cancion).toBe("Bailando — Enrique Iglesias");
@@ -558,9 +561,9 @@ describe("el formulario: Guardar y Cancelar", () => {
     expect(document.body.querySelector('input[placeholder="correo@ejemplo.com"]')).toBeFalsy();
     abrirApartado(vista, "Año nac.");
     expect(document.body.querySelector('input[placeholder="correo@ejemplo.com"]')).toBeTruthy();
-    abrirApartado(vista, "Canción");
+    abrirApartado(vista, "Canciones");
     expect(document.body.querySelector('input[placeholder="correo@ejemplo.com"]')).toBeFalsy();
-    expect(document.body.querySelector('input[placeholder="Título — Artista"]')).toBeTruthy();
+    expect(document.body.querySelector('input[placeholder="Artista"]')).toBeTruthy();
     vista.desmontar();
   });
 

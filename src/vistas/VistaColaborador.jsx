@@ -10,6 +10,7 @@ import { datosCompletos, pideDatosDeBoda, esMenorDeEdad, estadoDatos, familiasSi
 import { ordenarPorApellidoNombre, nombreCompleto, euros, fechaCorta } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
+import { huecosCanciones, textoDeHuecos, resumenCanciones } from "../lib/canciones";
 import { estadoImpago, textoAvisoImpago, PLAZOS_MAX } from "../lib/impagos";
 import { marcarSinGuardar, haySinGuardar, PREGUNTA_DESCARTAR } from "../lib/cambiosSinGuardar";
 import { requisitosActivos } from "../lib/modoPruebas";
@@ -44,7 +45,7 @@ const ETIQUETAS_CAMPOS_INVITADO = {
   anioNacimiento: "Año de nacimiento",
   anioBoda: "Año de boda",
   email: "Email",
-  cancion: "Canción",
+  cancion: "Canciones",
   alergias: "Alergias",
   observaciones: "Observaciones",
   // El "no" de la canción (su casilla nace marcada): cambiarlo también se
@@ -479,29 +480,47 @@ function FormularioDatos({
         </div>
       )}
 
-      {/* Canción y observaciones: sin casilla "Sí" (él, v52). Vacías no
-          cuentan en "datos X de Y": no son obligatorias. */}
-      {[
-        { campo: "cancion", titulo: "Canción", placeholder: "Título — Artista" },
-        { campo: "observaciones", titulo: "Observaciones", placeholder: "Cualquier detalle adicional" },
-      ].map(({ campo, titulo, placeholder }) => [
-        <LineaEntreApartados key={`linea-${campo}`} />,
-        <SeccionPlegable
-          sencilla
-          key={campo}
-          titulo={titulo}
-          resumen={form[campo] || ""}
-          abierta={apartado === campo}
-          onAlternar={() => alternarApartado(campo)}
-        >
-          <TextInput
-            value={form[campo] || ""}
-            onChange={(e) => setForm({ ...form, [campo]: e.target.value })}
-            placeholder={placeholder}
-            className="w-full"
-          />
-        </SeccionPlegable>,
-      ])}
+      {/* Canciones y observaciones: sin casilla "Sí" (él, v52). Vacías no
+          cuentan en "datos X de Y": no son obligatorias. Canciones, hasta 3
+          (él, v69), en tres huecos que se quedan vacíos si no hacen falta,
+          cada uno con «Canción» y «Artista» en la misma línea (norma 6).
+          Se guardan en el mismo campo, una por línea (lib/canciones.js). */}
+      <LineaEntreApartados />
+      <SeccionPlegable
+        sencilla
+        titulo="Canciones"
+        resumen={resumenCanciones(form.cancion)}
+        abierta={apartado === "cancion"}
+        onAlternar={() => alternarApartado("cancion")}
+      >
+        <div className="flex flex-col gap-2">
+          {huecosCanciones(form.cancion).map((hueco, i, huecos) => {
+            const cambiar = (parte) => (e) =>
+              setForm({ ...form, cancion: textoDeHuecos(huecos.map((h, j) => (j === i ? { ...h, [parte]: e.target.value } : h))) });
+            return (
+              <div key={i} className="flex items-center gap-2">
+                <TextInput value={hueco.titulo} onChange={cambiar("titulo")} placeholder="Canción" aria-label={`Canción ${i + 1}`} className="flex-1 min-w-0" />
+                <TextInput value={hueco.artista} onChange={cambiar("artista")} placeholder="Artista" aria-label={`Artista ${i + 1}`} className="flex-1 min-w-0" />
+              </div>
+            );
+          })}
+        </div>
+      </SeccionPlegable>
+      <LineaEntreApartados />
+      <SeccionPlegable
+        sencilla
+        titulo="Observaciones"
+        resumen={form.observaciones || ""}
+        abierta={apartado === "observaciones"}
+        onAlternar={() => alternarApartado("observaciones")}
+      >
+        <TextInput
+          value={form.observaciones || ""}
+          onChange={(e) => setForm({ ...form, observaciones: e.target.value })}
+          placeholder="Cualquier detalle adicional"
+          className="w-full"
+        />
+      </SeccionPlegable>
 
       <LineaEntreApartados />
       <div data-apartado="alergias" className={latido("alergias")}>

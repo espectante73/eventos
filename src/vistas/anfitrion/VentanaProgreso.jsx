@@ -15,6 +15,7 @@ import { datosCompletos, resolverColaborador } from "../../lib/invitados";
 import { impagosVencidos } from "../../lib/impagos";
 import { BarraCompacta } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { tieneCancion } from "../../lib/canciones";
 
 // `anfitrionToken`: para leer si cada colaborador tiene ya cuenta (v58.7).
 export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
@@ -64,7 +65,7 @@ export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
         />
         <BarraCompacta
           icono={Music}
-          completado={invitados.filter((g) => g.confirmado && g.cancion && g.cancion.trim()).length}
+          completado={invitados.filter((g) => g.confirmado && tieneCancion(g)).length}
           total={confirmadosCount}
           color={C.goldClaro}
           claro

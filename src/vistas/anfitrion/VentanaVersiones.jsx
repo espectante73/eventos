@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "69",
+    cambios: [
+      "Hasta 3 canciones por invitado. En el formulario del colaborador, el apartado se llama «Canciones» y trae tres huecos, cada uno con «Canción» y «Artista» en la misma línea; los que no hagan falta se quedan vacíos. La canción que ya tuviera cada uno pasa a ser la primera.",
+      "En la Lista de invitados, «Acciones → Canciones» las enseña en lista: una fila numerada por canción, con el nombre y la edad en la primera. El archivo que se descarga trae una línea por canción.",
+    ],
+  },
+  {
     version: "68.7",
     cambios: [
       "Arreglado en el Mac: la Lista de invitados en su propia ventana dejaba de filtrar (ni el buscador ni ningún filtro). Cuando sale una versión nueva la pestaña se recarga sola, pero la ventana de la lista seguía abierta con la versión de antes, desconectada: se veía igual y no respondía, y al volver a abrirla salía esa misma lista muerta encima. Ahora, al recargarse la pestaña, sus ventanas se cierran, y al abrir una se vacía antes lo que hubiera de antes.",
