@@ -40,7 +40,8 @@ it("las fotos: «Abrir» las abre; «Cerrar» pregunta antes", () => {
     <VentanaDiaEvento data={{ evento, persistEvento: (e) => guardados.push(e), obtenerFotosFiesta: sinFotos }} onCerrar={() => {}} />
   );
   expect(document.body.textContent).toContain("Fotos · cerradas");
-  vista.pulsar(boton("Abrir"));
+  // El último «Abrir»: antes van el de las llegadas (aquí abiertas) y el del marcador.
+  vista.pulsar(botones("Abrir").at(-1));
   expect(guardados).toEqual([{ asistenciaAbierta: true, fotosFiestaAbierta: true }]);
   vista.desmontar();
 
@@ -77,4 +78,19 @@ it("«Descargar» las fotos solo sale con alguna; el de las tarjetas QR, siempre
   expect(document.body.textContent).toContain("1 foto");
   expect(botones("Descargar")).toHaveLength(2);
   con.desmontar();
+});
+
+it("«Marcador» abre el marcador de llegadas", () => {
+  let abierto = false;
+  const vista = montar(
+    <VentanaDiaEvento
+      data={{ evento: { asistenciaAbierta: true, fotosFiestaAbierta: true }, persistEvento: () => {}, obtenerFotosFiesta: sinFotos }}
+      onCerrar={() => {}}
+      onAbrirMarcador={() => (abierto = true)}
+    />
+  );
+  expect(document.body.textContent).toContain("Marcador");
+  vista.pulsar(boton("Abrir"));
+  expect(abierto).toBe(true);
+  vista.desmontar();
 });

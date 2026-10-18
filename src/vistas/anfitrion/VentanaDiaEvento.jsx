@@ -14,7 +14,7 @@
 // Las fotos se eligen FUERA de la app (él, v67.6): aquí solo se descargan
 // todas en un ZIP, una carpeta por familia. Sin ventana para verlas.
 import { useEffect, useState } from "react";
-import { DoorOpen, DoorClosed, Camera, CameraOff, Download, QrCode } from "lucide-react";
+import { DoorOpen, DoorClosed, Camera, CameraOff, Download, QrCode, UserCheck } from "lucide-react";
 import { C, OP } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -84,7 +84,7 @@ function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, onAlterna
   );
 }
 
-export function VentanaDiaEvento({ data, onCerrar }) {
+export function VentanaDiaEvento({ data, onCerrar, onAbrirMarcador }) {
   const { evento, persistEvento, obtenerFotosFiesta, invitados = [], tokenTablon } = data;
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
@@ -171,8 +171,15 @@ export function VentanaDiaEvento({ data, onCerrar }) {
         >
           {llegadasAbiertas ? "Dejar de permitir acreditar invitados." : "Permitir acreditar invitados."}
         </FilaAbrirCerrar>
+        {/* El marcador grande de llegadas (v69.2), junto a las llegadas. */}
+        <CeldaTexto fila={2} Icono={UserCheck} titulo={<b>Marcador</b>}>
+          Ya están y faltan, en grande.
+        </CeldaTexto>
+        <Boton onClick={onAbrirMarcador} className={CELDA_BOTON} style={{ gridRow: 2 }}>
+          Abrir
+        </Boton>
         <FilaAbrirCerrar
-          fila={2}
+          fila={3}
           abierta={fotosAbiertas}
           Icono={Camera}
           IconoCerrada={CameraOff}
@@ -181,18 +188,18 @@ export function VentanaDiaEvento({ data, onCerrar }) {
         >
           {fotosAbiertas ? "Dejar de permitir subir fotos." : "Permitir subir fotos."}
         </FilaAbrirCerrar>
-        <CeldaTexto fila={3} Icono={QrCode} titulo={<b>Tarjetas QR</b>}>
+        <CeldaTexto fila={4} Icono={QrCode} titulo={<b>Tarjetas QR</b>}>
           Para las mesas, de pie: 2 por folio.
         </CeldaTexto>
-        <Boton onClick={descargarTarjetas} className={CELDA_BOTON} style={{ gridRow: 3 }}>
+        <Boton onClick={descargarTarjetas} className={CELDA_BOTON} style={{ gridRow: 4 }}>
           Descargar
         </Boton>
         {fotos?.length > 0 && (
           <>
-            <CeldaTexto fila={4} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
+            <CeldaTexto fila={5} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
               {cuentaFotosFiesta(fotos).detalle}
             </CeldaTexto>
-            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 4 }}>
+            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 5 }}>
               {descargando ? "Preparando…" : "Descargar"}
             </Boton>
           </>

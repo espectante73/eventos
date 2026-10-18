@@ -90,6 +90,17 @@ export const ROLES_CON_EMAIL_FAMILIAR = [
   ROL_FAMILIAR.SUELTO,
 ];
 
+// Quién se espera el día del evento y cuántos han entrado (él, v69.2): los
+// confirmados que han pagado y no han dicho «No asiste» (en Modo Pruebas,
+// sin mirar el pago). UNA sola cuenta para el marcador grande y el de la
+// cabecera de la Lista: los dos tienen que decir siempre lo mismo.
+export function cuentaLlegadas(invitados = [], evento = {}) {
+  const conPago = requisitosActivos(evento);
+  const esperados = invitados.filter((g) => g.confirmado && !g.noAsiste && (g.pagado || !conPago));
+  const yaEstan = esperados.filter((g) => g.presente).length;
+  return { esperados: esperados.length, yaEstan, faltan: esperados.length - yaEstan };
+}
+
 export function claveFamilia(g) {
   return String(g?.grupoFamiliar || g?.apellido || "").trim().toLowerCase();
 }

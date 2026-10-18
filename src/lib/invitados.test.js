@@ -361,3 +361,16 @@ describe("faltanObligatorios: la foto de boda", () => {
     expect(faltanObligatorios(esposo, evento)).not.toContain("fotoBoda");
   });
 });
+
+// v69.2: el marcador de llegadas (grande y el de la Lista) cuenta igual.
+import { cuentaLlegadas } from "./invitados";
+describe("cuentaLlegadas", () => {
+  const g = (id, extra) => ({ id, confirmado: true, pagado: true, ...extra });
+  const lista = [g("1", { presente: true }), g("2"), g("3", { pagado: false }), g("4", { noAsiste: true }), g("5", { confirmado: false })];
+  it("espera a los confirmados que han pagado y no han dicho «No asiste»", () => {
+    expect(cuentaLlegadas(lista, {})).toEqual({ esperados: 2, yaEstan: 1, faltan: 1 });
+  });
+  it("en Modo Pruebas, sin mirar el pago", () => {
+    expect(cuentaLlegadas(lista, { modoPruebasActivo: true })).toEqual({ esperados: 3, yaEstan: 1, faltan: 2 });
+  });
+});

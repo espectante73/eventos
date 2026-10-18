@@ -32,7 +32,7 @@ import {
   Download,
 } from "lucide-react";
 import { C, inputStyle, R, T, OP, conAlfa } from "../../theme";
-import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia } from "../../lib/invitados";
+import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, anioDelEvento } from "../../lib/matrimonios";
@@ -594,6 +594,7 @@ export function SeccionInvitados({
   // provisional caiga hoy (usuario, 2026-09-21).
   const hoyEsElEvento = !evento.fechaSinConfirmar && evento.fecha === new Date().toISOString().slice(0, 10);
   const mostrarLlegada = hoyEsElEvento || totalPresentes > 0;
+  const llegadas = cuentaLlegadas(invitados, evento);
   const totalInvitados = invitados.length;
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
   // Los que dijeron que no van (él, v61: al cobrar a su familia, o sin
@@ -1257,8 +1258,9 @@ export function SeccionInvitados({
                 style={{ border: `2px solid ${C.goldClaro}`, background: conAlfa(C.negro, 0.12) }}
               >
                 {[
-                  { etiqueta: "Ya están", valor: totalPresentes, color: C.ink },
-                  { etiqueta: "Faltan", valor: Math.max(0, confirmadosCount - totalPresentes), color: C.peligro },
+                  // La misma cuenta que el marcador grande (v69.2).
+                  { etiqueta: "Ya están", valor: llegadas.yaEstan, color: C.ink },
+                  { etiqueta: "Faltan", valor: llegadas.faltan, color: C.peligro },
                 ].map((m) => (
                   <div key={m.etiqueta} className="text-center">
                     <div

@@ -35,6 +35,7 @@ import { VentanaColaboradoresDatos } from "./anfitrion/VentanaColaboradoresDatos
 import { VentanaMesas } from "./anfitrion/VentanaMesas";
 import { VentanaCuentas } from "./anfitrion/VentanaCuentas";
 import { VentanaDiaEvento } from "./anfitrion/VentanaDiaEvento";
+import { VentanaMarcador } from "./anfitrion/VentanaMarcador";
 import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 import { Boton } from "../components/Boton";
@@ -142,6 +143,24 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     );
   });
 
+  // El marcador de llegadas (v69.2): en el Mac, ventana propia del sistema
+  // (para llevarla a otra pantalla o a la tele), repintada con cada cambio
+  // de datos como la Lista; en el móvil, dentro de la app.
+  const {
+    abrir: abrirMarcadorPopup,
+    actualizar: actualizarMarcador,
+    abierta: marcadorEnVentana,
+    ventana: ventanaMarcador,
+  } = usePopupWindow({ nombreVentana: "marcador-llegadas", ancho: 1000, alto: 600 });
+  useEffect(() => {
+    if (!marcadorEnVentana) return;
+    actualizarMarcador(
+      <ErrorBoundary ventana={ventanaMarcador}>
+        <VentanaMarcador data={data} fijo onCerrar={() => ventanaMarcador?.close()} />
+      </ErrorBoundary>
+    );
+  });
+
   // El aviso pendiente vive por invitado (avisoPendiente en invitados), no
   // por colaborador — así se sabe exactamente cuáles son los nuevos. Los
   // que siguen en tentativa no cuentan: no se nombran en el email al
@@ -226,6 +245,10 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   const abrirInvitados = useCallback(() => {
     if (esAparatoTactil() || !abrirInvitadosPopup()) toggle("invitados");
   }, [abrirInvitadosPopup]);
+  // Dentro del propio clic (si no, Safari bloquea la ventana): ver usePopupWindow.
+  const abrirMarcador = () => {
+    if (esAparatoTactil() || !abrirMarcadorPopup()) setAbierto((a) => ({ ...a, marcador: true }));
+  };
   // null | "tabla" | "canciones" | "alergias" | "avisosMesas" — controla la
   // ventana flotante; independiente de qué secciones estén plegadas.
   const [panelFlotante, setPanelFlotante] = useState(null);
@@ -347,7 +370,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
       )}
 
       {/* Día del evento: las llegadas y, después, las fotos (v66) */}
-      {abierto.diaEvento && <VentanaDiaEvento data={data} onCerrar={() => toggle("diaEvento")} />}
+      {abierto.diaEvento && <VentanaDiaEvento data={data} onCerrar={() => toggle("diaEvento")} onAbrirMarcador={abrirMarcador} />}
+      {abierto.marcador && <VentanaMarcador data={data} onCerrar={() => toggle("marcador")} />}
 
       {/* Configuración ya no tiene ventana propia: se abre directo desde el
           submenú "Configuración" de "Abrir sección…" (ver DesplegableSecciones.jsx) */}

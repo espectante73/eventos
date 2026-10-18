@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "69.2",
+    cambios: [
+      "«Día del evento»: fila nueva «Marcador», con «Abrir». Abre el marcador de llegadas: dos números enormes, «YA ESTÁN» en verde y «FALTAN» en rojo, y debajo «de 112 que han pagado». Cambia solo cada vez que un colaborador acredita a alguien. En el Mac sale en una ventana propia, para llevarla a otra pantalla o a la tele; en el móvil, dentro de la app.",
+      "El marcador pequeño de la cabecera de la Lista de invitados cuenta ahora igual que el grande: los confirmados que han pagado y no han dicho «No asiste».",
+    ],
+  },
+  {
     version: "69.1",
     cambios: [
       "Tablón: en la tarjeta verde del evento, junto al nombre, la cuenta atrás en grande y en dorado: «FALTAN 54 DÍAS». Con un día, «FALTA 1 DÍA»; el mismo día, «¡Es hoy!»; después del evento desaparece. Si la fecha no está confirmada, no sale.",
