@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "71",
+    cambios: [
+      "Quien está casado pero viene sin su pareja, si lo has marcado como excepción en la Revisión («Cónyuge sin su pareja»), ya sale en Aniversarios con su propio nombre, su año de boda y su aniversario, para poder subir su foto terminada. También cuenta en «Matrimonios» y deja de salir en rojo como «Sin pareja». Sin esa excepción, una marca suelta sigue siendo un error que corregir.",
+    ],
+  },
+  {
     version: "70.9",
     cambios: [
       "Aniversarios: fuera el falso aviso «Sin plantilla». La foto terminada, con la plantilla, se sube en la columna Aniversario; la columna Boda es solo la original del colaborador, así que ya no marca nada que falte ni ofrece «Subir con plantilla». La cuenta de las que faltan queda en Aniv.",

@@ -14,7 +14,7 @@
 // ellas en la propia lista, que sigue siendo donde se corrige.
 import { ROL_FAMILIAR } from "./rolFamiliar";
 import { calcularEdad, familiasSinEmail, claveFamilia, ROLES_CON_EMAIL_FAMILIAR } from "./invitados";
-import { conyugesSueltos, matrimoniosDeInvitados } from "./matrimonios";
+import { conyugesSueltos, matrimoniosDeInvitados, EXCEPCION_SIN_PAREJA } from "./matrimonios";
 import { colaboradoresSinFichaEnlazada, mismaPersona } from "./edicionInvitados";
 import { NOMBRES_HABITUALES } from "./nombresHabituales";
 
@@ -125,7 +125,7 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
   if (sueltos.length)
     hallazgos.push(
       hallazgo(
-        "conyugeSinPareja",
+        EXCEPCION_SIN_PAREJA,
         "Cónyuge sin su pareja",
         "Marcados con O o con A pero sin el otro en su familia. O falta marcar al cónyuge, o esa marca sobra (si viene solo, va P o S).",
         sueltos

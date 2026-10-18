@@ -13,6 +13,7 @@
 // un enlace temporal (createSignedUrl), en vez de apuntar a una URL fija.
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
+import { nombresMatrimonio } from "./matrimonios";
 
 export const CUBO_FOTOS = "fotos-matrimonios";
 
@@ -264,7 +265,7 @@ export function hojaDeEncargo(matrimonios) {
       nombre,
       "",
       "Monta esta foto en la plantilla adjunta.",
-      `Nombres: ${m.esposo?.nombre} y ${m.esposa?.nombre}. Año de boda: ${m.anioBoda}.${anios}`,
+      `Nombres: ${nombresMatrimonio(m)}. Año de boda: ${m.anioBoda}.${anios}`,
       "Devuélvela en 16:9, 1920x1080, y guárdala como archivo con el nombre",
       `exacto "${nombre}".`,
       "",

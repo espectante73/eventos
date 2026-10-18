@@ -35,7 +35,7 @@ import { C, inputStyle, R, T, OP, conAlfa } from "../../theme";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
-import { contarMatrimonios, conyugesSueltos, anioDelEvento } from "../../lib/matrimonios";
+import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
 import { descargarListaAcomodadores, ARCHIVO as ARCHIVO_ACOMODADORES } from "../../lib/pdfAcomodadores";
 import { TextInput, TextInputEnVentanaAparte } from "../../components/Formulario";
@@ -543,7 +543,9 @@ export function SeccionInvitados({
   // 2026-08-20.
   const tintaColumnaCabecera = (idx) => (idx % 2 === 1 ? conAlfa(C.blanco, 0.07) : "transparent");
 
-  const idsSueltos = new Set(conyugesSueltos(invitados).map((g) => g.id));
+  // Sin pareja, en rojo: solo los que siguen a medias. Quien viene sin su
+  // pareja y él lo dio por bueno en la Revisión cuenta como matrimonio (v71).
+  const idsSueltos = new Set(conyugesSueltos(invitados).filter((g) => !vieneSinPareja(g)).map((g) => g.id));
   // Los años que cumplen EL DÍA DEL EVENTO, no hoy: es el número que va
   // en el sello de la foto de cada pareja.
   const anioEvento = anioDelEvento(evento.fecha);

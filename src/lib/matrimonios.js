@@ -108,6 +108,39 @@ export function conyugesSueltos(invitados) {
   );
 }
 
+// Los casados que vienen SIN su pareja y que él ha dado por buenos en la
+// Revisión («Cónyuge sin su pareja», marcado como excepción, v71): no es una
+// marca a medias, es así. Tienen su boda, su aniversario y su foto, así que
+// en Aniversarios y en la cuenta de matrimonios son un matrimonio de uno.
+// Sin esa excepción, una marca suelta sigue siendo un error que corregir.
+export const EXCEPCION_SIN_PAREJA = "conyugeSinPareja";
+export const vieneSinPareja = (g) => Array.isArray(g?.excepcionesRevision) && g.excepcionesRevision.includes(EXCEPCION_SIN_PAREJA);
+
+export function matrimoniosConLosQueVienenSolos(invitados, fechaEvento) {
+  const anioEvento = anioDelEvento(fechaEvento);
+  const solos = conyugesSueltos(invitados)
+    .filter(vieneSinPareja)
+    .map((g) => {
+      const anioBodaNumero = parseInt(g.anioBoda, 10);
+      return {
+        clave: `${claveFamilia(g)}-solo-${g.id}`,
+        familia: primeroNoVacio(g.grupoFamiliar, g.apellido),
+        esposo: g.rolFamiliar === ROL_FAMILIAR.ESPOSO ? g : null,
+        esposa: g.rolFamiliar === ROL_FAMILIAR.ESPOSA ? g : null,
+        zona: g.zona || "",
+        anioBoda: String(g.anioBoda || ""),
+        aniversario:
+          anioEvento && Number.isFinite(anioBodaNumero) && anioBodaNumero > 1900 ? anioEvento - anioBodaNumero : null,
+        confirmados: Boolean(g.confirmado),
+        vieneSolo: true,
+      };
+    });
+  return [...matrimoniosDeInvitados(invitados, fechaEvento), ...solos].sort((a, b) => a.familia.localeCompare(b.familia, "es"));
+}
+
+// «Gustavo y Míriam», o solo el nombre de quien viene sin su pareja.
+export const nombresMatrimonio = (m) => [m?.esposo?.nombre, m?.esposa?.nombre].filter(Boolean).join(" y ");
+
 export function contarMatrimonios(invitados) {
-  return matrimoniosDeInvitados(invitados, "").length;
+  return matrimoniosConLosQueVienenSolos(invitados, "").length;
 }

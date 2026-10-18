@@ -167,3 +167,30 @@ describe("padres solos y sueltos", () => {
     expect(contarMatrimonios(lista)).toBe(1);
   });
 });
+
+// v71 (él): quien viene sin su pareja, marcado como excepción en la Revisión.
+import { matrimoniosConLosQueVienenSolos, nombresMatrimonio, vieneSinPareja } from "./matrimonios";
+describe("los casados que vienen sin su pareja (excepción en la Revisión)", () => {
+  const pareja = [
+    { id: "o", nombre: "Gustavo", apellido: "Abreu", grupoFamiliar: "Abreu01", rolFamiliar: ROL_FAMILIAR.ESPOSO, anioBoda: "1998", confirmado: true },
+    { id: "a", nombre: "Míriam", apellido: "Abreu", grupoFamiliar: "Abreu01", rolFamiliar: ROL_FAMILIAR.ESPOSA, anioBoda: "1998", confirmado: true },
+  ];
+  const sola = { id: "s", nombre: "Rosa", apellido: "Pérez", grupoFamiliar: "Pérez01", rolFamiliar: ROL_FAMILIAR.ESPOSA, anioBoda: "1990", confirmado: true, excepcionesRevision: ["conyugeSinPareja"] };
+  const suelto = { id: "x", nombre: "Luis", apellido: "Gil", grupoFamiliar: "Gil01", rolFamiliar: ROL_FAMILIAR.ESPOSO, anioBoda: "2000", confirmado: true };
+
+  it("con la excepción, es un matrimonio de uno, con su aniversario", () => {
+    const lista = matrimoniosConLosQueVienenSolos([...pareja, sola, suelto], "2026-12-11");
+    expect(lista.map((m) => m.familia)).toEqual(["Abreu01", "Pérez01"]);
+    const rosa = lista[1];
+    expect(rosa.esposa.id).toBe("s");
+    expect(rosa.esposo).toBeNull();
+    expect(rosa.aniversario).toBe(36);
+    expect(nombresMatrimonio(rosa)).toBe("Rosa");
+    expect(nombresMatrimonio(lista[0])).toBe("Gustavo y Míriam");
+  });
+
+  it("sin la excepción, una marca suelta no cuenta (sigue siendo un error)", () => {
+    expect(vieneSinPareja(suelto)).toBe(false);
+    expect(contarMatrimonios([...pareja, sola, suelto])).toBe(2);
+  });
+});

@@ -22,7 +22,7 @@ import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante
 import { Boton, estilosBoton } from "../../components/Boton";
 import { HuecoFoto, ANCHO_COL, ALTO_MINIATURA, estiloMarcoFoto } from "../../components/HuecoFoto";
 import { Seal } from "../../components/Widgets";
-import { matrimoniosDeInvitados } from "../../lib/matrimonios";
+import { matrimoniosConLosQueVienenSolos, nombresMatrimonio } from "../../lib/matrimonios";
 import {
   subirFotoMatrimonio,
   borrarFotoMatrimonio,
@@ -131,7 +131,8 @@ export function VentanaAniversarios({ data, onCerrar }) {
   const [descargando, setDescargando] = useState(false);
 
   const matrimonios = useMemo(
-    () => matrimoniosDeInvitados(invitados, evento?.fecha),
+    // Con los casados que vienen sin su pareja, si él lo marcó así (v71).
+    () => matrimoniosConLosQueVienenSolos(invitados, evento?.fecha),
     [invitados, evento?.fecha]
   );
 
@@ -271,7 +272,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
     </Boton>
   );
 
-  const nombreMatrimonio = (m) => `${m.familia} — ${m.esposo.nombre} y ${m.esposa.nombre}`;
+  const nombreMatrimonio = (m) => `${m.familia} — ${nombresMatrimonio(m)}`;
 
   return (
     <VentanaFlotante
@@ -357,7 +358,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
                   className="whitespace-nowrap overflow-hidden text-ellipsis"
                   style={{ color: C.ink, fontFamily: "'Fraunces', serif", fontSize: T.destacado }}
                 >
-                  <b>{m.familia}</b> — {m.esposo.nombre} y {m.esposa.nombre}
+                  <b>{m.familia}</b> — {nombresMatrimonio(m)}
                 </div>
                 <div className="text-xs whitespace-nowrap" style={{ color: C.ink, opacity: OP.secundario }}>
                   {m.anioBoda || "sin año"}
@@ -409,8 +410,8 @@ export function VentanaAniversarios({ data, onCerrar }) {
           const tipoSubida = esBoda ? "bodaFinal" : "aniversario";
           const idInput = `aniversarios-subir-${tipoSubida}`;
           const titulo = esBoda
-            ? `Boda (${enGrande.cual === "final" ? "con plantilla" : "original"}) — ${m.esposo.nombre} y ${m.esposa.nombre}`
-            : `Aniversario — ${m.esposo.nombre} y ${m.esposa.nombre}`;
+            ? `Boda (${enGrande.cual === "final" ? "con plantilla" : "original"}) — ${nombresMatrimonio(m)}`
+            : `Aniversario — ${nombresMatrimonio(m)}`;
 
           return (
             <ModalFlotante
