@@ -128,7 +128,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
   const [enGrande, setEnGrande] = useState(null);
   // Descarga de originales: null, o { sinAnio: [...] } esperando confirmar.
   const [avisoDescarga, setAvisoDescarga] = useState(null);
-  const [descargando, setDescargando] = useState(false);
+  const [descargando, setDescargando] = useState("");
 
   const matrimonios = useMemo(
     // Con los casados que vienen sin su pareja, si él lo marcó así (v71).
@@ -209,24 +209,45 @@ export function VentanaAniversarios({ data, onCerrar }) {
   // colaboradores, cada una con "Familia - Esposo y Esposa - año.jpg", para
   // pasarlas por la plantilla con otra IA (usuario, 2026-09-17: un ZIP
   // porque Safari bloquea decenas de descargas seguidas).
-  const conOriginal = matrimonios.filter((m) => fotosFamiliares?.[m.familia]);
+  //
+  // Dos botones (él, v71.1): «Todas», como siempre, y «Nuevas», solo las de
+  // los matrimonios que aún no tienen foto en Aniversario: las que quedan por
+  // montar, sin buscarlas entre las ya hechas. Cada descarga lleva la hoja de
+  // encargo de SUS fotos.
   // La hoja de encargo solo se entrega con TODOS los datos recogidos: con un
   // año a medias la instrucción saldría mal y el error se repetiría en las
   // 48 (regla del usuario, 2026-09-17).
-  const paraEncargo = matrimoniosParaEncargo(matrimonios, fotosSinBoda);
-  const falta = faltaParaEncargo(paraEncargo, fotosFamiliares);
-  const pedirDescarga = () => {
+  const sinAniversario = matrimonios.filter((m) => !fotosAniversario?.[m.familia]);
+  const alcance = (cuales) => {
+    const lista = cuales === "nuevas" ? sinAniversario : matrimonios;
+    const paraEncargo = matrimoniosParaEncargo(lista, fotosSinBoda);
+    return {
+      cuales,
+      conOriginal: lista.filter((m) => fotosFamiliares?.[m.familia]),
+      paraEncargo,
+      falta: faltaParaEncargo(paraEncargo, fotosFamiliares),
+      archivo: cuales === "nuevas" ? "Fotos de boda nuevas.zip" : "Fotos de boda originales.zip",
+    };
+  };
+  const nuevas = alcance("nuevas").conOriginal.length;
+  const pedirDescarga = (cuales) => {
     setError("");
-    if (conOriginal.length === 0) {
-      setError("Todavía no hay fotos de boda subidas por los colaboradores.");
+    const a = alcance(cuales);
+    if (a.conOriginal.length === 0) {
+      setError(
+        cuales === "nuevas"
+          ? "No queda ninguna nueva: todas las que tienen foto de boda ya tienen su foto en Aniversario."
+          : "Todavía no hay fotos de boda subidas por los colaboradores."
+      );
       return;
     }
-    if (!falta.completo) setAvisoDescarga(falta);
-    else descargarOriginales();
+    if (!a.falta.completo) setAvisoDescarga({ ...a.falta, cuales });
+    else descargarOriginales(cuales);
   };
-  const descargarOriginales = async () => {
+  const descargarOriginales = async (cuales) => {
+    const { conOriginal, paraEncargo, falta, archivo } = alcance(cuales);
     setAvisoDescarga(null);
-    setDescargando(true);
+    setDescargando(cuales);
     const archivos = [];
     const fallidas = [];
     const usados = new Set();
@@ -253,23 +274,36 @@ export function VentanaAniversarios({ data, onCerrar }) {
           datos: new TextEncoder().encode(hojaDeEncargo(paraEncargo)),
         });
       }
-      descargarBlob("Fotos de boda originales.zip", new Blob([crearZip(archivos)], { type: "application/zip" }));
+      descargarBlob(archivo, new Blob([crearZip(archivos)], { type: "application/zip" }));
     }
     if (fallidas.length > 0) setError(`No se pudieron descargar ${fallidas.length}: ${fallidas.join(", ")}.`);
-    setDescargando(false);
+    setDescargando("");
   };
 
+  // Los dos, del mismo ancho (norma 4): «Todas» y «Nuevas», como él los nombró.
   const accionesCabecera = (
-    <Boton
-      variante="secundario"
-      oscuro
-      icono={Download}
-      titulo="Descargar en un solo archivo las fotos de boda originales, con su nombre y año"
-      onClick={pedirDescarga}
-      disabled={descargando}
-    >
-      {descargando ? "Preparando…" : "Originales"}
-    </Boton>
+    <div className="grid grid-cols-2 gap-2">
+      <Boton
+        variante="secundario"
+        oscuro
+        icono={Download}
+        titulo="Descargar en un solo archivo todas las fotos de boda originales, con su nombre y año"
+        onClick={() => pedirDescarga("todas")}
+        disabled={Boolean(descargando)}
+      >
+        {descargando === "todas" ? "Preparando…" : "Todas"}
+      </Boton>
+      <Boton
+        variante="secundario"
+        oscuro
+        icono={Download}
+        titulo="Descargar solo las originales que aún no tienen su foto en Aniversario"
+        onClick={() => pedirDescarga("nuevas")}
+        disabled={Boolean(descargando) || nuevas === 0}
+      >
+        {descargando === "nuevas" ? "Preparando…" : `Nuevas (${nuevas})`}
+      </Boton>
+    </div>
   );
 
   const nombreMatrimonio = (m) => `${m.familia} — ${nombresMatrimonio(m)}`;
@@ -508,7 +542,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
           ancho={460}
           acciones={
             <>
-              <Boton variante="principal" onClick={descargarOriginales}>
+              <Boton variante="principal" onClick={() => descargarOriginales(avisoDescarga.cuales)}>
                 Descargar solo las fotos
               </Boton>
               <Boton onClick={() => setAvisoDescarga(null)}>Cancelar</Boton>

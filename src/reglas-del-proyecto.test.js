@@ -282,7 +282,6 @@ describe("cada pantalla tiene una prueba que la dibuja", () => {
     "VistaAnfitrion",
     "VistaNuevaContrasena",
     "VistaTablon",
-    "VentanaAniversarios",
     "VentanaColaboradoresDatos",
     "VentanaConfigDatosEvento",
     "VentanaConfigZonaPeligro",
