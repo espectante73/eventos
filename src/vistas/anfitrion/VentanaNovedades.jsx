@@ -504,7 +504,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             onChange={(e) => setPregunta(e.target.value)}
             onBlur={guardarPregunta}
             placeholder="Texto que ve la persona antes de entrar"
-            title="El acceso en sí ya no depende de esto -- solo comprueba nombre y apellido contra los confirmados. Esto es solo el redactado que ve la persona."
+            title="El acceso no depende de esto: se comprueban apellido, nombre y año de nacimiento contra los confirmados. Esto es solo el redactado que ve la persona."
             className="flex-1"
             style={{ ...inputStyle, fontSize: T.pequeno }}
           />

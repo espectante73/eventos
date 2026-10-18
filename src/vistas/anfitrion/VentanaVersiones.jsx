@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "70.4",
+    cambios: [
+      "Novedades: la ayuda del campo de la pregunta de acceso dice ya que se comprueban apellido, nombre y año de nacimiento.",
+    ],
+  },
+  {
     version: "70.3",
     cambios: [
       "Fotos de la fiesta: la mesa se elige ya sentado, viendo el número en la propia mesa. Los textos lo dicen así: «elige el número de tu mesa: lo ves en ella» y, si no coincide, «Revisa el número de tu mesa: es el que ves en ella».",
