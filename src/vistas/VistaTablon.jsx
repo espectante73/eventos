@@ -18,6 +18,7 @@ import { entrarTablon, anioDeRespuesta } from "../lib/tablonEntrada";
 import { InfoItem } from "../components/Portada";
 import { Boton, EnlaceTexto } from "../components/Boton";
 import { NotaPrivacidad } from "../components/NotaPrivacidad";
+import { SeccionPlegable } from "../components/SeccionPlegable";
 import { TITULO_NOTA_PRIVACIDAD } from "../constants";
 import { uid } from "../lib/id";
 import { leerEvento } from "../lib/leerEvento";
@@ -430,6 +431,88 @@ export function VistaTablon({ token }) {
     );
   }
 
+  // La lista de la FAQ: una sola pieza, abierta o dentro de su apartado
+  // plegado (con las fotos abiertas, v70.5).
+  const listaFaq = (
+    <div className="space-y-2">
+      {novedades.map((n) => {
+        const abierta = idAbierto === n.id;
+        return (
+          <div key={n.id} className="rounded-lg overflow-hidden" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
+            {/* La etiqueta se va a la derecha, donde estaba la
+                fecha, y la fecha baja dentro del apartado abierto --
+                a petición del usuario, 2026-09-14. Motivo: con la
+                etiqueta, la fecha y la flecha compitiendo por el
+                ancho de la misma línea, a quien tiene la letra del
+                móvil aumentada el título le salía cortado. Así el
+                título se queda con toda la línea y puede partirse en
+                dos si hace falta. (La regla de "una sola línea por
+                fila" es para las tablas del anfitrión, no para algo
+                que leen 58 personas en el móvil.) */}
+            <button
+              onClick={() => alternar(n.id)}
+              className="boton-3d w-full flex items-start justify-between gap-2 px-4 py-3 text-left"
+            >
+              <span
+                className="min-w-0 flex-1"
+                style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600, lineHeight: 1.3 }}
+              >
+                {n.titulo || "(sin título)"}
+              </span>
+              <span className="flex items-center gap-2 flex-shrink-0">
+                <span
+                  className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap font-medium"
+                  style={
+                    n.esNovedad
+                      ? { background: C.ink, color: C.paper }
+                      : { border: `1px solid ${C.line}`, color: C.charcoal, opacity: OP.secundario }
+                  }
+                >
+                  {n.esNovedad ? "NOVEDADES" : "FAQ"}
+                </span>
+                <ChevronDown
+                  size={16}
+                  style={{ color: C.gold, transform: abierta ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
+                />
+              </span>
+            </button>
+            {abierta && (
+              <div style={{ borderTop: `1px solid ${C.line}` }}>
+                <p className="px-4 pt-2.5 text-xs" style={{ color: C.charcoal, opacity: OP.tenue }}>
+                  {formatearFecha(String(n.creadaEn).slice(0, 10))}
+                </p>
+              </div>
+            )}
+            {abierta && (
+              <div
+                className="px-4 pt-2 pb-4 text-sm"
+                style={{
+                  color: C.charcoal,
+                  // Sin esto, un salto de línea o un tabulador sueltos
+                  // (Enter/Tab en VentanaNovedades) se colapsan como
+                  // cualquier espacio en blanco de HTML normal -- con
+                  // "pre-wrap" se ven de verdad, y el texto sigue
+                  // rompiendo línea solo si no cabe (no queda todo en
+                  // una única línea horizontal interminable).
+                  whiteSpace: "pre-wrap",
+                }}
+                // El anfitrión es el único que escribe este HTML (admite
+                // <b>/<br> sencillo, mismo criterio que las plantillas de
+                // email en Configuración) -- no es contenido de terceros.
+                dangerouslySetInnerHTML={{ __html: n.cuerpo }}
+              />
+            )}
+          </div>
+        );
+      })}
+      {novedades.length === 0 && (
+        <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
+          Todavía no hay ninguna novedad publicada.
+        </p>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen" style={{ background: C.paper }}>
       {/* Botón de música flotante: solo aparece si hay al menos una pista
@@ -597,93 +680,29 @@ export function VistaTablon({ token }) {
 
         {fotosFiesta?.abierta && <TarjetaFotosFiesta estado={fotosFiesta} onSubir={subirFoto} onEliminar={eliminarFoto} onVerificar={verificarFoto} />}
 
-        <h2
-          className="text-sm uppercase mb-1"
-          style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 1 }}
-        >
-          FAQ
-        </h2>
-        <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
-          Información relativa al evento dividida por secciones
-        </p>
-
-        <div className="space-y-2">
-          {novedades.map((n) => {
-            const abierta = idAbierto === n.id;
-            return (
-              <div key={n.id} className="rounded-lg overflow-hidden" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
-                {/* La etiqueta se va a la derecha, donde estaba la
-                    fecha, y la fecha baja dentro del apartado abierto --
-                    a petición del usuario, 2026-09-14. Motivo: con la
-                    etiqueta, la fecha y la flecha compitiendo por el
-                    ancho de la misma línea, a quien tiene la letra del
-                    móvil aumentada el título le salía cortado. Así el
-                    título se queda con toda la línea y puede partirse en
-                    dos si hace falta. (La regla de "una sola línea por
-                    fila" es para las tablas del anfitrión, no para algo
-                    que leen 58 personas en el móvil.) */}
-                <button
-                  onClick={() => alternar(n.id)}
-                  className="boton-3d w-full flex items-start justify-between gap-2 px-4 py-3 text-left"
-                >
-                  <span
-                    className="min-w-0 flex-1"
-                    style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600, lineHeight: 1.3 }}
-                  >
-                    {n.titulo || "(sin título)"}
-                  </span>
-                  <span className="flex items-center gap-2 flex-shrink-0">
-                    <span
-                      className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap font-medium"
-                      style={
-                        n.esNovedad
-                          ? { background: C.ink, color: C.paper }
-                          : { border: `1px solid ${C.line}`, color: C.charcoal, opacity: OP.secundario }
-                      }
-                    >
-                      {n.esNovedad ? "NOVEDADES" : "FAQ"}
-                    </span>
-                    <ChevronDown
-                      size={16}
-                      style={{ color: C.gold, transform: abierta ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
-                    />
-                  </span>
-                </button>
-                {abierta && (
-                  <div style={{ borderTop: `1px solid ${C.line}` }}>
-                    <p className="px-4 pt-2.5 text-xs" style={{ color: C.charcoal, opacity: OP.tenue }}>
-                      {formatearFecha(String(n.creadaEn).slice(0, 10))}
-                    </p>
-                  </div>
-                )}
-                {abierta && (
-                  <div
-                    className="px-4 pt-2 pb-4 text-sm"
-                    style={{
-                      color: C.charcoal,
-                      // Sin esto, un salto de línea o un tabulador sueltos
-                      // (Enter/Tab en VentanaNovedades) se colapsan como
-                      // cualquier espacio en blanco de HTML normal -- con
-                      // "pre-wrap" se ven de verdad, y el texto sigue
-                      // rompiendo línea solo si no cabe (no queda todo en
-                      // una única línea horizontal interminable).
-                      whiteSpace: "pre-wrap",
-                    }}
-                    // El anfitrión es el único que escribe este HTML (admite
-                    // <b>/<br> sencillo, mismo criterio que las plantillas de
-                    // email en Configuración) -- no es contenido de terceros.
-                    dangerouslySetInnerHTML={{ __html: n.cuerpo }}
-                  />
-                )}
-              </div>
-            );
-          })}
-          {novedades.length === 0 && (
-            <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
-              Todavía no hay ninguna novedad publicada.
+        {/* Con las fotos abiertas, la FAQ entera se pliega en una línea (él,
+            v70.5): ese día lo que importa es la tarjeta de las fotos. Se
+            abre tocándola, como cualquier apartado. */}
+        {fotosFiesta?.abierta ? (
+          <SeccionPlegable sencilla titulo="FAQ" resumen="Información relativa al evento">
+            {listaFaq}
+          </SeccionPlegable>
+        ) : (
+          <>
+            <h2
+              className="text-sm uppercase mb-1"
+              style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 1 }}
+            >
+              FAQ
+            </h2>
+            <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
+              Información relativa al evento dividida por secciones
             </p>
-          )}
+            {listaFaq}
+          </>
+        )}
 
+        <div>
           {/* Al pie, discreto y sin competir con las novedades: la nota de
               privacidad (usuario, 2026-09-21, eligiendo entre sección
               plegada, link al pie o texto abierto). Link subrayado, no

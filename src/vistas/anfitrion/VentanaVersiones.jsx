@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "70.5",
+    cambios: [
+      "Tablón: mientras las fotos de la fiesta están abiertas, la FAQ entera se pliega en una sola línea, «FAQ», para que mande la tarjeta de las fotos. Se abre tocándola. Con las fotos cerradas, la FAQ se ve como siempre.",
+    ],
+  },
+  {
     version: "70.4",
     cambios: [
       "Novedades: la ayuda del campo de la pregunta de acceso dice ya que se comprueban apellido, nombre y año de nacimiento.",
