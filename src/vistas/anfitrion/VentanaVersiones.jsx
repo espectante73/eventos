@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "70.1",
+    cambios: [
+      "Tablón, guía de las rondas: «Pagado» lleva ya el importe de su entrada («Pagado · 94 €»), calculado con los precios del evento y su edad, igual que cuando cobra el colaborador.",
+    ],
+  },
+  {
     version: "70",
     cambios: [
       "Tablón, más seguro: para entrar hacen falta el apellido y el nombre y, además, el año de nacimiento, elegido en un desplegable al lado (sin teclado). El servidor lo comprueba en la puerta y en todo lo que pide el tablón después. Si la ficha de alguien aún no tiene el año, le sale: «Tu ficha aún no tiene tu año de nacimiento. Pídeselo a tu colaborador.» Quien ya había entrado tendrá que volver a entrar una vez, ahora con su año.",

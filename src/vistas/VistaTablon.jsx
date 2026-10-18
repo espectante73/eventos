@@ -164,7 +164,8 @@ export function VistaTablon({ token }) {
         }),
       ]);
       setEvento(eventoLeido);
-      setYo({ ...(quien || {}), nombre: quien?.nombre || respuestaVerificadaRef.current });
+      // Con el año con el que entró (v70.1): el importe de su entrada en la guía.
+      setYo({ ...(quien || {}), nombre: quien?.nombre || respuestaVerificadaRef.current, anio: anioDeRespuesta(respuestaVerificadaRef.current) });
       setNovedades(novedadesFilas || []);
       setFotosFiesta(fotos || null);
       // Todas plegadas por defecto (ni siquiera la más reciente se abre
