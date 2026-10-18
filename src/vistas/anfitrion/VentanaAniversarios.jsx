@@ -176,11 +176,6 @@ export function VentanaAniversarios({ data, onCerrar }) {
 
   // Cuentan también las que están pero en Full HD: hay que volver a subirlas.
   const faltanAniversario = matrimonios.filter((m) => !fotosAniversario?.[m.familia] || falta4K(fotosAniversario[m.familia])).length;
-  // Los que no tienen foto de boda (marcado por el colaborador) no tienen
-  // nada que montar: no cuentan como "falta la plantilla".
-  const faltanPlantilla = matrimonios.filter(
-    (m) => (!fotosBodaFinal?.[m.familia] && !fotosSinBoda?.[m.familia]) || falta4K(fotosBodaFinal?.[m.familia])
-  ).length;
 
   const subir = async (tipo, familia, file) => {
     const t = TIPOS[tipo];
@@ -314,9 +309,10 @@ export function VentanaAniversarios({ data, onCerrar }) {
           >
             Matrimonio
           </div>
-          {/* En Boda el sello cuenta las que faltan por montar en la
-              plantilla; en Aniv., las fotos de aniversario que faltan. */}
-          <BandaCabecera aviso={faltanPlantilla}>Boda</BandaCabecera>
+          {/* El sello cuenta, en Aniv., las fotos terminadas que faltan.
+              Boda es la original del colaborador: no hay nada que contar
+              (él, v70.9: la foto con la plantilla la sube en Aniv.). */}
+          <BandaCabecera>Boda</BandaCabecera>
           <Separador adorno={false} />
           <BandaCabecera aviso={faltanAniversario}>Aniv.</BandaCabecera>
         </div>
@@ -368,10 +364,12 @@ export function VentanaAniversarios({ data, onCerrar }) {
                   {m.aniversario != null && ` · ${m.aniversario} años`}
                 </div>
               </div>
-              {/* Columna Boda: enseña la terminada (con plantilla) si ya está;
-                  si no, la original del colaborador con la marca "sin
-                  plantilla". La papelera solo quita la terminada: la
-                  original es del colaborador y se conserva. */}
+              {/* Columna Boda: la original del colaborador. La terminada, con
+                  la plantilla, la sube él en Aniversario (v70.9: la marca
+                  «Sin plantilla» salía siempre, aunque ya estuviera hecha).
+                  Si alguna se subió aquí con plantilla antes, se sigue
+                  viendo, y su papelera solo quita esa: la original se
+                  conserva. */}
               <HuecoFoto
                 titulo="Boda"
                 enlace={verMiniatura(final || original)}
@@ -379,7 +377,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
                 soloLectura={!final}
                 // "No tienen": el colaborador marcó que ese matrimonio no
                 // tiene foto de boda. Así se sabe que no falta, que no hay.
-                marca={falta4K(final) ? "Falta 4K" : !final && original ? "Sin plantilla" : !original && fotosSinBoda?.[m.familia] ? "No tienen" : ""}
+                marca={falta4K(final) ? "Falta 4K" : !original && fotosSinBoda?.[m.familia] ? "No tienen" : ""}
                 subiendo={subiendo === `bodaFinal:${m.familia}`}
                 onQuitar={() => setPorQuitar({ matrimonio: m, tipo: "bodaFinal" })}
                 onVer={() => setEnGrande({ matrimonio: m, tipo: "boda", cual: final ? "final" : "original" })}
@@ -413,7 +411,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
           const titulo = esBoda
             ? `Boda (${enGrande.cual === "final" ? "con plantilla" : "original"}) — ${m.esposo.nombre} y ${m.esposa.nombre}`
             : `Aniversario — ${m.esposo.nombre} y ${m.esposa.nombre}`;
-          const textoSubir = esBoda ? (final ? "Cambiar con plantilla" : "Subir con plantilla") : "Cambiar foto";
+
           return (
             <ModalFlotante
               titulo={titulo}
@@ -421,29 +419,35 @@ export function VentanaAniversarios({ data, onCerrar }) {
               ancho={960}
               acciones={
                 <>
-                  {/* Es un <label> y no un <Boton>: tiene que disparar el
-                      <input type="file"> de al lado. Se le clava el mismo
-                      aspecto con estilosBoton para que no desafine. */}
-                  <label
-                    htmlFor={idInput}
-                    className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer"
-                    style={estilosBoton("principal", "normal")}
-                  >
-                    {textoSubir}
-                  </label>
-                  <input
-                    id={idInput}
-                    type="file"
-                    accept="image/*"
-                    className="sr-only"
-                    onChange={(e) => {
-                      const file = e.target.files && e.target.files[0];
-                      e.target.value = "";
-                      if (!file) return;
-                      setEnGrande(null);
-                      subir(tipoSubida, m.familia, file);
-                    }}
-                  />
+                  {/* Solo en Aniversario se sube (v70.9): en Boda está la
+                      original del colaborador. Es un <label> y no un
+                      <Boton>: tiene que disparar el <input type="file"> de
+                      al lado. Se le clava el mismo aspecto con
+                      estilosBoton para que no desafine. */}
+                  {!esBoda && (
+                    <>
+                      <label
+                        htmlFor={idInput}
+                        className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer"
+                        style={estilosBoton("principal", "normal")}
+                      >
+                        Cambiar foto
+                      </label>
+                      <input
+                        id={idInput}
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        onChange={(e) => {
+                          const file = e.target.files && e.target.files[0];
+                          e.target.value = "";
+                          if (!file) return;
+                          setEnGrande(null);
+                          subir(tipoSubida, m.familia, file);
+                        }}
+                      />
+                    </>
+                  )}
                   {/* Comparar la original con la montada, sin salir. */}
                   {esBoda && final && original && (
                     <Boton onClick={() => setEnGrande({ ...enGrande, cual: enGrande.cual === "final" ? "original" : "final" })}>

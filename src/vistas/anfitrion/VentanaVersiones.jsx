@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "70.9",
+    cambios: [
+      "Aniversarios: fuera el falso aviso «Sin plantilla». La foto terminada, con la plantilla, se sube en la columna Aniversario; la columna Boda es solo la original del colaborador, así que ya no marca nada que falte ni ofrece «Subir con plantilla». La cuenta de las que faltan queda en Aniv.",
+    ],
+  },
+  {
     version: "70.8",
     cambios: [
       "«Día del evento», más sencilla: Llegadas y el marcador son ya una sola fila, «Acreditación · cerrada / abierta». «Abrir» deja acreditar y, en el Mac, abre a la vez el marcador grande; «Cerrar» pregunta antes y cierra las dos cosas. Si el marcador se cierra aparte (o en el móvil, donde no se abre solo), «Ver marcador» lo vuelve a abrir. Quedan tres secciones: Acreditación, Fotos y Tarjetas QR.",
