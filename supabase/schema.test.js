@@ -133,6 +133,16 @@ describe("el tablón: quién ha entrado y su colaborador", () => {
     expect(f).toContain("'esColaborador'");
     expect(f).not.toContain('is distinct from y."id"');
   });
+  // v69.4: la guía de las tres rondas. Solo sí o no, y «datos completos»
+  // con la MISMA regla que la app: si una cambia, esta prueba lo dice.
+  it("para la guía de las rondas: datos completos, pagado y dentro, solo sí o no", () => {
+    expect(f).toContain(`'datosCompletos', coalesce(y."anioNacimiento", '') <> '' and coalesce(y."alergias", '') <> ''`);
+    expect(f).toContain(`'pagado', y."pagado"`);
+    expect(f).toContain(`'presente', y."presente"`);
+    expect(f).not.toMatch(/'\w+',\s*y\."(anioNacimiento|alergias|mesa)"\s*[,)]/);
+    const app = readFileSync("src/lib/invitados.js", "utf8");
+    expect(app).toContain("return Boolean(g.anioNacimiento) && Boolean(g.alergias);");
+  });
 });
 
 // v67-68: las fotos de la fiesta. Solo las sube quien entra al tablón con

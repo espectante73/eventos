@@ -2625,6 +2625,10 @@ CREATE FUNCTION public.foto_fiesta_quitada(p_ruta text) RETURNS boolean
 --   colaborador      quien le atiende, también si es él mismo: que lo sepa
 --   colaboradorEsYo  su colaborador es él
 --   esColaborador    tiene cuenta de colaborador: se le recuerda entrar
+--   datosCompletos,  la guía de las tres rondas (v69.4): solo sí o no,
+--   pagado, presente nunca sus datos (el año es clave de las fotos).
+--                    datosCompletos es la misma regla que datosCompletos
+--                    de lib/invitados.js: año de nacimiento y alergias.
 CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
@@ -2633,7 +2637,10 @@ CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS 
     'nombre', y."apellido" || ', ' || y."nombre",
     'colaborador', c."nombre",
     'colaboradorEsYo', c."invitadoId" is not distinct from y."id",
-    'esColaborador', exists (select 1 from colaboradores cc where cc."invitadoId" = y."id")
+    'esColaborador', exists (select 1 from colaboradores cc where cc."invitadoId" = y."id"),
+    'datosCompletos', coalesce(y."anioNacimiento", '') <> '' and coalesce(y."alergias", '') <> '',
+    'pagado', y."pagado",
+    'presente', y."presente"
   )
   from tablon_invitado(p_token, p_respuesta) y
   left join colaboradores c on c."id" = y."colaboradorId";

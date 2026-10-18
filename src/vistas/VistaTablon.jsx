@@ -10,8 +10,8 @@
 // la monta ANTES de tocar nada de sesión/login en cuanto detecta
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause, ArrowLeft, User } from "lucide-react";
-import { C, inputStyle, OP, S, T, FONDO_VERDE, DORADO } from "../theme";
+import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause, ArrowLeft, User, Check } from "lucide-react";
+import { C, inputStyle, OP, S, T, FONDO_VERDE, DORADO, conAlfa } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
@@ -20,6 +20,7 @@ import { NotaPrivacidad } from "../components/NotaPrivacidad";
 import { TITULO_NOTA_PRIVACIDAD } from "../constants";
 import { uid } from "../lib/id";
 import { leerEvento } from "../lib/leerEvento";
+import { rondasTablon } from "../lib/rondasTablon";
 import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta } from "../lib/fotosFiesta";
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 
@@ -313,6 +314,7 @@ export function VistaTablon({ token }) {
   const verificarFoto = (anio, mesa) => conFotosAlDia((quien) => verificarFotoFiesta(supabase, { ...quien, anio, mesa }));
 
   const cuentaAtras = cuentaAtrasEvento(evento);
+  const rondas = rondasTablon(yo, evento);
 
   if (estado === "cargando") {
     return (
@@ -505,6 +507,35 @@ export function VistaTablon({ token }) {
               {/* La dirección, como en la Portada (v69.3: aquí faltaba). */}
               {evento.direccion && <InfoItem claro icon={MapPin} label="Dirección" value={valorDireccion(evento.direccion)} />}
             </div>
+            {/* La guía de las tres rondas (él, v69.4), al ritmo de cada uno
+                (lib/rondasTablon.js): la suya en negrita y con «Ahora»; las
+                cumplidas, claras y con su visto; las demás, difuminadas
+                pero legibles. */}
+            {rondas && (
+              <ul className="mt-4 pt-3 flex flex-col gap-1.5" style={{ borderTop: `1px solid ${conAlfa(C.gold, 0.4)}` }}>
+                {rondas.map((r) => (
+                  <li
+                    key={r.id}
+                    data-ronda={r.id}
+                    data-estado={r.estado}
+                    className="flex items-center justify-between gap-2"
+                    style={{ opacity: r.estado === "pendiente" ? OP.tenue : 1 }}
+                  >
+                    <span className="flex items-center gap-2" style={{ color: C.blanco, fontWeight: r.estado === "ahora" ? 700 : 400 }}>
+                      <MapPin size={16} style={{ color: C.gold, flexShrink: 0 }} aria-hidden />
+                      {r.etiqueta}
+                    </span>
+                    {r.estado === "ahora" && <span style={{ ...ROTULO_CUENTA_ATRAS, color: C.goldClaro }}>Ahora</span>}
+                    {r.estado === "hecha" && (
+                      <span className="flex items-center gap-1 text-sm" style={{ color: C.goldClaro }}>
+                        <Check size={15} aria-hidden />
+                        {r.nota}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 

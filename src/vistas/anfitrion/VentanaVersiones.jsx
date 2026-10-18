@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "69.4",
+    cambios: [
+      "Tablón: en la tarjeta del evento, la guía de las tres rondas (Datos, Recaudación, Acreditación) al ritmo de cada invitado. Sin los datos completos está en Datos; con ellos, en Recaudación, aunque su colaborador no le haya pedido aún el dinero; el día del evento, al abrir las Llegadas, todos en Acreditación. La suya, en negrita con «Ahora»; las cumplidas, claras y con su visto («Completos», «Pagado», «Ya estás dentro»); las demás, difuminadas pero legibles. Necesita el SQL «v69.4-tablon-rondas».",
+    ],
+  },
+  {
     version: "69.3",
     cambios: [
       "Tablón: la tarjeta del evento enseña ya la dirección del restaurante, igual que la Portada (calle en una línea y el resto en otra). Antes se había quedado sin ella.",
