@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cuentaAtrasEvento, formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY, valorFechaEvento, TEXTO_SIN_FECHA, euros } from "./formato";
+import { cuentaAtrasEvento, valorDireccion, formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY, valorFechaEvento, TEXTO_SIN_FECHA, euros } from "./formato";
 
 describe("formatearFecha", () => {
   it("convierte ISO a formato largo en español", () => {
@@ -115,5 +115,13 @@ describe("la cuenta atrás del tablón (v69.1)", () => {
     expect(cuentaAtrasEvento({ ...evento, fechaSinConfirmar: true }, hoy)).toBeNull();
     expect(cuentaAtrasEvento({ ...evento, tablonOcultarFecha: true }, hoy)).toBeNull();
     expect(cuentaAtrasEvento({ fecha: "" }, hoy)).toBeNull();
+  });
+});
+
+describe("valorDireccion (Portada y tablón, v69.3)", () => {
+  it("en dos líneas, partida en la primera coma; sin coma, en una", () => {
+    expect(valorDireccion("Ctra. el Amparo 190, 38430 Icod de los Vinos")).toEqual(["Ctra. el Amparo 190", "38430 Icod de los Vinos"]);
+    expect(valorDireccion("Calle Real 3")).toBe("Calle Real 3");
+    expect(valorDireccion("")).toBe("");
   });
 });

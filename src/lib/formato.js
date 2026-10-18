@@ -27,6 +27,15 @@ export function valorFechaEvento(evento) {
   return [formatearDiaSemana(evento.fecha), formatearFecha(evento.fecha)];
 }
 
+// La dirección, como la escribe la Portada y el tablón: en dos líneas,
+// partida en la primera coma ("calle" / "ciudad, provincia"); sin coma, en
+// una. Una sola pieza: el tablón se había quedado sin ella (v69.3).
+export function valorDireccion(direccion) {
+  const texto = String(direccion || "").trim();
+  const i = texto.indexOf(",");
+  return i === -1 ? texto : [texto.slice(0, i).trim(), texto.slice(i + 1).trim()];
+}
+
 export function formatearFecha(fechaISO) {
   if (!fechaISO) return "";
   const partes = fechaISO.split("-");

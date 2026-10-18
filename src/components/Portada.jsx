@@ -40,7 +40,7 @@ import { useState, useEffect } from "react";
 import { Calendar, Clock, MapPin, Image as ImageIcon } from "lucide-react";
 import { C, FONDO_VERDE, conAlfa } from "../theme";
 import { VERSION_APP } from "../constants";
-import { valorFechaEvento } from "../lib/formato";
+import { valorFechaEvento, valorDireccion } from "../lib/formato";
 import { DesplegableSecciones } from "./DesplegableSecciones";
 import { MiCuenta } from "./MiCuenta";
 import { useMano } from "../lib/mano";
@@ -259,14 +259,7 @@ export function Portada({
               claro
               icon={MapPin}
               label="Dirección"
-              value={(() => {
-                // Se divide en la primera coma (p.ej. "calle" / "ciudad,
-                // provincia") -- si no hay coma, se queda en una sola línea.
-                const i = form.direccion.indexOf(",");
-                return i === -1
-                  ? form.direccion
-                  : [form.direccion.slice(0, i).trim(), form.direccion.slice(i + 1).trim()];
-              })()}
+              value={valorDireccion(form.direccion)}
             />
           )}
         </div>

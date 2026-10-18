@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "69.3",
+    cambios: [
+      "Tablón: la tarjeta del evento enseña ya la dirección del restaurante, igual que la Portada (calle en una línea y el resto en otra). Antes se había quedado sin ella.",
+    ],
+  },
+  {
     version: "69.2",
     cambios: [
       "«Día del evento»: fila nueva «Marcador», con «Abrir». Abre el marcador de llegadas: dos números enormes, «YA ESTÁN» en verde y «FALTAN» en rojo, y debajo «de 112 que han pagado». Cambia solo cada vez que un colaborador acredita a alguien. En el Mac sale en una ventana propia, para llevarla a otra pantalla o a la tele; en el móvil, dentro de la app.",

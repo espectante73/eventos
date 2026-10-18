@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause, ArrowLeft, User } from "lucide-react";
 import { C, inputStyle, OP, S, T, FONDO_VERDE, DORADO } from "../theme";
 import { supabase } from "../supabaseClient";
-import { formatearFecha, valorFechaEvento, cuentaAtrasEvento } from "../lib/formato";
+import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
 import { Boton, EnlaceTexto } from "../components/Boton";
 import { NotaPrivacidad } from "../components/NotaPrivacidad";
@@ -502,6 +502,8 @@ export function VistaTablon({ token }) {
               />
               <InfoItem claro icon={Clock} label="Hora" value={evento.hora || "—"} />
               <InfoItem claro icon={MapPin} label="Lugar" value={evento.lugar || "—"} />
+              {/* La dirección, como en la Portada (v69.3: aquí faltaba). */}
+              {evento.direccion && <InfoItem claro icon={MapPin} label="Dirección" value={valorDireccion(evento.direccion)} />}
             </div>
           </div>
         )}
