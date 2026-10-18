@@ -39,7 +39,7 @@ import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } fro
 import { descargarCSV } from "../../lib/descargas";
 import { descargarListaAcomodadores, ARCHIVO as ARCHIVO_ACOMODADORES } from "../../lib/pdfAcomodadores";
 import { TextInput, TextInputEnVentanaAparte } from "../../components/Formulario";
-import { EncabezadoOrdenable, GrupoFamiliarInput } from "../../components/Widgets";
+import { EncabezadoOrdenable, GrupoFamiliarInput, RecuadroCifras } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { InformeInvitados } from "../../components/InformeInvitados";
@@ -1330,32 +1330,7 @@ export function SeccionInvitados({
             )}
 
             {[resumen.slice(0, 2), resumen.slice(2, 4), resumen.slice(4)].map((grupo, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 rounded px-2 py-1"
-                style={{ border: `1px solid ${C.gold}` }}
-              >
-                {grupo.map((s) => (
-                  <div key={s.label} className="text-center">
-                    <div
-                      className="text-[10px] uppercase"
-                      style={{ color: C.goldClaro, opacity: OP.secundario, fontFamily: "'IBM Plex Mono', monospace" }}
-                    >
-                      {s.label}
-                    </div>
-                    <div
-                      className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
-                      style={{
-                        background: s.alerta ? C.avisoFondo : conAlfa(C.paper, 0.92),
-                        color: s.alerta ? C.peligro : C.ink,
-                        fontFamily: "'Fraunces', serif",
-                      }}
-                    >
-                      {s.value}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <RecuadroCifras key={i} cifras={grupo} />
             ))}
             {/* Los 6 botones sueltos (Imprimir/Canciones/Alergias/Añadir/
                 Editar/Importar) se esconden en un desplegable

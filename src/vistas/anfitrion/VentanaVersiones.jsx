@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "71.4",
+    cambios: [
+      "Aniversarios: en la cabecera, un recuadro de cifras como el de la Lista de invitados: «Matrimonios» (los confirmados), «Aniversario» (los que ya tienen su foto) y «Faltan» (en rojo). El circulito rojo de la columna Aniv. se quita: esa cuenta está ya en «Faltan».",
+    ],
+  },
+  {
     version: "71.3",
     cambios: [
       "Aniversarios: solo salen los matrimonios confirmados (en pareja, los dos confirmados; quien viene sin su pareja, él o ella confirmado). Las cuentas y las descargas, «Todas» y «Nuevas», cuentan también solo los confirmados.",

@@ -21,7 +21,7 @@ import { C, R, T, OP, S, DORADO, conAlfa } from "../../theme";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton, estilosBoton } from "../../components/Boton";
 import { HuecoFoto, ANCHO_COL, ALTO_MINIATURA, estiloMarcoFoto } from "../../components/HuecoFoto";
-import { Seal } from "../../components/Widgets";
+import { Seal, RecuadroCifras } from "../../components/Widgets";
 import { matrimoniosConLosQueVienenSolos, nombresMatrimonio } from "../../lib/matrimonios";
 import {
   subirFotoMatrimonio,
@@ -285,29 +285,41 @@ export function VentanaAniversarios({ data, onCerrar }) {
     setDescargando("");
   };
 
-  // Los dos, del mismo ancho (norma 4): «Todas» y «Nuevas», como él los nombró.
+  // Las cuentas (él, v71.4): cuántos matrimonios hay, cuántos tienen ya su
+  // foto en Aniversario y cuántas faltan, en el recuadro de cifras de la
+  // Lista de invitados. «Faltan» cuenta también las que están en Full HD:
+  // hay que volver a subirlas en 4K.
+  const cifras = [
+    { label: "Matrimonios", value: matrimonios.length },
+    { label: "Aniversario", value: matrimonios.length - faltanAniversario },
+    { label: "Faltan", value: faltanAniversario, alerta: faltanAniversario > 0 },
+  ];
+  // Los dos botones, del mismo ancho (norma 4): «Todas» y «Nuevas», como él los nombró.
   const accionesCabecera = (
-    <div className="grid grid-cols-2 gap-2">
-      <Boton
-        variante="secundario"
-        oscuro
-        icono={Download}
-        titulo="Descargar en un solo archivo todas las fotos de boda originales, con su nombre y año"
-        onClick={() => pedirDescarga("todas")}
-        disabled={Boolean(descargando)}
-      >
-        {descargando === "todas" ? "Preparando…" : "Todas"}
-      </Boton>
-      <Boton
-        variante="secundario"
-        oscuro
-        icono={Download}
-        titulo="Descargar solo las originales que aún no tienen su foto en Aniversario"
-        onClick={() => pedirDescarga("nuevas")}
-        disabled={Boolean(descargando) || nuevas === 0}
-      >
-        {descargando === "nuevas" ? "Preparando…" : `Nuevas (${nuevas})`}
-      </Boton>
+    <div className="flex items-center gap-2">
+      <RecuadroCifras cifras={cifras} />
+      <div className="grid grid-cols-2 gap-2">
+        <Boton
+          variante="secundario"
+          oscuro
+          icono={Download}
+          titulo="Descargar en un solo archivo todas las fotos de boda originales, con su nombre y año"
+          onClick={() => pedirDescarga("todas")}
+          disabled={Boolean(descargando)}
+        >
+          {descargando === "todas" ? "Preparando…" : "Todas"}
+        </Boton>
+        <Boton
+          variante="secundario"
+          oscuro
+          icono={Download}
+          titulo="Descargar solo las originales que aún no tienen su foto en Aniversario"
+          onClick={() => pedirDescarga("nuevas")}
+          disabled={Boolean(descargando) || nuevas === 0}
+        >
+          {descargando === "nuevas" ? "Preparando…" : `Nuevas (${nuevas})`}
+        </Boton>
+      </div>
     </div>
   );
 
@@ -349,12 +361,11 @@ export function VentanaAniversarios({ data, onCerrar }) {
           >
             Matrimonio
           </div>
-          {/* El sello cuenta, en Aniv., las fotos terminadas que faltan.
-              Boda es la original del colaborador: no hay nada que contar
-              (él, v70.9: la foto con la plantilla la sube en Aniv.). */}
+          {/* Las cuentas van arriba, en el recuadro de cifras (v71.4): aquí
+              solo los títulos de las columnas. */}
           <BandaCabecera>Boda</BandaCabecera>
           <Separador adorno={false} />
-          <BandaCabecera aviso={faltanAniversario}>Aniv.</BandaCabecera>
+          <BandaCabecera>Aniv.</BandaCabecera>
         </div>
       )}
 

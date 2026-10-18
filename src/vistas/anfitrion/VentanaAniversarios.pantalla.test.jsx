@@ -35,6 +35,10 @@ it("«Todas» y «Nuevas (1)»: la que ya tiene su foto en Aniversario no cuenta
   const textos = [...document.body.querySelectorAll("button")].map((b) => b.textContent.trim());
   expect(textos).toContain("Todas");
   expect(textos).toContain("Nuevas (1)");
+  // Las cuentas (v71.4): matrimonios, con foto en Aniversario y las que faltan.
+  expect(document.body.textContent).toMatch(/Matrimonios\s*2/);
+  expect(document.body.textContent).toMatch(/Aniversario\s*1/);
+  expect(document.body.textContent).toMatch(/Faltan\s*1/);
   vista.desmontar();
 });
 

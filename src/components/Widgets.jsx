@@ -54,6 +54,37 @@ export function Seal({ count, size = 22, late = false }) {
 // muy grande, mejor más pequeño y ponle los colores como los botones".
 // Sin estos props, se comporta exactamente igual que antes (Versiones,
 // VistaColaborador).
+// Un recuadro de cifras de cabecera (la Lista de invitados: Previstos,
+// Confirmados…; Aniversarios: Matrimonios, Aniversario, Faltan). Una sola
+// pieza para las dos (v71.4). `cifras`: [{ label, value, alerta }]; con
+// `alerta`, la cifra en rojo.
+export function RecuadroCifras({ cifras }) {
+  return (
+    <div className="flex items-center gap-3 rounded px-2 py-1" style={{ border: `1px solid ${C.gold}` }}>
+      {cifras.map((s) => (
+        <div key={s.label} className="text-center">
+          <div
+            className="text-[10px] uppercase"
+            style={{ color: C.goldClaro, opacity: OP.secundario, fontFamily: "'IBM Plex Mono', monospace" }}
+          >
+            {s.label}
+          </div>
+          <div
+            className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
+            style={{
+              background: s.alerta ? C.avisoFondo : conAlfa(C.paper, 0.92),
+              color: s.alerta ? C.peligro : C.ink,
+              fontFamily: "'Fraunces', serif",
+            }}
+          >
+            {s.value}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function Stamp({ children, color = C.ink, pequeno, dorado }) {
   if (dorado) {
     return (
