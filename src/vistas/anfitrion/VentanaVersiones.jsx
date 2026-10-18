@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "71.2",
+    cambios: [
+      "Aniversarios, «Nuevas»: el ZIP trae ya su hoja de encargo. Antes se comprobaban también los matrimonios que aún esperan su foto de boda, y la hoja no salía nunca.",
+    ],
+  },
+  {
     version: "71.1",
     cambios: [
       "Aniversarios: dos botones para descargar las fotos de boda originales. «Todas», como hasta ahora, y «Nuevas (N)», solo las de los matrimonios que aún no tienen su foto en la columna Aniversario: las que quedan por montar, sin buscarlas entre las ya hechas. Cada descarga trae la hoja de encargo solo de sus fotos.",

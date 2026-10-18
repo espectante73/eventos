@@ -218,8 +218,11 @@ export function VentanaAniversarios({ data, onCerrar }) {
   // año a medias la instrucción saldría mal y el error se repetiría en las
   // 48 (regla del usuario, 2026-09-17).
   const sinAniversario = matrimonios.filter((m) => !fotosAniversario?.[m.familia]);
+  // «Nuevas» son las que se pueden montar YA: con la original del colaborador.
+  // La hoja de encargo comprueba solo esas (v71.2: comprobaba también las que
+  // aún esperan su foto de boda, y nunca salía).
   const alcance = (cuales) => {
-    const lista = cuales === "nuevas" ? sinAniversario : matrimonios;
+    const lista = cuales === "nuevas" ? sinAniversario.filter((m) => fotosFamiliares?.[m.familia]) : matrimonios;
     const paraEncargo = matrimoniosParaEncargo(lista, fotosSinBoda);
     return {
       cuales,

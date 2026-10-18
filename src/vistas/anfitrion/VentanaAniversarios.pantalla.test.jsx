@@ -37,3 +37,41 @@ it("«Todas» y «Nuevas (1)»: la que ya tiene su foto en Aniversario no cuenta
   expect(textos).toContain("Nuevas (1)");
   vista.desmontar();
 });
+
+// v71.2: la hoja de encargo de «Nuevas» es solo de las que se descargan; las
+// que aún esperan su foto de boda no la impiden.
+it("«Nuevas» trae su hoja de encargo aunque otros matrimonios esperen su foto", async () => {
+  const { act } = await import("react");
+  const descargas = [];
+  const espera = [g("5", "Jesús", "Ramírez", ROL_FAMILIAR.ESPOSO), g("6", "Paulina", "Ramírez", ROL_FAMILIAR.ESPOSA)];
+  const vista = montar(
+    <VentanaAniversarios
+      data={{
+        invitados: [...invitados, ...espera],
+        evento: { fecha: "2026-12-11" },
+        fotosFamiliares: { Martíni01: "data:image/jpeg;base64,eA==", Medina01: "boda/medina01.jpg" },
+        fotosAniversario: { Medina01: "aniversario/medina01.jpg" },
+        fotosBodaFinal: {},
+        fotosSinBoda: {},
+        persistFotosAniversario: () => {},
+        persistFotosBodaFinal: () => {},
+      }}
+      onCerrar={() => {}}
+    />
+  );
+  const original = URL.createObjectURL;
+  const fetchOriginal = globalThis.fetch;
+  URL.createObjectURL = (blob) => (descargas.push(blob), "blob:prueba");
+  globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer });
+  const nuevas = [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "Nuevas (1)");
+  await act(async () => nuevas.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  await act(async () => {});
+  expect(document.body.textContent).not.toContain("Faltan datos por recoger");
+  expect(descargas).toHaveLength(1);
+  const texto = new TextDecoder().decode(new Uint8Array(await descargas[0].arrayBuffer()));
+  expect(texto).toContain("Hoja de encargo.txt");
+  expect(texto).toContain("Martíni01 - Adriano y Rosi - 2010.jpg");
+  URL.createObjectURL = original;
+  globalThis.fetch = fetchOriginal;
+  vista.desmontar();
+});
