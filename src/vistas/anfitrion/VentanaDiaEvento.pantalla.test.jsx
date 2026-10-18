@@ -14,7 +14,7 @@ it("cerradas: dice «cerradas» y «Abrir» las abre sin preguntar", () => {
   const vista = montar(
     <VentanaDiaEvento data={{ evento: { asistenciaAbierta: false }, persistEvento: (e) => guardados.push(e), obtenerFotosFiesta: sinFotos }} onCerrar={() => {}} />
   );
-  expect(document.body.textContent).toContain("Llegadas · cerradas");
+  expect(document.body.textContent).toContain("Acreditación · cerrada");
   vista.pulsar(boton("Abrir"));
   expect(guardados).toEqual([{ asistenciaAbierta: true }]);
   vista.desmontar();
@@ -26,7 +26,7 @@ it("abiertas: «Cerrar» pregunta antes, y con «Sí» las cierra", () => {
     <VentanaDiaEvento data={{ evento: { asistenciaAbierta: true }, persistEvento: (e) => guardados.push(e), obtenerFotosFiesta: sinFotos }} onCerrar={() => {}} />
   );
   vista.pulsar(boton("Cerrar"));
-  expect(document.body.textContent).toContain("¿Cerrar las llegadas?");
+  expect(document.body.textContent).toContain("¿Cerrar la acreditación?");
   expect(guardados).toEqual([]);
   vista.pulsar(boton("Sí"));
   expect(guardados).toEqual([{ asistenciaAbierta: false }]);
@@ -80,28 +80,48 @@ it("«Descargar» las fotos solo sale con alguna; el de las tarjetas QR, siempre
   con.desmontar();
 });
 
-it("«Acreditación» abre el marcador grande y, abierto, dice «Cerrar» (v70.6)", () => {
-  let pulsado = 0;
-  const datos = { evento: { asistenciaAbierta: true, fotosFiestaAbierta: true }, persistEvento: () => {}, obtenerFotosFiesta: sinFotos };
-  const cerrada = montar(<VentanaDiaEvento data={datos} onCerrar={() => {}} acreditacionAbierta={false} onAlternarAcreditacion={() => (pulsado += 1)} />);
-  expect(document.body.textContent).toContain("Acreditación");
+// v70.8 (él): llegadas y marcador, una sola fila «Acreditación».
+it("«Abrir» la acreditación abre también el marcador; «Cerrar», tras el «Sí», cierra los dos", () => {
+  const hechos = [];
+  const marcador = { abierto: false, abrirAlAcreditar: () => hechos.push("abrir marcador"), cerrar: () => hechos.push("cerrar marcador"), abrir: () => {} };
+  const guardados = [];
+  const cerrada = montar(
+    <VentanaDiaEvento data={{ evento: { asistenciaAbierta: false }, persistEvento: (e) => guardados.push(e), obtenerFotosFiesta: sinFotos }} onCerrar={() => {}} marcador={marcador} />
+  );
   expect(document.body.textContent).not.toContain("Marcador");
   cerrada.pulsar(boton("Abrir"));
-  expect(pulsado).toBe(1);
+  expect(hechos).toEqual(["abrir marcador"]);
+  expect(guardados).toEqual([{ asistenciaAbierta: true }]);
   cerrada.desmontar();
 
-  const abierta = montar(<VentanaDiaEvento data={datos} onCerrar={() => {}} acreditacionAbierta onAlternarAcreditacion={() => (pulsado += 1)} />);
-  expect(botones("Cerrar")).toHaveLength(3);
-  expect(botones("Abrir")).toHaveLength(0);
+  const abierta = montar(
+    <VentanaDiaEvento data={{ evento: { asistenciaAbierta: true }, persistEvento: (e) => guardados.push(e), obtenerFotosFiesta: sinFotos }} onCerrar={() => {}} marcador={{ ...marcador, abierto: true }} />
+  );
+  abierta.pulsar(boton("Cerrar"));
+  abierta.pulsar(boton("Sí"));
+  expect(hechos).toEqual(["abrir marcador", "cerrar marcador"]);
+  expect(guardados.at(-1)).toEqual({ asistenciaAbierta: false });
   abierta.desmontar();
 });
 
-it("los tres «Abrir», iguales: rellenos (v70.6)", () => {
+it("con la acreditación abierta y el marcador cerrado, «Ver marcador» lo abre sin tocar nada más", () => {
+  let abierto = 0;
   const vista = montar(
-    <VentanaDiaEvento data={{ evento: {}, persistEvento: () => {}, obtenerFotosFiesta: sinFotos }} onCerrar={() => {}} acreditacionAbierta={false} onAlternarAcreditacion={() => {}} />
+    <VentanaDiaEvento
+      data={{ evento: { asistenciaAbierta: true }, persistEvento: () => {}, obtenerFotosFiesta: sinFotos }}
+      onCerrar={() => {}}
+      marcador={{ abierto: false, abrir: () => (abierto += 1) }}
+    />
   );
+  vista.pulsar(boton("Ver marcador"));
+  expect(abierto).toBe(1);
+  vista.desmontar();
+});
+
+it("los «Abrir», iguales: rellenos", () => {
+  const vista = montar(<VentanaDiaEvento data={{ evento: {}, persistEvento: () => {}, obtenerFotosFiesta: sinFotos }} onCerrar={() => {}} />);
   const fondos = botones("Abrir").map((b) => b.style.background);
-  expect(fondos).toHaveLength(3);
+  expect(fondos).toHaveLength(2);
   expect(new Set(fondos).size).toBe(1);
   vista.desmontar();
 });

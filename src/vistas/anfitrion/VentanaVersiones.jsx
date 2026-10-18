@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "70.8",
+    cambios: [
+      "«Día del evento», más sencilla: Llegadas y el marcador son ya una sola fila, «Acreditación · cerrada / abierta». «Abrir» deja acreditar y, en el Mac, abre a la vez el marcador grande; «Cerrar» pregunta antes y cierra las dos cosas. Si el marcador se cierra aparte (o en el móvil, donde no se abre solo), «Ver marcador» lo vuelve a abrir. Quedan tres secciones: Acreditación, Fotos y Tarjetas QR.",
+    ],
+  },
+  {
     version: "70.7",
     cambios: [
       "Acreditación (el marcador): todo centrado en la ventana, los dos rótulos a la misma altura y los dos números también. Los números ocupan unos dos tercios del alto de la pantalla, y los rótulos y el «de N que han pagado» crecen con ella, para leerse a 10 metros.",

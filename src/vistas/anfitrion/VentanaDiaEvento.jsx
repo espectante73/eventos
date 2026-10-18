@@ -14,10 +14,10 @@
 // Las fotos se eligen FUERA de la app (él, v67.6): aquí solo se descargan
 // todas en un ZIP, una carpeta por familia. Sin ventana para verlas.
 import { useEffect, useState } from "react";
-import { DoorOpen, DoorClosed, Camera, CameraOff, Download, QrCode, UserCheck } from "lucide-react";
+import { DoorOpen, DoorClosed, Camera, CameraOff, Download, QrCode } from "lucide-react";
 import { C, OP, conAlfa } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
-import { Boton } from "../../components/Boton";
+import { Boton, EnlaceTexto } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { supabase } from "../../supabaseClient";
 import { crearZip } from "../../lib/zip";
@@ -60,7 +60,8 @@ function CeldaTexto({ fila, Icono, titulo, children }) {
   );
 }
 
-function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, onAlternar, children }) {
+// `estados`: cómo se dice abierta y cerrada (Fotos, en plural; Acreditación, en singular).
+function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, estados = ["abiertas", "cerradas"], onAlternar, children }) {
   return (
     <>
       <CeldaTexto
@@ -71,7 +72,7 @@ function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, onAlterna
             <b>{rotulo}</b>
             <span style={{ color: abierta ? C.ink : C.peligro, fontWeight: 600 }}>
               {" · "}
-              {abierta ? "abiertas" : "cerradas"}
+              {abierta ? estados[0] : estados[1]}
             </span>
           </>
         }
@@ -90,23 +91,34 @@ function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, onAlterna
   );
 }
 
-export function VentanaDiaEvento({ data, onCerrar, acreditacionAbierta = false, onAlternarAcreditacion }) {
+// `marcador` (desde VistaAnfitrion): { abierto, abrir, abrirAlAcreditar, cerrar }.
+export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
   const { evento, persistEvento, obtenerFotosFiesta, invitados = [], tokenTablon } = data;
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
+  // La acreditación (él, v70.8): las llegadas y el marcador grande, que
+  // siempre van juntos, en UNA fila. Abrir deja acreditar y, en el Mac,
+  // abre el marcador (dentro del propio clic, o Safari lo bloquea). Cerrar
+  // pregunta antes (en pleno evento, los colaboradores dejarían de poder
+  // marcar a quien llega) y cierra los dos.
   const llegadasAbiertas = Boolean(evento.asistenciaAbierta);
   const fijarLlegadas = (abiertas) => persistEvento({ ...evento, asistenciaAbierta: abiertas });
-  // Cerrar pregunta antes: en pleno evento, los colaboradores dejarían de
-  // poder marcar a quien llega. Abrir, no.
-  const alternarLlegadas = () =>
-    llegadasAbiertas
-      ? preguntar({
-          titulo: "¿Cerrar las llegadas?",
-          texto: "Los colaboradores dejarán de poder marcar quién llega.",
-          peligro: false,
-          alConfirmar: () => fijarLlegadas(false),
-        })
-      : fijarLlegadas(true);
+  const alternarLlegadas = () => {
+    if (llegadasAbiertas) {
+      preguntar({
+        titulo: "¿Cerrar la acreditación?",
+        texto: "Los colaboradores dejarán de poder marcar quién llega, y se cierra el marcador.",
+        peligro: false,
+        alConfirmar: () => {
+          fijarLlegadas(false);
+          marcador.cerrar?.();
+        },
+      });
+      return;
+    }
+    marcador.abrirAlAcreditar?.();
+    fijarLlegadas(true);
+  };
 
   const fotosAbiertas = Boolean(evento.fotosFiestaAbierta);
   const fijarFotos = (abiertas) => persistEvento({ ...evento, fotosFiestaAbierta: abiertas });
@@ -172,29 +184,22 @@ export function VentanaDiaEvento({ data, onCerrar, acreditacionAbierta = false, 
           abierta={llegadasAbiertas}
           Icono={DoorOpen}
           IconoCerrada={DoorClosed}
-          rotulo="Llegadas"
+          rotulo="Acreditación"
+          estados={["abierta", "cerrada"]}
           onAlternar={alternarLlegadas}
         >
           {llegadasAbiertas ? "Dejar de permitir acreditar invitados." : "Permitir acreditar invitados."}
+          {/* Si el marcador se cerró aparte (o en el móvil, que no lo abre
+              solo), se vuelve a abrir sin tocar la acreditación. */}
+          {llegadasAbiertas && !marcador.abierto && (
+            <div>
+              <EnlaceTexto onClick={() => marcador.abrir?.()}>Ver marcador</EnlaceTexto>
+            </div>
+          )}
         </FilaAbrirCerrar>
         <Separador fila={2} />
-        {/* El marcador grande de llegadas (v69.2), «Acreditación» desde la
-            v70.6 (él). Su botón, como los demás: «Abrir» relleno y, con su
-            ventana abierta, «Cerrar» con borde. */}
-        <CeldaTexto fila={3} Icono={UserCheck} titulo={<b>Acreditación</b>}>
-          Ya están y faltan, en grande.
-        </CeldaTexto>
-        <Boton
-          variante={acreditacionAbierta ? "secundario" : "principal"}
-          onClick={onAlternarAcreditacion}
-          className={CELDA_BOTON}
-          style={{ gridRow: 3 }}
-        >
-          {acreditacionAbierta ? "Cerrar" : "Abrir"}
-        </Boton>
-        <Separador fila={4} />
         <FilaAbrirCerrar
-          fila={5}
+          fila={3}
           abierta={fotosAbiertas}
           Icono={Camera}
           IconoCerrada={CameraOff}
@@ -203,20 +208,20 @@ export function VentanaDiaEvento({ data, onCerrar, acreditacionAbierta = false, 
         >
           {fotosAbiertas ? "Dejar de permitir subir fotos." : "Permitir subir fotos."}
         </FilaAbrirCerrar>
-        <Separador fila={6} />
-        <CeldaTexto fila={7} Icono={QrCode} titulo={<b>Tarjetas QR</b>}>
+        <Separador fila={4} />
+        <CeldaTexto fila={5} Icono={QrCode} titulo={<b>Tarjetas QR</b>}>
           Para las mesas, de pie: 2 por folio.
         </CeldaTexto>
-        <Boton onClick={descargarTarjetas} className={CELDA_BOTON} style={{ gridRow: 7 }}>
+        <Boton onClick={descargarTarjetas} className={CELDA_BOTON} style={{ gridRow: 5 }}>
           Descargar
         </Boton>
         {fotos?.length > 0 && (
           <>
-            <Separador fila={8} />
-            <CeldaTexto fila={9} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
+            <Separador fila={6} />
+            <CeldaTexto fila={7} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
               {cuentaFotosFiesta(fotos).detalle}
             </CeldaTexto>
-            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 9 }}>
+            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 7 }}>
               {descargando ? "Preparando…" : "Descargar"}
             </Boton>
           </>

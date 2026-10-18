@@ -247,14 +247,21 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     if (esAparatoTactil() || !abrirInvitadosPopup()) toggle("invitados");
   }, [abrirInvitadosPopup]);
   // Dentro del propio clic (si no, Safari bloquea la ventana): ver usePopupWindow.
-  // Abrir o cerrar, desde su fila de «Día del evento» (v70.6: con la
-  // ventana abierta, el botón dice «Cerrar»).
-  const marcadorAbierto = marcadorEnVentana || Boolean(abierto.marcador);
-  const alternarMarcador = () => {
-    if (marcadorAbierto) {
+  // El marcador va con la acreditación (v70.8): al abrirla, en el Mac se
+  // abre solo (en el móvil no, para no tapar la pantalla); al cerrarla, se
+  // cierra; y «Ver marcador» lo abre aparte, también en el móvil.
+  const marcador = {
+    abierto: marcadorEnVentana || Boolean(abierto.marcador),
+    abrir: () => {
+      if (esAparatoTactil() || !abrirMarcadorPopup()) setAbierto((a) => ({ ...a, marcador: true }));
+    },
+    abrirAlAcreditar: () => {
+      if (!esAparatoTactil()) abrirMarcadorPopup();
+    },
+    cerrar: () => {
       cerrarMarcadorPopup();
       setAbierto((a) => ({ ...a, marcador: false }));
-    } else if (esAparatoTactil() || !abrirMarcadorPopup()) setAbierto((a) => ({ ...a, marcador: true }));
+    },
   };
   // null | "tabla" | "canciones" | "alergias" | "avisosMesas" — controla la
   // ventana flotante; independiente de qué secciones estén plegadas.
@@ -381,8 +388,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
         <VentanaDiaEvento
           data={data}
           onCerrar={() => toggle("diaEvento")}
-          acreditacionAbierta={marcadorAbierto}
-          onAlternarAcreditacion={alternarMarcador}
+          marcador={marcador}
         />
       )}
       {abierto.marcador && <VentanaMarcador data={data} onCerrar={() => toggle("marcador")} />}
