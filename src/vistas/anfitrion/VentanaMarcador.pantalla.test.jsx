@@ -12,7 +12,7 @@ it("ya están, faltan y de cuántos que han pagado", () => {
     { id: "4", confirmado: true, pagado: false },
   ];
   const vista = montar(<VentanaMarcador data={{ invitados, evento: {} }} onCerrar={() => {}} />);
-  const numero = (etiqueta) => document.body.querySelector(`[data-marcador="${etiqueta}"]`).lastElementChild.textContent;
+  const numero = (etiqueta) => document.body.querySelector(`[data-marcador="${etiqueta}"]`).textContent;
   expect(numero("Ya están")).toBe("1");
   expect(numero("Faltan")).toBe("2");
   expect(document.body.textContent).toContain("de 3 que han pagado");

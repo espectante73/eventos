@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "70.7",
+    cambios: [
+      "Acreditación (el marcador): todo centrado en la ventana, los dos rótulos a la misma altura y los dos números también. Los números ocupan unos dos tercios del alto de la pantalla, y los rótulos y el «de N que han pagado» crecen con ella, para leerse a 10 metros.",
+    ],
+  },
+  {
     version: "70.6",
     cambios: [
       "«Día del evento»: el marcador se llama ahora «Acreditación» (también su ventana). Su botón funciona como los demás: «Abrir» relleno y, con la ventana abierta, «Cerrar», que la cierra. Los tres «Abrir» son iguales. Y entre sección y sección, una línea dorada fina y más aire.",
