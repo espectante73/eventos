@@ -104,3 +104,40 @@ it("solo los confirmados (v71.3): una pareja sin confirmar no sale", () => {
   expect(document.body.textContent).not.toContain("Luis y Eva");
   vista.desmontar();
 });
+
+// v71.5 (él): un filtro debajo de Boda y otro debajo de Aniv., con la cifra
+// en cada opción, como en la Lista. «Faltan» cuenta lo mismo que el recuadro.
+it("los filtros: Boda «Con» + Aniv. «Faltan» deja las que se pueden montar ya", () => {
+  const espera = [g("5", "Jesús", "Ramírez", ROL_FAMILIAR.ESPOSO), g("6", "Paulina", "Ramírez", ROL_FAMILIAR.ESPOSA)];
+  const vista = montar(
+    <VentanaAniversarios
+      data={{
+        invitados: [...invitados, ...espera],
+        evento: { fecha: "2026-12-11" },
+        fotosFamiliares: { Martíni01: "boda/martini01.jpg", Medina01: "boda/medina01.jpg" },
+        fotosAniversario: { Medina01: "aniversario/medina01.jpg" },
+        fotosBodaFinal: {},
+        fotosSinBoda: {},
+        persistFotosAniversario: () => {},
+        persistFotosBodaFinal: () => {},
+      }}
+      onCerrar={() => {}}
+    />
+  );
+  const [boda, aniv] = document.body.querySelectorAll("select");
+  const opciones = (s) => [...s.options].map((o) => o.textContent);
+  expect(opciones(boda)).toEqual(["Todas", "Con (2)", "Sin (1)"]);
+  expect(opciones(aniv)).toEqual(["Todas", "Hechas (1)", "Faltan (2)"]);
+  const salen = () => ["Adriano y Rosi", "Emiliano y Ana", "Jesús y Paulina"].filter((n) => document.body.textContent.includes(n));
+
+  vista.elegir(aniv, "faltan");
+  expect(salen()).toEqual(["Adriano y Rosi", "Jesús y Paulina"]);
+  vista.elegir(boda, "con");
+  expect(salen()).toEqual(["Adriano y Rosi"]);
+  vista.elegir(boda, "sin");
+  expect(salen()).toEqual(["Jesús y Paulina"]);
+  vista.elegir(aniv, "hechas");
+  expect(salen()).toEqual([]);
+  expect(document.body.textContent).toContain("Ningún matrimonio con estos filtros.");
+  vista.desmontar();
+});

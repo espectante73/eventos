@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "71.5",
+    cambios: [
+      "Aniversarios: un filtro debajo de cada columna, como en la Lista de invitados, con la cifra en cada opción. Boda: «Con» o «Sin» foto. Aniv.: «Hechas» o «Faltan». Con Boda «Con» y Aniv. «Faltan» quedan las que se pueden montar ya; con Boda «Sin», las que hay que pedir al colaborador.",
+    ],
+  },
+  {
     version: "71.4",
     cambios: [
       "Aniversarios: en la cabecera, un recuadro de cifras como el de la Lista de invitados: «Matrimonios» (los confirmados), «Aniversario» (los que ya tienen su foto) y «Faltan» (en rojo). El circulito rojo de la columna Aniv. se quita: esa cuenta está ya en «Faltan».",

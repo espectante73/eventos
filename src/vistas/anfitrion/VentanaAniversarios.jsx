@@ -17,11 +17,11 @@
 // y enlaces temporales.
 import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
-import { C, R, T, OP, S, DORADO, conAlfa } from "../../theme";
+import { C, R, T, OP, S, DORADO, conAlfa, filtroColumnaStyle } from "../../theme";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton, estilosBoton } from "../../components/Boton";
 import { HuecoFoto, ANCHO_COL, ALTO_MINIATURA, estiloMarcoFoto } from "../../components/HuecoFoto";
-import { Seal, RecuadroCifras } from "../../components/Widgets";
+import { RecuadroCifras } from "../../components/Widgets";
 import { matrimoniosConLosQueVienenSolos, nombresMatrimonio } from "../../lib/matrimonios";
 import {
   subirFotoMatrimonio,
@@ -46,29 +46,30 @@ const SEPARACION_COLUMNAS = 44;
 // Una columna de la cabecera: misma banda clara con esquinas redondeadas
 // arriba que la Lista de invitados (tintaColumnaCabecera en
 // SeccionInvitados.jsx), para que se vea que la columna baja hasta las filas.
-function BandaCabecera({ children, aviso = 0 }) {
+// Debajo del título, su filtro con la cifra en cada opción, como en la Lista
+// (él, v71.5). Las cuentas van arriba, en el recuadro de cifras (v71.4).
+function BandaCabecera({ titulo, filtro, onFiltro, opciones }) {
   return (
     <div
-      className="relative flex items-center justify-center text-sm font-bold uppercase py-2"
+      className="flex flex-col pt-2 pb-1"
       style={{
         width: ANCHO_COL,
         flexShrink: 0,
-        color: C.goldClaro,
         background: conAlfa(C.blanco, 0.07),
         borderRadius: `${R.caja}px ${R.caja}px 0 0`,
       }}
     >
-      {children}
-      {/* El mismo sello rojo con número que avisa de los invitados sin
-          atender de cada colaborador (Seal, en ColaboradorCard). Aquí
-          cuenta las fotos de aniversario que FALTAN, y como Seal no pinta
-          nada con 0, desaparece solo cuando están todas. Sustituye a los
-          cuatro recuadros de resumen de la v30.5, a petición del usuario. */}
-      {aviso > 0 && (
-        <span className="absolute" style={{ top: -6, right: -8 }}>
-          <Seal count={aviso} size={20} />
-        </span>
-      )}
+      <div className="text-center text-sm font-bold uppercase" style={{ color: C.goldClaro }}>
+        {titulo}
+      </div>
+      <select value={filtro} onChange={(e) => onFiltro(e.target.value)} style={filtroColumnaStyle} title={`Filtrar por la columna ${titulo}`}>
+        <option value="">Todas</option>
+        {opciones.map(({ valor, texto, cuantas }) => (
+          <option key={valor} value={valor}>
+            {texto} ({cuantas})
+          </option>
+        ))}
+      </select>
     </div>
   );
 }
@@ -178,7 +179,23 @@ export function VentanaAniversarios({ data, onCerrar }) {
   const falta4K = (valor) => esRutaAlmacen(valor) && Boolean(enlaces[valor]) && Boolean(rutaMiniatura(valor)) && !enlaces[rutaMiniatura(valor)];
 
   // Cuentan también las que están pero en Full HD: hay que volver a subirlas.
-  const faltanAniversario = matrimonios.filter((m) => !fotosAniversario?.[m.familia] || falta4K(fotosAniversario[m.familia])).length;
+  // Una sola definición para el recuadro y el filtro: nunca dicen cosas distintas.
+  const faltaAniversario = (m) => !fotosAniversario?.[m.familia] || falta4K(fotosAniversario[m.familia]);
+  const faltanAniversario = matrimonios.filter(faltaAniversario).length;
+  // «Con» en Boda: la original que sube el colaborador, la misma que bajan «Todas» y «Nuevas».
+  const conFotoBoda = (m) => Boolean(fotosFamiliares?.[m.familia]);
+  const conBoda = matrimonios.filter(conFotoBoda).length;
+
+  // Los filtros de las columnas (él, v71.5). Con Boda «Con» y Aniv.
+  // «Faltan» quedan las que se pueden montar ya; con Boda «Sin», las
+  // que hay que pedir al colaborador.
+  const [filtroBoda, setFiltroBoda] = useState("");
+  const [filtroAniv, setFiltroAniv] = useState("");
+  const visibles = matrimonios.filter(
+    (m) =>
+      (!filtroBoda || (filtroBoda === "con") === conFotoBoda(m)) &&
+      (!filtroAniv || (filtroAniv === "faltan") === faltaAniversario(m))
+  );
 
   const subir = async (tipo, familia, file) => {
     const t = TIPOS[tipo];
@@ -355,17 +372,30 @@ export function VentanaAniversarios({ data, onCerrar }) {
             alignItems: "stretch",
           }}
         >
-          <div
-            className="flex-1 flex items-center text-sm font-bold uppercase pb-2"
-            style={{ color: C.goldClaro }}
-          >
+          {/* A la altura de los títulos de las columnas, no de sus filtros. */}
+          <div className="flex-1 text-sm font-bold uppercase pt-2" style={{ color: C.goldClaro }}>
             Matrimonio
           </div>
-          {/* Las cuentas van arriba, en el recuadro de cifras (v71.4): aquí
-              solo los títulos de las columnas. */}
-          <BandaCabecera>Boda</BandaCabecera>
+          <BandaCabecera
+            titulo="Boda"
+            filtro={filtroBoda}
+            onFiltro={setFiltroBoda}
+            opciones={[
+              // «Con foto (13)» no cabe en la columna: se abrevia (norma 4); el título ya dice «Boda».
+              { valor: "con", texto: "Con", cuantas: conBoda },
+              { valor: "sin", texto: "Sin", cuantas: matrimonios.length - conBoda },
+            ]}
+          />
           <Separador adorno={false} />
-          <BandaCabecera>Aniv.</BandaCabecera>
+          <BandaCabecera
+            titulo="Aniv."
+            filtro={filtroAniv}
+            onFiltro={setFiltroAniv}
+            opciones={[
+              { valor: "hechas", texto: "Hechas", cuantas: matrimonios.length - faltanAniversario },
+              { valor: "faltan", texto: "Faltan", cuantas: faltanAniversario },
+            ]}
+          />
         </div>
       )}
 
@@ -385,8 +415,14 @@ export function VentanaAniversarios({ data, onCerrar }) {
 
       {/* 10px entre filas: sobre el verde, las filas doradas se leían como
           un solo bloque. */}
+      {matrimonios.length > 0 && visibles.length === 0 && (
+        <p className="text-sm italic" style={{ color: C.goldClaro, opacity: OP.secundario }}>
+          Ningún matrimonio con estos filtros.
+        </p>
+      )}
+
       <div className="flex flex-col" style={{ gap: 10 }}>
-        {matrimonios.map((m) => {
+        {visibles.map((m) => {
           const original = fotosFamiliares?.[m.familia] || "";
           const final = fotosBodaFinal?.[m.familia] || "";
           const aniversario = fotosAniversario?.[m.familia] || "";

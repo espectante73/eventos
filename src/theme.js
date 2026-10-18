@@ -176,3 +176,18 @@ export const inputStyle = {
   fontFamily: "'Inter', sans-serif",
   fontSize: T.normal,
 };
+
+// El desplegable de filtro debajo del título de cada columna, sobre el verde
+// de la cabecera (Lista de invitados, Aniversarios): una sola definición.
+export const filtroColumnaStyle = {
+  ...inputStyle,
+  border: "none",
+  background: "transparent",
+  color: C.goldClaro,
+  fontFamily: "'IBM Plex Mono', monospace",
+  padding: "2px 4px",
+  fontSize: T.pequeno,
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
+};

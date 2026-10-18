@@ -31,7 +31,7 @@ import {
   ClipboardCheck,
   Download,
 } from "lucide-react";
-import { C, inputStyle, R, T, OP, conAlfa } from "../../theme";
+import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
@@ -907,18 +907,7 @@ export function SeccionInvitados({
                   <select
                     value={filtros.grupoFamiliar}
                     onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
-                    style={{
-                      ...inputStyle,
-                      border: "none",
-                      background: "transparent",
-                      color: C.goldClaro,
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      padding: "2px 4px",
-                      fontSize: T.pequeno,
-                      width: "100%",
-                      minWidth: 0,
-                      boxSizing: "border-box",
-                    }}
+                    style={filtroColumnaStyle}
                   >
                     <option value="">Todos</option>
                     {gruposFamiliaresUnicos.map((gf) => (
@@ -971,18 +960,7 @@ export function SeccionInvitados({
                   <select
                     value={filtros.anioBoda}
                     onChange={(e) => setFiltros({ ...filtros, anioBoda: e.target.value })}
-                    style={{
-                      ...inputStyle,
-                      border: "none",
-                      background: "transparent",
-                      color: C.goldClaro,
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      padding: "2px 4px",
-                      fontSize: T.pequeno,
-                      width: "100%",
-                      minWidth: 0,
-                      boxSizing: "border-box",
-                    }}
+                    style={filtroColumnaStyle}
                     title="Filtrar por año de boda"
                   >
                     <option value="">Todos</option>
@@ -994,18 +972,7 @@ export function SeccionInvitados({
                   <select
                     value={filtros.zona}
                     onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
-                    style={{
-                      ...inputStyle,
-                      border: "none",
-                      background: "transparent",
-                      color: C.goldClaro,
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      padding: "2px 4px",
-                      fontSize: T.pequeno,
-                      width: "100%",
-                      minWidth: 0,
-                      boxSizing: "border-box",
-                    }}
+                    style={filtroColumnaStyle}
                   >
                     <option value="">Todas</option>
                     {zonasUnicas.map((z) => (
@@ -1019,18 +986,7 @@ export function SeccionInvitados({
                   <select
                     value={filtros.colaboradorId}
                     onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
-                    style={{
-                      ...inputStyle,
-                      border: "none",
-                      background: "transparent",
-                      color: C.goldClaro,
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      padding: "2px 4px",
-                      fontSize: T.pequeno,
-                      width: "100%",
-                      minWidth: 0,
-                      boxSizing: "border-box",
-                    }}
+                    style={filtroColumnaStyle}
                   >
                     <option value="">Todos</option>
                     <option value="sin">Sin asignar ({porColaborador.sin || 0})</option>
@@ -1045,18 +1001,7 @@ export function SeccionInvitados({
                   <select
                     value={filtros.mesa}
                     onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
-                    style={{
-                      ...inputStyle,
-                      border: "none",
-                      background: "transparent",
-                      color: C.goldClaro,
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      padding: "2px 4px",
-                      fontSize: T.pequeno,
-                      width: "100%",
-                      minWidth: 0,
-                      boxSizing: "border-box",
-                    }}
+                    style={filtroColumnaStyle}
                   >
                     <option value="">Todas</option>
                     {/* "Sin mesa" vive aquí, en el filtro, y no en el
@@ -1074,18 +1019,7 @@ export function SeccionInvitados({
                   <select
                     value={filtros.confirmado}
                     onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
-                    style={{
-                      ...inputStyle,
-                      border: "none",
-                      background: "transparent",
-                      color: C.goldClaro,
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      padding: "2px 4px",
-                      fontSize: T.pequeno,
-                      width: "100%",
-                      minWidth: 0,
-                      boxSizing: "border-box",
-                    }}
+                    style={filtroColumnaStyle}
                   >
                     <option value="">Todos</option>
                     <option value="confirmado">Confirmado</option>
@@ -1097,18 +1031,7 @@ export function SeccionInvitados({
                   <select
                     value={filtros.datos}
                     onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
-                    style={{
-                      ...inputStyle,
-                      border: "none",
-                      background: "transparent",
-                      color: C.goldClaro,
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      padding: "2px 4px",
-                      fontSize: T.pequeno,
-                      width: "100%",
-                      minWidth: 0,
-                      boxSizing: "border-box",
-                    }}
+                    style={filtroColumnaStyle}
                   >
                     <option value="">Todos</option>
                     <option value="completo">Completos</option>
@@ -1119,18 +1042,7 @@ export function SeccionInvitados({
                   <select
                     value={filtros.pagado}
                     onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
-                    style={{
-                      ...inputStyle,
-                      border: "none",
-                      background: "transparent",
-                      color: C.goldClaro,
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      padding: "2px 4px",
-                      fontSize: T.pequeno,
-                      width: "100%",
-                      minWidth: 0,
-                      boxSizing: "border-box",
-                    }}
+                    style={filtroColumnaStyle}
                   >
                     <option value="">Todos</option>
                     <option value="pagado">Pagado</option>
@@ -1141,18 +1053,7 @@ export function SeccionInvitados({
                   <select
                     value={filtros.presente}
                     onChange={(e) => setFiltros({ ...filtros, presente: e.target.value })}
-                    style={{
-                      ...inputStyle,
-                      border: "none",
-                      background: "transparent",
-                      color: C.goldClaro,
-                      fontFamily: "'IBM Plex Mono', monospace",
-                      padding: "2px 4px",
-                      fontSize: T.pequeno,
-                      width: "100%",
-                      minWidth: 0,
-                      boxSizing: "border-box",
-                    }}
+                    style={filtroColumnaStyle}
                     title="Quién ha llegado al evento"
                   >
                     <option value="">Todos</option>
@@ -1176,18 +1077,7 @@ export function SeccionInvitados({
                       // son solo de las columnas estrechísimas (rol
                       // familiar, datos), no del resto. Lo señaló el
                       // usuario, 2026-09-23.
-                      style={{
-                        ...inputStyle,
-                        border: "none",
-                        background: "transparent",
-                        color: C.goldClaro,
-                        fontFamily: "'IBM Plex Mono', monospace",
-                        padding: "2px 4px",
-                        fontSize: T.pequeno,
-                        width: "100%",
-                        minWidth: 0,
-                        boxSizing: "border-box",
-                      }}
+                      style={filtroColumnaStyle}
                     >
                       {/* ⚠️ Aquí NO vale "Todos", aunque sea lo que dicen
                           los demás: esta columna es la de los iconos y no
