@@ -198,7 +198,7 @@ describe("confirmar el móvil: año y mesa (v68.1)", () => {
 
   it("si no coincide, dice qué revisar y dónde está la mesa", async () => {
     const s = falso({ rpc: { tablon_verificar_foto: { data: "no" } } });
-    expect((await verificarFotoFiesta(s, { ...QUIEN, anio: "1975", mesa: "x" })).aviso).toContain("pregunta a tu colaborador");
+    expect((await verificarFotoFiesta(s, { ...QUIEN, anio: "1975", mesa: "x" })).aviso).toBe("Revisa el número de tu mesa: es el que ves en ella.");
     expect(s.llamadas[0][1].p_mesa).toBeNull();
   });
 

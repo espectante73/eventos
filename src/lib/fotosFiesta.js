@@ -57,7 +57,7 @@ const MOTIVOS = {
   nombre: "No te hemos reconocido: vuelve a entrar con tu nombre.",
   cerrada: "Ya no se pueden subir fotos.",
   menor: SOLO_MAYORES_16,
-  verificar: "Antes de subir fotos, elige tu número de mesa.",
+  verificar: "Antes de subir fotos, elige el número de tu mesa: lo ves en ella.",
   completa: textoCompleta(2),
 };
 
@@ -67,7 +67,8 @@ const MOTIVOS = {
 // móvil.
 const RESPUESTAS_VERIFICAR = {
   ok: "",
-  no: "Revisa tu número de mesa; si no lo sabes, pregunta a tu colaborador.",
+  // Las fotos se suben en la fiesta, sentados: el número está en su mesa (él, v70.3).
+  no: "Revisa el número de tu mesa: es el que ves en ella.",
   faltan: FALTAN_CLAVES,
   bloqueado: "Demasiados intentos con este nombre. Espera 15 minutos y vuelve a probar.",
   nombre: MOTIVOS.nombre,

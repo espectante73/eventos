@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "70.3",
+    cambios: [
+      "Fotos de la fiesta: la mesa se elige ya sentado, viendo el número en la propia mesa. Los textos lo dicen así: «elige el número de tu mesa: lo ves en ella» y, si no coincide, «Revisa el número de tu mesa: es el que ves en ella».",
+    ],
+  },
+  {
     version: "70.2",
     cambios: [
       "Tablón: los textos de la entrada y de las fotos ya no hablan de «tu invitación» (muchos no la tienen), sino del formulario que tiene su colaborador, y si no puede entrar, que le pregunte a él.",

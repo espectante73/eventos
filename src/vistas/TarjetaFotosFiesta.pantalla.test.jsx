@@ -104,7 +104,7 @@ it("sin confirmar el móvil: solo la mesa, en desplegable (el año lo dio al ent
       }
     )
   );
-  expect(document.body.textContent).toContain("elige tu número de mesa");
+  expect(document.body.textContent).toContain("elige el número de tu mesa: lo ves en ella");
   expect(campoFoto()).toBeNull();
   expect(document.body.querySelectorAll("input")).toHaveLength(0);
   const selects = document.body.querySelectorAll("select");

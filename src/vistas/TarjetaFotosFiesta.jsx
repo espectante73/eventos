@@ -50,7 +50,7 @@ function ConfirmarMovil({ mesas = [], onVerificar }) {
   };
   return (
     <form onSubmit={confirmar} className="mt-2">
-      <p className="text-sm mb-2">Para subir fotos desde este móvil, elige tu número de mesa.</p>
+      <p className="text-sm mb-2">Para subir fotos desde este móvil, elige el número de tu mesa: lo ves en ella.</p>
       <div className="flex items-center gap-2">
         <select
           value={mesa}
