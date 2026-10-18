@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause, ArrowLeft, User } from "lucide-react";
 import { C, inputStyle, OP, S, T, FONDO_VERDE, DORADO } from "../theme";
 import { supabase } from "../supabaseClient";
-import { formatearFecha, valorFechaEvento } from "../lib/formato";
+import { formatearFecha, valorFechaEvento, cuentaAtrasEvento } from "../lib/formato";
 import { InfoItem } from "../components/Portada";
 import { Boton, EnlaceTexto } from "../components/Boton";
 import { NotaPrivacidad } from "../components/NotaPrivacidad";
@@ -50,6 +50,9 @@ function AvisoNoCompartir() {
     </div>
   );
 }
+
+// «FALTAN» y «DÍAS», encima y debajo del número de la cuenta atrás.
+const ROTULO_CUENTA_ATRAS = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno, letterSpacing: 1, textTransform: "uppercase" };
 
 export function VistaTablon({ token }) {
   // "cargando" | "invalido" | "bloqueado" | "listo"
@@ -309,6 +312,8 @@ export function VistaTablon({ token }) {
   const eliminarFoto = (id) => conFotosAlDia((quien) => eliminarFotoFiesta(supabase, { ...quien, id }));
   const verificarFoto = (anio, mesa) => conFotosAlDia((quien) => verificarFotoFiesta(supabase, { ...quien, anio, mesa }));
 
+  const cuentaAtras = cuentaAtrasEvento(evento);
+
   if (estado === "cargando") {
     return (
       <div
@@ -450,11 +455,24 @@ export function VistaTablon({ token }) {
             className="rounded-lg px-5 py-5 mb-6"
             style={{ background: FONDO_VERDE }}
           >
-            {evento.nombre && (
-              <h1 className="text-2xl mb-3" style={{ fontFamily: "'Fraunces', serif", color: C.blanco, fontWeight: 700 }}>
-                {evento.nombre}
-              </h1>
-            )}
+            {/* El nombre y, a su lado, los días que faltan (él, v69.1):
+                grande y en dorado, lo primero que se ve al abrir. */}
+            <div className="flex items-start justify-between gap-3">
+              {evento.nombre && (
+                <h1 className="text-2xl mb-3 min-w-0" style={{ fontFamily: "'Fraunces', serif", color: C.blanco, fontWeight: 700 }}>
+                  {evento.nombre}
+                </h1>
+              )}
+              {cuentaAtras && (
+                <div className="text-center flex-shrink-0 mb-3" style={{ color: C.goldClaro }}>
+                  {cuentaAtras.arriba && <div style={ROTULO_CUENTA_ATRAS}>{cuentaAtras.arriba}</div>}
+                  <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, lineHeight: 1, fontSize: cuentaAtras.hoy ? T.titulo : T.gigante }}>
+                    {cuentaAtras.numero}
+                  </div>
+                  {cuentaAtras.abajo && <div style={ROTULO_CUENTA_ATRAS}>{cuentaAtras.abajo}</div>}
+                </div>
+              )}
+            </div>
             <div className="flex flex-wrap items-start gap-x-6 gap-y-2">
               {/* Fecha ocultable temporalmente desde Novedades -- a
                   petición del usuario, 2026-08-27. Solo afecta a esta

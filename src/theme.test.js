@@ -82,8 +82,10 @@ describe("la escala del acabado no se escribe a mano", () => {
 });
 
 describe("la escala es corta a propósito", () => {
-  it("cinco tamaños de texto y uno para las cifras grandes", () => {
-    expect(Object.keys(T)).toEqual(["micro", "pequeno", "normal", "destacado", "titulo", "cifra"]);
+  // `gigante` (v69.1): lo que se lee de un vistazo, como los días que
+  // faltan en el tablón. Uno más, no uno por pantalla.
+  it("cinco tamaños de texto, uno para las cifras grandes y uno gigante", () => {
+    expect(Object.keys(T)).toEqual(["micro", "pequeno", "normal", "destacado", "titulo", "cifra", "gigante"]);
   });
 
   it("los tamaños van de menor a mayor, sin repetirse", () => {

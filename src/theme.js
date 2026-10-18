@@ -129,6 +129,7 @@ export const T = {
   destacado: 18, // el dato que manda en una tarjeta
   titulo: 22, // títulos de ventana, números de mesa
   cifra: 26, // solo los totales grandes del resumen
+  gigante: 44, // los días que faltan, en el tablón: lo primero que se ve
 };
 
 // Redondeos. Dos: recto-con-canto-suave y redondo del todo.

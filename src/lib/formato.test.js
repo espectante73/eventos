@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY, valorFechaEvento, TEXTO_SIN_FECHA, euros } from "./formato";
+import { cuentaAtrasEvento, formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY, valorFechaEvento, TEXTO_SIN_FECHA, euros } from "./formato";
 
 describe("formatearFecha", () => {
   it("convierte ISO a formato largo en español", () => {
@@ -97,5 +97,23 @@ describe("euros", () => {
   it("vacío o raro, cero", () => {
     expect(sinRaros(euros(undefined))).toBe("0 €");
     expect(sinRaros(euros("abc"))).toBe("0 €");
+  });
+});
+
+describe("la cuenta atrás del tablón (v69.1)", () => {
+  const hoy = new Date(Date.UTC(2026, 9, 18, 10));
+  const evento = { fecha: "2026-12-11" };
+  it("los días que faltan, en plural y en singular", () => {
+    expect(cuentaAtrasEvento(evento, hoy)).toEqual({ hoy: false, arriba: "Faltan", numero: "54", abajo: "días" });
+    expect(cuentaAtrasEvento({ fecha: "2026-10-19" }, hoy)).toEqual({ hoy: false, arriba: "Falta", numero: "1", abajo: "día" });
+  });
+  it("el mismo día, «¡Es hoy!»; después, nada", () => {
+    expect(cuentaAtrasEvento({ fecha: "2026-10-18" }, hoy)).toMatchObject({ hoy: true, numero: "¡Es hoy!" });
+    expect(cuentaAtrasEvento({ fecha: "2026-10-17" }, hoy)).toBeNull();
+  });
+  it("sin fecha confirmada no cuenta: sería contar hacia una provisional", () => {
+    expect(cuentaAtrasEvento({ ...evento, fechaSinConfirmar: true }, hoy)).toBeNull();
+    expect(cuentaAtrasEvento({ ...evento, tablonOcultarFecha: true }, hoy)).toBeNull();
+    expect(cuentaAtrasEvento({ fecha: "" }, hoy)).toBeNull();
   });
 });

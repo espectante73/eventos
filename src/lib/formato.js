@@ -70,15 +70,26 @@ export function formatearDiaSemana(fechaISO) {
 // local podría restar o sumar un día de más según dónde se abra la app.
 // "Hoy" se trunca también a medianoche UTC, así el día del evento en
 // curso da 0, no una fracción.
-export function diasHasta(fechaISO) {
+export function diasHasta(fechaISO, hoy = new Date()) {
   if (!fechaISO) return null;
   const partes = fechaISO.split("-").map((p) => parseInt(p, 10));
   if (partes.length !== 3 || partes.some((p) => isNaN(p))) return null;
   const [anio, mes, dia] = partes;
   const objetivo = Date.UTC(anio, mes - 1, dia);
-  const hoy = new Date();
   const hoyUTC = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate());
   return Math.round((objetivo - hoyUTC) / 86400000);
+}
+
+// La cuenta atrás del tablón (él, v69.1): cuántos días faltan, para que
+// se vea grande cada vez que se abre. Solo con la fecha confirmada (contar
+// hacia una provisional sería mentir); el mismo día, «¡Es hoy!»; después
+// del evento, nada.
+export function cuentaAtrasEvento(evento, hoy = new Date()) {
+  if (!evento || evento.fechaSinConfirmar || evento.tablonOcultarFecha) return null;
+  const dias = diasHasta(evento.fecha, hoy);
+  if (dias === null || dias < 0) return null;
+  if (dias === 0) return { hoy: true, arriba: "", numero: "¡Es hoy!", abajo: "" };
+  return { hoy: false, arriba: dias === 1 ? "Falta" : "Faltan", numero: String(dias), abajo: dias === 1 ? "día" : "días" };
 }
 
 // Cómo se nombra a una persona en TODA la app: "Apellido, Nombre".

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "69.1",
+    cambios: [
+      "Tablón: en la tarjeta verde del evento, junto al nombre, la cuenta atrás en grande y en dorado: «FALTAN 54 DÍAS». Con un día, «FALTA 1 DÍA»; el mismo día, «¡Es hoy!»; después del evento desaparece. Si la fecha no está confirmada, no sale.",
+    ],
+  },
+  {
     version: "69",
     cambios: [
       "Hasta 3 canciones por invitado. En el formulario del colaborador, el apartado se llama «Canciones» y trae tres huecos, cada uno con «Canción» y «Artista» en la misma línea; los que no hagan falta se quedan vacíos. La canción que ya tuviera cada uno pasa a ser la primera.",
