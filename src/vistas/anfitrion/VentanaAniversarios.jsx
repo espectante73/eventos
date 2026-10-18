@@ -132,7 +132,9 @@ export function VentanaAniversarios({ data, onCerrar }) {
 
   const matrimonios = useMemo(
     // Con los casados que vienen sin su pareja, si él lo marcó así (v71).
-    () => matrimoniosConLosQueVienenSolos(invitados, evento?.fecha),
+    // Solo los confirmados (él, v71.3): la foto es para quien viene. En
+    // pareja, los dos confirmados; también lo cuentan las descargas.
+    () => matrimoniosConLosQueVienenSolos(invitados, evento?.fecha).filter((m) => m.confirmados),
     [invitados, evento?.fecha]
   );
 

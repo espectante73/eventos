@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "71.3",
+    cambios: [
+      "Aniversarios: solo salen los matrimonios confirmados (en pareja, los dos confirmados; quien viene sin su pareja, él o ella confirmado). Las cuentas y las descargas, «Todas» y «Nuevas», cuentan también solo los confirmados.",
+    ],
+  },
+  {
     version: "71.2",
     cambios: [
       "Aniversarios, «Nuevas»: el ZIP trae ya su hoja de encargo. Antes se comprobaban también los matrimonios que aún esperan su foto de boda, y la hoja no salía nunca.",

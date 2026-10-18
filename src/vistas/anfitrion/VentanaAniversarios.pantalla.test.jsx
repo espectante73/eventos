@@ -75,3 +75,28 @@ it("«Nuevas» trae su hoja de encargo aunque otros matrimonios esperen su foto"
   globalThis.fetch = fetchOriginal;
   vista.desmontar();
 });
+
+it("solo los confirmados (v71.3): una pareja sin confirmar no sale", () => {
+  const sinConfirmar = [
+    { ...g("7", "Luis", "Gil", ROL_FAMILIAR.ESPOSO), confirmado: false },
+    { ...g("8", "Eva", "Gil", ROL_FAMILIAR.ESPOSA), confirmado: false },
+  ];
+  const vista = montar(
+    <VentanaAniversarios
+      data={{
+        invitados: [...invitados, ...sinConfirmar],
+        evento: { fecha: "2026-12-11" },
+        fotosFamiliares: {},
+        fotosAniversario: {},
+        fotosBodaFinal: {},
+        fotosSinBoda: {},
+        persistFotosAniversario: () => {},
+        persistFotosBodaFinal: () => {},
+      }}
+      onCerrar={() => {}}
+    />
+  );
+  expect(document.body.textContent).toContain("Adriano y Rosi");
+  expect(document.body.textContent).not.toContain("Luis y Eva");
+  vista.desmontar();
+});
