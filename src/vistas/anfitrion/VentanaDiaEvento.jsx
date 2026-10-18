@@ -15,7 +15,7 @@
 // todas en un ZIP, una carpeta por familia. Sin ventana para verlas.
 import { useEffect, useState } from "react";
 import { DoorOpen, DoorClosed, Camera, CameraOff, Download, QrCode, UserCheck } from "lucide-react";
-import { C, OP } from "../../theme";
+import { C, OP, conAlfa } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
@@ -37,6 +37,12 @@ export function cuentaFotosFiesta(fotos) {
 // Las dos celdas de cada fila de la rejilla, con su espejo para zurdos.
 const CELDA_TEXTO = "col-start-1 zurdo:col-start-2 min-w-0";
 const CELDA_BOTON = "col-start-2 zurdo:col-start-1";
+
+// Entre sección y sección, una línea dorada fina, a todo el ancho (él,
+// v70.6): con el hueco de la rejilla por encima y por debajo, más aire.
+function Separador({ fila }) {
+  return <div aria-hidden style={{ gridRow: fila, gridColumn: "1 / -1", borderTop: `1px solid ${conAlfa(C.gold, 0.4)}` }} />;
+}
 
 // La celda del texto: icono y rótulo en una línea; debajo, en pequeño, para
 // qué es el botón.
@@ -84,7 +90,7 @@ function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, onAlterna
   );
 }
 
-export function VentanaDiaEvento({ data, onCerrar, onAbrirMarcador }) {
+export function VentanaDiaEvento({ data, onCerrar, acreditacionAbierta = false, onAlternarAcreditacion }) {
   const { evento, persistEvento, obtenerFotosFiesta, invitados = [], tokenTablon } = data;
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
@@ -171,15 +177,24 @@ export function VentanaDiaEvento({ data, onCerrar, onAbrirMarcador }) {
         >
           {llegadasAbiertas ? "Dejar de permitir acreditar invitados." : "Permitir acreditar invitados."}
         </FilaAbrirCerrar>
-        {/* El marcador grande de llegadas (v69.2), junto a las llegadas. */}
-        <CeldaTexto fila={2} Icono={UserCheck} titulo={<b>Marcador</b>}>
+        <Separador fila={2} />
+        {/* El marcador grande de llegadas (v69.2), «Acreditación» desde la
+            v70.6 (él). Su botón, como los demás: «Abrir» relleno y, con su
+            ventana abierta, «Cerrar» con borde. */}
+        <CeldaTexto fila={3} Icono={UserCheck} titulo={<b>Acreditación</b>}>
           Ya están y faltan, en grande.
         </CeldaTexto>
-        <Boton onClick={onAbrirMarcador} className={CELDA_BOTON} style={{ gridRow: 2 }}>
-          Abrir
+        <Boton
+          variante={acreditacionAbierta ? "secundario" : "principal"}
+          onClick={onAlternarAcreditacion}
+          className={CELDA_BOTON}
+          style={{ gridRow: 3 }}
+        >
+          {acreditacionAbierta ? "Cerrar" : "Abrir"}
         </Boton>
+        <Separador fila={4} />
         <FilaAbrirCerrar
-          fila={3}
+          fila={5}
           abierta={fotosAbiertas}
           Icono={Camera}
           IconoCerrada={CameraOff}
@@ -188,18 +203,20 @@ export function VentanaDiaEvento({ data, onCerrar, onAbrirMarcador }) {
         >
           {fotosAbiertas ? "Dejar de permitir subir fotos." : "Permitir subir fotos."}
         </FilaAbrirCerrar>
-        <CeldaTexto fila={4} Icono={QrCode} titulo={<b>Tarjetas QR</b>}>
+        <Separador fila={6} />
+        <CeldaTexto fila={7} Icono={QrCode} titulo={<b>Tarjetas QR</b>}>
           Para las mesas, de pie: 2 por folio.
         </CeldaTexto>
-        <Boton onClick={descargarTarjetas} className={CELDA_BOTON} style={{ gridRow: 4 }}>
+        <Boton onClick={descargarTarjetas} className={CELDA_BOTON} style={{ gridRow: 7 }}>
           Descargar
         </Boton>
         {fotos?.length > 0 && (
           <>
-            <CeldaTexto fila={5} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
+            <Separador fila={8} />
+            <CeldaTexto fila={9} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
               {cuentaFotosFiesta(fotos).detalle}
             </CeldaTexto>
-            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 5 }}>
+            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 9 }}>
               {descargando ? "Preparando…" : "Descargar"}
             </Boton>
           </>

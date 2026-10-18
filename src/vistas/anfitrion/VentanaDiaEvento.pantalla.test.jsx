@@ -80,17 +80,28 @@ it("«Descargar» las fotos solo sale con alguna; el de las tarjetas QR, siempre
   con.desmontar();
 });
 
-it("«Marcador» abre el marcador de llegadas", () => {
-  let abierto = false;
+it("«Acreditación» abre el marcador grande y, abierto, dice «Cerrar» (v70.6)", () => {
+  let pulsado = 0;
+  const datos = { evento: { asistenciaAbierta: true, fotosFiestaAbierta: true }, persistEvento: () => {}, obtenerFotosFiesta: sinFotos };
+  const cerrada = montar(<VentanaDiaEvento data={datos} onCerrar={() => {}} acreditacionAbierta={false} onAlternarAcreditacion={() => (pulsado += 1)} />);
+  expect(document.body.textContent).toContain("Acreditación");
+  expect(document.body.textContent).not.toContain("Marcador");
+  cerrada.pulsar(boton("Abrir"));
+  expect(pulsado).toBe(1);
+  cerrada.desmontar();
+
+  const abierta = montar(<VentanaDiaEvento data={datos} onCerrar={() => {}} acreditacionAbierta onAlternarAcreditacion={() => (pulsado += 1)} />);
+  expect(botones("Cerrar")).toHaveLength(3);
+  expect(botones("Abrir")).toHaveLength(0);
+  abierta.desmontar();
+});
+
+it("los tres «Abrir», iguales: rellenos (v70.6)", () => {
   const vista = montar(
-    <VentanaDiaEvento
-      data={{ evento: { asistenciaAbierta: true, fotosFiestaAbierta: true }, persistEvento: () => {}, obtenerFotosFiesta: sinFotos }}
-      onCerrar={() => {}}
-      onAbrirMarcador={() => (abierto = true)}
-    />
+    <VentanaDiaEvento data={{ evento: {}, persistEvento: () => {}, obtenerFotosFiesta: sinFotos }} onCerrar={() => {}} acreditacionAbierta={false} onAlternarAcreditacion={() => {}} />
   );
-  expect(document.body.textContent).toContain("Marcador");
-  vista.pulsar(boton("Abrir"));
-  expect(abierto).toBe(true);
+  const fondos = botones("Abrir").map((b) => b.style.background);
+  expect(fondos).toHaveLength(3);
+  expect(new Set(fondos).size).toBe(1);
   vista.desmontar();
 });

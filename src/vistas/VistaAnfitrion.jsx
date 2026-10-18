@@ -148,6 +148,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   // de datos como la Lista; en el móvil, dentro de la app.
   const {
     abrir: abrirMarcadorPopup,
+    cerrar: cerrarMarcadorPopup,
     actualizar: actualizarMarcador,
     abierta: marcadorEnVentana,
     ventana: ventanaMarcador,
@@ -246,8 +247,14 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     if (esAparatoTactil() || !abrirInvitadosPopup()) toggle("invitados");
   }, [abrirInvitadosPopup]);
   // Dentro del propio clic (si no, Safari bloquea la ventana): ver usePopupWindow.
-  const abrirMarcador = () => {
-    if (esAparatoTactil() || !abrirMarcadorPopup()) setAbierto((a) => ({ ...a, marcador: true }));
+  // Abrir o cerrar, desde su fila de «Día del evento» (v70.6: con la
+  // ventana abierta, el botón dice «Cerrar»).
+  const marcadorAbierto = marcadorEnVentana || Boolean(abierto.marcador);
+  const alternarMarcador = () => {
+    if (marcadorAbierto) {
+      cerrarMarcadorPopup();
+      setAbierto((a) => ({ ...a, marcador: false }));
+    } else if (esAparatoTactil() || !abrirMarcadorPopup()) setAbierto((a) => ({ ...a, marcador: true }));
   };
   // null | "tabla" | "canciones" | "alergias" | "avisosMesas" — controla la
   // ventana flotante; independiente de qué secciones estén plegadas.
@@ -370,7 +377,14 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
       )}
 
       {/* Día del evento: las llegadas y, después, las fotos (v66) */}
-      {abierto.diaEvento && <VentanaDiaEvento data={data} onCerrar={() => toggle("diaEvento")} onAbrirMarcador={abrirMarcador} />}
+      {abierto.diaEvento && (
+        <VentanaDiaEvento
+          data={data}
+          onCerrar={() => toggle("diaEvento")}
+          acreditacionAbierta={marcadorAbierto}
+          onAlternarAcreditacion={alternarMarcador}
+        />
+      )}
       {abierto.marcador && <VentanaMarcador data={data} onCerrar={() => toggle("marcador")} />}
 
       {/* Configuración ya no tiene ventana propia: se abre directo desde el

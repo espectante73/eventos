@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "70.6",
+    cambios: [
+      "«Día del evento»: el marcador se llama ahora «Acreditación» (también su ventana). Su botón funciona como los demás: «Abrir» relleno y, con la ventana abierta, «Cerrar», que la cierra. Los tres «Abrir» son iguales. Y entre sección y sección, una línea dorada fina y más aire.",
+    ],
+  },
+  {
     version: "70.5",
     cambios: [
       "Tablón: mientras las fotos de la fiesta están abiertas, la FAQ entera se pliega en una sola línea, «FAQ», para que mande la tarjeta de las fotos. Se abre tocándola. Con las fotos cerradas, la FAQ se ve como siempre.",

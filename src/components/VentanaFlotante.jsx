@@ -133,7 +133,7 @@ export const ETIQUETAS_VENTANAS = {
   // Lo que se abre o se usa ese día: las llegadas y, después, las fotos (él, v66).
   diaEvento: "Día del evento",
   // Se abre desde «Día del evento», no desde «Abrir sección…» (él, v69.2).
-  marcador: "Marcador",
+  marcador: "Acreditación",
   configuracion: "Configuración",
   versiones: "Versiones",
   novedades: "Novedades",
