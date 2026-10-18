@@ -86,7 +86,7 @@ export function VistaTablon({ token }) {
   // invitados confirmados (ver tablon_verificar_respuesta en
   // schema.sql). El anfitrión puede seguir retocando el REDACTADO desde
   // Novedades (persistPreguntaTablon), así que igualmente se carga.
-  const [pregunta, setPregunta] = useState("Nombre y apellido tal como en tu invitación");
+  const [pregunta, setPregunta] = useState("Apellido familiar y nombre, tal como los tiene tu colaborador");
   const [respuestaEscrita, setRespuestaEscrita] = useState("");
   // El año de nacimiento, la otra mitad de la entrada (v70), y los años que
   // ofrece su desplegable (los de la lista, sin decir de quién).
@@ -409,7 +409,7 @@ export function VistaTablon({ token }) {
               persona pueda tener -- si no, no coincidirá nunca con lo
               guardado en la lista de invitados. */}
           <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            El apellido debe ser el familiar de tu invitación (el mismo con el que te invitamos), no otro apellido que tengas.
+            El apellido debe ser el familiar, el mismo que tiene tu colaborador en su formulario, no otro apellido que tengas.
           </p>
           {errorRespuesta && (
             <p className="text-sm mb-2" style={{ color: C.wax }}>

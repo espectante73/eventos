@@ -67,7 +67,7 @@ const MOTIVOS = {
 // móvil.
 const RESPUESTAS_VERIFICAR = {
   ok: "",
-  no: "Revisa tu número de mesa: lo tienes en tu invitación.",
+  no: "Revisa tu número de mesa; si no lo sabes, pregunta a tu colaborador.",
   faltan: FALTAN_CLAVES,
   bloqueado: "Demasiados intentos con este nombre. Espera 15 minutos y vuelve a probar.",
   nombre: MOTIVOS.nombre,

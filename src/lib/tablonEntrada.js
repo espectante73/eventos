@@ -3,9 +3,11 @@
 // la compara con su ficha (clave_tablon) en la puerta y en todo lo de dentro.
 // El año, en un desplegable sin teclado, como en las fotos.
 
+// Sin «invitación» (él, v70.2): muchos no la tienen. Lo que manda es el
+// formulario de su colaborador.
 export const NO_ENCONTRADO =
-  "No te encontramos. Escribe primero tu apellido y después tu nombre, tal como aparecen en tu invitación, " +
-  "y elige tu año de nacimiento. Dan igual las mayúsculas y las tildes.";
+  "No te encontramos. Escribe primero tu apellido y después tu nombre, tal como aparecen en el formulario que tiene tu colaborador, " +
+  "y elige tu año de nacimiento. Dan igual las mayúsculas y las tildes. Si no puedes entrar, pregunta a tu colaborador.";
 // Breve, como él pidió.
 export const SIN_ANIO = "Tu ficha aún no tiene tu año de nacimiento. Pídeselo a tu colaborador.";
 

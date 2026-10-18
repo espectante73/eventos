@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "70.2",
+    cambios: [
+      "Tablón: los textos de la entrada y de las fotos ya no hablan de «tu invitación» (muchos no la tienen), sino del formulario que tiene su colaborador, y si no puede entrar, que le pregunte a él.",
+    ],
+  },
+  {
     version: "70.1",
     cambios: [
       "Tablón, guía de las rondas: «Pagado» lleva ya el importe de su entrada («Pagado · 94 €»), calculado con los precios del evento y su edad, igual que cuando cobra el colaborador.",
