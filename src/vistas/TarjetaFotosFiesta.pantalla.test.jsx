@@ -4,7 +4,8 @@
 import { it, expect } from "vitest";
 import { act } from "react";
 import { montar } from "../pruebas/dibujar";
-import { TarjetaFotosFiesta, opcionesAnios } from "./TarjetaFotosFiesta";
+import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
+import { opcionesAnios } from "../lib/formato";
 import { FRASE_HORIZONTAL, FRASE_PERMISO_PADRES } from "../lib/fotosFiesta";
 
 const nada = async () => ({ aviso: "" });
@@ -90,37 +91,34 @@ it("su miniatura, guardada en su móvil; sin ella, el marco vacío", () => {
   window.localStorage.removeItem("fotos-fiesta-miniatura-1");
 });
 
-it("sin confirmar el móvil: año y mesa en desplegables, sin teclado, y «Confirmar» los manda", async () => {
+it("sin confirmar el móvil: solo la mesa, en desplegable (el año lo dio al entrar, v70)", async () => {
   const enviados = [];
   const vista = montar(
     tarjeta(
-      { fotos: [], verificado: false, anios: { desde: 1950, hasta: 2010 }, mesas: [1, 2, 7] },
+      { fotos: [], verificado: false, mesas: [1, 2, 7] },
       {
-        onVerificar: async (anio, mesa) => {
-          enviados.push([anio, mesa]);
+        onVerificar: async (mesa) => {
+          enviados.push(mesa);
           return { aviso: "" };
         },
       }
     )
   );
-  expect(document.body.textContent).toContain("elige tu año de nacimiento y tu número de mesa");
+  expect(document.body.textContent).toContain("elige tu número de mesa");
   expect(campoFoto()).toBeNull();
   expect(document.body.querySelectorAll("input")).toHaveLength(0);
-  const [anio, mesa] = document.body.querySelectorAll("select");
-  // Del más reciente al más antiguo, tras «Año»; las mesas, las que hay.
-  expect([...anio.options].slice(0, 3).map((o) => o.textContent)).toEqual(["Año", "2010", "2009"]);
-  expect(anio.options).toHaveLength(1 + 61);
-  expect([...mesa.options].map((o) => o.textContent)).toEqual(["Mesa", "1", "2", "7"]);
-  vista.elegir(anio, "1975");
-  vista.elegir(mesa, "7");
+  const selects = document.body.querySelectorAll("select");
+  expect(selects).toHaveLength(1);
+  expect([...selects[0].options].map((o) => o.textContent)).toEqual(["Mesa", "1", "2", "7"]);
+  vista.elegir(selects[0], "7");
   await act(async () => document.body.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
-  expect(enviados).toEqual([["1975", "7"]]);
+  expect(enviados).toEqual(["7"]);
   vista.desmontar();
 });
 
-it("si a su ficha le falta el año o la mesa: ni desplegables ni botón, y a quién preguntar", () => {
+it("si a su ficha le falta la mesa: ni desplegable ni botón, y a quién preguntar", () => {
   const vista = montar(tarjeta({ fotos: [], verificado: false, faltanDatos: true, anios: { desde: 1950, hasta: 2010 }, mesas: [1] }));
-  expect(document.body.textContent).toContain("tu ficha tiene que tener tu año de nacimiento y tu mesa");
+  expect(document.body.textContent).toContain("tu ficha tiene que tener tu mesa");
   expect(document.body.querySelectorAll("select")).toHaveLength(0);
   expect(campoFoto()).toBeNull();
   vista.desmontar();

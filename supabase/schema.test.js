@@ -114,6 +114,26 @@ describe("normalizar_nombre_tablon, la regla que copia la Revisión", () => {
   });
 });
 
+// v70 (él): para entrar al tablón, apellido, nombre Y año de nacimiento. La
+// misma clave en la puerta y en todo lo de dentro; sin año en la ficha, no
+// hay clave (y la puerta dice por qué).
+describe("la clave del tablón, con el año de nacimiento", () => {
+  it("la clave exige un año de 4 cifras y lo añade al nombre normalizado", () => {
+    const c = cuerpoDe("clave_tablon");
+    expect(c).toContain("trim(coalesce(p_anio, '')) ~ '^[0-9]{4}$'");
+    expect(c).toContain("normalizar_nombre_tablon(coalesce(p_apellido, '') || ' ' || coalesce(p_nombre, '') || ' ' || trim(p_anio))");
+  });
+  it("la puerta y lo de dentro comparan con la misma clave; ninguna con el nombre solo", () => {
+    for (const f of ["tablon_verificar_respuesta", "tablon_invitado"]) {
+      expect(cuerpoDe(f)).toContain('clave_tablon(i."apellido", i."nombre", i."anioNacimiento") = normalizar_nombre_tablon(p_respuesta)');
+    }
+    expect(cuerpoDe("tablon_verificar_respuesta")).not.toContain(`normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)`);
+  });
+  it("la alarma de accesos agrupa por persona, sin el año", () => {
+    expect(cuerpoDe("tablon_listar_novedades")).toContain("regexp_replace(normalizar_nombre_tablon(p_respuesta), ' [0-9]{4}$', '')");
+  });
+});
+
 describe("el tablón: quién ha entrado y su colaborador", () => {
   const f = cuerpoDe("tablon_quien_soy");
   // La pieza común (v67): la usan también las funciones de las fotos.
@@ -123,6 +143,8 @@ describe("el tablón: quién ha entrado y su colaborador", () => {
     expect(yo).toContain('i."confirmado" = true');
     expect(yo).toContain('i."excluidoTablon" = false');
     expect(yo).toContain("normalizar_nombre_tablon(p_respuesta)");
+    // v70: con el año, la misma clave en la puerta y dentro.
+    expect(yo).toContain('clave_tablon(i."apellido", i."nombre", i."anioNacimiento") = normalizar_nombre_tablon(p_respuesta)');
     expect(yo).toContain("(select count(*) from candidatos) = 1");
     expect(f).toContain("from tablon_invitado(p_token, p_respuesta) y");
   });

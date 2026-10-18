@@ -89,6 +89,14 @@ export function diasHasta(fechaISO, hoy = new Date()) {
   return Math.round((objetivo - hoyUTC) / 86400000);
 }
 
+// Los años de un desplegable, del más reciente al más antiguo (sin teclado,
+// él, v68.2): el rango que se le pase (los de la lista) o los últimos 100.
+export function opcionesAnios(anios, hoy = new Date().getFullYear()) {
+  const hasta = anios?.hasta || hoy;
+  const desde = anios?.desde || hoy - 100;
+  return Array.from({ length: hasta - desde + 1 }, (_, i) => hasta - i);
+}
+
 // La cuenta atrás del tablón (él, v69.1): cuántos días faltan, para que
 // se vea grande cada vez que se abre. Solo con la fecha confirmada (contar
 // hacia una provisional sería mentir); el mismo día, «¡Es hoy!»; después

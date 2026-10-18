@@ -2327,8 +2327,10 @@ declare
 begin
   v_valido := tablon_verificar_respuesta(p_token, p_respuesta);
   if v_valido then
+    -- Sin el año (v70): la alarma agrupa por persona, y el año no se le
+    -- enseña ni al anfitrión.
     insert into tablon_accesos ("nombreNormalizado", "dispositivoId")
-    values (normalizar_nombre_tablon(p_respuesta), coalesce(nullif(p_dispositivo_id, ''), 'desconocido'))
+    values (regexp_replace(normalizar_nombre_tablon(p_respuesta), ' [0-9]{4}$', ''), coalesce(nullif(p_dispositivo_id, ''), 'desconocido'))
     on conflict ("nombreNormalizado", "dispositivoId") do update set "actualizadoEn" = now();
   end if;
 
@@ -2351,7 +2353,23 @@ CREATE FUNCTION public.tablon_obtener_pregunta(p_token uuid) RETURNS text
   end;
 $$;
 
--- Comprueba el nombre y apellido contra la lista de confirmados.
+-- La clave con la que se entra al tablón (él, v70): apellido, nombre Y año
+-- de nacimiento, normalizados como siempre. La respuesta viaja como
+-- «Apellido Nombre 1975». UNA definición para la puerta
+-- (tablon_verificar_respuesta) y para todo lo demás (tablon_invitado): si
+-- solo la comprobara la puerta, bastaría saltársela llamando directamente
+-- a lo de dentro. Sin año en su ficha no hay clave: no entra
+-- (tablon_falta_anio le dice por qué).
+CREATE FUNCTION public.clave_tablon(p_apellido text, p_nombre text, p_anio text) RETURNS text
+    LANGUAGE sql IMMUTABLE
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+  select case when trim(coalesce(p_anio, '')) ~ '^[0-9]{4}$'
+    then normalizar_nombre_tablon(coalesce(p_apellido, '') || ' ' || coalesce(p_nombre, '') || ' ' || trim(p_anio))
+  end;
+$$;
+
+-- Comprueba el nombre, el apellido y el año contra la lista de confirmados.
 CREATE FUNCTION public.tablon_verificar_respuesta(p_token uuid, p_respuesta text) RETURNS boolean
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
@@ -2361,12 +2379,40 @@ CREATE FUNCTION public.tablon_verificar_respuesta(p_token uuid, p_respuesta text
       select 1 from invitados i
       where i."confirmado" = true
         and i."excluidoTablon" = false
-        and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)
+        and clave_tablon(i."apellido", i."nombre", i."anioNacimiento") = normalizar_nombre_tablon(p_respuesta)
     );
 $$;
 
--- El invitado que entra al tablón con ese nombre (v67): uno solo,
--- confirmado y no excluido. La pieza común de las funciones tablon_* que
+-- Para el mensaje de la puerta (v70): ese nombre es de un confirmado, pero
+-- su ficha aún no tiene el año, así que no puede entrar todavía.
+CREATE FUNCTION public.tablon_falta_anio(p_token uuid, p_nombre text) RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+  select p_token = (select "token" from tablon_secreto limit 1)
+    and exists (
+      select 1 from invitados i
+      where i."confirmado" = true
+        and i."excluidoTablon" = false
+        and clave_tablon(i."apellido", i."nombre", i."anioNacimiento") is null
+        and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_nombre)
+    );
+$$;
+
+-- Los años que ofrece el desplegable de la puerta (v70): del más antiguo al
+-- más reciente de los confirmados. Solo el rango, nunca de quién es cada uno.
+CREATE FUNCTION public.tablon_anios(p_token uuid) RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select jsonb_build_object('desde', min(trim(i."anioNacimiento")::int), 'hasta', max(trim(i."anioNacimiento")::int))
+  from invitados i
+  where p_token = (select "token" from tablon_secreto limit 1)
+    and i."confirmado" = true and trim(i."anioNacimiento") ~ '^[0-9]{4}$';
+$$;
+
+-- El invitado que entra al tablón con ese nombre y año (v67, v70): uno
+-- solo, confirmado y no excluido. La pieza común de las funciones tablon_* que
 -- necesitan saber quién es. Da la ficha entera: solo para usar por dentro.
 CREATE FUNCTION public.tablon_invitado(p_token uuid, p_respuesta text) RETURNS SETOF public.invitados
     LANGUAGE sql STABLE SECURITY DEFINER
@@ -2377,7 +2423,7 @@ CREATE FUNCTION public.tablon_invitado(p_token uuid, p_respuesta text) RETURNS S
     where p_token = (select "token" from tablon_secreto limit 1)
       and i."confirmado" = true
       and i."excluidoTablon" = false
-      and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)
+      and clave_tablon(i."apellido", i."nombre", i."anioNacimiento") = normalizar_nombre_tablon(p_respuesta)
   )
   select c.* from candidatos c where (select count(*) from candidatos) = 1;
 $$;

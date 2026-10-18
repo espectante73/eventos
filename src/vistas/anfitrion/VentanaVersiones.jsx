@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "70",
+    cambios: [
+      "Tablón, más seguro: para entrar hacen falta el apellido y el nombre y, además, el año de nacimiento, elegido en un desplegable al lado (sin teclado). El servidor lo comprueba en la puerta y en todo lo que pide el tablón después. Si la ficha de alguien aún no tiene el año, le sale: «Tu ficha aún no tiene tu año de nacimiento. Pídeselo a tu colaborador.» Quien ya había entrado tendrá que volver a entrar una vez, ahora con su año.",
+      "Fotos de la fiesta: para confirmar el móvil basta ya con la mesa; el año lo dio al entrar.",
+      "Necesita el SQL «v70-tablon-anio».",
+    ],
+  },
+  {
     version: "69.4",
     cambios: [
       "Tablón: en la tarjeta del evento, la guía de las tres rondas (Datos, Recaudación, Acreditación) al ritmo de cada invitado. Sin los datos completos está en Datos; con ellos, en Recaudación, aunque su colaborador no le haya pedido aún el dinero; el día del evento, al abrir las Llegadas, todos en Acreditación. La suya, en negrita con «Ahora»; las cumplidas, claras y con su visto («Completos», «Pagado», «Ya estás dentro»); las demás, difuminadas pero legibles. Necesita el SQL «v69.4-tablon-rondas».",

@@ -13,7 +13,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause, ArrowLeft, User, Check } from "lucide-react";
 import { C, inputStyle, OP, S, T, FONDO_VERDE, DORADO, conAlfa } from "../theme";
 import { supabase } from "../supabaseClient";
-import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento } from "../lib/formato";
+import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento, opcionesAnios } from "../lib/formato";
+import { entrarTablon, anioDeRespuesta } from "../lib/tablonEntrada";
 import { InfoItem } from "../components/Portada";
 import { Boton, EnlaceTexto } from "../components/Boton";
 import { NotaPrivacidad } from "../components/NotaPrivacidad";
@@ -87,6 +88,10 @@ export function VistaTablon({ token }) {
   // Novedades (persistPreguntaTablon), así que igualmente se carga.
   const [pregunta, setPregunta] = useState("Nombre y apellido tal como en tu invitación");
   const [respuestaEscrita, setRespuestaEscrita] = useState("");
+  // El año de nacimiento, la otra mitad de la entrada (v70), y los años que
+  // ofrece su desplegable (los de la lista, sin decir de quién).
+  const [anioEscrito, setAnioEscrito] = useState("");
+  const [rangoAnios, setRangoAnios] = useState(null);
   // Identifica este NAVEGADOR (no a la persona) de forma estable, para
   // poder avisar al anfitrión si el mismo nombre entra desde muchos
   // dispositivos distintos (ver tablon_accesos en schema.sql) -- nunca
@@ -202,6 +207,9 @@ export function VistaTablon({ token }) {
       const { data: preguntaTexto } = await supabase.rpc("tablon_obtener_pregunta", { p_token: token });
       if (cancelado) return;
       if (preguntaTexto) setPregunta(preguntaTexto);
+      const { data: anios } = await supabase.rpc("tablon_anios", { p_token: token });
+      if (cancelado) return;
+      if (anios?.desde) setRangoAnios(anios);
       let guardada = "";
       try {
         guardada = window.localStorage.getItem(claveLocalStorage) || "";
@@ -253,30 +261,23 @@ export function VistaTablon({ token }) {
     e.preventDefault();
     setComprobando(true);
     setErrorRespuesta("");
-    const { data: esCorrecta } = await supabase.rpc("tablon_verificar_respuesta", {
-      p_token: token,
-      p_respuesta: respuestaEscrita,
-    });
+    // Apellido, nombre y año (v70, lib/tablonEntrada.js). Norma 13: si no
+    // entra, se dice EN QUÉ se ha podido equivocar; lo que compara la base
+    // perdona mayúsculas, tildes, comas y espacios de más, pero NO el
+    // orden (apellido primero) ni el año.
+    const { respuesta, aviso: motivo } = await entrarTablon(supabase, token, respuestaEscrita, anioEscrito);
     setComprobando(false);
-    if (esCorrecta !== true) {
-      // Norma 13: se dice EN QUÉ se ha podido equivocar. Lo que compara
-      // la base (normalizar_nombre_tablon) perdona mayúsculas, tildes,
-      // comas y espacios de más — pero NO el orden: apellido primero.
-      // Antes solo ponía "Respuesta incorrecta", y el invitado no tenía
-      // forma de saber cuál de las cuatro cosas había fallado.
-      setErrorRespuesta(
-        "No te encontramos. Escribe primero tu apellido y después tu nombre, " +
-          "tal como aparecen en tu invitación. Dan igual las mayúsculas y las tildes."
-      );
+    if (motivo) {
+      setErrorRespuesta(motivo);
       return;
     }
     try {
-      window.localStorage.setItem(claveLocalStorage, respuestaEscrita);
+      window.localStorage.setItem(claveLocalStorage, respuesta);
     } catch (_) {
       // Sin almacenamiento disponible, no pasa nada -- solo tocará
       // responder de nuevo la próxima vez.
     }
-    respuestaVerificadaRef.current = respuestaEscrita;
+    respuestaVerificadaRef.current = respuesta;
     cargarContenido();
   };
 
@@ -295,6 +296,7 @@ export function VistaTablon({ token }) {
     }
     respuestaVerificadaRef.current = "";
     setRespuestaEscrita("");
+    setAnioEscrito("");
     setYo(null);
     setFotosFiesta(null);
     setEstado("bloqueado");
@@ -311,7 +313,9 @@ export function VistaTablon({ token }) {
   };
   const subirFoto = (archivo) => conFotosAlDia((quien) => subirFotoFiesta(supabase, { ...quien, archivo }));
   const eliminarFoto = (id) => conFotosAlDia((quien) => eliminarFotoFiesta(supabase, { ...quien, id }));
-  const verificarFoto = (anio, mesa) => conFotosAlDia((quien) => verificarFotoFiesta(supabase, { ...quien, anio, mesa }));
+  // El año, el de la entrada (v70): en las fotos solo se elige la mesa.
+  const verificarFoto = (mesa) =>
+    conFotosAlDia((quien) => verificarFotoFiesta(supabase, { ...quien, anio: anioDeRespuesta(quien.respuesta), mesa }));
 
   const cuentaAtras = cuentaAtrasEvento(evento);
   const rondas = rondasTablon(yo, evento);
@@ -370,15 +374,33 @@ export function VistaTablon({ token }) {
           <p className="text-sm mb-3" style={{ color: C.charcoal }}>
             {pregunta}
           </p>
-          <input
-            autoFocus
-            value={respuestaEscrita}
-            onChange={(e) => setRespuestaEscrita(e.target.value)}
-            placeholder="Ej.: Apellido Nombre"
-            className="w-full"
-            style={{ ...inputStyle, width: "100%", height: 42 }}
-            required
-          />
+          {/* Apellido y nombre, y el año al lado, en la misma línea
+              (norma 6), en su desplegable sin teclado (v70). */}
+          <div className="flex items-center gap-2">
+            <input
+              autoFocus
+              value={respuestaEscrita}
+              onChange={(e) => setRespuestaEscrita(e.target.value)}
+              placeholder="Ej.: Apellido Nombre"
+              className="flex-1 min-w-0"
+              style={{ ...inputStyle, height: 42 }}
+              required
+            />
+            <select
+              value={anioEscrito}
+              onChange={(e) => setAnioEscrito(e.target.value)}
+              aria-label="Tu año de nacimiento"
+              style={{ ...inputStyle, height: 42 }}
+              required
+            >
+              <option value="">Año</option>
+              {opcionesAnios(rangoAnios).map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+          </div>
           {/* Aclaración fija, aparte del texto editable de arriba (que el
               anfitrión puede retocar) -- a petición del usuario,
               2026-08-29: el apellido tiene que ser el FAMILIAR (el que
