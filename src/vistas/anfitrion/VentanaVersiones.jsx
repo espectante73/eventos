@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "71.7",
+    cambios: [
+      "Invitaciones: cada persona con «Apellido, Nombre» (norma 15) en el orden de los nombres, en «Se enviará a» y en el resumen del envío por bloques. La columna del nombre tiene ancho fijo, así las flechas quedan alineadas. El texto de la invitación no cambia.",
+    ],
+  },
+  {
     version: "71.6",
     cambios: [
       "Formulario del colaborador: el email se puede poner desde los 16 años (cumplidos el día del evento), no desde los 18. Para un hijo de 16 o 17 es opcional: el email de la familia lo sigue dando un adulto.",

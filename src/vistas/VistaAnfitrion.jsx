@@ -444,7 +444,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
             Destinatario
           </p>
           <p className="text-sm mb-3" style={{ color: C.ink }}>
-            {previewInvitacion.destinatario.nombre} — {previewInvitacion.destinatario.email}
+            {nombreCompleto(previewInvitacion.destinatario)} — {previewInvitacion.destinatario.email}
           </p>
           <p
             className="text-xs uppercase mb-1"

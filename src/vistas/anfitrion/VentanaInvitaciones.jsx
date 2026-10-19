@@ -14,6 +14,7 @@ import { useState, useEffect, useRef } from "react";
 import { Check, Mail, Image as ImageIcon, ChevronUp, ChevronDown } from "lucide-react";
 import { C, inputStyle, T, OP } from "../../theme";
 import { resolverColaborador, comoColaborador } from "../../lib/invitados";
+import { nombreCompleto } from "../../lib/formato";
 import { requisitosActivos } from "../../lib/modoPruebas";
 import { redimensionarImagenArchivo, guardarArchivoInvitacion, obtenerCarpetaInvitaciones, leerHandleCarpeta } from "../../lib/descargas";
 import { guardarImagenEvento, IMAGEN_EVENTO } from "../../lib/imagenesEvento";
@@ -25,6 +26,10 @@ import { Boton } from "../../components/Boton";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { avisoEnPantalla } from "../../lib/avisos";
 import { LineaAviso } from "../../components/LineaAviso";
+
+// La columna del nombre en el orden de la invitación: cabe «Apellido, Nombre»
+// normal; uno muy largo se recorta y se lee entero al pasar el ratón.
+const ANCHO_NOMBRE = 150;
 
 export function VentanaInvitaciones({
   data,
@@ -445,7 +450,11 @@ export function VentanaInvitaciones({
                         className="flex items-center gap-2 px-2 py-1 rounded text-xs"
                         style={{ background: C.blanco, border: `1px solid ${C.line}` }}
                       >
-                        <span style={{ color: C.ink, minWidth: 90 }}>{m.nombre}</span>
+                        {/* «Apellido, Nombre» (norma 15), con ancho fijo: así las flechas
+                            caen en la misma columna en todas las filas (norma 6). */}
+                        <span className="truncate flex-shrink-0" style={{ color: C.ink, width: ANCHO_NOMBRE }} title={nombreCompleto(m)}>
+                          {nombreCompleto(m)}
+                        </span>
                         <Boton
                           tamano="pequeno"
                           icono={ChevronUp}
@@ -522,13 +531,13 @@ export function VentanaInvitaciones({
                     Familia {familia.apellido}
                   </div>
                   <div style={{ color: C.charcoal, opacity: OP.secundario }}>
-                    {familia.confirmados.map((m) => m.nombre).join(", ")} —{" "}
+                    {familia.confirmados.map(nombreCompleto).join(" · ")} —{" "}
                     {familia.confirmados.length} confirmado
                     {familia.confirmados.length === 1 ? "" : "s"}, todos con pago hecho
                   </div>
                   {destinatario?.email ? (
                     <div className="text-xs" style={{ color: C.ink }}>
-                      Se enviará a: {destinatario.nombre} — {destinatario.email}
+                      Se enviará a: {nombreCompleto(destinatario)} — {destinatario.email}
                     </div>
                   ) : (
                     <LineaAviso className="text-xs">

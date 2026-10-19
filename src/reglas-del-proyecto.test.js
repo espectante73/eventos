@@ -173,6 +173,28 @@ describe("norma 15: a las personas se las nombra Apellido, Nombre", () => {
     );
     expect(culpables).toEqual([]);
   });
+
+  // v71.7: Invitaciones enseñaba «Benito», «Meritxell» (lo cazó él). Un
+  // invitado en pantalla, nunca solo con su nombre. El TEXTO de la
+  // invitación sí va sin apellido («Familia Fariña: Benito y Meritxell»),
+  // pero se arma en lib/, que este guardia no mira.
+  it("ninguna pantalla enseña a un invitado solo por su nombre", () => {
+    // Los colaboradores (`c.nombre`) tienen un solo campo: no entran.
+    const quien = "(?:m|g|inv|invitado|destinatario|miembro|persona|form)";
+    // En pantalla: {m.nombre} o {x.destinatario.nombre}; no `${g.nombre}`, que va a un buscador.
+    const suelto = new RegExp(`(?:(?<!\\$)\\{|\\.)${quien}\\??\\.nombre\\}`);
+    const lista = new RegExp(`\\.map\\(\\((${quien})\\) => \\1\\.nombre\\)\\.join`);
+    const culpables = archivos
+      .filter((r) => r.endsWith(".jsx"))
+      .filter((r) => {
+        const texto = sinComentarios(leer(r));
+        return (
+          texto.split("\n").some((l) => suelto.test(l) && !l.includes(".apellido")) ||
+          lista.test(texto)
+        );
+      });
+    expect(culpables).toEqual([]);
+  });
 });
 
 describe("Mi cuenta recibe todo lo que sabe mostrar", () => {
