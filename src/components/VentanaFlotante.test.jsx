@@ -86,3 +86,37 @@ it("la X nunca va dentro de lo que se desplaza de la cabecera, y `llena` reparte
   expect(cuerpo.style.overflow).toBe("hidden");
   expect(cuerpo.style.flexDirection).toBe("column");
 });
+
+// v71.9 (él): al agrandarla por la esquina se salía del navegador, ya no se
+// podía encoger, y al arrastrar se seleccionaba todo en azul.
+it("agrandarla o moverla nunca la saca de la pantalla, y no selecciona texto", async () => {
+  const { montar } = await import("../pruebas/dibujar");
+  const { MARGEN_PANTALLA } = await import("../theme");
+  // La receta de pruebas mide la ventana en (100, 100), de 100 x 100.
+  const vista = montar(<VentanaFlotante titulo="Ventana" onCerrar={() => {}}>Algo</VentanaFlotante>);
+  const ventana = document.querySelector(".fixed.rounded-lg");
+  const raton = (el, tipo, x, y) => {
+    const e = new MouseEvent(tipo, { bubbles: true, cancelable: true, clientX: x, clientY: y });
+    act(() => el.dispatchEvent(e));
+    return e;
+  };
+
+  const esquina = document.querySelector('[title="Arrastra para cambiar el tamaño"]');
+  expect(raton(esquina, "mousedown", 200, 200).defaultPrevented).toBe(true);
+  raton(window, "mousemove", 5000, 5000);
+  raton(window, "mouseup", 5000, 5000);
+  expect(ventana.style.width).toBe(`${window.innerWidth - 100 - MARGEN_PANTALLA}px`);
+  expect(ventana.style.height).toBe(`${window.innerHeight - 100 - MARGEN_PANTALLA}px`);
+
+  const cabecera = document.querySelector(".cursor-move");
+  expect(raton(cabecera, "mousedown", 120, 120).defaultPrevented).toBe(true);
+  raton(window, "mousemove", 5000, 5000);
+  raton(window, "mouseup", 5000, 5000);
+  expect(ventana.style.left).toBe(`${window.innerWidth - 100 - MARGEN_PANTALLA}px`);
+  expect(ventana.style.top).toBe(`${window.innerHeight - 100 - MARGEN_PANTALLA}px`);
+  raton(cabecera, "mousedown", 120, 120);
+  raton(window, "mousemove", -5000, -5000);
+  raton(window, "mouseup", -5000, -5000);
+  expect(ventana.style.left).toBe(`${MARGEN_PANTALLA}px`);
+  vista.desmontar();
+});

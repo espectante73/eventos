@@ -14,14 +14,13 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { C, R, OP, S, T, DORADO, VELO, DEDO, conAlfa } from "../theme";
+import { C, R, OP, S, T, DORADO, VELO, DEDO, MARGEN_PANTALLA, conAlfa } from "../theme";
 import { esZurdo } from "../lib/mano";
 import { Seal } from "./Widgets";
 
-// Margen mínimo respecto al borde de la ventana, y altura mínima aunque
-// haya poco hueco (por debajo de esto, mejor dejar que se salga un poco
-// que quedarse ilegible).
-const MARGEN_BORDE = 12;
+// Altura mínima aunque haya poco hueco (por debajo de esto, mejor dejar
+// que se salga un poco que quedarse ilegible). El margen con el borde,
+// MARGEN_PANTALLA, lo comparte con VentanaFlotante.
 const ALTO_MINIMO = 120;
 // Ancho fijo del panel (antes "max-content": cada panel se ajustaba solo
 // a su propio contenido, así que el desplegable de "Abrir sección…" y
@@ -90,12 +89,12 @@ function realmDe(nodo) {
 
 // El panel persistente (Acciones): todo el alto de la ventana, menos los
 // márgenes. Si aun así no caben sus botones, se desplazan con el dedo.
-const altoPersistente = (win) => win.innerHeight - 2 * MARGEN_BORDE;
+const altoPersistente = (win) => win.innerHeight - 2 * MARGEN_PANTALLA;
 
 function alturaMaximaDisponible(ancladoY, creceHaciaArriba, win = window) {
   const disponible = creceHaciaArriba
-    ? ancladoY - MARGEN_BORDE
-    : win.innerHeight - ancladoY - MARGEN_BORDE;
+    ? ancladoY - MARGEN_PANTALLA
+    : win.innerHeight - ancladoY - MARGEN_PANTALLA;
   return Math.max(ALTO_MINIMO, Math.min(disponible, win.innerHeight * 0.6));
 }
 
@@ -112,11 +111,11 @@ function useMantenerDentroDePantalla(activo, ref, pos, setPos) {
     if (!activo || !pos || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const { win } = realmDe(ref.current);
-    if (pos.right !== undefined && rect.left < MARGEN_BORDE) {
-      const ajuste = MARGEN_BORDE - rect.left;
+    if (pos.right !== undefined && rect.left < MARGEN_PANTALLA) {
+      const ajuste = MARGEN_PANTALLA - rect.left;
       setPos((p) => (p ? { ...p, right: p.right - ajuste } : p));
-    } else if (pos.left !== undefined && rect.right > win.innerWidth - MARGEN_BORDE) {
-      const ajuste = rect.right - (win.innerWidth - MARGEN_BORDE);
+    } else if (pos.left !== undefined && rect.right > win.innerWidth - MARGEN_PANTALLA) {
+      const ajuste = rect.right - (win.innerWidth - MARGEN_PANTALLA);
       setPos((p) => (p ? { ...p, left: p.left - ajuste } : p));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -423,8 +422,8 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
     const { win } = realmDe(el);
     const r = el.getBoundingClientRect();
     return {
-      top: Math.min(Math.max(MARGEN_BORDE, top), Math.max(MARGEN_BORDE, win.innerHeight - r.height - MARGEN_BORDE)),
-      left: Math.min(Math.max(MARGEN_BORDE, left), Math.max(MARGEN_BORDE, win.innerWidth - r.width - MARGEN_BORDE)),
+      top: Math.min(Math.max(MARGEN_PANTALLA, top), Math.max(MARGEN_PANTALLA, win.innerHeight - r.height - MARGEN_PANTALLA)),
+      left: Math.min(Math.max(MARGEN_PANTALLA, left), Math.max(MARGEN_PANTALLA, win.innerWidth - r.width - MARGEN_PANTALLA)),
     };
   };
   // Al girar el móvil, el alto cambia: el panel se vuelve a ajustar.

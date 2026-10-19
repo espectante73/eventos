@@ -82,6 +82,10 @@ export function conAlfa(hex, alfa) {
 // El dedo: lo mínimo para acertarle con él (44, como piden Apple y Google).
 export const DEDO = 44;
 
+// Lo que un panel o una ventana flotante deja libre hasta el borde de la
+// pantalla: al moverlo o agrandarlo nunca se sale (MenuFlotante, VentanaFlotante).
+export const MARGEN_PANTALLA = 12;
+
 // El velo detrás de lo que se abre encima (él, v63.5): una ventana que hay
 // que atender o un menú desplegado. El marfil de la app, translúcido y
 // esmerilado: aclara el fondo en vez de oscurecerlo.

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "71.9",
+    cambios: [
+      "Ventanas: al agrandarlas por la esquina o al moverlas ya no se salen del navegador, así su esquina y su X quedan siempre a mano. Si el navegador se hace más pequeño, se encogen y se recolocan dentro. Y al arrastrar ya no se selecciona todo en azul.",
+    ],
+  },
+  {
     version: "71.8",
     cambios: [
       "Invitaciones: el hueco de la etiqueta «destinatario» se reserva en todas las filas, así los recuadros del email miden igual en todas.",

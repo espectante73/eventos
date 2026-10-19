@@ -4,7 +4,7 @@
 // App.jsx en el reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useLayoutEffect, useRef, Children } from "react";
 import { X } from "lucide-react";
-import { C, S, VELO } from "../theme";
+import { C, S, VELO, MARGEN_PANTALLA } from "../theme";
 
 // Ventana flotante genérica: independiente de qué secciones estén plegadas,
 // para que Imprimir/Canciones/Alergias y los avisos de mesas funcionen siempre.
@@ -142,6 +142,12 @@ export const ETIQUETAS_VENTANAS = {
   musicaEvento: "Multimedia",
 };
 
+// Lo más pequeña que se puede dejar una ventana al encogerla a mano.
+const ANCHO_MINIMO = 280;
+const ALTO_MINIMO = 200;
+// Un valor entre dos límites; si no caben los dos (pantalla diminuta), manda el mínimo.
+const entre = (valor, minimo, maximo) => Math.max(minimo, Math.min(valor, maximo));
+
 // Ventana flotante independiente y no bloqueante: a diferencia de
 // ModalFlotante, no oscurece el resto de la pantalla ni impide que haya
 // varias abiertas a la vez — pensada para las secciones de administración
@@ -220,20 +226,26 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
     return () => window.removeEventListener("keydown", onKey);
   }, [onCerrar]);
 
+  // Nunca fuera de la pantalla (él, v71.9: al agrandarla se salía, su
+  // esquina quedaba fuera y ya no se podía encoger). Como el panel de
+  // Acciones (MenuFlotante): a MARGEN_PANTALLA del borde, al moverla, al
+  // agrandarla y al cambiar el tamaño del navegador.
   useEffect(() => {
     const coords = (e) => (e.touches ? e.touches[0] : e);
     const mover = (e) => {
       const { clientX, clientY } = coords(e);
       if (arrastre.current) {
+        const { width, height } = ventanaRef.current.getBoundingClientRect();
         setPos({
-          left: Math.max(0, clientX - arrastre.current.dx),
-          top: Math.max(0, clientY - arrastre.current.dy),
+          left: entre(clientX - arrastre.current.dx, MARGEN_PANTALLA, window.innerWidth - width - MARGEN_PANTALLA),
+          top: entre(clientY - arrastre.current.dy, MARGEN_PANTALLA, window.innerHeight - height - MARGEN_PANTALLA),
         });
       }
-      if (redimension.current) {
+      const r = redimension.current;
+      if (r) {
         setTam({
-          width: Math.max(280, redimension.current.anchoInicial + (clientX - redimension.current.x)),
-          height: Math.max(200, redimension.current.altoInicial + (clientY - redimension.current.y)),
+          width: entre(r.anchoInicial + (clientX - r.x), ANCHO_MINIMO, window.innerWidth - r.left - MARGEN_PANTALLA),
+          height: entre(r.altoInicial + (clientY - r.y), ALTO_MINIMO, window.innerHeight - r.top - MARGEN_PANTALLA),
         });
       }
     };
@@ -241,27 +253,51 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       arrastre.current = null;
       redimension.current = null;
     };
+    // El navegador más pequeño: la ventana se encoge y se recoloca dentro.
+    const alCambiarPantalla = () => {
+      const maxAncho = window.innerWidth - 2 * MARGEN_PANTALLA;
+      const maxAlto = window.innerHeight - 2 * MARGEN_PANTALLA;
+      setTam((t) => t && { width: Math.min(t.width, maxAncho), height: Math.min(t.height, maxAlto) });
+      const el = ventanaRef.current;
+      if (!el) return;
+      const { width, height } = el.getBoundingClientRect();
+      setPos((p) => ({
+        left: entre(p.left, MARGEN_PANTALLA, window.innerWidth - Math.min(width, maxAncho) - MARGEN_PANTALLA),
+        top: entre(p.top, MARGEN_PANTALLA, window.innerHeight - Math.min(height, maxAlto) - MARGEN_PANTALLA),
+      }));
+    };
     window.addEventListener("mousemove", mover);
     window.addEventListener("mouseup", soltar);
     window.addEventListener("touchmove", mover);
     window.addEventListener("touchend", soltar);
+    window.addEventListener("resize", alCambiarPantalla);
     return () => {
       window.removeEventListener("mousemove", mover);
       window.removeEventListener("mouseup", soltar);
       window.removeEventListener("touchmove", mover);
       window.removeEventListener("touchend", soltar);
+      window.removeEventListener("resize", alCambiarPantalla);
     };
   }, []);
 
+  // Con el ratón, sin `preventDefault` el navegador entiende que se empieza
+  // a seleccionar texto, y al arrastrar se pintaba todo de azul (él, v71.9).
+  // Con el dedo no: el móvil no selecciona así, y anularlo le quitaría el toque.
+  const sinSeleccionar = (e) => {
+    if (!e.touches) e.preventDefault();
+  };
+
   const iniciarArrastre = (e) => {
+    sinSeleccionar(e);
     const { clientX, clientY } = e.touches ? e.touches[0] : e;
     arrastre.current = { dx: clientX - pos.left, dy: clientY - pos.top };
   };
 
   const iniciarRedimension = (e) => {
+    sinSeleccionar(e);
     const { clientX, clientY } = e.touches ? e.touches[0] : e;
     const rect = ventanaRef.current.getBoundingClientRect();
-    redimension.current = { x: clientX, y: clientY, anchoInicial: rect.width, altoInicial: rect.height };
+    redimension.current = { x: clientX, y: clientY, left: rect.left, top: rect.top, anchoInicial: rect.width, altoInicial: rect.height };
   };
 
   return (
