@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "71.8",
+    cambios: [
+      "Invitaciones: el hueco de la etiqueta «destinatario» se reserva en todas las filas, así los recuadros del email miden igual en todas.",
+    ],
+  },
+  {
     version: "71.7",
     cambios: [
       "Invitaciones: cada persona con «Apellido, Nombre» (norma 15) en el orden de los nombres, en «Se enviará a» y en el resumen del envío por bloques. La columna del nombre tiene ancho fijo, así las flechas quedan alineadas. El texto de la invitación no cambia.",

@@ -485,14 +485,18 @@ export function VentanaInvitaciones({
                             />
                           )}
                         </div>
-                        {m.id === idDestinatario && (
-                          <span
-                            className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
-                            style={{ background: C.paperDark, color: C.charcoal }}
-                          >
-                            destinatario
-                          </span>
-                        )}
+                        {/* En todas las filas, y visible solo en la suya: así
+                            ocupa lo mismo y los emails miden igual (norma 6). */}
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
+                          style={{
+                            background: C.paperDark,
+                            color: C.charcoal,
+                            visibility: m.id === idDestinatario ? "visible" : "hidden",
+                          }}
+                        >
+                          destinatario
+                        </span>
                       </div>
                     );
                   });
