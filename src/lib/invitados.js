@@ -49,8 +49,6 @@ const CAMPOS_DATOS_INVITADO = [
 // escritas en el componente, el contador y los campos se desincronizarían
 // al primer retoque (misma regla de "una sola pieza" de CLAUDE.md).
 
-export const EDAD_ADULTO = 18;
-
 // Año de boda y foto de boda: solo a quien viene con su cónyuge (O y A).
 // Todos los demás roles quedan fuera a propósito, decidido con el usuario
 // el 2026-09-14: "todos los que no tengan ni A ni O, no le pediremos la
@@ -60,18 +58,15 @@ export function pideDatosDeBoda(g) {
   return g?.rolFamiliar === ROL_FAMILIAR.ESPOSO || g?.rolFamiliar === ROL_FAMILIAR.ESPOSA;
 }
 
-// Menor a fecha del evento (calcularEdad ya usa evento.fecha como
-// referencia). Sin año de nacimiento la edad es desconocida: NO se le
-// trata como menor, o el email quedaría bloqueado justo antes de que el
-// colaborador rellene la edad.
-export function esMenorDeEdad(g, evento) {
-  const edad = calcularEdad(g?.anioNacimiento, evento);
-  return edad !== null && edad < EDAD_ADULTO;
-}
-
-// Email solo de mayores de edad, a petición del usuario.
+// Email desde los 16 años, cumplidos el día del evento (él, v71.6; antes,
+// 18): la misma edad que las fotos de la fiesta. Al hijo de 16 o 17 no se
+// le exige: el de la familia lo da un adulto (ROLES_CON_EMAIL_FAMILIAR).
+// Sin año de nacimiento la edad es desconocida y se pide: si no, el email
+// quedaría bloqueado justo antes de que el colaborador rellene la edad.
+export const EDAD_EMAIL = 16;
 export function pideEmail(g, evento) {
-  return !esMenorDeEdad(g, evento);
+  const edad = calcularEdad(g?.anioNacimiento, evento);
+  return edad === null || edad >= EDAD_EMAIL;
 }
 
 // ---------- Email: al menos uno por familia (usuario, 2026-09-19) ----------
@@ -124,7 +119,7 @@ export function familiasSinEmail(invitados, colaboradores) {
 // solo (S), siempre; si nadie de la familia lo tiene todavía, quien puede
 // darlo por ella (ROLES_CON_EMAIL_FAMILIAR: los dos cónyuges, hasta que uno
 // lo ponga). A los demás no: su email no cuenta para la familia. Al menor
-// no se le pide, y el de quien también es colaborador se edita en
+// de 16 no se le pide, y el de quien también es colaborador se edita en
 // Colaboradores.
 export function emailObligatorio(g, evento, { familiaSinEmail = false, colaboradorVinculado = null } = {}) {
   if (colaboradorVinculado || !pideEmail(g, evento)) return false;

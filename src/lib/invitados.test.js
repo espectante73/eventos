@@ -10,7 +10,6 @@ import {
   colaboradorConEmail,
   fichasIncompletasDe,
   pideDatosDeBoda,
-  esMenorDeEdad,
   pideEmail,
   tieneAlergiaReal,
   calcularEdad,
@@ -181,24 +180,24 @@ describe("pideDatosDeBoda", () => {
   });
 });
 
-describe("esMenorDeEdad / pideEmail", () => {
+describe("pideEmail", () => {
   const evento = { fecha: "2026-11-13" };
 
-  it("usa la edad que tendrá el día del evento", () => {
-    expect(esMenorDeEdad({ anioNacimiento: "2010" }, evento)).toBe(true); // 16
-    expect(esMenorDeEdad({ anioNacimiento: "2008" }, evento)).toBe(false); // 18
-    expect(esMenorDeEdad({ anioNacimiento: "1990" }, evento)).toBe(false);
+  // v71.6 (él): desde los 16, con la edad que tendrá el día del evento.
+  it("los 16 justos ya pueden dar email; con 15, no", () => {
+    expect(pideEmail({ anioNacimiento: "2010" }, evento)).toBe(true); // 16
+    expect(pideEmail({ anioNacimiento: "2011" }, evento)).toBe(false); // 15
+    expect(pideEmail({ anioNacimiento: "1990" }, evento)).toBe(true);
   });
 
-  it("los 18 justos ya son mayoría de edad", () => {
-    expect(pideEmail({ anioNacimiento: "2008" }, evento)).toBe(true);
-    expect(pideEmail({ anioNacimiento: "2009" }, evento)).toBe(false);
+  it("al hijo de 16 o 17 no se le exige: el de la familia lo da un adulto", () => {
+    const hijo = { rolFamiliar: "hijo", anioNacimiento: "2009" };
+    expect(emailObligatorio(hijo, evento, { familiaSinEmail: true })).toBe(false);
   });
 
   // Importante: si bloqueara el email por no saber la edad, el
   // colaborador se lo encontraría cerrado ANTES de poder escribir el año.
-  it("sin año de nacimiento no se le trata como menor", () => {
-    expect(esMenorDeEdad({ anioNacimiento: "" }, evento)).toBe(false);
+  it("sin año de nacimiento se pide", () => {
     expect(pideEmail({}, evento)).toBe(true);
   });
 });

@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { Bell, Calendar, Check, ChevronDown, ChevronRight, ClipboardList, Euro, Lock, Mail, Megaphone, Send, User, UserCog, X } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
-import { datosCompletos, pideDatosDeBoda, esMenorDeEdad, estadoDatos, familiasSinEmail, emailObligatorio, faltanObligatorios, fichasIncompletasDe, claveFamilia, importeEsperadoInvitado, resolverColaborador, fichaCerradaAlColaborador, comoColaborador } from "../lib/invitados";
+import { datosCompletos, pideDatosDeBoda, pideEmail, estadoDatos, familiasSinEmail, emailObligatorio, faltanObligatorios, fichasIncompletasDe, claveFamilia, importeEsperadoInvitado, resolverColaborador, fichaCerradaAlColaborador, comoColaborador } from "../lib/invitados";
 import { ordenarPorApellidoNombre, nombreCompleto, euros, fechaCorta } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
@@ -356,11 +356,11 @@ function FormularioDatos({
       </div>
       {/* Seis apartados plegados, uno abierto a la vez (él, v52). Cerrado,
           cada uno enseña lo que tiene. El año de nacimiento va EL PRIMERO:
-          de él depende si se pide email (a un menor, no). */}
+          de él depende si se pide email (a un menor de 16, no). */}
       <div data-apartado="datos" className={latido("anioNacimiento", "email")}>
         <SeccionPlegable
           sencilla
-          titulo={esMenorDeEdad(form, evento) ? "Año nac. *" : `Año nac. * · Email${pideEmailAqui ? " *" : ""}`}
+          titulo={pideEmail(form, evento) ? `Año nac. * · Email${pideEmailAqui ? " *" : ""}` : "Año nac. *"}
           resumen={[form.anioNacimiento, colaboradorVinculado ? colaboradorVinculado.email : form.email].filter(Boolean).join(" · ")}
           abierta={apartado === "datos"}
           onAlternar={() => alternarApartado("datos")}
@@ -378,7 +378,7 @@ function FormularioDatos({
                 style={{ width: ANCHO_ANIO, ...bordeRojo("anioNacimiento") }}
               />
             </div>
-            {!esMenorDeEdad(form, evento) && (
+            {pideEmail(form, evento) && (
               <div data-campo="email" className="flex-1 min-w-0">
                   {colaboradorVinculado ? (
                     <div>

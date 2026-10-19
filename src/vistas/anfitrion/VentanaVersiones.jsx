@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "71.6",
+    cambios: [
+      "Formulario del colaborador: el email se puede poner desde los 16 años (cumplidos el día del evento), no desde los 18. Para un hijo de 16 o 17 es opcional: el email de la familia lo sigue dando un adulto.",
+    ],
+  },
+  {
     version: "71.5",
     cambios: [
       "Aniversarios: un filtro debajo de cada columna, como en la Lista de invitados, con la cifra en cada opción. Boda: «Con» o «Sin» foto. Aniv.: «Hechas» o «Faltan». Con Boda «Con» y Aniv. «Faltan» quedan las que se pueden montar ya; con Boda «Sin», las que hay que pedir al colaborador.",
