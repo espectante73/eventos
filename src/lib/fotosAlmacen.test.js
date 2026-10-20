@@ -112,6 +112,14 @@ describe("hojaDeEncargo", () => {
     const t = hojaDeEncargo([uno, { ...uno, familia: "Ruiz01" }]);
     expect(t.match(/Monta esta foto/g)).toHaveLength(2);
   });
+
+  // v72 (él): pedía 1920x1080 y la subida la rechazaba por no llegar a 4K.
+  it("pide la foto en la medida que luego acepta la subida", () => {
+    const t = hojaDeEncargo([uno]);
+    const [, ancho, alto] = t.match(/(\d{4})x(\d{4})/);
+    expect(llegaA4K({ ancho: Number(ancho), alto: Number(alto) })).toBe(true);
+    expect(t).not.toContain("1920x1080");
+  });
 });
 
 // v64.7: las terminadas, en 4K, con su miniatura para las filas de

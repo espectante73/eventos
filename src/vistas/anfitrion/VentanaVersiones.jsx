@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "72",
+    cambios: [
+      "Aniversarios: la hoja de encargo pide la foto terminada en 4K (3840x2160), la misma medida que luego exige la subida. Pedía 1920x1080 y la app la rechazaba por no llegar a 4K.",
+    ],
+  },
+  {
     version: "71.9",
     cambios: [
       "Ventanas: al agrandarlas por la esquina o al moverlas ya no se salen del navegador, así su esquina y su X quedan siempre a mano. Si el navegador se hace más pequeño, se encogen y se recolocan dentro. Y al arrastrar ya no se selecciona todo en azul.",

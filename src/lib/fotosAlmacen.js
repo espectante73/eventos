@@ -92,7 +92,7 @@ export function nombreArchivoFamilia(familia) {
 
 // Sube la foto y devuelve la RUTA dentro del cajón, que es lo que se guarda
 // en la base. `carpeta`: ver CARPETA. La original de boda se reduce menos
-// (LADO_ORIGINAL en cualquier sentido); las que van a pantalla, a 1920x1080.
+// (LADO_ORIGINAL en cualquier sentido); las terminadas, en 4K (ANCHO_MAXIMO x ALTO_MAXIMO).
 // Las medidas de una foto antes de subirla.
 function medidasDe(file) {
   return new Promise((resolve, reject) => {
@@ -266,7 +266,9 @@ export function hojaDeEncargo(matrimonios) {
       "",
       "Monta esta foto en la plantilla adjunta.",
       `Nombres: ${nombresMatrimonio(m)}. Año de boda: ${m.anioBoda}.${anios}`,
-      "Devuélvela en 16:9, 1920x1080, y guárdala como archivo con el nombre",
+      // La misma medida que exige la subida (llegaA4K): pedía 1920x1080 y
+      // luego la app la rechazaba por no llegar a 4K (él, v72).
+      `Devuélvela en 16:9 y en 4K, ${ANCHO_MAXIMO}x${ALTO_MAXIMO}, y guárdala como archivo con el nombre`,
       `exacto "${nombre}".`,
       "",
       "------------------------------------------------------------",
