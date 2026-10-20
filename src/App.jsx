@@ -76,7 +76,13 @@ export default function App() {
   // la vista de un colaborador desde las pestañas de abajo).
   const [esAnfitrionOriginal, setEsAnfitrionOriginal] = useState(null);
   const [rol, setRol] = useState(null);
-  const data = useLedgerData(rol);
+  // El token del anfitrión, estable aunque `rol` cambie al previsualizar un
+  // colaborador desde el selector de abajo. Lo resuelve mi_rol() la primera
+  // vez (ver el efecto más abajo) y se guarda aquí aparte: sin esto, volver
+  // a elegir "Anfitrión" tras previsualizar a un colaborador dejaría `rol`
+  // en null. Nunca sale de la URL — el ?rol= se retiró (v24.2).
+  const [anfitrionToken, setAnfitrionToken] = useState(null);
+  const data = useLedgerData(rol, rol !== null && rol === anfitrionToken);
   // Previsualización "Formularios" (anfitrión viendo la pantalla de un
   // colaborador): id del colaborador previsualizado, o null si se está
   // viendo la propia vista de anfitrión. A propósito NO reutiliza `rol` --
@@ -118,12 +124,6 @@ export default function App() {
   const cambiarVistaPrevia = (destino) => {
     setVistaPrevia(destino === anfitrionToken ? null : destino);
   };
-  // El token del anfitrión, estable aunque `rol` cambie al previsualizar un
-  // colaborador desde el selector de abajo. Lo resuelve mi_rol() la primera
-  // vez (ver el efecto más abajo) y se guarda aquí aparte: sin esto, volver
-  // a elegir "Anfitrión" tras previsualizar a un colaborador dejaría `rol`
-  // en null. Nunca sale de la URL — el ?rol= se retiró (v24.2).
-  const [anfitrionToken, setAnfitrionToken] = useState(null);
 
   // ---------- Login real (Supabase Auth) ----------
   // Capa añadida SOBRE el modelo de enlace-token existente, sin tocar

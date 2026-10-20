@@ -51,7 +51,9 @@ function avisar(mensaje, error) {
   avisoEnPantalla(mensaje, undefined, error?.message || error?.hint || "");
 }
 
-export function useLedgerData(rol) {
+// `esTokenAnfitrion`: mi_rol() ya dijo que `rol` es la llave del anfitrión
+// (App.jsx). Así no se pregunta antes si es un colaborador (v72.2).
+export function useLedgerData(rol, esTokenAnfitrion = false) {
   const [evento, setEvento] = useState(EVENTO_POR_DEFECTO);
   const [colaboradores, setColaboradores] = useState([]);
   const [invitados, setInvitados] = useState([]);
@@ -246,161 +248,152 @@ export function useLedgerData(rol) {
         return;
       }
 
-      // 1) ¿El código del enlace es el de un colaborador real?
-      const { data: perfil, error: errPerfil } = await supabase.rpc(
-        "colaborador_mi_perfil",
-        { p_colaborador_id: rol }
-      );
-      if (errPerfil) {
-        if (mostrarCarga) avisar("No se pudo comprobar el enlace.", errPerfil);
-        return;
-      }
+      // TODO A LA VEZ (él, v72.2): antes eran unas 16 preguntas una detrás
+      // de otra y, con 0,2-2 s cada una, a menudo pasaban de los 8 s en que
+      // PantallaCargando avisa «El servidor tarda en responder» sin que el
+      // servidor fallara. Tampoco se pregunta ya «¿es un colaborador?» al
+      // anfitrión: mi_rol() ya lo dijo (`esTokenAnfitrion`). Cada función
+      // sigue comprobando su llave por su cuenta, así que esto no abre nada.
+      if (esTokenAnfitrion) {
+        const p = { p_token: rol };
+        const [
+          { data: esValido, error: errToken },
+          eventoLeido,
+          { data: fotosFilas },
+          { data: todosColaboradores, error: errCol },
+          { data: todosInvitados, error: errInv },
+          { data: todasMesas, error: errMesas },
+          { data: ordenFilas, error: errOrden },
+          { data: tokenTablonCargado },
+          { data: avisos, error: errAvisos },
+          { data: todosGastos, error: errGastos },
+          { data: todasNovedades, error: errNovedades },
+          { data: preguntaCargada },
+          { data: accesosCargados },
+        ] = await Promise.all([
+          supabase.rpc("anfitrion_verificar_token", p),
+          // Entero: es el anfitrión (lib/leerEvento.js, v63).
+          leerEvento(supabase, "anfitrion_evento", p),
+          supabase.from("fotos_familiares").select("*"),
+          supabase.rpc("anfitrion_listar_colaboradores", p),
+          supabase.rpc("anfitrion_listar_invitados", p),
+          supabase.from("mesas").select("*").order("numero", { ascending: true }),
+          supabase.from("orden_familias").select("*"),
+          // "Best effort": es solo el enlace a mostrar en Novedades.
+          supabase.rpc("anfitrion_obtener_token_tablon", p),
+          // En cadena: primero se mira si Resend ya confirmó los envíos
+          // recientes (nunca dentro de enviar_email — ver el episodio del
+          // 2026-08-08 en schema.sql) y luego se lista. "Best effort": si
+          // falla lo primero, el ✓/✗/? se queda como estaba.
+          supabase.rpc("anfitrion_actualizar_estado_avisos", p).then(() => supabase.rpc("anfitrion_listar_avisos_enviados", p)),
+          supabase.rpc("anfitrion_listar_gastos", p),
+          supabase.rpc("anfitrion_listar_novedades", p),
+          supabase.rpc("anfitrion_obtener_pregunta_tablon", p),
+          // Accesos al tablón desde más de un dispositivo con el mismo
+          // nombre -- señal de alarma, nunca bloquea a nadie (schema.sql,
+          // 2026-08-29). "Best effort".
+          supabase.rpc("anfitrion_listar_accesos_tablon_sospechosos", p),
+        ]);
+        if (errToken) {
+          if (mostrarCarga) avisar("No se pudo comprobar el enlace.", errToken);
+          return;
+        }
+        if (esValido === true) {
+          if (mostrarCarga) {
+            if (errCol) avisar("No se pudieron cargar los colaboradores.", errCol);
+            if (errInv) avisar("No se pudieron cargar los invitados.", errInv);
+            if (errMesas) avisar("No se pudieron cargar las mesas.", errMesas);
+            if (errAvisos) avisar("No se pudo cargar el historial de avisos.", errAvisos);
+            if (errOrden) avisar("No se pudo cargar el orden de las familias.", errOrden);
+            if (errGastos) avisar("No se pudo cargar el estado de cuentas.", errGastos);
+            if (errNovedades) avisar("No se pudo cargar el tablón de novedades.", errNovedades);
+          }
 
-      if (perfil && perfil.length > 0) {
-        // Sin lo privado (lib/leerEvento.js, v63); el enlace del grupo, más
-        // abajo, solo con el permiso de Novedades.
-        const eventoLeido = await leerEvento(supabase);
-        const { data: fotosFilas } = await supabase.from("fotos_familiares").select("*");
-        const { data: misInvitados, error: errInv } = await supabase.rpc(
-          "colaborador_mis_invitados",
-          { p_colaborador_id: rol }
-        );
-        if (errInv && mostrarCarga) avisar("No se pudieron cargar tus invitados asignados.", errInv);
-        // "Best effort", igual que en la rama del anfitrión: es solo el
-        // enlace del botón "Novedades" en Portada, no bloquea nada más.
-        const { data: tokenTablonCargado } = await supabase.rpc("colaborador_obtener_token_tablon", {
-          p_colaborador_id: rol,
-        });
-        // Permiso especial (ver lib/permisos.js): si este colaborador
-        // puede editar el texto de Novedades, carga también esa lista --
-        // colaborador_listar_novedades vuelve a comprobar el permiso por
-        // su cuenta (no se fía de que el cliente ya lo sepa).
-        const tienePermisoNovedades =
-          perfil[0] && Array.isArray(perfil[0].permisos) && perfil[0].permisos.includes("novedades_editar");
-        await cargarFamiliasSinEmail(rol);
-        const { data: novedadesColaborador } = tienePermisoNovedades
-          ? await supabase.rpc("colaborador_listar_novedades", { p_colaborador_id: rol })
-          : { data: null };
-        // Para abrir el grupo y pegar las Novedades: solo a quien las publica.
-        const { data: enlaceGrupo } = tienePermisoNovedades
-          ? await supabase.rpc("colaborador_enlace_whatsapp", { p_colaborador_id: rol })
-          : { data: null };
+          if (cancelado) return;
+          if (eventoLeido) setEvento(eventoLeido);
+          repartirFilasDeFotos(fotosFilas);
+          if (!errCol) setColaboradores(todosColaboradores || []);
+          if (!errInv) setInvitados(todosInvitados || []);
+          if (!errMesas) setMesas(todasMesas || []);
+          if (!errAvisos) setAvisosEnviados(avisos || []);
+          if (!errGastos) setGastos(todosGastos || []);
+          if (!errNovedades) setNovedades(todasNovedades || []);
+          if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
+          // Ahora es un texto suelto (ya no {pregunta, respuesta} -- la
+          // "respuesta correcta" fija desapareció, ver schema.sql
+          // 2026-08-29: el acceso se comprueba contra los invitados
+          // confirmados, no contra un secreto compartido).
+          setPreguntaTablon(preguntaCargada || "");
+          setAccesosTablonSospechosos(accesosCargados || []);
+          setOrdenFamiliares(
+            Object.fromEntries(
+              (ordenFilas || []).map((r) => [
+                r.grupoFamiliar,
+                {
+                  orden: r.orden,
+                  invitacionEnviada: r.invitacionEnviada,
+                  invitacionEnviadaEn: r.invitacionEnviadaEn,
+                },
+              ])
+            )
+          );
+          setEsAnfitrion(true);
+          setLoaded(true);
+          return;
+        }
+      } else {
+        // El colaborador: su perfil (¿es de verdad un colaborador?) y lo
+        // suyo, en la misma vuelta. Sin lo privado del evento
+        // (lib/leerEvento.js, v63).
+        const pc = { p_colaborador_id: rol };
+        const [
+          { data: perfil, error: errPerfil },
+          eventoLeido,
+          { data: fotosFilas },
+          { data: misInvitados, error: errInv },
+          // "Best effort", igual que en la rama del anfitrión: es solo el
+          // enlace del botón "Novedades" en Portada.
+          { data: tokenTablonCargado },
+        ] = await Promise.all([
+          supabase.rpc("colaborador_mi_perfil", pc),
+          leerEvento(supabase),
+          supabase.from("fotos_familiares").select("*"),
+          supabase.rpc("colaborador_mis_invitados", pc),
+          supabase.rpc("colaborador_obtener_token_tablon", pc),
+          cargarFamiliasSinEmail(rol),
+        ]);
+        if (errPerfil) {
+          if (mostrarCarga) avisar("No se pudo comprobar el enlace.", errPerfil);
+          return;
+        }
 
-        if (cancelado) return;
-        if (eventoLeido) setEvento(enlaceGrupo ? { ...eventoLeido, enlaceGrupoWhatsapp: enlaceGrupo } : eventoLeido);
-        repartirFilasDeFotos(fotosFilas);
-        setColaboradores(perfil);
-        if (!errInv) setInvitados(misInvitados || []);
-        setMesas([]); // La vista de colaborador nunca necesita las mesas.
-        if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
-        if (novedadesColaborador) setNovedades(novedadesColaborador);
-        setEsAnfitrion(false);
-        setLoaded(true);
-        return;
-      }
+        if (perfil && perfil.length > 0) {
+          if (errInv && mostrarCarga) avisar("No se pudieron cargar tus invitados asignados.", errInv);
+          // Permiso especial (ver lib/permisos.js): si este colaborador
+          // puede editar el texto de Novedades, carga también esa lista y el
+          // enlace del grupo, para pegarlas. Las dos funciones vuelven a
+          // comprobar el permiso por su cuenta.
+          const tienePermisoNovedades =
+            perfil[0] && Array.isArray(perfil[0].permisos) && perfil[0].permisos.includes("novedades_editar");
+          const [{ data: novedadesColaborador }, { data: enlaceGrupo }] = tienePermisoNovedades
+            ? await Promise.all([
+                supabase.rpc("colaborador_listar_novedades", pc),
+                supabase.rpc("colaborador_enlace_whatsapp", pc),
+              ])
+            : [{ data: null }, { data: null }];
 
-      // 2) ¿El código del enlace es el secreto del anfitrión?
-      const { data: esValido, error: errToken } = await supabase.rpc(
-        "anfitrion_verificar_token",
-        { p_token: rol }
-      );
-      if (errToken) {
-        if (mostrarCarga) avisar("No se pudo comprobar el enlace.", errToken);
-        return;
-      }
-
-      if (esValido === true) {
-        // Entero: es el anfitrión (lib/leerEvento.js, v63).
-        const eventoLeido = await leerEvento(supabase, "anfitrion_evento", { p_token: rol });
-        const { data: fotosFilas } = await supabase.from("fotos_familiares").select("*");
-        const { data: todosColaboradores, error: errCol } = await supabase.rpc(
-          "anfitrion_listar_colaboradores",
-          { p_token: rol }
-        );
-        if (errCol && mostrarCarga) avisar("No se pudieron cargar los colaboradores.", errCol);
-        const { data: todosInvitados, error: errInv } = await supabase.rpc(
-          "anfitrion_listar_invitados",
-          { p_token: rol }
-        );
-        if (errInv && mostrarCarga) avisar("No se pudieron cargar los invitados.", errInv);
-        const { data: todasMesas, error: errMesas } = await supabase
-          .from("mesas")
-          .select("*")
-          .order("numero", { ascending: true });
-        if (errMesas && mostrarCarga) avisar("No se pudieron cargar las mesas.", errMesas);
-        // Comprobación aparte (nunca dentro de enviar_email — ver el
-        // episodio del 2026-08-08 documentado en schema.sql) de si Resend
-        // ya confirmó los envíos recientes. Es "best effort": si falla, no
-        // se avisa con una alerta — simplemente el ✓/✗/? de esta vuelta se
-        // queda como estaba y se reintenta solo en el próximo refresco.
-        await supabase.rpc("anfitrion_actualizar_estado_avisos", { p_token: rol });
-        const { data: avisos, error: errAvisos } = await supabase.rpc(
-          "anfitrion_listar_avisos_enviados",
-          { p_token: rol }
-        );
-        if (errAvisos && mostrarCarga) avisar("No se pudo cargar el historial de avisos.", errAvisos);
-        const { data: ordenFilas, error: errOrden } = await supabase
-          .from("orden_familias")
-          .select("*");
-        if (errOrden && mostrarCarga) avisar("No se pudo cargar el orden de las familias.", errOrden);
-        const { data: todosGastos, error: errGastos } = await supabase.rpc(
-          "anfitrion_listar_gastos",
-          { p_token: rol }
-        );
-        if (errGastos && mostrarCarga) avisar("No se pudo cargar el estado de cuentas.", errGastos);
-        const { data: todasNovedades, error: errNovedades } = await supabase.rpc(
-          "anfitrion_listar_novedades",
-          { p_token: rol }
-        );
-        if (errNovedades && mostrarCarga) avisar("No se pudo cargar el tablón de novedades.", errNovedades);
-        // "Best effort", sin avisar con una alerta si falla: es solo el
-        // enlace a mostrar en la ventana Novedades, no afecta a nada más.
-        const { data: tokenTablonCargado } = await supabase.rpc("anfitrion_obtener_token_tablon", {
-          p_token: rol,
-        });
-        const { data: preguntaCargada } = await supabase.rpc("anfitrion_obtener_pregunta_tablon", {
-          p_token: rol,
-        });
-        // Accesos al tablón desde más de un dispositivo con el mismo
-        // nombre -- señal de alarma, nunca bloquea a nadie (ver
-        // schema.sql, 2026-08-29). "Best effort": si falla, no hace
-        // falta avisar con una alerta, no es una función crítica.
-        const { data: accesosCargados } = await supabase.rpc(
-          "anfitrion_listar_accesos_tablon_sospechosos",
-          { p_token: rol }
-        );
-
-        if (cancelado) return;
-        if (eventoLeido) setEvento(eventoLeido);
-        repartirFilasDeFotos(fotosFilas);
-        if (!errCol) setColaboradores(todosColaboradores || []);
-        if (!errInv) setInvitados(todosInvitados || []);
-        if (!errMesas) setMesas(todasMesas || []);
-        if (!errAvisos) setAvisosEnviados(avisos || []);
-        if (!errGastos) setGastos(todosGastos || []);
-        if (!errNovedades) setNovedades(todasNovedades || []);
-        if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
-        // Ahora es un texto suelto (ya no {pregunta, respuesta} -- la
-        // "respuesta correcta" fija desapareció, ver schema.sql
-        // 2026-08-29: el acceso se comprueba contra los invitados
-        // confirmados, no contra un secreto compartido).
-        setPreguntaTablon(preguntaCargada || "");
-        setAccesosTablonSospechosos(accesosCargados || []);
-        setOrdenFamiliares(
-          Object.fromEntries(
-            (ordenFilas || []).map((r) => [
-              r.grupoFamiliar,
-              {
-                orden: r.orden,
-                invitacionEnviada: r.invitacionEnviada,
-                invitacionEnviadaEn: r.invitacionEnviadaEn,
-              },
-            ])
-          )
-        );
-        setEsAnfitrion(true);
-        setLoaded(true);
-        return;
+          if (cancelado) return;
+          if (eventoLeido) setEvento(enlaceGrupo ? { ...eventoLeido, enlaceGrupoWhatsapp: enlaceGrupo } : eventoLeido);
+          repartirFilasDeFotos(fotosFilas);
+          setColaboradores(perfil);
+          if (!errInv) setInvitados(misInvitados || []);
+          setMesas([]); // La vista de colaborador nunca necesita las mesas.
+          if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
+          if (novedadesColaborador) setNovedades(novedadesColaborador);
+          setEsAnfitrion(false);
+          setLoaded(true);
+          return;
+        }
       }
 
       // 3) Ni colaborador ni anfitrión: enlace no reconocido. No se
@@ -458,7 +451,7 @@ export function useLedgerData(rol) {
       clearTimeout(temporizador);
       document.removeEventListener("visibilitychange", alVolverVisible);
     };
-  }, [rol]);
+  }, [rol, esTokenAnfitrion]);
 
   const persistEvento = useCallback(async (next) => {
     const anterior = eventoRef.current;

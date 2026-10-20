@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "72.2",
+    cambios: [
+      "Abrir la app, más rápido: lo que pide al servidor ya no va una cosa detrás de otra (unas 16 en el anfitrión), sino todo a la vez. Y al anfitrión ya no se le pregunta antes si es un colaborador. La actualización automática de cada minuto (y la de cada 8 segundos el día del evento) va igual de rápida.",
+    ],
+  },
+  {
     version: "72.1",
     cambios: [
       "Aniversarios: la hoja de encargo pide la foto terminada como ya la entrega la otra IA: en 4K, en PNG y dentro de un ZIP, con el nombre de la original («… - 2006.png»).",
