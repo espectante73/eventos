@@ -120,6 +120,14 @@ describe("hojaDeEncargo", () => {
     expect(llegaA4K({ ancho: Number(ancho), alto: Number(alto) })).toBe(true);
     expect(t).not.toContain("1920x1080");
   });
+
+  // v72.1 (él): como la entrega la otra IA, en PNG y dentro de un ZIP, con
+  // el nombre de la original.
+  it("la pide en PNG, dentro de un ZIP, con el nombre de la original", () => {
+    const t = hojaDeEncargo([uno]);
+    expect(t).toContain("en PNG, dentro de un ZIP.");
+    expect(t).toContain(`Nombre exacto del archivo: "${nombreDescargaBoda(uno).replace(/\.jpg$/, ".png")}".`);
+  });
 });
 
 // v64.7: las terminadas, en 4K, con su miniatura para las filas de

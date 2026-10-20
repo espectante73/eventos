@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "72.1",
+    cambios: [
+      "Aniversarios: la hoja de encargo pide la foto terminada como ya la entrega la otra IA: en 4K, en PNG y dentro de un ZIP, con el nombre de la original («… - 2006.png»).",
+    ],
+  },
+  {
     version: "72",
     cambios: [
       "Aniversarios: la hoja de encargo pide la foto terminada en 4K (3840x2160), la misma medida que luego exige la subida. Pedía 1920x1080 y la app la rechazaba por no llegar a 4K.",

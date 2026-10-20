@@ -267,9 +267,11 @@ export function hojaDeEncargo(matrimonios) {
       "Monta esta foto en la plantilla adjunta.",
       `Nombres: ${nombresMatrimonio(m)}. Año de boda: ${m.anioBoda}.${anios}`,
       // La misma medida que exige la subida (llegaA4K): pedía 1920x1080 y
-      // luego la app la rechazaba por no llegar a 4K (él, v72).
-      `Devuélvela en 16:9 y en 4K, ${ANCHO_MAXIMO}x${ALTO_MAXIMO}, y guárdala como archivo con el nombre`,
-      `exacto "${nombre}".`,
+      // luego la app la rechazaba por no llegar a 4K (él, v72). En PNG y en
+      // un ZIP, como ya la entrega la otra IA (él, v72.1); el nombre, el
+      // mismo que la original, para casarla con su matrimonio.
+      `Devuélvela en 16:9 y en 4K, ${ANCHO_MAXIMO}x${ALTO_MAXIMO}, en PNG, dentro de un ZIP.`,
+      `Nombre exacto del archivo: "${nombre.replace(/\.jpg$/, ".png")}".`,
       "",
       "------------------------------------------------------------",
       "",
