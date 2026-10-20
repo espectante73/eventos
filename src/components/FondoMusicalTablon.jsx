@@ -17,6 +17,7 @@ import { supabase } from "../supabaseClient";
 import { estilosBoton } from "./Boton";
 import { BotonQuitar } from "./PreguntaSeguridad";
 import { LineaAviso } from "./LineaAviso";
+import { Cargando } from "./Cargando";
 
 const BUCKET = "musica-ambiental";
 
@@ -90,9 +91,7 @@ export function FondoMusicalTablon() {
       )}
 
       {pistas === null ? (
-        <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
-          Cargando…
-        </p>
+        <Cargando />
       ) : pistas.length === 0 ? (
         <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Todavía no hay ninguna pista subida — el tablón no sonará hasta que subas al menos

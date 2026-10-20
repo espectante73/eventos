@@ -44,17 +44,36 @@ function abrir(rol, esTokenAnfitrion) {
   return { vista: montar(<Prueba />), visto };
 }
 
-it("el anfitrión: no se le pregunta si es colaborador, y abre en dos vueltas", async () => {
+it("el anfitrión: no se le pregunta si es colaborador, y abre en una vuelta", async () => {
   const { vista, visto } = abrir("llave-anfitrion", true);
-  expect(llamadas.map((l) => l.nombre)).not.toContain("colaborador_mi_perfil");
-  expect(llamadas.length).toBeGreaterThan(10);
-  await contestar();
+  const nombres = llamadas.map((l) => l.nombre);
+  expect(nombres).not.toContain("colaborador_mi_perfil");
+  expect(nombres.length).toBeGreaterThan(5);
+  // Lo de Cuentas, Colaboradores y Novedades no viene al abrir (v72.3).
+  for (const deUnaVentana of ["anfitrion_listar_gastos", "anfitrion_listar_avisos_enviados", "anfitrion_listar_novedades"]) {
+    expect(nombres).not.toContain(deUnaVentana);
+  }
   await contestar();
   expect(visto.loaded).toBe(true);
   expect(visto.esAnfitrion).toBe(true);
-  // Todo sale en la primera vuelta, salvo la lista de avisos, que espera a
-  // que se compruebe el estado de los envíos.
-  expect(llamadas.filter((l) => l.vuelta > 0).map((l) => l.nombre)).toEqual(["anfitrion_listar_avisos_enviados"]);
+  expect(llamadas.every((l) => l.vuelta === 0)).toBe(true);
+  vista.desmontar();
+});
+
+// v72.3 (él): lo de una sola ventana se trae al abrirla; mientras está
+// abierta, también en cada actualización; al cerrarla, ya no.
+it("Cuentas: sus gastos llegan al abrirla, y dice que ya están", async () => {
+  const { vista, visto } = abrir("llave-anfitrion", true);
+  await contestar();
+  expect(visto.seccionesCargadas.cuentas).toBeFalsy();
+  let cerrar;
+  act(() => {
+    cerrar = visto.abrirSeccion("cuentas");
+  });
+  expect(llamadas.at(-1).nombre).toBe("anfitrion_listar_gastos");
+  await contestar();
+  expect(visto.seccionesCargadas.cuentas).toBe(true);
+  cerrar();
   vista.desmontar();
 });
 

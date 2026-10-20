@@ -56,3 +56,28 @@ describe("Novedades se puede dibujar", () => {
     expect(html).not.toContain("No se ha podido guardar");
   });
 });
+
+// v72.3: las novedades llegan al abrir la ventana. Hasta entonces, solo
+// «Cargando…», sin montar nada: la pregunta del tablón se rellena al montar
+// y, vacía, al salir de ella guardaría el vacío encima de la de verdad.
+it("hasta que llegan sus datos, solo «Cargando…»; después, la ventana entera", () => {
+  const pedidas = [];
+  const delAnfitrion = {
+    ...data,
+    esAnfitrion: true,
+    abrirSeccion: (n) => {
+      pedidas.push(n);
+      return () => {};
+    },
+    seccionesCargadas: {},
+  };
+  const vista = montar(<VentanaNovedades data={delAnfitrion} ventana={null} />);
+  expect(pedidas).toEqual(["novedades"]);
+  expect(vista.html).toContain("Cargando…");
+  expect(vista.html).not.toContain("El autobús");
+  expect(vista.contenedor.querySelector("textarea, input")).toBeNull();
+  vista.pintar(<VentanaNovedades data={{ ...delAnfitrion, seccionesCargadas: { novedades: true } }} ventana={null} />);
+  expect(vista.html).toContain("El autobús");
+  expect(vista.html).not.toContain("Cargando…");
+  vista.desmontar();
+});

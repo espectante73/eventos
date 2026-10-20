@@ -139,6 +139,77 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
   // bloquea a nadie. Solo lo carga el anfitrión.
   const [accesosTablonSospechosos, setAccesosTablonSospechosos] = useState([]);
 
+  // ---------- Lo que solo usa una ventana (él, v72.3) ----------
+  // Cuentas (los gastos), Colaboradores (el historial de avisos) y Novedades
+  // (sus textos, la pregunta y los accesos al tablón) se traen al abrir su
+  // ventana y, mientras sigue abierta, en cada actualización. Antes venían
+  // siempre, al abrir la app y cada minuto, aunque nadie las mirase. Hasta
+  // que llegan, la ventana solo dice «Cargando…» (lib/useSeccion.js): nunca
+  // enseña ni deja tocar una lista vacía que no lo es.
+  const [seccionesCargadas, setSeccionesCargadas] = useState({});
+  const seccionesAbiertasRef = useRef(new Map());
+  const cargarSeccion = useCallback(
+    async (nombre, mostrarError) => {
+      // El colaborador con permiso de Novedades ya las trae al abrir la app.
+      if (!rol || !esTokenAnfitrion) return;
+      const p = { p_token: rol };
+      if (nombre === "cuentas") {
+        const { data, error } = await supabase.rpc("anfitrion_listar_gastos", p);
+        if (error) {
+          if (mostrarError) avisar("No se pudo cargar el estado de cuentas.", error);
+          return;
+        }
+        setGastos(data || []);
+      } else if (nombre === "avisos") {
+        // En cadena: primero se mira si Resend ya confirmó los envíos
+        // recientes (nunca dentro de enviar_email — ver el episodio del
+        // 2026-08-08 en schema.sql) y luego se lista. "Best effort": si
+        // falla lo primero, el ✓/✗/? se queda como estaba.
+        await supabase.rpc("anfitrion_actualizar_estado_avisos", p);
+        const { data, error } = await supabase.rpc("anfitrion_listar_avisos_enviados", p);
+        if (error) {
+          if (mostrarError) avisar("No se pudo cargar el historial de avisos.", error);
+          return;
+        }
+        setAvisosEnviados(data || []);
+      } else if (nombre === "novedades") {
+        const [{ data, error }, { data: pregunta }, { data: accesos }] = await Promise.all([
+          supabase.rpc("anfitrion_listar_novedades", p),
+          supabase.rpc("anfitrion_obtener_pregunta_tablon", p),
+          // Accesos al tablón desde más de un dispositivo con el mismo
+          // nombre -- señal de alarma, nunca bloquea a nadie (schema.sql,
+          // 2026-08-29). "Best effort".
+          supabase.rpc("anfitrion_listar_accesos_tablon_sospechosos", p),
+        ]);
+        if (error) {
+          if (mostrarError) avisar("No se pudo cargar el tablón de novedades.", error);
+          return;
+        }
+        setNovedades(data || []);
+        // Un texto suelto (ya no {pregunta, respuesta}: el acceso se
+        // comprueba contra los invitados confirmados, schema.sql 2026-08-29).
+        setPreguntaTablon(pregunta || "");
+        setAccesosTablonSospechosos(accesos || []);
+      }
+      setSeccionesCargadas((s) => (s[nombre] ? s : { ...s, [nombre]: true }));
+    },
+    [rol, esTokenAnfitrion]
+  );
+  // La ventana avisa al abrirse; lo que devuelve, al cerrarse, deja de pedir lo suyo.
+  const abrirSeccion = useCallback(
+    (nombre) => {
+      const abiertas = seccionesAbiertasRef.current;
+      abiertas.set(nombre, (abiertas.get(nombre) || 0) + 1);
+      cargarSeccion(nombre, true);
+      return () => {
+        const quedan = (abiertas.get(nombre) || 1) - 1;
+        if (quedan > 0) abiertas.set(nombre, quedan);
+        else abiertas.delete(nombre);
+      };
+    },
+    [cargarSeccion]
+  );
+
   // Se mantiene al día para poder comparar "antes/después" dentro de
   // persistInvitados sin depender de closures obsoletas. También sirve
   // para revertir la pantalla si el guardado en Supabase falla — todos los
@@ -265,11 +336,6 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
           { data: todasMesas, error: errMesas },
           { data: ordenFilas, error: errOrden },
           { data: tokenTablonCargado },
-          { data: avisos, error: errAvisos },
-          { data: todosGastos, error: errGastos },
-          { data: todasNovedades, error: errNovedades },
-          { data: preguntaCargada },
-          { data: accesosCargados },
         ] = await Promise.all([
           supabase.rpc("anfitrion_verificar_token", p),
           // Entero: es el anfitrión (lib/leerEvento.js, v63).
@@ -279,20 +345,10 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
           supabase.rpc("anfitrion_listar_invitados", p),
           supabase.from("mesas").select("*").order("numero", { ascending: true }),
           supabase.from("orden_familias").select("*"),
-          // "Best effort": es solo el enlace a mostrar en Novedades.
+          // "Best effort": es el enlace del tablón (Portada, Novedades, Día del evento).
           supabase.rpc("anfitrion_obtener_token_tablon", p),
-          // En cadena: primero se mira si Resend ya confirmó los envíos
-          // recientes (nunca dentro de enviar_email — ver el episodio del
-          // 2026-08-08 en schema.sql) y luego se lista. "Best effort": si
-          // falla lo primero, el ✓/✗/? se queda como estaba.
-          supabase.rpc("anfitrion_actualizar_estado_avisos", p).then(() => supabase.rpc("anfitrion_listar_avisos_enviados", p)),
-          supabase.rpc("anfitrion_listar_gastos", p),
-          supabase.rpc("anfitrion_listar_novedades", p),
-          supabase.rpc("anfitrion_obtener_pregunta_tablon", p),
-          // Accesos al tablón desde más de un dispositivo con el mismo
-          // nombre -- señal de alarma, nunca bloquea a nadie (schema.sql,
-          // 2026-08-29). "Best effort".
-          supabase.rpc("anfitrion_listar_accesos_tablon_sospechosos", p),
+          // Lo de las ventanas abiertas, en la misma vuelta (ver cargarSeccion).
+          ...[...seccionesAbiertasRef.current.keys()].map((nombre) => cargarSeccion(nombre, false)),
         ]);
         if (errToken) {
           if (mostrarCarga) avisar("No se pudo comprobar el enlace.", errToken);
@@ -303,10 +359,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
             if (errCol) avisar("No se pudieron cargar los colaboradores.", errCol);
             if (errInv) avisar("No se pudieron cargar los invitados.", errInv);
             if (errMesas) avisar("No se pudieron cargar las mesas.", errMesas);
-            if (errAvisos) avisar("No se pudo cargar el historial de avisos.", errAvisos);
             if (errOrden) avisar("No se pudo cargar el orden de las familias.", errOrden);
-            if (errGastos) avisar("No se pudo cargar el estado de cuentas.", errGastos);
-            if (errNovedades) avisar("No se pudo cargar el tablón de novedades.", errNovedades);
           }
 
           if (cancelado) return;
@@ -315,16 +368,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
           if (!errCol) setColaboradores(todosColaboradores || []);
           if (!errInv) setInvitados(todosInvitados || []);
           if (!errMesas) setMesas(todasMesas || []);
-          if (!errAvisos) setAvisosEnviados(avisos || []);
-          if (!errGastos) setGastos(todosGastos || []);
-          if (!errNovedades) setNovedades(todasNovedades || []);
           if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
-          // Ahora es un texto suelto (ya no {pregunta, respuesta} -- la
-          // "respuesta correcta" fija desapareció, ver schema.sql
-          // 2026-08-29: el acceso se comprueba contra los invitados
-          // confirmados, no contra un secreto compartido).
-          setPreguntaTablon(preguntaCargada || "");
-          setAccesosTablonSospechosos(accesosCargados || []);
           setOrdenFamiliares(
             Object.fromEntries(
               (ordenFilas || []).map((r) => [
@@ -451,7 +495,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
       clearTimeout(temporizador);
       document.removeEventListener("visibilitychange", alVolverVisible);
     };
-  }, [rol, esTokenAnfitrion]);
+  }, [rol, esTokenAnfitrion, cargarSeccion]);
 
   const persistEvento = useCallback(async (next) => {
     const anterior = eventoRef.current;
@@ -1427,6 +1471,8 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     fotosSinBoda,
     familiasSinEmailServidor,
     loaded,
+    seccionesCargadas,
+    abrirSeccion,
     esAnfitrion,
     persistEvento,
     persistColaboradores,

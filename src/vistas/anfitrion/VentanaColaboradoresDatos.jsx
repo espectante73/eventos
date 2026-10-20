@@ -25,6 +25,8 @@ import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { EncabezadoOrdenable } from "../../components/Widgets";
 import { Boton } from "../../components/Boton";
+import { useSeccion } from "../../lib/useSeccion";
+import { Cargando } from "../../components/Cargando";
 
 const ETIQUETA_TIPO_AVISO = {
   asignados: "Asignados",
@@ -45,6 +47,8 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
     enviarInvitacionLogin,
     confirmarEmailColaboradorActualizado,
   } = data;
+  // El historial de emails llega al abrir la ventana (v72.3); lo demás ya está.
+  const avisosListos = useSeccion(data, "avisos");
   const [nuevoColab, setNuevoColab] = useState({ invitadoId: "" });
 
   // ---------- Aviso a un colaborador (antes, ventana "Avisos") ----------
@@ -238,7 +242,11 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
 
       {/* Historial de emails: registro, no gestión -- plegado. */}
       <div className="mt-3">
-        <SeccionPlegable icono={Mail} titulo="Emails enviados" resumen={`${avisosEnviados.length} en total`}>
+        <SeccionPlegable icono={Mail} titulo="Emails enviados" resumen={avisosListos ? `${avisosEnviados.length} en total` : "Cargando…"}>
+          {!avisosListos ? (
+            <Cargando />
+          ) : (
+          <>
           <div className="flex gap-2 mb-2">
             {[
               { clave: "todos", etiqueta: "Todos" },
@@ -328,6 +336,8 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
                 ))}
               </div>
             </div>
+          )}
+          </>
           )}
         </SeccionPlegable>
       </div>

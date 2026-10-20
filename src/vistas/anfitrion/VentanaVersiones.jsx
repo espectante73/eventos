@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "72.3",
+    cambios: [
+      "Abrir la app, más ligero: lo que solo usa una ventana se trae al abrirla, no al abrir la app ni en cada actualización. Cuentas (los gastos), Colaboradores (el historial de emails y la comprobación de si llegaron) y Novedades (sus textos, la pregunta y los accesos al tablón). Mientras llega, la ventana dice «Cargando…» y no deja tocar nada; abierta, se sigue actualizando sola.",
+    ],
+  },
+  {
     version: "72.2",
     cambios: [
       "Abrir la app, más rápido: lo que pide al servidor ya no va una cosa detrás de otra (unas 16 en el anfitrión), sino todo a la vez. Y al anfitrión ya no se le pregunta antes si es un colaborador. La actualización automática de cada minuto (y la de cada 8 segundos el día del evento) va igual de rápida.",

@@ -24,6 +24,8 @@ import { FondoMusicalTablon } from "../../components/FondoMusicalTablon";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar } from "../../components/PreguntaSeguridad";
 import { LineaAviso } from "../../components/LineaAviso";
+import { useSeccion } from "../../lib/useSeccion";
+import { Cargando } from "../../components/Cargando";
 
 // Añade "prefijo" al principio de cada línea tocada por la selección
 // actual (o solo la línea del cursor, si no hay nada seleccionado) --
@@ -235,7 +237,42 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
 // (crear, borrar, publicar, marcar NOVEDADES/FAQ, enlace, WhatsApp,
 // pregunta de acceso) queda deshabilitado y atenuado, a petición del
 // usuario, 2026-08-25.
+// La ventana: hasta que llegan sus datos (v72.3), solo su cabecera y
+// «Cargando…». No se monta antes el cuerpo: la pregunta del tablón se
+// rellena al montar y, vacía, guardaría el vacío encima del texto.
 export function VentanaNovedades({ data, ventana, soloTexto = false }) {
+  const lista = useSeccion(data, "novedades");
+  if (lista) return <NovedadesCargadas data={data} ventana={ventana} soloTexto={soloTexto} />;
+  return (
+    <MarcoNovedades>
+      <CabeceraNovedades />
+      <div className="p-4">
+        <Cargando />
+      </div>
+    </MarcoNovedades>
+  );
+}
+
+// El marco y la cabecera, los mismos cargando y cargada (norma 7).
+function MarcoNovedades({ children }) {
+  return (
+    <div className="flex flex-col" style={{ height: "100%", background: C.paper, fontFamily: "'Inter', sans-serif" }}>
+      {children}
+    </div>
+  );
+}
+function CabeceraNovedades({ children }) {
+  return (
+    <div className="panel-flotante-cristal flex items-center justify-between px-4 py-3" style={{ flexShrink: 0 }}>
+      <h3 className="text-lg" style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}>
+        Novedades
+      </h3>
+      {children}
+    </div>
+  );
+}
+
+function NovedadesCargadas({ data, ventana, soloTexto }) {
   const {
     evento,
     persistEvento,
@@ -382,17 +419,8 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
   };
 
   return (
-    <div
-      className="flex flex-col"
-      style={{ height: "100%", background: C.paper, fontFamily: "'Inter', sans-serif" }}
-    >
-      <div
-        className="panel-flotante-cristal flex items-center justify-between px-4 py-3"
-        style={{ flexShrink: 0 }}
-      >
-        <h3 className="text-lg" style={{ fontFamily: "'Fraunces', serif", color: C.goldClaro, fontWeight: 700 }}>
-          Novedades
-        </h3>
+    <MarcoNovedades>
+      <CabeceraNovedades>
         <div className="flex items-center gap-2">
           <button
             onClick={copiarYAbrirGrupo}
@@ -427,7 +455,7 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
             Nueva
           </button>
         </div>
-      </div>
+      </CabeceraNovedades>
 
       <div className="p-4 space-y-2" style={{ flex: 1, overflowY: "auto" }}>
         {copiaFallida && (
@@ -589,6 +617,6 @@ export function VentanaNovedades({ data, ventana, soloTexto = false }) {
           )}
         </>
       )}
-    </div>
+    </MarcoNovedades>
   );
 }

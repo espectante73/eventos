@@ -16,6 +16,8 @@ import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante
 import { Boton } from "../../components/Boton";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
+import { useSeccion } from "../../lib/useSeccion";
+import { Cargando } from "../../components/Cargando";
 
 export function VentanaCuentas({ data, onCerrar }) {
   const {
@@ -28,6 +30,7 @@ export function VentanaCuentas({ data, onCerrar }) {
     reenviarAcuseColaborador,
     deshacerRecogidaColaborador,
   } = data;
+  const lista = useSeccion(data, "cuentas");
   // Las tres partes, plegadas y como mucho UNA abierta: la filosofía del
   // tablón, a petición del usuario (2026-09-19). Antes el resumen estaba
   // siempre a la vista y solo las otras dos se plegaban.
@@ -205,6 +208,11 @@ export function VentanaCuentas({ data, onCerrar }) {
   return (
     <>
     <VentanaFlotante clave="cuentas" titulo="Contabilidad" onCerrar={onCerrar}>
+      {/* Los gastos llegan al abrir la ventana (v72.3): sin ellos, el
+          balance y la lista mentirían. */}
+      {!lista ? (
+        <Cargando />
+      ) : (
       <div className="space-y-2">
       <SeccionPlegable
         icono={Calculator}
@@ -425,6 +433,7 @@ export function VentanaCuentas({ data, onCerrar }) {
       </div>
       </SeccionPlegable>
       </div>
+      )}
       {ventanaPregunta}
     </VentanaFlotante>
 
