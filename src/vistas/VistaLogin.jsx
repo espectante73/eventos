@@ -32,6 +32,7 @@ import { Boton, EnlaceTexto } from "../components/Boton";
 import { CampoContrasena } from "../components/CampoContrasena";
 import { errorDelEnlace, limpiarErrorDelEnlace, esCorreoSinConfirmar } from "../lib/enlaceAuth";
 import { LineaAviso } from "../components/LineaAviso";
+import { cargarTurnstile } from "../lib/turnstile";
 
 const TITULOS = { entrar: "Entrar", crear: "Crear cuenta", recuperar: "Recuperar contraseña" };
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
@@ -67,8 +68,8 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
   // Monta el widget UNA sola vez (no depende de `modo`: el <div> vive
   // fuera de las tres ramas del formulario, así no hay que desmontar y
   // volver a montar Turnstile cada vez que se cambia de pestaña). El
-  // script de index.html es async -- puede no estar listo todavía al
-  // primer render, de ahí el sondeo corto.
+  // script se pide aquí mismo (lib/turnstile.js, v72.4) y llega async --
+  // puede no estar listo todavía al primer render, de ahí el sondeo corto.
   //
   // La limpieza llama a window.turnstile.remove(...) -- sin esto (fallo
   // real encontrado en un examen honesto del código, 2026-08-24), React
@@ -85,6 +86,9 @@ export function VistaLogin({ modoInicial = "entrar", emailInicial = "" }) {
   // bloqueado sin decir nada. Le pasaba a todo colaborador nuevo.
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY || cuentaCreada) return;
+    // Si no llega, el sondeo de abajo sigue esperando y «Entrar» no se
+    // activa: lo mismo que pasaba con el script en index.html.
+    cargarTurnstile().catch(() => {});
     let cancelado = false;
     const montar = () => {
       if (cancelado || !window.turnstile || !cajaCaptchaRef.current) return;

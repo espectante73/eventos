@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "72.4",
+    cambios: [
+      "El script anti-robots (el captcha de Cloudflare) se descarga solo en la pantalla de entrar. Antes se descargaba al abrir la app siempre, también con la sesión ya iniciada y en el tablón de los invitados.",
+    ],
+  },
+  {
     version: "72.3",
     cambios: [
       "Abrir la app, más ligero: lo que solo usa una ventana se trae al abrirla, no al abrir la app ni en cada actualización. Cuentas (los gastos), Colaboradores (el historial de emails y la comprobación de si llegaron) y Novedades (sus textos, la pregunta y los accesos al tablón). Mientras llega, la ventana dice «Cargando…» y no deja tocar nada; abierta, se sigue actualizando sola.",
