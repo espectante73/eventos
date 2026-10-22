@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "72.6",
+    cambios: [
+      "Lista de invitados: la columna con un filtro o un orden puesto va con los colores de la cabecera invertidos, fondo dorado y letra verde (título y filtro). El dorado translúcido de la 72.5 no se notaba a simple vista.",
+    ],
+  },
+  {
     version: "72.5",
     cambios: [
       "Lista de invitados: ordenar se suma como un filtro más, como en una hoja de cálculo. El primer título que tocas manda y el siguiente ordena dentro de él (Zona ▲1, Familia ▲2), hasta 3. Otro toque invierte el sentido y otro más lo quita. Por debajo, las familias siempre juntas y cada persona por su nombre.",

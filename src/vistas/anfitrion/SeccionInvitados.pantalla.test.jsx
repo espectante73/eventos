@@ -15,7 +15,7 @@ import { act } from "react";
 import { dibujarYSoltar, montar } from "../../pruebas/dibujar";
 import { SeccionInvitados } from "./SeccionInvitados";
 import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
-import { C, conAlfa } from "../../theme";
+import { C } from "../../theme";
 
 // Los PDF de verdad no se fabrican aquí (jsdom no dibuja): basta saber que
 // la pantalla avisa al terminar.
@@ -361,10 +361,14 @@ describe("ordenar por niveles", () => {
     const vista = montarLista({ confirmado: "tentativa" });
     vista.pulsar(titulo(vista, "Zona"));
     const tinta = (texto) => titulo(vista, texto).parentElement.style.background;
-    const activa = normalizar(conAlfa(C.gold, 0.4));
+    // Los colores de la cabecera, invertidos (él, v72.6): fondo dorado y letra verde.
+    const activa = normalizar(C.goldClaro);
     expect(tinta("Zona")).toBe(activa);
     expect(tinta("Confirm.")).toBe(activa);
     expect(tinta("Mesa")).not.toBe(activa);
+    const letra = (texto) => titulo(vista, texto).style.color;
+    expect(letra("Zona")).toBe(normalizar(C.ink));
+    expect(letra("Mesa")).not.toBe(letra("Zona"));
     vista.desmontar();
   });
 });

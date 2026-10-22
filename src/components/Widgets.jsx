@@ -210,7 +210,9 @@ export function BarraCompacta({ icono: Icono, completado, total, color, claro })
 // usuario, 2026-08-20. Sin este prop, se comporta igual que antes.
 // `orden`: { columna, direccion }, o una lista de niveles (la Lista de
 // invitados, lib/ordenNiveles.js, v72.5): entonces lleva su número de nivel.
-export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, sinDivisor }) {
+// `invertido`: la columna tiene algo puesto (un filtro o un orden) y su
+// recuadro va en dorado: la letra, en verde (Lista de invitados, v72.6).
+export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, sinDivisor, invertido = false }) {
   const niveles = Array.isArray(orden) ? orden : [orden];
   const posicion = niveles.findIndex((n) => n.columna === columna);
   const activo = posicion !== -1;
@@ -229,7 +231,7 @@ export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, 
         // 2026-08-20. La flecha (▲/▼ vs ⇅) ya distingue cuál está
         // activa, no hace falta además un color distinto. La variante
         // normal (fondo claro, p.ej. Avisos) no cambia.
-        color: claro ? C.goldClaro : activo ? C.ink : C.gold,
+        color: invertido ? C.ink : claro ? C.goldClaro : activo ? C.ink : C.gold,
         // `minWidth: 0`: sin esto, un <button> dentro de una celda de
         // CSS grid NUNCA se encoge por debajo del ancho de su propio
         // contenido (min-width:auto es el valor por defecto en un
