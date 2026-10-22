@@ -216,6 +216,10 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 16. **Una persona, varios papeles** (invitado, colaborador, acomodador).
     Una lista de gente se arma con cada persona una vez y sus papeles al
     lado. Modelo: `personasAsignables` (`lib/cronograma.js`).
+    ⚠️ **Todos son invitados: su nombre sale de su ficha de la Lista**
+    (colaborador, acomodador, anfitrión), y lo que se corrige allí se
+    corrige en toda la app. La copia que guarda el colaborador la mantiene
+    la base (`trg_nombre_colaborador_de_su_ficha`): se quedaba con la errata.
 
 
 ## 1.3 Cómo está hecha por dentro
