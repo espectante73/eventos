@@ -595,3 +595,22 @@ describe("el estado de las cuentas de los colaboradores", () => {
     expect(f.indexOf("update colaboradores c")).toBeLessThan(f.indexOf("from anfitriones a"));
   });
 });
+
+// v72.7 (él: «no me deja corregir»): el nombre del colaborador era una copia
+// de su ficha hecha al nombrarle, y al corregir la ficha la copia se
+// quedaba con la errata. Ahora lo mantiene la base, desde los dos lados.
+describe("el nombre del colaborador sale de su ficha de invitado", () => {
+  it("al guardar un colaborador enganchado, su nombre se toma de la ficha", () => {
+    expect(sql).toMatch(/CREATE TRIGGER colaboradores_nombre_de_su_ficha BEFORE INSERT OR UPDATE ON public\.colaboradores/);
+    expect(cuerpoDe("trg_nombre_colaborador_de_su_ficha")).toMatch(/new\."nombre" := v_nombre/);
+  });
+
+  it("al corregir el nombre o el apellido de la ficha, se corrige el del colaborador", () => {
+    expect(sql).toMatch(/CREATE TRIGGER invitados_nombre_colaborador AFTER INSERT OR UPDATE OF nombre, apellido ON public\.invitados/);
+    expect(cuerpoDe("trg_nombre_colaborador_al_cambiar_ficha")).toMatch(/update colaboradores[\s\S]*where "invitadoId" = new\."id"/);
+  });
+
+  it("con el mismo formato que nombreCompleto: «Apellido, Nombre»", () => {
+    expect(cuerpoDe("trg_nombre_colaborador_de_su_ficha")).toContain(`trim(coalesce(i."apellido", '')) || ', ' || trim(coalesce(i."nombre", ''))`);
+  });
+});

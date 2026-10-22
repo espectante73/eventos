@@ -2897,6 +2897,48 @@ $$;
 
 
 
+-- El nombre de un colaborador es el de su ficha de invitado (v72.7, norma
+-- 7). Antes se copiaba al hacerle colaborador y, si después se corregía la
+-- ficha («Pacheo» → «Pacheco»), la copia se quedaba con la errata en la
+-- Lista, el tablón, los correos y el acuse, sin ningún sitio donde
+-- cambiarla. Lo mantiene la base: al guardar un colaborador enganchado a
+-- un invitado (aunque el cliente mande una copia vieja) y al cambiar el
+-- nombre o el apellido de ese invitado. Mismo formato que nombreCompleto.
+CREATE FUNCTION public.trg_nombre_colaborador_de_su_ficha() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_nombre text;
+begin
+  if new."invitadoId" is null then
+    return new;
+  end if;
+  select trim(coalesce(i."apellido", '')) || ', ' || trim(coalesce(i."nombre", '')) into v_nombre
+  from invitados i where i."id" = new."invitadoId";
+  if found then
+    new."nombre" := v_nombre;
+  end if;
+  return new;
+end;
+$$;
+
+CREATE FUNCTION public.trg_nombre_colaborador_al_cambiar_ficha() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  update colaboradores
+  set "nombre" = trim(coalesce(new."apellido", '')) || ', ' || trim(coalesce(new."nombre", ''))
+  where "invitadoId" = new."id"
+    and "nombre" is distinct from trim(coalesce(new."apellido", '')) || ', ' || trim(coalesce(new."nombre", ''));
+  return null;
+end;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.trg_nombre_colaborador_de_su_ficha() FROM public, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.trg_nombre_colaborador_al_cambiar_ficha() FROM public, anon, authenticated;
+
 -- ============================================================
 -- 5. AVISOS AUTOMÁTICOS (TRIGGERS)
 -- ============================================================
@@ -2905,9 +2947,13 @@ $$;
 -- invitación cuando cambian los datos de la familia y guardan el
 -- texto anterior para poder deshacer.
 
+CREATE TRIGGER colaboradores_nombre_de_su_ficha BEFORE INSERT OR UPDATE ON public.colaboradores FOR EACH ROW EXECUTE FUNCTION public.trg_nombre_colaborador_de_su_ficha();
+
 CREATE TRIGGER invitados_anio_boda_pareja AFTER INSERT OR UPDATE OF "anioBoda", "rolFamiliar", "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_igualar_anio_boda_pareja();
 
 CREATE TRIGGER invitados_invalidar_invitacion AFTER INSERT OR UPDATE OF confirmado, pagado, mesa, "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_invalidar_invitacion_familia();
+
+CREATE TRIGGER invitados_nombre_colaborador AFTER INSERT OR UPDATE OF nombre, apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_nombre_colaborador_al_cambiar_ficha();
 
 CREATE TRIGGER invitados_pago_y_asistencia BEFORE INSERT OR UPDATE ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_pago_y_asistencia();
 

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "72.7",
+    cambios: [
+      "El nombre de un colaborador sale siempre de su ficha de invitado. Antes se copiaba al hacerle colaborador y, si se corregía la ficha, la copia se quedaba con la errata (en la Lista, el tablón, los correos y el acuse) sin ningún sitio donde cambiarla. Lo mantiene la base de datos (SQL v72.7).",
+    ],
+  },
+  {
     version: "72.6",
     cambios: [
       "Lista de invitados: la columna con un filtro o un orden puesto va con los colores de la cabecera invertidos, fondo dorado y letra verde (título y filtro). El dorado translúcido de la 72.5 no se notaba a simple vista.",
