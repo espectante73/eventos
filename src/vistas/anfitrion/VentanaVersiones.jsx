@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "72.5",
+    cambios: [
+      "Lista de invitados: ordenar se suma como un filtro más, como en una hoja de cálculo. El primer título que tocas manda y el siguiente ordena dentro de él (Zona ▲1, Familia ▲2), hasta 3. Otro toque invierte el sentido y otro más lo quita. Por debajo, las familias siempre juntas y cada persona por su nombre.",
+      "Toda columna con algo puesto, un filtro o un orden, queda señalada en dorado (su título y su filtro): así se ve qué está limitando la lista.",
+    ],
+  },
+  {
     version: "72.4",
     cambios: [
       "El script anti-robots (el captcha de Cloudflare) se descarga solo en la pantalla de entrar. Antes se descargaba al abrir la app siempre, también con la sesión ya iniciada y en el tablón de los invitados.",

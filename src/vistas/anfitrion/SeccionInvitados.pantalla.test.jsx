@@ -15,6 +15,7 @@ import { act } from "react";
 import { dibujarYSoltar, montar } from "../../pruebas/dibujar";
 import { SeccionInvitados } from "./SeccionInvitados";
 import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
+import { C, conAlfa } from "../../theme";
 
 // Los PDF de verdad no se fabrican aquí (jsdom no dibuja): basta saber que
 // la pantalla avisa al terminar.
@@ -298,6 +299,72 @@ describe("las Acciones de Invitados, en su panel", () => {
     vista.pulsar(cerrarPanel());
     expect(cerrarPanel()).toBeFalsy();
     expect(cerrada).toBe(false);
+    vista.desmontar();
+  });
+});
+
+// v72.5 (él): ordenar se suma como un filtro más («el primero que activo es
+// el amo; el segundo, su esclavo»), las familias no se separan, y toda
+// columna con algo puesto -- filtro u orden -- queda señalada.
+describe("ordenar por niveles", () => {
+  const familias = [
+    { id: "a1", nombre: "Jacob", apellido: "Barrios", grupoFamiliar: "Barrios01", zona: "Icod", confirmado: false },
+    { id: "a2", nombre: "Ana", apellido: "Alonso", grupoFamiliar: "Alonso01", zona: "Icod", confirmado: false },
+    { id: "a3", nombre: "Loly", apellido: "Barrios", grupoFamiliar: "Barrios01", zona: "Icod", confirmado: false },
+    { id: "a4", nombre: "Eva", apellido: "Cruz", grupoFamiliar: "Cruz01", zona: "Arona", confirmado: false },
+  ];
+  const montarLista = (filtros = {}) =>
+    montar(
+      <SeccionInvitados
+        data={{ ...data, invitados: familias, colaboradores: [] }}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante={null}
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={{ ...FILTROS_VACIOS, ...filtros }}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+  const titulo = (vista, texto) => [...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.startsWith(texto));
+  const ordenDe = (vista) =>
+    ["Alonso, Ana", "Barrios, Jacob", "Barrios, Loly", "Cruz, Eva"]
+      .map((n) => [n, vista.html.indexOf(n)])
+      .sort((a, b) => a[1] - b[1])
+      .map(([n]) => n);
+  const normalizar = (color) => {
+    const el = document.createElement("span");
+    el.style.background = color;
+    return el.style.background;
+  };
+
+  it("por Zona: dentro de cada zona, las familias juntas", () => {
+    const vista = montarLista();
+    vista.pulsar(titulo(vista, "Zona"));
+    expect(ordenDe(vista)).toEqual(["Cruz, Eva", "Alonso, Ana", "Barrios, Jacob", "Barrios, Loly"]);
+    vista.desmontar();
+  });
+
+  it("Zona y luego Familia: la segunda no borra la primera, y cada una lleva su número", () => {
+    const vista = montarLista();
+    vista.pulsar(titulo(vista, "Zona"));
+    vista.pulsar(titulo(vista, "Familia"));
+    expect(titulo(vista, "Zona").textContent).toContain("▲1");
+    expect(titulo(vista, "Familia").textContent).toContain("▲2");
+    expect(ordenDe(vista)[0]).toBe("Cruz, Eva");
+    vista.desmontar();
+  });
+
+  it("la columna con un orden o un filtro puesto se señala; las demás, no", () => {
+    const vista = montarLista({ confirmado: "tentativa" });
+    vista.pulsar(titulo(vista, "Zona"));
+    const tinta = (texto) => titulo(vista, texto).parentElement.style.background;
+    const activa = normalizar(conAlfa(C.gold, 0.4));
+    expect(tinta("Zona")).toBe(activa);
+    expect(tinta("Confirm.")).toBe(activa);
+    expect(tinta("Mesa")).not.toBe(activa);
     vista.desmontar();
   });
 });

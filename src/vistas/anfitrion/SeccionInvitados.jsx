@@ -48,6 +48,7 @@ import { Boton } from "../../components/Boton";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { asignarMesaConSuFamilia, confirmarConSuFamilia } from "../../lib/mesas";
 import { cancionesDe, tieneCancion } from "../../lib/canciones";
+import { tocarTitulo, compararPorNiveles } from "../../lib/ordenNiveles";
 import {
   agregarInvitado as crearInvitado,
   importarInvitados as importarFilas,
@@ -89,6 +90,12 @@ const FILTRO_ES_COLABORADOR = "es-colaborador";
 // initialization"). Pasó el 2026-09-24 al filtrar por Acomodador: el lint
 // y el build lo dieron por bueno, porque solo falla al ejecutarse.
 
+// El orden de las columnas de la cabecera (y de sus filtros): el índice es
+// el de tintaColumnaCabecera.
+const COLUMNAS_LISTA = ["invitado", "grupoFamiliar", "rolFamiliar", "anioBoda", "zona", "colaborador", "mesa", "confirmado", "datos", "pagado", "presente", "rolTrabajo"];
+// Dorado sobre el verde de la cabecera: la columna con un filtro o un orden puesto.
+const TINTA_COLUMNA_ACTIVA = conAlfa(C.gold, 0.4);
+
 export function SeccionInvitados({
   data,
   asignarColaborador,
@@ -120,7 +127,8 @@ export function SeccionInvitados({
   const avisarLista = (texto) => texto && preguntar({ titulo: "Lista de invitados", texto, soloAviso: true });
   const [mostrarImport, setMostrarImport] = useState(false);
   const [mostrarAnadir, setMostrarAnadir] = useState(false);
-  const [orden, setOrden] = useState({ columna: "invitado", direccion: "asc" });
+  // Por niveles (lib/ordenNiveles.js, v72.5): vacío = por «Apellido, Nombre».
+  const [orden, setOrden] = useState([]);
   const [modoEdicion, setModoEdicion] = useState(false);
 
   // "avisoPendiente" vive en el servidor (columna en invitados), no solo
@@ -161,13 +169,9 @@ export function SeccionInvitados({
   // sale) y además bloquea. Ya nos costó una ronda de bugs en Novedades.
   const [aviso, setAviso] = useState("");
 
-  const cambiarOrden = (columna) => {
-    setOrden((o) =>
-      o.columna === columna
-        ? { columna, direccion: o.direccion === "asc" ? "desc" : "asc" }
-        : { columna, direccion: "asc" }
-    );
-  };
+  // Cada título se suma debajo de los anteriores, como en una hoja de
+  // cálculo (él, v72.5): el primero manda y el siguiente ordena dentro.
+  const cambiarOrden = (columna) => setOrden((o) => tocarTitulo(o, columna));
 
   // La decisión vive en lib/edicionInvitados.js, con sus pruebas: aquí
   // solo se recoge lo que escribió el usuario y se enseña el aviso.
@@ -391,6 +395,55 @@ export function SeccionInvitados({
     ...new Set(invitados.map((g) => g.grupoFamiliar).filter(Boolean)),
   ].sort();
 
+  // Lo que vale cada fila en cada columna, para ordenar (lib/ordenNiveles.js).
+  const valorColumna = (g, columna) => {
+    switch (columna) {
+      case "grupoFamiliar":
+        return (g.grupoFamiliar || g.apellido || "").toLowerCase();
+      case "zona":
+        return (g.zona || "").toLowerCase();
+      // Sin año, al final: lo que se busca al ordenar por aquí son
+      // los que sí lo tienen.
+      case "anioBoda":
+        return parseInt(g.anioBoda, 10) || 9999;
+      // Los cónyuges arriba y juntos por familia: es como se
+      // repasan cuando lo que buscas son los matrimonios.
+      case "rolFamiliar":
+        return `${g.rolFamiliar ? "0" : "1"}${(g.grupoFamiliar || g.apellido || "").toLowerCase()}${g.rolFamiliar || ""}`;
+      case "colaborador":
+        return (resolverColaborador(g, colaboradores)?.nombre || "").toLowerCase();
+      case "mesa":
+        return g.mesa ? Number(g.mesa) : 9999;
+      case "confirmado":
+        return g.confirmado ? 1 : 0;
+      case "datos":
+        return g.confirmado && datosCompletos(g) ? 2 : g.confirmado ? 1 : 0;
+      case "pagado":
+        return g.pagado ? 1 : 0;
+      case "presente":
+        return g.presente ? 1 : 0;
+      // Los que tienen función, arriba y juntos por función; los que
+      // no tienen, al final. Es como se repasa cuando buscas a los
+      // acomodadores.
+      case "rolTrabajo": {
+        const suyos = Array.isArray(g.rolesTrabajo) ? [...g.rolesTrabajo] : [];
+        if (comoColaborador(g, colaboradores)) suyos.push("Colaborador");
+        suyos.sort();
+        return suyos.length > 0 ? `0${suyos.join(",")}` : "1";
+      }
+      default:
+        return `${(g.apellido || "").toLowerCase()} ${(g.nombre || "").toLowerCase()}`;
+    }
+  };
+  // Sin niveles, como siempre: por «Apellido, Nombre». Con niveles, por
+  // debajo de ellos las familias juntas y cada persona por su nombre (él,
+  // v72.5: «no debería separarlas»).
+  const porNombre = (a, b) => valorColumna(a, "invitado").localeCompare(valorColumna(b, "invitado"), "es");
+  const desempateOrden =
+    orden.length === 0
+      ? porNombre
+      : (a, b) => valorColumna(a, "grupoFamiliar").localeCompare(valorColumna(b, "grupoFamiliar"), "es") || porNombre(a, b);
+
   const invitadosOrdenados = invitados
     .filter((g) => {
       if (filtros.texto) {
@@ -453,52 +506,7 @@ export function SeccionInvitados({
       return true;
     })
     .slice()
-    .sort((a, b) => {
-      const dir = orden.direccion === "asc" ? 1 : -1;
-      const valor = (g) => {
-        switch (orden.columna) {
-          case "grupoFamiliar":
-            return (g.grupoFamiliar || g.apellido || "").toLowerCase();
-          case "zona":
-            return (g.zona || "").toLowerCase();
-          // Sin año, al final: lo que se busca al ordenar por aquí son
-          // los que sí lo tienen.
-          case "anioBoda":
-            return parseInt(g.anioBoda, 10) || 9999;
-          // Los cónyuges arriba y juntos por familia: es como se
-          // repasan cuando lo que buscas son los matrimonios.
-          case "rolFamiliar":
-            return `${g.rolFamiliar ? "0" : "1"}${(g.grupoFamiliar || g.apellido || "").toLowerCase()}${g.rolFamiliar || ""}`;
-          case "colaborador":
-            return (resolverColaborador(g, colaboradores)?.nombre || "").toLowerCase();
-          case "mesa":
-            return g.mesa ? Number(g.mesa) : 9999;
-          case "confirmado":
-            return g.confirmado ? 1 : 0;
-          case "datos":
-            return g.confirmado && datosCompletos(g) ? 2 : g.confirmado ? 1 : 0;
-          case "pagado":
-            return g.pagado ? 1 : 0;
-          case "presente":
-            return g.presente ? 1 : 0;
-          // Los que tienen función, arriba y juntos por función; los que
-          // no tienen, al final. Es como se repasa cuando buscas a los
-          // acomodadores.
-          case "rolTrabajo": {
-            const suyos = Array.isArray(g.rolesTrabajo) ? [...g.rolesTrabajo] : [];
-            if (comoColaborador(g, colaboradores)) suyos.push("Colaborador");
-            suyos.sort();
-            return suyos.length > 0 ? `0${suyos.join(",")}` : "1";
-          }
-          default:
-            return `${(g.apellido || "").toLowerCase()} ${(g.nombre || "").toLowerCase()}`;
-        }
-      };
-      const va = valor(a);
-      const vb = valor(b);
-      if (typeof va === "number" && typeof vb === "number") return (va - vb) * dir;
-      return String(va).localeCompare(String(vb)) * dir;
-    });
+    .sort(compararPorNiveles(orden, valorColumna, desempateOrden));
 
   // Invitado 1.2fr->1.8fr, Zona 0.8fr->1.1fr, Colaborador 1fr->1.3fr y
   // Mesa 0.8fr->1.1fr->1.4fr (Mesa necesitó una segunda pasada: seguía
@@ -542,6 +550,16 @@ export function SeccionInvitados({
   // recuadro que "incluye nombre y filtro" -- a petición del usuario,
   // 2026-08-20.
   const tintaColumnaCabecera = (idx) => (idx % 2 === 1 ? conAlfa(C.blanco, 0.07) : "transparent");
+  // Una columna con algo puesto -- un filtro o un nivel de orden -- queda
+  // señalada, como en una hoja de cálculo (él, v72.5: que se vea «no estás
+  // viendo más porque esto está filtrado»; ordenar también cuenta). Su
+  // título y su filtro, con la misma tinta: se leen como un solo recuadro.
+  const filtroDeColumna = (columna) => ({ invitado: "texto", colaborador: "colaboradorId" })[columna] || columna;
+  const columnaActiva = (idx) => {
+    const columna = COLUMNAS_LISTA[idx];
+    return Boolean(filtros[filtroDeColumna(columna)]) || orden.some((n) => n.columna === columna);
+  };
+  const tintaColumna = (idx) => (columnaActiva(idx) ? TINTA_COLUMNA_ACTIVA : tintaColumnaCabecera(idx));
 
   // Sin pareja, en rojo: solo los que siguen a medias. Quien viene sin su
   // pareja y él lo dio por bueno en la Revisión cuenta como matrimonio (v71).
@@ -775,12 +793,12 @@ export function SeccionInvitados({
                   letterSpacing: "0.03em",
                 }}
               >
-                <span style={{ background: tintaColumnaCabecera(0), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(0), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="invitado" orden={orden} onClick={cambiarOrden}>
                     Invitado
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(1), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(1), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
                     Familia
                   </EncabezadoOrdenable>
@@ -790,7 +808,7 @@ export function SeccionInvitados({
                     para contar los matrimonios y para la ventana
                     "Matrimonios" -- cada pareja tiene su foto de boda y
                     se les hará otra en el evento. */}
-                <span style={{ background: tintaColumnaCabecera(2), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(2), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="rolFamiliar" orden={orden} onClick={cambiarOrden}>
                     Rol
                   </EncabezadoOrdenable>
@@ -801,37 +819,37 @@ export function SeccionInvitados({
                     que se quitó la de Matrimonios: filtrando por O sale
                     una fila por pareja, que es justo esa lista
                     (2026-09-04). */}
-                <span style={{ background: tintaColumnaCabecera(3), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(3), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="anioBoda" orden={orden} onClick={cambiarOrden}>
                     Boda
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(4), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(4), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="zona" orden={orden} onClick={cambiarOrden}>
                     Zona
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(5), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(5), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="colaborador" orden={orden} onClick={cambiarOrden}>
                     Colaborador
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(6), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(6), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="mesa" orden={orden} onClick={cambiarOrden}>
                     Mesa
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(7), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(7), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="confirmado" orden={orden} onClick={cambiarOrden}>
                     Confirm.
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(8), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(8), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="datos" orden={orden} onClick={cambiarOrden}>
                     Datos
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(9), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(9), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="pagado" orden={orden} onClick={cambiarOrden}>
                     Pagado
                   </EncabezadoOrdenable>
@@ -841,7 +859,7 @@ export function SeccionInvitados({
                     su gente (2026-09-06). Aquí es de solo lectura -- el
                     recuento y el filtro son lo que de verdad hace falta
                     desde este lado. */}
-                <span style={{ background: tintaColumnaCabecera(10), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(10), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="presente" orden={orden} onClick={cambiarOrden}>
                     Llegó
                   </EncabezadoOrdenable>
@@ -850,7 +868,7 @@ export function SeccionInvitados({
                     las demás columnas (usuario, 2026-09-23: lo tenía al
                     revés). "Función" es lo que hace esa persona el día
                     del evento — acomodador, barra… */}
-                <span style={{ background: tintaColumnaCabecera(11), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ background: tintaColumna(11), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor columna="rolTrabajo" orden={orden} onClick={cambiarOrden}>
                     Función
                   </EncabezadoOrdenable>
@@ -880,12 +898,12 @@ export function SeccionInvitados({
                 }}
               >
                 {/* Cada celda de filtro va envuelta en el mismo recuadro
-                    (misma `tintaColumnaCabecera(idx)`) que su cabecera
+                    (misma `tintaColumna(idx)`) que su cabecera
                     de arriba, con las esquinas redondeadas solo abajo --
                     juntas, cabecera+filtro se leen como un único
                     recuadro por columna, a petición del usuario,
                     2026-08-20. */}
-                <span style={{ background: tintaColumnaCabecera(0), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(0), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <TextInputEnVentanaAparte
                     value={filtros.texto}
                     onCambio={(texto) => setFiltros({ ...filtros, texto })}
@@ -903,7 +921,7 @@ export function SeccionInvitados({
                     }}
                   />
                 </span>
-                <span style={{ background: tintaColumnaCabecera(1), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(1), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.grupoFamiliar}
                     onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
@@ -917,7 +935,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(2), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(2), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.rolFamiliar}
                     onChange={(e) => setFiltros({ ...filtros, rolFamiliar: e.target.value })}
@@ -956,7 +974,7 @@ export function SeccionInvitados({
                     <option value="sin">{conCuenta("Sin rol", "sin")}</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(3), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(3), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.anioBoda}
                     onChange={(e) => setFiltros({ ...filtros, anioBoda: e.target.value })}
@@ -968,7 +986,7 @@ export function SeccionInvitados({
                     <option value="sin">Sin año</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(4), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(4), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.zona}
                     onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
@@ -982,7 +1000,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(5), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(5), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.colaboradorId}
                     onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
@@ -997,7 +1015,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(6), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(6), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.mesa}
                     onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
@@ -1015,7 +1033,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(7), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(7), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.confirmado}
                     onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
@@ -1027,7 +1045,7 @@ export function SeccionInvitados({
                     {noAsistenCount > 0 && <option value="noAsiste">No asiste</option>}
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(8), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(8), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.datos}
                     onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
@@ -1038,7 +1056,7 @@ export function SeccionInvitados({
                     <option value="pendiente">Por recopilar</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(9), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(9), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.pagado}
                     onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
@@ -1049,7 +1067,7 @@ export function SeccionInvitados({
                     <option value="pendiente">Pendiente</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumnaCabecera(10), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(10), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.presente}
                     onChange={(e) => setFiltros({ ...filtros, presente: e.target.value })}
@@ -1066,7 +1084,7 @@ export function SeccionInvitados({
                     es la última (usuario, 2026-09-23: "de una letra o
                     dos, no más ancho"). Solo aparece si ya hay algún rol
                     creado — si no, sería un desplegable vacío. */}
-                <span style={{ background: tintaColumnaCabecera(11), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ background: tintaColumna(11), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   {(rolesConocidos.length > 0 || colaboradores.length > 0) && (
                     <select
                       value={filtros.rolTrabajo || ""}

@@ -208,8 +208,14 @@ export function BarraCompacta({ icono: Icono, completado, total, color, claro })
 // el propio llamador ya diferencia cada columna con su recuadro/sombra
 // (ver `tintaColumnaCabecera` en SeccionInvitados.jsx), a petición del
 // usuario, 2026-08-20. Sin este prop, se comporta igual que antes.
+// `orden`: { columna, direccion }, o una lista de niveles (la Lista de
+// invitados, lib/ordenNiveles.js, v72.5): entonces lleva su número de nivel.
 export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, sinDivisor }) {
-  const activo = orden.columna === columna;
+  const niveles = Array.isArray(orden) ? orden : [orden];
+  const posicion = niveles.findIndex((n) => n.columna === columna);
+  const activo = posicion !== -1;
+  const direccion = activo ? niveles[posicion].direccion : "asc";
+  const numeroNivel = Array.isArray(orden) && activo ? posicion + 1 : null;
   return (
     <button
       onClick={() => onClick(columna)}
@@ -250,14 +256,15 @@ export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, 
             petición del usuario, 2026-08-20. La variante normal (fondo
             claro, Avisos) no cambia. */}
         {claro
-          ? activo && orden.direccion === "desc"
+          ? activo && direccion === "desc"
             ? "▼"
             : "▲"
           : activo
-          ? orden.direccion === "asc"
+          ? direccion === "asc"
             ? "▲"
             : "▼"
           : "⇅"}
+        {numeroNivel}
       </span>
     </button>
   );
