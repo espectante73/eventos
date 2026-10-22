@@ -81,3 +81,20 @@ it("hasta que llegan sus datos, solo «Cargando…»; después, la ventana enter
   expect(vista.html).not.toContain("Cargando…");
   vista.desmontar();
 });
+
+// v73 (él): «De dónde venimos», una noticia más, automática: su título y
+// su casilla «Publicada», que guardan en el evento. Sin papelera.
+it("la noticia de las zonas: sale como automática y su casilla la publica", () => {
+  const guardados = [];
+  const vista = montar(
+    <VentanaNovedades data={{ ...data, evento: { ...data.evento, zonasTablon: false }, persistEvento: (e) => guardados.push(e) }} ventana={null} />
+  );
+  expect(vista.html).toContain("AUTOMÁTICA");
+  expect(vista.contenedor.querySelector('input[aria-label="Título de la noticia de las zonas"]').value).toBe("De dónde venimos");
+  const desplegar = [...vista.contenedor.querySelectorAll('button[aria-label="Desplegar"]')][0];
+  vista.pulsar(desplegar);
+  const casilla = [...vista.contenedor.querySelectorAll("label")].find((l) => l.textContent.includes("Publicada") && l.textContent.includes("tablón") && l.parentElement.textContent.includes("Se rellena sola"));
+  vista.pulsar(casilla.querySelector("input"));
+  expect(guardados.at(-1).zonasTablon).toBe(true);
+  vista.desmontar();
+});

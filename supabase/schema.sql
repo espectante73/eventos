@@ -105,6 +105,12 @@ CREATE TABLE public.evento (
     -- Cuánto suena la cortinilla por encima de la música, en puntos.
     -- La app la guarda desde la ventana de Música del evento.
     "cortinillaRealce" integer DEFAULT 15 NOT NULL,
+    -- «De dónde venimos» (v73): la noticia automática del tablón con las
+    -- zonas de los confirmados. Publicada o no, y su título. Viven aquí y
+    -- no en `novedades`: reponer una foto del Deshacer anterior a ella la
+    -- habría borrado sin manera de recuperarla.
+    "zonasTablon" boolean DEFAULT false,
+    "zonasTablonTitulo" text,
     CONSTRAINT evento_id_check CHECK (id)
 );
 
@@ -2497,6 +2503,37 @@ begin
   insert into fotos_fiesta_intentos ("invitadoId", "dispositivoId", "acierto")
   values (v_yo.id, p_dispositivo, v_acierto);
   return case when v_acierto then 'ok' else 'no' end;
+end;
+$$;
+
+-- «De dónde venimos» (v73, él): las zonas de los confirmados (sin los que
+-- dijeron «No asiste») y cuántos de cada una, tal como están escritas en
+-- la Lista. Solo cifras, nunca nombres, y solo a un invitado identificado
+-- (la misma llave que tablon_fotos), con la noticia publicada. Su propia
+-- zona, para marcarla. El orden alfabético lo pone la app.
+CREATE FUNCTION public.tablon_zonas(p_token uuid, p_respuesta text) RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+declare
+  v_yo invitados;
+begin
+  select * into v_yo from tablon_invitado(p_token, p_respuesta);
+  if v_yo.id is null or not coalesce((select "zonasTablon" from evento limit 1), false) then
+    return null;
+  end if;
+  return jsonb_build_object(
+    'miZona', trim(coalesce(v_yo."zona", '')),
+    'zonas', coalesce((
+      select jsonb_agg(jsonb_build_object('zona', z.zona, 'confirmados', z.n))
+      from (
+        select trim(i."zona") as zona, count(*) as n
+        from invitados i
+        where i."confirmado" and not coalesce(i."noAsiste", false) and trim(coalesce(i."zona", '')) <> ''
+        group by trim(i."zona")
+      ) z
+    ), '[]'::jsonb)
+  );
 end;
 $$;
 

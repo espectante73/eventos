@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "73",
+    cambios: [
+      "Tablón: «De dónde venimos», una noticia más (la primera, plegada) con las zonas de los confirmados y cuántos vienen de cada una. En orden alfabético, para que sea imparcial, dos por línea, y la zona de quien la mira en verde. Solo cifras, nunca nombres.",
+      "Novedades: aparece como AUTOMÁTICA, con su título y su casilla «Publicada (visible en el tablón)». Su contenido no se escribe: sale de la Lista, con cada zona tal como está escrita allí. Nace sin publicar (SQL v73).",
+    ],
+  },
+  {
     version: "72.7",
     cambios: [
       "El nombre de un colaborador sale siempre de su ficha de invitado. Antes se copiaba al hacerle colaborador y, si se corregía la ficha, la copia se quedaba con la errata (en la Lista, el tablón, los correos y el acuse) sin ningún sitio donde cambiarla. Lo mantiene la base de datos (SQL v72.7).",

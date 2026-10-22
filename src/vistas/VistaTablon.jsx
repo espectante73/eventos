@@ -25,6 +25,8 @@ import { leerEvento } from "../lib/leerEvento";
 import { rondasTablon } from "../lib/rondasTablon";
 import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta } from "../lib/fotosFiesta";
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
+import { ZonasTablon } from "./ZonasTablon";
+import { tituloZonas } from "../lib/zonasTablon";
 
 const BUCKET_MUSICA = "musica-ambiental";
 
@@ -65,6 +67,8 @@ export function VistaTablon({ token }) {
   // colaboradorEsYo, esColaborador }, o null.
   const [yo, setYo] = useState(null);
   const [novedades, setNovedades] = useState([]);
+  // «De dónde venimos» (v73): las zonas de los confirmados, si está publicada.
+  const [zonas, setZonas] = useState(null);
   // Sus fotos de la fiesta (tablon_fotos, v67.4-68): null si no
   // se le reconoce; con `abierta` falso, la tarjeta no sale.
   const [fotosFiesta, setFotosFiesta] = useState(null);
@@ -150,7 +154,7 @@ export function VistaTablon({ token }) {
     async () => {
       // El evento, sin lo privado (lib/leerEvento.js, v63), y quién ha
       // entrado (v64): su nombre y su colaborador.
-      const [eventoLeido, { data: novedadesFilas }, { data: quien }, { data: fotos }] = await Promise.all([
+      const [eventoLeido, { data: novedadesFilas }, { data: quien }, { data: fotos }, { data: zonasLeidas }] = await Promise.all([
         leerEvento(supabase),
         supabase.rpc("tablon_listar_novedades", {
           p_token: token,
@@ -163,12 +167,14 @@ export function VistaTablon({ token }) {
           p_respuesta: respuestaVerificadaRef.current,
           p_dispositivo: dispositivoIdRef.current,
         }),
+        supabase.rpc("tablon_zonas", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
       ]);
       setEvento(eventoLeido);
       // Con el año con el que entró (v70.1): el importe de su entrada en la guía.
       setYo({ ...(quien || {}), nombre: quien?.nombre || respuestaVerificadaRef.current, anio: anioDeRespuesta(respuestaVerificadaRef.current) });
       setNovedades(novedadesFilas || []);
       setFotosFiesta(fotos || null);
+      setZonas(zonasLeidas || null);
       // Todas plegadas por defecto (ni siquiera la más reciente se abre
       // sola) -- a petición del usuario, 2026-08-25. Sigue habiendo como
       // mucho una abierta a la vez (ver `alternar`, más abajo).
@@ -433,9 +439,14 @@ export function VistaTablon({ token }) {
 
   // La lista de la FAQ: una sola pieza, abierta o dentro de su apartado
   // plegado (con las fotos abiertas, v70.5).
+  // «De dónde venimos» (v73, él): una noticia más, la primera y plegada como
+  // las demás; su cuerpo no es texto, son las zonas (ZonasTablon).
+  const noticias = evento?.zonasTablon
+    ? [{ id: "zonas-tablon", titulo: tituloZonas(evento), esNovedad: true, automatica: true }, ...novedades]
+    : novedades;
   const listaFaq = (
     <div className="space-y-2">
-      {novedades.map((n) => {
+      {noticias.map((n) => {
         const abierta = idAbierto === n.id;
         return (
           <div key={n.id} className="rounded-lg overflow-hidden" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
@@ -476,14 +487,19 @@ export function VistaTablon({ token }) {
                 />
               </span>
             </button>
-            {abierta && (
+            {abierta && n.automatica && (
+              <div className="px-4 pt-3 pb-4" style={{ borderTop: `1px solid ${C.line}` }}>
+                <ZonasTablon datos={zonas} />
+              </div>
+            )}
+            {abierta && !n.automatica && (
               <div style={{ borderTop: `1px solid ${C.line}` }}>
                 <p className="px-4 pt-2.5 text-xs" style={{ color: C.charcoal, opacity: OP.tenue }}>
                   {formatearFecha(String(n.creadaEn).slice(0, 10))}
                 </p>
               </div>
             )}
-            {abierta && (
+            {abierta && !n.automatica && (
               <div
                 className="px-4 pt-2 pb-4 text-sm"
                 style={{
@@ -505,7 +521,7 @@ export function VistaTablon({ token }) {
           </div>
         );
       })}
-      {novedades.length === 0 && (
+      {noticias.length === 0 && (
         <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
           Todavía no hay ninguna novedad publicada.
         </p>

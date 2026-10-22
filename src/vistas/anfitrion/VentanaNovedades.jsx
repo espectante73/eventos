@@ -26,6 +26,7 @@ import { BotonQuitar } from "../../components/PreguntaSeguridad";
 import { LineaAviso } from "../../components/LineaAviso";
 import { useSeccion } from "../../lib/useSeccion";
 import { Cargando } from "../../components/Cargando";
+import { tituloZonas, TITULO_ZONAS } from "../../lib/zonasTablon";
 
 // Añade "prefijo" al principio de cada línea tocada por la selección
 // actual (o solo la línea del cursor, si no hay nada seleccionado) --
@@ -217,6 +218,79 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
               onChange={(e) => onCambiar({ ...n, esNovedad: e.target.checked })}
             />
             Marcarla como "NOVEDADES" (si no, se etiqueta "FAQ")
+          </label>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// «De dónde venimos» (v73, él): la noticia automática del tablón, con las
+// zonas de los confirmados. Como las demás -- su título y su casilla
+// «Publicada» --, pero su contenido no se escribe: sale de la Lista. El
+// título y si se publica viven en `evento` (zonasTablon, zonasTablonTitulo;
+// ver schema.sql). Sin papelera: se muestra o no con su casilla. El
+// colaborador de Novedades la ve, sin poder tocarla.
+function NovedadZonas({ evento, persistEvento, expandida, onAlternar, soloTexto }) {
+  // Se inicializa al montar y se guarda al salir del campo (norma 2.4).
+  const [titulo, setTitulo] = useState(tituloZonas(evento));
+  const publicada = Boolean(evento.zonasTablon);
+  return (
+    <div className="rounded" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
+      <div className="flex items-center gap-2 p-3">
+        <button
+          onClick={onAlternar}
+          title={expandida ? "Plegar" : "Desplegar"}
+          aria-label={expandida ? "Plegar" : "Desplegar"}
+          className="boton-3d rounded p-1 flex-shrink-0"
+        >
+          <ChevronDown
+            size={16}
+            style={{ color: C.gold, transform: expandida ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
+          />
+        </button>
+        <input
+          value={titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          onBlur={() => titulo !== tituloZonas(evento) && persistEvento({ ...evento, zonasTablonTitulo: titulo })}
+          readOnly={soloTexto}
+          placeholder={TITULO_ZONAS}
+          aria-label="Título de la noticia de las zonas"
+          className="flex-1"
+          style={{ ...inputStyle, fontFamily: "'Fraunces', serif", fontWeight: 600 }}
+        />
+        <span
+          className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap font-medium"
+          style={{ background: C.paperDark, color: C.charcoal }}
+        >
+          AUTOMÁTICA
+        </span>
+        {!publicada && (
+          <span
+            className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
+            style={{ background: C.paperDark, color: C.charcoal, opacity: OP.secundario }}
+          >
+            Borrador
+          </span>
+        )}
+      </div>
+      {expandida && (
+        <div className="px-3 pb-3 space-y-2">
+          <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
+            Las zonas de los confirmados, y cuántos de cada una, tal como están escritas en la Lista. Se rellena sola.
+          </p>
+          <label
+            className="flex items-center gap-1.5 text-xs"
+            style={{ color: C.charcoal, opacity: soloTexto ? OP.apagado : OP.secundario }}
+            title={soloTexto ? "No tienes permiso para cambiar esto" : undefined}
+          >
+            <input
+              type="checkbox"
+              checked={publicada}
+              disabled={soloTexto}
+              onChange={(e) => persistEvento({ ...evento, zonasTablon: e.target.checked })}
+            />
+            Publicada (visible en el tablón)
           </label>
         </div>
       )}
@@ -486,6 +560,13 @@ function NovedadesCargadas({ data, ventana, soloTexto }) {
             </button>
           </div>
         )}
+        <NovedadZonas
+          evento={evento}
+          persistEvento={persistEvento}
+          expandida={idExpandido === "zonas-tablon"}
+          onAlternar={() => alternarExpandida("zonas-tablon")}
+          soloTexto={soloTexto}
+        />
         {novedades.map((n) => (
           <NovedadCard
             key={n.id}
