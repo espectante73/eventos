@@ -161,8 +161,13 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    (`nombreCompleto`), su email (`emailDeInvitado`: el de su ficha o, si
    es colaborador, el de su cuenta) o un importe (`euros`)—, comparten la
    definición: dos copias a mano **derivan sin que nadie lo vea**.
-8. **Una vista que solo reordena o filtra lo que la Lista de invitados
-   ya muestra va DENTRO de la lista**: la lista es la raíz.
+8. **La Lista de invitados es la raíz de toda la app** (la norma de
+   origen): ahí se editan los datos y de ahí lee todo lo demás. Todos son
+   invitados —colaboradores, acomodadores, el anfitrión—: su nombre sale
+   de su ficha, y lo que se corrige en la Lista se corrige en toda la app.
+   Si algo guarda una copia, la mantiene la base
+   (`trg_nombre_colaborador_de_su_ficha`). Por eso, una vista que solo
+   reordena o filtra lo que la Lista ya muestra va DENTRO de ella.
 9. **Quitar o borrar pregunta antes**, en la ventana de la app
    (`usePreguntaSeguridad`; `BotonQuitar` ya la lleva dentro); lo que
    pasa fuera de la pantalla (una descarga, un envío) avisa en ella al
@@ -216,10 +221,6 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 16. **Una persona, varios papeles** (invitado, colaborador, acomodador).
     Una lista de gente se arma con cada persona una vez y sus papeles al
     lado. Modelo: `personasAsignables` (`lib/cronograma.js`).
-    ⚠️ **Todos son invitados: su nombre sale de su ficha de la Lista**
-    (colaborador, acomodador, anfitrión), y lo que se corrige allí se
-    corrige en toda la app. La copia que guarda el colaborador la mantiene
-    la base (`trg_nombre_colaborador_de_su_ficha`): se quedaba con la errata.
 
 
 ## 1.3 Cómo está hecha por dentro
