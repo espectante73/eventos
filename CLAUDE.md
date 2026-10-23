@@ -282,6 +282,9 @@ vigila `reglas-del-proyecto.test.js`.
 3. **Tilde**, no "acento", cuando se habla de lo que alguien escribe.
 4. **Las plantillas guardadas en la base son suyas**: se le avisa, no se
    tocan.
+5. **Nunca el «yo» del anfitrión**: tercera persona o el «tú» al lector.
+   Es el espíritu del evento: «el protagonismo personal es corrosivo en
+   un equipo». Sus mezclas («somos… consultarles») son a propósito.
 
 ## 1.6 El SQL que se le pasa
 
