@@ -10,6 +10,8 @@ export const ICONOS_VENTANAS = {
   configuracion: Settings,
   cuentas: Wallet,
   diaEvento: CalendarHeart,
+  // El equipo de colaboradores del panel de cada uno (v73.1): el mismo grupo de personas.
+  equipo: Users,
   marcador: UserCheck,
   formulario: ClipboardList,
   invitaciones: Mail,

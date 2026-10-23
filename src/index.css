@@ -156,6 +156,42 @@ button:disabled > .interruptor-haptico {
       0 0 0 13px rgba(214, 8, 34, 0.3);
   }
 }
+/* El sello de los días que faltan, en el panel del colaborador
+   (SelloCuentaAtras.jsx, él, v73.1): «que lata suavemente, con un halo muy
+   suave, no en rojo: dorado y verde; más allá de un segundo, si no sería
+   muy apremiante; un latido similar a los otros sellos». El mismo latido
+   que el sello rojo (crece y echa aros), pero en los colores de la app,
+   más pequeño y más lento: 3 s frente a sus 2 (él: «un poco más lento que
+   el sello de los nuevos sin registrar»). Acompaña, no avisa. Los aros: el de dentro en
+   dorado claro (C.goldClaro), el de fuera en verde (C.ink). */
+@keyframes latido-cuenta-atras {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 8px 30px rgba(0, 0, 0, 0.35),
+      0 0 0 0 rgba(217, 183, 120, 0),
+      0 0 0 0 rgba(31, 58, 46, 0);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow:
+      0 8px 30px rgba(0, 0, 0, 0.35),
+      0 0 0 6px rgba(217, 183, 120, 0.45),
+      0 0 0 14px rgba(31, 58, 46, 0.14);
+  }
+}
+.sello-cuenta-atras {
+  animation: latido-cuenta-atras 3s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sello-cuenta-atras {
+    animation: none;
+    box-shadow:
+      0 8px 30px rgba(0, 0, 0, 0.35),
+      0 0 0 4px rgba(217, 183, 120, 0.45);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .ficha-incompleta {
     animation: none;

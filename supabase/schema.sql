@@ -947,6 +947,33 @@ begin
 end;
 $$;
 REVOKE EXECUTE ON FUNCTION public.colaborador_enlace_whatsapp(uuid) FROM PUBLIC, anon;
+
+-- El equipo de colaboradores, en el panel de cada uno (v73.1, él: «si
+-- quiere hacer alguna consulta, que sepa quiénes son todo el equipo»).
+-- Nombre y zona de su ficha de la Lista (norma 8), y lo justo para
+-- ordenarlo (familia y papel); nada de emails. Se lee en cada momento:
+-- quien deja de ser colaborador desaparece y quien entra aparece. Solo a
+-- un colaborador con su sesión.
+CREATE FUNCTION public.colaborador_equipo(p_colaborador_id uuid) RETURNS TABLE(id uuid, apellido text, nombre text, "grupoFamiliar" text, "rolFamiliar" text, zona text, "esYo" boolean)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select
+    c."id",
+    coalesce(i."apellido", case when strpos(c."nombre", ',') > 0 then trim(split_part(c."nombre", ',', 1)) else '' end),
+    coalesce(i."nombre", case when strpos(c."nombre", ',') > 0 then trim(substr(c."nombre", strpos(c."nombre", ',') + 1)) else trim(c."nombre") end),
+    coalesce(i."grupoFamiliar", ''),
+    coalesce(i."rolFamiliar", ''),
+    coalesce(i."zona", ''),
+    c."id" = p_colaborador_id
+  from colaboradores c
+  left join invitados i on i."id" = c."invitadoId"
+  where exists (
+    select 1 from colaboradores yo
+    where yo."id" = p_colaborador_id and yo."authUserId" = auth.uid()
+  );
+$$;
+REVOKE EXECUTE ON FUNCTION public.colaborador_equipo(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.colaborador_enlace_whatsapp(uuid) TO authenticated;
 
 -- Guarda los datos de la boda (nombre, fecha, lugar, precios, plantillas).

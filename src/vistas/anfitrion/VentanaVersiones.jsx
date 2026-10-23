@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "73.1",
+    cambios: [
+      "Panel del colaborador: un sello con los días que faltan para el evento, siempre a la vista, abajo y del lado contrario al pulgar. La misma cuenta que el tablón («¡Es hoy!» ese día). Late despacio, cada 3 segundos, con un halo dorado y verde: más tranquilo que el sello rojo de las fichas que faltan.",
+      "Panel del colaborador: «Equipo», en su menú. Todos los colaboradores con su zona, en orden alfabético y con el esposo antes que la esposa; el suyo, marcado «(tú)». Sale de la Lista en cada momento: quien deja de ser colaborador desaparece y quien entra aparece (SQL v73.1).",
+    ],
+  },
+  {
     version: "73",
     cambios: [
       "Tablón: «De dónde venimos», una noticia más (la primera, plegada) con las zonas de los confirmados y cuántos vienen de cada una. En orden alfabético, para que sea imparcial, dos por línea, y la zona de quien la mira en verde. Solo cifras, nunca nombres.",
