@@ -14,6 +14,9 @@ import { LineaAviso } from "../components/LineaAviso";
 import { nombreCompleto } from "../lib/formato";
 import { ordenarEquipo, equipoDesdeDatos, leerEquipo } from "../lib/equipoColaboradores";
 
+export const NOTA_EQUIPO =
+  "Este es el equipo al completo: todos somos compañeros con las mismas tareas, para consultarles cuando lo necesites.";
+
 // Los anchos de las dos columnas, una sola vez (norma 6).
 const COLUMNAS = "minmax(0, 1fr) 7rem";
 
@@ -77,6 +80,10 @@ export function VentanaEquipo({ data, colaboradorId, onCerrar }) {
               </div>
             ))}
           </div>
+          {/* Su frase, tal cual (él, v73.2), al pie y en pequeño como las demás notas. */}
+          <p className="text-xs mt-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
+            {NOTA_EQUIPO}
+          </p>
         </>
       )}
     </VentanaFlotante>

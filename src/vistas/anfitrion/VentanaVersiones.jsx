@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "73.2",
+    cambios: [
+      "Equipo: al pie de la lista, su frase: «Este es el equipo al completo: todos somos compañeros con las mismas tareas, para consultarles cuando lo necesites.»",
+    ],
+  },
+  {
     version: "73.1",
     cambios: [
       "Panel del colaborador: un sello con los días que faltan para el evento, siempre a la vista, abajo y del lado contrario al pulgar. La misma cuenta que el tablón («¡Es hoy!» ese día). Late despacio, cada 3 segundos, con un halo dorado y verde: más tranquilo que el sello rojo de las fichas que faltan.",

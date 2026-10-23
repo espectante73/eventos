@@ -24,6 +24,8 @@ it("el colaborador lo pide al servidor: alfabético, el esposo arriba, y el suyo
   expect(filas(vista)).toEqual(["Álvarez, Rodrigo", "Álvarez, Noelia", "Sierra, Raul"]);
   expect(vista.html).toContain("(tú)");
   expect(vista.html).toContain("3 colaboradores");
+  // Su frase, al pie de la lista (v73.2).
+  expect(vista.html).toContain("Este es el equipo al completo: todos somos compañeros con las mismas tareas, para consultarles cuando lo necesites.");
   vista.desmontar();
 });
 
