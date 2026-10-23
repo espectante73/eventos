@@ -49,6 +49,7 @@ import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSegu
 import { asignarMesaConSuFamilia, confirmarConSuFamilia } from "../../lib/mesas";
 import { cancionesDe, tieneCancion } from "../../lib/canciones";
 import { tocarTitulo, compararPorNiveles } from "../../lib/ordenNiveles";
+import { ResumenAvisosAsignacion } from "./ResumenAvisosAsignacion";
 import {
   agregarInvitado as crearInvitado,
   importarInvitados as importarFilas,
@@ -1851,35 +1852,13 @@ export function SeccionInvitados({
       </div>
 
       {mostrarResumenAsignacion && (
-        <ModalFlotante
-          titulo="Resumen de asignaciones"
-          onCerrar={cancelarAvisosAsignacion}
-        >
-          <p className="text-sm mb-3" style={{ color: C.charcoal }}>
-            Estos colaboradores tienen invitados nuevos asignados. ¿Quieres avisarles ya?
-          </p>
-          <ul className="text-sm space-y-1 mb-4" style={{ color: C.ink }}>
-            {colaboradoresPendientes.map((c) => (
-              <li key={c.id}>
-                {c.nombre}
-                {!c.email && (
-                  <span style={{ color: C.wax }}> — sin email, no se le podrá avisar</span>
-                )}
-              </li>
-            ))}
-          </ul>
-          <div className="flex flex-wrap gap-2">
-            <Boton variante="principal" onClick={enviarAvisosAsignacion} disabled={enviandoAvisosAsignacion}>
-              {enviandoAvisosAsignacion ? "Enviando…" : "Enviar avisos"}
-            </Boton>
-            <Boton variante="secundario" onClick={() => setMostrarResumenAsignacion(false)}>
-              Seguir editando
-            </Boton>
-            <Boton variante="peligro" onClick={cancelarAvisosAsignacion}>
-              Cancelar (no avisar)
-            </Boton>
-          </div>
-        </ModalFlotante>
+        <ResumenAvisosAsignacion
+          colaboradores={colaboradoresPendientes}
+          enviando={enviandoAvisosAsignacion}
+          onEnviar={enviarAvisosAsignacion}
+          onSeguirEditando={() => setMostrarResumenAsignacion(false)}
+          onNoAvisar={cancelarAvisosAsignacion}
+        />
       )}
 
       {panelFlotante && panelFlotante !== "avisosMesas" && (

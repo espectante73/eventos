@@ -4,7 +4,7 @@
 // 2026-08-08 (ver CLAUDE.md) — sigue siendo un único componente grande;
 // dividir su interior es un cambio aparte, deliberadamente pospuesto (ver
 // CLAUDE.md, Fase 4).
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { construirEnlaceTablon } from "../lib/url";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { abrirMusica } from "../lib/ventanaMusica";
@@ -39,6 +39,7 @@ import { VentanaMarcador } from "./anfitrion/VentanaMarcador";
 import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 import { Boton } from "../components/Boton";
+import { ResumenAvisosAsignacion } from "./anfitrion/ResumenAvisosAsignacion";
 
 // Versiones es casi todo texto (el historial de cambios) y es de lo que
 // menos se abre: se descarga al pulsarla, no al entrar (2026-09-18).
@@ -172,6 +173,24 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   const colaboradoresPendientes = colaboradores.filter(
     (c) => invitadosPendientesDe(c.id).length > 0
   );
+
+  // La Lista en su ventana propia del Mac se cierra con el botón rojo del
+  // sistema, sin pasar por su X: al cerrarse, si hay colaboradores por
+  // avisar, la misma pregunta sale aquí (él, v73.4: allí no salía nunca).
+  const [avisosAlCerrarLista, setAvisosAlCerrarLista] = useState(false);
+  const [enviandoAvisosLista, setEnviandoAvisosLista] = useState(false);
+  const listaEnVentanaAntes = useRef(false);
+  const hayAvisosPendientes = colaboradoresPendientes.length > 0;
+  useEffect(() => {
+    if (listaEnVentanaAntes.current && !invitadosEnVentana && hayAvisosPendientes) setAvisosAlCerrarLista(true);
+    listaEnVentanaAntes.current = invitadosEnVentana;
+  }, [invitadosEnVentana, hayAvisosPendientes]);
+  const enviarAvisosAlCerrarLista = async () => {
+    setEnviandoAvisosLista(true);
+    for (const c of colaboradoresPendientes) await data.avisarColaborador(c.id);
+    setEnviandoAvisosLista(false);
+    setAvisosAlCerrarLista(false);
+  };
 
   // Vive aquí (no en SeccionInvitados) porque el botón "Editar asignación"
   // de la vista previa del aviso (ahora en Datos de colaboradores)
@@ -347,6 +366,19 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
       {/* Lista de invitados, en la página (móvil, o si el navegador
           bloqueara la ventana). En el ordenador vive en su propia
           ventana del sistema, ver `contenidoInvitados` más arriba. */}
+      {avisosAlCerrarLista && hayAvisosPendientes && (
+        <ResumenAvisosAsignacion
+          colaboradores={colaboradoresPendientes}
+          enviando={enviandoAvisosLista}
+          onEnviar={enviarAvisosAlCerrarLista}
+          // Dentro del propio clic: así el navegador deja reabrir la ventana.
+          onSeguirEditando={() => {
+            setAvisosAlCerrarLista(false);
+            abrirInvitados();
+          }}
+          onNoAvisar={() => setAvisosAlCerrarLista(false)}
+        />
+      )}
       {abierto.invitados && (
         <SeccionInvitados
           data={data}

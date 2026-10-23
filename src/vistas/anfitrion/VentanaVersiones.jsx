@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "73.4",
+    cambios: [
+      "Lista de invitados en el Mac: al cerrarla con el botón rojo de su ventana, si hay colaboradores con invitados nuevos por avisar, sale la pregunta de siempre («Resumen de asignaciones») en la pantalla principal. Antes solo salía con la X de la app, que esa ventana no tiene. «Seguir editando» la vuelve a abrir.",
+    ],
+  },
+  {
     version: "73.3",
     cambios: [
       "Inicio del anfitrión y del colaborador: abajo, a un lado el sello de los días que faltan y, en la esquina del pulgar, la barra con un cuadradito fijo: Equipo. Al abrir una ventana en el móvil, la casita y su icono salen al lado de Equipo, que no se mueve. Equipo deja de estar en el menú: ya está siempre a la vista.",
