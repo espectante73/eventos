@@ -22,6 +22,8 @@ const SEPARACION_ABAJO = 16;
 const HUECO_X = 14;
 // Lo que la barra tapa por abajo: el contenido de detrás deja ese hueco.
 export const ALTO_BARRA = SEPARACION_ABAJO + TAM_CUADRITO + HUECO_X + TAMANO_BOTON_QUITAR + 12;
+// Sin ventanas abiertas solo está Equipo, sin X encima: tapa menos.
+export const ALTO_BARRA_SOLA = SEPARACION_ABAJO + TAM_CUADRITO + 12;
 
 // Las ventanas que pueden ir en la barra. El icono, el del menú.
 export const VENTANAS_MOVIL = {
@@ -29,17 +31,24 @@ export const VENTANAS_MOVIL = {
   musica: { clave: "musica", titulo: "Multimedia", icono: ICONOS_VENTANAS.musicaEvento },
 };
 const INICIO = { clave: "inicio", titulo: "Inicio", icono: Home };
+const IconoEquipo = ICONOS_VENTANAS.equipo;
 
-export function BarraVentanas({ abiertas, delante, onElegir, onCerrar }) {
+// `onEquipo` (él, v73.3): el cuadradito de Equipo, SIEMPRE, el primero y
+// fijo en la esquina del pulgar; la casita y las ventanas abiertas salen a
+// su lado. Así la barra está siempre (en el inicio del anfitrión y en el
+// del colaborador), y frente a ella, del otro lado, el sello de los días.
+export function BarraVentanas({ abiertas, delante, onElegir, onCerrar, onEquipo }) {
   // Con algo escrito sin guardar, su X pregunta si se descarta (v61.2).
   const haySinGuardar = useSinGuardar();
+  const conVentanas = abiertas.length > 0;
   // Mientras se ve, las ventanas flotantes dejan su hueco abajo.
   useEffect(() => {
     const raiz = document.documentElement;
-    raiz.style.setProperty("--hueco-barra-ventanas", `${ALTO_BARRA}px`);
+    raiz.style.setProperty("--hueco-barra-ventanas", `${conVentanas ? ALTO_BARRA : ALTO_BARRA_SOLA}px`);
     return () => raiz.style.removeProperty("--hueco-barra-ventanas");
-  }, []);
-  const ventanas = [INICIO, ...abiertas.map((clave) => VENTANAS_MOVIL[clave]).filter(Boolean)];
+  }, [conVentanas]);
+  // La casita, solo si hay alguna ventana a la que volver desde ella.
+  const ventanas = conVentanas ? [INICIO, ...abiertas.map((clave) => VENTANAS_MOVIL[clave]).filter(Boolean)] : [];
   return (
     <div
       className="fixed left-0 right-0 flex items-end justify-end zurdo:justify-start gap-3 px-4 pointer-events-none"
@@ -74,6 +83,21 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar }) {
           </div>
         );
       })}
+      {/* Equipo, en la misma esquina siempre: el último (derecha) y, para el
+          zurdo, el primero (izquierda). Sin X: no es una ventana de la barra. */}
+      {onEquipo && (
+        <div className="flex flex-col items-center pointer-events-auto order-last zurdo:order-first">
+          <Boton
+            variante="secundario"
+            titulo="Equipo"
+            aria-label="Equipo"
+            onClick={onEquipo}
+            style={{ width: TAM_CUADRITO, height: TAM_CUADRITO, padding: 0, background: C.paper }}
+          >
+            <IconoEquipo size={26} />
+          </Boton>
+        </div>
+      )}
     </div>
   );
 }

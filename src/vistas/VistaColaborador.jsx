@@ -29,8 +29,6 @@ import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
 import { SeccionPlegable } from "../components/SeccionPlegable";
 import { BotonAbrirSeccion, ESTILO_MI_CUENTA } from "../components/DesplegableSecciones";
 import { CapaBarra } from "../components/BarraVentanas";
-import { SelloCuentaAtras, HUECO_SELLO } from "../components/SelloCuentaAtras";
-import { VentanaEquipo } from "./VentanaEquipo";
 import { abrirMusica } from "../lib/ventanaMusica";
 import { ICONOS_VENTANAS } from "../lib/iconosVentanas";
 import { Boton, estilosBoton, EnlaceTexto } from "../components/Boton";
@@ -1258,7 +1256,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const puedeVerMapaSitio = tienePermiso(colaborador, PERMISOS.MAPA_SITIO_VER);
   const puedeVerRepositorio = tienePermiso(colaborador, PERMISOS.REPOSITORIO_VER);
   const [ventanaDatosEventoAbierta, setVentanaDatosEventoAbierta] = useState(false);
-  const [ventanaEquipoAbierta, setVentanaEquipoAbierta] = useState(false);
   const [ventanaInvitacionesAbierta, setVentanaInvitacionesAbierta] = useState(false);
   const motorInvitaciones = useMotorInvitaciones(data);
 
@@ -1456,9 +1453,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const permisosDeEdicion = permisosActivos.filter(esDeEdicion);
 
   return (
-    // Abajo, el hueco del sello de los días que faltan: lo último no queda debajo.
-    <div className="space-y-8" style={{ paddingBottom: HUECO_SELLO }}>
-      <SelloCuentaAtras evento={evento} />
+    <div className="space-y-8">
       {/* El aviso de permisos. El usuario lo quiere mantener (2026-09-21):
           es lo primero que se ve y ahí se entera uno de lo que puede
           hacer. Dos partes distintas a propósito:
@@ -1550,7 +1545,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               sello={pendientes.length}
               opciones={[
                 puedeEditarDatosEvento && { id: "datos-evento", etiqueta: "Datos evento", icono: Calendar, onClick: () => setVentanaDatosEventoAbierta(true) },
-                { id: "equipo", etiqueta: "Equipo", icono: ICONOS_VENTANAS.equipo, onClick: () => setVentanaEquipoAbierta(true) },
                 { id: "formulario", etiqueta: "Formulario", icono: ICONOS_VENTANAS.formulario, onClick: abrirFormulario, sello: pendientes.length },
                 puedeEnviarInvitaciones && { id: "invitaciones", etiqueta: "Invitaciones", icono: Send, onClick: () => setVentanaInvitacionesAbierta(true) },
                 onCerrarSesion && { id: "mi-cuenta", etiqueta: "Mi cuenta", icono: UserCog, onClick: () => setMiCuentaAbierta(true), ...ESTILO_MI_CUENTA },
@@ -1576,9 +1570,6 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
 
       {ventanaDatosEventoAbierta && (
         <VentanaConfigDatosEvento data={data} onCerrar={() => setVentanaDatosEventoAbierta(false)} />
-      )}
-      {ventanaEquipoAbierta && (
-        <VentanaEquipo data={data} colaboradorId={colaboradorId} onCerrar={() => setVentanaEquipoAbierta(false)} />
       )}
       {ventanaInvitacionesAbierta && (
         <VentanaInvitacionesColaborador

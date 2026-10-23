@@ -70,3 +70,27 @@ describe("la barra de ventanas", () => {
     expect(document.documentElement.style.getPropertyValue("--hueco-barra-ventanas")).toBe("");
   });
 });
+
+// v73.3 (él): Equipo, un cuadradito fijo de la barra, siempre en la esquina
+// del pulgar; la casita y las ventanas abiertas salen a su lado.
+describe("el cuadradito de Equipo", () => {
+  it("sin ventanas abiertas, la barra es solo Equipo: sin casita", () => {
+    const equipo = [];
+    const { vista, boton } = dibujar({ abiertas: [], delante: "inicio", onEquipo: () => equipo.push(1) });
+    expect(boton("Equipo")).toBeTruthy();
+    expect(boton("Inicio")).toBeFalsy();
+    vista.pulsar(boton("Equipo"));
+    expect(equipo).toEqual([1]);
+    vista.desmontar();
+  });
+
+  it("con ventanas, Equipo se queda en la esquina: el último, y el primero para el zurdo", () => {
+    const { vista, boton } = dibujar({ onEquipo: () => {} });
+    expect(boton("Inicio")).toBeTruthy();
+    const pieza = boton("Equipo").parentElement;
+    expect(pieza.className).toContain("order-last");
+    expect(pieza.className).toContain("zurdo:order-first");
+    expect(boton("Cerrar Equipo")).toBeFalsy();
+    vista.desmontar();
+  });
+});

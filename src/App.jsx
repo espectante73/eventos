@@ -9,6 +9,8 @@ import { C, OP, S, conAlfa } from "./theme";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { PantallaCargando } from "./components/PantallaCargando";
 import { BarraVentanas, CapaBarra, ALTO_BARRA } from "./components/BarraVentanas";
+import { SelloCuentaAtras, HUECO_SELLO } from "./components/SelloCuentaAtras";
+import { VentanaEquipo } from "./vistas/VentanaEquipo";
 import { esFalloDelServidor } from "./lib/servidor";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
 import { VistaTablon } from "./vistas/VistaTablon";
@@ -104,6 +106,9 @@ export default function App() {
   // hay abiertas y cuál está delante ("inicio" = la app). Vive aquí, y no
   // en una vista, para seguir abierta al pasar de una vista a otra.
   const [ventanasMovil, setVentanasMovil] = useState([]);
+  // La ventana Equipo, desde su cuadradito fijo de la barra (v73.3): en el
+  // inicio del anfitrión y en el del colaborador, por eso vive aquí.
+  const [equipoAbierto, setEquipoAbierto] = useState(false);
   const [delante, setDelante] = useState("inicio");
   const abrirMusicaDentro = useCallback(() => {
     setVentanasMovil((v) => (v.includes("musica") ? v : [...v, "musica"]));
@@ -398,6 +403,15 @@ export default function App() {
     );
   }
 
+  // En el inicio del anfitrión o en el de un colaborador de verdad: ahí van
+  // el sello de los días y la barra con Equipo (v73.3).
+  const enUnaVista = data.esAnfitrion || data.colaboradores.some((c) => c.id === rol);
+  // Quién es «(tú)» en el Equipo: el colaborador; el anfitrión, el que se
+  // está mirando o, en su inicio, su propia ficha de colaborador si la tiene.
+  const yoEnElEquipo = data.esAnfitrion
+    ? vistaPrevia || data.colaboradores.find((c) => c.authUserId && c.authUserId === session?.user?.id)?.id || null
+    : rol;
+
   // Música: el anfitrión y el colaborador con permiso Multimedia (v57.2;
   // la base lo comprueba también al entrar en el canal, puede_usar_canal).
   const puedeMultimedia =
@@ -477,11 +491,12 @@ export default function App() {
           sola pantalla a la vez, y sus ventanas flotantes no asoman. */}
       <div
         className="max-w-4xl mx-auto px-4 py-6"
+        // Abajo, el hueco de la barra o, sin ventanas, el del sello de los días.
         style={{
           // El formulario vive DENTRO de la vista del colaborador: con él
           // delante, la vista sigue montada y él la cubre entera.
           display: delante === "musica" ? "none" : undefined,
-          paddingBottom: ventanasMovil.length ? ALTO_BARRA : undefined,
+          paddingBottom: ventanasMovil.length ? ALTO_BARRA : enUnaVista ? HUECO_SELLO : undefined,
         }}
       >
         {/* Para el anfitrión, "Cerrar sesión" vive DENTRO de la cabecera
@@ -583,9 +598,14 @@ export default function App() {
           </Suspense>
         </CapaBarra>
       )}
-      {ventanasMovil.length > 0 && (
+      {/* El sello de los días y, del otro lado, la barra con Equipo: siempre,
+          en el inicio del anfitrión y en el del colaborador (él, v73.3). */}
+      {enUnaVista && <SelloCuentaAtras evento={data.evento} />}
+      {equipoAbierto && <VentanaEquipo data={data} colaboradorId={yoEnElEquipo} onCerrar={() => setEquipoAbierto(false)} />}
+      {enUnaVista && (
         <BarraVentanas
           abiertas={ventanasMovil}
+          onEquipo={() => setEquipoAbierto(true)}
           delante={delante}
           onElegir={(clave) => {
             // El anfitrión pudo volver a su vista: el formulario es de un

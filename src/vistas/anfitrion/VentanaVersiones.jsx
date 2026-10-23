@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "73.3",
+    cambios: [
+      "Inicio del anfitrión y del colaborador: abajo, a un lado el sello de los días que faltan y, en la esquina del pulgar, la barra con un cuadradito fijo: Equipo. Al abrir una ventana en el móvil, la casita y su icono salen al lado de Equipo, que no se mueve. Equipo deja de estar en el menú: ya está siempre a la vista.",
+    ],
+  },
+  {
     version: "73.2",
     cambios: [
       "Equipo: al pie de la lista, su frase: «Este es el equipo al completo: todos somos compañeros con las mismas tareas, para consultarles cuando lo necesites.»",
