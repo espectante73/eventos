@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "74.3",
+    cambios: [
+      "Repartir familias: arriba, el recuadro de cifras con los confirmados y los que aún no han confirmado. Es la misma cuenta que la cabecera de la Lista de invitados, así que las dos dicen siempre lo mismo.",
+    ],
+  },
+  {
     version: "74.2",
     cambios: [
       "Repartir familias: salen también las familias que aún no han confirmado, sombreadas hasta que confirmen, y se sientan como las demás para cuadrar con tiempo. Su sitio queda reservado y cuenta en la mesa (también en Mesas y en la Lista); «No asiste» lo libera y eliminar a alguien lo quita de todo. Con parte de la familia sin confirmar, la cifra sale así: «2+1».",

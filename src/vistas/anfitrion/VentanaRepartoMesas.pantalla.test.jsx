@@ -114,3 +114,16 @@ it("los no confirmados salen siempre, sombreados, y se sientan como los demás",
   expect(vista.contenedor.querySelector('[data-columna="Mesa 7"]').textContent).toContain("1/9");
   vista.desmontar();
 });
+
+// v74.3 (él): arriba, confirmados y sin confirmar, con la cuenta de la Lista.
+it("la cabecera cuenta confirmados y sin confirmar", () => {
+  function Prueba() {
+    const [borrador, setBorrador] = useState({});
+    const lista = [...invitados, g("4", "Luis", "Dani", ROL_FAMILIAR.ESPOSO, { confirmado: false }), g("5", "Sierra", "Raul", ROL_FAMILIAR.SUELTO, { confirmado: false, noAsiste: true })];
+    return <VentanaRepartoMesas data={{ invitados: lista, mesas, persistInvitados: () => {} }} borrador={borrador} setBorrador={setBorrador} onCerrar={() => {}} />;
+  }
+  const vista = montar(<Prueba />);
+  expect(document.body.textContent).toMatch(/Confirmados\s*3/);
+  expect(document.body.textContent).toMatch(/Sin confirmar\s*1/);
+  vista.desmontar();
+});

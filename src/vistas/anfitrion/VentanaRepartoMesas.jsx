@@ -15,6 +15,8 @@ import { C, OP, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
+import { RecuadroCifras } from "../../components/Widgets";
+import { cuentaConfirmacion } from "../../lib/invitados";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion } from "../../lib/repartoMesas";
@@ -130,6 +132,7 @@ export function VentanaRepartoMesas({ data, borrador, setBorrador, onCerrar, fij
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
   const vista = conBorrador(invitados, borrador);
+  const confirmacion = cuentaConfirmacion(invitados);
   const familias = familiasParaRepartir(vista, { conSinConfirmar });
   const sinMesa = familias.filter((f) => f.mesa == null).sort(porNombre);
   const cambian = familiasQueCambian(invitados, borrador);
@@ -163,6 +166,16 @@ export function VentanaRepartoMesas({ data, borrador, setBorrador, onCerrar, fij
       fijo={fijo}
       llena
       ancho="min(1400px, calc(100vw - 48px))"
+      // Arriba, cuántos confirmados y cuántos sin confirmar (él, v74.3), con
+      // el recuadro y la cuenta de la Lista: dicen siempre lo mismo.
+      extra={
+        <RecuadroCifras
+          cifras={[
+            { label: "Confirmados", value: confirmacion.confirmados },
+            { label: "Sin confirmar", value: confirmacion.sinConfirmar },
+          ]}
+        />
+      }
     >
       <div className="flex flex-col" style={{ flex: 1, minHeight: 0 }}>
         <div className="flex items-center gap-2 flex-wrap mb-2">

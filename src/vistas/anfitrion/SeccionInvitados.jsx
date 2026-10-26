@@ -32,7 +32,7 @@ import {
   Download,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
-import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas } from "../../lib/invitados";
+import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } from "../../lib/matrimonios";
@@ -620,11 +620,11 @@ export function SeccionInvitados({
   const hoyEsElEvento = !evento.fechaSinConfirmar && evento.fecha === new Date().toISOString().slice(0, 10);
   const mostrarLlegada = hoyEsElEvento || totalPresentes > 0;
   const llegadas = cuentaLlegadas(invitados, evento);
-  const totalInvitados = invitados.length;
-  const confirmadosCount = invitados.filter((g) => g.confirmado).length;
   // Los que dijeron que no van (él, v61: al cobrar a su familia, o sin
-  // pagar a tiempo): ni confirmados ni por confirmar.
-  const noAsistenCount = invitados.filter((g) => !g.confirmado && g.noAsiste).length;
+  // pagar a tiempo): ni confirmados ni por confirmar. La misma cuenta que
+  // «Repartir familias» (cuentaConfirmacion).
+  const { previstos: totalInvitados, confirmados: confirmadosCount, noAsisten: noAsistenCount, sinConfirmar: sinConfirmarCount } =
+    cuentaConfirmacion(invitados);
   const edadMedia = edadPromedio(invitadosOrdenados, evento);
   // "Lista global" -> "Previstos" y "Tentativa" -> "Sin confirmar":
   // nombres más precisos, a petición del usuario 2026-08-20 -- el
@@ -634,7 +634,7 @@ export function SeccionInvitados({
   // exactamente eso, quien de ese total no ha confirmado todavía.
   const resumen = [
     { label: "Previstos", value: totalInvitados },
-    { label: "Sin confirmar", value: totalInvitados - confirmadosCount - noAsistenCount },
+    { label: "Sin confirmar", value: sinConfirmarCount },
     { label: "Confirmados", value: confirmadosCount },
     ...(noAsistenCount ? [{ label: "No asisten", value: noAsistenCount }] : []),
     // Edad media como recuadro más, en vez del texto suelto que llevaba

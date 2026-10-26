@@ -85,6 +85,15 @@ export const ROLES_CON_EMAIL_FAMILIAR = [
   ROL_FAMILIAR.SUELTO,
 ];
 
+// Confirmados, sin confirmar y «No asiste» (los que dijeron que no van: ni
+// lo uno ni lo otro). Una sola cuenta para la cabecera de la Lista y la de
+// «Repartir familias» (v74.3): las dos dicen siempre lo mismo.
+export function cuentaConfirmacion(invitados = []) {
+  const confirmados = invitados.filter((g) => g.confirmado).length;
+  const noAsisten = invitados.filter((g) => !g.confirmado && g.noAsiste).length;
+  return { previstos: invitados.length, confirmados, noAsisten, sinConfirmar: invitados.length - confirmados - noAsisten };
+}
+
 // Quién se espera el día del evento y cuántos han entrado (él, v69.2): los
 // confirmados que han pagado y no han dicho «No asiste» (en Modo Pruebas,
 // sin mirar el pago). UNA sola cuenta para el marcador grande y el de la
