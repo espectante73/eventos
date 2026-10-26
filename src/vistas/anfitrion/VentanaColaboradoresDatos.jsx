@@ -380,6 +380,16 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
                       nuevo — se incluye en el email
                     </span>
                   )}
+                  {/* Ya avisado y con datos a medias: va en el mismo correo,
+                      aparte y diciendo que no es nuevo (v73.5). */}
+                  {!g.avisoPendiente && g.confirmado && !g.noAsiste && !datosCompletos(g) && (
+                    <span
+                      className="text-xs ml-2 px-1.5 py-0.5 rounded"
+                      style={{ background: C.paperDark, color: C.charcoal }}
+                    >
+                      faltan datos — se le recuerda en el email
+                    </span>
+                  )}
                   {g.avisoPendiente && !g.confirmado && (
                     <span
                       className="text-xs ml-2 px-1.5 py-0.5 rounded"

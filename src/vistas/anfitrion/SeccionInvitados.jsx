@@ -1854,6 +1854,7 @@ export function SeccionInvitados({
       {mostrarResumenAsignacion && (
         <ResumenAvisosAsignacion
           colaboradores={colaboradoresPendientes}
+          invitados={invitados}
           enviando={enviandoAvisosAsignacion}
           onEnviar={enviarAvisosAsignacion}
           onSeguirEditando={() => setMostrarResumenAsignacion(false)}

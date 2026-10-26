@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "73.5",
+    cambios: [
+      "Avisos a los colaboradores: «nuevo» es solo el invitado que acabas de asignarle y del que aún no se le avisó. Cambiar la mesa, el pago o cualquier dato de la ficha ya no lo vuelve «nuevo», así que no le llegan correos repetidos con gente que ya tenía.",
+      "Un solo correo por colaborador, en dos partes: «Invitados nuevos asignados» y, aparte, «Recuerda: aún faltan los datos de estos invitados, que ya tenías asignados (no son nuevos)». La pregunta al cerrar la Lista dice cuántos nuevos tiene cada uno (SQL v73.5).",
+    ],
+  },
+  {
     version: "73.4",
     cambios: [
       "Lista de invitados en el Mac: al cerrarla con el botón rojo de su ventana, si hay colaboradores con invitados nuevos por avisar, sale la pregunta de siempre («Resumen de asignaciones») en la pantalla principal. Antes solo salía con la X de la app, que esa ventana no tiene. «Seguir editando» la vuelve a abrir.",

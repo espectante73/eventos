@@ -369,6 +369,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
       {avisosAlCerrarLista && hayAvisosPendientes && (
         <ResumenAvisosAsignacion
           colaboradores={colaboradoresPendientes}
+          invitados={invitados}
           enviando={enviandoAvisosLista}
           onEnviar={enviarAvisosAlCerrarLista}
           // Dentro del propio clic: así el navegador deja reabrir la ventana.

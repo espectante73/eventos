@@ -614,3 +614,25 @@ describe("el nombre del colaborador sale de su ficha de invitado", () => {
     expect(cuerpoDe("trg_nombre_colaborador_de_su_ficha")).toContain(`trim(coalesce(i."apellido", '')) || ', ' || trim(coalesce(i."nombre", ''))`);
   });
 });
+
+// v73.5 (él): «antes de avisar a los nuevos, comprobar que no lo son; si no,
+// enviaremos varios emails y dejarán de prestarles atención».
+describe("el aviso al colaborador: solo los nuevos de verdad", () => {
+  it("«nuevo» es confirmado y aún sin avisarle a ÉL; cambiar la ficha ya no lo vuelve nuevo", () => {
+    const f = cuerpoDe("trg_recalcular_aviso_pendiente");
+    expect(f).toMatch(/new\."colaboradorId" is distinct from new\."avisadoA"/);
+    expect(f).not.toMatch(/new\."mesa" is distinct from old\."mesa"/);
+  });
+
+  it("al avisar, se apunta a quién; y los que ya tenía sin datos van aparte, diciendo que no son nuevos", () => {
+    const f = cuerpoDe("anfitrion_avisar_colaborador");
+    expect(f).toMatch(/update invitados set "avisadoA" = "colaboradorId"/);
+    expect(f).toContain("(no son nuevos)");
+    expect(f).toMatch(/if nuevos is null and sin_datos is null then\s+return;/);
+  });
+
+  it("los reinicios los vuelven nuevos, para repetir una prueba sin reasignar", () => {
+    expect(cuerpoDe("anfitrion_resetear_avisos")).toMatch(/"avisadoA" = null/);
+    expect(cuerpoDe("anfitrion_resetear_por_invitados").match(/"avisadoA" = null/g)).toHaveLength(3);
+  });
+});

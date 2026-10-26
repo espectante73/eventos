@@ -164,7 +164,12 @@ CREATE TABLE public.invitados (
     -- (él). Sin "not null", como las demás columnas nuevas.
     "noAsiste" boolean DEFAULT false,
     "pagoPendienteHasta" date,
-    "plazosPago" integer DEFAULT 0
+    "plazosPago" integer DEFAULT 0,
+    -- A qué colaborador se le avisó de este invitado (v73.5, él: «antes de
+    -- avisar a los nuevos, comprobar que no lo son»). Es «nuevo» para su
+    -- colaborador solo si no es este: cambiar sus datos ya no lo vuelve
+    -- nuevo; pasarlo a otro colaborador, sí. Sin "not null".
+    "avisadoA" uuid
 );
 
 -- Quién ayuda a recoger datos y qué permisos tiene cada uno.
@@ -1186,30 +1191,47 @@ CREATE FUNCTION public.anfitrion_avisar_colaborador(p_token uuid, p_colaborador_
     SET search_path TO 'public', 'pg_temp'
     AS $$
 declare
-  lista_invitados text;
+  nuevos text;
+  sin_datos text;
+  v_nombre text := coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '');
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
 
-  select string_agg(
-    '<li>' || coalesce("nombre", '') || ' ' || coalesce("apellido", '') || '</li>',
-    '' order by "apellido", "nombre"
-  )
-  into lista_invitados
+  -- Los nuevos de verdad (v73.5): confirmados y aún sin avisarle de ellos.
+  select string_agg('<li>' || trim(coalesce("apellido", '')) || ', ' || trim(coalesce("nombre", '')) || '</li>', '' order by "apellido", "nombre")
+  into nuevos
   from invitados
-  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true and "confirmado" = true;
+  where "colaboradorId" = p_colaborador_id and "avisoPendiente" and "confirmado";
+
+  -- Los que ya tenía y siguen sin sus datos (año de nacimiento y alergias,
+  -- la regla de datosCompletos en lib/invitados.js): se le recuerdan en el
+  -- mismo correo, diciendo que NO son nuevos. Así no le llegan varios.
+  select string_agg('<li>' || trim(coalesce("apellido", '')) || ', ' || trim(coalesce("nombre", '')) || '</li>', '' order by "apellido", "nombre")
+  into sin_datos
+  from invitados
+  where "colaboradorId" = p_colaborador_id and not "avisoPendiente" and "confirmado"
+    and not coalesce("noAsiste", false)
+    and (coalesce("anioNacimiento", '') = '' or coalesce("alergias", '') = '');
+
+  -- Sin nada que contar, no se manda nada.
+  if nuevos is null and sin_datos is null then
+    return;
+  end if;
 
   perform enviar_email(
     (select "email" from colaboradores where "id" = p_colaborador_id),
-    'Tus invitados asignados',
-    replace(
-      (select "plantillaAsignacion" from evento limit 1),
-      '{colaborador}', coalesce((select "nombre" from colaboradores where "id" = p_colaborador_id), '')
-    ) ||
+    case when nuevos is not null then 'Tus invitados asignados' else 'Recordatorio: faltan datos de tus invitados' end,
     case
-      when lista_invitados is not null then '<ul>' || lista_invitados || '</ul>'
-      else ''
+      when nuevos is not null then
+        replace((select "plantillaAsignacion" from evento limit 1), '{colaborador}', v_nombre) ||
+        '<p><b>Invitados nuevos asignados:</b></p><ul>' || nuevos || '</ul>'
+      else 'Hola ' || v_nombre || ',<br>'
+    end ||
+    case
+      when sin_datos is null then ''
+      else '<p><b>Recuerda: aún faltan los datos de estos invitados, que ya tenías asignados (no son nuevos):</b></p><ul>' || sin_datos || '</ul>'
     end ||
     case
       when coalesce((select "urlPublica" from evento limit 1), '') = '' then ''
@@ -1226,8 +1248,10 @@ begin
     '<br><br><small>Aviso automático de la app de invitados del evento.</small>'
   );
 
-  update invitados set "avisoPendiente" = false
-  where "colaboradorId" = p_colaborador_id and "avisoPendiente" = true and "confirmado" = true;
+  -- Ya avisado de ellos: dejan de ser nuevos para él (el trigger
+  -- recalcula avisoPendiente con avisadoA).
+  update invitados set "avisadoA" = "colaboradorId"
+  where "colaboradorId" = p_colaborador_id and "avisoPendiente" and "confirmado";
 end;
 $$;
 
@@ -1829,7 +1853,8 @@ begin
     return;
   end if;
   delete from avisos_enviados where true;
-  update invitados set "avisoPendiente" = true where "colaboradorId" is not null;
+  -- Sin «avisado», vuelven a ser nuevos (el trigger recalcula avisoPendiente).
+  update invitados set "avisadoA" = null where "colaboradorId" is not null;
 end;
 $$;
 
@@ -1846,13 +1871,16 @@ begin
   if p_categoria = 'datos' then
     update invitados set
       "anioNacimiento" = '', "anioBoda" = '', "email" = '',
-      "cancion" = '', "alergias" = '', "observaciones" = ''
+      "cancion" = '', "alergias" = '', "observaciones" = '',
+      -- Vuelve a ser «nuevo» para su colaborador: así una prueba se repite
+      -- sin reasignar (v73.5; antes lo hacía cualquier cambio de la ficha).
+      "avisadoA" = null
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'pago' then
-    update invitados set "pagado" = false
+    update invitados set "pagado" = false, "avisadoA" = null
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'mesa' then
-    update invitados set "mesa" = null
+    update invitados set "mesa" = null, "avisadoA" = null
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'asignacion' then
     update invitados set "colaboradorId" = null
@@ -2797,29 +2825,18 @@ CREATE FUNCTION public.trg_recalcular_aviso_pendiente() RETURNS trigger
     AS $$
 begin
   -- Vía de escape para las funciones del propio colaborador (rellenar
-  -- datos, marcar pago): su cambio no debe generarle un aviso a sí mismo.
+  -- datos, marcar pago) y para reponer una foto tal cual.
   if coalesce(current_setting('eventos.recalculo_aviso_activo', true), 'on') = 'off' then
     return new;
   end if;
 
-  if new."colaboradorId" is null then
-    new."avisoPendiente" := false;
-  elsif TG_OP = 'INSERT' then
-    new."avisoPendiente" := new."confirmado";
-  elsif new."confirmado" and (
-    new."colaboradorId" is distinct from old."colaboradorId" or
-    new."confirmado" is distinct from old."confirmado" or
-    new."anioNacimiento" is distinct from old."anioNacimiento" or
-    new."anioBoda" is distinct from old."anioBoda" or
-    new."email" is distinct from old."email" or
-    new."cancion" is distinct from old."cancion" or
-    new."alergias" is distinct from old."alergias" or
-    new."observaciones" is distinct from old."observaciones" or
-    new."pagado" is distinct from old."pagado" or
-    new."mesa" is distinct from old."mesa"
-  ) then
-    new."avisoPendiente" := true;
-  end if;
+  -- «Nuevo» para su colaborador (v73.5): confirmado, asignado y aún sin
+  -- avisarle a ÉL de este invitado. Antes cualquier cambio en la ficha
+  -- (mesa, pago, alergias…) lo volvía «nuevo» y el colaborador recibía
+  -- otra vez «Tus invitados asignados» con gente que ya tenía.
+  new."avisoPendiente" := new."colaboradorId" is not null
+    and new."confirmado"
+    and new."colaboradorId" is distinct from new."avisadoA";
   return new;
 end;
 $$;
