@@ -41,6 +41,7 @@ import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 import { Boton } from "../components/Boton";
 import { ResumenAvisosAsignacion } from "./anfitrion/ResumenAvisosAsignacion";
 import { VentanaRepartoMesas } from "./anfitrion/VentanaRepartoMesas";
+import { ocupacion } from "../lib/mesas";
 
 // Versiones es casi todo texto (el historial de cambios) y es de lo que
 // menos se abre: se descarga al pulsarla, no al entrar (2026-09-18).
@@ -267,8 +268,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     return null;
   };
 
-  const ocupacionMesa = (numero) =>
-    invitados.filter((g) => g.mesa === numero && g.confirmado).length;
+  // La misma cuenta que al asignar (lib/mesas.js): con los sitios reservados.
+  const ocupacionMesa = (numero) => ocupacion(invitados, numero);
 
   const esAparatoTactil = () => window.matchMedia?.("(pointer: coarse) and (hover: none)").matches;
 

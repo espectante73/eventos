@@ -10,9 +10,11 @@
 // Un hijo mayor que va con otro apellido es OTRO grupo familiar: esta regla
 // no le afecta, y se le sienta aparte si hace falta. Eso es a propósito.
 //
-// Solo se sientan los CONFIRMADOS (la mesa es sitio real para quien va a
-// venir). Quien de la familia no está confirmado todavía se queda sin mesa;
-// al confirmarlo, se sienta con los suyos (confirmarConSuFamilia).
+// Se sientan los CONFIRMADOS (la mesa es sitio real para quien va a venir).
+// Quien de la familia no está confirmado todavía se queda sin mesa; al
+// confirmarlo, se sienta con los suyos (confirmarConSuFamilia). Desde la
+// v74.2, en «Repartir familias» se sienta también a quien aún no ha
+// confirmado: su sitio queda reservado y cuenta en la mesa (seSientaEnMesa).
 
 import { nombreCompleto } from "./formato";
 
@@ -28,18 +30,29 @@ function nombreFamilia(g) {
   return g.grupoFamiliar || g.apellido || `${g.nombre || ""}`.trim() || "(sin nombre)";
 }
 
-// Los sitios ocupados de una mesa: sus confirmados. La misma cuenta para
-// asignar a mano, confirmar y el reparto por familias (repartoMesas.js).
+// Quién ocupa sitio en una mesa: los confirmados y, desde la v74.2 (él:
+// «sentar también a los no confirmados para cuadrar con tiempo»), quien
+// aún no lo está pero ya tiene su sitio reservado. «No asiste» libera el
+// suyo. Una sola regla para asignar a mano, confirmar, auto-asignar, el
+// reparto por familias y las cifras de cada mesa.
+// `conSinConfirmar`: en «Repartir familias» se sientan también los que aún
+// no han confirmado ni tienen sitio.
+export function seSientaEnMesa(g, conSinConfirmar = false) {
+  return Boolean(g.confirmado) || (!g.noAsiste && (conSinConfirmar || g.mesa != null));
+}
+
+// Los sitios ocupados de una mesa.
 export function ocupacion(invitados, numero) {
-  return invitados.filter((g) => g.mesa === numero && g.confirmado).length;
+  return invitados.filter((g) => g.mesa === numero && seSientaEnMesa(g)).length;
 }
 
 // Pone (o quita, con numero = null) la mesa a un invitado Y a toda su
 // familia confirmada. Devuelve { invitados, aviso }: si hay aviso, la lista
 // vuelve sin tocar y el aviso dice por qué.
-// `comoSeLlama` (opcional): cómo nombrar a la familia en el aviso; en
-// «Repartir familias» va por su «O» («de García, Isaias»), como sus fichas.
-export function asignarMesaConSuFamilia(invitados, id, numero, mesas, comoSeLlama) {
+// Opciones (las usa «Repartir familias»): `comoSeLlama`, cómo nombrar a la
+// familia en el aviso (por su «O»: «de García, Isaias»); `conSinConfirmar`,
+// sentar también a los que aún no han confirmado (seSientaEnMesa).
+export function asignarMesaConSuFamilia(invitados, id, numero, mesas, { comoSeLlama, conSinConfirmar = false } = {}) {
   const g = invitados.find((x) => x.id === id);
   if (!g) return { invitados, aviso: "" };
   const clave = claveFamiliaMesa(g);
@@ -51,15 +64,17 @@ export function asignarMesaConSuFamilia(invitados, id, numero, mesas, comoSeLlam
     return { invitados: invitados.map((x) => (ids.has(x.id) ? { ...x, mesa: null } : x)), aviso: "" };
   }
 
-  if (!g.confirmado) {
+  if (!seSientaEnMesa(g, conSinConfirmar)) {
     return {
       invitados,
       aviso: nombreCompleto(g) + " todavía no está confirmado: confírmalo antes de asignarle mesa.",
     };
   }
 
-  const confirmados = familia.filter((x) => x.confirmado);
-  const entran = confirmados.filter((x) => x.mesa !== numero).length;
+  // Con los suyos que ya tienen sitio reservado, aunque no hayan confirmado:
+  // si se quedaran en la mesa de antes, la familia se partiría.
+  const sentados = familia.filter((x) => seSientaEnMesa(x, conSinConfirmar));
+  const entran = sentados.filter((x) => x.mesa !== numero).length;
   const mesa = mesas.find((m) => m.numero === numero);
   if (mesa && ocupacion(invitados, numero) + entran > mesa.capacidad) {
     const libres = Math.max(mesa.capacidad - ocupacion(invitados, numero), 0);
@@ -67,12 +82,12 @@ export function asignarMesaConSuFamilia(invitados, id, numero, mesas, comoSeLlam
     return {
       invitados,
       aviso:
-        `La familia ${comoSeLlama || nombreFamilia(g)} son ${confirmados.length} y en la mesa ${numero} ${quedan}. ` +
+        `La familia ${comoSeLlama || nombreFamilia(g)} son ${sentados.length} y en la mesa ${numero} ${quedan}. ` +
         "Una familia no se separa: sube la capacidad de la mesa o elige otra.",
     };
   }
 
-  const ids = new Set(confirmados.map((x) => x.id));
+  const ids = new Set(sentados.map((x) => x.id));
   return { invitados: invitados.map((x) => (ids.has(x.id) ? { ...x, mesa: numero } : x)), aviso: "" };
 }
 

@@ -79,3 +79,38 @@ it("«Descartar» pregunta antes y, con «Sí, descartar», vuelve todo como est
   expect(columna("Mesa 6").contains(familia("Expósito, Rosi"))).toBe(true);
   vista.desmontar();
 });
+
+it("al aplicar, dice que está guardado: los botones se apagan y no debe parecer que no hizo nada", () => {
+  const { vista, familia, columna, boton } = dibujar();
+  vista.pulsar(familia("García, Isaias"));
+  vista.pulsar(columna("Mesa 7"));
+  vista.pulsar(boton("Aplicar a la Lista"));
+  expect(document.body.textContent).toContain("Guardado en la Lista: 1 familia cambia de mesa.");
+  vista.desmontar();
+});
+
+// v74.2 (él): «que los muestre siempre sombreados hasta confirmar».
+it("los no confirmados salen siempre, sombreados, y se sientan como los demás", () => {
+  const guardados = [];
+  function Prueba() {
+    const [borrador, setBorrador] = useState({});
+    const conTentativa = [...invitados, g("4", "Luis", "Dani", ROL_FAMILIAR.ESPOSO, { confirmado: false })];
+    return (
+      <VentanaRepartoMesas
+        data={{ invitados: conTentativa, mesas, persistInvitados: (l) => guardados.push(l) }}
+        borrador={borrador}
+        setBorrador={setBorrador}
+        onCerrar={() => {}}
+      />
+    );
+  }
+  const vista = montar(<Prueba />);
+  const luis = () => vista.contenedor.querySelector('[data-familia="Luis, Dani"]');
+  expect(luis()).toBeTruthy();
+  expect(Number(luis().style.opacity)).toBeLessThan(1);
+  vista.pulsar(luis());
+  vista.pulsar(vista.contenedor.querySelector('[data-columna="Mesa 7"]'));
+  expect(vista.contenedor.querySelector('[data-columna="Mesa 7"]').contains(luis())).toBe(true);
+  expect(vista.contenedor.querySelector('[data-columna="Mesa 7"]').textContent).toContain("1/9");
+  vista.desmontar();
+});

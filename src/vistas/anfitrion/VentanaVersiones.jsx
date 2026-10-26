@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "74.2",
+    cambios: [
+      "Repartir familias: salen también las familias que aún no han confirmado, sombreadas hasta que confirmen, y se sientan como las demás para cuadrar con tiempo. Su sitio queda reservado y cuenta en la mesa (también en Mesas y en la Lista); «No asiste» lo libera y eliminar a alguien lo quita de todo. Con parte de la familia sin confirmar, la cifra sale así: «2+1».",
+      "Al pulsar «Aplicar a la Lista», lo dice: «Guardado en la Lista: 3 familias cambian de mesa».",
+    ],
+  },
+  {
     version: "74.1",
     cambios: [
       "Repartir familias: cada familia, con los colores de la mesa invertidos (dorado y letra verde), para no confundirla con la cabecera de una mesa. La que tienes cogida en el móvil, con el borde verde.",

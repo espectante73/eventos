@@ -7,7 +7,7 @@
 // La prueba es un BORRADOR de solo las mesas que cambian, { idInvitado:
 // mesa }, nunca una copia de la Lista: si mientras tanto un colaborador
 // confirma a alguien, al aplicar no se le pisa (norma 12).
-import { asignarMesaConSuFamilia, claveFamiliaMesa, ocupacion } from "./mesas";
+import { asignarMesaConSuFamilia, claveFamiliaMesa, ocupacion, seSientaEnMesa } from "./mesas";
 import { nombreCompleto } from "./formato";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
@@ -24,28 +24,33 @@ const puesto = (g) => {
   return i === -1 ? ORDEN_NOMBRE.length : i;
 };
 
-// Las familias con algún confirmado: quién las nombra, cuántos son (solo
-// los confirmados: son los que se sientan) y en qué mesa están.
-export function familiasParaRepartir(vista) {
+// Las familias que se sientan: quién las nombra, cuántos son, cuántos de
+// ellos aún sin confirmar (salen sombreados: él, «que se sombreen hasta
+// confirmar») y en qué mesa están. La ventana pide `conSinConfirmar`.
+export function familiasParaRepartir(vista, { conSinConfirmar = false } = {}) {
   const porClave = new Map();
   for (const g of vista) {
-    if (!g.confirmado) continue;
+    if (!seSientaEnMesa(g, conSinConfirmar)) continue;
     const clave = claveFamiliaMesa(g);
     if (!porClave.has(clave)) porClave.set(clave, []);
     porClave.get(clave).push(g);
   }
   return [...porClave.entries()].map(([clave, miembros]) => {
     const representante = [...miembros].sort((a, b) => puesto(a) - puesto(b) || nombreCompleto(a).localeCompare(nombreCompleto(b), "es"))[0];
-    return { clave, representante, nombre: nombreCompleto(representante), cuantos: miembros.length, mesa: representante.mesa ?? null };
+    const sinConfirmar = miembros.filter((g) => !g.confirmado).length;
+    return { clave, representante, nombre: nombreCompleto(representante), cuantos: miembros.length, sinConfirmar, mesa: representante.mesa ?? null };
   });
 }
 
 // Mueve una familia a una mesa (o a «Sin mesa», con numero = null) dentro
 // del borrador. Devuelve { borrador, aviso }: con aviso, no se ha movido.
-export function moverFamilia(invitados, borrador, idRepresentante, numero, mesas) {
+export function moverFamilia(invitados, borrador, idRepresentante, numero, mesas, { conSinConfirmar = false } = {}) {
   const vista = conBorrador(invitados, borrador);
   const representante = vista.find((g) => g.id === idRepresentante);
-  const { invitados: tras, aviso } = asignarMesaConSuFamilia(vista, idRepresentante, numero, mesas, representante && `de ${nombreCompleto(representante)}`);
+  const { invitados: tras, aviso } = asignarMesaConSuFamilia(vista, idRepresentante, numero, mesas, {
+    comoSeLlama: representante && `de ${nombreCompleto(representante)}`,
+    conSinConfirmar,
+  });
   if (aviso) return { borrador, aviso };
   const siguiente = { ...borrador };
   const real = new Map(invitados.map((g) => [g.id, g.mesa ?? null]));

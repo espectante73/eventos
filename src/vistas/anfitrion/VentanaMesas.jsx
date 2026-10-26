@@ -18,7 +18,7 @@ import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { PlanoMesas } from "../../components/PlanoMesas";
 import { Boton } from "../../components/Boton";
-import { claveFamiliaMesa } from "../../lib/mesas";
+import { claveFamiliaMesa, ocupacion as ocupacionDeMesa } from "../../lib/mesas";
 
 export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlotante, onRepartir, onCerrar }) {
   const { mesas, invitados, persistMesas, persistInvitados } = data;
@@ -62,7 +62,8 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
     const nuevos = invitados.map((g) => ({ ...g }));
     const ocupacion = {};
     mesas.forEach((m) => {
-      ocupacion[m.numero] = nuevos.filter((g) => g.mesa === m.numero && g.confirmado).length;
+      // La misma cuenta que al asignar a mano: con los sitios reservados.
+      ocupacion[m.numero] = ocupacionDeMesa(nuevos, m.numero);
     });
 
     const gruposMap = {};

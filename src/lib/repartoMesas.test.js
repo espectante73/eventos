@@ -1,7 +1,7 @@
 // v74 (él): probar el reparto moviendo familias enteras; que no deje sentar
 // a más de los que caben; y nada se guarda hasta «Aplicar a la Lista».
 import { describe, it, expect } from "vitest";
-import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian } from "./repartoMesas";
+import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion } from "./repartoMesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const g = (id, apellido, nombre, rol, extra = {}) => ({ id, apellido, nombre, grupoFamiliar: `${apellido}01`, rolFamiliar: rol, confirmado: true, mesa: null, ...extra });
@@ -59,5 +59,39 @@ describe("aplicar", () => {
     expect(aplicada.filter((x) => x.mesa === 7).map((x) => x.id)).toEqual(["1", "2", "3"]);
     expect(aplicada.find((x) => x.id === "4").mesa).toBe(6);
     expect(familiasQueCambian(invitados, borrador)).toBe(1);
+  });
+});
+
+// v74.2 (él): «sentar también a los no confirmados para cuadrar con tiempo;
+// si desactivo el check, no quitarlos de su asignación: que se sombreen
+// hasta confirmar».
+describe("los no confirmados", () => {
+  const conTentativa = [
+    ...invitados,
+    g("7", "Luis", "Dani", ROL_FAMILIAR.ESPOSO, { confirmado: false }),
+    g("8", "Luis", "Míriam", ROL_FAMILIAR.ESPOSA, { confirmado: false }),
+    g("9", "Bravo", "Yeray", ROL_FAMILIAR.SUELTO, { confirmado: false, mesa: 7 }),
+    g("10", "Sierra", "Raul", ROL_FAMILIAR.SUELTO, { confirmado: false, noAsiste: true }),
+  ];
+
+  it("sin la casilla, solo salen los que ya tienen sitio; con ella, todos menos «No asiste»", () => {
+    const sin = familiasParaRepartir(conTentativa).map((f) => f.nombre);
+    expect(sin).toContain("Bravo, Yeray");
+    expect(sin).not.toContain("Luis, Dani");
+    const con = familiasParaRepartir(conTentativa, { conSinConfirmar: true }).map((f) => f.nombre);
+    expect(con).toContain("Luis, Dani");
+    expect(con).not.toContain("Sierra, Raul");
+    expect(familiasParaRepartir(conTentativa, { conSinConfirmar: true }).find((f) => f.nombre === "Luis, Dani").sinConfirmar).toBe(2);
+  });
+
+  it("con la casilla se sientan; su sitio cuenta en la mesa", () => {
+    const { borrador, aviso } = moverFamilia(conTentativa, {}, "7", 7, mesas, { conSinConfirmar: true });
+    expect(aviso).toBe("");
+    expect(borrador).toEqual({ 7: 7, 8: 7 });
+    expect(ocupacion(conBorrador(conTentativa, borrador), 7)).toBe(3);
+  });
+
+  it("sin la casilla, a quien no tiene sitio no se le sienta", () => {
+    expect(moverFamilia(conTentativa, {}, "7", 7, mesas).aviso).toContain("todavía no está confirmado");
   });
 });

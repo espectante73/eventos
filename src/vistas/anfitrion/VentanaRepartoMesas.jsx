@@ -10,6 +10,7 @@
 // Es una PRUEBA: el borrador vive en VistaAnfitrion (sobrevive a cerrar la
 // ventana) y nada cambia en la Lista hasta «Aplicar a la Lista».
 import { useState } from "react";
+import { Check } from "lucide-react";
 import { C, OP, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -23,6 +24,10 @@ import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, famil
 const ANCHO_COLUMNA = 224;
 
 function Familia({ familia, cogida, onCoger }) {
+  // Sin confirmar todavía: sombreada hasta que confirmen (él, v74.2); su
+  // sitio, reservado. Con parte sin confirmar: «2+1».
+  const nadieConfirmado = familia.sinConfirmar === familia.cuantos;
+  const cifra = familia.sinConfirmar && !nadieConfirmado ? `${familia.cuantos - familia.sinConfirmar}+${familia.sinConfirmar}` : familia.cuantos;
   return (
     <button
       type="button"
@@ -41,13 +46,18 @@ function Familia({ familia, cogida, onCoger }) {
       style={{
         background: C.goldClaro,
         color: C.ink,
-        border: `2px solid ${cogida ? C.ink : C.gold}`,
+        border: `2px ${nadieConfirmado ? "dashed" : "solid"} ${cogida ? C.ink : C.gold}`,
+        opacity: nadieConfirmado && !cogida ? OP.tenue : 1,
         cursor: "grab",
       }}
-      title="Arrástrala a otra mesa, o tócala y luego toca la mesa"
+      title={
+        familia.sinConfirmar
+          ? `${familia.sinConfirmar === 1 ? "1 sin confirmar" : `${familia.sinConfirmar} sin confirmar`}: su sitio queda reservado. Arrástrala a otra mesa, o tócala y luego toca la mesa`
+          : "Arrástrala a otra mesa, o tócala y luego toca la mesa"
+      }
     >
       <span className="truncate">{familia.nombre}</span>
-      <b style={{ fontFamily: "'Fraunces', serif" }}>{familia.cuantos}</b>
+      <b style={{ fontFamily: "'Fraunces', serif" }}>{cifra}</b>
     </button>
   );
 }
@@ -112,25 +122,34 @@ export function VentanaRepartoMesas({ data, borrador, setBorrador, onCerrar, fij
   const { invitados, mesas, persistInvitados } = data;
   const [cogida, setCogida] = useState(null);
   const [aviso, setAviso] = useState("");
+  const [guardado, setGuardado] = useState("");
+  // Los no confirmados salen SIEMPRE, sombreados hasta que confirmen, y se
+  // sientan como los demás (él, v74.2: «para cuadrar con tiempo»). Su
+  // sitio queda reservado y cuenta en la mesa; «No asiste» lo libera.
+  const conSinConfirmar = true;
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
   const vista = conBorrador(invitados, borrador);
-  const familias = familiasParaRepartir(vista);
+  const familias = familiasParaRepartir(vista, { conSinConfirmar });
   const sinMesa = familias.filter((f) => f.mesa == null).sort(porNombre);
   const cambian = familiasQueCambian(invitados, borrador);
 
   const soltar = (idRepresentante, numero) => {
     setCogida(null);
-    const { borrador: siguiente, aviso: motivo } = moverFamilia(invitados, borrador, idRepresentante, numero, mesas);
+    const { borrador: siguiente, aviso: motivo } = moverFamilia(invitados, borrador, idRepresentante, numero, mesas, { conSinConfirmar });
     setAviso(motivo);
+    setGuardado("");
     if (!motivo) setBorrador(siguiente);
   };
   const coger = (id) => {
     setAviso("");
     setCogida((actual) => (actual === id ? null : id));
   };
+  // Al aplicar, la prueba pasa a la Lista y los botones se apagan: se dice
+  // aquí que está guardado (norma 9), o parecería que no ha hecho nada.
   const aplicar = () => {
     persistInvitados(aplicarBorrador(invitados, borrador));
+    setGuardado(`Guardado en la Lista: ${cambian === 1 ? "1 familia cambia" : `${cambian} familias cambian`} de mesa.`);
     setBorrador({});
   };
   const descartar = () =>
@@ -151,10 +170,15 @@ export function VentanaRepartoMesas({ data, borrador, setBorrador, onCerrar, fij
             {cambian === 0 ? "PRUEBA · sin cambios" : `PRUEBA · ${cambian} ${cambian === 1 ? "familia cambia" : "familias cambian"} de mesa, aún sin guardar`}
           </span>
           <span className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            Arrastra cada familia a su mesa; en el móvil, tócala y luego toca la mesa.
+            Arrastra cada familia a su mesa; en el móvil, tócala y luego toca la mesa. Sombreadas, las que aún no han confirmado.
           </span>
         </div>
         {aviso && <LineaAviso className="text-sm mb-2">{aviso}</LineaAviso>}
+        {guardado && (
+          <p className="text-sm mb-2 flex items-center gap-1.5" style={{ color: C.ink }}>
+            <Check size={16} aria-hidden /> {guardado}
+          </p>
+        )}
 
         {/* En el Mac, «Sin mesa» a la izquierda y cada parte con su propia
             barra; en el móvil no caben juntas: «Sin mesa» arriba, las mesas
