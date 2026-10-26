@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "74.1",
+    cambios: [
+      "Repartir familias: cada familia, con los colores de la mesa invertidos (dorado y letra verde), para no confundirla con la cabecera de una mesa. La que tienes cogida en el móvil, con el borde verde.",
+    ],
+  },
+  {
     version: "74",
     cambios: [
       "Mesas → «Repartir familias»: en su ventana propia (en el Mac, aparte, para verla en grande), una columna por mesa y otra de «Sin mesa». Cada familia sale con el nombre de su «O» (o de su primer adulto) y cuántos confirmados son; se arrastra de una mesa a otra o, en el móvil, se toca la familia y luego la mesa. Cada mesa dice sus sitios ocupados de los que tiene, y no deja sentar a más.",

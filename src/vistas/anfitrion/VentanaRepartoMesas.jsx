@@ -35,10 +35,13 @@ function Familia({ familia, cogida, onCoger }) {
       data-familia={familia.nombre}
       aria-pressed={cogida}
       className="boton-3d w-full flex items-center justify-between gap-2 rounded px-3 py-1.5 mb-1.5 text-sm text-left"
+      // Con los colores de la mesa invertidos (él, v74.1): dorado con letra
+      // verde, para no confundir una familia con la cabecera de una mesa.
+      // Cogida (en el móvil), con el borde verde.
       style={{
-        background: C.ink,
-        color: C.goldClaro,
-        border: `2px solid ${cogida ? C.blanco : C.goldClaro}`,
+        background: C.goldClaro,
+        color: C.ink,
+        border: `2px solid ${cogida ? C.ink : C.gold}`,
         cursor: "grab",
       }}
       title="Arrástrala a otra mesa, o tócala y luego toca la mesa"
