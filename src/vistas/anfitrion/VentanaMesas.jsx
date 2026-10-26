@@ -10,7 +10,7 @@
 // "tabla"/"canciones"/"alergias"-, así que llegan como props en vez de
 // definirse dentro.
 import { useState } from "react";
-import { AlertTriangle, Plus, Map } from "lucide-react";
+import { AlertTriangle, Plus, Map, Users } from "lucide-react";
 import { C, OP } from "../../theme";
 import { tieneAlergiaReal } from "../../lib/invitados";
 import { MesaRedonda } from "../../components/Mesas";
@@ -20,7 +20,7 @@ import { PlanoMesas } from "../../components/PlanoMesas";
 import { Boton } from "../../components/Boton";
 import { claveFamiliaMesa } from "../../lib/mesas";
 
-export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlotante, onCerrar }) {
+export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlotante, onRepartir, onCerrar }) {
   const { mesas, invitados, persistMesas, persistInvitados } = data;
   const [avisosMesas, setAvisosMesas] = useState([]);
 
@@ -173,6 +173,12 @@ export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlota
             <Boton variante="principal" onClick={autoAsignarMesas} titulo="Reparte a las familias confirmadas en las mesas; luego se puede retocar a mano">
               Auto-asignar
             </Boton>
+            {/* La prueba de reparto, en su ventana propia (él, v74). */}
+            {onRepartir && (
+              <Boton variante="secundario" onClick={onRepartir} titulo="Mueve familias enteras de una mesa a otra para probar el reparto; nada se guarda hasta «Aplicar a la Lista»">
+                <Users size={14} /> Repartir familias
+              </Boton>
+            )}
             <Boton variante="secundario" onClick={anadirMesa}>
               <Plus size={14} /> Añadir mesa
             </Boton>

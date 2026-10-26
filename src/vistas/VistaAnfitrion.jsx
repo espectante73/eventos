@@ -40,6 +40,7 @@ import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 import { Boton } from "../components/Boton";
 import { ResumenAvisosAsignacion } from "./anfitrion/ResumenAvisosAsignacion";
+import { VentanaRepartoMesas } from "./anfitrion/VentanaRepartoMesas";
 
 // Versiones es casi todo texto (el historial de cambios) y es de lo que
 // menos se abre: se descarga al pulsarla, no al entrar (2026-09-18).
@@ -118,6 +119,26 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   // probó en una pestaña aparte: no había forma de volver. En el Mac, si
   // el navegador bloquea la ventana, también cae dentro: nunca en nada.
   const abrirMusicaEvento = useCallback(() => abrirMusica(abrirMusicaDentro), [abrirMusicaDentro]);
+
+  // «Repartir familias» (él, v74): en su ventana propia, para verlo en
+  // grande; en un aparato táctil, dentro de la app. La prueba (el borrador)
+  // vive aquí: cerrar la ventana no la pierde, y nada se guarda hasta
+  // «Aplicar a la Lista».
+  const [borradorMesas, setBorradorMesas] = useState({});
+  const {
+    abrir: abrirRepartoPopup,
+    actualizar: actualizarReparto,
+    abierta: repartoEnVentana,
+    ventana: ventanaReparto,
+  } = usePopupWindow({ nombreVentana: "reparto-mesas", ancho: 1400, alto: 900 });
+  useEffect(() => {
+    if (!repartoEnVentana) return;
+    actualizarReparto(
+      <ErrorBoundary ventana={ventanaReparto}>
+        <VentanaRepartoMesas data={data} borrador={borradorMesas} setBorrador={setBorradorMesas} onCerrar={() => ventanaReparto?.close()} fijo />
+      </ErrorBoundary>
+    );
+  });
 
   // Se repinta con cada refresco de datos: la ventana
   // es un root de React aparte y no se entera sola de que `data` cambió.
@@ -269,6 +290,10 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   // El marcador va con la acreditación (v70.8): al abrirla, en el Mac se
   // abre solo (en el móvil no, para no tapar la pantalla); al cerrarla, se
   // cierra; y «Ver marcador» lo abre aparte, también en el móvil.
+  // Dentro del propio clic, como la Lista: si no, Safari bloquea la ventana.
+  const abrirReparto = () => {
+    if (esAparatoTactil() || !abrirRepartoPopup()) setAbierto((a) => ({ ...a, repartoMesas: true }));
+  };
   const marcador = {
     abierto: marcadorEnVentana || Boolean(abierto.marcador),
     abrir: () => {
@@ -359,7 +384,16 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
           ocupacionMesa={ocupacionMesa}
           panelFlotante={panelFlotante}
           setPanelFlotante={setPanelFlotante}
+          onRepartir={abrirReparto}
           onCerrar={() => toggle("mesas")}
+        />
+      )}
+      {abierto.repartoMesas && (
+        <VentanaRepartoMesas
+          data={data}
+          borrador={borradorMesas}
+          setBorrador={setBorradorMesas}
+          onCerrar={() => setAbierto((a) => ({ ...a, repartoMesas: false }))}
         />
       )}
 

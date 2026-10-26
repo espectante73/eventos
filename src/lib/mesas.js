@@ -28,14 +28,18 @@ function nombreFamilia(g) {
   return g.grupoFamiliar || g.apellido || `${g.nombre || ""}`.trim() || "(sin nombre)";
 }
 
-function ocupacion(invitados, numero) {
+// Los sitios ocupados de una mesa: sus confirmados. La misma cuenta para
+// asignar a mano, confirmar y el reparto por familias (repartoMesas.js).
+export function ocupacion(invitados, numero) {
   return invitados.filter((g) => g.mesa === numero && g.confirmado).length;
 }
 
 // Pone (o quita, con numero = null) la mesa a un invitado Y a toda su
 // familia confirmada. Devuelve { invitados, aviso }: si hay aviso, la lista
 // vuelve sin tocar y el aviso dice por qué.
-export function asignarMesaConSuFamilia(invitados, id, numero, mesas) {
+// `comoSeLlama` (opcional): cómo nombrar a la familia en el aviso; en
+// «Repartir familias» va por su «O» («de García, Isaias»), como sus fichas.
+export function asignarMesaConSuFamilia(invitados, id, numero, mesas, comoSeLlama) {
   const g = invitados.find((x) => x.id === id);
   if (!g) return { invitados, aviso: "" };
   const clave = claveFamiliaMesa(g);
@@ -59,11 +63,11 @@ export function asignarMesaConSuFamilia(invitados, id, numero, mesas) {
   const mesa = mesas.find((m) => m.numero === numero);
   if (mesa && ocupacion(invitados, numero) + entran > mesa.capacidad) {
     const libres = Math.max(mesa.capacidad - ocupacion(invitados, numero), 0);
+    const quedan = libres === 0 ? "no queda ningún sitio" : libres === 1 ? "solo queda 1 sitio" : `solo quedan ${libres} sitios`;
     return {
       invitados,
       aviso:
-        `La familia ${nombreFamilia(g)} son ${confirmados.length} y en la mesa ${numero} ` +
-        `${libres === 1 ? "solo queda 1 sitio" : `solo quedan ${libres} sitios`}. ` +
+        `La familia ${comoSeLlama || nombreFamilia(g)} son ${confirmados.length} y en la mesa ${numero} ${quedan}. ` +
         "Una familia no se separa: sube la capacidad de la mesa o elige otra.",
     };
   }

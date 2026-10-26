@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "74",
+    cambios: [
+      "Mesas → «Repartir familias»: en su ventana propia (en el Mac, aparte, para verla en grande), una columna por mesa y otra de «Sin mesa». Cada familia sale con el nombre de su «O» (o de su primer adulto) y cuántos confirmados son; se arrastra de una mesa a otra o, en el móvil, se toca la familia y luego la mesa. Cada mesa dice sus sitios ocupados de los que tiene, y no deja sentar a más.",
+      "Es una prueba: nada cambia en la Lista hasta «Aplicar a la Lista»; «Descartar» pregunta antes. La prueba no se pierde al cerrar la ventana.",
+      "El aviso de «no cabe», también en la Lista: con 0 sitios dice «no queda ningún sitio».",
+    ],
+  },
+  {
     version: "73.5",
     cambios: [
       "Avisos a los colaboradores: «nuevo» es solo el invitado que acabas de asignarle y del que aún no se le avisó. Cambiar la mesa, el pago o cualquier dato de la ficha ya no lo vuelve «nuevo», así que no le llegan correos repetidos con gente que ya tenía.",
