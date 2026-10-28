@@ -10,7 +10,7 @@ const evento = { nombre: "La boda", fecha: "2026-11-13", hora: "18:00", lugar: "
 const botones = () => [...document.body.querySelectorAll("button")];
 const boton = (t) => botones().find((b) => b.textContent.trim().endsWith(t));
 
-it("anfitrión: «Mi cuenta» está en «Abrir sección…», entre Mesas y Multimedia, y abre su ventana", () => {
+it("anfitrión: «Mi cuenta» está en «Abrir sección…», entre Invitados y Multimedia, y abre su ventana", () => {
   const vista = montar(
     <Portada evento={evento} editable abierto={{}} toggle={() => {}} colaboradores={[]} onCerrarSesion={() => {}} />
   );
@@ -19,7 +19,7 @@ it("anfitrión: «Mi cuenta» está en «Abrir sección…», entre Mesas y Mult
   const nombres = botones().map((b) => b.textContent.trim());
   const i = nombres.findIndex((n) => n.endsWith("Mi cuenta"));
   expect(i).toBeGreaterThan(-1);
-  expect(nombres[i - 1]).toMatch(/Mesas y acomodación$/);
+  expect(nombres[i - 1]).toMatch(/Invitados$/);
   expect(nombres[i + 1]).toMatch(/Multimedia$/);
   vista.pulsar(botones()[i]);
   expect(document.body.textContent).toContain("Cerrar sesión");
@@ -37,5 +37,20 @@ it("anfitrión que también es colaborador: su sello en «Abrir sección…»", 
     <Portada evento={evento} editable abierto={{}} toggle={() => {}} colaboradores={[]} onCerrarSesion={() => {}} sello={3} />
   );
   expect(botones().find((b) => b.textContent.includes("Abrir sección")).textContent).toContain("3");
+  vista.desmontar();
+});
+
+// v74.7 (él): «los nombres no se deben salir de los botones» («Mesas y
+// acomodación» se cortaba). El más largo que cabe, «Día del evento»: 14.
+it("«Abrir sección…»: en orden alfabético, y ningún nombre más largo de lo que cabe en su botón", () => {
+  const vista = montar(
+    <Portada evento={evento} editable abierto={{}} toggle={() => {}} colaboradores={[]} onCerrarSesion={() => {}} />
+  );
+  vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
+  const abrir = botones().findIndex((b) => b.textContent.includes("Abrir sección"));
+  const nombres = botones().slice(abrir + 1).map((b) => b.textContent.trim()).filter(Boolean);
+  expect(nombres[0]).toBe("Acomodación");
+  expect(nombres).toEqual([...nombres].sort((a, b) => a.localeCompare(b, "es")));
+  expect(nombres.filter((n) => n.length > 14)).toEqual([]);
   vista.desmontar();
 });

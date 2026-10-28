@@ -200,9 +200,8 @@ export function DesplegableSecciones({
     };
   });
 
-  // En su sitio del orden alfabético: detrás de "Mesas", delante de "Multimedia".
   if (abrirMiCuenta) {
-    opciones.splice(opciones.findIndex((o) => o.id === "mesas") + 1, 0, {
+    opciones.push({
       id: "miCuenta",
       etiqueta: "Mi cuenta",
       icono: UserCog,
@@ -210,6 +209,10 @@ export function DesplegableSecciones({
       ...ESTILO_MI_CUENTA,
     });
   }
+  // En orden alfabético por lo que se lee (él): «Acomodación» (v74.7) va
+  // la primera aunque su ventana sea la de Mesas, y «Mi cuenta», entre
+  // Invitados y Multimedia.
+  opciones.sort((x, y) => x.etiqueta.localeCompare(y.etiqueta, "es"));
 
   return <BotonAbrirSeccion opciones={opciones} sello={sello} posicion={posicion} />;
 }

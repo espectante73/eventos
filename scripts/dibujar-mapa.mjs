@@ -254,6 +254,7 @@ x.fillText("Abrir sección…", COLS[0] + 26, 320);
 
 let y = 362;
 const nivel1 = [
+  ["Acomodación", { fuera: true }],
   ["Aniversarios", {}],
   ["Colaboradores", { tipo: "abre" }],
   ["Configuración", { tipo: "abre" }],
@@ -261,7 +262,6 @@ const nivel1 = [
   ["Día del evento", {}],
   ["Invitaciones", {}],
   ["Invitados", { fuera: true }],
-  ["Mesas y acomodación", { fuera: true }],
   ["Mi cuenta", {}],
   ["Multimedia", { fuera: true }],
   ["Novedades", { fuera: true }],

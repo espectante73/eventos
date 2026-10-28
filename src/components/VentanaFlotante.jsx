@@ -125,7 +125,8 @@ export const ETIQUETAS_VENTANAS = {
   aniversarios: "Aniversarios",
   progreso: "Progreso",
   colaboradores: "Colaboradores",
-  mesas: "Mesas y acomodación",
+  // «Acomodación» (él, v74.7): «Mesas y acomodación» no cabía en el botón.
+  mesas: "Acomodación",
   invitaciones: "Invitaciones",
   invitados: "Invitados",
   // "Contabilidad" (antes "Cuentas"): se confundía con "Mi cuenta" (él, v51.3).

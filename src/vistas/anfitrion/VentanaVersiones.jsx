@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "74.7",
+    cambios: [
+      "En «Abrir sección…», «Mesas y acomodación» se llama ahora «Acomodación»: el nombre largo se salía del botón. Va la primera, por orden alfabético, y «Mi cuenta» queda entre Invitados y Multimedia. Una prueba vigila que ningún nombre del menú vuelva a salirse.",
+    ],
+  },
+  {
     version: "74.6",
     cambios: [
       "Mesas y Repartir familias, en una sola ventana: «Mesas y acomodación». En el Mac se abre aparte y en grande, como la Lista. Arriba, «Plano de mesas», «Auto-asignar» y «Añadir mesa», del mismo ancho.",
