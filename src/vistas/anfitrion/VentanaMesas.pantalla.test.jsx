@@ -298,3 +298,16 @@ it("cargar una la pone como prueba, mesas incluidas; «Aplicar» guarda las dos 
   expect(document.body.textContent).toContain("Guardado en la Lista: Acomodación 2.");
   vista.desmontar();
 });
+
+// v75.1 (él): «vaciar todas las mesas», desde la cabecera de «Sin mesa».
+it("«Vaciar mesas» pregunta antes y deja todas vacías, solo en la prueba", async () => {
+  const { vista, guardados, mesasGuardadas, familia, columna, boton } = dibujar();
+  vista.pulsar(boton("Vaciar mesas"));
+  expect(document.body.textContent).toContain("¿Vaciar todas las mesas?");
+  expect(document.body.textContent).toContain("1 invitado pasa a «Sin mesa»");
+  await act(async () => boton("Sí").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  expect(columna("Sin mesa").contains(familia("Expósito, Rosi"))).toBe(true);
+  expect(guardados).toEqual([]);
+  expect(mesasGuardadas).toEqual([]);
+  vista.desmontar();
+});

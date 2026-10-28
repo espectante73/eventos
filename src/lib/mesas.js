@@ -133,7 +133,9 @@ export function confirmarConSuFamilia(invitados, id, mesas) {
 // aplicarla). Nunca reparte una familia entre varias mesas por su cuenta:
 // si parte ya está sentada, completa el resto en esa misma mesa; si no cabe
 // entera (ahí o en cualquier otra), la deja sin mesa y lo dice en `avisos`.
-// Sienta a los confirmados; cuenta los sitios ya reservados (ocupacion).
+// Sienta a TODOS, también a los que aún no han confirmado (él, v75.1:
+// «estoy contando con los posibles invitados… siempre»); nunca a los «No
+// asiste». Cuenta los sitios ya reservados (ocupacion).
 export function autoAsignarMesas(invitados, mesas) {
   const nuevos = invitados.map((g) => ({ ...g }));
   const ocupados = {};
@@ -143,7 +145,7 @@ export function autoAsignarMesas(invitados, mesas) {
 
   const grupos = {};
   nuevos.forEach((g) => {
-    if (g.confirmado) (grupos[claveFamiliaMesa(g)] = grupos[claveFamiliaMesa(g)] || []).push(g);
+    if (seSientaEnMesa(g, true)) (grupos[claveFamiliaMesa(g)] = grupos[claveFamiliaMesa(g)] || []).push(g);
   });
 
   const avisos = [];

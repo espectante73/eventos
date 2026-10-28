@@ -35,6 +35,7 @@ import {
   familiasParaRepartir,
   moverFamilia,
   vaciarMesaEnBorrador,
+  vaciarTodasEnBorrador,
   autoAsignarEnBorrador,
   aplicarBorrador,
   familiasQueCambian,
@@ -204,6 +205,20 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
     limpiarAvisos();
     setBorrador(vaciarMesaEnBorrador(invitados, borrador, numero));
   };
+  // «Vaciar mesas» (él, v75.1): todas a la vez; mueve a todo el mundo,
+  // así que pregunta antes. Las mesas se quedan.
+  const sentados = mesas.reduce((total, m) => total + ocupacion(vista, m.numero), 0);
+  const vaciarTodas = () =>
+    preguntar({
+      titulo: "¿Vaciar todas las mesas?",
+      texto: `${sentados === 1 ? "1 invitado pasa" : `${sentados} invitados pasan`} a «Sin mesa», en la prueba. Las mesas se quedan; «Descartar» lo deshace.`,
+      rotulo: "Sí",
+      peligro: false,
+      alConfirmar: () => {
+        limpiarAvisos();
+        setBorrador(vaciarTodasEnBorrador(invitados, borrador));
+      },
+    });
   const autoAsignar = () => {
     limpiarAvisos();
     const { borrador: siguiente, avisos } = autoAsignarEnBorrador(invitados, borrador, mesas);
@@ -363,7 +378,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
             <Boton variante="secundario" icono={IconoPlano} aria-pressed={verPlano} onClick={() => setVerPlano((v) => !v)}>
               {verPlano ? "Ver las mesas" : "Plano de mesas"}
             </Boton>
-            <Boton variante="secundario" titulo="Propone un reparto de las familias confirmadas, en la prueba: se repasa y se aplica" disabled={verPlano} onClick={autoAsignar}>
+            <Boton variante="secundario" titulo="Propone un reparto de todas las familias, también las que aún no han confirmado (nunca los «No asiste»), en la prueba: se repasa y se aplica" disabled={verPlano} onClick={autoAsignar}>
               Auto-asignar
             </Boton>
             <Boton variante="secundario" icono={Plus} onClick={anadirMesa}>
@@ -416,11 +431,18 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
               <Columna
                 nombre="Sin mesa"
                 cabecera={
-                  <div
-                    className="flex items-baseline justify-center gap-2 rounded px-2 py-1.5 mb-2 font-semibold"
-                    style={{ background: C.paperDark, color: C.ink, border: `2px dashed ${C.line}` }}
-                  >
-                    Sin mesa <span style={CIFRA}>· {sinMesa.length}</span>
+                  // Como la cabecera de una mesa: arriba, su botón («Vaciar
+                  // mesas», él, v75.1: aquí es adonde van todos); debajo, el título.
+                  <div className="rounded px-2 py-1.5 mb-2" style={{ background: C.paperDark, color: C.ink, border: `2px dashed ${C.line}` }}>
+                    <div data-controles className="flex justify-center">
+                      <Boton variante="secundario" tamano="pequeno" titulo="Deja todas las mesas vacías, en la prueba; las mesas se quedan" disabled={sentados === 0} onClick={vaciarTodas}>
+                        Vaciar mesas
+                      </Boton>
+                    </div>
+                    <div className="mx-2 my-1.5" style={{ borderTop: `1px solid ${C.gold}` }} />
+                    <div className="flex items-baseline justify-center gap-2 font-semibold">
+                      Sin mesa <span style={CIFRA}>· {sinMesa.length}</span>
+                    </div>
                   </div>
                 }
                 familias={sinMesa}

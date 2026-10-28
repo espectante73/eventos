@@ -76,6 +76,13 @@ export function vaciarMesaEnBorrador(invitados, borrador, numero) {
   return borradorDesde(invitados, propuesta);
 }
 
+// «Vaciar mesas» (él, v75.1), en la prueba: todas las mesas, vacías; las
+// mesas se quedan.
+export function vaciarTodasEnBorrador(invitados, borrador) {
+  const propuesta = conBorrador(invitados, borrador).map((g) => (g.mesa != null ? { ...g, mesa: null } : g));
+  return borradorDesde(invitados, propuesta);
+}
+
 // Auto-asignar, en la prueba: lo propone sobre lo que ya hay en ella.
 export function autoAsignarEnBorrador(invitados, borrador, mesas) {
   const { invitados: propuesta, avisos } = autoAsignarMesas(conBorrador(invitados, borrador), mesas);

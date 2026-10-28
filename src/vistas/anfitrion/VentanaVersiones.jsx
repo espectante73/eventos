@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "75.1",
+    cambios: [
+      "Acomodación: «Auto-asignar» sienta siempre a todos, también a los que aún no han confirmado (sombreados, como siempre), para contar con los posibles invitados. Los «No asiste», nunca.",
+      "«Vaciar mesas», arriba en la cabecera de «Sin mesa»: deja todas las mesas vacías de una vez, en la prueba. Las mesas se quedan; pregunta antes y «Descartar» lo deshace.",
+    ],
+  },
+  {
     version: "75",
     cambios: [
       "Acomodación: «Memorias», en la línea de botones de arriba, con el desplegable de toda la app. Guarda hasta tres acomodaciones (Acomodación 1, 2 y 3) con todo: las mesas, sus sitios, su sitio en el plano y quién se sienta en cada una.",

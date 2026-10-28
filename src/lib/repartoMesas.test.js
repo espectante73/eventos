@@ -1,7 +1,7 @@
 // v74 (él): probar el reparto moviendo familias enteras; que no deje sentar
 // a más de los que caben; y nada se guarda hasta «Aplicar a la Lista».
 import { describe, it, expect } from "vitest";
-import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria } from "./repartoMesas";
+import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador } from "./repartoMesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const g = (id, apellido, nombre, rol, extra = {}) => ({ id, apellido, nombre, grupoFamiliar: `${apellido}01`, rolFamiliar: rol, confirmado: true, mesa: null, ...extra });
@@ -140,5 +140,23 @@ describe("las memorias", () => {
   it("una mesa que la memoria no tiene se queda vacía al cargarla", () => {
     const sinLa6 = { ...memoria, mesas: mesas.filter((m) => m.numero !== 6), asientos: { ...memoria.asientos, 4: 6 } };
     expect(cargarMemoria(invitados, sinLa6).borrador["4"]).toBe(null);
+  });
+});
+
+// v75.1 (él): «autoasignar siempre todos» y «vaciar todas las mesas».
+describe("Auto-asignar y Vaciar mesas, en la prueba", () => {
+  it("Auto-asignar sienta también a los que aún no han confirmado, nunca a los «No asiste»", () => {
+    const conDudas = [...invitados, g("7", "Luis", "Dani", ROL_FAMILIAR.SUELTO, { confirmado: false, noAsiste: true })];
+    const { borrador } = autoAsignarEnBorrador(conDudas, {}, mesas);
+    // Pablo (Pérez), sin confirmar: con su familia.
+    expect(borrador["6"]).toBe(borrador["5"]);
+    expect(borrador["6"]).not.toBe(undefined);
+    expect(borrador).not.toHaveProperty("7");
+  });
+
+  it("Vaciar mesas deja a todos sin mesa, también lo que ya estaba en la prueba", () => {
+    const borrador = vaciarTodasEnBorrador(invitados, { 1: 7 });
+    expect(conBorrador(invitados, borrador).every((x) => x.mesa == null)).toBe(true);
+    expect(borrador).toEqual({ 4: null });
   });
 });
