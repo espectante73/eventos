@@ -145,8 +145,8 @@ export const ETIQUETAS_VENTANAS = {
 // Lo más pequeña que se puede dejar una ventana al encogerla a mano.
 const ANCHO_MINIMO = 280;
 const ALTO_MINIMO = 200;
-// La franja de abajo que ocupan la barra de ventanas y el sello de los días
-// (BarraVentanas la anuncia en --hueco-barra-ventanas): ninguna ventana baja ahí.
+// La franja de abajo de la barra de ventanas, cuando tiene ventanas abiertas
+// (la anuncia en --hueco-barra-ventanas): ninguna ventana baja ahí.
 const huecoAbajo = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hueco-barra-ventanas")) || 0;
 // Un valor entre dos límites; si no caben los dos (pantalla diminuta), manda el mínimo.
 const entre = (valor, minimo, maximo) => Math.max(minimo, Math.min(valor, maximo));
@@ -291,9 +291,9 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
     if (!e.touches) e.preventDefault();
   };
 
-  // Lo más alta que puede ser: el 88 % de la pantalla y, aun así, sin
-  // bajar hasta la franja de abajo, la de la barra de ventanas y el sello de
-  // los días (él, v74.4: la ventana de Mesas tapaba el sello).
+  // Lo más alta que puede ser: el 88 % de la pantalla y, con ventanas de la
+  // barra abiertas (el móvil), sin bajar hasta su franja. Sin ellas no hay
+  // franja: puede bajar hasta abajo, tapando el sello y Equipo (v74.5).
   const altoMaximo = `min(calc(88vh - var(--hueco-barra-ventanas, 0px)), calc(100vh - ${pos.top + MARGEN_PANTALLA}px - var(--hueco-barra-ventanas, 0px)))`;
 
   const iniciarArrastre = (e) => {

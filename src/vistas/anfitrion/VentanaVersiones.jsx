@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "74.5",
+    cambios: [
+      "Se deshace lo de la 74.4: las ventanas vuelven a poder agrandarse hasta abajo del todo, tapando el sello de los días y el cuadradito de Equipo, que son para verlos en el inicio. En el móvil, con el formulario o Multimedia abiertos, la barra sigue por encima para cambiar de una a otra.",
+      "Cronograma: el nombre de un bloque ya admite tildes («Acomodación»). Pasaba en las ventanas que se abren aparte; ahora una prueba vigila que ningún campo de esas ventanas vuelva a perderlas.",
+    ],
+  },
+  {
     version: "74.4",
     cambios: [
       "El sello de los días que faltan, siempre por encima, como el cuadradito de Equipo: la ventana de Mesas lo tapaba. Y ninguna ventana baja ya hasta la franja de abajo (la de la barra y el sello), ni al abrirse ni al moverla ni al agrandarla.",

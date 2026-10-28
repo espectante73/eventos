@@ -22,11 +22,16 @@ const SEPARACION_ABAJO = 16;
 const HUECO_X = 14;
 // Lo que la barra tapa por abajo: el contenido de detrás deja ese hueco.
 export const ALTO_BARRA = SEPARACION_ABAJO + TAM_CUADRITO + HUECO_X + TAMANO_BOTON_QUITAR + 12;
-// Sin ventanas abiertas solo está Equipo, sin X encima: tapa menos.
-export const ALTO_BARRA_SOLA = SEPARACION_ABAJO + TAM_CUADRITO + 12;
-// La capa de la barra, por encima de todo (también de las ventanas
-// flotantes): la comparte el sello de los días (SelloCuentaAtras).
+// Las capas (él, v74.5: «el sello y el botón son para verlos al abrir; con
+// una ventana abierta no son útiles, y ella tiene que poder agrandarse»):
+// - con ventanas de la barra abiertas (el móvil), la barra va por encima de
+//   todo, para poder cambiar de una a otra, y deja su hueco abajo;
+// - sin ellas, la barra (solo Equipo) y el sello de los días van en la capa
+//   del inicio: por encima del formulario a pantalla entera (CapaBarra, 40)
+//   y DEBAJO de las ventanas flotantes (desde 51), que pueden taparlos y
+//   bajar hasta abajo del todo.
 export const Z_BARRA = 10000;
+export const Z_INICIO = 45;
 
 // Las ventanas que pueden ir en la barra. El icono, el del menú.
 export const VENTANAS_MOVIL = {
@@ -45,9 +50,12 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar, onEquipo 
   const haySinGuardar = useSinGuardar();
   const conVentanas = abiertas.length > 0;
   // Mientras se ve, las ventanas flotantes dejan su hueco abajo.
+  // Solo con ventanas de la barra: con Equipo solo, las ventanas flotantes
+  // pueden bajar hasta abajo y taparlo (Z_INICIO).
   useEffect(() => {
+    if (!conVentanas) return undefined;
     const raiz = document.documentElement;
-    raiz.style.setProperty("--hueco-barra-ventanas", `${conVentanas ? ALTO_BARRA : ALTO_BARRA_SOLA}px`);
+    raiz.style.setProperty("--hueco-barra-ventanas", `${ALTO_BARRA}px`);
     return () => raiz.style.removeProperty("--hueco-barra-ventanas");
   }, [conVentanas]);
   // La casita, solo si hay alguna ventana a la que volver desde ella.
@@ -58,7 +66,7 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar, onEquipo 
       // Por encima de todo, también de las ventanas flotantes: tiene que
       // poder tocarse con una abierta. Ellas se acortan para no quedar
       // debajo (--hueco-barra-ventanas, en VentanaFlotante.jsx).
-      style={{ bottom: SEPARACION_ABAJO, zIndex: Z_BARRA }}
+      style={{ bottom: SEPARACION_ABAJO, zIndex: conVentanas ? Z_BARRA : Z_INICIO }}
     >
       {ventanas.map(({ clave, titulo, icono: Icono }) => {
         const esDelante = clave === delante;

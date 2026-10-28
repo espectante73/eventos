@@ -4,13 +4,12 @@
 // dice «¡Es hoy!» y, con la fecha sin confirmar, no sale. Abajo, del lado
 // CONTRARIO al pulgar: ese es de la barra de ventanas (norma 3, con su
 // espejo zurdo:). No se pulsa: los toques pasan a lo que hay debajo.
-// En la misma capa que la barra de ventanas (BarraVentanas): por encima de
-// todo, también de las ventanas flotantes (él, v74.4: Mesas lo tapaba y a
-// Equipo no). No estorba: no se pulsa, y las ventanas no bajan hasta esa
-// franja (VentanaFlotante, --hueco-barra-ventanas).
+// En la capa del inicio (Z_INICIO, ver BarraVentanas): por encima del
+// formulario a pantalla entera del móvil y debajo de las ventanas flotantes,
+// que pueden taparlo (él, v74.5: «es para verlo al abrir»).
 import { C, R, T, FONDO_VERDE } from "../theme";
 import { cuentaAtrasEvento } from "../lib/formato";
-import { Z_BARRA } from "./BarraVentanas";
+import { Z_INICIO } from "./BarraVentanas";
 
 export const TAM_SELLO = 76;
 const MARGEN_SELLO = 16;
@@ -37,7 +36,7 @@ export function SelloCuentaAtras({ evento, hoy }) {
         background: FONDO_VERDE,
         color: C.goldClaro,
         border: `2px solid ${C.gold}`,
-        zIndex: Z_BARRA,
+        zIndex: Z_INICIO,
       }}
     >
       {cuenta.arriba && <div style={ROTULO}>{cuenta.arriba}</div>}

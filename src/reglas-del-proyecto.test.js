@@ -197,6 +197,35 @@ describe("norma 15: a las personas se las nombra Apellido, Nombre", () => {
   });
 });
 
+describe("las tildes en las ventanas que se abren aparte", () => {
+  // v74.5 (él: «no me deja escribir bien la tilde en Cronograma y en la
+  // Lista sí: no hay una regla unificada»). Una ventana aparte es otro root
+  // de React: un campo controlado cuyo valor vive en la pestaña principal
+  // se repinta tarde y la tilde, que se escribe en dos pasos, se pierde
+  // («Acomodaci´ón»). Ahí va TextInputEnVentanaAparte (trampa 2.2). Lo que
+  // se guarda en el estado de la propia ventana (setAlgo) no tiene ese
+  // problema.
+  const VENTANAS_APARTE = [
+    "src/vistas/anfitrion/VentanaConfigCronograma.jsx",
+    "src/vistas/anfitrion/VentanaNovedades.jsx",
+    "src/vistas/anfitrion/SeccionInvitados.jsx",
+    "src/vistas/anfitrion/VentanaRepartoMesas.jsx",
+    "src/vistas/anfitrion/VentanaMarcador.jsx",
+  ];
+  it("ningún campo de texto guarda directamente fuera de su ventana", () => {
+    const culpables = [];
+    for (const ruta of VENTANAS_APARTE) {
+      const texto = sinComentarios(leer(ruta));
+      for (const [campo] of texto.matchAll(/<(?:input|textarea|TextInput)\b[\s\S]*?\/>/g)) {
+        if (/type="(?:checkbox|file|radio)"/.test(campo)) continue;
+        const cambio = campo.match(/onChange=\{\(?\w*\)?\s*=>\s*(\w+)\(/);
+        if (cambio && !/^set[A-Z]/.test(cambio[1])) culpables.push(`${ruta}: ${cambio[1]}`);
+      }
+    }
+    expect(culpables).toEqual([]);
+  });
+});
+
 describe("Mi cuenta recibe todo lo que sabe mostrar", () => {
   // La v45 salió con el botón "Diseño app" invisible: VistaAnfitrion
   // mandaba `mostrarDiseno` a la Portada, y la Portada no se lo pasaba a

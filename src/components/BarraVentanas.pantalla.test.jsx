@@ -94,3 +94,24 @@ describe("el cuadradito de Equipo", () => {
     vista.desmontar();
   });
 });
+
+// v74.5 (él): «el sello y el botón son para verlos al abrir; con una ventana
+// abierta no son útiles, y ella tiene que poder agrandarse».
+describe("las capas", () => {
+  it("con Equipo solo, la barra va debajo de las ventanas flotantes y no les quita sitio", async () => {
+    const { Z_INICIO } = await import("./BarraVentanas");
+    const { vista, boton } = dibujar({ abiertas: [], delante: "inicio", onEquipo: () => {} });
+    const barra = boton("Equipo").closest(".fixed");
+    expect(Number(barra.style.zIndex)).toBe(Z_INICIO);
+    expect(document.documentElement.style.getPropertyValue("--hueco-barra-ventanas")).toBe("");
+    vista.desmontar();
+  });
+
+  it("con ventanas de la barra abiertas (el móvil), va por encima y deja su hueco", async () => {
+    const { Z_BARRA } = await import("./BarraVentanas");
+    const { vista, boton } = dibujar({ onEquipo: () => {} });
+    expect(Number(boton("Equipo").closest(".fixed").style.zIndex)).toBe(Z_BARRA);
+    expect(document.documentElement.style.getPropertyValue("--hueco-barra-ventanas")).toBe(`${ALTO_BARRA}px`);
+    vista.desmontar();
+  });
+});

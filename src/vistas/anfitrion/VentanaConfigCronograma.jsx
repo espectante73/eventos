@@ -35,6 +35,7 @@ import { resolverColaborador } from "../../lib/invitados";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar } from "../../components/PreguntaSeguridad";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
+import { TextInputEnVentanaAparte } from "../../components/Formulario";
 
 // Todas las horas del día en pasos de 5 minutos, en un único <select> --
 // a petición del usuario ("un único reloj, no dos relojes distintos").
@@ -285,11 +286,14 @@ export function VentanaConfigCronograma({ data, ventana }) {
           rebautizarlo. */}
       {bloqueActual && (
         <div className="flex items-center gap-2 mb-4">
-          <input
+          {/* En su ventana aparte, y el valor vive en la principal: con un
+              campo normal se comía la tilde («Acomodaci´ón», él, v74.5). */}
+          <TextInputEnVentanaAparte
             value={bloqueActual.texto || ""}
-            onChange={(e) => cambiarBloque(seleccionado, "texto", e.target.value)}
+            onCambio={(texto) => cambiarBloque(seleccionado, "texto", texto)}
             placeholder="Nombre del bloque"
-            style={{ ...inputStyle, height: 42, width: "100%" }}
+            aria-label="Nombre del bloque"
+            style={{ height: 42, width: "100%" }}
           />
           <select
             value={DURACIONES.includes(Number(bloqueActual.duracionMin)) ? Number(bloqueActual.duracionMin) : ""}
