@@ -40,8 +40,8 @@ import {
 // «Sin mesa», que en el móvil va arriba, a todo lo ancho.
 const ANCHO_COLUMNA = 224;
 // El recuadro de una mesa llena (él: «un recuadro más grueso alrededor…
-// que sea visual»). Está siempre, transparente, para que llenarse no la
-// mueva de sitio.
+// que sea visual»), y desde la v74.8 relleno del mismo color. Está
+// siempre, transparente, para que llenarse no la mueva de sitio.
 const GROSOR_RECUADRO = 3;
 
 function Familia({ familia, cogida, onCoger }) {
@@ -84,8 +84,9 @@ function Familia({ familia, cogida, onCoger }) {
 }
 
 // Una columna donde se sueltan familias: «Sin mesa» o una mesa. `cabecera`,
-// lo de arriba; `marco`, el color del recuadro (transparente: sin él).
-function Columna({ nombre, cabecera, marco = "transparent", familias, cogida, onCoger, onSoltar }) {
+// lo de arriba; `llena`, el color de la mesa llena: recuadro y relleno
+// sólido (él, v74.8: «el recuadro no es suficiente»).
+function Columna({ nombre, cabecera, llena, familias, cogida, onCoger, onSoltar }) {
   const [encima, setEncima] = useState(false);
   return (
     <div
@@ -109,8 +110,8 @@ function Columna({ nombre, cabecera, marco = "transparent", familias, cogida, on
       className="p-1.5"
       style={{
         borderRadius: R.caja,
-        border: `${GROSOR_RECUADRO}px solid ${marco}`,
-        background: encima || cogida ? C.paperDark : "transparent",
+        border: `${GROSOR_RECUADRO}px solid ${llena || "transparent"}`,
+        background: llena || (encima || cogida ? C.paperDark : "transparent"),
         cursor: cogida ? "pointer" : undefined,
       }}
     >
@@ -237,7 +238,9 @@ export function VentanaMesas({ data, borrador, setBorrador, onCerrar, fijo }) {
             onClick={() => quitarMesa(m.numero)}
           />
         </div>
-        <div className="flex items-baseline justify-center gap-2 font-semibold mt-1">
+        {/* Una línea dorada fina entre los dos, sin llegar al borde (él, v74.8). */}
+        <div className="mx-2 my-1.5" style={{ borderTop: `1px solid ${C.gold}` }} />
+        <div className="flex items-baseline justify-center gap-2 font-semibold">
           Mesa {m.numero}
           <span className="px-1 rounded" style={{ ...CIFRA, ...(ocupados > m.capacidad ? { background: C.peligro, color: C.blanco } : {}) }}>
             {ocupados}/{m.capacidad}
@@ -336,7 +339,7 @@ export function VentanaMesas({ data, borrador, setBorrador, onCerrar, fijo }) {
                     key={m.numero}
                     nombre={`Mesa ${m.numero}`}
                     cabecera={cabeceraMesa(m, ocupados)}
-                    marco={ocupados > m.capacidad ? C.peligro : ocupados === m.capacidad ? C.gold : "transparent"}
+                    llena={ocupados > m.capacidad ? C.peligro : ocupados === m.capacidad ? C.gold : null}
                     familias={familias.filter((f) => f.mesa === m.numero).sort(porNombre)}
                     cogida={cogida}
                     onCoger={coger}

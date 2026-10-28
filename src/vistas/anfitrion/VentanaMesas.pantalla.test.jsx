@@ -145,11 +145,13 @@ it("− / + cambia los sitios de la mesa al momento, y no baja de los que ya se 
   vista.desmontar();
 });
 
-it("llena, la mesa lleva un recuadro grueso alrededor; con sitio, no", () => {
+it("llena, la mesa lleva un recuadro grueso y relleno del mismo color; con sitio, no", () => {
   const { vista, columna } = dibujar({ conMesas: mesa6Llena });
   const recuadro = (n) => columna(`Mesa ${n}`).style.border;
   expect(recuadro(6)).not.toContain("transparent");
+  expect(recuadro(6)).toContain(columna("Mesa 6").style.background);
   expect(recuadro(7)).toContain("transparent");
+  expect(columna("Mesa 7").style.background).toBe("transparent");
   vista.desmontar();
 });
 

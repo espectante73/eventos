@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "74.8",
+    cambios: [
+      "Acomodación: en la cabecera de cada mesa, una línea dorada fina separa los controles de «Mesa 3 · 5/9».",
+      "Una mesa llena ya no lleva solo el recuadro: va rellena entera del mismo dorado, y en rojo si se pasa de sitios. Se ve de un vistazo.",
+    ],
+  },
+  {
     version: "74.7",
     cambios: [
       "En «Abrir sección…», «Mesas y acomodación» se llama ahora «Acomodación»: el nombre largo se salía del botón. Va la primera, por orden alfabético, y «Mi cuenta» queda entre Invitados y Multimedia. Una prueba vigila que ningún nombre del menú vuelva a salirse.",
