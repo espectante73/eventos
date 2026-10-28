@@ -56,6 +56,10 @@ export function Seal({ count, size = 22, late = false }) {
 // VistaColaborador).
 // Un circulito de color (él, v75.2: quién ha entrado al tablón, verde o
 // rojo). Uno solo para la fila de la Lista y para su recuento de arriba.
+// Con un aro blanco (él, v75.4: «que se distinga bien su color»): sobre el
+// verde de la cabecera, el rojo casi no se veía. En las filas, claras, el
+// aro apenas se nota y el círculo de color sigue midiendo lo mismo (8 px).
+const ARO_CIRCULITO = 2;
 export function Circulito({ color, titulo }) {
   return (
     <span
@@ -63,8 +67,8 @@ export function Circulito({ color, titulo }) {
       aria-label={titulo}
       aria-hidden={titulo ? undefined : true}
       title={titulo}
-      className="inline-block flex-shrink-0"
-      style={{ width: 8, height: 8, borderRadius: R.redondo, background: color }}
+      className="inline-block flex-shrink-0 align-middle"
+      style={{ width: 8 + 2 * ARO_CIRCULITO, height: 8 + 2 * ARO_CIRCULITO, borderRadius: R.redondo, background: color, border: `${ARO_CIRCULITO}px solid ${C.blanco}` }}
     />
   );
 }
@@ -73,9 +77,10 @@ export function Circulito({ color, titulo }) {
 // Confirmados…; Aniversarios: Matrimonios, Aniversario, Faltan). Una sola
 // pieza para las dos (v71.4). `cifras`: [{ label, value, alerta, punto,
 // titulo }]; con `alerta`, la cifra en rojo; con `punto`, un Circulito de
-// ese color delante de la cifra y, si no lleva `label`, solo eso (el
-// tablón, él, v75.3: «muy simplificado»); `titulo`, lo que dice al pasar
-// por encima.
+// ese color EN LUGAR del rótulo, arriba (el tablón, él, v75.3: «muy
+// simplificado», y v75.4: «el puntito arriba, como si fuera las letras»,
+// para que el recuadro mida lo mismo que los demás); `titulo`, lo que dice
+// al pasar por encima.
 export function RecuadroCifras({ cifras }) {
   return (
     // Del ancho de sus cifras, sin partir los rótulos: si en la cabecera no
@@ -83,23 +88,30 @@ export function RecuadroCifras({ cifras }) {
     <div className="flex items-center gap-3 rounded px-2 py-1 w-max flex-shrink-0" style={{ border: `1px solid ${C.gold}` }}>
       {cifras.map((s) => (
         <div key={s.label || s.titulo} className="text-center" title={s.titulo}>
-          {s.label && (
-            <div
-              className="text-[10px] uppercase whitespace-nowrap"
-              style={{ color: C.goldClaro, opacity: OP.secundario, fontFamily: "'IBM Plex Mono', monospace" }}
-            >
-              {s.label}
-            </div>
-          )}
           <div
-            className="text-sm font-bold rounded px-2 mt-0.5 inline-flex items-center gap-1.5"
+            className="text-[10px] uppercase whitespace-nowrap"
+            // El rótulo, tenue; el puntito, con su color pleno, como en las filas.
+            style={{ color: C.goldClaro, opacity: s.punto ? 1 : OP.secundario, fontFamily: "'IBM Plex Mono', monospace" }}
+          >
+            {/* El espacio de ancho cero da al puntito el alto de una línea
+                de rótulo: así el recuadro mide lo mismo que los demás. */}
+            {s.punto ? (
+              <>
+                <Circulito color={s.punto} titulo={s.titulo} />
+                {"\u200b"}
+              </>
+            ) : (
+              s.label
+            )}
+          </div>
+          <div
+            className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
             style={{
               background: s.alerta ? C.avisoFondo : conAlfa(C.paper, 0.92),
               color: s.alerta ? C.peligro : C.ink,
               fontFamily: "'Fraunces', serif",
             }}
           >
-            {s.punto && <Circulito color={s.punto} titulo={s.titulo} />}
             {s.value}
           </div>
         </div>

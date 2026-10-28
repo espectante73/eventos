@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "75.4",
+    cambios: [
+      "Lista de invitados: en la cabecera, el puntito verde y el rojo van arriba, donde los demás recuadros llevan su rótulo, y la cifra debajo; así el recuadro mide lo mismo que los otros. Y los puntitos llevan un aro blanco: sobre el verde, el rojo casi no se veía.",
+    ],
+  },
+  {
     version: "75.3",
     cambios: [
       "Lista de invitados: arriba, junto a las demás cifras, el circulito verde con cuántos han entrado al tablón y el rojo con cuántos no, sin más. Cuenta lo mismo que los circulitos de las filas.",
