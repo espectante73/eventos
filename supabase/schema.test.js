@@ -637,3 +637,15 @@ describe("el aviso al colaborador: solo los nuevos de verdad", () => {
     expect(cuerpoDe("anfitrion_resetear_por_invitados").match(/"avisadoA" = null/g)).toHaveLength(3);
   });
 });
+
+// v75.2 (él): el circulito del tablón en la Lista.
+describe("quién ha entrado al tablón", () => {
+  it("solo con la llave del anfitrión, y solo desde que la puerta pide el año", () => {
+    const f = cuerpoDe("anfitrion_entradas_tablon");
+    expect(f).toContain(`p_token = (select "token" from anfitrion_secreto limit 1)`);
+    expect(f).toContain(`where "nombre" = 'v70-tablon-anio'`);
+    // Reconoce a cada uno como la puerta: apellido y nombre, sin el año.
+    expect(f).toContain("normalizar_nombre_tablon(");
+    expect(f).not.toContain("anioNacimiento");
+  });
+});

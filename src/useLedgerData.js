@@ -138,6 +138,10 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
   // distinto -- señal de alarma (ver schema.sql, 2026-08-29), nunca
   // bloquea a nadie. Solo lo carga el anfitrión.
   const [accesosTablonSospechosos, setAccesosTablonSospechosos] = useState([]);
+  // Quién ha entrado al tablón, { idInvitado: última entrada } (él, v75.2:
+  // el circulito de la Lista). null hasta que llega: la Lista no pinta
+  // ningún circulito antes de saberlo.
+  const [entradasTablon, setEntradasTablon] = useState(null);
 
   // ---------- Lo que solo usa una ventana (él, v72.3) ----------
   // Cuentas (los gastos), Colaboradores (el historial de avisos) y Novedades
@@ -190,6 +194,12 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
         // comprueba contra los invitados confirmados, schema.sql 2026-08-29).
         setPreguntaTablon(pregunta || "");
         setAccesosTablonSospechosos(accesos || []);
+      } else if (nombre === "entradasTablon") {
+        // «Best effort» y sin aviso: sin el SQL de la v75.2 (o si falla),
+        // la Lista sale como antes, sin circulitos.
+        const { data, error } = await supabase.rpc("anfitrion_entradas_tablon", p);
+        if (error) return;
+        setEntradasTablon(Object.fromEntries((data || []).map((e) => [e.invitadoId, e.ultimaEntrada])));
       }
       setSeccionesCargadas((s) => (s[nombre] ? s : { ...s, [nombre]: true }));
     },
@@ -1509,6 +1519,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     preguntaTablon,
     persistPreguntaTablon,
     accesosTablonSospechosos,
+    entradasTablon,
     obtenerHistorialTexto,
     obtenerFotosFiesta,
     obtenerFamilia,

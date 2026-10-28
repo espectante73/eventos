@@ -27,7 +27,7 @@ import { PlanoMesas } from "../../components/PlanoMesas";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { cuentaConfirmacion } from "../../lib/invitados";
-import { nombreCompleto, fechaCorta, horaCorta } from "../../lib/formato";
+import { nombreCompleto, fechaYHora } from "../../lib/formato";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import {
   conBorrador,
@@ -150,9 +150,6 @@ function Columna({ nombre, cabecera, llena, familias, cogida, onCoger, onSoltar 
 
 const porNombre = (a, b) => a.nombre.localeCompare(b.nombre, "es");
 const CIFRA = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno };
-// «28 oct a las 10:15», en la hora de quien mira («sv-SE» da el día local
-// como AAAA-MM-DD, lo que espera fechaCorta).
-const cuandoSeGuardo = (iso) => `${fechaCorta(new Date(iso).toLocaleDateString("sv-SE"))} a las ${horaCorta(iso)}`;
 
 export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   const { invitados, evento, persistInvitados, persistMesas, persistEvento } = data;
@@ -255,7 +252,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
     if (!yaHabia) return hacer();
     preguntar({
       titulo: `¿Sustituir la Acomodación ${numero}?`,
-      texto: `Se guardó el ${cuandoSeGuardo(yaHabia.guardadaEl)}. Se cambia por lo que se ve ahora.`,
+      texto: `Se guardó el ${fechaYHora(yaHabia.guardadaEl)}. Se cambia por lo que se ve ahora.`,
       rotulo: "Sí",
       peligro: false,
       alConfirmar: hacer,

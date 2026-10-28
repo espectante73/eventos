@@ -372,3 +372,33 @@ describe("ordenar por niveles", () => {
     vista.desmontar();
   });
 });
+
+// v75.2 (él): quién ha entrado al tablón, con un circulito tras el nombre.
+describe("el circulito del tablón", () => {
+  const conEntradas = (entradasTablon) =>
+    dibujarYSoltar(
+      <SeccionInvitados
+        data={{ ...data, entradasTablon }}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante={null}
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+
+  it("verde quien entró, rojo el confirmado que no; nada a no confirmados ni menores", () => {
+    const html = conEntradas({ g1: "2026-10-27T17:40:00Z" });
+    expect(html.match(/aria-label="Entró al tablón el /g)).toHaveLength(1);
+    // Rojo: solo Omar (Míriam y Loly sin confirmar; Lucía, menor).
+    expect(html.match(/aria-label="Aún no ha entrado al tablón"/g)).toHaveLength(1);
+  });
+
+  it("mientras no han llegado las entradas, ningún circulito", () => {
+    expect(conEntradas(null)).not.toMatch(/aria-label="(Entró al tablón|Aún no ha entrado)/);
+  });
+});

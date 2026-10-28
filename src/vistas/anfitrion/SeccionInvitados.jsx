@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
-import { nombreCompleto, ordenarPorApellidoNombre } from "../../lib/formato";
+import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
@@ -62,6 +62,29 @@ import {
   quitarExcepcion as desmarcarExcepcion,
   marcarResponsable as fijarResponsable,
 } from "../../lib/edicionInvitados";
+import { estadoTablon } from "../../lib/entradasTablon";
+import { useSeccion } from "../../lib/useSeccion";
+
+// El circulito del tablón tras el nombre (él, v75.2): «estilo semáforo»,
+// verde claro si ha entrado y rojo si nunca, sin columna nueva. Quién lo
+// lleva, en lib/entradasTablon.js.
+function CirculoTablon({ estado }) {
+  if (!estado) return null;
+  const titulo = estado.entro
+    ? `Entró al tablón el ${fechaYHora(estado.cuando)}`
+    : estado.sinAnio
+      ? "Aún no ha entrado al tablón: falta su año de nacimiento, y sin él la puerta no le deja"
+      : "Aún no ha entrado al tablón";
+  return (
+    <span
+      role="img"
+      aria-label={titulo}
+      title={titulo}
+      className="flex-shrink-0 ml-1.5"
+      style={{ width: 8, height: 8, borderRadius: R.redondo, background: estado.entro ? C.enVivo : C.peligro }}
+    />
+  );
+}
 
 // Filete dorado pegado al borde izquierdo de la fila de quien, además de
 // invitado, es colaborador (él, 2026-09-24). Antes era una ★ detrás del
@@ -118,6 +141,10 @@ export function SeccionInvitados({
   fijo,
 }) {
   const { evento, persistEvento, colaboradores, invitados, mesas, persistInvitados, avisarColaborador, asistenciaEnVivo } = data;
+  // Quién ha entrado al tablón: llega al abrir la Lista (sin esperar a
+  // pintarla) y se pone al día con ella abierta.
+  useSeccion(data, "entradasTablon");
+  const { entradasTablon } = data;
 
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
   const [textoImport, setTextoImport] = useState("");
@@ -1518,6 +1545,7 @@ export function SeccionInvitados({
                         >
                           {nombreCompleto(g)}
                         </span>
+                        <CirculoTablon estado={estadoTablon(g, entradasTablon, evento)} />
                       </>
                     )}
                   </span>

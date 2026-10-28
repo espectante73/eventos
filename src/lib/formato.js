@@ -66,6 +66,15 @@ export function horaCorta(momento) {
   return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
 }
 
+// «28 oct a las 10:15», un momento guardado en la hora de quien mira (las
+// memorias de Acomodación, la última entrada al tablón). «sv-SE» da el día
+// local como AAAA-MM-DD, lo que espera fechaCorta.
+export function fechaYHora(momento) {
+  const d = new Date(momento);
+  if (!momento || Number.isNaN(d.getTime())) return "";
+  return `${fechaCorta(d.toLocaleDateString("sv-SE"))} a las ${horaCorta(momento)}`;
+}
+
 export function formatearDiaSemana(fechaISO) {
   if (!fechaISO) return "";
   const partes = fechaISO.split("-").map((p) => parseInt(p, 10));

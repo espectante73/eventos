@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "75.2",
+    cambios: [
+      "Lista de invitados: un circulito tras el nombre dice quién ha entrado al tablón, sin columna nueva. Verde claro, ha entrado; rojo, todavía no. Al pasar el ratón, cuándo fue la última vez.",
+      "Solo cuentan las entradas desde el 18 de octubre, cuando la puerta empezó a pedir también el año. Y solo llevan circulito quienes pueden entrar: confirmados, no excluidos del tablón, de 16 años cumplidos.",
+    ],
+  },
+  {
     version: "75.1",
     cambios: [
       "Acomodación: «Auto-asignar» sienta siempre a todos, también a los que aún no han confirmado (sombreados, como siempre), para contar con los posibles invitados. Los «No asiste», nunca.",

@@ -1725,6 +1725,24 @@ CREATE FUNCTION public.anfitrion_listar_accesos_tablon_sospechosos(p_token uuid)
   order by max(ta."actualizadoEn") desc;
 $$;
 
+-- Quién ha entrado al tablón (él, v75.2: el circulito de la Lista). La
+-- última entrada de cada invitado, reconocido como en la puerta (apellido
+-- y nombre, sin el año, que no se guarda). Solo desde que la puerta pide el
+-- año (v70): «solo me interesan los que han entrado desde el último
+-- cambio». La fecha sale del día en que se subió ese SQL, no escrita a mano.
+CREATE FUNCTION public.anfitrion_entradas_tablon(p_token uuid) RETURNS TABLE("invitadoId" uuid, "ultimaEntrada" timestamp with time zone)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+  select i."id", max(ta."actualizadoEn")
+  from invitados i
+  join tablon_accesos ta
+    on ta."nombreNormalizado" = normalizar_nombre_tablon(coalesce(i."apellido", '') || ' ' || coalesce(i."nombre", ''))
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+    and ta."actualizadoEn" >= (select "aplicadaEn" from migraciones_aplicadas where "nombre" = 'v70-tablon-anio')
+  group by i."id";
+$$;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
