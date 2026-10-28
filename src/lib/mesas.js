@@ -13,7 +13,7 @@
 // Se sientan los CONFIRMADOS (la mesa es sitio real para quien va a venir).
 // Quien de la familia no está confirmado todavía se queda sin mesa; al
 // confirmarlo, se sienta con los suyos (confirmarConSuFamilia). Desde la
-// v74.2, en «Repartir familias» se sienta también a quien aún no ha
+// v74.2, en «Mesas y acomodación» se sienta también a quien aún no ha
 // confirmado: su sitio queda reservado y cuenta en la mesa (seSientaEnMesa).
 
 import { nombreCompleto } from "./formato";
@@ -35,7 +35,7 @@ function nombreFamilia(g) {
 // aún no lo está pero ya tiene su sitio reservado. «No asiste» libera el
 // suyo. Una sola regla para asignar a mano, confirmar, auto-asignar, el
 // reparto por familias y las cifras de cada mesa.
-// `conSinConfirmar`: en «Repartir familias» se sientan también los que aún
+// `conSinConfirmar`: en «Mesas y acomodación» se sientan también los que aún
 // no han confirmado ni tienen sitio.
 export function seSientaEnMesa(g, conSinConfirmar = false) {
   return Boolean(g.confirmado) || (!g.noAsiste && (conSinConfirmar || g.mesa != null));
@@ -49,7 +49,7 @@ export function ocupacion(invitados, numero) {
 // Pone (o quita, con numero = null) la mesa a un invitado Y a toda su
 // familia confirmada. Devuelve { invitados, aviso }: si hay aviso, la lista
 // vuelve sin tocar y el aviso dice por qué.
-// Opciones (las usa «Repartir familias»): `comoSeLlama`, cómo nombrar a la
+// Opciones (las usa «Mesas y acomodación»): `comoSeLlama`, cómo nombrar a la
 // familia en el aviso (por su «O»: «de García, Isaias»); `conSinConfirmar`,
 // sentar también a los que aún no han confirmado (seSientaEnMesa).
 export function asignarMesaConSuFamilia(invitados, id, numero, mesas, { comoSeLlama, conSinConfirmar = false } = {}) {
@@ -126,4 +126,59 @@ export function confirmarConSuFamilia(invitados, id, mesas) {
     };
   }
   return { invitados: siguiente.map((x) => (x.id === id ? { ...x, mesa: numero } : x)), aviso: "" };
+}
+
+// Auto-asignar (antes en la ventana Mesas; desde la v74.6, una propuesta
+// dentro de la prueba de «Mesas y acomodación», que se repasa antes de
+// aplicarla). Nunca reparte una familia entre varias mesas por su cuenta:
+// si parte ya está sentada, completa el resto en esa misma mesa; si no cabe
+// entera (ahí o en cualquier otra), la deja sin mesa y lo dice en `avisos`.
+// Sienta a los confirmados; cuenta los sitios ya reservados (ocupacion).
+export function autoAsignarMesas(invitados, mesas) {
+  const nuevos = invitados.map((g) => ({ ...g }));
+  const ocupados = {};
+  mesas.forEach((m) => {
+    ocupados[m.numero] = ocupacion(nuevos, m.numero);
+  });
+
+  const grupos = {};
+  nuevos.forEach((g) => {
+    if (g.confirmado) (grupos[claveFamiliaMesa(g)] = grupos[claveFamiliaMesa(g)] || []).push(g);
+  });
+
+  const avisos = [];
+  // Las familias con más gente sin sentar van primero, para que no se queden
+  // sin hueco por culpa de familias pequeñas que se adelantaron.
+  const ordenados = Object.values(grupos).sort((a, b) => b.filter((g) => !g.mesa).length - a.filter((g) => !g.mesa).length);
+  const sentar = (sinMesa, numero) => {
+    sinMesa.forEach((g) => {
+      g.mesa = numero;
+    });
+    ocupados[numero] = (ocupados[numero] || 0) + sinMesa.length;
+  };
+  const personas = (n) => `${n} persona${n !== 1 ? "s" : ""}`;
+
+  ordenados.forEach((grupo) => {
+    const sinMesa = grupo.filter((g) => !g.mesa);
+    if (sinMesa.length === 0) return;
+    const familia = nombreFamilia(grupo[0]);
+    const usadas = [...new Set(grupo.filter((g) => g.mesa).map((g) => g.mesa))];
+
+    if (usadas.length > 1) {
+      avisos.push({ familia, motivo: `ya está repartida a mano entre las mesas ${usadas.join(", ")}: revísalo si no era a propósito` });
+      return;
+    }
+    const suya = usadas.length === 1 ? mesas.find((m) => m.numero === usadas[0]) : null;
+    if (suya) {
+      const hueco = suya.capacidad - (ocupados[suya.numero] || 0);
+      if (hueco >= sinMesa.length) sentar(sinMesa, suya.numero);
+      else avisos.push({ familia, motivo: `no caben ${personas(sinMesa.length)} más en la mesa ${suya.numero} (solo ${Math.max(hueco, 0)} libres): se quedan sin mesa` });
+      return;
+    }
+    const libre = mesas.find((m) => m.capacidad - (ocupados[m.numero] || 0) >= sinMesa.length);
+    if (libre) sentar(sinMesa, libre.numero);
+    else avisos.push({ familia, motivo: `ninguna mesa tiene ${sinMesa.length} sitio${sinMesa.length !== 1 ? "s" : ""} libres juntos: se queda sin mesa` });
+  });
+
+  return { invitados: nuevos, avisos };
 }

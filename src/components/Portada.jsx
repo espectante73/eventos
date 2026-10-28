@@ -101,6 +101,7 @@ export function Portada({
   // encontrarse rápido esa noche (decidido con el usuario, 2026-08-30).
   abrirMusicaEvento,
   abrirInvitados,
+  abrirMesas,
   // `botonExtra`: para cuando esta Portada la usa alguien que NO es el
   // anfitrión editando (p.ej. VistaColaborador.jsx) -- en vez del
   // desplegable "Abrir sección…" (editable+toggle), se puede pasar aquí
@@ -212,6 +213,7 @@ export function Portada({
             abrirCronograma={abrirCronograma}
             abrirMusicaEvento={abrirMusicaEvento}
             abrirInvitados={abrirInvitados}
+            abrirMesas={abrirMesas}
             abrirMiCuenta={onCerrarSesion ? () => setMiCuentaAbierta(true) : null}
             sello={sello}
             miColaboradorId={miColaboradorId}

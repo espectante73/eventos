@@ -19,7 +19,7 @@ it("anfitrión: «Mi cuenta» está en «Abrir sección…», entre Mesas y Mult
   const nombres = botones().map((b) => b.textContent.trim());
   const i = nombres.findIndex((n) => n.endsWith("Mi cuenta"));
   expect(i).toBeGreaterThan(-1);
-  expect(nombres[i - 1]).toMatch(/Mesas$/);
+  expect(nombres[i - 1]).toMatch(/Mesas y acomodación$/);
   expect(nombres[i + 1]).toMatch(/Multimedia$/);
   vista.pulsar(botones()[i]);
   expect(document.body.textContent).toContain("Cerrar sesión");

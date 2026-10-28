@@ -209,7 +209,7 @@ describe("las tildes en las ventanas que se abren aparte", () => {
     "src/vistas/anfitrion/VentanaConfigCronograma.jsx",
     "src/vistas/anfitrion/VentanaNovedades.jsx",
     "src/vistas/anfitrion/SeccionInvitados.jsx",
-    "src/vistas/anfitrion/VentanaRepartoMesas.jsx",
+    "src/vistas/anfitrion/VentanaMesas.jsx",
     "src/vistas/anfitrion/VentanaMarcador.jsx",
   ];
   it("ningún campo de texto guarda directamente fuera de su ventana", () => {
@@ -338,7 +338,6 @@ describe("cada pantalla tiene una prueba que la dibuja", () => {
     "VentanaConfigZonaPeligro",
     "VentanaConfigZonaReinicio",
     "VentanaInvitaciones",
-    "VentanaMesas",
     "VentanaPermisos",
     "VentanaVersiones",
   ];

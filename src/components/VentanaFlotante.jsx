@@ -125,7 +125,7 @@ export const ETIQUETAS_VENTANAS = {
   aniversarios: "Aniversarios",
   progreso: "Progreso",
   colaboradores: "Colaboradores",
-  mesas: "Mesas",
+  mesas: "Mesas y acomodación",
   invitaciones: "Invitaciones",
   invitados: "Invitados",
   // "Contabilidad" (antes "Cuentas"): se confundía con "Mi cuenta" (él, v51.3).

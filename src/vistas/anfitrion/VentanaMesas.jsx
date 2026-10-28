@@ -1,259 +1,379 @@
-// Ventana "Mesas": lista de mesas redondas, añadir/eliminar, cambiar
-// capacidad, vaciar, y auto-asignación preliminar (respetando el grupo
-// familiar) con su aviso de familias que se quedaron sin mesa. Extraída
-// de VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4, Ronda 3).
+// «Mesas y acomodación» (él, v74.6): la ventana Mesas y la de «Repartir
+// familias», en una sola. En su ventana propia («que ocupe la pantalla y
+// verlo en grande»; en el Mac, una ventana del sistema, como la Lista). A
+// la izquierda, «Sin mesa»; a la derecha, una columna por mesa. Arriba de
+// cada mesa, sus controles (− / + sitios, alergias, Vaciar, quitarla) y
+// debajo «Mesa 3 · 5/9»; llena, un recuadro grueso alrededor. Cada familia,
+// con el nombre de su «O» y cuántos son; se arrastra a otra columna o, en
+// el móvil, se toca la familia y luego la mesa. Una familia no entra donde
+// no cabe: se queda donde estaba y se dice cuántos sitios quedan.
 //
-// `ocupacionMesa` no vive aquí: se sigue definiendo en VistaAnfitrion
-// porque el Plano de mesas y la tabla principal de invitados también la
-// usan. `panelFlotante`/`setPanelFlotante` tampoco son de aquí en
-// exclusiva -son el mismo interruptor compartido con los paneles
-// "tabla"/"canciones"/"alergias"-, así que llegan como props en vez de
-// definirse dentro.
+// Qué se guarda y cuándo: las mesas y sus sitios, AL MOMENTO (son el
+// mobiliario); sentar, Vaciar y Auto-asignar, en la PRUEBA, que vive en
+// VistaAnfitrion (sobrevive a cerrar la ventana) y no toca la Lista hasta
+// «Aplicar a la Lista». «Plano de mesas» (él), un botón que lo abre aquí.
 import { useState } from "react";
-import { AlertTriangle, Plus, Map, Users } from "lucide-react";
-import { C, OP } from "../../theme";
-import { tieneAlergiaReal } from "../../lib/invitados";
-import { MesaRedonda } from "../../components/Mesas";
-import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
-import { SeccionPlegable } from "../../components/SeccionPlegable";
-import { PlanoMesas } from "../../components/PlanoMesas";
+import { Check, AlertTriangle, Plus, Minus, Map as IconoPlano } from "lucide-react";
+import { C, OP, R, T } from "../../theme";
+import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
-import { claveFamiliaMesa, ocupacion as ocupacionDeMesa } from "../../lib/mesas";
+import { LineaAviso } from "../../components/LineaAviso";
+import { RecuadroCifras } from "../../components/Widgets";
+import { PlanoMesas } from "../../components/PlanoMesas";
+import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
+import { cuentaConfirmacion, tieneAlergiaReal } from "../../lib/invitados";
+import { seSientaEnMesa } from "../../lib/mesas";
+import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
+import {
+  conBorrador,
+  borradorDesde,
+  familiasParaRepartir,
+  moverFamilia,
+  vaciarMesaEnBorrador,
+  autoAsignarEnBorrador,
+  aplicarBorrador,
+  familiasQueCambian,
+  ocupacion,
+} from "../../lib/repartoMesas";
 
-export function VentanaMesas({ data, ocupacionMesa, panelFlotante, setPanelFlotante, onRepartir, onCerrar }) {
-  const { mesas, invitados, persistMesas, persistInvitados } = data;
-  const [avisosMesas, setAvisosMesas] = useState([]);
+// El ancho de una columna, una sola vez (norma 6): 224 px = `sm:w-56` de
+// «Sin mesa», que en el móvil va arriba, a todo lo ancho.
+const ANCHO_COLUMNA = 224;
+// El recuadro de una mesa llena (él: «un recuadro más grueso alrededor…
+// que sea visual»). Está siempre, transparente, para que llenarse no la
+// mueva de sitio.
+const GROSOR_RECUADRO = 3;
 
-  const cambiarCapacidadMesa = (numero, capacidad) => {
-    persistMesas(
-      mesas.map((m) => (m.numero === numero ? { ...m, capacidad: Number(capacidad) || 0 } : m))
-    );
+function Familia({ familia, cogida, onCoger }) {
+  // Sin confirmar todavía: sombreada hasta que confirmen (él, v74.2); su
+  // sitio, reservado. Con parte sin confirmar: «2+1».
+  const nadieConfirmado = familia.sinConfirmar === familia.cuantos;
+  const cifra = familia.sinConfirmar && !nadieConfirmado ? `${familia.cuantos - familia.sinConfirmar}+${familia.sinConfirmar}` : familia.cuantos;
+  return (
+    <button
+      type="button"
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("text/plain", familia.representante.id);
+        e.dataTransfer.effectAllowed = "move";
+      }}
+      onClick={() => onCoger(familia.representante.id)}
+      data-familia={familia.nombre}
+      aria-pressed={cogida}
+      className="boton-3d w-full flex items-center justify-between gap-2 rounded px-3 py-1.5 mb-1.5 text-sm text-left"
+      // Con los colores de la mesa invertidos (él, v74.1): dorado con letra
+      // verde, para no confundir una familia con la cabecera de una mesa.
+      // Cogida (en el móvil), con el borde verde.
+      style={{
+        background: C.goldClaro,
+        color: C.ink,
+        border: `2px ${nadieConfirmado ? "dashed" : "solid"} ${cogida ? C.ink : C.gold}`,
+        opacity: nadieConfirmado && !cogida ? OP.tenue : 1,
+        cursor: "grab",
+      }}
+      title={
+        familia.sinConfirmar
+          ? `${familia.sinConfirmar === 1 ? "1 sin confirmar" : `${familia.sinConfirmar} sin confirmar`}: su sitio queda reservado. Arrástrala a otra mesa, o tócala y luego toca la mesa`
+          : "Arrástrala a otra mesa, o tócala y luego toca la mesa"
+      }
+    >
+      <span className="truncate">{familia.nombre}</span>
+      <b style={{ fontFamily: "'Fraunces', serif" }}>{cifra}</b>
+    </button>
+  );
+}
+
+// Una columna donde se sueltan familias: «Sin mesa» o una mesa. `cabecera`,
+// lo de arriba; `marco`, el color del recuadro (transparente: sin él).
+function Columna({ nombre, cabecera, marco = "transparent", familias, cogida, onCoger, onSoltar }) {
+  const [encima, setEncima] = useState(false);
+  return (
+    <div
+      data-columna={nombre}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setEncima(true);
+      }}
+      onDragLeave={() => setEncima(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setEncima(false);
+        const id = e.dataTransfer.getData("text/plain");
+        if (id) onSoltar(id);
+      }}
+      // Con una familia cogida (el móvil), tocar la columna la deja aquí;
+      // tocar los controles de la mesa, no.
+      onClick={(e) => {
+        if (cogida && !e.target.closest("[data-familia], [data-controles]")) onSoltar(cogida);
+      }}
+      className="p-1.5"
+      style={{
+        borderRadius: R.caja,
+        border: `${GROSOR_RECUADRO}px solid ${marco}`,
+        background: encima || cogida ? C.paperDark : "transparent",
+        cursor: cogida ? "pointer" : undefined,
+      }}
+    >
+      {cabecera}
+      {familias.map((f) => (
+        <Familia key={f.clave} familia={f} cogida={cogida === f.representante.id} onCoger={onCoger} />
+      ))}
+    </div>
+  );
+}
+
+const porNombre = (a, b) => a.nombre.localeCompare(b.nombre, "es");
+const CIFRA = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno };
+
+export function VentanaMesas({ data, borrador, setBorrador, onCerrar, fijo }) {
+  const { invitados, mesas, persistInvitados, persistMesas } = data;
+  const [cogida, setCogida] = useState(null);
+  const [aviso, setAviso] = useState("");
+  const [avisosAuto, setAvisosAuto] = useState([]);
+  const [guardado, setGuardado] = useState("");
+  const [verPlano, setVerPlano] = useState(false);
+  // Los no confirmados salen SIEMPRE, sombreados hasta que confirmen, y se
+  // sientan como los demás (él, v74.2: «para cuadrar con tiempo»). Su
+  // sitio queda reservado y cuenta en la mesa; «No asiste» lo libera.
+  const conSinConfirmar = true;
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
+
+  const vista = conBorrador(invitados, borrador);
+  const confirmacion = cuentaConfirmacion(invitados);
+  const familias = familiasParaRepartir(vista, { conSinConfirmar });
+  const sinMesa = familias.filter((f) => f.mesa == null).sort(porNombre);
+  const cambian = familiasQueCambian(invitados, borrador);
+  const ordenadas = [...mesas].sort((a, b) => a.numero - b.numero);
+
+  const limpiarAvisos = () => {
+    setAviso("");
+    setAvisosAuto([]);
+    setGuardado("");
   };
 
+  // ---------- La prueba ----------
+  const soltar = (idRepresentante, numero) => {
+    setCogida(null);
+    limpiarAvisos();
+    const { borrador: siguiente, aviso: motivo } = moverFamilia(invitados, borrador, idRepresentante, numero, mesas, { conSinConfirmar });
+    setAviso(motivo);
+    if (!motivo) setBorrador(siguiente);
+  };
+  const coger = (id) => {
+    setAviso("");
+    setCogida((actual) => (actual === id ? null : id));
+  };
+  // Vaciar va a la prueba: no pregunta, se deshace con «Descartar».
+  const vaciar = (numero) => {
+    limpiarAvisos();
+    setBorrador(vaciarMesaEnBorrador(invitados, borrador, numero));
+  };
+  const autoAsignar = () => {
+    limpiarAvisos();
+    const { borrador: siguiente, avisos } = autoAsignarEnBorrador(invitados, borrador, mesas);
+    setBorrador(siguiente);
+    setAvisosAuto(avisos);
+  };
+  // Al aplicar, la prueba pasa a la Lista y los botones se apagan: se dice
+  // aquí que está guardado (norma 9), o parecería que no ha hecho nada.
+  const aplicar = () => {
+    persistInvitados(aplicarBorrador(invitados, borrador));
+    limpiarAvisos();
+    setGuardado(`Guardado en la Lista: ${cambian === 1 ? "1 familia cambia" : `${cambian} familias cambian`} de mesa.`);
+    setBorrador({});
+  };
+  const descartar = () => preguntar({ ...PREGUNTA_DESCARTAR, peligro: false, alConfirmar: () => setBorrador({}) });
+
+  // ---------- Las mesas: al momento ----------
   const anadirMesa = () => {
     const siguiente = mesas.reduce((max, m) => Math.max(max, m.numero), 0) + 1;
     persistMesas([...mesas, { numero: siguiente, capacidad: 10 }]);
   };
-
-  const eliminarMesa = (numero) => {
-    const afectados = invitados.filter((g) => g.mesa === numero);
-    // La pregunta ya la ha hecho el botón (BotonQuitar, en Mesas.jsx).
-    if (afectados.length > 0) {
-      persistInvitados(
-        invitados.map((g) => (g.mesa === numero ? { ...g, mesa: null } : g))
-      );
-    }
+  const cambiarSitios = (numero, capacidad) => persistMesas(mesas.map((m) => (m.numero === numero ? { ...m, capacidad } : m)));
+  // Quien estaba en ella se queda sin mesa, en la Lista y en la prueba; no
+  // se borra a nadie.
+  const quitarMesa = (numero) => {
+    const sinEsaMesa = (lista) => lista.map((g) => (g.mesa === numero ? { ...g, mesa: null } : g));
+    const lista = sinEsaMesa(invitados);
+    if (invitados.some((g) => g.mesa === numero)) persistInvitados(lista);
     persistMesas(mesas.filter((m) => m.numero !== numero));
+    setBorrador(borradorDesde(lista, sinEsaMesa(conBorrador(lista, borrador))));
   };
 
-  const vaciarMesa = (numero) => {
-    const afectados = invitados.filter((g) => g.mesa === numero);
-    if (afectados.length === 0) return;
-    // La pregunta ya la ha hecho el botón "Vaciar mesa" (Mesas.jsx).
-    persistInvitados(invitados.map((g) => (g.mesa === numero ? { ...g, mesa: null } : g)));
-  };
-
-  // Auto-asignación de mesas: nunca reparte un grupo familiar entre varias
-  // mesas por su cuenta. Si parte del grupo ya está sentada a mano, intenta
-  // completar el resto en esa misma mesa; si no cabe entero (ahí o en
-  // cualquier otra), no toca nada y genera un aviso para que el Anfitrión lo
-  // resuelva a mano (subiendo capacidad, moviendo gente, etc.).
-  const autoAsignarMesas = () => {
-    const nuevos = invitados.map((g) => ({ ...g }));
-    const ocupacion = {};
-    mesas.forEach((m) => {
-      // La misma cuenta que al asignar a mano: con los sitios reservados.
-      ocupacion[m.numero] = ocupacionDeMesa(nuevos, m.numero);
-    });
-
-    const gruposMap = {};
-    nuevos.forEach((g) => {
-      if (g.confirmado) {
-        // La misma "familia" que al asignar a mano (lib/mesas.js).
-        const key = claveFamiliaMesa(g);
-        (gruposMap[key] = gruposMap[key] || []).push(g);
-      }
-    });
-
-    const avisos = [];
-
-    // Los grupos con más gente sin sentar van primero, para que no se queden
-    // sin hueco por culpa de familias pequeñas que se adelantaron.
-    const gruposOrdenados = Object.values(gruposMap).sort(
-      (a, b) => b.filter((g) => !g.mesa).length - a.filter((g) => !g.mesa).length
+  const cabeceraMesa = (m, ocupados) => {
+    const alergias = vista.some((g) => g.mesa === m.numero && seSientaEnMesa(g) && tieneAlergiaReal(g));
+    return (
+      <div className="rounded px-2 py-1.5 mb-2" style={{ background: C.ink, color: C.goldClaro }}>
+        {/* Arriba, los controles (él, v74.6); debajo, «Mesa 3 · 5/9». */}
+        <div data-controles className="flex items-center justify-between gap-1">
+          <span className="flex items-center gap-1" title={`${m.capacidad} sitios`}>
+            <Boton
+              variante="secundario"
+              oscuro
+              tamano="pequeno"
+              icono={Minus}
+              titulo={m.capacidad <= ocupados ? "Está llena: saca antes a alguien" : "Un sitio menos"}
+              disabled={m.capacidad <= Math.max(ocupados, 1)}
+              onClick={() => cambiarSitios(m.numero, m.capacidad - 1)}
+            />
+            <span style={CIFRA}>{m.capacidad}</span>
+            <Boton variante="secundario" oscuro tamano="pequeno" icono={Plus} titulo="Un sitio más" onClick={() => cambiarSitios(m.numero, m.capacidad + 1)} />
+          </span>
+          {alergias && (
+            <span title="Hay alergias en esta mesa" aria-label="Hay alergias en esta mesa" style={{ color: C.avisoFondo }}>
+              <AlertTriangle size={16} aria-hidden />
+            </span>
+          )}
+          <Boton variante="secundario" oscuro tamano="pequeno" titulo="Deja sus familias sin mesa, en la prueba" disabled={ocupados === 0} onClick={() => vaciar(m.numero)}>
+            Vaciar
+          </Boton>
+          <BotonQuitar
+            titulo="Quitar esta mesa"
+            pregunta={{
+              titulo: `¿Quitar la mesa ${m.numero}?`,
+              texto: ocupados > 0 ? `Tiene ${ocupados} invitado${ocupados !== 1 ? "s" : ""}: volverán a quedar sin mesa. No se borra a nadie.` : "Está vacía.",
+              rotulo: "Sí",
+            }}
+            onClick={() => quitarMesa(m.numero)}
+          />
+        </div>
+        <div className="flex items-baseline justify-center gap-2 font-semibold mt-1">
+          Mesa {m.numero}
+          <span className="px-1 rounded" style={{ ...CIFRA, ...(ocupados > m.capacidad ? { background: C.peligro, color: C.blanco } : {}) }}>
+            {ocupados}/{m.capacidad}
+          </span>
+        </div>
+      </div>
     );
-
-    gruposOrdenados.forEach((grupo) => {
-      const sinMesa = grupo.filter((g) => !g.mesa);
-      if (sinMesa.length === 0) return;
-
-      const nombreGrupo = grupo[0].grupoFamiliar || grupo[0].apellido || "(sin nombre)";
-      const mesasYaUsadas = [...new Set(grupo.filter((g) => g.mesa).map((g) => g.mesa))];
-
-      if (mesasYaUsadas.length > 1) {
-        avisos.push({
-          grupo: nombreGrupo,
-          motivo: `ya está repartida a mano entre las mesas ${mesasYaUsadas.join(
-            ", "
-          )} — revísalo si no era intencional`,
-        });
-        return;
-      }
-
-      const mesaObjetivo =
-        mesasYaUsadas.length === 1 ? mesas.find((m) => m.numero === mesasYaUsadas[0]) : null;
-
-      if (mesaObjetivo) {
-        const hueco = mesaObjetivo.capacidad - (ocupacion[mesaObjetivo.numero] || 0);
-        if (hueco >= sinMesa.length) {
-          sinMesa.forEach((g) => {
-            g.mesa = mesaObjetivo.numero;
-          });
-          ocupacion[mesaObjetivo.numero] = (ocupacion[mesaObjetivo.numero] || 0) + sinMesa.length;
-        } else {
-          avisos.push({
-            grupo: nombreGrupo,
-            motivo: `no caben ${sinMesa.length} persona${
-              sinMesa.length !== 1 ? "s" : ""
-            } más en la Mesa ${mesaObjetivo.numero} (solo ${Math.max(
-              hueco,
-              0
-            )} libres) — se han dejado sin mesa`,
-          });
-        }
-        return;
-      }
-
-      const mesaElegida = mesas.find(
-        (m) => m.capacidad - (ocupacion[m.numero] || 0) >= sinMesa.length
-      );
-      if (mesaElegida) {
-        sinMesa.forEach((g) => {
-          g.mesa = mesaElegida.numero;
-        });
-        ocupacion[mesaElegida.numero] = (ocupacion[mesaElegida.numero] || 0) + sinMesa.length;
-      } else {
-        avisos.push({
-          grupo: nombreGrupo,
-          motivo: `ninguna mesa tiene ${sinMesa.length} hueco${
-            sinMesa.length !== 1 ? "s" : ""
-          } libres juntos — se han dejado sin mesa`,
-        });
-      }
-    });
-
-    persistInvitados(nuevos);
-    setAvisosMesas(avisos);
-    setPanelFlotante(avisos.length > 0 ? "avisosMesas" : null);
   };
 
   return (
-    <>
-      <VentanaFlotante clave="mesas" titulo="Mesas" onCerrar={onCerrar}>
-        {/* Texto en su propia línea y los botones debajo (usuario,
-            2026-09-05). Desde el 2026-09-19, del lado del pulgar: a la
-            derecha, o a la izquierda si en ese móvil se eligió esa mano, y
-            con "Añadir mesa" -- el más usado -- pegado al borde. */}
-        <div className="mb-3">
-          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            Define cuántas mesas y cuántos comensales por mesa.
-          </p>
-          {/* Los tres botones llevan .boton-3d: se levantan al pasar por
-              encima y se hunden al pulsar. Es el mismo relieve que ya
-              usan el resto de botones de la app (definido una sola vez
-              en index.css); aquí faltaba, y al añadir una mesa -- que
-              aparece al final de una fila larga, fuera de la vista --
-              no había ninguna señal de que el clic hubiera entrado.
-              Pedido por el usuario el 2026-09-16. */}
-          <div className="flex items-center gap-2 flex-wrap justify-end zurdo:flex-row-reverse">
-            {avisosMesas.length > 0 && (
-              <Boton variante="peligro" tamano="pequeno" onClick={() => setPanelFlotante("avisosMesas")} titulo="Ver familias que se quedaron sin mesa">
-                <AlertTriangle size={12} /> {avisosMesas.length} aviso{avisosMesas.length !== 1 && "s"}
-              </Boton>
-            )}
-            <Boton variante="principal" onClick={autoAsignarMesas} titulo="Reparte a las familias confirmadas en las mesas; luego se puede retocar a mano">
+    <VentanaFlotante
+      clave="mesas"
+      titulo="Mesas y acomodación"
+      onCerrar={onCerrar}
+      fijo={fijo}
+      llena
+      ancho="min(1400px, calc(100vw - 48px))"
+      // Arriba, cuántos confirmados y cuántos sin confirmar (él, v74.3), con
+      // el recuadro y la cuenta de la Lista: dicen siempre lo mismo.
+      extra={
+        <RecuadroCifras
+          cifras={[
+            { label: "Confirmados", value: confirmacion.confirmados },
+            { label: "Sin confirmar", value: confirmacion.sinConfirmar },
+          ]}
+        />
+      }
+    >
+      <div className="flex flex-col" style={{ flex: 1, minHeight: 0 }}>
+        <div className="flex items-center gap-2 flex-wrap mb-2">
+          <span className="text-xs px-2 py-0.5 rounded" style={{ background: C.paperDark, color: C.charcoal }}>
+            {cambian === 0 ? "PRUEBA · sin cambios" : `PRUEBA · ${cambian} ${cambian === 1 ? "familia cambia" : "familias cambian"} de mesa, aún sin guardar`}
+          </span>
+          <span className="flex-1" />
+          {/* Los tres, del mismo ancho (norma 4). En el móvil no caben en una
+              fila: dos arriba y «Añadir mesa», a lo ancho, debajo. */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full sm:w-auto">
+            <Boton variante="secundario" icono={IconoPlano} aria-pressed={verPlano} onClick={() => setVerPlano((v) => !v)}>
+              {verPlano ? "Ver las mesas" : "Plano de mesas"}
+            </Boton>
+            <Boton variante="secundario" titulo="Propone un reparto de las familias confirmadas, en la prueba: se repasa y se aplica" disabled={verPlano} onClick={autoAsignar}>
               Auto-asignar
             </Boton>
-            {/* La prueba de reparto, en su ventana propia (él, v74). */}
-            {onRepartir && (
-              <Boton variante="secundario" onClick={onRepartir} titulo="Mueve familias enteras de una mesa a otra para probar el reparto; nada se guarda hasta «Aplicar a la Lista»">
-                <Users size={14} /> Repartir familias
-              </Boton>
-            )}
-            <Boton variante="secundario" onClick={anadirMesa}>
-              <Plus size={14} /> Añadir mesa
+            <Boton variante="secundario" icono={Plus} className="col-span-2 sm:col-span-1" onClick={anadirMesa}>
+              Añadir mesa
             </Boton>
           </div>
         </div>
-        <div className="flex flex-wrap gap-4">
-          {mesas.map((m) => {
-            const ocupados = ocupacionMesa(m.numero);
-            const lleno = ocupados >= m.capacidad && m.capacidad > 0;
-            const tieneAlergias = invitados.some(
-              (g) => g.mesa === m.numero && g.confirmado && tieneAlergiaReal(g)
-            );
-            return (
-              <MesaRedonda
-                key={m.numero}
-                m={m}
-                ocupados={ocupados}
-                lleno={lleno}
-                tieneAlergias={tieneAlergias}
-                onCambiarCapacidad={(v) => cambiarCapacidadMesa(m.numero, v)}
-                onEliminar={() => eliminarMesa(m.numero)}
-                onVaciar={() => vaciarMesa(m.numero)}
-              />
-            );
-          })}
-          {mesas.length === 0 && (
-            <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
-              Todavía no hay mesas — pulsa "Añadir mesa" para crear la primera.
-            </p>
-          )}
-        </div>
-
-        {/* El plano es la MISMA información desde otra perspectiva: no
-            tiene datos propios, solo coloca en el espacio las mesas que
-            se crean aquí arriba. Lo señaló el usuario (2026-09-05) y por
-            eso deja de ser una entrada propia del menú. Plegado por
-            defecto: se coloca una vez y se imprime, no se mira a diario. */}
-        <div className="mt-3">
-          <SeccionPlegable
-            icono={Map}
-            titulo="Plano de mesas"
-            resumen={mesas.length ? `${mesas.length} mesa(s) · imprimible en A2` : "sin mesas todavía"}
-          >
-            <PlanoMesas data={data} ocupacionMesa={ocupacionMesa} />
-          </SeccionPlegable>
-        </div>
-      </VentanaFlotante>
-
-      {panelFlotante === "avisosMesas" && (
-        <ModalFlotante
-          titulo="Familias sin mesa completa"
-          iconoTitulo={AlertTriangle}
-          colorTitulo={C.wax}
-          onCerrar={() => setPanelFlotante(null)}
-        >
-          <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            La auto-asignación nunca reparte un grupo familiar entre mesas por su cuenta.
-            Estas familias se han quedado (total o parcialmente) sin mesa — sube la capacidad
-            de alguna mesa, mueve gente a mano, o vuelve a pulsar "Auto-asignar" tras
-            ajustarlo. Cuando ya no queden avisos, la distribución está completa.
+        {aviso && <LineaAviso className="text-sm mb-2">{aviso}</LineaAviso>}
+        {avisosAuto.map((a) => (
+          <LineaAviso key={a.familia} className="text-sm mb-1">
+            Familia {a.familia}: {a.motivo}
+          </LineaAviso>
+        ))}
+        {guardado && (
+          <p className="text-sm mb-2 flex items-center gap-1.5" style={{ color: C.ink }}>
+            <Check size={16} aria-hidden /> {guardado}
           </p>
-          <div className="space-y-2">
-            {avisosMesas.map((a, i) => (
-              <div
-                key={i}
-                className="p-2 rounded text-sm"
-                style={{ background: C.avisoFondo, border: `1px solid ${C.wax}`, color: C.charcoal }}
-              >
-                <strong style={{ color: C.wax }}>Familia {a.grupo}</strong>: {a.motivo}
-              </div>
-            ))}
+        )}
+
+        {verPlano ? (
+          // El plano es el de la Lista (lo que se imprime), no el de la prueba.
+          <div className="overflow-y-auto" style={{ flex: 1, minHeight: 0 }}>
+            <PlanoMesas data={data} ocupacionMesa={(numero) => ocupacion(invitados, numero)} />
           </div>
-        </ModalFlotante>
-      )}
-    </>
+        ) : (
+          // En el Mac, «Sin mesa» a la izquierda y cada parte con su propia
+          // barra; en el móvil no caben juntas: «Sin mesa» arriba, las mesas
+          // debajo (una por fila) y una sola barra para todo.
+          <div className="flex flex-col sm:flex-row gap-3 overflow-y-auto sm:overflow-visible" style={{ flex: 1, minHeight: 0 }}>
+            <div className="w-full sm:w-56 flex-shrink-0 sm:overflow-y-auto">
+              <Columna
+                nombre="Sin mesa"
+                cabecera={
+                  <div
+                    className="flex items-baseline justify-center gap-2 rounded px-2 py-1.5 mb-2 font-semibold"
+                    style={{ background: C.paperDark, color: C.ink, border: `2px dashed ${C.line}` }}
+                  >
+                    Sin mesa <span style={CIFRA}>· {sinMesa.length}</span>
+                  </div>
+                }
+                familias={sinMesa}
+                cogida={cogida}
+                onCoger={coger}
+                onSoltar={(id) => soltar(id, null)}
+              />
+            </div>
+            <div
+              className="grid gap-3 content-start sm:flex-1 sm:min-h-0 sm:overflow-y-auto"
+              style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${ANCHO_COLUMNA}px, 1fr))` }}
+            >
+              {ordenadas.map((m) => {
+                const ocupados = ocupacion(vista, m.numero);
+                return (
+                  <Columna
+                    key={m.numero}
+                    nombre={`Mesa ${m.numero}`}
+                    cabecera={cabeceraMesa(m, ocupados)}
+                    marco={ocupados > m.capacidad ? C.peligro : ocupados === m.capacidad ? C.gold : "transparent"}
+                    familias={familias.filter((f) => f.mesa === m.numero).sort(porNombre)}
+                    cogida={cogida}
+                    onCoger={coger}
+                    onSoltar={(id) => soltar(id, m.numero)}
+                  />
+                );
+              })}
+              {mesas.length === 0 && (
+                <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
+                  Todavía no hay mesas: pulsa «Añadir mesa» para crear la primera.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 flex-wrap justify-end zurdo:flex-row-reverse mt-3 pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
+          {/* La ayuda, al pie y plegada (norma 5); en el móvil, en su línea. */}
+          <details className="text-xs w-full sm:w-auto mr-auto zurdo:mr-0 zurdo:ml-auto" style={{ color: C.charcoal }}>
+            <summary className="cursor-pointer select-none whitespace-nowrap" style={{ opacity: OP.secundario }}>
+              Cómo se usa
+            </summary>
+            <p className="mt-2" style={{ opacity: OP.secundario }}>
+              Arrastra cada familia a su mesa; en el móvil, tócala y luego toca la mesa. Sombreadas, las que aún no han
+              confirmado: su sitio queda reservado. Sentar, Vaciar y Auto-asignar son una prueba hasta «Aplicar a la
+              Lista»; las mesas y sus sitios se guardan al momento.
+            </p>
+          </details>
+          <Boton variante="secundario" onClick={descartar} disabled={cambian === 0}>
+            Descartar
+          </Boton>
+          <Boton variante="principal" onClick={aplicar} disabled={cambian === 0}>
+            Aplicar a la Lista
+          </Boton>
+        </div>
+      </div>
+      {ventanaPregunta}
+    </VentanaFlotante>
   );
 }

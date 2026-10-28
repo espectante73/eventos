@@ -76,6 +76,7 @@ export function DesplegableSecciones({
   abrirCronograma,
   abrirMusicaEvento,
   abrirInvitados,
+  abrirMesas,
   // "Mi cuenta" del anfitrión vive aquí, entre las demás (v50.6). Abre la
   // ventana de siempre (MiCuenta.jsx). Sin sesión real no hay.
   abrirMiCuenta = null,
@@ -111,6 +112,15 @@ export function DesplegableSecciones({
         etiqueta: ETIQUETAS_VENTANAS[clave],
         icono: ICONOS_VENTANAS[clave],
         onClick: abrirInvitados,
+      };
+    }
+    // «Mesas y acomodación» (v74.6), igual: en el Mac, su propia ventana.
+    if (clave === "mesas" && abrirMesas) {
+      return {
+        id: clave,
+        etiqueta: ETIQUETAS_VENTANAS[clave],
+        icono: ICONOS_VENTANAS[clave],
+        onClick: abrirMesas,
       };
     }
     if (clave === "musicaEvento") {

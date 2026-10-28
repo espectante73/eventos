@@ -622,7 +622,7 @@ export function SeccionInvitados({
   const llegadas = cuentaLlegadas(invitados, evento);
   // Los que dijeron que no van (él, v61: al cobrar a su familia, o sin
   // pagar a tiempo): ni confirmados ni por confirmar. La misma cuenta que
-  // «Repartir familias» (cuentaConfirmacion).
+  // «Mesas y acomodación» (cuentaConfirmacion).
   const { previstos: totalInvitados, confirmados: confirmadosCount, noAsisten: noAsistenCount, sinConfirmar: sinConfirmarCount } =
     cuentaConfirmacion(invitados);
   const edadMedia = edadPromedio(invitadosOrdenados, evento);

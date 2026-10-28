@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "74.6",
+    cambios: [
+      "Mesas y Repartir familias, en una sola ventana: «Mesas y acomodación». En el Mac se abre aparte y en grande, como la Lista. Arriba, «Plano de mesas», «Auto-asignar» y «Añadir mesa», del mismo ancho.",
+      "Cada mesa lleva arriba sus controles (− y + sitios, el aviso de alergias, Vaciar y quitarla) y debajo «Mesa 3 · 5/9». Llena, un recuadro dorado grueso alrededor; pasada, en rojo.",
+      "Qué se guarda y cuándo: las mesas y sus sitios, al momento; sentar, Vaciar y Auto-asignar son la prueba, que no toca la Lista hasta «Aplicar a la Lista». Auto-asignar propone y avisa ahí mismo de las familias que no caben.",
+    ],
+  },
+  {
     version: "74.5",
     cambios: [
       "Se deshace lo de la 74.4: las ventanas vuelven a poder agrandarse hasta abajo del todo, tapando el sello de los días y el cuadradito de Equipo, que son para verlos en el inicio. En el móvil, con el formulario o Multimedia abiertos, la barra sigue por encima para cambiar de una a otra.",

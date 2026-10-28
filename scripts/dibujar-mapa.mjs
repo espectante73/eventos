@@ -261,7 +261,7 @@ const nivel1 = [
   ["Día del evento", {}],
   ["Invitaciones", {}],
   ["Invitados", { fuera: true }],
-  ["Mesas", {}],
+  ["Mesas y acomodación", { fuera: true }],
   ["Mi cuenta", {}],
   ["Multimedia", { fuera: true }],
   ["Novedades", { fuera: true }],

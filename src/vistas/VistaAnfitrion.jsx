@@ -40,7 +40,6 @@ import { VentanaInvitaciones } from "./anfitrion/VentanaInvitaciones";
 import { SeccionInvitados } from "./anfitrion/SeccionInvitados";
 import { Boton } from "../components/Boton";
 import { ResumenAvisosAsignacion } from "./anfitrion/ResumenAvisosAsignacion";
-import { VentanaRepartoMesas } from "./anfitrion/VentanaRepartoMesas";
 import { ocupacion } from "../lib/mesas";
 
 // Versiones es casi todo texto (el historial de cambios) y es de lo que
@@ -121,22 +120,22 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   // el navegador bloquea la ventana, también cae dentro: nunca en nada.
   const abrirMusicaEvento = useCallback(() => abrirMusica(abrirMusicaDentro), [abrirMusicaDentro]);
 
-  // «Repartir familias» (él, v74): en su ventana propia, para verlo en
+  // «Mesas y acomodación» (él, v74.6): en su ventana propia, para verlo en
   // grande; en un aparato táctil, dentro de la app. La prueba (el borrador)
   // vive aquí: cerrar la ventana no la pierde, y nada se guarda hasta
   // «Aplicar a la Lista».
   const [borradorMesas, setBorradorMesas] = useState({});
   const {
-    abrir: abrirRepartoPopup,
-    actualizar: actualizarReparto,
-    abierta: repartoEnVentana,
-    ventana: ventanaReparto,
-  } = usePopupWindow({ nombreVentana: "reparto-mesas", ancho: 1400, alto: 900 });
+    abrir: abrirMesasPopup,
+    actualizar: actualizarMesas,
+    abierta: mesasEnVentana,
+    ventana: ventanaMesas,
+  } = usePopupWindow({ nombreVentana: "mesas-acomodacion", ancho: 1400, alto: 900 });
   useEffect(() => {
-    if (!repartoEnVentana) return;
-    actualizarReparto(
-      <ErrorBoundary ventana={ventanaReparto}>
-        <VentanaRepartoMesas data={data} borrador={borradorMesas} setBorrador={setBorradorMesas} onCerrar={() => ventanaReparto?.close()} fijo />
+    if (!mesasEnVentana) return;
+    actualizarMesas(
+      <ErrorBoundary ventana={ventanaMesas}>
+        <VentanaMesas data={data} borrador={borradorMesas} setBorrador={setBorradorMesas} onCerrar={() => ventanaMesas?.close()} fijo />
       </ErrorBoundary>
     );
   });
@@ -292,9 +291,9 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   // abre solo (en el móvil no, para no tapar la pantalla); al cerrarla, se
   // cierra; y «Ver marcador» lo abre aparte, también en el móvil.
   // Dentro del propio clic, como la Lista: si no, Safari bloquea la ventana.
-  const abrirReparto = () => {
-    if (esAparatoTactil() || !abrirRepartoPopup()) setAbierto((a) => ({ ...a, repartoMesas: true }));
-  };
+  const abrirMesas = useCallback(() => {
+    if (esAparatoTactil() || !abrirMesasPopup()) toggle("mesas");
+  }, [abrirMesasPopup]);
   const marcador = {
     abierto: marcadorEnVentana || Boolean(abierto.marcador),
     abrir: () => {
@@ -352,6 +351,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
         abrirCronograma={abrirCronograma}
         abrirMusicaEvento={abrirMusicaEvento}
         abrirInvitados={abrirInvitados}
+        abrirMesas={abrirMesas}
         sello={misFichasIncompletas}
         miColaboradorId={miColaborador?.id || null}
       />
@@ -380,22 +380,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
 
       {/* Mesas */}
       {abierto.mesas && (
-        <VentanaMesas
-          data={data}
-          ocupacionMesa={ocupacionMesa}
-          panelFlotante={panelFlotante}
-          setPanelFlotante={setPanelFlotante}
-          onRepartir={abrirReparto}
-          onCerrar={() => toggle("mesas")}
-        />
-      )}
-      {abierto.repartoMesas && (
-        <VentanaRepartoMesas
-          data={data}
-          borrador={borradorMesas}
-          setBorrador={setBorradorMesas}
-          onCerrar={() => setAbierto((a) => ({ ...a, repartoMesas: false }))}
-        />
+        <VentanaMesas data={data} borrador={borradorMesas} setBorrador={setBorradorMesas} onCerrar={() => toggle("mesas")} />
       )}
 
       {/* Lista de invitados, en la página (móvil, o si el navegador

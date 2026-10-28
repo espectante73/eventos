@@ -1,4 +1,4 @@
-// «Repartir familias» (él, v74): probar el reparto de mesas moviendo
+// «Mesas y acomodación» (él, v74.6; antes «Repartir familias», v74): probar el reparto de mesas moviendo
 // familias enteras de una mesa a otra, en su ventana propia, y solo al
 // final «Aplicar a la Lista». Las reglas son las de siempre, en una sola
 // pieza (asignarMesaConSuFamilia): una familia no se separa y no se sienta
@@ -7,7 +7,7 @@
 // La prueba es un BORRADOR de solo las mesas que cambian, { idInvitado:
 // mesa }, nunca una copia de la Lista: si mientras tanto un colaborador
 // confirma a alguien, al aplicar no se le pisa (norma 12).
-import { asignarMesaConSuFamilia, claveFamiliaMesa, ocupacion, seSientaEnMesa } from "./mesas";
+import { asignarMesaConSuFamilia, autoAsignarMesas, claveFamiliaMesa, ocupacion, seSientaEnMesa } from "./mesas";
 import { nombreCompleto } from "./formato";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
@@ -52,14 +52,30 @@ export function moverFamilia(invitados, borrador, idRepresentante, numero, mesas
     conSinConfirmar,
   });
   if (aviso) return { borrador, aviso };
-  const siguiente = { ...borrador };
+  return { borrador: borradorDesde(invitados, tras), aviso: "" };
+}
+
+// El borrador que lleva de la Lista real a `propuesta`: solo las mesas que cambian.
+export function borradorDesde(invitados, propuesta) {
   const real = new Map(invitados.map((g) => [g.id, g.mesa ?? null]));
-  for (const g of tras) {
+  const borrador = {};
+  for (const g of propuesta) {
     const mesa = g.mesa ?? null;
-    if (mesa === real.get(g.id)) delete siguiente[g.id];
-    else siguiente[g.id] = mesa;
+    if (real.has(g.id) && mesa !== real.get(g.id)) borrador[g.id] = mesa;
   }
-  return { borrador: siguiente, aviso: "" };
+  return borrador;
+}
+
+// «Vaciar» una mesa, en la prueba: todas sus familias a «Sin mesa».
+export function vaciarMesaEnBorrador(invitados, borrador, numero) {
+  const propuesta = conBorrador(invitados, borrador).map((g) => (g.mesa === numero ? { ...g, mesa: null } : g));
+  return borradorDesde(invitados, propuesta);
+}
+
+// Auto-asignar, en la prueba: lo propone sobre lo que ya hay en ella.
+export function autoAsignarEnBorrador(invitados, borrador, mesas) {
+  const { invitados: propuesta, avisos } = autoAsignarMesas(conBorrador(invitados, borrador), mesas);
+  return { borrador: borradorDesde(invitados, propuesta), avisos };
 }
 
 // Lo que se manda al aplicar: la Lista de ahora con solo esas mesas cambiadas.

@@ -60,11 +60,13 @@ export function Seal({ count, size = 22, late = false }) {
 // `alerta`, la cifra en rojo.
 export function RecuadroCifras({ cifras }) {
   return (
-    <div className="flex items-center gap-3 rounded px-2 py-1" style={{ border: `1px solid ${C.gold}` }}>
+    // Del ancho de sus cifras, sin partir los rótulos: si en la cabecera no
+    // cabe (un móvil), se desliza de lado, como todo `extra` (v68.6).
+    <div className="flex items-center gap-3 rounded px-2 py-1 w-max flex-shrink-0" style={{ border: `1px solid ${C.gold}` }}>
       {cifras.map((s) => (
         <div key={s.label} className="text-center">
           <div
-            className="text-[10px] uppercase"
+            className="text-[10px] uppercase whitespace-nowrap"
             style={{ color: C.goldClaro, opacity: OP.secundario, fontFamily: "'IBM Plex Mono', monospace" }}
           >
             {s.label}

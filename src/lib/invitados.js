@@ -87,7 +87,7 @@ export const ROLES_CON_EMAIL_FAMILIAR = [
 
 // Confirmados, sin confirmar y «No asiste» (los que dijeron que no van: ni
 // lo uno ni lo otro). Una sola cuenta para la cabecera de la Lista y la de
-// «Repartir familias» (v74.3): las dos dicen siempre lo mismo.
+// «Mesas y acomodación» (v74.3): las dos dicen siempre lo mismo.
 export function cuentaConfirmacion(invitados = []) {
   const confirmados = invitados.filter((g) => g.confirmado).length;
   const noAsisten = invitados.filter((g) => !g.confirmado && g.noAsiste).length;
