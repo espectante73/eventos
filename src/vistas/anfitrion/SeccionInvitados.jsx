@@ -39,7 +39,7 @@ import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } fro
 import { descargarCSV } from "../../lib/descargas";
 import { descargarListaAcomodadores, ARCHIVO as ARCHIVO_ACOMODADORES } from "../../lib/pdfAcomodadores";
 import { TextInput, TextInputEnVentanaAparte } from "../../components/Formulario";
-import { EncabezadoOrdenable, GrupoFamiliarInput, RecuadroCifras } from "../../components/Widgets";
+import { EncabezadoOrdenable, GrupoFamiliarInput, RecuadroCifras, Circulito } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { InformeInvitados } from "../../components/InformeInvitados";
@@ -62,7 +62,7 @@ import {
   quitarExcepcion as desmarcarExcepcion,
   marcarResponsable as fijarResponsable,
 } from "../../lib/edicionInvitados";
-import { estadoTablon } from "../../lib/entradasTablon";
+import { estadoTablon, contarTablon } from "../../lib/entradasTablon";
 import { useSeccion } from "../../lib/useSeccion";
 
 // El circulito del tablón tras el nombre (él, v75.2): «estilo semáforo»,
@@ -76,13 +76,9 @@ function CirculoTablon({ estado }) {
       ? "Aún no ha entrado al tablón: falta su año de nacimiento, y sin él la puerta no le deja"
       : "Aún no ha entrado al tablón";
   return (
-    <span
-      role="img"
-      aria-label={titulo}
-      title={titulo}
-      className="flex-shrink-0 ml-1.5"
-      style={{ width: 8, height: 8, borderRadius: R.redondo, background: estado.entro ? C.enVivo : C.peligro }}
-    />
+    <span className="ml-1.5 flex items-center">
+      <Circulito color={estado.entro ? C.enVivo : C.peligro} titulo={titulo} />
+    </span>
   );
 }
 
@@ -145,6 +141,7 @@ export function SeccionInvitados({
   // pintarla) y se pone al día con ella abierta.
   useSeccion(data, "entradasTablon");
   const { entradasTablon } = data;
+  const recuentoTablon = contarTablon(invitados, entradasTablon, evento);
 
   const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
   const [textoImport, setTextoImport] = useState("");
@@ -1272,6 +1269,17 @@ export function SeccionInvitados({
             {[resumen.slice(0, 2), resumen.slice(2, 4), resumen.slice(4)].map((grupo, i) => (
               <RecuadroCifras key={i} cifras={grupo} />
             ))}
+            {/* Quién ha entrado al tablón, contado con sus circulitos y
+                nada más (él, v75.3: «muy simplificado»). Sale cuando han
+                llegado las entradas. */}
+            {recuentoTablon && (
+              <RecuadroCifras
+                cifras={[
+                  { value: recuentoTablon.entraron, punto: C.enVivo, titulo: "Han entrado al tablón" },
+                  { value: recuentoTablon.sinEntrar, punto: C.peligro, titulo: "Aún no han entrado al tablón" },
+                ]}
+              />
+            )}
             {/* Los 6 botones sueltos (Imprimir/Canciones/Alergias/Añadir/
                 Editar/Importar) se esconden en un desplegable
                 ("Acciones"), mismo MenuFlotante que usa el resto de la

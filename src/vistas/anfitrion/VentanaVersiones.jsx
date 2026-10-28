@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "75.3",
+    cambios: [
+      "Lista de invitados: arriba, junto a las demás cifras, el circulito verde con cuántos han entrado al tablón y el rojo con cuántos no, sin más. Cuenta lo mismo que los circulitos de las filas.",
+    ],
+  },
+  {
     version: "75.2",
     cambios: [
       "Lista de invitados: un circulito tras el nombre dice quién ha entrado al tablón, sin columna nueva. Verde claro, ha entrado; rojo, todavía no. Al pasar el ratón, cuándo fue la última vez.",

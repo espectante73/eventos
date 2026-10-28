@@ -1,6 +1,6 @@
 // v75.2 (él): en la Lista, quién ha entrado al tablón, con un circulito.
 import { describe, it, expect } from "vitest";
-import { estadoTablon } from "./entradasTablon";
+import { estadoTablon, contarTablon } from "./entradasTablon";
 
 const evento = { fecha: "2026-12-11" };
 const g = (extra = {}) => ({ id: "1", confirmado: true, anioNacimiento: "1980", ...extra });
@@ -29,5 +29,13 @@ describe("estadoTablon", () => {
 
   it("sin año no puede entrar todavía: rojo, y se dice por qué", () => {
     expect(estadoTablon(g({ anioNacimiento: "" }), {}, evento)).toEqual({ entro: false, sinAnio: true });
+  });
+});
+
+describe("contarTablon", () => {
+  it("cuenta los circulitos verdes y los rojos; los que no llevan, no cuentan", () => {
+    const lista = [g(), g({ id: "2" }), g({ id: "3", confirmado: false }), g({ id: "4", anioNacimiento: "2015" })];
+    expect(contarTablon(lista, entradas, evento)).toEqual({ entraron: 1, sinEntrar: 1 });
+    expect(contarTablon(lista, null, evento)).toBe(null);
   });
 });

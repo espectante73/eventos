@@ -398,6 +398,12 @@ describe("el circulito del tablón", () => {
     expect(html.match(/aria-label="Aún no ha entrado al tablón"/g)).toHaveLength(1);
   });
 
+  it("arriba, el recuento: cuántos entraron y cuántos no", () => {
+    const html = conEntradas({ g1: "2026-10-27T17:40:00Z" });
+    expect(html).toMatch(/aria-label="Han entrado al tablón"[^>]*><\/span>1</);
+    expect(html).toMatch(/aria-label="Aún no han entrado al tablón"[^>]*><\/span>1</);
+  });
+
   it("mientras no han llegado las entradas, ningún circulito", () => {
     expect(conEntradas(null)).not.toMatch(/aria-label="(Entró al tablón|Aún no ha entrado)/);
   });
