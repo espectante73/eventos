@@ -77,6 +77,7 @@ describe("el evento no se lee directamente", () => {
     const f = cuerpoDe("evento_publico");
     expect(f).toContain("- 'enlaceGrupoWhatsapp'");
     expect(f).toContain("- 'emailAnfitrion'");
+    expect(f).toContain("- 'acomodaciones'");
   });
 
   it("entero solo al anfitrión; el enlace, al colaborador con permiso de Novedades", () => {

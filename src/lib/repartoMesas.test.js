@@ -1,7 +1,7 @@
 // v74 (él): probar el reparto moviendo familias enteras; que no deje sentar
 // a más de los que caben; y nada se guarda hasta «Aplicar a la Lista».
 import { describe, it, expect } from "vitest";
-import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion } from "./repartoMesas";
+import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria } from "./repartoMesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const g = (id, apellido, nombre, rol, extra = {}) => ({ id, apellido, nombre, grupoFamiliar: `${apellido}01`, rolFamiliar: rol, confirmado: true, mesa: null, ...extra });
@@ -101,5 +101,44 @@ describe("los no confirmados", () => {
 
   it("sin la casilla, a quien no tiene sitio no se le sienta", () => {
     expect(moverFamilia(conTentativa, {}, "7", 7, mesas).aviso).toContain("todavía no está confirmado");
+  });
+});
+
+// v75 (él): «Acomodación 1, 2 y 3», una memoria de todo lo de la acomodación.
+describe("las memorias", () => {
+  const sentados = invitados.map((x) => (["1", "2", "3"].includes(x.id) ? { ...x, mesa: 7 } : x));
+  const memoria = memoriaDesde(sentados, mesas, 1, "2026-10-28T10:00:00Z");
+
+  it("guarda las mesas y la mesa de cada invitado, también la de quien no tiene", () => {
+    expect(memoria.mesas).toEqual(mesas);
+    expect(memoria.asientos).toMatchObject({ 1: 7, 2: 7, 3: 7, 4: 6, 5: null });
+  });
+
+  it("guardar en un número sustituye lo que había en él", () => {
+    const otra = { ...memoria, guardadaEl: "otra" };
+    expect(conMemoria([memoria, { ...memoria, numero: 3 }], otra).map((m) => [m.numero, m.guardadaEl])).toEqual([
+      [1, "otra"],
+      [3, "2026-10-28T10:00:00Z"],
+    ]);
+  });
+
+  it("cargarla la deja como prueba: sus mesas y el borrador hasta sus asientos", () => {
+    const { mesas: suyas, borrador, aviso } = cargarMemoria(invitados, memoria);
+    expect(suyas).toEqual(mesas);
+    expect(borrador).toEqual({ 1: 7, 2: 7, 3: 7 });
+    expect(aviso).toBe("");
+  });
+
+  it("quien llegó después se sienta con su familia; quien se borró, ya no está", () => {
+    const despues = [...invitados.filter((x) => x.id !== "5"), g("9", "García", "Nuevo", ROL_FAMILIAR.HIJO)];
+    const { borrador, aviso } = cargarMemoria(despues, memoria);
+    expect(borrador["9"]).toBe(7);
+    expect(borrador).not.toHaveProperty("5");
+    expect(aviso).toContain("Hay 1 invitado nuevo");
+  });
+
+  it("una mesa que la memoria no tiene se queda vacía al cargarla", () => {
+    const sinLa6 = { ...memoria, mesas: mesas.filter((m) => m.numero !== 6), asientos: { ...memoria.asientos, 4: 6 } };
+    expect(cargarMemoria(invitados, sinLa6).borrador["4"]).toBe(null);
   });
 });

@@ -92,3 +92,57 @@ export function familiasQueCambian(invitados, borrador = {}) {
 }
 
 export { ocupacion };
+
+// ---------- Las memorias: «Acomodación 1, 2 y 3» (él, v75) ----------
+//
+// Una foto de TODO lo de la acomodación (él: «todo lo relacionado»): las
+// mesas con sus sitios y su sitio en el plano, y la mesa de cada invitado
+// (también los que no tienen: así, al cargarla, se sabe quién es nuevo).
+// Se guardan en `evento.acomodaciones`. Cargar una no toca nada: la deja
+// como prueba, y todo cambia a la vez con «Aplicar a la Lista».
+export const MEMORIAS = [1, 2, 3];
+
+// La prueba entera, que vive en VistaAnfitrion: el borrador de asientos;
+// las mesas, solo con una memoria cargada (si no, las de verdad); qué
+// memoria está en pantalla; y si se ha tocado algo desde que se cargó o se
+// guardó (entonces, cargar otra pregunta antes de descartarlo).
+export const PRUEBA_VACIA = { borrador: {}, mesas: null, cargada: null, sucia: false };
+
+export function memoriaDesde(vista, mesas, numero, guardadaEl = new Date().toISOString()) {
+  return {
+    numero,
+    guardadaEl,
+    mesas: mesas.map((m) => ({ ...m })),
+    asientos: Object.fromEntries(vista.map((g) => [g.id, g.mesa ?? null])),
+  };
+}
+
+// La lista de memorias con esta puesta en su número (sustituye la que hubiera).
+export function conMemoria(memorias = [], memoria) {
+  return [...memorias.filter((m) => m.numero !== memoria.numero), memoria].sort((a, b) => a.numero - b.numero);
+}
+
+// Lo que se pone en pantalla al cargar una memoria: sus mesas y el
+// borrador que lleva de la Lista a sus asientos. Quien se añadió después,
+// con su familia si ella estaba sentada; si no, donde esté (si su mesa
+// sigue existiendo). Quien se borró, ya no está. Devuelve { mesas,
+// borrador, aviso }: el aviso cuenta los nuevos, para que no sorprenda.
+export function cargarMemoria(invitados, memoria) {
+  const numeros = new Set(memoria.mesas.map((m) => m.numero));
+  const asientos = memoria.asientos || {};
+  const mesaDeFamilia = {};
+  for (const g of invitados) {
+    const mesa = asientos[g.id];
+    if (mesa != null && numeros.has(mesa)) mesaDeFamilia[claveFamiliaMesa(g)] ??= mesa;
+  }
+  const nuevos = invitados.filter((g) => !Object.hasOwn(asientos, g.id));
+  const propuesta = invitados.map((g) => {
+    const mesa = Object.hasOwn(asientos, g.id) ? asientos[g.id] : (mesaDeFamilia[claveFamiliaMesa(g)] ?? g.mesa ?? null);
+    return { ...g, mesa: mesa != null && numeros.has(mesa) ? mesa : null };
+  });
+  const aviso =
+    nuevos.length === 0
+      ? ""
+      : `${nuevos.length === 1 ? "Hay 1 invitado nuevo" : `Hay ${nuevos.length} invitados nuevos`} desde que se guardó: con su familia si ella estaba sentada; si no, donde ya estaba.`;
+  return { mesas: memoria.mesas.map((m) => ({ ...m })), borrador: borradorDesde(invitados, propuesta), aviso };
+}

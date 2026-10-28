@@ -7,6 +7,7 @@ import { act } from "react";
 import { montar } from "../../pruebas/dibujar";
 import { VentanaMesas } from "./VentanaMesas";
 import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
+import { PRUEBA_VACIA } from "../../lib/repartoMesas";
 
 const g = (id, apellido, nombre, rol, extra = {}) => ({ id, apellido, nombre, grupoFamiliar: `${apellido}01`, rolFamiliar: rol, confirmado: true, mesa: null, ...extra });
 const invitados = [
@@ -23,12 +24,12 @@ function dibujar({ conMesas = mesas } = {}) {
   const guardados = [];
   const mesasGuardadas = [];
   function Prueba() {
-    const [borrador, setBorrador] = useState({});
+    const [prueba, setPrueba] = useState(PRUEBA_VACIA);
     return (
       <VentanaMesas
         data={{ invitados, mesas: conMesas, persistInvitados: (l) => guardados.push(l), persistMesas: (l) => mesasGuardadas.push(l) }}
-        borrador={borrador}
-        setBorrador={setBorrador}
+        prueba={prueba}
+        setPrueba={setPrueba}
         onCerrar={() => {}}
       />
     );
@@ -96,13 +97,13 @@ it("al aplicar, dice que está guardado: los botones se apagan y no debe parecer
 it("los no confirmados salen siempre, sombreados, y se sientan como los demás", () => {
   const guardados = [];
   function Prueba() {
-    const [borrador, setBorrador] = useState({});
+    const [prueba, setPrueba] = useState(PRUEBA_VACIA);
     const conTentativa = [...invitados, g("4", "Luis", "Dani", ROL_FAMILIAR.ESPOSO, { confirmado: false })];
     return (
       <VentanaMesas
         data={{ invitados: conTentativa, mesas, persistInvitados: (l) => guardados.push(l), persistMesas: () => {} }}
-        borrador={borrador}
-        setBorrador={setBorrador}
+        prueba={prueba}
+        setPrueba={setPrueba}
         onCerrar={() => {}}
       />
     );
@@ -121,9 +122,9 @@ it("los no confirmados salen siempre, sombreados, y se sientan como los demás",
 // v74.3 (él): arriba, confirmados y sin confirmar, con la cuenta de la Lista.
 it("la cabecera cuenta confirmados y sin confirmar", () => {
   function Prueba() {
-    const [borrador, setBorrador] = useState({});
+    const [prueba, setPrueba] = useState(PRUEBA_VACIA);
     const lista = [...invitados, g("4", "Luis", "Dani", ROL_FAMILIAR.ESPOSO, { confirmado: false }), g("5", "Sierra", "Raul", ROL_FAMILIAR.SUELTO, { confirmado: false, noAsiste: true })];
-    return <VentanaMesas data={{ invitados: lista, mesas, persistInvitados: () => {}, persistMesas: () => {} }} borrador={borrador} setBorrador={setBorrador} onCerrar={() => {}} />;
+    return <VentanaMesas data={{ invitados: lista, mesas, persistInvitados: () => {}, persistMesas: () => {} }} prueba={prueba} setPrueba={setPrueba} onCerrar={() => {}} />;
   }
   const vista = montar(<Prueba />);
   expect(document.body.textContent).toMatch(/Confirmados\s*3/);
@@ -201,13 +202,99 @@ it("«Plano de mesas» se abre aquí mismo", () => {
 it("el aviso de alergias o intolerancias sale en la familia que las tiene, no en la mesa", () => {
   const conAlergia = invitados.map((x) => (x.id === "3" ? { ...x, alergias: "Gluten" } : x));
   function Prueba() {
-    const [borrador, setBorrador] = useState({});
-    return <VentanaMesas data={{ invitados: conAlergia, mesas, persistInvitados: () => {}, persistMesas: () => {} }} borrador={borrador} setBorrador={setBorrador} onCerrar={() => {}} />;
+    const [prueba, setPrueba] = useState(PRUEBA_VACIA);
+    return <VentanaMesas data={{ invitados: conAlergia, mesas, persistInvitados: () => {}, persistMesas: () => {} }} prueba={prueba} setPrueba={setPrueba} onCerrar={() => {}} />;
   }
   const vista = montar(<Prueba />);
   const avisos = [...vista.contenedor.querySelectorAll('[aria-label="Alergias o intolerancias"]')];
   expect(avisos).toHaveLength(1);
   expect(vista.contenedor.querySelector('[data-familia="Expósito, Rosi"]').contains(avisos[0])).toBe(true);
   expect(avisos[0].title).toBe("Alergias o intolerancias: Expósito, Rosi (Gluten)");
+  vista.desmontar();
+});
+
+// v75 (él): «Memorias», Acomodación 1, 2 y 3, en el desplegable de la app.
+function dibujarConMemorias(acomodaciones) {
+  const guardados = [];
+  const mesasGuardadas = [];
+  const eventos = [];
+  function Prueba() {
+    const [prueba, setPrueba] = useState(PRUEBA_VACIA);
+    const [evento, setEvento] = useState(acomodaciones === undefined ? {} : { acomodaciones });
+    return (
+      <VentanaMesas
+        data={{
+          invitados,
+          mesas,
+          evento,
+          persistInvitados: (l) => guardados.push(l),
+          persistMesas: (l) => mesasGuardadas.push(l),
+          persistEvento: (e) => {
+            eventos.push(e);
+            setEvento(e);
+          },
+        }}
+        prueba={prueba}
+        setPrueba={setPrueba}
+        onCerrar={() => {}}
+      />
+    );
+  }
+  const vista = montar(<Prueba />);
+  const botones = (t) => [...document.body.querySelectorAll("button")].filter((b) => b.textContent.trim() === t);
+  const memorias = () => botones("Memorias")[0];
+  return { vista, guardados, mesasGuardadas, eventos, botones, memorias };
+}
+
+const MEMORIA_2 = {
+  numero: 2,
+  guardadaEl: "2026-10-27T17:40:00Z",
+  mesas: [{ numero: 9, capacidad: 4 }],
+  asientos: { 1: 9, 2: 9, 3: null },
+};
+
+it("sin el SQL de la v75 en la base, «Memorias» sale apagado y dice por qué", () => {
+  const { vista, memorias } = dibujarConMemorias(undefined);
+  expect(memorias().disabled).toBe(true);
+  expect(memorias().title).toContain("SQL");
+  vista.desmontar();
+});
+
+it("«Guardar» en una vacía la guarda sin preguntar, con todo lo que se ve", () => {
+  const { vista, eventos, botones, memorias } = dibujarConMemorias([]);
+  vista.pulsar(memorias());
+  expect(document.body.textContent).toContain("Ninguna guardada");
+  vista.pulsar(botones("Guardar")[0]);
+  vista.pulsar(botones("Acomodación 1").at(-1));
+  const [memoria] = eventos.at(-1).acomodaciones;
+  expect(memoria).toMatchObject({ numero: 1, mesas, asientos: { 1: null, 3: 6 } });
+  expect(document.body.textContent).toContain("Guardada en Acomodación 1.");
+  vista.desmontar();
+});
+
+it("«Guardar» en una que ya tiene algo pregunta antes de sustituirla", () => {
+  const { vista, eventos, botones, memorias } = dibujarConMemorias([MEMORIA_2]);
+  vista.pulsar(memorias());
+  vista.pulsar(botones("Guardar")[0]);
+  vista.pulsar(botones("Acomodación 2").at(-1));
+  expect(document.body.textContent).toContain("¿Sustituir la Acomodación 2?");
+  expect(eventos).toEqual([]);
+  vista.desmontar();
+});
+
+it("cargar una la pone como prueba, mesas incluidas; «Aplicar» guarda las dos cosas", async () => {
+  const { vista, guardados, mesasGuardadas, botones, memorias } = dibujarConMemorias([MEMORIA_2]);
+  vista.pulsar(memorias());
+  vista.pulsar(botones("Acomodación 2")[0]);
+  const columna = (t) => vista.contenedor.querySelector(`[data-columna="${t}"]`);
+  expect(columna("Mesa 6")).toBeNull();
+  expect(columna("Mesa 9").querySelector('[data-familia="García, Isaias"]')).toBeTruthy();
+  expect(document.body.textContent).toContain("PRUEBA · Acomodación 2, aún sin aplicar");
+  expect(mesasGuardadas).toEqual([]);
+  vista.pulsar(botones("Aplicar a la Lista")[0]);
+  expect(mesasGuardadas.at(-1)).toEqual(MEMORIA_2.mesas);
+  const final = Object.fromEntries(guardados.at(-1).map((x) => [x.id, x.mesa]));
+  expect(final).toEqual({ 1: 9, 2: 9, 3: null });
+  expect(document.body.textContent).toContain("Guardado en la Lista: Acomodación 2.");
   vista.desmontar();
 });

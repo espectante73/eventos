@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "75",
+    cambios: [
+      "Acomodación: «Memorias», en la línea de botones de arriba, con el desplegable de toda la app. Guarda hasta tres acomodaciones (Acomodación 1, 2 y 3) con todo: las mesas, sus sitios, su sitio en el plano y quién se sienta en cada una.",
+      "Pulsar una la carga como prueba, mesas incluidas, para comparar sin riesgo: nada cambia hasta «Aplicar a la Lista», y «Descartar» lo deja como estaba. La que está en pantalla sale en dorado. Guardar encima de una que ya tiene algo pregunta antes.",
+      "Quien se añadió a la Lista después de guardar una, al cargarla se sienta con su familia; quien se borró, ya no aparece.",
+    ],
+  },
+  {
     version: "74.9",
     cambios: [
       "Acomodación: el aviso de alergias o intolerancias ya no va en la cabecera de la mesa, sino en cada familia que las tiene (una mesa puede tener varias). Al pasar por encima del icono se ve quién y qué.",

@@ -12,8 +12,12 @@
 // mobiliario); sentar, Vaciar y Auto-asignar, en la PRUEBA, que vive en
 // VistaAnfitrion (sobrevive a cerrar la ventana) y no toca la Lista hasta
 // «Aplicar a la Lista». «Plano de mesas» (él), un botón que lo abre aquí.
+//
+// «Memorias» (él, v75): Acomodación 1, 2 y 3, una foto de todo (mesas,
+// sitios, plano y quién se sienta dónde). Cargar una la pone como prueba,
+// mesas incluidas: mientras está cargada, también las mesas son prueba.
 import { useState } from "react";
-import { Check, AlertTriangle, Plus, Minus, Map as IconoPlano } from "lucide-react";
+import { Check, AlertTriangle, Plus, Minus, Bookmark, Map as IconoPlano } from "lucide-react";
 import { C, OP, R, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -21,8 +25,9 @@ import { LineaAviso } from "../../components/LineaAviso";
 import { RecuadroCifras } from "../../components/Widgets";
 import { PlanoMesas } from "../../components/PlanoMesas";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
+import { MenuFlotante } from "../../components/MenuFlotante";
 import { cuentaConfirmacion } from "../../lib/invitados";
-import { nombreCompleto } from "../../lib/formato";
+import { nombreCompleto, fechaCorta, horaCorta } from "../../lib/formato";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import {
   conBorrador,
@@ -34,6 +39,11 @@ import {
   aplicarBorrador,
   familiasQueCambian,
   ocupacion,
+  MEMORIAS,
+  PRUEBA_VACIA,
+  memoriaDesde,
+  conMemoria,
+  cargarMemoria,
 } from "../../lib/repartoMesas";
 
 // El ancho de una columna, una sola vez (norma 6): 224 px = `sm:w-56` de
@@ -139,9 +149,17 @@ function Columna({ nombre, cabecera, llena, familias, cogida, onCoger, onSoltar 
 
 const porNombre = (a, b) => a.nombre.localeCompare(b.nombre, "es");
 const CIFRA = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno };
+// «28 oct a las 10:15», en la hora de quien mira («sv-SE» da el día local
+// como AAAA-MM-DD, lo que espera fechaCorta).
+const cuandoSeGuardo = (iso) => `${fechaCorta(new Date(iso).toLocaleDateString("sv-SE"))} a las ${horaCorta(iso)}`;
 
-export function VentanaMesas({ data, borrador, setBorrador, onCerrar, fijo }) {
-  const { invitados, mesas, persistInvitados, persistMesas } = data;
+export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
+  const { invitados, evento, persistInvitados, persistMesas, persistEvento } = data;
+  const { borrador } = prueba;
+  // Las mesas que se ven: las de la memoria cargada o, si no hay, las de verdad.
+  const mesas = prueba.mesas ?? data.mesas;
+  // Sin la columna en la base (falta subir el SQL de la v75), no hay memorias.
+  const memorias = evento?.acomodaciones;
   const [cogida, setCogida] = useState(null);
   const [aviso, setAviso] = useState("");
   const [avisosAuto, setAvisosAuto] = useState([]);
@@ -158,7 +176,10 @@ export function VentanaMesas({ data, borrador, setBorrador, onCerrar, fijo }) {
   const familias = familiasParaRepartir(vista, { conSinConfirmar });
   const sinMesa = familias.filter((f) => f.mesa == null).sort(porNombre);
   const cambian = familiasQueCambian(invitados, borrador);
+  const hayPrueba = cambian > 0 || prueba.mesas != null;
   const ordenadas = [...mesas].sort((a, b) => a.numero - b.numero);
+  const cambiar = (cambios) => setPrueba((p) => ({ ...p, ...cambios, sucia: true }));
+  const setBorrador = (siguiente) => cambiar({ borrador: siguiente });
 
   const limpiarAvisos = () => {
     setAviso("");
@@ -191,24 +212,73 @@ export function VentanaMesas({ data, borrador, setBorrador, onCerrar, fijo }) {
   };
   // Al aplicar, la prueba pasa a la Lista y los botones se apagan: se dice
   // aquí que está guardado (norma 9), o parecería que no ha hecho nada.
+  // Con una memoria cargada, también sus mesas; quien quedara en una mesa
+  // que ya no existe, sin mesa.
   const aplicar = () => {
-    persistInvitados(aplicarBorrador(invitados, borrador));
+    if (prueba.mesas) persistMesas(prueba.mesas);
+    const numeros = new Set(mesas.map((m) => m.numero));
+    persistInvitados(aplicarBorrador(invitados, borrador).map((g) => (g.mesa != null && !numeros.has(g.mesa) ? { ...g, mesa: null } : g)));
     limpiarAvisos();
-    setGuardado(`Guardado en la Lista: ${cambian === 1 ? "1 familia cambia" : `${cambian} familias cambian`} de mesa.`);
-    setBorrador({});
+    setGuardado(
+      prueba.cargada
+        ? `Guardado en la Lista: Acomodación ${prueba.cargada}.`
+        : `Guardado en la Lista: ${cambian === 1 ? "1 familia cambia" : `${cambian} familias cambian`} de mesa.`
+    );
+    setPrueba(PRUEBA_VACIA);
   };
-  const descartar = () => preguntar({ ...PREGUNTA_DESCARTAR, peligro: false, alConfirmar: () => setBorrador({}) });
+  const descartar = () => preguntar({ ...PREGUNTA_DESCARTAR, peligro: false, alConfirmar: () => setPrueba(PRUEBA_VACIA) });
 
-  // ---------- Las mesas: al momento ----------
+  // ---------- Las memorias ----------
+  const guardarEn = (numero) => {
+    const hacer = () => {
+      persistEvento({ ...evento, acomodaciones: conMemoria(memorias, memoriaDesde(vista, mesas, numero)) });
+      setPrueba((p) => ({ ...p, cargada: numero, sucia: false }));
+      limpiarAvisos();
+      setGuardado(`Guardada en Acomodación ${numero}.`);
+    };
+    const yaHabia = memorias.find((m) => m.numero === numero);
+    if (!yaHabia) return hacer();
+    preguntar({
+      titulo: `¿Sustituir la Acomodación ${numero}?`,
+      texto: `Se guardó el ${cuandoSeGuardo(yaHabia.guardadaEl)}. Se cambia por lo que se ve ahora.`,
+      rotulo: "Sí",
+      peligro: false,
+      alConfirmar: hacer,
+    });
+  };
+  const cargar = (memoria) => {
+    const hacer = () => {
+      const { mesas: suyas, borrador: suyo, aviso: nota } = cargarMemoria(invitados, memoria);
+      setPrueba({ borrador: suyo, mesas: suyas, cargada: memoria.numero, sucia: false });
+      limpiarAvisos();
+      setAviso(nota);
+    };
+    // Lo que se ha tocado desde la última carga o guardado se perdería.
+    if (prueba.sucia && hayPrueba) preguntar({ ...PREGUNTA_DESCARTAR, peligro: false, alConfirmar: hacer });
+    else hacer();
+  };
+  const opcionesMemorias = [
+    ...(memorias?.length
+      ? memorias.map((m) => ({ id: `cargar-${m.numero}`, etiqueta: `Acomodación ${m.numero}`, marcado: prueba.cargada === m.numero, onClick: () => cargar(m) }))
+      : [{ id: "ninguna", encabezado: "Ninguna guardada" }]),
+    { id: "guardar", etiqueta: "Guardar", submenu: MEMORIAS.map((n) => ({ id: `guardar-${n}`, etiqueta: `Acomodación ${n}`, onClick: () => guardarEn(n) })) },
+  ];
+
+  // ---------- Las mesas: al momento (con una memoria cargada, en la prueba) ----------
+  const cambiarMesas = (siguientes) => (prueba.mesas ? cambiar({ mesas: siguientes }) : persistMesas(siguientes));
   const anadirMesa = () => {
     const siguiente = mesas.reduce((max, m) => Math.max(max, m.numero), 0) + 1;
-    persistMesas([...mesas, { numero: siguiente, capacidad: 10 }]);
+    cambiarMesas([...mesas, { numero: siguiente, capacidad: 10 }]);
   };
-  const cambiarSitios = (numero, capacidad) => persistMesas(mesas.map((m) => (m.numero === numero ? { ...m, capacidad } : m)));
+  const cambiarSitios = (numero, capacidad) => cambiarMesas(mesas.map((m) => (m.numero === numero ? { ...m, capacidad } : m)));
   // Quien estaba en ella se queda sin mesa, en la Lista y en la prueba; no
   // se borra a nadie.
   const quitarMesa = (numero) => {
     const sinEsaMesa = (lista) => lista.map((g) => (g.mesa === numero ? { ...g, mesa: null } : g));
+    if (prueba.mesas) {
+      cambiar({ mesas: mesas.filter((m) => m.numero !== numero), borrador: borradorDesde(invitados, sinEsaMesa(vista)) });
+      return;
+    }
     const lista = sinEsaMesa(invitados);
     if (invitados.some((g) => g.mesa === numero)) persistInvitados(lista);
     persistMesas(mesas.filter((m) => m.numero !== numero));
@@ -281,21 +351,42 @@ export function VentanaMesas({ data, borrador, setBorrador, onCerrar, fijo }) {
       <div className="flex flex-col" style={{ flex: 1, minHeight: 0 }}>
         <div className="flex items-center gap-2 flex-wrap mb-2">
           <span className="text-xs px-2 py-0.5 rounded" style={{ background: C.paperDark, color: C.charcoal }}>
-            {cambian === 0 ? "PRUEBA · sin cambios" : `PRUEBA · ${cambian} ${cambian === 1 ? "familia cambia" : "familias cambian"} de mesa, aún sin guardar`}
+            {!hayPrueba
+              ? "PRUEBA · sin cambios"
+              : prueba.cargada
+                ? `PRUEBA · Acomodación ${prueba.cargada}${prueba.sucia ? " con cambios" : ""}, aún sin aplicar`
+                : `PRUEBA · ${cambian} ${cambian === 1 ? "familia cambia" : "familias cambian"} de mesa, aún sin guardar`}
           </span>
           <span className="flex-1" />
-          {/* Los tres, del mismo ancho (norma 4). En el móvil no caben en una
-              fila: dos arriba y «Añadir mesa», a lo ancho, debajo. */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 w-full sm:w-auto">
+          {/* Los cuatro, del mismo ancho (norma 4); en el móvil, dos y dos. */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full sm:w-auto">
             <Boton variante="secundario" icono={IconoPlano} aria-pressed={verPlano} onClick={() => setVerPlano((v) => !v)}>
               {verPlano ? "Ver las mesas" : "Plano de mesas"}
             </Boton>
             <Boton variante="secundario" titulo="Propone un reparto de las familias confirmadas, en la prueba: se repasa y se aplica" disabled={verPlano} onClick={autoAsignar}>
               Auto-asignar
             </Boton>
-            <Boton variante="secundario" icono={Plus} className="col-span-2 sm:col-span-1" onClick={anadirMesa}>
+            <Boton variante="secundario" icono={Plus} onClick={anadirMesa}>
               Añadir mesa
             </Boton>
+            {/* Las memorias, en el desplegable de toda la app (él, v75). */}
+            <MenuFlotante
+              anchor="bottom-left"
+              opciones={opcionesMemorias}
+              render={({ ref, toggle }) => (
+                <Boton
+                  ref={ref}
+                  variante="secundario"
+                  icono={Bookmark}
+                  className="w-full"
+                  disabled={!memorias}
+                  titulo={memorias ? "Guardar la acomodación de ahora, o cargar una guardada" : "Falta subir el SQL de la versión 75"}
+                  onClick={toggle}
+                >
+                  Memorias
+                </Boton>
+              )}
+            />
           </div>
         </div>
         {aviso && <LineaAviso className="text-sm mb-2">{aviso}</LineaAviso>}
@@ -311,9 +402,10 @@ export function VentanaMesas({ data, borrador, setBorrador, onCerrar, fijo }) {
         )}
 
         {verPlano ? (
-          // El plano es el de la Lista (lo que se imprime), no el de la prueba.
+          // El plano, de lo que se ve en pantalla, como el resto de la ventana:
+          // con una memoria cargada, sus mesas, y moverlas es parte de la prueba.
           <div className="overflow-y-auto" style={{ flex: 1, minHeight: 0 }}>
-            <PlanoMesas data={data} ocupacionMesa={(numero) => ocupacion(invitados, numero)} />
+            <PlanoMesas data={{ ...data, mesas, persistMesas: cambiarMesas }} ocupacionMesa={(numero) => ocupacion(vista, numero)} />
           </div>
         ) : (
           // En el Mac, «Sin mesa» a la izquierda y cada parte con su propia
@@ -377,10 +469,10 @@ export function VentanaMesas({ data, borrador, setBorrador, onCerrar, fijo }) {
               Lista»; las mesas y sus sitios se guardan al momento.
             </p>
           </details>
-          <Boton variante="secundario" onClick={descartar} disabled={cambian === 0}>
+          <Boton variante="secundario" onClick={descartar} disabled={!hayPrueba}>
             Descartar
           </Boton>
-          <Boton variante="principal" onClick={aplicar} disabled={cambian === 0}>
+          <Boton variante="principal" onClick={aplicar} disabled={!hayPrueba}>
             Aplicar a la Lista
           </Boton>
         </div>

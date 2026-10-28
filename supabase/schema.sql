@@ -111,6 +111,11 @@ CREATE TABLE public.evento (
     -- habría borrado sin manera de recuperarla.
     "zonasTablon" boolean DEFAULT false,
     "zonasTablonTitulo" text,
+    -- «Memorias» de Acomodación (v75): Acomodación 1, 2 y 3, cada una una
+    -- foto de las mesas y de la mesa de cada invitado ({ numero,
+    -- guardadaEl, mesas, asientos }). Solo el anfitrión: no sale en
+    -- evento_publico().
+    "acomodaciones" jsonb DEFAULT '[]'::jsonb NOT NULL,
     CONSTRAINT evento_id_check CHECK (id)
 );
 
@@ -916,13 +921,14 @@ $$;
 
 -- Los datos del evento que puede ver cualquiera (v63): portada, login y
 -- tablón. Sin lo privado: el enlace del grupo de WhatsApp (el primer filtro
--- para llegar al tablón) y el email del anfitrión. Una columna nueva sale
--- aquí sola: si es privada, se quita también aquí.
+-- para llegar al tablón), el email del anfitrión y las memorias de
+-- Acomodación (v75). Una columna nueva sale aquí sola: si es privada, se
+-- quita también aquí.
 CREATE FUNCTION public.evento_publico() RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-  select to_jsonb(e) - 'enlaceGrupoWhatsapp' - 'emailAnfitrion' from evento e limit 1;
+  select to_jsonb(e) - 'enlaceGrupoWhatsapp' - 'emailAnfitrion' - 'acomodaciones' from evento e limit 1;
 $$;
 
 -- El evento entero, para el anfitrión.

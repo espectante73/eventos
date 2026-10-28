@@ -33,6 +33,7 @@ import { VentanaConfigZonaReinicio } from "./anfitrion/VentanaConfigZonaReinicio
 import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
 import { VentanaColaboradoresDatos } from "./anfitrion/VentanaColaboradoresDatos";
 import { VentanaMesas } from "./anfitrion/VentanaMesas";
+import { PRUEBA_VACIA } from "../lib/repartoMesas";
 import { VentanaCuentas } from "./anfitrion/VentanaCuentas";
 import { VentanaDiaEvento } from "./anfitrion/VentanaDiaEvento";
 import { VentanaMarcador } from "./anfitrion/VentanaMarcador";
@@ -121,10 +122,10 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   const abrirMusicaEvento = useCallback(() => abrirMusica(abrirMusicaDentro), [abrirMusicaDentro]);
 
   // «Mesas y acomodación» (él, v74.6): en su ventana propia, para verlo en
-  // grande; en un aparato táctil, dentro de la app. La prueba (el borrador)
-  // vive aquí: cerrar la ventana no la pierde, y nada se guarda hasta
+  // grande; en un aparato táctil, dentro de la app. La prueba (asientos y,
+  // con una memoria cargada, sus mesas) vive aquí: cerrar la ventana no la pierde, y nada se guarda hasta
   // «Aplicar a la Lista».
-  const [borradorMesas, setBorradorMesas] = useState({});
+  const [pruebaMesas, setPruebaMesas] = useState(PRUEBA_VACIA);
   const {
     abrir: abrirMesasPopup,
     actualizar: actualizarMesas,
@@ -135,7 +136,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     if (!mesasEnVentana) return;
     actualizarMesas(
       <ErrorBoundary ventana={ventanaMesas}>
-        <VentanaMesas data={data} borrador={borradorMesas} setBorrador={setBorradorMesas} onCerrar={() => ventanaMesas?.close()} fijo />
+        <VentanaMesas data={data} prueba={pruebaMesas} setPrueba={setPruebaMesas} onCerrar={() => ventanaMesas?.close()} fijo />
       </ErrorBoundary>
     );
   });
@@ -380,7 +381,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
 
       {/* Mesas */}
       {abierto.mesas && (
-        <VentanaMesas data={data} borrador={borradorMesas} setBorrador={setBorradorMesas} onCerrar={() => toggle("mesas")} />
+        <VentanaMesas data={data} prueba={pruebaMesas} setPrueba={setPruebaMesas} onCerrar={() => toggle("mesas")} />
       )}
 
       {/* Lista de invitados, en la página (móvil, o si el navegador
