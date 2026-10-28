@@ -27,6 +27,14 @@ describe("familiasParaRepartir", () => {
     // Pablo sin confirmar no cuenta ni da nombre.
     expect(familias.find((f) => f.clave === "pérez01")).toMatchObject({ nombre: "Pérez, Loli", cuantos: 1 });
   });
+
+  // v74.9 (él): el aviso de alergias, en la familia que las tiene.
+  it("dice quién de la familia tiene alergias o intolerancias («No» no cuenta)", () => {
+    const conAlergias = invitados.map((x) => (x.id === "2" ? { ...x, alergias: "Gluten" } : x.id === "3" ? { ...x, alergias: "No" } : x));
+    const familias = familiasParaRepartir(conAlergias);
+    expect(familias.find((f) => f.clave === "garcía01").conAlergia.map((x) => x.id)).toEqual(["2"]);
+    expect(familias.find((f) => f.clave === "expósito01").conAlergia).toEqual([]);
+  });
 });
 
 describe("moverFamilia", () => {

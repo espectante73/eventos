@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "74.9",
+    cambios: [
+      "Acomodación: el aviso de alergias o intolerancias ya no va en la cabecera de la mesa, sino en cada familia que las tiene (una mesa puede tener varias). Al pasar por encima del icono se ve quién y qué.",
+    ],
+  },
+  {
     version: "74.8",
     cambios: [
       "Acomodación: en la cabecera de cada mesa, una línea dorada fina separa los controles de «Mesa 3 · 5/9».",

@@ -2,7 +2,7 @@
 // familias», en una sola. En su ventana propia («que ocupe la pantalla y
 // verlo en grande»; en el Mac, una ventana del sistema, como la Lista). A
 // la izquierda, «Sin mesa»; a la derecha, una columna por mesa. Arriba de
-// cada mesa, sus controles (− / + sitios, alergias, Vaciar, quitarla) y
+// cada mesa, sus controles (− / + sitios, Vaciar, quitarla) y
 // debajo «Mesa 3 · 5/9»; llena, un recuadro grueso alrededor. Cada familia,
 // con el nombre de su «O» y cuántos son; se arrastra a otra columna o, en
 // el móvil, se toca la familia y luego la mesa. Una familia no entra donde
@@ -21,8 +21,8 @@ import { LineaAviso } from "../../components/LineaAviso";
 import { RecuadroCifras } from "../../components/Widgets";
 import { PlanoMesas } from "../../components/PlanoMesas";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
-import { cuentaConfirmacion, tieneAlergiaReal } from "../../lib/invitados";
-import { seSientaEnMesa } from "../../lib/mesas";
+import { cuentaConfirmacion } from "../../lib/invitados";
+import { nombreCompleto } from "../../lib/formato";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import {
   conBorrador,
@@ -78,7 +78,21 @@ function Familia({ familia, cogida, onCoger }) {
       }
     >
       <span className="truncate">{familia.nombre}</span>
-      <b style={{ fontFamily: "'Fraunces', serif" }}>{cifra}</b>
+      <span className="flex items-center gap-1.5 flex-shrink-0">
+        {/* Alergias o intolerancias: en la familia que las tiene, no en la
+            mesa (él, v74.9: «solo donde aplique»). Quién y qué, al pasar
+            por encima. */}
+        {familia.conAlergia.length > 0 && (
+          <span
+            title={`Alergias o intolerancias: ${familia.conAlergia.map((g) => `${nombreCompleto(g)} (${g.alergias.trim()})`).join("; ")}`}
+            aria-label="Alergias o intolerancias"
+            style={{ color: C.wax }}
+          >
+            <AlertTriangle size={14} aria-hidden />
+          </span>
+        )}
+        <b style={{ fontFamily: "'Fraunces', serif" }}>{cifra}</b>
+      </span>
     </button>
   );
 }
@@ -202,10 +216,10 @@ export function VentanaMesas({ data, borrador, setBorrador, onCerrar, fijo }) {
   };
 
   const cabeceraMesa = (m, ocupados) => {
-    const alergias = vista.some((g) => g.mesa === m.numero && seSientaEnMesa(g) && tieneAlergiaReal(g));
     return (
       <div className="rounded px-2 py-1.5 mb-2" style={{ background: C.ink, color: C.goldClaro }}>
-        {/* Arriba, los controles (él, v74.6); debajo, «Mesa 3 · 5/9». */}
+        {/* Arriba, los controles (él, v74.6); debajo, «Mesa 3 · 5/9». Las
+            alergias, en cada familia (v74.9). */}
         <div data-controles className="flex items-center justify-between gap-1">
           <span className="flex items-center gap-1" title={`${m.capacidad} sitios`}>
             <Boton
@@ -220,11 +234,6 @@ export function VentanaMesas({ data, borrador, setBorrador, onCerrar, fijo }) {
             <span style={CIFRA}>{m.capacidad}</span>
             <Boton variante="secundario" oscuro tamano="pequeno" icono={Plus} titulo="Un sitio más" onClick={() => cambiarSitios(m.numero, m.capacidad + 1)} />
           </span>
-          {alergias && (
-            <span title="Hay alergias en esta mesa" aria-label="Hay alergias en esta mesa" style={{ color: C.avisoFondo }}>
-              <AlertTriangle size={16} aria-hidden />
-            </span>
-          )}
           <Boton variante="secundario" oscuro tamano="pequeno" titulo="Deja sus familias sin mesa, en la prueba" disabled={ocupados === 0} onClick={() => vaciar(m.numero)}>
             Vaciar
           </Boton>

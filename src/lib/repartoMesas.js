@@ -9,6 +9,7 @@
 // confirma a alguien, al aplicar no se le pisa (norma 12).
 import { asignarMesaConSuFamilia, autoAsignarMesas, claveFamiliaMesa, ocupacion, seSientaEnMesa } from "./mesas";
 import { nombreCompleto } from "./formato";
+import { tieneAlergiaReal } from "./invitados";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 // La Lista tal como quedaría con el borrador.
@@ -26,7 +27,9 @@ const puesto = (g) => {
 
 // Las familias que se sientan: quién las nombra, cuántos son, cuántos de
 // ellos aún sin confirmar (salen sombreados: él, «que se sombreen hasta
-// confirmar») y en qué mesa están. La ventana pide `conSinConfirmar`.
+// confirmar»), en qué mesa están y quiénes tienen alergias o intolerancias
+// (el aviso, en la familia y no en la mesa: él, v74.9, «solo donde
+// aplique»). La ventana pide `conSinConfirmar`.
 export function familiasParaRepartir(vista, { conSinConfirmar = false } = {}) {
   const porClave = new Map();
   for (const g of vista) {
@@ -38,7 +41,8 @@ export function familiasParaRepartir(vista, { conSinConfirmar = false } = {}) {
   return [...porClave.entries()].map(([clave, miembros]) => {
     const representante = [...miembros].sort((a, b) => puesto(a) - puesto(b) || nombreCompleto(a).localeCompare(nombreCompleto(b), "es"))[0];
     const sinConfirmar = miembros.filter((g) => !g.confirmado).length;
-    return { clave, representante, nombre: nombreCompleto(representante), cuantos: miembros.length, sinConfirmar, mesa: representante.mesa ?? null };
+    const conAlergia = miembros.filter(tieneAlergiaReal);
+    return { clave, representante, nombre: nombreCompleto(representante), cuantos: miembros.length, sinConfirmar, conAlergia, mesa: representante.mesa ?? null };
   });
 }
 

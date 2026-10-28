@@ -196,3 +196,18 @@ it("«Plano de mesas» se abre aquí mismo", () => {
   expect(boton("Ver las mesas")).toBeTruthy();
   vista.desmontar();
 });
+
+// v74.9 (él): «el icono de alergias debe verse solo donde aplique».
+it("el aviso de alergias o intolerancias sale en la familia que las tiene, no en la mesa", () => {
+  const conAlergia = invitados.map((x) => (x.id === "3" ? { ...x, alergias: "Gluten" } : x));
+  function Prueba() {
+    const [borrador, setBorrador] = useState({});
+    return <VentanaMesas data={{ invitados: conAlergia, mesas, persistInvitados: () => {}, persistMesas: () => {} }} borrador={borrador} setBorrador={setBorrador} onCerrar={() => {}} />;
+  }
+  const vista = montar(<Prueba />);
+  const avisos = [...vista.contenedor.querySelectorAll('[aria-label="Alergias o intolerancias"]')];
+  expect(avisos).toHaveLength(1);
+  expect(vista.contenedor.querySelector('[data-familia="Expósito, Rosi"]').contains(avisos[0])).toBe(true);
+  expect(avisos[0].title).toBe("Alergias o intolerancias: Expósito, Rosi (Gluten)");
+  vista.desmontar();
+});
