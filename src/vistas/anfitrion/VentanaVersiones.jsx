@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "74.4",
+    cambios: [
+      "El sello de los días que faltan, siempre por encima, como el cuadradito de Equipo: la ventana de Mesas lo tapaba. Y ninguna ventana baja ya hasta la franja de abajo (la de la barra y el sello), ni al abrirse ni al moverla ni al agrandarla.",
+    ],
+  },
+  {
     version: "74.3",
     cambios: [
       "Repartir familias: arriba, el recuadro de cifras con los confirmados y los que aún no han confirmado. Es la misma cuenta que la cabecera de la Lista de invitados, así que las dos dicen siempre lo mismo.",

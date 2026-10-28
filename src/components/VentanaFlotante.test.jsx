@@ -120,3 +120,24 @@ it("agrandarla o moverla nunca la saca de la pantalla, y no selecciona texto", a
   expect(ventana.style.left).toBe(`${MARGEN_PANTALLA}px`);
   vista.desmontar();
 });
+
+// v74.4 (él): la ventana de Mesas tapaba el sello de los días. Ninguna
+// ventana baja hasta la franja de la barra y el sello.
+it("agrandarla o moverla no la mete en la franja de abajo, la de la barra y el sello", async () => {
+  const { montar } = await import("../pruebas/dibujar");
+  const { MARGEN_PANTALLA } = await import("../theme");
+  document.documentElement.style.setProperty("--hueco-barra-ventanas", "90px");
+  const vista = montar(<VentanaFlotante titulo="Ventana" onCerrar={() => {}}>Algo</VentanaFlotante>);
+  const ventana = document.querySelector(".fixed.rounded-lg");
+  const raton = (el, tipo, x, y) => act(() => el.dispatchEvent(new MouseEvent(tipo, { bubbles: true, cancelable: true, clientX: x, clientY: y })));
+  raton(document.querySelector('[title="Arrastra para cambiar el tamaño"]'), "mousedown", 200, 200);
+  raton(window, "mousemove", 5000, 5000);
+  raton(window, "mouseup", 5000, 5000);
+  expect(ventana.style.height).toBe(`${window.innerHeight - 90 - MARGEN_PANTALLA - 100}px`);
+  raton(document.querySelector(".cursor-move"), "mousedown", 120, 120);
+  raton(window, "mousemove", 120, 5000);
+  raton(window, "mouseup", 120, 5000);
+  expect(ventana.style.top).toBe(`${window.innerHeight - 90 - MARGEN_PANTALLA - 100}px`);
+  document.documentElement.style.removeProperty("--hueco-barra-ventanas");
+  vista.desmontar();
+});

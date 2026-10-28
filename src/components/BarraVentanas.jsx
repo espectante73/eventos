@@ -24,6 +24,9 @@ const HUECO_X = 14;
 export const ALTO_BARRA = SEPARACION_ABAJO + TAM_CUADRITO + HUECO_X + TAMANO_BOTON_QUITAR + 12;
 // Sin ventanas abiertas solo está Equipo, sin X encima: tapa menos.
 export const ALTO_BARRA_SOLA = SEPARACION_ABAJO + TAM_CUADRITO + 12;
+// La capa de la barra, por encima de todo (también de las ventanas
+// flotantes): la comparte el sello de los días (SelloCuentaAtras).
+export const Z_BARRA = 10000;
 
 // Las ventanas que pueden ir en la barra. El icono, el del menú.
 export const VENTANAS_MOVIL = {
@@ -55,7 +58,7 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar, onEquipo 
       // Por encima de todo, también de las ventanas flotantes: tiene que
       // poder tocarse con una abierta. Ellas se acortan para no quedar
       // debajo (--hueco-barra-ventanas, en VentanaFlotante.jsx).
-      style={{ bottom: SEPARACION_ABAJO, zIndex: 10000 }}
+      style={{ bottom: SEPARACION_ABAJO, zIndex: Z_BARRA }}
     >
       {ventanas.map(({ clave, titulo, icono: Icono }) => {
         const esDelante = clave === delante;

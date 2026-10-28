@@ -145,6 +145,9 @@ export const ETIQUETAS_VENTANAS = {
 // Lo más pequeña que se puede dejar una ventana al encogerla a mano.
 const ANCHO_MINIMO = 280;
 const ALTO_MINIMO = 200;
+// La franja de abajo que ocupan la barra de ventanas y el sello de los días
+// (BarraVentanas la anuncia en --hueco-barra-ventanas): ninguna ventana baja ahí.
+const huecoAbajo = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hueco-barra-ventanas")) || 0;
 // Un valor entre dos límites; si no caben los dos (pantalla diminuta), manda el mínimo.
 const entre = (valor, minimo, maximo) => Math.max(minimo, Math.min(valor, maximo));
 
@@ -234,18 +237,19 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
     const coords = (e) => (e.touches ? e.touches[0] : e);
     const mover = (e) => {
       const { clientX, clientY } = coords(e);
+      const abajo = window.innerHeight - huecoAbajo() - MARGEN_PANTALLA;
       if (arrastre.current) {
         const { width, height } = ventanaRef.current.getBoundingClientRect();
         setPos({
           left: entre(clientX - arrastre.current.dx, MARGEN_PANTALLA, window.innerWidth - width - MARGEN_PANTALLA),
-          top: entre(clientY - arrastre.current.dy, MARGEN_PANTALLA, window.innerHeight - height - MARGEN_PANTALLA),
+          top: entre(clientY - arrastre.current.dy, MARGEN_PANTALLA, abajo - height),
         });
       }
       const r = redimension.current;
       if (r) {
         setTam({
           width: entre(r.anchoInicial + (clientX - r.x), ANCHO_MINIMO, window.innerWidth - r.left - MARGEN_PANTALLA),
-          height: entre(r.altoInicial + (clientY - r.y), ALTO_MINIMO, window.innerHeight - r.top - MARGEN_PANTALLA),
+          height: entre(r.altoInicial + (clientY - r.y), ALTO_MINIMO, abajo - r.top),
         });
       }
     };
@@ -256,14 +260,14 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
     // El navegador más pequeño: la ventana se encoge y se recoloca dentro.
     const alCambiarPantalla = () => {
       const maxAncho = window.innerWidth - 2 * MARGEN_PANTALLA;
-      const maxAlto = window.innerHeight - 2 * MARGEN_PANTALLA;
+      const maxAlto = window.innerHeight - 2 * MARGEN_PANTALLA - huecoAbajo();
       setTam((t) => t && { width: Math.min(t.width, maxAncho), height: Math.min(t.height, maxAlto) });
       const el = ventanaRef.current;
       if (!el) return;
       const { width, height } = el.getBoundingClientRect();
       setPos((p) => ({
         left: entre(p.left, MARGEN_PANTALLA, window.innerWidth - Math.min(width, maxAncho) - MARGEN_PANTALLA),
-        top: entre(p.top, MARGEN_PANTALLA, window.innerHeight - Math.min(height, maxAlto) - MARGEN_PANTALLA),
+        top: entre(p.top, MARGEN_PANTALLA, window.innerHeight - huecoAbajo() - Math.min(height, maxAlto) - MARGEN_PANTALLA),
       }));
     };
     window.addEventListener("mousemove", mover);
@@ -286,6 +290,11 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
   const sinSeleccionar = (e) => {
     if (!e.touches) e.preventDefault();
   };
+
+  // Lo más alta que puede ser: el 88 % de la pantalla y, aun así, sin
+  // bajar hasta la franja de abajo, la de la barra de ventanas y el sello de
+  // los días (él, v74.4: la ventana de Mesas tapaba el sello).
+  const altoMaximo = `min(calc(88vh - var(--hueco-barra-ventanas, 0px)), calc(100vh - ${pos.top + MARGEN_PANTALLA}px - var(--hueco-barra-ventanas, 0px)))`;
 
   const iniciarArrastre = (e) => {
     sinSeleccionar(e);
@@ -314,13 +323,13 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
         // ventana claramente más estrecha que la pantalla, no pegada de
         // borde a borde, a petición del usuario.
         width: fijo ? "100%" : tam ? tam.width : ancho || "min(620px, calc(100vw - 48px))",
-        height: fijo ? "100%" : tam ? tam.height : llena ? "calc(88vh - var(--hueco-barra-ventanas, 0px))" : undefined,
+        height: fijo ? "100%" : tam ? tam.height : llena ? altoMaximo : undefined,
         // 88vh (no 80vh): más aprovechado en una pantalla vertical de
         // móvil -- mismo valor que ya usa ModalFlotante, antes iban
         // distintos sin motivo real.
         // Menos el hueco de la barra de ventanas del móvil cuando se ve
         // (BarraVentanas.jsx): así no le tapa los botones de abajo.
-        maxHeight: fijo ? "100%" : tam ? undefined : "calc(88vh - var(--hueco-barra-ventanas, 0px))",
+        maxHeight: fijo ? "100%" : tam ? undefined : altoMaximo,
         boxShadow: fijo && !pantallaEntera ? "none" : S.flotanteOscura,
         top: fijo ? undefined : pos.top,
         left: fijo ? undefined : pos.left,
