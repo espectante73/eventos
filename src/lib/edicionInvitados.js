@@ -21,19 +21,25 @@
 import { uid } from "./id";
 import { claveFamiliaMesa } from "./mesas";
 import { nombreCompleto } from "./formato";
-import { comoColaborador } from "./invitados";
+import { comoColaborador, calcularEdad, pideEmail } from "./invitados";
+import { emailValido } from "./validacion";
+import { ROL_FAMILIAR, LETRA_ROL } from "./rolFamiliar";
 
 // Dos personas son "la misma" si coinciden nombre y apellido, sin
 // mirar mayúsculas, tildes ni espacios de más — el mismo criterio que
 // usa el tablón para reconocer a un invitado.
+// Un texto sin mayúsculas, tildes ni espacios de más: así se comparan los
+// nombres (y, en «Nuevo invitado», las zonas y las familias).
+const limpio = (texto) =>
+  String(texto || "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
 export function mismaPersona(a, b) {
-  const limpiar = (g) =>
-    `${g?.nombre || ""} ${g?.apellido || ""}`
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .toLowerCase();
+  const limpiar = (g) => limpio(`${g?.nombre || ""} ${g?.apellido || ""}`);
   return limpiar(a) === limpiar(b);
 }
 
@@ -102,7 +108,9 @@ export function agregarInvitado(invitados, datos) {
   if (!nombre || !apellido || !grupoFamiliar) {
     return { invitados, aviso: "Faltan el nombre, el apellido o el grupo familiar." };
   }
-  const nuevo = invitadoNuevo({ nombre, apellido, grupoFamiliar, zona: String(datos?.zona || "").trim() });
+  // Lo demás que traiga (rol, colaborador, año, email: «Nuevo invitado», v77).
+  const { rolFamiliar = "", colaboradorId = null, anioNacimiento = "", email = "" } = datos || {};
+  const nuevo = invitadoNuevo({ nombre, apellido, grupoFamiliar, zona: String(datos?.zona || "").trim(), rolFamiliar, colaboradorId, anioNacimiento, email });
   // Se AÑADE igual y solo se avisa: dos personas pueden llamarse igual
   // (un padre y un hijo). Bloquearlo sería decidir por el usuario.
   const repetido = invitados.some((g) => mismaPersona(g, nuevo));
@@ -276,4 +284,88 @@ export function marcarResponsable(responsables, rol, invitadoId) {
   if (siguiente[rol] === invitadoId) delete siguiente[rol];
   else siguiente[rol] = invitadoId;
   return siguiente;
+}
+
+// ---------- «Nuevo invitado» (él, v77) ----------
+//
+// El formulario flotante de la Lista, pensado sobre todo para el móvil en
+// vertical: Apellido · Nombre, Familia · Rol, Zona · Colaborador y, plegado,
+// Año · Email. Familia y Zona se eligen de las que ya hay; lo nuevo va
+// fuera de esa lista, con su «＋» (él: «mejor que esa opción sea fuera de
+// esa lista pero sí en ese mismo formulario»).
+
+// Lo que ve el desplegable de Rol: su letra y cómo se llama, corto.
+export const ROLES_FORMULARIO = [
+  { valor: ROL_FAMILIAR.ESPOSO, texto: `${LETRA_ROL[ROL_FAMILIAR.ESPOSO]} · Esposo` },
+  { valor: ROL_FAMILIAR.ESPOSA, texto: `${LETRA_ROL[ROL_FAMILIAR.ESPOSA]} · Esposa` },
+  { valor: ROL_FAMILIAR.HIJO, texto: `${LETRA_ROL[ROL_FAMILIAR.HIJO]} · Hijo` },
+  { valor: ROL_FAMILIAR.PADRE, texto: `${LETRA_ROL[ROL_FAMILIAR.PADRE]} · Padre o madre` },
+  { valor: ROL_FAMILIAR.SUELTO, texto: `${LETRA_ROL[ROL_FAMILIAR.SUELTO]} · Suelto` },
+];
+
+const unicos = (valores) => {
+  const vistos = new Map();
+  for (const v of valores) {
+    const t = String(v || "").trim();
+    if (t && !vistos.has(limpio(t))) vistos.set(limpio(t), t);
+  }
+  return [...vistos.values()].sort((a, b) => a.localeCompare(b, "es"));
+};
+// Las zonas y las familias que ya hay, escritas como están en la Lista.
+export const zonasDe = (invitados) => unicos(invitados.map((g) => g.zona));
+export const familiasDe = (invitados) => unicos(invitados.map((g) => g.grupoFamiliar));
+
+// Una familia nueva empieza con el apellido: «Pacheco01», o el siguiente
+// número libre si ya existe.
+export function familiaNuevaPara(invitados, apellido) {
+  const base = String(apellido || "").trim().split(/\s+/)[0] || "";
+  if (!base) return "";
+  const usadas = new Set(familiasDe(invitados).map(limpio));
+  for (let n = 1; n < 100; n += 1) {
+    const nombre = `${base}${String(n).padStart(2, "0")}`;
+    if (!usadas.has(limpio(nombre))) return nombre;
+  }
+  return base;
+}
+
+// El aviso de asignar colaborador a quien no tiene rol: el mismo en la
+// Lista y en «Nuevo invitado» (norma 7).
+export const avisoFaltaRol = (nombre) =>
+  `${nombre} todavía no tiene rol familiar. Ponle su rol (O, A, H, P o S) antes de asignarle colaborador: el formulario que verá el colaborador depende de ese rol.`;
+
+// Guarda lo del formulario. `familiaNueva` / `zonaNueva`: si se escribieron
+// a mano (con su «＋»). Devuelve { invitados, aviso } como las demás: si la
+// lista no cambia, el aviso dice qué falta.
+export function nuevoDesdeFormulario(invitados, datos, { familiaNueva = false, zonaNueva = false, evento } = {}) {
+  const sinCambio = (aviso) => ({ invitados, aviso });
+  let { grupoFamiliar = "", zona = "", anioNacimiento = "", email = "" } = datos;
+  grupoFamiliar = String(grupoFamiliar).trim();
+  zona = String(zona).trim();
+  anioNacimiento = String(anioNacimiento).trim();
+  email = String(email).trim();
+  const nombre = nombreCompleto({ nombre: String(datos.nombre || "").trim(), apellido: String(datos.apellido || "").trim() });
+
+  // Una familia «nueva» que ya existe uniría a esta persona con otros: no
+  // se adivina, se pregunta eligiéndola.
+  const familiaQueYaHay = familiasDe(invitados).find((f) => limpio(f) === limpio(grupoFamiliar));
+  if (familiaNueva && familiaQueYaHay) return sinCambio(`La familia «${familiaQueYaHay}» ya existe: elígela en la lista o escribe otra.`);
+  // Una zona «nueva» que ya existe con otra grafía: la de la Lista (así no
+  // salen dos en el tablón), y se dice.
+  let salvedad = "";
+  const zonaQueYaHay = zonasDe(invitados).find((z) => limpio(z) === limpio(zona));
+  if (zonaNueva && zonaQueYaHay) {
+    if (zonaQueYaHay !== zona) salvedad = `Se ha usado la zona «${zonaQueYaHay}», como ya estaba en la Lista.`;
+    zona = zonaQueYaHay;
+  }
+
+  if (datos.colaboradorId && !datos.rolFamiliar) return sinCambio(avisoFaltaRol(nombre || "Este invitado"));
+  if (anioNacimiento && (!/^\d{4}$/.test(anioNacimiento) || calcularEdad(anioNacimiento, evento) === null)) {
+    return sinCambio("El año de nacimiento son cuatro cifras, como 1988.");
+  }
+  // El email, como en el formulario del colaborador: desde los 16 años.
+  if (!pideEmail({ anioNacimiento }, evento)) email = "";
+  if (email && !emailValido(email)) return sinCambio("Ese email no parece válido: revisa que tenga @ y un punto.");
+
+  const { invitados: siguiente, aviso } = agregarInvitado(invitados, { ...datos, grupoFamiliar, zona, anioNacimiento, email });
+  return { invitados: siguiente, aviso: [aviso, siguiente !== invitados ? salvedad : ""].filter(Boolean).join(" ") };
 }

@@ -85,6 +85,10 @@ export function Field({ label, children }) {
   );
 }
 
+// El ancho del año de nacimiento: «1988» y nada más. Uno solo para el
+// formulario del colaborador y el «Nuevo invitado» de la Lista (norma 7).
+export const ANCHO_ANIO = 56;
+
 export function TextInput(props) {
   return <input {...props} style={{ ...inputStyle, ...props.style }} />;
 }

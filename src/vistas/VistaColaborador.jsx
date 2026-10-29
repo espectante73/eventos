@@ -23,7 +23,7 @@ import { generarImagenCronograma } from "../lib/cronograma";
 import { C, R, T, OP, DORADO, conAlfa } from "../theme";
 import { URL_REPOSITORIO } from "../constants";
 import { Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
-import { SectionTitle, TextInput } from "../components/Formulario";
+import { SectionTitle, TextInput, ANCHO_ANIO } from "../components/Formulario";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
 import { SeccionPlegable } from "../components/SeccionPlegable";
@@ -103,9 +103,9 @@ function SeparadorCeldas() {
   return <span aria-hidden="true" style={{ alignSelf: "stretch", borderLeft: `1px solid ${C.ink}`, opacity: OP.linea }} />;
 }
 
-// Las cajas de un año: justo para 4 cifras. Estrechas a propósito, para
-// que la línea de Boda (año, foto y casilla) quepa en el móvil (norma 6).
-const ANCHO_ANIO = 56;
+// Las cajas de un año (ANCHO_ANIO, en Formulario): justo para 4 cifras.
+// Estrechas a propósito, para que la línea de Boda (año, foto y casilla)
+// quepa en el móvil (norma 6).
 
 // En qué apartado plegado vive cada obligatorio: "Guardar" abre ese.
 const APARTADO_DE = { anioNacimiento: "datos", email: "datos", anioBoda: "boda", fotoBoda: "boda", alergias: "alergias" };

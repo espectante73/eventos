@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "77",
+    cambios: [
+      "Lista de invitados: «Acciones → Añadir» abre ahora un formulario flotante, «Nuevo invitado», pensado para el móvil en vertical: Apellido · Nombre, Familia · Rol, Zona · Colaborador y, plegado, Año nac. · Email. Ya no hay campos en la cabecera de la Lista.",
+      "Familia y Zona se eligen de las que ya hay, escritas como en la Lista; lo nuevo va aparte, con su «＋» (una familia nueva empieza con el apellido, «Apellido01»). Una zona nueva que ya existe con otra grafía usa la de la Lista y lo dice.",
+      "Al guardar, el formulario sigue abierto con Familia, Zona y Colaborador puestos, para seguir con el siguiente de la misma familia. El email, solo a partir de 16 años, como en el formulario del colaborador.",
+    ],
+  },
+  {
     version: "76",
     cambios: [
       "Contabilidad: los gastos, como una hoja de cálculo. Fecha · Concepto · Importe, una línea cada uno, con la fila de escribir siempre arriba: Intro o ＋ y el gasto queda justo debajo. Lo último apuntado, arriba; al pie, el Total.",

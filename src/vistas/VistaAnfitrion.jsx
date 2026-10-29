@@ -34,6 +34,7 @@ import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
 import { VentanaColaboradoresDatos } from "./anfitrion/VentanaColaboradoresDatos";
 import { VentanaMesas } from "./anfitrion/VentanaMesas";
 import { PRUEBA_VACIA } from "../lib/repartoMesas";
+import { avisoFaltaRol } from "../lib/edicionInvitados";
 import { VentanaCuentas } from "./anfitrion/VentanaCuentas";
 import { VentanaDiaEvento } from "./anfitrion/VentanaDiaEvento";
 import { VentanaMarcador } from "./anfitrion/VentanaMarcador";
@@ -260,7 +261,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     const nuevoId = colaboradorId || null;
     const invitado = invitados.find((g) => g.id === id);
     if (nuevoId && invitado && !invitado.rolFamiliar) {
-      return `${nombreCompleto(invitado)} todavía no tiene rol familiar. Ponle su rol (O, A, H, P o S) antes de asignarle colaborador: el formulario que verá el colaborador depende de ese rol.`;
+      return avisoFaltaRol(nombreCompleto(invitado));
     }
     persistInvitados(
       invitados.map((g) => (g.id === id ? { ...g, colaboradorId: nuevoId } : g))

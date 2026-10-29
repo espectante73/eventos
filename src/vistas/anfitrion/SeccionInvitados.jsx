@@ -51,7 +51,6 @@ import { cancionesDe, tieneCancion } from "../../lib/canciones";
 import { tocarTitulo, compararPorNiveles } from "../../lib/ordenNiveles";
 import { ResumenAvisosAsignacion } from "./ResumenAvisosAsignacion";
 import {
-  agregarInvitado as crearInvitado,
   importarInvitados as importarFilas,
   eliminarInvitado as borrarInvitado,
   PREGUNTA_ELIMINAR_COLABORADOR_DESDE_INVITADOS,
@@ -63,6 +62,7 @@ import {
   marcarResponsable as fijarResponsable,
 } from "../../lib/edicionInvitados";
 import { estadoTablon, contarTablon } from "../../lib/entradasTablon";
+import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
 import { useSeccion } from "../../lib/useSeccion";
 
 // El circulito del tablón tras el nombre (él, v75.2): «estilo semáforo»,
@@ -143,7 +143,6 @@ export function SeccionInvitados({
   const { entradasTablon } = data;
   const recuentoTablon = contarTablon(invitados, entradasTablon, evento);
 
-  const [nuevoInvitado, setNuevoInvitado] = useState({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
   const [textoImport, setTextoImport] = useState("");
   // Los avisos de las mesas salen en una ventanita en medio de la pantalla:
   // el aviso de arriba de la lista no se ve si se está en la fila 100.
@@ -199,17 +198,6 @@ export function SeccionInvitados({
   // Cada título se suma debajo de los anteriores, como en una hoja de
   // cálculo (él, v72.5): el primero manda y el siguiente ordena dentro.
   const cambiarOrden = (columna) => setOrden((o) => tocarTitulo(o, columna));
-
-  // La decisión vive en lib/edicionInvitados.js, con sus pruebas: aquí
-  // solo se recoge lo que escribió el usuario y se enseña el aviso.
-  const agregarInvitado = () => {
-    const { invitados: siguiente, aviso } = crearInvitado(invitados, nuevoInvitado);
-    if (siguiente !== invitados) {
-      persistInvitados(siguiente);
-      setNuevoInvitado({ nombre: "", apellido: "", zona: "", grupoFamiliar: "" });
-    }
-    avisarLista(aviso);
-  };
 
   const intentarCerrarInvitados = () => {
     if (colaboradoresPendientes.length > 0) {
@@ -1366,42 +1354,6 @@ export function SeccionInvitados({
           />
           </div>
         )}
-        {mostrarAnadir && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          <TextInput
-            placeholder="Grupo familiar"
-            value={nuevoInvitado.grupoFamiliar}
-            onChange={(e) =>
-              setNuevoInvitado({ ...nuevoInvitado, grupoFamiliar: e.target.value })
-            }
-          />
-          <TextInput
-            placeholder="Apellido familiar"
-            value={nuevoInvitado.apellido}
-            onChange={(e) =>
-              setNuevoInvitado({ ...nuevoInvitado, apellido: e.target.value })
-            }
-          />
-          <TextInput
-            placeholder="Nombre"
-            value={nuevoInvitado.nombre}
-            onChange={(e) =>
-              setNuevoInvitado({ ...nuevoInvitado, nombre: e.target.value })
-            }
-          />
-          <TextInput
-            placeholder="Zona"
-            value={nuevoInvitado.zona}
-            onChange={(e) =>
-              setNuevoInvitado({ ...nuevoInvitado, zona: e.target.value })
-            }
-          />
-          <Boton variante="principal" onClick={agregarInvitado}>
-            <Plus size={14} /> Añadir
-          </Boton>
-        </div>
-        )}
-
         {mostrarImport && (
           <div
             className="p-4 rounded mb-4"
@@ -2146,6 +2098,8 @@ export function SeccionInvitados({
           </div>
         </ModalFlotante>
       )}
+      {/* «Nuevo invitado» (él, v77): un formulario flotante, no campos en la cabecera. */}
+      {mostrarAnadir && <VentanaNuevoInvitado data={data} onCerrar={() => setMostrarAnadir(false)} />}
     </>
   );
 }

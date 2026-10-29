@@ -3,8 +3,7 @@ import {
   agregarInvitado, importarInvitados, eliminarInvitado, mismaPersona,
   cambiarCampo, alternarRolTrabajo, alternarExcluidoTablon,
   permitirExcepcion, quitarExcepcion, marcarResponsable,
-  colaboradoresSinFichaEnlazada, fichaDelColaborador,
-} from "./edicionInvitados";
+  colaboradoresSinFichaEnlazada, fichaDelColaborador, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario } from "./edicionInvitados";
 
 // La lista de invitados es la base de toda la app: si aquí se pierde
 // alguien, no se nota hasta que falta en la boda. Estas pruebas son el
@@ -248,5 +247,55 @@ describe("colaboradoresSinFichaEnlazada", () => {
   it("parte el nombre del colaborador por la coma; sin coma no adivina", () => {
     expect(fichaDelColaborador({ nombre: "Barrios, Jacob" })).toEqual({ apellido: "Barrios", nombre: " Jacob" });
     expect(fichaDelColaborador({ nombre: "Jacob" })).toEqual({ nombre: "Jacob", apellido: "" });
+  });
+});
+
+// v77 (él): «Nuevo invitado», el formulario flotante de la Lista.
+describe("«Nuevo invitado»", () => {
+  const evento = { fecha: "2026-12-11" };
+  const lista = [
+    { id: "1", nombre: "Ana", apellido: "Pacheco", grupoFamiliar: "Pacheco01", zona: "Icod" },
+    { id: "2", nombre: "Luis", apellido: "Sierra", grupoFamiliar: "Sierra01", zona: "Puerto" },
+  ];
+  const base = { apellido: "Pacheco", nombre: "Rubén", grupoFamiliar: "Pacheco01", rolFamiliar: "esposo", zona: "Icod", colaboradorId: null, anioNacimiento: "", email: "" };
+
+  it("las zonas y familias que ya hay, una vez cada una y en orden", () => {
+    expect(zonasDe([...lista, { zona: "icod" }, { zona: "" }])).toEqual(["Icod", "Puerto"]);
+    expect(familiasDe(lista)).toEqual(["Pacheco01", "Sierra01"]);
+  });
+
+  it("una familia nueva empieza con el apellido y el primer número libre", () => {
+    expect(familiaNuevaPara(lista, "Pacheco")).toBe("Pacheco02");
+    expect(familiaNuevaPara(lista, "Abrante")).toBe("Abrante01");
+    expect(familiaNuevaPara(lista, "")).toBe("");
+  });
+
+  it("guarda con su rol, colaborador, año y email", () => {
+    const { invitados, aviso } = nuevoDesdeFormulario(lista, { ...base, colaboradorId: "c1", anioNacimiento: "1985", email: "r@r.com" }, { evento });
+    expect(aviso).toBe("");
+    expect(invitados.at(-1)).toMatchObject({ nombre: "Rubén", apellido: "Pacheco", grupoFamiliar: "Pacheco01", rolFamiliar: "esposo", colaboradorId: "c1", anioNacimiento: "1985", email: "r@r.com" });
+  });
+
+  it("una familia «nueva» que ya existe no se guarda: se elige en la lista", () => {
+    const r = nuevoDesdeFormulario(lista, { ...base, grupoFamiliar: "pacheco01" }, { familiaNueva: true, evento });
+    expect(r.invitados).toBe(lista);
+    expect(r.aviso).toBe("La familia «Pacheco01» ya existe: elígela en la lista o escribe otra.");
+  });
+
+  it("una zona «nueva» que ya existe con otra grafía usa la de la Lista, y lo dice", () => {
+    const { invitados, aviso } = nuevoDesdeFormulario(lista, { ...base, zona: "ICOD" }, { zonaNueva: true, evento });
+    expect(invitados.at(-1).zona).toBe("Icod");
+    expect(aviso).toBe("Se ha usado la zona «Icod», como ya estaba en la Lista.");
+  });
+
+  it("colaborador sin rol, año mal escrito o email raro: no se guarda y se dice por qué", () => {
+    expect(nuevoDesdeFormulario(lista, { ...base, rolFamiliar: "", colaboradorId: "c1" }, { evento }).aviso).toContain("todavía no tiene rol familiar");
+    expect(nuevoDesdeFormulario(lista, { ...base, anioNacimiento: "85" }, { evento }).aviso).toBe("El año de nacimiento son cuatro cifras, como 1988.");
+    expect(nuevoDesdeFormulario(lista, { ...base, email: "r@r" }, { evento }).aviso).toBe("Ese email no parece válido: revisa que tenga @ y un punto.");
+  });
+
+  it("a un menor de 16 no se le guarda email, como en el formulario del colaborador", () => {
+    const { invitados } = nuevoDesdeFormulario(lista, { ...base, anioNacimiento: "2015", email: "n@n.com" }, { evento });
+    expect(invitados.at(-1).email).toBe("");
   });
 });
