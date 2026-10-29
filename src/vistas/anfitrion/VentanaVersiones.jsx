@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "76",
+    cambios: [
+      "Contabilidad: los gastos, como una hoja de cálculo. Fecha · Concepto · Importe, una línea cada uno, con la fila de escribir siempre arriba: Intro o ＋ y el gasto queda justo debajo. Lo último apuntado, arriba; al pie, el Total.",
+      "La fecha se elige en un calendario y puede ser de otro día: el orden sigue siendo por cuándo se apuntó, así que un gasto del mes pasado apuntado hoy sale arriba igual.",
+      "El concepto se elige de una lista propia («Conceptos»), que sustituye a la categoría. Un concepto puede llevar precio fijo (una suscripción): al elegirlo, el importe se pone solo, y si un mes cambia se corrige en la fila de ese gasto.",
+      "Todo gasto apuntado está pagado: desaparece la casilla «Pagado» y el balance resta todos los gastos.",
+    ],
+  },
+  {
     version: "75.4",
     cambios: [
       "Lista de invitados: en la cabecera, el puntito verde y el rojo van arriba, donde los demás recuadros llevan su rótulo, y la cifra debajo; así el recuadro mide lo mismo que los otros. Y los puntitos llevan un aro blanco: sobre el verde, el rojo casi no se veía.",

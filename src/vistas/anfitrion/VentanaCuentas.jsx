@@ -1,23 +1,24 @@
 // Ventana "Estado de cuentas": recaudado/pendiente de cobro (calculados
 // solos a partir de los pagos), recaudado por cada colaborador (con
-// acuse desglosado enviado por email), lista de gastos editable, y
-// balance. Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08
+// acuse desglosado enviado por email), los gastos como hoja de cálculo
+// (GastosHoja, v76) y balance. Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08
 // (Fase 4, Ronda 4).
 import { useState } from "react";
-import { Plus, Mail, Undo2, Calculator, Users, Receipt, Check } from "lucide-react";
+import { Mail, Undo2, Calculator, Users, Receipt, Check } from "lucide-react";
 import { C, T, OP } from "../../theme";
 import { importeEsperadoInvitado, resolverColaborador } from "../../lib/invitados";
-import { parsePrecio, formatearFecha, ordenarPorApellidoNombre, euros } from "../../lib/formato";
-import { uid } from "../../lib/id";
+import { formatearFecha, ordenarPorApellidoNombre, euros } from "../../lib/formato";
 import { construirAsuntoAcuse, construirHtmlAcuse } from "../../lib/acuseRecogida";
 import { generarPdfAcuse } from "../../lib/acuseImagen";
 import { TextInput } from "../../components/Formulario";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
-import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
+import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { useSeccion } from "../../lib/useSeccion";
 import { Cargando } from "../../components/Cargando";
+import { GastosHoja, VentanaConceptos } from "./GastosHoja";
+import { totalGastos as sumaGastos } from "../../lib/gastos";
 
 export function VentanaCuentas({ data, onCerrar }) {
   const {
@@ -25,7 +26,6 @@ export function VentanaCuentas({ data, onCerrar }) {
     invitados,
     colaboradores,
     gastos,
-    persistGastos,
     confirmarRecogidaColaborador,
     reenviarAcuseColaborador,
     deshacerRecogidaColaborador,
@@ -52,20 +52,8 @@ export function VentanaCuentas({ data, onCerrar }) {
   const [generandoPreview, setGenerandoPreview] = useState(null); // id del colaborador mientras se genera
   const [enviandoAcuse, setEnviandoAcuse] = useState(false);
 
-  const agregarGasto = () => {
-    persistGastos([
-      ...gastos,
-      { id: uid(), concepto: "", categoria: "", importe: "", pagado: false },
-    ]);
-  };
-
-  const cambiarGasto = (id, campo, valor) => {
-    persistGastos(gastos.map((g) => (g.id === id ? { ...g, [campo]: valor } : g)));
-  };
-
-  const eliminarGasto = (id) => {
-    persistGastos(gastos.filter((g) => g.id !== id));
-  };
+  // La lista de conceptos de los gastos, en su ventanita (v76).
+  const [verConceptos, setVerConceptos] = useState(false);
 
   const confirmados = invitados.filter((g) => g.confirmado);
   const recaudado = confirmados
@@ -74,11 +62,10 @@ export function VentanaCuentas({ data, onCerrar }) {
   const pendienteCobro = confirmados
     .filter((g) => !g.pagado)
     .reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
-  const totalGastos = gastos.reduce((s, g) => s + parsePrecio(g.importe), 0);
-  const gastosPagados = gastos
-    .filter((g) => g.pagado)
-    .reduce((s, g) => s + parsePrecio(g.importe), 0);
-  const balance = recaudado - gastosPagados;
+  // Todo gasto apuntado está pagado (él, v76: «si hago el asiento, es que
+  // está pagado»): el balance resta todos.
+  const totalGastos = sumaGastos(gastos);
+  const balance = recaudado - totalGastos;
 
   // Invitados confirmados y ya pagados de un colaborador — es tanto el
   // desglose del acuse como la base del importe total a confirmar.
@@ -254,7 +241,7 @@ export function VentanaCuentas({ data, onCerrar }) {
             {euros(balance)}
           </div>
           <div className="text-xs uppercase" style={{ color: C.charcoal, fontFamily: "'IBM Plex Mono', monospace" }}>
-            Balance (recaudado − gastos pagados)
+            Balance (recaudado − gastos)
           </div>
         </div>
       </div>
@@ -375,67 +362,14 @@ export function VentanaCuentas({ data, onCerrar }) {
         abierta={seccionAbierta === "gastos"}
         onAlternar={() => alternar("gastos")}
       >
-      <div className="flex items-center justify-end zurdo:justify-start mb-2 mt-2">
-        <Boton variante="principal" onClick={agregarGasto}>
-          <Plus size={14} /> Añadir gasto
-        </Boton>
-      </div>
-      <div className="space-y-2">
-        {gastos.map((g) => (
-          <div
-            key={g.id}
-            className="flex flex-wrap items-center gap-2 p-2 rounded"
-            style={{ background: C.blanco, border: `1px solid ${C.line}` }}
-          >
-            <TextInput
-              value={g.concepto}
-              onChange={(e) => cambiarGasto(g.id, "concepto", e.target.value)}
-              placeholder="Concepto (ej. Suscripción Claude Code)"
-              className="flex-1"
-              style={{ minWidth: 160 }}
-            />
-            <TextInput
-              value={g.categoria}
-              onChange={(e) => cambiarGasto(g.id, "categoria", e.target.value)}
-              placeholder="Categoría"
-              style={{ width: 120 }}
-            />
-            <TextInput
-              value={g.importe}
-              onChange={(e) => cambiarGasto(g.id, "importe", e.target.value)}
-              placeholder="Importe"
-              style={{ width: 90, textAlign: "right" }}
-            />
-            <label className="flex items-center gap-1 text-xs" style={{ color: C.charcoal }}>
-              <input
-                type="checkbox"
-                checked={g.pagado}
-                onChange={(e) => cambiarGasto(g.id, "pagado", e.target.checked)}
-              />
-              Pagado
-            </label>
-            <BotonQuitar
-              titulo="Quitar este gasto"
-              pregunta={{
-                titulo: "¿Quitar este gasto?",
-                texto: [g.concepto, g.importe && euros(g.importe)].filter(Boolean).join(" · ") || "Gasto sin concepto.",
-                rotulo: "Sí",
-              }}
-              onClick={() => eliminarGasto(g.id)}
-            />
-          </div>
-        ))}
-        {gastos.length === 0 && (
-          <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            Todavía no hay gastos registrados.
-          </p>
-        )}
-      </div>
+      <GastosHoja data={data} onConceptos={() => setVerConceptos(true)} />
       </SeccionPlegable>
       </div>
       )}
       {ventanaPregunta}
     </VentanaFlotante>
+
+    {verConceptos && <VentanaConceptos data={data} onCerrar={() => setVerConceptos(false)} />}
 
     {previewAcuse && (
       <ModalFlotante

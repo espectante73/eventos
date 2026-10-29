@@ -116,6 +116,9 @@ CREATE TABLE public.evento (
     -- guardadaEl, mesas, asientos }). Solo el anfitrión: no sale en
     -- evento_publico().
     "acomodaciones" jsonb DEFAULT '[]'::jsonb NOT NULL,
+    -- La lista de conceptos de los gastos (v76): [{ nombre, precio }], con
+    -- precio si es fijo (las suscripciones). Solo el anfitrión.
+    "conceptosGastos" jsonb DEFAULT '[]'::jsonb NOT NULL,
     CONSTRAINT evento_id_check CHECK (id)
 );
 
@@ -244,12 +247,21 @@ CREATE TABLE public.novedades (
 );
 
 -- Los gastos del evento.
+-- Desde la v76, una hoja de cálculo (él): Fecha · Concepto · Importe.
+-- `fecha`, la del gasto (se elige en un calendario; puede ser de otro día).
+-- `creadoEn`, cuándo se apuntó: da el orden, lo último arriba. Puede ir
+-- vacío a propósito: una foto del Deshacer de antes de la v76 no lo trae, y
+-- reponerla no debe fallar. `categoria` y `pagado` ya no se usan (el
+-- concepto sustituye a la categoría; todo lo apuntado está pagado): se
+-- quedan para no perder nada de lo ya escrito.
 CREATE TABLE public.gastos (
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     concepto text DEFAULT ''::text NOT NULL,
     categoria text DEFAULT ''::text NOT NULL,
     importe text DEFAULT ''::text NOT NULL,
-    pagado boolean DEFAULT false NOT NULL
+    pagado boolean DEFAULT false NOT NULL,
+    fecha date,
+    "creadoEn" timestamp with time zone DEFAULT now()
 );
 
 -- Registro de cada email enviado: a quién, cuándo y si salió bien.
@@ -921,14 +933,14 @@ $$;
 
 -- Los datos del evento que puede ver cualquiera (v63): portada, login y
 -- tablón. Sin lo privado: el enlace del grupo de WhatsApp (el primer filtro
--- para llegar al tablón), el email del anfitrión y las memorias de
--- Acomodación (v75). Una columna nueva sale aquí sola: si es privada, se
+-- para llegar al tablón), el email del anfitrión, las memorias de
+-- Acomodación (v75) y los conceptos de los gastos (v76). Una columna nueva sale aquí sola: si es privada, se
 -- quita también aquí.
 CREATE FUNCTION public.evento_publico() RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-  select to_jsonb(e) - 'enlaceGrupoWhatsapp' - 'emailAnfitrion' - 'acomodaciones' from evento e limit 1;
+  select to_jsonb(e) - 'enlaceGrupoWhatsapp' - 'emailAnfitrion' - 'acomodaciones' - 'conceptosGastos' from evento e limit 1;
 $$;
 
 -- El evento entero, para el anfitrión.
@@ -1544,19 +1556,23 @@ begin
     return;
   end if;
 
-  insert into gastos ("id", "concepto", "categoria", "importe", "pagado")
+  -- `creadoEn` solo al apuntarlo: corregir un gasto no lo sube arriba.
+  insert into gastos ("id", "concepto", "categoria", "importe", "pagado", "fecha", "creadoEn")
   select
     (f->>'id')::uuid,
     coalesce(f->>'concepto', ''),
     coalesce(f->>'categoria', ''),
     coalesce(f->>'importe', ''),
-    coalesce((f->>'pagado')::boolean, false)
+    coalesce((f->>'pagado')::boolean, false),
+    nullif(f->>'fecha', '')::date,
+    coalesce((f->>'creadoEn')::timestamptz, now())
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update
     set "concepto" = excluded."concepto",
         "categoria" = excluded."categoria",
         "importe" = excluded."importe",
-        "pagado" = excluded."pagado";
+        "pagado" = excluded."pagado",
+        "fecha" = excluded."fecha";
 
   if p_ids is not null then
     delete from gastos g where not (g."id" = any(p_ids));
@@ -1775,7 +1791,7 @@ CREATE FUNCTION public.anfitrion_listar_gastos(p_token uuid) RETURNS SETOF publi
     AS $$
   select * from gastos
   where p_token = (select "token" from anfitrion_secreto limit 1)
-  order by "categoria", "concepto";
+  order by "creadoEn" desc nulls last, "categoria", "concepto";
 $$;
 
 -- Lista las versiones anteriores de un texto, para deshacer.

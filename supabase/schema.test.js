@@ -78,6 +78,7 @@ describe("el evento no se lee directamente", () => {
     expect(f).toContain("- 'enlaceGrupoWhatsapp'");
     expect(f).toContain("- 'emailAnfitrion'");
     expect(f).toContain("- 'acomodaciones'");
+    expect(f).toContain("- 'conceptosGastos'");
   });
 
   it("entero solo al anfitrión; el enlace, al colaborador con permiso de Novedades", () => {
@@ -647,5 +648,23 @@ describe("quién ha entrado al tablón", () => {
     // Reconoce a cada uno como la puerta: apellido y nombre, sin el año.
     expect(f).toContain("normalizar_nombre_tablon(");
     expect(f).not.toContain("anioNacimiento");
+  });
+});
+
+// v76 (él): los gastos como hoja de cálculo.
+describe("los gastos, con fecha y lo último arriba", () => {
+  it("se guarda la fecha; cuándo se apuntó, solo al apuntarlo", () => {
+    const f = cuerpoDe("anfitrion_guardar_gastos");
+    expect(f).toContain(`nullif(f->>'fecha', '')::date`);
+    expect(f).toContain(`coalesce((f->>'creadoEn')::timestamptz, now())`);
+    expect(f.slice(f.indexOf("do update"))).not.toContain(`"creadoEn" =`);
+  });
+
+  it("se listan con lo último apuntado arriba", () => {
+    expect(cuerpoDe("anfitrion_listar_gastos")).toContain(`order by "creadoEn" desc nulls last`);
+  });
+
+  it("cuándo se apuntó puede ir vacío: reponer una foto del Deshacer de antes no falla", () => {
+    expect(sql).toMatch(/"creadoEn" timestamp with time zone DEFAULT now\(\)\n\);/);
   });
 });
