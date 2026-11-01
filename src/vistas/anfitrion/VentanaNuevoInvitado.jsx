@@ -2,7 +2,8 @@
 // los campos que se abrían en su cabecera. Pensado sobre todo para el
 // móvil en vertical (él): estrecho, dos campos por línea (norma 6) y todo
 // del alto de un dedo. Apellido · Nombre, Familia · Rol, Zona · Colaborador
-// y, plegado, Año · Email, como el apartado «Datos» del colaborador.
+// y, plegado, Año · Teléfono · Email, como el apartado «Datos» del
+// colaborador (el teléfono, v78).
 //
 // Familia y Zona: el desplegable trae solo lo que ya hay, escrito como en
 // la Lista; lo nuevo va fuera de esa lista, con su «＋», y la ✕ vuelve a
@@ -22,7 +23,7 @@ import { pideEmail } from "../../lib/invitados";
 import { nombreCompleto } from "../../lib/formato";
 import { ROLES_FORMULARIO, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario } from "../../lib/edicionInvitados";
 
-const VACIO = { apellido: "", nombre: "", grupoFamiliar: "", rolFamiliar: "", zona: "", colaboradorId: "", anioNacimiento: "", email: "" };
+const VACIO = { apellido: "", nombre: "", grupoFamiliar: "", rolFamiliar: "", zona: "", colaboradorId: "", anioNacimiento: "", telefono: "", email: "" };
 // Todo del alto de un dedo: es para el móvil.
 const CAMPO = { ...inputStyle, width: "100%", minWidth: 0, minHeight: DEDO };
 
@@ -158,16 +159,20 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
           </Field>
         </div>
 
-        {/* Año y email, plegados: como el apartado «Datos» del colaborador. */}
+        {/* Año, teléfono y email, plegados: como el apartado «Datos» del
+            colaborador. Año y teléfono en una línea; el email, debajo. */}
         <SeccionPlegable
           sencilla
-          titulo={conEmail ? "Año nac. · Email" : "Año nac."}
-          resumen={[ficha.anioNacimiento, conEmail && ficha.email].filter(Boolean).join(" · ")}
+          titulo={conEmail ? "Año nac. · Tel. · Email" : "Año nac."}
+          resumen={[ficha.anioNacimiento, conEmail && ficha.telefono, conEmail && ficha.email].filter(Boolean).join(" · ")}
           abierta={verDatos}
           onAlternar={() => setVerDatos((v) => !v)}
         >
-          <div className="flex items-center gap-2">
-            <TextInput aria-label="Año de nacimiento" value={ficha.anioNacimiento} onChange={(e) => poner("anioNacimiento")(e.target.value)} placeholder="1988" maxLength={4} inputMode="numeric" style={{ ...CAMPO, width: ANCHO_ANIO, flexShrink: 0 }} />
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <TextInput aria-label="Año de nacimiento" value={ficha.anioNacimiento} onChange={(e) => poner("anioNacimiento")(e.target.value)} placeholder="1988" maxLength={4} inputMode="numeric" style={{ ...CAMPO, width: ANCHO_ANIO, flexShrink: 0 }} />
+              {conEmail && <TextInput aria-label="Teléfono" value={ficha.telefono} onChange={(e) => poner("telefono")(e.target.value)} placeholder="612 34 56 78" inputMode="tel" autoComplete="off" style={CAMPO} />}
+            </div>
             {conEmail && <TextInput aria-label="Email" value={ficha.email} onChange={(e) => poner("email")(e.target.value)} placeholder="correo@ejemplo.com" inputMode="email" autoComplete="off" style={CAMPO} />}
           </div>
         </SeccionPlegable>

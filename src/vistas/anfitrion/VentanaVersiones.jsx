@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "78",
+    cambios: [
+      "El teléfono del invitado, para que su colaborador le llame o le escriba. Se apunta en la ficha («Año nac. · Tel. · Email») o al añadirlo en «Nuevo invitado»; opcional y desde los 16 años, como el email. Se escribe como sea y se guarda con su prefijo (+34).",
+      "En el panel del colaborador: en cada fila, el auricular con flecha, en dorado oscuro, llama sin abrir la ficha. En la ficha, del lado del pulgar, el auricular y el número para llamar y, al otro lado, el icono de WhatsApp para escribirle. Con la mano izquierda, en espejo.",
+      "Lo ven el anfitrión y el colaborador de ese invitado; nunca el tablón.",
+    ],
+  },
+  {
     version: "77",
     cambios: [
       "Lista de invitados: «Acciones → Añadir» abre ahora un formulario flotante, «Nuevo invitado», pensado para el móvil en vertical: Apellido · Nombre, Familia · Rol, Zona · Colaborador y, plegado, Año nac. · Email. Ya no hay campos en la cabecera de la Lista.",

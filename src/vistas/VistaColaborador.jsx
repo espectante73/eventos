@@ -24,6 +24,8 @@ import { C, R, T, OP, DORADO, conAlfa } from "../theme";
 import { URL_REPOSITORIO } from "../constants";
 import { Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, TextInput, ANCHO_ANIO } from "../components/Formulario";
+import { LineaContacto, BotonLlamar } from "../components/Contacto";
+import { pideTelefono, telefonoValido, limpiarTelefono, telefonoParaVer, AVISO_TELEFONO } from "../lib/telefono";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
 import { SeccionPlegable } from "../components/SeccionPlegable";
@@ -45,6 +47,7 @@ const ETIQUETAS_CAMPOS_INVITADO = {
   anioNacimiento: "Año de nacimiento",
   anioBoda: "Año de boda",
   email: "Email",
+  telefono: "Teléfono",
   cancion: "Canciones",
   alergias: "Alergias",
   observaciones: "Observaciones",
@@ -131,7 +134,8 @@ function FormularioDatos({
   // "Guardar" no deja subir una ficha sin sus obligatorios. Lo que no se
   // ha tocado no se manda, así que lo que puso otro colaborador (el año
   // o la foto de boda del cónyuge) no se pisa.
-  const [form, setForm] = useState(invitado);
+  // El teléfono, como se lee («611 22 33 44»), no como se guarda (v78).
+  const [form, setForm] = useState(() => ({ ...invitado, telefono: telefonoParaVer(invitado.telefono || "") }));
   const [foto, setFoto] = useState(fotoFamiliar || "");
   // La foto elegida espera aquí, sin subir: subirla pisaría la de la
   // familia en el almacén aunque luego se cancelara.
@@ -205,8 +209,11 @@ function FormularioDatos({
   // Para Guardar, también la foto de boda: subida o «No» (él, v58.2).
   const opcionesGuardar = { ...opcionesEmail, fotoBoda: { hay: hayFoto, sinFoto } };
   const faltan = intentado ? faltanObligatorios(form, evento, opcionesGuardar) : [];
-  const datosCambiados = Object.keys(ETIQUETAS_CAMPOS_INVITADO).some(
-    (campo) => (form[campo] || "") !== (invitado[campo] || "")
+  const datosCambiados = Object.keys(ETIQUETAS_CAMPOS_INVITADO).some((campo) =>
+    // El teléfono, comparado limpio: verlo con espacios no es cambiarlo.
+    campo === "telefono"
+      ? limpiarTelefono(form.telefono) !== limpiarTelefono(invitado.telefono)
+      : (form[campo] || "") !== (invitado[campo] || "")
   );
   const hayCambios =
     datosCambiados || Boolean(fotoNueva) || foto !== (fotoFamiliar || "") || sinFoto !== sinFotoBoda;
@@ -216,6 +223,12 @@ function FormularioDatos({
   useEffect(() => () => marcarSinGuardar("formulario", false), []);
 
   const guardar = async () => {
+    // El teléfono, opcional: si se escribe, que parezca uno (v78).
+    if (form.telefono && !telefonoValido(form.telefono)) {
+      preguntar({ titulo: "No se puede guardar", texto: AVISO_TELEFONO, soloAviso: true });
+      setApartado("datos");
+      return;
+    }
     const pendientes = faltanObligatorios(form, evento, opcionesGuardar);
     if (pendientes.length) {
       setIntentado(true);
@@ -255,7 +268,7 @@ function FormularioDatos({
         return;
       }
     }
-    if (datosCambiados) onGuardar(form);
+    if (datosCambiados) onGuardar({ ...form, telefono: limpiarTelefono(form.telefono) });
     if (rutaFoto !== (fotoFamiliar || "")) onCambiarFotoFamiliar?.(invitado.grupoFamiliar, rutaFoto);
     if (sinFoto !== sinFotoBoda) onCambiarSinFotoBoda?.(invitado.grupoFamiliar, sinFoto);
     onCerrar();
@@ -353,6 +366,12 @@ function FormularioDatos({
             {form.zona || "Sin zona"}
           </PastillaDato>
         </div>
+        {/* Llamarle o escribirle (él, v78): con el teléfono ya guardado. */}
+        {invitado.telefono && (
+          <div className="mt-2">
+            <LineaContacto telefono={invitado.telefono} nombre={nombreCompleto(invitado)} />
+          </div>
+        )}
       </div>
       {/* Seis apartados plegados, uno abierto a la vez (él, v52). Cerrado,
           cada uno enseña lo que tiene. El año de nacimiento va EL PRIMERO:
@@ -360,11 +379,14 @@ function FormularioDatos({
       <div data-apartado="datos" className={latido("anioNacimiento", "email")}>
         <SeccionPlegable
           sencilla
-          titulo={pideEmail(form, evento) ? `Año nac. * · Email${pideEmailAqui ? " *" : ""}` : "Año nac. *"}
-          resumen={[form.anioNacimiento, colaboradorVinculado ? colaboradorVinculado.email : form.email].filter(Boolean).join(" · ")}
+          // «Tel.», abreviado: entero no cabía en el móvil (norma 6).
+          titulo={pideEmail(form, evento) ? `Año nac. * · Tel. · Email${pideEmailAqui ? " *" : ""}` : "Año nac. *"}
+          resumen={[form.anioNacimiento, form.telefono && telefonoParaVer(form.telefono), colaboradorVinculado ? colaboradorVinculado.email : form.email].filter(Boolean).join(" · ")}
           abierta={apartado === "datos"}
           onAlternar={() => alternarApartado("datos")}
         >
+          {/* Año y teléfono, cortos, en una línea; el email, debajo (v78). */}
+          <div className="space-y-2">
           <div className="flex items-start gap-3">
             {/* Sin rótulos dentro: ya los dice el apartado (él, v52.2). */}
             <div data-campo="anioNacimiento">
@@ -378,8 +400,23 @@ function FormularioDatos({
                 style={{ width: ANCHO_ANIO, ...bordeRojo("anioNacimiento") }}
               />
             </div>
+            {/* El teléfono, opcional y como el email: desde los 16 (pideTelefono). */}
+            {pideTelefono(form, evento) && (
+              <div data-campo="telefono" className="flex-1 min-w-0">
+                <TextInput
+                  value={form.telefono || ""}
+                  onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+                  placeholder="612 34 56 78"
+                  inputMode="tel"
+                  autoComplete="off"
+                  aria-label="Teléfono"
+                  className="w-full"
+                />
+              </div>
+            )}
+          </div>
             {pideEmail(form, evento) && (
-              <div data-campo="email" className="flex-1 min-w-0">
+              <div data-campo="email" className="min-w-0">
                   {colaboradorVinculado ? (
                     <div>
                       <div
@@ -894,6 +931,9 @@ function FilaInvitadoColaborador({
             )}
           </span>
         </button>
+        {/* Llamarle sin abrir la ficha (él, v78): el auricular, del tamaño
+            del círculo de la llegada, justo antes de él. */}
+        {g.telefono && <BotonLlamar telefono={g.telefono} nombre={nombreCompleto(g)} lado={ALTO_BOTON_FILA} />}
         {/* El check de llegada cierra la fila, SIEMPRE en la misma columna
             (él, 2026-09-24) -- así se marca sin desplegar el formulario,
             que es como se va a usar el día del evento: de pie, recibiendo

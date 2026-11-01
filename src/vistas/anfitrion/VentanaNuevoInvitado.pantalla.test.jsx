@@ -88,3 +88,21 @@ it("el email solo aparece si tiene 16 años cumplidos, como en el formulario del
   expect(q('input[aria-label="Email"]')).toBeTruthy();
   vista.desmontar();
 });
+
+// v78 (él): el teléfono, también al añadir a alguien.
+it("el teléfono, desde los 16 y limpio, con su prefijo; si no parece uno, se dice", () => {
+  const { vista, guardados, q, boton } = dibujar();
+  escribir(q('input[aria-label="Apellido"]'), "Pacheco");
+  escribir(q('input[aria-label="Nombre"]'), "Rubén");
+  vista.elegir(q('select[aria-label="Familia"]'), "Pacheco01");
+  vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Año nac.")));
+  escribir(q('input[aria-label="Año de nacimiento"]'), "1985");
+  escribir(q('input[aria-label="Teléfono"]'), "6123");
+  vista.pulsar(boton("Guardar"));
+  expect(guardados).toEqual([]);
+  expect(document.body.textContent).toContain("Ese teléfono no parece válido");
+  escribir(q('input[aria-label="Teléfono"]'), "612 34 56 78");
+  vista.pulsar(boton("Guardar"));
+  expect(guardados.at(-1).at(-1).telefono).toBe("+34612345678");
+  vista.desmontar();
+});

@@ -668,3 +668,17 @@ describe("los gastos, con fecha y lo último arriba", () => {
     expect(sql).toMatch(/"creadoEn" timestamp with time zone DEFAULT now\(\)\n\);/);
   });
 });
+
+// v78 (él): el teléfono del invitado, para su colaborador.
+describe("el teléfono del invitado", () => {
+  it("lo guardan el anfitrión y el colaborador; una fila sin él no lo borra", () => {
+    const anfitrion = cuerpoDe("anfitrion_guardar_invitados");
+    expect(anfitrion).toContain(`f->>'telefono'`);
+    expect(anfitrion).toContain(`"telefono"=coalesce(excluded."telefono", invitados."telefono")`);
+    expect(cuerpoDe("colaborador_guardar_invitado")).toContain(`"telefono"       = coalesce(p_cambios->>'telefono', "telefono")`);
+  });
+
+  it("puede ir vacío: reponer una foto del Deshacer de antes no falla", () => {
+    expect(sql).toMatch(/"telefono" text DEFAULT ''::text\n\);/);
+  });
+});

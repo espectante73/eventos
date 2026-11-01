@@ -24,6 +24,7 @@ import { nombreCompleto } from "./formato";
 import { comoColaborador, calcularEdad, pideEmail } from "./invitados";
 import { emailValido } from "./validacion";
 import { ROL_FAMILIAR, LETRA_ROL } from "./rolFamiliar";
+import { limpiarTelefono, telefonoValido, pideTelefono, AVISO_TELEFONO } from "./telefono";
 
 // Dos personas son "la misma" si coinciden nombre y apellido, sin
 // mirar mayúsculas, tildes ni espacios de más — el mismo criterio que
@@ -90,6 +91,7 @@ function invitadoNuevo(datos) {
     anioBoda: "",
     rolFamiliar: "",
     email: "",
+    telefono: "",
     cancion: "",
     alergias: "",
     observaciones: "",
@@ -109,8 +111,8 @@ export function agregarInvitado(invitados, datos) {
     return { invitados, aviso: "Faltan el nombre, el apellido o el grupo familiar." };
   }
   // Lo demás que traiga (rol, colaborador, año, email: «Nuevo invitado», v77).
-  const { rolFamiliar = "", colaboradorId = null, anioNacimiento = "", email = "" } = datos || {};
-  const nuevo = invitadoNuevo({ nombre, apellido, grupoFamiliar, zona: String(datos?.zona || "").trim(), rolFamiliar, colaboradorId, anioNacimiento, email });
+  const { rolFamiliar = "", colaboradorId = null, anioNacimiento = "", email = "", telefono = "" } = datos || {};
+  const nuevo = invitadoNuevo({ nombre, apellido, grupoFamiliar, zona: String(datos?.zona || "").trim(), rolFamiliar, colaboradorId, anioNacimiento, email, telefono });
   // Se AÑADE igual y solo se avisa: dos personas pueden llamarse igual
   // (un padre y un hijo). Bloquearlo sería decidir por el usuario.
   const repetido = invitados.some((g) => mismaPersona(g, nuevo));
@@ -290,7 +292,7 @@ export function marcarResponsable(responsables, rol, invitadoId) {
 //
 // El formulario flotante de la Lista, pensado sobre todo para el móvil en
 // vertical: Apellido · Nombre, Familia · Rol, Zona · Colaborador y, plegado,
-// Año · Email. Familia y Zona se eligen de las que ya hay; lo nuevo va
+// Año · Teléfono · Email (el teléfono, v78). Familia y Zona se eligen de las que ya hay; lo nuevo va
 // fuera de esa lista, con su «＋» (él: «mejor que esa opción sea fuera de
 // esa lista pero sí en ese mismo formulario»).
 
@@ -338,7 +340,7 @@ export const avisoFaltaRol = (nombre) =>
 // lista no cambia, el aviso dice qué falta.
 export function nuevoDesdeFormulario(invitados, datos, { familiaNueva = false, zonaNueva = false, evento } = {}) {
   const sinCambio = (aviso) => ({ invitados, aviso });
-  let { grupoFamiliar = "", zona = "", anioNacimiento = "", email = "" } = datos;
+  let { grupoFamiliar = "", zona = "", anioNacimiento = "", email = "", telefono = "" } = datos;
   grupoFamiliar = String(grupoFamiliar).trim();
   zona = String(zona).trim();
   anioNacimiento = String(anioNacimiento).trim();
@@ -365,7 +367,11 @@ export function nuevoDesdeFormulario(invitados, datos, { familiaNueva = false, z
   // El email, como en el formulario del colaborador: desde los 16 años.
   if (!pideEmail({ anioNacimiento }, evento)) email = "";
   if (email && !emailValido(email)) return sinCambio("Ese email no parece válido: revisa que tenga @ y un punto.");
+  // El teléfono, igual (v78): desde los 16, y limpio, con su prefijo.
+  if (!pideTelefono({ anioNacimiento }, evento)) telefono = "";
+  if (telefono && !telefonoValido(telefono)) return sinCambio(AVISO_TELEFONO);
+  telefono = limpiarTelefono(telefono);
 
-  const { invitados: siguiente, aviso } = agregarInvitado(invitados, { ...datos, grupoFamiliar, zona, anioNacimiento, email });
+  const { invitados: siguiente, aviso } = agregarInvitado(invitados, { ...datos, grupoFamiliar, zona, anioNacimiento, email, telefono });
   return { invitados: siguiente, aviso: [aviso, siguiente !== invitados ? salvedad : ""].filter(Boolean).join(" ") };
 }

@@ -166,6 +166,26 @@ describe("la pantalla del colaborador se puede dibujar", () => {
     expect(html).toContain("Orotava");
   });
 
+  // v78 (él): el teléfono del invitado. Llamar, del lado del pulgar, en la
+  // fila y en la ficha; WhatsApp, en la ficha.
+  it("con teléfono: el auricular en la fila y, en la ficha, llamar y WhatsApp", () => {
+    const conTelefono = invitados.map((g) => (g.id === "g2" ? { ...g, telefono: "+34612345678" } : g));
+    const vista = montar(
+      <VistaColaborador data={{ ...data, invitados: conTelefono }} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+    );
+    abrirPorMenu(vista);
+    const llamar = () => [...vista.contenedor.querySelectorAll('a[aria-label="Llamar a Pacheco, Omar"]')];
+    expect(llamar()).toHaveLength(1);
+    expect(llamar()[0].getAttribute("href")).toBe("tel:+34612345678");
+    // Quien no tiene teléfono, sin auricular.
+    expect(vista.contenedor.querySelector('a[aria-label="Llamar a Pacheco, Lucía"]')).toBeNull();
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Pacheco, Omar")));
+    expect(llamar()).toHaveLength(2);
+    expect(vista.html).toContain("612 34 56 78");
+    expect(vista.contenedor.querySelector('a[aria-label="Escribir a Pacheco, Omar por WhatsApp"]').getAttribute("href")).toBe("https://wa.me/34612345678");
+    vista.desmontar();
+  });
+
   // El anfitrión ve esta misma pantalla desde "Formularios" (vista
   // previa), y por ahí pasa por otra rama: calcula él las familias sin
   // email en vez de recibirlas de la base.

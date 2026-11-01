@@ -177,7 +177,12 @@ CREATE TABLE public.invitados (
     -- avisar a los nuevos, comprobar que no lo son»). Es «nuevo» para su
     -- colaborador solo si no es este: cambiar sus datos ya no lo vuelve
     -- nuevo; pasarlo a otro colaborador, sí. Sin "not null".
-    "avisadoA" uuid
+    "avisadoA" uuid,
+    -- Su teléfono (v78, él): para que su colaborador le llame o le escriba
+    -- por WhatsApp. Opcional, desde los 16 años, como el email. Se guarda
+    -- limpio, con el prefijo (+34612345678). Lo ven el anfitrión y el
+    -- colaborador de este invitado. Sin "not null".
+    "telefono" text DEFAULT ''::text
 );
 
 -- Quién ayuda a recoger datos y qué permisos tiene cada uno.
@@ -1601,7 +1606,7 @@ begin
     "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
     "cancion","alergias","observaciones","pagado","rolesTrabajo",
     "excluidoTablon","rolFamiliar","presente","excepcionesRevision","sinCancion","sinEmail",
-    "conservarDatos","noAsiste","pagoPendienteHasta","plazosPago"
+    "conservarDatos","noAsiste","pagoPendienteHasta","plazosPago","telefono"
   )
   select
     (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
@@ -1621,7 +1626,8 @@ begin
     coalesce((f->>'conservarDatos')::boolean, false),
     coalesce((f->>'noAsiste')::boolean, false),
     nullif(f->>'pagoPendienteHasta', '')::date,
-    coalesce((f->>'plazosPago')::integer, 0)
+    coalesce((f->>'plazosPago')::integer, 0),
+    f->>'telefono'
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update set
     "nombre"=excluded."nombre", "apellido"=excluded."apellido",
@@ -1639,7 +1645,10 @@ begin
     "conservarDatos"=excluded."conservarDatos",
     "noAsiste"=excluded."noAsiste",
     "pagoPendienteHasta"=excluded."pagoPendienteHasta",
-    "plazosPago"=excluded."plazosPago";
+    "plazosPago"=excluded."plazosPago",
+    -- Una fila sin teléfono (de una pantalla abierta antes de la v78) no
+    -- borra el que ya hay.
+    "telefono"=coalesce(excluded."telefono", invitados."telefono");
 
   -- Solo se borra si de verdad llega la lista de quién debe quedar: un
   -- p_ids nulo por error no puede vaciar la tabla.
@@ -2067,6 +2076,7 @@ begin
     "anioNacimiento" = coalesce(p_cambios->>'anioNacimiento', "anioNacimiento"),
     "anioBoda"       = coalesce(p_cambios->>'anioBoda', "anioBoda"),
     "email"          = coalesce(p_cambios->>'email', "email"),
+    "telefono"       = coalesce(p_cambios->>'telefono', "telefono"),
     "cancion"        = coalesce(p_cambios->>'cancion', "cancion"),
     "alergias"       = coalesce(p_cambios->>'alergias', "alergias"),
     "observaciones"  = coalesce(p_cambios->>'observaciones', "observaciones"),
