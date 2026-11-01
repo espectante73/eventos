@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "78.1",
+    cambios: [
+      "Lista de invitados: con «Editar», una columna Teléfono junto al nombre, para poner o corregir el de cualquiera, también de los que ya han pagado. Fuera de «Editar», la Lista sigue como siempre, sin ella. Las mismas reglas que en la ficha: desde los 16 años y guardado con su prefijo.",
+    ],
+  },
+  {
     version: "78",
     cambios: [
       "El teléfono del invitado, para que su colaborador le llame o le escriba. Se apunta en la ficha («Año nac. · Tel. · Email») o al añadirlo en «Nuevo invitado»; opcional y desde los 16 años, como el email. Se escribe como sea y se guarda con su prefijo (+34).",

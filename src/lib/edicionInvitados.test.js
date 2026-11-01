@@ -3,7 +3,7 @@ import {
   agregarInvitado, importarInvitados, eliminarInvitado, mismaPersona,
   cambiarCampo, alternarRolTrabajo, alternarExcluidoTablon,
   permitirExcepcion, quitarExcepcion, marcarResponsable,
-  colaboradoresSinFichaEnlazada, fichaDelColaborador, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario } from "./edicionInvitados";
+  colaboradoresSinFichaEnlazada, fichaDelColaborador, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, cambiarTelefono } from "./edicionInvitados";
 
 // La lista de invitados es la base de toda la app: si aquí se pierde
 // alguien, no se nota hasta que falta en la boda. Estas pruebas son el
@@ -297,5 +297,29 @@ describe("«Nuevo invitado»", () => {
   it("a un menor de 16 no se le guarda email, como en el formulario del colaborador", () => {
     const { invitados } = nuevoDesdeFormulario(lista, { ...base, anioNacimiento: "2015", email: "n@n.com" }, { evento });
     expect(invitados.at(-1).email).toBe("");
+  });
+});
+
+// v78.1 (él): el teléfono, desde «Editar» de la Lista.
+describe("cambiarTelefono", () => {
+  const evento = { fecha: "2026-12-11" };
+  const lista = [
+    { id: "1", nombre: "Ana", apellido: "Pacheco", anioNacimiento: "1985", telefono: "" },
+    { id: "2", nombre: "Leo", apellido: "Pacheco", anioNacimiento: "2015", telefono: "" },
+    { id: "3", nombre: "Eva", apellido: "Sierra", anioNacimiento: "1990", telefono: "+34611223344" },
+  ];
+
+  it("se guarda limpio, con su prefijo", () => {
+    expect(cambiarTelefono(lista, "1", "612 34 56 78", evento).invitados[0].telefono).toBe("+34612345678");
+  });
+
+  it("si no parece un teléfono, o es un menor de 16, no se guarda y se dice", () => {
+    expect(cambiarTelefono(lista, "1", "6123", evento)).toEqual({ invitados: lista, aviso: expect.stringContaining("no parece válido") });
+    expect(cambiarTelefono(lista, "2", "612 34 56 78", evento).aviso).toContain("menos de 16 años");
+  });
+
+  it("verlo con espacios no es cambiarlo; vacío, se borra", () => {
+    expect(cambiarTelefono(lista, "3", "611 22 33 44", evento).invitados).toBe(lista);
+    expect(cambiarTelefono(lista, "3", "", evento).invitados[2].telefono).toBe("");
   });
 });

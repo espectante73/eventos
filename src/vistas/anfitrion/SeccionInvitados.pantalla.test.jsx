@@ -409,3 +409,35 @@ describe("el circulito del tablón", () => {
     expect(conEntradas(null)).not.toMatch(/aria-label="(Entró al tablón|Aún no ha entrado)/);
   });
 });
+
+// v78.1 (él): el teléfono, «solo visible al editar y no visible en normal».
+describe("la columna Teléfono", () => {
+  it("no está en la Lista normal; con «Editar», aparece junto al nombre (a un menor, «—»)", () => {
+    const conTelefono = invitados.map((x) => (x.id === "g1" ? { ...x, telefono: "+34612345678" } : x));
+    const vista = montar(
+      <SeccionInvitados
+        data={{ ...data, invitados: conTelefono }}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante={null}
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+    const telefono = (n) => document.body.querySelector(`input[aria-label="Teléfono de ${n}"]`);
+    expect(document.body.textContent).not.toContain("Teléfono");
+    const botones = () => [...document.body.querySelectorAll("button")];
+    vista.pulsar(botones().find((b) => b.textContent.includes("Acciones")));
+    vista.pulsar(botones().find((b) => b.textContent.trim().endsWith("Editar")));
+    expect(document.body.textContent).toContain("Teléfono");
+    expect(telefono("Barrios, Jacob").value).toBe("612 34 56 78");
+    expect(telefono("Pacheco, Omar").value).toBe("");
+    // Lucía nació en 2018: sin casilla.
+    expect(telefono("Pacheco, Lucía")).toBeNull();
+    vista.desmontar();
+  });
+});

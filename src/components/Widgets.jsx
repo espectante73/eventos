@@ -307,11 +307,13 @@ export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, 
   );
 }
 
-export function GrupoFamiliarInput({ value, onCommit }) {
+// `resto`: lo propio de cada casilla (aria-label, inputMode, placeholder).
+export function GrupoFamiliarInput({ value, onCommit, ...resto }) {
   const [v, setV] = useState(value);
   useEffect(() => setV(value), [value]);
   return (
     <input
+      {...resto}
       value={v}
       onChange={(e) => setV(e.target.value)}
       onBlur={() => onCommit(v)}

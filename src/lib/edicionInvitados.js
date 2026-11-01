@@ -288,6 +288,21 @@ export function marcarResponsable(responsables, rol, invitadoId) {
   return siguiente;
 }
 
+// El teléfono, desde «Editar» de la Lista (él, v78.1: «solo visible al
+// editar»). Las mismas reglas que en la ficha: desde los 16, y limpio, con
+// su prefijo; si no parece un teléfono, no se guarda y se dice. Vacío, se
+// borra.
+export function cambiarTelefono(invitados, id, valor, evento) {
+  const g = invitados.find((x) => x.id === id);
+  if (!g) return { invitados, aviso: "" };
+  const escrito = String(valor ?? "").trim();
+  if (escrito && !pideTelefono(g, evento)) return { invitados, aviso: `${nombreCompleto(g)} tiene menos de 16 años: como el email, sin teléfono.` };
+  if (escrito && !telefonoValido(escrito)) return { invitados, aviso: AVISO_TELEFONO };
+  const telefono = limpiarTelefono(escrito);
+  if (telefono === limpiarTelefono(g.telefono)) return { invitados, aviso: "" };
+  return { invitados: invitados.map((x) => (x.id === id ? { ...x, telefono } : x)), aviso: "" };
+}
+
 // ---------- «Nuevo invitado» (él, v77) ----------
 //
 // El formulario flotante de la Lista, pensado sobre todo para el móvil en

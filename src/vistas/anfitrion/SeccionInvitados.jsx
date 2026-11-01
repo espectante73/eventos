@@ -55,6 +55,7 @@ import {
   eliminarInvitado as borrarInvitado,
   PREGUNTA_ELIMINAR_COLABORADOR_DESDE_INVITADOS,
   cambiarCampo,
+  cambiarTelefono,
   alternarRolTrabajo as alternarRol,
   alternarExcluidoTablon as alternarTablon,
   permitirExcepcion as marcarExcepcion,
@@ -63,6 +64,7 @@ import {
 } from "../../lib/edicionInvitados";
 import { estadoTablon, contarTablon } from "../../lib/entradasTablon";
 import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
+import { pideTelefono, telefonoParaVer } from "../../lib/telefono";
 import { useSeccion } from "../../lib/useSeccion";
 
 // El circulito del tablón tras el nombre (él, v75.2): «estilo semáforo»,
@@ -236,6 +238,12 @@ export function SeccionInvitados({
   const asignarNombre = (id, v) => editarCampo(id, "nombre")(v);
   const asignarZona = (id, v) => editarCampo(id, "zona")(v);
   const asignarRolFamiliar = (id, v) => editarCampo(id, "rolFamiliar")(v);
+  // El teléfono, con sus reglas (lib/edicionInvitados.js, v78.1).
+  const asignarTelefono = (id, v) => {
+    const { invitados: siguiente, aviso } = cambiarTelefono(invitados, id, v, evento);
+    if (siguiente !== invitados) persistInvitados(siguiente);
+    avisarLista(aviso);
+  };
 
   // REGLA INFLEXIBLE del usuario (2026-09-19): una familia no se separa.
   // Poner o quitar la mesa a uno la pone o la quita a toda su familia
@@ -552,7 +560,10 @@ export function SeccionInvitados({
   // lo vio el usuario el 2026-09-05 y dio con la causa: "tienen tres
   // iconos al final que no tienen encabezado, están ocupando espacio del
   // resto". Con una medida fija, las tres rejillas parten de lo mismo.
-  const columnasTabla = "1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.75fr 0.75fr 0.7fr 100px";
+  // En «Editar», una columna más: el Teléfono, junto al nombre (él, v78.1:
+  // «solo visible al editar y no visible en normal»).
+  const ANCHO_TELEFONO = "120px";
+  const columnasTabla = `1.5fr ${modoEdicion ? `${ANCHO_TELEFONO} ` : ""}1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.75fr 0.75fr 0.7fr 100px`;
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
@@ -815,6 +826,11 @@ export function SeccionInvitados({
                     Invitado
                   </EncabezadoOrdenable>
                 </span>
+                {modoEdicion && (
+                  <span className="flex items-center justify-center" style={{ minWidth: 0 }}>
+                    Teléfono
+                  </span>
+                )}
                 <span style={{ background: tintaColumna(1), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(1)} columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
                     Familia
@@ -938,6 +954,7 @@ export function SeccionInvitados({
                     }}
                   />
                 </span>
+                {modoEdicion && <span />}
                 <span style={{ background: tintaColumna(1), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.grupoFamiliar}
@@ -1509,6 +1526,23 @@ export function SeccionInvitados({
                       </>
                     )}
                   </span>
+                  {/* El teléfono, solo en «Editar» (v78.1); a un menor de 16, «—». */}
+                  {modoEdicion && (
+                    <span style={celda(0)}>
+                      {pideTelefono(g, evento) ? (
+                        <GrupoFamiliarInput
+                          value={telefonoParaVer(g.telefono || "")}
+                          onCommit={(v) => asignarTelefono(g.id, v)}
+                          aria-label={`Teléfono de ${nombreCompleto(g)}`}
+                          // Sin número de ejemplo: en una lista larga, en gris,
+                          // parecería el teléfono de alguien.
+                          inputMode="tel"
+                        />
+                      ) : (
+                        "—"
+                      )}
+                    </span>
+                  )}
                   <span style={celda(1)}>
                     {modoEdicion ? (
                       <GrupoFamiliarInput
