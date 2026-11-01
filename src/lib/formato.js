@@ -66,6 +66,24 @@ export function horaCorta(momento) {
   return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
 }
 
+// Un texto para buscar (v78.3, él: «no me encuentra a la familia N´gabu»):
+// sin mayúsculas, tildes ni comillas o apóstrofos (', ´, `, ’, ‘), la coma
+// como un espacio, y los espacios juntos. Así «ngabu», «N´gabu» y «N'gabu» se encuentran igual,
+// esté escrito en la ficha como esté.
+export function paraBuscar(texto) {
+  return String(texto || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/['´`’‘ʼ]/g, "")
+    // La coma de «Apellido, Nombre», como un espacio: «pacheco ruben» encuentra a «Pacheco, Rubén».
+    .replace(/[,;.]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+// ¿Está lo buscado en este texto? Con las reglas de paraBuscar.
+export const contiene = (texto, buscado) => paraBuscar(texto).includes(paraBuscar(buscado));
+
 // «28 oct a las 10:15», un momento guardado en la hora de quien mira (las
 // memorias de Acomodación, la última entrada al tablón). «sv-SE» da el día
 // local como AAAA-MM-DD, lo que espera fechaCorta.

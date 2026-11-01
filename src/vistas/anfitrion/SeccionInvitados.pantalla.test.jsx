@@ -441,3 +441,24 @@ describe("la columna Teléfono", () => {
     vista.desmontar();
   });
 });
+
+// v78.3 (él): «no me encuentra a la familia N´gabu».
+it("el buscador encuentra «N'gabu» escrito «N´gabu», sin mayúsculas ni tildes", () => {
+  const conNgabu = [...invitados, { id: "g9", nombre: "Amélie", apellido: "N'gabu", grupoFamiliar: "N'gabu01", rolFamiliar: ROL_FAMILIAR.SUELTO, rolesTrabajo: [], confirmado: true, anioNacimiento: "1980", alergias: "No", email: "", mesa: null }];
+  const html = dibujarYSoltar(
+    <SeccionInvitados
+      data={{ ...data, invitados: conNgabu }}
+      asignarColaborador={() => null}
+      ocupacionMesa={() => 1}
+      panelFlotante={null}
+      setPanelFlotante={() => {}}
+      colaboradoresPendientes={[]}
+      filtros={{ ...FILTROS_VACIOS, texto: "N´gabu amelie" }}
+      setFiltros={() => {}}
+      onCerrar={() => {}}
+      fijo
+    />
+  );
+  expect(html).toContain("N'gabu, Amélie");
+  expect(html).not.toContain("Pacheco, Omar");
+});

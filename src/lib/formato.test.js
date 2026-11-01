@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cuentaAtrasEvento, valorDireccion, formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY, valorFechaEvento, TEXTO_SIN_FECHA, euros } from "./formato";
+import { cuentaAtrasEvento, valorDireccion, formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY, valorFechaEvento, TEXTO_SIN_FECHA, euros, paraBuscar, contiene } from "./formato";
 
 describe("formatearFecha", () => {
   it("convierte ISO a formato largo en español", () => {
@@ -123,5 +123,19 @@ describe("valorDireccion (Portada y tablón, v69.3)", () => {
     expect(valorDireccion("Ctra. el Amparo 190, 38430 Icod de los Vinos")).toEqual(["Ctra. el Amparo 190", "38430 Icod de los Vinos"]);
     expect(valorDireccion("Calle Real 3")).toBe("Calle Real 3");
     expect(valorDireccion("")).toBe("");
+  });
+});
+
+// v78.3 (él): «no me encuentra a la familia N´gabu».
+describe("buscar", () => {
+  it("sin mayúsculas, tildes ni comillas o apóstrofos", () => {
+    expect(paraBuscar("  N’Gabú  Ruiz ")).toBe("ngabu ruiz");
+    for (const escrito of ["N´gabu", "n'gabu", "Ngabu", "N`gabu", "N‘gabu"]) {
+      expect(contiene("N’gabu, Ama", escrito)).toBe(true);
+      expect(contiene("N'gabu, Ama", escrito)).toBe(true);
+    }
+    expect(contiene("Peña, José", "pena jose")).toBe(true);
+    expect(contiene("Peña, José", "pena, jose")).toBe(true);
+    expect(contiene("Peña, José", "jose pena")).toBe(false);
   });
 });

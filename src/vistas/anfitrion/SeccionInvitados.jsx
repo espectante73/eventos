@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
-import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora } from "../../lib/formato";
+import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora, contiene } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
@@ -473,12 +473,11 @@ export function SeccionInvitados({
   const invitadosOrdenados = invitados
     .filter((g) => {
       if (filtros.texto) {
-        const t = filtros.texto.toLowerCase();
         // Se busca contra las dos formas: "Gatell, Juan" (como se
         // nombra en toda la app) y el nombre suelto, para que escribir
-        // solo "juan" siga valiendo.
-        const texto = `${nombreCompleto(g)} ${g.nombre} ${g.grupoFamiliar || ""}`.toLowerCase();
-        if (!texto.includes(t)) return false;
+        // solo "juan" siga valiendo. Sin tildes ni comillas (v78.3:
+        // «N´gabu» no encontraba «N'gabu»).
+        if (!contiene(`${nombreCompleto(g)} ${g.nombre} ${g.grupoFamiliar || ""}`, filtros.texto)) return false;
       }
       if (filtros.grupoFamiliar && g.grupoFamiliar !== filtros.grupoFamiliar) return false;
       // "matrimonio" = los dos cónyuges (O y A), sin los hijos: el

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "78.3",
+    cambios: [
+      "Lista de invitados: el buscador ya no se fija en tildes, comillas ni apóstrofos. «N´gabu», «N'gabu» y «Ngabu» encuentran a la misma familia, la escriba como la escriba. Y la coma tampoco cuenta: «pacheco ruben» encuentra a «Pacheco, Rubén». Igual en el buscador de invitados de Colaboradores.",
+    ],
+  },
+  {
     version: "78.2",
     cambios: [
       "Lista de invitados: «Acciones → Importar tel.» pone los teléfonos desde el archivo que exporta Contactos del Mac, sin escribirlos uno a uno. El archivo se lee en el ordenador y no sale de él: de cada contacto solo se miran el nombre y los teléfonos.",

@@ -3,7 +3,7 @@
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState } from "react";
 import { inputStyle } from "../theme";
-import { ordenarPorApellidoNombre } from "../lib/formato";
+import { ordenarPorApellidoNombre, contiene } from "../lib/formato";
 import { TextInput } from "./Formulario";
 import { BotonQuitar } from "./PreguntaSeguridad";
 
@@ -13,8 +13,8 @@ export function BuscadorInvitado({ invitados, invitadoId, onSeleccionar, placeho
 
   const resultados = ordenarPorApellidoNombre(invitados).filter((g) => {
     if (!texto.trim()) return true;
-    const t = texto.trim().toLowerCase();
-    return `${g.apellido} ${g.nombre}`.toLowerCase().includes(t);
+    // Sin tildes ni comillas, como el buscador de la Lista (v78.3).
+    return contiene(`${g.apellido} ${g.nombre}`, texto);
   });
 
   if (seleccionado) {
