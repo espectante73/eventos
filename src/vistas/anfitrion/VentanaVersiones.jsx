@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "78.2",
+    cambios: [
+      "Lista de invitados: «Acciones → Importar tel.» pone los teléfonos desde el archivo que exporta Contactos del Mac, sin escribirlos uno a uno. El archivo se lee en el ordenador y no sale de él: de cada contacto solo se miran el nombre y los teléfonos.",
+      "Antes de guardar, una lista de repaso: Nuevos (ya marcados), Distintos al de la app (no se cambian si no se marcan), Dudosos (se elige el contacto o ninguno), Ya están y Sin encontrar. Solo se guarda lo marcado.",
+    ],
+  },
+  {
     version: "78.1",
     cambios: [
       "Lista de invitados: con «Editar», una columna Teléfono junto al nombre, para poner o corregir el de cualquiera, también de los que ya han pagado. Fuera de «Editar», la Lista sigue como siempre, sin ella. Las mismas reglas que en la ficha: desde los 16 años y guardado con su prefijo.",

@@ -23,6 +23,7 @@ import {
   UserPlus,
   Pencil,
   Copy,
+  Contact,
   Printer,
   MoreHorizontal,
   Tag,
@@ -64,6 +65,7 @@ import {
 } from "../../lib/edicionInvitados";
 import { estadoTablon, contarTablon } from "../../lib/entradasTablon";
 import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
+import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
 import { pideTelefono, telefonoParaVer } from "../../lib/telefono";
 import { useSeccion } from "../../lib/useSeccion";
 
@@ -154,6 +156,7 @@ export function SeccionInvitados({
   // texto, es que NO se ha hecho el cambio (o se hizo con una salvedad).
   const avisarLista = (texto) => texto && preguntar({ titulo: "Lista de invitados", texto, soloAviso: true });
   const [mostrarImport, setMostrarImport] = useState(false);
+  const [mostrarImportarTel, setMostrarImportarTel] = useState(false);
   const [mostrarAnadir, setMostrarAnadir] = useState(false);
   // Por niveles (lib/ordenNiveles.js, v72.5): vacío = por «Apellido, Nombre».
   const [orden, setOrden] = useState([]);
@@ -742,6 +745,14 @@ export function SeccionInvitados({
       marcado: mostrarImport,
       icono: Copy,
       onClick: () => setMostrarImport((v) => !v),
+    },
+    // Los teléfonos, desde el archivo de Contactos (él, v78.2).
+    {
+      id: "importarTelefonos",
+      etiqueta: "Importar tel.",
+      marcado: mostrarImportarTel,
+      icono: Contact,
+      onClick: () => setMostrarImportarTel((v) => !v),
     },
   ];
 
@@ -2134,6 +2145,7 @@ export function SeccionInvitados({
       )}
       {/* «Nuevo invitado» (él, v77): un formulario flotante, no campos en la cabecera. */}
       {mostrarAnadir && <VentanaNuevoInvitado data={data} onCerrar={() => setMostrarAnadir(false)} />}
+      {mostrarImportarTel && <VentanaImportarTelefonos data={data} onCerrar={() => setMostrarImportarTel(false)} />}
     </>
   );
 }
