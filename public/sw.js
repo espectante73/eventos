@@ -17,6 +17,9 @@ self.addEventListener("push", (evento) => {
       icon: "/icono-192.png",
       badge: "/icono-192.png",
       data: { url: datos.url || "/" },
+      // Los del anfitrión (v79.3) llevan su tipo: el nuevo sustituye al
+      // anterior del mismo tipo y vuelve a sonar.
+      ...(datos.etiqueta ? { tag: datos.etiqueta, renotify: true } : {}),
     })
   );
 });

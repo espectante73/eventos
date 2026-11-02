@@ -40,3 +40,14 @@ it("en el iPhone sin instalar: cómo instalarla, sin botón", async () => {
   expect([...document.body.querySelectorAll("button")].some((b) => b.textContent.includes("Activar avisos"))).toBe(false);
   vista.desmontar();
 });
+
+// v79.3: el anfitrión lo tiene en Mi cuenta, con lo que a él le avisa.
+it("con `explicacion`, cuenta la suya", async () => {
+  let vista;
+  await act(async () => {
+    vista = montar(<AvisosMovil entorno={movil()} guardar={vi.fn()} quitar={vi.fn()} abierta onAlternar={() => {}} explicacion="Llega un aviso cuando una familia paga." />);
+  });
+  expect(document.body.textContent).toContain("Llega un aviso cuando una familia paga.");
+  expect(document.body.textContent).not.toContain("invitados nuevos");
+  vista.desmontar();
+});

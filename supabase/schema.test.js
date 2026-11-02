@@ -699,8 +699,37 @@ describe("los avisos al móvil", () => {
   });
 
   it("la lista de móviles, solo con la llave del anfitrión", () => {
-    for (const f of ["anfitrion_suscripciones_avisos", "anfitrion_borrar_suscripcion", "anfitrion_colaboradores_con_avisos"]) {
+    for (const f of ["anfitrion_suscripciones_avisos", "anfitrion_borrar_suscripcion", "anfitrion_colaboradores_con_avisos", "anfitrion_quitar_suscripcion", "anfitrion_suscripciones_anfitrion"]) {
       expect(cuerpoDe(f)).toContain(`p_token = (select "token" from anfitrion_secreto limit 1)`);
     }
+    expect(cuerpoDe("anfitrion_guardar_suscripcion")).toContain(`p_token is distinct from (select "token" from anfitrion_secreto limit 1)`);
+  });
+});
+
+// v79.3 (él): al anfitrión, lo que pide su atención.
+describe("los avisos al anfitrión", () => {
+  it("solo lo que hace el equipo: ni sus propios cambios, ni el Deshacer, ni el SQL pegado", () => {
+    const f = cuerpoDe("avisa_al_anfitrion");
+    expect(f).toContain("es_colaborador() and not es_anfitrion()");
+    for (const g of ["avisar_anfitrion", "trg_avisar_anfitrion_progreso"]) expect(cuerpoDe(g)).toContain("if not avisa_al_anfitrion() then");
+  });
+
+  it("un aviso que falla no deshace lo que guardó el colaborador, y nadie de fuera lo puede pedir", () => {
+    expect(cuerpoDe("avisar_anfitrion")).toMatch(/exception when others then\s+return;/);
+    for (const f of ["avisa_al_anfitrion\\(\\)", "avisar_anfitrion\\(text, text, text\\)"]) {
+      expect(sql).toMatch(new RegExp(`REVOKE EXECUTE ON FUNCTION public\\.${f} FROM PUBLIC, anon, authenticated;`));
+    }
+  });
+
+  it("por familia y una vez por sentencia: pagar a la familia entera es un solo aviso", () => {
+    expect(sql).toContain(
+      "CREATE TRIGGER invitados_avisar_anfitrion AFTER UPDATE ON public.invitados REFERENCING OLD TABLE AS viejos NEW TABLE AS nuevos FOR EACH STATEMENT"
+    );
+    expect(cuerpoDe("trg_avisar_anfitrion_progreso")).toContain("v_datos_antes < v_total");
+  });
+
+  it("los pasos hechos y los impagos también le avisan", () => {
+    for (const f of ["colaborador_confirmar_datos_completos", "colaborador_confirmar_pagos_completos"]) expect(cuerpoDe(f)).toContain("avisar_anfitrion('pasos'");
+    expect(cuerpoDe("colaborador_responder_impago")).toContain("avisar_anfitrion('impago'");
   });
 });

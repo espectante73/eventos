@@ -350,6 +350,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
         mostrarMapaSitio
         mostrarDiseno
         mostrarErrores
+        avisosMovil={{ guardar: data.guardarSuscripcionAvisos, quitar: data.quitarSuscripcionAvisos }}
         abrirNovedades={abrirNovedades}
         abrirCronograma={abrirCronograma}
         abrirMusicaEvento={abrirMusicaEvento}

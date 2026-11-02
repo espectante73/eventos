@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "79.3",
+    cambios: [
+      "Avisos al móvil del anfitrión: en Mi cuenta, «Avisos en este móvil». Llega un aviso cuando una familia completa los datos de todos o queda pagada, con cada foto de boda nueva, cuando un colaborador pulsa «Datos completados» o «Pagos completos» y cuando responde a un impago (va o no asiste). Con el nombre del colaborador al final; los cambios propios no avisan. Cada aviso nuevo sustituye al anterior del mismo tipo.",
+    ],
+  },
+  {
     version: "79.2",
     cambios: [
       "«Avisar equipo»: un apartado plegado, «Quién los tiene», con los colaboradores por nombre: primero los que tienen los avisos activos (✓, y cuántos móviles si son más de uno) y después los que aún no, para saber a quién recordárselo.",

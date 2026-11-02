@@ -1312,20 +1312,26 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
   );
 
   // ---------- Los avisos al móvil (v79) ----------
-  // El colaborador apunta (o quita) su móvil. Devuelven si se pudo.
+  // El colaborador (o el anfitrión, v79.3: lo que pide su atención) apunta
+  // o quita su móvil. Devuelven si se pudo.
   const guardarSuscripcionAvisos = useCallback(
     async ({ endpoint, p256dh, auth }) => {
-      const { error } = await supabase.rpc("colaborador_guardar_suscripcion", { p_colaborador_id: rol, p_endpoint: endpoint, p_p256dh: p256dh, p_auth: auth });
+      const claves = { p_endpoint: endpoint, p_p256dh: p256dh, p_auth: auth };
+      const { error } = esAnfitrion
+        ? await supabase.rpc("anfitrion_guardar_suscripcion", { p_token: rol, ...claves })
+        : await supabase.rpc("colaborador_guardar_suscripcion", { p_colaborador_id: rol, ...claves });
       return !error;
     },
-    [rol]
+    [esAnfitrion, rol]
   );
   const quitarSuscripcionAvisos = useCallback(
     async (endpoint) => {
-      const { error } = await supabase.rpc("colaborador_quitar_suscripcion", { p_colaborador_id: rol, p_endpoint: endpoint });
+      const { error } = esAnfitrion
+        ? await supabase.rpc("anfitrion_quitar_suscripcion", { p_token: rol, p_endpoint: endpoint })
+        : await supabase.rpc("colaborador_quitar_suscripcion", { p_colaborador_id: rol, p_endpoint: endpoint });
       return !error;
     },
-    [rol]
+    [esAnfitrion, rol]
   );
   // El anfitrión, a todo el equipo (o a unos): { enviados, fallidos } o { error }.
   const avisarAlEquipo = useCallback(

@@ -1013,9 +1013,10 @@ GRANT EXECUTE ON FUNCTION public.colaborador_enlace_whatsapp(uuid) TO authentica
 -- móvil. Nadie lee la tabla: el colaborador apunta o quita SU móvil con su
 -- sesión, y el «cartero» (api/avisos.js, en Vercel) pide la lista con la
 -- llave del anfitrión. El email sigue siempre de respaldo.
+-- "colaboradorId" vacío: un móvil del anfitrión (v79.3).
 CREATE TABLE IF NOT EXISTS public.suscripciones_avisos (
     id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
-    "colaboradorId" uuid NOT NULL,
+    "colaboradorId" uuid,
     endpoint text NOT NULL UNIQUE,
     p256dh text NOT NULL,
     auth text NOT NULL,
@@ -1088,6 +1089,85 @@ CREATE OR REPLACE FUNCTION public.anfitrion_colaboradores_con_avisos(p_token uui
   where p_token = (select "token" from anfitrion_secreto limit 1)
   group by s."colaboradorId";
 $$;
+
+-- El anfitrión apunta (o quita) un móvil suyo (v79.3): le llega lo que
+-- pide su atención (avisar_anfitrion).
+CREATE OR REPLACE FUNCTION public.anfitrion_guardar_suscripcion(p_token uuid, p_endpoint text, p_p256dh text, p_auth text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    raise exception 'No autorizado';
+  end if;
+  insert into suscripciones_avisos ("colaboradorId", endpoint, p256dh, auth)
+  values (null, p_endpoint, p_p256dh, p_auth)
+  on conflict (endpoint) do update
+    set "colaboradorId" = null, p256dh = excluded.p256dh, auth = excluded.auth;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION public.anfitrion_quitar_suscripcion(p_token uuid, p_endpoint text) RETURNS void
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  delete from suscripciones_avisos s
+  where s.endpoint = p_endpoint and s."colaboradorId" is null
+    and p_token = (select "token" from anfitrion_secreto limit 1);
+$$;
+
+-- El «cartero», con la llave del anfitrión: los móviles del anfitrión.
+CREATE OR REPLACE FUNCTION public.anfitrion_suscripciones_anfitrion(p_token uuid) RETURNS TABLE(id uuid, endpoint text, p256dh text, auth text)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select s.id, s.endpoint, s.p256dh, s.auth
+  from suscripciones_avisos s
+  where s."colaboradorId" is null
+    and p_token = (select "token" from anfitrion_secreto limit 1);
+$$;
+
+-- ¿Hay que avisar al anfitrión de lo que acaba de pasar? (v79.3) Solo si lo
+-- ha hecho alguien del equipo y él tiene un móvil apuntado: sus propios
+-- cambios, el Deshacer y el SQL que se pega en Supabase no avisan.
+CREATE OR REPLACE FUNCTION public.avisa_al_anfitrion() RETURNS boolean
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select es_colaborador() and not es_anfitrion()
+    and exists (select 1 from suscripciones_avisos s where s."colaboradorId" is null);
+$$;
+REVOKE EXECUTE ON FUNCTION public.avisa_al_anfitrion() FROM PUBLIC, anon, authenticated;
+
+-- Un aviso al móvil del anfitrión (v79.3), con el nombre de quien lo hizo
+-- al final. Lo reparte el «cartero» con su llave, como cuando él avisa al
+-- equipo; la base lo envía al confirmarse el cambio. `p_tipo` agrupa: en el
+-- móvil, el aviso nuevo sustituye al anterior del mismo tipo. ⚠️ Nunca
+-- falla: un aviso que no sale no puede deshacer lo que guardó el colaborador.
+CREATE OR REPLACE FUNCTION public.avisar_anfitrion(p_tipo text, p_titulo text, p_texto text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'net', 'pg_temp'
+    AS $$
+begin
+  if not avisa_al_anfitrion() then
+    return;
+  end if;
+  perform net.http_post(
+    url := 'https://nexuspoint.rsvp/api/avisos',
+    body := jsonb_build_object(
+      'token', (select "token" from anfitrion_secreto limit 1),
+      'para', 'anfitrion',
+      'etiqueta', p_tipo,
+      'titulo', p_titulo,
+      'texto', p_texto || ' · ' || coalesce((select c."nombre" from colaboradores c where c."authUserId" = auth.uid() limit 1), '')
+    ),
+    timeout_milliseconds := 10000
+  );
+exception when others then
+  return;
+end;
+$$;
+REVOKE EXECUTE ON FUNCTION public.avisar_anfitrion(text, text, text) FROM PUBLIC, anon, authenticated;
 
 -- Guarda los datos de la boda (nombre, fecha, lugar, precios, plantillas).
 CREATE FUNCTION public.guardar_evento(p_token uuid, p_fila jsonb) RETURNS void
@@ -2069,6 +2149,7 @@ begin
       ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>',
       p_tipo := 'datos'
     );
+    perform avisar_anfitrion('pasos', 'Paso hecho', 'Datos de todos sus invitados, completos');
     return true;
   end if;
   return false;
@@ -2103,6 +2184,7 @@ begin
       ) || '<br><br><small>Aviso automático de la app de invitados del evento.</small>',
       p_tipo := 'datos'
     );
+    perform avisar_anfitrion('pasos', 'Paso hecho', 'Todos sus invitados han pagado');
     return true;
   end if;
   return false;
@@ -2487,6 +2569,11 @@ begin
       set "noAsiste" = true, "confirmado" = false, "mesa" = null, "pagoPendienteHasta" = null
       where i."id" = p_id
       returning i.*;
+  end if;
+  if found then
+    perform avisar_anfitrion('impago', 'Impago',
+      (select trim(coalesce(i."apellido", '')) || ', ' || trim(coalesce(i."nombre", '')) from invitados i where i."id" = p_id)
+      || case when p_va then ': va, paga en una semana' else ': no asiste' end);
   end if;
 end;
 $$;
@@ -3054,6 +3141,69 @@ begin
 end;
 $$;
 
+-- Avisa al anfitrión (v79.3) cuando una familia queda con los datos de todos
+-- completos, o toda pagada: lo que mueve su progreso. Por familia y no por
+-- invitado, para no llenarle el móvil; y una vez por sentencia (pagar a la
+-- familia entera es una sola). Cómo estaba antes, de las filas viejas.
+CREATE FUNCTION public.trg_avisar_anfitrion_progreso() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_clave text;
+  v_familia text;
+  v_total integer;
+  v_datos integer;
+  v_datos_antes integer;
+  v_pagados integer;
+  v_pagados_antes integer;
+begin
+  if not avisa_al_anfitrion() then
+    return null;
+  end if;
+  for v_clave in select distinct clave_familia(n."grupoFamiliar", n."apellido") from nuevos n loop
+    select
+      count(*),
+      count(*) filter (where coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> ''),
+      count(*) filter (where case when v."id" is null
+        then coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> ''
+        else coalesce(v."anioNacimiento", '') <> '' and coalesce(v."alergias", '') <> '' end),
+      count(*) filter (where coalesce(i."pagado", false)),
+      count(*) filter (where coalesce(case when v."id" is null then i."pagado" else v."pagado" end, false)),
+      coalesce(nullif(max(i."grupoFamiliar"), ''), max(i."apellido"))
+    into v_total, v_datos, v_datos_antes, v_pagados, v_pagados_antes, v_familia
+    from invitados i
+    left join viejos v on v."id" = i."id"
+    where i."confirmado" = true and clave_familia(i."grupoFamiliar", i."apellido") = v_clave;
+
+    if v_total > 0 and v_datos = v_total and v_datos_antes < v_total then
+      perform avisar_anfitrion('datos', 'Datos completos', 'Familia ' || v_familia || ' (' || v_total || ')');
+    end if;
+    if v_total > 0 and v_pagados = v_total and v_pagados_antes < v_total then
+      perform avisar_anfitrion('pago', 'Familia pagada', 'Familia ' || v_familia || ' (' || v_total || ')');
+    end if;
+  end loop;
+  return null;
+end;
+$$;
+
+-- Avisa al anfitrión (v79.3) de cada foto de boda nueva que sube el equipo.
+CREATE FUNCTION public.trg_avisar_anfitrion_foto() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if coalesce(new."url", '') = '' then
+    return null;
+  end if;
+  if TG_OP = 'UPDATE' and new."url" is not distinct from old."url" then
+    return null;
+  end if;
+  perform avisar_anfitrion('foto', 'Foto de boda nueva', 'Familia ' || new."grupoFamiliar");
+  return null;
+end;
+$$;
+
 -- Si cambian los datos de un invitado, marca la invitación de su familia como caducada.
 CREATE FUNCTION public.trg_invalidar_invitacion_familia() RETURNS trigger
     LANGUAGE plpgsql
@@ -3165,7 +3315,11 @@ REVOKE EXECUTE ON FUNCTION public.trg_nombre_colaborador_al_cambiar_ficha() FROM
 
 CREATE TRIGGER colaboradores_nombre_de_su_ficha BEFORE INSERT OR UPDATE ON public.colaboradores FOR EACH ROW EXECUTE FUNCTION public.trg_nombre_colaborador_de_su_ficha();
 
+CREATE TRIGGER fotos_familiares_avisar_anfitrion AFTER INSERT OR UPDATE OF url ON public.fotos_familiares FOR EACH ROW EXECUTE FUNCTION public.trg_avisar_anfitrion_foto();
+
 CREATE TRIGGER invitados_anio_boda_pareja AFTER INSERT OR UPDATE OF "anioBoda", "rolFamiliar", "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_igualar_anio_boda_pareja();
+
+CREATE TRIGGER invitados_avisar_anfitrion AFTER UPDATE ON public.invitados REFERENCING OLD TABLE AS viejos NEW TABLE AS nuevos FOR EACH STATEMENT EXECUTE FUNCTION public.trg_avisar_anfitrion_progreso();
 
 CREATE TRIGGER invitados_invalidar_invitacion AFTER INSERT OR UPDATE OF confirmado, pagado, mesa, "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_invalidar_invitacion_familia();
 

@@ -1,5 +1,7 @@
 // El «cartero» de los avisos al móvil (él, v79): manda un aviso a los
-// móviles de los colaboradores que lo han activado. Vive en Vercel, junto a
+// móviles de los colaboradores que lo han activado o, con `para:
+// "anfitrion"` (v79.3, lo pide la propia base: avisar_anfitrion), a los del
+// anfitrión. Vive en Vercel, junto a
 // la web (plan gratuito). Solo el anfitrión puede pedirlo: se comprueba su
 // llave contra la base, como en el resto de la app. La clave secreta de los
 // avisos (VAPID_PRIVATE_KEY) la pega él en Vercel; nunca está en el código.
@@ -24,13 +26,16 @@ export function crearManejador({ webpush, fetch, env }) {
   return async function manejador(req, res) {
     if (req.method !== "POST") return res.status(405).json({ error: "Solo POST." });
     if (!env.VAPID_PRIVATE_KEY) return res.status(503).json({ error: "Falta la clave de los avisos en Vercel (VAPID_PRIVATE_KEY)." });
-    const { token, colaboradores = null, titulo = "", texto = "", url = "/" } = req.body || {};
+    const { token, para = "equipo", colaboradores = null, titulo = "", texto = "", url = "/", etiqueta = "" } = req.body || {};
     if (!token || !String(texto).trim()) return res.status(400).json({ error: "Falta la llave o el texto." });
 
     let suscripciones;
     try {
       if (!(await rpc("anfitrion_verificar_token", { p_token: token }))) return res.status(403).json({ error: "No autorizado." });
-      suscripciones = (await rpc("anfitrion_suscripciones_avisos", { p_token: token, p_colaboradores: colaboradores })) || [];
+      suscripciones =
+        (para === "anfitrion"
+          ? await rpc("anfitrion_suscripciones_anfitrion", { p_token: token })
+          : await rpc("anfitrion_suscripciones_avisos", { p_token: token, p_colaboradores: colaboradores })) || [];
     } catch (e) {
       return res.status(502).json({ error: `No se pudo hablar con la base (${e.message}).` });
     }
@@ -41,6 +46,8 @@ export function crearManejador({ webpush, fetch, env }) {
       texto: String(texto).slice(0, LARGO_MAXIMO),
       // Siempre dentro de la app: «/algo», nunca «//otra.web» ni «https://…».
       url: /^\/(?!\/)/.test(String(url || "")) ? url : "/",
+      // Agrupa en el móvil: el aviso nuevo sustituye al anterior del mismo tipo.
+      ...(/^[a-z]{1,20}$/.test(String(etiqueta)) ? { etiqueta } : {}),
     });
     let enviados = 0;
     let fallidos = 0;

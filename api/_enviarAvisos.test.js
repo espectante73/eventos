@@ -15,6 +15,7 @@ function montar({ llaveBuena = true, falla410 = false, entorno = env } = {}) {
     llamadas.push({ nombre, cuerpo: JSON.parse(opciones.body) });
     if (nombre === "anfitrion_verificar_token") return { ok: true, status: 200, json: async () => llaveBuena };
     if (nombre === "anfitrion_suscripciones_avisos") return { ok: true, status: 200, json: async () => SUSCRIPCIONES };
+    if (nombre === "anfitrion_suscripciones_anfitrion") return { ok: true, status: 200, json: async () => [SUSCRIPCIONES[0]] };
     return { ok: true, status: 204, json: async () => null };
   });
   const webpush = {
@@ -65,5 +66,17 @@ describe("el cartero de los avisos", () => {
     const otra = montar();
     await otra.manejador({ method: "POST", body: { token: "t", texto: "x", url: "//otra.web" } }, otra.res);
     expect(JSON.parse(otra.webpush.sendNotification.mock.calls[0][1]).url).toBe("/");
+  });
+
+  // v79.3: lo que pide la atención del anfitrión, a SUS móviles, agrupado por tipo.
+  it("para el anfitrión, solo a sus móviles y con su etiqueta", async () => {
+    const { manejador, webpush, res, llamadas } = montar();
+    await manejador({ method: "POST", body: { token: "t", para: "anfitrion", etiqueta: "pago", titulo: "Familia pagada", texto: "Familia Pacheco (4)" } }, res);
+    expect(llamadas.map((l) => l.nombre)).not.toContain("anfitrion_suscripciones_avisos");
+    expect(res.cuerpo).toEqual({ enviados: 1, fallidos: 0 });
+    expect(JSON.parse(webpush.sendNotification.mock.calls[0][1])).toEqual({ titulo: "Familia pagada", texto: "Familia Pacheco (4)", url: "/", etiqueta: "pago" });
+    const rara = montar();
+    await rara.manejador({ method: "POST", body: { token: "t", etiqueta: "<b>", texto: "x" } }, rara.res);
+    expect(JSON.parse(rara.webpush.sendNotification.mock.calls[0][1])).not.toHaveProperty("etiqueta");
   });
 });

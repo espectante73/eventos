@@ -78,6 +78,8 @@ export function Portada({
   mostrarDiseno,
   // Solo lo pasa VistaAnfitrion: el panel de errores es cosa del anfitrión.
   mostrarErrores,
+  // Los avisos al móvil del anfitrión, en Mi cuenta (v79.3).
+  avisosMovil,
   // Enlace COMPLETO al tablón público (?tablon=...), ya calculado por
   // quien monta Portada (VistaAnfitrion.jsx / VistaColaborador.jsx) a
   // partir de data.tokenTablon -- Portada no sabe nada de cómo se
@@ -192,6 +194,7 @@ export function Portada({
               mostrarMapaSitio={mostrarMapaSitio}
               mostrarDiseno={mostrarDiseno}
               mostrarErrores={mostrarErrores}
+              avisos={avisosMovil}
               {...(miCuenta || (editable && toggle ? { abierta: miCuentaAbierta, onCerrar: () => setMiCuentaAbierta(false) } : {}))}
             />
           </div>

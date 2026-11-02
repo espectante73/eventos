@@ -1,7 +1,8 @@
 // «Avisos en este móvil» (él, v79): el colaborador activa los avisos en su
 // móvil, como los de una app instalada. Un apartado plegado más de su panel
 // (norma 5), con su estado al lado del título. Las reglas, en
-// lib/avisosPush.js. Sin «yo» en los textos: «el anfitrión».
+// lib/avisosPush.js. Sin «yo» en los textos: «el anfitrión». El anfitrión lo
+// tiene en Mi cuenta (v79.3), con su `explicacion`.
 import { useEffect, useState } from "react";
 import { Bell, Check } from "lucide-react";
 import { C, OP } from "../theme";
@@ -11,8 +12,9 @@ import { LineaAviso } from "./LineaAviso";
 import { estadoAvisos, activarAvisos, desactivarAvisos, AVISO_BLOQUEADOS } from "../lib/avisosPush";
 
 const RESUMEN = { activar: "Sin activar", activos: "Activados", instalar: "Instala la app", bloqueados: "Bloqueados" };
+const PARA_EL_COLABORADOR = "Llega un aviso cuando tengas invitados nuevos, o cuando el anfitrión avise al equipo.";
 
-export function AvisosMovil({ guardar, quitar, abierta, onAlternar, entorno }) {
+export function AvisosMovil({ guardar, quitar, abierta, onAlternar, entorno, explicacion = PARA_EL_COLABORADOR }) {
   const [estado, setEstado] = useState(null);
   const [aviso, setAviso] = useState("");
   const [ocupado, setOcupado] = useState(false);
@@ -52,7 +54,7 @@ export function AvisosMovil({ guardar, quitar, abierta, onAlternar, entorno }) {
       <div className="space-y-2 text-sm">
         {estado === "activar" && (
           <>
-            <p style={texto}>Llega un aviso cuando tengas invitados nuevos, o cuando el anfitrión avise al equipo.</p>
+            <p style={texto}>{explicacion}</p>
             <Boton variante="principal" icono={Bell} disabled={ocupado} onClick={activar}>
               Activar avisos
             </Boton>

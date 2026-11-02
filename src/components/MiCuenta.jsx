@@ -28,6 +28,7 @@ import { ModalMapaSitio } from "./MapaSitio";
 // En su propio trozo: lleva CLAUDE.md dentro y solo se baja al abrirlo.
 const ModalDiseno = lazy(() => import("./ModalDiseno"));
 import { CampoContrasena } from "./CampoContrasena";
+import { AvisosMovil } from "./AvisosMovil";
 import { URL_REGISTRO_ERRORES } from "../constants";
 import { useMano, MANO } from "../lib/mano";
 import { hayQueRepasar } from "../lib/manual";
@@ -128,10 +129,15 @@ function PreguntaMano() {
   );
 }
 
+const AVISOS_DEL_ANFITRION =
+  "Llega un aviso cuando una familia completa sus datos o paga, con cada foto de boda nueva, y cuando un colaborador termina un paso o responde a un impago.";
+
 // `abierta` + `onCerrar`: la abre otro (el anfitrión, desde "Abrir
 // sección…", v50.6) y aquí no se pinta botón. Sin ellos, el botón de
 // siempre (los colaboradores, que no tienen ese menú).
-export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarDiseno, mostrarErrores, abierta: abiertaFuera, onCerrar }) {
+// `avisos` ({ guardar, quitar }): solo el anfitrión (v79.3); el colaborador
+// los tiene en su panel.
+export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostrarDiseno, mostrarErrores, avisos, abierta: abiertaFuera, onCerrar }) {
   const desdeFuera = abiertaFuera !== undefined;
   const [abiertaAqui, setAbierta] = useState(false);
   const abierta = desdeFuera ? abiertaFuera : abiertaAqui;
@@ -338,6 +344,12 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
                 </a>
               )}
               {tactil && <SelectorMano />}
+            </div>
+          )}
+
+          {avisos && (
+            <div className="mb-5">
+              <AvisosMovil guardar={avisos.guardar} quitar={avisos.quitar} explicacion={AVISOS_DEL_ANFITRION} />
             </div>
           )}
 
