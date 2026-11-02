@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabaseClient";
+import { pedirAvisos, textoInvitadosNuevos } from "./lib/avisosPush";
 import { avisoEnPantalla } from "./lib/avisos";
 import { useCanalAsistencia } from "./lib/useCanalAsistencia";
 import { C } from "./theme";
@@ -142,6 +143,9 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
   // el circulito de la Lista). null hasta que llega: la Lista no pinta
   // ningún circulito antes de saberlo.
   const [entradasTablon, setEntradasTablon] = useState(null);
+  // Qué colaboradores tienen los avisos al móvil activos (v79), para la
+  // ventana «Avisar al equipo». null hasta que llega.
+  const [colaboradoresConAvisos, setColaboradoresConAvisos] = useState(null);
 
   // ---------- Lo que solo usa una ventana (él, v72.3) ----------
   // Cuentas (los gastos), Colaboradores (el historial de avisos) y Novedades
@@ -194,6 +198,10 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
         // comprueba contra los invitados confirmados, schema.sql 2026-08-29).
         setPreguntaTablon(pregunta || "");
         setAccesosTablonSospechosos(accesos || []);
+      } else if (nombre === "avisosMovil") {
+        // «Best effort»: sin el SQL de la v79, la ventana dice que faltan.
+        const { data, error } = await supabase.rpc("anfitrion_colaboradores_con_avisos", p);
+        setColaboradoresConAvisos(error ? [] : data || []);
       } else if (nombre === "entradasTablon") {
         // «Best effort» y sin aviso: sin el SQL de la v75.2 (o si falla),
         // la Lista sale como antes, sin circulitos.
@@ -1277,6 +1285,8 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
   const avisarColaborador = useCallback(
     async (colaboradorId) => {
       if (!esAnfitrion) return;
+      // Los nuevos de los que se le avisa (los mismos que nombra el email).
+      const nuevos = invitadosRef.current.filter((g) => g.colaboradorId === colaboradorId && g.avisoPendiente && g.confirmado).length;
       const { error } = await supabase.rpc("anfitrion_avisar_colaborador", {
         p_token: rol,
         p_colaborador_id: colaboradorId,
@@ -1285,6 +1295,9 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
         avisar("No se pudo avisar al colaborador.", error);
         return;
       }
+      // Y en su móvil, si lo tiene activado (v79). Sin esperar ni avisar
+      // si falla: el email ya ha salido, y es el respaldo.
+      if (nuevos > 0) pedirAvisos({ token: rol, colaboradores: [colaboradorId], titulo: "Invitados nuevos", texto: textoInvitadosNuevos(nuevos) });
       const [{ data: todosInvitados }, { data: avisos }] = await Promise.all([
         supabase.rpc("anfitrion_listar_invitados", { p_token: rol }),
         supabase.rpc("anfitrion_listar_avisos_enviados", { p_token: rol }),
@@ -1294,6 +1307,31 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
         invitadosRef.current = todosInvitados;
       }
       if (avisos) setAvisosEnviados(avisos);
+    },
+    [esAnfitrion, rol]
+  );
+
+  // ---------- Los avisos al móvil (v79) ----------
+  // El colaborador apunta (o quita) su móvil. Devuelven si se pudo.
+  const guardarSuscripcionAvisos = useCallback(
+    async ({ endpoint, p256dh, auth }) => {
+      const { error } = await supabase.rpc("colaborador_guardar_suscripcion", { p_colaborador_id: rol, p_endpoint: endpoint, p_p256dh: p256dh, p_auth: auth });
+      return !error;
+    },
+    [rol]
+  );
+  const quitarSuscripcionAvisos = useCallback(
+    async (endpoint) => {
+      const { error } = await supabase.rpc("colaborador_quitar_suscripcion", { p_colaborador_id: rol, p_endpoint: endpoint });
+      return !error;
+    },
+    [rol]
+  );
+  // El anfitrión, a todo el equipo (o a unos): { enviados, fallidos } o { error }.
+  const avisarAlEquipo = useCallback(
+    async ({ titulo, texto, colaboradores = null }) => {
+      if (!esAnfitrion) return { error: "Solo el anfitrión." };
+      return pedirAvisos({ token: rol, colaboradores, titulo, texto });
     },
     [esAnfitrion, rol]
   );
@@ -1520,6 +1558,10 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     persistPreguntaTablon,
     accesosTablonSospechosos,
     entradasTablon,
+    colaboradoresConAvisos,
+    guardarSuscripcionAvisos,
+    quitarSuscripcionAvisos,
+    avisarAlEquipo,
     obtenerHistorialTexto,
     obtenerFotosFiesta,
     obtenerFamilia,

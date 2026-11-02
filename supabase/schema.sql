@@ -1004,6 +1004,91 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.colaborador_equipo(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.colaborador_enlace_whatsapp(uuid) TO authenticated;
 
+-- ------------------------------------------------------------
+-- Los avisos al móvil (él, v79)
+-- ------------------------------------------------------------
+-- Los móviles de los colaboradores que han activado los avisos, «como una
+-- app instalada». Lo que guarda cada uno es la dirección a la que Apple o
+-- Google entregan su aviso y sus dos claves: nada que sirva para leer su
+-- móvil. Nadie lee la tabla: el colaborador apunta o quita SU móvil con su
+-- sesión, y el «cartero» (api/avisos.js, en Vercel) pide la lista con la
+-- llave del anfitrión. El email sigue siempre de respaldo.
+CREATE TABLE IF NOT EXISTS public.suscripciones_avisos (
+    id uuid DEFAULT gen_random_uuid() NOT NULL PRIMARY KEY,
+    "colaboradorId" uuid NOT NULL,
+    endpoint text NOT NULL UNIQUE,
+    p256dh text NOT NULL,
+    auth text NOT NULL,
+    "creadaEn" timestamp with time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE public.suscripciones_avisos ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.suscripciones_avisos FROM anon, authenticated;
+
+-- El colaborador apunta su móvil (si el móvil ya estaba, pasa a ser suyo).
+CREATE OR REPLACE FUNCTION public.colaborador_guardar_suscripcion(p_colaborador_id uuid, p_endpoint text, p_p256dh text, p_auth text) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if not exists (select 1 from colaboradores c where c."id" = p_colaborador_id and c."authUserId" = auth.uid()) then
+    raise exception 'No autorizado';
+  end if;
+  insert into suscripciones_avisos ("colaboradorId", endpoint, p256dh, auth)
+  values (p_colaborador_id, p_endpoint, p_p256dh, p_auth)
+  on conflict (endpoint) do update
+    set "colaboradorId" = excluded."colaboradorId", p256dh = excluded.p256dh, auth = excluded.auth;
+end;
+$$;
+REVOKE EXECUTE ON FUNCTION public.colaborador_guardar_suscripcion(uuid, text, text, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.colaborador_guardar_suscripcion(uuid, text, text, text) TO authenticated;
+
+-- El colaborador quita su móvil.
+CREATE OR REPLACE FUNCTION public.colaborador_quitar_suscripcion(p_colaborador_id uuid, p_endpoint text) RETURNS void
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  delete from suscripciones_avisos s
+  where s.endpoint = p_endpoint and s."colaboradorId" = p_colaborador_id
+    and exists (select 1 from colaboradores c where c."id" = p_colaborador_id and c."authUserId" = auth.uid());
+$$;
+REVOKE EXECUTE ON FUNCTION public.colaborador_quitar_suscripcion(uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.colaborador_quitar_suscripcion(uuid, text) TO authenticated;
+
+-- El «cartero», con la llave del anfitrión: los móviles a los que avisar
+-- (de esos colaboradores, o de todos con p_colaboradores nulo). Solo de
+-- quien sigue siendo colaborador.
+CREATE OR REPLACE FUNCTION public.anfitrion_suscripciones_avisos(p_token uuid, p_colaboradores uuid[]) RETURNS TABLE(id uuid, "colaboradorId" uuid, endpoint text, p256dh text, auth text)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select s.id, s."colaboradorId", s.endpoint, s.p256dh, s.auth
+  from suscripciones_avisos s
+  join colaboradores c on c."id" = s."colaboradorId"
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+    and (p_colaboradores is null or s."colaboradorId" = any(p_colaboradores));
+$$;
+
+-- El «cartero» borra un móvil que ya no los quiere (Apple o Google dicen 410).
+CREATE OR REPLACE FUNCTION public.anfitrion_borrar_suscripcion(p_token uuid, p_id uuid) RETURNS void
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  delete from suscripciones_avisos s
+  where s.id = p_id and p_token = (select "token" from anfitrion_secreto limit 1);
+$$;
+
+-- Para la ventana «Avisar al equipo»: quién tiene los avisos activos.
+CREATE OR REPLACE FUNCTION public.anfitrion_colaboradores_con_avisos(p_token uuid) RETURNS TABLE("colaboradorId" uuid, moviles bigint)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select s."colaboradorId", count(*)
+  from suscripciones_avisos s
+  join colaboradores c on c."id" = s."colaboradorId"
+  where p_token = (select "token" from anfitrion_secreto limit 1)
+  group by s."colaboradorId";
+$$;
+
 -- Guarda los datos de la boda (nombre, fecha, lugar, precios, plantillas).
 CREATE FUNCTION public.guardar_evento(p_token uuid, p_fila jsonb) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER

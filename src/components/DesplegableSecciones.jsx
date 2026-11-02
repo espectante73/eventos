@@ -24,6 +24,7 @@ import {
   Trash2,
   KeyRound,
   Clock3,
+  Send,
 } from "lucide-react";
 import { C } from "../theme";
 import { UserSolido, Seal } from "./Widgets";
@@ -140,6 +141,14 @@ export function DesplegableSecciones({
         // Formularios → tu nombre.
         sello,
         submenu: [
+          // Un aviso al móvil de todo el equipo (v79). Por orden alfabético, la primera.
+          {
+            id: "avisar-equipo",
+            etiqueta: "Avisar equipo",
+            marcado: Boolean(abierto["avisar-equipo"]),
+            icono: Send,
+            onClick: () => toggle("avisar-equipo"),
+          },
           {
             id: "colaboradores-datos",
             etiqueta: "Datos Colab.",

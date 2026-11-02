@@ -682,3 +682,25 @@ describe("el teléfono del invitado", () => {
     expect(sql).toMatch(/"telefono" text DEFAULT ''::text\n\);/);
   });
 });
+
+// v79 (él): los avisos al móvil.
+describe("los avisos al móvil", () => {
+  it("nadie lee la tabla de móviles", () => {
+    expect(sql).toContain("ALTER TABLE public.suscripciones_avisos ENABLE ROW LEVEL SECURITY;");
+    expect(sql).toContain("REVOKE ALL ON public.suscripciones_avisos FROM anon, authenticated;");
+    expect(sql).not.toMatch(/CREATE POLICY\s+\w+\s+ON\s+public\.suscripciones_avisos/i);
+  });
+
+  it("cada colaborador, solo su móvil y con su sesión", () => {
+    for (const f of ["colaborador_guardar_suscripcion", "colaborador_quitar_suscripcion"]) {
+      expect(cuerpoDe(f)).toContain(`c."authUserId" = auth.uid()`);
+      expect(sql).toMatch(new RegExp(`REVOKE EXECUTE ON FUNCTION public\\.${f}\\([^)]*\\) FROM PUBLIC, anon;`));
+    }
+  });
+
+  it("la lista de móviles, solo con la llave del anfitrión", () => {
+    for (const f of ["anfitrion_suscripciones_avisos", "anfitrion_borrar_suscripcion", "anfitrion_colaboradores_con_avisos"]) {
+      expect(cuerpoDe(f)).toContain(`p_token = (select "token" from anfitrion_secreto limit 1)`);
+    }
+  });
+});

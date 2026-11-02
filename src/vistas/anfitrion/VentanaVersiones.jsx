@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "79",
+    cambios: [
+      "Avisos al móvil, como los de una app instalada. Cada colaborador los activa en su panel, en «Avisos en este móvil» (en el iPhone, con la app añadida a la pantalla de inicio y abierta desde su icono).",
+      "Llegan solos cuando se le asignan invitados nuevos («Tienes 3 invitados nuevos»), a la vez que el email, que sigue de respaldo. Y el anfitrión puede escribir uno a todo el equipo desde Colaboradores → «Avisar equipo», por ejemplo para contar una función nueva.",
+    ],
+  },
+  {
     version: "78.4",
     cambios: [
       "La app ya se puede instalar en el móvil como una app, sin tiendas: en el iPhone, Safari → Compartir → «Añadir a pantalla de inicio»; en Android, Chrome → «Instalar». Se abre a pantalla completa, con su icono (dos anillos de boda en dorado sobre el verde) y su nombre, «Las Bodas». Es el primer paso para poder mandar avisos al móvil.",

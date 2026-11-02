@@ -25,6 +25,7 @@ import { URL_REPOSITORIO } from "../constants";
 import { Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, TextInput, ANCHO_ANIO } from "../components/Formulario";
 import { LineaContacto, BotonLlamar } from "../components/Contacto";
+import { AvisosMovil } from "../components/AvisosMovil";
 import { pideTelefono, telefonoValido, limpiarTelefono, telefonoParaVer, AVISO_TELEFONO } from "../lib/telefono";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
@@ -1633,6 +1634,16 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               y para la ficha de cada invitado, así que abrir una cierra las
               demás sin lógica aparte. */}
           <div className={`space-y-2 ${fichaAbierta ? "hidden sm:block" : ""}`}>
+            {/* Los avisos al móvil (v79). No en la vista previa del
+                anfitrión: apuntaría su Mac como el móvil de este colaborador. */}
+            {!esAnfitrionOriginal && (
+              <AvisosMovil
+                guardar={data.guardarSuscripcionAvisos}
+                quitar={data.quitarSuscripcionAvisos}
+                abierta={abiertoId === "avisos"}
+                onAlternar={() => setAbiertoId((a) => (hayFicha(a) ? a : a === "avisos" ? null : "avisos"))}
+              />
+            )}
             <SeccionPlegable
               icono={UserCog}
               titulo="Tus datos"
