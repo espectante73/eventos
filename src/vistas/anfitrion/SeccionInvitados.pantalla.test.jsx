@@ -274,6 +274,39 @@ describe("las canciones, en lista", () => {
     vista.desmontar();
   });
 
+  it("tocando una canción se corrige en la ficha de quien la pidió (v79.6)", async () => {
+    const persistInvitados = vi.fn();
+    const vista = montar(
+      <SeccionInvitados
+        data={{ ...conCanciones, persistInvitados }}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante="canciones"
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+    const botones = () => [...document.body.querySelectorAll("button")];
+    // La del más joven (36): la que escribió Barrios, Jacob.
+    const fila = botones().filter((b) => b.textContent === "Bailando — Enrique Iglesias")[1];
+    await act(async () => fila.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(document.body.textContent).toContain("Pedida por Barrios, Jacob (36)");
+    const titulo = document.body.querySelector('input[aria-label="Canción"]');
+    expect(titulo.value).toBe("Bailando");
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(titulo, "Bailando!");
+      titulo.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => botones().find((b) => b.textContent === "Guardar").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    const guardados = persistInvitados.mock.calls[0][0];
+    expect(guardados.find((g) => g.id === "g1").cancion).toBe("Bailando! — Enrique Iglesias\n\nLa bamba — Ritchie Valens");
+    vista.desmontar();
+  });
+
   it("tocando «Edad», de mayor a menor; otra vez, de menor a mayor", async () => {
     const vista = abrir();
     const edad = () => [...document.body.querySelectorAll("#zona-imprimible button")].find((b) => b.textContent.startsWith("Edad"));

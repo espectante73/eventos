@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "79.6",
+    cambios: [
+      "«Canciones para bailar»: tocando una canción se abre «Corregir canción», con Canción y Artista tal como lo escribió esa persona (y quién la pidió). Al guardar se corrige en su ficha, también si ya pagó. Solo el anfitrión.",
+      "La misma canción también cuenta junta aunque cambien guiones, puntos o espacios: «yeye» y «YE-YE» son una.",
+    ],
+  },
+  {
     version: "79.5",
     cambios: [
       "«Canciones para bailar», sin nombres: una línea por cada vez que se pide una canción, con la edad de quien la pidió y una estrella por cada vez que se ha pedido en total (de 6 en adelante, «★ 7»). La misma canción se escribe igual en todas sus líneas aunque cada uno la escribiera a su manera. Tocando las cabeceras se ordena: al abrir, las más pedidas; «Edad», de mayor a menor y, otra vez, de menor a mayor. Imprimir y Exportar CSV salen igual.",

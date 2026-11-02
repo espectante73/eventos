@@ -10,6 +10,7 @@ import {
   ordenarCanciones,
   tocarOrdenCanciones,
   ORDEN_CANCIONES_INICIAL,
+  corregirCancion,
 } from "./canciones";
 
 describe("hasta 3 canciones, con título y artista (v69)", () => {
@@ -107,5 +108,37 @@ describe("la lista para bailar (v79.5): una fila por petición, sin nombres", ()
     expect(estrellas(1)).toBe("★");
     expect(estrellas(5)).toBe("★★★★★");
     expect(estrellas(7)).toBe("★ 7");
+  });
+});
+
+describe("corregir cómo se escribió una canción (v79.6)", () => {
+  const invitados = [
+    { id: "a", cancion: "Chica yeye — Conchita Velasco" },
+    { id: "b", cancion: "Bailando\n\nUna Chica YE-YE - Concha Velasco" },
+    { id: "c", cancion: "Una Chica YE-YE" },
+    { id: "d", cancion: "una chica yeye" },
+  ];
+  const edad = () => 50;
+
+  it("«yeye» y «YE-YE» son la misma; con una palabra de más, o el artista dentro del título, no", () => {
+    const veces = Object.fromEntries(cancionesPedidas(invitados, edad).map((f) => [`${f.invitadoId}${f.hueco}`, f.veces]));
+    expect(veces).toEqual({ a0: 1, b0: 1, b2: 1, c0: 2, d0: 2 });
+  });
+
+  it("cada fila sabe de quién es y en qué hueco está; corregida, se junta con las demás", () => {
+    const fila = cancionesPedidas(invitados, edad).find((f) => f.invitadoId === "b" && f.hueco === 2);
+    const { invitados: siguiente, aviso } = corregirCancion(invitados, fila.invitadoId, fila.hueco, { titulo: " Chica yeye ", artista: "Conchita Velasco" });
+    expect(aviso).toBe("");
+    expect(siguiente.find((g) => g.id === "b").cancion).toBe("Bailando\n\nChica yeye — Conchita Velasco");
+    expect(siguiente.find((g) => g.id === "a")).toBe(invitados[0]);
+    expect(cancionesPedidas(siguiente, edad).filter((f) => f.clave === "chicayeye").map((f) => `${f.veces}|${f.cancion}`)).toEqual([
+      "2|Chica yeye — Conchita Velasco",
+      "2|Chica yeye — Conchita Velasco",
+    ]);
+  });
+
+  it("vacía no se guarda, y sin cambios no toca la lista", () => {
+    expect(corregirCancion(invitados, "a", 0, { titulo: " ", artista: "" })).toEqual({ invitados, aviso: "Escribe la canción o el artista." });
+    expect(corregirCancion(invitados, "a", 0, { titulo: "Chica yeye", artista: "Conchita Velasco" }).invitados).toBe(invitados);
   });
 });

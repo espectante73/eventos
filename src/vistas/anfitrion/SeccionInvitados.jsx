@@ -66,6 +66,7 @@ import {
 import { estadoTablon, contarTablon } from "../../lib/entradasTablon";
 import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
 import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
+import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
 import { pideTelefono, telefonoParaVer } from "../../lib/telefono";
 import { useSeccion } from "../../lib/useSeccion";
 
@@ -164,6 +165,8 @@ export function SeccionInvitados({
   // Por niveles (lib/ordenNiveles.js, v72.5): vacío = por «Apellido, Nombre».
   const [orden, setOrden] = useState([]);
   const [ordenCanciones, setOrdenCanciones] = useState(ORDEN_CANCIONES_INICIAL);
+  // La canción que se está corrigiendo: { invitadoId, hueco } (v79.6).
+  const [cancionACorregir, setCancionACorregir] = useState(null);
   const [modoEdicion, setModoEdicion] = useState(false);
 
   // "avisoPendiente" vive en el servidor (columna en invitados), no solo
@@ -2032,11 +2035,12 @@ export function SeccionInvitados({
                 {/* Una fila por petición, sin nombres (él, v79.5): la misma
                     canción sale tantas veces como se pidió, con la edad de
                     quien la pidió; las estrellas, cuántas veces en total.
-                    Todas las filas de la misma altura (norma 6). */}
+                    Todas las filas de la misma altura (norma 6). Tocar la
+                    canción abre «Corregir canción» (v79.6). */}
                 {filasCanciones().map((f, i) => (
                   <div
-                    key={i}
-                    className="grid gap-1 px-2 py-2 text-sm"
+                    key={`${f.invitadoId}-${f.hueco}`}
+                    className="grid gap-1 items-center px-2 py-1 text-sm"
                     style={{
                       gridTemplateColumns: COLUMNAS_CANCIONES,
                       background: i % 2 ? C.paperDark : C.blanco,
@@ -2046,7 +2050,13 @@ export function SeccionInvitados({
                     <span className="text-center whitespace-nowrap" style={{ color: C.gold }}>
                       {estrellas(f.veces)}
                     </span>
-                    <span className="truncate">{f.cancion}</span>
+                    <button
+                      onClick={() => setCancionACorregir({ invitadoId: f.invitadoId, hueco: f.hueco })}
+                      className="boton-3d rounded px-2 py-1 text-left truncate min-w-0"
+                      title="Corregir cómo está escrita"
+                    >
+                      {f.cancion}
+                    </button>
                     <span className="text-center">{f.edad ?? "—"}</span>
                   </div>
                 ))}
@@ -2163,6 +2173,7 @@ export function SeccionInvitados({
       {/* «Nuevo invitado» (él, v77): un formulario flotante, no campos en la cabecera. */}
       {mostrarAnadir && <VentanaNuevoInvitado data={data} onCerrar={() => setMostrarAnadir(false)} />}
       {mostrarImportarTel && <VentanaImportarTelefonos data={data} onCerrar={() => setMostrarImportarTel(false)} />}
+      {cancionACorregir && <VentanaCorregirCancion data={data} peticion={cancionACorregir} onCerrar={() => setCancionACorregir(null)} />}
     </>
   );
 }

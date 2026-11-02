@@ -45,16 +45,26 @@ export const resumenCanciones = (texto) => cancionesDe(texto).join(" · ");
 // alguien pide una canción, con la edad de quien la pidió y sin nombres,
 // para poder ordenarla por edad real. Cada fila lleva cuántas veces se ha
 // pedido esa canción en toda la lista. Es la misma aunque cambien las
-// mayúsculas, las tildes o falte el artista (se compara el título); una
-// errata cuenta como otra. Todas sus filas se escriben igual: como la
-// primera que trae el artista (o, si ninguna, como la primera).
+// mayúsculas, las tildes, los guiones, los puntos o los espacios, o falte
+// el artista (se compara el título): «yeye» y «YE-YE» son una. Una errata,
+// o una palabra de más, cuenta como otra: eso se corrige a mano
+// (corregirCancion). Todas sus filas se escriben igual: como la primera que
+// trae el artista (o, si ninguna, como la primera). Cada fila sabe de quién
+// es y en qué hueco está, para poder corregirla.
 export function cancionesPedidas(invitados, edadDe) {
   const filas = invitados.flatMap((g) => {
     const edad = edadDe(g) ?? null;
     return huecosCanciones(g.cancion)
-      .map(({ titulo, artista }) => [titulo.trim(), artista.trim()])
+      .map(({ titulo, artista }, hueco) => [titulo.trim(), artista.trim(), hueco])
       .filter(([titulo, artista]) => titulo || artista)
-      .map(([titulo, artista]) => ({ cancion: [titulo, artista].filter(Boolean).join(SEPARADOR), clave: paraBuscar(titulo || artista), conArtista: Boolean(titulo && artista), edad }));
+      .map(([titulo, artista, hueco]) => ({
+        cancion: [titulo, artista].filter(Boolean).join(SEPARADOR),
+        clave: paraBuscar(titulo || artista).replace(/[^a-z0-9]/g, ""),
+        conArtista: Boolean(titulo && artista),
+        edad,
+        invitadoId: g.id,
+        hueco,
+      }));
   });
   const veces = new Map();
   const nombre = new Map();
@@ -62,7 +72,7 @@ export function cancionesPedidas(invitados, edadDe) {
     veces.set(f.clave, (veces.get(f.clave) || 0) + 1);
     if (!nombre.has(f.clave) || (f.conArtista && !nombre.get(f.clave).conArtista)) nombre.set(f.clave, f);
   }
-  return filas.map(({ clave, edad }) => ({ cancion: nombre.get(clave).cancion, clave, edad, veces: veces.get(clave) }));
+  return filas.map(({ clave, edad, invitadoId, hueco }) => ({ cancion: nombre.get(clave).cancion, clave, edad, veces: veces.get(clave), invitadoId, hueco }));
 }
 
 // Una estrella por vez; de 6 en adelante no caben en la línea: «★ 7».
@@ -91,4 +101,19 @@ export function ordenarCanciones(filas, { columna, direccion }) {
       signo * COMPARAR[columna](x, y) || y.veces - x.veces || x.clave.localeCompare(y.clave) || (y.edad ?? -1) - (x.edad ?? -1)
     );
   });
+}
+
+// Corregir cómo escribió alguien su canción (él, v79.6), desde «Canciones
+// para bailar»: el hueco `hueco` de su ficha, con su título y su artista.
+// Vacía del todo, no: corregir no es quitar.
+export function corregirCancion(invitados, invitadoId, hueco, { titulo = "", artista = "" }) {
+  const t = titulo.trim();
+  const a = artista.trim();
+  if (!t && !a) return { invitados, aviso: "Escribe la canción o el artista." };
+  const g = invitados.find((x) => x.id === invitadoId);
+  if (!g) return { invitados, aviso: "Ese invitado ya no está en la lista." };
+  const huecos = huecosCanciones(g.cancion);
+  if (huecos[hueco].titulo === t && huecos[hueco].artista === a) return { invitados, aviso: "" };
+  const cancion = textoDeHuecos(huecos.map((h, i) => (i === hueco ? { titulo: t, artista: a } : h)));
+  return { invitados: invitados.map((x) => (x.id === invitadoId ? { ...x, cancion } : x)), aviso: "" };
 }
