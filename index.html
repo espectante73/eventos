@@ -10,6 +10,20 @@
          verlo yo mismo en un navegador real; confirmar tras probarlo. -->
     <meta name="format-detection" content="date=no, telephone=no, address=no, email=no" />
     <title>Libro de invitados</title>
+    <!-- Instalable como una app (él, v78.4): «Añadir a pantalla de inicio»
+         la abre a pantalla completa, con su icono (el 3: dos anillos de boda
+         en dorado sobre el verde de la app) y su nombre corto, «Las Bodas»
+         (entero no cabe bajo el icono). Sin tiendas: desde el navegador.
+         Es el primer paso para los avisos en el móvil. Los iconos salen de
+         public/icono.svg. Sin service worker todavía: así nadie se queda con
+         una versión vieja guardada en el móvil. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Las Bodas" />
+    <meta name="theme-color" content="#1F3A2E" />
     <!-- Miniatura al compartir cualquier enlace de esta web en WhatsApp/
          Facebook (og:image) -- a petición del usuario, 2026-08-25.
          ESTÁTICO a propósito: el rastreador que genera la vista previa

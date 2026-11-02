@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- El icono de la app (él, v78.4: el 3, «dos anillos de boda en dorado»).
+       El verde y los dorados, los de theme.js (C.ink, C.verdeHondo,
+       C.goldClaro y el dorado claro del degradado DORADO). -->
+  <defs>
+    <linearGradient id="fondo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1F3A2E"/>
+      <stop offset="1" stop-color="#24402F"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#fondo)"/>
+  <g transform="translate(256 268)">
+    <circle cx="-54" cy="0" r="106" fill="none" stroke="#D9B778" stroke-width="30"/>
+    <circle cx="54" cy="0" r="106" fill="none" stroke="#E6C77F" stroke-width="30"/>
+    <path d="M12 -116 l21 -42 l21 42 z" fill="#D9B778"/>
+  </g>
+</svg>

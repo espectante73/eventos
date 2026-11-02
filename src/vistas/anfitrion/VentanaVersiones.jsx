@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "78.4",
+    cambios: [
+      "La app ya se puede instalar en el móvil como una app, sin tiendas: en el iPhone, Safari → Compartir → «Añadir a pantalla de inicio»; en Android, Chrome → «Instalar». Se abre a pantalla completa, con su icono (dos anillos de boda en dorado sobre el verde) y su nombre, «Las Bodas». Es el primer paso para poder mandar avisos al móvil.",
+      "Quien ya tenía el acceso directo: borrarlo y volver a añadirlo una vez, y entrar de nuevo con su contraseña dentro de la app instalada.",
+    ],
+  },
+  {
     version: "78.3",
     cambios: [
       "Lista de invitados: el buscador ya no se fija en tildes, comillas ni apóstrofos. «N´gabu», «N'gabu» y «Ngabu» encuentran a la misma familia, la escriba como la escriba. Y la coma tampoco cuenta: «pacheco ruben» encuentra a «Pacheco, Rubén». Igual en el buscador de invitados de Colaboradores.",
