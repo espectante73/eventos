@@ -349,7 +349,7 @@ export function MiCuenta({ onCerrarSesion, enlaceTablon, mostrarMapaSitio, mostr
 
           {avisos && (
             <div className="mb-5">
-              <AvisosMovil guardar={avisos.guardar} quitar={avisos.quitar} explicacion={AVISOS_DEL_ANFITRION} />
+              <AvisosMovil guardar={avisos.guardar} quitar={avisos.quitar} explicacion={AVISOS_DEL_ANFITRION} titulo="Avisos móvil" />
             </div>
           )}
 

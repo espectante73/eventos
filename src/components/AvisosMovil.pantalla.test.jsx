@@ -29,7 +29,7 @@ it("sin activar: lo dice y, al pulsar, se apunta y queda «Activados»", async (
   const boton = [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Activar avisos"));
   await act(async () => boton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
   expect(guardar).toHaveBeenCalledWith({ endpoint: "https://push/1", p256dh: "p", auth: "a" });
-  expect(document.body.textContent).toContain("Activados en este móvil.");
+  expect(document.body.textContent).toContain("Activados.");
   vista.desmontar();
 });
 

@@ -14,7 +14,8 @@ import { estadoAvisos, activarAvisos, desactivarAvisos, AVISO_BLOQUEADOS } from 
 const RESUMEN = { activar: "Sin activar", activos: "Activados", instalar: "Instala la app", bloqueados: "Bloqueados" };
 const PARA_EL_COLABORADOR = "Llega un aviso cuando tengas invitados nuevos, o cuando el anfitrión avise al equipo.";
 
-export function AvisosMovil({ guardar, quitar, abierta, onAlternar, entorno, explicacion = PARA_EL_COLABORADOR }) {
+// `titulo`: en Mi cuenta (300 px) el largo se cortaba; allí, «Avisos móvil».
+export function AvisosMovil({ guardar, quitar, abierta, onAlternar, entorno, explicacion = PARA_EL_COLABORADOR, titulo = "Avisos en este móvil" }) {
   const [estado, setEstado] = useState(null);
   const [aviso, setAviso] = useState("");
   const [ocupado, setOcupado] = useState(false);
@@ -50,7 +51,7 @@ export function AvisosMovil({ guardar, quitar, abierta, onAlternar, entorno, exp
 
   const texto = { color: C.charcoal, opacity: OP.secundario };
   return (
-    <SeccionPlegable icono={Bell} titulo="Avisos en este móvil" resumen={RESUMEN[estado]} abierta={abierta} onAlternar={onAlternar}>
+    <SeccionPlegable icono={Bell} titulo={titulo} resumen={RESUMEN[estado]} abierta={abierta} onAlternar={onAlternar}>
       <div className="space-y-2 text-sm">
         {estado === "activar" && (
           <>
@@ -61,9 +62,9 @@ export function AvisosMovil({ guardar, quitar, abierta, onAlternar, entorno, exp
           </>
         )}
         {estado === "activos" && (
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
             <span className="flex items-center gap-1.5" style={{ color: C.ink }}>
-              <Check size={16} aria-hidden /> Activados en este móvil.
+              <Check size={16} aria-hidden /> Activados.
             </span>
             <Boton variante="secundario" tamano="pequeno" disabled={ocupado} onClick={quitarAvisos} className="ml-auto zurdo:ml-0 zurdo:mr-auto">
               Quitar
