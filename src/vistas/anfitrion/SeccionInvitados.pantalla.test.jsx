@@ -239,15 +239,17 @@ describe("Imprimir: la lista para acomodadores", () => {
   });
 });
 
-// Hasta 3 canciones por invitado (él, v69): en «Canciones», una fila por
-// canción, numerada, con el nombre solo en la primera.
+// «Canciones para bailar» (él, v79.5): una fila por petición, sin nombres,
+// con la edad de quien la pidió y una estrella por cada vez que se pidió.
 describe("las canciones, en lista", () => {
-  it("una fila numerada por canción, y el nombre solo en la primera", () => {
-    const conCanciones = {
-      ...data,
-      invitados: data.invitados.map((g) => (g.id === "g1" ? { ...g, cancion: "Bailando — Enrique Iglesias\n\nLa bamba — Ritchie Valens" } : g)),
-    };
-    const html = dibujarYSoltar(
+  const conCanciones = {
+    ...data,
+    invitados: data.invitados.map((g) =>
+      g.id === "g1" ? { ...g, cancion: "Bailando — Enrique Iglesias\n\nLa bamba — Ritchie Valens" } : g.id === "g2" ? { ...g, cancion: "bailando" } : g
+    ),
+  };
+  const abrir = () =>
+    montar(
       <SeccionInvitados
         data={conCanciones}
         asignarColaborador={() => null}
@@ -261,10 +263,25 @@ describe("las canciones, en lista", () => {
         fijo
       />
     );
-    const panel = html.slice(html.indexOf(">Canción<"));
-    expect(panel).toContain("1. Bailando — Enrique Iglesias");
-    expect(panel).toContain("2. La bamba — Ritchie Valens");
-    expect(panel.split("Barrios, Jacob").length - 1).toBe(1);
+  // Las filas de la lista, como «estrellas|canción|edad».
+  const filas = () =>
+    [...document.body.querySelectorAll("#zona-imprimible > div.grid")].slice(1).map((f) => [...f.children].map((c) => c.textContent).join("|"));
+
+  it("sin nombres; la misma canción, una fila por quien la pidió y escrita igual", () => {
+    const vista = abrir();
+    expect(filas()).toEqual(["★★|Bailando — Enrique Iglesias|41", "★★|Bailando — Enrique Iglesias|36", "★|La bamba — Ritchie Valens|36"]);
+    expect(document.querySelector("#zona-imprimible").textContent).not.toContain("Barrios");
+    vista.desmontar();
+  });
+
+  it("tocando «Edad», de mayor a menor; otra vez, de menor a mayor", async () => {
+    const vista = abrir();
+    const edad = () => [...document.body.querySelectorAll("#zona-imprimible button")].find((b) => b.textContent.startsWith("Edad"));
+    await act(async () => edad().dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(filas().map((f) => f.split("|")[2])).toEqual(["41", "36", "36"]);
+    await act(async () => edad().dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(filas().map((f) => f.split("|")[2])).toEqual(["36", "36", "41"]);
+    vista.desmontar();
   });
 });
 

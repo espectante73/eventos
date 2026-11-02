@@ -48,7 +48,7 @@ import { revisarConExcepciones } from "../../lib/revisionInvitados";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { asignarMesaConSuFamilia, confirmarConSuFamilia } from "../../lib/mesas";
-import { cancionesDe, tieneCancion } from "../../lib/canciones";
+import { tieneCancion, cancionesPedidas, estrellas, ordenarCanciones, tocarOrdenCanciones, ORDEN_CANCIONES_INICIAL } from "../../lib/canciones";
 import { tocarTitulo, compararPorNiveles } from "../../lib/ordenNiveles";
 import { ResumenAvisosAsignacion } from "./ResumenAvisosAsignacion";
 import {
@@ -122,6 +122,9 @@ const COLUMNAS_LISTA = ["invitado", "grupoFamiliar", "rolFamiliar", "anioBoda", 
 // y letra verde.
 const TINTA_COLUMNA_ACTIVA = C.goldClaro;
 
+// «Canciones para bailar» (v79.5): estrellas · canción · edad.
+const COLUMNAS_CANCIONES = "4.5rem minmax(0, 1fr) 3.5rem";
+
 export function SeccionInvitados({
   data,
   asignarColaborador,
@@ -160,6 +163,7 @@ export function SeccionInvitados({
   const [mostrarAnadir, setMostrarAnadir] = useState(false);
   // Por niveles (lib/ordenNiveles.js, v72.5): vacío = por «Apellido, Nombre».
   const [orden, setOrden] = useState([]);
+  const [ordenCanciones, setOrdenCanciones] = useState(ORDEN_CANCIONES_INICIAL);
   const [modoEdicion, setModoEdicion] = useState(false);
 
   // "avisoPendiente" vive en el servidor (columna en invitados), no solo
@@ -328,6 +332,12 @@ export function SeccionInvitados({
   const marcarResponsable = (rol, invitadoId) =>
     persistEvento({ ...evento, rolesTrabajoResponsables: fijarResponsable(responsablesRol, rol, invitadoId) });
 
+  const filasCanciones = () =>
+    ordenarCanciones(
+      cancionesPedidas(invitados, (g) => calcularEdad(g.anioNacimiento, evento)),
+      ordenCanciones
+    );
+
   const imprimirPanelActivo = () => {
     setTimeout(() => {
       try {
@@ -358,12 +368,10 @@ export function SeccionInvitados({
         filas
       );
     } else if (panelFlotante === "canciones") {
-      // Una línea por canción (v69: hasta 3 por invitado), con su nombre
-      // y su edad en cada una: una lista corrida para quien pinche.
-      const filas = ordenarPorApellidoNombre(invitados.filter(tieneCancion)).flatMap((g) =>
-        cancionesDe(g.cancion).map((cancion) => [nombreCompleto(g), calcularEdad(g.anioNacimiento, evento) ?? "", cancion])
-      );
-      descargarCSV(`canciones-${evento.nombre || "evento"}.csv`, ["Invitado", "Edad", "Canción"], filas);
+      // Como se ve en la ventana (v79.5): una línea por petición, sin
+      // nombres, en el orden elegido.
+      const filas = filasCanciones().map((f) => [f.veces, f.cancion, f.edad ?? ""]);
+      descargarCSV(`canciones-${evento.nombre || "evento"}.csv`, ["Veces", "Canción", "Edad"], filas);
     } else if (panelFlotante === "alergias") {
       const filas = ordenarPorApellidoNombre(invitados.filter(tieneAlergiaReal)).map((g) => [
         `${g.apellido}, ${g.nombre}`,
@@ -1998,40 +2006,50 @@ export function SeccionInvitados({
             {panelFlotante === "canciones" && (
               <>
                 <div
-                  className="grid text-xs uppercase px-2 py-2"
+                  className="grid gap-1 text-xs uppercase px-2 py-2"
                   style={{
-                    gridTemplateColumns: "1.5fr 0.6fr 2fr",
-                    color: C.gold,
+                    gridTemplateColumns: COLUMNAS_CANCIONES,
                     fontFamily: "'IBM Plex Mono', monospace",
                     borderBottom: `1px solid ${C.line}`,
                   }}
                 >
-                  <span>Invitado</span>
-                  <span>Edad</span>
-                  <span>Canción</span>
-                </div>
-                {/* En lista (él, v69): una fila por canción, numerada; el
-                    nombre y la edad, solo en la primera de cada invitado.
-                    Todas las filas de la misma altura (norma 6). */}
-                {ordenarPorApellidoNombre(invitados.filter(tieneCancion)).map((g, i) =>
-                  cancionesDe(g.cancion).map((cancion, n) => (
-                    <div
-                      key={`${g.id}-${n}`}
-                      className="grid px-2 py-2 text-sm"
-                      style={{
-                        gridTemplateColumns: "1.5fr 0.6fr 2fr",
-                        background: i % 2 ? C.paperDark : C.blanco,
-                        color: C.charcoal,
-                      }}
+                  {[
+                    ["veces", "★"],
+                    ["cancion", "Canción"],
+                    ["edad", "Edad"],
+                  ].map(([columna, rotulo]) => (
+                    <EncabezadoOrdenable
+                      key={columna}
+                      sinDivisor
+                      columna={columna}
+                      orden={ordenCanciones}
+                      onClick={(c) => setOrdenCanciones((o) => tocarOrdenCanciones(o, c))}
                     >
-                      <span className="truncate">{n === 0 ? nombreCompleto(g) : ""}</span>
-                      <span>{n === 0 ? calcularEdad(g.anioNacimiento, evento) ?? "—" : ""}</span>
-                      <span className="truncate">
-                        {n + 1}. {cancion}
-                      </span>
-                    </div>
-                  ))
-                )}
+                      {rotulo}
+                    </EncabezadoOrdenable>
+                  ))}
+                </div>
+                {/* Una fila por petición, sin nombres (él, v79.5): la misma
+                    canción sale tantas veces como se pidió, con la edad de
+                    quien la pidió; las estrellas, cuántas veces en total.
+                    Todas las filas de la misma altura (norma 6). */}
+                {filasCanciones().map((f, i) => (
+                  <div
+                    key={i}
+                    className="grid gap-1 px-2 py-2 text-sm"
+                    style={{
+                      gridTemplateColumns: COLUMNAS_CANCIONES,
+                      background: i % 2 ? C.paperDark : C.blanco,
+                      color: C.charcoal,
+                    }}
+                  >
+                    <span className="text-center whitespace-nowrap" style={{ color: C.gold }}>
+                      {estrellas(f.veces)}
+                    </span>
+                    <span className="truncate">{f.cancion}</span>
+                    <span className="text-center">{f.edad ?? "—"}</span>
+                  </div>
+                ))}
                 {invitados.filter(tieneCancion).length === 0 && (
                   <p className="text-sm italic p-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
                     Todavía nadie ha indicado una canción.
