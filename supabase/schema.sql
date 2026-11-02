@@ -2132,12 +2132,12 @@ begin
     return false;
   end if;
 
-  select count(*), count(*) filter (
-    where coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> ''
-  )
-  into total, completos
-  from invitados
-  where "colaboradorId" = p_colaborador_id and "confirmado" = true;
+  total := (select count(*) from invitados where "colaboradorId" = p_colaborador_id and "confirmado" = true);
+  completos := (
+    select count(*) from invitados
+    where "colaboradorId" = p_colaborador_id and "confirmado" = true
+      and coalesce("anioNacimiento", '') <> '' and coalesce("alergias", '') <> ''
+  );
 
   if total > 0 and total = completos then
     perform enviar_email(
@@ -2169,10 +2169,8 @@ begin
     return false;
   end if;
 
-  select count(*), count(*) filter (where "pagado")
-  into total, pagados
-  from invitados
-  where "colaboradorId" = p_colaborador_id and "confirmado" = true;
+  total := (select count(*) from invitados where "colaboradorId" = p_colaborador_id and "confirmado" = true);
+  pagados := (select count(*) from invitados where "colaboradorId" = p_colaborador_id and "confirmado" = true and "pagado");
 
   if total > 0 and total = pagados then
     perform enviar_email(
@@ -2541,9 +2539,10 @@ begin
   if not colaborador_puede_actuar(p_colaborador_id) then
     return;
   end if;
-  select lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) into v_familia
-  from invitados i
-  where i."id" = p_invitado_id and i."colaboradorId" = p_colaborador_id;
+  v_familia := (
+    select lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) from invitados i
+    where i."id" = p_invitado_id and i."colaboradorId" = p_colaborador_id
+  );
   if coalesce(v_familia, '') = '' then
     return;
   end if;
@@ -3150,37 +3149,32 @@ CREATE FUNCTION public.trg_avisar_anfitrion_progreso() RETURNS trigger
     SET search_path TO 'public', 'pg_temp'
     AS $$
 declare
-  v_clave text;
-  v_familia text;
-  v_total integer;
-  v_datos integer;
-  v_datos_antes integer;
-  v_pagados integer;
-  v_pagados_antes integer;
+  f record;
 begin
   if not avisa_al_anfitrion() then
     return null;
   end if;
-  for v_clave in select distinct clave_familia(n."grupoFamiliar", n."apellido") from nuevos n loop
+  for f in
     select
-      count(*),
-      count(*) filter (where coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> ''),
+      coalesce(nullif(max(i."grupoFamiliar"), ''), max(i."apellido")) as familia,
+      count(*) as total,
+      count(*) filter (where coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> '') as datos,
       count(*) filter (where case when v."id" is null
         then coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> ''
-        else coalesce(v."anioNacimiento", '') <> '' and coalesce(v."alergias", '') <> '' end),
-      count(*) filter (where coalesce(i."pagado", false)),
-      count(*) filter (where coalesce(case when v."id" is null then i."pagado" else v."pagado" end, false)),
-      coalesce(nullif(max(i."grupoFamiliar"), ''), max(i."apellido"))
-    into v_total, v_datos, v_datos_antes, v_pagados, v_pagados_antes, v_familia
+        else coalesce(v."anioNacimiento", '') <> '' and coalesce(v."alergias", '') <> '' end) as datos_antes,
+      count(*) filter (where coalesce(i."pagado", false)) as pagados,
+      count(*) filter (where coalesce(case when v."id" is null then i."pagado" else v."pagado" end, false)) as pagados_antes
     from invitados i
     left join viejos v on v."id" = i."id"
-    where i."confirmado" = true and clave_familia(i."grupoFamiliar", i."apellido") = v_clave;
-
-    if v_total > 0 and v_datos = v_total and v_datos_antes < v_total then
-      perform avisar_anfitrion('datos', 'Datos completos', 'Familia ' || v_familia || ' (' || v_total || ')');
+    where i."confirmado" = true
+      and clave_familia(i."grupoFamiliar", i."apellido") in (select clave_familia(n."grupoFamiliar", n."apellido") from nuevos n)
+    group by clave_familia(i."grupoFamiliar", i."apellido")
+  loop
+    if f.datos = f.total and f.datos_antes < f.total then
+      perform avisar_anfitrion('datos', 'Datos completos', 'Familia ' || f.familia || ' (' || f.total || ')');
     end if;
-    if v_total > 0 and v_pagados = v_total and v_pagados_antes < v_total then
-      perform avisar_anfitrion('pago', 'Familia pagada', 'Familia ' || v_familia || ' (' || v_total || ')');
+    if f.pagados = f.total and f.pagados_antes < f.total then
+      perform avisar_anfitrion('pago', 'Familia pagada', 'Familia ' || f.familia || ' (' || f.total || ')');
     end if;
   end loop;
   return null;

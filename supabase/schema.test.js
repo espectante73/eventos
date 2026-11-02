@@ -725,7 +725,18 @@ describe("los avisos al anfitrión", () => {
     expect(sql).toContain(
       "CREATE TRIGGER invitados_avisar_anfitrion AFTER UPDATE ON public.invitados REFERENCING OLD TABLE AS viejos NEW TABLE AS nuevos FOR EACH STATEMENT"
     );
-    expect(cuerpoDe("trg_avisar_anfitrion_progreso")).toContain("v_datos_antes < v_total");
+    expect(cuerpoDe("trg_avisar_anfitrion_progreso")).toContain("f.datos_antes < f.total");
+  });
+
+  // 2026-11-02: el editor de Supabase tomó un «select … into total» por
+  // crear una tabla, preguntó por RLS y cortó el SQL ahí (no entró nada).
+  // Lo nuevo se escribe `v := (select …)` o `for f in select … loop`; las 23
+  // de antes, si dan guerra al volver a pegarlas.
+  it("ningún «select … into» nuevo", () => {
+    const usos = sql
+      .split("\n")
+      .filter((l) => /\binto\s+[a-z_]/i.test(l) && !/\b(insert|merge)\s+into\b|\breturning\b/i.test(l) && !/^\s*--/.test(l));
+    expect(usos.length).toBeLessThanOrEqual(23);
   });
 
   it("los pasos hechos y los impagos también le avisan", () => {
