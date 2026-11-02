@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "79.2",
+    cambios: [
+      "«Avisar equipo»: un apartado plegado, «Quién los tiene», con los colaboradores por nombre: primero los que tienen los avisos activos (✓, y cuántos móviles si son más de uno) y después los que aún no, para saber a quién recordárselo.",
+    ],
+  },
+  {
     version: "79.1",
     cambios: [
       "Panel del colaborador, en el móvil: abrir «Avisos en este móvil» dejaba la ventana en blanco y no se podía cerrar (la app lo tomaba por la ficha de un invitado y escondía todo lo demás). Arreglado.",
