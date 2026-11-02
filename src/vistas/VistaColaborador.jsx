@@ -111,6 +111,9 @@ function SeparadorCeldas() {
 // Estrechas a propósito, para que la línea de Boda (año, foto y casilla)
 // quepa en el móvil (norma 6).
 
+// Los apartados plegados de arriba del panel del colaborador (no fichas).
+const APARTADOS_PANEL = ["avisos", "perfil", "cuentas"];
+
 // En qué apartado plegado vive cada obligatorio: "Guardar" abre ese.
 const APARTADO_DE = { anioNacimiento: "datos", email: "datos", anioBoda: "boda", fotoBoda: "boda", alergias: "alergias" };
 
@@ -1415,7 +1418,11 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // Una ficha de invitado abierta (no los paneles): en el móvil pasa a ser
   // la protagonista y se esconde todo lo demás -- "para ver otra cosa hay
   // que cerrarla", como pidió el usuario.
-  const hayFicha = (a) => Boolean(a) && a !== "perfil" && a !== "cuentas";
+  // Los apartados de arriba del panel; cualquier otro `abiertoId` es la ficha
+  // de un invitado. ⚠️ Un apartado nuevo va AQUÍ: «Avisos en este móvil»
+  // faltaba (v79), contaba como ficha y en el móvil dejaba el panel en
+  // blanco, sin poder cerrarlo (v79.1).
+  const hayFicha = (a) => Boolean(a) && !APARTADOS_PANEL.includes(a);
   const fichaAbierta = hayFicha(abiertoId);
 
   // Con una ficha abierta, solo se sale por "Guardar" o "Cancelar" (v50):

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "79.1",
+    cambios: [
+      "Panel del colaborador, en el móvil: abrir «Avisos en este móvil» dejaba la ventana en blanco y no se podía cerrar (la app lo tomaba por la ficha de un invitado y escondía todo lo demás). Arreglado.",
+    ],
+  },
+  {
     version: "79",
     cambios: [
       "Avisos al móvil, como los de una app instalada. Cada colaborador los activa en su panel, en «Avisos en este móvil» (en el iPhone, con la app añadida a la pantalla de inicio y abierta desde su icono).",

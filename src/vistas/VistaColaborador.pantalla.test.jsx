@@ -749,3 +749,34 @@ describe("el formulario en la barra de ventanas del móvil", () => {
       expect(detras.oculta).toBe(true);
     }));
 });
+
+// v79.1: en un Android, abrir «Avisos en este móvil» dejaba el panel en
+// blanco: contaba como la ficha de un invitado y lo escondía todo.
+it("abrir «Avisos en este móvil» no esconde el panel", async () => {
+  const registro = { pushManager: { getSubscription: async () => null } };
+  Object.defineProperty(navigator, "serviceWorker", { value: { getRegistration: async () => registro }, configurable: true });
+  window.PushManager = function () {};
+  window.Notification = { permission: "default" };
+  let vista;
+  await act(async () => {
+    vista = montar(
+      <VistaColaborador data={data} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+    );
+  });
+  abrirPorMenu(vista);
+  // Que el apartado pregunte al móvil (es asíncrono).
+  await act(async () => {});
+  const avisos = [...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Avisos en este móvil"));
+  expect(avisos).toBeTruthy();
+  await act(async () => vista.pulsar(avisos));
+  // El bloque de arriba (con «Tus datos») sigue a la vista en el móvil.
+  const tusDatos = [...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Tus datos"));
+  expect(tusDatos.closest(".hidden")).toBeNull();
+  // Y se puede cerrar: volver a tocarlo lo pliega.
+  await act(async () => vista.pulsar(avisos));
+  expect(document.body.textContent).not.toContain("Activar avisos");
+  vista.desmontar();
+  delete navigator.serviceWorker;
+  delete window.PushManager;
+  delete window.Notification;
+});
