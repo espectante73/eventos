@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabaseClient";
 import { pedirAvisos, textoInvitadosNuevos } from "./lib/avisosPush";
+import { buscarEnDeezer } from "./lib/repasoCanciones";
 import { avisoEnPantalla } from "./lib/avisos";
 import { useCanalAsistencia } from "./lib/useCanalAsistencia";
 import { C } from "./theme";
@@ -1333,6 +1334,19 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     },
     [esAnfitrion, rol]
   );
+  // El catálogo de canciones (v80), sobre lo ÚLTIMO del evento: el repaso
+  // guarda tanda a tanda y no debe pisar nada más (persistEvento manda solo
+  // lo cambiado).
+  const actualizarCatalogoCanciones = useCallback(
+    (cambiar) => persistEvento({ ...eventoRef.current, catalogoCanciones: cambiar(eventoRef.current?.catalogoCanciones || {}) }),
+    [persistEvento]
+  );
+  // «Repasar canciones» (v80): unas cuantas canciones, a Deezer por el
+  // buscador de Vercel. { resultados } o { error }.
+  const buscarCanciones = useCallback(
+    async (consultas) => (esAnfitrion ? buscarEnDeezer({ token: rol, consultas }) : { error: "Solo el anfitrión." }),
+    [esAnfitrion, rol]
+  );
   // El anfitrión, a todo el equipo (o a unos): { enviados, fallidos } o { error }.
   const avisarAlEquipo = useCallback(
     async ({ titulo, texto, colaboradores = null }) => {
@@ -1568,6 +1582,8 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     guardarSuscripcionAvisos,
     quitarSuscripcionAvisos,
     avisarAlEquipo,
+    buscarCanciones,
+    actualizarCatalogoCanciones,
     obtenerHistorialTexto,
     obtenerFotosFiesta,
     obtenerFamilia,

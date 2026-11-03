@@ -119,6 +119,11 @@ CREATE TABLE public.evento (
     -- La lista de conceptos de los gastos (v76): [{ nombre, precio }], con
     -- precio si es fijo (las suscripciones). Solo el anfitrión.
     "conceptosGastos" jsonb DEFAULT '[]'::jsonb NOT NULL,
+    -- Lo que Deezer dice de cada canción pedida (v80): { [clave]: { titulo,
+    -- artista, duracion } | { noEncontrada } }, ver lib/repasoCanciones.js.
+    -- Solo el anfitrión. Sin «not null»: una foto del Deshacer de antes la
+    -- trae vacía.
+    "catalogoCanciones" jsonb DEFAULT '{}'::jsonb,
     CONSTRAINT evento_id_check CHECK (id)
 );
 
@@ -939,13 +944,14 @@ $$;
 -- Los datos del evento que puede ver cualquiera (v63): portada, login y
 -- tablón. Sin lo privado: el enlace del grupo de WhatsApp (el primer filtro
 -- para llegar al tablón), el email del anfitrión, las memorias de
--- Acomodación (v75) y los conceptos de los gastos (v76). Una columna nueva sale aquí sola: si es privada, se
+-- Acomodación (v75), los conceptos de los gastos (v76) y el catálogo de
+-- canciones (v80). Una columna nueva sale aquí sola: si es privada, se
 -- quita también aquí.
 CREATE FUNCTION public.evento_publico() RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-  select to_jsonb(e) - 'enlaceGrupoWhatsapp' - 'emailAnfitrion' - 'acomodaciones' - 'conceptosGastos' from evento e limit 1;
+  select to_jsonb(e) - 'enlaceGrupoWhatsapp' - 'emailAnfitrion' - 'acomodaciones' - 'conceptosGastos' - 'catalogoCanciones' from evento e limit 1;
 $$;
 
 -- El evento entero, para el anfitrión.

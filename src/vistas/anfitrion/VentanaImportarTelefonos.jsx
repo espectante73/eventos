@@ -10,27 +10,15 @@ import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
+import { FilaMarcable as Fila } from "../../components/FilaMarcable";
 import { nombreCompleto } from "../../lib/formato";
 import { telefonoParaVer } from "../../lib/telefono";
 import { leerVCard, repasoTelefonos, ponerTelefonos } from "../../lib/importarTelefonos";
 
-const ALTO_FILA = 34;
 const NUMERO = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno, whiteSpace: "nowrap" };
 const DESPLEGABLE = { fontSize: T.pequeno, border: `1px solid ${C.line}`, borderRadius: R.caja, background: C.blanco, padding: "2px 4px", maxWidth: 150 };
 
 // Una línea por invitado (norma 6): casilla, nombre y número.
-function Fila({ i, marcada, onMarcar, nombre, nota, children }) {
-  return (
-    <label className="flex items-center gap-2 px-2 text-sm" style={{ height: ALTO_FILA, background: i % 2 ? C.paperDark : C.blanco, cursor: onMarcar ? "pointer" : undefined }}>
-      {onMarcar ? <input type="checkbox" checked={marcada} onChange={(e) => onMarcar(e.target.checked)} style={{ accentColor: C.ink }} /> : <span style={{ width: 13 }} />}
-      <span className="flex-1 min-w-0 truncate" title={nota ? `${nombre} · ${nota}` : nombre}>
-        {nombre}
-        {nota && <span style={{ color: C.charcoal, opacity: OP.secundario, fontSize: T.pequeno }}> · {nota}</span>}
-      </span>
-      {children}
-    </label>
-  );
-}
 
 export function VentanaImportarTelefonos({ data, onCerrar }) {
   const { invitados, evento, persistInvitados } = data;

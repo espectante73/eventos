@@ -41,6 +41,13 @@ export const tieneCancion = (g) => cancionesDe(g?.cancion).length > 0;
 // En una línea, para el apartado plegado del formulario.
 export const resumenCanciones = (texto) => cancionesDe(texto).join(" · ");
 
+// Una canción, escrita: «Título — Artista», o solo lo que haya.
+export const textoCancion = (titulo, artista) => [titulo, artista].filter(Boolean).join(SEPARADOR);
+
+// Qué la hace «la misma canción» (v79.5-79.6): su título (o, sin él, su
+// artista) sin mayúsculas, tildes, guiones, puntos ni espacios.
+export const claveCancion = (titulo, artista) => paraBuscar(titulo || artista).replace(/[^a-z0-9]/g, "");
+
 // La lista «Canciones para bailar» (él, v79.5): una fila por cada vez que
 // alguien pide una canción, con la edad de quien la pidió y sin nombres,
 // para poder ordenarla por edad real. Cada fila lleva cuántas veces se ha
@@ -58,8 +65,8 @@ export function cancionesPedidas(invitados, edadDe) {
       .map(({ titulo, artista }, hueco) => [titulo.trim(), artista.trim(), hueco])
       .filter(([titulo, artista]) => titulo || artista)
       .map(([titulo, artista, hueco]) => ({
-        cancion: [titulo, artista].filter(Boolean).join(SEPARADOR),
-        clave: paraBuscar(titulo || artista).replace(/[^a-z0-9]/g, ""),
+        cancion: textoCancion(titulo, artista),
+        clave: claveCancion(titulo, artista),
         conArtista: Boolean(titulo && artista),
         edad,
         invitadoId: g.id,

@@ -9,19 +9,12 @@
 // Separado de api/avisos.js (la ruta) para poder probarlo sin red: recibe
 // `webpush`, `fetch` y las variables.
 import { CLAVE_PUBLICA_AVISOS } from "../src/lib/clavePublicaAvisos.js";
+import { crearRpc } from "./_rpc.js";
 
 const LARGO_MAXIMO = 180;
 
 export function crearManejador({ webpush, fetch, env }) {
-  const rpc = async (nombre, cuerpo) => {
-    const r = await fetch(`${env.VITE_SUPABASE_URL}/rest/v1/rpc/${nombre}`, {
-      method: "POST",
-      headers: { apikey: env.VITE_SUPABASE_ANON_KEY, Authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify(cuerpo),
-    });
-    if (!r.ok) throw new Error(`${nombre}: ${r.status}`);
-    return r.status === 204 ? null : r.json();
-  };
+  const rpc = crearRpc({ fetch, env });
 
   return async function manejador(req, res) {
     if (req.method !== "POST") return res.status(405).json({ error: "Solo POST." });

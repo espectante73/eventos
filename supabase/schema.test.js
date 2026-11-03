@@ -79,6 +79,7 @@ describe("el evento no se lee directamente", () => {
     expect(f).toContain("- 'emailAnfitrion'");
     expect(f).toContain("- 'acomodaciones'");
     expect(f).toContain("- 'conceptosGastos'");
+    expect(f).toContain("- 'catalogoCanciones'");
   });
 
   it("entero solo al anfitrión; el enlace, al colaborador con permiso de Novedades", () => {

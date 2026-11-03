@@ -31,8 +31,9 @@ import {
   ShieldOff,
   ClipboardCheck,
   Download,
+  ListChecks,
 } from "lucide-react";
-import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
+import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa, FONDO_VERDE } from "../../theme";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora, contiene } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
@@ -67,6 +68,8 @@ import { estadoTablon, contarTablon } from "../../lib/entradasTablon";
 import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
 import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
 import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
+import { VentanaRepasarCanciones } from "./VentanaRepasarCanciones";
+import { cancionesDistintas, duracionTotal, textoDuracion } from "../../lib/repasoCanciones";
 import { pideTelefono, telefonoParaVer } from "../../lib/telefono";
 import { useSeccion } from "../../lib/useSeccion";
 
@@ -167,6 +170,7 @@ export function SeccionInvitados({
   const [ordenCanciones, setOrdenCanciones] = useState(ORDEN_CANCIONES_INICIAL);
   // La canción que se está corrigiendo: { invitadoId, hueco } (v79.6).
   const [cancionACorregir, setCancionACorregir] = useState(null);
+  const [repasandoCanciones, setRepasandoCanciones] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
 
   // "avisoPendiente" vive en el servidor (columna en invitados), no solo
@@ -340,6 +344,24 @@ export function SeccionInvitados({
       cancionesPedidas(invitados, (g) => calcularEdad(g.anioNacimiento, evento)),
       ordenCanciones
     );
+
+  // Las cifras de «Canciones para bailar» (v80): cuántas peticiones, cuántas
+  // canciones distintas y cuánto duran todas juntas (con Deezer; la que no
+  // tiene la suya cuenta 3½ min, y entonces la cifra lleva «≈»).
+  const cifrasCanciones = () => {
+    const pedidas = cancionesPedidas(invitados, () => null);
+    const distintas = cancionesDistintas(pedidas);
+    const { segundos, estimadas } = duracionTotal(distintas, evento.catalogoCanciones);
+    return [
+      { label: "Peticiones", value: pedidas.length },
+      { label: "Distintas", value: distintas.length },
+      {
+        label: "Duración",
+        value: `${estimadas ? "≈ " : ""}${textoDuracion(segundos)}`,
+        titulo: estimadas ? `${estimadas} sin su duración de Deezer: cuentan 3½ min cada una. Se completan en «Repasar».` : "Con la duración de Deezer de cada una",
+      },
+    ];
+  };
 
   const imprimirPanelActivo = () => {
     setTimeout(() => {
@@ -1925,6 +1947,11 @@ export function SeccionInvitados({
               <Boton variante="secundario" onClick={exportarPanelActivoCSV}>
                 <Copy size={14} /> Exportar CSV
               </Boton>
+              {panelFlotante === "canciones" && (
+                <Boton variante="secundario" onClick={() => setRepasandoCanciones(true)}>
+                  <ListChecks size={14} /> Repasar
+                </Boton>
+              )}
               {panelFlotante === "tabla" && (
                 <Boton variante="secundario" onClick={descargarAcomodadores}>
                   <Download size={14} /> Lista para acomodadores
@@ -2008,6 +2035,11 @@ export function SeccionInvitados({
 
             {panelFlotante === "canciones" && (
               <>
+                {/* Las cifras, en una franja verde pegada a la cabecera, como
+                    las barras de «Progreso de recopilación». */}
+                <div className="rounded px-2 py-2 mb-1 flex justify-center" style={{ background: FONDO_VERDE, marginTop: -14, marginLeft: -14, marginRight: -14 }}>
+                  <RecuadroCifras cifras={cifrasCanciones()} />
+                </div>
                 <div
                   className="grid gap-1 text-xs uppercase px-2 py-2"
                   style={{
@@ -2174,6 +2206,7 @@ export function SeccionInvitados({
       {mostrarAnadir && <VentanaNuevoInvitado data={data} onCerrar={() => setMostrarAnadir(false)} />}
       {mostrarImportarTel && <VentanaImportarTelefonos data={data} onCerrar={() => setMostrarImportarTel(false)} />}
       {cancionACorregir && <VentanaCorregirCancion data={data} peticion={cancionACorregir} onCerrar={() => setCancionACorregir(null)} />}
+      {repasandoCanciones && <VentanaRepasarCanciones data={data} onCerrar={() => setRepasandoCanciones(false)} />}
     </>
   );
 }

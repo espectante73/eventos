@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "80",
+    cambios: [
+      "«Canciones para bailar», arriba, sus cifras: Peticiones · Distintas · Duración de todas juntas.",
+      "Botón «Repasar»: busca cada canción distinta en Deezer (gratis, sin cuenta) y propone cómo dejarla escrita, con la canción y el cantante cada uno en su hueco aunque el colaborador los metiera juntos. Se marca lo que se quiere corregir y se cambia en todas las fichas que la pidieron. Las que Deezer no encuentra salen aparte, para corregirlas a mano.",
+      "La duración sale de Deezer; la canción que aún no la tiene cuenta 3½ min, y entonces la cifra lleva «≈».",
+    ],
+  },
+  {
     version: "79.6",
     cambios: [
       "«Canciones para bailar»: tocando una canción se abre «Corregir canción», con Canción y Artista tal como lo escribió esa persona (y quién la pidió). Al guardar se corrige en su ficha, también si ya pagó. Solo el anfitrión.",
