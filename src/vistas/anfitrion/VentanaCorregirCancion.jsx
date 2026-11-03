@@ -19,14 +19,21 @@ import { huecosCanciones, cancionesPedidas, corregirCancion, corregirCancionEnTo
 export function VentanaCorregirCancion({ data, peticion, onCerrar }) {
   const { invitados, evento, persistInvitados } = data;
   const enTodas = Boolean(peticion.clave);
-  const pedidas = enTodas ? cancionesPedidas(invitados, () => null).filter((f) => f.clave === peticion.clave) : [];
-  const { invitadoId, hueco } = enTodas ? pedidas[0] || {} : peticion;
+  const pedidas = enTodas ? cancionesPedidas(invitados, () => null).filter((f) => f.clave === peticion.clave) : [peticion];
+  const { invitadoId, hueco } = pedidas[0] || {};
   const g = invitados.find((x) => x.id === invitadoId);
   const inicial = huecosCanciones(g?.cancion)[hueco ?? 0];
   const [titulo, setTitulo] = useState(inicial.titulo);
   const [artista, setArtista] = useState(inicial.artista);
   const [aviso, setAviso] = useState("");
-  const edad = g ? calcularEdad(g.anioNacimiento, evento) : null;
+  // Quién la pidió, con su edad: para consultarle si se cambia o no se
+  // encuentra (él, v80.3: desde «Repasar» solo salía cuántas veces).
+  const quien = (id) => {
+    const p = invitados.find((x) => x.id === id);
+    if (!p) return "";
+    const edad = calcularEdad(p.anioNacimiento, evento);
+    return `${nombreCompleto(p)}${edad != null ? ` (${edad})` : ""}`;
+  };
 
   const guardar = () => {
     const { invitados: siguiente, aviso: motivo } = enTodas
@@ -41,18 +48,20 @@ export function VentanaCorregirCancion({ data, peticion, onCerrar }) {
   return (
     <VentanaFlotante clave="corregirCancion" titulo="Corregir canción" onCerrar={onCerrar} ancho="min(440px, calc(100vw - 48px))">
       <div className="space-y-3">
-        {enTodas ? (
-          <p className="text-sm truncate" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            {pedidas.length === 1 ? "Pedida 1 vez" : `Pedida ${pedidas.length} veces: se corrige en todas`}
-          </p>
-        ) : (
-          g && (
-            <p className="text-sm truncate" style={{ color: C.charcoal, opacity: OP.secundario }}>
-              Pedida por {nombreCompleto(g)}
-              {edad != null && ` (${edad})`}
-            </p>
-          )
-        )}
+        <div className="text-sm" style={{ color: C.charcoal, opacity: OP.secundario }}>
+          {pedidas.length === 1 ? (
+            <p className="truncate">Pedida por {quien(invitadoId)}</p>
+          ) : (
+            <>
+              <p>Pedida {pedidas.length} veces, se corrige en todas:</p>
+              {pedidas.map((f) => (
+                <p key={`${f.invitadoId}-${f.hueco}`} className="truncate">
+                  · {quien(f.invitadoId)}
+                </p>
+              ))}
+            </>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <TextInput value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Canción" aria-label="Canción" className="flex-1 min-w-0" />
           <TextInput value={artista} onChange={(e) => setArtista(e.target.value)} placeholder="Artista" aria-label="Artista" className="flex-1 min-w-0" />

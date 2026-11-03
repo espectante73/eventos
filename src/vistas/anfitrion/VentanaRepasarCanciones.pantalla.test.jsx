@@ -9,7 +9,7 @@ import { VentanaRepasarCanciones } from "./VentanaRepasarCanciones";
 const INVITADOS = [
   { id: "a", cancion: "Una Chica YE-YE - Concha Velasco" },
   { id: "b", cancion: "Mi jaca — Estrellita Castro\n\nUna Chica YE-YE - Concha Velasco" },
-  { id: "c", cancion: "Canción inventada" },
+  { id: "c", nombre: "Rubén", apellido: "Pacheco", anioNacimiento: "1964", cancion: "Canción inventada" },
 ];
 const DEEZER = {
   "Una Chica YE-YE Concha Velasco": { pista: { titulo: "Chica Ye-Ye", artista: "Conchita Velasco", duracion: 143 } },
@@ -20,7 +20,7 @@ const DEEZER = {
 
 // Como la app: el evento y los invitados viven arriba y la ventana los recibe.
 function Arnes({ espias }) {
-  const [evento, setEvento] = useState({ catalogoCanciones: {} });
+  const [evento, setEvento] = useState({ fecha: "2026-11-13", catalogoCanciones: {} });
   const [invitados, setInvitados] = useState(INVITADOS);
   const data = {
     evento,
@@ -75,7 +75,8 @@ it("la que Deezer no encontró se corrige con el lápiz, en todas sus peticiones
   await act(async () => botones().find((b) => b.textContent.includes("No encontradas")).dispatchEvent(new MouseEvent("click", { bubbles: true })));
   const fila = [...document.body.querySelectorAll("label")].find((l) => l.textContent.includes("Canción inventada"));
   await act(async () => fila.querySelector('button[title="Corregir a mano"]').dispatchEvent(new MouseEvent("click", { bubbles: true })));
-  expect(document.body.textContent).toContain("Pedida 1 vez");
+  // Quién la pidió, para consultarle (v80.3).
+  expect(document.body.textContent).toContain("Pedida por Pacheco, Rubén (62)");
   const escribir = async (etiqueta, valor) => {
     const campo = document.body.querySelector(`input[aria-label="${etiqueta}"]`);
     await act(async () => {
@@ -88,5 +89,17 @@ it("la que Deezer no encontró se corrige con el lápiz, en todas sus peticiones
   await act(async () => botones().find((b) => b.textContent === "Guardar").dispatchEvent(new MouseEvent("click", { bubbles: true })));
   expect(espias.persistInvitados.mock.calls[0][0].find((g) => g.id === "c").cancion).toBe("Chica yeye — Conchita Velasco");
   expect(espias.buscarCanciones).toHaveBeenLastCalledWith(["Chica yeye Conchita Velasco"]);
+  vista.desmontar();
+});
+
+it("si la pidieron varios, salen todos con su edad", async () => {
+  const espias = { persistInvitados: vi.fn(), buscarCanciones: vi.fn() };
+  let vista;
+  await act(async () => {
+    vista = montar(<Arnes espias={espias} />);
+  });
+  const fila = [...document.body.querySelectorAll("label")].find((l) => l.textContent.includes("Chica Ye-Ye"));
+  await act(async () => fila.querySelector('button[title="Corregir a mano"]').dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  expect(document.body.textContent).toContain("Pedida 2 veces, se corrige en todas:");
   vista.desmontar();
 });

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "80.3",
+    cambios: [
+      "«Corregir canción» abierta desde el lápiz de «Repasar»: vuelve a decir quién la pidió, con su edad, para poder consultarle. Si la pidieron varios, salen todos.",
+    ],
+  },
+  {
     version: "80.2",
     cambios: [
       "Las ventanas de la Lista que sirven para imprimir (Canciones para bailar, Alergias y la de Imprimir) ya se mueven arrastrando su cabecera, sin salirse de la pantalla. Al imprimir salen en su sitio.",
