@@ -3,7 +3,7 @@ import {
   agregarInvitado, importarInvitados, eliminarInvitado, mismaPersona,
   cambiarCampo, alternarRolTrabajo, alternarExcluidoTablon,
   permitirExcepcion, quitarExcepcion, marcarResponsable,
-  colaboradoresSinFichaEnlazada, fichaDelColaborador, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, cambiarTelefono } from "./edicionInvitados";
+  colaboradoresSinFichaEnlazada, fichaDelColaborador, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, cambiarTelefono, anioBodaDeLaFamilia } from "./edicionInvitados";
 
 // La lista de invitados es la base de toda la app: si aquí se pierde
 // alguien, no se nota hasta que falta en la boda. Estas pruebas son el
@@ -292,6 +292,21 @@ describe("«Nuevo invitado»", () => {
     expect(nuevoDesdeFormulario(lista, { ...base, rolFamiliar: "", colaboradorId: "c1" }, { evento }).aviso).toContain("todavía no tiene rol familiar");
     expect(nuevoDesdeFormulario(lista, { ...base, anioNacimiento: "85" }, { evento }).aviso).toBe("El año de nacimiento son cuatro cifras, como 1988.");
     expect(nuevoDesdeFormulario(lista, { ...base, email: "r@r" }, { evento }).aviso).toBe("Ese email no parece válido: revisa que tenga @ y un punto.");
+  });
+
+  // v81.3 (él): confirmarle ya, y el año de boda si es esposo o esposa.
+  it("confirmado o no, y el año de boda solo del esposo o la esposa", () => {
+    const si = nuevoDesdeFormulario(lista, { ...base, confirmado: true, anioBoda: "2010" }, { evento }).invitados.at(-1);
+    expect(si).toMatchObject({ confirmado: true, anioBoda: "2010" });
+    expect(nuevoDesdeFormulario(lista, base, { evento }).invitados.at(-1).confirmado).toBe(false);
+    expect(nuevoDesdeFormulario(lista, { ...base, rolFamiliar: "hijo", anioBoda: "2010" }, { evento }).invitados.at(-1).anioBoda).toBe("");
+    expect(nuevoDesdeFormulario(lista, { ...base, anioBoda: "10" }, { evento }).aviso).toBe("El año de boda son cuatro cifras, como 2010.");
+  });
+
+  it("el año de boda que ya tiene la familia, de su esposo o esposa", () => {
+    const conBoda = [...lista, { id: "3", nombre: "Ana", apellido: "Pacheco", grupoFamiliar: "Pacheco01", rolFamiliar: "esposa", anioBoda: "2010" }];
+    expect(anioBodaDeLaFamilia(conBoda, "pacheco01")).toBe("2010");
+    expect(anioBodaDeLaFamilia(conBoda, "Sierra01")).toBe("");
   });
 
   it("a un menor de 16 no se le guarda email, como en el formulario del colaborador", () => {

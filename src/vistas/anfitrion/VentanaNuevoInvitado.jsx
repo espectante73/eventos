@@ -10,7 +10,13 @@
 // ella (él). Al guardar, el formulario sigue abierto con Familia, Zona y
 // Colaborador puestos, por si se sigue con otro de la misma familia. Las
 // reglas, en lib/edicionInvitados.js (nuevoDesdeFormulario).
-import { useState } from "react";
+//
+// v81.3 (él): «Confirmado» Sí / No, y, al esposo o la esposa, la «Boda»:
+// su año y la foto, por si se la adelantan al anfitrión. Son de la pareja:
+// el año que ya tiene la familia sale puesto (y la base lo iguala), y la
+// foto que ya tiene se enseña. La foto se sube igual que en la ficha del
+// colaborador (lib/fotosAlmacen.js).
+import { useEffect, useState } from "react";
 import { Plus, Check } from "lucide-react";
 import { C, DEDO, OP, inputStyle } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
@@ -19,11 +25,13 @@ import { Boton } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
 import { BotonQuitar } from "../../components/PreguntaSeguridad";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
-import { pideEmail } from "../../lib/invitados";
+import { HuecoFoto } from "../../components/HuecoFoto";
+import { pideEmail, pideDatosDeBoda } from "../../lib/invitados";
 import { nombreCompleto } from "../../lib/formato";
-import { ROLES_FORMULARIO, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario } from "../../lib/edicionInvitados";
+import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../../lib/fotosAlmacen";
+import { ROLES_FORMULARIO, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, anioBodaDeLaFamilia } from "../../lib/edicionInvitados";
 
-const VACIO = { apellido: "", nombre: "", grupoFamiliar: "", rolFamiliar: "", zona: "", colaboradorId: "", anioNacimiento: "", telefono: "", email: "" };
+const VACIO = { apellido: "", nombre: "", grupoFamiliar: "", rolFamiliar: "", zona: "", colaboradorId: "", anioNacimiento: "", telefono: "", email: "", confirmado: false, anioBoda: "" };
 // Todo del alto de un dedo: es para el móvil.
 const CAMPO = { ...inputStyle, width: "100%", minWidth: 0, minHeight: DEDO };
 
@@ -55,7 +63,7 @@ function ElegirONuevo({ nombre, opciones, vacio, valor, nuevo, onValor, onNuevo,
 }
 
 export function VentanaNuevoInvitado({ data, onCerrar }) {
-  const { invitados, colaboradores, evento, persistInvitados } = data;
+  const { invitados, colaboradores, evento, persistInvitados, fotosFamiliares = {}, persistFotosFamiliares } = data;
   const familias = familiasDe(invitados);
   const zonas = zonasDe(invitados);
   const [ficha, setFicha] = useState(VACIO);
@@ -66,20 +74,49 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
   const [aviso, setAviso] = useState("");
   const [guardado, setGuardado] = useState("");
   const poner = (campo) => (valor) => setFicha((f) => ({ ...f, [campo]: valor }));
+  // Al elegir familia o rol, el esposo o la esposa trae el año de boda que
+  // ya tenga su familia (v81.3).
+  const ponerConBoda = (campo) => (valor) =>
+    setFicha((f) => {
+      const g = { ...f, [campo]: valor };
+      return pideDatosDeBoda(g) && !g.anioBoda ? { ...g, anioBoda: anioBodaDeLaFamilia(invitados, g.grupoFamiliar) } : g;
+    });
+  const [verBoda, setVerBoda] = useState(false);
+  // La foto elegida espera aquí y se sube al guardar, como en la ficha.
+  const [fotoNueva, setFotoNueva] = useState(null); // { archivo, vista } | null
+  const [subiendo, setSubiendo] = useState(false);
+  useEffect(() => () => fotoNueva && URL.revokeObjectURL(fotoNueva.vista), [fotoNueva]);
+  const fotoFamilia = fotosFamiliares[ficha.grupoFamiliar] || "";
+  const enlaceFamilia = useEnlaceFoto(fotoFamilia);
 
-  const guardar = () => {
+  const guardar = async () => {
     const { invitados: siguiente, aviso: motivo } = nuevoDesdeFormulario(invitados, ficha, { familiaNueva, zonaNueva, evento });
     if (siguiente === invitados) {
       setAviso(motivo);
       setGuardado("");
       return;
     }
-    persistInvitados(siguiente);
     const nuevo = siguiente.at(-1);
+    // La foto primero: si no se puede subir, no se guarda nada y se dice.
+    let ruta = "";
+    if (fotoNueva && pideDatosDeBoda(nuevo) && !fotoFamilia) {
+      setSubiendo(true);
+      try {
+        ruta = await subirFotoMatrimonio(fotoNueva.archivo, nuevo.grupoFamiliar, CARPETA.BODA);
+      } catch (_) {
+        setSubiendo(false);
+        setAviso("No se ha podido procesar la foto de boda. Prueba con otra.");
+        return;
+      }
+      setSubiendo(false);
+    }
+    persistInvitados(siguiente);
+    if (ruta) persistFotosFamiliares?.({ ...fotosFamiliares, [nuevo.grupoFamiliar]: ruta });
     setAviso(motivo);
     setGuardado(`Guardado: ${nombreCompleto(nuevo)}.`);
     // Lo de la familia se queda para el siguiente; lo nuevo ya está en la lista.
-    setFicha({ ...VACIO, grupoFamiliar: nuevo.grupoFamiliar, zona: nuevo.zona, colaboradorId: nuevo.colaboradorId || "" });
+    setFicha({ ...VACIO, grupoFamiliar: nuevo.grupoFamiliar, zona: nuevo.zona, colaboradorId: nuevo.colaboradorId || "", confirmado: nuevo.confirmado });
+    setFotoNueva(null);
     setFamiliaNueva(false);
     setZonaNueva(false);
   };
@@ -105,11 +142,11 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
               vacio="Elegir"
               valor={ficha.grupoFamiliar}
               nuevo={familiaNueva}
-              onValor={poner("grupoFamiliar")}
+              onValor={ponerConBoda("grupoFamiliar")}
               // Empieza con el apellido (él): «Pacheco01», o el siguiente libre.
               onNuevo={() => {
                 setFamiliaNueva(true);
-                poner("grupoFamiliar")(familiaNuevaPara(invitados, ficha.apellido));
+                ponerConBoda("grupoFamiliar")(familiaNuevaPara(invitados, ficha.apellido));
               }}
               onLista={() => {
                 setFamiliaNueva(false);
@@ -118,7 +155,7 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
             />
           </Field>
           <Field label="Rol">
-            <select aria-label="Rol" value={ficha.rolFamiliar} onChange={(e) => poner("rolFamiliar")(e.target.value)} style={{ ...CAMPO, color: ficha.rolFamiliar ? C.charcoal : C.line }}>
+            <select aria-label="Rol" value={ficha.rolFamiliar} onChange={(e) => ponerConBoda("rolFamiliar")(e.target.value)} style={{ ...CAMPO, color: ficha.rolFamiliar ? C.charcoal : C.line }}>
               <option value="">Sin rol</option>
               {ROLES_FORMULARIO.map((r) => (
                 <option key={r.valor} value={r.valor}>
@@ -159,6 +196,30 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
           </Field>
         </div>
 
+        {/* Confirmado (v81.3): Sí / No, iguales (norma 4); No, de entrada. */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm flex-shrink-0" style={{ color: C.charcoal }}>
+            Confirmado
+          </span>
+          <div className="grid grid-cols-2 gap-2 flex-1" role="radiogroup" aria-label="Confirmado">
+            {[
+              [true, "Sí"],
+              [false, "No"],
+            ].map(([valor, rotulo]) => (
+              <Boton
+                key={rotulo}
+                variante={ficha.confirmado === valor ? "principal" : "secundario"}
+                role="radio"
+                aria-checked={ficha.confirmado === valor}
+                onClick={() => poner("confirmado")(valor)}
+                style={{ minHeight: DEDO }}
+              >
+                {rotulo}
+              </Boton>
+            ))}
+          </div>
+        </div>
+
         {/* Año, teléfono y email, plegados: como el apartado «Datos» del
             colaborador. Año y teléfono en una línea; el email, debajo. */}
         <SeccionPlegable
@@ -177,6 +238,43 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
           </div>
         </SeccionPlegable>
 
+        {/* Boda (v81.3): solo al esposo o la esposa. El año y la foto, en
+            una línea (norma 6), como en la ficha del colaborador. */}
+        {pideDatosDeBoda(ficha) && (
+          <SeccionPlegable
+            sencilla
+            titulo="Boda"
+            resumen={[ficha.anioBoda, fotoFamilia || fotoNueva ? "con foto" : ""].filter(Boolean).join(" · ")}
+            abierta={verBoda}
+            onAlternar={() => setVerBoda((v) => !v)}
+          >
+            <div className="flex items-center gap-3">
+              <TextInput aria-label="Año de boda" value={ficha.anioBoda} onChange={(e) => poner("anioBoda")(e.target.value)} placeholder="2010" maxLength={4} inputMode="numeric" style={{ ...CAMPO, width: ANCHO_ANIO, flexShrink: 0 }} />
+              <span className="uppercase text-xs whitespace-nowrap" style={{ color: "var(--etiqueta-campo)", fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" }}>
+                Foto boda
+              </span>
+              {fotoFamilia ? (
+                <>
+                  <HuecoFoto ajustada soloLectura titulo="Foto de boda" enlace={enlaceFamilia} ocupada />
+                  <span className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
+                    Ya la tienen
+                  </span>
+                </>
+              ) : (
+                <HuecoFoto
+                  ajustada
+                  titulo="Foto de boda"
+                  enlace={fotoNueva?.vista || ""}
+                  ocupada={Boolean(fotoNueva)}
+                  subiendo={subiendo}
+                  onElegir={(archivo) => setFotoNueva({ archivo, vista: URL.createObjectURL(archivo) })}
+                  onQuitar={() => setFotoNueva(null)}
+                />
+              )}
+            </div>
+          </SeccionPlegable>
+        )}
+
         {aviso && <LineaAviso className="text-sm">{aviso}</LineaAviso>}
         {guardado && (
           <p className="text-sm flex items-center gap-1.5" style={{ color: C.ink }}>
@@ -190,7 +288,7 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
           <Boton variante="secundario" onClick={onCerrar} style={{ minHeight: DEDO }}>
             {guardado ? "Cerrar" : "Cancelar"}
           </Boton>
-          <Boton variante="principal" onClick={guardar} className="zurdo:order-first" style={{ minHeight: DEDO }}>
+          <Boton variante="principal" onClick={guardar} disabled={subiendo} className="zurdo:order-first" style={{ minHeight: DEDO }}>
             Guardar
           </Boton>
         </div>

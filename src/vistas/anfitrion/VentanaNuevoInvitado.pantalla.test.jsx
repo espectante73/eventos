@@ -1,10 +1,23 @@
 // «Nuevo invitado» (v77), DIBUJADO de verdad: lo de siempre se elige; lo
 // nuevo, con su «＋»; y al guardar sigue abierto para el siguiente.
-import { it, expect } from "vitest";
+import { it, expect, vi } from "vitest";
 import { useState } from "react";
 import { act } from "react";
 import { montar } from "../../pruebas/dibujar";
 import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
+
+// La foto de boda (v81.3): el almacén, de mentira.
+const subidas = [];
+vi.mock("../../lib/fotosAlmacen", () => ({
+  CARPETA: { BODA: "boda" },
+  subirFotoMatrimonio: async (archivo, familia, carpeta) => {
+    subidas.push({ nombre: archivo.name, familia, carpeta });
+    return `${carpeta}/${familia}.jpg`;
+  },
+  useEnlaceFoto: (ruta) => (ruta ? `https://foto/${ruta}` : ""),
+}));
+if (!URL.createObjectURL) URL.createObjectURL = () => "blob:vista";
+if (!URL.revokeObjectURL) URL.revokeObjectURL = () => {};
 
 const escribir = (input, valor) =>
   act(() => {
@@ -17,14 +30,17 @@ const INVITADOS = [
   { id: "2", nombre: "Luis", apellido: "Sierra", grupoFamiliar: "Sierra01", zona: "Puerto", rolFamiliar: "suelto" },
 ];
 
-function dibujar() {
+function dibujar(lista = INVITADOS, fotos = {}) {
   const guardados = [];
+  const fotosGuardadas = [];
   function Prueba() {
-    const [invitados, setInvitados] = useState(INVITADOS);
+    const [invitados, setInvitados] = useState(lista);
     const data = {
       invitados,
       colaboradores: [{ id: "c1", nombre: "Colaborador Uno" }],
       evento: { fecha: "2026-12-11" },
+      fotosFamiliares: fotos,
+      persistFotosFamiliares: (f) => fotosGuardadas.push(f),
       persistInvitados: (l) => {
         guardados.push(l);
         setInvitados(l);
@@ -35,7 +51,7 @@ function dibujar() {
   const vista = montar(<Prueba />);
   const q = (sel) => document.body.querySelector(sel);
   const boton = (t) => [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === t || b.title === t);
-  return { vista, guardados, q, boton };
+  return { vista, guardados, fotosGuardadas, q, boton };
 }
 
 it("con familia y zona de la lista, rol y colaborador: se guarda y sigue abierto para el siguiente", () => {
@@ -104,5 +120,49 @@ it("el teléfono, desde los 16 y limpio, con su prefijo; si no parece uno, se di
   escribir(q('input[aria-label="Teléfono"]'), "612 34 56 78");
   vista.pulsar(boton("Guardar"));
   expect(guardados.at(-1).at(-1).telefono).toBe("+34612345678");
+  vista.desmontar();
+});
+
+// v81.3 (él): confirmarle desde aquí, y la boda del esposo o la esposa.
+it("«Confirmado» Sí / No: de entrada No; con Sí, se guarda confirmado", () => {
+  const { vista, guardados, q, boton } = dibujar();
+  expect(boton("No").getAttribute("aria-checked")).toBe("true");
+  escribir(q('input[aria-label="Apellido"]'), "Pacheco");
+  escribir(q('input[aria-label="Nombre"]'), "Rubén");
+  vista.elegir(q('select[aria-label="Familia"]'), "Pacheco01");
+  vista.pulsar(boton("Sí"));
+  vista.pulsar(boton("Guardar"));
+  expect(guardados.at(-1).at(-1).confirmado).toBe(true);
+  vista.desmontar();
+});
+
+it("la «Boda», solo al esposo o la esposa: trae el año de su familia, y su foto se sube al guardar", async () => {
+  const conAnio = INVITADOS.map((g) => (g.id === "1" ? { ...g, anioBoda: "2010" } : g));
+  const { vista, guardados, fotosGuardadas, q, boton } = dibujar(conAnio);
+  escribir(q('input[aria-label="Apellido"]'), "Pacheco");
+  escribir(q('input[aria-label="Nombre"]'), "Rubén");
+  vista.elegir(q('select[aria-label="Familia"]'), "Pacheco01");
+  expect(document.body.textContent).not.toContain("Boda");
+  vista.elegir(q('select[aria-label="Rol"]'), "esposo");
+  vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Boda")));
+  expect(q('input[aria-label="Año de boda"]').value).toBe("2010");
+  const archivo = new File(["x"], "boda.jpg", { type: "image/jpeg" });
+  const entrada = q('input[type="file"]');
+  Object.defineProperty(entrada, "files", { value: [archivo] });
+  await act(async () => entrada.dispatchEvent(new Event("change", { bubbles: true })));
+  await act(async () => boton("Guardar").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  expect(subidas.at(-1)).toEqual({ nombre: "boda.jpg", familia: "Pacheco01", carpeta: "boda" });
+  expect(guardados.at(-1).at(-1)).toMatchObject({ rolFamiliar: "esposo", anioBoda: "2010" });
+  expect(fotosGuardadas.at(-1)).toEqual({ Pacheco01: "boda/Pacheco01.jpg" });
+  vista.desmontar();
+});
+
+it("si la familia ya tiene la foto, se enseña y no se pide otra", () => {
+  const { vista, q } = dibujar(INVITADOS, { Pacheco01: "boda/Pacheco01.jpg" });
+  vista.elegir(q('select[aria-label="Familia"]'), "Pacheco01");
+  vista.elegir(q('select[aria-label="Rol"]'), "esposo");
+  vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Boda")));
+  expect(document.body.textContent).toContain("Ya la tienen");
+  expect(q('input[type="file"]')).toBe(null);
   vista.desmontar();
 });

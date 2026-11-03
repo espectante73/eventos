@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "81.3",
+    cambios: [
+      "«Nuevo invitado»: «Confirmado» Sí / No (de entrada, No). Con Sí y colaborador asignado, le llega el aviso de invitado nuevo.",
+      "«Nuevo invitado», al esposo o la esposa: apartado «Boda» con su año y la foto, por si la adelantan. Son de la pareja: el año que ya tiene la familia sale puesto, y si la familia ya tiene foto, se enseña.",
+    ],
+  },
+  {
     version: "81.2",
     cambios: [
       "«Canciones para bailar»: la ventana mide lo que la canción más larga, no un ancho fijo; en el móvil cabe en la pantalla y las largas se recortan. El título queda en «Canciones para bailar». Igual en la página del DJ.",

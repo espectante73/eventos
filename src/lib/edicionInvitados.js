@@ -21,7 +21,7 @@
 import { uid } from "./id";
 import { claveFamiliaMesa } from "./mesas";
 import { nombreCompleto } from "./formato";
-import { comoColaborador, calcularEdad, pideEmail } from "./invitados";
+import { comoColaborador, calcularEdad, pideEmail, pideDatosDeBoda } from "./invitados";
 import { emailValido } from "./validacion";
 import { ROL_FAMILIAR, LETRA_ROL } from "./rolFamiliar";
 import { limpiarTelefono, telefonoValido, pideTelefono, AVISO_TELEFONO } from "./telefono";
@@ -110,9 +110,22 @@ export function agregarInvitado(invitados, datos) {
   if (!nombre || !apellido || !grupoFamiliar) {
     return { invitados, aviso: "Faltan el nombre, el apellido o el grupo familiar." };
   }
-  // Lo demás que traiga (rol, colaborador, año, email: «Nuevo invitado», v77).
-  const { rolFamiliar = "", colaboradorId = null, anioNacimiento = "", email = "", telefono = "" } = datos || {};
-  const nuevo = invitadoNuevo({ nombre, apellido, grupoFamiliar, zona: String(datos?.zona || "").trim(), rolFamiliar, colaboradorId, anioNacimiento, email, telefono });
+  // Lo demás que traiga (rol, colaborador, año, email: «Nuevo invitado», v77;
+  // confirmado y año de boda, v81.3).
+  const { rolFamiliar = "", colaboradorId = null, anioNacimiento = "", email = "", telefono = "", anioBoda = "", confirmado = false } = datos || {};
+  const nuevo = invitadoNuevo({
+    nombre,
+    apellido,
+    grupoFamiliar,
+    zona: String(datos?.zona || "").trim(),
+    rolFamiliar,
+    colaboradorId,
+    anioNacimiento,
+    email,
+    telefono,
+    anioBoda,
+    confirmado: Boolean(confirmado),
+  });
   // Se AÑADE igual y solo se avisa: dos personas pueden llamarse igual
   // (un padre y un hijo). Bloquearlo sería decidir por el usuario.
   const repetido = invitados.some((g) => mismaPersona(g, nuevo));
@@ -386,7 +399,20 @@ export function nuevoDesdeFormulario(invitados, datos, { familiaNueva = false, z
   if (!pideTelefono({ anioNacimiento }, evento)) telefono = "";
   if (telefono && !telefonoValido(telefono)) return sinCambio(AVISO_TELEFONO);
   telefono = limpiarTelefono(telefono);
+  // El año de boda (v81.3), solo del esposo o la esposa: el de su pareja lo
+  // iguala la base (trg_igualar_anio_boda_pareja). Vacío, toma el suyo.
+  let anioBoda = pideDatosDeBoda(datos) ? String(datos.anioBoda || "").trim() : "";
+  if (anioBoda && !/^\d{4}$/.test(anioBoda)) return sinCambio("El año de boda son cuatro cifras, como 2010.");
 
-  const { invitados: siguiente, aviso } = agregarInvitado(invitados, { ...datos, grupoFamiliar, zona, anioNacimiento, email, telefono });
+  const { invitados: siguiente, aviso } = agregarInvitado(invitados, { ...datos, grupoFamiliar, zona, anioNacimiento, email, telefono, anioBoda });
   return { invitados: siguiente, aviso: [aviso, siguiente !== invitados ? salvedad : ""].filter(Boolean).join(" ") };
+}
+
+// El año de boda que ya tiene la familia (v81.3): el del esposo o la
+// esposa que lo tenga. Para «Nuevo invitado»: al elegir familia y rol, sale
+// puesto.
+export function anioBodaDeLaFamilia(invitados, grupoFamiliar) {
+  const clave = limpio(grupoFamiliar);
+  if (!clave) return "";
+  return invitados.find((g) => limpio(g.grupoFamiliar) === clave && pideDatosDeBoda(g) && g.anioBoda)?.anioBoda || "";
 }
