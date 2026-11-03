@@ -54,3 +54,21 @@ it("«Abrir sección…»: en orden alfabético, y ningún nombre más largo de 
   expect(nombres.filter((n) => n.length > 14)).toEqual([]);
   vista.desmontar();
 });
+
+// v81.5 (él): «Invitados» con dos opciones, «Añadir» y «Lista».
+it("«Invitados»: «Añadir» abre «Nuevo invitado» y «Lista», la Lista", () => {
+  const abiertas = [];
+  let lista = 0;
+  const vista = montar(
+    <Portada evento={evento} editable abierto={{}} toggle={(c) => abiertas.push(c)} colaboradores={[]} onCerrarSesion={() => {}} abrirInvitados={() => (lista += 1)} />
+  );
+  vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
+  vista.pulsar(boton("Invitados"));
+  vista.pulsar(boton("Añadir"));
+  expect(abiertas).toEqual(["nuevo-invitado"]);
+  vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
+  vista.pulsar(boton("Invitados"));
+  vista.pulsar(boton("Lista"));
+  expect(lista).toBe(1);
+  vista.desmontar();
+});

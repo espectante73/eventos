@@ -25,6 +25,7 @@ import {
   KeyRound,
   Clock3,
   Send,
+  UserPlus,
 } from "lucide-react";
 import { C } from "../theme";
 import { UserSolido, Seal } from "./Widgets";
@@ -107,12 +108,17 @@ export function DesplegableSecciones({
     // Novedades, Logística y Música -- no pasa por el `toggle` genérico
     // y no lleva el "✓ " (no hay estado fiable de "sigue abierta": se
     // puede cerrar con la X del sistema sin que este menú se entere).
+    // Dos opciones (él, v81.5): «Añadir», el formulario «Nuevo invitado»
+    // sin abrir antes la Lista, y «Lista». Mismos iconos que en la Lista.
     if (clave === "invitados") {
       return {
         id: clave,
         etiqueta: ETIQUETAS_VENTANAS[clave],
         icono: ICONOS_VENTANAS[clave],
-        onClick: abrirInvitados,
+        submenu: [
+          { id: "nuevo-invitado", etiqueta: "Añadir", icono: UserPlus, marcado: Boolean(abierto["nuevo-invitado"]), onClick: () => toggle("nuevo-invitado") },
+          { id: "invitados-lista", etiqueta: "Lista", icono: ICONOS_VENTANAS[clave], onClick: abrirInvitados },
+        ],
       };
     }
     // «Mesas y acomodación» (v74.6), igual: en el Mac, su propia ventana.

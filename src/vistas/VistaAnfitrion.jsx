@@ -33,6 +33,7 @@ import { VentanaConfigZonaReinicio } from "./anfitrion/VentanaConfigZonaReinicio
 import { VentanaConfigZonaPeligro } from "./anfitrion/VentanaConfigZonaPeligro";
 import { VentanaColaboradoresDatos } from "./anfitrion/VentanaColaboradoresDatos";
 import { VentanaMesas } from "./anfitrion/VentanaMesas";
+import { VentanaNuevoInvitado } from "./anfitrion/VentanaNuevoInvitado";
 import { VentanaAvisarEquipo } from "./anfitrion/VentanaAvisarEquipo";
 import { PRUEBA_VACIA } from "../lib/repartoMesas";
 import { avisoFaltaRol } from "../lib/edicionInvitados";
@@ -373,6 +374,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
       {/* Colaboradores: "Datos Colab." abre esta ventana; "Formularios" no
           abre ninguna — cambia de vista directamente (ver DesplegableSecciones.jsx) */}
       {abierto["avisar-equipo"] && <VentanaAvisarEquipo data={data} onCerrar={() => toggle("avisar-equipo")} />}
+      {/* «Nuevo invitado» desde Abrir sección → Invitados → Añadir (v81.5). */}
+      {abierto["nuevo-invitado"] && <VentanaNuevoInvitado data={data} onCerrar={() => toggle("nuevo-invitado")} />}
       {abierto["colaboradores-datos"] && (
         <VentanaColaboradoresDatos
           data={data}
