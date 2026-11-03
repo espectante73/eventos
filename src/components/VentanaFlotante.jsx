@@ -20,7 +20,9 @@ import { realmDe } from "../lib/realm";
 // `extra` (v80.5): lo que va en la cabecera a la derecha del título, como en
 // VentanaFlotante (las cifras de «Canciones para bailar», igual que las de la
 // Lista de invitados). Si no cabe, se desliza de lado; la X, siempre a la vista.
-export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720, movible = false, extra }) {
+// `ajustado` (v81.2): del ancho de lo que lleva (la canción más larga), no
+// de `ancho`; los botones de abajo se acomodan a él sin ensancharlo.
+export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720, movible = false, extra, ajustado = false }) {
   const hayCuerpo = Children.toArray(children).some((c) => c !== "");
   // Escape, en la ventana donde está este modal (realmDe): dentro de la
   // Lista de invitados es otra ventana del sistema (v80.1).
@@ -114,11 +116,13 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
     >
       <div
         ref={cajaRef}
-        className="rounded-lg w-full flex flex-col modal-flotante-caja"
+        className={`rounded-lg flex flex-col modal-flotante-caja${ajustado ? "" : " w-full"}`}
         style={{
           background: C.paper,
           border: `1px solid ${C.line}`,
-          maxWidth: ancho,
+          // `minWidth: 0`: sin él, en el móvil no encogía por debajo de lo
+          // que mide su cabecera y se salía por la derecha, X incluida.
+          ...(ajustado ? { width: "max-content", maxWidth: "100%", minWidth: 0 } : { maxWidth: ancho }),
           maxHeight: "88vh",
           boxShadow: S.flotanteOscura,
           transform: desplazado.x || desplazado.y ? `translate(${desplazado.x}px, ${desplazado.y}px)` : undefined,
@@ -165,7 +169,7 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
         {acciones && (
           <div
             className="flex items-center gap-2 px-4 py-3 flex-wrap"
-            style={{ borderTop: hayCuerpo ? `1px solid ${C.line}` : undefined }}
+            style={{ borderTop: hayCuerpo ? `1px solid ${C.line}` : undefined, ...(ajustado ? { width: 0, minWidth: "100%" } : {}) }}
           >
             {acciones}
           </div>

@@ -131,7 +131,11 @@ const COLUMNAS_LISTA = ["invitado", "grupoFamiliar", "rolFamiliar", "anioBoda", 
 const TINTA_COLUMNA_ACTIVA = C.goldClaro;
 
 // «Canciones para bailar» (v79.5): estrellas · canción · edad · ▶ (v81.1).
-const COLUMNAS_CANCIONES = "4.5rem minmax(0, 1fr) 3.5rem 2.25rem";
+// La canción, del ancho de la más larga (él, v81.2), y la ventana con ella:
+// todas las filas comparten las columnas de la lista (subgrid), así que la
+// más larga marca el ancho de todas. Si no cabe en la pantalla, se recorta.
+const COLUMNAS_CANCIONES = "4.5rem minmax(0, max-content) 3.5rem 2.25rem";
+const FILA_CANCIONES = { gridColumn: "1 / -1", gridTemplateColumns: "subgrid" };
 
 export function SeccionInvitados({
   data,
@@ -1948,7 +1952,9 @@ export function SeccionInvitados({
             panelFlotante === "tabla"
               ? "Lista de invitados"
               : panelFlotante === "canciones"
-              ? `Canciones para bailar — ${evento.nombre || "Evento"}`
+              ? // Sin el nombre del evento (v81.2): así la ventana puede ser
+                // del ancho de la canción más larga, con las cifras al lado.
+                "Canciones para bailar"
               : `Alergias — ${evento.nombre || "Evento"}`
           }
           iconoTitulo={panelFlotante === "alergias" ? AlertTriangle : undefined}
@@ -1961,7 +1967,7 @@ export function SeccionInvitados({
           // (él, v80.5: en una franja aparte se cortaban al desplazar). Más
           // ancha, para que quepan junto al título.
           extra={panelFlotante === "canciones" ? <RecuadroCifras cifras={cifrasCanciones()} /> : undefined}
-          ancho={panelFlotante === "canciones" ? 900 : undefined}
+          ajustado={panelFlotante === "canciones"}
           acciones={
             <>
               <Boton variante="principal" onClick={imprimirPanelActivo}>
@@ -2080,10 +2086,11 @@ export function SeccionInvitados({
 
             {panelFlotante === "canciones" && (
               <>
+                <div style={{ display: "grid", gridTemplateColumns: COLUMNAS_CANCIONES, columnGap: 4 }}>
                 <div
-                  className="grid gap-1 text-xs uppercase px-2 py-2"
+                  className="grid text-xs uppercase px-2 py-2"
                   style={{
-                    gridTemplateColumns: COLUMNAS_CANCIONES,
+                    ...FILA_CANCIONES,
                     fontFamily: "'IBM Plex Mono', monospace",
                     borderBottom: `1px solid ${C.line}`,
                   }}
@@ -2113,9 +2120,9 @@ export function SeccionInvitados({
                 {filasCanciones().map((f, i) => (
                   <div
                     key={`${f.invitadoId}-${f.hueco}`}
-                    className="grid gap-1 items-center px-2 py-1 text-sm"
+                    className="grid items-center px-2 py-1 text-sm"
                     style={{
-                      gridTemplateColumns: COLUMNAS_CANCIONES,
+                      ...FILA_CANCIONES,
                       background: i % 2 ? C.paperDark : C.blanco,
                       color: C.charcoal,
                     }}
@@ -2139,6 +2146,7 @@ export function SeccionInvitados({
                     </span>
                   </div>
                 ))}
+                </div>
                 {invitados.filter(tieneCancion).length === 0 && (
                   <p className="text-sm italic p-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
                     Todavía nadie ha indicado una canción.

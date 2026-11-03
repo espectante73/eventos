@@ -265,7 +265,7 @@ describe("las canciones, en lista", () => {
     );
   // Las filas de la lista, como «estrellas|canción|edad» (la 4.ª, el ▶).
   const filas = () =>
-    [...document.body.querySelectorAll("#zona-imprimible > div.grid")]
+    [...document.body.querySelectorAll("#zona-imprimible > div > div.grid")]
       .slice(1)
       .map((f) => [...f.children].slice(0, 3).map((c) => c.textContent).join("|"));
 

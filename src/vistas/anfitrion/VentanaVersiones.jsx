@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "81.2",
+    cambios: [
+      "«Canciones para bailar»: la ventana mide lo que la canción más larga, no un ancho fijo; en el móvil cabe en la pantalla y las largas se recortan. El título queda en «Canciones para bailar». Igual en la página del DJ.",
+      "El ▶ de escuchar, en dorado y relleno, como las estrellas.",
+    ],
+  },
+  {
     version: "81.1",
     cambios: [
       "Escucha previa: un ▶ junto a cada canción suena 30 segundos de Deezer; si no aparece, está mal escrita. En la ficha del invitado (colaborador y anfitrión) y en «Corregir canción», debajo salen hasta 3 que se llaman parecido, cada una con su ▶ y «Usar así» para dejarla escrita como en Deezer. También en «Canciones para bailar», en «Repasar» y en la página del DJ.",

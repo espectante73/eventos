@@ -20,8 +20,13 @@ import { descargarCSV } from "../lib/descargas";
 import { EscucharCancion } from "../components/EscucharCancion";
 import { pedirMuestras, consultaDeFila } from "../lib/escuchar";
 
-// Mismas columnas que la ventana del anfitrión: estrellas · canción · edad · ▶.
-const COLUMNAS = "4.5rem minmax(0, 1fr) 3.5rem 2.25rem";
+// Mismas columnas que la ventana del anfitrión: estrellas · canción · edad · ▶,
+// con la canción del ancho de la más larga (v81.2): las filas comparten las
+// columnas de la lista (subgrid).
+const COLUMNAS = "4.5rem minmax(0, max-content) 3.5rem 2.25rem";
+const FILA = { gridColumn: "1 / -1", gridTemplateColumns: "subgrid" };
+// Lo que va con la lista (filtros, botones) se acomoda a su ancho sin ensancharla.
+const A_SU_ANCHO = { width: 0, minWidth: "100%" };
 const CADA = 60 * 1000;
 
 // La clave, recordada en este aparato (si el navegador deja guardar).
@@ -166,9 +171,9 @@ export function VistaDj({ token }) {
         </div>
       </header>
 
-      <main className="mx-auto p-4 space-y-3" style={{ maxWidth: 900 }}>
+      <main className="mx-auto p-4 space-y-3" style={{ width: "max-content", maxWidth: "100%", minWidth: "min(100%, 420px)" }}>
         {/* Los filtros, en una línea (norma 6). */}
-        <div className="flex items-center gap-2 oculto-al-imprimir">
+        <div className="flex items-center gap-2 oculto-al-imprimir" style={A_SU_ANCHO}>
           <TextInput value={filtro.texto} onChange={poner("texto")} placeholder="Buscar canción o artista" aria-label="Buscar canción o artista" className="flex-1 min-w-0" />
           <span className="text-sm" style={{ color: C.charcoal }}>
             Edad
@@ -177,8 +182,8 @@ export function VistaDj({ token }) {
           <input value={filtro.hasta} onChange={poner("hasta")} inputMode="numeric" placeholder="a" aria-label="Edad hasta" style={edad} />
         </div>
 
-        <div id="zona-imprimible">
-          <div className="grid gap-1 text-xs uppercase px-2 py-2" style={{ gridTemplateColumns: COLUMNAS, fontFamily: "'IBM Plex Mono', monospace", borderBottom: `1px solid ${C.line}` }}>
+        <div id="zona-imprimible" style={{ display: "grid", gridTemplateColumns: COLUMNAS, columnGap: 4 }}>
+          <div className="grid text-xs uppercase px-2 py-2" style={{ ...FILA, fontFamily: "'IBM Plex Mono', monospace", borderBottom: `1px solid ${C.line}` }}>
             {[
               ["veces", "★"],
               ["cancion", "Canción"],
@@ -191,7 +196,7 @@ export function VistaDj({ token }) {
             <span />
           </div>
           {filas.map((f, i) => (
-            <div key={`${f.invitadoId}-${f.hueco}`} className="grid gap-1 items-center px-2 py-1.5 text-sm" style={{ gridTemplateColumns: COLUMNAS, background: i % 2 ? C.paperDark : C.blanco, color: C.charcoal }}>
+            <div key={`${f.invitadoId}-${f.hueco}`} className="grid items-center px-2 py-1.5 text-sm" style={{ ...FILA, background: i % 2 ? C.paperDark : C.blanco, color: C.charcoal }}>
               <span className="text-center whitespace-nowrap" style={{ color: C.gold }}>
                 {estrellas(f.veces)}
               </span>
@@ -209,13 +214,13 @@ export function VistaDj({ token }) {
             </div>
           ))}
           {!filas.length && (
-            <p className="text-sm italic p-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
+            <p className="text-sm italic p-2" style={{ gridColumn: "1 / -1", color: C.charcoal, opacity: OP.secundario }}>
               {todas.length ? "Ninguna canción con estos filtros." : "Todavía nadie ha pedido una canción."}
             </p>
           )}
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap pt-2 oculto-al-imprimir" style={{ borderTop: `1px solid ${C.line}` }}>
+        <div className="flex items-center gap-2 flex-wrap pt-2 oculto-al-imprimir" style={{ ...A_SU_ANCHO, borderTop: `1px solid ${C.line}` }}>
           <Boton variante="principal" icono={Printer} onClick={() => window.print()}>
             Imprimir / PDF
           </Boton>

@@ -21,6 +21,15 @@ import { realmDe } from "../lib/realm";
 import { textoCancion } from "../lib/canciones";
 import { minutosYSegundos } from "../lib/repasoCanciones";
 
+// El ▶ y el ■ rellenos, en dorado como las estrellas (él, v81.2: «ponle
+// color»); en rojo, la que no está en Deezer.
+const relleno = (Icono) => {
+  const ConRelleno = (props) => <Icono {...props} fill="currentColor" />;
+  return ConRelleno;
+};
+const PlayRelleno = relleno(Play);
+const PararRelleno = relleno(Square);
+
 // Un WAV vacío: abre el sonido dentro del toque.
 const SILENCIO = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
 
@@ -83,7 +92,7 @@ export function useEscucharCancion({ consulta, buscar, onUsar }) {
     else setEstado("nada");
   };
 
-  const icono = estado === "buscando" ? Loader2 : estado === "sonando" ? Square : estado === "nada" ? VolumeX : Play;
+  const icono = estado === "buscando" ? Loader2 : estado === "sonando" ? PararRelleno : estado === "nada" ? VolumeX : PlayRelleno;
   const titulo =
     estado === "sonando" ? "Parar" : estado === "nada" ? "No la encuentro en Deezer: revisa cómo está escrita" : estado === "error" ? "No se pudo escuchar" : "Escuchar 30 segundos";
   const boton = (
@@ -94,7 +103,7 @@ export function useEscucharCancion({ consulta, buscar, onUsar }) {
       titulo={titulo}
       disabled={estado === "buscando"}
       onClick={(e) => pulsar(e, cual)}
-      style={estado === "nada" ? { color: C.peligro, borderColor: C.peligro } : undefined}
+      style={estado === "nada" ? { color: C.peligro, borderColor: C.peligro } : { color: C.gold, borderColor: C.gold }}
     />
   );
   const escrita = textoCancion(String(consulta.titulo || "").trim(), String(consulta.artista || "").trim()).toLowerCase();
@@ -113,7 +122,14 @@ export function useEscucharCancion({ consulta, buscar, onUsar }) {
         )}
         {resultado.candidatos.map((c, i) => (
           <div key={c.deezer || i} className="flex items-center gap-2 px-2 py-1" style={{ background: i % 2 ? C.paperDark : C.blanco }}>
-            <Boton variante="secundario" tamano="pequeno" icono={estado === "sonando" && cual === i ? Square : Play} titulo={estado === "sonando" && cual === i ? "Parar" : "Escuchar 30 segundos"} onClick={(e) => pulsar(e, i)} />
+            <Boton
+              variante="secundario"
+              tamano="pequeno"
+              icono={estado === "sonando" && cual === i ? PararRelleno : PlayRelleno}
+              titulo={estado === "sonando" && cual === i ? "Parar" : "Escuchar 30 segundos"}
+              onClick={(e) => pulsar(e, i)}
+              style={{ color: C.gold, borderColor: C.gold }}
+            />
             <span className="flex-1 min-w-0 truncate" title={textoCancion(c.titulo, c.artista)}>
               {textoCancion(c.titulo, c.artista)}
               <span style={{ color: C.charcoal, opacity: OP.secundario }}> · {minutosYSegundos(c.duracion)}</span>
