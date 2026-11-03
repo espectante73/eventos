@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "80.4",
+    cambios: [
+      "Canciones: una canción corregida se vuelve a buscar en Deezer aunque solo cambie el artista. Antes «Tu Cariñito — Edwin Rivera», ya bien escrita, seguía como no encontrada y en rojo. Las que estaban como no encontradas se vuelven a buscar al abrir «Repasar».",
+    ],
+  },
+  {
     version: "80.3",
     cambios: [
       "«Corregir canción» abierta desde el lápiz de «Repasar»: vuelve a decir quién la pidió, con su edad, para poder consultarle. Si la pidieron varios, salen todos.",

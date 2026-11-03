@@ -3,7 +3,10 @@
 // una clave). Cada canción distinta se busca UNA vez y lo encontrado se
 // guarda en `evento.catalogoCanciones`:
 //   { [clave]: { titulo, artista, duracion } | { noEncontrada: true } }
-// con `descartada: true` si él no quiso la propuesta. Sirve para dos cosas:
+// con `descartada: true` si él no quiso la propuesta, y `consulta`: lo que
+// se le preguntó a Deezer. Si la canción se escribe de otra forma (también
+// solo el artista, que no cambia su clave), se vuelve a buscar (v80.4: «Tu
+// Cariñito — Edwin Rivera», ya bien escrita, seguía «no encontrada»). Sirve para dos cosas:
 // proponer cómo dejarla escrita (canción y cantante, cada uno en su hueco,
 // aunque el colaborador los metiera juntos) y saber cuánto dura. Nada cambia
 // solo: él marca lo que se aplica. Lo busca api/canciones.js.
@@ -24,16 +27,27 @@ export function cancionesDistintas(filas) {
 // Lo que se le pregunta a Deezer: título y artista, sin el guion de en medio.
 export const consultaDe = (cancion) => cancion.replace(/\s+[—–-]\s+/g, " ").trim();
 
-export const sinBuscar = (distintas, catalogo) => distintas.filter((d) => !catalogo?.[d.clave]);
+// ¿Lo apuntado vale para como está escrita ahora? Las de antes de la v80.4
+// no guardaban la consulta: lo encontrado se da por bueno y lo no
+// encontrado se vuelve a buscar.
+function vigente(e, d) {
+  if (!e) return false;
+  return e.consulta === undefined ? !e.noEncontrada : e.consulta === consultaDe(d.cancion);
+}
+export const sinBuscar = (distintas, catalogo) => distintas.filter((d) => !vigente(catalogo?.[d.clave], d));
 
-// Lo que trae el buscador, al catálogo. Si Deezer no respondió (`fallo`),
-// no se apunta nada: se vuelve a buscar la próxima vez.
-export function conResultados(catalogo, claves, resultados) {
+// ¿Deezer no la encuentra, tal como está escrita? (en rojo en la lista)
+export const noEncontrada = (catalogo, d) => Boolean(catalogo?.[d.clave]?.noEncontrada) && vigente(catalogo[d.clave], d);
+
+// Lo que trae el buscador para `tanda` (canciones distintas), al catálogo.
+// Si Deezer no respondió (`fallo`), no se apunta nada: se vuelve a buscar.
+export function conResultados(catalogo, tanda, resultados) {
   const siguiente = { ...(catalogo || {}) };
-  claves.forEach((clave, i) => {
+  tanda.forEach((d, i) => {
     const r = resultados?.[i];
     if (!r || r.fallo) return;
-    siguiente[clave] = r.pista ? { titulo: r.pista.titulo, artista: r.pista.artista, duracion: r.pista.duracion } : { noEncontrada: true };
+    const consulta = consultaDe(d.cancion);
+    siguiente[d.clave] = r.pista ? { titulo: r.pista.titulo, artista: r.pista.artista, duracion: r.pista.duracion, consulta } : { noEncontrada: true, consulta };
   });
   return siguiente;
 }
@@ -44,7 +58,7 @@ export function repasoCanciones(distintas, catalogo) {
   const r = { proponer: [], bien: [], noEncontradas: [], pendientes: 0 };
   for (const d of distintas) {
     const e = catalogo?.[d.clave];
-    if (!e) r.pendientes += 1;
+    if (!vigente(e, d)) r.pendientes += 1;
     else if (e.noEncontrada) r.noEncontradas.push(d);
     else {
       const propuesta = textoCancion(e.titulo, e.artista);
@@ -77,7 +91,7 @@ export function aplicarRepaso(invitados, catalogo, { aplicar = [], descartar = [
   const nuevo = { ...(catalogo || {}) };
   for (const clave of aplicar) {
     const e = catalogo?.[clave];
-    if (e?.titulo) nuevo[claveCancion(e.titulo, e.artista)] = { titulo: e.titulo, artista: e.artista, duracion: e.duracion };
+    if (e?.titulo) nuevo[claveCancion(e.titulo, e.artista)] = { titulo: e.titulo, artista: e.artista, duracion: e.duracion, consulta: consultaDe(textoCancion(e.titulo, e.artista)) };
   }
   for (const clave of descartar) if (nuevo[clave]) nuevo[clave] = { ...nuevo[clave], descartada: true };
   return {

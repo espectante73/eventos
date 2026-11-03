@@ -69,7 +69,7 @@ import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
 import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
 import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
 import { VentanaRepasarCanciones } from "./VentanaRepasarCanciones";
-import { cancionesDistintas, duracionTotal, textoDuracion } from "../../lib/repasoCanciones";
+import { cancionesDistintas, duracionTotal, textoDuracion, noEncontrada } from "../../lib/repasoCanciones";
 import { pideTelefono, telefonoParaVer } from "../../lib/telefono";
 import { useSeccion } from "../../lib/useSeccion";
 
@@ -2090,8 +2090,8 @@ export function SeccionInvitados({
                     <button
                       onClick={() => setCancionACorregir({ invitadoId: f.invitadoId, hueco: f.hueco })}
                       className="boton-3d rounded px-2 py-1 text-left truncate min-w-0"
-                      style={evento.catalogoCanciones?.[f.clave]?.noEncontrada ? { color: C.peligro, fontWeight: 600 } : undefined}
-                      title={evento.catalogoCanciones?.[f.clave]?.noEncontrada ? "Deezer no la encuentra: tócala para corregirla" : "Corregir cómo está escrita"}
+                      style={noEncontrada(evento.catalogoCanciones, f) ? { color: C.peligro, fontWeight: 600 } : undefined}
+                      title={noEncontrada(evento.catalogoCanciones, f) ? "Deezer no la encuentra: tócala para corregirla" : "Corregir cómo está escrita"}
                     >
                       {f.cancion}
                     </button>

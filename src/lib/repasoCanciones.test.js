@@ -4,6 +4,7 @@ import {
   cancionesDistintas,
   consultaDe,
   sinBuscar,
+  noEncontrada,
   conResultados,
   repasoCanciones,
   aplicarRepaso,
@@ -29,7 +30,7 @@ const catalogo = {
   [CLAVE_YEYE]: { titulo: "Chica Ye-Ye", artista: "Conchita Velasco", duracion: 143 },
   mijaca: { titulo: "Mi jaca", artista: "Estrellita Castro", duracion: 211 },
   despacito: { titulo: "Despacito", artista: "Luis Fonsi", duracion: 228 },
-  cancioninventada: { noEncontrada: true },
+  cancioninventada: { noEncontrada: true, consulta: "Canción inventada" },
 };
 
 describe("repasar canciones con Deezer (v80)", () => {
@@ -40,9 +41,14 @@ describe("repasar canciones con Deezer (v80)", () => {
   });
 
   it("lo encontrado se apunta; si Deezer falló, se vuelve a buscar", () => {
-    const c = conResultados({}, ["x", "y", "z"], [{ pista: { titulo: "X", artista: "A", duracion: 100 } }, { pista: null }, { fallo: true }]);
-    expect(c).toEqual({ x: { titulo: "X", artista: "A", duracion: 100 }, y: { noEncontrada: true } });
-    expect(sinBuscar([{ clave: "x" }, { clave: "z" }], c).map((d) => d.clave)).toEqual(["z"]);
+    const tanda = [
+      { clave: "x", cancion: "X — A" },
+      { clave: "y", cancion: "Y" },
+      { clave: "z", cancion: "Z" },
+    ];
+    const c = conResultados({}, tanda, [{ pista: { titulo: "X", artista: "A", duracion: 100 } }, { pista: null }, { fallo: true }]);
+    expect(c).toEqual({ x: { titulo: "X", artista: "A", duracion: 100, consulta: "X A" }, y: { noEncontrada: true, consulta: "Y" } });
+    expect(sinBuscar(tanda, c).map((d) => d.clave)).toEqual(["z"]);
   });
 
   it("propone separar canción y cantante; lo que ya está como en Deezer (salvo mayúsculas) está bien", () => {
@@ -62,7 +68,7 @@ describe("repasar canciones con Deezer (v80)", () => {
     expect(siguientes.find((g) => g.id === "b").cancion).toBe("Mi jaca — Estrellita Castro\n\nChica Ye-Ye — Conchita Velasco");
     expect(siguientes.find((g) => g.id === "c")).toBe(invitados[2]);
     expect(aviso).toBe("Corregidas 2 peticiones.");
-    expect(nuevo.chicayeye).toEqual({ titulo: "Chica Ye-Ye", artista: "Conchita Velasco", duracion: 143 });
+    expect(nuevo.chicayeye).toEqual({ titulo: "Chica Ye-Ye", artista: "Conchita Velasco", duracion: 143, consulta: "Chica Ye-Ye Conchita Velasco" });
     expect(nuevo.despacito.descartada).toBe(true);
     // Ya corregida, sale bien escrita; la descartada, sin marcar.
     const r = repasoCanciones(cancionesDistintas(cancionesPedidas(siguientes, () => 50)), nuevo);
@@ -90,5 +96,26 @@ describe("repasar canciones con Deezer (v80)", () => {
       throw new Error("sin red");
     });
     expect((await buscarEnDeezer({ token: "t", consultas: ["x"] }, roto)).error).toContain("sin red");
+  });
+});
+
+// v80.4 (él): «Tu Cariñito — Edwin Rivera», ya bien escrita, seguía en rojo:
+// solo había cambiado el artista, y la clave (el título) era la misma.
+describe("escrita de otra forma, se vuelve a buscar aunque su clave no cambie", () => {
+  const antes = { clave: "tucarinito", cancion: "Tu cariñito — Elvis Crespo" };
+  const ahora = { clave: "tucarinito", cancion: "Tu Cariñito — Edwin Rivera" };
+  const catalogo = { tucarinito: { noEncontrada: true, consulta: "Tu cariñito Elvis Crespo" } };
+
+  it("como estaba, no encontrada y en rojo; corregida, pendiente de buscar y ya no en rojo", () => {
+    expect(noEncontrada(catalogo, antes)).toBe(true);
+    expect(sinBuscar([antes], catalogo)).toEqual([]);
+    expect(noEncontrada(catalogo, ahora)).toBe(false);
+    expect(sinBuscar([ahora], catalogo)).toEqual([ahora]);
+    expect(repasoCanciones([ahora], catalogo).pendientes).toBe(1);
+  });
+
+  it("lo apuntado antes de esta versión: lo encontrado vale; lo no encontrado se busca otra vez", () => {
+    expect(sinBuscar([antes], { tucarinito: { titulo: "Tu Cariñito", artista: "Elvis Crespo", duracion: 200 } })).toEqual([]);
+    expect(sinBuscar([antes], { tucarinito: { noEncontrada: true } })).toEqual([antes]);
   });
 });

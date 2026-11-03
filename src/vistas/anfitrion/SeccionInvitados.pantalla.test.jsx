@@ -319,7 +319,7 @@ describe("las canciones, en lista", () => {
   it("la que Deezer no encontró sale en rojo y negrita (v80.1)", () => {
     const html = dibujarYSoltar(
       <SeccionInvitados
-        data={{ ...conCanciones, evento: { ...evento, catalogoCanciones: { labamba: { noEncontrada: true } } } }}
+        data={{ ...conCanciones, evento: { ...evento, catalogoCanciones: { labamba: { noEncontrada: true, consulta: "La bamba Ritchie Valens" } } } }}
         asignarColaborador={() => null}
         ocupacionMesa={() => 1}
         panelFlotante="canciones"

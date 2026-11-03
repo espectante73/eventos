@@ -53,10 +53,10 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
       viva.current = false;
     };
   }, []);
-  const pendientes = () => sinBuscar(ahora.current.distintas, ahora.current.catalogo).filter((d) => !intentadas.current.has(d.clave));
-  const clavesPendientes = pendientes()
-    .map((d) => d.clave)
-    .join("|");
+  // Una canción, tal como está escrita (si se corrige, es otra búsqueda).
+  const intento = (d) => `${d.clave}|${consultaDe(d.cancion)}`;
+  const pendientes = () => sinBuscar(ahora.current.distintas, ahora.current.catalogo).filter((d) => !intentadas.current.has(intento(d)));
+  const clavesPendientes = pendientes().map(intento).join("·");
   useEffect(() => {
     if (!clavesPendientes || buscando.current) return;
     buscando.current = true;
@@ -64,13 +64,13 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
       let hechas = 0;
       for (let tanda = pendientes().slice(0, POR_TANDA); tanda.length && viva.current; tanda = pendientes().slice(0, POR_TANDA)) {
         setBusqueda({ hechas, total: hechas + pendientes().length });
-        tanda.forEach((d) => intentadas.current.add(d.clave));
+        tanda.forEach((d) => intentadas.current.add(intento(d)));
         const r = await buscarCanciones(tanda.map((d) => consultaDe(d.cancion)));
         if (r.error) {
           if (viva.current) setError(`No se pudo preguntar a Deezer: ${r.error} Vuelve a abrir esta ventana para seguir donde se quedó.`);
           break;
         }
-        await actualizarCatalogoCanciones((c) => conResultados(c, tanda.map((d) => d.clave), r.resultados));
+        await actualizarCatalogoCanciones((c) => conResultados(c, tanda, r.resultados));
         hechas += tanda.length;
       }
       buscando.current = false;
