@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabaseClient";
 import { pedirAvisos, textoInvitadosNuevos } from "./lib/avisosPush";
 import { buscarEnDeezer } from "./lib/repasoCanciones";
+import { pedirMuestras } from "./lib/escuchar";
 import { avisoEnPantalla } from "./lib/avisos";
 import { useCanalAsistencia } from "./lib/useCanalAsistencia";
 import { C } from "./theme";
@@ -1334,6 +1335,17 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     },
     [esAnfitrion, rol]
   );
+  // La escucha previa (v81.1): hasta 3 de Deezer con su muestra. El
+  // anfitrión, con su llave; un colaborador, con su sesión.
+  const buscarParaEscuchar = useCallback(
+    async (consulta) => {
+      if (esAnfitrion) return pedirMuestras({ consulta, token: rol });
+      const { data: s } = await supabase.auth.getSession();
+      return pedirMuestras({ consulta, sesion: s?.session?.access_token || null });
+    },
+    [esAnfitrion, rol]
+  );
+
   // «Compartir con el DJ» (v81): el enlace y la clave del DJ. Devuelven
   // { dj } (null si no se comparte) o { error }.
   const leerDj = useCallback(async () => {
@@ -1605,6 +1617,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     leerDj,
     compartirDj,
     dejarDj,
+    buscarParaEscuchar,
     obtenerHistorialTexto,
     obtenerFotosFiesta,
     obtenerFamilia,

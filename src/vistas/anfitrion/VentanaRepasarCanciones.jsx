@@ -17,6 +17,8 @@ import { LineaAviso } from "../../components/LineaAviso";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { FilaMarcable as Fila } from "../../components/FilaMarcable";
 import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
+import { EscucharCancion } from "../../components/EscucharCancion";
+import { consultaDeFila } from "../../lib/escuchar";
 import { cancionesPedidas } from "../../lib/canciones";
 import { cancionesDistintas, sinBuscar, consultaDe, conResultados, repasoCanciones, aplicarRepaso, minutosYSegundos, POR_TANDA } from "../../lib/repasoCanciones";
 
@@ -91,11 +93,13 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
     setHecho(aviso);
   };
 
-  // Al final de cada fila: su duración y el lápiz para escribirla a mano.
-  const final = (clave, segundos) => (
+  // Al final de cada fila: su duración, el ▶ para escucharla (v81.1) y el
+  // lápiz para escribirla a mano.
+  const final = (d, segundos) => (
     <>
       {segundos !== undefined && <span style={DURACION}>{segundos ? minutosYSegundos(segundos) : "—"}</span>}
-      <Boton variante="secundario" tamano="pequeno" icono={Pencil} titulo="Corregir a mano" onClick={() => setCorrigiendo(clave)} />
+      <EscucharCancion consulta={consultaDeFila(d, catalogo)} buscar={data.buscarParaEscuchar} />
+      <Boton variante="secundario" tamano="pequeno" icono={Pencil} titulo="Corregir a mano" onClick={() => setCorrigiendo(d.clave)} />
     </>
   );
   const apartado = (id, titulo, filas, ayuda) => (
@@ -122,7 +126,7 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
           "Para corregir",
           repaso.proponer.map((p, i) => (
             <Fila key={p.clave} i={i} nombre={p.propuesta} nota={`escrita «${p.cancion}»`} marcada={marcada(p)} onMarcar={(si) => setMarcas((m) => ({ ...m, [p.clave]: si }))}>
-              {final(p.clave, p.duracion)}
+              {final(p, p.duracion)}
             </Fila>
           )),
           "Como la tiene Deezer. Marca las que quieras corregir: se cambian en todas las fichas que la pidieron."
@@ -132,7 +136,7 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
           "Bien escritas",
           repaso.bien.map((b, i) => (
             <Fila key={b.clave} i={i} nombre={b.cancion}>
-              {final(b.clave, b.duracion)}
+              {final(b, b.duracion)}
             </Fila>
           ))
         )}
@@ -141,7 +145,7 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
           "No encontradas",
           repaso.noEncontradas.map((n, i) => (
             <Fila key={n.clave} i={i} nombre={n.cancion}>
-              {final(n.clave)}
+              {final(n)}
             </Fila>
           )),
           "Corrígelas con el lápiz: escritas de otra forma, se vuelven a buscar. En la lista salen en rojo."

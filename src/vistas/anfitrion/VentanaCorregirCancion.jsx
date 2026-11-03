@@ -9,7 +9,7 @@
 import { useState } from "react";
 import { C, DEDO, OP } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
-import { TextInput } from "../../components/Formulario";
+import { CampoCancion } from "../../components/CampoCancion";
 import { Boton } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
 import { nombreCompleto } from "../../lib/formato";
@@ -62,10 +62,17 @@ export function VentanaCorregirCancion({ data, peticion, onCerrar }) {
             </>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <TextInput value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Canción" aria-label="Canción" className="flex-1 min-w-0" />
-          <TextInput value={artista} onChange={(e) => setArtista(e.target.value)} placeholder="Artista" aria-label="Artista" className="flex-1 min-w-0" />
-        </div>
+        {/* Con su ▶ (v81.1): escucharla antes de guardar; «Usar así» la
+            deja como en Deezer. */}
+        <CampoCancion
+          titulo={titulo}
+          artista={artista}
+          buscar={data.buscarParaEscuchar}
+          onCambiar={(c) => {
+            setTitulo(c.titulo);
+            setArtista(c.artista);
+          }}
+        />
         {aviso && <LineaAviso className="text-sm">{aviso}</LineaAviso>}
         {/* Al pie, Cancelar y Guardar, iguales (normas 4 y 5); «Guardar», del lado del pulgar. */}
         <div className="grid grid-cols-2 gap-2 pt-3" style={{ borderTop: `1px solid ${C.line}` }}>

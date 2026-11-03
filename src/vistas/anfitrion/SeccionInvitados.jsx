@@ -71,6 +71,8 @@ import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
 import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
 import { VentanaRepasarCanciones } from "./VentanaRepasarCanciones";
 import { VentanaCompartirDj } from "./VentanaCompartirDj";
+import { EscucharCancion } from "../../components/EscucharCancion";
+import { consultaDeFila } from "../../lib/escuchar";
 import { cancionesDistintas, duracionTotal, textoDuracion, noEncontrada, filasAppleMusic } from "../../lib/repasoCanciones";
 import { pideTelefono, telefonoParaVer } from "../../lib/telefono";
 import { useSeccion } from "../../lib/useSeccion";
@@ -128,8 +130,8 @@ const COLUMNAS_LISTA = ["invitado", "grupoFamiliar", "rolFamiliar", "anioBoda", 
 // y letra verde.
 const TINTA_COLUMNA_ACTIVA = C.goldClaro;
 
-// «Canciones para bailar» (v79.5): estrellas · canción · edad.
-const COLUMNAS_CANCIONES = "4.5rem minmax(0, 1fr) 3.5rem";
+// «Canciones para bailar» (v79.5): estrellas · canción · edad · ▶ (v81.1).
+const COLUMNAS_CANCIONES = "4.5rem minmax(0, 1fr) 3.5rem 2.25rem";
 
 export function SeccionInvitados({
   data,
@@ -2101,6 +2103,7 @@ export function SeccionInvitados({
                       {rotulo}
                     </EncabezadoOrdenable>
                   ))}
+                  <span />
                 </div>
                 {/* Una fila por petición, sin nombres (él, v79.5): la misma
                     canción sale tantas veces como se pidió, con la edad de
@@ -2131,6 +2134,9 @@ export function SeccionInvitados({
                       {f.cancion}
                     </button>
                     <span className="text-center">{f.edad ?? "—"}</span>
+                    <span className="flex justify-center oculto-al-imprimir">
+                      <EscucharCancion consulta={consultaDeFila(f, evento.catalogoCanciones)} buscar={data.buscarParaEscuchar} />
+                    </span>
                   </div>
                 ))}
                 {invitados.filter(tieneCancion).length === 0 && (

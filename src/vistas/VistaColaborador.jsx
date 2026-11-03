@@ -11,6 +11,7 @@ import { ordenarPorApellidoNombre, nombreCompleto, euros, fechaCorta } from "../
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
 import { huecosCanciones, textoDeHuecos, resumenCanciones } from "../lib/canciones";
+import { CampoCancion } from "../components/CampoCancion";
 import { estadoImpago, textoAvisoImpago, PLAZOS_MAX } from "../lib/impagos";
 import { marcarSinGuardar, haySinGuardar, PREGUNTA_DESCARTAR } from "../lib/cambiosSinGuardar";
 import { requisitosActivos } from "../lib/modoPruebas";
@@ -132,6 +133,8 @@ function FormularioDatos({
   onCambiarSinFotoBoda,
   // Nadie de la familia tiene email (regla: al menos uno por familia).
   familiaSinEmail = false,
+  // ▶ junto a cada canción (v81.1): escucharla en Deezer.
+  escucharCancion,
 }) {
   // Todo lo que se escribe se queda AQUÍ, en la pantalla, hasta pulsar
   // "Guardar" (él, v50): así "Cancelar" puede descartarlo de verdad, y
@@ -535,16 +538,18 @@ function FormularioDatos({
         onAlternar={() => alternarApartado("cancion")}
       >
         <div className="flex flex-col gap-2">
-          {huecosCanciones(form.cancion).map((hueco, i, huecos) => {
-            const cambiar = (parte) => (e) =>
-              setForm({ ...form, cancion: textoDeHuecos(huecos.map((h, j) => (j === i ? { ...h, [parte]: e.target.value } : h))) });
-            return (
-              <div key={i} className="flex items-center gap-2">
-                <TextInput value={hueco.titulo} onChange={cambiar("titulo")} placeholder="Canción" aria-label={`Canción ${i + 1}`} className="flex-1 min-w-0" />
-                <TextInput value={hueco.artista} onChange={cambiar("artista")} placeholder="Artista" aria-label={`Artista ${i + 1}`} className="flex-1 min-w-0" />
-              </div>
-            );
-          })}
+          {/* Con su ▶ (v81.1): si no suena, está mal escrita; «Usar así» la
+              deja como en Deezer. */}
+          {huecosCanciones(form.cancion).map((hueco, i, huecos) => (
+            <CampoCancion
+              key={i}
+              numero={i + 1}
+              titulo={hueco.titulo}
+              artista={hueco.artista}
+              buscar={escucharCancion}
+              onCambiar={(nuevo) => setForm({ ...form, cancion: textoDeHuecos(huecos.map((h, j) => (j === i ? nuevo : h))) })}
+            />
+          ))}
         </div>
       </SeccionPlegable>
       <LineaEntreApartados />
@@ -752,6 +757,8 @@ function FilaInvitadoColaborador({
   // `enFamilia`: dentro de su familia ya cerrada (v60). Solo el nombre, para
   // abrir su ficha: el pago y la llegada van por familia (FilaFamilia).
   enFamilia = false,
+  // ▶ junto a cada canción de la ficha (v81.1).
+  escucharCancion,
   // Lo que le falta a su familia para pasar a «Familias» (v62.6): si sus
   // datos ya están, la fila lo dice en rojo debajo.
   faltaFamilia = [],
@@ -987,6 +994,7 @@ function FilaInvitadoColaborador({
             sinFotoBoda={sinFotoBoda}
             onCambiarSinFotoBoda={onCambiarSinFotoBoda}
             familiaSinEmail={familiaSinEmail}
+            escucharCancion={escucharCancion}
           />
         </div>
       )}
@@ -1783,6 +1791,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   onMarcarPresente={marcarPresente}
                   obtenerFamilia={data.obtenerFamilia}
                   marcarFamilia={data.marcarFamilia}
+                  escucharCancion={data.buscarParaEscuchar}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   fotosSinBoda={fotosSinBoda || {}}
@@ -1836,6 +1845,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   onMarcarPresente={marcarPresente}
                   obtenerFamilia={data.obtenerFamilia}
                   marcarFamilia={data.marcarFamilia}
+                  escucharCancion={data.buscarParaEscuchar}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   fotosSinBoda={fotosSinBoda || {}}

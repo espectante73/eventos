@@ -771,6 +771,12 @@ describe("el enlace del DJ", () => {
     expect(f).not.toMatch(/i\."(nombre|apellido|email|telefono)"/);
   });
 
+  it("escuchar las muestras: con enlace y clave, y los fallos cuentan (v81.1)", () => {
+    const f = cuerpoDe("dj_puede");
+    expect(f).toContain(">= 10");
+    expect(f).toContain("update dj_secreto set fallos = fallos + 1");
+  });
+
   it("queda fuera de la foto del Deshacer: lleva la llave", () => {
     expect(cuerpoDe("foto_de_datos")).not.toContain("dj_secreto");
   });

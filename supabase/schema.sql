@@ -718,6 +718,26 @@ begin
 end;
 $$;
 
+-- ¿Puede el DJ escuchar las muestras? (v81.1, api/canciones.js) Con su
+-- enlace y su clave; los fallos cuentan igual que al entrar.
+CREATE OR REPLACE FUNCTION public.dj_puede(p_token uuid, p_clave text) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_clave text := (select d.clave from dj_secreto d where d.token = p_token);
+begin
+  if v_clave is null or (select d.fallos from dj_secreto d where d.token = p_token) >= 10 then
+    return false;
+  end if;
+  if upper(trim(coalesce(p_clave, ''))) <> v_clave then
+    update dj_secreto set fallos = fallos + 1 where token = p_token;
+    return false;
+  end if;
+  return true;
+end;
+$$;
+
 -- ¿Está activo el Modo Pruebas? Una sola definición (v49): mientras lo
 -- está, ningún colaborador puede escribir nada (las tres funciones de
 -- abajo) y los correos van solo al anfitrión (enviar_email).

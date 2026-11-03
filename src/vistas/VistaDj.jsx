@@ -17,9 +17,11 @@ import { estrellas, ordenarCanciones, tocarOrdenCanciones, ORDEN_CANCIONES_INICI
 import { cancionesDistintas, duracionTotal, textoDuracion, enlaceDeezer } from "../lib/repasoCanciones";
 import { filasDelDj, filtrarPeticiones, MOTIVOS_DJ } from "../lib/dj";
 import { descargarCSV } from "../lib/descargas";
+import { EscucharCancion } from "../components/EscucharCancion";
+import { pedirMuestras, consultaDeFila } from "../lib/escuchar";
 
-// Mismas columnas que la ventana del anfitrión: estrellas · canción · edad.
-const COLUMNAS = "4.5rem minmax(0, 1fr) 3.5rem";
+// Mismas columnas que la ventana del anfitrión: estrellas · canción · edad · ▶.
+const COLUMNAS = "4.5rem minmax(0, 1fr) 3.5rem 2.25rem";
 const CADA = 60 * 1000;
 
 // La clave, recordada en este aparato (si el navegador deja guardar).
@@ -139,6 +141,8 @@ export function VistaDj({ token }) {
       filas.map((f) => [f.veces, f.cancion, f.edad ?? ""])
     );
   const edad = { ...inputStyle, width: 56, textAlign: "center", minWidth: 0 };
+  // La escucha previa (v81.1), con su enlace y su clave.
+  const escuchar = (consulta) => pedirMuestras({ consulta, dj: { token, clave } });
 
   return (
     <div className="min-h-screen" style={{ background: C.paper }}>
@@ -184,6 +188,7 @@ export function VistaDj({ token }) {
                 {rotulo}
               </EncabezadoOrdenable>
             ))}
+            <span />
           </div>
           {filas.map((f, i) => (
             <div key={`${f.invitadoId}-${f.hueco}`} className="grid gap-1 items-center px-2 py-1.5 text-sm" style={{ gridTemplateColumns: COLUMNAS, background: i % 2 ? C.paperDark : C.blanco, color: C.charcoal }}>
@@ -198,6 +203,9 @@ export function VistaDj({ token }) {
                 <ExternalLink size={12} className="flex-shrink-0 oculto-al-imprimir" style={{ opacity: OP.secundario }} aria-hidden />
               </a>
               <span className="text-center">{f.edad ?? "—"}</span>
+              <span className="flex justify-center oculto-al-imprimir">
+                <EscucharCancion consulta={consultaDeFila(f, catalogo)} buscar={escuchar} />
+              </span>
             </div>
           ))}
           {!filas.length && (

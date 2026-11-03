@@ -263,9 +263,11 @@ describe("las canciones, en lista", () => {
         fijo
       />
     );
-  // Las filas de la lista, como «estrellas|canción|edad».
+  // Las filas de la lista, como «estrellas|canción|edad» (la 4.ª, el ▶).
   const filas = () =>
-    [...document.body.querySelectorAll("#zona-imprimible > div.grid")].slice(1).map((f) => [...f.children].map((c) => c.textContent).join("|"));
+    [...document.body.querySelectorAll("#zona-imprimible > div.grid")]
+      .slice(1)
+      .map((f) => [...f.children].slice(0, 3).map((c) => c.textContent).join("|"));
 
   it("sin nombres; la misma canción, una fila por quien la pidió y escrita igual", () => {
     const vista = abrir();
