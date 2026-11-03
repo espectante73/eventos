@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "81.4",
+    cambios: [
+      "«Nuevo invitado», más regular: los desplegables (Familia, Rol, Zona, Colaborador) miden lo mismo que los campos y los «＋» (en Safari quedaban más bajos); «Confirmado» lleva su rótulo como los demás y es una sola pieza Sí | No del alto de un campo; en «Boda», el año y la foto, cada uno con su rótulo.",
+    ],
+  },
+  {
     version: "81.3",
     cambios: [
       "«Nuevo invitado»: «Confirmado» Sí / No (de entrada, No). Con Sí y colaborador asignado, le llega el aviso de invitado nuevo.",

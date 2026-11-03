@@ -3,7 +3,8 @@
 // texto con el estilo estándar. Movidos fuera de App.jsx en el reparto del
 // 2026-08-08 (ver CLAUDE.md).
 import { useId, useRef, useLayoutEffect } from "react";
-import { C, inputStyle } from "../theme";
+import { ChevronDown } from "lucide-react";
+import { C, inputStyle, OP } from "../theme";
 
 // `accion`: un botón al otro lado del título, en la misma línea y sobre la
 // misma raya («Avisar», junto a «Incompletos»; él, v62.4).
@@ -91,6 +92,51 @@ export const ANCHO_ANIO = 56;
 
 export function TextInput(props) {
   return <input {...props} style={{ ...inputStyle, ...props.style }} />;
+}
+
+// Un desplegable con la misma altura y el mismo marco que un campo de texto
+// (él, v81.4: en «Nuevo invitado» quedaban más bajos que los campos y los
+// «＋»). Safari no deja cambiar la altura del suyo: se quita su aspecto y la
+// flecha se dibuja aparte. `style`, el del campo (alto, ancho, color).
+export function Desplegable({ style, children, ...props }) {
+  return (
+    <div className="relative flex-1 min-w-0" style={{ width: style?.width }}>
+      <select
+        {...props}
+        style={{ ...inputStyle, ...style, width: "100%", appearance: "none", WebkitAppearance: "none", MozAppearance: "none", paddingRight: 28 }}
+      >
+        {children}
+      </select>
+      <ChevronDown size={16} aria-hidden className="absolute pointer-events-none" style={{ right: 8, top: "50%", transform: "translateY(-50%)", color: C.charcoal, opacity: OP.secundario }} />
+    </div>
+  );
+}
+
+// Sí o No, en una sola pieza partida en dos, del alto y el marco de un
+// campo: la mitad elegida, rellena (como el selector de mano de Mi cuenta,
+// el modelo que él aprobó). v81.4, «Confirmado» de «Nuevo invitado».
+export function ElegirSiNo({ valor, onCambiar, etiqueta, alto }) {
+  const mitad = (si, rotulo) => {
+    const elegida = valor === si;
+    return (
+      <button
+        type="button"
+        role="radio"
+        aria-checked={elegida}
+        onClick={() => onCambiar(si)}
+        className="flex-1 rounded"
+        style={elegida ? { background: C.ink, color: C.goldClaro, fontWeight: 600 } : { color: C.charcoal }}
+      >
+        {rotulo}
+      </button>
+    );
+  };
+  return (
+    <div role="radiogroup" aria-label={etiqueta} className="flex gap-1 text-sm" style={{ ...inputStyle, padding: 3, minHeight: alto }}>
+      {mitad(true, "Sí")}
+      {mitad(false, "No")}
+    </div>
+  );
 }
 
 // Un campo de texto cuyo valor vive en la pestaña PRINCIPAL pero que se

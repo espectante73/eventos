@@ -20,7 +20,7 @@ import { useEffect, useState } from "react";
 import { Plus, Check } from "lucide-react";
 import { C, DEDO, OP, inputStyle } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
-import { Field, TextInput, ANCHO_ANIO } from "../../components/Formulario";
+import { Field, TextInput, Desplegable, ElegirSiNo, ANCHO_ANIO } from "../../components/Formulario";
 import { Boton } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
 import { BotonQuitar } from "../../components/PreguntaSeguridad";
@@ -47,14 +47,14 @@ function ElegirONuevo({ nombre, opciones, vacio, valor, nuevo, onValor, onNuevo,
         </>
       ) : (
         <>
-          <select aria-label={nombre} value={valor} onChange={(e) => onValor(e.target.value)} style={{ ...CAMPO, color: valor ? C.charcoal : C.line }}>
+          <Desplegable aria-label={nombre} value={valor} onChange={(e) => onValor(e.target.value)} style={{ ...CAMPO, color: valor ? C.charcoal : C.line }}>
             <option value="">{vacio}</option>
             {opciones.map((o) => (
               <option key={o} value={o}>
                 {o}
               </option>
             ))}
-          </select>
+          </Desplegable>
           <Boton variante="secundario" icono={Plus} titulo={`${nombre} nueva`} onClick={onNuevo} style={{ minHeight: DEDO, minWidth: DEDO }} />
         </>
       )}
@@ -155,14 +155,14 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
             />
           </Field>
           <Field label="Rol">
-            <select aria-label="Rol" value={ficha.rolFamiliar} onChange={(e) => ponerConBoda("rolFamiliar")(e.target.value)} style={{ ...CAMPO, color: ficha.rolFamiliar ? C.charcoal : C.line }}>
+            <Desplegable aria-label="Rol" value={ficha.rolFamiliar} onChange={(e) => ponerConBoda("rolFamiliar")(e.target.value)} style={{ ...CAMPO, color: ficha.rolFamiliar ? C.charcoal : C.line }}>
               <option value="">Sin rol</option>
               {ROLES_FORMULARIO.map((r) => (
                 <option key={r.valor} value={r.valor}>
                   {r.texto}
                 </option>
               ))}
-            </select>
+            </Desplegable>
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-2">
@@ -185,40 +185,22 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
             />
           </Field>
           <Field label="Colaborador">
-            <select aria-label="Colaborador" value={ficha.colaboradorId} onChange={(e) => poner("colaboradorId")(e.target.value)} style={{ ...CAMPO, color: ficha.colaboradorId ? C.charcoal : C.line }}>
+            <Desplegable aria-label="Colaborador" value={ficha.colaboradorId} onChange={(e) => poner("colaboradorId")(e.target.value)} style={{ ...CAMPO, color: ficha.colaboradorId ? C.charcoal : C.line }}>
               <option value="">Sin asignar</option>
               {colaboradores.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre}
                 </option>
               ))}
-            </select>
+            </Desplegable>
           </Field>
         </div>
 
-        {/* Confirmado (v81.3): Sí / No, iguales (norma 4); No, de entrada. */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm flex-shrink-0" style={{ color: C.charcoal }}>
-            Confirmado
-          </span>
-          <div className="grid grid-cols-2 gap-2 flex-1" role="radiogroup" aria-label="Confirmado">
-            {[
-              [true, "Sí"],
-              [false, "No"],
-            ].map(([valor, rotulo]) => (
-              <Boton
-                key={rotulo}
-                variante={ficha.confirmado === valor ? "principal" : "secundario"}
-                role="radio"
-                aria-checked={ficha.confirmado === valor}
-                onClick={() => poner("confirmado")(valor)}
-                style={{ minHeight: DEDO }}
-              >
-                {rotulo}
-              </Boton>
-            ))}
-          </div>
-        </div>
+        {/* Confirmado (v81.3): Sí / No en una pieza del alto de un campo, y
+            con su rótulo como los demás (v81.4); No, de entrada. */}
+        <Field label="Confirmado">
+          <ElegirSiNo etiqueta="Confirmado" valor={ficha.confirmado} onCambiar={poner("confirmado")} alto={DEDO} />
+        </Field>
 
         {/* Año, teléfono y email, plegados: como el apartado «Datos» del
             colaborador. Año y teléfono en una línea; el email, debajo. */}
@@ -248,18 +230,20 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
             abierta={verBoda}
             onAlternar={() => setVerBoda((v) => !v)}
           >
-            <div className="flex items-center gap-3">
-              <TextInput aria-label="Año de boda" value={ficha.anioBoda} onChange={(e) => poner("anioBoda")(e.target.value)} placeholder="2010" maxLength={4} inputMode="numeric" style={{ ...CAMPO, width: ANCHO_ANIO, flexShrink: 0 }} />
-              <span className="uppercase text-xs whitespace-nowrap" style={{ color: "var(--etiqueta-campo)", fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" }}>
-                Foto boda
-              </span>
+            {/* El año y la foto, cada uno con su rótulo como los demás campos
+                (v81.4), en una línea. */}
+            <div className="grid grid-cols-2 gap-2 items-start">
+              <Field label="Año">
+                <TextInput aria-label="Año de boda" value={ficha.anioBoda} onChange={(e) => poner("anioBoda")(e.target.value)} placeholder="2010" maxLength={4} inputMode="numeric" style={{ ...CAMPO, width: ANCHO_ANIO }} />
+              </Field>
+              <Field label="Foto">
               {fotoFamilia ? (
-                <>
+                <div className="flex items-center gap-2">
                   <HuecoFoto ajustada soloLectura titulo="Foto de boda" enlace={enlaceFamilia} ocupada />
                   <span className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
                     Ya la tienen
                   </span>
-                </>
+                </div>
               ) : (
                 <HuecoFoto
                   ajustada
@@ -271,6 +255,7 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
                   onQuitar={() => setFotoNueva(null)}
                 />
               )}
+              </Field>
             </div>
           </SeccionPlegable>
         )}
