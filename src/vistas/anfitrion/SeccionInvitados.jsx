@@ -33,7 +33,7 @@ import {
   Download,
   ListChecks,
 } from "lucide-react";
-import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa, FONDO_VERDE } from "../../theme";
+import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora, contiene } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
@@ -1942,6 +1942,11 @@ export function SeccionInvitados({
           colorTitulo={panelFlotante === "alergias" ? C.wax : undefined}
           onCerrar={() => setPanelFlotante(null)}
           movible
+          // Las cifras de las canciones, en la cabecera como las de la Lista
+          // (él, v80.5: en una franja aparte se cortaban al desplazar). Más
+          // ancha, para que quepan junto al título.
+          extra={panelFlotante === "canciones" ? <RecuadroCifras cifras={cifrasCanciones()} /> : undefined}
+          ancho={panelFlotante === "canciones" ? 900 : undefined}
           acciones={
             <>
               <Boton variante="principal" onClick={imprimirPanelActivo}>
@@ -2038,11 +2043,6 @@ export function SeccionInvitados({
 
             {panelFlotante === "canciones" && (
               <>
-                {/* Las cifras, en una franja verde pegada a la cabecera, como
-                    las barras de «Progreso de recopilación». */}
-                <div className="rounded px-2 py-2 mb-1 flex justify-center" style={{ background: FONDO_VERDE, marginTop: -14, marginLeft: -14, marginRight: -14 }}>
-                  <RecuadroCifras cifras={cifrasCanciones()} />
-                </div>
                 <div
                   className="grid gap-1 text-xs uppercase px-2 py-2"
                   style={{

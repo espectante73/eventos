@@ -316,6 +316,15 @@ describe("las canciones, en lista", () => {
     vista.desmontar();
   });
 
+  it("las cifras van en la cabecera de la ventana, como en la Lista; no dentro de lo que se desplaza (v80.5)", () => {
+    const vista = abrir();
+    const cabecera = document.body.querySelector(".modal-flotante-caja [data-extra-ventana]");
+    expect(cabecera.textContent).toContain("Peticiones");
+    expect(cabecera.textContent).toContain("Distintas");
+    expect(document.querySelector("#zona-imprimible").textContent).not.toContain("Peticiones");
+    vista.desmontar();
+  });
+
   it("la que Deezer no encontró sale en rojo y negrita (v80.1)", () => {
     const html = dibujarYSoltar(
       <SeccionInvitados

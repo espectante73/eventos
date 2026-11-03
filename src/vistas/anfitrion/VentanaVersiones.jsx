@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "80.5",
+    cambios: [
+      "«Canciones para bailar»: las cifras (Peticiones · Distintas · Duración) pasan a la cabecera de la ventana, junto al título, como en la Lista de invitados. Antes iban en una franja que se cortaba al desplazar la lista.",
+    ],
+  },
+  {
     version: "80.4",
     cambios: [
       "Canciones: una canción corregida se vuelve a buscar en Deezer aunque solo cambie el artista. Antes «Tu Cariñito — Edwin Rivera», ya bien escrita, seguía como no encontrada y en rojo. Las que estaban como no encontradas se vuelven a buscar al abrir «Repasar».",

@@ -17,7 +17,10 @@ import { realmDe } from "../lib/realm";
 // flotantes. Lo llevan los paneles de la Lista (canciones, alergias,
 // imprimir), que se miran junto a otra ventana. Se mueve con `transform`,
 // que al imprimir se anula (index.css), y nunca sale de la pantalla.
-export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720, movible = false }) {
+// `extra` (v80.5): lo que va en la cabecera a la derecha del título, como en
+// VentanaFlotante (las cifras de «Canciones para bailar», igual que las de la
+// Lista de invitados). Si no cabe, se desliza de lado; la X, siempre a la vista.
+export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720, movible = false, extra }) {
   const hayCuerpo = Children.toArray(children).some((c) => c !== "");
   // Escape, en la ventana donde está este modal (realmDe): dentro de la
   // Lista de invitados es otra ventana del sistema (v80.1).
@@ -135,9 +138,22 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
             {IconoTitulo && <IconoTitulo size={18} style={{ flexShrink: 0 }} aria-hidden />}
             {titulo}
           </h3>
-          <button onClick={onCerrar} title="Cerrar" aria-label="Cerrar" className="boton-3d rounded-full p-1.5" style={{ color: C.goldClaro }}>
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-2 min-w-0">
+            {extra && (
+              <div
+                data-extra-ventana
+                className="min-w-0 overflow-x-auto"
+                style={{ touchAction: "pan-x" }}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+              >
+                {extra}
+              </div>
+            )}
+            <button onClick={onCerrar} title="Cerrar" aria-label="Cerrar" className="boton-3d rounded-full p-1.5 flex-shrink-0" style={{ color: C.goldClaro }}>
+              <X size={18} />
+            </button>
+          </div>
         </div>
         {/* Sin nada dentro (una pregunta sin texto, «¿Descartar los
             cambios?»), sin cuerpo: dejaba una franja vacía (v61.3). */}
