@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "80.2",
+    cambios: [
+      "Las ventanas de la Lista que sirven para imprimir (Canciones para bailar, Alergias y la de Imprimir) ya se mueven arrastrando su cabecera, sin salirse de la pantalla. Al imprimir salen en su sitio.",
+      "«Canciones para bailar» y la de Imprimir: su título iba en verde oscuro sobre la cabecera verde y no se leía; ahora va en dorado, como todas.",
+    ],
+  },
+  {
     version: "80.1",
     cambios: [
       "Dentro de la Lista de invitados (su ventana aparte), las ventanas flotantes no se dejaban mover: ahora se arrastran y se agrandan. También cierra Escape.",

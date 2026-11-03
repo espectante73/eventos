@@ -307,6 +307,15 @@ describe("las canciones, en lista", () => {
     vista.desmontar();
   });
 
+  it("su título se lee: dorado sobre la cabecera verde, no verde sobre verde (v80.2)", () => {
+    const vista = abrir();
+    const titulo = [...document.body.querySelectorAll("h3")].find((h) => h.textContent.startsWith("Canciones para bailar"));
+    const tinta = document.createElement("span");
+    tinta.style.color = C.ink;
+    expect(titulo.style.color).not.toBe(tinta.style.color);
+    vista.desmontar();
+  });
+
   it("la que Deezer no encontró sale en rojo y negrita (v80.1)", () => {
     const html = dibujarYSoltar(
       <SeccionInvitados

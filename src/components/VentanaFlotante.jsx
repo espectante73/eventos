@@ -13,7 +13,11 @@ import { realmDe } from "../lib/realm";
 // formularios y listas; el visor del mapa pide más sitio porque enseña
 // una imagen apaisada (ver MapaSitio.jsx).
 // `iconoTitulo`: un icono delante del título (el triángulo de un aviso, v62).
-export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720 }) {
+// `movible` (él, v80.2): se arrastra por la cabecera, como las ventanas
+// flotantes. Lo llevan los paneles de la Lista (canciones, alergias,
+// imprimir), que se miran junto a otra ventana. Se mueve con `transform`,
+// que al imprimir se anula (index.css), y nunca sale de la pantalla.
+export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720, movible = false }) {
   const hayCuerpo = Children.toArray(children).some((c) => c !== "");
   // Escape, en la ventana donde está este modal (realmDe): dentro de la
   // Lista de invitados es otra ventana del sistema (v80.1).
@@ -34,6 +38,61 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
   // compartido, así queda garantizado por encima de todo lo anterior.
   const [zIndex] = useState(() => ++contadorZIndexVentanas);
 
+  const cajaRef = useRef(null);
+  const [desplazado, setDesplazado] = useState({ x: 0, y: 0 });
+  const arrastre = useRef(null);
+  // Soltar fuera de la caja tras arrastrar no es «tocar fuera»: no cierra.
+  const recienArrastrado = useRef(false);
+  useEffect(() => {
+    if (!movible) return undefined;
+    const { win } = realmDe(fondoRef.current);
+    const mover = (e) => {
+      const a = arrastre.current;
+      if (!a) return;
+      const { clientX, clientY } = e.touches ? e.touches[0] : e;
+      recienArrastrado.current = true;
+      setDesplazado({ x: entre(a.x + clientX - a.raton.x, a.minX, a.maxX), y: entre(a.y + clientY - a.raton.y, a.minY, a.maxY) });
+    };
+    const soltar = () => {
+      arrastre.current = null;
+    };
+    win.addEventListener("mousemove", mover);
+    win.addEventListener("mouseup", soltar);
+    win.addEventListener("touchmove", mover);
+    win.addEventListener("touchend", soltar);
+    return () => {
+      win.removeEventListener("mousemove", mover);
+      win.removeEventListener("mouseup", soltar);
+      win.removeEventListener("touchmove", mover);
+      win.removeEventListener("touchend", soltar);
+    };
+  }, [movible]);
+  const iniciarArrastre = (e) => {
+    if (!movible || e.target.closest("button")) return;
+    // Con el ratón, sin esto se seleccionaría texto al arrastrar.
+    if (!e.touches) e.preventDefault();
+    const { clientX, clientY } = e.touches ? e.touches[0] : e;
+    const r = cajaRef.current.getBoundingClientRect();
+    const { win } = realmDe(cajaRef.current);
+    recienArrastrado.current = false;
+    // Hasta dónde puede ir sin salirse de la pantalla.
+    arrastre.current = {
+      raton: { x: clientX, y: clientY },
+      ...desplazado,
+      minX: desplazado.x + MARGEN_PANTALLA - r.left,
+      maxX: desplazado.x + win.innerWidth - MARGEN_PANTALLA - r.right,
+      minY: desplazado.y + MARGEN_PANTALLA - r.top,
+      maxY: desplazado.y + win.innerHeight - MARGEN_PANTALLA - r.bottom,
+    };
+  };
+  const tocarFuera = () => {
+    if (recienArrastrado.current) {
+      recienArrastrado.current = false;
+      return;
+    }
+    onCerrar();
+  };
+
   return (
     <div
       ref={fondoRef}
@@ -48,9 +107,10 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
       // #zona-imprimible en index.css).
       className="fixed inset-0 flex items-center justify-center p-4 modal-flotante-fondo"
       style={{ ...VELO, zIndex }}
-      onClick={onCerrar}
+      onClick={tocarFuera}
     >
       <div
+        ref={cajaRef}
         className="rounded-lg w-full flex flex-col modal-flotante-caja"
         style={{
           background: C.paper,
@@ -58,12 +118,15 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
           maxWidth: ancho,
           maxHeight: "88vh",
           boxShadow: S.flotanteOscura,
+          transform: desplazado.x || desplazado.y ? `translate(${desplazado.x}px, ${desplazado.y}px)` : undefined,
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="panel-flotante-cristal flex items-center justify-between px-4 py-3 rounded-t-lg"
+          className={`panel-flotante-cristal flex items-center justify-between px-4 py-3 rounded-t-lg${movible ? " cursor-move select-none" : ""}`}
           style={{ borderBottom: "none" }}
+          onMouseDown={movible ? iniciarArrastre : undefined}
+          onTouchStart={movible ? iniciarArrastre : undefined}
         >
           <h3
             className="text-lg flex items-center gap-2"

@@ -1937,8 +1937,11 @@ export function SeccionInvitados({
               : `Alergias — ${evento.nombre || "Evento"}`
           }
           iconoTitulo={panelFlotante === "alergias" ? AlertTriangle : undefined}
-          colorTitulo={panelFlotante === "alergias" ? C.wax : C.ink}
+          // El dorado de todas las cabeceras: en verde oscuro (C.ink) sobre
+          // la cabecera verde no se leía (él, v80.2: «no tiene nombre»).
+          colorTitulo={panelFlotante === "alergias" ? C.wax : undefined}
           onCerrar={() => setPanelFlotante(null)}
+          movible
           acciones={
             <>
               <Boton variante="principal" onClick={imprimirPanelActivo}>

@@ -166,3 +166,34 @@ it("dentro de otra ventana del sistema, se arrastra con el ratón de ESA ventana
   marco.remove();
   contenedor.remove();
 });
+
+// v80.2 (él): la ventana de «Canciones para bailar» (un ModalFlotante) no
+// se movía. Con `movible`, se arrastra por la cabecera; soltar fuera tras
+// arrastrar no la cierra.
+it("un modal `movible` se arrastra por la cabecera, y soltarlo fuera no lo cierra", async () => {
+  const { montar } = await import("../pruebas/dibujar");
+  let cerrado = 0;
+  const vista = montar(
+    <ModalFlotante titulo="Canciones" movible onCerrar={() => (cerrado += 1)}>
+      Algo
+    </ModalFlotante>
+  );
+  const caja = document.querySelector(".modal-flotante-caja");
+  const raton = (el, tipo, x, y) => act(() => el.dispatchEvent(new MouseEvent(tipo, { bubbles: true, cancelable: true, clientX: x, clientY: y })));
+  raton(document.querySelector(".modal-flotante-caja .cursor-move"), "mousedown", 120, 110);
+  raton(window, "mousemove", 170, 140);
+  raton(window, "mouseup", 170, 140);
+  expect(caja.style.transform).toBe("translate(50px, 30px)");
+  act(() => document.querySelector(".modal-flotante-fondo").click());
+  expect(cerrado).toBe(0);
+  act(() => document.querySelector(".modal-flotante-fondo").click());
+  expect(cerrado).toBe(1);
+  vista.desmontar();
+});
+
+it("sin `movible`, la cabecera no arrastra", async () => {
+  const { montar } = await import("../pruebas/dibujar");
+  const vista = montar(<ModalFlotante titulo="Pregunta" onCerrar={() => {}}>Algo</ModalFlotante>);
+  expect(document.querySelector(".modal-flotante-caja .cursor-move")).toBe(null);
+  vista.desmontar();
+});
