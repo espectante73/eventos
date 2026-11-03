@@ -307,6 +307,24 @@ describe("las canciones, en lista", () => {
     vista.desmontar();
   });
 
+  it("la que Deezer no encontró sale en rojo y negrita (v80.1)", () => {
+    const html = dibujarYSoltar(
+      <SeccionInvitados
+        data={{ ...conCanciones, evento: { ...evento, catalogoCanciones: { labamba: { noEncontrada: true } } } }}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante="canciones"
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+    expect(html).toMatch(/title="Deezer no la encuentra: tócala para corregirla"[^>]*>La bamba — Ritchie Valens/);
+  });
+
   it("tocando «Edad», de mayor a menor; otra vez, de menor a mayor", async () => {
     const vista = abrir();
     const edad = () => [...document.body.querySelectorAll("#zona-imprimible button")].find((b) => b.textContent.startsWith("Edad"));

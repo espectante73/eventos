@@ -4,14 +4,19 @@
 // escrita: canción y cantante, cada uno en su hueco. Él marca lo que se
 // aplica, y se corrige en todas las fichas que la pidieron. Mismo modelo que
 // «Importar teléfonos». Las reglas, en lib/repasoCanciones.js.
-import { useEffect, useState } from "react";
-import { Check } from "lucide-react";
+//
+// Desde aquí también se corrige a mano (el lápiz de cada fila, v80.1): la
+// que Deezer no encontró o cuya propuesta no sirve, en todas sus
+// peticiones. Escrita de otra forma, se vuelve a buscar sola.
+import { useEffect, useRef, useState } from "react";
+import { Check, Pencil } from "lucide-react";
 import { C, OP, R, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { FilaMarcable as Fila } from "../../components/FilaMarcable";
+import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
 import { cancionesPedidas } from "../../lib/canciones";
 import { cancionesDistintas, sinBuscar, consultaDe, conResultados, repasoCanciones, aplicarRepaso, minutosYSegundos, POR_TANDA } from "../../lib/repasoCanciones";
 
@@ -22,8 +27,10 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
   const catalogo = evento?.catalogoCanciones || {};
   const distintas = cancionesDistintas(cancionesPedidas(invitados, () => null));
   const repaso = repasoCanciones(distintas, catalogo);
-  // Lo que se busca al abrir: { hechas, total } mientras dura.
+  // Lo que se está buscando: { hechas, total } mientras dura.
   const [busqueda, setBusqueda] = useState(null);
+  // La canción que se corrige a mano: su clave.
+  const [corrigiendo, setCorrigiendo] = useState(null);
   const [error, setError] = useState("");
   // Lo que él cambia a mano; si no, una propuesta nueva va marcada y una
   // que ya descartó, no.
@@ -31,29 +38,45 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
   const [abierto, setAbierto] = useState("proponer");
   const [hecho, setHecho] = useState("");
 
+  // Busca lo que falte: al abrir y cada vez que aparece una canción nueva
+  // (una corregida a mano es otra canción). Lee siempre lo último (`ahora`),
+  // y cada canción se intenta una vez por ventana: si Deezer falló, se
+  // vuelve a intentar al abrirla otra vez.
+  const ahora = useRef({});
+  ahora.current = { distintas, catalogo };
+  const buscando = useRef(false);
+  const intentadas = useRef(new Set());
+  const viva = useRef(true);
   useEffect(() => {
-    let viva = true;
-    const pendientes = sinBuscar(distintas, catalogo);
-    if (!pendientes.length) return undefined;
+    viva.current = true;
+    return () => {
+      viva.current = false;
+    };
+  }, []);
+  const pendientes = () => sinBuscar(ahora.current.distintas, ahora.current.catalogo).filter((d) => !intentadas.current.has(d.clave));
+  const clavesPendientes = pendientes()
+    .map((d) => d.clave)
+    .join("|");
+  useEffect(() => {
+    if (!clavesPendientes || buscando.current) return;
+    buscando.current = true;
     (async () => {
-      setBusqueda({ hechas: 0, total: pendientes.length });
-      for (let i = 0; i < pendientes.length && viva; i += POR_TANDA) {
-        const tanda = pendientes.slice(i, i + POR_TANDA);
+      let hechas = 0;
+      for (let tanda = pendientes().slice(0, POR_TANDA); tanda.length && viva.current; tanda = pendientes().slice(0, POR_TANDA)) {
+        setBusqueda({ hechas, total: hechas + pendientes().length });
+        tanda.forEach((d) => intentadas.current.add(d.clave));
         const r = await buscarCanciones(tanda.map((d) => consultaDe(d.cancion)));
         if (r.error) {
-          if (viva) setError(`No se pudo preguntar a Deezer: ${r.error} Vuelve a abrir esta ventana para seguir donde se quedó.`);
+          if (viva.current) setError(`No se pudo preguntar a Deezer: ${r.error} Vuelve a abrir esta ventana para seguir donde se quedó.`);
           break;
         }
         await actualizarCatalogoCanciones((c) => conResultados(c, tanda.map((d) => d.clave), r.resultados));
-        if (viva) setBusqueda({ hechas: i + tanda.length, total: pendientes.length });
+        hechas += tanda.length;
       }
-      if (viva) setBusqueda(null);
+      buscando.current = false;
+      if (viva.current) setBusqueda(null);
     })();
-    return () => {
-      viva = false;
-    };
-    // Una vez, al abrir: las que vayan apareciendo se buscan la próxima vez.
-  }, []);
+  }, [clavesPendientes]);
 
   const marcada = (p) => marcas[p.clave] ?? !p.descartada;
   const cuantas = repaso.proponer.filter(marcada).length;
@@ -68,7 +91,13 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
     setHecho(aviso);
   };
 
-  const duracion = (segundos) => <span style={DURACION}>{segundos ? minutosYSegundos(segundos) : "—"}</span>;
+  // Al final de cada fila: su duración y el lápiz para escribirla a mano.
+  const final = (clave, segundos) => (
+    <>
+      {segundos !== undefined && <span style={DURACION}>{segundos ? minutosYSegundos(segundos) : "—"}</span>}
+      <Boton variante="secundario" tamano="pequeno" icono={Pencil} titulo="Corregir a mano" onClick={() => setCorrigiendo(clave)} />
+    </>
+  );
   const apartado = (id, titulo, filas, ayuda) => (
     <SeccionPlegable sencilla titulo={titulo} resumen={String(filas.length)} abierta={abierto === id} onAlternar={() => setAbierto((a) => (a === id ? null : id))}>
       {ayuda && (
@@ -81,6 +110,7 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
   );
 
   return (
+    <>
     <VentanaFlotante clave="repasarCanciones" titulo="Repasar canciones" onCerrar={onCerrar} ancho="min(440px, calc(100vw - 48px))">
       <div className="space-y-2">
         <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
@@ -92,7 +122,7 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
           "Para corregir",
           repaso.proponer.map((p, i) => (
             <Fila key={p.clave} i={i} nombre={p.propuesta} nota={`escrita «${p.cancion}»`} marcada={marcada(p)} onMarcar={(si) => setMarcas((m) => ({ ...m, [p.clave]: si }))}>
-              {duracion(p.duracion)}
+              {final(p.clave, p.duracion)}
             </Fila>
           )),
           "Como la tiene Deezer. Marca las que quieras corregir: se cambian en todas las fichas que la pidieron."
@@ -102,15 +132,19 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
           "Bien escritas",
           repaso.bien.map((b, i) => (
             <Fila key={b.clave} i={i} nombre={b.cancion}>
-              {duracion(b.duracion)}
+              {final(b.clave, b.duracion)}
             </Fila>
           ))
         )}
         {apartado(
           "noEncontradas",
           "No encontradas",
-          repaso.noEncontradas.map((n, i) => <Fila key={n.clave} i={i} nombre={n.cancion} />),
-          "Corrígelas tocándolas en «Canciones para bailar»: escritas de otra forma, se vuelven a buscar."
+          repaso.noEncontradas.map((n, i) => (
+            <Fila key={n.clave} i={i} nombre={n.cancion}>
+              {final(n.clave)}
+            </Fila>
+          )),
+          "Corrígelas con el lápiz: escritas de otra forma, se vuelven a buscar. En la lista salen en rojo."
         )}
 
         {hecho && (
@@ -129,5 +163,9 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
         </div>
       </div>
     </VentanaFlotante>
+    {/* Fuera de esta ventana, no dentro: una flotante dentro de otra queda
+        recortada por ella. */}
+    {corrigiendo && <VentanaCorregirCancion data={data} peticion={{ clave: corrigiendo }} onCerrar={() => setCorrigiendo(null)} />}
+    </>
   );
 }

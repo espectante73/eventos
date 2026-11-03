@@ -16,6 +16,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { C, R, OP, S, T, DORADO, VELO, DEDO, MARGEN_PANTALLA, conAlfa } from "../theme";
 import { esZurdo } from "../lib/mano";
+import { realmDe } from "../lib/realm";
 import { Seal } from "./Widgets";
 
 // Altura mínima aunque haya poco hueco (por debajo de esto, mejor dejar
@@ -70,22 +71,7 @@ export const ANCHO_FILA_MENU = ANCHO_PANEL - 12;
 // de la lista — quedaban fuera de la ventana sin forma de llegar a
 // ellas). `ancladoY` es el borde fijo del panel (de dónde "cuelga");
 // `creceHaciaArriba` indica hacia qué lado se extiende el resto.
-// ⚠️ De qué VENTANA es este menú. Fallo real (2026-09-05): al llevar la
-// Lista de invitados a una ventana propia del sistema, el botón
-// "Acciones" dejó de hacer nada -- el panel se pintaba con un portal a
-// `document.body`, y ese `document` es el de la PESTAÑA PRINCIPAL, no el
-// de la ventana emergente, así que aparecía en la otra ventana, detrás.
-// Igual con `window.innerWidth/innerHeight` (medidas de la pantalla
-// equivocada) y con los escuchadores para cerrar al tocar fuera.
-//
-// En vez de pasar la ventana como prop por toda la app, se deduce del
-// propio nodo al que se ancla el menú: `ownerDocument` siempre es el
-// documento donde ESE nodo vive. Así funciona en cualquier ventana sin
-// que quien lo use tenga que enterarse.
-function realmDe(nodo) {
-  const doc = nodo?.ownerDocument || document;
-  return { doc, win: doc.defaultView || window };
-}
+// ⚠️ De qué VENTANA es este menú: realmDe (lib/realm.js).
 
 // El panel persistente (Acciones): todo el alto de la ventana, menos los
 // márgenes. Si aun así no caben sus botones, se desplazan con el dedo.

@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "80.1",
+    cambios: [
+      "Dentro de la Lista de invitados (su ventana aparte), las ventanas flotantes no se dejaban mover: ahora se arrastran y se agrandan. También cierra Escape.",
+      "«Repasar canciones»: cada fila lleva un lápiz para escribirla a mano, en todas sus peticiones a la vez; la corregida se vuelve a buscar en Deezer sola.",
+      "En «Canciones para bailar», las que Deezer no encuentra salen en rojo y negrita.",
+    ],
+  },
+  {
     version: "80",
     cambios: [
       "«Canciones para bailar», arriba, sus cifras: Peticiones · Distintas · Duración de todas juntas.",

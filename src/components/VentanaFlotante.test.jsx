@@ -141,3 +141,28 @@ it("agrandarla o moverla no la mete en la franja de abajo, la de la barra y el s
   document.documentElement.style.removeProperty("--hueco-barra-ventanas");
   vista.desmontar();
 });
+
+// v80.1 (él): dentro de la Lista de invitados, que es OTRA ventana del
+// sistema, las ventanas flotantes no se dejaban arrastrar: escuchaban el
+// ratón en la ventana principal. Aquí la «otra ventana» es un iframe.
+it("dentro de otra ventana del sistema, se arrastra con el ratón de ESA ventana", async () => {
+  const { createPortal } = await import("react-dom");
+  const marco = document.createElement("iframe");
+  document.body.appendChild(marco);
+  const otra = marco.contentWindow;
+  const destino = otra.document.body;
+  const contenedor = document.createElement("div");
+  document.body.appendChild(contenedor);
+  const raiz = createRoot(contenedor);
+  act(() => raiz.render(createPortal(<VentanaFlotante titulo="Ventana" onCerrar={() => {}}>Algo</VentanaFlotante>, destino)));
+  const ventana = destino.querySelector(".fixed.rounded-lg");
+  const raton = (el, tipo, x, y) => act(() => el.dispatchEvent(new otra.MouseEvent(tipo, { bubbles: true, cancelable: true, clientX: x, clientY: y })));
+  const izquierdaAntes = ventana.style.left;
+  raton(destino.querySelector(".cursor-move"), "mousedown", 120, 120);
+  raton(otra, "mousemove", 300, 260);
+  raton(otra, "mouseup", 300, 260);
+  expect(ventana.style.left).not.toBe(izquierdaAntes);
+  act(() => raiz.unmount());
+  marco.remove();
+  contenedor.remove();
+});

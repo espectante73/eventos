@@ -5,6 +5,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, Children } from "react";
 import { X } from "lucide-react";
 import { C, S, VELO, MARGEN_PANTALLA } from "../theme";
+import { realmDe } from "../lib/realm";
 
 // Ventana flotante genérica: independiente de qué secciones estén plegadas,
 // para que Imprimir/Canciones/Alergias y los avisos de mesas funcionen siempre.
@@ -14,12 +15,16 @@ import { C, S, VELO, MARGEN_PANTALLA } from "../theme";
 // `iconoTitulo`: un icono delante del título (el triángulo de un aviso, v62).
 export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720 }) {
   const hayCuerpo = Children.toArray(children).some((c) => c !== "");
+  // Escape, en la ventana donde está este modal (realmDe): dentro de la
+  // Lista de invitados es otra ventana del sistema (v80.1).
+  const fondoRef = useRef(null);
   useEffect(() => {
+    const { win } = realmDe(fondoRef.current);
     const onKey = (e) => {
       if (e.key === "Escape") onCerrar();
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    win.addEventListener("keydown", onKey);
+    return () => win.removeEventListener("keydown", onKey);
   }, [onCerrar]);
 
   // Un modal de verdad (con fondo oscurecido) tiene que quedar SIEMPRE por
@@ -31,6 +36,7 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
 
   return (
     <div
+      ref={fondoRef}
       // "modal-flotante-fondo"/"-caja"/"-cuerpo": sin efecto en pantalla
       // (son ganchos vacíos), solo existen para poder neutralizar estas
       // tres cajas durante la impresión -- ver @media print en
@@ -222,12 +228,16 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
   const arrastre = useRef(null);
   const redimension = useRef(null);
 
+  // El ratón, el teclado y las medidas, los de la ventana donde está ESTA
+  // (realmDe): dentro de la Lista de invitados, que es otra ventana del
+  // sistema, escuchando en la principal no se dejaba arrastrar (v80.1).
   useEffect(() => {
+    const { win } = realmDe(ventanaRef.current);
     const onKey = (e) => {
       if (e.key === "Escape") onCerrar();
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    win.addEventListener("keydown", onKey);
+    return () => win.removeEventListener("keydown", onKey);
   }, [onCerrar]);
 
   // Nunca fuera de la pantalla (él, v71.9: al agrandarla se salía, su
@@ -235,21 +245,22 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
   // Acciones (MenuFlotante): a MARGEN_PANTALLA del borde, al moverla, al
   // agrandarla y al cambiar el tamaño del navegador.
   useEffect(() => {
+    const { win } = realmDe(ventanaRef.current);
     const coords = (e) => (e.touches ? e.touches[0] : e);
     const mover = (e) => {
       const { clientX, clientY } = coords(e);
-      const abajo = window.innerHeight - huecoAbajo() - MARGEN_PANTALLA;
+      const abajo = win.innerHeight - huecoAbajo() - MARGEN_PANTALLA;
       if (arrastre.current) {
         const { width, height } = ventanaRef.current.getBoundingClientRect();
         setPos({
-          left: entre(clientX - arrastre.current.dx, MARGEN_PANTALLA, window.innerWidth - width - MARGEN_PANTALLA),
+          left: entre(clientX - arrastre.current.dx, MARGEN_PANTALLA, win.innerWidth - width - MARGEN_PANTALLA),
           top: entre(clientY - arrastre.current.dy, MARGEN_PANTALLA, abajo - height),
         });
       }
       const r = redimension.current;
       if (r) {
         setTam({
-          width: entre(r.anchoInicial + (clientX - r.x), ANCHO_MINIMO, window.innerWidth - r.left - MARGEN_PANTALLA),
+          width: entre(r.anchoInicial + (clientX - r.x), ANCHO_MINIMO, win.innerWidth - r.left - MARGEN_PANTALLA),
           height: entre(r.altoInicial + (clientY - r.y), ALTO_MINIMO, abajo - r.top),
         });
       }
@@ -260,28 +271,28 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
     };
     // El navegador más pequeño: la ventana se encoge y se recoloca dentro.
     const alCambiarPantalla = () => {
-      const maxAncho = window.innerWidth - 2 * MARGEN_PANTALLA;
-      const maxAlto = window.innerHeight - 2 * MARGEN_PANTALLA - huecoAbajo();
+      const maxAncho = win.innerWidth - 2 * MARGEN_PANTALLA;
+      const maxAlto = win.innerHeight - 2 * MARGEN_PANTALLA - huecoAbajo();
       setTam((t) => t && { width: Math.min(t.width, maxAncho), height: Math.min(t.height, maxAlto) });
       const el = ventanaRef.current;
       if (!el) return;
       const { width, height } = el.getBoundingClientRect();
       setPos((p) => ({
-        left: entre(p.left, MARGEN_PANTALLA, window.innerWidth - Math.min(width, maxAncho) - MARGEN_PANTALLA),
-        top: entre(p.top, MARGEN_PANTALLA, window.innerHeight - huecoAbajo() - Math.min(height, maxAlto) - MARGEN_PANTALLA),
+        left: entre(p.left, MARGEN_PANTALLA, win.innerWidth - Math.min(width, maxAncho) - MARGEN_PANTALLA),
+        top: entre(p.top, MARGEN_PANTALLA, win.innerHeight - huecoAbajo() - Math.min(height, maxAlto) - MARGEN_PANTALLA),
       }));
     };
-    window.addEventListener("mousemove", mover);
-    window.addEventListener("mouseup", soltar);
-    window.addEventListener("touchmove", mover);
-    window.addEventListener("touchend", soltar);
-    window.addEventListener("resize", alCambiarPantalla);
+    win.addEventListener("mousemove", mover);
+    win.addEventListener("mouseup", soltar);
+    win.addEventListener("touchmove", mover);
+    win.addEventListener("touchend", soltar);
+    win.addEventListener("resize", alCambiarPantalla);
     return () => {
-      window.removeEventListener("mousemove", mover);
-      window.removeEventListener("mouseup", soltar);
-      window.removeEventListener("touchmove", mover);
-      window.removeEventListener("touchend", soltar);
-      window.removeEventListener("resize", alCambiarPantalla);
+      win.removeEventListener("mousemove", mover);
+      win.removeEventListener("mouseup", soltar);
+      win.removeEventListener("touchmove", mover);
+      win.removeEventListener("touchend", soltar);
+      win.removeEventListener("resize", alCambiarPantalla);
     };
   }, []);
 

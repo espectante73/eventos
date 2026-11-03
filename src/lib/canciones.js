@@ -124,3 +124,24 @@ export function corregirCancion(invitados, invitadoId, hueco, { titulo = "", art
   const cancion = textoDeHuecos(huecos.map((h, i) => (i === hueco ? { titulo: t, artista: a } : h)));
   return { invitados: invitados.map((x) => (x.id === invitadoId ? { ...x, cancion } : x)), aviso: "" };
 }
+
+// La misma corrección en TODAS las peticiones de esa canción (v80.1), desde
+// «Repasar canciones»: las que Deezer no encontró, o cuya propuesta no
+// sirve, se escriben a mano una vez.
+export function corregirCancionEnTodas(invitados, clave, { titulo = "", artista = "" }) {
+  const t = titulo.trim();
+  const a = artista.trim();
+  if (!t && !a) return { invitados, aviso: "Escribe la canción o el artista." };
+  let cambiadas = 0;
+  const siguientes = invitados.map((g) => {
+    let tocada = false;
+    const huecos = huecosCanciones(g.cancion).map((h) => {
+      if (claveCancion(h.titulo.trim(), h.artista.trim()) !== clave || (h.titulo === t && h.artista === a)) return h;
+      tocada = true;
+      cambiadas += 1;
+      return { titulo: t, artista: a };
+    });
+    return tocada ? { ...g, cancion: textoDeHuecos(huecos) } : g;
+  });
+  return { invitados: cambiadas ? siguientes : invitados, aviso: "" };
+}

@@ -3,6 +3,9 @@
 // del formulario (Canción y Artista, en la misma línea: norma 6). Se guarda
 // en su ficha, también si ya pagó (la ficha cerrada lo es para el
 // colaborador, no para el anfitrión). La regla, en lib/canciones.js.
+//
+// `peticion`: { invitadoId, hueco } corrige esa línea; { clave } (desde
+// «Repasar canciones», v80.1), todas las peticiones de esa canción.
 import { useState } from "react";
 import { C, DEDO, OP } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
@@ -11,19 +14,24 @@ import { Boton } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
 import { nombreCompleto } from "../../lib/formato";
 import { calcularEdad } from "../../lib/invitados";
-import { huecosCanciones, corregirCancion } from "../../lib/canciones";
+import { huecosCanciones, cancionesPedidas, corregirCancion, corregirCancionEnTodas } from "../../lib/canciones";
 
 export function VentanaCorregirCancion({ data, peticion, onCerrar }) {
   const { invitados, evento, persistInvitados } = data;
-  const g = invitados.find((x) => x.id === peticion.invitadoId);
-  const inicial = huecosCanciones(g?.cancion)[peticion.hueco];
+  const enTodas = Boolean(peticion.clave);
+  const pedidas = enTodas ? cancionesPedidas(invitados, () => null).filter((f) => f.clave === peticion.clave) : [];
+  const { invitadoId, hueco } = enTodas ? pedidas[0] || {} : peticion;
+  const g = invitados.find((x) => x.id === invitadoId);
+  const inicial = huecosCanciones(g?.cancion)[hueco ?? 0];
   const [titulo, setTitulo] = useState(inicial.titulo);
   const [artista, setArtista] = useState(inicial.artista);
   const [aviso, setAviso] = useState("");
   const edad = g ? calcularEdad(g.anioNacimiento, evento) : null;
 
   const guardar = () => {
-    const { invitados: siguiente, aviso: motivo } = corregirCancion(invitados, peticion.invitadoId, peticion.hueco, { titulo, artista });
+    const { invitados: siguiente, aviso: motivo } = enTodas
+      ? corregirCancionEnTodas(invitados, peticion.clave, { titulo, artista })
+      : corregirCancion(invitados, invitadoId, hueco, { titulo, artista });
     setAviso(motivo);
     if (motivo) return;
     if (siguiente !== invitados) persistInvitados(siguiente);
@@ -33,11 +41,17 @@ export function VentanaCorregirCancion({ data, peticion, onCerrar }) {
   return (
     <VentanaFlotante clave="corregirCancion" titulo="Corregir canción" onCerrar={onCerrar} ancho="min(440px, calc(100vw - 48px))">
       <div className="space-y-3">
-        {g && (
+        {enTodas ? (
           <p className="text-sm truncate" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            Pedida por {nombreCompleto(g)}
-            {edad != null && ` (${edad})`}
+            {pedidas.length === 1 ? "Pedida 1 vez" : `Pedida ${pedidas.length} veces: se corrige en todas`}
           </p>
+        ) : (
+          g && (
+            <p className="text-sm truncate" style={{ color: C.charcoal, opacity: OP.secundario }}>
+              Pedida por {nombreCompleto(g)}
+              {edad != null && ` (${edad})`}
+            </p>
+          )
         )}
         <div className="flex items-center gap-2">
           <TextInput value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Canción" aria-label="Canción" className="flex-1 min-w-0" />

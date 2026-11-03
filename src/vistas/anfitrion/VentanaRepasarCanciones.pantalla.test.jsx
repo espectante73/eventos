@@ -15,6 +15,7 @@ const DEEZER = {
   "Una Chica YE-YE Concha Velasco": { pista: { titulo: "Chica Ye-Ye", artista: "Conchita Velasco", duracion: 143 } },
   "Mi jaca Estrellita Castro": { pista: { titulo: "Mi jaca", artista: "Estrellita Castro", duracion: 211 } },
   "Canción inventada": { pista: null },
+  "Chica yeye Conchita Velasco": { pista: { titulo: "Chica Ye-Ye", artista: "Conchita Velasco", duracion: 143 } },
 };
 
 // Como la app: el evento y los invitados viven arriba y la ventana los recibe.
@@ -59,5 +60,33 @@ it("busca lo que falta, propone separar canción y cantante, y al corregir cambi
     "Canción inventada",
   ]);
   expect(document.body.textContent).toContain("Corregidas 2 peticiones.");
+  vista.desmontar();
+});
+
+// v80.1 (él): «en la ventana de primer plano no me deja editar».
+it("la que Deezer no encontró se corrige con el lápiz, en todas sus peticiones, y se vuelve a buscar sola", async () => {
+  const espias = { persistInvitados: vi.fn(), buscarCanciones: vi.fn() };
+  let vista;
+  await act(async () => {
+    vista = montar(<Arnes espias={espias} />);
+  });
+  const botones = () => [...document.body.querySelectorAll("button")];
+  // Abrir «No encontradas» y su lápiz.
+  await act(async () => botones().find((b) => b.textContent.includes("No encontradas")).dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  const fila = [...document.body.querySelectorAll("label")].find((l) => l.textContent.includes("Canción inventada"));
+  await act(async () => fila.querySelector('button[title="Corregir a mano"]').dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  expect(document.body.textContent).toContain("Pedida 1 vez");
+  const escribir = async (etiqueta, valor) => {
+    const campo = document.body.querySelector(`input[aria-label="${etiqueta}"]`);
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(campo, valor);
+      campo.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  };
+  await escribir("Canción", "Chica yeye");
+  await escribir("Artista", "Conchita Velasco");
+  await act(async () => botones().find((b) => b.textContent === "Guardar").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  expect(espias.persistInvitados.mock.calls[0][0].find((g) => g.id === "c").cancion).toBe("Chica yeye — Conchita Velasco");
+  expect(espias.buscarCanciones).toHaveBeenLastCalledWith(["Chica yeye Conchita Velasco"]);
   vista.desmontar();
 });

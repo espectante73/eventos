@@ -2082,10 +2082,13 @@ export function SeccionInvitados({
                     <span className="text-center whitespace-nowrap" style={{ color: C.gold }}>
                       {estrellas(f.veces)}
                     </span>
+                    {/* La que Deezer no encontró, en rojo y negrita (él, v80.1):
+                        para saber cuáles corregir sin tener «Repasar» abierta. */}
                     <button
                       onClick={() => setCancionACorregir({ invitadoId: f.invitadoId, hueco: f.hueco })}
                       className="boton-3d rounded px-2 py-1 text-left truncate min-w-0"
-                      title="Corregir cómo está escrita"
+                      style={evento.catalogoCanciones?.[f.clave]?.noEncontrada ? { color: C.peligro, fontWeight: 600 } : undefined}
+                      title={evento.catalogoCanciones?.[f.clave]?.noEncontrada ? "Deezer no la encuentra: tócala para corregirla" : "Corregir cómo está escrita"}
                     >
                       {f.cancion}
                     </button>

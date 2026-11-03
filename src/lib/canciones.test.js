@@ -11,6 +11,7 @@ import {
   tocarOrdenCanciones,
   ORDEN_CANCIONES_INICIAL,
   corregirCancion,
+  corregirCancionEnTodas,
 } from "./canciones";
 
 describe("hasta 3 canciones, con título y artista (v69)", () => {
@@ -140,5 +141,24 @@ describe("corregir cómo se escribió una canción (v79.6)", () => {
   it("vacía no se guarda, y sin cambios no toca la lista", () => {
     expect(corregirCancion(invitados, "a", 0, { titulo: " ", artista: "" })).toEqual({ invitados, aviso: "Escribe la canción o el artista." });
     expect(corregirCancion(invitados, "a", 0, { titulo: "Chica yeye", artista: "Conchita Velasco" }).invitados).toBe(invitados);
+  });
+});
+
+describe("corregir una canción en todas sus peticiones (v80.1)", () => {
+  const invitados = [
+    { id: "a", cancion: "Una chica yeye — Concha Velasco" },
+    { id: "b", cancion: "Bailando\n\nUNA CHICA YE-YE" },
+    { id: "c", cancion: "Bailando" },
+  ];
+
+  it("cambia todas las que son esa canción, y nada más", () => {
+    const { invitados: siguientes, aviso } = corregirCancionEnTodas(invitados, "unachicayeye", { titulo: "Chica yeye ", artista: "Conchita Velasco" });
+    expect(aviso).toBe("");
+    expect(siguientes.map((g) => g.cancion)).toEqual(["Chica yeye — Conchita Velasco", "Bailando\n\nChica yeye — Conchita Velasco", "Bailando"]);
+    expect(siguientes[2]).toBe(invitados[2]);
+  });
+
+  it("vacía no se guarda", () => {
+    expect(corregirCancionEnTodas(invitados, "unachicayeye", { titulo: "", artista: " " })).toEqual({ invitados, aviso: "Escribe la canción o el artista." });
   });
 });
