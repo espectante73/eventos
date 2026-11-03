@@ -1334,6 +1334,24 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     },
     [esAnfitrion, rol]
   );
+  // «Compartir con el DJ» (v81): el enlace y la clave del DJ. Devuelven
+  // { dj } (null si no se comparte) o { error }.
+  const leerDj = useCallback(async () => {
+    const { data: dj, error } = await supabase.rpc("anfitrion_dj", { p_token: rol });
+    return error ? { error: error.message } : { dj };
+  }, [rol]);
+  const compartirDj = useCallback(
+    async (nombre) => {
+      const { data: dj, error } = await supabase.rpc("anfitrion_dj_compartir", { p_token: rol, p_nombre: nombre });
+      return error ? { error: error.message } : { dj };
+    },
+    [rol]
+  );
+  const dejarDj = useCallback(async () => {
+    const { error } = await supabase.rpc("anfitrion_dj_dejar", { p_token: rol });
+    return error ? { error: error.message } : { dj: null };
+  }, [rol]);
+
   // El catálogo de canciones (v80), sobre lo ÚLTIMO del evento: el repaso
   // guarda tanda a tanda y no debe pisar nada más (persistEvento manda solo
   // lo cambiado).
@@ -1584,6 +1602,9 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     avisarAlEquipo,
     buscarCanciones,
     actualizarCatalogoCanciones,
+    leerDj,
+    compartirDj,
+    dejarDj,
     obtenerHistorialTexto,
     obtenerFotosFiesta,
     obtenerFamilia,

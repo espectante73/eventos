@@ -12,6 +12,8 @@ import {
   textoDuracion,
   minutosYSegundos,
   buscarEnDeezer,
+  enlaceDeezer,
+  filasAppleMusic,
   DURACION_ESTIMADA,
 } from "./repasoCanciones";
 
@@ -117,5 +119,27 @@ describe("escrita de otra forma, se vuelve a buscar aunque su clave no cambie", 
   it("lo apuntado antes de esta versión: lo encontrado vale; lo no encontrado se busca otra vez", () => {
     expect(sinBuscar([antes], { tucarinito: { titulo: "Tu Cariñito", artista: "Elvis Crespo", duracion: 200 } })).toEqual([]);
     expect(sinBuscar([antes], { tucarinito: { noEncontrada: true } })).toEqual([antes]);
+  });
+});
+
+describe("para el DJ y para Apple Music (v81)", () => {
+  it("su ficha de Deezer si se encontró; si no, la búsqueda", () => {
+    const d = { clave: "despacito", cancion: "Despacito — Luis Fonsi" };
+    expect(enlaceDeezer(d, { despacito: { titulo: "Despacito", artista: "Luis Fonsi", duracion: 228, deezer: 3135556 } })).toBe("https://www.deezer.com/track/3135556");
+    expect(enlaceDeezer(d, {})).toBe("https://www.deezer.com/search/Despacito%20Luis%20Fonsi");
+  });
+
+  it("el buscador guarda su número de Deezer", () => {
+    const c = conResultados({}, [{ clave: "x", cancion: "X" }], [{ pista: { titulo: "X", artista: "A", duracion: 1, deezer: 9 } }]);
+    expect(c.x.deezer).toBe(9);
+  });
+
+  it("Apple Music: cada canción una vez, canción y artista aparte (como en Deezer si se encontró)", () => {
+    expect(filasAppleMusic(distintas, catalogo)).toEqual([
+      ["Chica Ye-Ye", "Conchita Velasco"],
+      ["Mi jaca", "Estrellita Castro"],
+      ["Despacito", "Luis Fonsi"],
+      ["Canción inventada", ""],
+    ]);
   });
 });

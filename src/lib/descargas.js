@@ -4,12 +4,14 @@
 // de React — movida fuera de App.jsx en el reparto del 2026-08-08 (ver
 // CLAUDE.md).
 
-export function descargarCSV(nombreArchivo, cabeceras, filas) {
+// `separador`: «;» para Excel en español; «,» para otras webs (el de Apple
+// Music por TuneMyMusic, v81).
+export function descargarCSV(nombreArchivo, cabeceras, filas, separador = ";") {
   const escapar = (v) => {
     const s = String(v ?? "");
-    return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    return s.includes(separador) || /["\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
-  const lineas = [cabeceras, ...filas].map((fila) => fila.map(escapar).join(";"));
+  const lineas = [cabeceras, ...filas].map((fila) => fila.map(escapar).join(separador));
   const csv = "﻿" + lineas.join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);

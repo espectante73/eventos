@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { LogOut } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase, supabaseConfigurado } from "./supabaseClient";
-import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl } from "./lib/url";
+import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl, getTokenDjFromUrl } from "./lib/url";
 import { esVistaMusica, esVistaPantalla } from "./lib/ventanaMusica";
 import { PERMISOS, tienePermiso } from "./lib/permisos";
 import { C, OP, S, conAlfa } from "./theme";
@@ -14,6 +14,7 @@ import { VentanaEquipo } from "./vistas/VentanaEquipo";
 import { esFalloDelServidor } from "./lib/servidor";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
 import { VistaTablon } from "./vistas/VistaTablon";
+import { VistaDj } from "./vistas/VistaDj";
 
 // Las dos vistas grandes se descargan solo cuando hacen falta (2026-09-18).
 // El que más lo nota es el invitado que abre el tablón desde el móvil: ya
@@ -53,6 +54,9 @@ export default function App() {
   // VistaTablon.jsx). No es una `const` en el orden de hooks -- es una
   // simple lectura de la URL, igual que emailCrearCuenta.
   const tokenTablon = getTokenTablonFromUrl();
+  // ?dj=<token> -- «Canciones para bailar» para el DJ (v81): igual que el
+  // tablón, sin sesión; pide además su clave (VistaDj.jsx).
+  const tokenDj = getTokenDjFromUrl();
   // ?musica -- la ventana de Música como página propia (lib/ventanaMusica.js).
   const vistaMusica = esVistaMusica();
   const vistaPantalla = esVistaPantalla();
@@ -286,6 +290,9 @@ export default function App() {
   // PASSWORD_RECOVERY y de todo lo demás.
   if (tokenTablon) {
     return <VistaTablon token={tokenTablon} />;
+  }
+  if (tokenDj) {
+    return <VistaDj token={tokenDj} />;
   }
 
   if (authEvent === "PASSWORD_RECOVERY") {

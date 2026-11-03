@@ -4,7 +4,7 @@ import { crearManejador, MAXIMO_CONSULTAS } from "./_buscarCanciones.js";
 
 const env = { VITE_SUPABASE_URL: "https://base", VITE_SUPABASE_ANON_KEY: "anon" };
 const DEEZER = {
-  "chica yeye": { data: [{ title: "Chica Ye-Ye (Remastered)", title_short: "Chica Ye-Ye", artist: { name: "Conchita Velasco" }, duration: 143 }] },
+  "chica yeye": { data: [{ id: 77, title: "Chica Ye-Ye (Remastered)", title_short: "Chica Ye-Ye", artist: { name: "Conchita Velasco" }, duration: 143 }] },
   inventada: { data: [], total: 0 },
   saturada: { error: { type: "Exception", message: "Quota limit exceeded", code: 4 } },
 };
@@ -26,7 +26,7 @@ describe("el buscador de canciones", () => {
     await manejador({ method: "POST", body: { token: "t", consultas: ["chica yeye", "inventada", "saturada", "sin red"] } }, res);
     expect(res.codigo).toBe(200);
     expect(res.cuerpo.resultados).toEqual([
-      { pista: { titulo: "Chica Ye-Ye", artista: "Conchita Velasco", duracion: 143 } },
+      { pista: { titulo: "Chica Ye-Ye", artista: "Conchita Velasco", duracion: 143, deezer: 77 } },
       { pista: null },
       { fallo: true },
       { fallo: true },

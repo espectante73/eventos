@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "81",
+    cambios: [
+      "«Canciones para bailar» para el DJ: botón «DJ» en la ventana de canciones. Crea un enlace exclusivo (para DJ Brown) y una clave de 5 letras y números que se le da por teléfono; se manda por WhatsApp o se copia. Se ve cuándo entró por última vez, y se puede crear un enlace nuevo o dejar de compartir. Tras 10 claves equivocadas se bloquea.",
+      "La página del DJ: sin nombres, una línea por petición con estrellas y edad, y las cifras arriba. Busca por canción o artista, filtra por tramo de edad, ordena, exporta a CSV e imprime o guarda en PDF. Cada canción se abre en Deezer. Se actualiza sola cada minuto, y su aparato recuerda la clave.",
+      "Exportar CSV de canciones tiene ahora dos opciones: «La lista» y «Para Apple Music» (cada canción una vez, canción y artista aparte), para pasarla a Apple Music con TuneMyMusic.",
+    ],
+  },
+  {
     version: "80.5",
     cambios: [
       "«Canciones para bailar»: las cifras (Peticiones · Distintas · Duración) pasan a la cabecera de la ventana, junto al título, como en la Lista de invitados. Antes iban en una franja que se cortaba al desplazar la lista.",

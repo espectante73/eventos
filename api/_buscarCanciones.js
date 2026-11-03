@@ -21,7 +21,7 @@ export function crearManejador({ fetch, env }) {
       const d = await r.json();
       if (!r.ok || d.error) return { fallo: true };
       const p = d.data?.[0];
-      return { pista: p ? { titulo: p.title_short || p.title || "", artista: p.artist?.name || "", duracion: Number(p.duration) || 0 } : null };
+      return { pista: p ? { titulo: p.title_short || p.title || "", artista: p.artist?.name || "", duracion: Number(p.duration) || 0, deezer: p.id || null } : null };
     } catch {
       return { fallo: true };
     }

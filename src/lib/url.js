@@ -48,3 +48,18 @@ export function construirEnlaceTablon(urlPublica, token) {
   if (!token || !urlPublica) return "";
   return `${urlPublica.replace(/\/$/, "")}?tablon=${token}`;
 }
+
+// ?dj=<token> — «Canciones para bailar» para el DJ (v81): solo mirar, y
+// además pide la clave que el anfitrión le da por teléfono (VistaDj.jsx).
+export function getTokenDjFromUrl() {
+  try {
+    return new URLSearchParams(window.location.search).get("dj");
+  } catch (_) {
+    return null;
+  }
+}
+
+export function construirEnlaceDj(urlPublica, token) {
+  if (!token || !urlPublica) return "";
+  return `${urlPublica.replace(/\/$/, "")}?dj=${token}`;
+}

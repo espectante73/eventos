@@ -336,6 +336,24 @@ CREATE TABLE public.tablon_secreto (
     CONSTRAINT tablon_secreto_id_check CHECK (id)
 );
 
+-- El enlace de «Canciones para bailar» para el DJ (él, v81): solo él, con
+-- el enlace (lleva `token`) y una clave de 5 letras y números que el
+-- anfitrión le da por teléfono. Una sola fila; sin ella, no se comparte. Ve
+-- las canciones y la edad de quien las pidió, nunca nombres. Nadie lee la
+-- tabla: el anfitrión, con su llave (anfitrion_dj*); el DJ, con
+-- dj_canciones. Fuera del Deshacer, como tablon_secreto: lleva la llave.
+CREATE TABLE IF NOT EXISTS public.dj_secreto (
+    id boolean DEFAULT true NOT NULL PRIMARY KEY,
+    token uuid DEFAULT gen_random_uuid() NOT NULL,
+    clave text NOT NULL,
+    nombre text DEFAULT ''::text NOT NULL,
+    fallos integer DEFAULT 0 NOT NULL,
+    "ultimoAcceso" timestamp with time zone,
+    CONSTRAINT dj_secreto_id_check CHECK (id)
+);
+ALTER TABLE public.dj_secreto ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.dj_secreto FROM anon, authenticated;
+
 -- Quién ha entrado al tablón y desde qué dispositivo, para detectar
 -- accesos raros.
 CREATE TABLE public.tablon_accesos (
@@ -619,6 +637,86 @@ CREATE FUNCTION public.tablon_verificar_token(p_token uuid) RETURNS boolean
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$ select p_token = (select "token" from tablon_secreto limit 1); $$;
+
+-- «Compartir con el DJ» (v81), lo que ve el anfitrión: null si no se comparte.
+CREATE OR REPLACE FUNCTION public.anfitrion_dj(p_token uuid) RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select jsonb_build_object('token', d.token, 'clave', d.clave, 'nombre', d.nombre, 'fallos', d.fallos, 'ultimoAcceso', d."ultimoAcceso")
+  from dj_secreto d
+  where p_token = (select "token" from anfitrion_secreto limit 1);
+$$;
+
+-- Compartir, o cambiar enlace y clave: los de antes dejan de valer. La
+-- clave, 5 de entre letras y números que no se confunden por teléfono (sin
+-- 0, O, 1, I ni L), sacados al azar de un uuid nuevo.
+CREATE OR REPLACE FUNCTION public.anfitrion_dj_compartir(p_token uuid, p_nombre text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_letras constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  v_azar bytea := decode(replace(gen_random_uuid()::text, '-', ''), 'hex');
+  v_clave text := '';
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    raise exception 'No autorizado';
+  end if;
+  for i in 0..4 loop
+    v_clave := v_clave || substr(v_letras, get_byte(v_azar, i) % length(v_letras) + 1, 1);
+  end loop;
+  insert into dj_secreto (id, token, clave, nombre, fallos, "ultimoAcceso")
+  values (true, gen_random_uuid(), v_clave, trim(coalesce(p_nombre, '')), 0, null)
+  on conflict (id) do update
+    set token = excluded.token, clave = excluded.clave, nombre = excluded.nombre, fallos = 0, "ultimoAcceso" = null;
+  return anfitrion_dj(p_token);
+end;
+$$;
+
+-- Dejar de compartir: el enlace deja de valer.
+CREATE OR REPLACE FUNCTION public.anfitrion_dj_dejar(p_token uuid) RETURNS void
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  delete from dj_secreto d where d.id and p_token = (select "token" from anfitrion_secreto limit 1);
+$$;
+
+-- La página del DJ (?dj=…, v81): con su enlace y su clave (dan igual las
+-- mayúsculas), las canciones pedidas con la edad de quien las pidió (nunca
+-- nombres) y lo que Deezer dice de cada una. Tras 10 claves equivocadas se
+-- bloquea hasta que el anfitrión cree un enlace nuevo. Cada vez que mira se
+-- apunta la hora: el anfitrión ve cuándo entró por última vez.
+CREATE OR REPLACE FUNCTION public.dj_canciones(p_token uuid, p_clave text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_clave text := (select d.clave from dj_secreto d where d.token = p_token);
+begin
+  if v_clave is null then
+    return jsonb_build_object('error', 'enlace');
+  end if;
+  if (select d.fallos from dj_secreto d where d.token = p_token) >= 10 then
+    return jsonb_build_object('error', 'bloqueado');
+  end if;
+  if upper(trim(coalesce(p_clave, ''))) <> v_clave then
+    update dj_secreto set fallos = fallos + 1 where token = p_token;
+    return jsonb_build_object('error', 'clave');
+  end if;
+  update dj_secreto set fallos = 0, "ultimoAcceso" = now() where token = p_token;
+  return jsonb_build_object(
+    'nombre', (select d.nombre from dj_secreto d where d.token = p_token),
+    'evento', (select e."nombre" from evento e limit 1),
+    'fecha', (select e."fecha" from evento e limit 1),
+    'catalogo', coalesce((select e."catalogoCanciones" from evento e limit 1), '{}'::jsonb),
+    'peticiones', coalesce(
+      (select jsonb_agg(jsonb_build_object('cancion', i."cancion", 'edad', edad_en_evento(i."anioNacimiento")))
+       from invitados i where coalesce(i."cancion", '') <> ''),
+      '[]'::jsonb)
+  );
+end;
+$$;
 
 -- ¿Está activo el Modo Pruebas? Una sola definición (v49): mientras lo
 -- está, ningún colaborador puede escribir nada (las tres funciones de

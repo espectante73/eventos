@@ -47,7 +47,9 @@ export function conResultados(catalogo, tanda, resultados) {
     const r = resultados?.[i];
     if (!r || r.fallo) return;
     const consulta = consultaDe(d.cancion);
-    siguiente[d.clave] = r.pista ? { titulo: r.pista.titulo, artista: r.pista.artista, duracion: r.pista.duracion, consulta } : { noEncontrada: true, consulta };
+    siguiente[d.clave] = r.pista
+      ? { titulo: r.pista.titulo, artista: r.pista.artista, duracion: r.pista.duracion, ...(r.pista.deezer ? { deezer: r.pista.deezer } : {}), consulta }
+      : { noEncontrada: true, consulta };
   });
   return siguiente;
 }
@@ -91,7 +93,15 @@ export function aplicarRepaso(invitados, catalogo, { aplicar = [], descartar = [
   const nuevo = { ...(catalogo || {}) };
   for (const clave of aplicar) {
     const e = catalogo?.[clave];
-    if (e?.titulo) nuevo[claveCancion(e.titulo, e.artista)] = { titulo: e.titulo, artista: e.artista, duracion: e.duracion, consulta: consultaDe(textoCancion(e.titulo, e.artista)) };
+    if (e?.titulo) {
+      nuevo[claveCancion(e.titulo, e.artista)] = {
+        titulo: e.titulo,
+        artista: e.artista,
+        duracion: e.duracion,
+        ...(e.deezer ? { deezer: e.deezer } : {}),
+        consulta: consultaDe(textoCancion(e.titulo, e.artista)),
+      };
+    }
   }
   for (const clave of descartar) if (nuevo[clave]) nuevo[clave] = { ...nuevo[clave], descartada: true };
   return {
@@ -141,4 +151,24 @@ export async function buscarEnDeezer({ token, consultas }, f = fetch) {
   } catch (e) {
     return { error: `No se pudo llegar al buscador (${e.message}).` };
   }
+}
+
+// Escucharla en Deezer (v81, la página del DJ): su ficha si se encontró
+// (desde la v81 se guarda su número); si no, la búsqueda de cómo está escrita.
+export function enlaceDeezer(d, catalogo) {
+  const e = catalogo?.[d.clave];
+  if (e?.deezer && !e.noEncontrada) return `https://www.deezer.com/track/${e.deezer}`;
+  return `https://www.deezer.com/search/${encodeURIComponent(consultaDe(d.cancion))}`;
+}
+
+// El CSV para pasarla a Apple Music con TuneMyMusic (v81): cada canción
+// distinta una vez, con la canción y el artista en columnas aparte (como
+// Deezer la tiene, si la encontró).
+export function filasAppleMusic(distintas, catalogo) {
+  return distintas.map((d) => {
+    const e = catalogo?.[d.clave];
+    if (e?.titulo && !e.descartada) return [e.titulo, e.artista];
+    const [titulo, ...artista] = d.cancion.split(" — ");
+    return [titulo, artista.join(" — ")];
+  });
 }

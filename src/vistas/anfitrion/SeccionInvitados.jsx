@@ -32,6 +32,7 @@ import {
   ClipboardCheck,
   Download,
   ListChecks,
+  Headphones,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
@@ -69,7 +70,8 @@ import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
 import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
 import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
 import { VentanaRepasarCanciones } from "./VentanaRepasarCanciones";
-import { cancionesDistintas, duracionTotal, textoDuracion, noEncontrada } from "../../lib/repasoCanciones";
+import { VentanaCompartirDj } from "./VentanaCompartirDj";
+import { cancionesDistintas, duracionTotal, textoDuracion, noEncontrada, filasAppleMusic } from "../../lib/repasoCanciones";
 import { pideTelefono, telefonoParaVer } from "../../lib/telefono";
 import { useSeccion } from "../../lib/useSeccion";
 
@@ -171,6 +173,7 @@ export function SeccionInvitados({
   // La canción que se está corrigiendo: { invitadoId, hueco } (v79.6).
   const [cancionACorregir, setCancionACorregir] = useState(null);
   const [repasandoCanciones, setRepasandoCanciones] = useState(false);
+  const [compartiendoDj, setCompartiendoDj] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
 
   // "avisoPendiente" vive en el servidor (columna en invitados), no solo
@@ -362,6 +365,16 @@ export function SeccionInvitados({
       },
     ];
   };
+
+  // Para pasarla a Apple Music con TuneMyMusic (v81): cada canción una vez,
+  // canción y artista en columnas aparte, separadas por comas.
+  const exportarAppleMusic = () =>
+    descargarCSV(
+      `apple-music-${evento.nombre || "evento"}.csv`,
+      ["Track name", "Artist name"],
+      filasAppleMusic(cancionesDistintas(cancionesPedidas(invitados, () => null)), evento.catalogoCanciones),
+      ","
+    );
 
   const imprimirPanelActivo = () => {
     setTimeout(() => {
@@ -1952,13 +1965,35 @@ export function SeccionInvitados({
               <Boton variante="principal" onClick={imprimirPanelActivo}>
                 <Printer size={14} /> Imprimir
               </Boton>
-              <Boton variante="secundario" onClick={exportarPanelActivoCSV}>
-                <Copy size={14} /> Exportar CSV
-              </Boton>
-              {panelFlotante === "canciones" && (
-                <Boton variante="secundario" onClick={() => setRepasandoCanciones(true)}>
-                  <ListChecks size={14} /> Repasar
+              {panelFlotante === "canciones" ? (
+                // Dos CSV (v81): la lista como se ve, y el de Apple Music
+                // (cada canción una vez) para pasarla con TuneMyMusic.
+                <MenuFlotante
+                  anchor="bottom-left"
+                  opciones={[
+                    { id: "lista", etiqueta: "La lista", onClick: exportarPanelActivoCSV },
+                    { id: "apple", etiqueta: "Para Apple Music", onClick: exportarAppleMusic },
+                  ]}
+                  render={({ ref, toggle }) => (
+                    <Boton ref={ref} variante="secundario" icono={Copy} onClick={toggle}>
+                      Exportar CSV
+                    </Boton>
+                  )}
+                />
+              ) : (
+                <Boton variante="secundario" onClick={exportarPanelActivoCSV}>
+                  <Copy size={14} /> Exportar CSV
                 </Boton>
+              )}
+              {panelFlotante === "canciones" && (
+                <>
+                  <Boton variante="secundario" onClick={() => setRepasandoCanciones(true)}>
+                    <ListChecks size={14} /> Repasar
+                  </Boton>
+                  <Boton variante="secundario" icono={Headphones} onClick={() => setCompartiendoDj(true)}>
+                    DJ
+                  </Boton>
+                </>
               )}
               {panelFlotante === "tabla" && (
                 <Boton variante="secundario" onClick={descargarAcomodadores}>
@@ -2213,6 +2248,7 @@ export function SeccionInvitados({
       {mostrarImportarTel && <VentanaImportarTelefonos data={data} onCerrar={() => setMostrarImportarTel(false)} />}
       {cancionACorregir && <VentanaCorregirCancion data={data} peticion={cancionACorregir} onCerrar={() => setCancionACorregir(null)} />}
       {repasandoCanciones && <VentanaRepasarCanciones data={data} onCerrar={() => setRepasandoCanciones(false)} />}
+      {compartiendoDj && <VentanaCompartirDj data={data} onCerrar={() => setCompartiendoDj(false)} />}
     </>
   );
 }

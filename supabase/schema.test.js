@@ -745,3 +745,33 @@ describe("los avisos al anfitrión", () => {
     expect(cuerpoDe("colaborador_responder_impago")).toContain("avisar_anfitrion('impago'");
   });
 });
+
+// v81 (él): «Canciones para bailar» para DJ Brown, con enlace y clave.
+describe("el enlace del DJ", () => {
+  it("nadie lee la tabla; el anfitrión, con su llave", () => {
+    expect(sql).toContain("ALTER TABLE public.dj_secreto ENABLE ROW LEVEL SECURITY;");
+    expect(sql).toContain("REVOKE ALL ON public.dj_secreto FROM anon, authenticated;");
+    expect(sql).not.toMatch(/CREATE POLICY\s+\w+\s+ON\s+public\.dj_secreto/i);
+    for (const f of ["anfitrion_dj", "anfitrion_dj_dejar"]) expect(cuerpoDe(f)).toContain(`p_token = (select "token" from anfitrion_secreto limit 1)`);
+    expect(cuerpoDe("anfitrion_dj_compartir")).toContain(`p_token is distinct from (select "token" from anfitrion_secreto limit 1)`);
+  });
+
+  it("la clave: 5 de letras y números que no se confunden por teléfono", () => {
+    const f = cuerpoDe("anfitrion_dj_compartir");
+    expect(f).toContain("'ABCDEFGHJKMNPQRSTUVWXYZ23456789'");
+    expect(f).toContain("for i in 0..4 loop");
+    expect(f).not.toMatch(/'[^']*[01IOL][^']*'\s*;\s*\n\s*v_azar/);
+  });
+
+  it("el DJ: con enlace y clave, tope de 10 fallos, y nunca nombres", () => {
+    const f = cuerpoDe("dj_canciones");
+    expect(f).toContain(">= 10");
+    expect(f).toContain("upper(trim(coalesce(p_clave, ''))) <> v_clave");
+    expect(f).toContain("'cancion', i.\"cancion\", 'edad', edad_en_evento(i.\"anioNacimiento\")");
+    expect(f).not.toMatch(/i\."(nombre|apellido|email|telefono)"/);
+  });
+
+  it("queda fuera de la foto del Deshacer: lleva la llave", () => {
+    expect(cuerpoDe("foto_de_datos")).not.toContain("dj_secreto");
+  });
+});
