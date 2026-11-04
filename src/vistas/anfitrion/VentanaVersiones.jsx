@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "81.9",
+    cambios: [
+      "«Lo nuevo» sale del panel y pasa a lo más alto del Inicio de cada colaborador, del ancho de la portada y plegado en una línea («llamar, avisos y canciones»); al tocarlo, las novedades y, en el móvil sin instalar, cómo instalar la app con su icono. Es temporal y sin «Entendido»: se quita solo pasado el 18 de noviembre, o antes si llega algo nuevo que lo sustituya.",
+    ],
+  },
+  {
     version: "81.8",
     cambios: [
       "«Lo nuevo», en la vista previa del anfitrión (Colaboradores → Formularios): sale siempre y abierta en el formulario de cada colaborador; su «Entendido» solo la pliega. Antes lo recordaba el aparato y, pulsado una vez, desaparecía en todos los formularios. A cada colaborador le sigue saliendo hasta su propio «Entendido».",

@@ -1,41 +1,22 @@
-// «Lo nuevo» (él, v81.7): la tarjeta que pone al día a cada colaborador, en
-// su panel, de lo añadido estas semanas. Lo nuevo sale hasta que toca
-// «Entendido» (se recuerda en ese aparato); «Instala la app» sale en el
-// móvil mientras no la abra instalada, y se va sola al abrirla desde su
-// icono. Con novedades nuevas en la tarjeta, cambiar LO_NUEVO para que
-// vuelva a salir a todos.
+// «Lo nuevo» (él, v81.7-81.9): aviso arriba del todo en el Inicio de cada
+// colaborador, plegado en una línea, con lo añadido estas semanas (él no
+// lee «Versiones», que es del anfitrión). Temporal (él: «hasta algo nuevo o
+// quitarlo en un tiempo»): sale hasta LO_NUEVO_HASTA, incluido, sin
+// «Entendido». Con novedades nuevas, se cambian las líneas de AvisoLoNuevo
+// y la fecha. «Instala la app», dentro, solo en el móvil sin instalar: en
+// el iPhone, sin eso no llegan los avisos.
 import { esAppInstalada } from "./avisosPush";
 
-export const LO_NUEVO = "81.7";
-const CLAVE = `lo-nuevo-visto:${LO_NUEVO}`;
+export const LO_NUEVO_HASTA = "2026-11-18";
 
-const almacenDe = (w) => {
-  try {
-    return w.localStorage;
-  } catch {
-    return null;
-  }
-};
-
-export function leerVisto(w = window) {
-  try {
-    return almacenDe(w)?.getItem(CLAVE) === "1";
-  } catch {
-    return false;
-  }
-}
-
-export function marcarVisto(w = window) {
-  try {
-    almacenDe(w)?.setItem(CLAVE, "1");
-  } catch {
-    /* sin memoria: volverá a salir, nada más */
-  }
-}
+// "AAAA-MM-DD" de un día, en la hora de este aparato.
+const diaDe = (fecha) =>
+  `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`;
 
 // En un aparato táctil (no por el ancho: un iPad apaisado es ancho).
 const esTactil = (w) => Boolean(w.matchMedia?.("(pointer: coarse) and (hover: none)").matches);
 
-export function queVerLoNuevo(w = window) {
-  return { verNovedades: !leerVisto(w), verInstalar: esTactil(w) && !esAppInstalada(w) };
+export function queVerLoNuevo(w = window, hoy = new Date()) {
+  const ver = diaDe(hoy) <= LO_NUEVO_HASTA;
+  return { ver, verInstalar: ver && esTactil(w) && !esAppInstalada(w) };
 }

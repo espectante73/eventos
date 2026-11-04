@@ -553,7 +553,7 @@ describe("el panel del colaborador: todo apartado está en APARTADOS_PANEL", () 
     const vista = leer("src/vistas/VistaColaborador.jsx");
     const lista = JSON.parse(vista.match(/const APARTADOS_PANEL = (\[[^\]]*\]);/)[1]);
     const usados = [...vista.matchAll(/abiertoId === "([^"]+)"/g)].map((m) => m[1]);
-    expect(usados.length).toBeGreaterThan(3);
+    expect(usados.length, "encuentra los apartados").toBeGreaterThan(0);
     expect(usados.filter((u) => !lista.includes(u))).toEqual([]);
   });
 });

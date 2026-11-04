@@ -52,7 +52,7 @@ import { useMano } from "../lib/mano";
 // Sin "export": nadie más lo usa (comprobado en un examen honesto del
 // código, 2026-08-24) -- si algún día otro componente necesita este
 // mismo ancho, vuelve a exportarse entonces.
-const ANCHO_MAXIMO_PORTADA = 480;
+export const ANCHO_MAXIMO_PORTADA = 480;
 
 export function Portada({
   evento,

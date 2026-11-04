@@ -6,7 +6,7 @@
 //
 // Comprueba que se PUEDE ver, no cómo se ve (para eso sigue haciendo
 // falta su captura, norma 10).
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { act } from "react";
 import { montar, dibujarYSoltar } from "../pruebas/dibujar";
 import { VistaColaborador } from "./VistaColaborador";
@@ -781,42 +781,39 @@ it("abrir «Avisos en este móvil» no esconde el panel", async () => {
   delete window.Notification;
 });
 
-describe("«Lo nuevo» en el panel (v81.7)", () => {
-  const montarPanel = (esAnfitrionOriginal) => {
-    const vista = montar(
-      <VistaColaborador data={data} colaboradorId="c1" esAnfitrionOriginal={esAnfitrionOriginal} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
-    );
-    abrirPorMenu(vista);
-    return vista;
-  };
+describe("«Lo nuevo» arriba del Inicio (v81.9)", () => {
+  const montarInicio = (esAnfitrionOriginal = false) =>
+    montar(<VistaColaborador data={data} colaboradorId="c1" esAnfitrionOriginal={esAnfitrionOriginal} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />);
 
-  const entendido = (vista) => vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "Entendido"));
+  afterEach(() => vi.useRealTimers());
 
-  it("al colaborador le sale abierta arriba del panel, y «Entendido» la quita para siempre en ese aparato", () => {
-    localStorage.clear();
-    let vista = montarPanel(false);
-    expect(vista.html).toContain("Lo nuevo");
-    expect(vista.html).toContain("Escucha en la ficha de tu invitado");
-    entendido(vista);
-    expect(vista.html).not.toContain("Lo nuevo");
-    vista.desmontar();
-    vista = montarPanel(false);
-    expect(vista.html).not.toContain("Lo nuevo");
-    vista.desmontar();
+  it("al entrar, lo primero, plegado en una línea; al tocarlo, las novedades", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-10T12:00:00"));
+    for (const anfitrion of [false, true]) {
+      const vista = montarInicio(anfitrion);
+      const html = vista.html;
+      expect(html, anfitrion ? "vista previa" : "colaborador").toContain("Lo nuevo");
+      expect(html.indexOf("Lo nuevo"), "antes que la Portada").toBeLessThan(html.indexOf("Abrir sección"));
+      expect(html, "plegado").not.toContain("Escucha en la ficha de tu invitado");
+      vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Lo nuevo")));
+      expect(vista.html).toContain("Escucha en la ficha de tu invitado");
+      vista.desmontar();
+    }
   });
 
-  it("al anfitrión (vista previa) le sale siempre: su «Entendido» solo la pliega (v81.8)", () => {
-    localStorage.clear();
-    let vista = montarPanel(true);
-    entendido(vista);
-    expect(vista.html).toContain("Lo nuevo");
-    expect(vista.html, "plegada").not.toContain("Escucha en la ficha de tu invitado");
-    vista.desmontar();
-    vista = montarPanel(true);
-    expect(vista.html, "en el siguiente formulario, otra vez abierta").toContain("Escucha en la ficha de tu invitado");
-    vista.desmontar();
-    vista = montarPanel(false);
-    expect(vista.html, "y no ha contado como el de un colaborador").toContain("Lo nuevo");
+  it("en el panel ya no está: un solo sitio", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-10T12:00:00"));
+    const html = abrirFormulario();
+    expect((html.match(/Lo nuevo/g) || []).length).toBe(1);
+  });
+
+  it("pasada su fecha, se va sola", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-19T09:00:00"));
+    const vista = montarInicio();
+    expect(vista.html).not.toContain("Lo nuevo");
     vista.desmontar();
   });
 });
