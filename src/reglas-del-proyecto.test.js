@@ -546,6 +546,18 @@ describe("toda cita a una norma apunta a una que existe", () => {
   });
 });
 
+describe("el panel del colaborador: todo apartado está en APARTADOS_PANEL", () => {
+  // Uno que falte cuenta como la ficha de un invitado y, en el móvil, deja
+  // el panel en blanco sin poder cerrarlo (pasó con «Avisos», v79.1).
+  it("cada `abiertoId === \"…\"` de un apartado está en la lista", () => {
+    const vista = leer("src/vistas/VistaColaborador.jsx");
+    const lista = JSON.parse(vista.match(/const APARTADOS_PANEL = (\[[^\]]*\]);/)[1]);
+    const usados = [...vista.matchAll(/abiertoId === "([^"]+)"/g)].map((m) => m[1]);
+    expect(usados.length).toBeGreaterThan(3);
+    expect(usados.filter((u) => !lista.includes(u))).toEqual([]);
+  });
+});
+
 describe("el versionado: tras el .9 viene el siguiente entero", () => {
   // Regla suya (1.11, regla 4): 45.9 → 46, nunca 45.10. Las antiguas del
   // historial (30.16, 37.13…) son de antes de la regla y se quedan.

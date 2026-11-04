@@ -27,6 +27,8 @@ import { Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, TextInput, ANCHO_ANIO } from "../components/Formulario";
 import { LineaContacto, BotonLlamar } from "../components/Contacto";
 import { AvisosMovil } from "../components/AvisosMovil";
+import { TarjetaLoNuevo } from "../components/TarjetaLoNuevo";
+import { queVerLoNuevo, marcarVisto } from "../lib/loNuevo";
 import { pideTelefono, telefonoValido, limpiarTelefono, telefonoParaVer, AVISO_TELEFONO } from "../lib/telefono";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
@@ -113,7 +115,7 @@ function SeparadorCeldas() {
 // quepa en el móvil (norma 6).
 
 // Los apartados plegados de arriba del panel del colaborador (no fichas).
-const APARTADOS_PANEL = ["avisos", "perfil", "cuentas"];
+const APARTADOS_PANEL = ["lo-nuevo", "avisos", "perfil", "cuentas"];
 
 // En qué apartado plegado vive cada obligatorio: "Guardar" abre ese.
 const APARTADO_DE = { anioNacimiento: "datos", email: "datos", anioBoda: "boda", fotoBoda: "boda", alergias: "alergias" };
@@ -1326,7 +1328,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       ? preguntar({ ...PREGUNTA_DESCARTAR, alConfirmar: cerrarSinPreguntar })
       : cerrarSinPreguntar();
   const [miCuentaAbierta, setMiCuentaAbierta] = useState(false);
-  const [abiertoId, setAbiertoId] = useState(null);
+  // «Lo nuevo» (v81.7): abierta al entrar mientras no se haya visto.
+  const [loNuevo, setLoNuevo] = useState(() => queVerLoNuevo());
+  const [abiertoId, setAbiertoId] = useState(() => (loNuevo.verNovedades ? "lo-nuevo" : null));
   // Mientras un invitado está abierto, se queda fijo en la sección donde
   // estaba al abrirlo (pendiente o completo), aunque sus datos cambien
   // mientras tanto — si no, al rellenar el año de nacimiento saltaría de
@@ -1649,6 +1653,19 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               y para la ficha de cada invitado, así que abrir una cierra las
               demás sin lógica aparte. */}
           <div className={`space-y-2 ${fichaAbierta ? "hidden sm:block" : ""}`}>
+            {(loNuevo.verNovedades || loNuevo.verInstalar) && (
+              <TarjetaLoNuevo
+                verNovedades={loNuevo.verNovedades}
+                verInstalar={loNuevo.verInstalar}
+                abierta={abiertoId === "lo-nuevo"}
+                onAlternar={() => setAbiertoId((a) => (hayFicha(a) ? a : a === "lo-nuevo" ? null : "lo-nuevo"))}
+                onEntendido={() => {
+                  marcarVisto();
+                  setLoNuevo((l) => ({ ...l, verNovedades: false }));
+                  setAbiertoId((a) => (a === "lo-nuevo" ? null : a));
+                }}
+              />
+            )}
             {/* Los avisos al móvil (v79). No en la vista previa del
                 anfitrión: apuntaría su Mac como el móvil de este colaborador. */}
             {!esAnfitrionOriginal && (

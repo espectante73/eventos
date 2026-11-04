@@ -27,7 +27,7 @@ const relleno = (Icono) => {
   const ConRelleno = (props) => <Icono {...props} fill="currentColor" />;
   return ConRelleno;
 };
-const PlayRelleno = relleno(Play);
+export const PlayRelleno = relleno(Play);
 const PararRelleno = relleno(Square);
 
 // Un WAV vacío: abre el sonido dentro del toque.

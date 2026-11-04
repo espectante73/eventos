@@ -8,10 +8,16 @@
 // respaldo: un aviso puede no llegar.
 import { CLAVE_PUBLICA_AVISOS } from "./clavePublicaAvisos";
 
+// Cómo instalar la app, para «Lo nuevo» y «Avisos en este móvil»: una sola
+// vez, para que digan siempre lo mismo (él, v81.7: corto, en lista).
+export const PASOS_INSTALAR = {
+  iphone: "Safari → Compartir → «Añadir a pantalla de inicio».",
+  android: "Chrome → ⋮ → «Instalar» (o «Añadir a pantalla de inicio»).",
+};
 export const AVISO_BLOQUEADOS = "Los avisos están bloqueados en este móvil. Se activan en Ajustes → Notificaciones → Las Bodas.";
 
 const esIphone = (nav) => /iPhone|iPad|iPod/.test(nav.userAgent || "") || (nav.platform === "MacIntel" && nav.maxTouchPoints > 1);
-const esAppInstalada = (w) => Boolean(w.matchMedia?.("(display-mode: standalone)").matches || w.navigator.standalone === true);
+export const esAppInstalada = (w) => Boolean(w.matchMedia?.("(display-mode: standalone)").matches || w.navigator.standalone === true);
 const soporta = (w) => "serviceWorker" in w.navigator && "PushManager" in w && "Notification" in w;
 
 // Qué se puede hacer aquí: "activar", "activos", "bloqueados", "instalar"

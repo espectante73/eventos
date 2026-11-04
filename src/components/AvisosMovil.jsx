@@ -9,7 +9,7 @@ import { C, OP } from "../theme";
 import { SeccionPlegable } from "./SeccionPlegable";
 import { Boton } from "./Boton";
 import { LineaAviso } from "./LineaAviso";
-import { estadoAvisos, activarAvisos, desactivarAvisos, AVISO_BLOQUEADOS } from "../lib/avisosPush";
+import { estadoAvisos, activarAvisos, desactivarAvisos, AVISO_BLOQUEADOS, PASOS_INSTALAR } from "../lib/avisosPush";
 
 const RESUMEN = { activar: "Sin activar", activos: "Activados", instalar: "Instala la app", bloqueados: "Bloqueados" };
 const PARA_EL_COLABORADOR = "Llega un aviso cuando tengas invitados nuevos, o cuando el anfitrión avise al equipo.";
@@ -72,7 +72,7 @@ export function AvisosMovil({ guardar, quitar, abierta, onAlternar, entorno, exp
           </div>
         )}
         {estado === "instalar" && (
-          <p style={texto}>En el iPhone, los avisos solo llegan con la app instalada: en Safari, Compartir → «Añadir a pantalla de inicio», y ábrela desde su icono.</p>
+          <p style={texto}>En el iPhone, los avisos solo llegan con la app instalada: {PASOS_INSTALAR.iphone} Ábrela desde su icono.</p>
         )}
         {estado === "bloqueados" && <LineaAviso className="text-sm">{AVISO_BLOQUEADOS}</LineaAviso>}
         {aviso && estado !== "bloqueados" && <LineaAviso className="text-sm">{aviso}</LineaAviso>}

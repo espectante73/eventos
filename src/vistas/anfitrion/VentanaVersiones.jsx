@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "81.7",
+    cambios: [
+      "«Lo nuevo», arriba del todo en el panel de cada colaborador y abierto al entrar: llamar o escribir por WhatsApp a su invitado desde la ficha, avisos en el móvil y escuchar en la ficha la canción que pidió. Se cierra con «Entendido» y no vuelve en ese móvil.",
+      "Debajo, «Instala la app» en tres líneas (iPhone y Android) con el icono de «Las Bodas». En el móvil sigue saliendo mientras no la abran instalada, y se va sola al abrirla desde su icono; en el ordenador no sale. Los pasos son los mismos que en «Avisos en este móvil».",
+    ],
+  },
+  {
     version: "81.6",
     cambios: [
       "El aviso rojo de «Actualizar», para todos los que entran con su cuenta: el número de la versión nueva y, en 2 o 3 líneas, qué cambia, se corrige o se añade. Si alguna vez llegara una actualización sin número nuevo, al anfitrión se lo dice, para preguntar antes. «Actualizar» se pone del lado del pulgar elegido.",
