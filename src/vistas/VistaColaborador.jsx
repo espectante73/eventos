@@ -28,7 +28,7 @@ import { SectionTitle, TextInput, ANCHO_ANIO } from "../components/Formulario";
 import { LineaContacto, BotonLlamar } from "../components/Contacto";
 import { AvisosMovil } from "../components/AvisosMovil";
 import { AvisoLoNuevo } from "../components/AvisoLoNuevo";
-import { queVerLoNuevo } from "../lib/loNuevo";
+import { hayLoNuevo } from "../lib/loNuevo";
 import { pideTelefono, telefonoValido, limpiarTelefono, telefonoParaVer, AVISO_TELEFONO } from "../lib/telefono";
 import { ModalFlotante, VentanaFlotante } from "../components/VentanaFlotante";
 import { HuecoFoto, estiloMarcoFoto } from "../components/HuecoFoto";
@@ -1329,7 +1329,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       : cerrarSinPreguntar();
   const [miCuentaAbierta, setMiCuentaAbierta] = useState(false);
   // «Lo nuevo» (v81.9): arriba del Inicio hasta su fecha (lib/loNuevo.js).
-  const [loNuevo] = useState(() => queVerLoNuevo());
+  const [loNuevo] = useState(() => hayLoNuevo());
   const [abiertoId, setAbiertoId] = useState(null);
   // Mientras un invitado está abierto, se queda fijo en la sección donde
   // estaba al abrirlo (pendiente o completo), aunque sus datos cambien
@@ -1515,7 +1515,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   return (
     <div className="space-y-8">
       {/* «Lo nuevo» (él, v81.9): lo más arriba posible, temporal. */}
-      {loNuevo.ver && <AvisoLoNuevo verInstalar={loNuevo.verInstalar} />}
+      {loNuevo && <AvisoLoNuevo />}
       {/* El aviso de permisos. El usuario lo quiere mantener (2026-09-21):
           es lo primero que se ve y ahí se entera uno de lo que puede
           hacer. Dos partes distintas a propósito:

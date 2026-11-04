@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "82",
+    cambios: [
+      "«Lo nuevo», en el Inicio de cada colaborador: los pasos para instalar la app (iPhone y Android, con el icono) y activar los avisos salen siempre al desplegarlo. Antes se escondían a quien ya la tenía instalada o entraba desde el ordenador, y la línea de los avisos quedaba sin instrucciones.",
+    ],
+  },
+  {
     version: "81.9",
     cambios: [
       "«Lo nuevo» sale del panel y pasa a lo más alto del Inicio de cada colaborador, del ancho de la portada y plegado en una línea («llamar, avisos y canciones»); al tocarlo, las novedades y, en el móvil sin instalar, cómo instalar la app con su icono. Es temporal y sin «Entendido»: se quita solo pasado el 18 de noviembre, o antes si llega algo nuevo que lo sustituya.",

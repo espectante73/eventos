@@ -798,6 +798,9 @@ describe("«Lo nuevo» arriba del Inicio (v81.9)", () => {
       expect(html, "plegado").not.toContain("Escucha en la ficha de tu invitado");
       vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Lo nuevo")));
       expect(vista.html).toContain("Escucha en la ficha de tu invitado");
+      // Los pasos, siempre (v82): aquí no es un móvil ni le falta instalarla.
+      expect(vista.html).toContain("Instala la app");
+      expect(vista.html).toContain("«Añadir a pantalla de inicio»");
       vista.desmontar();
     }
   });
