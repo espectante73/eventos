@@ -780,3 +780,43 @@ it("abrir «Avisos en este móvil» no esconde el panel", async () => {
   delete window.PushManager;
   delete window.Notification;
 });
+
+describe("«Lo nuevo» en el panel (v81.7)", () => {
+  const montarPanel = (esAnfitrionOriginal) => {
+    const vista = montar(
+      <VistaColaborador data={data} colaboradorId="c1" esAnfitrionOriginal={esAnfitrionOriginal} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+    );
+    abrirPorMenu(vista);
+    return vista;
+  };
+
+  const entendido = (vista) => vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "Entendido"));
+
+  it("al colaborador le sale abierta arriba del panel, y «Entendido» la quita para siempre en ese aparato", () => {
+    localStorage.clear();
+    let vista = montarPanel(false);
+    expect(vista.html).toContain("Lo nuevo");
+    expect(vista.html).toContain("Escucha en la ficha de tu invitado");
+    entendido(vista);
+    expect(vista.html).not.toContain("Lo nuevo");
+    vista.desmontar();
+    vista = montarPanel(false);
+    expect(vista.html).not.toContain("Lo nuevo");
+    vista.desmontar();
+  });
+
+  it("al anfitrión (vista previa) le sale siempre: su «Entendido» solo la pliega (v81.8)", () => {
+    localStorage.clear();
+    let vista = montarPanel(true);
+    entendido(vista);
+    expect(vista.html).toContain("Lo nuevo");
+    expect(vista.html, "plegada").not.toContain("Escucha en la ficha de tu invitado");
+    vista.desmontar();
+    vista = montarPanel(true);
+    expect(vista.html, "en el siguiente formulario, otra vez abierta").toContain("Escucha en la ficha de tu invitado");
+    vista.desmontar();
+    vista = montarPanel(false);
+    expect(vista.html, "y no ha contado como el de un colaborador").toContain("Lo nuevo");
+    vista.desmontar();
+  });
+});

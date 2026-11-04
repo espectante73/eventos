@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "81.8",
+    cambios: [
+      "«Lo nuevo», en la vista previa del anfitrión (Colaboradores → Formularios): sale siempre y abierta en el formulario de cada colaborador; su «Entendido» solo la pliega. Antes lo recordaba el aparato y, pulsado una vez, desaparecía en todos los formularios. A cada colaborador le sigue saliendo hasta su propio «Entendido».",
+    ],
+  },
+  {
     version: "81.7",
     cambios: [
       "«Lo nuevo», arriba del todo en el panel de cada colaborador y abierto al entrar: llamar o escribir por WhatsApp a su invitado desde la ficha, avisos en el móvil y escuchar en la ficha la canción que pidió. Se cierra con «Entendido» y no vuelve en ese móvil.",

@@ -1328,8 +1328,14 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       ? preguntar({ ...PREGUNTA_DESCARTAR, alConfirmar: cerrarSinPreguntar })
       : cerrarSinPreguntar();
   const [miCuentaAbierta, setMiCuentaAbierta] = useState(false);
-  // «Lo nuevo» (v81.7): abierta al entrar mientras no se haya visto.
-  const [loNuevo, setLoNuevo] = useState(() => queVerLoNuevo());
+  // «Lo nuevo» (v81.7): abierta al entrar mientras no se haya visto. En la
+  // vista previa del anfitrión sale SIEMPRE (v81.8): él mira el formulario
+  // de cada colaborador para ver lo que les sale, y su «Entendido» no es el
+  // de ellos (el aparato lo recordaba y desaparecía en todos).
+  const [loNuevo, setLoNuevo] = useState(() => {
+    const ver = queVerLoNuevo();
+    return esAnfitrionOriginal ? { ...ver, verNovedades: true } : ver;
+  });
   const [abiertoId, setAbiertoId] = useState(() => (loNuevo.verNovedades ? "lo-nuevo" : null));
   // Mientras un invitado está abierto, se queda fijo en la sección donde
   // estaba al abrirlo (pendiente o completo), aunque sus datos cambien
@@ -1660,9 +1666,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 abierta={abiertoId === "lo-nuevo"}
                 onAlternar={() => setAbiertoId((a) => (hayFicha(a) ? a : a === "lo-nuevo" ? null : "lo-nuevo"))}
                 onEntendido={() => {
+                  setAbiertoId((a) => (a === "lo-nuevo" ? null : a));
+                  if (esAnfitrionOriginal) return; // solo la pliega
                   marcarVisto();
                   setLoNuevo((l) => ({ ...l, verNovedades: false }));
-                  setAbiertoId((a) => (a === "lo-nuevo" ? null : a));
                 }}
               />
             )}
