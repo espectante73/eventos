@@ -449,8 +449,8 @@ No se mueve porque no toca: no ofrecerlo como pendiente.
   reparten con TODAS las confirmaciones.
 - **Las fotos terminadas y su subida en bloque** (nombre de archivo con
   ChatGPT): cuando las tenga.
-- **La prueba del local** (tele, cortinilla y música con su wifi): cerca
-  del evento, y la fecha no está fijada.
+- **La prueba del local** (tele, cortinilla y música con su wifi): en las
+  semanas antes del evento (su fecha, en la base).
 - **El mapa de la app sigue público** hasta que él lo retome. Para hacerlo
   privado, primero él pone privado el repositorio en GitHub (Vercel
   despliega igual; al desarrollador que lo revisa habría que invitarle).
