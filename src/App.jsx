@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { LogOut } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase, supabaseConfigurado } from "./supabaseClient";
@@ -15,6 +15,9 @@ import { esFalloDelServidor } from "./lib/servidor";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
 import { VistaTablon } from "./vistas/VistaTablon";
 import { VistaDj } from "./vistas/VistaDj";
+import { AvisoActualizar } from "./components/AvisoActualizar";
+import { leerVersionPublicada, textoAvisoVersion } from "./lib/avisoVersion";
+import { VERSION_APP } from "./constants";
 
 // Las dos vistas grandes se descargan solo cuando hacen falta (2026-09-18).
 // El que más lo nota es el invitado que abre el tablón desde el móvil: ya
@@ -215,6 +218,9 @@ export default function App() {
   // Se compara el archivo .js que carga esta pestaña con el que carga
   // /index.html ahora mismo (sin caché); si difieren, hay una versión nueva.
   const [hayNuevaVersion, setHayNuevaVersion] = useState(false);
+  // A qué versión lleva y qué cambia (v81.6): de /version.json, que escribe
+  // cada publicación; null si no se pudo leer.
+  const [versionNueva, setVersionNueva] = useState(null);
   useEffect(() => {
     const scriptActual = document.querySelector("script[type='module']")?.getAttribute("src");
     if (!scriptActual) return;
@@ -223,7 +229,10 @@ export default function App() {
         const res = await fetch("/", { cache: "no-store" });
         const html = await res.text();
         const match = html.match(/<script[^>]*type=["']module["'][^>]*src=["']([^"']+)["']/);
-        if (match && match[1] !== scriptActual) setHayNuevaVersion(true);
+        if (match && match[1] !== scriptActual) {
+          setHayNuevaVersion(true);
+          setVersionNueva(await leerVersionPublicada());
+        }
       } catch (_) {
         // Sin conexión o fallo de red: no pasa nada, se reintenta luego.
       }
@@ -241,6 +250,26 @@ export default function App() {
       clearInterval(intervalo);
       document.removeEventListener("visibilitychange", alVolverVisible);
     };
+  }, []);
+
+  // Los letreros de arriba (Modo Pruebas y el aviso de versión) van en UNA
+  // caja, y lo que reservan arriba la página y las ventanas es lo que mide
+  // esa caja: el aviso ocupa más o menos líneas según lo que cuente.
+  const [alturaBanners, setAlturaBanners] = useState(0);
+  const observadorBanners = useRef(null);
+  const refBanners = useCallback((nodo) => {
+    observadorBanners.current?.disconnect();
+    observadorBanners.current = null;
+    if (!nodo) {
+      setAlturaBanners(0);
+      return;
+    }
+    const medir = () => setAlturaBanners(nodo.offsetHeight);
+    medir();
+    if (typeof ResizeObserver !== "undefined") {
+      observadorBanners.current = new ResizeObserver(medir);
+      observadorBanners.current.observe(nodo);
+    }
   }, []);
 
   // Sin sesión no hay ningún rol que resolver. Antes, aquí se verificaba
@@ -448,7 +477,7 @@ export default function App() {
   // saber que todo lo que haga puede deshacerse al desactivarlo (ver
   // VentanaConfigModoPruebas.jsx).
   const modoPruebas = Boolean(data.evento?.modoPruebasActivo);
-  const alturaBanners = (modoPruebas ? ALTO_LETRERO : 0) + (hayNuevaVersion ? 44 : 0);
+  const aviso = textoAvisoVersion({ actual: VERSION_APP, nueva: versionNueva, esAnfitrion: data.esAnfitrion });
 
   return (
     <div
@@ -462,36 +491,19 @@ export default function App() {
         boxSizing: "border-box",
       }}
     >
-      {modoPruebas && (
-        <div
-          className="fixed left-0 right-0 flex items-center justify-center gap-2 px-4 text-sm font-semibold"
-          // Una sola línea y de 40 de alto, lo que le reserva alturaBanners:
-          // en el móvil ocupaba dos y tapaba lo de debajo (v60.1, norma 6:
-          // si no cabe, se recorta).
-          style={{ top: 0, height: ALTO_LETRERO, background: C.peligro, color: C.blanco, zIndex: 61, boxShadow: S.flotante }}
-        >
-          <span className="truncate">🧪 MODO PRUEBAS ACTIVO — todo lo que se haga se restaurará al desactivarlo</span>
-        </div>
-      )}
-      {hayNuevaVersion && (
-        <div
-          className="fixed left-0 right-0 flex items-center justify-between gap-3 px-4 py-2 text-sm"
-          style={{
-            top: modoPruebas ? ALTO_LETRERO : 0,
-            background: C.wax,
-            color: C.blanco,
-            zIndex: 60,
-            boxShadow: S.flotante,
-          }}
-        >
-          <span className="font-medium">Hay una versión nueva de la app — recarga para actualizar.</span>
-          <button
-            onClick={() => window.location.reload()}
-            className="boton-3d px-3 py-1 rounded font-medium whitespace-nowrap"
-            style={{ background: C.blanco, color: C.wax }}
-          >
-            Actualizar
-          </button>
+      {(modoPruebas || hayNuevaVersion) && (
+        <div ref={refBanners} className="fixed left-0 right-0" style={{ top: 0, zIndex: 61, boxShadow: S.flotante }}>
+          {modoPruebas && (
+            <div
+              className="flex items-center justify-center gap-2 px-4 text-sm font-semibold"
+              // Una sola línea y de 40 de alto: en el móvil ocupaba dos y
+              // tapaba lo de debajo (v60.1, norma 6: si no cabe, se recorta).
+              style={{ height: ALTO_LETRERO, background: C.peligro, color: C.blanco }}
+            >
+              <span className="truncate">🧪 MODO PRUEBAS ACTIVO — todo lo que se haga se restaurará al desactivarlo</span>
+            </div>
+          )}
+          {hayNuevaVersion && <AvisoActualizar titulo={aviso.titulo} texto={aviso.texto} onActualizar={() => window.location.reload()} />}
         </div>
       )}
       {/* Con otra ventana delante (Música), la app se oculta entera: una

@@ -4,5 +4,9 @@
 # vez subió con una prueba en rojo (GitHub mandó el correo de fallo).
 # Se activa una vez por máquina: git config core.hooksPath .githooks
 set -e
+# Lo que git cuenta por la entrada (qué ramas y hasta dónde), antes de nada.
+ramas=$(cat)
+# Sin número de versión nuevo y su aviso, tampoco (v81.6).
+printf '%s\n' "$ramas" | node scripts/version-subida.mjs
 npm run lint --silent
 npm test --silent

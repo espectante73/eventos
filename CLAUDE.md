@@ -434,6 +434,9 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
    entero por defecto, y tras el .9 viene el siguiente entero (45.9 →
    46). Se renumera desde la 1 cuando él lo diga (no lo propongo yo),
    tras usar toda la app sin fallo. Lo vigila `reglas-del-proyecto.test.js`.
+   **Toda subida que cambie lo publicado lleva número nuevo y
+   `AVISO_VERSION`**: sin él parece algo de fuera. Lo frena
+   `scripts/version-subida.mjs`.
 5. **La plantilla de invitación DEBE traer dibujado el sello «PAGADO»**:
    la app no lo dibuja, y lo pregunta antes de subir una. Nunca miente:
    solo hay invitación con toda la familia pagada y con mesa.
@@ -450,10 +453,10 @@ No se mueve porque no toca: no ofrecerlo como pendiente.
 - **Las fotos terminadas y su subida en bloque** (nombre de archivo con
   ChatGPT): cuando las tenga.
 - **La prueba del local** (tele, cortinilla y música con su wifi): en las
-  semanas antes del evento (su fecha, en la base).
-- **El mapa de la app sigue público** hasta que él lo retome. Para hacerlo
-  privado, primero él pone privado el repositorio en GitHub (Vercel
-  despliega igual; al desarrollador que lo revisa habría que invitarle).
+  semanas antes del evento.
+- **El mapa de la app sigue público** hasta que él lo retome: antes, él
+  pone privado el repositorio (Vercel despliega igual; al desarrollador
+  que lo revisa habría que invitarle).
 
 ======================================================================
 
@@ -528,10 +531,9 @@ invitados. Lo vigila `reglas-del-proyecto.test.js`.
 
 ### 2.8 `nvm install` cambia su Mac, no solo la prueba
 
-⚠️ Instalar otra versión de Node para una prueba dejó el alias `default`
-apuntando a nada, y en un terminal nuevo no había `node` ni `npm`. Al
-terminar, dejar el `default` como estaba: mirarlo con `nvm alias
-default` ANTES de instalar.
+⚠️ Instalar otro Node dejó el alias `default` apuntando a nada: en un
+terminal nuevo no había `node` ni `npm`. Mirar `nvm alias
+default` ANTES de instalar, y dejarlo como estaba.
 
 ### 2.9 Algo raro con un botón SOLO en el iPhone
 

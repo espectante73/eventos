@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "81.6",
+    cambios: [
+      "El aviso rojo de «Actualizar», para todos los que entran con su cuenta: el número de la versión nueva y, en 2 o 3 líneas, qué cambia, se corrige o se añade. Si alguna vez llegara una actualización sin número nuevo, al anfitrión se lo dice, para preguntar antes. «Actualizar» se pone del lado del pulgar elegido.",
+      "No se publica nada sin número nuevo y su explicación: lo impide un freno antes de subir.",
+    ],
+  },
+  {
     version: "81.5",
     cambios: [
       "Inicio → Abrir sección → Invitados: dos opciones, «Añadir» (el formulario «Nuevo invitado», sin abrir antes la Lista) y «Lista».",
