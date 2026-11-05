@@ -109,13 +109,12 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    copia de cómo está resuelto lo mismo en la app y, si hay duda, **se
    pregunta en una línea ANTES de tocarlo**. Si una norma suya choca con
    algo que cualquiera reconoce de internet, preguntar por su alcance.
-   Medidas y colores los vigila `src/theme.test.js` (un translúcido, con
-   `conAlfa`; lo que copia `index.css`, con `= theme.js C.nombre` al lado).
+   Medidas y colores los vigila `src/theme.test.js`.
 2. **Ventanas tan pequeñas como su contenido**: del ancho de un móvil en
    vertical, también en el ordenador. Toda ventana nueva es una
    `VentanaFlotante`; si crece mucho, lanzadora pequeña + una ventana por
-   parte. ⚠️ Las que se usan **mientras se mira otra cosa** —Novedades,
-   Cronograma, Lista de invitados— son ventanas de verdad del sistema
+   parte. ⚠️ Las que se usan **mientras se mira otra cosa** —como la Lista
+   o Novedades— son ventanas de verdad del sistema
    (`usePopupWindow`); Multimedia, en el ordenador, una página propia
    (`lib/ventanaMusica.js`) que sigue sonando aunque se cierre la app; en
    el móvil, dentro de la app, con la barra de ventanas (`BarraVentanas`).
@@ -124,7 +123,6 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    (ver 1.4).
 4. **Siempre con las piezas compartidas**; los lenguajes propios ya
    aprobados —pastilla de inicio, mando de música— se respetan tal cual.
-   Lo vigila `Boton.test.js`.
    - **Lo que se PULSA** (también desplegables, títulos plegables e
      iconos de las tablas) → `Boton`: relieve, clic y vibración. Los
      apartados de un formulario llevan solo su rótulo y una flecha grande
@@ -136,15 +134,14 @@ en la propuesta cuáles se han comprobado. Lo fuerza
      la app. X = quitar; papelera = para siempre.
    - **Las fotos** → `HuecoFoto` (16:9, mismo marco).
    - **Los botones de un mismo grupo**, todos iguales y del ancho del más
-     largo; si un rótulo no cabe, se abrevia. En Mi cuenta copian las
-     filas de "Abrir sección…" (`ANCHO_FILA_MENU`).
+     largo; si un rótulo no cabe, se abrevia.
    - **Icono y texto, mismo hueco**: lo pone la pieza (`Boton`,
-     `MenuFlotante`), con iconos que llenan su cuadrado (`UserPlus`: el «+»
-     suelto deja más aire).
+     `MenuFlotante`), con iconos que llenan su cuadrado (lo vigila
+     `reglas-del-proyecto.test.js`).
 5. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
    protagonista, y lo que se abre encima aclara el fondo con `VELO`: tras
-   una ventana que atender, todo; tras un menú, sus botones y un dedo
-   que se desvanece. Los textos de ayuda, al pie y
+   una ventana que atender, todo; tras un menú, solo alrededor de sus
+   botones. Los textos de ayuda, al pie y
    plegados (`<details>`). Todo panel tiene su **salida ARRIBA y a la
    vista**, y salir deja la pantalla como estaba; un formulario acaba en
    **«Guardar» y «Cancelar»**.
@@ -158,8 +155,8 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 7. **Una sola pieza, no sincronizar**: si dos sitios tienen que decir
    siempre lo mismo —un componente, una constante, una función, qué es
    una familia (`claveFamilia`), cómo se nombra a alguien
-   (`nombreCompleto`), su email (`emailDeInvitado`: el de su ficha o, si
-   es colaborador, el de su cuenta) o un importe (`euros`)—, comparten la
+   (`nombreCompleto`), su email (`emailDeInvitado`) o un importe
+   (`euros`)—, comparten la
    definición: dos copias a mano **derivan sin que nadie lo vea**.
 8. **La Lista de invitados es la raíz de toda la app** (la norma de
    origen): ahí se editan los datos y de ahí lee todo lo demás. Todos son
