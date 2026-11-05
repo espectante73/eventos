@@ -209,3 +209,51 @@ describe("descargar las fotos de Aniversario", () => {
     vista.desmontar();
   });
 });
+
+// v82.2 (él): «es un lío abrir y cerrar»: ← → o ‹ › sin cerrar la foto.
+describe("pasar por las fotos en grande", () => {
+  const foto = "data:image/jpeg;base64,eA==";
+  const datos = {
+    invitados,
+    evento: { fecha: "2026-12-11" },
+    fotosFamiliares: { Martíni01: foto },
+    fotosAniversario: { Martíni01: foto, Medina01: foto },
+    fotosBodaFinal: {},
+    fotosSinBoda: {},
+    persistFotosAniversario: () => {},
+    persistFotosBodaFinal: () => {},
+  };
+  const botones = () => [...document.body.querySelectorAll("button")];
+  const tecla = async (key) => {
+    const { act } = await import("react");
+    await act(async () => window.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true })));
+  };
+  const clic = async (b) => {
+    const { act } = await import("react");
+    await act(async () => b.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  };
+  const titulo = () => document.body.textContent.match(/Aniversario — (Adriano y Rosi|Emiliano y Ana)/)?.[1];
+
+  it("Aniversario: → pasa a la siguiente, ‹ vuelve, y al final da la vuelta; dice «N de M»", async () => {
+    const vista = montar(<VentanaAniversarios data={datos} onCerrar={() => {}} />);
+    await clic(botones().find((b) => b.title === "Aniversario — ver en grande"));
+    const primera = titulo();
+    expect(document.body.textContent).toContain("1 de 2");
+    await tecla("ArrowRight");
+    expect(titulo()).not.toBe(primera);
+    expect(document.body.textContent).toContain("2 de 2");
+    await tecla("ArrowRight");
+    expect(titulo(), "da la vuelta").toBe(primera);
+    await clic(botones().find((b) => b.title === "Anterior (←)"));
+    expect(document.body.textContent).toContain("2 de 2");
+    vista.desmontar();
+  });
+
+  it("Boda: solo pasa por las que tienen foto de boda (aquí, una: sin flechas)", async () => {
+    const vista = montar(<VentanaAniversarios data={datos} onCerrar={() => {}} />);
+    await clic(botones().find((b) => b.title === "Boda — ver en grande"));
+    expect(document.body.textContent).toContain("1 de 1");
+    expect(botones().find((b) => b.title === "Siguiente (→)")).toBeUndefined();
+    vista.desmontar();
+  });
+});

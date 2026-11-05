@@ -15,8 +15,8 @@
 // Las fotos NO se guardan en la base, sino en el cajón cerrado
 // "fotos-matrimonios" (ver lib/fotosAlmacen.js). Aquí solo se manejan rutas
 // y enlaces temporales.
-import { useEffect, useMemo, useState } from "react";
-import { Download } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { C, R, T, OP, S, DORADO, conAlfa, filtroColumnaStyle } from "../../theme";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton, estilosBoton } from "../../components/Boton";
@@ -40,6 +40,7 @@ import { crearZip } from "../../lib/zip";
 import { descargarBlob } from "../../lib/descargas";
 import { LineaAviso } from "../../components/LineaAviso";
 import { esAparatoTactil } from "../../lib/mano";
+import { vecina, posicion, versionDeBoda } from "../../lib/recorrerFotos";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 
 // Aire entre las dos columnas, con un adorno en medio (ver Separador).
@@ -203,6 +204,35 @@ export function VentanaAniversarios({ data, onCerrar }) {
       (!filtroBoda || (filtroBoda === "con") === conFotoBoda(m)) &&
       (!filtroAniv || (filtroAniv === "faltan") === faltaAniversario(m))
   );
+
+  // Pasar por todas sin cerrar (él, v82.2): ← → o ‹ ›, por la columna
+  // abierta, en el orden de la lista y con sus filtros, saltando los
+  // matrimonios sin foto en esa columna. Lógica en lib/recorrerFotos.js.
+  const conFotoEn = (tipo) => (m) =>
+    tipo === "boda" ? Boolean(fotosFamiliares?.[m.familia] || fotosBodaFinal?.[m.familia]) : Boolean(fotosAniversario?.[m.familia]);
+  const recorrido = enGrande ? visibles.filter(conFotoEn(enGrande.tipo)) : [];
+  // Por familia y nombres, no por objeto: la lista se rehace con cada refresco.
+  const esLaAbierta = (m) => m.familia === enGrande?.matrimonio.familia && nombresMatrimonio(m) === nombresMatrimonio(enGrande.matrimonio);
+  const pasar = (paso) => {
+    const m = enGrande && vecina(recorrido, esLaAbierta, paso);
+    if (!m) return;
+    const cual = enGrande.tipo === "boda" ? versionDeBoda(enGrande.cual, { original: fotosFamiliares?.[m.familia], final: fotosBodaFinal?.[m.familia] }) : undefined;
+    setEnGrande({ matrimonio: m, tipo: enGrande.tipo, cual });
+  };
+  const pasarConTeclas = useRef(pasar);
+  pasarConTeclas.current = pasar;
+  const hayEnGrande = Boolean(enGrande);
+  useEffect(() => {
+    if (!hayEnGrande) return undefined;
+    const alPulsar = (e) => {
+      if (e.target?.closest?.("input, select, textarea")) return;
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      pasarConTeclas.current(e.key === "ArrowRight" ? 1 : -1);
+    };
+    window.addEventListener("keydown", alPulsar);
+    return () => window.removeEventListener("keydown", alPulsar);
+  }, [hayEnGrande]);
 
   const subir = async (tipo, familia, file) => {
     const t = TIPOS[tipo];
@@ -567,11 +597,20 @@ export function VentanaAniversarios({ data, onCerrar }) {
             ? `Boda (${enGrande.cual === "final" ? "con plantilla" : "original"}) — ${nombresMatrimonio(m)}`
             : `Aniversario — ${nombresMatrimonio(m)}`;
 
+          const donde = posicion(recorrido, esLaAbierta);
+          const conFlechas = recorrido.length > 1;
           return (
             <ModalFlotante
               titulo={titulo}
               onCerrar={() => setEnGrande(null)}
               ancho={960}
+              extra={
+                donde && (
+                  <span className="text-sm whitespace-nowrap" style={{ color: C.goldClaro }}>
+                    {donde.n} de {donde.de}
+                  </span>
+                )
+              }
               acciones={
                 <>
                   {/* Solo en Aniversario se sube (v70.9): en Boda está la
@@ -617,14 +656,20 @@ export function VentanaAniversarios({ data, onCerrar }) {
                 </>
               }
             >
-              <div
-                style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: R.caja, overflow: "hidden", ...estiloMarcoFoto(10) }}
-              >
-                <img
-                  src={verFoto(valor)}
-                  alt={titulo}
-                  style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-                />
+              {/* ‹ › a los lados (v82.2). No se invierten con la mano izquierda:
+                  «anterior» quedaría a la derecha de «siguiente» (1.4). */}
+              <div className="flex items-center gap-2">
+                {conFlechas && <Boton icono={ChevronLeft} titulo="Anterior (←)" onClick={() => pasar(-1)} />}
+                <div
+                  style={{ flex: 1, minWidth: 0, aspectRatio: "16 / 9", borderRadius: R.caja, overflow: "hidden", ...estiloMarcoFoto(10) }}
+                >
+                  <img
+                    src={verFoto(valor)}
+                    alt={titulo}
+                    style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                  />
+                </div>
+                {conFlechas && <Boton icono={ChevronRight} titulo="Siguiente (→)" onClick={() => pasar(1)} />}
               </div>
             </ModalFlotante>
           );
