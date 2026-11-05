@@ -138,6 +138,8 @@ function FormularioDatos({
   familiaSinEmail = false,
   // ▶ junto a cada canción (v81.1): escucharla en Deezer.
   escucharCancion,
+  // Los mensajes de WhatsApp de este invitado (v82.6).
+  mensajesDe,
 }) {
   // Todo lo que se escribe se queda AQUÍ, en la pantalla, hasta pulsar
   // "Guardar" (él, v50): así "Cancelar" puede descartarlo de verdad, y
@@ -215,14 +217,10 @@ function FormularioDatos({
   };
 
   const opcionesEmail = { familiaSinEmail, colaboradorVinculado };
-  // Los mensajes de WhatsApp que le tocan (v82.4), con lo ya GUARDADO: lo
-  // que se está escribiendo aún no cuenta.
-  const mensajesDelInvitado = mensajesWhatsapp({
-    invitado,
-    evento,
-    faltan: faltanObligatorios(invitado, evento, { ...opcionesEmail, fotoBoda: { hay: Boolean(fotoFamiliar), sinFoto: sinFotoBoda } }),
-    importe,
-  });
+  // Los mensajes de WhatsApp de su familia (v82.6), con lo ya GUARDADO: lo
+  // que se está escribiendo aún no cuenta. Los arma VistaColaborador, que
+  // ve a toda la familia.
+  const mensajesDelInvitado = mensajesDe ? mensajesDe(invitado) : [];
   const pideEmailAqui = emailObligatorio(form, evento, opcionesEmail);
   // Para Guardar, también la foto de boda: subida o «No» (él, v58.2).
   const opcionesGuardar = { ...opcionesEmail, fotoBoda: { hay: hayFoto, sinFoto } };
@@ -773,6 +771,8 @@ function FilaInvitadoColaborador({
   // Lo que le falta a su familia para pasar a «Familias» (v62.6): si sus
   // datos ya están, la fila lo dice en rojo debajo.
   faltaFamilia = [],
+  // Los mensajes de WhatsApp de su familia (v82.6), para su ficha.
+  mensajesDe,
 }) {
   const importe = importeEsperadoInvitado(g, evento);
   // Las preguntas en la ventana de la app, no en la del navegador (norma).
@@ -1006,6 +1006,7 @@ function FilaInvitadoColaborador({
             onCambiarSinFotoBoda={onCambiarSinFotoBoda}
             familiaSinEmail={familiaSinEmail}
             escucharCancion={escucharCancion}
+            mensajesDe={mensajesDe}
           />
         </div>
       )}
@@ -1353,6 +1354,21 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // no manda tentativa al navegador del colaborador (ver schema.sql) --
   // este filtro es ahora un no-op de refuerzo, no la barrera real.
   const confirmados = misInvitados.filter((g) => g.confirmado);
+  // Los mensajes de WhatsApp de un invitado (v82.6): los de SU FAMILIA, con
+  // los confirmados de ella que lleva este colaborador (lib/mensajesWhatsapp.js).
+  const mensajesDe = (g) =>
+    mensajesWhatsapp({
+      invitado: g,
+      familia: confirmados.filter((m) => claveFamilia(m) === claveFamilia(g)),
+      evento,
+      faltanDe: (m) =>
+        faltanObligatorios(m, evento, {
+          familiaSinEmail: familiasSinEmailAhora.has(claveFamilia(m)),
+          colaboradorVinculado: comoColaborador(m, colaboradores),
+          fotoBoda: { hay: Boolean(fotosFamiliares?.[m.grupoFamiliar || ""]), sinFoto: Boolean(fotosSinBoda?.[m.grupoFamiliar || ""]) },
+        }),
+      importeDe: (m) => importeEsperadoInvitado(m, evento),
+    });
   // INCOMPLETA = no está en "N de N" (la misma regla que pinta la fila de
   // rojo, lib/invitados.js). Antes estas secciones solo miraban los datos
   // obligatorios (año de nacimiento y alergias), y una ficha podía estar en
@@ -1807,6 +1823,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   obtenerFamilia={data.obtenerFamilia}
                   marcarFamilia={data.marcarFamilia}
                   escucharCancion={data.buscarParaEscuchar}
+                  mensajesDe={mensajesDe}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   fotosSinBoda={fotosSinBoda || {}}
@@ -1861,6 +1878,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   obtenerFamilia={data.obtenerFamilia}
                   marcarFamilia={data.marcarFamilia}
                   escucharCancion={data.buscarParaEscuchar}
+                  mensajesDe={mensajesDe}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   fotosSinBoda={fotosSinBoda || {}}

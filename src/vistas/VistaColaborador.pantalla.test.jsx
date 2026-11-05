@@ -197,7 +197,7 @@ describe("la pantalla del colaborador se puede dibujar", () => {
     window.open = abrirOriginal;
     expect(abiertas).toHaveLength(1);
     expect(abiertas[0]).toMatch(/^https:\/\/wa\.me\/34612345678\?text=/);
-    expect(decodeURIComponent(abiertas[0].split("text=")[1])).toBe("Hola, Omar: para la boda del 13 de noviembre nos faltan algunos datos tuyos: email, foto de boda y alergias. ¿Nos los mandas cuando puedas? ¡Gracias!");
+    expect(decodeURIComponent(abiertas[0].split("text=")[1])).toBe("PACHECO, Omar: para la boda del 13 de noviembre nos faltan algunos datos de la familia: Omar (email y alergias) y la foto de boda. ¿Nos los mandan cuando puedan? ¡Gracias!");
     vista.desmontar();
   });
 

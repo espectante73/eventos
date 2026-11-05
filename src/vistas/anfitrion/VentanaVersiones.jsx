@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "82.6",
+    cambios: [
+      "Mensajes de WhatsApp, por familia: el mismo mensaje para todos sus miembros, y solo cambia a quién va. Lo encabeza la app con el apellido familiar en mayúsculas, una coma y el nombre («PACHECO, Omar: …»); las plantillas son lo que sigue. Sale si le toca a alguien de la familia: lo que falta, por persona («Omar (alergias) y Lucía (año de nacimiento)») y la foto o el año de boda una sola vez; el pago, el total pendiente de la familia. Cuenta los miembros que lleva ese colaborador. A quien viene solo, lo suyo y en singular, mientras no haya textos propios.",
+    ],
+  },
+  {
     version: "82.5",
     cambios: [
       "«Lo nuevo», en el Inicio de cada colaborador: una línea más, con el icono de WhatsApp, para los mensajes ya escritos («lo que le falta, sus canciones (hasta 3) o su pago»). Plegado dice «WhatsApp, avisos y canciones». Al ser algo nuevo, sale hasta el 19 de noviembre (antes, el 18).",

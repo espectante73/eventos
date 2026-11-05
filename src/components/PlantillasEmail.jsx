@@ -153,17 +153,18 @@ export function PlantillasEmail({ data }) {
   );
 }
 
-// Los mensajes de WhatsApp a los invitados (él, v82.4): una plantilla por
-// caso, aquí con el resto del texto de la app. Vacía, vale la de
-// lib/mensajesWhatsapp.js, que es la que se ve al abrirla. Solo el
+// Los mensajes de WhatsApp a los invitados (él, v82.4-82.6): una plantilla
+// por caso, aquí con el resto del texto de la app. Vacía, vale la de
+// lib/mensajesWhatsapp.js (la de familia), que es la que se ve al abrirla. Solo el
 // anfitrión: la base no deja guardarlas a nadie más (guardar_evento).
 export function PlantillasWhatsapp({ data }) {
   const { evento, persistEvento, obtenerHistorialTexto } = data;
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-        Mensajes de WhatsApp a los invitados, desde su ficha: cada uno sale solo si le toca. Los
-        huecos {HUECOS_WHATSAPP.join(" ")} se rellenan solos.
+        Mensajes de WhatsApp a los invitados, desde su ficha: cada uno sale si le toca a alguien de
+        su familia, y es el mismo para toda ella. El saludo («PACHECO, Omar:») lo pone la app; aquí va
+        lo que sigue. Los huecos {HUECOS_WHATSAPP.join(" ")} se rellenan solos.
       </p>
       {PLANTILLAS_WHATSAPP.map((p) => (
         <SeccionPlegable key={p.campo} icono={IconoWhatsApp} titulo={p.titulo} resumen={resumenDe(evento[p.campo] || p.porDefecto)}>
