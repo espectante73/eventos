@@ -39,6 +39,8 @@ import {
 import { crearZip } from "../../lib/zip";
 import { descargarBlob } from "../../lib/descargas";
 import { LineaAviso } from "../../components/LineaAviso";
+import { esAparatoTactil } from "../../lib/mano";
+import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 
 // Aire entre las dos columnas, con un adorno en medio (ver Separador).
 const SEPARACION_COLUMNAS = 44;
@@ -48,7 +50,9 @@ const SEPARACION_COLUMNAS = 44;
 // SeccionInvitados.jsx), para que se vea que la columna baja hasta las filas.
 // Debajo del título, su filtro con la cifra en cada opción, como en la Lista
 // (él, v71.5). Las cuentas van arriba, en el recuadro de cifras (v71.4).
-function BandaCabecera({ titulo, filtro, onFiltro, opciones }) {
+// `accion`: un botón junto al título (Aniv.: bajar todas, v82.1). La fila
+// del título mide lo mismo con o sin él, para que los filtros se alineen.
+function BandaCabecera({ titulo, filtro, onFiltro, opciones, accion = null }) {
   return (
     <div
       className="flex flex-col pt-2 pb-1"
@@ -59,8 +63,9 @@ function BandaCabecera({ titulo, filtro, onFiltro, opciones }) {
         borderRadius: `${R.caja}px ${R.caja}px 0 0`,
       }}
     >
-      <div className="text-center text-sm font-bold uppercase" style={{ color: C.goldClaro }}>
+      <div className="flex items-center justify-center gap-1 text-sm font-bold uppercase" style={{ color: C.goldClaro, minHeight: 28 }}>
         {titulo}
+        {accion}
       </div>
       <select value={filtro} onChange={(e) => onFiltro(e.target.value)} style={filtroColumnaStyle} title={`Filtrar por la columna ${titulo}`}>
         <option value="">Todas</option>
@@ -114,6 +119,8 @@ export function VentanaAniversarios({ data, onCerrar }) {
     persistFotosBodaFinal,
   } = data;
   const [enlaces, setEnlaces] = useState({});
+  // Avisar al terminar una descarga, y dónde está (norma 9).
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   // Al CAMBIAR una foto la ruta no cambia (el nombre de archivo es estable a
   // propósito), así que el efecto de abajo no se enteraría y el navegador
   // seguiría enseñando la vieja desde su caché. Este contador fuerza a pedir
@@ -266,16 +273,16 @@ export function VentanaAniversarios({ data, onCerrar }) {
     if (!a.falta.completo) setAvisoDescarga({ ...a.falta, cuales });
     else descargarOriginales(cuales);
   };
-  const descargarOriginales = async (cuales) => {
-    const { conOriginal, paraEncargo, falta, archivo } = alcance(cuales);
-    setAvisoDescarga(null);
-    setDescargando(cuales);
+  // Las fotos de esos matrimonios (de `mapa`), cada una con su nombre
+  // «Familia - Esposo y Esposa - año.jpg»: lo mismo para las originales y
+  // para las de aniversario (v82.1).
+  const fotosConNombre = async (lista, mapa) => {
     const archivos = [];
     const fallidas = [];
     const usados = new Set();
     await Promise.all(
-      conOriginal.map(async (m) => {
-        const valor = fotosFamiliares[m.familia];
+      lista.map(async (m) => {
+        const valor = mapa[m.familia];
         try {
           const datos = await bytesDeFoto(valor, enlaces[valor]);
           let nombre = nombreDescargaBoda(m);
@@ -288,8 +295,16 @@ export function VentanaAniversarios({ data, onCerrar }) {
         }
       })
     );
+    archivos.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+    return { archivos, fallidas };
+  };
+
+  const descargarOriginales = async (cuales) => {
+    const { conOriginal, paraEncargo, falta, archivo } = alcance(cuales);
+    setAvisoDescarga(null);
+    setDescargando(cuales);
+    const { archivos, fallidas } = await fotosConNombre(conOriginal, fotosFamiliares);
     if (archivos.length > 0) {
-      archivos.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
       if (falta.completo) {
         archivos.unshift({
           nombre: "Hoja de encargo.txt",
@@ -300,6 +315,41 @@ export function VentanaAniversarios({ data, onCerrar }) {
     }
     if (fallidas.length > 0) setError(`No se pudieron descargar ${fallidas.length}: ${fallidas.join(", ")}.`);
     setDescargando("");
+  };
+
+  // Las de Aniversario (él, v82.1): todas en un ZIP desde la cabecera de su
+  // columna, y una desde su vista en grande. Solo en el ordenador (él: «en
+  // el Mac»): todas juntas pesan cientos de MB y en el móvil se quedaría
+  // sin memoria a medias.
+  const enOrdenador = !esAparatoTactil();
+  const conAniversario = matrimonios.filter((m) => fotosAniversario?.[m.familia]);
+  const avisarDescarga = (archivo, fallidas, de) =>
+    preguntar({
+      titulo: archivo ? "Descargada" : "No se pudo",
+      texto: [
+        archivo && `${archivo}\nLo tienes en tu carpeta de Descargas.`,
+        fallidas.length > 0 && `No se pudieron bajar ${fallidas.length} de ${de}: ${fallidas.join(", ")}. Vuelve a intentarlo.`,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      soloAviso: true,
+    });
+  const ARCHIVO_ANIVERSARIOS = "Fotos de aniversario.zip";
+  const descargarAniversarios = async () => {
+    setError("");
+    setDescargando("aniversario");
+    const { archivos, fallidas } = await fotosConNombre(conAniversario, fotosAniversario);
+    if (archivos.length > 0) descargarBlob(ARCHIVO_ANIVERSARIOS, new Blob([crearZip(archivos)], { type: "application/zip" }));
+    setDescargando("");
+    avisarDescarga(archivos.length > 0 && `${ARCHIVO_ANIVERSARIOS} (${archivos.length} fotos)`, fallidas, conAniversario.length);
+  };
+  const descargarUnAniversario = async (m) => {
+    setError("");
+    setDescargando(`aniversario:${m.familia}`);
+    const { archivos, fallidas } = await fotosConNombre([m], fotosAniversario);
+    if (archivos.length > 0) descargarBlob(archivos[0].nombre, new Blob([archivos[0].datos], { type: "image/jpeg" }));
+    setDescargando("");
+    avisarDescarga(archivos[0]?.nombre, fallidas, 1);
   };
 
   // Las cuentas (él, v71.4): cuántos matrimonios hay, cuántos tienen ya su
@@ -389,6 +439,19 @@ export function VentanaAniversarios({ data, onCerrar }) {
           <Separador adorno={false} />
           <BandaCabecera
             titulo="Aniv."
+            accion={
+              enOrdenador && (
+                <Boton
+                  variante="secundario"
+                  oscuro
+                  tamano="pequeno"
+                  icono={Download}
+                  titulo={`Descargar en un solo archivo las ${conAniversario.length} fotos de aniversario, con su nombre y año`}
+                  onClick={descargarAniversarios}
+                  disabled={Boolean(descargando) || conAniversario.length === 0}
+                />
+              )
+            }
             filtro={filtroAniv}
             onFiltro={setFiltroAniv}
             opciones={[
@@ -399,6 +462,11 @@ export function VentanaAniversarios({ data, onCerrar }) {
         </div>
       )}
 
+      {descargando === "aniversario" && (
+        <p className="text-xs mb-2" style={{ color: C.goldClaro }}>
+          Preparando «{ARCHIVO_ANIVERSARIOS}» con {conAniversario.length} fotos…
+        </p>
+      )}
       {error && (
         // Rosa claro: el cuerpo de esta ventana es verde oscuro.
         <LineaAviso className="text-xs mb-2" style={{ color: C.avisoFondo }}>
@@ -511,6 +579,11 @@ export function VentanaAniversarios({ data, onCerrar }) {
                       <Boton>: tiene que disparar el <input type="file"> de
                       al lado. Se le clava el mismo aspecto con
                       estilosBoton para que no desafine. */}
+                  {!esBoda && valor && enOrdenador && (
+                    <Boton icono={Download} onClick={() => descargarUnAniversario(m)} disabled={Boolean(descargando)}>
+                      {descargando === `aniversario:${m.familia}` ? "Preparando…" : "Descargar"}
+                    </Boton>
+                  )}
                   {!esBoda && (
                     <>
                       <label
@@ -634,6 +707,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
         </ModalFlotante>
       )}
 
+      {ventanaPregunta}
     </VentanaFlotante>
   );
 }

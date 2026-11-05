@@ -1,6 +1,6 @@
 // Aniversarios (v71.1, él): dos botones para bajar las originales, «Todas»
 // y «Nuevas», que cuenta solo las que aún no tienen foto en Aniversario.
-import { it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { montar } from "../../pruebas/dibujar";
 import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
 
@@ -140,4 +140,72 @@ it("los filtros: Boda «Con» + Aniv. «Faltan» deja las que se pueden montar y
   expect(salen()).toEqual([]);
   expect(document.body.textContent).toContain("Ningún matrimonio con estos filtros.");
   vista.desmontar();
+});
+
+// v82.1 (él): las de Aniversario, todas en un ZIP desde su columna y una desde
+// su vista en grande; las dos solo en el ordenador.
+describe("descargar las fotos de Aniversario", () => {
+  const foto = "data:image/jpeg;base64,eA==";
+  const datos = {
+    invitados,
+    evento: { fecha: "2026-12-11" },
+    fotosFamiliares: {},
+    fotosAniversario: { Martíni01: foto, Medina01: foto },
+    fotosBodaFinal: {},
+    fotosSinBoda: {},
+    persistFotosAniversario: () => {},
+    persistFotosBodaFinal: () => {},
+  };
+  const botones = () => [...document.body.querySelectorAll("button")];
+  const todas = () => botones().find((b) => (b.title || "").startsWith("Descargar en un solo archivo las 2 fotos de aniversario"));
+  const clic = async (b) => {
+    const { act } = await import("react");
+    await act(async () => b.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    await act(async () => {});
+  };
+  let descargas, original, fetchOriginal, matchOriginal;
+  beforeEach(() => {
+    descargas = [];
+    original = URL.createObjectURL;
+    fetchOriginal = globalThis.fetch;
+    matchOriginal = window.matchMedia;
+    URL.createObjectURL = (blob) => (descargas.push(blob), "blob:prueba");
+    globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer });
+  });
+  afterEach(() => {
+    URL.createObjectURL = original;
+    globalThis.fetch = fetchOriginal;
+    window.matchMedia = matchOriginal;
+  });
+
+  it("en el ordenador: ⬇ en «Aniv.» baja todas en un ZIP con su nombre y avisa dónde está", async () => {
+    const vista = montar(<VentanaAniversarios data={datos} onCerrar={() => {}} />);
+    await clic(todas());
+    expect(descargas).toHaveLength(1);
+    const zip = new TextDecoder().decode(new Uint8Array(await descargas[0].arrayBuffer()));
+    expect(zip).toContain("Martíni01 - Adriano y Rosi - 2010.jpg");
+    expect(zip).toContain("Medina01 - Emiliano y Ana - 2010.jpg");
+    expect(document.body.textContent).toContain("Fotos de aniversario.zip (2 fotos)");
+    expect(document.body.textContent).toContain("carpeta de Descargas");
+    vista.desmontar();
+  });
+
+  it("en el ordenador: en grande, «Descargar» baja esa foto sola", async () => {
+    const vista = montar(<VentanaAniversarios data={datos} onCerrar={() => {}} />);
+    await clic(botones().find((b) => b.title === "Aniversario — ver en grande"));
+    await clic(botones().find((b) => b.textContent.trim() === "Descargar"));
+    expect(descargas).toHaveLength(1);
+    expect(descargas[0].type).toBe("image/jpeg");
+    expect(document.body.textContent).toMatch(/- Adriano y Rosi - 2010\.jpg|- Emiliano y Ana - 2010\.jpg/);
+    vista.desmontar();
+  });
+
+  it("en el móvil no salen: ni ⬇ ni «Descargar»", async () => {
+    window.matchMedia = (q) => ({ matches: q.includes("pointer: coarse"), addEventListener() {}, removeEventListener() {} });
+    const vista = montar(<VentanaAniversarios data={datos} onCerrar={() => {}} />);
+    expect(todas()).toBeUndefined();
+    await clic(botones().find((b) => b.title === "Aniversario — ver en grande"));
+    expect(botones().map((b) => b.textContent.trim())).not.toContain("Descargar");
+    vista.desmontar();
+  });
 });

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "82.1",
+    cambios: [
+      "Aniversarios, solo en el ordenador: un botón ⬇ en la cabecera de la columna «Aniv.» baja todas las fotos de aniversario en un solo ZIP («Fotos de aniversario.zip»), y en la vista en grande de cada una, «Descargar» baja esa sola. Cada foto con su nombre, «Familia - Nombres - año.jpg», como las originales. Al terminar avisa de que está en la carpeta de Descargas.",
+    ],
+  },
+  {
     version: "82",
     cambios: [
       "«Lo nuevo», en el Inicio de cada colaborador: los pasos para instalar la app (iPhone y Android, con el icono) y activar los avisos salen siempre al desplegarlo. Antes se escondían a quien ya la tenía instalada o entraba desde el ordenador, y la línea de los avisos quedaba sin instrucciones.",
