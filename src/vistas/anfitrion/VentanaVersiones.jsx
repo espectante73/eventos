@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "82.3",
+    cambios: [
+      "Aniversarios, en el ordenador: «Descargar» también en la vista en grande de Boda. Baja la que se ve: la original («Familia - Nombres - año.jpg») o la de plantilla, con «con plantilla» al final del nombre para que no se pisen en Descargas. Antes solo estaba en las de aniversario.",
+    ],
+  },
+  {
     version: "82.2",
     cambios: [
       "Aniversarios: con una foto abierta en grande, ← → del teclado o las flechas ‹ › a sus lados pasan a la anterior o la siguiente sin cerrarla. Recorre la columna abierta (Aniversario o Boda, en Boda con la misma versión, original o con plantilla, si la tiene), en el orden de la lista y con sus filtros, saltando las que no tienen foto; al final vuelve a la primera. Arriba, «3 de 48».",

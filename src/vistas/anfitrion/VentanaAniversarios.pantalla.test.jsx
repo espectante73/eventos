@@ -200,6 +200,21 @@ describe("descargar las fotos de Aniversario", () => {
     vista.desmontar();
   });
 
+  it("en el ordenador: en grande, Boda también tiene «Descargar», y la de plantilla lo dice en el nombre (v82.3)", async () => {
+    const conBoda = { ...datos, fotosFamiliares: { Martíni01: foto }, fotosBodaFinal: { Martíni01: foto } };
+    const vista = montar(<VentanaAniversarios data={conBoda} onCerrar={() => {}} />);
+    await clic(botones().find((b) => b.title === "Boda — ver en grande"));
+    await clic(botones().find((b) => b.textContent.trim() === "Descargar"));
+    expect(descargas).toHaveLength(1);
+    expect(document.body.textContent, "abre con la de plantilla").toContain("Martíni01 - Adriano y Rosi - 2010 - con plantilla.jpg");
+    await clic(botones().find((b) => b.textContent.trim() === "Entendido"));
+    await clic(botones().find((b) => b.textContent.trim() === "Ver original"));
+    await clic(botones().find((b) => b.textContent.trim() === "Descargar"));
+    expect(descargas).toHaveLength(2);
+    expect(document.body.textContent).toContain("Martíni01 - Adriano y Rosi - 2010.jpg");
+    vista.desmontar();
+  });
+
   it("en el móvil no salen: ni ⬇ ni «Descargar»", async () => {
     window.matchMedia = (q) => ({ matches: q.includes("pointer: coarse"), addEventListener() {}, removeEventListener() {} });
     const vista = montar(<VentanaAniversarios data={datos} onCerrar={() => {}} />);

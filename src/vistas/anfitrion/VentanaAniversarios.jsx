@@ -373,13 +373,18 @@ export function VentanaAniversarios({ data, onCerrar }) {
     setDescargando("");
     avisarDescarga(archivos.length > 0 && `${ARCHIVO_ANIVERSARIOS} (${archivos.length} fotos)`, fallidas, conAniversario.length);
   };
-  const descargarUnAniversario = async (m) => {
+  // Una sola, la que se ve en grande (v82.1 aniversario; v82.3 también la
+  // de boda, original o con plantilla). La de plantilla lo lleva en el
+  // nombre: si no, al bajar las dos se pisarían en Descargas.
+  const MAPA_DE = { aniversario: fotosAniversario, original: fotosFamiliares, bodaFinal: fotosBodaFinal };
+  const descargarUna = async (m, cual) => {
     setError("");
-    setDescargando(`aniversario:${m.familia}`);
-    const { archivos, fallidas } = await fotosConNombre([m], fotosAniversario);
-    if (archivos.length > 0) descargarBlob(archivos[0].nombre, new Blob([archivos[0].datos], { type: "image/jpeg" }));
+    setDescargando(`una:${cual}:${m.familia}`);
+    const { archivos, fallidas } = await fotosConNombre([m], MAPA_DE[cual] || {});
+    const nombre = archivos[0] && (cual === "bodaFinal" ? archivos[0].nombre.replace(/\.jpg$/, " - con plantilla.jpg") : archivos[0].nombre);
+    if (nombre) descargarBlob(nombre, new Blob([archivos[0].datos], { type: "image/jpeg" }));
     setDescargando("");
-    avisarDescarga(archivos[0]?.nombre, fallidas, 1);
+    avisarDescarga(nombre, fallidas, 1);
   };
 
   // Las cuentas (él, v71.4): cuántos matrimonios hay, cuántos tienen ya su
@@ -592,6 +597,8 @@ export function VentanaAniversarios({ data, onCerrar }) {
           const final = fotosBodaFinal?.[m.familia] || "";
           const valor = esBoda ? (enGrande.cual === "final" ? final : original) : fotosAniversario?.[m.familia];
           const tipoSubida = esBoda ? "bodaFinal" : "aniversario";
+          // La que se ve: aniversario, o en boda la original o la de plantilla.
+          const cualSeVe = !esBoda ? "aniversario" : enGrande.cual === "final" ? "bodaFinal" : "original";
           const idInput = `aniversarios-subir-${tipoSubida}`;
           const titulo = esBoda
             ? `Boda (${enGrande.cual === "final" ? "con plantilla" : "original"}) — ${nombresMatrimonio(m)}`
@@ -618,9 +625,9 @@ export function VentanaAniversarios({ data, onCerrar }) {
                       <Boton>: tiene que disparar el <input type="file"> de
                       al lado. Se le clava el mismo aspecto con
                       estilosBoton para que no desafine. */}
-                  {!esBoda && valor && enOrdenador && (
-                    <Boton icono={Download} onClick={() => descargarUnAniversario(m)} disabled={Boolean(descargando)}>
-                      {descargando === `aniversario:${m.familia}` ? "Preparando…" : "Descargar"}
+                  {valor && enOrdenador && (
+                    <Boton icono={Download} onClick={() => descargarUna(m, cualSeVe)} disabled={Boolean(descargando)}>
+                      {descargando === `una:${cualSeVe}:${m.familia}` ? "Preparando…" : "Descargar"}
                     </Boton>
                   )}
                   {!esBoda && (
