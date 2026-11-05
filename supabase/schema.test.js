@@ -781,3 +781,16 @@ describe("el enlace del DJ", () => {
     expect(cuerpoDe("foto_de_datos")).not.toContain("dj_secreto");
   });
 });
+
+describe("las plantillas de WhatsApp (v82.4)", () => {
+  it("su historial no recibe null: nacen vacías y historial_texto lo rechazaría, y con él el guardado", () => {
+    const cuerpo = cuerpoDe("trg_historial_plantillas_email");
+    for (const c of ["Datos", "Musica", "Pagos"]) {
+      expect(cuerpo).toContain(`coalesce(old."plantillaWhatsapp${c}", '')`);
+    }
+  });
+
+  it("las columnas existen y sin «not null» (1.7, regla 7)", () => {
+    for (const c of ["Datos", "Musica", "Pagos"]) expect(sql).toMatch(new RegExp(`"plantillaWhatsapp${c}" text,`));
+  });
+});

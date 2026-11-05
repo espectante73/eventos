@@ -21,6 +21,8 @@ import { envolverSeleccion } from "../lib/textoEnriquecido";
 import { useDeshacer } from "../lib/useDeshacer";
 import { BotonHistorial } from "./HistorialTexto";
 import { Boton } from "./Boton";
+import { IconoWhatsApp } from "./Contacto";
+import { PLANTILLAS_WHATSAPP, HUECOS_WHATSAPP } from "../lib/mensajesWhatsapp";
 
 // Las cuatro, con un título corto para la fila plegada (el largo de
 // antes no cabía) y el de siempre como explicación dentro.
@@ -70,7 +72,9 @@ function resumenDe(texto) {
 // que es otro texto largo de `evento` con las mismas necesidades —
 // formato, deshacer e historial. Un segundo editor sería un editor de
 // más que mantener.
-export function TextoEditableEvento({ label, valor, onCambio, campo, obtenerHistorialTexto, filas = 3, tipoHistorial = "plantilla" }) {
+// `sinFormato` (v82.4): sin negrita/cursiva/subrayado, para texto que no es
+// HTML (los mensajes de WhatsApp).
+export function TextoEditableEvento({ label, valor, onCambio, campo, obtenerHistorialTexto, filas = 3, tipoHistorial = "plantilla", sinFormato = false }) {
   const { valor: texto, cambiar: setTexto, deshacer, puedeDeshacer, fijarValor: fijarTexto } = useDeshacer(valor || "");
   const ref = useRef(null);
   useAltoAutomatico(ref, texto);
@@ -87,10 +91,14 @@ export function TextoEditableEvento({ label, valor, onCambio, campo, obtenerHist
   return (
     <Field label={label}>
       <div className="flex items-center gap-1 mb-1">
-        {botonFormato(Bold, "b", "Negrita")}
-        {botonFormato(Italic, "i", "Cursiva")}
-        {botonFormato(Underline, "u", "Subrayado")}
-        <div style={{ width: 1, alignSelf: "stretch", background: C.line }} />
+        {!sinFormato && (
+          <>
+            {botonFormato(Bold, "b", "Negrita")}
+            {botonFormato(Italic, "i", "Cursiva")}
+            {botonFormato(Underline, "u", "Subrayado")}
+            <div style={{ width: 1, alignSelf: "stretch", background: C.line }} />
+          </>
+        )}
         <Boton variante="secundario" type="button" titulo="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)" aria-label="Deshacer (vuelve a como estaba antes de tu último cambio, sin guardar)" onMouseDown={(e) => e.preventDefault()} onClick={deshacer} disabled={!puedeDeshacer}>
           <Undo2 size={12} />
         </Boton>
@@ -136,6 +144,34 @@ export function PlantillasEmail({ data }) {
             label={p.label}
             valor={evento[p.campo]}
             campo={p.campo}
+            obtenerHistorialTexto={obtenerHistorialTexto}
+            onCambio={(v) => persistEvento({ ...evento, [p.campo]: v })}
+          />
+        </SeccionPlegable>
+      ))}
+    </div>
+  );
+}
+
+// Los mensajes de WhatsApp a los invitados (él, v82.4): una plantilla por
+// caso, aquí con el resto del texto de la app. Vacía, vale la de
+// lib/mensajesWhatsapp.js, que es la que se ve al abrirla. Solo el
+// anfitrión: la base no deja guardarlas a nadie más (guardar_evento).
+export function PlantillasWhatsapp({ data }) {
+  const { evento, persistEvento, obtenerHistorialTexto } = data;
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
+        Mensajes de WhatsApp a los invitados, desde su ficha: cada uno sale solo si le toca. Los
+        huecos {HUECOS_WHATSAPP.join(" ")} se rellenan solos.
+      </p>
+      {PLANTILLAS_WHATSAPP.map((p) => (
+        <SeccionPlegable key={p.campo} icono={IconoWhatsApp} titulo={p.titulo} resumen={resumenDe(evento[p.campo] || p.porDefecto)}>
+          <TextoEditableEvento
+            label="Mensaje de WhatsApp"
+            valor={evento[p.campo] || p.porDefecto}
+            campo={p.campo}
+            sinFormato
             obtenerHistorialTexto={obtenerHistorialTexto}
             onCambio={(v) => persistEvento({ ...evento, [p.campo]: v })}
           />

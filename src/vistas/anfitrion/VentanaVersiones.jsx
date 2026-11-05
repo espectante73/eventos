@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "82.4",
+    cambios: [
+      "Mensajes de WhatsApp a los invitados, una plantilla por caso: «Faltan datos», «Música» (hasta 3 canciones) y «Pagos». En la ficha del invitado, el icono de WhatsApp abre un menú solo con los que le tocan (le falta algún dato obligatorio; no ha pedido canción; está confirmado y no ha pagado) y «Mensaje libre». Elegido, WhatsApp se abre con el mensaje ya escrito, con su nombre, la fecha, lo que le falta y su importe: solo queda pulsar «Enviar». Sin nada que le toque, abre el chat como antes.",
+      "Los textos, en Datos del evento, junto a las plantillas de email, con Deshacer e historial; solo el anfitrión los cambia. Huecos: {nombre}, {fecha}, {faltan} e {importe}. Enviar sin pulsar exige la plataforma de pago de WhatsApp: descartado.",
+    ],
+  },
+  {
     version: "82.3",
     cambios: [
       "Aniversarios, en el ordenador: «Descargar» también en la vista en grande de Boda. Baja la que se ve: la original («Familia - Nombres - año.jpg») o la de plantilla, con «con plantilla» al final del nombre para que no se pisen en Descargas. Antes solo estaba en las de aniversario.",

@@ -90,6 +90,11 @@ CREATE TABLE public.evento (
     -- texto por defecto de src/constants.js. La edita el anfitrión o un
     -- colaborador con el permiso "datos_evento_editar".
     "notaPrivacidad" text,
+    -- Los mensajes de WhatsApp a los invitados, uno por caso (v82.4). Vacíos
+    -- = los de src/lib/mensajesWhatsapp.js. Solo los guarda el anfitrión.
+    "plantillaWhatsappDatos" text,
+    "plantillaWhatsappMusica" text,
+    "plantillaWhatsappPagos" text,
     "enlaceGrupoWhatsapp" text DEFAULT ''::text NOT NULL,
     "cronogramaBloques" jsonb DEFAULT '[{"texto": "Recepción", "duracionMin": 15}, {"texto": "Cóctel", "duracionMin": 30}, {"texto": "Foto 1", "duracionMin": 15}, {"texto": "Mesas", "duracionMin": 15}, {"texto": "Cena", "duracionMin": 90}, {"texto": "Foto 2", "duracionMin": 15}, {"texto": "Postre", "duracionMin": 15}, {"texto": "Baile", "duracionMin": 135}, {"texto": "Final", "duracionMin": 15}]'::jsonb NOT NULL,
     "cronogramaHoraFin" text DEFAULT '23:45'::text NOT NULL,
@@ -3374,6 +3379,17 @@ begin
   end if;
   if old."plantillaInvitacionFamilia" is distinct from new."plantillaInvitacionFamilia" then
     perform registrar_historial_texto('plantilla', null, 'plantillaInvitacionFamilia', old."plantillaInvitacionFamilia");
+  end if;
+  -- Y las de WhatsApp (v82.4). Nacen vacías (null) y el historial no
+  -- admite null: la primera vez haría fallar el guardado entero.
+  if old."plantillaWhatsappDatos" is distinct from new."plantillaWhatsappDatos" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaWhatsappDatos', coalesce(old."plantillaWhatsappDatos", ''));
+  end if;
+  if old."plantillaWhatsappMusica" is distinct from new."plantillaWhatsappMusica" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaWhatsappMusica', coalesce(old."plantillaWhatsappMusica", ''));
+  end if;
+  if old."plantillaWhatsappPagos" is distinct from new."plantillaWhatsappPagos" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaWhatsappPagos', coalesce(old."plantillaWhatsappPagos", ''));
   end if;
   return new;
 end;

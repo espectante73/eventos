@@ -29,4 +29,7 @@ export function telefonoParaVer(texto) {
 }
 
 export const enlaceLlamar = (texto) => `tel:${limpiarTelefono(texto)}`;
-export const enlaceWhatsApp = (texto) => `https://wa.me/${limpiarTelefono(texto).slice(1)}`;
+// Con `mensaje`, WhatsApp se abre con él ya escrito (v82.4): solo falta
+// pulsar «Enviar».
+export const enlaceWhatsApp = (texto, mensaje = "") =>
+  `https://wa.me/${limpiarTelefono(texto).slice(1)}${mensaje ? `?text=${encodeURIComponent(mensaje)}` : ""}`;

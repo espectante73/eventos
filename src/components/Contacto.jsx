@@ -4,7 +4,9 @@
 // tinta), del lado del pulgar; WhatsApp, su icono SÓLIDO en su verde, al
 // otro lado. Llamar es la preferencia: queda al alcance del pulgar.
 import { C, R, T, DEDO } from "../theme";
+import { ClipboardList, Music, Wallet, MessageCircle } from "lucide-react";
 import { telefonoParaVer, enlaceLlamar, enlaceWhatsApp } from "../lib/telefono";
+import { MenuFlotante } from "./MenuFlotante";
 
 // El auricular con su flecha: relleno; la flecha, trazada (relleno se
 // vería como un triángulo). El dibujo, el de lucide (PhoneOutgoing).
@@ -55,15 +57,44 @@ export function BotonLlamar({ telefono, nombre, lado }) {
   );
 }
 
+// Cada mensaje del menú de WhatsApp, con su icono (v82.4).
+const ICONO_MENSAJE = { datos: ClipboardList, musica: Music, pagos: Wallet };
+
 // En la ficha: WhatsApp a un lado y, del lado del pulgar, el auricular y el
 // número (los dos, un solo enlace para llamar). Con la mano izquierda, en
 // espejo: el número pegado al borde y el auricular después.
-export function LineaContacto({ telefono, nombre }) {
+// `mensajes` (v82.4, lib/mensajesWhatsapp.js): si le toca alguno, WhatsApp
+// abre un menú con ellos y «Mensaje libre»; elegido, se abre ya escrito.
+export function LineaContacto({ telefono, nombre, mensajes = [] }) {
+  const abrir = (texto) => window.open(enlaceWhatsApp(telefono, texto), "_blank", "noopener,noreferrer");
   return (
     <div className="flex items-center gap-3 px-3 py-1.5 zurdo:flex-row-reverse" style={{ background: C.champanClaro, borderRadius: R.caja }}>
-      <a href={enlaceWhatsApp(telefono)} target="_blank" rel="noopener noreferrer" aria-label={`Escribir a ${nombre} por WhatsApp`} title="WhatsApp" className="flex items-center justify-center" style={{ minWidth: DEDO, minHeight: DEDO }}>
-        <IconoWhatsApp />
-      </a>
+      {mensajes.length > 0 ? (
+        <MenuFlotante
+          anchor="bottom-left"
+          opciones={[
+            ...mensajes.map((m) => ({ id: m.id, etiqueta: m.etiqueta, icono: ICONO_MENSAJE[m.id] || MessageCircle, onClick: () => abrir(m.texto) })),
+            { id: "libre", etiqueta: "Mensaje libre", icono: MessageCircle, onClick: () => abrir("") },
+          ]}
+          render={({ ref, toggle }) => (
+            <button
+              ref={ref}
+              type="button"
+              onClick={toggle}
+              aria-label={`Escribir a ${nombre} por WhatsApp`}
+              title="WhatsApp: elegir mensaje"
+              className="flex items-center justify-center"
+              style={{ minWidth: DEDO, minHeight: DEDO, background: "none", border: "none", padding: 0 }}
+            >
+              <IconoWhatsApp />
+            </button>
+          )}
+        />
+      ) : (
+        <a href={enlaceWhatsApp(telefono)} target="_blank" rel="noopener noreferrer" aria-label={`Escribir a ${nombre} por WhatsApp`} title="WhatsApp" className="flex items-center justify-center" style={{ minWidth: DEDO, minHeight: DEDO }}>
+          <IconoWhatsApp />
+        </a>
+      )}
       <a
         href={enlaceLlamar(telefono)}
         aria-label={`Llamar a ${nombre}`}

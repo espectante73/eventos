@@ -10,7 +10,7 @@ import { supabase } from "../../supabaseClient";
 import { Field, TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
-import { PlantillasEmail, TextoEditableEvento } from "../../components/PlantillasEmail";
+import { PlantillasEmail, PlantillasWhatsapp, TextoEditableEvento } from "../../components/PlantillasEmail";
 import { NOTA_PRIVACIDAD_POR_DEFECTO, TITULO_NOTA_PRIVACIDAD } from "../../constants";
 import { emailValido } from "../../lib/validacion";
 import { euros } from "../../lib/formato";
@@ -397,6 +397,11 @@ export function VentanaConfigDatosEvento({ data, onCerrar }) {
             2026-09-06: es texto del evento, y así todo el texto editable
             de la app queda concentrado aquí. */}
         <PlantillasEmail data={data} />
+
+        {/* Los mensajes de WhatsApp a los invitados (v82.4), con el resto
+            del texto. Solo el anfitrión: la base no deja guardarlos a
+            nadie más. */}
+        {data.esAnfitrion && <PlantillasWhatsapp data={data} />}
 
         {/* La nota de privacidad del tablón. Aquí y no en Novedades:
             decisión del usuario (2026-09-21), porque la nota dice su

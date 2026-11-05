@@ -26,6 +26,7 @@ import { URL_REPOSITORIO } from "../constants";
 import { Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, TextInput, ANCHO_ANIO } from "../components/Formulario";
 import { LineaContacto, BotonLlamar } from "../components/Contacto";
+import { mensajesWhatsapp } from "../lib/mensajesWhatsapp";
 import { AvisosMovil } from "../components/AvisosMovil";
 import { AvisoLoNuevo } from "../components/AvisoLoNuevo";
 import { hayLoNuevo } from "../lib/loNuevo";
@@ -214,6 +215,14 @@ function FormularioDatos({
   };
 
   const opcionesEmail = { familiaSinEmail, colaboradorVinculado };
+  // Los mensajes de WhatsApp que le tocan (v82.4), con lo ya GUARDADO: lo
+  // que se está escribiendo aún no cuenta.
+  const mensajesDelInvitado = mensajesWhatsapp({
+    invitado,
+    evento,
+    faltan: faltanObligatorios(invitado, evento, { ...opcionesEmail, fotoBoda: { hay: Boolean(fotoFamiliar), sinFoto: sinFotoBoda } }),
+    importe,
+  });
   const pideEmailAqui = emailObligatorio(form, evento, opcionesEmail);
   // Para Guardar, también la foto de boda: subida o «No» (él, v58.2).
   const opcionesGuardar = { ...opcionesEmail, fotoBoda: { hay: hayFoto, sinFoto } };
@@ -378,7 +387,7 @@ function FormularioDatos({
         {/* Llamarle o escribirle (él, v78): con el teléfono ya guardado. */}
         {invitado.telefono && (
           <div className="mt-2">
-            <LineaContacto telefono={invitado.telefono} nombre={nombreCompleto(invitado)} />
+            <LineaContacto telefono={invitado.telefono} nombre={nombreCompleto(invitado)} mensajes={mensajesDelInvitado} />
           </div>
         )}
       </div>
