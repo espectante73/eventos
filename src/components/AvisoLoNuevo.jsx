@@ -17,7 +17,7 @@ export function AvisoLoNuevo() {
   const texto = { color: C.charcoal };
   return (
     <div className="mx-auto" style={{ maxWidth: ANCHO_MAXIMO_PORTADA }}>
-      <SeccionPlegable icono={Sparkles} titulo="Lo nuevo" resumen="llamar, avisos y canciones">
+      <SeccionPlegable icono={Sparkles} titulo="Lo nuevo" resumen="WhatsApp, avisos y canciones">
         <div className="space-y-2 text-sm pt-1">
           <p className={LINEA} style={texto}>
             <span style={{ ...HUECO_ICONO, color: C.champanTinta }}>
@@ -25,6 +25,13 @@ export function AvisoLoNuevo() {
               <IconoWhatsApp size={18} />
             </span>
             <span>Llama o escribe por WhatsApp a tu invitado desde su ficha.</span>
+          </p>
+          {/* v82.5 (él): los mensajes de WhatsApp ya escritos (v82.4). */}
+          <p className={LINEA} style={texto}>
+            <span style={HUECO_ICONO}>
+              <IconoWhatsApp size={18} />
+            </span>
+            <span>Al escribirle, el mensaje ya sale escrito: lo que le falta, sus canciones (hasta 3) o su pago.</span>
           </p>
           <p className={LINEA} style={texto}>
             <span style={{ ...HUECO_ICONO, color: C.gold }}>

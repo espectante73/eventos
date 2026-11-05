@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "82.5",
+    cambios: [
+      "«Lo nuevo», en el Inicio de cada colaborador: una línea más, con el icono de WhatsApp, para los mensajes ya escritos («lo que le falta, sus canciones (hasta 3) o su pago»). Plegado dice «WhatsApp, avisos y canciones». Al ser algo nuevo, sale hasta el 19 de noviembre (antes, el 18).",
+    ],
+  },
+  {
     version: "82.4",
     cambios: [
       "Mensajes de WhatsApp a los invitados, una plantilla por caso: «Faltan datos», «Música» (hasta 3 canciones) y «Pagos». En la ficha del invitado, el icono de WhatsApp abre un menú solo con los que le tocan (le falta algún dato obligatorio; no ha pedido canción; está confirmado y no ha pagado) y «Mensaje libre». Elegido, WhatsApp se abre con el mensaje ya escrito, con su nombre, la fecha, lo que le falta y su importe: solo queda pulsar «Enviar». Sin nada que le toque, abre el chat como antes.",

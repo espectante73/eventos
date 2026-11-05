@@ -11,6 +11,7 @@ import { act } from "react";
 import { montar, dibujarYSoltar } from "../pruebas/dibujar";
 import { VistaColaborador } from "./VistaColaborador";
 import { ROL_FAMILIAR } from "../lib/rolFamiliar";
+import { LO_NUEVO_HASTA } from "../lib/loNuevo";
 
 const evento = {
   fecha: "2026-11-13",
@@ -819,6 +820,7 @@ describe("«Lo nuevo» arriba del Inicio (v81.9)", () => {
       expect(html, "plegado").not.toContain("Escucha en la ficha de tu invitado");
       vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Lo nuevo")));
       expect(vista.html).toContain("Escucha en la ficha de tu invitado");
+      expect(vista.html).toContain("el mensaje ya sale escrito");
       // Los pasos, siempre (v82): aquí no es un móvil ni le falta instalarla.
       expect(vista.html).toContain("Instala la app");
       expect(vista.html).toContain("«Añadir a pantalla de inicio»");
@@ -835,7 +837,8 @@ describe("«Lo nuevo» arriba del Inicio (v81.9)", () => {
 
   it("pasada su fecha, se va sola", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date("2026-11-19T09:00:00"));
+    const [a, m, d] = LO_NUEVO_HASTA.split("-").map(Number);
+    vi.setSystemTime(new Date(a, m - 1, d + 1, 9));
     const vista = montarInicio();
     expect(vista.html).not.toContain("Lo nuevo");
     vista.desmontar();
