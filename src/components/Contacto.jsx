@@ -5,7 +5,8 @@
 // otro lado. Llamar es la preferencia: queda al alcance del pulgar.
 import { C, R, T, DEDO } from "../theme";
 import { ClipboardList, Music, Wallet, MessageCircle } from "lucide-react";
-import { telefonoParaVer, enlaceLlamar, enlaceWhatsApp } from "../lib/telefono";
+import { telefonoParaVer, enlaceLlamar, enlaceWhatsApp, enlaceWhatsAppDirecto, abrirWhatsApp } from "../lib/telefono";
+import { esAparatoTactil } from "../lib/mano";
 import { MenuFlotante } from "./MenuFlotante";
 
 // El auricular con su flecha: relleno; la flecha, trazada (relleno se
@@ -66,7 +67,10 @@ const ICONO_MENSAJE = { datos: ClipboardList, musica: Music, pagos: Wallet };
 // `mensajes` (v82.4, lib/mensajesWhatsapp.js): si le toca alguno, WhatsApp
 // abre un menú con ellos y «Mensaje libre»; elegido, se abre ya escrito.
 export function LineaContacto({ telefono, nombre, mensajes = [] }) {
-  const abrir = (texto) => window.open(enlaceWhatsApp(telefono, texto), "_blank", "noopener,noreferrer");
+  const abrir = (texto) => abrirWhatsApp({ telefono, mensaje: texto });
+  // Sin menú, el chat directo: en el móvil, el enlace propio de WhatsApp y en
+  // la misma ventana (sin dejar una en blanco al volver, v82.7).
+  const tactil = esAparatoTactil();
   return (
     <div className="flex items-center gap-3 px-3 py-1.5 zurdo:flex-row-reverse" style={{ background: C.champanClaro, borderRadius: R.caja }}>
       {mensajes.length > 0 ? (
@@ -91,7 +95,14 @@ export function LineaContacto({ telefono, nombre, mensajes = [] }) {
           )}
         />
       ) : (
-        <a href={enlaceWhatsApp(telefono)} target="_blank" rel="noopener noreferrer" aria-label={`Escribir a ${nombre} por WhatsApp`} title="WhatsApp" className="flex items-center justify-center" style={{ minWidth: DEDO, minHeight: DEDO }}>
+        <a
+          href={tactil ? enlaceWhatsAppDirecto(telefono) : enlaceWhatsApp(telefono)}
+          {...(tactil ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+          aria-label={`Escribir a ${nombre} por WhatsApp`}
+          title="WhatsApp"
+          className="flex items-center justify-center"
+          style={{ minWidth: DEDO, minHeight: DEDO }}
+        >
           <IconoWhatsApp />
         </a>
       )}

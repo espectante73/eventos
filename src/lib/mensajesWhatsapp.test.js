@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mensajesWhatsapp, saludoWhatsapp, rellenar, enLista, fechaDelMensaje, PLANTILLAS_WHATSAPP } from "./mensajesWhatsapp";
-import { enlaceWhatsApp } from "./telefono";
+import { enlaceWhatsApp, enlaceWhatsAppDirecto, abrirWhatsApp } from "./telefono";
 import { euros } from "./formato";
 
 const evento = { fecha: "2026-12-11" };
@@ -80,5 +80,37 @@ describe("mensajes de WhatsApp por familia (v82.6)", () => {
   it("el enlace lleva el mensaje ya escrito", () => {
     expect(enlaceWhatsApp("612 34 56 78")).toBe("https://wa.me/34612345678");
     expect(enlaceWhatsApp("612 34 56 78", "Hola, ¿qué tal?")).toBe("https://wa.me/34612345678?text=Hola%2C%20%C2%BFqu%C3%A9%20tal%3F");
+  });
+});
+
+describe("abrir WhatsApp (v82.7): en el móvil, sin dejar una ventana en blanco", () => {
+  const aparato = (tactil) => {
+    const abiertas = [];
+    const win = {
+      matchMedia: (q) => ({ matches: tactil && q.includes("pointer: coarse") }),
+      open: (url) => abiertas.push(url),
+      location: { href: "https://nexuspoint.rsvp/" },
+    };
+    return { win, abiertas };
+  };
+
+  it("el enlace propio de la app: con teléfono, mensaje, los dos o ninguno", () => {
+    expect(enlaceWhatsAppDirecto("612 34 56 78", "Hola, ¿qué tal?")).toBe("whatsapp://send?phone=34612345678&text=Hola%2C%20%C2%BFqu%C3%A9%20tal%3F");
+    expect(enlaceWhatsAppDirecto("612 34 56 78")).toBe("whatsapp://send?phone=34612345678");
+    expect(enlaceWhatsAppDirecto("", "Hola")).toBe("whatsapp://send?text=Hola");
+  });
+
+  it("en el móvil, la app de WhatsApp en la misma ventana, sin abrir otra", () => {
+    const { win, abiertas } = aparato(true);
+    abrirWhatsApp({ telefono: "612 34 56 78", mensaje: "Hola", win });
+    expect(abiertas).toEqual([]);
+    expect(win.location.href).toBe("whatsapp://send?phone=34612345678&text=Hola");
+  });
+
+  it("en el ordenador, wa.me en otra pestaña (ahí se elige la app del Mac o WhatsApp Web)", () => {
+    const { win, abiertas } = aparato(false);
+    abrirWhatsApp({ telefono: "612 34 56 78", mensaje: "Hola", win });
+    expect(abiertas).toEqual(["https://wa.me/34612345678?text=Hola"]);
+    expect(win.location.href).toBe("https://nexuspoint.rsvp/");
   });
 });

@@ -546,6 +546,15 @@ describe("toda cita a una norma apunta a una que existe", () => {
   });
 });
 
+describe("WhatsApp se abre de una sola manera (v82.7)", () => {
+  // Con wa.me en una ventana nueva, en el móvil quedaba una ventana del
+  // navegador en blanco al volver de WhatsApp. Todo pasa por abrirWhatsApp.
+  it("nadie escribe un enlace a wa.me fuera de lib/telefono.js", () => {
+    const fuera = archivos.filter((r) => !r.endsWith("lib/telefono.js") && /wa\.me\//.test(sinComentarios(leer(r))));
+    expect(fuera).toEqual([]);
+  });
+});
+
 describe("el panel del colaborador: todo apartado está en APARTADOS_PANEL", () => {
   // Uno que falte cuenta como la ficha de un invitado y, en el móvil, deja
   // el panel en blanco sin poder cerrarlo (pasó con «Avisos», v79.1).

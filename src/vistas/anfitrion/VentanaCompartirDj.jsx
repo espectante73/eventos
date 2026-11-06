@@ -12,6 +12,7 @@ import { Boton, EnlaceTexto } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { construirEnlaceDj } from "../../lib/url";
+import { abrirWhatsApp } from "../../lib/telefono";
 import { fechaYHora } from "../../lib/formato";
 import { realmDe } from "../../lib/realm";
 
@@ -62,10 +63,9 @@ export function VentanaCompartirDj({ data, onCerrar }) {
       () => setAviso("No se pudo copiar: selecciona el enlace y cópialo a mano.")
     );
   };
-  const porWhatsApp = (e) => {
-    const { win } = realmDe(e.currentTarget);
-    win.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, "_blank", "noopener,noreferrer");
-  };
+  // Como en toda la app (lib/telefono.js): en el móvil, sin dejar una
+  // ventana en blanco al volver.
+  const porWhatsApp = (e) => abrirWhatsApp({ mensaje, win: realmDe(e.currentTarget).win });
   const enlaceNuevo = () =>
     preguntar({
       titulo: "¿Enlace y clave nuevos?",

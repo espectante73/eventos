@@ -3,6 +3,7 @@
 // «+34 612…», «0034…») y se guarda limpio, con el prefijo: sin él, WhatsApp
 // no sabe a qué país llamar. Sin prefijo y con 9 cifras, es de España (+34).
 import { pideEmail } from "./invitados";
+import { esAparatoTactil } from "./mano";
 
 // El mismo criterio que el email: desde los 16 años cumplidos (norma 7).
 export const pideTelefono = pideEmail;
@@ -33,3 +34,21 @@ export const enlaceLlamar = (texto) => `tel:${limpiarTelefono(texto)}`;
 // pulsar «Enviar».
 export const enlaceWhatsApp = (texto, mensaje = "") =>
   `https://wa.me/${limpiarTelefono(texto).slice(1)}${mensaje ? `?text=${encodeURIComponent(mensaje)}` : ""}`;
+
+// El enlace propio de la app de WhatsApp (v82.7): la abre directamente, sin
+// pasar por el navegador.
+export function enlaceWhatsAppDirecto(texto, mensaje = "") {
+  const numero = limpiarTelefono(texto).slice(1);
+  const partes = [numero && `phone=${numero}`, mensaje && `text=${encodeURIComponent(mensaje)}`].filter(Boolean);
+  return `whatsapp://send${partes.length ? `?${partes.join("&")}` : ""}`;
+}
+
+// Abrir WhatsApp, una sola manera en toda la app (v82.7). En el móvil, con
+// su enlace propio y en la misma ventana: con wa.me en una ventana nueva, al
+// volver de WhatsApp quedaba una ventana del navegador en blanco que había
+// que cerrar (él). En el ordenador, wa.me en otra pestaña: ahí se elige la
+// app del Mac o WhatsApp Web. `win`: la ventana del botón (realmDe).
+export function abrirWhatsApp({ telefono = "", mensaje = "", win = window } = {}) {
+  if (esAparatoTactil(win)) win.location.href = enlaceWhatsAppDirecto(telefono, mensaje);
+  else win.open(enlaceWhatsApp(telefono, mensaje), "_blank", "noopener,noreferrer");
+}

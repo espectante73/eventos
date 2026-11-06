@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "82.7",
+    cambios: [
+      "WhatsApp, en el móvil: se abre con el enlace propio de su app y en la misma ventana. Antes pasaba por su página web en una ventana nueva, y al volver a la app quedaba una ventana del navegador en blanco que había que cerrar. En el ordenador sigue igual: su página, para elegir la app del Mac o WhatsApp Web. Vale para la ficha del invitado (mensajes y chat) y para «Compartir con el DJ».",
+    ],
+  },
+  {
     version: "82.6",
     cambios: [
       "Mensajes de WhatsApp, por familia: el mismo mensaje para todos sus miembros, y solo cambia a quién va. Lo encabeza la app con el apellido familiar en mayúsculas, una coma y el nombre («PACHECO, Omar: …»); las plantillas son lo que sigue. Sale si le toca a alguien de la familia: lo que falta, por persona («Omar (alergias) y Lucía (año de nacimiento)») y la foto o el año de boda una sola vez; el pago, el total pendiente de la familia. Cuenta los miembros que lleva ese colaborador. A quien viene solo, lo suyo y en singular, mientras no haya textos propios.",
