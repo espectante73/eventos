@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "82.9",
+    cambios: [
+      "Foto de boda: una familia con su foto puesta y a la vez marcada «No» se quedaba atascada: la ficha escondía la foto y no dejaba desmarcar la casilla. Ahora manda la foto: al abrir la app esas familias salen con su foto, y subir una foto quita el «No» en el mismo guardado.",
+    ],
+  },
+  {
     version: "82.8",
     cambios: [
       "Canciones de quien ya ha pagado: al tocar su nombre, su colaborador abre una ventana solo con sus 3 canciones, para cambiarlas o añadir más; el resto de la ficha sigue cerrado. No toca el pago: ni caduca la invitación ni salta el aviso «Familia pagada». Al marcar un pago, la pregunta dice ahora: «Al marcar como pagado, los datos del invitado quedarán bloqueados, solo podrás añadir nuevas canciones.» En «Lo nuevo», hasta el 22 de noviembre.",

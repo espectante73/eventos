@@ -6,6 +6,7 @@ import {
   esRutaAlmacen,
   nombreDescargaBoda,
   faltaParaEncargo,
+  quitarNoConFoto,
   matrimoniosParaEncargo,
   hojaDeEncargo,
 } from "./fotosAlmacen";
@@ -149,5 +150,16 @@ describe("llegaA4K", () => {
     expect(llegaA4K({ ancho: 4000, alto: 2000 })).toBe(true);
     expect(llegaA4K({ ancho: 2160, alto: 3840 })).toBe(true);
     expect(llegaA4K({ ancho: 1920, alto: 1080 })).toBe(false);
+  });
+});
+
+describe("foto de boda o «No», nunca las dos (v82.9)", () => {
+  it("manda la foto: se quita el «No» solo de las familias que tienen foto", () => {
+    expect(quitarNoConFoto({ a: true, b: true, c: false }, { a: "boda/a.jpg", b: "" })).toEqual({ a: false, b: true, c: false });
+  });
+
+  it("sin nada que limpiar, el mismo objeto", () => {
+    const sinBoda = { b: true };
+    expect(quitarNoConFoto(sinBoda, { a: "boda/a.jpg" })).toBe(sinBoda);
   });
 });

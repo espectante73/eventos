@@ -11,6 +11,7 @@ import { miembrosDesdeLista } from "./lib/familiasColaborador";
 import { respuestaImpago } from "./lib/impagos";
 import { datosCompletos } from "./lib/invitados";
 import { leerEvento } from "./lib/leerEvento";
+import { quitarNoConFoto } from "./lib/fotosAlmacen";
 
 const EVENTO_POR_DEFECTO = {
   nombre: "",
@@ -97,6 +98,11 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
   // que acaban de subir.
   const fotosServidorRef = useRef({});
 
+  // Foto de boda o «No», nunca las dos: manda la foto (él, familia Martínez,
+  // v82.9). Con las dos, la ficha escondía el hueco de la foto y bloqueaba
+  // la casilla, sin salida. Se limpia al leer, y también en la copia del
+  // servidor: así ninguna fila se vuelve a mandar sin haberla tocado.
+  const sinFotoDeLaFila = (r) => Boolean(r.sinFotoBoda) && !r.url;
   const repartirFilasDeFotos = (filas) => {
     fotosServidorRef.current = Object.fromEntries(
       (filas || []).map((r) => [
@@ -105,7 +111,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
           url: r.url || "",
           urlAniversario: r.urlAniversario || "",
           urlBodaFinal: r.urlBodaFinal || "",
-          sinFotoBoda: Boolean(r.sinFotoBoda),
+          sinFotoBoda: sinFotoDeLaFila(r),
         }),
       ])
     );
@@ -113,7 +119,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     setFotosFamiliares(porFamilia((r) => r.url));
     setFotosAniversario(porFamilia((r) => r.urlAniversario || ""));
     setFotosBodaFinal(porFamilia((r) => r.urlBodaFinal || ""));
-    setFotosSinBoda(porFamilia((r) => Boolean(r.sinFotoBoda)));
+    setFotosSinBoda(porFamilia(sinFotoDeLaFila));
   };
   const [loaded, setLoaded] = useState(false);
   const [esAnfitrion, setEsAnfitrion] = useState(false);
@@ -610,13 +616,21 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
 
   const persistFotosFamiliares = useCallback(async (next) => {
     const anterior = fotosFamiliaresRef.current;
+    const sinBodaAnterior = fotosSinBodaRef.current;
+    // La foto nueva se lleva el «No» en el MISMO guardado (v82.9): en dos
+    // guardados seguidos, el que llegara el último podía dejar los dos.
+    const sinBoda = quitarNoConFoto(sinBodaAnterior, next);
     setFotosFamiliares(next);
     fotosFamiliaresRef.current = next;
-    const error = await guardarFilasDeFotos(next, fotosAniversarioRef.current, fotosBodaFinalRef.current);
+    setFotosSinBoda(sinBoda);
+    fotosSinBodaRef.current = sinBoda;
+    const error = await guardarFilasDeFotos(next, fotosAniversarioRef.current, fotosBodaFinalRef.current, sinBoda);
     if (error) {
       avisar("No se pudo guardar la foto familiar. Se deshace el cambio en pantalla.", error);
       setFotosFamiliares(anterior);
       fotosFamiliaresRef.current = anterior;
+      setFotosSinBoda(sinBodaAnterior);
+      fotosSinBodaRef.current = sinBodaAnterior;
     }
   }, [guardarFilasDeFotos]);
 

@@ -229,6 +229,14 @@ export function nombreDescargaBoda({ familia, esposo, esposa, anioBoda }) {
 // están completos. Con un año a medias, la instrucción saldría mal y el
 // error se repetiría en las 48.
 
+// Foto de boda o «No», nunca las dos (él, familia Martínez, v82.9): manda la
+// foto. Devuelve el mismo objeto si no hay nada que limpiar.
+export function quitarNoConFoto(sinBoda, boda) {
+  const conLasDos = Object.keys(sinBoda || {}).filter((grupo) => sinBoda[grupo] && boda?.[grupo]);
+  if (conLasDos.length === 0) return sinBoda;
+  return { ...sinBoda, ...Object.fromEntries(conLasDos.map((grupo) => [grupo, false])) };
+}
+
 // Los matrimonios que entran en el encargo: todos menos los que el
 // colaborador ha marcado que NO tienen foto de boda (2026-09-19). Sin foto
 // no hay nada que montar, y contarlos dejaría el encargo "incompleto" para
