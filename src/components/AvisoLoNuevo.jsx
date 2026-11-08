@@ -2,7 +2,7 @@
 // plegado en una línea; al tocarlo, las novedades de estas semanas y, SIEMPRE
 // (v82), cómo instalar la app y activar los avisos, con su icono. Temporal,
 // sin «Entendido»: cuándo sale, en lib/loNuevo.js. Del ancho de la Portada.
-import { Bell, Sparkles } from "lucide-react";
+import { Bell, Music, Sparkles } from "lucide-react";
 import { C, OP } from "../theme";
 import { SeccionPlegable } from "./SeccionPlegable";
 import { IconoLlamar, IconoWhatsApp } from "./Contacto";
@@ -44,6 +44,13 @@ export function AvisoLoNuevo() {
               <PlayRelleno size={18} />
             </span>
             <span>Escucha en la ficha de tu invitado la canción que pidió: si no suena, está mal escrita.</span>
+          </p>
+          {/* v82.8 (él): las canciones, abiertas también tras el pago. */}
+          <p className={LINEA} style={texto}>
+            <span style={{ ...HUECO_ICONO, color: C.gold }}>
+              <Music size={18} />
+            </span>
+            <span>Aunque ya haya pagado, puedes cambiar o añadir sus canciones: toca su nombre.</span>
           </p>
           <div className="space-y-1.5 pt-2" style={{ borderTop: `1px solid ${C.line}` }}>
             <p style={{ color: C.ink }}>

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "82.8",
+    cambios: [
+      "Canciones de quien ya ha pagado: al tocar su nombre, su colaborador abre una ventana solo con sus 3 canciones, para cambiarlas o añadir más; el resto de la ficha sigue cerrado. No toca el pago: ni caduca la invitación ni salta el aviso «Familia pagada». Al marcar un pago, la pregunta dice ahora: «Al marcar como pagado, los datos del invitado quedarán bloqueados, solo podrás añadir nuevas canciones.» En «Lo nuevo», hasta el 22 de noviembre.",
+    ],
+  },
+  {
     version: "82.7",
     cambios: [
       "WhatsApp, en el móvil: se abre con el enlace propio de su app y en la misma ventana. Antes pasaba por su página web en una ventana nueva, y al volver a la app quedaba una ventana del navegador en blanco que había que cerrar. En el ordenador sigue igual: su página, para elegir la app del Mac o WhatsApp Web. Vale para la ficha del invitado (mensajes y chat) y para «Compartir con el DJ».",

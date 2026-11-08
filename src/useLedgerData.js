@@ -1092,6 +1092,8 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
           : false;
       const soloCambioPagado = soloCambio("pagado");
       const soloCambioPresente = soloCambio("presente");
+      // Ya pagado, lo único que puede cambiar es la canción (v82.8).
+      const soloCancionesPagado = soloCambio("cancion") && cambiado.pagado;
 
       if (soloCambioPresente) {
         // Asistencia el día del evento: ver colaborador_marcar_presente
@@ -1110,6 +1112,17 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
           // pintaría en la pantalla del anfitrión una llegada que
           // podría no haberse guardado.
           avisarLlegada(cambiado.id, cambiado.presente);
+        }
+      } else if (soloCancionesPagado) {
+        const { data, error } = await supabase.rpc("colaborador_guardar_canciones", {
+          p_colaborador_id: rol,
+          p_invitado_id: cambiado.id,
+          p_cancion: cambiado.cancion,
+        });
+        if (error || !data || data.length === 0) {
+          avisar("No se pudieron guardar las canciones (¿sigue asignado a ti este invitado?). Se deshace el cambio en pantalla.", error);
+          setInvitados(anterior);
+          invitadosRef.current = anterior;
         }
       } else if (soloCambioPagado) {
         const { data, error } = await supabase.rpc("colaborador_marcar_pagado", {

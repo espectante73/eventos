@@ -18,7 +18,8 @@ export function datosCompletos(g) {
 // Con el pago, la ficha se cierra al colaborador (él, v54): sobre esos
 // datos ya se han sacado las listas de canciones, edades y alergias, y el
 // día de la acreditación nadie debe abrirlos con prisas. Solo el anfitrión
-// los cambia. Quitar el pago la vuelve a abrir A PROPÓSITO: el colaborador
+// los cambia; al colaborador le quedan las canciones (v82.8,
+// VentanaCancionesInvitado: la lista del DJ se actualiza sola). Quitar el pago la vuelve a abrir A PROPÓSITO: el colaborador
 // puede devolver el dinero (alguien que enferma), y no es una puerta que
 // cerrar. Lo mismo comprueba la base en colaborador_guardar_invitado.
 export function fichaCerradaAlColaborador(g) {

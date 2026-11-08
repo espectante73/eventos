@@ -2385,6 +2385,30 @@ begin
 end;
 $$;
 
+-- El colaborador cambia las canciones de uno de sus invitados (él, v82.8),
+-- también si ya ha pagado: es lo único que sigue abierto tras el pago. Solo
+-- toca la canción: sin rozar el pago, ni la invitación caduca ni salta el
+-- aviso de «Familia pagada».
+CREATE FUNCTION public.colaborador_guardar_canciones(p_colaborador_id uuid, p_invitado_id uuid, p_cancion text) RETURNS SETOF public.invitados
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if not colaborador_puede_actuar(p_colaborador_id) then
+    return;
+  end if;
+
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
+  return query
+  update invitados set "cancion" = coalesce(p_cancion, '')
+  where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id
+  returning *;
+end;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.colaborador_guardar_canciones(uuid, uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.colaborador_guardar_canciones(uuid, uuid, text) TO authenticated;
+
 -- El colaborador escribe en el tablón de novedades, si tiene permiso.
 CREATE FUNCTION public.colaborador_guardar_novedades(p_colaborador_id uuid, p_filas jsonb) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER

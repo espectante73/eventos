@@ -1,13 +1,13 @@
 // Constantes de app compartidas entre App.jsx y los componentes bajo
 // src/components/. Movida fuera de App.jsx en el reparto del 2026-08-08.
-export const VERSION_APP = "82.7";
+export const VERSION_APP = "82.8";
 
 // Lo que dice el aviso rojo de «Actualizar» a TODOS los que entran con su
 // cuenta, junto al número (él, v81.6): qué cambia, se corrige o se añade,
 // en 2 o 3 líneas del móvil (TOPE_AVISO, lib/avisoVersion.js), para
 // cualquiera: tú/ustedes, sin «yo». Va con cada número nuevo, y sin él no
 // se sube (.githooks/pre-push → scripts/version-subida.mjs).
-export const AVISO_VERSION = "En el móvil, WhatsApp se abre directamente desde la app: al volver ya no queda una ventana del navegador en blanco.";
+export const AVISO_VERSION = "Aunque un invitado ya haya pagado, su colaborador puede cambiar o añadir sus canciones tocando su nombre.";
 
 // Dirección del código de la app. La enseña "Mi cuenta" a quien tenga el
 // permiso "Ver el código de la app" (lib/permisos.js).

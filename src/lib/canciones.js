@@ -125,6 +125,16 @@ export function corregirCancion(invitados, invitadoId, hueco, { titulo = "", art
   return { invitados: invitados.map((x) => (x.id === invitadoId ? { ...x, cancion } : x)), aviso: "" };
 }
 
+// Las canciones de un invitado, los huecos enteros (v82.8): lo que le queda
+// abierto al colaborador cuando ya ha pagado. Si no cambia nada, la misma lista.
+export function cambiarCanciones(invitados, invitadoId, huecos) {
+  const g = invitados.find((x) => x.id === invitadoId);
+  if (!g) return { invitados, aviso: "Ese invitado ya no está en la lista." };
+  const cancion = textoDeHuecos(huecos.map(({ titulo = "", artista = "" }) => ({ titulo: titulo.trim(), artista: artista.trim() })));
+  if (cancion === textoDeHuecos(huecosCanciones(g.cancion))) return { invitados, aviso: "" };
+  return { invitados: invitados.map((x) => (x.id === invitadoId ? { ...x, cancion } : x)), aviso: "" };
+}
+
 // La misma corrección en TODAS las peticiones de esa canción (v80.1), desde
 // «Repasar canciones»: las que Deezer no encontró, o cuya propuesta no
 // sirve, se escriben a mano una vez.

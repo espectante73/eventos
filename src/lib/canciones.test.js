@@ -12,6 +12,7 @@ import {
   ORDEN_CANCIONES_INICIAL,
   corregirCancion,
   corregirCancionEnTodas,
+  cambiarCanciones,
 } from "./canciones";
 
 describe("hasta 3 canciones, con título y artista (v69)", () => {
@@ -160,5 +161,31 @@ describe("corregir una canción en todas sus peticiones (v80.1)", () => {
 
   it("vacía no se guarda", () => {
     expect(corregirCancionEnTodas(invitados, "unachicayeye", { titulo: "", artista: " " })).toEqual({ invitados, aviso: "Escribe la canción o el artista." });
+  });
+});
+
+describe("cambiarCanciones (v82.8): lo que le queda abierto tras el pago", () => {
+  const lista = [{ id: "a", pagado: true, cancion: "Bailando — Enrique Iglesias" }, { id: "b", cancion: "" }];
+  const huecos = (...h) => [...h, { titulo: "", artista: "" }, { titulo: "", artista: "" }].slice(0, 3);
+
+  it("añade una, limpia los espacios y no toca nada más", () => {
+    const { invitados, aviso } = cambiarCanciones(lista, "a", huecos({ titulo: "Bailando", artista: "Enrique Iglesias" }, { titulo: " Vivir mi vida ", artista: "Marc Anthony" }));
+    expect(aviso).toBe("");
+    expect(invitados[0]).toEqual({ id: "a", pagado: true, cancion: "Bailando — Enrique Iglesias\nVivir mi vida — Marc Anthony" });
+    expect(invitados[1]).toBe(lista[1]);
+  });
+
+  it("se pueden quitar todas", () => {
+    expect(cambiarCanciones(lista, "a", huecos()).invitados[0].cancion).toBe("");
+  });
+
+  it("sin cambios devuelve la misma lista, para no subir nada", () => {
+    expect(cambiarCanciones(lista, "a", huecos({ titulo: "Bailando", artista: "Enrique Iglesias" })).invitados).toBe(lista);
+  });
+
+  it("si el invitado ya no está, lo dice", () => {
+    const { invitados, aviso } = cambiarCanciones(lista, "z", huecos());
+    expect(invitados).toBe(lista);
+    expect(aviso).toMatch(/ya no está/);
   });
 });

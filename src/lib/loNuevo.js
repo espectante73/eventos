@@ -7,7 +7,7 @@
 // sentido avisos si no tiene instrucciones»): antes se escondían a quien ya
 // la tenía instalada o entraba desde el ordenador, y él no los veía.
 
-export const LO_NUEVO_HASTA = "2026-11-19";
+export const LO_NUEVO_HASTA = "2026-11-22";
 
 // "AAAA-MM-DD" de un día, en la hora de este aparato.
 const diaDe = (fecha) =>

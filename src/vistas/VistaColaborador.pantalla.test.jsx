@@ -282,7 +282,7 @@ describe("el pago y la llegada, por familias (v60)", () => {
     const html = document.body.innerHTML;
     expect(html).toContain("¿Pagan todos los Ruiz?");
     expect(html).toContain("Total:");
-    expect(html).toContain("Después ya no podrás cambiar sus datos ni su foto.");
+    expect(html).toContain("Al marcar como pagado, los datos del invitado quedarán bloqueados, solo podrás añadir nuevas canciones.");
     expect(botones().some((b) => b.textContent.trim() === "No")).toBe(true);
     await pulsarAsync(botones().find((b) => b.textContent.trim() === "Sí"));
     expect(marcadas).toEqual([["r1", "pagado", true]]);
@@ -390,19 +390,63 @@ describe("el pago y la llegada, por familias (v60)", () => {
 });
 
 // Pagado, la ficha se cierra al colaborador (él, v54): ni se abre ni se ve.
-describe("la ficha pagada, cerrada", () => {
-  it("tocar el nombre avisa «Datos cerrados» y no abre el formulario", () => {
+describe("la ficha pagada, cerrada salvo sus canciones (v82.8)", () => {
+  const botones = () => [...document.body.querySelectorAll("button")];
+  const boton = (t) => botones().find((b) => b.textContent.trim() === t);
+  const escribir = (vista, input, valor) =>
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, valor);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  const abrirMiriam = () => {
+    const guardados = [];
     const vista = montar(
-      <VistaColaborador data={data} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+      <VistaColaborador data={{ ...data, persistInvitados: (lista) => guardados.push(lista) }} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
     );
     abrirPorMenu(vista);
     // Míriam ya ha pagado.
-    const nombre = [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Pacheco, Míriam"));
-    vista.pulsar(nombre);
-    const html = document.body.innerHTML;
-    expect(html).toContain("Datos cerrados");
-    expect(html).toContain("díselo al anfitrión");
-    expect(html).not.toContain("Guardar");
+    vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Míriam")));
+    return { vista, guardados };
+  };
+
+  it("tocar el nombre abre solo sus canciones, no el formulario", () => {
+    const { vista } = abrirMiriam();
+    const texto = document.body.textContent;
+    expect(texto).toContain("Canciones · Pacheco, Míriam");
+    expect(texto).toContain("Sus demás datos quedan cerrados");
+    expect(document.body.querySelectorAll('input[placeholder="Canción"]')).toHaveLength(3);
+    expect(texto, "ni rastro de los datos de la ficha").not.toContain("Alergias *");
+    vista.desmontar();
+  });
+
+  it("«Guardar» cambia solo la canción, y el pago sigue puesto", () => {
+    const { vista, guardados } = abrirMiriam();
+    escribir(vista, document.body.querySelector('input[aria-label="Canción 1"]'), " Bailando ");
+    escribir(vista, document.body.querySelector('input[aria-label="Artista 1"]'), "Enrique Iglesias");
+    vista.pulsar(boton("Guardar"));
+    expect(guardados).toHaveLength(1);
+    const antes = invitados.find((g) => g.id === "g3");
+    const despues = guardados[0].find((g) => g.id === "g3");
+    expect(despues).toEqual({ ...antes, cancion: "Bailando — Enrique Iglesias" });
+    expect(document.body.textContent, "se cierra").not.toContain("Canciones · Pacheco, Míriam");
+    vista.desmontar();
+  });
+
+  it("sin cambios, «Guardar» cierra sin subir nada", () => {
+    const { vista, guardados } = abrirMiriam();
+    vista.pulsar(boton("Guardar"));
+    expect(guardados).toHaveLength(0);
+    vista.desmontar();
+  });
+
+  it("«Cancelar» con algo escrito pregunta antes de descartar", () => {
+    const { vista, guardados } = abrirMiriam();
+    escribir(vista, document.body.querySelector('input[aria-label="Canción 1"]'), "Bailando");
+    vista.pulsar(boton("Cancelar"));
+    expect(document.body.textContent).toContain("¿Descartar los cambios?");
+    vista.pulsar(boton("Sí, descartar"));
+    expect(guardados).toHaveLength(0);
+    expect(document.body.textContent).not.toContain("Canciones · Pacheco, Míriam");
     vista.desmontar();
   });
 });

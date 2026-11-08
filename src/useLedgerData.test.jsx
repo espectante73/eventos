@@ -86,3 +86,22 @@ it("el colaborador: lo suyo en una sola vuelta, y sin las preguntas del anfitri�
   expect(llamadas.some((l) => l.nombre.startsWith("anfitrion_"))).toBe(false);
   vista.desmontar();
 });
+
+// v82.8: ya pagado, el colaborador solo puede cambiar la canción, y va por
+// su función estrecha; la general rechazaría a quien ya ha pagado.
+it("colaborador: la canción de un pagado va por colaborador_guardar_canciones", async () => {
+  DATOS.colaborador_mis_invitados = [{ id: "g1", pagado: true, cancion: "" }];
+  const { vista, visto } = abrir("col-1", false);
+  for (let i = 0; i < 5; i++) await contestar();
+  expect(visto.invitados).toHaveLength(1);
+  llamadas.length = 0;
+  await act(async () => {
+    visto.persistInvitados([{ id: "g1", pagado: true, cancion: "Bailando" }]);
+  });
+  const nombres = llamadas.map((l) => l.nombre);
+  expect(nombres).toContain("colaborador_guardar_canciones");
+  expect(nombres).not.toContain("colaborador_guardar_invitado");
+  await contestar();
+  delete DATOS.colaborador_mis_invitados;
+  vista.desmontar();
+});

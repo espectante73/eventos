@@ -44,6 +44,7 @@ import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
 import { VentanaInvitacionesColaborador } from "./VentanaInvitacionesColaborador";
+import { VentanaCancionesInvitado } from "./VentanaCancionesInvitado";
 import { LineaAvisoFila } from "../components/LineaAviso";
 
 // ---------- Colaborador view ----------
@@ -75,7 +76,7 @@ const ETIQUETAS_CAMPOS_INVITADO = {
 const ANCHO_PAGO = 104; // "Pago pendiente" es el rótulo más largo de esa columna
 const ALTO_BOTON_FILA = 32; // manda el círculo de llegada: todos iguales (norma 4)
 // Al marcar el pago, una vez o para toda la familia (él, v54).
-const AVISO_CIERRE_AL_PAGAR = "Después ya no podrás cambiar sus datos ni su foto.";
+const AVISO_CIERRE_AL_PAGAR = "Al marcar como pagado, los datos del invitado quedarán bloqueados, solo podrás añadir nuevas canciones.";
 
 // Pastilla de un dato que el colaborador SOLO MIRA: la zona y el importe.
 // Una sola pieza para las dos (norma 7), pero distintas a propósito (él,
@@ -773,6 +774,8 @@ function FilaInvitadoColaborador({
   faltaFamilia = [],
   // Los mensajes de WhatsApp de su familia (v82.6), para su ficha.
   mensajesDe,
+  // Ya pagado, tocar su nombre abre solo sus canciones (v82.8).
+  onAbrirCanciones,
 }) {
   const importe = importeEsperadoInvitado(g, evento);
   // Las preguntas en la ventana de la app, no en la del navegador (norma).
@@ -832,13 +835,8 @@ function FilaInvitadoColaborador({
   // Si ya estaba abierta (la pagó el anfitrión mientras tanto) no se le
   // cierra de golpe: lo escrito se perdería sin aviso, y al guardar la base
   // lo rechaza con su motivo.
+  // Lo que sí se puede tocar, sus canciones (v82.8): VentanaCancionesInvitado.
   const cerrada = fichaCerradaAlColaborador(g) && !abierto;
-  const avisarCerrada = () =>
-    preguntar({
-      titulo: "Datos cerrados",
-      texto: `${nombreCompleto(g)} ya ha pagado: sus datos quedan cerrados. Si hay que cambiar algo, díselo al anfitrión.`,
-      soloAviso: true,
-    });
 
   // Asistencia el día del evento (2026-09-06). Con confirmación, por el
   // mismo motivo que el pago: las filas van muy juntas y un dedo puede
@@ -933,7 +931,7 @@ function FilaInvitadoColaborador({
         </div>
         )}
         <button
-          onClick={cerrada ? avisarCerrada : onToggleAbierto}
+          onClick={cerrada ? () => onAbrirCanciones(g.id) : onToggleAbierto}
           className="boton-3d rounded px-2 flex items-center gap-2 flex-1 min-w-0"
           style={{ color: C.ink, height: ALTO_BOTON_FILA }}
         >
@@ -1321,6 +1319,10 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const puedeVerRepositorio = tienePermiso(colaborador, PERMISOS.REPOSITORIO_VER);
   const [ventanaDatosEventoAbierta, setVentanaDatosEventoAbierta] = useState(false);
   const [ventanaInvitacionesAbierta, setVentanaInvitacionesAbierta] = useState(false);
+  // De quién se están cambiando las canciones (ya pagado, v82.8). La ventana
+  // va aquí, fuera del panel: dentro quedaría recortada por él.
+  const [cancionesDeId, setCancionesDeId] = useState(null);
+  const cancionesDe = cancionesDeId ? invitados.find((g) => g.id === cancionesDeId) : null;
   const motorInvitaciones = useMotorInvitaciones(data);
 
   // Pantalla de inicio: la misma Portada que ve el anfitrión (sin sus 3
@@ -1658,6 +1660,8 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       {ventanaDatosEventoAbierta && (
         <VentanaConfigDatosEvento data={data} onCerrar={() => setVentanaDatosEventoAbierta(false)} />
       )}
+      {cancionesDe && <VentanaCancionesInvitado key={cancionesDe.id} data={data} invitado={cancionesDe} onCerrar={() => setCancionesDeId(null)} />}
+
       {ventanaInvitacionesAbierta && (
         <VentanaInvitacionesColaborador
           motor={motorInvitaciones}
@@ -1824,6 +1828,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   marcarFamilia={data.marcarFamilia}
                   escucharCancion={data.buscarParaEscuchar}
                   mensajesDe={mensajesDe}
+                  onAbrirCanciones={setCancionesDeId}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   fotosSinBoda={fotosSinBoda || {}}
@@ -1879,6 +1884,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                   marcarFamilia={data.marcarFamilia}
                   escucharCancion={data.buscarParaEscuchar}
                   mensajesDe={mensajesDe}
+                  onAbrirCanciones={setCancionesDeId}
                   evento={evento}
                   fotosFamiliares={fotosFamiliares}
                   fotosSinBoda={fotosSinBoda || {}}

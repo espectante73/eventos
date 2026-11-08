@@ -512,6 +512,22 @@ describe("la ficha pagada, cerrada al colaborador", () => {
     expect(cuerpoDe("colaborador_guardar_invitado")).toMatch(/and not coalesce\("pagado", false\)/);
   });
 
+  // Las canciones, lo único abierto tras el pago (él, v82.8).
+  it("colaborador_guardar_canciones: solo la canción, solo de sus invitados, y sin rozar el pago", () => {
+    const f = cuerpoDe("colaborador_guardar_canciones");
+    expect(f).toContain("colaborador_puede_actuar(p_colaborador_id)");
+    expect(f).toContain(`update invitados set "cancion" = coalesce(p_cancion, '')`);
+    expect(f).toContain(`where "id" = p_invitado_id and "colaboradorId" = p_colaborador_id`);
+    expect(f).toContain("eventos.recalculo_aviso_activo");
+    expect(f).not.toMatch(/"pagado"/);
+    expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.colaborador_guardar_canciones(uuid, uuid, text) FROM PUBLIC, anon;");
+  });
+
+  it("cambiar la canción no caduca la invitación: «cancion» no está entre lo que la vigila", () => {
+    const disparador = sql.match(/CREATE TRIGGER invitados_invalidar_invitacion[^;]*;/)[0];
+    expect(disparador).not.toContain("cancion");
+  });
+
   it("la foto de boda: solo de sus matrimonios, y mientras la pareja no haya pagado", () => {
     const f = cuerpoDe("guardar_fotos_familiares");
     expect(f).toMatch(/c\."authUserId" = auth\.uid\(\)/);
