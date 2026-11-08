@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "83",
+    cambios: [
+      "Acomodación, con el ratón: una mesa se arrastra por su cabecera sobre otra, ocupa su lugar y las demás se corren. Todas se renumeran 1, 2, 3… en el orden en que quedan, y cada una se lleva a su gente, sus sitios y su lugar en el plano. Va a la prueba, como sentar: «Descartar» lo deshace y solo se guarda con «Aplicar a la Lista».",
+    ],
+  },
+  {
     version: "82.9",
     cambios: [
       "Foto de boda: una familia con su foto puesta y a la vez marcada «No» se quedaba atascada: la ficha escondía la foto y no dejaba desmarcar la casilla. Ahora manda la foto: al abrir la app esas familias salen con su foto, y subir una foto quita el «No» en el mismo guardado.",

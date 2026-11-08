@@ -13,6 +13,9 @@
 // VistaAnfitrion (sobrevive a cerrar la ventana) y no toca la Lista hasta
 // «Aplicar a la Lista». «Plano de mesas» (él), un botón que lo abre aquí.
 //
+// Con ratón, una mesa se arrastra por su cabecera sobre otra (él, v83): ocupa
+// su lugar y todas se renumeran, en la PRUEBA, llevándose a su gente.
+//
 // «Memorias» (él, v75): Acomodación 1, 2 y 3, una foto de todo (mesas,
 // sitios, plano y quién se sienta dónde). Cargar una la pone como prueba,
 // mesas incluidas: mientras está cargada, también las mesas son prueba.
@@ -27,6 +30,7 @@ import { PlanoMesas } from "../../components/PlanoMesas";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { cuentaConfirmacion } from "../../lib/invitados";
+import { esAparatoTactil } from "../../lib/mano";
 import { nombreCompleto, fechaYHora } from "../../lib/formato";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import {
@@ -34,6 +38,7 @@ import {
   borradorDesde,
   familiasParaRepartir,
   moverFamilia,
+  moverMesa,
   vaciarMesaEnBorrador,
   vaciarTodasEnBorrador,
   autoAsignarEnBorrador,
@@ -50,6 +55,9 @@ import {
 // El ancho de una columna, una sola vez (norma 6): 224 px = `sm:w-56` de
 // «Sin mesa», que en el móvil va arriba, a todo lo ancho.
 const ANCHO_COLUMNA = 224;
+// Lo que lleva una mesa al arrastrarla (v83), para no confundirla con una
+// familia: las dos se sueltan en la misma columna.
+const MESA_ARRASTRADA = "mesa:";
 // El recuadro de una mesa llena (él: «un recuadro más grueso alrededor…
 // que sea visual»), y desde la v74.8 relleno del mismo color. Está
 // siempre, transparente, para que llenarse no la mueva de sitio.
@@ -110,8 +118,9 @@ function Familia({ familia, cogida, onCoger }) {
 
 // Una columna donde se sueltan familias: «Sin mesa» o una mesa. `cabecera`,
 // lo de arriba; `llena`, el color de la mesa llena: recuadro y relleno
-// sólido (él, v74.8: «el recuadro no es suficiente»).
-function Columna({ nombre, cabecera, llena, familias, cogida, onCoger, onSoltar }) {
+// sólido (él, v74.8: «el recuadro no es suficiente»). `onSoltarMesa`: otra
+// mesa soltada encima, para cambiarlas de orden (v83).
+function Columna({ nombre, cabecera, llena, familias, cogida, onCoger, onSoltar, onSoltarMesa }) {
   const [encima, setEncima] = useState(false);
   return (
     <div
@@ -124,8 +133,9 @@ function Columna({ nombre, cabecera, llena, familias, cogida, onCoger, onSoltar 
       onDrop={(e) => {
         e.preventDefault();
         setEncima(false);
-        const id = e.dataTransfer.getData("text/plain");
-        if (id) onSoltar(id);
+        const dato = e.dataTransfer.getData("text/plain");
+        if (dato.startsWith(MESA_ARRASTRADA)) onSoltarMesa?.(Number(dato.slice(MESA_ARRASTRADA.length)));
+        else if (dato) onSoltar(dato);
       }}
       // Con una familia cogida (el móvil), tocar la columna la deja aquí;
       // tocar los controles de la mesa, no.
@@ -193,6 +203,12 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
     setAviso(motivo);
     if (!motivo) setBorrador(siguiente);
   };
+  // Una mesa soltada sobre otra (v83): ocupa su lugar y todas se renumeran.
+  const soltarMesa = (desde, hasta) => {
+    limpiarAvisos();
+    const siguiente = moverMesa(invitados, borrador, mesas, desde, hasta);
+    if (siguiente.mesas !== mesas) cambiar(siguiente);
+  };
   const coger = (id) => {
     setAviso("");
     setCogida((actual) => (actual === id ? null : id));
@@ -225,16 +241,19 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   // Al aplicar, la prueba pasa a la Lista y los botones se apagan: se dice
   // aquí que está guardado (norma 9), o parecería que no ha hecho nada.
   // Con una memoria cargada, también sus mesas; quien quedara en una mesa
-  // que ya no existe, sin mesa.
-  const aplicar = () => {
-    if (prueba.mesas) persistMesas(prueba.mesas);
+  // que ya no existe, sin mesa. Primero las mesas, y esperando: un invitado
+  // no puede apuntar a un número que todavía no existe (v83).
+  const aplicar = async () => {
+    if (prueba.mesas && (await persistMesas(prueba.mesas))) return;
     const numeros = new Set(mesas.map((m) => m.numero));
     persistInvitados(aplicarBorrador(invitados, borrador).map((g) => (g.mesa != null && !numeros.has(g.mesa) ? { ...g, mesa: null } : g)));
     limpiarAvisos();
     setGuardado(
       prueba.cargada
         ? `Guardado en la Lista: Acomodación ${prueba.cargada}.`
-        : `Guardado en la Lista: ${cambian === 1 ? "1 familia cambia" : `${cambian} familias cambian`} de mesa.`
+        : cambian === 0
+          ? "Guardado: las mesas, en su nuevo orden."
+          : `Guardado en la Lista: ${cambian === 1 ? "1 familia cambia" : `${cambian} familias cambian`} de mesa.`
     );
     setPrueba(PRUEBA_VACIA);
   };
@@ -297,9 +316,21 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
     setBorrador(borradorDesde(lista, sinEsaMesa(conBorrador(lista, borrador))));
   };
 
+  // Con ratón, la cabecera entera se arrastra (él, v83); en el móvil, no.
+  const arrastrarMesas = !esAparatoTactil();
   const cabeceraMesa = (m, ocupados) => {
     return (
-      <div className="rounded px-2 py-1.5 mb-2" style={{ background: C.ink, color: C.goldClaro }}>
+      <div
+        data-cabecera-mesa={m.numero}
+        draggable={arrastrarMesas}
+        onDragStart={(e) => {
+          e.dataTransfer.setData("text/plain", `${MESA_ARRASTRADA}${m.numero}`);
+          e.dataTransfer.effectAllowed = "move";
+        }}
+        title={arrastrarMesas ? "Arrástrala sobre otra mesa para cambiar el orden: se renumeran solas" : undefined}
+        className="rounded px-2 py-1.5 mb-2"
+        style={{ background: C.ink, color: C.goldClaro, cursor: arrastrarMesas ? "grab" : undefined }}
+      >
         {/* Arriba, los controles (él, v74.6); debajo, «Mesa 3 · 5/9». Las
             alergias, en cada familia (v74.9). */}
         <div data-controles className="flex items-center justify-between gap-1">
@@ -367,7 +398,9 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
               ? "PRUEBA · sin cambios"
               : prueba.cargada
                 ? `PRUEBA · Acomodación ${prueba.cargada}${prueba.sucia ? " con cambios" : ""}, aún sin aplicar`
-                : `PRUEBA · ${cambian} ${cambian === 1 ? "familia cambia" : "familias cambian"} de mesa, aún sin guardar`}
+                : cambian === 0
+                  ? "PRUEBA · mesas en otro orden, aún sin guardar"
+                  : `PRUEBA · ${cambian} ${cambian === 1 ? "familia cambia" : "familias cambian"} de mesa, aún sin guardar`}
           </span>
           <span className="flex-1" />
           {/* Los cuatro, del mismo ancho (norma 4); en el móvil, dos y dos. */}
@@ -464,6 +497,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
                     cogida={cogida}
                     onCoger={coger}
                     onSoltar={(id) => soltar(id, m.numero)}
+                    onSoltarMesa={(desde) => soltarMesa(desde, m.numero)}
                   />
                 );
               })}
@@ -485,7 +519,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
             <p className="mt-2" style={{ opacity: OP.secundario }}>
               Arrastra cada familia a su mesa; en el móvil, tócala y luego toca la mesa. Sombreadas, las que aún no han
               confirmado: su sitio queda reservado. Sentar, Vaciar y Auto-asignar son una prueba hasta «Aplicar a la
-              Lista»; las mesas y sus sitios se guardan al momento.
+              Lista»; las mesas y sus sitios se guardan al momento. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba.
             </p>
           </details>
           <Boton variante="secundario" onClick={descartar} disabled={!hayPrueba}>

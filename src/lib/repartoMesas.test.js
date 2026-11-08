@@ -1,7 +1,7 @@
 // v74 (él): probar el reparto moviendo familias enteras; que no deje sentar
 // a más de los que caben; y nada se guarda hasta «Aplicar a la Lista».
 import { describe, it, expect } from "vitest";
-import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador } from "./repartoMesas";
+import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador, moverMesa } from "./repartoMesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const g = (id, apellido, nombre, rol, extra = {}) => ({ id, apellido, nombre, grupoFamiliar: `${apellido}01`, rolFamiliar: rol, confirmado: true, mesa: null, ...extra });
@@ -158,5 +158,53 @@ describe("Auto-asignar y Vaciar mesas, en la prueba", () => {
     const borrador = vaciarTodasEnBorrador(invitados, { 1: 7 });
     expect(conBorrador(invitados, borrador).every((x) => x.mesa == null)).toBe(true);
     expect(borrador).toEqual({ 4: null });
+  });
+});
+
+describe("cambiar una mesa de orden (v83)", () => {
+  const persona = (id, mesa) => g(id, `Fam${id}`, "X", ROL_FAMILIAR.SUELTO, { mesa });
+  const lista = [persona("a", 1), persona("b", 2), persona("c", 3), persona("d", 4), persona("e", null)];
+  const cuatro = [
+    { numero: 1, capacidad: 10, posX: 1, posY: 1 },
+    { numero: 2, capacidad: 8, posX: 2, posY: 2 },
+    { numero: 3, capacidad: 6, posX: 3, posY: 3 },
+    { numero: 4, capacidad: 12, posX: 4, posY: 4 },
+  ];
+
+  it("la 4 sobre la 2: ocupa su lugar, las demás se corren y se llevan a su gente, sus sitios y su sitio en el plano", () => {
+    const { mesas, borrador } = moverMesa(lista, {}, cuatro, 4, 2);
+    expect(mesas).toEqual([
+      { numero: 1, capacidad: 10, posX: 1, posY: 1 },
+      { numero: 2, capacidad: 12, posX: 4, posY: 4 },
+      { numero: 3, capacidad: 8, posX: 2, posY: 2 },
+      { numero: 4, capacidad: 6, posX: 3, posY: 3 },
+    ]);
+    expect(borrador).toEqual({ d: 2, b: 3, c: 4 });
+  });
+
+  it("hacia atrás: la 1 sobre la 3", () => {
+    const { mesas, borrador } = moverMesa(lista, {}, cuatro, 1, 3);
+    expect(mesas.map((m) => m.capacidad)).toEqual([8, 6, 10, 12]);
+    expect(borrador).toEqual({ b: 1, c: 2, a: 3 });
+  });
+
+  it("sobre lo que ya hay en la prueba, y sin dar por sentado a quien no tiene mesa", () => {
+    const { borrador } = moverMesa(lista, { e: 1 }, cuatro, 1, 2);
+    expect(borrador).toEqual({ e: 2, a: 2, b: 1 });
+  });
+
+  it("con huecos en la numeración, quedan 1, 2, 3", () => {
+    const conHuecos = [{ numero: 2, capacidad: 5 }, { numero: 5, capacidad: 6 }, { numero: 9, capacidad: 7 }];
+    const gente = [persona("a", 2), persona("b", 5), persona("c", 9)];
+    const { mesas, borrador } = moverMesa(gente, {}, conHuecos, 9, 2);
+    expect(mesas).toEqual([{ numero: 1, capacidad: 7 }, { numero: 2, capacidad: 5 }, { numero: 3, capacidad: 6 }]);
+    expect(borrador, "la de la 2 sigue en la 2: no cambia").toEqual({ c: 1, b: 3 });
+  });
+
+  it("sobre sí misma, o una mesa que no existe: no cambia nada", () => {
+    const borrador = { e: 1 };
+    expect(moverMesa(lista, borrador, cuatro, 2, 2)).toEqual({ borrador, mesas: cuatro });
+    expect(moverMesa(lista, borrador, cuatro, 2, 2).mesas).toBe(cuatro);
+    expect(moverMesa(lista, borrador, cuatro, 99, 2).mesas).toBe(cuatro);
   });
 });

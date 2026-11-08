@@ -1,7 +1,7 @@
 // «Mesas y acomodación» (v74.6; antes «Repartir familias», v74), DIBUJADA
 // de verdad: mover tocando, el tope de la mesa, nada guardado hasta
 // «Aplicar a la Lista»; y las mesas y sus sitios, al momento.
-import { it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 import { useState } from "react";
 import { act } from "react";
 import { montar } from "../../pruebas/dibujar";
@@ -27,7 +27,7 @@ function dibujar({ conMesas = mesas } = {}) {
     const [prueba, setPrueba] = useState(PRUEBA_VACIA);
     return (
       <VentanaMesas
-        data={{ invitados, mesas: conMesas, persistInvitados: (l) => guardados.push(l), persistMesas: (l) => mesasGuardadas.push(l) }}
+        data={{ invitados, mesas: conMesas, persistInvitados: (l) => guardados.push(l), persistMesas: (l) => void mesasGuardadas.push(l) }}
         prueba={prueba}
         setPrueba={setPrueba}
         onCerrar={() => {}}
@@ -228,7 +228,7 @@ function dibujarConMemorias(acomodaciones) {
           mesas,
           evento,
           persistInvitados: (l) => guardados.push(l),
-          persistMesas: (l) => mesasGuardadas.push(l),
+          persistMesas: (l) => void mesasGuardadas.push(l),
           persistEvento: (e) => {
             eventos.push(e);
             setEvento(e);
@@ -291,7 +291,7 @@ it("cargar una la pone como prueba, mesas incluidas; «Aplicar» guarda las dos 
   expect(columna("Mesa 9").querySelector('[data-familia="García, Isaias"]')).toBeTruthy();
   expect(document.body.textContent).toContain("PRUEBA · Acomodación 2, aún sin aplicar");
   expect(mesasGuardadas).toEqual([]);
-  vista.pulsar(botones("Aplicar a la Lista")[0]);
+  await act(async () => botones("Aplicar a la Lista")[0].dispatchEvent(new MouseEvent("click", { bubbles: true })));
   expect(mesasGuardadas.at(-1)).toEqual(MEMORIA_2.mesas);
   const final = Object.fromEntries(guardados.at(-1).map((x) => [x.id, x.mesa]));
   expect(final).toEqual({ 1: 9, 2: 9, 3: null });
@@ -310,4 +310,62 @@ it("«Vaciar mesas» pregunta antes y deja todas vacías, solo en la prueba", as
   expect(guardados).toEqual([]);
   expect(mesasGuardadas).toEqual([]);
   vista.desmontar();
+});
+
+// v83 (él): «rodar las mesas con el ratón y al cambiarlas de orden se renumeren».
+describe("arrastrar una mesa sobre otra", () => {
+  const arrastrar = async (de, a) => {
+    const dt = { datos: {}, setData(k, v) { this.datos[k] = v; }, getData(k) { return this.datos[k] || ""; } };
+    const evento = (tipo) => Object.assign(new Event(tipo, { bubbles: true, cancelable: true }), { dataTransfer: dt });
+    await act(async () => de.dispatchEvent(evento("dragstart")));
+    await act(async () => a.dispatchEvent(evento("drop")));
+  };
+  const cabecera = (vista, n) => vista.contenedor.querySelector(`[data-cabecera-mesa="${n}"]`);
+
+  it("la 7 sobre la 6: se renumeran y se llevan a su gente; nada se guarda hasta «Aplicar»", async () => {
+    const { vista, guardados, mesasGuardadas, familia, columna, boton } = dibujar();
+    await arrastrar(cabecera(vista, 7), columna("Mesa 6"));
+    // Eran 6 y 7: quedan 1 (la de 9 sitios, antes 7) y 2 (la de 2, con Rosi).
+    expect(columna("Mesa 1").textContent).toContain("0/9");
+    expect(columna("Mesa 2").contains(familia("Expósito, Rosi"))).toBe(true);
+    expect(columna("Mesa 6")).toBeNull();
+    expect(mesasGuardadas).toEqual([]);
+    expect(guardados).toEqual([]);
+    await act(async () => boton("Aplicar a la Lista").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(mesasGuardadas[0]).toEqual([{ numero: 1, capacidad: 9 }, { numero: 2, capacidad: 2 }]);
+    expect(guardados[0].find((x) => x.id === "3").mesa).toBe(2);
+    vista.desmontar();
+  });
+
+  it("si las mesas no se pueden guardar, tampoco se toca a los invitados", async () => {
+    const guardados = [];
+    function Prueba() {
+      const [prueba, setPrueba] = useState(PRUEBA_VACIA);
+      return <VentanaMesas data={{ invitados, mesas, persistInvitados: (l) => guardados.push(l), persistMesas: async () => "fallo" }} prueba={prueba} setPrueba={setPrueba} onCerrar={() => {}} />;
+    }
+    const vista = montar(<Prueba />);
+    await arrastrar(vista.contenedor.querySelector('[data-cabecera-mesa="7"]'), vista.contenedor.querySelector('[data-columna="Mesa 6"]'));
+    const aplicar = [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "Aplicar a la Lista");
+    await act(async () => aplicar.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(guardados).toEqual([]);
+    vista.desmontar();
+  });
+
+  it("una mesa soltada en «Sin mesa» no hace nada, y una familia sigue yendo a su mesa", async () => {
+    const { vista, familia, columna } = dibujar();
+    await arrastrar(cabecera(vista, 7), columna("Sin mesa"));
+    expect(columna("Mesa 7")).not.toBeNull();
+    await arrastrar(familia("García, Isaias"), columna("Mesa 7"));
+    expect(columna("Mesa 7").contains(familia("García, Isaias"))).toBe(true);
+    vista.desmontar();
+  });
+
+  it("en el móvil la mesa no se arrastra", () => {
+    const original = window.matchMedia;
+    window.matchMedia = (q) => ({ matches: q.includes("pointer: coarse"), addEventListener() {}, removeEventListener() {} });
+    const { vista } = dibujar();
+    expect(cabecera(vista, 7).getAttribute("draggable")).toBe("false");
+    window.matchMedia = original;
+    vista.desmontar();
+  });
 });

@@ -70,6 +70,23 @@ export function borradorDesde(invitados, propuesta) {
   return borrador;
 }
 
+// Cambiar una mesa de orden (él, v83): la mesa `desde` ocupa el lugar de
+// `hasta`, las de en medio se corren, y todas se renumeran 1, 2, 3… en el
+// orden en que quedan. Cada mesa se lleva a su gente, sus sitios y su lugar
+// en el plano. Va a la prueba, como sentar: devuelve { borrador, mesas }.
+// Sin nada que cambiar, las mismas mesas.
+export function moverMesa(invitados, borrador, mesas, desde, hasta) {
+  const orden = [...mesas].sort((a, b) => a.numero - b.numero);
+  const i = orden.findIndex((m) => m.numero === desde);
+  const j = orden.findIndex((m) => m.numero === hasta);
+  if (i === -1 || j === -1 || i === j) return { borrador, mesas };
+  const [cogida] = orden.splice(i, 1);
+  orden.splice(j, 0, cogida);
+  const numeroNuevo = new Map(orden.map((m, k) => [m.numero, k + 1]));
+  const propuesta = conBorrador(invitados, borrador).map((g) => (numeroNuevo.has(g.mesa) ? { ...g, mesa: numeroNuevo.get(g.mesa) } : g));
+  return { borrador: borradorDesde(invitados, propuesta), mesas: orden.map((m, k) => ({ ...m, numero: k + 1 })) };
+}
+
 // «Vaciar» una mesa, en la prueba: todas sus familias a «Sin mesa».
 export function vaciarMesaEnBorrador(invitados, borrador, numero) {
   const propuesta = conBorrador(invitados, borrador).map((g) => (g.mesa === numero ? { ...g, mesa: null } : g));

@@ -571,6 +571,9 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
       setMesas(anterior);
       mesasRef.current = anterior;
     }
+    // Quien tenga que guardar algo DESPUÉS de las mesas (las mesas de los
+    // invitados apuntan a ellas) mira si ha ido bien.
+    return error;
   }, [rol]);
 
   // Las dos fotos de cada familia viven en la MISMA fila de la tabla, así
