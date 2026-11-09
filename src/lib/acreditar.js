@@ -35,3 +35,9 @@ export const MOTIVOS_ACREDITAR = {
   cerrada: "Las llegadas todavía no están abiertas: se abren en «Día del evento».",
   regla: "Alguno de ellos no tiene el pago o sus datos completos. Avisa a su colaborador.",
 };
+
+// Por qué no vale lo que ha respondido la base al leer un QR; vacío si vale.
+export function motivoDeLectura(datos, error) {
+  if (error || !datos) return "No se ha podido leer. Comprueba la conexión y vuelve a leer el QR.";
+  return datos.error ? MOTIVOS_ACREDITAR[datos.error] || MOTIVOS_ACREDITAR.codigo : "";
+}

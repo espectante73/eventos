@@ -11,8 +11,10 @@ import { Boton, EnlaceTexto } from "../components/Boton";
 import { Stamp } from "../components/Widgets";
 import { LineaAviso } from "../components/LineaAviso";
 import { nombreCompleto } from "../lib/formato";
-import { MOTIVOS_ACREDITAR, pantallaInicial, seleccionInicial, sePuedeMarcar, textoMesas } from "../lib/acreditar";
+import { MOTIVOS_ACREDITAR, motivoDeLectura, pantallaInicial, seleccionInicial, sePuedeMarcar, textoMesas } from "../lib/acreditar";
 import { useCanalAsistencia } from "../lib/useCanalAsistencia";
+import { codigoAcreditarDe } from "../lib/url";
+import { LectorQr } from "../components/LectorQr";
 
 function Pagina({ titulo, children }) {
   return (
@@ -43,17 +45,20 @@ export function AcreditarSinSesion({ onEntrar }) {
   );
 }
 
-export function VistaAcreditar({ codigo }) {
+export function VistaAcreditar({ codigo: codigoInicial }) {
+  // El de la familia que hay en pantalla: el del enlace que abrió esto o el
+  // último leído con la cámara de la página (v83.8).
+  const [codigo, setCodigo] = useState(codigoInicial);
   const [datos, setDatos] = useState(null);
   const [motivo, setMotivo] = useState("");
   const [modo, setModo] = useState("");
   const [marcados, setMarcados] = useState(new Set());
   const [guardando, setGuardando] = useState(false);
+  const [modoAntes, setModoAntes] = useState("");
+  const [avisoLector, setAvisoLector] = useState("");
   const { avisarLlegada } = useCanalAsistencia();
 
-  const recibir = (d, error) => {
-    if (error || !d) return setMotivo("No se ha podido leer. Comprueba la conexión y vuelve a leer el QR.");
-    if (d.error) return setMotivo(MOTIVOS_ACREDITAR[d.error] || MOTIVOS_ACREDITAR.codigo);
+  const abrirFamilia = (d) => {
     setMotivo("");
     setDatos(d);
     setMarcados(seleccionInicial(d));
@@ -61,8 +66,31 @@ export function VistaAcreditar({ codigo }) {
   };
 
   useEffect(() => {
-    supabase.rpc("acreditar_familia", { p_codigo: codigo }).then(({ data, error }) => recibir(data, error));
-  }, [codigo]);
+    supabase.rpc("acreditar_familia", { p_codigo: codigoInicial }).then(({ data, error }) => {
+      const fallo = motivoDeLectura(data, error);
+      if (fallo) setMotivo(fallo);
+      else abrirFamilia(data);
+    });
+  }, [codigoInicial]);
+
+  const abrirLector = () => {
+    setModoAntes(modo);
+    setAvisoLector("");
+    setModo("leer");
+  };
+
+  // Lo leído con la cámara de la página. Lo que no vale se dice y se sigue
+  // leyendo; lo que vale abre su familia, y al cambiar de pantalla la cámara
+  // se apaga sola.
+  const leido = async (texto) => {
+    const nuevo = codigoAcreditarDe(texto);
+    if (!nuevo) return setAvisoLector(MOTIVOS_ACREDITAR.codigo);
+    const { data, error } = await supabase.rpc("acreditar_familia", { p_codigo: nuevo });
+    const fallo = motivoDeLectura(data, error);
+    if (fallo) return setAvisoLector(fallo);
+    setCodigo(nuevo);
+    abrirFamilia(data);
+  };
 
   const guardar = async (ids) => {
     setGuardando(true);
@@ -81,8 +109,39 @@ export function VistaAcreditar({ codigo }) {
     setModo("hecho");
   };
 
+  if (modo === "leer") {
+    return (
+      <Pagina titulo="Leer QR">
+        <Boton variante="secundario" onClick={() => setModo(modoAntes)} style={{ minHeight: DEDO, width: "100%" }}>
+          Cancelar
+        </Boton>
+        <LectorQr onTexto={leido} />
+        {avisoLector && <LineaAviso className="text-sm">{avisoLector}</LineaAviso>}
+      </Pagina>
+    );
+  }
+
+  // Desde cualquier pantalla se puede pasar a otro QR: un QR equivocado o una
+  // familia que no puede entrar no dejan al acomodador sin seguir.
+  const leerOtro = (
+    <Boton variante="secundario" onClick={abrirLector} style={{ minHeight: DEDO, width: "100%" }}>
+      Leer otro QR
+    </Boton>
+  );
+
   if (!datos) {
-    return <Pagina titulo="Acreditación">{motivo ? <LineaAviso className="text-sm">{motivo}</LineaAviso> : <p>Leyendo…</p>}</Pagina>;
+    return (
+      <Pagina titulo="Acreditación">
+        {motivo ? (
+          <>
+            <LineaAviso className="text-sm">{motivo}</LineaAviso>
+            {leerOtro}
+          </>
+        ) : (
+          <p>Leyendo…</p>
+        )}
+      </Pagina>
+    );
   }
 
   const { familia, miembros, abierta, exigir } = datos;
@@ -108,10 +167,10 @@ export function VistaAcreditar({ codigo }) {
         <p className="text-center" style={dato}>
           {dentro} de {total} · {mesas}
         </p>
-        <p className="text-center" style={{ opacity: OP.secundario }}>
-          Lee el siguiente QR con la cámara.
-        </p>
         {aviso}
+        <Boton variante="principal" onClick={abrirLector} style={{ minHeight: DEDO, width: "100%" }}>
+          Leer el siguiente QR
+        </Boton>
         <Boton variante="secundario" onClick={() => setModo("elegir")} style={{ minHeight: DEDO, width: "100%" }}>
           Corregir
         </Boton>
@@ -126,6 +185,7 @@ export function VistaAcreditar({ codigo }) {
           {total} {total === 1 ? "invitado" : "invitados"} · {mesas}
         </p>
         <LineaAviso className="text-sm">{MOTIVOS_ACREDITAR.cerrada}</LineaAviso>
+        {leerOtro}
       </Pagina>
     );
   }
@@ -146,6 +206,7 @@ export function VistaAcreditar({ codigo }) {
             Sí
           </Boton>
         </div>
+        {leerOtro}
       </Pagina>
     );
   }
@@ -187,6 +248,7 @@ export function VistaAcreditar({ codigo }) {
           Guardar
         </Boton>
       </div>
+      {leerOtro}
     </Pagina>
   );
 }

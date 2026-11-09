@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "83.8",
+    cambios: [
+      "Acreditación: en «Acreditados», el botón «Leer el siguiente QR» enciende la cámara dentro de la misma página y se lee una familia tras otra sin salir. Las demás pantallas llevan «Leer otro QR», para seguir si un QR no vale o una familia no puede entrar. La cámara normal del móvil sigue sirviendo.",
+    ],
+  },
+  {
     version: "83.7",
     cambios: [
       "Ventanas aparte: cerrar la acreditación con el marcador abierto daba «Algo ha fallado», porque la app intentaba repintar la ventana justo al cerrarla. La acreditación sí se cerraba; ya no se rompe la pantalla.",

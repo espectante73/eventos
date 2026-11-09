@@ -17,6 +17,13 @@ const avisos = [];
 vi.mock("../lib/useCanalAsistencia", () => ({
   useCanalAsistencia: () => ({ avisarLlegada: (id, presente) => avisos.push([id, presente]) }),
 }));
+let entregarTexto;
+vi.mock("../components/LectorQr", () => ({
+  LectorQr: ({ onTexto }) => {
+    entregarTexto = onTexto;
+    return <p>cámara abierta</p>;
+  },
+}));
 const { VistaAcreditar, AcreditarSinSesion } = await import("./VistaAcreditar");
 
 const m = (id, nombre, extra = {}) => ({ id, nombre, apellido: "Pacheco", presente: false, mesa: 5, enRegla: true, ...extra });
@@ -121,6 +128,84 @@ describe("al leer el QR", () => {
     await pulsar(boton("Sí"));
     expect(document.body.textContent).toContain("Avisa a su colaborador");
     expect(boton("Sí")).toBeTruthy();
+    vista.desmontar();
+  });
+});
+
+describe("leer el siguiente QR sin salir de la página (v83.8)", () => {
+  const ruiz = [m("x", "Ana", { apellido: "Ruiz" }), m("y", "Luis", { apellido: "Ruiz" })];
+  const ENLACE_RUIZ = "https://nexuspoint.rsvp?acreditar=def456abc789";
+  const yaDentro = () => ({ data: familia(tres.map((x) => ({ ...x, presente: true }))), error: null });
+  const leer = (texto) => act(async () => entregarTexto(texto));
+
+  it("tras acreditar abre la cámara, y la siguiente familia se acredita con SU código", async () => {
+    const vista = await abrir();
+    respuesta = yaDentro;
+    await pulsar(boton("Sí"));
+    await pulsar(boton("Leer el siguiente QR"));
+    expect(document.body.textContent).toContain("cámara abierta");
+    respuesta = () => ({ data: familia(ruiz, { familia: "Ruiz" }), error: null });
+    await leer(ENLACE_RUIZ);
+    expect(llamadas.at(-1)).toEqual(["acreditar_familia", { p_codigo: "def456abc789" }]);
+    expect(document.body.textContent).toContain("Ruiz");
+    expect(document.body.textContent).toContain("¿Vienen todos?");
+    expect(document.body.textContent).not.toContain("cámara abierta");
+    await pulsar(boton("Sí"));
+    expect(llamadas.at(-1)).toEqual(["acreditar_marcar", { p_codigo: "def456abc789", p_ids: ["x", "y"] }]);
+    vista.desmontar();
+  });
+
+  it("«Cancelar» vuelve a la pantalla de donde se vino, sin recargar nada", async () => {
+    const vista = await abrir();
+    respuesta = yaDentro;
+    await pulsar(boton("Sí"));
+    const antes = llamadas.length;
+    await pulsar(boton("Leer el siguiente QR"));
+    await pulsar(boton("Cancelar"));
+    expect(document.body.textContent).toContain("3 de 3 · Mesa 5");
+    expect(document.body.textContent).not.toContain("cámara abierta");
+    expect(llamadas.length).toBe(antes);
+    vista.desmontar();
+  });
+
+  it("un QR que no es una invitación lo dice, no pregunta a la base y sigue leyendo", async () => {
+    const vista = await abrir();
+    await pulsar(boton("Leer otro QR"));
+    const antes = llamadas.length;
+    await leer("https://una-carta-de-restaurante.com");
+    expect(llamadas.length).toBe(antes);
+    expect(document.body.textContent).toContain("no es de ninguna familia");
+    expect(document.body.textContent).toContain("cámara abierta");
+    vista.desmontar();
+  });
+
+  it("una invitación que la base no reconoce: lo dice, sigue leyendo y no cambia de familia", async () => {
+    const vista = await abrir();
+    await pulsar(boton("Leer otro QR"));
+    respuesta = () => ({ data: { error: "codigo" }, error: null });
+    await leer(ENLACE_RUIZ);
+    expect(document.body.textContent).toContain("no es de ninguna familia");
+    expect(document.body.textContent).toContain("cámara abierta");
+    await pulsar(boton("Cancelar"));
+    expect(document.body.textContent).toContain("¿Vienen todos?");
+    expect(document.body.textContent).not.toContain("no es de ninguna familia");
+    respuesta = yaDentro;
+    await pulsar(boton("Sí"));
+    expect(llamadas.at(-1)[1].p_codigo).toBe("abc123");
+    vista.desmontar();
+  });
+
+  it("también se puede pasar a otro QR con las llegadas cerradas o si el primero no valía", async () => {
+    respuesta = () => ({ data: familia(tres, { abierta: false }), error: null });
+    let vista = await abrir();
+    expect(boton("Leer otro QR")).toBeTruthy();
+    vista.desmontar();
+    respuesta = () => ({ data: { error: "codigo" }, error: null });
+    vista = await abrir();
+    await pulsar(boton("Leer otro QR"));
+    expect(document.body.textContent).toContain("cámara abierta");
+    await pulsar(boton("Cancelar"));
+    expect(document.body.textContent).toContain("no es de ninguna familia");
     vista.desmontar();
   });
 });

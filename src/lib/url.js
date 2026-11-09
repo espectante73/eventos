@@ -75,6 +75,12 @@ export function getCodigoAcreditarFromUrl() {
   }
 }
 
+// El código de un QR leído con la cámara de la propia página (v83.8). Solo
+// se saca el código: a la dirección que traiga el QR no se va nunca.
+export function codigoAcreditarDe(texto) {
+  return String(texto || "").match(/[?&]acreditar=([0-9a-z]+)/i)?.[1] || "";
+}
+
 export function construirEnlaceAcreditar(urlPublica, codigo) {
   const base = urlPublica || window.location.origin;
   return `${base.replace(/\/$/, "")}?acreditar=${codigo}`;
