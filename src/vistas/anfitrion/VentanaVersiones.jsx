@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "83.2",
+    cambios: [
+      "Acreditar por QR: cada invitación lleva un QR de su familia, justo encima del recuadro de datos. El acomodador lo lee con la cámara del móvil y se abre «¿Vienen todos?»; con «No», elige quiénes. Funciona en varios móviles a la vez: si otro ya la leyó, sale «Ya acreditados», y se puede corregir. Solo para el anfitrión y quien tenga el permiso nuevo «Acreditar en la entrada». Quien lea su propio QR sin cuenta no ve datos ni puede acreditar.",
+      "La invitación llega a todos los confirmados de la familia que tengan email, no solo a uno; también la nueva de «Cambiar mesa».",
+    ],
+  },
+  {
     version: "83.1",
     cambios: [
       "Con la invitación enviada, la mesa de esa familia queda fija: candado en Acomodación y en la Lista. No se arrastra; «Vaciar», «Auto-asignar» y las memorias la respetan; su mesa no se puede quitar ni cambiar de número.",

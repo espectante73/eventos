@@ -22,7 +22,7 @@ import { useMotorInvitaciones } from "../../lib/useMotorInvitaciones";
 import { requisitosActivos } from "../../lib/modoPruebas";
 
 export function VentanaCambiarMesa({ data, familia, onCerrar }) {
-  const { invitados, mesas, evento, ordenFamiliares, persistInvitados, enviarInvitacionFamilia } = data;
+  const { invitados, mesas, evento, ordenFamiliares, persistInvitados } = data;
   const motor = useMotorInvitaciones(data);
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   const [numero, setNumero] = useState("");
@@ -51,24 +51,19 @@ export function VentanaCambiarMesa({ data, familia, onCerrar }) {
     const { invitados: siguiente, aviso: motivo } = asignarMesaConSuFamilia(invitados, familia.representante.id, destino, mesas, { conSinConfirmar: true });
     if (motivo) return fallar(motivo);
     const corregida = familiasDelEvento(siguiente, ordenFamiliares, evento).find((f) => f.clave === clave);
-    const destinatario = corregida && motor.destinatarioConEmail(corregida);
-    if (!destinatario?.email && requisitosActivos(evento)) return fallar("No se ha cambiado nada: ninguno de esta familia tiene email guardado.");
+    const correos = corregida ? motor.destinatariosConEmail(corregida) : [];
+    if (!correos.length && requisitosActivos(evento)) return fallar("No se ha cambiado nada: ninguno de esta familia tiene email guardado.");
     const dataUrl = await motor.generarImagenParaFamilia(corregida, false);
     if (!dataUrl) return fallar("No se ha cambiado nada: no se ha podido generar la imagen de la invitación.");
     if (await persistInvitados(siguiente)) return fallar("No se ha cambiado nada: no se pudo guardar la mesa.");
-    const enviada = await enviarInvitacionFamilia(
-      destinatario.email,
-      `Tu invitación — ${evento.nombre || "evento"}`,
-      `<p>${texto}</p>${evento.plantillaInvitacionFamilia || ""}`,
-      dataUrl.split(",")[1] || ""
-    );
+    const { enviados, fallidos } = await motor.enviarATodos(correos, `<p>${texto}</p>${evento.plantillaInvitacionFamilia || ""}`, dataUrl.split(",")[1] || "");
     setEnviando(false);
-    if (!enviada) {
+    if (!enviados.length) {
       setHecho(`La mesa ya es la ${destino}, pero el correo no ha salido. Envíasela desde Invitaciones.`);
       return;
     }
     motor.marcarInvitacionEnviada(clave);
-    setHecho(`Ahora está en la mesa ${destino}. Invitación nueva enviada a ${destinatario.email}.`);
+    setHecho(`Ahora está en la mesa ${destino}. Invitación nueva enviada a ${enviados.join(", ")}.${fallidos.length ? ` No se ha podido enviar a ${fallidos.join(", ")}.` : ""}`);
   };
 
   const pedirConfirmacion = () =>

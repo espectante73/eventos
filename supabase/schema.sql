@@ -359,6 +359,16 @@ CREATE TABLE IF NOT EXISTS public.dj_secreto (
 ALTER TABLE public.dj_secreto ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.dj_secreto FROM anon, authenticated;
 
+-- El código del QR de cada familia, el que va en su invitación (él, v83.2).
+-- Secreto: el QR lo lleva cualquiera, pero sin una cuenta con permiso no da
+-- nada. Fuera de la foto del Deshacer: no son datos del evento.
+CREATE TABLE IF NOT EXISTS public.qr_familias (
+    "grupoFamiliar" text PRIMARY KEY,
+    codigo text NOT NULL UNIQUE
+);
+ALTER TABLE public.qr_familias ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.qr_familias FROM anon, authenticated;
+
 -- Quién ha entrado al tablón y desde qué dispositivo, para detectar
 -- accesos raros.
 CREATE TABLE public.tablon_accesos (
@@ -2621,6 +2631,148 @@ begin
   end if;
 end;
 $$;
+
+-- La acreditación por QR (él, v83.2). Quien lee: el anfitrión o un
+-- colaborador con el permiso «Acreditar en la entrada».
+CREATE FUNCTION public.puede_acreditar() RETURNS boolean
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select es_anfitrion() or colaborador_tiene_permiso('acreditar_entrada');
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.puede_acreditar() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.puede_acreditar() TO authenticated;
+
+-- El código de una familia, para su invitación; si no tiene, se le crea.
+CREATE FUNCTION public.qr_codigo_familia(p_token uuid, p_grupo text) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_codigo text;
+begin
+  if not (p_token is not null and p_token = (select "token" from anfitrion_secreto limit 1))
+     and not colaborador_tiene_permiso('invitaciones_enviar') then
+    raise exception 'No autorizado';
+  end if;
+  v_codigo := (select q.codigo from qr_familias q where q."grupoFamiliar" = p_grupo);
+  if v_codigo is null then
+    insert into qr_familias ("grupoFamiliar", codigo)
+    values (p_grupo, substr(replace(gen_random_uuid()::text, '-', ''), 1, 12))
+    on conflict ("grupoFamiliar") do nothing;
+    v_codigo := (select q.codigo from qr_familias q where q."grupoFamiliar" = p_grupo);
+  end if;
+  return v_codigo;
+end;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.qr_codigo_familia(uuid, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.qr_codigo_familia(uuid, text) TO authenticated;
+
+-- Lo que ve quien lee el QR: sus confirmados y si están en regla. Lo justo:
+-- nada de alergias ni contacto.
+CREATE FUNCTION public.acreditar_estado(p_grupo text) RETURNS jsonb
+    LANGUAGE sql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select jsonb_build_object(
+    'familia', regexp_replace(p_grupo, '\s*\d+\s*$', ''),
+    'abierta', coalesce((select e."asistenciaAbierta" from evento e limit 1), false),
+    'exigir', not modo_pruebas_activo(),
+    'miembros', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', i."id",
+        'nombre', i."nombre",
+        'apellido', i."apellido",
+        'presente', coalesce(i."presente", false),
+        'mesa', i."mesa",
+        'enRegla', coalesce(i."pagado", false) and coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> ''
+      ) order by i."apellido", i."nombre")
+      from invitados i
+      where i."confirmado" = true
+        and coalesce(nullif(i."grupoFamiliar", ''), i."apellido") = p_grupo
+    ), '[]'::jsonb)
+  );
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.acreditar_estado(text) FROM PUBLIC, anon, authenticated;
+
+-- Al leer el QR.
+CREATE FUNCTION public.acreditar_familia(p_codigo text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_grupo text;
+begin
+  if not puede_acreditar() then
+    return jsonb_build_object('error', 'permiso');
+  end if;
+  v_grupo := (select q."grupoFamiliar" from qr_familias q where q.codigo = lower(trim(p_codigo)));
+  if v_grupo is null then
+    return jsonb_build_object('error', 'codigo');
+  end if;
+  return acreditar_estado(v_grupo);
+end;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.acreditar_familia(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.acreditar_familia(text) TO authenticated;
+
+-- Deja acreditados a ESOS de la familia, y a los demás no: así la misma
+-- pantalla sirve para corregir. Con las comprobaciones de siempre para quien
+-- entra de nuevo (llegadas abiertas, pagado y con sus datos); quitar una
+-- llegada no se bloquea nunca. En Modo Pruebas no se exige nada.
+CREATE FUNCTION public.acreditar_marcar(p_codigo text, p_ids uuid[]) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  v_grupo text;
+  v_ids uuid[] := coalesce(p_ids, '{}');
+begin
+  if not puede_acreditar() then
+    return jsonb_build_object('error', 'permiso');
+  end if;
+  v_grupo := (select q."grupoFamiliar" from qr_familias q where q.codigo = lower(trim(p_codigo)));
+  if v_grupo is null then
+    return jsonb_build_object('error', 'codigo');
+  end if;
+
+  if not modo_pruebas_activo() and exists (
+    select 1 from invitados i
+    where i."confirmado" = true
+      and coalesce(nullif(i."grupoFamiliar", ''), i."apellido") = v_grupo
+      and i."id" = any(v_ids)
+      and not coalesce(i."presente", false)
+  ) then
+    if not coalesce((select e."asistenciaAbierta" from evento e limit 1), false) then
+      return jsonb_build_object('error', 'cerrada');
+    end if;
+    if exists (
+      select 1 from invitados i
+      where i."confirmado" = true
+        and coalesce(nullif(i."grupoFamiliar", ''), i."apellido") = v_grupo
+        and i."id" = any(v_ids)
+        and not coalesce(i."presente", false)
+        and (not coalesce(i."pagado", false) or coalesce(i."anioNacimiento", '') = '' or coalesce(i."alergias", '') = '')
+    ) then
+      return jsonb_build_object('error', 'regla');
+    end if;
+  end if;
+
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
+  update invitados i set "presente" = (i."id" = any(v_ids))
+  where i."confirmado" = true
+    and coalesce(nullif(i."grupoFamiliar", ''), i."apellido") = v_grupo
+    and coalesce(i."presente", false) is distinct from (i."id" = any(v_ids));
+  return acreditar_estado(v_grupo);
+end;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.acreditar_marcar(text, uuid[]) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.acreditar_marcar(text, uuid[]) TO authenticated;
 
 -- El colaborador ve su propia ficha y sus permisos.
 CREATE FUNCTION public.colaborador_mi_perfil(p_colaborador_id uuid) RETURNS SETOF public.colaboradores

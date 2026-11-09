@@ -505,7 +505,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
             Destinatario
           </p>
           <p className="text-sm mb-3" style={{ color: C.ink }}>
-            {nombreCompleto(previewInvitacion.destinatario)} — {previewInvitacion.destinatario.email}
+            {previewInvitacion.destinatarios.join(", ") || nombreCompleto(previewInvitacion.destinatario)}
           </p>
           <p
             className="text-xs uppercase mb-1"

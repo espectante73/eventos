@@ -63,3 +63,19 @@ export function construirEnlaceDj(urlPublica, token) {
   if (!token || !urlPublica) return "";
   return `${urlPublica.replace(/\/$/, "")}?dj=${token}`;
 }
+
+// ?acreditar=<código> — el QR de la invitación (v83.2): lo lee en la entrada
+// un acomodador con permiso (VistaAcreditar.jsx). Va siempre con un enlace,
+// para que lo abra la cámara normal del móvil.
+export function getCodigoAcreditarFromUrl() {
+  try {
+    return new URLSearchParams(window.location.search).get("acreditar");
+  } catch (_) {
+    return null;
+  }
+}
+
+export function construirEnlaceAcreditar(urlPublica, codigo) {
+  const base = urlPublica || window.location.origin;
+  return `${base.replace(/\/$/, "")}?acreditar=${codigo}`;
+}

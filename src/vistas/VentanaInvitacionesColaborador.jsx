@@ -101,7 +101,7 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
       {previewInvitacion && (
         <ModalFlotante titulo="Confirmar envío" onCerrar={() => setPreviewInvitacion(null)}>
           <p className="text-sm mb-2" style={{ color: C.charcoal }}>
-            Se enviará a <b>{previewInvitacion.destinatario.email}</b>.
+            Se enviará a <b>{previewInvitacion.destinatarios.join(", ")}</b>.
           </p>
           <img
             src={previewInvitacion.dataUrl}

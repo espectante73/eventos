@@ -40,6 +40,9 @@ export const PERMISOS = {
   // sencillo y estable; quién lleva qué lo acuerdan entre ellos. Lo
   // comprueba la base al entrar en el canal (puede_usar_canal).
   MULTIMEDIA: "multimedia",
+  // Leer el QR de las invitaciones en la entrada (él, v83.2): para los
+  // acomodadores que también son colaboradores. Lo comprueba la base.
+  ACREDITAR_ENTRADA: "acreditar_entrada",
 };
 
 // Etiquetas legibles, para VentanaPermisos.jsx -- un objeto en vez de un
@@ -53,6 +56,7 @@ export const ETIQUETAS_PERMISOS = {
   [PERMISOS.REPOSITORIO_VER]: "Ver el proyecto en GitHub",
   [PERMISOS.DISENO_VER]: "Ver el diseño de la app (cómo se construye)",
   [PERMISOS.MULTIMEDIA]: "Multimedia: manejar la música y el vídeo con el mando",
+  [PERMISOS.ACREDITAR_ENTRADA]: "Acreditar en la entrada (leer el QR de las invitaciones)",
 };
 
 // ⚠️ Hay DOS clases de permiso, y confundirlas ya dio un fallo real

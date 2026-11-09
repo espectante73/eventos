@@ -13,9 +13,11 @@ import { resolverColaborador, emailDeInvitado } from "./invitados";
 import { familiasDelEvento, mesasYCantidad } from "./familiasInvitacion";
 import { requisitosActivos } from "./modoPruebas";
 import { avisoEnPantalla } from "./avisos";
+import { matrizQr } from "./matrizQr";
+import { construirEnlaceAcreditar } from "./url";
 
 export function useMotorInvitaciones(data) {
-  const { evento, colaboradores, invitados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia } = data;
+  const { evento, colaboradores, invitados, ordenFamiliares, persistOrdenFamiliares, enviarInvitacionFamilia, codigoQrFamilia } = data;
 
   // Las familias con invitación: la familia entera pagada y con mesa
   // (lib/familiasInvitacion.js, la misma pieza que la lista de acomodadores).
@@ -34,6 +36,14 @@ export function useMotorInvitaciones(data) {
     const elegido =
       familia.confirmados.find((m) => emailDe(m)) || familia.confirmados[0];
     return elegido ? { ...elegido, email: emailDe(elegido) } : elegido;
+  };
+
+  // A todos los confirmados de la familia con email, sin repetir (él,
+  // v83.2: por si a uno no le llega o no la encuentra). El QR es de la
+  // familia: vale el de cualquiera.
+  const destinatariosConEmail = (familia) => {
+    const correos = [...new Set(familia.confirmados.map(emailDe).map((e) => String(e || "").trim()).filter(Boolean))];
+    return correos.length ? correos : [destinatarioConEmail(familia)?.email].filter(Boolean);
   };
 
   const marcarInvitacionEnviada = (clave) => {
@@ -76,7 +86,18 @@ export function useMotorInvitaciones(data) {
     // antemano. Se toma del primer confirmado (todos los miembros de
     // una misma familia comparten colaborador en la práctica).
     const nombreColaborador = resolverColaborador(familia.confirmados[0], colaboradores)?.nombre || "";
-    return generarInvitacionImagen(evento, familia.apellido, nombres, mesaTexto, mostrarCuadricula, nombreColaborador);
+    // El QR de la familia (v83.2). Sin él no sale la invitación: llegaría a
+    // la entrada sin poder leerse, y nadie se enteraría hasta ese día.
+    let qr = null;
+    if (codigoQrFamilia) {
+      const codigo = await codigoQrFamilia(familia.clave);
+      if (!codigo) {
+        avisoEnPantalla("No se ha podido preparar el código QR de esta familia. Vuelve a intentarlo en un momento.", "Invitación sin generar");
+        return undefined;
+      }
+      qr = await matrizQr(construirEnlaceAcreditar(evento.urlPublica, codigo));
+    }
+    return generarInvitacionImagen(evento, familia.apellido, nombres, mesaTexto, mostrarCuadricula, nombreColaborador, qr);
   };
 
   const [previewInvitacion, setPreviewInvitacion] = useState(null); // { familia, dataUrl, destinatario } | null
@@ -96,6 +117,7 @@ export function useMotorInvitaciones(data) {
     setDescargando(familia.clave);
     const dataUrl = await generarImagenParaFamilia(familia);
     setDescargando(null);
+    if (dataUrl === undefined) return; // ya se ha avisado
     if (!dataUrl) {
       avisoEnPantalla(
         "Probablemente la URL de la imagen del evento no permite descargarla desde otro origen. Prueba con otra imagen alojada en un servicio que sí lo permita, o quita la URL para usar el fondo por defecto.",
@@ -103,23 +125,33 @@ export function useMotorInvitaciones(data) {
       );
       return;
     }
-    setPreviewInvitacion({ familia, dataUrl, destinatario });
+    setPreviewInvitacion({ familia, dataUrl, destinatario, destinatarios: destinatariosConEmail(familia) });
+  };
+
+  // El mismo correo a cada uno, de uno en uno. Una familia con alguno que
+  // haya salido cuenta como enviada; los que no, se dicen.
+  const enviarATodos = async (correos, html, base64) => {
+    const enviados = [];
+    const fallidos = [];
+    for (const correo of correos) {
+      if (await enviarInvitacionFamilia(correo, `Tu invitación — ${evento.nombre || "evento"}`, html, base64)) enviados.push(correo);
+      else fallidos.push(correo);
+    }
+    return { enviados, fallidos };
   };
 
   const confirmarEnvioInvitacion = async () => {
     if (!previewInvitacion) return;
     setEnviandoInvitacion(true);
     const base64 = previewInvitacion.dataUrl.split(",")[1] || "";
-    const ok = await enviarInvitacionFamilia(
-      previewInvitacion.destinatario.email,
-      `Tu invitación — ${evento.nombre || "evento"}`,
-      evento.plantillaInvitacionFamilia || "",
-      base64
-    );
+    const { enviados, fallidos } = await enviarATodos(previewInvitacion.destinatarios, evento.plantillaInvitacionFamilia || "", base64);
     setEnviandoInvitacion(false);
-    if (ok) {
+    if (enviados.length) {
       marcarInvitacionEnviada(previewInvitacion.familia.clave);
-      avisoEnPantalla(previewInvitacion.destinatario.email, "Invitación enviada");
+      avisoEnPantalla(
+        [enviados.join(", "), fallidos.length && `No se ha podido enviar a: ${fallidos.join(", ")}`].filter(Boolean).join("\n"),
+        "Invitación enviada"
+      );
       setPreviewInvitacion(null);
     }
   };
@@ -128,6 +160,8 @@ export function useMotorInvitaciones(data) {
     familiasListasParaInvitacion,
     emailDeInvitado: emailDe,
     destinatarioConEmail,
+    destinatariosConEmail,
+    enviarATodos,
     marcarInvitacionEnviada,
     descargando,
     setDescargando,

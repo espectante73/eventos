@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 
 import { LogOut } from "lucide-react";
 import { useLedgerData } from "./useLedgerData";
 import { supabase, supabaseConfigurado } from "./supabaseClient";
-import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl, getTokenDjFromUrl } from "./lib/url";
+import { getRolFromUrl, getEmailCrearCuentaFromUrl, getTokenTablonFromUrl, getTokenDjFromUrl, getCodigoAcreditarFromUrl } from "./lib/url";
 import { esVistaMusica, esVistaPantalla } from "./lib/ventanaMusica";
 import { PERMISOS, tienePermiso } from "./lib/permisos";
 import { C, OP, S, conAlfa } from "./theme";
@@ -15,6 +15,7 @@ import { esFalloDelServidor } from "./lib/servidor";
 import { VistaNuevaContrasena } from "./vistas/VistaNuevaContrasena";
 import { VistaTablon } from "./vistas/VistaTablon";
 import { VistaDj } from "./vistas/VistaDj";
+import { VistaAcreditar, AcreditarSinSesion } from "./vistas/VistaAcreditar";
 import { AvisoActualizar } from "./components/AvisoActualizar";
 import { leerVersionPublicada, textoAvisoVersion } from "./lib/avisoVersion";
 import { VERSION_APP } from "./constants";
@@ -60,6 +61,9 @@ export default function App() {
   // ?dj=<token> -- «Canciones para bailar» para el DJ (v81): igual que el
   // tablón, sin sesión; pide además su clave (VistaDj.jsx).
   const tokenDj = getTokenDjFromUrl();
+  // ?acreditar=: el QR de una invitación, leído en la entrada (v83.2).
+  const codigoAcreditar = getCodigoAcreditarFromUrl();
+  const [entrarParaAcreditar, setEntrarParaAcreditar] = useState(false);
   // ?musica -- la ventana de Música como página propia (lib/ventanaMusica.js).
   const vistaMusica = esVistaMusica();
   const vistaPantalla = esVistaPantalla();
@@ -330,6 +334,15 @@ export default function App() {
 
   if (session === undefined) {
     return <PantallaCargando />;
+  }
+
+  // El QR de una invitación: con sesión, a acreditar; sin ella, quien lee
+  // su propio QR ve que se enseña en la entrada, y el equipo puede entrar.
+  if (codigoAcreditar && session) {
+    return <VistaAcreditar codigo={codigoAcreditar} />;
+  }
+  if (codigoAcreditar && !entrarParaAcreditar) {
+    return <AcreditarSinSesion onEntrar={() => setEntrarParaAcreditar(true)} />;
   }
 
   // Enlace antiguo (?rol=...) sin sesión: ya no da acceso a nadie -- ni a

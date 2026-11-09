@@ -84,13 +84,48 @@ function dibujarCuadriculaCalibracion(ctx, W, H) {
   ctx.restore();
 }
 
+// El QR, justo encima del recuadro de familia/mesa y alineado con su borde
+// derecho (él, v83.2: arriba a la derecha se veía de 1 cm en el móvil). En
+// fracción del ancho y del alto, como el resto de la invitación. Módulos
+// enteros de píxel: medios píxeles lo emborronarían al comprimirla.
+const QR = { lado: 0.275, derecha: 0.965, abajo: 0.789, margen: 0.0153, pie: 0.049, letra: 0.0208 };
+
+function dibujarQr(ctx, W, H, qr) {
+  const n = qr.length;
+  const modulo = Math.max(1, Math.floor((QR.lado * W) / n));
+  const lado = modulo * n;
+  const margen = Math.round(QR.margen * W);
+  const ancho = lado + 2 * margen;
+  const alto = lado + margen + Math.round(QR.pie * W);
+  const x = Math.round(QR.derecha * W) - ancho;
+  const y = Math.round(QR.abajo * H) - alto;
+  ctx.fillStyle = C.paper;
+  ctx.strokeStyle = C.gold;
+  ctx.lineWidth = Math.max(2, Math.round(W / 360));
+  ctx.beginPath();
+  ctx.roundRect(x, y, ancho, alto, Math.round(W / 72));
+  ctx.fill();
+  ctx.stroke();
+  // El margen blanco alrededor: sin él, una cámara no encuentra el QR.
+  const blanco = Math.round(margen / 2);
+  ctx.fillStyle = C.blanco;
+  ctx.fillRect(x + margen - blanco, y + margen - blanco, lado + 2 * blanco, lado + 2 * blanco);
+  ctx.fillStyle = C.ink;
+  qr.forEach((fila, f) => fila.forEach((oscuro, c) => oscuro && ctx.fillRect(x + margen + c * modulo, y + margen + f * modulo, modulo, modulo)));
+  ctx.font = `bold ${Math.round(QR.letra * W)}px 'Fraunces', serif`;
+  ctx.textAlign = "center";
+  ctx.fillText("Enséñalo en la entrada", x + ancho / 2, y + alto - Math.round(QR.margen * W));
+}
+
 export function generarInvitacionImagen(
   evento,
   apellidoFamilia,
   nombresMiembros,
   mesaTexto,
   mostrarCuadricula = false,
-  nombreColaborador = ""
+  nombreColaborador = "",
+  // El QR de la familia, como cuadrícula (lib/matrizQr.js), o null (v83.2).
+  qr = null
 ) {
   return (
     new Promise((resolve) => {
@@ -330,6 +365,7 @@ export function generarInvitacionImagen(
             cursorY += b.lineas.length * b.lineHeight + espacioEntreBloques;
           });
 
+          if (qr) dibujarQr(ctx, W, H, qr);
           if (mostrarCuadricula) dibujarCuadriculaCalibracion(ctx, W, H);
 
           try {

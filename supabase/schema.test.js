@@ -820,3 +820,38 @@ describe("la invitación caduca solo con cambios reales (v83.1)", () => {
     expect(f.indexOf("is not distinct from"), "antes de tocar nada").toBeLessThan(f.indexOf("update orden_familias"));
   });
 });
+
+describe("la acreditación por QR (v83.2)", () => {
+  it("los códigos, cerrados y fuera de la foto del Deshacer", () => {
+    expect(sql).toContain("ALTER TABLE public.qr_familias ENABLE ROW LEVEL SECURITY;");
+    expect(sql).toContain("REVOKE ALL ON public.qr_familias FROM anon, authenticated;");
+    expect(cuerpoDe("foto_de_datos")).not.toContain("qr_familias");
+  });
+
+  it("solo el anfitrión o quien tenga el permiso; las funciones, cerradas a quien no ha entrado", () => {
+    expect(cuerpoDe("puede_acreditar")).toContain("es_anfitrion() or colaborador_tiene_permiso('acreditar_entrada')");
+    for (const f of ["acreditar_familia", "acreditar_marcar"]) expect(cuerpoDe(f)).toContain("if not puede_acreditar() then");
+    for (const firma of ["puede_acreditar()", "qr_codigo_familia(uuid, text)", "acreditar_familia(text)", "acreditar_marcar(text, uuid[])"]) {
+      expect(sql).toContain(`REVOKE EXECUTE ON FUNCTION public.${firma} FROM PUBLIC, anon;`);
+    }
+    expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.acreditar_estado(text) FROM PUBLIC, anon, authenticated;");
+  });
+
+  it("marcar: llegadas abiertas y en regla para quien entra de nuevo, y solo dentro de su familia", () => {
+    const f = cuerpoDe("acreditar_marcar");
+    expect(f).toContain("'cerrada'");
+    expect(f).toContain("'regla'");
+    expect(f).toContain("not modo_pruebas_activo()");
+    expect(f).toContain(`coalesce(nullif(i."grupoFamiliar", ''), i."apellido") = v_grupo`);
+    expect(f).toContain("eventos.recalculo_aviso_activo");
+  });
+
+  it("lo que se enseña, sin alergias, email ni teléfono", () => {
+    const f = cuerpoDe("acreditar_estado");
+    for (const dato of ["'alergias'", "'email'", "'telefono'"]) expect(f).not.toContain(dato);
+  });
+
+  it("sin «select … into»: el editor de Supabase las cortaría", () => {
+    for (const f of ["qr_codigo_familia", "acreditar_familia", "acreditar_marcar"]) expect(cuerpoDe(f)).not.toMatch(/select[^;]*\binto\s+v_/i);
+  });
+});

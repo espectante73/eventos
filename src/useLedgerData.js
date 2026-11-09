@@ -1564,6 +1564,16 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     [esAnfitrion, rol]
   );
 
+  // El código del QR de una familia, para su invitación (v83.2). Lo crea la
+  // base la primera vez. Sin él, null: quien lo pide no genera la invitación.
+  const codigoQrFamilia = useCallback(
+    async (grupo) => {
+      const { data, error } = await supabase.rpc("qr_codigo_familia", { p_token: esAnfitrion ? rol : null, p_grupo: grupo });
+      return error ? null : data;
+    },
+    [esAnfitrion, rol]
+  );
+
   const enviarInvitacionFamilia = useCallback(
     async (email, asunto, html, imagenBase64) => {
       if (!esAnfitrion) return false;
@@ -1599,6 +1609,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     fotosAniversario,
     fotosBodaFinal,
     fotosSinBoda,
+    codigoQrFamilia,
     familiasSinEmailServidor,
     loaded,
     seccionesCargadas,
