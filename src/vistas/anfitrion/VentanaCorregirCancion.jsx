@@ -14,10 +14,10 @@ import { Boton } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
 import { nombreCompleto } from "../../lib/formato";
 import { calcularEdad } from "../../lib/invitados";
-import { huecosCanciones, cancionesPedidas, corregirCancion, corregirCancionEnTodas } from "../../lib/canciones";
+import { huecosCanciones, cancionesPedidas, corregirCancion, corregirCancionEnTodas, claveCancion, trasladarFueraDj } from "../../lib/canciones";
 
 export function VentanaCorregirCancion({ data, peticion, onCerrar }) {
-  const { invitados, evento, persistInvitados } = data;
+  const { invitados, evento, persistInvitados, persistCancionesFueraDj } = data;
   const enTodas = Boolean(peticion.clave);
   const pedidas = enTodas ? cancionesPedidas(invitados, () => null).filter((f) => f.clave === peticion.clave) : [peticion];
   const { invitadoId, hueco } = pedidas[0] || {};
@@ -42,6 +42,7 @@ export function VentanaCorregirCancion({ data, peticion, onCerrar }) {
     setAviso(motivo);
     if (motivo) return;
     if (siguiente !== invitados) persistInvitados(siguiente);
+    if (enTodas) persistCancionesFueraDj((lista) => trasladarFueraDj(lista, peticion.clave, claveCancion(titulo.trim(), artista.trim())));
     onCerrar();
   };
 

@@ -12,8 +12,26 @@ import {
   ORDEN_CANCIONES_INICIAL,
   corregirCancion,
   corregirCancionEnTodas,
+  alternarFueraDj,
+  trasladarFueraDj,
   cambiarCanciones,
 } from "./canciones";
+
+describe("las que no pasan al DJ (v84.3)", () => {
+  it("se marca y se desmarca por canción", () => {
+    expect(alternarFueraDj([], "a")).toEqual(["a"]);
+    expect(alternarFueraDj(["a", "b"], "a")).toEqual(["b"]);
+    expect(alternarFueraDj(undefined, "a")).toEqual(["a"]);
+  });
+
+  it("al corregir cómo se escribe, la marca la sigue; si no estaba marcada, nada", () => {
+    expect(trasladarFueraDj(["gasolin", "b"], "gasolin", "gasolina")).toEqual(["gasolina", "b"]);
+    expect(trasladarFueraDj(["a", "b"], "a", "b")).toEqual(["b"]);
+    const lista = ["a"];
+    expect(trasladarFueraDj(lista, "otra", "nueva")).toBe(lista);
+    expect(trasladarFueraDj(lista, "a", "a")).toBe(lista);
+  });
+});
 
 describe("hasta 3 canciones, con título y artista (v69)", () => {
   it("la de antes, escrita en un solo hueco, pasa entera al título de la primera", () => {

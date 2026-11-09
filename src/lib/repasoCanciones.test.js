@@ -8,6 +8,7 @@ import {
   conResultados,
   repasoCanciones,
   aplicarRepaso,
+  fueraDjTrasRepaso,
   duracionTotal,
   textoDuracion,
   minutosYSegundos,
@@ -62,6 +63,11 @@ describe("repasar canciones con Deezer (v80)", () => {
     expect(r.bien.map((b) => b.cancion)).toEqual(["Mi jaca — Estrellita Castro"]);
     expect(r.noEncontradas.map((n) => n.cancion)).toEqual(["Canción inventada"]);
     expect(repasoCanciones(distintas, {}).pendientes).toBe(4);
+  });
+
+  it("la que no pasa al DJ sigue sin pasar con su nombre corregido (v84.3)", () => {
+    const catalogo = { gasolin: { titulo: "Gasolina", artista: "Daddy Yankee" }, otra: { noEncontrada: true } };
+    expect(fueraDjTrasRepaso(["gasolin", "x"], catalogo, ["gasolin", "otra"])).toEqual(["gasolina", "x"]);
   });
 
   it("aplicar corrige TODAS las fichas que la pidieron, y la forma nueva queda con su duración", () => {

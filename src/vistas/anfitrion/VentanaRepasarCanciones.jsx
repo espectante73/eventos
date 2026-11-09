@@ -20,12 +20,12 @@ import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
 import { EscucharCancion } from "../../components/EscucharCancion";
 import { consultaDeFila } from "../../lib/escuchar";
 import { cancionesPedidas } from "../../lib/canciones";
-import { cancionesDistintas, sinBuscar, consultaDe, conResultados, repasoCanciones, aplicarRepaso, minutosYSegundos, POR_TANDA } from "../../lib/repasoCanciones";
+import { cancionesDistintas, sinBuscar, consultaDe, conResultados, repasoCanciones, aplicarRepaso, fueraDjTrasRepaso, minutosYSegundos, POR_TANDA } from "../../lib/repasoCanciones";
 
 const DURACION = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno, whiteSpace: "nowrap" };
 
 export function VentanaRepasarCanciones({ data, onCerrar }) {
-  const { invitados, evento, persistInvitados, buscarCanciones, actualizarCatalogoCanciones } = data;
+  const { invitados, evento, persistInvitados, buscarCanciones, actualizarCatalogoCanciones, persistCancionesFueraDj } = data;
   const catalogo = evento?.catalogoCanciones || {};
   const distintas = cancionesDistintas(cancionesPedidas(invitados, () => null));
   const repaso = repasoCanciones(distintas, catalogo);
@@ -83,12 +83,14 @@ export function VentanaRepasarCanciones({ data, onCerrar }) {
   const marcada = (p) => marcas[p.clave] ?? !p.descartada;
   const cuantas = repaso.proponer.filter(marcada).length;
   const aplicar = () => {
+    const aplicadas = repaso.proponer.filter(marcada).map((p) => p.clave);
     const { invitados: siguientes, catalogo: nuevo, aviso } = aplicarRepaso(invitados, catalogo, {
-      aplicar: repaso.proponer.filter(marcada).map((p) => p.clave),
+      aplicar: aplicadas,
       descartar: repaso.proponer.filter((p) => !marcada(p)).map((p) => p.clave),
     });
     if (siguientes !== invitados) persistInvitados(siguientes);
     actualizarCatalogoCanciones(() => nuevo);
+    persistCancionesFueraDj((lista) => fueraDjTrasRepaso(lista, catalogo, aplicadas));
     setMarcas({});
     setHecho(aviso);
   };

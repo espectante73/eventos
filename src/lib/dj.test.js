@@ -11,6 +11,12 @@ const datos = {
 };
 
 describe("la página del DJ (v81)", () => {
+  it("las que el anfitrión dejó fuera no llegan, en ninguna de sus peticiones (v84.3)", () => {
+    const filas = filasDelDj({ ...datos, fuera: ["despacito"] });
+    expect(filas.map((f) => f.cancion)).toEqual(["Bailando", "Mi jaca — Estrellita Castro"]);
+    expect(filasDelDj(datos)).toHaveLength(4);
+  });
+
   it("una fila por petición, con su edad y las veces de esa canción; sin nombres", () => {
     const filas = filasDelDj(datos);
     expect(filas.map((f) => `${f.veces}|${f.cancion}|${f.edad}`)).toEqual([

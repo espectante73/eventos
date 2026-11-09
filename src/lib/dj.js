@@ -7,7 +7,10 @@ import { contiene } from "./formato";
 // Lo que llega de la base: { peticiones: [{ cancion, edad }], catalogo, … }.
 export function filasDelDj(datos) {
   const peticiones = (datos?.peticiones || []).map((p, i) => ({ id: `p${i}`, cancion: p.cancion, edad: p.edad ?? null }));
-  return cancionesPedidas(peticiones, (p) => p.edad);
+  // Las que el anfitrión dejó fuera (v84.3) no llegan a la lista, y con ellas
+  // tampoco a lo que el DJ imprima o exporte, ni a la duración.
+  const fuera = new Set(datos?.fuera || []);
+  return cancionesPedidas(peticiones, (p) => p.edad).filter((f) => !fuera.has(f.clave));
 }
 
 // Por canción o artista (sin mayúsculas ni tildes) y por un tramo de edad.

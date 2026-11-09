@@ -34,6 +34,7 @@ function Arnes({ espias }) {
       return { resultados: consultas.map((q) => DEEZER[q]) };
     },
     actualizarCatalogoCanciones: async (cambiar) => setEvento((e) => ({ ...e, catalogoCanciones: cambiar(e.catalogoCanciones) })),
+    persistCancionesFueraDj: () => {},
   };
   return <VentanaRepasarCanciones data={data} onCerrar={() => {}} />;
 }

@@ -130,6 +130,7 @@ CREATE TABLE public.evento (
     -- Solo el anfitrión. Sin «not null»: una foto del Deshacer de antes la
     -- trae vacía.
     "catalogoCanciones" jsonb DEFAULT '{}'::jsonb,
+    "cancionesFueraDj" jsonb DEFAULT '[]'::jsonb,
     CONSTRAINT evento_id_check CHECK (id)
 );
 
@@ -726,6 +727,7 @@ begin
     'evento', (select e."nombre" from evento e limit 1),
     'fecha', (select e."fecha" from evento e limit 1),
     'catalogo', coalesce((select e."catalogoCanciones" from evento e limit 1), '{}'::jsonb),
+    'fuera', coalesce((select e."cancionesFueraDj" from evento e limit 1), '[]'::jsonb),
     'peticiones', coalesce(
       (select jsonb_agg(jsonb_build_object('cancion', i."cancion", 'edad', edad_en_evento(i."anioNacimiento")))
        from invitados i where coalesce(i."cancion", '') <> ''),
@@ -1085,7 +1087,7 @@ CREATE FUNCTION public.evento_publico() RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-  select to_jsonb(e) - 'enlaceGrupoWhatsapp' - 'emailAnfitrion' - 'acomodaciones' - 'conceptosGastos' - 'catalogoCanciones' from evento e limit 1;
+  select to_jsonb(e) - 'enlaceGrupoWhatsapp' - 'emailAnfitrion' - 'acomodaciones' - 'conceptosGastos' - 'catalogoCanciones' - 'cancionesFueraDj' from evento e limit 1;
 $$;
 
 -- El evento entero, para el anfitrión.

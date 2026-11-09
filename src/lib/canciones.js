@@ -83,6 +83,21 @@ export function cancionesPedidas(invitados, edadDe) {
 }
 
 // Una estrella por vez; de 6 en adelante no caben en la línea: «★ 7».
+// Las que él deja fuera de la lista del DJ (v84.3): la lista sirve para conocer
+// el perfil musical del conjunto, y las que no encajan con la idea del evento
+// no pasan. Por canción, no por persona: vale también para quien la pida
+// después. Nadie más lo sabe: sigue en la ficha del invitado.
+export function alternarFueraDj(lista = [], clave) {
+  return lista.includes(clave) ? lista.filter((c) => c !== clave) : [...lista, clave];
+}
+
+// Al corregir cómo se escribe una canción marcada, la marca la sigue: si no,
+// volvería a la lista del DJ sin que nadie lo notara.
+export function trasladarFueraDj(lista = [], vieja, nueva) {
+  if (!nueva || vieja === nueva || !lista.includes(vieja)) return lista;
+  return [...new Set(lista.map((c) => (c === vieja ? nueva : c)))];
+}
+
 export const estrellas = (veces) => (veces <= 5 ? "★".repeat(veces) : `★ ${veces}`);
 
 // El orden, tocando la cabecera como en la Lista: al abrir, las más pedidas

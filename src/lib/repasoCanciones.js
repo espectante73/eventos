@@ -10,7 +10,7 @@
 // proponer cómo dejarla escrita (canción y cantante, cada uno en su hueco,
 // aunque el colaborador los metiera juntos) y saber cuánto dura. Nada cambia
 // solo: él marca lo que se aplica. Lo busca api/canciones.js.
-import { huecosCanciones, textoDeHuecos, textoCancion, claveCancion } from "./canciones";
+import { huecosCanciones, textoDeHuecos, textoCancion, claveCancion, trasladarFueraDj } from "./canciones";
 
 // Lo que cuenta una canción sin buscar, no encontrada o descartada: 3½ min.
 export const DURACION_ESTIMADA = 210;
@@ -75,6 +75,14 @@ export function repasoCanciones(distintas, catalogo) {
 // en TODAS las fichas que las pidieron (también las pagadas: lo hace el
 // anfitrión), y su forma nueva queda en el catálogo con su duración; las de
 // `descartar` ya no salen marcadas. Devuelve las dos listas y el aviso.
+// Las marcadas para no pasar al DJ siguen marcadas con su nombre corregido.
+export function fueraDjTrasRepaso(lista, catalogo, aplicar = []) {
+  return aplicar.reduce((actual, clave) => {
+    const e = catalogo?.[clave];
+    return e?.titulo ? trasladarFueraDj(actual, clave, claveCancion(e.titulo, e.artista)) : actual;
+  }, lista);
+}
+
 export function aplicarRepaso(invitados, catalogo, { aplicar = [], descartar = [] }) {
   const elegidas = new Set(aplicar);
   let cambiadas = 0;

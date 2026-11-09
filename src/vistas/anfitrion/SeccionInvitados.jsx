@@ -33,6 +33,7 @@ import {
   Download,
   ListChecks,
   Headphones,
+  Ban,
   Lock,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
@@ -51,7 +52,7 @@ import { revisarConExcepciones } from "../../lib/revisionInvitados";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { asignarMesaConSuFamilia, confirmarConSuFamilia, mesaFija } from "../../lib/mesas";
-import { tieneCancion, cancionesPedidas, estrellas, ordenarCanciones, tocarOrdenCanciones, ORDEN_CANCIONES_INICIAL } from "../../lib/canciones";
+import { tieneCancion, cancionesPedidas, estrellas, ordenarCanciones, tocarOrdenCanciones, alternarFueraDj, ORDEN_CANCIONES_INICIAL } from "../../lib/canciones";
 import { tocarTitulo, compararPorNiveles } from "../../lib/ordenNiveles";
 import { ResumenAvisosAsignacion } from "./ResumenAvisosAsignacion";
 import {
@@ -136,7 +137,7 @@ const TINTA_COLUMNA_ACTIVA = C.goldClaro;
 // La canción, del ancho de la más larga (él, v81.2), y la ventana con ella:
 // todas las filas comparten las columnas de la lista (subgrid), así que la
 // más larga marca el ancho de todas. Si no cabe en la pantalla, se recorta.
-const COLUMNAS_CANCIONES = "4.5rem minmax(0, max-content) 3.5rem 2.25rem";
+const COLUMNAS_CANCIONES = "4.5rem minmax(0, max-content) 3.5rem 2.25rem 2.25rem";
 const FILA_CANCIONES = { gridColumn: "1 / -1", gridTemplateColumns: "subgrid" };
 
 export function SeccionInvitados({
@@ -350,6 +351,7 @@ export function SeccionInvitados({
   const marcarResponsable = (rol, invitadoId) =>
     persistEvento({ ...evento, rolesTrabajoResponsables: fijarResponsable(responsablesRol, rol, invitadoId) });
 
+  const fueraDelDj = evento.cancionesFueraDj || [];
   const filasCanciones = () =>
     ordenarCanciones(
       cancionesPedidas(invitados, (g) => calcularEdad(g.anioNacimiento, evento)),
@@ -360,7 +362,8 @@ export function SeccionInvitados({
   // canciones distintas y cuánto duran todas juntas (con Deezer; la que no
   // tiene la suya cuenta 3½ min, y entonces la cifra lleva «≈»).
   const cifrasCanciones = () => {
-    const pedidas = cancionesPedidas(invitados, () => null);
+    // Las cifras son las de lo que le llega al DJ (v84.3).
+    const pedidas = cancionesPedidas(invitados, () => null).filter((f) => !fueraDelDj.includes(f.clave));
     const distintas = cancionesDistintas(pedidas);
     const { segundos, estimadas } = duracionTotal(distintas, evento.catalogoCanciones);
     return [
@@ -416,7 +419,8 @@ export function SeccionInvitados({
     } else if (panelFlotante === "canciones") {
       // Como se ve en la ventana (v79.5): una línea por petición, sin
       // nombres, en el orden elegido.
-      const filas = filasCanciones().map((f) => [f.veces, f.cancion, f.edad ?? ""]);
+      // Sin las que no pasan al DJ: en un CSV no se vería que van tachadas.
+      const filas = filasCanciones().filter((f) => !fueraDelDj.includes(f.clave)).map((f) => [f.veces, f.cancion, f.edad ?? ""]);
       descargarCSV(`canciones-${evento.nombre || "evento"}.csv`, ["Veces", "Canción", "Edad"], filas);
     } else if (panelFlotante === "alergias") {
       const filas = ordenarPorApellidoNombre(invitados.filter(tieneAlergiaReal)).map((g) => [
@@ -2117,13 +2121,16 @@ export function SeccionInvitados({
                     </EncabezadoOrdenable>
                   ))}
                   <span />
+                  <span />
                 </div>
                 {/* Una fila por petición, sin nombres (él, v79.5): la misma
                     canción sale tantas veces como se pidió, con la edad de
                     quien la pidió; las estrellas, cuántas veces en total.
                     Todas las filas de la misma altura (norma 6). Tocar la
                     canción abre «Corregir canción» (v79.6). */}
-                {filasCanciones().map((f, i) => (
+                {filasCanciones().map((f, i) => {
+                  const fuera = fueraDelDj.includes(f.clave);
+                  return (
                   <div
                     key={`${f.invitadoId}-${f.hueco}`}
                     className="grid items-center px-2 py-1 text-sm"
@@ -2141,7 +2148,10 @@ export function SeccionInvitados({
                     <button
                       onClick={() => setCancionACorregir({ invitadoId: f.invitadoId, hueco: f.hueco })}
                       className="boton-3d rounded px-2 py-1 text-left truncate min-w-0"
-                      style={noEncontrada(evento.catalogoCanciones, f) ? { color: C.peligro, fontWeight: 600 } : undefined}
+                      style={{
+                        ...(noEncontrada(evento.catalogoCanciones, f) ? { color: C.peligro, fontWeight: 600 } : {}),
+                        ...(fuera ? { textDecoration: "line-through", opacity: OP.tenue } : {}),
+                      }}
                       title={noEncontrada(evento.catalogoCanciones, f) ? "Deezer no la encuentra: tócala para corregirla" : "Corregir cómo está escrita"}
                     >
                       {f.cancion}
@@ -2150,8 +2160,20 @@ export function SeccionInvitados({
                     <span className="flex justify-center oculto-al-imprimir">
                       <EscucharCancion consulta={consultaDeFila(f, evento.catalogoCanciones)} buscar={data.buscarParaEscuchar} />
                     </span>
+                    {/* No pasar al DJ (v84.3): por canción; nadie más lo ve. */}
+                    <span className="flex justify-center oculto-al-imprimir">
+                      <Boton
+                        variante={fuera ? "principal" : "secundario"}
+                        tamano="pequeno"
+                        icono={Ban}
+                        titulo={fuera ? "No pasa al DJ: toca para que vuelva a pasar" : "No pasar al DJ"}
+                        aria-pressed={fuera}
+                        onClick={() => data.persistCancionesFueraDj((lista) => alternarFueraDj(lista, f.clave))}
+                      />
+                    </span>
                   </div>
-                ))}
+                  );
+                })}
                 </div>
                 {invitados.filter(tieneCancion).length === 0 && (
                   <p className="text-sm italic p-2" style={{ color: C.charcoal, opacity: OP.secundario }}>

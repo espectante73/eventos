@@ -80,6 +80,7 @@ describe("el evento no se lee directamente", () => {
     expect(f).toContain("- 'acomodaciones'");
     expect(f).toContain("- 'conceptosGastos'");
     expect(f).toContain("- 'catalogoCanciones'");
+    expect(f).toContain("- 'cancionesFueraDj'");
   });
 
   it("entero solo al anfitrión; el enlace, al colaborador con permiso de Novedades", () => {

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "84.3",
+    cambios: [
+      "Canciones para bailar: marca «No pasar al DJ», por canción. Queda tachada en tu lista y no le llega al DJ, ni a lo que imprima o exporte, ni a la duración; sigue en la ficha del invitado y nadie más lo sabe. Si se corrige cómo está escrita en todas sus peticiones, la marca se mantiene.",
+    ],
+  },
+  {
     version: "84.2",
     cambios: [
       "El DJ contratado (la zona DJ): su entrada vale 0 € en toda la app, y sigue siendo un invitado más, con mesa e invitación con QR. Lleva unos auriculares junto a su nombre en la Lista y en los formularios del colaborador, y en Acomodación su etiqueta va en blanco y en negrita.",

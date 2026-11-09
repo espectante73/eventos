@@ -276,6 +276,31 @@ describe("las canciones, en lista", () => {
     vista.desmontar();
   });
 
+  it("«No pasar al DJ» va por canción: tacha todas sus peticiones y las demás siguen (v84.3)", async () => {
+    const persistCancionesFueraDj = vi.fn();
+    const vista = montar(
+      <SeccionInvitados
+        data={{ ...conCanciones, evento: { ...conCanciones.evento, cancionesFueraDj: ["bailando"] }, persistCancionesFueraDj }}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante="canciones"
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+    expect(document.body.querySelectorAll('button[aria-label^="No pasa al DJ"]')).toHaveLength(2);
+    const tachadas = [...document.body.querySelectorAll("button")].filter((b) => b.style.textDecoration === "line-through");
+    expect(tachadas.map((b) => b.textContent)).toEqual(["Bailando — Enrique Iglesias", "Bailando — Enrique Iglesias"]);
+    const pasar = document.body.querySelector('button[aria-label="No pasar al DJ"]');
+    await act(async () => pasar.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(persistCancionesFueraDj.mock.calls[0][0](["bailando"])).toEqual(["bailando", "labamba"]);
+    vista.desmontar();
+  });
+
   it("tocando una canción se corrige en la ficha de quien la pidió (v79.6)", async () => {
     const persistInvitados = vi.fn();
     const vista = montar(

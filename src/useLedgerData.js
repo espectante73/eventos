@@ -1410,6 +1410,11 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     (cambiar) => persistEvento({ ...eventoRef.current, catalogoCanciones: cambiar(eventoRef.current?.catalogoCanciones || {}) }),
     [persistEvento]
   );
+  // Las que no pasan al DJ (v84.3). Sobre lo último guardado, como el catálogo.
+  const persistCancionesFueraDj = useCallback(
+    (cambiar) => persistEvento({ ...eventoRef.current, cancionesFueraDj: cambiar(eventoRef.current?.cancionesFueraDj || []) }),
+    [persistEvento]
+  );
   // «Repasar canciones» (v80): unas cuantas canciones, a Deezer por el
   // buscador de Vercel. { resultados } o { error }.
   const buscarCanciones = useCallback(
@@ -1664,6 +1669,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     avisarAlEquipo,
     buscarCanciones,
     actualizarCatalogoCanciones,
+    persistCancionesFueraDj,
     leerDj,
     compartirDj,
     dejarDj,
