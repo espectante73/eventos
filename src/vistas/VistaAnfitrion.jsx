@@ -323,6 +323,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   const {
     familiasListasParaInvitacion,
     destinatarioConEmail,
+    destinatariosConEmail,
+    enviarATodos,
     marcarInvitacionEnviada,
     descargando,
     setDescargando,
@@ -428,6 +430,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
           data={data}
           familiasListasParaInvitacion={familiasListasParaInvitacion}
           destinatarioConEmail={destinatarioConEmail}
+          destinatariosConEmail={destinatariosConEmail}
+          enviarATodos={enviarATodos}
           descargando={descargando}
           setDescargando={setDescargando}
           abrirPreviewInvitacion={abrirPreviewInvitacion}

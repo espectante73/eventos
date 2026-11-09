@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "83.3",
+    cambios: [
+      "Invitaciones: el envío en bloque («Revisar y enviar a N familias») también llega a todos los confirmados de la familia con email; hasta ahora solo el envío de una en una. En la lista de repaso salen todos los correos.",
+    ],
+  },
+  {
     version: "83.2",
     cambios: [
       "Acreditar por QR: cada invitación lleva un QR de su familia, justo encima del recuadro de datos. El acomodador lo lee con la cámara del móvil y se abre «¿Vienen todos?»; con «No», elige quiénes. Funciona en varios móviles a la vez: si otro ya la leyó, sale «Ya acreditados», y se puede corregir. Solo para el anfitrión y quien tenga el permiso nuevo «Acreditar en la entrada». Quien lea su propio QR sin cuenta no ve datos ni puede acreditar.",

@@ -35,6 +35,8 @@ export function VentanaInvitaciones({
   data,
   familiasListasParaInvitacion,
   destinatarioConEmail,
+  destinatariosConEmail,
+  enviarATodos,
   descargando,
   setDescargando,
   abrirPreviewInvitacion,
@@ -45,7 +47,7 @@ export function VentanaInvitaciones({
   onCerrar,
 }) {
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
-  const { evento, colaboradores, invitados, persistEvento, persistInvitados, enviarInvitacionFamilia } = data;
+  const { evento, colaboradores, invitados, persistEvento, persistInvitados } = data;
 
   const [nombreCarpetaInvitaciones, setNombreCarpetaInvitaciones] = useState(null);
   const [subiendoPlantillaInvitacion, setSubiendoPlantillaInvitacion] = useState(false);
@@ -100,6 +102,7 @@ export function VentanaInvitaciones({
     setDescargando(familia.clave);
     const dataUrl = await generarImagenParaFamilia(familia);
     setDescargando(null);
+    if (dataUrl === undefined) return; // ya se ha avisado
     if (!dataUrl) {
       avisoEnPantalla(
         "Probablemente la URL de la imagen del evento no permite descargarla desde otro origen. Prueba con otra imagen alojada en un servicio que sí lo permita, o quita la URL para usar el fondo por defecto.",
@@ -138,9 +141,10 @@ export function VentanaInvitaciones({
     let enviados = 0;
     const saltados = [];
     for (const familia of familiasPendientesDeEnviar) {
-      const destinatario = destinatarioConEmail(familia);
-      // En Modo Pruebas el correo va al anfitrión: no se salta a nadie.
-      if (!destinatario?.email && requisitosActivos(evento)) {
+      // A todos los de la familia con email (v83.2). En Modo Pruebas el
+      // correo va al anfitrión: no se salta a nadie.
+      const correos = destinatariosConEmail(familia);
+      if (!correos.length && requisitosActivos(evento)) {
         saltados.push(`${familia.apellido} (sin email)`);
         continue;
       }
@@ -150,15 +154,11 @@ export function VentanaInvitaciones({
         continue;
       }
       const base64 = dataUrl.split(",")[1] || "";
-      const ok = await enviarInvitacionFamilia(
-        destinatario.email,
-        `Tu invitación — ${evento.nombre || "evento"}`,
-        evento.plantillaInvitacionFamilia || "",
-        base64
-      );
-      if (ok) {
+      const { enviados: salidos, fallidos } = await enviarATodos(correos, evento.plantillaInvitacionFamilia || "", base64);
+      if (salidos.length) {
         enviados++;
         marcarInvitacionEnviada(familia.clave);
+        if (fallidos.length) saltados.push(`${familia.apellido} (no ha llegado a ${fallidos.join(", ")})`);
       } else {
         saltados.push(`${familia.apellido} (error al enviar)`);
       }
@@ -528,7 +528,7 @@ export function VentanaInvitaciones({
           </p>
           <ul className="text-sm space-y-2 mb-4">
             {familiasPendientesDeEnviar.map((familia) => {
-              const destinatario = destinatarioConEmail(familia);
+              const correos = destinatariosConEmail(familia).filter(Boolean);
               return (
                 <li key={familia.clave} className="pb-2" style={{ borderBottom: `1px solid ${C.line}` }}>
                   <div style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
@@ -539,9 +539,9 @@ export function VentanaInvitaciones({
                     {familia.confirmados.length} confirmado
                     {familia.confirmados.length === 1 ? "" : "s"}, todos con pago hecho
                   </div>
-                  {destinatario?.email ? (
+                  {correos.length ? (
                     <div className="text-xs" style={{ color: C.ink }}>
-                      Se enviará a: {nombreCompleto(destinatario)} — {destinatario.email}
+                      Se enviará a: {correos.join(", ")}
                     </div>
                   ) : (
                     <LineaAviso className="text-xs">

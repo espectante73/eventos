@@ -546,6 +546,15 @@ describe("toda cita a una norma apunta a una que existe", () => {
   });
 });
 
+describe("la invitación se envía de una sola manera (v83.2)", () => {
+  // Llega a todos los de la familia con email. El envío en bloque iba por
+  // su cuenta y seguía mandándola a uno solo.
+  it("nadie llama a enviarInvitacionFamilia fuera del motor: todo pasa por enviarATodos", () => {
+    const fuera = archivos.filter((r) => !/useMotorInvitaciones|useLedgerData/.test(r) && /enviarInvitacionFamilia\(/.test(sinComentarios(leer(r))));
+    expect(fuera).toEqual([]);
+  });
+});
+
 describe("WhatsApp se abre de una sola manera (v82.7)", () => {
   // Con wa.me en una ventana nueva, en el móvil quedaba una ventana del
   // navegador en blanco al volver de WhatsApp. Todo pasa por abrirWhatsApp.

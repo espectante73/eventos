@@ -43,7 +43,8 @@ export function useMotorInvitaciones(data) {
   // familia: vale el de cualquiera.
   const destinatariosConEmail = (familia) => {
     const correos = [...new Set(familia.confirmados.map(emailDe).map((e) => String(e || "").trim()).filter(Boolean))];
-    return correos.length ? correos : [destinatarioConEmail(familia)?.email].filter(Boolean);
+    // En Modo Pruebas el correo va al anfitrión: también sin email se prueba.
+    return correos.length || requisitosActivos(evento) ? correos : [""];
   };
 
   const marcarInvitacionEnviada = (clave) => {
