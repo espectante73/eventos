@@ -1326,7 +1326,7 @@ export function SeccionInvitados({
                       fontWeight: 700,
                       letterSpacing: "0.04em",
                     }}
-                    title="Los colaboradores no pueden marcar llegadas. Se abre en «Día del evento»."
+                    title="Los acomodadores no pueden acreditar con el QR. Se abre en «Día del evento»."
                   >
                     Marcado cerrado
                   </span>

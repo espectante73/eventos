@@ -99,15 +99,15 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
   // La acreditación (él, v70.8): las llegadas y el marcador grande, que
   // siempre van juntos, en UNA fila. Abrir deja acreditar y, en el Mac,
   // abre el marcador (dentro del propio clic, o Safari lo bloquea). Cerrar
-  // pregunta antes (en pleno evento, los colaboradores dejarían de poder
-  // marcar a quien llega) y cierra los dos.
+  // pregunta antes (en pleno evento, los acomodadores dejarían de poder
+  // acreditar con el QR) y cierra los dos.
   const llegadasAbiertas = Boolean(evento.asistenciaAbierta);
   const fijarLlegadas = (abiertas) => persistEvento({ ...evento, asistenciaAbierta: abiertas });
   const alternarLlegadas = () => {
     if (llegadasAbiertas) {
       preguntar({
         titulo: "¿Cerrar la acreditación?",
-        texto: "Los colaboradores dejarán de poder marcar quién llega, y se cierra el marcador.",
+        texto: "Los acomodadores de la entrada dejarán de poder acreditar con el QR, y se cierra el marcador.",
         peligro: false,
         alConfirmar: () => {
           fijarLlegadas(false);

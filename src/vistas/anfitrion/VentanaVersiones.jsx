@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "83.6",
+    cambios: [
+      "Acreditación: la pregunta de cerrarla y el rótulo «Marcado cerrado» de la Lista hablan ya de los acomodadores de la entrada y del QR, no de los colaboradores.",
+    ],
+  },
+  {
     version: "83.5",
     cambios: [
       "Acreditación: el marcador grande se quedaba quieto al leer un QR, porque esa pantalla guardaba la llegada sin avisar a los demás aparatos. Ahora avisa como las otras formas de marcar, y el número cambia al momento.",
