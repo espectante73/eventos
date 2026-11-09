@@ -4,13 +4,14 @@
 // verde; y al pie, el total. Solo cifras: nunca quién.
 import { C, OP } from "../theme";
 import { Cargando } from "../components/Cargando";
-import { ordenarZonas, pieZonas } from "../lib/zonasTablon";
+import { ordenarZonas, pieNinos, pieZonas } from "../lib/zonasTablon";
 
 // `datos`: lo que da tablon_zonas ({ miZona, zonas: [{ zona, confirmados }] }),
 // o null mientras llega.
 export function ZonasTablon({ datos }) {
   if (!datos) return <Cargando />;
   const zonas = ordenarZonas(datos.zonas || []);
+  const ninos = pieNinos(datos.ninos);
   if (zonas.length === 0) {
     return (
       <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
@@ -43,6 +44,11 @@ export function ZonasTablon({ datos }) {
       <p className="text-xs mt-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
         {pieZonas(zonas)}
       </p>
+      {ninos && (
+        <p className="text-xs mt-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
+          {ninos}
+        </p>
+      )}
     </div>
   );
 }

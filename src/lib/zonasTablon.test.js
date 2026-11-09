@@ -1,6 +1,12 @@
 // v73 (él): las zonas en orden alfabético, «imparcial», y tal como están en la Lista.
 import { it, expect } from "vitest";
-import { ordenarZonas, pieZonas, tituloZonas, TITULO_ZONAS } from "./zonasTablon";
+import { ordenarZonas, pieNinos, pieZonas, tituloZonas, TITULO_ZONAS } from "./zonasTablon";
+
+it("los niños: las dos franjas, también a cero; sin datos del servidor, nada", () => {
+  expect(pieNinos({ de0a4: 3, de5a11: 7 })).toBe("Niños de 0 a 4 años: 3 · de 5 a 11: 7");
+  expect(pieNinos({ de0a4: 0, de5a11: 0 })).toBe("Niños de 0 a 4 años: 0 · de 5 a 11: 0");
+  expect(pieNinos(undefined)).toBe("");
+});
 
 it("en orden alfabético, no por cantidad", () => {
   const zonas = [

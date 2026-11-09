@@ -3092,19 +3092,14 @@ $$;
 -- la Lista. Solo cifras, nunca nombres, y solo a un invitado identificado
 -- (la misma llave que tablon_fotos), con la noticia publicada. Su propia
 -- zona, para marcarla. El orden alfabético lo pone la app.
-CREATE FUNCTION public.tablon_zonas(p_token uuid, p_respuesta text) RETURNS jsonb
-    LANGUAGE plpgsql STABLE SECURITY DEFINER
-    SET search_path TO 'public', 'extensions', 'pg_temp'
+-- La cuenta, una sola para el tablón y la vista previa (v83.9): las zonas y
+-- cuántos niños vienen. Solo en total, nunca por zona (él: en una zona
+-- pequeña señalaría a un niño concreto). Cerrada: la llaman esas dos.
+CREATE FUNCTION public.resumen_zonas() RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
     AS $$
-declare
-  v_yo invitados;
-begin
-  select * into v_yo from tablon_invitado(p_token, p_respuesta);
-  if v_yo.id is null or not coalesce((select "zonasTablon" from evento limit 1), false) then
-    return null;
-  end if;
-  return jsonb_build_object(
-    'miZona', trim(coalesce(v_yo."zona", '')),
+  select jsonb_build_object(
     'zonas', coalesce((
       select jsonb_agg(jsonb_build_object('zona', z.zona, 'confirmados', z.n))
       from (
@@ -3113,8 +3108,44 @@ begin
         where i."confirmado" and not coalesce(i."noAsiste", false) and trim(coalesce(i."zona", '')) <> ''
         group by trim(i."zona")
       ) z
-    ), '[]'::jsonb)
+    ), '[]'::jsonb),
+    'ninos', (
+      select jsonb_build_object(
+        'de0a4', count(*) filter (where p.edad between 0 and 4),
+        'de5a11', count(*) filter (where p.edad between 5 and 11)
+      )
+      from (
+        select edad_en_evento(i."anioNacimiento") as edad
+        from invitados i
+        where i."confirmado" and not coalesce(i."noAsiste", false)
+      ) p
+    )
   );
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.resumen_zonas() FROM PUBLIC, anon, authenticated;
+
+-- Lo que verá el invitado, esté publicada o no (v83.9): solo el anfitrión.
+CREATE FUNCTION public.anfitrion_zonas_previa(p_token uuid) RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select resumen_zonas() || jsonb_build_object('miZona', '')
+  where p_token = (select "token" from anfitrion_secreto limit 1);
+$$;
+
+CREATE FUNCTION public.tablon_zonas(p_token uuid, p_respuesta text) RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+declare
+  v_yo invitados;
+begin
+  v_yo := (select t from tablon_invitado(p_token, p_respuesta) t limit 1);
+  if v_yo.id is null or not coalesce((select "zonasTablon" from evento limit 1), false) then
+    return null;
+  end if;
+  return resumen_zonas() || jsonb_build_object('miZona', trim(coalesce(v_yo."zona", '')));
 end;
 $$;
 

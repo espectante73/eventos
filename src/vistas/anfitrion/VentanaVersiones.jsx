@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "83.9",
+    cambios: [
+      "«De dónde venimos»: al pie, en gris, cuántos niños vienen (de 0 a 4 años y de 5 a 11), solo en total. Y en Novedades, al desplegarla, una vista previa con lo que verá el invitado, esté publicada o no.",
+    ],
+  },
+  {
     version: "83.8",
     cambios: [
       "Acreditación: en «Acreditados», el botón «Leer el siguiente QR» enciende la cámara dentro de la misma página y se lee una familia tras otra sin salir. Las demás pantallas llevan «Leer otro QR», para seguir si un QR no vale o una familia no puede entrar. La cámara normal del móvil sigue sirviendo.",

@@ -935,6 +935,13 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     [rol]
   );
 
+  // Lo que verá el invitado en «De dónde venimos», esté publicada o no
+  // (v83.9). null si no se ha podido leer.
+  const obtenerZonasPrevia = useCallback(async () => {
+    const { data, error } = await supabase.rpc("anfitrion_zonas_previa", { p_token: rol });
+    return error ? null : data;
+  }, [rol]);
+
   // Las fotos de la fiesta (v67), subidas y sin quitar: solo lectura. Para
   // quien no es el anfitrión, la RPC devuelve una lista vacía.
   const obtenerFotosFiesta = useCallback(async () => {
@@ -1662,6 +1669,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     dejarDj,
     buscarParaEscuchar,
     obtenerHistorialTexto,
+    obtenerZonasPrevia,
     obtenerFotosFiesta,
     obtenerFamilia,
     marcarFamilia,

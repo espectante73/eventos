@@ -23,6 +23,16 @@ it("las zonas en orden alfabético, la suya marcada, y el total", () => {
   vista.desmontar();
 });
 
+it("los niños van al pie, en gris; si el servidor aún no los manda, no sale nada", () => {
+  const zonas = [{ zona: "Icod", confirmados: 34 }];
+  const con = montar(<ZonasTablon datos={{ miZona: "", zonas, ninos: { de0a4: 3, de5a11: 7 } }} />);
+  expect(con.html).toContain("Niños de 0 a 4 años: 3 · de 5 a 11: 7");
+  con.desmontar();
+  const sin = montar(<ZonasTablon datos={{ miZona: "", zonas }} />);
+  expect(sin.html).not.toContain("Niños");
+  sin.desmontar();
+});
+
 it("mientras llega, «Cargando…»; sin confirmados, lo dice", () => {
   const cargando = montar(<ZonasTablon datos={null} />);
   expect(cargando.html).toContain("Cargando…");

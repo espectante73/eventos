@@ -82,6 +82,47 @@ it("hasta que llegan sus datos, solo «Cargando…»; después, la ventana enter
   vista.desmontar();
 });
 
+// v83.9 (él): para ver cómo queda sin publicarla.
+describe("la vista previa de «De dónde venimos»", () => {
+  const previa = { miZona: "", zonas: [{ zona: "Icod", confirmados: 34 }], ninos: { de0a4: 3, de5a11: 7 } };
+  const desplegar = (vista) => vista.pulsar(vista.contenedor.querySelector('button[aria-label="Desplegar"]'));
+  const sinPublicar = { ...data, evento: { ...data.evento, zonasTablon: false } };
+
+  it("sin publicarla, enseña las zonas y los niños; plegada, ni pregunta", async () => {
+    let lecturas = 0;
+    const obtenerZonasPrevia = async () => {
+      lecturas += 1;
+      return previa;
+    };
+    const vista = montar(<VentanaNovedades data={{ ...sinPublicar, obtenerZonasPrevia }} ventana={null} />);
+    await act(async () => {});
+    expect(lecturas).toBe(0);
+    desplegar(vista);
+    await act(async () => {});
+    expect(lecturas).toBe(1);
+    expect(vista.html).toContain("Vista previa");
+    expect(vista.html).toContain("34 confirmados · 1 zona");
+    expect(vista.html).toContain("Niños de 0 a 4 años: 3 · de 5 a 11: 7");
+    vista.desmontar();
+  });
+
+  it("si no se puede leer, lo dice", async () => {
+    const vista = montar(<VentanaNovedades data={{ ...sinPublicar, obtenerZonasPrevia: async () => null }} ventana={null} />);
+    desplegar(vista);
+    await act(async () => {});
+    expect(vista.html).toContain("No se ha podido cargar la vista previa");
+    vista.desmontar();
+  });
+
+  it("el colaborador de Novedades no la ve: la cuenta es del anfitrión", async () => {
+    const vista = montar(<VentanaNovedades data={{ ...sinPublicar, obtenerZonasPrevia: async () => previa }} ventana={null} soloTexto />);
+    desplegar(vista);
+    await act(async () => {});
+    expect(vista.html).not.toContain("Vista previa");
+    vista.desmontar();
+  });
+});
+
 // v73 (él): «De dónde venimos», una noticia más, automática: su título y
 // su casilla «Publicada», que guardan en el evento. Sin papelera.
 it("la noticia de las zonas: sale como automática y su casilla la publica", () => {

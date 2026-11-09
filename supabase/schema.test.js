@@ -756,6 +756,13 @@ describe("los avisos al anfitrión", () => {
     expect(usos.length).toBeLessThanOrEqual(23);
   });
 
+  it("«De dónde venimos»: una sola cuenta para el tablón y la vista previa, y cerrada (v83.9)", () => {
+    for (const f of ["tablon_zonas", "anfitrion_zonas_previa"]) expect(cuerpoDe(f)).toContain("resumen_zonas()");
+    expect(cuerpoDe("anfitrion_zonas_previa")).toContain("anfitrion_secreto");
+    expect(cuerpoDe("tablon_zonas")).toContain('"zonasTablon"');
+    expect(sql).toMatch(/REVOKE EXECUTE ON FUNCTION public\.resumen_zonas\(\) FROM PUBLIC, anon, authenticated/);
+  });
+
   it("los pasos hechos y los impagos también le avisan", () => {
     for (const f of ["colaborador_confirmar_datos_completos", "colaborador_confirmar_pagos_completos"]) expect(cuerpoDe(f)).toContain("avisar_anfitrion('pasos'");
     expect(cuerpoDe("colaborador_responder_impago")).toContain("avisar_anfitrion('impago'");

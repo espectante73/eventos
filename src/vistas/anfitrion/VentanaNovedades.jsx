@@ -4,7 +4,7 @@
 // Un único enlace (?tablon=<token>) se comparte una vez en ese grupo;
 // cualquiera con el enlace ve las novedades publicadas, sin login ni
 // cuenta — a petición del usuario, 2026-08-25.
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAltoAutomatico } from "../../lib/useAltoAutomatico";
 import { Plus, Link as LinkIcon, Check, Bold, Italic, Underline, List, MessageCircle, ChevronDown, Lock, Undo2, AlertTriangle, Music } from "lucide-react";
 import { C, inputStyle, T, OP } from "../../theme";
@@ -27,6 +27,7 @@ import { LineaAviso } from "../../components/LineaAviso";
 import { useSeccion } from "../../lib/useSeccion";
 import { Cargando } from "../../components/Cargando";
 import { tituloZonas, TITULO_ZONAS } from "../../lib/zonasTablon";
+import { ZonasTablon } from "../ZonasTablon";
 
 // Añade "prefijo" al principio de cada línea tocada por la selección
 // actual (o solo la línea del cursor, si no hay nada seleccionado) --
@@ -231,7 +232,35 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
 // título y si se publica viven en `evento` (zonasTablon, zonasTablonTitulo;
 // ver schema.sql). Sin papelera: se muestra o no con su casilla. El
 // colaborador de Novedades la ve, sin poder tocarla.
-function NovedadZonas({ evento, persistEvento, expandida, onAlternar, soloTexto }) {
+// Lo que verá el invitado, esté publicada o no (v83.9, él: para mirarlo sin
+// que nadie lo vea antes de tiempo). Es la misma pieza del tablón, con la
+// misma cuenta del servidor; se lee cada vez que se despliega.
+function VistaPreviaZonas({ obtener }) {
+  const [datos, setDatos] = useState(null);
+  const [fallo, setFallo] = useState(false);
+  useEffect(() => {
+    let vigente = true;
+    obtener().then((leidos) => {
+      if (!vigente) return;
+      if (leidos) setDatos(leidos);
+      else setFallo(true);
+    });
+    return () => {
+      vigente = false;
+    };
+  }, [obtener]);
+  if (fallo) return <LineaAviso className="text-sm">No se ha podido cargar la vista previa. Comprueba la conexión.</LineaAviso>;
+  return (
+    <div className="rounded p-3 space-y-2" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+      <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
+        Vista previa: así se verá en el tablón.
+      </p>
+      <ZonasTablon datos={datos} />
+    </div>
+  );
+}
+
+function NovedadZonas({ evento, persistEvento, expandida, onAlternar, soloTexto, obtenerZonasPrevia }) {
   // Se inicializa al montar y se guarda al salir del campo (norma 2.4).
   const [titulo, setTitulo] = useState(tituloZonas(evento));
   const publicada = Boolean(evento.zonasTablon);
@@ -279,6 +308,7 @@ function NovedadZonas({ evento, persistEvento, expandida, onAlternar, soloTexto 
           <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Las zonas de los confirmados, y cuántos de cada una, tal como están escritas en la Lista. Se rellena sola.
           </p>
+          {!soloTexto && obtenerZonasPrevia && <VistaPreviaZonas obtener={obtenerZonasPrevia} />}
           <label
             className="flex items-center gap-1.5 text-xs"
             style={{ color: C.charcoal, opacity: soloTexto ? OP.apagado : OP.secundario }}
@@ -356,6 +386,7 @@ function NovedadesCargadas({ data, ventana, soloTexto }) {
     preguntaTablon,
     persistPreguntaTablon,
     obtenerHistorialTexto,
+    obtenerZonasPrevia,
     accesosTablonSospechosos,
   } = data;
   const [copiado, setCopiado] = useState(false);
@@ -566,6 +597,7 @@ function NovedadesCargadas({ data, ventana, soloTexto }) {
           expandida={idExpandido === "zonas-tablon"}
           onAlternar={() => alternarExpandida("zonas-tablon")}
           soloTexto={soloTexto}
+          obtenerZonasPrevia={obtenerZonasPrevia}
         />
         {novedades.map((n) => (
           <NovedadCard
