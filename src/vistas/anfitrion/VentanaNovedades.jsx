@@ -26,8 +26,8 @@ import { BotonQuitar } from "../../components/PreguntaSeguridad";
 import { LineaAviso } from "../../components/LineaAviso";
 import { useSeccion } from "../../lib/useSeccion";
 import { Cargando } from "../../components/Cargando";
-import { tituloZonas, TITULO_ZONAS } from "../../lib/zonasTablon";
-import { ZonasTablon } from "../ZonasTablon";
+import { tituloZonas, TITULO_ZONAS, zonaDeEjemplo } from "../../lib/zonasTablon";
+import { TarjetaNoticia, CabeceraNoticia, CuerpoZonas } from "../NoticiaTablon";
 
 // Añade "prefijo" al principio de cada línea tocada por la selección
 // actual (o solo la línea del cursor, si no hay nada seleccionado) --
@@ -233,9 +233,10 @@ function NovedadCard({ n, onCambiar, onEliminar, expandida, onAlternar, soloText
 // ver schema.sql). Sin papelera: se muestra o no con su casilla. El
 // colaborador de Novedades la ve, sin poder tocarla.
 // Lo que verá el invitado, esté publicada o no (v83.9, él: para mirarlo sin
-// que nadie lo vea antes de tiempo). Es la misma pieza del tablón, con la
-// misma cuenta del servidor; se lee cada vez que se despliega.
-function VistaPreviaZonas({ obtener }) {
+// que nadie lo vea antes de tiempo). Son las piezas del tablón sobre su mismo
+// fondo (v84), con la misma cuenta del servidor; se lee cada vez que se
+// despliega.
+function VistaPreviaZonas({ obtener, titulo }) {
   const [datos, setDatos] = useState(null);
   const [fallo, setFallo] = useState(false);
   useEffect(() => {
@@ -251,11 +252,16 @@ function VistaPreviaZonas({ obtener }) {
   }, [obtener]);
   if (fallo) return <LineaAviso className="text-sm">No se ha podido cargar la vista previa. Comprueba la conexión.</LineaAviso>;
   return (
-    <div className="rounded p-3 space-y-2" style={{ background: C.paper, border: `1px solid ${C.line}` }}>
+    <div className="rounded p-3 space-y-2" style={{ background: C.paper }}>
       <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-        Vista previa: así se verá en el tablón.
+        Vista previa: así se verá en el tablón. En verde sale la zona de quien lo mira; aquí, de ejemplo, la de más confirmados.
       </p>
-      <ZonasTablon datos={datos} />
+      <TarjetaNoticia>
+        <div className="flex items-start justify-between gap-2 px-4 py-3">
+          <CabeceraNoticia titulo={titulo} esNovedad abierta />
+        </div>
+        <CuerpoZonas datos={datos && { ...datos, miZona: zonaDeEjemplo(datos.zonas) }} />
+      </TarjetaNoticia>
     </div>
   );
 }
@@ -308,7 +314,7 @@ function NovedadZonas({ evento, persistEvento, expandida, onAlternar, soloTexto,
           <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Las zonas de los confirmados, y cuántos de cada una, tal como están escritas en la Lista. Se rellena sola.
           </p>
-          {!soloTexto && obtenerZonasPrevia && <VistaPreviaZonas obtener={obtenerZonasPrevia} />}
+          {!soloTexto && obtenerZonasPrevia && <VistaPreviaZonas obtener={obtenerZonasPrevia} titulo={tituloZonas({ zonasTablonTitulo: titulo })} />}
           <label
             className="flex items-center gap-1.5 text-xs"
             style={{ color: C.charcoal, opacity: soloTexto ? OP.apagado : OP.secundario }}

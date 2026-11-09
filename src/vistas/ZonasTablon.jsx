@@ -6,6 +6,26 @@ import { C, OP } from "../theme";
 import { Cargando } from "../components/Cargando";
 import { ordenarZonas, pieNinos, pieZonas } from "../lib/zonasTablon";
 
+// Una línea del pie, en gris, con las cantidades en negrita como las de las
+// zonas (v84, él): los números de `partes` son cantidades.
+function LineaPie({ partes, className }) {
+  return (
+    <p className={`text-xs ${className}`} style={{ color: C.charcoal }}>
+      {partes.map((parte, i) =>
+        typeof parte === "number" ? (
+          <b key={i} style={{ fontFamily: "'Fraunces', serif", color: C.ink }}>
+            {parte}
+          </b>
+        ) : (
+          <span key={i} style={{ opacity: OP.secundario }}>
+            {parte}
+          </span>
+        )
+      )}
+    </p>
+  );
+}
+
 // `datos`: lo que da tablon_zonas ({ miZona, zonas: [{ zona, confirmados }] }),
 // o null mientras llega.
 export function ZonasTablon({ datos }) {
@@ -41,14 +61,8 @@ export function ZonasTablon({ datos }) {
           );
         })}
       </ul>
-      <p className="text-xs mt-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
-        {pieZonas(zonas)}
-      </p>
-      {ninos && (
-        <p className="text-xs mt-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
-          {ninos}
-        </p>
-      )}
+      <LineaPie partes={pieZonas(zonas)} className="mt-3" />
+      {ninos.length > 0 && <LineaPie partes={ninos} className="mt-1" />}
     </div>
   );
 }

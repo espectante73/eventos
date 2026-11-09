@@ -10,7 +10,7 @@
 // la monta ANTES de tocar nada de sesión/login en cuanto detecta
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Calendar, Clock, MapPin, ChevronDown, Lock, Music, Pause, ArrowLeft, User, Check } from "lucide-react";
+import { Calendar, Clock, MapPin, Lock, Music, Pause, ArrowLeft, User, Check } from "lucide-react";
 import { C, inputStyle, OP, S, T, FONDO_VERDE, DORADO, conAlfa } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento, opcionesAnios } from "../lib/formato";
@@ -25,7 +25,7 @@ import { leerEvento } from "../lib/leerEvento";
 import { rondasTablon } from "../lib/rondasTablon";
 import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta } from "../lib/fotosFiesta";
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
-import { ZonasTablon } from "./ZonasTablon";
+import { TarjetaNoticia, CabeceraNoticia, CuerpoZonas } from "./NoticiaTablon";
 import { tituloZonas } from "../lib/zonasTablon";
 
 const BUCKET_MUSICA = "musica-ambiental";
@@ -449,49 +449,16 @@ export function VistaTablon({ token }) {
       {noticias.map((n) => {
         const abierta = idAbierto === n.id;
         return (
-          <div key={n.id} className="rounded-lg overflow-hidden" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
-            {/* La etiqueta se va a la derecha, donde estaba la
-                fecha, y la fecha baja dentro del apartado abierto --
-                a petición del usuario, 2026-09-14. Motivo: con la
-                etiqueta, la fecha y la flecha compitiendo por el
-                ancho de la misma línea, a quien tiene la letra del
-                móvil aumentada el título le salía cortado. Así el
-                título se queda con toda la línea y puede partirse en
-                dos si hace falta. (La regla de "una sola línea por
-                fila" es para las tablas del anfitrión, no para algo
-                que leen 58 personas en el móvil.) */}
+          <TarjetaNoticia key={n.id}>
+            {/* La fecha va dentro del apartado abierto: en la cabecera no
+                cabe con la letra del móvil aumentada (CabeceraNoticia). */}
             <button
               onClick={() => alternar(n.id)}
               className="boton-3d w-full flex items-start justify-between gap-2 px-4 py-3 text-left"
             >
-              <span
-                className="min-w-0 flex-1"
-                style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600, lineHeight: 1.3 }}
-              >
-                {n.titulo || "(sin título)"}
-              </span>
-              <span className="flex items-center gap-2 flex-shrink-0">
-                <span
-                  className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap font-medium"
-                  style={
-                    n.esNovedad
-                      ? { background: C.ink, color: C.paper }
-                      : { border: `1px solid ${C.line}`, color: C.charcoal, opacity: OP.secundario }
-                  }
-                >
-                  {n.esNovedad ? "NOVEDADES" : "FAQ"}
-                </span>
-                <ChevronDown
-                  size={16}
-                  style={{ color: C.gold, transform: abierta ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}
-                />
-              </span>
+              <CabeceraNoticia titulo={n.titulo} esNovedad={n.esNovedad} abierta={abierta} />
             </button>
-            {abierta && n.automatica && (
-              <div className="px-4 pt-3 pb-4" style={{ borderTop: `1px solid ${C.line}` }}>
-                <ZonasTablon datos={zonas} />
-              </div>
-            )}
+            {abierta && n.automatica && <CuerpoZonas datos={zonas} />}
             {abierta && !n.automatica && (
               <div style={{ borderTop: `1px solid ${C.line}` }}>
                 <p className="px-4 pt-2.5 text-xs" style={{ color: C.charcoal, opacity: OP.tenue }}>
@@ -518,7 +485,7 @@ export function VistaTablon({ token }) {
                 dangerouslySetInnerHTML={{ __html: n.cuerpo }}
               />
             )}
-          </div>
+          </TarjetaNoticia>
         );
       })}
       {noticias.length === 0 && (

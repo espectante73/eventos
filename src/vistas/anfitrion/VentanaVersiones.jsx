@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "84",
+    cambios: [
+      "«De dónde venimos»: las cantidades del pie (confirmados, zonas y niños) van en negrita, como las de cada zona. La vista previa de Novedades se dibuja con las mismas piezas que el tablón: fondo champán, tarjeta blanca, etiqueta y zona en verde.",
+    ],
+  },
+  {
     version: "83.9",
     cambios: [
       "«De dónde venimos»: al pie, en gris, cuántos niños vienen (de 0 a 4 años y de 5 a 11), solo en total. Y en Novedades, al desplegarla, una vista previa con lo que verá el invitado, esté publicada o no.",

@@ -101,8 +101,11 @@ describe("la vista previa de «De dónde venimos»", () => {
     await act(async () => {});
     expect(lecturas).toBe(1);
     expect(vista.html).toContain("Vista previa");
-    expect(vista.html).toContain("34 confirmados · 1 zona");
-    expect(vista.html).toContain("Niños de 0 a 4 años: 3 · de 5 a 11: 7");
+    expect(vista.contenedor.textContent).toContain("34 confirmados · 1 zona");
+    expect(vista.contenedor.textContent).toContain("Niños de 0 a 4 años: 3 · de 5 a 11: 7");
+    // Con las piezas del tablón: su etiqueta y una zona en verde, de ejemplo.
+    expect(vista.contenedor.textContent).toContain("NOVEDADES");
+    expect(vista.contenedor.querySelector("[data-zona=\"Icod\"]").style.background).toBe("rgb(31, 58, 46)");
     vista.desmontar();
   });
 
