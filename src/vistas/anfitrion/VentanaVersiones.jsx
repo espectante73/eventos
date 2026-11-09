@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "83.5",
+    cambios: [
+      "Acreditación: el marcador grande se quedaba quieto al leer un QR, porque esa pantalla guardaba la llegada sin avisar a los demás aparatos. Ahora avisa como las otras formas de marcar, y el número cambia al momento.",
+    ],
+  },
+  {
     version: "83.4",
     cambios: [
       "Invitaciones: fuera la elección de un solo destinatario y su etiqueta «destinatario» junto al email. La invitación llega a todos los confirmados de la familia que tengan email, y en cada sitio salen todos sus correos.",

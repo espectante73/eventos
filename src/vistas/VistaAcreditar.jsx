@@ -12,6 +12,7 @@ import { Stamp } from "../components/Widgets";
 import { LineaAviso } from "../components/LineaAviso";
 import { nombreCompleto } from "../lib/formato";
 import { MOTIVOS_ACREDITAR, pantallaInicial, seleccionInicial, sePuedeMarcar, textoMesas } from "../lib/acreditar";
+import { useCanalAsistencia } from "../lib/useCanalAsistencia";
 
 function Pagina({ titulo, children }) {
   return (
@@ -48,6 +49,7 @@ export function VistaAcreditar({ codigo }) {
   const [modo, setModo] = useState("");
   const [marcados, setMarcados] = useState(new Set());
   const [guardando, setGuardando] = useState(false);
+  const { avisarLlegada } = useCanalAsistencia();
 
   const recibir = (d, error) => {
     if (error || !d) return setMotivo("No se ha podido leer. Comprueba la conexión y vuelve a leer el QR.");
@@ -69,6 +71,10 @@ export function VistaAcreditar({ codigo }) {
     // Con un motivo (cerrada, sin pagar) se queda donde estaba, para verlo.
     if (data?.error) return setMotivo(MOTIVOS_ACREDITAR[data.error] || MOTIVOS_ACREDITAR.codigo);
     if (error || !data) return setMotivo("No se ha podido guardar. Comprueba la conexión y vuelve a intentarlo.");
+    // El marcador grande y la Lista se enteran al momento, como con
+    // cualquier otra forma de marcar una llegada; sin esto, solo al volver a
+    // preguntar a la base (v83.5). Lo que dice la base, también al corregir.
+    (data.miembros || []).forEach((x) => avisarLlegada(x.id, Boolean(x.presente)));
     setMotivo("");
     setDatos(data);
     setMarcados(seleccionInicial(data));

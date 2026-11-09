@@ -13,6 +13,10 @@ vi.mock("../supabaseClient", () => ({
     },
   },
 }));
+const avisos = [];
+vi.mock("../lib/useCanalAsistencia", () => ({
+  useCanalAsistencia: () => ({ avisarLlegada: (id, presente) => avisos.push([id, presente]) }),
+}));
 const { VistaAcreditar, AcreditarSinSesion } = await import("./VistaAcreditar");
 
 const m = (id, nombre, extra = {}) => ({ id, nombre, apellido: "Pacheco", presente: false, mesa: 5, enRegla: true, ...extra });
@@ -28,6 +32,7 @@ const abrir = async () => {
 
 beforeEach(() => {
   llamadas.length = 0;
+  avisos.length = 0;
   respuesta = () => ({ data: familia(tres), error: null });
 });
 
@@ -54,6 +59,23 @@ describe("al leer el QR", () => {
     expect(llamadas.at(-1)[1].p_ids).toEqual(["b", "c"]);
     expect(document.body.textContent).toContain("Acreditados");
     expect(document.body.textContent).toContain("2 de 3 · Mesa 5");
+    vista.desmontar();
+  });
+
+  it("al acreditar avisa al marcador al momento, con lo que dice la base (v83.5)", async () => {
+    const vista = await abrir();
+    expect(avisos).toEqual([]);
+    respuesta = () => ({ data: familia([{ ...tres[0] }, { ...tres[1], presente: true }, { ...tres[2], presente: true }]), error: null });
+    await pulsar(boton("Sí"));
+    expect(avisos).toEqual([["a", false], ["b", true], ["c", true]]);
+    vista.desmontar();
+  });
+
+  it("si la base no lo guarda, no avisa de nada al marcador", async () => {
+    const vista = await abrir();
+    respuesta = () => ({ data: { error: "regla" }, error: null });
+    await pulsar(boton("Sí"));
+    expect(avisos).toEqual([]);
     vista.desmontar();
   });
 
