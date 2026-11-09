@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "83.7",
+    cambios: [
+      "Ventanas aparte: cerrar la acreditación con el marcador abierto daba «Algo ha fallado», porque la app intentaba repintar la ventana justo al cerrarla. La acreditación sí se cerraba; ya no se rompe la pantalla.",
+    ],
+  },
+  {
     version: "83.6",
     cambios: [
       "Acreditación: la pregunta de cerrarla y el rótulo «Marcado cerrado» de la Lista hablan ya de los acomodadores de la entrada y del QR, no de los colaboradores.",

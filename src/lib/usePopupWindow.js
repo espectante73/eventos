@@ -53,10 +53,12 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
   const cerrar = useCallback(() => {
     dejarDeSeguirManoRef.current?.();
     dejarDeSeguirManoRef.current = null;
-    if (raizRef.current) {
-      raizRef.current.unmount();
-      raizRef.current = null;
-    }
+    // Primero se suelta y luego se desmonta (v83.7): desmontar repinta la
+    // pestaña en el acto, y el efecto que repinta esta ventana la encontraba
+    // todavía aquí, ya desmontada: «Algo ha fallado» (error 409 de React).
+    const raiz = raizRef.current;
+    raizRef.current = null;
+    raiz?.unmount();
     if (ventanaRef.current && !ventanaRef.current.closed) {
       ventanaRef.current.close();
     }
