@@ -1,7 +1,7 @@
 // v74 (él): probar el reparto moviendo familias enteras; que no deje sentar
 // a más de los que caben; y nada se guarda hasta «Aplicar a la Lista».
 import { describe, it, expect } from "vitest";
-import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador, moverMesa } from "./repartoMesas";
+import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador, moverMesa, vaciarMesaEnBorrador, fijosEnMesa } from "./repartoMesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const g = (id, apellido, nombre, rol, extra = {}) => ({ id, apellido, nombre, grupoFamiliar: `${apellido}01`, rolFamiliar: rol, confirmado: true, mesa: null, ...extra });
@@ -203,8 +203,60 @@ describe("cambiar una mesa de orden (v83)", () => {
 
   it("sobre sí misma, o una mesa que no existe: no cambia nada", () => {
     const borrador = { e: 1 };
-    expect(moverMesa(lista, borrador, cuatro, 2, 2)).toEqual({ borrador, mesas: cuatro });
+    expect(moverMesa(lista, borrador, cuatro, 2, 2)).toEqual({ borrador, mesas: cuatro, aviso: "" });
     expect(moverMesa(lista, borrador, cuatro, 2, 2).mesas).toBe(cuatro);
     expect(moverMesa(lista, borrador, cuatro, 99, 2).mesas).toBe(cuatro);
+  });
+});
+
+describe("con la invitación enviada, la mesa queda fija (v83.1)", () => {
+  const persona = (id, familia, mesa) => g(id, familia, "X", ROL_FAMILIAR.SUELTO, { mesa });
+  const lista = [persona("a", "Fija", 1), persona("b", "Libre", 1), persona("c", "Otra", 2), persona("d", "Sentar", null)];
+  const orden = { Fija01: { invitacionEnviada: true } };
+  const dos = [{ numero: 1, capacidad: 10 }, { numero: 2, capacidad: 10 }, { numero: 3, capacidad: 10 }];
+
+  it("no se mueve, y lo dice", () => {
+    const { borrador, aviso } = moverFamilia(lista, {}, "a", 2, dos, { ordenFamiliares: orden });
+    expect(borrador).toEqual({});
+    expect(aviso).toContain("ya tiene su invitación con la mesa 1");
+  });
+
+  it("las demás se mueven como siempre", () => {
+    expect(moverFamilia(lista, {}, "b", 2, dos, { ordenFamiliares: orden }).borrador).toEqual({ b: 2 });
+  });
+
+  it("«Vaciar» y «Vaciar mesas» la dejan donde está", () => {
+    expect(vaciarMesaEnBorrador(lista, {}, 1, orden)).toEqual({ b: null });
+    expect(vaciarTodasEnBorrador(lista, {}, orden)).toEqual({ b: null, c: null });
+    expect(fijosEnMesa(lista, 1, orden)).toBe(1);
+  });
+
+  it("una mesa con invitaciones enviadas no cambia de número: no se mueve nada y dice cuál", () => {
+    const r = moverMesa(lista, {}, dos, 3, 1, orden);
+    expect(r.mesas).toBe(dos);
+    expect(r.aviso).toContain("la mesa 1 tiene invitaciones enviadas");
+  });
+
+  it("las que no cambian de número se pueden reordenar", () => {
+    const r = moverMesa(lista, {}, dos, 3, 2, orden);
+    expect(r.aviso).toBe("");
+    expect(r.borrador).toEqual({ c: 3 });
+  });
+
+  it("si recibió la invitación con una prueba a medias, «Aplicar» no la mueve", () => {
+    const final = aplicarBorrador(lista, { a: 2, b: 2 }, orden);
+    expect(final.find((x) => x.id === "a").mesa).toBe(1);
+    expect(final.find((x) => x.id === "b").mesa).toBe(2);
+  });
+
+  it("una memoria no la mueve, aunque diga otra cosa o no tenga su mesa", () => {
+    const memoria = { numero: 1, mesas: [{ numero: 2, capacidad: 8 }], asientos: { a: 2, b: 2, c: 2, d: null } };
+    const { mesas, borrador } = cargarMemoria(lista, memoria, { ordenFamiliares: orden, mesasReales: dos });
+    expect(borrador.a).toBeUndefined();
+    expect(mesas.map((m) => m.numero).sort()).toEqual([1, 2]);
+  });
+
+  it("una familia sin invitación enviada o sin mesa no está fija", () => {
+    expect(moverFamilia(lista, {}, "d", 2, dos, { ordenFamiliares: { Sentar01: { invitacionEnviada: true } } }).aviso).toBe("");
   });
 });

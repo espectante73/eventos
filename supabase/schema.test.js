@@ -810,3 +810,13 @@ describe("las plantillas de WhatsApp (v82.4)", () => {
     for (const c of ["Datos", "Musica", "Pagos"]) expect(sql).toMatch(new RegExp(`"plantillaWhatsapp${c}" text,`));
   });
 });
+
+describe("la invitación caduca solo con cambios reales (v83.1)", () => {
+  it("si no cambia nada de lo que lleva, no la toca", () => {
+    const f = cuerpoDe("trg_invalidar_invitacion_familia");
+    for (const c of ["confirmado", "pagado", "mesa", "grupoFamiliar", "apellido"]) {
+      expect(f).toContain(`new."${c}" is not distinct from old."${c}"`);
+    }
+    expect(f.indexOf("is not distinct from"), "antes de tocar nada").toBeLessThan(f.indexOf("update orden_familias"));
+  });
+});

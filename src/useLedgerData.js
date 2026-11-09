@@ -1076,6 +1076,8 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
         // Si se ha borrado a un invitado que era colaborador, la base lo ha
         // eliminado también como colaborador (v53.8): se recarga esa lista,
         // o su tarjeta seguiría en Colaboradores hasta el próximo refresco.
+        // (Quien tenga que seguir después, como la salvaguarda de la mesa,
+        // mira `error` en lo que devuelve esta función.)
         const siguen = new Set(next.map((g) => g.id));
         if (!error && colaboradoresRef.current.some((c) => c.invitadoId && !siguen.has(c.invitadoId))) {
           const { data: todosColaboradores, error: errCol } = await supabase.rpc("anfitrion_listar_colaboradores", {
@@ -1086,7 +1088,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
             colaboradoresRef.current = todosColaboradores || [];
           }
         }
-        return;
+        return error;
       }
 
       // Colaborador: solo cambia una fila a la vez, y solo mediante las

@@ -3359,6 +3359,19 @@ declare
   clave text;
   clave_anterior text;
 begin
+  -- Solo si cambia de verdad algo de lo que lleva la invitación (v83.1). El
+  -- guardado del anfitrión escribe todas las columnas de cada fila, y sin
+  -- esto corregir una canción la daba por no enviada (y le quitaría a la
+  -- familia su mesa fija).
+  if TG_OP = 'UPDATE'
+     and new."confirmado" is not distinct from old."confirmado"
+     and new."pagado" is not distinct from old."pagado"
+     and new."mesa" is not distinct from old."mesa"
+     and new."grupoFamiliar" is not distinct from old."grupoFamiliar"
+     and new."apellido" is not distinct from old."apellido" then
+    return new;
+  end if;
+
   clave := coalesce(nullif(new."grupoFamiliar", ''), new."apellido");
   update orden_familias set "invitacionEnviada" = false, "invitacionEnviadaEn" = null
   where "grupoFamiliar" = clave and "invitacionEnviada" = true;

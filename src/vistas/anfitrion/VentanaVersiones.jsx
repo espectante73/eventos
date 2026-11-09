@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "83.1",
+    cambios: [
+      "Con la invitación enviada, la mesa de esa familia queda fija: candado en Acomodación y en la Lista. No se arrastra; «Vaciar», «Auto-asignar» y las memorias la respetan; su mesa no se puede quitar ni cambiar de número.",
+      "Como último remedio, al tocarla, «Cambiar mesa»: elige otra donde quepa la familia entera y, en un solo paso, cambia la mesa y le envía la invitación nueva con el número nuevo y el aviso «Por cuestiones organizativas hemos tenido que cambiar su mesa asignada. Ahora su mesa asignada es la 5.». Si el correo fallara, avisa y queda pendiente en Invitaciones.",
+      "Arreglado: cualquier cambio del anfitrión en la ficha de alguien (corregir una canción, un teléfono) daba la invitación de su familia por no enviada. Ahora solo cuentan los cambios reales de confirmación, pago, mesa o familia.",
+    ],
+  },
+  {
     version: "83",
     cambios: [
       "Acomodación, con el ratón: una mesa se arrastra por su cabecera sobre otra, ocupa su lugar y las demás se corren. Todas se renumeran 1, 2, 3… en el orden en que quedan, y cada una se lleva a su gente, sus sitios y su lugar en el plano. Va a la prueba, como sentar: «Descartar» lo deshace y solo se guarda con «Aplicar a la Lista».",

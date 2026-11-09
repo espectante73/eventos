@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { asignarMesaConSuFamilia, confirmarConSuFamilia, claveFamiliaMesa } from "./mesas";
+import { asignarMesaConSuFamilia, confirmarConSuFamilia, claveFamiliaMesa, textoCambioMesa } from "./mesas";
 
 // La regla del usuario: una familia no se separa nunca.
 const persona = (id, extra) => ({ id, nombre: id, apellido: "Abreu", grupoFamiliar: "Abreu01", confirmado: true, mesa: null, ...extra });
@@ -76,5 +76,12 @@ describe("al confirmar, se sienta con los suyos", () => {
     const { invitados } = confirmarConSuFamilia(lista, "hijo", mesas);
     expect(invitados.map((g) => g.mesa)).toEqual([1, 1]);
     expect(invitados.find((g) => g.id === "hijo").confirmado).toBe(false);
+  });
+});
+
+describe("el aviso de la invitación nueva (v83.1)", () => {
+  it("«su mesa» a una familia y «tu mesa» a quien viene solo", () => {
+    expect(textoCambioMesa(5, false)).toBe("Por cuestiones organizativas hemos tenido que cambiar su mesa asignada. Ahora su mesa asignada es la 5.");
+    expect(textoCambioMesa(5, true)).toBe("Por cuestiones organizativas hemos tenido que cambiar tu mesa asignada. Ahora tu mesa asignada es la 5.");
   });
 });

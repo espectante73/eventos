@@ -13,6 +13,10 @@
 // VistaAnfitrion (sobrevive a cerrar la ventana) y no toca la Lista hasta
 // «Aplicar a la Lista». «Plano de mesas» (él), un botón que lo abre aquí.
 //
+// Con la invitación enviada, la mesa de esa familia queda fija (él, v83.1):
+// candado, no se arrastra, y «Vaciar», «Auto-asignar» y las memorias la
+// respetan. Tocarla abre la salvaguarda, VentanaCambiarMesa.
+//
 // Con ratón, una mesa se arrastra por su cabecera sobre otra (él, v83): ocupa
 // su lugar y todas se renumeran, en la PRUEBA, llevándose a su gente.
 //
@@ -20,7 +24,7 @@
 // sitios, plano y quién se sienta dónde). Cargar una la pone como prueba,
 // mesas incluidas: mientras está cargada, también las mesas son prueba.
 import { useState } from "react";
-import { Check, AlertTriangle, Plus, Minus, Bookmark, Map as IconoPlano } from "lucide-react";
+import { Check, AlertTriangle, Lock, Plus, Minus, Bookmark, Map as IconoPlano } from "lucide-react";
 import { C, OP, R, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -31,6 +35,7 @@ import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSegu
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { cuentaConfirmacion } from "../../lib/invitados";
 import { esAparatoTactil } from "../../lib/mano";
+import { VentanaCambiarMesa } from "./VentanaCambiarMesa";
 import { nombreCompleto, fechaYHora } from "../../lib/formato";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import {
@@ -39,6 +44,7 @@ import {
   familiasParaRepartir,
   moverFamilia,
   moverMesa,
+  fijosEnMesa,
   vaciarMesaEnBorrador,
   vaciarTodasEnBorrador,
   autoAsignarEnBorrador,
@@ -71,7 +77,7 @@ function Familia({ familia, cogida, onCoger }) {
   return (
     <button
       type="button"
-      draggable
+      draggable={!familia.fija}
       onDragStart={(e) => {
         e.dataTransfer.setData("text/plain", familia.representante.id);
         e.dataTransfer.effectAllowed = "move";
@@ -88,16 +94,19 @@ function Familia({ familia, cogida, onCoger }) {
         color: C.ink,
         border: `2px ${nadieConfirmado ? "dashed" : "solid"} ${cogida ? C.ink : C.gold}`,
         opacity: nadieConfirmado && !cogida ? OP.tenue : 1,
-        cursor: "grab",
+        cursor: familia.fija ? "pointer" : "grab",
       }}
       title={
-        familia.sinConfirmar
+        familia.fija
+          ? `Ya tiene su invitación con la mesa ${familia.mesa}: su mesa queda fija. Tócala si hubiera que cambiarla`
+          : familia.sinConfirmar
           ? `${familia.sinConfirmar === 1 ? "1 sin confirmar" : `${familia.sinConfirmar} sin confirmar`}: su sitio queda reservado. Arrástrala a otra mesa, o tócala y luego toca la mesa`
           : "Arrástrala a otra mesa, o tócala y luego toca la mesa"
       }
     >
       <span className="truncate">{familia.nombre}</span>
       <span className="flex items-center gap-1.5 flex-shrink-0">
+        {familia.fija && <Lock size={13} aria-label="Mesa fija: invitación enviada" />}
         {/* Alergias o intolerancias: en la familia que las tiene, no en la
             mesa (él, v74.9: «solo donde aplique»). Quién y qué, al pasar
             por encima. */}
@@ -162,7 +171,7 @@ const porNombre = (a, b) => a.nombre.localeCompare(b.nombre, "es");
 const CIFRA = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno };
 
 export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
-  const { invitados, evento, persistInvitados, persistMesas, persistEvento } = data;
+  const { invitados, evento, persistInvitados, persistMesas, persistEvento, ordenFamiliares } = data;
   const { borrador } = prueba;
   // Las mesas que se ven: las de la memoria cargada o, si no hay, las de verdad.
   const mesas = prueba.mesas ?? data.mesas;
@@ -173,6 +182,8 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   const [avisosAuto, setAvisosAuto] = useState([]);
   const [guardado, setGuardado] = useState("");
   const [verPlano, setVerPlano] = useState(false);
+  // La familia con la mesa fija que se va a cambiar (su «O»), o null.
+  const [cambiandoMesa, setCambiandoMesa] = useState(null);
   // Los no confirmados salen SIEMPRE, sombreados hasta que confirmen, y se
   // sientan como los demás (él, v74.2: «para cuadrar con tiempo»). Su
   // sitio queda reservado y cuenta en la mesa; «No asiste» lo libera.
@@ -181,7 +192,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
 
   const vista = conBorrador(invitados, borrador);
   const confirmacion = cuentaConfirmacion(invitados);
-  const familias = familiasParaRepartir(vista, { conSinConfirmar });
+  const familias = familiasParaRepartir(vista, { conSinConfirmar, ordenFamiliares });
   const sinMesa = familias.filter((f) => f.mesa == null).sort(porNombre);
   const cambian = familiasQueCambian(invitados, borrador);
   const hayPrueba = cambian > 0 || prueba.mesas != null;
@@ -199,28 +210,37 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   const soltar = (idRepresentante, numero) => {
     setCogida(null);
     limpiarAvisos();
-    const { borrador: siguiente, aviso: motivo } = moverFamilia(invitados, borrador, idRepresentante, numero, mesas, { conSinConfirmar });
+    const { borrador: siguiente, aviso: motivo } = moverFamilia(invitados, borrador, idRepresentante, numero, mesas, { conSinConfirmar, ordenFamiliares });
     setAviso(motivo);
     if (!motivo) setBorrador(siguiente);
   };
   // Una mesa soltada sobre otra (v83): ocupa su lugar y todas se renumeran.
   const soltarMesa = (desde, hasta) => {
     limpiarAvisos();
-    const siguiente = moverMesa(invitados, borrador, mesas, desde, hasta);
+    const { aviso: motivo, ...siguiente } = moverMesa(invitados, borrador, mesas, desde, hasta, ordenFamiliares);
+    setAviso(motivo);
     if (siguiente.mesas !== mesas) cambiar(siguiente);
   };
   const coger = (id) => {
     setAviso("");
+    // Con la mesa fija, tocarla es ir a la salvaguarda, que actúa sobre la
+    // Lista de verdad: con una prueba a medias, primero hay que cerrarla.
+    if (familias.find((f) => f.representante.id === id)?.fija) {
+      setCogida(null);
+      if (hayPrueba) setAviso("Esa familia ya tiene su invitación. Para cambiarle la mesa, antes aplica o descarta la prueba.");
+      else setCambiandoMesa(id);
+      return;
+    }
     setCogida((actual) => (actual === id ? null : id));
   };
   // Vaciar va a la prueba: no pregunta, se deshace con «Descartar».
   const vaciar = (numero) => {
     limpiarAvisos();
-    setBorrador(vaciarMesaEnBorrador(invitados, borrador, numero));
+    setBorrador(vaciarMesaEnBorrador(invitados, borrador, numero, ordenFamiliares));
   };
   // «Vaciar mesas» (él, v75.1): todas a la vez; mueve a todo el mundo,
   // así que pregunta antes. Las mesas se quedan.
-  const sentados = mesas.reduce((total, m) => total + ocupacion(vista, m.numero), 0);
+  const sentados = mesas.reduce((total, m) => total + ocupacion(vista, m.numero) - fijosEnMesa(vista, m.numero, ordenFamiliares), 0);
   const vaciarTodas = () =>
     preguntar({
       titulo: "¿Vaciar todas las mesas?",
@@ -229,7 +249,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
       peligro: false,
       alConfirmar: () => {
         limpiarAvisos();
-        setBorrador(vaciarTodasEnBorrador(invitados, borrador));
+        setBorrador(vaciarTodasEnBorrador(invitados, borrador, ordenFamiliares));
       },
     });
   const autoAsignar = () => {
@@ -246,7 +266,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   const aplicar = async () => {
     if (prueba.mesas && (await persistMesas(prueba.mesas))) return;
     const numeros = new Set(mesas.map((m) => m.numero));
-    persistInvitados(aplicarBorrador(invitados, borrador).map((g) => (g.mesa != null && !numeros.has(g.mesa) ? { ...g, mesa: null } : g)));
+    persistInvitados(aplicarBorrador(invitados, borrador, ordenFamiliares).map((g) => (g.mesa != null && !numeros.has(g.mesa) ? { ...g, mesa: null } : g)));
     limpiarAvisos();
     setGuardado(
       prueba.cargada
@@ -279,7 +299,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   };
   const cargar = (memoria) => {
     const hacer = () => {
-      const { mesas: suyas, borrador: suyo, aviso: nota } = cargarMemoria(invitados, memoria);
+      const { mesas: suyas, borrador: suyo, aviso: nota } = cargarMemoria(invitados, memoria, { ordenFamiliares, mesasReales: data.mesas });
       setPrueba({ borrador: suyo, mesas: suyas, cargada: memoria.numero, sucia: false });
       limpiarAvisos();
       setAviso(nota);
@@ -319,6 +339,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   // Con ratón, la cabecera entera se arrastra (él, v83); en el móvil, no.
   const arrastrarMesas = !esAparatoTactil();
   const cabeceraMesa = (m, ocupados) => {
+    const fijos = fijosEnMesa(vista, m.numero, ordenFamiliares);
     return (
       <div
         data-cabecera-mesa={m.numero}
@@ -347,11 +368,12 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
             <span style={CIFRA}>{m.capacidad}</span>
             <Boton variante="secundario" oscuro tamano="pequeno" icono={Plus} titulo="Un sitio más" onClick={() => cambiarSitios(m.numero, m.capacidad + 1)} />
           </span>
-          <Boton variante="secundario" oscuro tamano="pequeno" titulo="Deja sus familias sin mesa, en la prueba" disabled={ocupados === 0} onClick={() => vaciar(m.numero)}>
+          <Boton variante="secundario" oscuro tamano="pequeno" titulo="Deja sus familias sin mesa, en la prueba; las que ya tienen su invitación se quedan" disabled={ocupados - fijos <= 0} onClick={() => vaciar(m.numero)}>
             Vaciar
           </Boton>
           <BotonQuitar
-            titulo="Quitar esta mesa"
+            titulo={fijos > 0 ? "Tiene familias con su invitación enviada: no se puede quitar" : "Quitar esta mesa"}
+            disabled={fijos > 0}
             pregunta={{
               titulo: `¿Quitar la mesa ${m.numero}?`,
               texto: ocupados > 0 ? `Tiene ${ocupados} invitado${ocupados !== 1 ? "s" : ""}: volverán a quedar sin mesa. No se borra a nadie.` : "Está vacía.",
@@ -372,7 +394,10 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
     );
   };
 
+  const familiaCambiando = cambiandoMesa ? familias.find((f) => f.representante.id === cambiandoMesa) : null;
+
   return (
+    <>
     <VentanaFlotante
       clave="mesas"
       titulo="Mesas y acomodación"
@@ -519,7 +544,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
             <p className="mt-2" style={{ opacity: OP.secundario }}>
               Arrastra cada familia a su mesa; en el móvil, tócala y luego toca la mesa. Sombreadas, las que aún no han
               confirmado: su sitio queda reservado. Sentar, Vaciar y Auto-asignar son una prueba hasta «Aplicar a la
-              Lista»; las mesas y sus sitios se guardan al momento. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba.
+              Lista»; las mesas y sus sitios se guardan al momento. Con candado, las familias que ya tienen su invitación: su mesa queda fija; tócalas si hubiera que cambiarla. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba.
             </p>
           </details>
           <Boton variante="secundario" onClick={descartar} disabled={!hayPrueba}>
@@ -532,5 +557,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
       </div>
       {ventanaPregunta}
     </VentanaFlotante>
+    {familiaCambiando && <VentanaCambiarMesa data={data} familia={familiaCambiando} onCerrar={() => setCambiandoMesa(null)} />}
+    </>
   );
 }

@@ -26,6 +26,18 @@ export function claveFamiliaMesa(g) {
   return String(g?.grupoFamiliar || g?.apellido || g?.id || "").trim().toLowerCase();
 }
 
+// La mesa de una familia con la invitación enviada queda fija (él, v83.1): es
+// la que lleva escrita. La clave, la de la invitación (familiasDelEvento).
+export const claveInvitacion = (g) => g?.grupoFamiliar || g?.apellido || g?.id;
+export const mesaFija = (g, ordenFamiliares) => g?.mesa != null && Boolean(ordenFamiliares?.[claveInvitacion(g)]?.invitacionEnviada);
+
+// El aviso que encabeza la invitación nueva (texto suyo): «tu» a quien viene
+// solo, «su» a una familia (1.5).
+export function textoCambioMesa(numero, solo) {
+  const de = solo ? "tu" : "su";
+  return `Por cuestiones organizativas hemos tenido que cambiar ${de} mesa asignada. Ahora ${de} mesa asignada es la ${numero}.`;
+}
+
 function nombreFamilia(g) {
   return g.grupoFamiliar || g.apellido || `${g.nombre || ""}`.trim() || "(sin nombre)";
 }
@@ -51,10 +63,18 @@ export function ocupacion(invitados, numero) {
 // vuelve sin tocar y el aviso dice por qué.
 // Opciones (las usa «Mesas y acomodación»): `comoSeLlama`, cómo nombrar a la
 // familia en el aviso (por su «O»: «de García, Isaias»); `conSinConfirmar`,
-// sentar también a los que aún no han confirmado (seSientaEnMesa).
-export function asignarMesaConSuFamilia(invitados, id, numero, mesas, { comoSeLlama, conSinConfirmar = false } = {}) {
+// sentar también a los que aún no han confirmado (seSientaEnMesa);
+// `ordenFamiliares`, para respetar las mesas ya enviadas (sin él no se
+// comprueba: lo usa la salvaguarda, VentanaCambiarMesa).
+export function asignarMesaConSuFamilia(invitados, id, numero, mesas, { comoSeLlama, conSinConfirmar = false, ordenFamiliares } = {}) {
   const g = invitados.find((x) => x.id === id);
   if (!g) return { invitados, aviso: "" };
+  if (mesaFija(g, ordenFamiliares)) {
+    return {
+      invitados,
+      aviso: `La familia ${comoSeLlama || nombreFamilia(g)} ya tiene su invitación con la mesa ${g.mesa}: su mesa queda fija. Si hubiera que cambiarla, tócala en Acomodación.`,
+    };
+  }
   const clave = claveFamiliaMesa(g);
   const familia = invitados.filter((x) => claveFamiliaMesa(x) === clave);
 

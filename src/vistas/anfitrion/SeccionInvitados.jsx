@@ -33,6 +33,7 @@ import {
   Download,
   ListChecks,
   Headphones,
+  Lock,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
@@ -49,7 +50,7 @@ import { InformeInvitados } from "../../components/InformeInvitados";
 import { revisarConExcepciones } from "../../lib/revisionInvitados";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
-import { asignarMesaConSuFamilia, confirmarConSuFamilia } from "../../lib/mesas";
+import { asignarMesaConSuFamilia, confirmarConSuFamilia, mesaFija } from "../../lib/mesas";
 import { tieneCancion, cancionesPedidas, estrellas, ordenarCanciones, tocarOrdenCanciones, ORDEN_CANCIONES_INICIAL } from "../../lib/canciones";
 import { tocarTitulo, compararPorNiveles } from "../../lib/ordenNiveles";
 import { ResumenAvisosAsignacion } from "./ResumenAvisosAsignacion";
@@ -276,7 +277,7 @@ export function SeccionInvitados({
   const asignarMesa = (id, mesaValue) => {
     setAviso("");
     const numero = mesaValue ? Number(mesaValue) : null;
-    const { invitados: siguiente, aviso: motivo } = asignarMesaConSuFamilia(invitados, id, numero, mesas);
+    const { invitados: siguiente, aviso: motivo } = asignarMesaConSuFamilia(invitados, id, numero, mesas, { ordenFamiliares: data.ordenFamiliares });
     if (motivo) {
       avisarMesa(motivo);
       return;
@@ -1736,7 +1737,10 @@ export function SeccionInvitados({
                         </span>
                       )}
                   </span>
-                  <span className="text-xs" style={celda(6)}>
+                  <span className="text-xs flex items-center gap-1" style={celda(6)}>
+                    {/* Con la invitación enviada, su mesa queda fija (v83.1):
+                        se cambia en Acomodación, tocando la familia. */}
+                    {mesaFija(g, data.ordenFamiliares) && <Lock size={12} className="flex-shrink-0" aria-label="Mesa fija: invitación enviada" />}
                     <select
                       value={g.mesa || ""}
                       onChange={(e) => asignarMesa(g.id, e.target.value)}
@@ -1747,8 +1751,8 @@ export function SeccionInvitados({
                       // hacía que ese contador pareciera "no
                       // actualizarse" al añadir gente sin confirmar. A
                       // petición del usuario, 2026-08-20.
-                      disabled={!g.confirmado}
-                      title={g.confirmado ? undefined : "Confirma primero a este invitado para poder asignarle mesa"}
+                      disabled={!g.confirmado || mesaFija(g, data.ordenFamiliares)}
+                      title={mesaFija(g, data.ordenFamiliares) ? "Ya tiene su invitación con esta mesa: si hubiera que cambiarla, tócala en Acomodación" : g.confirmado ? undefined : "Confirma primero a este invitado para poder asignarle mesa"}
                       style={{
                         ...inputStyle,
                         // Sin borde y sin el fondo blanco de inputStyle

@@ -369,3 +369,50 @@ describe("arrastrar una mesa sobre otra", () => {
     vista.desmontar();
   });
 });
+
+// v83.1 (él): con la invitación enviada, la mesa de esa familia queda fija.
+describe("una familia con su invitación enviada", () => {
+  const dibujarFija = () => {
+    function Prueba() {
+      const [prueba, setPrueba] = useState(PRUEBA_VACIA);
+      return (
+        <VentanaMesas
+          data={{ invitados, mesas, evento: {}, colaboradores: [], ordenFamiliares: { Expósito01: { invitacionEnviada: true } }, persistInvitados: () => {}, persistMesas: () => {} }}
+          prueba={prueba}
+          setPrueba={setPrueba}
+          onCerrar={() => {}}
+        />
+      );
+    }
+    const vista = montar(<Prueba />);
+    const familia = (n) => vista.contenedor.querySelector(`[data-familia="${n}"]`);
+    const columna = (t) => vista.contenedor.querySelector(`[data-columna="${t}"]`);
+    return { vista, familia, columna };
+  };
+
+  it("lleva candado, no se arrastra y su mesa no se puede quitar ni vaciar", () => {
+    const { vista, familia, columna } = dibujarFija();
+    const f = familia("Expósito, Rosi");
+    expect(f.querySelector('[aria-label="Mesa fija: invitación enviada"]')).toBeTruthy();
+    expect(f.getAttribute("draggable")).toBe("false");
+    expect([...columna("Mesa 6").querySelectorAll("button")].find((b) => b.textContent.trim() === "Vaciar").disabled).toBe(true);
+    expect(columna("Mesa 6").querySelector('button[aria-label^="Tiene familias con su invitación"]').disabled).toBe(true);
+    expect(familia("García, Isaias").getAttribute("draggable")).toBe("true");
+    vista.desmontar();
+  });
+
+  it("tocarla abre «Cambiar mesa»; con una prueba a medias, pide cerrarla antes", () => {
+    const { vista, familia, columna } = dibujarFija();
+    vista.pulsar(familia("García, Isaias"));
+    vista.pulsar(columna("Mesa 7"));
+    vista.pulsar(familia("Expósito, Rosi"));
+    expect(document.body.textContent).toContain("antes aplica o descarta la prueba");
+    expect(document.body.textContent).not.toContain("Cambiar y enviar");
+    vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "Descartar"));
+    vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "Sí, descartar"));
+    vista.pulsar(familia("Expósito, Rosi"));
+    expect(document.body.textContent).toContain("Ya tiene su invitación con la mesa 6");
+    expect(document.body.textContent).toContain("Cambiar y enviar");
+    vista.desmontar();
+  });
+});
