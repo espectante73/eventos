@@ -252,11 +252,21 @@ export function edadPromedio(invitados, evento) {
   return Math.round(edades.reduce((a, b) => a + b, 0) / edades.length);
 }
 
+// El DJ contratado (él, v84.2): la zona «DJ» de la Lista es él y nadie más; él
+// la llamó así para identificarlo en toda la app. Un invitado más, con su QR
+// y su mesa, con la entrada a 0 €: la única excepción. Ni casilla (un dato
+// nuevo para una persona) ni la norma de la edad (un año falso lo contaría
+// como niño).
+export function esDj(g) {
+  return String(g?.zona || "").trim().toUpperCase() === "DJ";
+}
+
 // Importe que le corresponde a un invitado según su edad (calculada a partir del
 // año de nacimiento y la fecha del evento) y el rango/precios fijados en Configuración.
 // Por debajo de "desde" no paga (bebés); entre "desde" y "hasta" paga precio niño;
 // de "hasta" en adelante paga precio adulto.
 export function importeEsperadoInvitado(g, evento) {
+  if (esDj(g)) return 0;
   const edad = calcularEdad(g.anioNacimiento, evento);
   const desde = parseInt(evento?.edadNinoDesde, 10);
   const hasta = parseInt(evento?.edadNinoHasta, 10);

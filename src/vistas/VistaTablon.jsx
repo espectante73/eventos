@@ -326,7 +326,8 @@ export function VistaTablon({ token }) {
     conFotosAlDia((quien) => verificarFotoFiesta(supabase, { ...quien, anio: anioDeRespuesta(quien.respuesta), mesa }));
 
   const cuentaAtras = cuentaAtrasEvento(evento);
-  const rondas = rondasTablon(yo, evento);
+  // Su zona, para el importe del DJ (0 €): la da la noticia de las zonas.
+  const rondas = rondasTablon(yo && { ...yo, zona: zonas?.miZona }, evento);
 
   if (estado === "cargando") {
     return (

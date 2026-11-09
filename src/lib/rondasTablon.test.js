@@ -5,6 +5,13 @@ import { euros } from "./formato";
 const estados = (yo, evento = {}) => rondasTablon(yo, evento).map((r) => `${r.id}:${r.estado}`);
 
 describe("la guía de las tres rondas, al ritmo de cada uno (v69.4)", () => {
+  it("el DJ contratado no pagó nada: «Pagado», sin importe (v84.2)", () => {
+    const evento = { fecha: "2026-12-11", precioAdulto: "45", precioNino: "20", edadNinoDesde: "2", edadNinoHasta: "12" };
+    const yo = { datosCompletos: true, pagado: true, presente: false, anio: "1985" };
+    expect(rondasTablon({ ...yo, zona: "DJ" }, evento)[1].nota).toBe("Pagado");
+    expect(rondasTablon(yo, evento)[1].nota).toBe(`Pagado · ${euros(45)}`);
+  });
+
   it("sin los datos completos, en Datos", () => {
     expect(estados({ datosCompletos: false, pagado: false, presente: false })).toEqual(["datos:ahora", "recaudacion:pendiente", "acreditacion:pendiente"]);
   });

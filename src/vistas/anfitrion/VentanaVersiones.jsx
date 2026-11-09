@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "84.2",
+    cambios: [
+      "El DJ contratado (la zona DJ): su entrada vale 0 € en toda la app, y sigue siendo un invitado más, con mesa e invitación con QR. Lleva unos auriculares junto a su nombre en la Lista y en los formularios del colaborador, y en Acomodación su etiqueta va en blanco y en negrita.",
+    ],
+  },
+  {
     version: "84.1",
     cambios: [
       "«De dónde venimos»: casilla «Zona DJ visible en el tablón», sin marcar de entrada. Oculta, esa zona no sale ni suma en el total de confirmados y zonas. No afecta a nada más de la app.",

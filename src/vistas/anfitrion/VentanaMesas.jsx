@@ -33,7 +33,8 @@ import { RecuadroCifras } from "../../components/Widgets";
 import { PlanoMesas } from "../../components/PlanoMesas";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { MenuFlotante } from "../../components/MenuFlotante";
-import { cuentaConfirmacion } from "../../lib/invitados";
+import { cuentaConfirmacion, esDj } from "../../lib/invitados";
+import { MarcaDj } from "../../components/MarcaDj";
 import { esAparatoTactil } from "../../lib/mano";
 import { VentanaCambiarMesa } from "./VentanaCambiarMesa";
 import { nombreCompleto, fechaYHora } from "../../lib/formato";
@@ -74,6 +75,9 @@ function Familia({ familia, cogida, onCoger }) {
   // sitio, reservado. Con parte sin confirmar: «2+1».
   const nadieConfirmado = familia.sinConfirmar === familia.cuantos;
   const cifra = familia.sinConfirmar && !nadieConfirmado ? `${familia.cuantos - familia.sinConfirmar}+${familia.sinConfirmar}` : familia.cuantos;
+  // El DJ contratado se localiza de un vistazo (él, v84.2): en blanco y en
+  // negrita, con sus auriculares. Verde no: es la cabecera de una mesa.
+  const dj = esDj(familia.representante);
   return (
     <button
       type="button"
@@ -90,7 +94,7 @@ function Familia({ familia, cogida, onCoger }) {
       // verde, para no confundir una familia con la cabecera de una mesa.
       // Cogida (en el móvil), con el borde verde.
       style={{
-        background: C.goldClaro,
+        background: dj ? C.blanco : C.goldClaro,
         color: C.ink,
         border: `2px ${nadieConfirmado ? "dashed" : "solid"} ${cogida ? C.ink : C.gold}`,
         opacity: nadieConfirmado && !cogida ? OP.tenue : 1,
@@ -104,7 +108,10 @@ function Familia({ familia, cogida, onCoger }) {
           : "Arrástrala a otra mesa, o tócala y luego toca la mesa"
       }
     >
-      <span className="truncate">{familia.nombre}</span>
+      <span className="truncate" style={dj ? { fontWeight: 700 } : undefined}>
+        <MarcaDj persona={familia.representante} />
+        {familia.nombre}
+      </span>
       <span className="flex items-center gap-1.5 flex-shrink-0">
         {familia.fija && <Lock size={13} aria-label="Mesa fija: invitación enviada" />}
         {/* Alergias o intolerancias: en la familia que las tiene, no en la

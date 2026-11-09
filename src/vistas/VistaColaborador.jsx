@@ -42,6 +42,7 @@ import { Boton, estilosBoton, EnlaceTexto } from "../components/Boton";
 import { usePreguntaSeguridad, ALTO_RESPUESTA } from "../components/PreguntaSeguridad";
 import { Portada } from "../components/Portada";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
+import { MarcaDj } from "../components/MarcaDj";
 import { VentanaConfigDatosEvento } from "./anfitrion/VentanaConfigDatosEvento";
 import { VentanaInvitacionesColaborador } from "./VentanaInvitacionesColaborador";
 import { VentanaCancionesInvitado } from "./VentanaCancionesInvitado";
@@ -377,6 +378,7 @@ function FormularioDatos({
         </div>
         <div className="flex items-center gap-2 flex-wrap mt-1">
           <span className="text-lg" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
+            <MarcaDj persona={form} size={16} />
             {form.apellido}, {form.nombre}
           </span>
           <PastillaDato title="Zona del invitado. Solo la cambia el anfitrión.">
@@ -938,6 +940,7 @@ function FilaInvitadoColaborador({
           {/* Si el nombre no cabe se recorta con puntos suspensivos: entero
               se lee al abrir la ficha. Nunca dos líneas (norma 6). */}
           <span className="truncate" style={{ fontFamily: "'Fraunces', serif", fontWeight: 600 }}>
+            <MarcaDj persona={g} />
             {g.apellido}, {g.nombre}
           </span>
           {/* Flechas dibujadas, del tamaño del candado (v62). */}
@@ -1215,7 +1218,10 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
             const marcado = eligiendo.marcados.has(m.id);
             return (
               <div key={m.id} className="flex items-center justify-between gap-2 py-1.5" style={{ borderBottom: `1px solid ${C.gold}33` }}>
-                <span className="truncate" style={{ opacity: cambia ? 1 : OP.tenue }}>{nombreCompleto(m)}</span>
+                <span className="truncate" style={{ opacity: cambia ? 1 : OP.tenue }}>
+                  <MarcaDj persona={m} />
+                  {nombreCompleto(m)}
+                </span>
                 <button
                   onClick={() => cambia && alternarMarcado(m.id)}
                   disabled={!cambia}
@@ -1255,6 +1261,7 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
             ) : (
               // Lo lleva otro colaborador: se ve, pero su ficha no es suya.
               <div key={m.id} className="px-2 text-sm truncate" style={{ color: C.charcoal, opacity: OP.secundario }}>
+                <MarcaDj persona={m} />
                 {nombreCompleto(m)}
               </div>
             )

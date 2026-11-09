@@ -101,6 +101,12 @@ describe("edadPromedio", () => {
 });
 
 describe("importeEsperadoInvitado", () => {
+  it("el DJ contratado (la zona DJ, escrita como sea) no paga; los demás, su precio (v84.2)", () => {
+    const ev = { fecha: "2026-12-11", precioAdulto: "45", precioNino: "20", edadNinoDesde: "2", edadNinoHasta: "12" };
+    for (const zona of ["DJ", " dj "]) expect(importeEsperadoInvitado({ anioNacimiento: "1985", zona }, ev)).toBe(0);
+    expect(importeEsperadoInvitado({ anioNacimiento: "1985", zona: "Icod" }, ev)).toBe(45);
+  });
+
   const evento = {
     fecha: "2026-11-13",
     edadNinoDesde: "2",

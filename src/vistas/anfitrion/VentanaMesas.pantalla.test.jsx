@@ -20,14 +20,14 @@ const mesas = [
   { numero: 7, capacidad: 9 },
 ];
 
-function dibujar({ conMesas = mesas } = {}) {
+function dibujar({ conMesas = mesas, lista = invitados } = {}) {
   const guardados = [];
   const mesasGuardadas = [];
   function Prueba() {
     const [prueba, setPrueba] = useState(PRUEBA_VACIA);
     return (
       <VentanaMesas
-        data={{ invitados, mesas: conMesas, persistInvitados: (l) => guardados.push(l), persistMesas: (l) => void mesasGuardadas.push(l) }}
+        data={{ invitados: lista, mesas: conMesas, persistInvitados: (l) => guardados.push(l), persistMesas: (l) => void mesasGuardadas.push(l) }}
         prueba={prueba}
         setPrueba={setPrueba}
         onCerrar={() => {}}
@@ -41,6 +41,16 @@ function dibujar({ conMesas = mesas } = {}) {
   const enMesa = (n, t) => [...columna(`Mesa ${n}`).querySelectorAll("button")].find((b) => b.textContent.trim() === t || b.title === t);
   return { vista, guardados, mesasGuardadas, familia, columna, boton, enMesa };
 }
+
+it("el DJ contratado se distingue: blanco, en negrita y con sus auriculares (v84.2)", () => {
+  const { vista, familia } = dibujar({ lista: [...invitados, g("9", "Brown", "Julien", ROL_FAMILIAR.SUELTO, { zona: "DJ" })] });
+  const dj = familia("Brown, Julien");
+  expect(dj.style.background).toBe("rgb(255, 255, 255)");
+  expect(dj.querySelector('svg[aria-label="DJ"]')).toBeTruthy();
+  expect(familia("García, Isaias").style.background).not.toBe("rgb(255, 255, 255)");
+  expect(familia("García, Isaias").querySelector('svg[aria-label="DJ"]')).toBeNull();
+  vista.desmontar();
+});
 
 it("cada familia con su «O» y cuántos son; cada mesa con sus ocupados de los que caben", () => {
   const { vista, familia, columna } = dibujar();

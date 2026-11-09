@@ -21,7 +21,7 @@ import { euros } from "./formato";
 // ronda equivocada.
 export function rondasTablon(yo, evento) {
   if (!yo || yo.datosCompletos === undefined) return null;
-  const importe = yo.anio ? importeEsperadoInvitado({ anioNacimiento: yo.anio }, evento) : 0;
+  const importe = yo.anio ? importeEsperadoInvitado({ anioNacimiento: yo.anio, zona: yo.zona }, evento) : 0;
   const ronda = evento?.asistenciaAbierta ? 3 : !yo.datosCompletos ? 1 : 2;
   const estado = (n, hecha) => (hecha ? "hecha" : ronda === n ? "ahora" : "pendiente");
   return [

@@ -72,6 +72,7 @@ import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
 import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
 import { VentanaRepasarCanciones } from "./VentanaRepasarCanciones";
 import { VentanaCompartirDj } from "./VentanaCompartirDj";
+import { MarcaDj } from "../../components/MarcaDj";
 import { EscucharCancion } from "../../components/EscucharCancion";
 import { consultaDeFila } from "../../lib/escuchar";
 import { cancionesDistintas, duracionTotal, textoDuracion, noEncontrada, filasAppleMusic } from "../../lib/repasoCanciones";
@@ -1583,6 +1584,7 @@ export function SeccionInvitados({
                               : undefined
                           }
                         >
+                          <MarcaDj persona={g} />
                           {nombreCompleto(g)}
                         </span>
                         <CirculoTablon estado={estadoTablon(g, entradasTablon, evento)} />
