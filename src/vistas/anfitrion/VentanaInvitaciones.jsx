@@ -5,7 +5,7 @@
 // Ronda 4).
 //
 // El motor de "enviar la invitación a UNA familia" (familiasListasParaInvitacion,
-// destinatarioConEmail, descargando, abrirPreviewInvitacion, y el propio
+// destinatariosConEmail, descargando, abrirPreviewInvitacion, y el propio
 // modal de vista previa) sigue en VistaAnfitrion porque la ventana Avisos
 // también lo usa — moverlo aquí lo habría duplicado en dos sitios.
 // generarImagenParaFamilia y modoCalibracion tampoco son exclusivos de
@@ -34,7 +34,6 @@ const ANCHO_NOMBRE = 150;
 export function VentanaInvitaciones({
   data,
   familiasListasParaInvitacion,
-  destinatarioConEmail,
   destinatariosConEmail,
   enviarATodos,
   descargando,
@@ -201,7 +200,7 @@ export function VentanaInvitaciones({
             {
               etiqueta: "Sin email",
               valor: familiasListasParaInvitacion.filter(
-                (f) => !f.invitacionEnviada && !destinatarioConEmail(f)?.email
+                (f) => !f.invitacionEnviada && destinatariosConEmail(f).filter(Boolean).length === 0
               ).length,
               alerta: true,
             },
@@ -431,14 +430,11 @@ export function VentanaInvitaciones({
                 </div>
               </div>
               <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
-                Orden de los nombres en la invitación (usa las flechas para cambiarlo, p.ej.
-                para poner al esposo primero — a esa persona se le enviará el email) y su
-                email de contacto:
+                Orden de los nombres en la invitación (usa las flechas para cambiarlo) y su
+                email de contacto: la invitación llega a todos los que lo tengan.
               </p>
               <div className="space-y-1">
-                {(() => {
-                  const idDestinatario = destinatarioConEmail(familia)?.id;
-                  return familia.confirmados.map((m, i) => {
+                {familia.confirmados.map((m, i) => {
                     // Si esta persona es también colaborador, su email se
                     // edita solo en Colaboradores (igual que en su propio
                     // formulario de datos) — aquí se muestra de solo
@@ -485,22 +481,9 @@ export function VentanaInvitaciones({
                             />
                           )}
                         </div>
-                        {/* En todas las filas, y visible solo en la suya: así
-                            ocupa lo mismo y los emails miden igual (norma 6). */}
-                        <span
-                          className="text-xs px-1.5 py-0.5 rounded whitespace-nowrap"
-                          style={{
-                            background: C.paperDark,
-                            color: C.charcoal,
-                            visibility: m.id === idDestinatario ? "visible" : "hidden",
-                          }}
-                        >
-                          destinatario
-                        </span>
                       </div>
                     );
-                  });
-                })()}
+                })}
               </div>
             </div>
           ))}

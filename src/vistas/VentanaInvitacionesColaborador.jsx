@@ -22,7 +22,7 @@ import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
 export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
   const {
     familiasListasParaInvitacion,
-    destinatarioConEmail,
+    destinatariosConEmail,
     descargando,
     abrirPreviewInvitacion,
     previewInvitacion,
@@ -59,7 +59,7 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
       ) : (
         <div className="space-y-2">
           {pendientes.map((f) => {
-            const destinatario = destinatarioConEmail(f);
+            const correos = destinatariosConEmail(f).filter(Boolean);
             return (
               <div
                 key={f.clave}
@@ -71,10 +71,10 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
                     {f.apellido}
                   </div>
                   <div className="text-xs truncate" style={{ color: C.charcoal, opacity: OP.secundario }}>
-                    {destinatario?.email || "sin email"}
+                    {correos.join(", ") || "sin email"}
                   </div>
                 </div>
-                <Boton variante="principal" tamano="pequeno" onClick={() => intentarEnviar(f)} disabled={!destinatario?.email || descargando === f.clave}>
+                <Boton variante="principal" tamano="pequeno" onClick={() => intentarEnviar(f)} disabled={!correos.length || descargando === f.clave}>
                   <Send size={13} /> {descargando === f.clave ? "Generando…" : "Enviar"}
                 </Boton>
               </div>
@@ -101,7 +101,7 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
       {previewInvitacion && (
         <ModalFlotante titulo="Confirmar envío" onCerrar={() => setPreviewInvitacion(null)}>
           <p className="text-sm mb-2" style={{ color: C.charcoal }}>
-            Se enviará a <b>{previewInvitacion.destinatarios.join(", ")}</b>.
+            Se enviará a <b>{previewInvitacion.destinatarios.filter(Boolean).join(", ")}</b>.
           </p>
           <img
             src={previewInvitacion.dataUrl}

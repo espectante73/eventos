@@ -322,7 +322,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   // dónde vive el código.
   const {
     familiasListasParaInvitacion,
-    destinatarioConEmail,
     destinatariosConEmail,
     enviarATodos,
     marcarInvitacionEnviada,
@@ -429,7 +428,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
         <VentanaInvitaciones
           data={data}
           familiasListasParaInvitacion={familiasListasParaInvitacion}
-          destinatarioConEmail={destinatarioConEmail}
           destinatariosConEmail={destinatariosConEmail}
           enviarATodos={enviarATodos}
           descargando={descargando}
@@ -509,7 +507,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
             Destinatario
           </p>
           <p className="text-sm mb-3" style={{ color: C.ink }}>
-            {previewInvitacion.destinatarios.join(", ") || nombreCompleto(previewInvitacion.destinatario)}
+            {previewInvitacion.destinatarios.filter(Boolean).join(", ") || "El anfitrión (Modo Pruebas)"}
           </p>
           <p
             className="text-xs uppercase mb-1"

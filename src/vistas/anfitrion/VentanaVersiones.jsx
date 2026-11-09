@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "83.4",
+    cambios: [
+      "Invitaciones: fuera la elección de un solo destinatario y su etiqueta «destinatario» junto al email. La invitación llega a todos los confirmados de la familia que tengan email, y en cada sitio salen todos sus correos.",
+    ],
+  },
+  {
     version: "83.3",
     cambios: [
       "Invitaciones: el envío en bloque («Revisar y enviar a N familias») también llega a todos los confirmados de la familia con email; hasta ahora solo el envío de una en una. En la lista de repaso salen todos los correos.",

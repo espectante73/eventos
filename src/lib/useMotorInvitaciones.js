@@ -28,16 +28,6 @@ export function useMotorInvitaciones(data) {
   // Ficha o cuenta de colaborador: lib/invitados.js.
   const emailDe = (miembro) => emailDeInvitado(miembro, colaboradores);
 
-  // El destinatario del email de invitación no tiene por qué ser el primero
-  // del orden de nombres (ese orden es solo para el texto de la propia
-  // invitación) — se busca el primer confirmado de la familia que SÍ tenga
-  // email (propio o de su colaborador vinculado), sea cual sea su posición.
-  const destinatarioConEmail = (familia) => {
-    const elegido =
-      familia.confirmados.find((m) => emailDe(m)) || familia.confirmados[0];
-    return elegido ? { ...elegido, email: emailDe(elegido) } : elegido;
-  };
-
   // A todos los confirmados de la familia con email, sin repetir (él,
   // v83.2: por si a uno no le llega o no la encuentra). El QR es de la
   // familia: vale el de cualquiera.
@@ -101,13 +91,13 @@ export function useMotorInvitaciones(data) {
     return generarInvitacionImagen(evento, familia.apellido, nombres, mesaTexto, mostrarCuadricula, nombreColaborador, qr);
   };
 
-  const [previewInvitacion, setPreviewInvitacion] = useState(null); // { familia, dataUrl, destinatario } | null
+  const [previewInvitacion, setPreviewInvitacion] = useState(null); // { familia, dataUrl, destinatarios } | null
   const [enviandoInvitacion, setEnviandoInvitacion] = useState(false);
 
   const abrirPreviewInvitacion = async (familia) => {
-    const destinatario = destinatarioConEmail(familia);
+    const destinatarios = destinatariosConEmail(familia);
     // En Modo Pruebas el correo va al anfitrión, así que se prueba igual.
-    if (!destinatario?.email && requisitosActivos(evento)) {
+    if (!destinatarios.length) {
       avisoEnPantalla(
         "Ninguno de los confirmados de esta familia tiene email guardado. " +
           "Rellena el de alguno de ellos (en su formulario de datos) para poder enviarle la invitación.",
@@ -126,7 +116,7 @@ export function useMotorInvitaciones(data) {
       );
       return;
     }
-    setPreviewInvitacion({ familia, dataUrl, destinatario, destinatarios: destinatariosConEmail(familia) });
+    setPreviewInvitacion({ familia, dataUrl, destinatarios });
   };
 
   // El mismo correo a cada uno, de uno en uno. Una familia con alguno que
@@ -160,7 +150,6 @@ export function useMotorInvitaciones(data) {
   return {
     familiasListasParaInvitacion,
     emailDeInvitado: emailDe,
-    destinatarioConEmail,
     destinatariosConEmail,
     enviarATodos,
     marcarInvitacionEnviada,
