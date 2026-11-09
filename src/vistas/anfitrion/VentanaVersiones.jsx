@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "84.1",
+    cambios: [
+      "«De dónde venimos»: casilla «Zona DJ visible en el tablón», sin marcar de entrada. Oculta, esa zona no sale ni suma en el total de confirmados y zonas. No afecta a nada más de la app.",
+    ],
+  },
+  {
     version: "84",
     cambios: [
       "«De dónde venimos»: las cantidades del pie (confirmados, zonas y niños) van en negrita, como las de cada zona. La vista previa de Novedades se dibuja con las mismas piezas que el tablón: fondo champán, tarjeta blanca, etiqueta y zona en verde.",

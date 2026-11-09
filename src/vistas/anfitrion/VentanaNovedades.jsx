@@ -270,6 +270,13 @@ function NovedadZonas({ evento, persistEvento, expandida, onAlternar, soloTexto,
   // Se inicializa al montar y se guarda al salir del campo (norma 2.4).
   const [titulo, setTitulo] = useState(tituloZonas(evento));
   const publicada = Boolean(evento.zonasTablon);
+  // La zona «DJ» se enseña o no en el tablón con su casilla (v84.1, él). Solo
+  // afecta a esta noticia. La vista previa se relee ya guardada.
+  const [lecturaPrevia, setLecturaPrevia] = useState(0);
+  const cambiarZonaDj = async (visible) => {
+    await persistEvento({ ...evento, zonaDjVisible: visible });
+    setLecturaPrevia((n) => n + 1);
+  };
   return (
     <div className="rounded" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
       <div className="flex items-center gap-2 p-3">
@@ -314,7 +321,15 @@ function NovedadZonas({ evento, persistEvento, expandida, onAlternar, soloTexto,
           <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Las zonas de los confirmados, y cuántos de cada una, tal como están escritas en la Lista. Se rellena sola.
           </p>
-          {!soloTexto && obtenerZonasPrevia && <VistaPreviaZonas obtener={obtenerZonasPrevia} titulo={tituloZonas({ zonasTablonTitulo: titulo })} />}
+          {!soloTexto && obtenerZonasPrevia && <VistaPreviaZonas key={lecturaPrevia} obtener={obtenerZonasPrevia} titulo={tituloZonas({ zonasTablonTitulo: titulo })} />}
+          <label
+            className="flex items-center gap-1.5 text-xs"
+            style={{ color: C.charcoal, opacity: soloTexto ? OP.apagado : OP.secundario }}
+            title={soloTexto ? "No tienes permiso para cambiar esto" : undefined}
+          >
+            <input type="checkbox" checked={Boolean(evento.zonaDjVisible)} disabled={soloTexto} onChange={(e) => cambiarZonaDj(e.target.checked)} />
+            Zona DJ visible en el tablón
+          </label>
           <label
             className="flex items-center gap-1.5 text-xs"
             style={{ color: C.charcoal, opacity: soloTexto ? OP.apagado : OP.secundario }}

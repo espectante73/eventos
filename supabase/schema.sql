@@ -116,6 +116,7 @@ CREATE TABLE public.evento (
     -- habría borrado sin manera de recuperarla.
     "zonasTablon" boolean DEFAULT false,
     "zonasTablonTitulo" text,
+    "zonaDjVisible" boolean DEFAULT false,
     -- «Memorias» de Acomodación (v75): Acomodación 1, 2 y 3, cada una una
     -- foto de las mesas y de la mesa de cada invitado ({ numero,
     -- guardadaEl, mesas, asientos }). Solo el anfitrión: no sale en
@@ -3094,7 +3095,9 @@ $$;
 -- zona, para marcarla. El orden alfabético lo pone la app.
 -- La cuenta, una sola para el tablón y la vista previa (v83.9): las zonas y
 -- cuántos niños vienen. Solo en total, nunca por zona (él: en una zona
--- pequeña señalaría a un niño concreto). Cerrada: la llaman esas dos.
+-- pequeña señalaría a un niño concreto). Cerrada: la llaman esas dos. La
+-- zona «DJ» solo sale si él marca su casilla (zonaDjVisible, v84.1): oculta,
+-- tampoco suma en el total; los niños se cuentan igual.
 CREATE FUNCTION public.resumen_zonas() RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
@@ -3106,6 +3109,7 @@ CREATE FUNCTION public.resumen_zonas() RETURNS jsonb
         select trim(i."zona") as zona, count(*) as n
         from invitados i
         where i."confirmado" and not coalesce(i."noAsiste", false) and trim(coalesce(i."zona", '')) <> ''
+          and (upper(trim(i."zona")) <> 'DJ' or coalesce((select e."zonaDjVisible" from evento e limit 1), false))
         group by trim(i."zona")
       ) z
     ), '[]'::jsonb),

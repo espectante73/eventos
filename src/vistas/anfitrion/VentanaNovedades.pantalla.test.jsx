@@ -109,6 +109,24 @@ describe("la vista previa de «De dónde venimos»", () => {
     vista.desmontar();
   });
 
+  it("la casilla de la zona DJ guarda, y la vista previa se vuelve a leer ya guardada (v84.1)", async () => {
+    let lecturas = 0;
+    const guardados = [];
+    const obtenerZonasPrevia = async () => {
+      lecturas += 1;
+      return previa;
+    };
+    const vista = montar(<VentanaNovedades data={{ ...sinPublicar, persistEvento: async (e) => guardados.push(e), obtenerZonasPrevia }} ventana={null} />);
+    desplegar(vista);
+    await act(async () => {});
+    const casilla = [...vista.contenedor.querySelectorAll("label")].find((l) => l.textContent.includes("Zona DJ")).querySelector("input");
+    expect(casilla.checked).toBe(false);
+    await act(async () => casilla.click());
+    expect(guardados.at(-1).zonaDjVisible).toBe(true);
+    expect(lecturas).toBe(2);
+    vista.desmontar();
+  });
+
   it("si no se puede leer, lo dice", async () => {
     const vista = montar(<VentanaNovedades data={{ ...sinPublicar, obtenerZonasPrevia: async () => null }} ventana={null} />);
     desplegar(vista);

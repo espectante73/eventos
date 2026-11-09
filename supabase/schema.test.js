@@ -760,6 +760,7 @@ describe("los avisos al anfitrión", () => {
     for (const f of ["tablon_zonas", "anfitrion_zonas_previa"]) expect(cuerpoDe(f)).toContain("resumen_zonas()");
     expect(cuerpoDe("anfitrion_zonas_previa")).toContain("anfitrion_secreto");
     expect(cuerpoDe("tablon_zonas")).toContain('"zonasTablon"');
+    expect(cuerpoDe("resumen_zonas")).toContain('"zonaDjVisible"');
     expect(sql).toMatch(/REVOKE EXECUTE ON FUNCTION public\.resumen_zonas\(\) FROM PUBLIC, anon, authenticated/);
   });
 
