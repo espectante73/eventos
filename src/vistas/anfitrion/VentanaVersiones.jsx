@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "84.4",
+    cambios: [
+      "Aniversarios: la cabecera verde de la foto ampliada lleva los datos del panel dorado (familia, pareja, año de boda y años de casados), para comprobar de un vistazo que el sello coincide con lo guardado.",
+    ],
+  },
+  {
     version: "84.3",
     cambios: [
       "Canciones para bailar: marca «No pasar al DJ», por canción. Queda tachada en tu lista y no le llega al DJ, ni a lo que imprima o exporte, ni a la duración; sigue en la ficha del invitado y nadie más lo sabe. Si se corrige cómo está escrita en todas sus peticiones, la marca se mantiene.",

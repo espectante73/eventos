@@ -247,7 +247,15 @@ describe("pasar por las fotos en grande", () => {
     const { act } = await import("react");
     await act(async () => b.dispatchEvent(new MouseEvent("click", { bubbles: true })));
   };
-  const titulo = () => document.body.textContent.match(/Aniversario — (Adriano y Rosi|Emiliano y Ana)/)?.[1];
+  const titulo = () => document.body.textContent.match(/Aniversario — \S+ — (Adriano y Rosi|Emiliano y Ana)/)?.[1];
+
+  it("la cabecera lleva los datos del panel dorado, para cotejarlos con el sello (v84.4)", async () => {
+    const vista = montar(<VentanaAniversarios data={datos} onCerrar={() => {}} />);
+    await clic(botones().find((b) => b.title === "Aniversario — ver en grande"));
+    expect([...document.body.querySelectorAll("h3")].some((h) => /^Aniversario — Martíni01 — Adriano y Rosi$|^Aniversario — Medina01 — Emiliano y Ana$/.test(h.textContent.trim()))).toBe(true);
+    expect([...document.body.querySelectorAll("[data-extra-ventana]")].at(-1).textContent).toContain("2010 · 16 años");
+    vista.desmontar();
+  });
 
   it("Aniversario: → pasa a la siguiente, ‹ vuelve, y al final da la vuelta; dice «N de M»", async () => {
     const vista = montar(<VentanaAniversarios data={datos} onCerrar={() => {}} />);

@@ -426,6 +426,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
   );
 
   const nombreMatrimonio = (m) => `${m.familia} — ${nombresMatrimonio(m)}`;
+  const anioYAniversario = (m) => `${m.anioBoda || "sin año"}${m.aniversario != null ? ` · ${m.aniversario} años` : ""}`;
 
   return (
     <VentanaFlotante
@@ -550,8 +551,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
                   <b>{m.familia}</b> — {nombresMatrimonio(m)}
                 </div>
                 <div className="text-xs whitespace-nowrap" style={{ color: C.ink, opacity: OP.secundario }}>
-                  {m.anioBoda || "sin año"}
-                  {m.aniversario != null && ` · ${m.aniversario} años`}
+                  {anioYAniversario(m)}
                 </div>
               </div>
               {/* Columna Boda: la original del colaborador. La terminada, con
@@ -601,8 +601,8 @@ export function VentanaAniversarios({ data, onCerrar }) {
           const cualSeVe = !esBoda ? "aniversario" : enGrande.cual === "final" ? "bodaFinal" : "original";
           const idInput = `aniversarios-subir-${tipoSubida}`;
           const titulo = esBoda
-            ? `Boda (${enGrande.cual === "final" ? "con plantilla" : "original"}) — ${nombresMatrimonio(m)}`
-            : `Aniversario — ${nombresMatrimonio(m)}`;
+            ? `Boda (${enGrande.cual === "final" ? "con plantilla" : "original"}) — ${nombreMatrimonio(m)}`
+            : `Aniversario — ${nombreMatrimonio(m)}`;
 
           const donde = posicion(recorrido, esLaAbierta);
           const conFlechas = recorrido.length > 1;
@@ -611,12 +611,17 @@ export function VentanaAniversarios({ data, onCerrar }) {
               titulo={titulo}
               onCerrar={() => setEnGrande(null)}
               ancho={960}
+              // Los datos del panel dorado, para comprobar de un vistazo que el
+              // sello de la foto coincide con lo guardado (v84.4, él).
               extra={
-                donde && (
-                  <span className="text-sm whitespace-nowrap" style={{ color: C.goldClaro }}>
-                    {donde.n} de {donde.de}
-                  </span>
-                )
+                <span className="flex items-center gap-4 text-sm whitespace-nowrap" style={{ color: C.goldClaro }}>
+                  <b>{anioYAniversario(m)}</b>
+                  {donde && (
+                    <span>
+                      {donde.n} de {donde.de}
+                    </span>
+                  )}
+                </span>
               }
               acciones={
                 <>
