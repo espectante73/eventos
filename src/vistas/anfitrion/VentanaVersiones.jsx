@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "84.5",
+    cambios: [
+      "Aniversarios: la foto ampliada se ve sobre negro y sin el marco champán, como en la pantalla del local. Con el champán, el fondo parecía parte de la foto.",
+    ],
+  },
+  {
     version: "84.4",
     cambios: [
       "Aniversarios: la cabecera verde de la foto ampliada lleva los datos del panel dorado (familia, pareja, año de boda y años de casados), para comprobar de un vistazo que el sello coincide con lo guardado.",

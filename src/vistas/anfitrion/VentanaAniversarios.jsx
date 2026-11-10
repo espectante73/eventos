@@ -20,7 +20,7 @@ import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { C, R, T, OP, S, DORADO, conAlfa, filtroColumnaStyle } from "../../theme";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton, estilosBoton } from "../../components/Boton";
-import { HuecoFoto, ANCHO_COL, ALTO_MINIATURA, estiloMarcoFoto } from "../../components/HuecoFoto";
+import { HuecoFoto, ANCHO_COL, ALTO_MINIATURA } from "../../components/HuecoFoto";
 import { RecuadroCifras } from "../../components/Widgets";
 import { matrimoniosConLosQueVienenSolos, nombresMatrimonio } from "../../lib/matrimonios";
 import {
@@ -672,8 +672,11 @@ export function VentanaAniversarios({ data, onCerrar }) {
                   «anterior» quedaría a la derecha de «siguiente» (1.4). */}
               <div className="flex items-center gap-2">
                 {conFlechas && <Boton icono={ChevronLeft} titulo="Anterior (←)" onClick={() => pasar(-1)} />}
+                {/* Sobre negro, como en la pantalla del local, y sin marco (v84.5,
+                    él): con el champán, el fondo parecía parte de la foto. */}
                 <div
-                  style={{ flex: 1, minWidth: 0, aspectRatio: "16 / 9", borderRadius: R.caja, overflow: "hidden", ...estiloMarcoFoto(10) }}
+                  data-visor-foto
+                  style={{ flex: 1, minWidth: 0, aspectRatio: "16 / 9", borderRadius: R.caja, overflow: "hidden", background: C.negro }}
                 >
                   <img
                     src={verFoto(valor)}

@@ -254,6 +254,10 @@ describe("pasar por las fotos en grande", () => {
     await clic(botones().find((b) => b.title === "Aniversario — ver en grande"));
     expect([...document.body.querySelectorAll("h3")].some((h) => /^Aniversario — Martíni01 — Adriano y Rosi$|^Aniversario — Medina01 — Emiliano y Ana$/.test(h.textContent.trim()))).toBe(true);
     expect([...document.body.querySelectorAll("[data-extra-ventana]")].at(-1).textContent).toContain("2010 · 16 años");
+    // Sobre negro y sin marco, como en la pantalla del local (v84.5).
+    const visor = document.body.querySelector("[data-visor-foto]");
+    expect(visor.style.background).toBe("rgb(0, 0, 0)");
+    expect(visor.style.padding).toBe("");
     vista.desmontar();
   });
 
