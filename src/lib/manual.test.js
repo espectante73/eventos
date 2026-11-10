@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { partirManual, bloques, trozosEnLinea, contarPalabras, contarReglas, hayQueRepasar, UMBRAL_REPASAR } from "./manual";
 import { huellaDe } from "../../scripts/huellaManual.mjs";
@@ -235,7 +235,16 @@ describe("salvaguardas del CLAUDE.md", () => {
   const manual = partirManual(texto);
   // Fuera de los bloques de código: ahí van ejemplos, no citas.
   const prosa = texto.replace(/```[\s\S]*?```/g, "");
-  const citas = [...prosa.matchAll(/`([^`\n]+)`/g)].map((m) => m[1]);
+  // Las skills (.claude/skills/*/SKILL.md) son apartados sacados de aquí
+  // para que Claude los lea solo cuando hacen falta: lo que nombran también
+  // tiene que existir. No cuentan para el techo de palabras.
+  const DIR_SKILLS = ".claude/skills";
+  const prosaSkills = (existsSync(DIR_SKILLS) ? readdirSync(DIR_SKILLS) : [])
+    .map((d) => join(DIR_SKILLS, d, "SKILL.md"))
+    .filter((r) => existsSync(r))
+    .map((r) => readFileSync(r, "utf-8").replace(/```[\s\S]*?```/g, ""))
+    .join("\n");
+  const citas = [...`${prosa}\n${prosaSkills}`.matchAll(/`([^`\n]+)`/g)].map((m) => m[1]);
 
   // Pasar de aquí es una decisión suya, no algo que ocurre sin darse cuenta.
   const TECHO = 4500; // Fijado por él tras el repaso: cada norma nueva se compensa recortando otra.
