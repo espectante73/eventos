@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "84.6",
+    cambios: [
+      "Diseño app: las reglas del SQL salen de la guía a una skill aparte (sql-supabase), que solo se abre cuando se toca la base. La guía baja de 4.452 a 4.128 palabras y conserva su numeración.",
+    ],
+  },
+  {
     version: "84.5",
     cambios: [
       "Aniversarios: la foto ampliada se ve sobre negro y sin el marco champán, como en la pantalla del local. Con el champán, el fondo parecía parte de la foto.",
