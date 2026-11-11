@@ -19,7 +19,7 @@
 // ejemplo, al añadir a alguien que se llama igual que otro—, porque
 // bloquearlo sería decidir por él.
 import { uid } from "./id";
-import { claveFamiliaMesa } from "./mesas";
+import { claveFamiliaMesa, confirmarConSuFamilia } from "./mesas";
 import { nombreCompleto } from "./formato";
 import { comoColaborador, calcularEdad, pideEmail, pideDatosDeBoda } from "./invitados";
 import { emailValido } from "./validacion";
@@ -103,13 +103,13 @@ function invitadoNuevo(datos) {
 
 // Añadir uno a mano. Nombre, apellido y grupo familiar son obligatorios:
 // sin ellos la ficha no se puede ni buscar ni agrupar.
+const AVISO_FALTAN = "Faltan el nombre, el apellido o el grupo familiar.";
+
 export function agregarInvitado(invitados, datos) {
   const nombre = String(datos?.nombre || "").trim();
   const apellido = String(datos?.apellido || "").trim();
   const grupoFamiliar = String(datos?.grupoFamiliar || "").trim();
-  if (!nombre || !apellido || !grupoFamiliar) {
-    return { invitados, aviso: "Faltan el nombre, el apellido o el grupo familiar." };
-  }
+  if (!nombre || !apellido || !grupoFamiliar) return { invitados, aviso: AVISO_FALTAN };
   // Lo demás que traiga (rol, colaborador, año, email: «Nuevo invitado», v77;
   // confirmado y año de boda, v81.3).
   const { rolFamiliar = "", colaboradorId = null, anioNacimiento = "", email = "", telefono = "", anioBoda = "", confirmado = false } = datos || {};
@@ -363,22 +363,23 @@ export function familiaNuevaPara(invitados, apellido) {
 export const avisoFaltaRol = (nombre) =>
   `${nombre} todavía no tiene rol familiar. Ponle su rol (O, A, H, P o S) antes de asignarle colaborador: el formulario que verá el colaborador depende de ese rol.`;
 
-// Guarda lo del formulario. `familiaNueva` / `zonaNueva`: si se escribieron
-// a mano (con su «＋»). Devuelve { invitados, aviso } como las demás: si la
-// lista no cambia, el aviso dice qué falta.
-export function nuevoDesdeFormulario(invitados, datos, { familiaNueva = false, zonaNueva = false, evento } = {}) {
-  const sinCambio = (aviso) => ({ invitados, aviso });
+// Lo que el formulario comprueba y limpia, igual al añadir que al editar
+// (norma 7): familia y zona nuevas, rol antes de colaborador, año, email,
+// teléfono y año de boda. Devuelve `{ error }` o los valores ya limpios y
+// una `salvedad` que contar. `conColaborador`: si hay que exigir el rol
+// (al editar, solo si cambia el colaborador, como en la Lista).
+function revisarFormulario(invitados, datos, { familiaNueva, zonaNueva, evento, conColaborador }) {
   let { grupoFamiliar = "", zona = "", anioNacimiento = "", email = "", telefono = "" } = datos;
   grupoFamiliar = String(grupoFamiliar).trim();
   zona = String(zona).trim();
-  anioNacimiento = String(anioNacimiento).trim();
-  email = String(email).trim();
+  anioNacimiento = String(anioNacimiento ?? "").trim();
+  email = String(email ?? "").trim();
   const nombre = nombreCompleto({ nombre: String(datos.nombre || "").trim(), apellido: String(datos.apellido || "").trim() });
 
   // Una familia «nueva» que ya existe uniría a esta persona con otros: no
   // se adivina, se pregunta eligiéndola.
   const familiaQueYaHay = familiasDe(invitados).find((f) => limpio(f) === limpio(grupoFamiliar));
-  if (familiaNueva && familiaQueYaHay) return sinCambio(`La familia «${familiaQueYaHay}» ya existe: elígela en la lista o escribe otra.`);
+  if (familiaNueva && familiaQueYaHay) return { error: `La familia «${familiaQueYaHay}» ya existe: elígela en la lista o escribe otra.` };
   // Una zona «nueva» que ya existe con otra grafía: la de la Lista (así no
   // salen dos en el tablón), y se dice.
   let salvedad = "";
@@ -388,24 +389,80 @@ export function nuevoDesdeFormulario(invitados, datos, { familiaNueva = false, z
     zona = zonaQueYaHay;
   }
 
-  if (datos.colaboradorId && !datos.rolFamiliar) return sinCambio(avisoFaltaRol(nombre || "Este invitado"));
+  if (conColaborador && datos.colaboradorId && !datos.rolFamiliar) return { error: avisoFaltaRol(nombre || "Este invitado") };
   if (anioNacimiento && (!/^\d{4}$/.test(anioNacimiento) || calcularEdad(anioNacimiento, evento) === null)) {
-    return sinCambio("El año de nacimiento son cuatro cifras, como 1988.");
+    return { error: "El año de nacimiento son cuatro cifras, como 1988." };
   }
   // El email, como en el formulario del colaborador: desde los 16 años.
   if (!pideEmail({ anioNacimiento }, evento)) email = "";
-  if (email && !emailValido(email)) return sinCambio("Ese email no parece válido: revisa que tenga @ y un punto.");
+  if (email && !emailValido(email)) return { error: "Ese email no parece válido: revisa que tenga @ y un punto." };
   // El teléfono, igual (v78): desde los 16, y limpio, con su prefijo.
   if (!pideTelefono({ anioNacimiento }, evento)) telefono = "";
-  if (telefono && !telefonoValido(telefono)) return sinCambio(AVISO_TELEFONO);
+  if (telefono && !telefonoValido(telefono)) return { error: AVISO_TELEFONO };
   telefono = limpiarTelefono(telefono);
   // El año de boda (v81.3), solo del esposo o la esposa: el de su pareja lo
   // iguala la base (trg_igualar_anio_boda_pareja). Vacío, toma el suyo.
-  let anioBoda = pideDatosDeBoda(datos) ? String(datos.anioBoda || "").trim() : "";
-  if (anioBoda && !/^\d{4}$/.test(anioBoda)) return sinCambio("El año de boda son cuatro cifras, como 2010.");
+  const anioBoda = pideDatosDeBoda(datos) ? String(datos.anioBoda || "").trim() : "";
+  if (anioBoda && !/^\d{4}$/.test(anioBoda)) return { error: "El año de boda son cuatro cifras, como 2010." };
 
-  const { invitados: siguiente, aviso } = agregarInvitado(invitados, { ...datos, grupoFamiliar, zona, anioNacimiento, email, telefono, anioBoda });
+  return { limpios: { grupoFamiliar, zona, anioNacimiento, email, telefono, anioBoda }, salvedad };
+}
+
+// Guarda lo del formulario. `familiaNueva` / `zonaNueva`: si se escribieron
+// a mano (con su «＋»). Devuelve { invitados, aviso } como las demás: si la
+// lista no cambia, el aviso dice qué falta.
+export function nuevoDesdeFormulario(invitados, datos, { familiaNueva = false, zonaNueva = false, evento } = {}) {
+  const { error, limpios, salvedad } = revisarFormulario(invitados, datos, { familiaNueva, zonaNueva, evento, conColaborador: true });
+  if (error) return { invitados, aviso: error };
+  const { invitados: siguiente, aviso } = agregarInvitado(invitados, { ...datos, ...limpios });
   return { invitados: siguiente, aviso: [aviso, siguiente !== invitados ? salvedad : ""].filter(Boolean).join(" ") };
+}
+
+// Lo que dice «Guardar» si al editar no se tocó nada (la pantalla lo
+// distingue de un fallo: con una foto nueva, sí hay algo que guardar).
+export const SIN_CAMBIOS = "No has cambiado nada.";
+
+// Editar a uno que YA está en la lista, desde el mismo formulario (él,
+// v84.7: «buscar e insertar a un invitado, esté o no confirmado», para
+// añadirle un dato sin rellenarlo todo). Cambia SOLO lo que se tocó, con
+// las reglas de la Lista: nombre, familia, zona y rol con `cambiarCampo`
+// (avisa si alguien cambia de familia), el colaborador con el rol antes, y
+// «Confirmado» con `confirmarConSuFamilia` (se sienta con su familia). Lo
+// que el formulario no tiene (canción, alergias, pago, mesa) no se toca.
+export function editarDesdeFormulario(invitados, id, datos, { familiaNueva = false, zonaNueva = false, evento, mesas = [] } = {}) {
+  const g = invitados.find((x) => x.id === id);
+  if (!g) return { invitados, aviso: "Ese invitado ya no está en la lista." };
+  const nombre = String(datos.nombre || "").trim();
+  const apellido = String(datos.apellido || "").trim();
+  if (!nombre || !apellido || !String(datos.grupoFamiliar || "").trim()) return { invitados, aviso: AVISO_FALTAN };
+  const colaboradorId = datos.colaboradorId || null;
+  const otroColaborador = colaboradorId !== (g.colaboradorId || null);
+  const { error, limpios, salvedad } = revisarFormulario(invitados, datos, { familiaNueva, zonaNueva, evento, conColaborador: otroColaborador });
+  if (error) return { invitados, aviso: error };
+
+  let lista = invitados;
+  const avisos = [];
+  const aplicar = ({ invitados: siguiente, aviso }) => {
+    lista = siguiente;
+    if (aviso) avisos.push(aviso);
+  };
+  const campos = { apellido, nombre, grupoFamiliar: limpios.grupoFamiliar, zona: limpios.zona, rolFamiliar: datos.rolFamiliar || "" };
+  for (const [campo, valor] of Object.entries(campos)) aplicar(cambiarCampo(lista, id, campo, valor));
+
+  const cambios = {};
+  if (otroColaborador) cambios.colaboradorId = colaboradorId;
+  if (limpios.anioNacimiento !== String(g.anioNacimiento ?? "")) cambios.anioNacimiento = limpios.anioNacimiento;
+  if (limpios.email !== String(g.email || "")) cambios.email = limpios.email;
+  if (limpios.telefono !== limpiarTelefono(g.telefono)) cambios.telefono = limpios.telefono;
+  // El año de boda solo se escribe al esposo o la esposa; a los demás no se
+  // les borra el que tuvieran.
+  if (pideDatosDeBoda(datos) && limpios.anioBoda !== String(g.anioBoda ?? "")) cambios.anioBoda = limpios.anioBoda;
+  if (Object.keys(cambios).length) lista = lista.map((x) => (x.id === id ? { ...x, ...cambios } : x));
+
+  if (Boolean(datos.confirmado) !== Boolean(g.confirmado)) aplicar(confirmarConSuFamilia(lista, id, mesas));
+
+  if (lista === invitados) return { invitados, aviso: SIN_CAMBIOS };
+  return { invitados: lista, aviso: [...new Set([...avisos, salvedad])].filter(Boolean).join(" ") };
 }
 
 // El año de boda que ya tiene la familia (v81.3): el del esposo o la

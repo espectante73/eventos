@@ -16,22 +16,47 @@
 // el año que ya tiene la familia sale puesto (y la base lo iguala), y la
 // foto que ya tiene se enseña. La foto se sube igual que en la ficha del
 // colaborador (lib/fotosAlmacen.js).
-import { useEffect, useState } from "react";
+//
+// v84.7 (él): arriba, buscar a uno que YA está en la lista, confirmado o
+// no, y editarlo en este mismo formulario: sale con lo suyo puesto y se
+// toca solo el dato que falte. Guardar cambia solo lo tocado, con las
+// reglas de la Lista (editarDesdeFormulario). La ✕ del buscador vuelve a
+// «Nuevo invitado»; con algo a medio escribir, «¿Descartar los cambios?».
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Check } from "lucide-react";
 import { C, DEDO, OP, inputStyle } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Field, TextInput, Desplegable, ElegirSiNo, ANCHO_ANIO } from "../../components/Formulario";
 import { Boton } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
-import { BotonQuitar } from "../../components/PreguntaSeguridad";
+import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { HuecoFoto } from "../../components/HuecoFoto";
+import { BuscadorInvitado } from "../../components/BuscadorInvitado";
 import { pideEmail, pideDatosDeBoda } from "../../lib/invitados";
 import { nombreCompleto } from "../../lib/formato";
+import { telefonoParaVer } from "../../lib/telefono";
+import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../../lib/fotosAlmacen";
-import { ROLES_FORMULARIO, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, anioBodaDeLaFamilia } from "../../lib/edicionInvitados";
+import { ROLES_FORMULARIO, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, editarDesdeFormulario, SIN_CAMBIOS, mismaPersona, anioBodaDeLaFamilia } from "../../lib/edicionInvitados";
 
 const VACIO = { apellido: "", nombre: "", grupoFamiliar: "", rolFamiliar: "", zona: "", colaboradorId: "", anioNacimiento: "", telefono: "", email: "", confirmado: false, anioBoda: "" };
+
+// El formulario con lo que ya tiene alguien de la lista (v84.7). El año de
+// boda que le falte, el de su familia, como al añadir.
+const fichaDe = (g, invitados) => ({
+  apellido: g.apellido || "",
+  nombre: g.nombre || "",
+  grupoFamiliar: g.grupoFamiliar || "",
+  rolFamiliar: g.rolFamiliar || "",
+  zona: g.zona || "",
+  colaboradorId: g.colaboradorId || "",
+  anioNacimiento: String(g.anioNacimiento ?? ""),
+  telefono: g.telefono ? telefonoParaVer(g.telefono) : "",
+  email: g.email || "",
+  confirmado: Boolean(g.confirmado),
+  anioBoda: String(g.anioBoda || (pideDatosDeBoda(g) ? anioBodaDeLaFamilia(invitados, g.grupoFamiliar) : "") || ""),
+});
 // Todo del alto de un dedo: es para el móvil.
 const CAMPO = { ...inputStyle, width: "100%", minWidth: 0, minHeight: DEDO };
 
@@ -63,10 +88,15 @@ function ElegirONuevo({ nombre, opciones, vacio, valor, nuevo, onValor, onNuevo,
 }
 
 export function VentanaNuevoInvitado({ data, onCerrar }) {
-  const { invitados, colaboradores, evento, persistInvitados, fotosFamiliares = {}, persistFotosFamiliares } = data;
+  const { invitados, colaboradores, evento, mesas = [], persistInvitados, fotosFamiliares = {}, persistFotosFamiliares } = data;
   const familias = familiasDe(invitados);
   const zonas = zonasDe(invitados);
   const [ficha, setFicha] = useState(VACIO);
+  // A quién se está editando (v84.7); null = «Nuevo invitado». `base`, cómo
+  // estaba el formulario al abrirlo: lo distinto es lo escrito sin guardar.
+  const [editandoId, setEditandoId] = useState(null);
+  const [base, setBase] = useState(VACIO);
+  const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   // Sin familias todavía, se empieza escribiendo la primera.
   const [familiaNueva, setFamiliaNueva] = useState(familias.length === 0);
   const [zonaNueva, setZonaNueva] = useState(false);
@@ -89,17 +119,48 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
   const fotoFamilia = fotosFamiliares[ficha.grupoFamiliar] || "";
   const enlaceFamilia = useEnlaceFoto(fotoFamilia);
 
+  const hayCambios = JSON.stringify(ficha) !== JSON.stringify(base) || Boolean(fotoNueva);
+  const empezar = (f, id) => {
+    setEditandoId(id);
+    setFicha(f);
+    setBase(f);
+    setFamiliaNueva(!id && familias.length === 0);
+    setZonaNueva(false);
+    setFotoNueva(null);
+    setVerDatos(false);
+    setVerBoda(false);
+    setAviso("");
+    setGuardado("");
+  };
+  // Elegir a otro, o volver a «Nuevo» con la ✕: lo escrito sin guardar se
+  // perdería, así que antes se pregunta (norma 9).
+  const alBuscar = (id) => {
+    const g = invitados.find((x) => x.id === id);
+    const seguir = () => (g ? empezar(fichaDe(g, invitados), g.id) : empezar(VACIO, null));
+    if (hayCambios) preguntar({ ...PREGUNTA_DESCARTAR, alConfirmar: seguir });
+    else seguir();
+  };
+  // Tras el nombre, en el desplegable: si no ha confirmado, y su familia si
+  // otro se llama igual.
+  const repetidos = useMemo(() => new Set(invitados.filter((g) => invitados.some((x) => x.id !== g.id && mismaPersona(x, g))).map((g) => g.id)), [invitados]);
+  const detalleOpcion = (g) =>
+    [repetidos.has(g.id) ? g.grupoFamiliar : "", g.confirmado ? "" : g.noAsiste ? "no asiste" : "sin confirmar"].filter(Boolean).join(" · ");
+
   const guardar = async () => {
-    const { invitados: siguiente, aviso: motivo } = nuevoDesdeFormulario(invitados, ficha, { familiaNueva, zonaNueva, evento });
-    if (siguiente === invitados) {
+    const { invitados: siguiente, aviso: motivo } = editandoId
+      ? editarDesdeFormulario(invitados, editandoId, ficha, { familiaNueva, zonaNueva, evento, mesas })
+      : nuevoDesdeFormulario(invitados, ficha, { familiaNueva, zonaNueva, evento });
+    const nuevo = editandoId ? siguiente.find((g) => g.id === editandoId) : siguiente.at(-1);
+    const conFoto = Boolean(fotoNueva && nuevo && pideDatosDeBoda(nuevo) && !fotoFamilia);
+    // Al editar, la foto sola también es un cambio.
+    if (siguiente === invitados && !(motivo === SIN_CAMBIOS && conFoto)) {
       setAviso(motivo);
       setGuardado("");
       return;
     }
-    const nuevo = siguiente.at(-1);
     // La foto primero: si no se puede subir, no se guarda nada y se dice.
     let ruta = "";
-    if (fotoNueva && pideDatosDeBoda(nuevo) && !fotoFamilia) {
+    if (conFoto) {
       setSubiendo(true);
       try {
         ruta = await subirFotoMatrimonio(fotoNueva.archivo, nuevo.grupoFamiliar, CARPETA.BODA);
@@ -110,12 +171,17 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
       }
       setSubiendo(false);
     }
-    persistInvitados(siguiente);
+    if (siguiente !== invitados) persistInvitados(siguiente);
     if (ruta) persistFotosFamiliares?.({ ...fotosFamiliares, [nuevo.grupoFamiliar]: ruta });
-    setAviso(motivo);
+    setAviso(motivo === SIN_CAMBIOS ? "" : motivo);
     setGuardado(`Guardado: ${nombreCompleto(nuevo)}.`);
-    // Lo de la familia se queda para el siguiente; lo nuevo ya está en la lista.
-    setFicha({ ...VACIO, grupoFamiliar: nuevo.grupoFamiliar, zona: nuevo.zona, colaboradorId: nuevo.colaboradorId || "", confirmado: nuevo.confirmado });
+    // Al editar, se queda con lo ya guardado. Al añadir, lo de la familia se
+    // queda para el siguiente; lo nuevo ya está en la lista.
+    const siguienteFicha = editandoId
+      ? fichaDe(nuevo, siguiente)
+      : { ...VACIO, grupoFamiliar: nuevo.grupoFamiliar, zona: nuevo.zona, colaboradorId: nuevo.colaboradorId || "", confirmado: nuevo.confirmado };
+    setFicha(siguienteFicha);
+    setBase(siguienteFicha);
     setFotoNueva(null);
     setFamiliaNueva(false);
     setZonaNueva(false);
@@ -124,8 +190,22 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
   const conEmail = pideEmail({ anioNacimiento: ficha.anioNacimiento }, evento);
 
   return (
-    <VentanaFlotante clave="nuevoInvitado" titulo="Nuevo invitado" onCerrar={onCerrar} ancho="min(440px, calc(100vw - 48px))">
-      <div className="space-y-3" onKeyDown={(e) => e.key === "Enter" && e.target.tagName === "INPUT" && guardar()}>
+    <VentanaFlotante clave="nuevoInvitado" titulo={editandoId ? "Editar invitado" : "Nuevo invitado"} onCerrar={onCerrar} ancho="min(440px, calc(100vw - 48px))">
+      {/* Buscar a uno que ya está (v84.7), fuera del Enter que guarda. */}
+      <Field label={editandoId ? "Editando" : "Buscar en la lista"}>
+        <div className="flex items-center gap-2">
+          <BuscadorInvitado
+            invitados={invitados}
+            invitadoId={editandoId || ""}
+            onSeleccionar={alBuscar}
+            estilo={CAMPO}
+            detalle={detalleOpcion}
+            preguntaAlQuitar={null}
+            placeholder="Apellido o nombre"
+          />
+        </div>
+      </Field>
+      <div className="space-y-3 mt-3" onKeyDown={(e) => e.key === "Enter" && e.target.tagName === "INPUT" && guardar()}>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Apellido *">
             <TextInput aria-label="Apellido" value={ficha.apellido} onChange={(e) => poner("apellido")(e.target.value)} autoComplete="off" style={CAMPO} />
@@ -281,6 +361,7 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
           * Obligatorios. Lo demás lo puede completar su colaborador.
         </p>
       </div>
+      {ventanaPregunta}
     </VentanaFlotante>
   );
 }

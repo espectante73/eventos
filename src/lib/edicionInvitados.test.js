@@ -3,7 +3,7 @@ import {
   agregarInvitado, importarInvitados, eliminarInvitado, mismaPersona,
   cambiarCampo, alternarRolTrabajo, alternarExcluidoTablon,
   permitirExcepcion, quitarExcepcion, marcarResponsable,
-  colaboradoresSinFichaEnlazada, fichaDelColaborador, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, cambiarTelefono, anioBodaDeLaFamilia } from "./edicionInvitados";
+  colaboradoresSinFichaEnlazada, fichaDelColaborador, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, editarDesdeFormulario, cambiarTelefono, anioBodaDeLaFamilia } from "./edicionInvitados";
 
 // La lista de invitados es la base de toda la app: si aquí se pierde
 // alguien, no se nota hasta que falta en la boda. Estas pruebas son el
@@ -336,5 +336,62 @@ describe("cambiarTelefono", () => {
   it("verlo con espacios no es cambiarlo; vacío, se borra", () => {
     expect(cambiarTelefono(lista, "3", "611 22 33 44", evento).invitados).toBe(lista);
     expect(cambiarTelefono(lista, "3", "", evento).invitados[2].telefono).toBe("");
+  });
+});
+
+// v84.7 (él): «buscar e insertar a un invitado, esté o no confirmado» desde
+// el mismo formulario, para añadirle un dato sin rellenarlo todo.
+describe("editarDesdeFormulario", () => {
+  const evento = { fecha: "2026-12-11" };
+  const lista = [
+    { id: "1", nombre: "Ana", apellido: "Pacheco", grupoFamiliar: "Pacheco01", zona: "Icod", rolFamiliar: "esposa", colaboradorId: "c1", anioNacimiento: "1985", email: "", telefono: "", confirmado: false, mesa: null, cancion: "Volare", anioBoda: "2010" },
+    { id: "2", nombre: "Rubén", apellido: "Pacheco", grupoFamiliar: "Pacheco01", zona: "Icod", rolFamiliar: "esposo", colaboradorId: "c1", anioNacimiento: "1983", confirmado: true, mesa: 4, anioBoda: "2010" },
+    { id: "3", nombre: "Luis", apellido: "Sierra", grupoFamiliar: "Sierra01", zona: "Puerto", rolFamiliar: "", colaboradorId: null, confirmado: false, mesa: null },
+  ];
+  const mesas = [{ numero: 4, capacidad: 10 }];
+  // Lo que el formulario trae al elegirla: lo suyo, tal cual.
+  const ficha = (g) => ({ apellido: g.apellido, nombre: g.nombre, grupoFamiliar: g.grupoFamiliar, rolFamiliar: g.rolFamiliar || "", zona: g.zona || "", colaboradorId: g.colaboradorId || "", anioNacimiento: g.anioNacimiento || "", telefono: g.telefono || "", email: g.email || "", confirmado: Boolean(g.confirmado), anioBoda: g.anioBoda || "" });
+
+  it("un solo dato: cambia ese y nada más, ni de ella ni de los demás", () => {
+    const { invitados, aviso } = editarDesdeFormulario(lista, "1", { ...ficha(lista[0]), email: "ana@correo.com" }, { evento, mesas });
+    expect(aviso).toBe("");
+    expect(invitados[0]).toEqual({ ...lista[0], email: "ana@correo.com" });
+    expect(invitados[1]).toBe(lista[1]);
+    expect(invitados[2]).toBe(lista[2]);
+  });
+
+  it("sin tocar nada no se guarda, y se dice", () => {
+    expect(editarDesdeFormulario(lista, "1", ficha(lista[0]), { evento, mesas })).toEqual({ invitados: lista, aviso: "No has cambiado nada." });
+  });
+
+  it("con las mismas comprobaciones que al añadir: si algo no vale, no se guarda nada", () => {
+    expect(editarDesdeFormulario(lista, "1", { ...ficha(lista[0]), email: "ana@" }, { evento, mesas }).invitados).toBe(lista);
+    expect(editarDesdeFormulario(lista, "1", { ...ficha(lista[0]), telefono: "6123" }, { evento, mesas }).aviso).toContain("no parece válido");
+    expect(editarDesdeFormulario(lista, "1", { ...ficha(lista[0]), nombre: " " }, { evento, mesas }).aviso).toBe("Faltan el nombre, el apellido o el grupo familiar.");
+  });
+
+  it("el teléfono se guarda limpio; verlo con espacios no es cambiarlo", () => {
+    const { invitados } = editarDesdeFormulario(lista, "1", { ...ficha(lista[0]), telefono: "612 34 56 78" }, { evento, mesas });
+    expect(invitados[0].telefono).toBe("+34612345678");
+    const conTel = [{ ...lista[0], telefono: "+34612345678" }, ...lista.slice(1)];
+    expect(editarDesdeFormulario(conTel, "1", { ...ficha(conTel[0]), telefono: "612 34 56 78" }, { evento, mesas }).aviso).toBe("No has cambiado nada.");
+  });
+
+  it("confirmarla la sienta con su familia, como en la Lista", () => {
+    const { invitados } = editarDesdeFormulario(lista, "1", { ...ficha(lista[0]), confirmado: true }, { evento, mesas });
+    expect(invitados[0]).toMatchObject({ confirmado: true, mesa: 4 });
+  });
+
+  it("cambiarla de familia se hace y se avisa con la cifra, como en la Lista", () => {
+    const { invitados, aviso } = editarDesdeFormulario(lista, "2", { ...ficha(lista[1]), grupoFamiliar: "Sierra01" }, { evento, mesas });
+    expect(invitados[1].grupoFamiliar).toBe("Sierra01");
+    expect(aviso).toContain("pasa a ser de otra familia");
+  });
+
+  it("el colaborador pide el rol solo si se le cambia; con el que ya tenía, no estorba", () => {
+    expect(editarDesdeFormulario(lista, "3", { ...ficha(lista[2]), colaboradorId: "c1" }, { evento, mesas }).aviso).toContain("todavía no tiene rol familiar");
+    const sinRolConColab = [lista[0], lista[1], { ...lista[2], colaboradorId: "c1" }];
+    const { invitados } = editarDesdeFormulario(sinRolConColab, "3", { ...ficha(sinRolConColab[2]), anioNacimiento: "1990" }, { evento, mesas });
+    expect(invitados[2].anioNacimiento).toBe("1990");
   });
 });

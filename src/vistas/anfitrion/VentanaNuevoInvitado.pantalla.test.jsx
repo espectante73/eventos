@@ -166,3 +166,53 @@ it("si la familia ya tiene la foto, se enseña y no se pide otra", () => {
   expect(q('input[type="file"]')).toBe(null);
   vista.desmontar();
 });
+
+// v84.7 (él): buscar a uno que YA está, confirmado o no, y añadirle un dato
+// sin rellenar todo el formulario.
+it("buscar a uno de la lista: sale con lo suyo, se toca un dato y solo cambia ese", () => {
+  const lista = [{ ...INVITADOS[0], anioNacimiento: "1985", email: "", cancion: "Volare" }, INVITADOS[1]];
+  const { vista, guardados, q, boton } = dibujar(lista);
+  const opciones = [...q('select[aria-label="Elegir invitado"]').options].map((o) => o.textContent);
+  expect(opciones).toContain("Pacheco, Ana · sin confirmar");
+  vista.elegir(q('select[aria-label="Elegir invitado"]'), "1");
+  expect(document.body.textContent).toContain("Editar invitado");
+  expect(q('input[aria-label="Apellido"]').value).toBe("Pacheco");
+  expect(q('select[aria-label="Familia"]').value).toBe("Pacheco01");
+  vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Año nac.")));
+  expect(q('input[aria-label="Año de nacimiento"]').value).toBe("1985");
+  escribir(q('input[aria-label="Email"]'), "ana@correo.com");
+  vista.pulsar(boton("Guardar"));
+  const guardada = guardados.at(-1);
+  expect(guardada).toHaveLength(2);
+  expect(guardada[0]).toEqual({ ...lista[0], email: "ana@correo.com" });
+  expect(guardada[1]).toBe(lista[1]);
+  expect(document.body.textContent).toContain("Guardado: Pacheco, Ana.");
+  // Sigue con ella, ya guardada.
+  expect(q('input[aria-label="Email"]').value).toBe("ana@correo.com");
+  vista.desmontar();
+});
+
+it("sin tocar nada no guarda; la ✕ vuelve a «Nuevo invitado», vacío", () => {
+  const { vista, guardados, q, boton } = dibujar();
+  vista.elegir(q('select[aria-label="Elegir invitado"]'), "2");
+  vista.pulsar(boton("Guardar"));
+  expect(guardados).toEqual([]);
+  expect(document.body.textContent).toContain("No has cambiado nada.");
+  vista.pulsar(boton("Quitar selección"));
+  expect(document.body.textContent).toContain("Nuevo invitado");
+  expect(q('input[aria-label="Apellido"]').value).toBe("");
+  vista.desmontar();
+});
+
+it("con algo a medio escribir, elegir a otro pregunta antes de perderlo", () => {
+  const { vista, q, boton } = dibujar();
+  escribir(q('input[aria-label="Apellido"]'), "Abrante");
+  vista.elegir(q('select[aria-label="Elegir invitado"]'), "2");
+  expect(document.body.textContent).toContain("¿Descartar los cambios?");
+  vista.pulsar(boton("No"));
+  expect(q('input[aria-label="Apellido"]').value).toBe("Abrante");
+  vista.elegir(q('select[aria-label="Elegir invitado"]'), "2");
+  vista.pulsar(boton("Sí, descartar"));
+  expect(q('input[aria-label="Apellido"]').value).toBe("Sierra");
+  vista.desmontar();
+});
