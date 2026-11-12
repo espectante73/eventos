@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "84.9",
+    cambios: [
+      "Contabilidad → Resumen: «Previsto a recoger» va arriba, a todo el ancho; debajo, Recaudado, Pendiente de cobro, Total gastos y Balance.",
+    ],
+  },
+  {
     version: "84.8",
     cambios: [
       "Contabilidad → Resumen: nueva casilla «Previsto a recoger», a todo el ancho. Suma lo de los confirmados con su edad (lo mismo que Recaudado + Pendiente de cobro) y los sin confirmar como si fueran todos adultos, la cifra más alta. Los de «No asiste» no cuentan; el DJ, a 0 €.",

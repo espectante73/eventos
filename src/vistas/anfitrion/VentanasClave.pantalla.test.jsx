@@ -130,6 +130,8 @@ describe("Contabilidad se puede dibujar", () => {
     // 45 + 45 + 20 (la niña, con su edad) + 45 (sin confirmar, como adulta).
     expect(texto).toContain(`${euros(155)}Previsto a recoger`);
     expect(texto).not.toContain("Lo que entra");
+    // Arriba, antes que las otras cuatro (v84.9).
+    expect(texto.indexOf("Previsto a recoger")).toBeLessThan(texto.indexOf("Recaudado"));
     vista.desmontar();
   });
 });

@@ -212,6 +212,17 @@ export function VentanaCuentas({ data, onCerrar }) {
         onAlternar={() => alternar("resumen")}
       >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+        {/* La cantidad final (v84.8), a todo el ancho y ARRIBA (él, v84.9);
+            debajo, las otras cuatro. Sin texto de explicación al pie: él
+            lo quitó por lioso (v84.8). */}
+        <div className="p-2 rounded text-center col-span-2 sm:col-span-4" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
+          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.ink }}>
+            {euros(previsto)}
+          </div>
+          <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
+            Previsto a recoger
+          </div>
+        </div>
         <div className="p-2 rounded text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.ink }}>
             {euros(recaudado)}
@@ -245,16 +256,6 @@ export function VentanaCuentas({ data, onCerrar }) {
           </div>
           <div className="text-xs uppercase" style={{ color: C.charcoal, fontFamily: "'IBM Plex Mono', monospace" }}>
             Balance (recaudado − gastos)
-          </div>
-        </div>
-        {/* La cantidad final (v84.8), a todo el ancho, al cierre. Sin texto
-            de explicación al pie: él lo quitó por lioso (v84.8). */}
-        <div className="p-2 rounded text-center col-span-2 sm:col-span-4" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
-          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.ink }}>
-            {euros(previsto)}
-          </div>
-          <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
-            Previsto a recoger
           </div>
         </div>
       </div>
