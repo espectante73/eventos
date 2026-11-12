@@ -56,8 +56,8 @@ export async function prepararFotoFiesta(archivo, reducir = reducirImagen) {
 
 // Con las suyas ya subidas: también si las subió desde otro móvil, que es
 // el único que puede quitarlas.
-export const textoCompleta = (maximo) =>
-  `Ya tienes tus ${maximo} fotos. Para cambiar una, elimínala desde el móvil con el que la subiste.`;
+// Solo eso (él, v85.6): cómo cambiar una ya lo dice su papelera.
+export const textoCompleta = (maximo) => `Ya tienes tus ${maximo} fotos.`;
 
 const MOTIVOS = {
   nombre: "No te hemos reconocido: vuelve a entrar con tu nombre.",

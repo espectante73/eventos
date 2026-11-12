@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "85.6",
+    cambios: [
+      "Fotos de la fiesta: con las dos subidas, la tarjeta dice solo «Ya tienes tus 2 fotos.» (sin «Para cambiar una, elimínala…»: ya lo dice su papelera).",
+    ],
+  },
+  {
     version: "85.5",
     cambios: [
       "Tablón, con las fotos de la fiesta abiertas: la tarjeta de las fotos va lo primero, dorada, con la cámara en grande y latiendo suave; el recuadro verde se pliega a lo básico (nombre, hora y lugar, y el círculo, quieto) y se abre entero tocándolo; «Tu colaborador» y la FAQ, plegados en una línea. Al cerrar la recogida, todo vuelve a estar como siempre.",

@@ -71,7 +71,7 @@ describe("subirFotoFiesta", () => {
   it("con sus 2 ya subidas, dice por qué y no sube nada", async () => {
     const s = falso({ rpc: { tablon_reservar_foto: { data: { error: "completa" } } } });
     const { aviso } = await subirFotoFiesta(s, { ...QUIEN, archivo: {} }, PEQUENA);
-    expect(aviso).toBe("Ya tienes tus 2 fotos. Para cambiar una, elimínala desde el móvil con el que la subiste.");
+    expect(aviso).toBe("Ya tienes tus 2 fotos.");
     expect(s.llamadas.map((l) => l[0])).toEqual(["tablon_reservar_foto"]);
   });
 

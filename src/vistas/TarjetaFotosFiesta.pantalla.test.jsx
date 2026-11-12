@@ -39,7 +39,8 @@ it("la papelera, solo en el móvil que la subió", () => {
 
 it("con las 2: sin botón, y dice cómo cambiar una", () => {
   const vista = montar(tarjeta({ fotos: [foto("1", true), foto("2", false)] }));
-  expect(document.body.textContent).toContain("Ya tienes tus 2 fotos. Para cambiar una, elimínala desde el móvil con el que la subiste.");
+  expect(document.body.textContent).toContain("Ya tienes tus 2 fotos.");
+  expect(document.body.textContent).not.toContain("Para cambiar una");
   expect(campoFoto()).toBeNull();
   vista.desmontar();
 });
