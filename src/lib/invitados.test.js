@@ -16,6 +16,7 @@ import {
   edadPromedio,
   importeEsperadoInvitado,
   previstoARecoger,
+  FALTAS_DATOS,
   resolverColaborador,
   fichaCerradaAlColaborador,
   parseImport,
@@ -405,5 +406,28 @@ describe("previstoARecoger", () => {
 
   it("sin precio puesto, todo a 0", () => {
     expect(previstoARecoger(lista, { fecha: "2026-12-11" }).total).toBe(0);
+  });
+});
+
+// v85 (él): el filtro «Datos» de la Lista, por lo que le falta a cada uno.
+describe("FALTAS_DATOS", () => {
+  const evento = { fecha: "2026-12-11" };
+  const falta = (valor, g) => FALTAS_DATOS.find((f) => f.valor === valor).falta(g, evento);
+
+  it("el email y el teléfono, desde los 16 (los de 16 cuentan; los de 15, no)", () => {
+    expect(falta("sinEmail", { anioNacimiento: "2010", email: "" })).toBe(true);
+    expect(falta("sinEmail", { anioNacimiento: "2011", email: "" })).toBe(false);
+    expect(falta("sinTelefono", { anioNacimiento: "1980" })).toBe(true);
+    expect(falta("sinTelefono", { anioNacimiento: "1980", telefono: "+34612345678" })).toBe(false);
+  });
+
+  it("sin año, se le piden como a un adulto, igual que en el formulario", () => {
+    expect(falta("sinEmail", { email: " " })).toBe(true);
+    expect(falta("sinAnio", { anioNacimiento: "" })).toBe(true);
+  });
+
+  it("las alergias faltan solo sin contestar: «No» ya es una respuesta", () => {
+    expect(falta("sinAlergias", { alergias: "" })).toBe(true);
+    expect(falta("sinAlergias", { alergias: "No" })).toBe(false);
   });
 });

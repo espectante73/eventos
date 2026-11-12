@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "85",
+    cambios: [
+      "Lista de invitados, filtro «Datos»: además de «Completos» y «Por recopilar», «Sin email», «Sin tel.», «Sin alerg.» y «Sin año». El email y el teléfono, solo de 16 en adelante (a quien se le piden); las alergias faltan si no están contestadas («No» ya es respuesta). Se combinan con los demás: «Confirmado» + «Sin email» dice en «Mostrando» cuántos confirmados de 16 en adelante no lo tienen, y quiénes.",
+      "La columna «Datos», un poco más ancha, para que quepa «Sin alerg.».",
+    ],
+  },
+  {
     version: "84.9",
     cambios: [
       "Contabilidad → Resumen: «Previsto a recoger» va arriba, a todo el ancho; debajo, Recaudado, Pendiente de cobro, Total gastos y Balance.",

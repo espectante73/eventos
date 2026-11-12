@@ -15,6 +15,19 @@ export function datosCompletos(g) {
   return Boolean(g.anioNacimiento) && Boolean(g.alergias);
 }
 
+// Lo que le falta a alguien, para el filtro «Datos» de la Lista (él, v85:
+// «¿a cuántos confirmados de 16 en adelante les falta el email?», y por
+// los demás datos, «por ejemplo, las alergias»). Una línea por dato: su
+// rótulo (corto: la columna «Datos» es estrecha) y cuándo falta. El email y el teléfono, desde los 16, la misma
+// regla que el formulario (pideEmail). No mira si está confirmado: eso se
+// combina con el filtro «Confirmado».
+export const FALTAS_DATOS = [
+  { valor: "sinEmail", rotulo: "Sin email", falta: (g, evento) => pideEmail(g, evento) && !String(g.email || "").trim() },
+  { valor: "sinTelefono", rotulo: "Sin tel.", falta: (g, evento) => pideEmail(g, evento) && !String(g.telefono || "").trim() },
+  { valor: "sinAlergias", rotulo: "Sin alerg.", falta: (g) => !g.alergias },
+  { valor: "sinAnio", rotulo: "Sin año", falta: (g) => !String(g.anioNacimiento || "").trim() },
+];
+
 // Con el pago, la ficha se cierra al colaborador (él, v54): sobre esos
 // datos ya se han sacado las listas de canciones, edades y alergias, y el
 // día de la acreditación nadie debe abrirlos con prisas. Solo el anfitrión

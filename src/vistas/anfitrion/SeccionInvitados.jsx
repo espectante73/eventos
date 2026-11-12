@@ -37,7 +37,7 @@ import {
   Lock,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
-import { datosCompletos, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
+import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora, contiene } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } from "../../lib/matrimonios";
@@ -582,6 +582,9 @@ export function SeccionInvitados({
       if (filtros.confirmado === "noAsiste" && !g.noAsiste) return false;
       if (filtros.datos === "completo" && !(g.confirmado && datosCompletos(g))) return false;
       if (filtros.datos === "pendiente" && (!g.confirmado || datosCompletos(g))) return false;
+      // Lo que le falta (v85): se combina con «Confirmado».
+      const falta = FALTAS_DATOS.find((f) => f.valor === filtros.datos);
+      if (falta && !falta.falta(g, evento)) return false;
       if (filtros.presente === "si" && !g.presente) return false;
       if (filtros.presente === "no" && g.presente) return false;
       if (filtros.pagado === "pagado" && !g.pagado) return false;
@@ -623,7 +626,9 @@ export function SeccionInvitados({
   // En «Editar», una columna más: el Teléfono, junto al nombre (él, v78.1:
   // «solo visible al editar y no visible en normal»).
   const ANCHO_TELEFONO = "120px";
-  const columnasTabla = `1.5fr ${modoEdicion ? `${ANCHO_TELEFONO} ` : ""}1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.75fr 0.75fr 0.7fr 100px`;
+  // «Datos», 0.75fr → 0.85fr (v85): su filtro dice ahora «Sin alerg.», y
+  // a 0.75 se cortaba el punto.
+  const columnasTabla = `1.5fr ${modoEdicion ? `${ANCHO_TELEFONO} ` : ""}1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.75fr 0.7fr 100px`;
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
@@ -1156,6 +1161,11 @@ export function SeccionInvitados({
                     <option value="">Todos</option>
                     <option value="completo">Completos</option>
                     <option value="pendiente">Por recopilar</option>
+                    {FALTAS_DATOS.map((f) => (
+                      <option key={f.valor} value={f.valor}>
+                        {f.rotulo}
+                      </option>
+                    ))}
                   </select>
                 </span>
                 <span style={{ background: tintaColumna(9), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>

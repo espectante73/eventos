@@ -106,7 +106,7 @@ describe("la Lista de invitados se puede dibujar", () => {
     ["colaboradorId", ["sin", "c1"]],
     ["mesa", ["1", "sin"]],
     ["confirmado", ["si", "no"]],
-    ["datos", ["si", "no"]],
+    ["datos", ["si", "no", "completo", "pendiente", "sinEmail", "sinTelefono", "sinAlergias", "sinAnio"]],
     ["pagado", ["si", "no"]],
     ["presente", ["si", "no"]],
     ["rolTrabajo", ["Acomodador", "es-colaborador", "sin"]],
@@ -119,6 +119,23 @@ describe("la Lista de invitados se puede dibujar", () => {
       });
     }
   }
+
+  // v85 (él): «de los confirmados, ¿a cuántos de 16 en adelante les falta
+  // el email?». Lucía (8 años) no cuenta: a ella no se le pide.
+  it("Confirmado + «Sin email»: los confirmados de 16 en adelante sin email", () => {
+    const html = dibujar({ confirmado: "confirmado", datos: "sinEmail" });
+    expect(html).toContain("Pacheco, Omar");
+    expect(html).not.toContain("Pacheco, Lucía");
+    expect(html).not.toContain("Abrante, Loly");
+    // (Barrios, Jacob tiene email, pero su nombre sale igual: es colaborador.)
+  });
+
+  it("«Sin alergias», sin más filtros: confirmados o no, quien no las ha contestado", () => {
+    const html = dibujar({ datos: "sinAlergias" });
+    expect(html).toContain("Pacheco, Omar");
+    expect(html).toContain("Abrante, Loly");
+    expect(html).not.toContain("Pacheco, Míriam");
+  });
 
   it("filtrando por Colaborador solo queda quien lo es", () => {
     const html = dibujar({ rolTrabajo: "es-colaborador" });
