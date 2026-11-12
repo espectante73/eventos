@@ -152,6 +152,14 @@ describe("el tablón: quién ha entrado y su colaborador", () => {
     expect(yo).toContain("(select count(*) from candidatos) = 1");
     expect(f).toContain("from tablon_invitado(p_token, p_respuesta) y");
   });
+  // v85.1 (él): «Lo que te ha apuntado». Lo justo, y nunca la llave ni lo
+  // que se podría ir sacando con una puerta que no es contraseña.
+  it("lo que le apuntó su colaborador, pero nunca el año de nacimiento, el email ni el teléfono", () => {
+    for (const clave of ["'alergias'", "'cancion'", "'sinCancion'", "'conservarDatos'", "'anioBoda'"]) expect(f).toContain(clave);
+    expect(f).toContain(`when y."rolFamiliar" in ('esposo', 'esposa') then y."anioBoda"`);
+    for (const nunca of ["'anioNacimiento'", "'email'", "'telefono'", 'y."email"', 'y."telefono"']) expect(f).not.toContain(nunca);
+    expect(f).not.toMatch(/'\w+',\s*y\."anioNacimiento"/);
+  });
   it("su nombre como en la lista, su colaborador aunque sea él mismo, y si es colaborador", () => {
     expect(f).toContain(`'nombre', y."apellido" || ', ' || y."nombre"`);
     expect(f).toContain(`'colaborador', c."nombre"`);
@@ -165,7 +173,9 @@ describe("el tablón: quién ha entrado y su colaborador", () => {
     expect(f).toContain(`'datosCompletos', coalesce(y."anioNacimiento", '') <> '' and coalesce(y."alergias", '') <> ''`);
     expect(f).toContain(`'pagado', y."pagado"`);
     expect(f).toContain(`'presente', y."presente"`);
-    expect(f).not.toMatch(/'\w+',\s*y\."(anioNacimiento|alergias|mesa)"\s*[,)]/);
+    // Las alergias, sí desde la v85.1 («Lo que te ha apuntado», él); el año
+    // y la mesa, nunca: son llaves (la entrada y las fotos).
+    expect(f).not.toMatch(/'\w+',\s*y\."(anioNacimiento|mesa)"\s*[,)]/);
     const app = readFileSync("src/lib/invitados.js", "utf8");
     expect(app).toContain("return Boolean(g.anioNacimiento) && Boolean(g.alergias);");
   });

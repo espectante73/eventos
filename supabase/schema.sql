@@ -3330,6 +3330,12 @@ CREATE FUNCTION public.foto_fiesta_quitada(p_ruta text) RETURNS boolean
 --   pagado, presente nunca sus datos (el año es clave de las fotos).
 --                    datosCompletos es la misma regla que datosCompletos
 --                    de lib/invitados.js: año de nacimiento y alergias.
+--   alergias, cancion, «Lo que te ha apuntado» (v85.1, él): para que vea lo
+--   sinCancion,       que su colaborador le apuntó y avise si algo está mal.
+--   conservarDatos,   anioBoda, solo del esposo o la esposa (null: no es
+--   anioBoda          matrimonio). NUNCA el año de nacimiento (es la llave),
+--                     ni el email ni el teléfono (la puerta no es una
+--                     contraseña: se podrían ir sacando uno a uno).
 CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
@@ -3341,7 +3347,12 @@ CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS 
     'esColaborador', exists (select 1 from colaboradores cc where cc."invitadoId" = y."id"),
     'datosCompletos', coalesce(y."anioNacimiento", '') <> '' and coalesce(y."alergias", '') <> '',
     'pagado', y."pagado",
-    'presente', y."presente"
+    'presente', y."presente",
+    'alergias', y."alergias",
+    'cancion', y."cancion",
+    'sinCancion', coalesce(y."sinCancion", false),
+    'conservarDatos', coalesce(y."conservarDatos", false),
+    'anioBoda', case when y."rolFamiliar" in ('esposo', 'esposa') then y."anioBoda" end
   )
   from tablon_invitado(p_token, p_respuesta) y
   left join colaboradores c on c."id" = y."colaboradorId";

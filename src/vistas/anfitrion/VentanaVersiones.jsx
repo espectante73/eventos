@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "85.1",
+    cambios: [
+      "Tablón: en la tarjeta «Tu colaborador», plegado, «Lo que te ha apuntado»: alergias, canciones (hasta 3), la boda en una línea («1990 · 36º aniversario en 2026», solo los matrimonios) y si quiere que se guarden sus datos tras el evento. Solo se ve; al pie, «¿Algo no está bien? Díselo a tu colaborador». Nunca el año de nacimiento (es la llave de la puerta), ni el email ni el teléfono.",
+      "Necesita el SQL «v85.1-tablon-lo-apuntado»: hasta subirlo, el apartado no sale.",
+    ],
+  },
+  {
     version: "85",
     cambios: [
       "Lista de invitados, filtro «Datos»: además de «Completos» y «Por recopilar», «Sin email», «Sin tel.», «Sin alerg.» y «Sin año». El email y el teléfono, solo de 16 en adelante (a quien se le piden); las alergias faltan si no están contestadas («No» ya es respuesta). Se combinan con los demás: «Confirmado» + «Sin email» dice en «Mostrando» cuántos confirmados de 16 en adelante no lo tienen, y quiénes.",

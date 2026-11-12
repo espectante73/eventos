@@ -26,6 +26,7 @@ import { rondasTablon } from "../lib/rondasTablon";
 import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta } from "../lib/fotosFiesta";
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 import { TarjetaNoticia, CabeceraNoticia, CuerpoZonas } from "./NoticiaTablon";
+import { RegistroTablon } from "./RegistroTablon";
 import { tituloZonas } from "../lib/zonasTablon";
 
 const BUCKET_MUSICA = "musica-ambiental";
@@ -658,6 +659,9 @@ export function VistaTablon({ token }) {
                   </EnlaceTexto>
                 </p>
               )}
+              {/* «Lo que te ha apuntado» (v85.1): plegado, y abierto solo él
+                  o una novedad, como todo en el tablón. */}
+              <RegistroTablon yo={yo} evento={evento} abierta={idAbierto === "registro"} onAlternar={() => alternar("registro")} />
             </div>
           </div>
         )}
