@@ -15,6 +15,7 @@ import {
   calcularEdad,
   edadPromedio,
   importeEsperadoInvitado,
+  previstoARecoger,
   resolverColaborador,
   fichaCerradaAlColaborador,
   parseImport,
@@ -377,5 +378,32 @@ describe("cuentaLlegadas", () => {
   });
   it("en Modo Pruebas, sin mirar el pago", () => {
     expect(cuentaLlegadas(lista, { modoPruebasActivo: true })).toEqual({ esperados: 3, yaEstan: 1, faltan: 2 });
+  });
+});
+
+// v84.8 (él): la cantidad final que se debería recoger.
+describe("previstoARecoger", () => {
+  const evento = { fecha: "2026-12-11", precioAdulto: "50", precioNino: "25", edadNinoDesde: "2", edadNinoHasta: "12" };
+  const lista = [
+    { id: "1", confirmado: true, anioNacimiento: "1985" }, // adulto: 50
+    { id: "2", confirmado: true, anioNacimiento: "2020" }, // niño: 25
+    { id: "3", confirmado: true, anioNacimiento: "2025" }, // bebé: 0
+    { id: "4", confirmado: true, anioNacimiento: "1980", zona: "DJ" }, // el DJ: 0
+    { id: "5", confirmado: false, anioNacimiento: "2020" }, // sin confirmar: como adulto, 50
+    { id: "6", confirmado: false }, // sin confirmar: 50
+    { id: "7", confirmado: false, noAsiste: true, anioNacimiento: "1985" }, // no asiste: fuera
+  ];
+
+  it("confirmados con su edad, y los sin confirmar todos como adultos; «No asiste», fuera", () => {
+    expect(previstoARecoger(lista, evento)).toEqual({ total: 175, deConfirmados: 75, deSinConfirmar: 100, sinConfirmar: 2 });
+  });
+
+  it("lo de los confirmados es lo mismo que suman importeEsperadoInvitado de cada uno", () => {
+    const suma = lista.filter((g) => g.confirmado).reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
+    expect(previstoARecoger(lista, evento).deConfirmados).toBe(suma);
+  });
+
+  it("sin precio puesto, todo a 0", () => {
+    expect(previstoARecoger(lista, { fecha: "2026-12-11" }).total).toBe(0);
   });
 });

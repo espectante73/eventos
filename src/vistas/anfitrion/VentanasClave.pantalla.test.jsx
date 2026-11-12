@@ -12,6 +12,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { dibujarYSoltar, montar } from "../../pruebas/dibujar";
 import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
+import { euros } from "../../lib/formato";
 
 vi.mock("../../lib/cronograma", async (original) => ({
   ...(await original()),
@@ -118,5 +119,17 @@ describe("Contabilidad se puede dibujar", () => {
       if (boton) expect(() => vista.pulsar(boton)).not.toThrow();
       vista.desmontar();
     }
+  });
+  // v84.8 (él): la cantidad final, con los sin confirmar como adultos; y sin
+  // el texto de explicación al pie, que quitó por lioso.
+  it("el Resumen dice lo previsto a recoger: confirmados con su edad y sin confirmar como adultos", () => {
+    const conPendiente = [...invitados, { id: "g4", nombre: "Ana", apellido: "Sierra", grupoFamiliar: "Sierra01", confirmado: false, anioNacimiento: "2018" }];
+    const vista = montar(<VentanaCuentas data={{ ...data, invitados: conPendiente }} onCerrar={() => {}} />);
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Resumen")));
+    const texto = vista.contenedor.textContent;
+    // 45 + 45 + 20 (la niña, con su edad) + 45 (sin confirmar, como adulta).
+    expect(texto).toContain(`${euros(155)}Previsto a recoger`);
+    expect(texto).not.toContain("Lo que entra");
+    vista.desmontar();
   });
 });

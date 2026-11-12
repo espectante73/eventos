@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { Mail, Undo2, Calculator, Users, Receipt, Check } from "lucide-react";
 import { C, T, OP } from "../../theme";
-import { importeEsperadoInvitado, resolverColaborador } from "../../lib/invitados";
+import { importeEsperadoInvitado, previstoARecoger, resolverColaborador } from "../../lib/invitados";
 import { formatearFecha, ordenarPorApellidoNombre, euros } from "../../lib/formato";
 import { construirAsuntoAcuse, construirHtmlAcuse } from "../../lib/acuseRecogida";
 import { generarPdfAcuse } from "../../lib/acuseImagen";
@@ -66,6 +66,9 @@ export function VentanaCuentas({ data, onCerrar }) {
   // está pagado»): el balance resta todos.
   const totalGastos = sumaGastos(gastos);
   const balance = recaudado - totalGastos;
+  // Lo que se debería recoger al final (v84.8): confirmados con su edad y
+  // los sin confirmar como adultos.
+  const previsto = previstoARecoger(invitados, evento).total;
 
   // Invitados confirmados y ya pagados de un colaborador — es tanto el
   // desglose del acuse como la base del importe total a confirmar.
@@ -208,7 +211,7 @@ export function VentanaCuentas({ data, onCerrar }) {
         abierta={seccionAbierta === "resumen"}
         onAlternar={() => alternar("resumen")}
       >
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 mt-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
         <div className="p-2 rounded text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.ink }}>
             {euros(recaudado)}
@@ -244,13 +247,17 @@ export function VentanaCuentas({ data, onCerrar }) {
             Balance (recaudado − gastos)
           </div>
         </div>
+        {/* La cantidad final (v84.8), a todo el ancho, al cierre. Sin texto
+            de explicación al pie: él lo quitó por lioso (v84.8). */}
+        <div className="p-2 rounded text-center col-span-2 sm:col-span-4" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
+          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.ink }}>
+            {euros(previsto)}
+          </div>
+          <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
+            Previsto a recoger
+          </div>
+        </div>
       </div>
-      {/* La explicación, al pie de su sección (norma de la app). */}
-      <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-        "Lo que entra" se calcula solo (pagos de invitados confirmados). "Lo que sale"
-        son los gastos que añadas en Gastos — incluye también los costes de la propia app
-        (dominio, suscripciones...), no solo proveedores de la boda.
-      </p>
       </SeccionPlegable>
 
       <SeccionPlegable

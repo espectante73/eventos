@@ -278,6 +278,18 @@ export function importeEsperadoInvitado(g, evento) {
   return precioAdulto;
 }
 
+// Lo que se debería recoger en total (él, v84.8, en Contabilidad): los
+// confirmados con su edad (importeEsperadoInvitado) y los sin confirmar
+// TODOS como adultos —él: «suponiendo que sean adultos»; es la cifra más
+// alta—. Los de «No asiste», fuera (cuentaConfirmacion); el DJ, a 0.
+export function previstoARecoger(invitados = [], evento) {
+  const precioAdulto = parsePrecio(evento?.precioAdulto);
+  const sinConfirmar = invitados.filter((g) => !g.confirmado && !g.noAsiste);
+  const deConfirmados = invitados.filter((g) => g.confirmado).reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
+  const deSinConfirmar = sinConfirmar.reduce((s, g) => s + (esDj(g) ? 0 : precioAdulto), 0);
+  return { total: deConfirmados + deSinConfirmar, deConfirmados, deSinConfirmar, sinConfirmar: sinConfirmar.length };
+}
+
 // Una familia recibe la invitación cuando todos sus confirmados han pagado
 // y tienen mesa. En Modo Pruebas basta con un confirmado.
 export function familiaListaParaInvitacion(confirmados, evento) {

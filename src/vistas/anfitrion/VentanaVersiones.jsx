@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "84.8",
+    cambios: [
+      "Contabilidad → Resumen: nueva casilla «Previsto a recoger», a todo el ancho. Suma lo de los confirmados con su edad (lo mismo que Recaudado + Pendiente de cobro) y los sin confirmar como si fueran todos adultos, la cifra más alta. Los de «No asiste» no cuentan; el DJ, a 0 €.",
+      "Fuera el texto de explicación del pie del Resumen («Lo que entra… Lo que sale…»): lioso. Si hace falta alguna aclaración, se añadirá.",
+    ],
+  },
+  {
     version: "84.7",
     cambios: [
       "«Añadir» (Invitados) busca también a los que ya están en la lista, confirmados o no: arriba, «Buscar en la lista». Al elegir a uno, la ventana pasa a «Editar invitado» con sus datos puestos; se toca solo lo que falta y «Guardar» cambia solo eso, con las mismas reglas que la Lista (cambio de familia avisado, confirmar le sienta con su familia). La ✕ vuelve a «Nuevo invitado»; con algo a medio escribir, pregunta antes.",
