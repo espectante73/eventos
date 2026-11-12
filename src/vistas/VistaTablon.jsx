@@ -9,7 +9,7 @@
 // hay sesión, nada que resolver — solo un token de solo lectura. App.jsx
 // la monta ANTES de tocar nada de sesión/login en cuanto detecta
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
-import { useState, useEffect, useCallback, useRef } from "react";
+import { Fragment, useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, MapPin, Lock, Music, Pause, ArrowLeft, User, Check } from "lucide-react";
 import { C, inputStyle, OP, S, T, FONDO_VERDE, DORADO, conAlfa } from "../theme";
 import { supabase } from "../supabaseClient";
@@ -664,8 +664,8 @@ export function VistaTablon({ token }) {
             {rondas && (
               <ul className="mt-4 pt-3 flex flex-col gap-1.5" style={{ borderTop: `1px solid ${conAlfa(C.gold, 0.4)}` }}>
                 {rondas.map((r) => (
+                  <Fragment key={r.id}>
                   <li
-                    key={r.id}
                     data-ronda={r.id}
                     data-estado={r.estado}
                     className="flex items-center justify-between gap-2"
@@ -683,6 +683,15 @@ export function VistaTablon({ token }) {
                       </span>
                     )}
                   </li>
+                  {/* «Comprueba tus datos» (v85.2, él), plegado justo debajo
+                      de su ronda: «Datos» no sale dos veces por separado. Una
+                      sola cosa abierta, con las novedades. */}
+                  {r.id === "datos" && (
+                    <li className="pl-6">
+                      <RegistroTablon yo={yo} evento={evento} abierta={idAbierto === "registro"} onAlternar={() => alternar("registro")} />
+                    </li>
+                  )}
+                  </Fragment>
                 ))}
               </ul>
             )}
@@ -718,9 +727,6 @@ export function VistaTablon({ token }) {
                   </EnlaceTexto>
                 </p>
               )}
-              {/* «Lo que te ha apuntado» (v85.1): plegado, y abierto solo él
-                  o una novedad, como todo en el tablón. */}
-              <RegistroTablon yo={yo} evento={evento} abierta={idAbierto === "registro"} onAlternar={() => alternar("registro")} />
             </div>
           </div>
         )}

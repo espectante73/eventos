@@ -1,5 +1,6 @@
-// «Comprueba tus datos» (él, v85.1-85.2): plegado dentro de la tarjeta
-// dorada «Tu colaborador» del tablón. Lo que su colaborador le apuntó en el
+// «Comprueba tus datos» (él, v85.1-85.2): plegado en el recuadro verde del
+// tablón, justo debajo de la ronda «Datos» (él: «datos aparece dos veces»;
+// antes iba en la tarjeta de su colaborador). Lo que su colaborador le apuntó en el
 // formulario, una línea cada cosa (norma 6), para que lo vea y avise si
 // algo está mal. Solo se ve. Las reglas de qué se enseña, en
 // lib/registroTablon.js; aparte de VistaTablon para poder dibujarlo en
@@ -20,11 +21,11 @@ export function RegistroTablon({ yo, evento, abierta, onAlternar }) {
   const registro = registroDelTablon(yo, evento);
   if (!registro) return null;
   return (
-    // Sobre el dorado de la tarjeta, el rótulo en verde, como el formulario
-    // del colaborador (.formulario-dorado): en su dorado de siempre no se leía.
-    <div className="mt-2 formulario-dorado">
+    // Sobre el verde: el rótulo en su dorado de siempre y los datos en
+    // blanco, como las rondas de encima.
+    <div>
       <SeccionPlegable sencilla titulo="Comprueba tus datos" abierta={abierta} onAlternar={onAlternar}>
-        <div className="space-y-1 text-sm" style={{ color: C.ink }}>
+        <div className="space-y-1 text-sm pb-1" style={{ color: C.blanco }}>
           {/* Su frase (él, v85.2). Si es su propio colaborador, se corrige él. */}
           <p className="pb-1">
             {yo.colaboradorEsYo

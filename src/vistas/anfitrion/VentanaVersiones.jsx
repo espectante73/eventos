@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "85.3",
+    cambios: [
+      "Tablón: «Comprueba tus datos» pasa de la tarjeta de su colaborador al recuadro verde, plegado justo debajo de la ronda «Datos», para que «Datos» no salga dos veces por separado. El rótulo en dorado y los datos en blanco, como las rondas.",
+    ],
+  },
+  {
     version: "85.2",
     cambios: [
       "Formulario del colaborador: en la fila de cada invitado con teléfono, el auricular y, a su derecha, WhatsApp, también con la familia pagada (la ficha ya no se abría y no se llegaba a los mensajes). Mientras su menú está abierto, el recuadro de esa persona se pone dorado: así se ve a quién va el mensaje.",
