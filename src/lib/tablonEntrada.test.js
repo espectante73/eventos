@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { entrarTablon, respuestaTablon, anioDeRespuesta, NO_ENCONTRADO, SIN_ANIO } from "./tablonEntrada";
+import { entrarTablon, respuestaTablon, anioDeRespuesta, mismaPersonaEnRespuesta, NO_ENCONTRADO, SIN_ANIO } from "./tablonEntrada";
 
 // Un servidor de mentira: qué respuestas valen y si a ese nombre le falta el año.
 const servidor = ({ valen = [], faltaAnio = false }) => {
@@ -41,5 +41,17 @@ describe("la entrada al tablón, con el año (v70)", () => {
   it("mientras el servidor no exige el año, aún entra con el nombre", async () => {
     const s = servidor({ valen: ["Medina Ana"] });
     expect(await entrarTablon(s, "t", "Medina Ana", "1975")).toEqual({ respuesta: "Medina Ana" });
+  });
+});
+
+// v85.2: el enlace personal y la respuesta guardada en el móvil.
+describe("mismaPersonaEnRespuesta", () => {
+  it("la misma persona aunque cambien mayúsculas, tildes, comas o el año guardado", () => {
+    expect(mismaPersonaEnRespuesta("Pacheco Ana 1985", "Pacheco Ana")).toBe(true);
+    expect(mismaPersonaEnRespuesta("pacheco, ána 1985", "Pacheco Ana")).toBe(true);
+  });
+  it("otra persona de la familia, no; y sin nombre en el enlace, nunca", () => {
+    expect(mismaPersonaEnRespuesta("Pacheco Omar 1983", "Pacheco Ana")).toBe(false);
+    expect(mismaPersonaEnRespuesta("", "")).toBe(false);
   });
 });

@@ -155,10 +155,12 @@ describe("el tablón: quién ha entrado y su colaborador", () => {
   // v85.1 (él): «Lo que te ha apuntado». Lo justo, y nunca la llave ni lo
   // que se podría ir sacando con una puerta que no es contraseña.
   it("lo que le apuntó su colaborador, pero nunca el año de nacimiento, el email ni el teléfono", () => {
-    for (const clave of ["'alergias'", "'cancion'", "'sinCancion'", "'conservarDatos'", "'anioBoda'"]) expect(f).toContain(clave);
+    for (const clave of ["'alergias'", "'cancion'", "'sinCancion'", "'conservarDatos'", "'anioBoda'", "'tieneEmail'"]) expect(f).toContain(clave);
     expect(f).toContain(`when y."rolFamiliar" in ('esposo', 'esposa') then y."anioBoda"`);
-    for (const nunca of ["'anioNacimiento'", "'email'", "'telefono'", 'y."email"', 'y."telefono"']) expect(f).not.toContain(nunca);
-    expect(f).not.toMatch(/'\w+',\s*y\."anioNacimiento"/);
+    // Del email, solo si lo dio (v85.2): sí o no, nunca la dirección.
+    expect(f).toContain(`'tieneEmail', coalesce(trim(y."email"), '') <> ''`);
+    for (const nunca of ["'anioNacimiento'", "'email'", "'telefono'", 'y."telefono"']) expect(f).not.toContain(nunca);
+    expect(f).not.toMatch(/'\w+',\s*y\."(anioNacimiento|email|telefono)"/);
   });
   it("su nombre como en la lista, su colaborador aunque sea él mismo, y si es colaborador", () => {
     expect(f).toContain(`'nombre', y."apellido" || ', ' || y."nombre"`);
@@ -707,7 +709,8 @@ describe("el teléfono del invitado", () => {
   });
 
   it("puede ir vacío: reponer una foto del Deshacer de antes no falla", () => {
-    expect(sql).toMatch(/"telefono" text DEFAULT ''::text\n\);/);
+    // Sin "not null" (desde la v85.2 ya no es la última columna).
+    expect(sql).toMatch(/"telefono" text DEFAULT ''::text,?\n/);
   });
 });
 
@@ -872,5 +875,28 @@ describe("la acreditación por QR (v83.2)", () => {
 
   it("sin «select … into»: el editor de Supabase las cortaría", () => {
     for (const f of ["qr_codigo_familia", "acreditar_familia", "acreditar_marcar"]) expect(cuerpoDe(f)).not.toMatch(/select[^;]*\binto\s+v_/i);
+  });
+});
+
+// v85.2 (él): el enlace personal al tablón.
+describe("el enlace personal al tablón", () => {
+  const f = cuerpoDe("tablon_por_clave");
+  it("cada ficha tiene su clave, distinta, puesta por la base y sin «not null»", () => {
+    expect(sql).toContain(`"claveTablon" text DEFAULT substr(replace((gen_random_uuid())::text, '-'::text, ''::text), 1, 16)\n);`);
+    expect(sql).toContain('ADD CONSTRAINT invitados_clave_tablon_key UNIQUE ("claveTablon")');
+    expect(sql).toContain("CREATE TRIGGER invitados_clave_tablon BEFORE INSERT ON public.invitados");
+    expect(cuerpoDe("trg_clave_tablon")).toContain(`if coalesce(new."claveTablon", '') = '' then`);
+  });
+  it("con la llave del tablón, la clave, y solo de quien la puerta deja entrar; nunca el año", () => {
+    expect(f).toContain('p_token = (select "token" from tablon_secreto limit 1)');
+    expect(f).toContain(`i."claveTablon" = p_clave`);
+    expect(f).toContain(`coalesce(p_clave, '') <> ''`);
+    expect(f).toContain('i."confirmado" = true');
+    expect(f).toContain('i."excluidoTablon" = false');
+    expect(f).not.toContain("anioNacimiento");
+  });
+  it("su mensaje de WhatsApp, editable y con su historial como los demás", () => {
+    expect(sql).toContain('"plantillaWhatsappEnlace" text,');
+    expect(cuerpoDe("trg_historial_plantillas_email")).toContain(`registrar_historial_texto('plantilla', null, 'plantillaWhatsappEnlace', coalesce(old."plantillaWhatsappEnlace", ''))`);
   });
 });

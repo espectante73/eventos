@@ -14,7 +14,8 @@ import { Calendar, Clock, MapPin, Lock, Music, Pause, ArrowLeft, User, Check } f
 import { C, inputStyle, OP, S, T, FONDO_VERDE, DORADO, conAlfa } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento, opcionesAnios } from "../lib/formato";
-import { entrarTablon, anioDeRespuesta } from "../lib/tablonEntrada";
+import { entrarTablon, anioDeRespuesta, mismaPersonaEnRespuesta, NO_ENCONTRADO, ANIO_NO_COINCIDE } from "../lib/tablonEntrada";
+import { getClaveTablonFromUrl } from "../lib/url";
 import { InfoItem } from "../components/Portada";
 import { Boton, EnlaceTexto } from "../components/Boton";
 import { NotaPrivacidad } from "../components/NotaPrivacidad";
@@ -94,6 +95,9 @@ export function VistaTablon({ token }) {
   // Novedades (persistPreguntaTablon), así que igualmente se carga.
   const [pregunta, setPregunta] = useState("Apellido familiar y nombre, tal como los tiene tu colaborador");
   const [respuestaEscrita, setRespuestaEscrita] = useState("");
+  // Quién es, si ha entrado con su enlace personal (v85.2): { nombre
+  // «Apellido, Nombre», respuesta «Apellido Nombre» }, o null.
+  const [personaEnlace, setPersonaEnlace] = useState(null);
   // El año de nacimiento, la otra mitad de la entrada (v70), y los años que
   // ofrece su desplegable (los de la lista, sin decir de quién).
   const [anioEscrito, setAnioEscrito] = useState("");
@@ -226,6 +230,21 @@ export function VistaTablon({ token }) {
         // Almacenamiento no disponible (navegación privada estricta...)
         // -- se pedirá la respuesta cada vez, sin más.
       }
+      // El enlace personal (v85.2, ?tablon=…&yo=<clave>): la base dice de
+      // quién es, y la puerta solo pide el año. La respuesta guardada en este
+      // móvil vale si es de esa misma persona; si es de otro de la familia,
+      // se pregunta. Sin la función en la base (o con una clave que ya no
+      // vale), la puerta de siempre.
+      const clave = getClaveTablonFromUrl();
+      if (clave) {
+        const { data: persona } = await supabase.rpc("tablon_por_clave", { p_token: token, p_clave: clave });
+        if (cancelado) return;
+        if (persona?.respuesta) {
+          setPersonaEnlace(persona);
+          setRespuestaEscrita(persona.respuesta);
+          if (!mismaPersonaEnRespuesta(guardada, persona.respuesta)) guardada = "";
+        }
+      }
       if (guardada) {
         const { data: sigueValiendo } = await supabase.rpc("tablon_verificar_respuesta", {
           p_token: token,
@@ -250,6 +269,23 @@ export function VistaTablon({ token }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- claveLocalStorage se deriva de `token`, no hace falta repetirlo
   }, [token, cargarContenido]);
+
+  // Su propia ficha de instalación (v85.2, él: «crea un acceso directo en
+  // el escritorio de tu móvil»). La de la app empieza en la portada, y el
+  // acceso directo abría la pantalla de entrada; esta empieza en ESTE
+  // tablón, con su enlace personal si lo trae (api/_manifestTablon.js).
+  useEffect(() => {
+    const ficha = document.querySelector('link[rel="manifest"]');
+    const titulo = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    const antes = { ficha: ficha?.getAttribute("href"), titulo: titulo?.getAttribute("content") };
+    const clave = getClaveTablonFromUrl();
+    ficha?.setAttribute("href", `/api/manifest-tablon?t=${encodeURIComponent(token)}${clave ? `&yo=${encodeURIComponent(clave)}` : ""}`);
+    titulo?.setAttribute("content", "Tablón");
+    return () => {
+      if (antes.ficha) ficha?.setAttribute("href", antes.ficha);
+      if (antes.titulo) titulo?.setAttribute("content", antes.titulo);
+    };
+  }, [token]);
 
   // Refresco periódico -- solo tiene sentido una vez desbloqueado (antes
   // de eso no hay nada real que refrescar).
@@ -277,7 +313,8 @@ export function VistaTablon({ token }) {
     const { respuesta, aviso: motivo } = await entrarTablon(supabase, token, respuestaEscrita, anioEscrito);
     setComprobando(false);
     if (motivo) {
-      setErrorRespuesta(motivo);
+      // Con el enlace personal el nombre lo pone la app: solo puede ser el año.
+      setErrorRespuesta(personaEnlace && motivo === NO_ENCONTRADO ? ANIO_NO_COINCIDE : motivo);
       return;
     }
     try {
@@ -377,29 +414,33 @@ export function VistaTablon({ token }) {
         >
           <div className="flex items-center gap-2 mb-3" style={{ color: C.gold }}>
             <Lock size={18} />
-            <h1 className="text-lg" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}>
-              Antes de entrar…
+            <h1 className="text-lg min-w-0 truncate" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}>
+              {personaEnlace ? `Hola, ${personaEnlace.nombre}` : "Antes de entrar…"}
             </h1>
           </div>
           <p className="text-sm mb-3" style={{ color: C.charcoal }}>
-            {pregunta}
+            {personaEnlace ? "Para entrar, elige tu año de nacimiento." : pregunta}
           </p>
           {/* Apellido y nombre, y el año al lado, en la misma línea
-              (norma 6), en su desplegable sin teclado (v70). */}
+              (norma 6), en su desplegable sin teclado (v70). Con el enlace
+              personal (v85.2), el nombre ya lo sabe la app: solo el año. */}
           <div className="flex items-center gap-2">
-            <input
-              autoFocus
-              value={respuestaEscrita}
-              onChange={(e) => setRespuestaEscrita(e.target.value)}
-              placeholder="Ej.: Apellido Nombre"
-              className="flex-1 min-w-0"
-              style={{ ...inputStyle, height: 42 }}
-              required
-            />
+            {!personaEnlace && (
+              <input
+                autoFocus
+                value={respuestaEscrita}
+                onChange={(e) => setRespuestaEscrita(e.target.value)}
+                placeholder="Ej.: Apellido Nombre"
+                className="flex-1 min-w-0"
+                style={{ ...inputStyle, height: 42 }}
+                required
+              />
+            )}
             <select
               value={anioEscrito}
               onChange={(e) => setAnioEscrito(e.target.value)}
               aria-label="Tu año de nacimiento"
+              className={personaEnlace ? "flex-1 min-w-0" : undefined}
               style={{ ...inputStyle, height: 42 }}
               required
             >
@@ -417,9 +458,12 @@ export function VistaTablon({ token }) {
               consta en la invitación), no cualquier otro apellido que la
               persona pueda tener -- si no, no coincidirá nunca con lo
               guardado en la lista de invitados. */}
-          <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            El apellido debe ser el familiar, el mismo que tiene tu colaborador en su formulario, no otro apellido que tengas.
-          </p>
+          {!personaEnlace && (
+            <p className="text-xs mb-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
+              El apellido debe ser el familiar, el mismo que tiene tu colaborador en su formulario, no otro apellido que tengas.
+            </p>
+          )}
+          {personaEnlace && <div className="mb-2" />}
           {errorRespuesta && (
             <p className="text-sm mb-2" style={{ color: C.wax }}>
               {errorRespuesta}
@@ -433,6 +477,21 @@ export function VistaTablon({ token }) {
           >
             {comprobando ? "Comprobando…" : "Entrar"}
           </button>
+          {/* Un enlace que ha llegado a otro (un móvil de la familia): la
+              puerta de siempre, con su nombre. */}
+          {personaEnlace && (
+            <div className="flex justify-end zurdo:justify-start mt-2">
+              <EnlaceTexto
+                onClick={() => {
+                  setPersonaEnlace(null);
+                  setRespuestaEscrita("");
+                  setErrorRespuesta("");
+                }}
+              >
+                ¿No eres tú? Entra con tu nombre
+              </EnlaceTexto>
+            </div>
+          )}
         </form>
         </div>
       </div>

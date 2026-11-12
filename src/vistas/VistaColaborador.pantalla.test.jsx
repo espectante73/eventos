@@ -888,3 +888,33 @@ describe("«Lo nuevo» arriba del Inicio (v81.9)", () => {
     vista.desmontar();
   });
 });
+
+// v85.2 (él): con la familia pagada la ficha ya no se abre; en la fila, el
+// teléfono y a su derecha WhatsApp, con su enlace personal al tablón, y la
+// fila de esa persona se marca mientras su menú está abierto.
+it("la fila lleva teléfono y WhatsApp; su menú trae «Enlace tablón» y marca a quién va", () => {
+  const conTelefono = invitados.map((g) => (g.id === "g1" ? { ...g, pagado: true, telefono: "+34612345678", claveTablon: "k7q2xw9a" } : g));
+  const vista = montar(
+    <VistaColaborador
+      data={{ ...data, invitados: conTelefono, tokenTablon: "11111111-2222-3333-4444-555555555555" }}
+      colaboradorId="c1"
+      esAnfitrionOriginal={false}
+      setRol={() => {}}
+      anfitrionToken={null}
+      onCerrarSesion={() => {}}
+    />
+  );
+  abrirPorMenu(vista);
+  // Su familia, ya cerrada: se despliega para ver a cada uno.
+  vista.pulsar([...document.body.querySelectorAll("button")].find((b) => /^Barrios\s*\d/.test(b.textContent.trim())));
+  const llamar = document.body.querySelector('a[aria-label="Llamar a Barrios, Jacob"]');
+  const whatsapp = document.body.querySelector('button[aria-label="Escribir a Barrios, Jacob por WhatsApp"]');
+  expect(llamar).toBeTruthy();
+  expect(whatsapp).toBeTruthy();
+  // A la derecha del teléfono.
+  expect(llamar.compareDocumentPosition(whatsapp) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  vista.pulsar(whatsapp);
+  expect(document.body.textContent).toContain("Enlace tablón");
+  expect(whatsapp.closest("[data-escribiendole]")).toBeTruthy();
+  vista.desmontar();
+});

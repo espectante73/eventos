@@ -2,16 +2,26 @@ import { describe, it, expect } from "vitest";
 import { registroDelTablon } from "./registroTablon";
 
 const evento = { fecha: "2026-12-11" };
-const yo = { nombre: "Pacheco, Ana", alergias: "Gluten", cancion: "Volare — Gipsy Kings\nDespacito", sinCancion: false, conservarDatos: true, anioBoda: "1990" };
+const yo = { nombre: "Pacheco, Ana", anio: "1985", tieneEmail: true, alergias: "Gluten", cancion: "Volare — Gipsy Kings\nDespacito", sinCancion: false, conservarDatos: true, anioBoda: "1990" };
 
 describe("registroDelTablon", () => {
   it("lo que le apuntó su colaborador, en una línea cada cosa", () => {
     expect(registroDelTablon(yo, evento)).toEqual({
+      nombre: "Pacheco, Ana",
       alergias: "Gluten",
       canciones: ["Volare — Gipsy Kings", "Despacito"],
       boda: "1990 · 36º aniversario en 2026",
       conservar: "Sí",
+      email: "Sí",
     });
+  });
+
+  it("el email, Sí o No y solo desde los 16; sin el dato (base sin la v85.2), no sale", () => {
+    expect(registroDelTablon({ ...yo, tieneEmail: false }, evento).email).toBe("No");
+    expect(registroDelTablon({ ...yo, anio: "2015", tieneEmail: false }, evento).email).toBeNull();
+    const sinDato = { ...yo };
+    delete sinDato.tieneEmail;
+    expect(registroDelTablon(sinDato, evento).email).toBeNull();
   });
 
   it("sin el SQL de la v85.1 la base no manda nada de esto: no se enseña", () => {

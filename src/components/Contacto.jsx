@@ -3,8 +3,9 @@
 // RELLENO, y el número, en negrita, los dos en dorado oscuro (champán
 // tinta), del lado del pulgar; WhatsApp, su icono SÓLIDO en su verde, al
 // otro lado. Llamar es la preferencia: queda al alcance del pulgar.
-import { C, R, T, DEDO } from "../theme";
-import { ClipboardList, Music, Wallet, MessageCircle } from "lucide-react";
+import { useEffect } from "react";
+import { C, R, T, DEDO, DORADO } from "../theme";
+import { ClipboardList, Music, Wallet, MessageCircle, KeyRound } from "lucide-react";
 import { telefonoParaVer, enlaceLlamar, enlaceWhatsApp, enlaceWhatsAppDirecto, abrirWhatsApp } from "../lib/telefono";
 import { esAparatoTactil } from "../lib/mano";
 import { MenuFlotante } from "./MenuFlotante";
@@ -58,54 +59,88 @@ export function BotonLlamar({ telefono, nombre, lado }) {
   );
 }
 
-// Cada mensaje del menú de WhatsApp, con su icono (v82.4).
-const ICONO_MENSAJE = { datos: ClipboardList, musica: Music, pagos: Wallet };
+// Cada mensaje del menú de WhatsApp, con su icono (v82.4). El enlace
+// personal al tablón (v85.2, él), además, con los colores al revés: dorado
+// con letra verde, para que se distinga.
+const ICONO_MENSAJE = { datos: ClipboardList, musica: Music, pagos: Wallet, enlace: KeyRound };
+const ESTILO_MENSAJE = { enlace: { fondo: DORADO.fondo, color: C.ink } };
+
+// El icono de WhatsApp, una sola pieza para la ficha abierta y para la fila
+// de la lista (v85.2, él: «en la misma línea donde está el icono del
+// teléfono cabe el del WhatsApp»; con la familia pagada la ficha ya no se
+// abre y no se llegaba a los mensajes). `mensajes` (v82.4,
+// lib/mensajesWhatsapp.js): si le toca alguno, abre un menú con ellos y
+// «Mensaje libre»; elegido, se abre ya escrito. Sin ninguno, el chat
+// directo: en el móvil, el enlace propio de WhatsApp y en la misma ventana
+// (sin dejar una en blanco al volver, v82.7). `lado`: su cuadrado.
+// `onMenu(abierto)`: avisa al abrir y al cerrar su menú, para que la fila
+// de esa persona se marque y se vea a quién va el mensaje (v85.2, él).
+export function BotonWhatsapp({ telefono, nombre, mensajes = [], lado = DEDO, onMenu }) {
+  const abrir = (texto) => abrirWhatsApp({ telefono, mensaje: texto });
+  const tactil = esAparatoTactil();
+  const caja = { minWidth: lado, minHeight: lado, flexShrink: 0 };
+  if (mensajes.length === 0) {
+    return (
+      <a
+        href={tactil ? enlaceWhatsAppDirecto(telefono) : enlaceWhatsApp(telefono)}
+        {...(tactil ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+        aria-label={`Escribir a ${nombre} por WhatsApp`}
+        title="WhatsApp"
+        className="flex items-center justify-center"
+        style={caja}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <IconoWhatsApp />
+      </a>
+    );
+  }
+  return (
+    <MenuFlotante
+      anchor="bottom-left"
+      opciones={[
+        ...mensajes.map((m) => ({ id: m.id, etiqueta: m.etiqueta, icono: ICONO_MENSAJE[m.id] || MessageCircle, ...ESTILO_MENSAJE[m.id], onClick: () => abrir(m.texto) })),
+        { id: "libre", etiqueta: "Mensaje libre", icono: MessageCircle, onClick: () => abrir("") },
+      ]}
+      render={({ ref, open, toggle }) => (
+        <>
+          <button
+            ref={ref}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggle();
+            }}
+            aria-label={`Escribir a ${nombre} por WhatsApp`}
+            aria-expanded={open}
+            title="WhatsApp: elegir mensaje"
+            className="flex items-center justify-center"
+            style={{ ...caja, background: "none", border: "none", padding: 0 }}
+          >
+            <IconoWhatsApp />
+          </button>
+          <AvisarMenu abierto={open} onMenu={onMenu} />
+        </>
+      )}
+    />
+  );
+}
+
+// El menú vive dentro de MenuFlotante: este hueco le cuenta a la fila si
+// está abierto, sin cambiar nada mientras se dibuja.
+function AvisarMenu({ abierto, onMenu }) {
+  useEffect(() => {
+    onMenu?.(abierto);
+  }, [abierto, onMenu]);
+  return null;
+}
 
 // En la ficha: WhatsApp a un lado y, del lado del pulgar, el auricular y el
 // número (los dos, un solo enlace para llamar). Con la mano izquierda, en
 // espejo: el número pegado al borde y el auricular después.
-// `mensajes` (v82.4, lib/mensajesWhatsapp.js): si le toca alguno, WhatsApp
-// abre un menú con ellos y «Mensaje libre»; elegido, se abre ya escrito.
 export function LineaContacto({ telefono, nombre, mensajes = [] }) {
-  const abrir = (texto) => abrirWhatsApp({ telefono, mensaje: texto });
-  // Sin menú, el chat directo: en el móvil, el enlace propio de WhatsApp y en
-  // la misma ventana (sin dejar una en blanco al volver, v82.7).
-  const tactil = esAparatoTactil();
   return (
     <div className="flex items-center gap-3 px-3 py-1.5 zurdo:flex-row-reverse" style={{ background: C.champanClaro, borderRadius: R.caja }}>
-      {mensajes.length > 0 ? (
-        <MenuFlotante
-          anchor="bottom-left"
-          opciones={[
-            ...mensajes.map((m) => ({ id: m.id, etiqueta: m.etiqueta, icono: ICONO_MENSAJE[m.id] || MessageCircle, onClick: () => abrir(m.texto) })),
-            { id: "libre", etiqueta: "Mensaje libre", icono: MessageCircle, onClick: () => abrir("") },
-          ]}
-          render={({ ref, toggle }) => (
-            <button
-              ref={ref}
-              type="button"
-              onClick={toggle}
-              aria-label={`Escribir a ${nombre} por WhatsApp`}
-              title="WhatsApp: elegir mensaje"
-              className="flex items-center justify-center"
-              style={{ minWidth: DEDO, minHeight: DEDO, background: "none", border: "none", padding: 0 }}
-            >
-              <IconoWhatsApp />
-            </button>
-          )}
-        />
-      ) : (
-        <a
-          href={tactil ? enlaceWhatsAppDirecto(telefono) : enlaceWhatsApp(telefono)}
-          {...(tactil ? {} : { target: "_blank", rel: "noopener noreferrer" })}
-          aria-label={`Escribir a ${nombre} por WhatsApp`}
-          title="WhatsApp"
-          className="flex items-center justify-center"
-          style={{ minWidth: DEDO, minHeight: DEDO }}
-        >
-          <IconoWhatsApp />
-        </a>
-      )}
+      <BotonWhatsapp telefono={telefono} nombre={nombre} mensajes={mensajes} />
       <a
         href={enlaceLlamar(telefono)}
         aria-label={`Llamar a ${nombre}`}

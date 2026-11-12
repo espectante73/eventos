@@ -49,6 +49,23 @@ export function construirEnlaceTablon(urlPublica, token) {
   return `${urlPublica.replace(/\/$/, "")}?tablon=${token}`;
 }
 
+// &yo=<clave> — el enlace PERSONAL al tablón (v85.2, él): el mismo enlace
+// con la clave de una ficha (invitados."claveTablon"). Abre el tablón
+// sabiendo quién es, y solo pide el año. Lo manda su colaborador por
+// WhatsApp; la puerta de siempre sigue abierta.
+export function getClaveTablonFromUrl() {
+  try {
+    return new URLSearchParams(window.location.search).get("yo");
+  } catch (_) {
+    return null;
+  }
+}
+
+export function construirEnlacePersonalTablon(urlPublica, token, clave) {
+  const enlace = construirEnlaceTablon(urlPublica, token);
+  return enlace && clave ? `${enlace}&yo=${encodeURIComponent(clave)}` : "";
+}
+
 // ?dj=<token> — «Canciones para bailar» para el DJ (v81): solo mirar, y
 // además pide la clave que el anfitrión le da por teléfono (VistaDj.jsx).
 export function getTokenDjFromUrl() {

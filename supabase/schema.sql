@@ -95,6 +95,8 @@ CREATE TABLE public.evento (
     "plantillaWhatsappDatos" text,
     "plantillaWhatsappMusica" text,
     "plantillaWhatsappPagos" text,
+    -- Su enlace personal al tablón (v85.2). Lleva {enlace} donde va el enlace.
+    "plantillaWhatsappEnlace" text,
     "enlaceGrupoWhatsapp" text DEFAULT ''::text NOT NULL,
     "cronogramaBloques" jsonb DEFAULT '[{"texto": "Recepción", "duracionMin": 15}, {"texto": "Cóctel", "duracionMin": 30}, {"texto": "Foto 1", "duracionMin": 15}, {"texto": "Mesas", "duracionMin": 15}, {"texto": "Cena", "duracionMin": 90}, {"texto": "Foto 2", "duracionMin": 15}, {"texto": "Postre", "duracionMin": 15}, {"texto": "Baile", "duracionMin": 135}, {"texto": "Final", "duracionMin": 15}]'::jsonb NOT NULL,
     "cronogramaHoraFin" text DEFAULT '23:45'::text NOT NULL,
@@ -194,7 +196,14 @@ CREATE TABLE public.invitados (
     -- por WhatsApp. Opcional, desde los 16 años, como el email. Se guarda
     -- limpio, con el prefijo (+34612345678). Lo ven el anfitrión y el
     -- colaborador de este invitado. Sin "not null".
-    "telefono" text DEFAULT ''::text
+    "telefono" text DEFAULT ''::text,
+    -- La clave de su enlace PERSONAL al tablón (v85.2, él): ?tablon=…&yo=<esta>.
+    -- Abre el tablón sabiendo quién es, y la puerta solo pide el año. La pone
+    -- la base, distinta para cada uno: al crear la columna, a cada ficha que
+    -- ya había (sin tocar ninguna: no salta ningún aviso), y luego a cada
+    -- nueva (trg_clave_tablon, también si una foto de Deshacer la trae
+    -- vacía). Nadie la escribe desde la app. Sin "not null".
+    "claveTablon" text DEFAULT substr(replace((gen_random_uuid())::text, '-'::text, ''::text), 1, 16)
 );
 
 -- Quién ayuda a recoger datos y qué permisos tiene cada uno.
@@ -493,6 +502,9 @@ ALTER TABLE ONLY public.gastos
 
 ALTER TABLE ONLY public.historial_texto
     ADD CONSTRAINT historial_texto_pkey PRIMARY KEY (id);
+
+ALTER TABLE ONLY public.invitados
+    ADD CONSTRAINT invitados_clave_tablon_key UNIQUE ("claveTablon");
 
 ALTER TABLE ONLY public.invitados
     ADD CONSTRAINT invitados_pkey PRIMARY KEY (id);
@@ -3019,6 +3031,24 @@ CREATE FUNCTION public.tablon_invitado(p_token uuid, p_respuesta text) RETURNS S
 $$;
 REVOKE EXECUTE ON FUNCTION public.tablon_invitado(uuid, text) FROM PUBLIC, anon, authenticated;
 
+-- El enlace personal (v85.2, él): con la llave del tablón y la clave de una
+-- ficha, su nombre para la puerta («Hola, Pacheco, Ana») y la respuesta sin
+-- el año, que es lo único que se le pide. Solo de quien la puerta deja
+-- entrar (confirmado y no excluido). Nunca el año: sigue siendo la llave.
+CREATE FUNCTION public.tablon_por_clave(p_token uuid, p_clave text) RETURNS jsonb
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select jsonb_build_object('nombre', i."apellido" || ', ' || i."nombre", 'respuesta', i."apellido" || ' ' || i."nombre")
+  from invitados i
+  where p_token = (select "token" from tablon_secreto limit 1)
+    and coalesce(p_clave, '') <> ''
+    and i."claveTablon" = p_clave
+    and i."confirmado" = true
+    and i."excluidoTablon" = false
+  limit 1;
+$$;
+
 -- La clave de familia de un invitado, igual que claveFamilia en la app.
 CREATE FUNCTION public.clave_familia(p_grupo text, p_apellido text) RETURNS text
     LANGUAGE sql IMMUTABLE
@@ -3333,8 +3363,9 @@ CREATE FUNCTION public.foto_fiesta_quitada(p_ruta text) RETURNS boolean
 --   alergias, cancion, «Lo que te ha apuntado» (v85.1, él): para que vea lo
 --   sinCancion,       que su colaborador le apuntó y avise si algo está mal.
 --   conservarDatos,   anioBoda, solo del esposo o la esposa (null: no es
---   anioBoda          matrimonio). NUNCA el año de nacimiento (es la llave),
---                     ni el email ni el teléfono (la puerta no es una
+--   anioBoda,         matrimonio). tieneEmail (v85.2): si dio email para la
+--   tieneEmail        invitación, sí o no. NUNCA el año de nacimiento (es la
+--                     llave), ni el email ni el teléfono (la puerta no es una
 --                     contraseña: se podrían ir sacando uno a uno).
 CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
@@ -3352,7 +3383,8 @@ CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS 
     'cancion', y."cancion",
     'sinCancion', coalesce(y."sinCancion", false),
     'conservarDatos', coalesce(y."conservarDatos", false),
-    'anioBoda', case when y."rolFamiliar" in ('esposo', 'esposa') then y."anioBoda" end
+    'anioBoda', case when y."rolFamiliar" in ('esposo', 'esposa') then y."anioBoda" end,
+    'tieneEmail', coalesce(trim(y."email"), '') <> ''
   )
   from tablon_invitado(p_token, p_respuesta) y
   left join colaboradores c on c."id" = y."colaboradorId";
@@ -3472,6 +3504,21 @@ begin
     and lower(trim(coalesce(nullif(p."grupoFamiliar", ''), p."apellido", ''))) = v_familia
     and p."anioBoda" is distinct from v_anio;
   return null;
+end;
+$$;
+
+-- Una ficha que entra sin clave del tablón (v85.2) recibe una: las nuevas
+-- ya la traen por defecto, pero una foto de Deshacer anterior a la columna
+-- la trae vacía, y sin ella no habría enlace personal.
+CREATE FUNCTION public.trg_clave_tablon() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if coalesce(new."claveTablon", '') = '' then
+    new."claveTablon" := substr(replace(gen_random_uuid()::text, '-', ''), 1, 16);
+  end if;
+  return new;
 end;
 $$;
 
@@ -3628,6 +3675,9 @@ begin
   if old."plantillaWhatsappPagos" is distinct from new."plantillaWhatsappPagos" then
     perform registrar_historial_texto('plantilla', null, 'plantillaWhatsappPagos', coalesce(old."plantillaWhatsappPagos", ''));
   end if;
+  if old."plantillaWhatsappEnlace" is distinct from new."plantillaWhatsappEnlace" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaWhatsappEnlace', coalesce(old."plantillaWhatsappEnlace", ''));
+  end if;
   return new;
 end;
 $$;
@@ -3691,6 +3741,8 @@ CREATE TRIGGER fotos_familiares_avisar_anfitrion AFTER INSERT OR UPDATE OF url O
 CREATE TRIGGER invitados_anio_boda_pareja AFTER INSERT OR UPDATE OF "anioBoda", "rolFamiliar", "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_igualar_anio_boda_pareja();
 
 CREATE TRIGGER invitados_avisar_anfitrion AFTER UPDATE ON public.invitados REFERENCING OLD TABLE AS viejos NEW TABLE AS nuevos FOR EACH STATEMENT EXECUTE FUNCTION public.trg_avisar_anfitrion_progreso();
+
+CREATE TRIGGER invitados_clave_tablon BEFORE INSERT ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_clave_tablon();
 
 CREATE TRIGGER invitados_invalidar_invitacion AFTER INSERT OR UPDATE OF confirmado, pagado, mesa, "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_invalidar_invitacion_familia();
 

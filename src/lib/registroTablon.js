@@ -1,7 +1,8 @@
-// «Lo que te ha apuntado» (él, v85.1): en el tablón, dentro de la tarjeta
+// «Comprueba tus datos» (él, v85.1-85.2): en el tablón, dentro de la tarjeta
 // «Tu colaborador», lo que su colaborador le apuntó en el formulario, para
 // que lo vea y avise si algo está mal. Solo se ve: se corrige a través del
-// colaborador, como promete la nota de privacidad.
+// colaborador, como promete la nota de privacidad. Con su nombre tal como
+// está registrado y si dio email para la invitación (v85.2).
 //
 // Lo manda tablon_quien_soy. Sin esas claves (la base aún sin el SQL de la
 // v85.1: el cliente va antes, skill sql-supabase, regla 3), null: no se
@@ -9,15 +10,20 @@
 // siempre el mismo que eligió), ni el email ni el teléfono.
 import { cancionesDe } from "./canciones";
 import { anioDelEvento } from "./matrimonios";
+import { pideEmail } from "./invitados";
 
 export function registroDelTablon(yo, evento) {
   if (!yo || !("alergias" in yo)) return null;
   const canciones = cancionesDe(yo.cancion);
   return {
+    nombre: yo.nombre || "",
     alergias: String(yo.alergias || "").trim() || "Sin contestar",
     canciones: canciones.length ? canciones : [yo.sinCancion ? "Prefieres no pedir ninguna" : "Ninguna todavía"],
     boda: lineaBoda(yo.anioBoda, evento),
     conservar: yo.conservarDatos ? "Sí" : "No",
+    // Sí o No, nunca la dirección; solo a quien se le pide (desde los 16,
+    // con el año con el que entró). null: no se enseña.
+    email: "tieneEmail" in yo && pideEmail({ anioNacimiento: yo.anio }, evento) ? (yo.tieneEmail ? "Sí" : "No") : null,
   };
 }
 

@@ -74,7 +74,7 @@ describe("mensajes de WhatsApp por familia (v82.6)", () => {
     expect(rellenar("{nombre}/{importe}/{otro}", { nombre: "A", importe: "5 €" })).toBe("A/5 €/{otro}");
     expect(enLista(["a", "b", "c"])).toBe("a, b y c");
     expect(fechaDelMensaje({ fecha: "2026-12-11", fechaSinConfirmar: true })).toBe("día que se confirme");
-    expect(PLANTILLAS_WHATSAPP.map((p) => p.titulo)).toEqual(["Faltan datos", "Música", "Pagos"]);
+    expect(PLANTILLAS_WHATSAPP.map((p) => p.titulo)).toEqual(["Faltan datos", "Música", "Pagos", "Enlace tablón"]);
   });
 
   it("el enlace lleva el mensaje ya escrito", () => {
@@ -112,5 +112,28 @@ describe("abrir WhatsApp (v82.7): en el móvil, sin dejar una ventana en blanco"
     abrirWhatsApp({ telefono: "612 34 56 78", mensaje: "Hola", win });
     expect(abiertas).toEqual(["https://wa.me/34612345678?text=Hola"]);
     expect(win.location.href).toBe("https://nexuspoint.rsvp/");
+  });
+});
+
+// v85.2 (él): su enlace personal al tablón, con el nombre del evento, el
+// enlace en su sitio y, en otro párrafo, cómo tenerlo a mano.
+describe("el mensaje del enlace personal al tablón", () => {
+  const ana = { id: "a", nombre: "Ana", apellido: "Pacheco", grupoFamiliar: "Pacheco01", confirmado: true, pagado: true, cancion: "Volare" };
+  const evento = { nombre: "Las Bodas de todos.", fecha: "2026-12-11" };
+  const enlace = "https://nexuspoint.rsvp?tablon=t&yo=k7";
+  const delEnlace = (ev = evento) => mensajesWhatsapp({ invitado: ana, familia: [ana], evento: ev, enlace }).find((m) => m.id === "enlace");
+
+  it("sale solo con enlace; con el nombre del evento sin el punto, el enlace y el párrafo de debajo", () => {
+    expect(mensajesWhatsapp({ invitado: ana, familia: [ana], evento }).some((m) => m.id === "enlace")).toBe(false);
+    const { etiqueta, texto } = delEnlace();
+    expect(etiqueta).toBe("Enlace tablón");
+    expect(texto).toMatch(/^PACHECO, Ana: este es tu enlace personal al tablón de «Las Bodas de todos»\. Es solo tuyo/);
+    expect(texto).toContain(`no lo reenvíes.\n${enlace}\n\nPor favor, para que puedas acceder`);
+    expect(texto).toContain("pide ayuda a alguien que se maneje con los dispositivos electrónicos.");
+  });
+
+  it("si su texto editado ya no lleva {enlace}, el enlace va al final: nunca sale sin él", () => {
+    const { texto } = delEnlace({ ...evento, plantillaWhatsappEnlace: "aquí tienes el tablón." });
+    expect(texto).toBe(`PACHECO, Ana: aquí tienes el tablón.\n${enlace}`);
   });
 });

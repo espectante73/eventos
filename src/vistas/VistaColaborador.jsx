@@ -15,7 +15,7 @@ import { CampoCancion } from "../components/CampoCancion";
 import { estadoImpago, textoAvisoImpago, PLAZOS_MAX } from "../lib/impagos";
 import { marcarSinGuardar, haySinGuardar, PREGUNTA_DESCARTAR } from "../lib/cambiosSinGuardar";
 import { requisitosActivos } from "../lib/modoPruebas";
-import { construirEnlaceTablon } from "../lib/url";
+import { construirEnlaceTablon, construirEnlacePersonalTablon } from "../lib/url";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
@@ -25,7 +25,7 @@ import { C, R, T, OP, DORADO, conAlfa } from "../theme";
 import { URL_REPOSITORIO } from "../constants";
 import { Stamp, BarraCompacta, UserSolido } from "../components/Widgets";
 import { SectionTitle, TextInput, ANCHO_ANIO } from "../components/Formulario";
-import { LineaContacto, BotonLlamar } from "../components/Contacto";
+import { LineaContacto, BotonLlamar, BotonWhatsapp } from "../components/Contacto";
 import { mensajesWhatsapp } from "../lib/mensajesWhatsapp";
 import { AvisosMovil } from "../components/AvisosMovil";
 import { AvisoLoNuevo } from "../components/AvisoLoNuevo";
@@ -889,14 +889,19 @@ function FilaInvitadoColaborador({
   // latido (usuario, 2026-09-19: primero "suave", luego "más rojo, más
   // latido"). Abierta no late: ya se está rellenando.
   const incompleta = !abierto && faltanDatos;
+  // Con su menú de WhatsApp abierto, su recuadro se pone dorado, el de «lo
+  // elegido» en toda la app (v85.2, él: con las filas tan juntas, que se vea
+  // a quién va el mensaje).
+  const [escribiendole, setEscribiendole] = useState(false);
 
   return (
     <div
-      className={`rounded ${oculta ? "hidden sm:block" : ""}${incompleta ? " ficha-incompleta" : ""}`}
+      className={`rounded ${oculta ? "hidden sm:block" : ""}${incompleta && !escribiendole ? " ficha-incompleta" : ""}`}
+      data-escribiendole={escribiendole || undefined}
       style={{
         // El tono de reposo del latido (.ficha-incompleta en index.css).
-        background: incompleta ? C.incompletaFondo : C.blanco,
-        border: `1px solid ${incompleta ? conAlfa(C.peligro, 0.7) : C.line}`,
+        background: escribiendole ? DORADO.fondo : incompleta ? C.incompletaFondo : C.blanco,
+        border: `1px solid ${escribiendole ? C.gold : incompleta ? conAlfa(C.peligro, 0.7) : C.line}`,
       }}
     >
       <div className="flex items-center gap-2 p-3 text-sm">
@@ -954,9 +959,13 @@ function FilaInvitadoColaborador({
             )}
           </span>
         </button>
-        {/* Llamarle sin abrir la ficha (él, v78): el auricular, del tamaño
-            del círculo de la llegada, justo antes de él. */}
+        {/* Escribirle y llamarle sin abrir la ficha (él, v78 y v85.2): con
+            la familia pagada la ficha ya no se abre, y sin esto no se
+            llegaba a sus mensajes de WhatsApp. Del tamaño del círculo de la
+            llegada, justo antes de él. */}
+        {/* El auricular primero y WhatsApp a su derecha (él, v85.2). */}
         {g.telefono && <BotonLlamar telefono={g.telefono} nombre={nombreCompleto(g)} lado={ALTO_BOTON_FILA} />}
+        {g.telefono && <BotonWhatsapp telefono={g.telefono} nombre={nombreCompleto(g)} mensajes={mensajesDe ? mensajesDe(g) : []} lado={ALTO_BOTON_FILA} onMenu={setEscribiendole} />}
         {/* El check de llegada cierra la fila, SIEMPRE en la misma columna
             (él, 2026-09-24) -- así se marca sin desplegar el formulario,
             que es como se va a usar el día del evento: de pie, recibiendo
@@ -1377,7 +1386,15 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           fotoBoda: { hay: Boolean(fotosFamiliares?.[m.grupoFamiliar || ""]), sinFoto: Boolean(fotosSinBoda?.[m.grupoFamiliar || ""]) },
         }),
       importeDe: (m) => importeEsperadoInvitado(m, evento),
+      enlace: enlacePersonalDe(g),
     });
+  // Su enlace personal al tablón (v85.2): solo a quien la puerta deja
+  // entrar (confirmado, sin «No asiste», no excluido) y con su clave, que
+  // pone la base (invitados."claveTablon").
+  function enlacePersonalDe(g) {
+    if (!g.confirmado || g.noAsiste || g.excluidoTablon || !g.claveTablon) return "";
+    return construirEnlacePersonalTablon(evento.urlPublica, tokenTablon, g.claveTablon);
+  }
   // INCOMPLETA = no está en "N de N" (la misma regla que pinta la fila de
   // rojo, lib/invitados.js). Antes estas secciones solo miraban los datos
   // obligatorios (año de nacimiento y alergias), y una ficha podía estar en

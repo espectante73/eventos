@@ -11,6 +11,27 @@ export const NO_ENCONTRADO =
 // Breve, como él pidió.
 export const SIN_ANIO = "Tu ficha aún no tiene tu año de nacimiento. Pídeselo a tu colaborador.";
 
+// Con el enlace personal (v85.2) el nombre ya lo pone la app: si no entra,
+// solo puede ser el año.
+export const ANIO_NO_COINCIDE = "Ese año no es el de tu ficha. Si estás seguro de que es el tuyo, pregunta a tu colaborador.";
+
+// ¿Es de la misma persona una respuesta guardada («Pacheco Ana 1985») y la
+// del enlace personal («Pacheco Ana»)? Sin el año, y sin mayúsculas, tildes,
+// comas ni espacios de más, como compara la base. Así, en un móvil que
+// comparte la familia, el enlace de otro no entra con la respuesta guardada.
+export function mismaPersonaEnRespuesta(guardada, delEnlace) {
+  const limpia = (t) =>
+    String(t || "")
+      .replace(/\s*\d{4}\s*$/, "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[,'´`’]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  return Boolean(limpia(delEnlace)) && limpia(guardada) === limpia(delEnlace);
+}
+
 export const respuestaTablon = (nombre, anio) => `${String(nombre || "").trim()} ${anio || ""}`.trim();
 
 // El año con el que entró, para no volver a pedirlo en las fotos.

@@ -42,6 +42,16 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "85.2",
+    cambios: [
+      "Formulario del colaborador: en la fila de cada invitado con teléfono, el auricular y, a su derecha, WhatsApp, también con la familia pagada (la ficha ya no se abría y no se llegaba a los mensajes). Mientras su menú está abierto, el recuadro de esa persona se pone dorado: así se ve a quién va el mensaje.",
+      "Nuevo mensaje de WhatsApp, «Enlace tablón», en dorado con letra verde: su enlace PERSONAL al tablón de «Las Bodas de todos», con la cabecera de siempre y, en otro párrafo, que cree un acceso directo en el móvil. Editable en Datos del evento ({enlace} es donde va el enlace; si se borra, va al final).",
+      "Tablón: con el enlace personal, la puerta saluda («Hola, Pacheco, Ana») y solo pide el año; «¿No eres tú? Entra con tu nombre» vuelve a la de siempre, que sigue abierta. El acceso directo creado desde el tablón abre ese tablón, no la entrada de la app.",
+      "Tablón: «Lo que te ha apuntado» pasa a «Comprueba tus datos», con su frase («…si ves algún error, dile a tu colaborador que los corrija»), su nombre tal como está registrado y si dio email para la invitación (Sí o No).",
+      "Necesita el SQL «v85.2-enlace-personal-tablon» (con el de la v85.1 dentro).",
+    ],
+  },
+  {
     version: "85.1",
     cambios: [
       "Tablón: en la tarjeta «Tu colaborador», plegado, «Lo que te ha apuntado»: alergias, canciones (hasta 3), la boda en una línea («1990 · 36º aniversario en 2026», solo los matrimonios) y si quiere que se guarden sus datos tras el evento. Solo se ve; al pie, «¿Algo no está bien? Díselo a tu colaborador». Nunca el año de nacimiento (es la llave de la puerta), ni el email ni el teléfono.",
