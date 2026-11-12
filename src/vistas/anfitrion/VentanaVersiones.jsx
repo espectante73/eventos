@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "85.4",
+    cambios: [
+      "Tablón, recuadro verde más corto: los días que faltan, en el círculo dorado del inicio de la app (la misma pieza, con su latido, aquí en su sitio y no en la esquina), y el lugar con su dirección en un solo apartado: «Rte. El Rincón» en negrita, la calle detrás y el pueblo debajo.",
+      "«Comprueba tus datos»: solo «Si ves algún error, dile a tu colaborador que lo corrija.», y debajo los datos.",
+    ],
+  },
+  {
     version: "85.3",
     cambios: [
       "Tablón: «Comprueba tus datos» pasa de la tarjeta de su colaborador al recuadro verde, plegado justo debajo de la ronda «Datos», para que «Datos» no salga dos veces por separado. El rótulo en dorado y los datos en blanco, como las rondas.",

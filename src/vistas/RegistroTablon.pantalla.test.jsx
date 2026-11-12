@@ -10,7 +10,7 @@ it("abierto: su frase, su nombre, alergias, canciones, boda, email y si guarda s
   const vista = montar(<RegistroTablon yo={yo} evento={evento} abierta onAlternar={() => {}} />);
   const texto = vista.contenedor.textContent;
   expect(texto).toContain("Comprueba tus datos");
-  expect(texto).toContain("Comprueba que estos datos que nos has dado están bien registrados; si ves algún error, dile a tu colaborador que los corrija.");
+  expect(texto).toContain("Si ves algún error, dile a tu colaborador que lo corrija.");
   expect(texto).toContain("Nombre: Pacheco, Ana");
   expect(texto).toContain("Alergias: Gluten");
   expect(texto).toContain("Email para la invitación: No");

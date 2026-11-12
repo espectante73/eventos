@@ -18,7 +18,10 @@ export const HUECO_SELLO = TAM_SELLO + 2 * MARGEN_SELLO;
 
 const ROTULO = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.micro, letterSpacing: 1, textTransform: "uppercase", lineHeight: 1.2 };
 
-export function SelloCuentaAtras({ evento, hoy }) {
+// `enLinea` (v85.4, él: «en un círculo dorado los días que faltan, igual
+// que el inicio de la app»): el MISMO sello dentro de la página, en su
+// sitio, en vez de fijo en la esquina. Lo usa el recuadro verde del tablón.
+export function SelloCuentaAtras({ evento, hoy, enLinea = false }) {
   const cuenta = cuentaAtrasEvento(evento, hoy);
   if (!cuenta) return null;
   return (
@@ -27,16 +30,15 @@ export function SelloCuentaAtras({ evento, hoy }) {
       aria-label={cuenta.hoy ? "Es hoy" : `${cuenta.arriba} ${cuenta.numero} ${cuenta.abajo}`}
       // El latido y su halo, en index.css (.sello-cuenta-atras): dorado y
       // verde, lento, como el de los otros sellos pero sin prisa (él).
-      className="sello-cuenta-atras fixed left-4 zurdo:left-auto zurdo:right-4 flex flex-col items-center justify-center text-center pointer-events-none"
+      className={`sello-cuenta-atras ${enLinea ? "flex-shrink-0" : "fixed left-4 zurdo:left-auto zurdo:right-4"} flex flex-col items-center justify-center text-center pointer-events-none`}
       style={{
-        bottom: MARGEN_SELLO,
+        ...(enLinea ? {} : { bottom: MARGEN_SELLO, zIndex: Z_INICIO }),
         width: TAM_SELLO,
         height: TAM_SELLO,
         borderRadius: R.redondo,
         background: FONDO_VERDE,
         color: C.goldClaro,
         border: `2px solid ${C.gold}`,
-        zIndex: Z_INICIO,
       }}
     >
       {cuenta.arriba && <div style={ROTULO}>{cuenta.arriba}</div>}

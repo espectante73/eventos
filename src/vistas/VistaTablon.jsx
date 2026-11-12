@@ -17,6 +17,7 @@ import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento, op
 import { entrarTablon, anioDeRespuesta, mismaPersonaEnRespuesta, NO_ENCONTRADO, ANIO_NO_COINCIDE } from "../lib/tablonEntrada";
 import { getClaveTablonFromUrl } from "../lib/url";
 import { InfoItem } from "../components/Portada";
+import { SelloCuentaAtras } from "../components/SelloCuentaAtras";
 import { Boton, EnlaceTexto } from "../components/Boton";
 import { NotaPrivacidad } from "../components/NotaPrivacidad";
 import { SeccionPlegable } from "../components/SeccionPlegable";
@@ -60,6 +61,22 @@ function AvisoNoCompartir() {
 
 // «FALTAN» y «DÍAS», encima y debajo del número de la cuenta atrás.
 const ROTULO_CUENTA_ATRAS = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno, letterSpacing: 1, textTransform: "uppercase" };
+
+// «Rte. El Rincón · Ctra. el Amparo 190» / «38430 Icod de los Vinos» (él,
+// v85.4): el sitio en negrita, y la dirección partida por su primera coma.
+function lineasLugar(evento) {
+  const lugar = String(evento.lugar || "").trim();
+  const direccion = valorDireccion(evento.direccion);
+  const [primera, ...resto] = Array.isArray(direccion) ? direccion : [direccion].filter(Boolean);
+  if (!lugar) return [primera, ...resto].filter(Boolean).length ? [primera, ...resto] : ["—"];
+  return [
+    <>
+      <b>{lugar}</b>
+      {primera ? ` · ${primera}` : ""}
+    </>,
+    ...resto,
+  ];
+}
 
 export function VistaTablon({ token }) {
   // "cargando" | "invalido" | "bloqueado" | "listo"
@@ -615,13 +632,11 @@ export function VistaTablon({ token }) {
                   {evento.nombre}
                 </h1>
               )}
+              {/* En el círculo dorado del inicio de la app (él, v85.4): la
+                  misma pieza, aquí en su sitio y no fija en la esquina. */}
               {cuentaAtras && (
-                <div className="text-center flex-shrink-0 mb-3" style={{ color: C.goldClaro }}>
-                  {cuentaAtras.arriba && <div style={ROTULO_CUENTA_ATRAS}>{cuentaAtras.arriba}</div>}
-                  <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, lineHeight: 1, fontSize: cuentaAtras.hoy ? T.titulo : T.gigante }}>
-                    {cuentaAtras.numero}
-                  </div>
-                  {cuentaAtras.abajo && <div style={ROTULO_CUENTA_ATRAS}>{cuentaAtras.abajo}</div>}
+                <div className="mb-3">
+                  <SelloCuentaAtras evento={evento} enLinea />
                 </div>
               )}
             </div>
@@ -653,9 +668,10 @@ export function VistaTablon({ token }) {
                 value={valorFechaEvento(evento.tablonOcultarFecha ? { ...evento, fechaSinConfirmar: true } : evento)}
               />
               <InfoItem claro icon={Clock} label="Hora" value={evento.hora || "—"} />
-              <InfoItem claro icon={MapPin} label="Lugar" value={evento.lugar || "—"} />
-              {/* La dirección, como en la Portada (v69.3: aquí faltaba). */}
-              {evento.direccion && <InfoItem claro icon={MapPin} label="Dirección" value={valorDireccion(evento.direccion)} />}
+              {/* Lugar y dirección en un solo apartado (él, v85.4, «B»: el
+                  recuadro más corto, sin partir nada): el sitio en negrita y
+                  su dirección detrás, como en la Portada (v69.3). */}
+              <InfoItem claro icon={MapPin} label="Lugar" value={lineasLugar(evento)} />
             </div>
             {/* La guía de las tres rondas (él, v69.4), al ritmo de cada uno
                 (lib/rondasTablon.js): la suya en negrita y con «Ahora»; las

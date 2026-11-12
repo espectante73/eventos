@@ -26,11 +26,10 @@ export function RegistroTablon({ yo, evento, abierta, onAlternar }) {
     <div>
       <SeccionPlegable sencilla titulo="Comprueba tus datos" abierta={abierta} onAlternar={onAlternar}>
         <div className="space-y-1 text-sm pb-1" style={{ color: C.blanco }}>
-          {/* Su frase (él, v85.2). Si es su propio colaborador, se corrige él. */}
+          {/* Su frase, más corta (él, v85.4: el título ya dice «Comprueba»).
+              Si es su propio colaborador, se corrige él. */}
           <p className="pb-1">
-            {yo.colaboradorEsYo
-              ? "Comprueba que tus datos están bien registrados; si ves algún error, corrígelo en tu formulario."
-              : "Comprueba que estos datos que nos has dado están bien registrados; si ves algún error, dile a tu colaborador que los corrija."}
+            {yo.colaboradorEsYo ? "Si ves algún error, corrígelo en tu formulario." : "Si ves algún error, dile a tu colaborador que lo corrija."}
           </p>
           {registro.nombre && <Linea rotulo="Nombre">{registro.nombre}</Linea>}
           <Linea rotulo="Alergias">{registro.alergias}</Linea>
