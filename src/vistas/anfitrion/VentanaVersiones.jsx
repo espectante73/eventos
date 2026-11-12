@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "85.7",
+    cambios: [
+      "Día del evento: el ZIP de las fotos se llama como el evento, «Fotos de Las Bodas de todos.zip», y no «Fotos de la fiesta»: es algo más que una fiesta.",
+    ],
+  },
+  {
     version: "85.6",
     cambios: [
       "Fotos de la fiesta: con las dos subidas, la tarjeta dice solo «Ya tienes tus 2 fotos.» (sin «Para cambiar una, elimínala…»: ya lo dice su papelera).",

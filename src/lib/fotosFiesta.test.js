@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, miniaturaFotoFiesta, nombresDescargaFotosFiesta, bajarFotosFiesta, marcarFotoFamilia, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
+import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, miniaturaFotoFiesta, nombresDescargaFotosFiesta, bajarFotosFiesta, marcarFotoFamilia, archivoFotosEvento, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
 
 // Una reducción de mentira: el tamaño que «pesaría» cada intento.
 const reducirQuePesa = (pesos) => {
@@ -230,4 +230,10 @@ describe("marcar la foto de familia", () => {
     const [n] = nombresDescargaFotosFiesta([{ id: "1", familia: "medina", quien: "Medina, Ana", ruta: "fiesta/1.jpg", creadaEn: "2026-11-13T22:47:00", deFamilia: true }]);
     expect(n.nombre).toBe("Medina, Ana · Foto de familia · 22.47.jpg");
   });
+});
+
+// v85.7 (él): el ZIP lleva el nombre del evento, no «de la fiesta».
+it("el ZIP se llama como el evento, sin su punto final", () => {
+  expect(archivoFotosEvento({ nombre: "Las Bodas de todos." })).toBe("Fotos de Las Bodas de todos.zip");
+  expect(archivoFotosEvento({ nombre: "" })).toBe("Fotos del evento.zip");
 });

@@ -8,6 +8,7 @@
 // reserva se suelta en el acto: si no, ocuparía uno de sus sitios hasta
 // que caduque, a los 15 minutos. Cada paso lleva el móvil (`dispositivo`):
 // solo el que la subió puede quitarla.
+import { nombreDelEvento } from "./mensajesWhatsapp";
 import { reducirImagen } from "./fotosAlmacen";
 import { horaCorta } from "./formato";
 
@@ -200,7 +201,12 @@ export async function marcarFotoFamilia(supabase, { token, respuesta, dispositiv
 // «Medina, Ana · 22.47.jpg». La de familia, con su nombre detrás del de
 // quien la subió, para que siga en su sitio por apellido:
 // «Medina, Ana · Foto de familia · 22.47.jpg».
-export const ARCHIVO_FOTOS_FIESTA = "Fotos de la fiesta.zip";
+// El ZIP, con el nombre del evento (v85.7, él: «es algo más que una
+// fiesta»): «Fotos de Las Bodas de todos.zip». Sin nombre, del evento.
+export const archivoFotosEvento = (evento) => {
+  const nombre = limpiarNombre(nombreDelEvento(evento));
+  return nombre ? `Fotos de ${nombre}.zip` : "Fotos del evento.zip";
+};
 const limpiarNombre = (t) => String(t || "").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim();
 
 export function nombresDescargaFotosFiesta(fotos) {

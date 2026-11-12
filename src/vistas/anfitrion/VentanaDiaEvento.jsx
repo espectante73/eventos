@@ -22,7 +22,7 @@ import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { supabase } from "../../supabaseClient";
 import { crearZip } from "../../lib/zip";
 import { descargarBlob } from "../../lib/descargas";
-import { bajarFotosFiesta, ARCHIVO_FOTOS_FIESTA } from "../../lib/fotosFiesta";
+import { bajarFotosFiesta, archivoFotosEvento } from "../../lib/fotosFiesta";
 import { descargarTarjetasQr, ARCHIVO_TARJETAS_QR } from "../../lib/pdfTarjetasQr";
 import { construirEnlaceTablon } from "../../lib/url";
 
@@ -160,13 +160,13 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
     setDescargando(true);
     const lista = await obtenerFotosFiesta();
     const { archivos, fallidas } = await bajarFotosFiesta(supabase, lista);
-    if (archivos.length) descargarBlob(ARCHIVO_FOTOS_FIESTA, new Blob([crearZip(archivos)], { type: "application/zip" }));
+    if (archivos.length) descargarBlob(archivoFotosEvento(evento), new Blob([crearZip(archivos)], { type: "application/zip" }));
     setFotos(lista);
     setDescargando(false);
     preguntar({
       titulo: archivos.length ? "Fotos descargadas" : "No se pudo",
       texto: [
-        archivos.length && `${ARCHIVO_FOTOS_FIESTA}\nLo tienes en tu carpeta de Descargas.`,
+        archivos.length && `${archivoFotosEvento(evento)}\nLo tienes en tu carpeta de Descargas.`,
         fallidas && `No se pudieron bajar ${fallidas} de ${lista.length}: vuelve a intentarlo.`,
         !lista.length && "Todavía no hay fotos.",
       ]
