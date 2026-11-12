@@ -12,7 +12,7 @@
 // el más largo, y así todos son iguales (norma 4) sin medir nada.
 //
 // Las fotos se eligen FUERA de la app (él, v67.6): aquí solo se descargan
-// todas en un ZIP, una carpeta por familia. Sin ventana para verlas.
+// todas en un ZIP, en una sola carpeta (v85.5). Sin ventana para verlas.
 import { useEffect, useState } from "react";
 import { DoorOpen, DoorClosed, Camera, CameraOff, Download, QrCode } from "lucide-react";
 import { C, OP, conAlfa } from "../../theme";
@@ -93,7 +93,7 @@ function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, estados =
 
 // `marcador` (desde VistaAnfitrion): { abierto, abrir, abrirAlAcreditar, cerrar }.
 export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
-  const { evento, persistEvento, obtenerFotosFiesta, invitados = [], tokenTablon } = data;
+  const { evento, persistEvento, obtenerFotosFiesta, tokenTablon } = data;
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
   // La acreditación (él, v70.8): las llegadas y el marcador grande, que
@@ -159,7 +159,7 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
   const descargarFotos = async () => {
     setDescargando(true);
     const lista = await obtenerFotosFiesta();
-    const { archivos, fallidas } = await bajarFotosFiesta(supabase, lista, invitados);
+    const { archivos, fallidas } = await bajarFotosFiesta(supabase, lista);
     if (archivos.length) descargarBlob(ARCHIVO_FOTOS_FIESTA, new Blob([crearZip(archivos)], { type: "application/zip" }));
     setFotos(lista);
     setDescargando(false);

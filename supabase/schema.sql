@@ -408,7 +408,11 @@ CREATE TABLE public.fotos_fiesta (
     "quitada" boolean DEFAULT false NOT NULL,
     "elegida" boolean DEFAULT false NOT NULL,
     "creadaEn" timestamp with time zone DEFAULT now() NOT NULL,
-    "dispositivoId" text
+    "dispositivoId" text,
+    -- La foto de familia (v85.5, él): una por familia, la marca quien la
+    -- subió (tablon_marcar_foto_familia). Las demás son personales. Sin
+    -- "not null".
+    "deFamilia" boolean DEFAULT false
 );
 
 -- Confirmar que es quien dice para subir fotos (él, v68.1: «está claro
@@ -3191,7 +3195,8 @@ $$;
 -- (`verificado`, v68.1), qué años y mesas ofrecer al confirmarlo (v68.2,
 -- él: con desplegables, sin teclado: el rango de años de la lista y sus
 -- mesas) y cada foto suya subida; `mia`, que la subió ESTE móvil (solo
--- ahí se puede quitar). Sin la foto: no se ven.
+-- ahí se puede quitar). Sin la foto: no se ven. La foto de familia
+-- (v85.5): cuál suya lo es, si viene en familia y quién la marcó ya.
 CREATE FUNCTION public.tablon_fotos(p_token uuid, p_respuesta text, p_dispositivo text DEFAULT NULL) RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
@@ -3219,10 +3224,23 @@ begin
     'mesas', coalesce((select jsonb_agg(m."numero" order by m."numero") from mesas m), '[]'::jsonb),
     'fotos', coalesce((
       select jsonb_agg(jsonb_build_object('id', f.id, 'quien', f."quien", 'creadaEn', f."creadaEn",
-        'mia', f."dispositivoId" is null or f."dispositivoId" = p_dispositivo) order by f."creadaEn")
+        'mia', f."dispositivoId" is null or f."dispositivoId" = p_dispositivo,
+        'deFamilia', coalesce(f."deFamilia", false)) order by f."creadaEn")
       from fotos_fiesta f
       where f."invitadoId" = v_yo.id and f."subida" and not f."quitada"
-    ), '[]'::jsonb)
+    ), '[]'::jsonb),
+    -- La foto de familia (v85.5): si viene con más confirmados de su
+    -- familia, y quién de ellos marcó ya la suya (null: nadie).
+    'enFamilia', (
+      select count(*) > 1 from invitados i
+      where i."confirmado" and clave_familia(i."grupoFamiliar", i."apellido") = clave_familia(v_yo."grupoFamiliar", v_yo."apellido")
+    ),
+    'fotoFamilia', (
+      select f."quien" from fotos_fiesta f
+      where f."familia" = clave_familia(v_yo."grupoFamiliar", v_yo."apellido")
+        and coalesce(f."deFamilia", false) and f."subida" and not f."quitada"
+      limit 1
+    )
   );
 end;
 $$;
@@ -3311,6 +3329,55 @@ begin
     and (f."dispositivoId" is null or f."dispositivoId" = p_dispositivo)
   returning f."ruta" into v_ruta;
   return v_ruta;
+end;
+$$;
+
+-- La foto de familia (v85.5, él: «uno de los miembros de la familia
+-- subiría la foto familiar; las demás son personales»): quien la subió,
+-- desde el mismo móvil (como quitarla), la marca o la desmarca. Una por
+-- familia: si ya la marcó otro de ella, no se cambia y se devuelve quién
+-- fue; si era otra suya, pasa a esta. Devuelve '' si se hizo, el nombre de
+-- quien ya la tiene, o null si esa foto no es suya.
+CREATE FUNCTION public.tablon_marcar_foto_familia(p_token uuid, p_respuesta text, p_id uuid, p_dispositivo text, p_marcar boolean) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+declare
+  v_yo invitados;
+  v_foto fotos_fiesta;
+  v_otra fotos_fiesta;
+begin
+  v_yo := (select t from tablon_invitado(p_token, p_respuesta) t limit 1);
+  if v_yo.id is null then
+    return null;
+  end if;
+  v_foto := (
+    select f from fotos_fiesta f
+    where f.id = p_id and f."invitadoId" = v_yo.id and f."subida" and not f."quitada"
+      and (f."dispositivoId" is null or f."dispositivoId" = p_dispositivo)
+    limit 1
+  );
+  if v_foto.id is null then
+    return null;
+  end if;
+  if p_marcar then
+    -- Dos de la familia marcando a la vez: solo una.
+    perform pg_advisory_xact_lock(hashtext('foto_familia:' || v_foto."familia"));
+    v_otra := (
+      select f from fotos_fiesta f
+      where f."familia" = v_foto."familia" and coalesce(f."deFamilia", false)
+        and f."subida" and not f."quitada" and f.id <> v_foto.id
+      limit 1
+    );
+    if v_otra.id is not null then
+      if v_otra."invitadoId" is distinct from v_yo.id then
+        return v_otra."quien";
+      end if;
+      update fotos_fiesta f set "deFamilia" = false where f.id = v_otra.id;
+    end if;
+  end if;
+  update fotos_fiesta f set "deFamilia" = p_marcar where f.id = v_foto.id;
+  return '';
 end;
 $$;
 

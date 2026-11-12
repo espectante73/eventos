@@ -1,7 +1,7 @@
 // La tarjeta de las fotos de la fiesta en el tablón (v67.4-68): personal,
 // 2 por persona, la papelera solo en el móvil que la subió, y lo que ven
 // los menores.
-import { it, expect } from "vitest";
+import { describe, it, expect } from "vitest";
 import { act } from "react";
 import { montar } from "../pruebas/dibujar";
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
@@ -127,4 +127,46 @@ it("si a su ficha le falta la mesa: ni desplegable ni botón, y a quién pregunt
 it("sin años en la lista, ofrece los últimos 100", () => {
   expect(opcionesAnios(null, 2026)).toHaveLength(101);
   expect(opcionesAnios(null, 2026)[0]).toBe(2026);
+});
+
+// v85.5 (él): una foto de familia, que sube uno de ellos; las demás,
+// personales. Y el día del evento, la tarjeta destacada.
+describe("la foto de familia", () => {
+  const marcadas = [];
+  const conFamilia = (estado) =>
+    tarjeta({ verificado: true, enFamilia: true, ...estado }, { onMarcarFamilia: async (id, marcar) => (marcadas.push([id, marcar]), { aviso: "" }) });
+
+  it("en familia: las dos frases y la casilla «Familia» en su foto, que la marca", () => {
+    const vista = montar(conFamilia({ fotos: [foto("1", true)] }));
+    const texto = vista.contenedor.textContent;
+    expect(texto).toContain("Si vienen en familia, una foto de toda la familia: que la suba solo uno de ustedes.");
+    expect(texto).toContain("Las demás son personales: lo que para ti ha sido el evento.");
+    const casilla = vista.contenedor.querySelector('input[aria-label="Es la foto de familia"]');
+    expect(casilla).toBeTruthy();
+    vista.pulsar(casilla);
+    expect(marcadas.at(-1)).toEqual(["1", true]);
+    vista.desmontar();
+  });
+
+  it("si ya la subió otro de la familia, se dice quién y no hay casilla", () => {
+    const vista = montar(conFamilia({ fotos: [foto("1", true)], fotoFamilia: "Medina, Luis" }));
+    expect(vista.contenedor.textContent).toContain("Foto de familia: ya la subió Medina, Luis.");
+    expect(vista.contenedor.querySelector('input[aria-label="Es la foto de familia"]')).toBeNull();
+    vista.desmontar();
+  });
+
+  it("quien viene solo: solo lo suyo, sin foto de familia", () => {
+    const vista = montar(conFamilia({ fotos: [foto("1", true)], enFamilia: false }));
+    expect(vista.contenedor.textContent).toContain("Son personales: lo que para ti ha sido el evento.");
+    expect(vista.contenedor.textContent).not.toContain("toda la familia");
+    expect(vista.contenedor.querySelector('input[aria-label="Es la foto de familia"]')).toBeNull();
+    vista.desmontar();
+  });
+
+  it("destacada: dorada y latiendo", () => {
+    const vista = montar(tarjeta({ fotos: [] }, { destacada: true }));
+    const caja = vista.contenedor.querySelector("[data-destacada]");
+    expect(caja.className).toContain("tarjeta-latido");
+    vista.desmontar();
+  });
 });

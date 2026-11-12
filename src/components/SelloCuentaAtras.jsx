@@ -7,7 +7,7 @@
 // En la capa del inicio (Z_INICIO, ver BarraVentanas): por encima del
 // formulario a pantalla entera del móvil y debajo de las ventanas flotantes,
 // que pueden taparlo (él, v74.5: «es para verlo al abrir»).
-import { C, R, T, FONDO_VERDE } from "../theme";
+import { C, R, S, T, FONDO_VERDE } from "../theme";
 import { cuentaAtrasEvento } from "../lib/formato";
 import { Z_INICIO } from "./BarraVentanas";
 
@@ -21,7 +21,9 @@ const ROTULO = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.micro, le
 // `enLinea` (v85.4, él: «en un círculo dorado los días que faltan, igual
 // que el inicio de la app»): el MISMO sello dentro de la página, en su
 // sitio, en vez de fijo en la esquina. Lo usa el recuadro verde del tablón.
-export function SelloCuentaAtras({ evento, hoy, enLinea = false }) {
+// `quieto` (v85.5, él): el día del evento, con las fotos abiertas, la que
+// late es la tarjeta de las fotos; dos latidos a la vez compiten.
+export function SelloCuentaAtras({ evento, hoy, enLinea = false, quieto = false }) {
   const cuenta = cuentaAtrasEvento(evento, hoy);
   if (!cuenta) return null;
   return (
@@ -30,9 +32,11 @@ export function SelloCuentaAtras({ evento, hoy, enLinea = false }) {
       aria-label={cuenta.hoy ? "Es hoy" : `${cuenta.arriba} ${cuenta.numero} ${cuenta.abajo}`}
       // El latido y su halo, en index.css (.sello-cuenta-atras): dorado y
       // verde, lento, como el de los otros sellos pero sin prisa (él).
-      className={`sello-cuenta-atras ${enLinea ? "flex-shrink-0" : "fixed left-4 zurdo:left-auto zurdo:right-4"} flex flex-col items-center justify-center text-center pointer-events-none`}
+      className={`${quieto ? "" : "sello-cuenta-atras "}${enLinea ? "flex-shrink-0" : "fixed left-4 zurdo:left-auto zurdo:right-4"} flex flex-col items-center justify-center text-center pointer-events-none`}
+      data-quieto={quieto || undefined}
       style={{
         ...(enLinea ? {} : { bottom: MARGEN_SELLO, zIndex: Z_INICIO }),
+        ...(quieto ? { boxShadow: S.flotante } : {}),
         width: TAM_SELLO,
         height: TAM_SELLO,
         borderRadius: R.redondo,

@@ -10,8 +10,8 @@
 // la monta ANTES de tocar nada de sesión/login en cuanto detecta
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
 import { Fragment, useState, useEffect, useCallback, useRef } from "react";
-import { Calendar, Clock, MapPin, Lock, Music, Pause, ArrowLeft, User, Check } from "lucide-react";
-import { C, inputStyle, OP, S, T, FONDO_VERDE, DORADO, conAlfa } from "../theme";
+import { Calendar, Clock, MapPin, Lock, Music, Pause, ArrowLeft, User, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { C, inputStyle, OP, S, T, DEDO, FONDO_VERDE, DORADO, conAlfa } from "../theme";
 import { supabase } from "../supabaseClient";
 import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento, opcionesAnios } from "../lib/formato";
 import { entrarTablon, anioDeRespuesta, mismaPersonaEnRespuesta, NO_ENCONTRADO, ANIO_NO_COINCIDE } from "../lib/tablonEntrada";
@@ -25,7 +25,7 @@ import { TITULO_NOTA_PRIVACIDAD } from "../constants";
 import { uid } from "../lib/id";
 import { leerEvento } from "../lib/leerEvento";
 import { rondasTablon } from "../lib/rondasTablon";
-import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta } from "../lib/fotosFiesta";
+import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, marcarFotoFamilia } from "../lib/fotosFiesta";
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 import { TarjetaNoticia, CabeceraNoticia, CuerpoZonas } from "./NoticiaTablon";
 import { RegistroTablon } from "./RegistroTablon";
@@ -380,6 +380,47 @@ export function VistaTablon({ token }) {
   const verificarFoto = (mesa) =>
     conFotosAlDia((quien) => verificarFotoFiesta(supabase, { ...quien, anio: anioDeRespuesta(quien.respuesta), mesa }));
 
+  // La foto de familia (v85.5): la marca quien la subió, desde su móvil.
+  const marcarFoto = (id, marcar) => conFotosAlDia((quien) => marcarFotoFamilia(supabase, { ...quien, id, marcar }));
+
+  // El día del evento, con las fotos abiertas (v85.5, él: «sería el
+  // protagonista»): las fotos, lo primero, doradas y latiendo; el recuadro
+  // verde y el colaborador, plegados, como ya lo estaba la FAQ (v70.5). Al
+  // cerrar la recogida, todo vuelve a estar como siempre.
+  const diaFotos = Boolean(fotosFiesta?.abierta);
+  const verdePlegado = diaFotos && idAbierto !== "verde";
+
+  // La tarjeta de quién le atiende (v64), una sola pieza: a la vista o, el
+  // día de las fotos, dentro de su línea plegada (v85.5).
+  const tarjetaColaborador = yo?.colaborador ? (
+    <div
+      className="rounded-lg px-5 py-4 mb-6 flex items-start gap-3"
+      style={{ background: DORADO.fondo, boxShadow: DORADO.relieveFlotante, color: C.ink }}
+    >
+      <User size={28} className="mt-1" style={{ flexShrink: 0 }} aria-hidden />
+      <div className="min-w-0">
+        <div className="text-xs uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 1 }}>
+          Tu colaborador
+        </div>
+        <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.titulo }}>
+          {yo.colaborador}
+          {yo.colaboradorEsYo && " (tú)"}
+        </div>
+        {!yo.colaboradorEsYo && (
+          <p className="text-sm mt-1">Recoge tus datos y el importe de tu entrada: para cualquier duda, pregúntale.</p>
+        )}
+        {yo.esColaborador && (
+          <p className="text-sm mt-1">
+            <b>Recuerda: eres colaborador.</b> Entra con tu cuenta e introduce los datos de tus invitados en el formulario.{" "}
+            <EnlaceTexto href="/" enLinea color={C.ink}>
+              Entrar
+            </EnlaceTexto>
+          </p>
+        )}
+      </div>
+    </div>
+  ) : null;
+
   const cuentaAtras = cuentaAtrasEvento(evento);
   // Su zona, para el importe del DJ (0 €): la da la noticia de las zonas.
   const rondas = rondasTablon(yo && { ...yo, zona: zonas?.miZona }, evento);
@@ -619,7 +660,39 @@ export function VistaTablon({ token }) {
           </div>
         )}
 
-        {evento && (
+        {diaFotos && (
+          <TarjetaFotosFiesta destacada estado={fotosFiesta} onSubir={subirFoto} onEliminar={eliminarFoto} onVerificar={verificarFoto} onMarcarFamilia={marcarFoto} />
+        )}
+
+        {/* Plegado el día del evento (v85.5): lo básico, y se abre entero. */}
+        {evento && verdePlegado && (
+          <button
+            type="button"
+            onClick={() => alternar("verde")}
+            aria-expanded={false}
+            aria-label="Ver los datos del evento"
+            className="w-full text-left rounded-lg px-5 py-4 mb-4 flex items-center justify-between gap-3"
+            style={{ background: FONDO_VERDE }}
+          >
+            <span className="min-w-0">
+              {evento.nombre && (
+                <span className="block text-xl truncate" style={{ fontFamily: "'Fraunces', serif", color: C.blanco, fontWeight: 700 }}>
+                  {evento.nombre}
+                </span>
+              )}
+              <span className="block text-sm mt-1 truncate" style={{ color: C.goldClaro }}>
+                <b>{evento.hora || "—"}</b>
+                {evento.lugar ? ` · ${String(evento.lugar).trim()}` : ""}
+              </span>
+            </span>
+            <span className="flex items-center gap-2 flex-shrink-0">
+              {cuentaAtras && <SelloCuentaAtras evento={evento} enLinea quieto />}
+              <ChevronDown size={22} style={{ color: C.gold }} aria-hidden />
+            </span>
+          </button>
+        )}
+
+        {evento && !verdePlegado && (
           <div
             className="rounded-lg px-5 py-5 mb-6"
             style={{ background: FONDO_VERDE }}
@@ -633,10 +706,16 @@ export function VistaTablon({ token }) {
                 </h1>
               )}
               {/* En el círculo dorado del inicio de la app (él, v85.4): la
-                  misma pieza, aquí en su sitio y no fija en la esquina. */}
+                  misma pieza, aquí en su sitio y no fija en la esquina. El
+                  día de las fotos, quieto, y con su flecha para plegar. */}
               {cuentaAtras && (
-                <div className="mb-3">
-                  <SelloCuentaAtras evento={evento} enLinea />
+                <div className="mb-3 flex items-center gap-2">
+                  <SelloCuentaAtras evento={evento} enLinea quieto={diaFotos} />
+                  {diaFotos && (
+                    <button type="button" onClick={() => alternar("verde")} aria-expanded aria-label="Plegar los datos del evento" style={{ minWidth: DEDO, minHeight: DEDO }} className="flex items-center justify-center">
+                      <ChevronUp size={22} style={{ color: C.gold }} aria-hidden />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -718,41 +797,18 @@ export function VistaTablon({ token }) {
             tarjeta propia en el dorado de las fichas y el nombre en grande.
             Para todos, también si su colaborador es él mismo; y a quien es
             colaborador, que entre a sus formularios (v64.3). */}
-        {yo?.colaborador && (
-          <div
-            className="rounded-lg px-5 py-4 mb-6 flex items-start gap-3"
-            style={{ background: DORADO.fondo, boxShadow: DORADO.relieveFlotante, color: C.ink }}
-          >
-            <User size={28} className="mt-1" style={{ flexShrink: 0 }} aria-hidden />
-            <div className="min-w-0">
-              <div className="text-xs uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 1 }}>
-                Tu colaborador
-              </div>
-              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.titulo }}>
-                {yo.colaborador}
-                {yo.colaboradorEsYo && " (tú)"}
-              </div>
-              {!yo.colaboradorEsYo && (
-                <p className="text-sm mt-1">Recoge tus datos y el importe de tu entrada: para cualquier duda, pregúntale.</p>
-              )}
-              {yo.esColaborador && (
-                <p className="text-sm mt-1">
-                  <b>Recuerda: eres colaborador.</b> Entra con tu cuenta e introduce los datos de tus invitados en el formulario.{" "}
-                  <EnlaceTexto href="/" enLinea color={C.ink}>
-                    Entrar
-                  </EnlaceTexto>
-                </p>
-              )}
-            </div>
+        {/* El día de las fotos (v85.5), plegado en una línea, como la FAQ. */}
+        {yo?.colaborador && diaFotos && (
+          <div className="mb-1">
+            <SeccionPlegable sencilla titulo="Tu colaborador" resumen={yo.colaborador} abierta={idAbierto === "colaborador"} onAlternar={() => alternar("colaborador")}>
+              {tarjetaColaborador}
+            </SeccionPlegable>
           </div>
         )}
+        {yo?.colaborador && !diaFotos && tarjetaColaborador}
 
-        {fotosFiesta?.abierta && <TarjetaFotosFiesta estado={fotosFiesta} onSubir={subirFoto} onEliminar={eliminarFoto} onVerificar={verificarFoto} />}
-
-        {/* Con las fotos abiertas, la FAQ entera se pliega en una línea (él,
-            v70.5): ese día lo que importa es la tarjeta de las fotos. Se
-            abre tocándola, como cualquier apartado. */}
-        {fotosFiesta?.abierta ? (
+        {/* La FAQ (con las fotos abiertas, plegada; v70.5). */}
+        {diaFotos ? (
           <SeccionPlegable sencilla titulo="FAQ" resumen="Información relativa al evento">
             {listaFaq}
           </SeccionPlegable>

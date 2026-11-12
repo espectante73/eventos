@@ -17,8 +17,8 @@
 // foto, Seleccionar archivo) no se puede quitar. Es el mismo botón-etiqueta
 // con el campo escondido que «Cambiar foto» del formulario (VistaColaborador).
 import { useState } from "react";
-import { Camera, ImagePlus } from "lucide-react";
-import { C, OP, T, DEDO, inputStyle } from "../theme";
+import { Camera, Check, ImagePlus } from "lucide-react";
+import { C, OP, T, DEDO, DORADO, inputStyle } from "../theme";
 import { Boton, estilosBoton } from "../components/Boton";
 import { BotonQuitar } from "../components/PreguntaSeguridad";
 import { LineaAviso } from "../components/LineaAviso";
@@ -31,6 +31,10 @@ import {
   FRASE_PERMISO_PADRES,
   SOLO_MAYORES_16,
   FALTAN_CLAVES,
+  FRASE_FOTO_FAMILIA,
+  FRASE_FOTOS_PERSONALES,
+  FRASE_FOTOS_SOLO,
+  fraseFotoFamiliaHecha,
 } from "../lib/fotosFiesta";
 
 // La mesa, con su desplegable (sin teclado, v68.2) y el botón del lado del
@@ -87,11 +91,27 @@ const estiloAyuda = { color: C.charcoal, opacity: OP.secundario };
 // estado: lo que da tablon_fotos ({ maximo, menor, conPermiso, verificado,
 // anios: { desde, hasta }, mesas, fotos: [{ id, creadaEn, mia }] }). onSubir(archivo), onEliminar(id) y
 // onVerificar(mesa) devuelven { aviso }: vacío si salió bien.
-export function TarjetaFotosFiesta({ estado, onSubir, onEliminar, onVerificar }) {
+// `destacada` (v85.5, él: el día del evento «sería el protagonista»): la
+// primera del tablón, en el dorado, con la cámara en grande y un latido
+// suave (.tarjeta-latido en index.css), mientras lo demás se pliega.
+// `onMarcarFamilia(id, marcar)` (v85.5): la casilla «Familia» de cada foto
+// suya, si viene en familia. Una por familia: si ya la marcó otro de ella,
+// no sale la casilla y se dice quién.
+export function TarjetaFotosFiesta({ estado, onSubir, onEliminar, onVerificar, onMarcarFamilia, destacada = false }) {
   const [subiendo, setSubiendo] = useState(false);
   const [aviso, setAviso] = useState("");
   const { fotos, maximo, menor, conPermiso } = estado;
   const completa = fotos.length >= maximo;
+  // La de familia: suya (una de sus fotos) o de otro de la familia. Sin el
+  // dato (la base sin la v85.5), como si viniera en familia y sin casilla.
+  const familiaMia = fotos.some((f) => f.deFamilia);
+  const familiaDeOtro = !familiaMia && estado.fotoFamilia ? estado.fotoFamilia : "";
+  const conCasilla = Boolean(onMarcarFamilia) && estado.enFamilia === true && !familiaDeOtro;
+  const marcarFamilia = async (id, marcar) => {
+    setAviso("");
+    const { aviso: motivo } = await onMarcarFamilia(id, marcar);
+    setAviso(motivo);
+  };
 
   const alElegir = async (e) => {
     const archivo = e.target.files && e.target.files[0];
@@ -111,10 +131,11 @@ export function TarjetaFotosFiesta({ estado, onSubir, onEliminar, onVerificar })
 
   return (
     <div
-      className="rounded-lg px-5 py-4 mb-6 flex items-start gap-3"
-      style={{ background: C.blanco, border: `1px solid ${C.line}`, color: C.ink }}
+      className={`rounded-lg px-5 py-4 mb-6 flex items-start gap-3${destacada ? " tarjeta-latido formulario-dorado" : ""}`}
+      data-destacada={destacada || undefined}
+      style={destacada ? { background: DORADO.fondo, boxShadow: DORADO.relieveFlotante, color: C.ink } : { background: C.blanco, border: `1px solid ${C.line}`, color: C.ink }}
     >
-      <Camera size={28} className="mt-1" style={{ flexShrink: 0 }} aria-hidden />
+      <Camera size={destacada ? 44 : 28} className="mt-1" style={{ flexShrink: 0 }} aria-hidden />
       <div className="min-w-0 flex-1">
         <div className="text-xs uppercase" style={{ fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 1 }}>
           Fotos de la fiesta
@@ -128,12 +149,40 @@ export function TarjetaFotosFiesta({ estado, onSubir, onEliminar, onVerificar })
               Tus fotos · {fotos.length} de {maximo}
             </div>
 
+            {/* Qué foto es cada una (v85.5, él): una de familia, que sube
+                solo uno de ellos, y las demás personales. */}
+            <div className="text-sm mt-1 space-y-0.5">
+              {estado.enFamilia === false ? (
+                <p>{FRASE_FOTOS_SOLO}</p>
+              ) : (
+                <>
+                  <p>
+                    {familiaDeOtro ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Check size={15} aria-hidden /> {fraseFotoFamiliaHecha(familiaDeOtro)}
+                      </span>
+                    ) : (
+                      FRASE_FOTO_FAMILIA
+                    )}
+                  </p>
+                  <p>{FRASE_FOTOS_PERSONALES}</p>
+                </>
+              )}
+            </div>
+
             {fotos.length > 0 && (
               <ul className="mt-1">
                 {fotos.map((f) => (
                   <li key={f.id} className="flex items-center gap-2 py-1 text-sm">
                     <HuecoFoto titulo="Tu foto" enlace={miniaturaFotoFiesta(f.id)} soloLectura ajustada />
                     <span className="truncate flex-1 min-w-0">Subida a las {horaCorta(f.creadaEn)}</span>
+                    {/* «Familia» (v85.5): la marca quien la subió, desde su móvil. */}
+                    {conCasilla && f.mia && (
+                      <label className="flex items-center gap-1 flex-shrink-0 cursor-pointer" style={{ minHeight: DEDO }}>
+                        <input type="checkbox" checked={Boolean(f.deFamilia)} onChange={(e) => marcarFamilia(f.id, e.target.checked)} aria-label="Es la foto de familia" />
+                        Familia
+                      </label>
+                    )}
                     {f.mia && (
                       <BotonQuitar borrar titulo="Eliminar esta foto" pregunta={PREGUNTA_ELIMINAR} onClick={() => eliminar(f.id)} />
                     )}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, miniaturaFotoFiesta, nombresDescargaFotosFiesta, bajarFotosFiesta, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
+import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, miniaturaFotoFiesta, nombresDescargaFotosFiesta, bajarFotosFiesta, marcarFotoFamilia, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
 
 // Una reducción de mentira: el tamaño que «pesaría» cada intento.
 const reducirQuePesa = (pesos) => {
@@ -150,21 +150,18 @@ describe("la miniatura, solo en el móvil que la subió (v67.5)", () => {
 
 describe("el ZIP de las fotos (v67.6)", () => {
   const foto = (id, familia, quien, hora) => ({ id, familia, quien, ruta: `fiesta/${id}.jpg`, creadaEn: `2026-11-13T${hora}:00` });
-  const INVITADOS = [
-    { grupoFamiliar: "Abreu01", apellido: "Abreu" },
-    { grupoFamiliar: "", apellido: "Medina" },
-  ];
 
-  it("una carpeta por familia, con su nombre de la lista; cada foto, quién y a qué hora", () => {
-    expect(nombresDescargaFotosFiesta([foto("1", "abreu01", "Abreu, Gustavo", "22:47"), foto("2", "medina", "Medina, Ana", "23:05")], INVITADOS)).toEqual([
-      { ruta: "fiesta/1.jpg", nombre: "Abreu01/Abreu, Gustavo · 22.47.jpg" },
-      { ruta: "fiesta/2.jpg", nombre: "Medina/Medina, Ana · 23.05.jpg" },
+  // v85.5 (él): una sola carpeta, «diferenciados por el apellido».
+  it("todas en una sola carpeta; cada foto, quién (por su apellido) y a qué hora", () => {
+    expect(nombresDescargaFotosFiesta([foto("1", "abreu01", "Abreu, Gustavo", "22:47"), foto("2", "medina", "Medina, Ana", "23:05")])).toEqual([
+      { ruta: "fiesta/1.jpg", nombre: "Abreu, Gustavo · 22.47.jpg" },
+      { ruta: "fiesta/2.jpg", nombre: "Medina, Ana · 23.05.jpg" },
     ]);
   });
 
-  it("dos de la misma persona en el mismo minuto no se pisan; una familia que ya no está, con su clave", () => {
-    const nombres = nombresDescargaFotosFiesta([foto("1", "medina", "Medina, Ana", "22:47"), foto("2", "medina", "Medina, Ana", "22:47"), foto("3", "pérez", "Pérez, Eva", "21:00")], INVITADOS).map((n) => n.nombre);
-    expect(nombres).toEqual(["Medina/Medina, Ana · 22.47.jpg", "Medina/Medina, Ana · 22.47 (2).jpg", "pérez/Pérez, Eva · 21.00.jpg"]);
+  it("dos de la misma persona en el mismo minuto no se pisan", () => {
+    const nombres = nombresDescargaFotosFiesta([foto("1", "medina", "Medina, Ana", "22:47"), foto("2", "medina", "Medina, Ana", "22:47")]).map((n) => n.nombre);
+    expect(nombres).toEqual(["Medina, Ana · 22.47.jpg", "Medina, Ana · 22.47 (2).jpg"]);
   });
 
   it("baja todas del cajón, ordenadas, y cuenta las que fallan", async () => {
@@ -179,8 +176,8 @@ describe("el ZIP de las fotos (v67.6)", () => {
         }),
       },
     };
-    const { archivos, fallidas } = await bajarFotosFiesta(s, [foto("2", "medina", "Medina, Ana", "23:05"), foto("1", "abreu01", "Abreu, Gustavo", "22:47"), foto("3", "medina", "Medina, Luis", "23:10")], INVITADOS);
-    expect(archivos.map((a) => a.nombre)).toEqual(["Abreu01/Abreu, Gustavo · 22.47.jpg", "Medina/Medina, Ana · 23.05.jpg"]);
+    const { archivos, fallidas } = await bajarFotosFiesta(s, [foto("2", "medina", "Medina, Ana", "23:05"), foto("1", "abreu01", "Abreu, Gustavo", "22:47"), foto("3", "medina", "Medina, Luis", "23:10")]);
+    expect(archivos.map((a) => a.nombre)).toEqual(["Abreu, Gustavo · 22.47.jpg", "Medina, Ana · 23.05.jpg"]);
     expect(fallidas).toBe(1);
     expect(bajadas.every(([cubo]) => cubo === "fotos-fiesta")).toBe(true);
   });
@@ -212,5 +209,25 @@ describe("confirmar el móvil: año y mesa (v68.1)", () => {
     expect((await verificarFotoFiesta(bloqueado, { ...QUIEN, anio: "1975", mesa: "7" })).aviso).toContain("Espera 15 minutos");
     const raro = falso({ rpc: { tablon_verificar_foto: { data: null } } });
     expect((await verificarFotoFiesta(raro, { ...QUIEN, anio: "1975", mesa: "7" })).aviso).toBe("No se pudo comprobar. Prueba otra vez.");
+  });
+});
+
+// v85.5 (él): la foto de familia, una por familia.
+describe("marcar la foto de familia", () => {
+  it("se marca con su llave, su móvil y su foto", async () => {
+    const s = falso({ rpc: { tablon_marcar_foto_familia: { data: "" } } });
+    expect(await marcarFotoFamilia(s, { ...QUIEN, id: "f1", marcar: true })).toEqual({ aviso: "" });
+    expect(s.llamadas[0]).toEqual(["tablon_marcar_foto_familia", { p_token: "t", p_respuesta: "Medina Ana", p_id: "f1", p_dispositivo: "d1", p_marcar: true }]);
+  });
+
+  it("si ya la marcó otro de la familia, se dice quién; si no se pudo, que lo intente otra vez", async () => {
+    const otro = falso({ rpc: { tablon_marcar_foto_familia: { data: "Medina, Luis" } } });
+    expect((await marcarFotoFamilia(otro, { ...QUIEN, id: "f1", marcar: true })).aviso).toBe("La foto de familia ya la subió Medina, Luis: las tuyas son personales.");
+    expect((await marcarFotoFamilia(falso({}), { ...QUIEN, id: "f1", marcar: true })).aviso).toContain("No se pudo marcar");
+  });
+
+  it("en el ZIP, la de familia lo dice, detrás del nombre: sigue en su sitio por apellido", () => {
+    const [n] = nombresDescargaFotosFiesta([{ id: "1", familia: "medina", quien: "Medina, Ana", ruta: "fiesta/1.jpg", creadaEn: "2026-11-13T22:47:00", deFamilia: true }]);
+    expect(n.nombre).toBe("Medina, Ana · Foto de familia · 22.47.jpg");
   });
 });

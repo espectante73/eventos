@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "85.5",
+    cambios: [
+      "Tablón, con las fotos de la fiesta abiertas: la tarjeta de las fotos va lo primero, dorada, con la cámara en grande y latiendo suave; el recuadro verde se pliega a lo básico (nombre, hora y lugar, y el círculo, quieto) y se abre entero tocándolo; «Tu colaborador» y la FAQ, plegados en una línea. Al cerrar la recogida, todo vuelve a estar como siempre.",
+      "Fotos de la fiesta: «Si vienen en familia, una foto de toda la familia: que la suba solo uno de ustedes. Las demás son personales: lo que para ti ha sido el evento.» Quien la sube marca su foto con «Familia»; una por familia, y a los demás les sale «Foto de familia: ya la subió …». Quien viene solo, solo las suyas.",
+      "El ZIP de las fotos, en una sola carpeta: cada foto empieza por el apellido de quien la subió, y la de familia lo dice detrás del nombre.",
+      "Necesita el SQL «v85.5-foto-de-familia».",
+    ],
+  },
+  {
     version: "85.4",
     cambios: [
       "Tablón, recuadro verde más corto: los días que faltan, en el círculo dorado del inicio de la app (la misma pieza, con su latido, aquí en su sitio y no en la esquina), y el lugar con su dirección en un solo apartado: «Rte. El Rincón» en negrita, la calle detrás y el pueblo debajo.",

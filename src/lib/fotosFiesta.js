@@ -9,7 +9,6 @@
 // que caduque, a los 15 minutos. Cada paso lleva el móvil (`dispositivo`):
 // solo el que la subió puede quitarla.
 import { reducirImagen } from "./fotosAlmacen";
-import { claveFamilia } from "./invitados";
 import { horaCorta } from "./formato";
 
 export const CUBO_FOTOS_FIESTA = "fotos-fiesta";
@@ -22,6 +21,13 @@ export const FRASE_HORIZONTAL =
 // Su frase para quien tiene 16 o 17 años (él, v68), en el tablón y en las
 // tarjetas QR.
 export const FRASE_PERMISO_PADRES = "Puedes subir la foto con el permiso de tus padres, si eres menor de edad.";
+// Qué foto es cada una (v85.5, él): una de toda la familia, que sube solo
+// uno de ellos, y las demás personales. A quien viene solo, solo lo suyo.
+export const FRASE_FOTO_FAMILIA = "Si vienen en familia, una foto de toda la familia: que la suba solo uno de ustedes.";
+export const FRASE_FOTOS_PERSONALES = "Las demás son personales: lo que para ti ha sido el evento.";
+export const FRASE_FOTOS_SOLO = "Son personales: lo que para ti ha sido el evento.";
+export const fraseFotoFamiliaHecha = (quien) => `Foto de familia: ya la subió ${quien}.`;
+
 export const SOLO_MAYORES_16 = "Las fotos las suben los mayores de 16 años.";
 // Sin mesa en su ficha no se confirma el móvil (el año ya lo pide la
 // entrada del tablón, v70; las dos claves siguen siendo obligatorias).
@@ -173,21 +179,34 @@ export async function eliminarFotoFiesta(supabase, { token, respuesta, dispositi
   return { aviso: "" };
 }
 
-// El ZIP de las fotos, para elegirlas FUERA de la app (él, v67.6): una
-// carpeta por familia, con su nombre de la lista (grupo o apellido), y cada
-// foto con quién la subió y a qué hora: «Medina/Medina, Ana · 22.47.jpg».
+// Marcar (o desmarcar) una foto suya como la de familia (v85.5). Una por
+// familia: si ya la marcó otro, se dice quién y no se cambia.
+export async function marcarFotoFamilia(supabase, { token, respuesta, dispositivo, id, marcar }) {
+  const { data, error } = await supabase.rpc("tablon_marcar_foto_familia", {
+    p_token: token,
+    p_respuesta: respuesta,
+    p_id: id,
+    p_dispositivo: dispositivo,
+    p_marcar: marcar,
+  });
+  if (error || data === null || data === undefined) return { aviso: "No se pudo marcar la foto. Prueba otra vez.", detalle: error?.message };
+  if (data) return { aviso: `La foto de familia ya la subió ${data}: las tuyas son personales.` };
+  return { aviso: "" };
+}
+
+// El ZIP de las fotos, para elegirlas FUERA de la app (él, v67.6): todas en
+// una sola carpeta (v85.5, él: «una por familia son muchas carpetas»), cada
+// una con quién la subió, que empieza por su apellido, y a qué hora:
+// «Medina, Ana · 22.47.jpg». La de familia, con su nombre detrás del de
+// quien la subió, para que siga en su sitio por apellido:
+// «Medina, Ana · Foto de familia · 22.47.jpg».
 export const ARCHIVO_FOTOS_FIESTA = "Fotos de la fiesta.zip";
 const limpiarNombre = (t) => String(t || "").replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, " ").trim();
 
-export function nombresDescargaFotosFiesta(fotos, invitados = []) {
-  const carpetas = {};
-  for (const g of invitados) {
-    const clave = claveFamilia(g);
-    if (clave && !carpetas[clave]) carpetas[clave] = String(g.grupoFamiliar || g.apellido).trim();
-  }
+export function nombresDescargaFotosFiesta(fotos) {
   const usados = new Set();
   return fotos.map((f) => {
-    const base = `${limpiarNombre(carpetas[f.familia] || f.familia)}/${limpiarNombre(f.quien)} · ${horaCorta(f.creadaEn).replace(":", ".")}`;
+    const base = `${limpiarNombre(f.quien)} · ${f.deFamilia ? "Foto de familia · " : ""}${horaCorta(f.creadaEn).replace(":", ".")}`;
     let nombre = `${base}.jpg`;
     // Dos de la misma persona en el mismo minuto: no pisar.
     for (let i = 2; usados.has(nombre); i++) nombre = `${base} (${i}).jpg`;
@@ -198,8 +217,8 @@ export function nombresDescargaFotosFiesta(fotos, invitados = []) {
 
 // Baja las fotos del cajón (el anfitrión puede leerlas) de 6 en 6, para no
 // pedir 200 a la vez. Devuelve los archivos para el ZIP y cuántas fallaron.
-export async function bajarFotosFiesta(supabase, fotos, invitados) {
-  const pendientes = nombresDescargaFotosFiesta(fotos, invitados);
+export async function bajarFotosFiesta(supabase, fotos) {
+  const pendientes = nombresDescargaFotosFiesta(fotos);
   const archivos = [];
   let fallidas = 0;
   for (let i = 0; i < pendientes.length; i += 6) {

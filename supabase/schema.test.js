@@ -900,3 +900,22 @@ describe("el enlace personal al tablón", () => {
     expect(cuerpoDe("trg_historial_plantillas_email")).toContain(`registrar_historial_texto('plantilla', null, 'plantillaWhatsappEnlace', coalesce(old."plantillaWhatsappEnlace", ''))`);
   });
 });
+
+// v85.5 (él): la foto de familia, una por familia, la marca quien la subió.
+describe("la foto de familia", () => {
+  const f = cuerpoDe("tablon_marcar_foto_familia");
+  it("una columna sin «not null», y el tablón dice cuál, si viene en familia y quién la marcó", () => {
+    expect(sql).toContain('"deFamilia" boolean DEFAULT false\n);');
+    const fotos = cuerpoDe("tablon_fotos");
+    expect(fotos).toContain("'deFamilia', coalesce(f.\"deFamilia\", false)");
+    expect(fotos).toContain("'enFamilia'");
+    expect(fotos).toContain("'fotoFamilia'");
+  });
+  it("solo su autor, desde su móvil, y una por familia (si es de otro, dice quién)", () => {
+    expect(f).toContain("v_yo := (select t from tablon_invitado(p_token, p_respuesta) t limit 1);");
+    expect(f).toContain('f."invitadoId" = v_yo.id');
+    expect(f).toContain('(f."dispositivoId" is null or f."dispositivoId" = p_dispositivo)');
+    expect(f).toContain("pg_advisory_xact_lock(hashtext('foto_familia:' || v_foto.\"familia\"))");
+    expect(f).toContain('return v_otra."quien";');
+  });
+});
