@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "85.9",
+    cambios: [
+      "Contabilidad, al confirmar la recogida de un colaborador: junto al importe, «+ propina». Si la hubo, sale en el acuse como una línea más («Propina») y el total entregado la incluye; en «Recogido», «94 € + 20 € de propina».",
+      "Resumen: una casilla «Propinas» al lado de «Recaudado», y el balance, abajo a todo el ancho, ya las suma (recaudado + propinas − gastos). Deshacer la recogida quita también su propina.",
+      "Necesita el SQL «v85.9-propina-recogida».",
+    ],
+  },
+  {
     version: "85.8",
     cambios: [
       "El DJ no paga, también al cobrar por familias: «por cobrar», la pregunta del pago y el mensaje de WhatsApp le cuentan 0 € (antes, el precio de adulto). En su tablón, «Pagado» sin importe. Sigue contando como una persona más: invitación, QR y mesa.",

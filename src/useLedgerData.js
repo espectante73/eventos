@@ -765,13 +765,15 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
   // acuse (desglose por invitado, total, fecha, firma) se genera como
   // IMAGEN adjunta en el navegador (ver lib/acuseImagen.js) y se manda
   // por email al propio colaborador en la misma llamada.
+  // La propina (v85.9) se manda solo si la hay.
   const confirmarRecogidaColaborador = useCallback(
-    async (colaboradorId, importe, email, asunto, html, adjuntoNombre, adjuntoBase64) => {
+    async (colaboradorId, importe, propina, email, asunto, html, adjuntoNombre, adjuntoBase64) => {
       if (!esAnfitrion) return false;
       const { error } = await supabase.rpc("anfitrion_confirmar_recogida_colaborador", {
         p_token: rol,
         p_colaborador_id: colaboradorId,
         p_importe: importe,
+        ...(propina > 0 ? { p_propina: propina } : {}),
         p_email: email,
         p_asunto: asunto,
         p_html: html,

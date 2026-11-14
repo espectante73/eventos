@@ -936,3 +936,16 @@ describe("las familias del colaborador traen la zona, para el importe", () => {
     });
   }
 });
+
+// v85.9 (él): la propina de la recogida es parte de la contabilidad. Va al
+// final y opcional (la pantalla anterior sigue confirmando sin ella), y
+// deshacer la recogida la borra con el importe.
+describe("la propina de la recogida", () => {
+  it("se guarda al confirmar, opcional, y se borra al deshacer", () => {
+    expect(sql).toMatch(/"dineroRecogidoPropina" numeric\n\);/);
+    const confirmar = cuerpoDe("anfitrion_confirmar_recogida_colaborador");
+    expect(confirmar).toContain("p_propina numeric DEFAULT NULL::numeric) RETURNS void");
+    expect(confirmar).toContain(`"dineroRecogidoPropina" = nullif(p_propina, 0)`);
+    expect(cuerpoDe("anfitrion_deshacer_recogida_colaborador")).toContain(`"dineroRecogidoPropina" = null`);
+  });
+});

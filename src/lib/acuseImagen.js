@@ -62,8 +62,10 @@ function calcularHuecoExtra(numItems) {
   return Math.max(0, LIMITE_FOOTER - alturaNatural) / 3;
 }
 
-function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
-  const hueco = calcularHuecoExtra(items.length);
+// La propina (v85.9, él: «es parte de la contabilidad»): una fila más al
+// pie de la tabla, y el total entregado la incluye.
+function dibujarCanvasAcuse({ evento, colaborador, items, total, propina = 0, fechaISO }) {
+  const hueco = calcularHuecoExtra(items.length + (propina > 0 ? 1 : 0));
   const canvas = document.createElement("canvas");
   canvas.width = PAGINA_ANCHO * ESCALA_RESOLUCION;
   canvas.height = PAGINA_ALTO * ESCALA_RESOLUCION;
@@ -159,6 +161,15 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
       y += ALTO_FILA;
     });
   }
+  if (propina > 0) {
+    ctx.textAlign = "left";
+    ctx.font = "italic 12.5px 'Inter', sans-serif";
+    ctx.fillStyle = C.charcoal;
+    ctx.fillText("Propina", X_IZQ, y);
+    ctx.textAlign = "right";
+    ctx.fillText(euros(propina), X_DER, y);
+    y += ALTO_FILA;
+  }
 
   y += 4;
   ctx.strokeStyle = C.line;
@@ -178,7 +189,7 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
   ctx.fillStyle = C.wax;
   ctx.fillText("TOTAL ENTREGADO", CENTRO, y - 12);
   ctx.font = "bold 30px 'Fraunces', serif";
-  ctx.fillText(euros(total), CENTRO, y + 22);
+  ctx.fillText(euros(total + (propina > 0 ? propina : 0)), CENTRO, y + 22);
   y += ALTO_CAJA_TOTAL / 2 + 30 + hueco; // hueco C
 
   // ---------- Fecha y firma ----------
@@ -219,7 +230,7 @@ function dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO }) {
 
 // Devuelve un data URL "data:application/pdf;base64,...." con el recibo
 // en una única página A4 vertical real, dibujada 1:1 (sin escalar).
-export async function generarPdfAcuse({ evento, colaborador, items, total, fechaISO }) {
+export async function generarPdfAcuse({ evento, colaborador, items, total, propina = 0, fechaISO }) {
   // 'Alex Brush' no se usa en ningún otro sitio de la app (a diferencia
   // de Fraunces/Inter, ya cargadas de sobra por el resto de la interfaz
   // antes de llegar aquí) -- sin cargarla explícitamente antes de
@@ -231,7 +242,7 @@ export async function generarPdfAcuse({ evento, colaborador, items, total, fecha
   } catch (_) {
     // Sigue con la fuente de reserva si falla la carga.
   }
-  const canvas = dibujarCanvasAcuse({ evento, colaborador, items, total, fechaISO });
+  const canvas = dibujarCanvasAcuse({ evento, colaborador, items, total, propina, fechaISO });
   const imagenPng = canvas.toDataURL("image/png");
 
   // jsPDF (con sus piezas de compresión) era casi la mitad de la app y se

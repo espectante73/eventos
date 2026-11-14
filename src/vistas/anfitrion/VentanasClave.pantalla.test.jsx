@@ -134,4 +134,30 @@ describe("Contabilidad se puede dibujar", () => {
     expect(texto.indexOf("Previsto a recoger")).toBeLessThan(texto.indexOf("Recaudado"));
     vista.desmontar();
   });
+  // v85.9 (él): la propina «es parte de la contabilidad». La escribe él al
+  // confirmar la recogida, sale en «Recogido» y suma al balance.
+  it("la propina de una recogida suma al balance y se ve en «Recogido»", () => {
+    const conPropina = [{ ...colaboradores[0], dineroRecogidoEn: "2026-11-14T10:00:00Z", dineroRecogidoImporte: 45, dineroRecogidoPropina: 20 }];
+    const vista = montar(<VentanaCuentas data={{ ...data, colaboradores: conPropina }} onCerrar={() => {}} />);
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Resumen")));
+    let texto = vista.contenedor.textContent;
+    expect(texto).toContain(`${euros(20)}Propinas`);
+    // 45 recaudado + 20 de propina − 120 de gastos.
+    expect(texto).toContain(`${euros(45 + 20 - 120)}Balance (recaudado + propinas − gastos)`);
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Recaudado por colaborador")));
+    texto = vista.contenedor.textContent;
+    expect(texto).toContain(`Recogido ${euros(45)} + ${euros(20)} de propina`);
+    vista.desmontar();
+  });
+  it("al confirmar la recogida, la propina va junto al importe", () => {
+    const vista = montar(<VentanaCuentas data={data} onCerrar={() => {}} />);
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Recaudado por colaborador")));
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Confirmar recogida")));
+    const propina = vista.contenedor.querySelector('input[aria-label="Propina"]');
+    expect(propina).not.toBeNull();
+    expect(propina.value).toBe("");
+    // En la misma pieza que su rótulo y su «€» (norma 6).
+    expect(propina.parentElement.textContent).toContain("+ propina");
+    vista.desmontar();
+  });
 });

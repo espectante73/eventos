@@ -216,7 +216,11 @@ CREATE TABLE public.colaboradores (
     "dineroRecogidoEn" timestamp with time zone,
     "dineroRecogidoImporte" numeric,
     "emailSincronizadoEn" timestamp with time zone,
-    permisos jsonb DEFAULT '[]'::jsonb NOT NULL
+    permisos jsonb DEFAULT '[]'::jsonb NOT NULL,
+    -- La propina que entregó con lo recogido (v85.9, él: «es parte de la
+    -- contabilidad»): la escribe el anfitrión al enviar el acuse; suma al
+    -- balance. Sin "not null" (1.7, regla 7).
+    "dineroRecogidoPropina" numeric
 );
 
 -- Las mesas del banquete y su posición en el plano.
@@ -1617,8 +1621,10 @@ begin
 end;
 $$;
 
--- Cierra la recogida de datos de un colaborador y le manda el acuse.
-CREATE FUNCTION public.anfitrion_confirmar_recogida_colaborador(p_token uuid, p_colaborador_id uuid, p_importe numeric, p_email text, p_asunto text, p_html text, p_adjunto_nombre text, p_adjunto_base64 text) RETURNS void
+-- Cierra la recogida de datos de un colaborador y le manda el acuse. La
+-- propina (v85.9), al final y opcional: una pantalla abierta con la versión
+-- anterior sigue confirmando sin ella.
+CREATE FUNCTION public.anfitrion_confirmar_recogida_colaborador(p_token uuid, p_colaborador_id uuid, p_importe numeric, p_email text, p_asunto text, p_html text, p_adjunto_nombre text, p_adjunto_base64 text, p_propina numeric DEFAULT NULL::numeric) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -1628,7 +1634,8 @@ begin
   end if;
 
   update colaboradores
-  set "dineroRecogidoEn" = now(), "dineroRecogidoImporte" = p_importe
+  set "dineroRecogidoEn" = now(), "dineroRecogidoImporte" = p_importe,
+    "dineroRecogidoPropina" = nullif(p_propina, 0)
   where "id" = p_colaborador_id;
 
   perform enviar_email(p_email, p_asunto, p_html, p_adjunto_nombre, p_adjunto_base64, null, 'asignados');
@@ -1669,7 +1676,7 @@ begin
   end if;
 
   update colaboradores
-  set "dineroRecogidoEn" = null, "dineroRecogidoImporte" = null
+  set "dineroRecogidoEn" = null, "dineroRecogidoImporte" = null, "dineroRecogidoPropina" = null
   where "id" = p_colaborador_id;
 end;
 $$;
