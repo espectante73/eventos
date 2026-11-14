@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "86",
+    cambios: [
+      "Contabilidad, vista previa del acuse (al confirmar la recogida o al probarlo): además del destinatario, el importe y el PDF, el texto del email tal cual llega, con su asunto. Sale de la misma pieza que lo envía: lo que se ve es lo que se manda.",
+    ],
+  },
+  {
     version: "85.9",
     cambios: [
       "Contabilidad, al confirmar la recogida de un colaborador: junto al importe, «+ propina». Si la hubo, sale en el acuse como una línea más («Propina») y el total entregado la incluye; en «Recogido», «94 € + 20 € de propina».",

@@ -6,11 +6,17 @@ export function construirAsuntoAcuse(evento) {
   return `Acuse de recogida — ${evento?.nombre || "evento"}`;
 }
 
+// El cuerpo, en párrafos (v86, él: «que en la vista previa se vea el
+// contenido del email»): el email los une con <br><br> y la vista previa
+// los enseña tal cual. Una sola pieza: lo que se ve es lo que se envía.
+export function parrafosAcuse({ colaborador }) {
+  return [
+    `Hola ${colaborador.nombre},`,
+    "Adjunto tu acuse de recogida — comprobante de que hemos recibido de ti la cantidad recaudada de tus invitados asignados. Consérvalo para tu propia seguridad.",
+    "Gracias por tu ayuda.",
+  ];
+}
+
 export function construirHtmlAcuse({ colaborador }) {
-  return `
-Hola ${colaborador.nombre},<br><br>
-Adjunto tu acuse de recogida — comprobante de que hemos recibido de ti la cantidad
-recaudada de tus invitados asignados. Consérvalo para tu propia seguridad.<br><br>
-Gracias por tu ayuda.
-`.trim();
+  return parrafosAcuse({ colaborador }).join("<br><br>");
 }

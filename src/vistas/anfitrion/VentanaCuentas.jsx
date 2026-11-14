@@ -8,7 +8,7 @@ import { Mail, Undo2, Calculator, Users, Receipt, Check } from "lucide-react";
 import { C, T, OP } from "../../theme";
 import { importeEsperadoInvitado, previstoARecoger, resolverColaborador } from "../../lib/invitados";
 import { formatearFecha, ordenarPorApellidoNombre, euros, parsePrecio } from "../../lib/formato";
-import { construirAsuntoAcuse, construirHtmlAcuse } from "../../lib/acuseRecogida";
+import { construirAsuntoAcuse, construirHtmlAcuse, parrafosAcuse } from "../../lib/acuseRecogida";
 import { generarPdfAcuse } from "../../lib/acuseImagen";
 import { TextInput } from "../../components/Formulario";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
@@ -445,6 +445,17 @@ export function VentanaCuentas({ data, onCerrar }) {
             <p className="text-sm mb-3" style={{ color: C.ink }}>{conPropina(previewAcuse.importe, previewAcuse.propina)}</p>
           </>
         )}
+        {/* El email tal cual llega (v86): su asunto y su texto, de la misma
+            pieza que lo envía (parrafosAcuse). */}
+        <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
+          Texto del email
+        </p>
+        <div data-texto-email className="text-sm mb-3 p-2 rounded space-y-2" style={{ background: C.blanco, border: `1px solid ${C.line}`, color: C.ink }}>
+          <p style={{ fontWeight: 600 }}>{previewAcuse.asunto}</p>
+          {parrafosAcuse({ colaborador: previewAcuse.colaborador }).map((parrafo) => (
+            <p key={parrafo}>{parrafo}</p>
+          ))}
+        </div>
         <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
           Acuse (PDF) — revisa que todo esté bien antes de continuar
         </p>
