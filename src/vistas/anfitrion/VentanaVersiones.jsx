@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "86.2",
+    cambios: [
+      "Progreso de recopilación: el colaborador que ha terminado su parte sale destacado, en dorado y con la marca de hecho delante del nombre. Terminado es: datos y pagos al 100 % y el dinero ya entregado (acuse enviado en Contabilidad). Las invitaciones no cuentan: las manda el anfitrión.",
+    ],
+  },
+  {
     version: "86.1",
     cambios: [
       "Contabilidad, «Recaudado por colaborador»: arriba, los que faltan por entregar; al enviar el acuse, ese colaborador baja con los ya recogidos. Dentro de cada grupo, por orden alfabético.",

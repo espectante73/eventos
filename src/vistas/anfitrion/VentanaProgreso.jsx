@@ -8,8 +8,8 @@
 // uno por métrica, que no era la idea). Y de canciones registradas.
 // Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4,
 // Ronda 1).
-import { AlertTriangle, ClipboardList, Euro, Mail, Music, UserCheck, UserX } from "lucide-react";
-import { C, OP, T, FONDO_VERDE } from "../../theme";
+import { AlertTriangle, Check, ClipboardList, Euro, Mail, Music, UserCheck, UserX } from "lucide-react";
+import { C, OP, T, FONDO_VERDE, DORADO } from "../../theme";
 import { useEstadoCuentas, textoUltimaEntrada } from "../../lib/estadoCuentas";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
 import { impagosVencidos } from "../../lib/impagos";
@@ -89,14 +89,29 @@ export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
             (f) => ordenFamiliares[f]?.invitacionEnviada
           ).length;
           const impagos = impagosVencidos(suyos);
+          // Ha terminado su parte (él, v86.2): datos y pagos al 100 % y el
+          // dinero ya entregado (acuse enviado, en Contabilidad). Las
+          // invitaciones no cuentan: las manda el anfitrión, no él.
+          const terminado =
+            suyos.length > 0 && completosDatos === suyos.length && pagados === suyos.length && Boolean(c.dineroRecogidoEn);
           return (
-            <div key={c.id} className="rounded p-2" style={{ background: C.paperDark }}>
+            <div
+              key={c.id}
+              className="rounded p-2"
+              data-terminado={terminado || undefined}
+              style={{
+                background: terminado ? DORADO.fondo : C.paperDark,
+                // El borde, en todos: el destacado no cambia el tamaño.
+                border: `1px solid ${terminado ? C.gold : "transparent"}`,
+              }}
+            >
               <div
-                className="text-xs mb-1 truncate"
+                className="text-xs mb-1 truncate flex items-center gap-1"
                 style={{ color: C.ink, fontWeight: 600, fontFamily: "'Fraunces', serif" }}
-                title={c.nombre}
+                title={terminado ? `${c.nombre}: ha terminado` : c.nombre}
               >
-                {c.nombre}
+                {terminado && <Check size={14} strokeWidth={3} style={{ flexShrink: 0 }} aria-label="Ha terminado" />}
+                <span className="truncate">{c.nombre}</span>
               </div>
               <BarraCompacta icono={ClipboardList} completado={completosDatos} total={suyos.length} color={C.ink} />
               <BarraCompacta icono={Euro} completado={pagados} total={suyos.length} color={C.gold} />
