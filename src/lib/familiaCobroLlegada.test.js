@@ -25,6 +25,14 @@ describe("la familia para el pago y la llegada", () => {
     expect(p.puedeTodos).toBe(true);
   });
 
+  // v85.8 (él): el DJ no paga. La copia de la familia guarda su zona, o
+  // cobrarle por familia le sumaría el precio de adulto.
+  it("el DJ, a 0 € también al cobrar por familia", () => {
+    const dj = { ...g("j", "Brown"), apellido: "Brown", grupoFamiliar: "", zona: "DJ" };
+    const p = preguntaFamilia(familiaDe([dj], dj), "pagado", true, { evento });
+    expect(p.total).toBe(0);
+  });
+
   it("si a alguien le faltan datos, no se puede a toda la familia y dice quién", () => {
     const lista = invitados.map((x) => (x.id === "c" ? { ...x, alergias: "" } : x));
     const p = preguntaFamilia(familiaDe(lista, lista[0]), "pagado", true, { evento });

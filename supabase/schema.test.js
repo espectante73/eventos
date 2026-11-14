@@ -162,6 +162,11 @@ describe("el tablón: quién ha entrado y su colaborador", () => {
     for (const nunca of ["'anioNacimiento'", "'email'", "'telefono'", 'y."telefono"']) expect(f).not.toContain(nunca);
     expect(f).not.toMatch(/'\w+',\s*y\."(anioNacimiento|email|telefono)"/);
   });
+  // v85.8 (él): el DJ no paga. Sin su zona, la ronda de Recaudación le
+  // ponía el precio de adulto (rondasTablon → importeEsperadoInvitado).
+  it("su zona, para el importe: el DJ, a 0 €", () => {
+    expect(f).toContain(`'zona', trim(coalesce(y."zona", ''))`);
+  });
   it("su nombre como en la lista, su colaborador aunque sea él mismo, y si es colaborador", () => {
     expect(f).toContain(`'nombre', y."apellido" || ', ' || y."nombre"`);
     expect(f).toContain(`'colaborador', c."nombre"`);
@@ -918,4 +923,16 @@ describe("la foto de familia", () => {
     expect(f).toContain("pg_advisory_xact_lock(hashtext('foto_familia:' || v_foto.\"familia\"))");
     expect(f).toContain('return v_otra."quien";');
   });
+});
+
+// v85.8 (él): el DJ no paga. Las familias que se cobran juntas llegan de la
+// base al colaborador; sin la zona, el DJ sumaba el precio de adulto.
+describe("las familias del colaborador traen la zona, para el importe", () => {
+  for (const nombre of ["colaborador_familia_de", "colaborador_mis_familias"]) {
+    it(nombre, () => {
+      const f = cuerpoDe(nombre);
+      expect(f).toMatch(/RETURNS TABLE\([^)]*\bzona text\)/);
+      expect(f).toContain(`coalesce(i."zona", '')`);
+    });
+  }
 });

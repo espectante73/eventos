@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "85.8",
+    cambios: [
+      "El DJ no paga, también al cobrar por familias: «por cobrar», la pregunta del pago y el mensaje de WhatsApp le cuentan 0 € (antes, el precio de adulto). En su tablón, «Pagado» sin importe. Sigue contando como una persona más: invitación, QR y mesa.",
+      "Necesita el SQL «v85.8-zona-dj-familias».",
+    ],
+  },
+  {
     version: "85.7",
     cambios: [
       "Día del evento: el ZIP de las fotos se llama como el evento, «Fotos de Las Bodas de todos.zip», y no «Fotos de la fiesta»: es algo más que una fiesta.",

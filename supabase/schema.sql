@@ -2546,10 +2546,10 @@ $$;
 -- familia (grupo familiar o, si está vacío, el apellido: lib/invitados.js,
 -- claveFamilia), aunque parte la lleve OTRO colaborador (un matrimonio
 -- puede tener dos). Solo lo que hace falta para preguntar: nombre, año de
--- nacimiento (para el importe), si tiene los datos obligatorios, y si ya
--- ha pagado o llegado. Nada de alergias ni contacto.
+-- nacimiento y zona (para el importe: el DJ, a 0 €), si tiene los datos
+-- obligatorios, y si ya ha pagado o llegado. Nada de alergias ni contacto.
 CREATE FUNCTION public.colaborador_familia_de(p_colaborador_id uuid, p_invitado_id uuid)
-    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "datosCompletos" boolean, pagado boolean, presente boolean)
+    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "datosCompletos" boolean, pagado boolean, presente boolean, zona text)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -2568,7 +2568,8 @@ begin
   return query
     select i."id", i."nombre", i."apellido", i."anioNacimiento",
       (coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> ''),
-      coalesce(i."pagado", false), coalesce(i."presente", false)
+      coalesce(i."pagado", false), coalesce(i."presente", false),
+      coalesce(i."zona", '')
     from invitados i
     where i."confirmado" = true
       and lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) = v_familia;
@@ -2802,10 +2803,11 @@ CREATE FUNCTION public.colaborador_mi_perfil(p_colaborador_id uuid) RETURNS SETO
 -- Las familias del colaborador, completas (v60): para cobrar y acreditar
 -- por familia ve también a los miembros que lleva otro colaborador (un
 -- matrimonio puede tener dos). Lo justo para agrupar y cobrar: nombre,
--- años (importe y aniversario), papel en la familia, si tiene sus datos
--- obligatorios y si ha pagado o llegado. Nada de alergias ni contacto.
+-- años (importe y aniversario), zona (el DJ entra a 0 €), papel en la
+-- familia, si tiene sus datos obligatorios y si ha pagado o llegado. Nada
+-- de alergias ni contacto.
 CREATE FUNCTION public.colaborador_mis_familias(p_colaborador_id uuid)
-    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "anioBoda" text, "grupoFamiliar" text, "rolFamiliar" text, "datosCompletos" boolean, pagado boolean, presente boolean, "esMio" boolean, "pagoPendienteHasta" date, "plazosPago" integer)
+    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "anioBoda" text, "grupoFamiliar" text, "rolFamiliar" text, "datosCompletos" boolean, pagado boolean, presente boolean, "esMio" boolean, "pagoPendienteHasta" date, "plazosPago" integer, zona text)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -2823,7 +2825,8 @@ begin
       (coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> ''),
       coalesce(i."pagado", false), coalesce(i."presente", false),
       i."colaboradorId" is not distinct from p_colaborador_id,
-      i."pagoPendienteHasta", coalesce(i."plazosPago", 0)
+      i."pagoPendienteHasta", coalesce(i."plazosPago", 0),
+      coalesce(i."zona", '')
     from invitados i
     where i."confirmado" = true
       and lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) in (select m.clave from mias m where m.clave <> '');
@@ -3451,7 +3454,8 @@ CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS 
     'sinCancion', coalesce(y."sinCancion", false),
     'conservarDatos', coalesce(y."conservarDatos", false),
     'anioBoda', case when y."rolFamiliar" in ('esposo', 'esposa') then y."anioBoda" end,
-    'tieneEmail', coalesce(trim(y."email"), '') <> ''
+    'tieneEmail', coalesce(trim(y."email"), '') <> '',
+    'zona', trim(coalesce(y."zona", ''))
   )
   from tablon_invitado(p_token, p_respuesta) y
   left join colaboradores c on c."id" = y."colaboradorId";
