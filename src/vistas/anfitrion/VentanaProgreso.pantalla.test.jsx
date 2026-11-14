@@ -52,18 +52,22 @@ describe("Progreso de recopilación", () => {
 
   // v86.2 (él): el que ha terminado su parte —datos y pagos al 100 % y el
   // dinero entregado— queda destacado. Las invitaciones no cuentan.
-  it("destaca al que ha terminado: datos y pagos completos y el acuse enviado", async () => {
+  it("destaca al que ha terminado: datos y pagos completos y todo entregado", async () => {
     const completo = { confirmado: true, anioNacimiento: "1980", alergias: "No", pagado: true };
     const datos = {
       invitados: [
         { id: "g1", nombre: "Ana", apellido: "Ruiz", colaboradorId: "c1", ...completo },
         { id: "g2", nombre: "Luis", apellido: "Sosa", colaboradorId: "c2", ...completo },
         { id: "g3", nombre: "Eva", apellido: "Gil", colaboradorId: "c3", ...completo, pagado: false },
+        { id: "g4", nombre: "Leo", apellido: "Paz", colaboradorId: "c4", ...completo },
+        { id: "g5", nombre: "Mar", apellido: "Paz", colaboradorId: "c4", ...completo },
       ],
       colaboradores: [
-        { id: "c1", nombre: "Bravo, Yeray", dineroRecogidoEn: hoy },
+        { id: "c1", nombre: "Bravo, Yeray", entregas: [{ id: "e1", fecha: hoy, importe: 47, invitados: ["g1"] }] },
         { id: "c2", nombre: "Sin, Entregar" },
-        { id: "c3", nombre: "Sin, Cobrar", dineroRecogidoEn: hoy },
+        { id: "c3", nombre: "Sin, Cobrar", entregas: [{ id: "e2", fecha: hoy, importe: 0, invitados: [] }] },
+        // Entregó una vez, pero luego cobró a otro: no ha terminado (v87).
+        { id: "c4", nombre: "Falta, Otra", entregas: [{ id: "e3", fecha: hoy, importe: 47, invitados: ["g4"] }] },
       ],
       ordenFamiliares: {},
     };

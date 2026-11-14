@@ -757,23 +757,25 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     [esAnfitrion, rol]
   );
 
-  // Confirmar/deshacer que el anfitrión ha recibido de un colaborador lo
-  // recaudado de sus invitados -- evento aparte de "invitado pagó a su
-  // colaborador" (invitados.pagado). El importe se congela en el momento
-  // de confirmar (no se recalcula después), para que el acuse ya
-  // enviado siga siendo fiel a lo que de verdad se entregó ese día. El
-  // acuse (desglose por invitado, total, fecha, firma) se genera como
-  // IMAGEN adjunta en el navegador (ver lib/acuseImagen.js) y se manda
-  // por email al propio colaborador en la misma llamada.
-  // La propina (v85.9) se manda solo si la hay.
-  const confirmarRecogidaColaborador = useCallback(
-    async (colaboradorId, importe, propina, email, asunto, html, adjuntoNombre, adjuntoBase64) => {
+  // Las entregas de dinero de un colaborador al anfitrión (v87, él: «varias
+  // rondas de recogida»): cada una con sus invitados, su importe y su
+  // propina, congelados ese día, y su acuse (imagen en el navegador,
+  // lib/acuseImagen.js) por email al propio colaborador en la misma llamada.
+  // Qué falta por entregar lo calcula lib/entregas.js.
+  const recargarColaboradores = useCallback(async () => {
+    const { data: todos, error } = await supabase.rpc("anfitrion_listar_colaboradores", { p_token: rol });
+    if (!error) setColaboradores(todos || []);
+  }, [rol]);
+
+  const confirmarEntregaColaborador = useCallback(
+    async (colaboradorId, invitadosIds, importe, propina, email, asunto, html, adjuntoNombre, adjuntoBase64) => {
       if (!esAnfitrion) return false;
-      const { error } = await supabase.rpc("anfitrion_confirmar_recogida_colaborador", {
+      const { error } = await supabase.rpc("anfitrion_confirmar_entrega", {
         p_token: rol,
         p_colaborador_id: colaboradorId,
+        p_invitados: invitadosIds,
         p_importe: importe,
-        ...(propina > 0 ? { p_propina: propina } : {}),
+        p_propina: propina > 0 ? propina : null,
         p_email: email,
         p_asunto: asunto,
         p_html: html,
@@ -781,17 +783,13 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
         p_adjunto_base64: adjuntoBase64,
       });
       if (error) {
-        avisar("No se pudo confirmar la recogida.", error);
+        avisar("No se pudo confirmar la entrega.", error);
         return false;
       }
-      const { data: todosColaboradores, error: errCol } = await supabase.rpc(
-        "anfitrion_listar_colaboradores",
-        { p_token: rol }
-      );
-      if (!errCol) setColaboradores(todosColaboradores || []);
+      await recargarColaboradores();
       return true;
     },
-    [esAnfitrion, rol]
+    [esAnfitrion, rol, recargarColaboradores]
   );
 
   // Reenviar el mismo acuse sin volver a "confirmar" (no toca la fecha ni
@@ -817,25 +815,23 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     [esAnfitrion, rol]
   );
 
-  const deshacerRecogidaColaborador = useCallback(
-    async (colaboradorId) => {
+  // Solo la última entrega (la base lo comprueba): es para el error recién hecho.
+  const deshacerEntregaColaborador = useCallback(
+    async (colaboradorId, entregaId) => {
       if (!esAnfitrion) return false;
-      const { error } = await supabase.rpc("anfitrion_deshacer_recogida_colaborador", {
+      const { error } = await supabase.rpc("anfitrion_deshacer_entrega", {
         p_token: rol,
         p_colaborador_id: colaboradorId,
+        p_entrega_id: entregaId,
       });
       if (error) {
-        avisar("No se pudo deshacer la recogida.", error);
+        avisar("No se pudo deshacer la entrega.", error);
         return false;
       }
-      const { data: todosColaboradores, error: errCol } = await supabase.rpc(
-        "anfitrion_listar_colaboradores",
-        { p_token: rol }
-      );
-      if (!errCol) setColaboradores(todosColaboradores || []);
+      await recargarColaboradores();
       return true;
     },
-    [esAnfitrion, rol]
+    [esAnfitrion, rol, recargarColaboradores]
   );
 
   // Dos caminos según quién llama: el anfitrión gestiona el tablón
@@ -1652,9 +1648,9 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     resetearPorInvitados,
     gastos,
     persistGastos,
-    confirmarRecogidaColaborador,
+    confirmarEntregaColaborador,
     reenviarAcuseColaborador,
-    deshacerRecogidaColaborador,
+    deshacerEntregaColaborador,
     confirmarEmailColaboradorActualizado,
     activarModoPruebas,
     desactivarModoPruebas,

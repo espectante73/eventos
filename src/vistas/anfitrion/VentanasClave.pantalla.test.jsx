@@ -54,9 +54,9 @@ const data = {
   invitados,
   gastos: [{ id: "x1", concepto: "Flores", categoria: "Decoración", importe: "120", pagado: false }],
   persistGastos: () => {},
-  confirmarRecogidaColaborador: () => {},
+  confirmarEntregaColaborador: () => {},
   reenviarAcuseColaborador: () => {},
-  deshacerRecogidaColaborador: () => {},
+  deshacerEntregaColaborador: () => {},
 };
 
 describe("el Cronograma se puede dibujar", () => {
@@ -136,8 +136,8 @@ describe("Contabilidad se puede dibujar", () => {
   });
   // v85.9 (él): la propina «es parte de la contabilidad». La escribe él al
   // confirmar la recogida, sale en «Recogido» y suma al balance.
-  it("la propina de una recogida suma al balance y se ve en «Recogido»", () => {
-    const conPropina = [{ ...colaboradores[0], dineroRecogidoEn: "2026-11-14T10:00:00Z", dineroRecogidoImporte: 45, dineroRecogidoPropina: 20 }];
+  it("las propinas de las entregas suman al balance, y cada entrega con la suya", () => {
+    const conPropina = [{ ...colaboradores[0], entregas: [{ id: "e1", fecha: "2026-11-14T10:00:00Z", importe: 45, propina: 20, invitados: ["g1"] }] }];
     const vista = montar(<VentanaCuentas data={{ ...data, colaboradores: conPropina }} onCerrar={() => {}} />);
     vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Resumen")));
     let texto = vista.contenedor.textContent;
@@ -145,28 +145,40 @@ describe("Contabilidad se puede dibujar", () => {
     // 45 recaudado + 20 de propina − 120 de gastos.
     expect(texto).toContain(`${euros(45 + 20 - 120)}Balance (recaudado + propinas − gastos)`);
     vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Recaudado por colaborador")));
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Entregas (1)")));
     texto = vista.contenedor.textContent;
-    expect(texto).toContain(`Recogido ${euros(45)} + ${euros(20)} de propina`);
+    expect(texto).toContain(`${euros(45)} + ${euros(20)} propina`);
     vista.desmontar();
   });
-  // v86.1 (él): con el acuse enviado, el colaborador baja; arriba, los que
-  // faltan por entregar, en el orden de siempre.
-  it("los que faltan por entregar, arriba; con el acuse enviado, abajo", () => {
+  // v86.1, v87 (él): arriba los que tienen algo por entregar; abajo, los
+  // que lo han entregado todo.
+  it("los que tienen algo por entregar, arriba; los que lo entregaron todo, abajo", () => {
     const tres = [
-      { id: "c1", nombre: "Ana", email: "a@a.com", permisos: [], dineroRecogidoEn: "2026-11-14T10:00:00Z", dineroRecogidoImporte: 45 },
+      { id: "c1", nombre: "Ana", email: "a@a.com", permisos: [], entregas: [{ id: "e1", fecha: "2026-11-14T10:00:00Z", importe: 45, invitados: ["g1"] }] },
       { id: "c2", nombre: "Bea", email: "b@b.com", permisos: [] },
       { id: "c3", nombre: "Ciro", email: "c@c.com", permisos: [] },
     ];
-    const vista = montar(<VentanaCuentas data={{ ...data, colaboradores: tres }} onCerrar={() => {}} />);
+    const conPagado = [...invitados, { id: "g9", nombre: "Pepe", apellido: "Sosa", grupoFamiliar: "Sosa01", colaboradorId: "c3", confirmado: true, pagado: true, anioNacimiento: "1980" }];
+    const vista = montar(<VentanaCuentas data={{ ...data, invitados: conPagado, colaboradores: tres }} onCerrar={() => {}} />);
     vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Recaudado por colaborador")));
     const orden = [...vista.contenedor.textContent.matchAll(/Recaudado por (Ana|Bea|Ciro)/g)].map((m) => m[1]);
-    expect(orden).toEqual(["Bea", "Ciro", "Ana"]);
+    // Ciro tiene a Pepe por entregar; Bea, nada; Ana lo entregó todo.
+    expect(orden).toEqual(["Ciro", "Bea", "Ana"]);
     vista.desmontar();
   });
-  it("al confirmar la recogida, la propina va junto al importe", () => {
+  // v87 (él): una entrega nueva solo con lo cobrado desde la anterior.
+  it("tras una entrega, lo que paga después sale «Por entregar» aparte", () => {
+    const yeray = [{ ...colaboradores[0], entregas: [{ id: "e1", fecha: "2026-11-14T10:00:00Z", importe: 45, invitados: ["g1"] }] }];
+    const pagaOmar = invitados.map((g) => (g.id === "g2" ? { ...g, pagado: true } : g));
+    const vista = montar(<VentanaCuentas data={{ ...data, invitados: pagaOmar, colaboradores: yeray }} onCerrar={() => {}} />);
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Recaudado por colaborador")));
+    expect(vista.contenedor.textContent).toContain(`Por entregar: ${euros(45)} (1 invitado)`);
+    vista.desmontar();
+  });
+  it("al confirmar la entrega, la propina va junto al importe", () => {
     const vista = montar(<VentanaCuentas data={data} onCerrar={() => {}} />);
     vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Recaudado por colaborador")));
-    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Confirmar recogida")));
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Confirmar entrega")));
     const propina = vista.contenedor.querySelector('input[aria-label="Propina"]');
     expect(propina).not.toBeNull();
     expect(propina.value).toBe("");

@@ -937,15 +937,25 @@ describe("las familias del colaborador traen la zona, para el importe", () => {
   }
 });
 
-// v85.9 (él): la propina de la recogida es parte de la contabilidad. Va al
-// final y opcional (la pantalla anterior sigue confirmando sin ella), y
-// deshacer la recogida la borra con el importe.
-describe("la propina de la recogida", () => {
-  it("se guarda al confirmar, opcional, y se borra al deshacer", () => {
-    expect(sql).toMatch(/"dineroRecogidoPropina" numeric\n\);/);
-    const confirmar = cuerpoDe("anfitrion_confirmar_recogida_colaborador");
-    expect(confirmar).toContain("p_propina numeric DEFAULT NULL::numeric) RETURNS void");
-    expect(confirmar).toContain(`"dineroRecogidoPropina" = nullif(p_propina, 0)`);
-    expect(cuerpoDe("anfitrion_deshacer_recogida_colaborador")).toContain(`"dineroRecogidoPropina" = null`);
+// v87 (él): «un colaborador puede tener varias rondas de recogida de
+// dinero». Cada entrega, con sus invitados, importe y propina (v85.9), en
+// colaboradores.entregas: una sola pieza dice qué está entregado.
+describe("las entregas de dinero de cada colaborador", () => {
+  it("se guardan en una lista, sin «not null» (una foto anterior la trae vacía)", () => {
+    expect(sql).toMatch(/entregas jsonb DEFAULT '\[\]'::jsonb\n\);/);
+    expect(sql).not.toContain("dineroRecogido");
+  });
+  it("confirmar apunta una entrega nueva, y un invitado entra en una sola", () => {
+    const f = cuerpoDe("anfitrion_confirmar_entrega");
+    expect(f).toContain('p_token is distinct from (select "token" from anfitrion_secreto limit 1)');
+    expect(f).toContain(`coalesce("entregas", '[]'::jsonb) || jsonb_build_array(`);
+    expect(f).toContain("'propina', nullif(p_propina, 0)");
+    expect(f).toContain("raise exception 'Algún invitado de esta entrega ya estaba en otra.'");
+  });
+  it("deshacer quita solo la última, y solo si es esa", () => {
+    const f = cuerpoDe("anfitrion_deshacer_entrega");
+    expect(f).toContain('p_token is distinct from (select "token" from anfitrion_secreto limit 1)');
+    expect(f).toContain(`set "entregas" = "entregas" - (-1)`);
+    expect(f).toContain(`"entregas"->-1->>'id' = p_entrega_id`);
   });
 });

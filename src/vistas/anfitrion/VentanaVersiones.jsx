@@ -42,6 +42,16 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "87",
+    cambios: [
+      "Contabilidad, «Recaudado por colaborador»: un colaborador puede entregar el dinero en varias veces. Lo cobrado y aún no entregado sale como «Por entregar: 141 € (3 invitados)» con «Confirmar entrega»: su importe, su propina y un acuse solo con esos invitados.",
+      "Sus entregas, plegadas debajo («Entregas (2)»), una por línea con su fecha, importe y propina, y su acuse para reenviar. Deshacer, solo la última.",
+      "Arriba, los que tienen algo por entregar; abajo, los que lo han entregado todo. Las propinas de todas las entregas suman al balance.",
+      "Progreso: el dorado sale solo con datos y pagos al 100 % y nada por entregar.",
+      "La recogida que ya estaba apuntada es ahora la primera entrega de ese colaborador. Necesita el SQL «v87-entregas-colaborador».",
+    ],
+  },
+  {
     version: "86.2",
     cambios: [
       "Progreso de recopilación: el colaborador que ha terminado su parte sale destacado, en dorado y con la marca de hecho delante del nombre. Terminado es: datos y pagos al 100 % y el dinero ya entregado (acuse enviado en Contabilidad). Las invitaciones no cuentan: las manda el anfitrión.",

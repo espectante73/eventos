@@ -16,10 +16,11 @@ import { impagosVencidos } from "../../lib/impagos";
 import { BarraCompacta } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { tieneCancion } from "../../lib/canciones";
+import { estadoEntregas } from "../../lib/entregas";
 
 // `anfitrionToken`: para leer si cada colaborador tiene ya cuenta (v58.7).
 export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
-  const { invitados, colaboradores, ordenFamiliares } = data;
+  const { invitados, colaboradores, ordenFamiliares, evento } = data;
   const cuentas = useEstadoCuentas(anfitrionToken);
   const confirmadosCount = invitados.filter((g) => g.confirmado).length;
 
@@ -89,11 +90,14 @@ export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
             (f) => ordenFamiliares[f]?.invitacionEnviada
           ).length;
           const impagos = impagosVencidos(suyos);
-          // Ha terminado su parte (él, v86.2): datos y pagos al 100 % y el
-          // dinero ya entregado (acuse enviado, en Contabilidad). Las
-          // invitaciones no cuentan: las manda el anfitrión, no él.
+          // Ha terminado su parte (él, v86.2): datos y pagos al 100 % y todo
+          // el dinero entregado, sin nada «por entregar» (v87: varias
+          // entregas). Las invitaciones no cuentan: las manda el anfitrión.
           const terminado =
-            suyos.length > 0 && completosDatos === suyos.length && pagados === suyos.length && Boolean(c.dineroRecogidoEn);
+            suyos.length > 0 &&
+            completosDatos === suyos.length &&
+            pagados === suyos.length &&
+            estadoEntregas(c, invitados, evento, colaboradores) === "entregado";
           return (
             <div
               key={c.id}

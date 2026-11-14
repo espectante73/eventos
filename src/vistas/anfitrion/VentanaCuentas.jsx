@@ -4,10 +4,11 @@
 // (GastosHoja, v76) y balance. Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08
 // (Fase 4, Ronda 4).
 import { useState } from "react";
-import { Mail, Undo2, Calculator, Users, Receipt, Check } from "lucide-react";
+import { Mail, Undo2, Calculator, Users, Receipt } from "lucide-react";
 import { C, T, OP } from "../../theme";
-import { importeEsperadoInvitado, previstoARecoger, resolverColaborador } from "../../lib/invitados";
-import { formatearFecha, ordenarPorApellidoNombre, euros, parsePrecio } from "../../lib/formato";
+import { importeEsperadoInvitado, previstoARecoger } from "../../lib/invitados";
+import { fechaCorta, euros, parsePrecio } from "../../lib/formato";
+import { entregasDe, porEntregar, itemsDeEntrega, propinasTotales, ordenarPorEntregas } from "../../lib/entregas";
 import { construirAsuntoAcuse, construirHtmlAcuse, parrafosAcuse } from "../../lib/acuseRecogida";
 import { generarPdfAcuse } from "../../lib/acuseImagen";
 import { TextInput } from "../../components/Formulario";
@@ -21,9 +22,10 @@ import { GastosHoja, VentanaConceptos } from "./GastosHoja";
 import { totalGastos as sumaGastos } from "../../lib/gastos";
 
 // Lo entregado, con la propina si la hubo (v85.9): la misma frase en la
-// vista previa y en «Recogido».
-const conPropina = (importe, propina) =>
-  propina > 0 ? `${euros(importe)} + ${euros(propina)} de propina` : euros(importe);
+// vista previa y en cada entrega; `corto`, sin «de», para que la línea de
+// una entrega quepa entera en el móvil (norma 6).
+const conPropina = (importe, propina, { corto = false } = {}) =>
+  propina > 0 ? `${euros(importe)} + ${euros(propina)} ${corto ? "" : "de "}propina` : euros(importe);
 
 export function VentanaCuentas({ data, onCerrar }) {
   const {
@@ -31,9 +33,9 @@ export function VentanaCuentas({ data, onCerrar }) {
     invitados,
     colaboradores,
     gastos,
-    confirmarRecogidaColaborador,
+    confirmarEntregaColaborador,
     reenviarAcuseColaborador,
-    deshacerRecogidaColaborador,
+    deshacerEntregaColaborador,
   } = data;
   const lista = useSeccion(data, "cuentas");
   // Las tres partes, plegadas y como mucho UNA abierta: la filosofía del
@@ -43,18 +45,18 @@ export function VentanaCuentas({ data, onCerrar }) {
   const [seccionAbierta, setSeccionAbierta] = useState(null);
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   const alternar = (id) => setSeccionAbierta((actual) => (actual === id ? null : id));
-  // Fila en la que se está editando el importe antes de confirmar la
-  // recogida — null cuando ninguna está abierta.
+  // El colaborador cuya entrega se está confirmando (importe y propina)
+  // — null cuando ninguno.
   const [confirmandoId, setConfirmandoId] = useState(null);
   const [importeConfirmar, setImporteConfirmar] = useState("");
   // La propina la escribe él al enviar el acuse (v85.9); vacío = no hubo.
   const [propinaConfirmar, setPropinaConfirmar] = useState("");
+  // La entrega cuyo acuse se está reenviando.
   const [enviandoId, setEnviandoId] = useState(null);
-  // Vista previa del acuse antes de enviarlo -- "Confirmar recogida" y
-  // "Probar acuse" ya no mandan nada directamente: generan el PDF,
-  // abren este modal para revisarlo, y solo se envía/confirma de verdad
-  // al pulsar "Aceptar" ahí dentro. { tipo: "confirmar" | "prueba",
-  // colaborador, dataUrl, importe (solo "confirmar"), asunto, html } | null
+  // Vista previa del acuse antes de enviarlo: «Confirmar entrega» y «Probar
+  // acuse» no mandan nada directamente; solo se envía al aceptar ahí.
+  // { tipo: "confirmar" | "prueba", colaborador, dataUrl, importe, propina,
+  // invitadosIds (solo "confirmar"), asunto, html } | null
   const [previewAcuse, setPreviewAcuse] = useState(null);
   const [generandoPreview, setGenerandoPreview] = useState(null); // id del colaborador mientras se genera
   const [enviandoAcuse, setEnviandoAcuse] = useState(false);
@@ -72,51 +74,44 @@ export function VentanaCuentas({ data, onCerrar }) {
   // Todo gasto apuntado está pagado (él, v76: «si hago el asiento, es que
   // está pagado»): el balance resta todos.
   const totalGastos = sumaGastos(gastos);
-  // Las propinas (v85.9, él: «es parte de la contabilidad»): las de las
-  // recogidas ya confirmadas; suman al balance.
-  const propinas = colaboradores.reduce((s, c) => s + (Number(c.dineroRecogidoPropina) || 0), 0);
-  // Arriba los que faltan por entregar; con el acuse enviado, abajo (él,
-  // v86.1). Dentro de cada grupo, el orden de siempre (alfabético).
-  const porRecoger = [...colaboradores].sort((a, b) => Boolean(a.dineroRecogidoEn) - Boolean(b.dineroRecogidoEn));
+  // Las propinas (v85.9, él: «es parte de la contabilidad»), las de todas
+  // las entregas (v87); suman al balance.
+  const propinas = propinasTotales(colaboradores);
   const balance = recaudado + propinas - totalGastos;
   // Lo que se debería recoger al final (v84.8): confirmados con su edad y
   // los sin confirmar como adultos.
   const previsto = previstoARecoger(invitados, evento).total;
+  // Arriba los que tienen algo por entregar; abajo, los que lo han entregado
+  // todo (v86.1, v87). Dentro de cada grupo, alfabético.
+  const ordenados = ordenarPorEntregas(colaboradores, invitados, evento);
 
-  // Invitados confirmados y ya pagados de un colaborador — es tanto el
-  // desglose del acuse como la base del importe total a confirmar.
-  const itemsRecaudadosPorColaborador = (c) =>
-    ordenarPorApellidoNombre(
-      confirmados.filter((g) => resolverColaborador(g, colaboradores)?.id === c.id && g.pagado)
-    ).map((g) => ({
-      apellido: g.apellido,
-      nombre: g.nombre,
-      importe: importeEsperadoInvitado(g, evento),
-    }));
-
-  const importeRecaudadoPorColaborador = (c) =>
-    itemsRecaudadosPorColaborador(c).reduce((s, it) => s + it.importe, 0);
+  // Lo cobrado por un colaborador y aún no entregado (lib/entregas.js): el
+  // desglose del acuse de la entrega nueva y su importe.
+  const pendienteDe = (c) => porEntregar(c, invitados, evento, colaboradores);
+  const recaudadoPor = (c) =>
+    confirmados.filter((g) => g.colaboradorId === c.id && g.pagado).reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
 
   const abrirConfirmar = (c) => {
     setConfirmandoId(c.id);
-    setImporteConfirmar(importeRecaudadoPorColaborador(c).toFixed(2));
+    setImporteConfirmar(pendienteDe(c).total.toFixed(2));
     setPropinaConfirmar("");
   };
 
-  const nombreArchivoAcuse = (c) =>
-    `acuse-${(c.nombre || "colaborador").replace(/\s+/g, "-").toLowerCase()}.pdf`;
+  // Con el número de entrega: dos acuses del mismo colaborador no se pisan.
+  const nombreArchivoAcuse = (c, numero) =>
+    `acuse-${(c.nombre || "colaborador").replace(/\s+/g, "-").toLowerCase()}-${numero}.pdf`;
 
-  // Ya no confirma/envía directamente -- genera el PDF y abre la vista
-  // previa; el envío real solo pasa si se acepta ahí (ver
-  // confirmarEnvioAcuse más abajo).
+  // Genera el PDF y abre la vista previa; el envío real solo pasa si se
+  // acepta ahí (confirmarEnvioAcuse, más abajo).
   const abrirPreviewConfirmar = async (c) => {
+    const { items } = pendienteDe(c);
     const importe = parseFloat(importeConfirmar.replace(",", ".")) || 0;
     const propina = Math.max(0, parsePrecio(propinaConfirmar));
     setGenerandoPreview(c.id);
     const dataUrl = await generarPdfAcuse({
       evento,
       colaborador: c,
-      items: itemsRecaudadosPorColaborador(c),
+      items,
       total: importe,
       propina,
       fechaISO: new Date().toISOString().slice(0, 10),
@@ -128,43 +123,44 @@ export function VentanaCuentas({ data, onCerrar }) {
       dataUrl,
       importe,
       propina,
+      invitadosIds: items.map((it) => it.id),
       asunto: construirAsuntoAcuse(evento),
       html: construirHtmlAcuse({ colaborador: c }),
     });
   };
 
-  const reenviarAcuse = async (c) => {
-    setEnviandoId(c.id);
+  // El acuse de una entrega ya hecha, otra vez: sus invitados, su importe,
+  // su propina y su fecha.
+  const reenviarAcuse = async (c, entrega, numero) => {
+    setEnviandoId(entrega.id);
     const dataUrl = await generarPdfAcuse({
       evento,
       colaborador: c,
-      items: itemsRecaudadosPorColaborador(c),
-      total: Number(c.dineroRecogidoImporte) || 0,
-      propina: Number(c.dineroRecogidoPropina) || 0,
-      fechaISO: String(c.dineroRecogidoEn).slice(0, 10),
+      items: itemsDeEntrega(entrega, invitados, evento),
+      total: Number(entrega.importe) || 0,
+      propina: Number(entrega.propina) || 0,
+      fechaISO: String(entrega.fecha).slice(0, 10),
     });
     await reenviarAcuseColaborador(
       c.email,
       construirAsuntoAcuse(evento),
       construirHtmlAcuse({ colaborador: c }),
-      nombreArchivoAcuse(c),
+      nombreArchivoAcuse(c, numero),
       dataUrl.split(",")[1] || ""
     );
     setEnviandoId(null);
   };
 
-  // "Probar acuse": genera el acuse con los datos reales de AHORA (sus
-  // invitados ya pagados) pero SIN confirmar ni registrar ninguna
-  // recogida -- no toca dineroRecogidoEn/Importe, así que no hace falta
-  // deshacer nada después. Igual que "Confirmar recogida", ya no manda
-  // nada directamente: abre la vista previa primero.
+  // «Probar acuse»: el de lo que tiene por entregar AHORA, sin apuntar
+  // ninguna entrega; también con su vista previa.
   const abrirPreviewProbar = async (c) => {
+    const { items, total } = pendienteDe(c);
     setGenerandoPreview(c.id);
     const dataUrl = await generarPdfAcuse({
       evento,
       colaborador: c,
-      items: itemsRecaudadosPorColaborador(c),
-      total: importeRecaudadoPorColaborador(c),
+      items,
+      total,
       fechaISO: new Date().toISOString().slice(0, 10),
     });
     setGenerandoPreview(null);
@@ -177,23 +173,25 @@ export function VentanaCuentas({ data, onCerrar }) {
     });
   };
 
-  // Único punto real de envío: se llama al aceptar la vista previa, sea
-  // "confirmar" (registra la recogida de verdad) o "prueba" (solo manda
-  // el email, sin tocar dineroRecogidoEn/Importe) -- el PDF ya generado
-  // para la vista previa se reutiliza tal cual, no se vuelve a construir.
+  // Único punto real de envío: al aceptar la vista previa, sea «confirmar»
+  // (apunta la entrega) o «prueba» (solo manda el email). El PDF de la
+  // vista previa se reutiliza tal cual.
   const confirmarEnvioAcuse = async () => {
     if (!previewAcuse) return;
     setEnviandoAcuse(true);
     const base64 = previewAcuse.dataUrl.split(",")[1] || "";
+    const c = previewAcuse.colaborador;
+    const numero = entregasDe(c).length + 1;
     if (previewAcuse.tipo === "confirmar") {
-      const ok = await confirmarRecogidaColaborador(
-        previewAcuse.colaborador.id,
+      const ok = await confirmarEntregaColaborador(
+        c.id,
+        previewAcuse.invitadosIds,
         previewAcuse.importe,
         previewAcuse.propina,
-        previewAcuse.colaborador.email,
+        c.email,
         previewAcuse.asunto,
         previewAcuse.html,
-        nombreArchivoAcuse(previewAcuse.colaborador),
+        nombreArchivoAcuse(c, numero),
         base64
       );
       setEnviandoAcuse(false);
@@ -202,13 +200,7 @@ export function VentanaCuentas({ data, onCerrar }) {
         setPreviewAcuse(null);
       }
     } else {
-      await reenviarAcuseColaborador(
-        previewAcuse.colaborador.email,
-        previewAcuse.asunto,
-        previewAcuse.html,
-        nombreArchivoAcuse(previewAcuse.colaborador),
-        base64
-      );
+      await reenviarAcuseColaborador(c.email, previewAcuse.asunto, previewAcuse.html, nombreArchivoAcuse(c, numero), base64);
       setEnviandoAcuse(false);
       setPreviewAcuse(null);
     }
@@ -298,101 +290,114 @@ export function VentanaCuentas({ data, onCerrar }) {
         onAlternar={() => alternar("colaboradores")}
       >
         <div className="space-y-2 mt-2">
-          {porRecoger.map((c) => {
-            const importeSuyo = importeRecaudadoPorColaborador(c);
-            const recogido = Boolean(c.dineroRecogidoEn);
+          {ordenados.map((c) => {
+            const pendiente = pendienteDe(c);
+            const entregas = entregasDe(c);
             return (
-              <div
-                key={c.id}
-                className="flex flex-wrap items-center gap-2 p-2 rounded"
-                style={{ background: C.blanco, border: `1px solid ${C.line}` }}
-              >
-                <div className="flex-1" style={{ minWidth: 160 }}>
-                  <div style={{ color: C.ink, fontWeight: 600 }}>
-                    Recaudado por {c.nombre}: {euros(importeSuyo)}
-                  </div>
-                  {!c.email && (
-                    <div className="text-xs" style={{ color: C.wax }}>
-                      Sin email — no se podrá enviar el acuse automáticamente
-                    </div>
-                  )}
+              <div key={c.id} className="p-2 rounded space-y-1" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
+                <div style={{ color: C.ink, fontWeight: 600 }}>
+                  Recaudado por {c.nombre}: {euros(recaudadoPor(c))}
                 </div>
-
-                {confirmandoId === c.id ? (
-                  // En su propio bloque, a todo el ancho: los campos en una
-                  // línea y los botones debajo, nunca junto al nombre.
-                  <div className="w-full flex flex-wrap items-center gap-2">
-                    {/* Cada campo con su «€» y su rótulo, juntos (norma 6). */}
-                    <span className="inline-flex items-center gap-1">
-                      <TextInput
-                        value={importeConfirmar}
-                        onChange={(e) => setImporteConfirmar(e.target.value)}
-                        aria-label="Importe entregado"
-                        style={{ width: 80, textAlign: "right" }}
-                      />
-                      <span className="text-xs" style={{ color: C.charcoal }}>€</span>
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <span className="text-xs" style={{ color: C.charcoal }}>+ propina</span>
-                      <TextInput
-                        value={propinaConfirmar}
-                        onChange={(e) => setPropinaConfirmar(e.target.value)}
-                        aria-label="Propina"
-                        inputMode="decimal"
-                        placeholder="0"
-                        style={{ width: 56, textAlign: "right" }}
-                      />
-                      <span className="text-xs" style={{ color: C.charcoal }}>€</span>
-                    </span>
-                    <Boton variante="principal" tamano="pequeno" onClick={() => abrirPreviewConfirmar(c)} disabled={generandoPreview === c.id}>
-                      {generandoPreview === c.id ? "Generando…" : "Revisar y confirmar"}
-                    </Boton>
-                    <Boton variante="secundario" tamano="pequeno" onClick={() => setConfirmandoId(null)}>
-                      Cancelar
-                    </Boton>
+                {!c.email && (
+                  <div className="text-xs" style={{ color: C.wax }}>
+                    Sin email — no se podrá enviar el acuse automáticamente
                   </div>
-                ) : recogido ? (
-                  <>
-                    <span
-                      className="text-xs px-2 py-1 rounded inline-flex items-center gap-1"
-                      style={{ background: C.okFondo, color: C.ink }}
-                    >
-                      <Check size={13} style={{ flexShrink: 0 }} aria-hidden />
-                      Recogido {conPropina(Number(c.dineroRecogidoImporte) || 0, Number(c.dineroRecogidoPropina) || 0)} el{" "}
-                      {formatearFecha(String(c.dineroRecogidoEn).slice(0, 10))}
-                    </span>
-                    <Boton variante="secundario" tamano="pequeno" onClick={() => reenviarAcuse(c)} disabled={enviandoId === c.id || !c.email} titulo="Reenviar el acuse por email otra vez">
-                      <Mail size={13} /> {enviandoId === c.id ? "Enviando…" : "Reenviar acuse"}
-                    </Boton>
-                    <Boton
-                      tamano="pequeno"
-                      icono={Undo2}
-                      titulo="Deshacer (si se confirmó por error)"
-                      onClick={() =>
-                        preguntar({
-                          titulo: "¿Deshacer la recogida?",
-                          texto: `El dinero de ${c.nombre} volverá a constar como no recogido.`,
-                          rotulo: "Sí",
-                          alConfirmar: () => deshacerRecogidaColaborador(c.id),
-                        })
-                      }
-                      style={{ color: C.wax }}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <Boton
-                      variante="principal"
-                      tamano="pequeno"
-                      onClick={() => abrirConfirmar(c)}
-                      disabled={importeSuyo === 0}
-                    >
-                      Confirmar recogida
-                    </Boton>
-                    <Boton variante="secundario" tamano="pequeno" onClick={() => abrirPreviewProbar(c)} disabled={generandoPreview === c.id || !c.email} titulo="Ver el acuse de prueba antes de enviarlo, sin confirmar ni registrar nada">
-                      <Mail size={13} /> {generandoPreview === c.id ? "Generando…" : "Probar acuse"}
-                    </Boton>
-                  </>
+                )}
+
+                {/* Lo cobrado y aún no entregado (v87): su entrega nueva. */}
+                {pendiente.items.length > 0 &&
+                  (confirmandoId === c.id ? (
+                    // Los campos en una línea y los botones debajo.
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Cada campo con su «€» y su rótulo, juntos (norma 6). */}
+                      <span className="inline-flex items-center gap-1">
+                        <TextInput
+                          value={importeConfirmar}
+                          onChange={(e) => setImporteConfirmar(e.target.value)}
+                          aria-label="Importe entregado"
+                          style={{ width: 80, textAlign: "right" }}
+                        />
+                        <span className="text-xs" style={{ color: C.charcoal }}>€</span>
+                      </span>
+                      <span className="inline-flex items-center gap-2">
+                        <span className="text-xs" style={{ color: C.charcoal }}>+ propina</span>
+                        <TextInput
+                          value={propinaConfirmar}
+                          onChange={(e) => setPropinaConfirmar(e.target.value)}
+                          aria-label="Propina"
+                          inputMode="decimal"
+                          placeholder="0"
+                          style={{ width: 56, textAlign: "right" }}
+                        />
+                        <span className="text-xs" style={{ color: C.charcoal }}>€</span>
+                      </span>
+                      <Boton variante="principal" tamano="pequeno" onClick={() => abrirPreviewConfirmar(c)} disabled={generandoPreview === c.id}>
+                        {generandoPreview === c.id ? "Generando…" : "Revisar y confirmar"}
+                      </Boton>
+                      <Boton variante="secundario" tamano="pequeno" onClick={() => setConfirmandoId(null)}>
+                        Cancelar
+                      </Boton>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2" data-por-entregar>
+                      <span className="text-sm" style={{ color: C.wax, fontWeight: 600 }}>
+                        Por entregar: {euros(pendiente.total)} ({pendiente.items.length} invitado{pendiente.items.length !== 1 ? "s" : ""})
+                      </span>
+                      <Boton variante="principal" tamano="pequeno" onClick={() => abrirConfirmar(c)}>
+                        Confirmar entrega
+                      </Boton>
+                      <Boton variante="secundario" tamano="pequeno" onClick={() => abrirPreviewProbar(c)} disabled={generandoPreview === c.id || !c.email} titulo="Ver el acuse de prueba antes de enviarlo, sin apuntar ninguna entrega">
+                        <Mail size={13} /> {generandoPreview === c.id ? "Generando…" : "Probar acuse"}
+                      </Boton>
+                    </div>
+                  ))}
+
+                {/* Sus entregas, plegadas: una línea cada una, con su acuse
+                    para reenviar. Deshacer, solo la última (la base igual). */}
+                {entregas.length > 0 && (
+                  <SeccionPlegable sencilla titulo={`Entregas (${entregas.length})`}>
+                    <div className="space-y-1 pb-1">
+                      {entregas.map((e, i) => {
+                        const numero = i + 1;
+                        const ultima = i === entregas.length - 1;
+                        return (
+                          <div key={e.id} className="flex items-center gap-2" data-entrega>
+                            {/* El verde ya dice «hecha»: sin visto, cabe entera. */}
+                            <span
+                              className="flex-1 min-w-0 truncate text-xs px-2 py-1 rounded"
+                              style={{ background: C.okFondo, color: C.ink }}
+                            >
+                              {fechaCorta(String(e.fecha).slice(0, 10))} · {conPropina(Number(e.importe) || 0, Number(e.propina) || 0, { corto: true })}
+                            </span>
+                            <Boton
+                              variante="secundario"
+                              tamano="pequeno"
+                              icono={Mail}
+                              titulo={enviandoId === e.id ? "Enviando…" : "Reenviar el acuse de esta entrega"}
+                              onClick={() => reenviarAcuse(c, e, numero)}
+                              disabled={enviandoId === e.id || !c.email}
+                            />
+                            {ultima && (
+                              <Boton
+                                tamano="pequeno"
+                                icono={Undo2}
+                                titulo="Deshacer esta entrega (si se confirmó por error)"
+                                onClick={() =>
+                                  preguntar({
+                                    titulo: "¿Deshacer la entrega?",
+                                    texto: `Sus invitados volverán a «Por entregar» de ${c.nombre}.`,
+                                    rotulo: "Sí",
+                                    alConfirmar: () => deshacerEntregaColaborador(c.id, e.id),
+                                  })
+                                }
+                                style={{ color: C.wax }}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </SeccionPlegable>
                 )}
               </div>
             );
@@ -403,9 +408,9 @@ export function VentanaCuentas({ data, onCerrar }) {
             </p>
           )}
           <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            Confirmar la recogida manda por email al propio colaborador un acuse con el
-            desglose de sus invitados, el importe total, la fecha y la firma — para que
-            lo guarde como comprobante.
+            Cada entrega manda por email al propio colaborador un acuse con los
+            invitados de esa entrega, el importe, la fecha y la firma — para que lo
+            guarde como comprobante.
           </p>
         </div>
       </SeccionPlegable>
@@ -429,7 +434,7 @@ export function VentanaCuentas({ data, onCerrar }) {
     {previewAcuse && (
       <ModalFlotante
         titulo={
-          (previewAcuse.tipo === "confirmar" ? "Confirmar recogida — " : "Probar acuse — ") +
+          (previewAcuse.tipo === "confirmar" ? "Confirmar entrega — " : "Probar acuse — ") +
           previewAcuse.colaborador.nombre
         }
         onCerrar={() => setPreviewAcuse(null)}

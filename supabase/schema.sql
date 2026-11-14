@@ -213,14 +213,13 @@ CREATE TABLE public.colaboradores (
     "invitadoId" uuid,
     email text DEFAULT ''::text NOT NULL,
     "authUserId" uuid,
-    "dineroRecogidoEn" timestamp with time zone,
-    "dineroRecogidoImporte" numeric,
     "emailSincronizadoEn" timestamp with time zone,
     permisos jsonb DEFAULT '[]'::jsonb NOT NULL,
-    -- La propina que entregó con lo recogido (v85.9, él: «es parte de la
-    -- contabilidad»): la escribe el anfitrión al enviar el acuse; suma al
-    -- balance. Sin "not null" (1.7, regla 7).
-    "dineroRecogidoPropina" numeric
+    -- Sus entregas de dinero al anfitrión (v87, él: «varias rondas de
+    -- recogida»), una por acuse: [{id, fecha, importe, propina, invitados:
+    -- [ids]}]. Lo que falta por entregar se calcula (lib/entregas.js). Sin
+    -- "not null" (1.7, regla 7): una foto anterior la trae vacía.
+    entregas jsonb DEFAULT '[]'::jsonb
 );
 
 -- Las mesas del banquete y su posición en el plano.
@@ -1621,10 +1620,11 @@ begin
 end;
 $$;
 
--- Cierra la recogida de datos de un colaborador y le manda el acuse. La
--- propina (v85.9), al final y opcional: una pantalla abierta con la versión
--- anterior sigue confirmando sin ella.
-CREATE FUNCTION public.anfitrion_confirmar_recogida_colaborador(p_token uuid, p_colaborador_id uuid, p_importe numeric, p_email text, p_asunto text, p_html text, p_adjunto_nombre text, p_adjunto_base64 text, p_propina numeric DEFAULT NULL::numeric) RETURNS void
+-- Apunta una entrega de dinero de un colaborador (v87, él: «varias rondas
+-- de recogida»): sus invitados, el importe y la propina, y le manda el acuse
+-- de esa entrega. Un invitado entra en una sola entrega: si alguno ya está en
+-- otra (un doble clic), no apunta nada y lo dice.
+CREATE FUNCTION public.anfitrion_confirmar_entrega(p_token uuid, p_colaborador_id uuid, p_invitados uuid[], p_importe numeric, p_propina numeric, p_email text, p_asunto text, p_html text, p_adjunto_nombre text, p_adjunto_base64 text) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -1632,10 +1632,27 @@ begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
   end if;
+  if coalesce(array_length(p_invitados, 1), 0) = 0 then
+    raise exception 'Esta entrega no tiene invitados.';
+  end if;
+  if exists (
+    select 1
+    from colaboradores c
+    cross join jsonb_array_elements(coalesce(c."entregas", '[]'::jsonb)) e
+    cross join jsonb_array_elements_text(coalesce(e->'invitados', '[]'::jsonb)) i
+    where i = any (select x::text from unnest(p_invitados) x)
+  ) then
+    raise exception 'Algún invitado de esta entrega ya estaba en otra.';
+  end if;
 
   update colaboradores
-  set "dineroRecogidoEn" = now(), "dineroRecogidoImporte" = p_importe,
-    "dineroRecogidoPropina" = nullif(p_propina, 0)
+  set "entregas" = coalesce("entregas", '[]'::jsonb) || jsonb_build_array(jsonb_build_object(
+    'id', gen_random_uuid(),
+    'fecha', now(),
+    'importe', p_importe,
+    'propina', nullif(p_propina, 0),
+    'invitados', to_jsonb(p_invitados)
+  ))
   where "id" = p_colaborador_id;
 
   perform enviar_email(p_email, p_asunto, p_html, p_adjunto_nombre, p_adjunto_base64, null, 'asignados');
@@ -1665,8 +1682,10 @@ begin
 end;
 $$;
 
--- Deshace ese cierre y vuelve a dejar la recogida abierta.
-CREATE FUNCTION public.anfitrion_deshacer_recogida_colaborador(p_token uuid, p_colaborador_id uuid) RETURNS void
+-- Deshace la ÚLTIMA entrega de un colaborador (v87): es para el error
+-- recién hecho. Sus invitados vuelven a «por entregar». Si la última ya no
+-- es esa (otra pestaña apuntó otra), no toca nada.
+CREATE FUNCTION public.anfitrion_deshacer_entrega(p_token uuid, p_colaborador_id uuid, p_entrega_id text) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -1676,8 +1695,10 @@ begin
   end if;
 
   update colaboradores
-  set "dineroRecogidoEn" = null, "dineroRecogidoImporte" = null, "dineroRecogidoPropina" = null
-  where "id" = p_colaborador_id;
+  set "entregas" = "entregas" - (-1)
+  where "id" = p_colaborador_id
+    and jsonb_array_length(coalesce("entregas", '[]'::jsonb)) > 0
+    and "entregas"->-1->>'id' = p_entrega_id;
 end;
 $$;
 
