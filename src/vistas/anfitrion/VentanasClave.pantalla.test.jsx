@@ -149,6 +149,20 @@ describe("Contabilidad se puede dibujar", () => {
     expect(texto).toContain(`Recogido ${euros(45)} + ${euros(20)} de propina`);
     vista.desmontar();
   });
+  // v86.1 (él): con el acuse enviado, el colaborador baja; arriba, los que
+  // faltan por entregar, en el orden de siempre.
+  it("los que faltan por entregar, arriba; con el acuse enviado, abajo", () => {
+    const tres = [
+      { id: "c1", nombre: "Ana", email: "a@a.com", permisos: [], dineroRecogidoEn: "2026-11-14T10:00:00Z", dineroRecogidoImporte: 45 },
+      { id: "c2", nombre: "Bea", email: "b@b.com", permisos: [] },
+      { id: "c3", nombre: "Ciro", email: "c@c.com", permisos: [] },
+    ];
+    const vista = montar(<VentanaCuentas data={{ ...data, colaboradores: tres }} onCerrar={() => {}} />);
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Recaudado por colaborador")));
+    const orden = [...vista.contenedor.textContent.matchAll(/Recaudado por (Ana|Bea|Ciro)/g)].map((m) => m[1]);
+    expect(orden).toEqual(["Bea", "Ciro", "Ana"]);
+    vista.desmontar();
+  });
   it("al confirmar la recogida, la propina va junto al importe", () => {
     const vista = montar(<VentanaCuentas data={data} onCerrar={() => {}} />);
     vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Recaudado por colaborador")));

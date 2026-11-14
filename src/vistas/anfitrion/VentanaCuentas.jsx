@@ -75,6 +75,9 @@ export function VentanaCuentas({ data, onCerrar }) {
   // Las propinas (v85.9, él: «es parte de la contabilidad»): las de las
   // recogidas ya confirmadas; suman al balance.
   const propinas = colaboradores.reduce((s, c) => s + (Number(c.dineroRecogidoPropina) || 0), 0);
+  // Arriba los que faltan por entregar; con el acuse enviado, abajo (él,
+  // v86.1). Dentro de cada grupo, el orden de siempre (alfabético).
+  const porRecoger = [...colaboradores].sort((a, b) => Boolean(a.dineroRecogidoEn) - Boolean(b.dineroRecogidoEn));
   const balance = recaudado + propinas - totalGastos;
   // Lo que se debería recoger al final (v84.8): confirmados con su edad y
   // los sin confirmar como adultos.
@@ -295,7 +298,7 @@ export function VentanaCuentas({ data, onCerrar }) {
         onAlternar={() => alternar("colaboradores")}
       >
         <div className="space-y-2 mt-2">
-          {colaboradores.map((c) => {
+          {porRecoger.map((c) => {
             const importeSuyo = importeRecaudadoPorColaborador(c);
             const recogido = Boolean(c.dineroRecogidoEn);
             return (

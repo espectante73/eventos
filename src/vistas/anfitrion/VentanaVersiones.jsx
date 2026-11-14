@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "86.1",
+    cambios: [
+      "Contabilidad, «Recaudado por colaborador»: arriba, los que faltan por entregar; al enviar el acuse, ese colaborador baja con los ya recogidos. Dentro de cada grupo, por orden alfabético.",
+    ],
+  },
+  {
     version: "86",
     cambios: [
       "Contabilidad, vista previa del acuse (al confirmar la recogida o al probarlo): además del destinatario, el importe y el PDF, el texto del email tal cual llega, con su asunto. Sale de la misma pieza que lo envía: lo que se ve es lo que se manda.",
