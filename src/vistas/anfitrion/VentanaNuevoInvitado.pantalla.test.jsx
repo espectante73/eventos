@@ -231,6 +231,23 @@ it("canciones, observaciones, alergias y la autorización, plegadas y una sola a
   vista.desmontar();
 });
 
+// v87.4 (él): «que tenga la opción de seleccionar por colaborador».
+it("buscar por colaborador: «Elegir invitado» enseña solo los suyos, o los que nadie atiende", () => {
+  const lista = [{ ...INVITADOS[0], colaboradorId: "c1" }, INVITADOS[1]];
+  const { vista, q } = dibujar(lista);
+  const opciones = () => [...q('select[aria-label="Elegir invitado"]').options].slice(1).map((o) => o.textContent);
+  expect([...q('select[aria-label="Buscar por colaborador"]').options].map((o) => o.textContent)).toEqual(["Todos los colaboradores", "Sin colaborador (1)", "Colaborador Uno (1)"]);
+  expect(opciones()).toHaveLength(2);
+  vista.elegir(q('select[aria-label="Buscar por colaborador"]'), "c1");
+  expect(opciones()).toEqual(["Pacheco, Ana · sin confirmar"]);
+  vista.elegir(q('select[aria-label="Buscar por colaborador"]'), "sin-colaborador");
+  expect(opciones()).toEqual(["Sierra, Luis · sin confirmar"]);
+  // Elegido uno, el filtro sobra y no sale.
+  vista.elegir(q('select[aria-label="Elegir invitado"]'), "2");
+  expect(q('select[aria-label="Buscar por colaborador"]')).toBeNull();
+  vista.desmontar();
+});
+
 it("con algo a medio escribir, elegir a otro pregunta antes de perderlo", () => {
   const { vista, q, boton } = dibujar();
   escribir(q('input[aria-label="Apellido"]'), "Abrante");

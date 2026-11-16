@@ -20,7 +20,6 @@ import {
   Music,
   AlertTriangle,
   Plus,
-  UserPlus,
   Pencil,
   Copy,
   Contact,
@@ -69,6 +68,7 @@ import {
 } from "../../lib/edicionInvitados";
 import { estadoTablon, contarTablon } from "../../lib/entradasTablon";
 import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
+import { FORMULARIO_INVITADO } from "../../lib/iconosVentanas";
 import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
 import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
 import { VentanaRepasarCanciones } from "./VentanaRepasarCanciones";
@@ -747,12 +747,12 @@ export function SeccionInvitados({
       : []),
   ];
 
-  // Los 6 botones de la cabecera (Imprimir/Canciones/Alergias/Añadir/
+  // Los 6 botones de la cabecera (Imprimir/Canciones/Alergias/Formulario/
   // Editar/Importar) se esconden en un desplegable ("Acciones"), en vez
   // de ir todos sueltos en una fila -- a petición del usuario,
   // 2026-08-20. Mismo componente MenuFlotante que ya usa el resto de la
   // app (Abrir sección…, Modo pruebas...) en vez de un desplegable
-  // nuevo. Añadir/Editar/Importar activan un panel que se queda abierto
+  // nuevo. Formulario/Editar/Importar activan un panel que se queda abierto
   // debajo -- el "✓ " delante de la etiqueta cuando está activo es el
   // mismo convenio ya usado en DesplegableSecciones.jsx para señalar
   // "esto ya está abierto". Alergias conserva su fondo propio (la única
@@ -787,11 +787,8 @@ export function SeccionInvitados({
       : []),
     {
       id: "anadir",
-      etiqueta: "Añadir",
+      ...FORMULARIO_INVITADO,
       marcado: mostrarAnadir,
-      // La persona con «+», no el «+» suelto: el «+» ocupa menos de su
-      // cuadrado y dejaba más hueco hasta el texto que los demás (v62.2).
-      icono: UserPlus,
       onClick: () => setMostrarAnadir((v) => !v),
     },
     {
@@ -1363,7 +1360,7 @@ export function SeccionInvitados({
                 ]}
               />
             )}
-            {/* Los 6 botones sueltos (Imprimir/Canciones/Alergias/Añadir/
+            {/* Los 6 botones sueltos (Imprimir/Canciones/Alergias/Formulario/
                 Editar/Importar) se esconden en un desplegable
                 ("Acciones"), mismo MenuFlotante que usa el resto de la
                 app -- a petición del usuario, 2026-08-20.
@@ -1385,7 +1382,7 @@ export function SeccionInvitados({
                   oscuro
                   ref={ref}
                   onClick={toggle}
-                  titulo="Imprimir, canciones, alergias, añadir, editar o importar"
+                  titulo="Imprimir, canciones, alergias, formulario, editar o importar"
                 >
                   <MoreHorizontal size={14} /> Acciones
                 </Boton>

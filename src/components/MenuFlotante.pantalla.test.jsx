@@ -5,7 +5,7 @@ import { it, expect } from "vitest";
 import { montar } from "../pruebas/dibujar";
 import { MenuFlotante } from "./MenuFlotante";
 
-const OPCIONES = ["Revisión", "Imprimir", "Canciones", "Alergias", "Añadir", "Editar", "Importar"].map((etiqueta) => ({
+const OPCIONES = ["Revisión", "Imprimir", "Canciones", "Alergias", "Formulario", "Editar", "Importar"].map((etiqueta) => ({
   id: etiqueta,
   etiqueta,
   onClick: () => {},

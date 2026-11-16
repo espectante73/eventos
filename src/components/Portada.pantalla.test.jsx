@@ -55,8 +55,8 @@ it("«Abrir sección…»: en orden alfabético, y ningún nombre más largo de 
   vista.desmontar();
 });
 
-// v81.5 (él): «Invitados» con dos opciones, «Añadir» y «Lista».
-it("«Invitados»: «Añadir» abre «Nuevo invitado» y «Lista», la Lista", () => {
+// v81.5 (él): «Invitados» con dos opciones, «Formulario» (antes «Añadir», v87.4) y «Lista».
+it("«Invitados»: «Formulario» abre «Nuevo invitado» y «Lista», la Lista", () => {
   const abiertas = [];
   let lista = 0;
   const vista = montar(
@@ -64,7 +64,7 @@ it("«Invitados»: «Añadir» abre «Nuevo invitado» y «Lista», la Lista", (
   );
   vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
   vista.pulsar(boton("Invitados"));
-  vista.pulsar(boton("Añadir"));
+  vista.pulsar(boton("Formulario"));
   expect(abiertas).toEqual(["nuevo-invitado"]);
   vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
   vista.pulsar(boton("Invitados"));

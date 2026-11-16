@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "87.4",
+    cambios: [
+      "«Añadir» se llama ahora «Formulario», en la Lista y en el menú «Invitados» de la portada: ya no solo añade, también busca, confirma y corrige. Su icono, un portapapeles con lápiz.",
+      "En «Buscar en la lista», un desplegable por colaborador («Bravo, Yeray (12)», o «Sin colaborador»): «Elegir invitado» enseña solo los suyos. Editando a alguien, no sale.",
+    ],
+  },
+  {
     version: "87.3",
     cambios: [
       "Tablón: sin pagar, «Te falta» ya no se cierra (ni X ni «Entendido»): el tablón queda atenuado hasta que su colaborador le marque como pagado, y entonces se abre solo (como mucho en un minuto, o al volver a la pestaña).",

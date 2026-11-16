@@ -2,7 +2,12 @@
 // sección…" (DesplegableSecciones.jsx) y en la barra de ventanas del
 // móvil (BarraVentanas.jsx). Una sola pieza: si cambia aquí, cambia en
 // los dos sitios.
-import { Heart, Users, Settings, Wallet, Mail, List, Utensils, MonitorPlay, Megaphone, KeyRound, ClipboardList, CalendarHeart, UserCheck } from "lucide-react";
+import { Heart, Users, Settings, Wallet, Mail, List, Utensils, MonitorPlay, Megaphone, KeyRound, ClipboardList, CalendarHeart, UserCheck, ClipboardPen } from "lucide-react";
+
+// «Formulario» (él, v87.4; antes «Añadir»): «ahora no solo añade, sino que
+// busca o confirma o hace cambios». Su nombre y su icono, una sola pieza
+// para la cabecera de la Lista y el menú «Invitados» de la Portada.
+export const FORMULARIO_INVITADO = { etiqueta: "Formulario", icono: ClipboardPen };
 
 export const ICONOS_VENTANAS = {
   aniversarios: Heart,

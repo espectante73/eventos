@@ -25,14 +25,13 @@ import {
   KeyRound,
   Clock3,
   Send,
-  UserPlus,
 } from "lucide-react";
 import { C } from "../theme";
 import { UserSolido, Seal } from "./Widgets";
 import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "./VentanaFlotante";
 import { MenuFlotante } from "./MenuFlotante";
 
-import { ICONOS_VENTANAS } from "../lib/iconosVentanas";
+import { ICONOS_VENTANAS, FORMULARIO_INVITADO } from "../lib/iconosVentanas";
 
 // Submenú de "Configuración": cada parte se abre en su propia ventana,
 // igual que antes — solo cambia cómo se llega hasta ella. "Modo
@@ -108,15 +107,16 @@ export function DesplegableSecciones({
     // Novedades, Logística y Música -- no pasa por el `toggle` genérico
     // y no lleva el "✓ " (no hay estado fiable de "sigue abierta": se
     // puede cerrar con la X del sistema sin que este menú se entere).
-    // Dos opciones (él, v81.5): «Añadir», el formulario «Nuevo invitado»
-    // sin abrir antes la Lista, y «Lista». Mismos iconos que en la Lista.
+    // Dos opciones (él, v81.5): «Formulario» (antes «Añadir», v87.4), el de
+    // «Nuevo invitado» sin abrir antes la Lista, y «Lista». Mismos iconos
+    // que en la Lista (FORMULARIO_INVITADO).
     if (clave === "invitados") {
       return {
         id: clave,
         etiqueta: ETIQUETAS_VENTANAS[clave],
         icono: ICONOS_VENTANAS[clave],
         submenu: [
-          { id: "nuevo-invitado", etiqueta: "Añadir", icono: UserPlus, marcado: Boolean(abierto["nuevo-invitado"]), onClick: () => toggle("nuevo-invitado") },
+          { id: "nuevo-invitado", ...FORMULARIO_INVITADO, marcado: Boolean(abierto["nuevo-invitado"]), onClick: () => toggle("nuevo-invitado") },
           { id: "invitados-lista", etiqueta: "Lista", icono: ICONOS_VENTANAS[clave], onClick: abrirInvitados },
         ],
       };

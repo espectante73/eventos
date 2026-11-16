@@ -28,6 +28,9 @@
 // plegados y en el orden de la ficha del colaborador; alergias y la
 // autorización, con su misma pieza (components/CamposFicha.jsx). Como allí,
 // un solo apartado abierto a la vez (norma 5).
+//
+// v87.4 (él): en la Lista y en la Portada se llama «Formulario» (antes
+// «Añadir»: ya también busca, confirma y corrige), y busca por colaborador.
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Check } from "lucide-react";
 import { C, DEDO, OP, inputStyle } from "../../theme";
@@ -86,6 +89,8 @@ const fichaDe = (g, invitados) => ({
   alergias: g.alergias || "",
   conservarDatos: Boolean(g.conservarDatos),
 });
+// En «Buscar por colaborador», los que nadie atiende todavía.
+const SIN_COLABORADOR = "sin-colaborador";
 // Todo del alto de un dedo: es para el móvil.
 const CAMPO = { ...inputStyle, width: "100%", minWidth: 0, minHeight: DEDO };
 
@@ -176,6 +181,12 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
   // Tras el nombre, en el desplegable: si no ha confirmado, y su familia si
   // otro se llama igual.
   const repetidos = useMemo(() => new Set(invitados.filter((g) => invitados.some((x) => x.id !== g.id && mismaPersona(x, g))).map((g) => g.id)), [invitados]);
+  // Buscar por colaborador (v87.4): "" todos, SIN_COLABORADOR los que nadie
+  // atiende, o el id de uno. El que se está editando, siempre.
+  const [filtroColaborador, setFiltroColaborador] = useState("");
+  const delColaborador = (g, filtro) => (filtro === SIN_COLABORADOR ? !g.colaboradorId : g.colaboradorId === filtro);
+  const cuantosDe = (filtro) => invitados.filter((g) => delColaborador(g, filtro)).length;
+  const buscables = filtroColaborador ? invitados.filter((g) => g.id === editandoId || delColaborador(g, filtroColaborador)) : invitados;
   const detalleOpcion = (g) =>
     [repetidos.has(g.id) ? g.grupoFamiliar : "", g.confirmado ? "" : g.noAsiste ? "no asiste" : "sin confirmar"].filter(Boolean).join(" · ");
 
@@ -227,9 +238,29 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
     <VentanaFlotante clave="nuevoInvitado" titulo={editandoId ? "Editar invitado" : "Nuevo invitado"} onCerrar={onCerrar} ancho="min(440px, calc(100vw - 48px))">
       {/* Buscar a uno que ya está (v84.7), fuera del Enter que guarda. */}
       <Field label={editandoId ? "Editando" : "Buscar en la lista"}>
+        {/* Por colaborador (v87.4, él): «Elegir invitado» enseña solo los
+            suyos. Editando a alguien, sobra y no sale. */}
+        {!editandoId && (
+          <div className="flex mb-2">
+            <Desplegable
+              aria-label="Buscar por colaborador"
+              value={filtroColaborador}
+              onChange={(e) => setFiltroColaborador(e.target.value)}
+              style={{ ...CAMPO, color: filtroColaborador ? C.charcoal : C.line }}
+            >
+              <option value="">Todos los colaboradores</option>
+              <option value={SIN_COLABORADOR}>Sin colaborador ({cuantosDe(SIN_COLABORADOR)})</option>
+              {colaboradores.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre} ({cuantosDe(c.id)})
+                </option>
+              ))}
+            </Desplegable>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <BuscadorInvitado
-            invitados={invitados}
+            invitados={buscables}
             invitadoId={editandoId || ""}
             onSeleccionar={alBuscar}
             estilo={CAMPO}
