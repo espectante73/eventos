@@ -81,6 +81,7 @@ describe("el evento no se lee directamente", () => {
     expect(f).toContain("- 'conceptosGastos'");
     expect(f).toContain("- 'catalogoCanciones'");
     expect(f).toContain("- 'cancionesFueraDj'");
+    expect(f).toContain("- 'aPagar'");
   });
 
   it("entero solo al anfitrión; el enlace, al colaborador con permiso de Novedades", () => {

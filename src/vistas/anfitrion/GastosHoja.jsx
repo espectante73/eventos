@@ -62,8 +62,9 @@ function CeldaFecha({ valor, onCambio, estilo }) {
 
 // El importe de una fila: «180,00 €» a la vista; al tocarlo, el número,
 // que se guarda al salir o con Intro (él: «que yo pueda corregir el de
-// ese mes»).
-function CeldaImporte({ valor, onGuardar }) {
+// ese mes»). También la línea del DJ en «A pagar» (v88), con su borde
+// (`campo`): ahí se escribe.
+export function CeldaImporte({ valor, onGuardar, etiqueta = "Importe", campo = false, placeholder }) {
   const [texto, setTexto] = useState(null);
   const guardar = () => {
     if (texto !== null && texto.trim() !== valor) onGuardar(texto.trim());
@@ -76,8 +77,10 @@ function CeldaImporte({ valor, onGuardar }) {
       onChange={(e) => setTexto(e.target.value)}
       onBlur={guardar}
       onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-      aria-label="Importe"
-      style={{ ...CELDA, textAlign: "right" }}
+      aria-label={etiqueta}
+      placeholder={placeholder}
+      inputMode="decimal"
+      style={{ ...(campo ? CAMPO : CELDA), textAlign: "right" }}
     />
   );
 }

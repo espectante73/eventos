@@ -254,7 +254,9 @@ export function calcularEdad(anioNacimiento, evento) {
   const anioReferencia =
     evento && evento.fecha ? new Date(evento.fecha).getFullYear() : new Date().getFullYear();
   const edad = anioReferencia - anio;
-  return edad > 0 && edad < 130 ? edad : null;
+  // 0 es una edad: un bebé nacido el año del evento (antes, null, y contaba
+  // como adulto: pagaba entrada y no se le dejaba guardar el año).
+  return edad >= 0 && edad < 130 ? edad : null;
 }
 
 export function edadPromedio(invitados, evento) {
@@ -280,15 +282,23 @@ export function esDj(g) {
 // de "hasta" en adelante paga precio adulto.
 export function importeEsperadoInvitado(g, evento) {
   if (esDj(g)) return 0;
-  const edad = calcularEdad(g.anioNacimiento, evento);
+  const tramo = tramoDeEdad(g?.anioNacimiento, evento);
+  if (tramo === TRAMO.BEBE) return 0;
+  return parsePrecio(tramo === TRAMO.NINO ? evento?.precioNino : evento?.precioAdulto);
+}
+
+// Bebé, niño o adulto, con las edades de Configuración (edadNinoDesde y
+// edadNinoHasta). UNA sola definición (norma 7): la usan la entrada del
+// invitado (arriba) y lo que cobra el local (lib/aPagar.js). Sin año, adulto.
+export const TRAMO = { BEBE: "bebe", NINO: "nino", ADULTO: "adulto" };
+export function tramoDeEdad(anioNacimiento, evento) {
+  const edad = calcularEdad(anioNacimiento, evento);
+  if (edad === null) return TRAMO.ADULTO;
   const desde = parseInt(evento?.edadNinoDesde, 10);
   const hasta = parseInt(evento?.edadNinoHasta, 10);
-  const precioAdulto = parsePrecio(evento?.precioAdulto);
-  const precioNino = parsePrecio(evento?.precioNino);
-  if (edad === null) return precioAdulto;
-  if (!isNaN(desde) && edad < desde) return 0;
-  if (!isNaN(hasta) && edad < hasta) return precioNino;
-  return precioAdulto;
+  if (!isNaN(desde) && edad < desde) return TRAMO.BEBE;
+  if (!isNaN(hasta) && edad < hasta) return TRAMO.NINO;
+  return TRAMO.ADULTO;
 }
 
 // Lo que se debería recoger en total (él, v84.8, en Contabilidad): los

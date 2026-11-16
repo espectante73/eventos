@@ -1,10 +1,11 @@
 // Ventana "Estado de cuentas": recaudado/pendiente de cobro (calculados
 // solos a partir de los pagos), recaudado por cada colaborador (con
-// acuse desglosado enviado por email), los gastos como hoja de cálculo
-// (GastosHoja, v76) y balance. Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08
+// acuse desglosado enviado por email), lo que hay que pagar al local, al DJ
+// y a él (APagarHoja, v88), los gastos como hoja de cálculo (GastosHoja,
+// v76) y balance. Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08
 // (Fase 4, Ronda 4).
 import { useState } from "react";
-import { Mail, Undo2, Calculator, Users, Receipt } from "lucide-react";
+import { Mail, Undo2, Calculator, Users, Receipt, Scale } from "lucide-react";
 import { C, T, OP } from "../../theme";
 import { importeEsperadoInvitado, previstoARecoger } from "../../lib/invitados";
 import { fechaCorta, euros, parsePrecio } from "../../lib/formato";
@@ -19,7 +20,9 @@ import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { useSeccion } from "../../lib/useSeccion";
 import { Cargando } from "../../components/Cargando";
 import { GastosHoja, VentanaConceptos } from "./GastosHoja";
+import { APagarHoja, VentanaLocal } from "./APagar";
 import { totalGastos as sumaGastos } from "../../lib/gastos";
+import { resumenAPagar } from "../../lib/aPagar";
 
 // Lo entregado, con la propina si la hubo (v85.9): la misma frase en la
 // vista previa y en cada entrega; `corto`, sin «de», para que la línea de
@@ -41,7 +44,7 @@ export function VentanaCuentas({ data, onCerrar }) {
   // Las tres partes, plegadas y como mucho UNA abierta: la filosofía del
   // tablón, a petición del usuario (2026-09-19). Antes el resumen estaba
   // siempre a la vista y solo las otras dos se plegaban.
-  // null | "resumen" | "colaboradores" | "gastos"
+  // null | "resumen" | "aPagar" | "colaboradores" | "gastos"
   const [seccionAbierta, setSeccionAbierta] = useState(null);
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   const alternar = (id) => setSeccionAbierta((actual) => (actual === id ? null : id));
@@ -63,6 +66,8 @@ export function VentanaCuentas({ data, onCerrar }) {
 
   // La lista de conceptos de los gastos, en su ventanita (v76).
   const [verConceptos, setVerConceptos] = useState(false);
+  // Lo que cobra el local, en la suya (v88).
+  const [verLocal, setVerLocal] = useState(false);
 
   const confirmados = invitados.filter((g) => g.confirmado);
   const recaudado = confirmados
@@ -72,12 +77,17 @@ export function VentanaCuentas({ data, onCerrar }) {
     .filter((g) => !g.pagado)
     .reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
   // Todo gasto apuntado está pagado (él, v76: «si hago el asiento, es que
-  // está pagado»): el balance resta todos.
+  // está pagado»).
   const totalGastos = sumaGastos(gastos);
   // Las propinas (v85.9, él: «es parte de la contabilidad»), las de todas
   // las entregas (v87); suman al balance.
   const propinas = propinasTotales(colaboradores);
-  const balance = recaudado + propinas - totalGastos;
+  // Lo que sale al local, al DJ y a sus gastos (v88). El Balance del
+  // Resumen es el mismo «Sobran/Faltan» de «A pagar»: UNA cuenta (norma 7),
+  // no dos balances que digan cosas distintas. Sin precios del local ni DJ,
+  // es el de antes (recaudado + propinas − gastos).
+  const aPagar = resumenAPagar({ evento, invitados, gastos, recaudado, propinas });
+  const balance = aPagar.diferencia;
   // Lo que se debería recoger al final (v84.8): confirmados con su edad y
   // los sin confirmar como adultos.
   const previsto = previstoARecoger(invitados, evento).total;
@@ -260,10 +270,10 @@ export function VentanaCuentas({ data, onCerrar }) {
         </div>
         <div className="p-2 rounded text-center" style={{ background: C.blanco, border: `1px solid ${C.line}` }}>
           <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado, color: C.wax }}>
-            {euros(totalGastos)}
+            {euros(aPagar.sale)}
           </div>
           <div className="text-xs uppercase" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
-            Total gastos
+            Total a pagar
           </div>
         </div>
         {/* El balance, a todo el ancho y abajo (v85.9): con las propinas
@@ -276,10 +286,20 @@ export function VentanaCuentas({ data, onCerrar }) {
             {euros(balance)}
           </div>
           <div className="text-xs uppercase" style={{ color: C.charcoal, fontFamily: "'IBM Plex Mono', monospace" }}>
-            Balance (recaudado + propinas − gastos)
+            Balance (recaudado + propinas − a pagar)
           </div>
         </div>
       </div>
+      </SeccionPlegable>
+
+      <SeccionPlegable
+        icono={Scale}
+        titulo="A pagar"
+        resumen={`${aPagar.diferencia >= 0 ? "Sobran" : "Faltan"} ${euros(Math.abs(aPagar.diferencia))}`}
+        abierta={seccionAbierta === "aPagar"}
+        onAlternar={() => alternar("aPagar")}
+      >
+        <APagarHoja data={data} resumen={aPagar} recaudado={recaudado} propinas={propinas} onLocal={() => setVerLocal(true)} />
       </SeccionPlegable>
 
       <SeccionPlegable
@@ -430,6 +450,7 @@ export function VentanaCuentas({ data, onCerrar }) {
     </VentanaFlotante>
 
     {verConceptos && <VentanaConceptos data={data} onCerrar={() => setVerConceptos(false)} />}
+    {verLocal && <VentanaLocal data={data} onCerrar={() => setVerLocal(false)} />}
 
     {previewAcuse && (
       <ModalFlotante

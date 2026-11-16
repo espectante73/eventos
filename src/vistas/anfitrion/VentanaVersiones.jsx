@@ -42,6 +42,16 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "88",
+    cambios: [
+      "Contabilidad, apartado nuevo «A pagar»: lo que ENTRA (recaudado + propinas) frente a lo que SALE a cada acreedor —el local, el DJ y tus gastos— y lo que sobra o falta.",
+      "«Precios del local»: lo que cobra el local por persona, en partidas (menú, cóctel, tarta…) con precio de adulto y de niño, y lo demás del local a mano. Las personas las cuenta la app con los confirmados de la Lista (el DJ también), con las edades de Datos evento; sin año, como adulto.",
+      "Lo del DJ se escribe en su línea. Tus gastos, la suma de la hoja de Gastos. El precio de la entrada de los invitados no cambia: solo se comparten las edades.",
+      "El Balance del Resumen es el mismo «Sobran/Faltan» de «A pagar», y su casilla «Total gastos» pasa a «Total a pagar».",
+      "Arreglado: un bebé nacido el año del evento contaba como adulto (pagaba entrada) y no se podía guardar su año.",
+    ],
+  },
+  {
     version: "87.4",
     cambios: [
       "«Añadir» se llama ahora «Formulario», en la Lista y en el menú «Invitados» de la portada: ya no solo añade, también busca, confirma y corrige. Su icono, un portapapeles con lápiz.",

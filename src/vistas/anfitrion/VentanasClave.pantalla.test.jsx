@@ -111,7 +111,7 @@ describe("Contabilidad se puede dibujar", () => {
   });
 
   it("al abrir cada parte", () => {
-    for (const titulo of ["Resumen", "Colaboradores", "Gastos"]) {
+    for (const titulo of ["Resumen", "A pagar", "Colaboradores", "Gastos"]) {
       const vista = montar(<VentanaCuentas data={data} onCerrar={() => {}} />);
       const boton = [...vista.contenedor.querySelectorAll("button")].find((b) =>
         b.textContent.includes(titulo)
@@ -143,7 +143,8 @@ describe("Contabilidad se puede dibujar", () => {
     let texto = vista.contenedor.textContent;
     expect(texto).toContain(`${euros(20)}Propinas`);
     // 45 recaudado + 20 de propina − 120 de gastos.
-    expect(texto).toContain(`${euros(45 + 20 - 120)}Balance (recaudado + propinas − gastos)`);
+    // 45 recaudado + 20 de propina − 120 de gastos (sin precios del local ni DJ).
+    expect(texto).toContain(`${euros(45 + 20 - 120)}Balance (recaudado + propinas − a pagar)`);
     vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Recaudado por colaborador")));
     vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Entregas (1)")));
     texto = vista.contenedor.textContent;
@@ -173,6 +174,19 @@ describe("Contabilidad se puede dibujar", () => {
     const vista = montar(<VentanaCuentas data={{ ...data, invitados: pagaOmar, colaboradores: yeray }} onCerrar={() => {}} />);
     vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Recaudado por colaborador")));
     expect(vista.contenedor.textContent).toContain(`Por entregar: ${euros(45)} (1 invitado)`);
+    vista.desmontar();
+  });
+  // v88 (él): el Balance del Resumen y el «Sobran/Faltan» de «A pagar» son
+  // la MISMA cuenta: con lo del local y el DJ, los dos dicen lo mismo.
+  it("el Balance del Resumen es el mismo que el de «A pagar»", () => {
+    const aPagar = { partidas: [{ id: "1", concepto: "Menú", adulto: "50", nino: "20" }], otros: [], dj: "100" };
+    const vista = montar(<VentanaCuentas data={{ ...data, evento: { ...evento, aPagar } }} onCerrar={() => {}} />);
+    // Entra 45; sale local 2 × 50 + 1 × 20 = 120, DJ 100 y gastos 120: faltan 295.
+    const titulos = vista.contenedor.textContent;
+    expect(titulos).toContain(`Balance ${euros(-295)}`);
+    expect(titulos).toContain(`Faltan ${euros(295)}`);
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Resumen")));
+    expect(vista.contenedor.textContent).toContain(`${euros(340)}Total a pagar`);
     vista.desmontar();
   });
   it("al confirmar la entrega, la propina va junto al importe", () => {
