@@ -24,7 +24,8 @@ import { SeccionPlegable } from "../components/SeccionPlegable";
 import { TITULO_NOTA_PRIVACIDAD } from "../constants";
 import { uid } from "../lib/id";
 import { leerEvento } from "../lib/leerEvento";
-import { rondasTablon } from "../lib/rondasTablon";
+import { rondasTablon, pendientesDelTablon } from "../lib/rondasTablon";
+import { TeFaltaTablon } from "./TeFaltaTablon";
 import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, marcarFotoFamilia } from "../lib/fotosFiesta";
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 import { TarjetaNoticia, CabeceraNoticia, CuerpoZonas } from "./NoticiaTablon";
@@ -97,6 +98,8 @@ export function VistaTablon({ token }) {
   const [idAbierto, setIdAbierto] = useState(null);
   // La nota de privacidad, al pie: cerrada hasta que alguien la pide.
   const [notaAbierta, setNotaAbierta] = useState(false);
+  // «Te falta» (v87.2): sale una vez cada vez que se abre el tablón.
+  const [teFaltaVisto, setTeFaltaVisto] = useState(false);
   // ---------- Pregunta de acceso (capa extra sobre el enlace en sí) ----------
   // A petición del usuario, 2026-08-25: aunque el enlace se reenvíe fuera
   // del grupo, sin la respuesta correcta el tablón no enseña nada -- ni
@@ -176,7 +179,11 @@ export function VistaTablon({ token }) {
     async () => {
       // El evento, sin lo privado (lib/leerEvento.js, v63), y quién ha
       // entrado (v64): su nombre y su colaborador.
-      const [eventoLeido, { data: novedadesFilas }, { data: quien }, { data: fotos }, { data: zonasLeidas }] = await Promise.all([
+      // Su email, solo con su enlace personal (v87.2, tablon_mi_email): la
+      // clave de su ficha y su año. Sin la función en la base, nada: sale
+      // «Sí» o «No», como antes.
+      const clave = getClaveTablonFromUrl();
+      const [eventoLeido, { data: novedadesFilas }, { data: quien }, { data: fotos }, { data: zonasLeidas }, { data: miEmail }] = await Promise.all([
         leerEvento(supabase),
         supabase.rpc("tablon_listar_novedades", {
           p_token: token,
@@ -190,10 +197,16 @@ export function VistaTablon({ token }) {
           p_dispositivo: dispositivoIdRef.current,
         }),
         supabase.rpc("tablon_zonas", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
+        clave ? supabase.rpc("tablon_mi_email", { p_token: token, p_clave: clave, p_respuesta: respuestaVerificadaRef.current }) : Promise.resolve({ data: null }),
       ]);
       setEvento(eventoLeido);
       // Con el año con el que entró (v70.1): el importe de su entrada en la guía.
-      setYo({ ...(quien || {}), nombre: quien?.nombre || respuestaVerificadaRef.current, anio: anioDeRespuesta(respuestaVerificadaRef.current) });
+      setYo({
+        ...(quien || {}),
+        nombre: quien?.nombre || respuestaVerificadaRef.current,
+        anio: anioDeRespuesta(respuestaVerificadaRef.current),
+        email: typeof miEmail === "string" ? miEmail : "",
+      });
       setNovedades(novedadesFilas || []);
       setFotosFiesta(fotos || null);
       setZonas(zonasLeidas || null);
@@ -361,6 +374,7 @@ export function VistaTablon({ token }) {
     setRespuestaEscrita("");
     setAnioEscrito("");
     setYo(null);
+    setTeFaltaVisto(false);
     setFotosFiesta(null);
     setEstado("bloqueado");
   };
@@ -422,8 +436,12 @@ export function VistaTablon({ token }) {
   ) : null;
 
   const cuentaAtras = cuentaAtrasEvento(evento);
-  // Su zona, para el importe del DJ (0 €): la da la noticia de las zonas.
-  const rondas = rondasTablon(yo && { ...yo, zona: zonas?.miZona }, evento);
+  // Su zona, para el importe del DJ (0 €): la de tablon_quien_soy (v85.8).
+  // La de la noticia de las zonas solo llega si está publicada: sin ella,
+  // al DJ le salían 47 €.
+  const yoConZona = yo && { ...yo, zona: yo.zona ?? zonas?.miZona };
+  const rondas = rondasTablon(yoConZona, evento);
+  const pendientes = pendientesDelTablon(yoConZona, evento);
 
   if (estado === "cargando") {
     return (
@@ -839,6 +857,9 @@ export function VistaTablon({ token }) {
         </div>
       </div>
       {notaAbierta && <NotaPrivacidad evento={evento} onCerrar={() => setNotaAbierta(false)} />}
+      {pendientes && !teFaltaVisto && (
+        <TeFaltaTablon pendientes={pendientes} colaborador={yo?.colaborador} colaboradorEsYo={yo?.colaboradorEsYo} onCerrar={() => setTeFaltaVisto(true)} />
+      )}
     </div>
   );
 }

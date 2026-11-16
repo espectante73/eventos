@@ -36,3 +36,16 @@ it("sin el SQL de la v85.1 (la base no lo manda), no sale nada", () => {
   expect(vista.contenedor.textContent).toBe("");
   vista.desmontar();
 });
+
+// v87.2 (él): el email entero, para ver si está bien escrito; solo con su
+// enlace personal. Por la puerta general, «Sí» y cómo verlo.
+it("con su enlace personal, el email entero; sin él, «Sí» y cómo verlo", () => {
+  let vista = montar(<RegistroTablon yo={{ ...yo, tieneEmail: true, email: "ana@correo.com" }} evento={evento} abierta onAlternar={() => {}} />);
+  expect(vista.contenedor.textContent).toContain("Email para la invitación: ana@correo.com");
+  expect(vista.contenedor.textContent).not.toContain("enlace personal");
+  vista.desmontar();
+  vista = montar(<RegistroTablon yo={{ ...yo, tieneEmail: true, email: "" }} evento={evento} abierta onAlternar={() => {}} />);
+  expect(vista.contenedor.textContent).toContain("Email para la invitación: Sí");
+  expect(vista.contenedor.textContent).toContain("Para verlo, entra con tu enlace personal.");
+  vista.desmontar();
+});

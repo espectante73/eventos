@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rondasTablon } from "./rondasTablon";
+import { rondasTablon, pendientesDelTablon } from "./rondasTablon";
 import { euros } from "./formato";
 
 const estados = (yo, evento = {}) => rondasTablon(yo, evento).map((r) => `${r.id}:${r.estado}`);
@@ -46,5 +46,30 @@ describe("«Pagado» con su importe (v70.1)", () => {
   it("sin año, o si no paga (un bebé), solo «Pagado»", () => {
     expect(recaudacion({})).toBe("Pagado");
     expect(recaudacion({ anio: "2025" })).toBe("Pagado");
+  });
+});
+
+// v87.2 (él): «Te falta», al abrir el tablón.
+describe("lo que le falta, al abrir el tablón", () => {
+  const evento = { fecha: "2026-12-11", precioAdulto: "47", precioNino: "35", edadNinoDesde: "4", edadNinoHasta: "8" };
+  const yo = { anio: "1980", pagado: false, datosCompletos: true, faltaFotoBoda: null, zona: "Icod" };
+
+  it("sin pagar: el importe de su entrada, con su año", () => {
+    expect(pendientesDelTablon(yo, evento)).toEqual({ importe: 47, fotoBoda: false, alergias: false });
+    expect(pendientesDelTablon({ ...yo, anio: "2020" }, evento).importe).toBe(35);
+  });
+
+  it("pagado, o el DJ que no paga: el importe no sale", () => {
+    expect(pendientesDelTablon({ ...yo, pagado: true }, evento)).toBeNull();
+    expect(pendientesDelTablon({ ...yo, zona: "DJ" }, evento)).toBeNull();
+  });
+
+  it("la foto de boda y las alergias, también ya pagado", () => {
+    expect(pendientesDelTablon({ ...yo, pagado: true, faltaFotoBoda: true, datosCompletos: false }, evento)).toEqual({ importe: 0, fotoBoda: true, alergias: true });
+  });
+
+  it("lo que la base no manda (SQL sin subir, o sin respuesta), no sale", () => {
+    expect(pendientesDelTablon({ anio: "1980" }, evento)).toBeNull();
+    expect(pendientesDelTablon(null, evento)).toBeNull();
   });
 });

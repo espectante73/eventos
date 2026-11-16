@@ -19,9 +19,13 @@ import { euros } from "./formato";
 // `yo` viene de tablon_quien_soy: solo sí o no, nunca sus datos. Sin esos
 // tres (el servidor aún sin el SQL v69.4) no hay guía: mejor nada que una
 // ronda equivocada.
+// El importe de su entrada: el año con el que entró y su zona (el DJ, 0 €).
+// Una sola cuenta para la guía y para «Te falta» (norma 7).
+const importeDe = (yo, evento) => (yo?.anio ? importeEsperadoInvitado({ anioNacimiento: yo.anio, zona: yo.zona }, evento) : 0);
+
 export function rondasTablon(yo, evento) {
   if (!yo || yo.datosCompletos === undefined) return null;
-  const importe = yo.anio ? importeEsperadoInvitado({ anioNacimiento: yo.anio, zona: yo.zona }, evento) : 0;
+  const importe = importeDe(yo, evento);
   const ronda = evento?.asistenciaAbierta ? 3 : !yo.datosCompletos ? 1 : 2;
   const estado = (n, hecha) => (hecha ? "hecha" : ronda === n ? "ahora" : "pendiente");
   return [
@@ -29,4 +33,22 @@ export function rondasTablon(yo, evento) {
     { id: "recaudacion", etiqueta: "Recaudación", estado: estado(2, yo.pagado), nota: importe > 0 ? `Pagado · ${euros(importe)}` : "Pagado" },
     { id: "acreditacion", etiqueta: "Acreditación", estado: estado(3, ronda === 3 && yo.presente), nota: "Ya estás dentro" },
   ];
+}
+
+// «Te falta» (él, v87.2): al abrir el tablón, lo que le queda por dar a su
+// colaborador, en una ventana con el resto atenuado. Primero, y muy
+// resaltado, el importe: «es muy importante poder recoger el dinero de tu
+// entrada». Debajo, más apagados, la foto de boda (solo el matrimonio, sin
+// «No tienen») y las alergias (con el año ya puesto, porque entró con él,
+// datosCompletos solo puede fallar por ellas). Lo que la base no manda (un
+// SQL sin subir), no sale. null: no le falta nada.
+export function pendientesDelTablon(yo, evento) {
+  if (!yo) return null;
+  const importe = importeDe(yo, evento);
+  const pendientes = {
+    importe: yo.pagado === false && importe > 0 ? importe : 0,
+    fotoBoda: yo.faltaFotoBoda === true,
+    alergias: yo.datosCompletos === false,
+  };
+  return pendientes.importe || pendientes.fotoBoda || pendientes.alergias ? pendientes : null;
 }

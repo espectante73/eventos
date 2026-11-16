@@ -3084,6 +3084,20 @@ CREATE FUNCTION public.tablon_por_clave(p_token uuid, p_clave text) RETURNS json
   limit 1;
 $$;
 
+-- Su email, para que vea si está bien escrito (v87.2, él). SOLO con su
+-- enlace personal: la clave de su ficha (secreta, se la manda su
+-- colaborador) Y su respuesta con el año. Por la puerta general, nunca:
+-- nombre y año se pueden ir probando. Vacío, null.
+CREATE FUNCTION public.tablon_mi_email(p_token uuid, p_clave text, p_respuesta text) RETURNS text
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+  select nullif(trim(coalesce(y."email", '')), '')
+  from tablon_invitado(p_token, p_respuesta) y
+  where coalesce(p_clave, '') <> ''
+    and y."claveTablon" = p_clave;
+$$;
+
 -- La clave de familia de un invitado, igual que claveFamilia en la app.
 CREATE FUNCTION public.clave_familia(p_grupo text, p_apellido text) RETURNS text
     LANGUAGE sql IMMUTABLE
@@ -3464,7 +3478,10 @@ CREATE FUNCTION public.foto_fiesta_quitada(p_ruta text) RETURNS boolean
 --   anioBoda,         matrimonio). tieneEmail (v85.2): si dio email para la
 --   tieneEmail        invitación, sí o no. NUNCA el año de nacimiento (es la
 --                     llave), ni el email ni el teléfono (la puerta no es una
---                     contraseña: se podrían ir sacando uno a uno).
+--                     contraseña: se podrían ir sacando uno a uno). El email,
+--                     solo con su enlace personal: tablon_mi_email.
+--   faltaFotoBoda     «Te falta» (v87.2, él): sí o no, solo del esposo o la
+--                     esposa (null: no es matrimonio). Ni la foto ni su ruta.
 CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
@@ -3483,7 +3500,12 @@ CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS 
     'conservarDatos', coalesce(y."conservarDatos", false),
     'anioBoda', case when y."rolFamiliar" in ('esposo', 'esposa') then y."anioBoda" end,
     'tieneEmail', coalesce(trim(y."email"), '') <> '',
-    'zona', trim(coalesce(y."zona", ''))
+    'zona', trim(coalesce(y."zona", '')),
+    'faltaFotoBoda', case when y."rolFamiliar" in ('esposo', 'esposa') then not exists (
+      select 1 from fotos_familiares f
+      where f."grupoFamiliar" = coalesce(y."grupoFamiliar", '')
+        and (coalesce(f."url", '') <> '' or coalesce(f."sinFotoBoda", false))
+    ) end
   )
   from tablon_invitado(p_token, p_respuesta) y
   left join colaboradores c on c."id" = y."colaboradorId";

@@ -13,7 +13,16 @@ describe("registroDelTablon", () => {
       boda: "1990 · 36º aniversario en 2026",
       conservar: "Sí",
       email: "Sí",
+      emailOculto: true,
     });
+  });
+
+  // v87.2 (él): «para que pueda decir si está o no bien escrito». Con su
+  // enlace personal (tablon_mi_email), el email entero; sin él, Sí o No.
+  it("con su enlace personal, el email entero; por la puerta general, Sí y cómo verlo", () => {
+    expect(registroDelTablon({ ...yo, email: "ana@correo.com" }, evento)).toMatchObject({ email: "ana@correo.com", emailOculto: false });
+    expect(registroDelTablon({ ...yo, email: "" }, evento)).toMatchObject({ email: "Sí", emailOculto: true });
+    expect(registroDelTablon({ ...yo, tieneEmail: false, email: "" }, evento)).toMatchObject({ email: "No", emailOculto: false });
   });
 
   it("el email, Sí o No y solo desde los 16; sin el dato (base sin la v85.2), no sale", () => {

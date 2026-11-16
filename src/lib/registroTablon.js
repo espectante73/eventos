@@ -7,7 +7,9 @@
 // Lo manda tablon_quien_soy. Sin esas claves (la base aún sin el SQL de la
 // v85.1: el cliente va antes, skill sql-supabase, regla 3), null: no se
 // enseña nada. Nunca el año de nacimiento (es la llave de la puerta: se ve
-// siempre el mismo que eligió), ni el email ni el teléfono.
+// siempre el mismo que eligió) ni el teléfono. El email, entero solo con su
+// enlace personal (v87.2, él: «para que pueda decir si está o no bien
+// escrito»; `yo.email`, de tablon_mi_email); por la puerta general, sí o no.
 import { cancionesDe } from "./canciones";
 import { anioDelEvento } from "./matrimonios";
 import { pideEmail } from "./invitados";
@@ -21,9 +23,11 @@ export function registroDelTablon(yo, evento) {
     canciones: canciones.length ? canciones : [yo.sinCancion ? "Prefieres no pedir ninguna" : "Ninguna todavía"],
     boda: lineaBoda(yo.anioBoda, evento),
     conservar: yo.conservarDatos ? "Sí" : "No",
-    // Sí o No, nunca la dirección; solo a quien se le pide (desde los 16,
-    // con el año con el que entró). null: no se enseña.
-    email: "tieneEmail" in yo && pideEmail({ anioNacimiento: yo.anio }, evento) ? (yo.tieneEmail ? "Sí" : "No") : null,
+    // Solo a quien se le pide (desde los 16, con el año con el que entró).
+    // null: no se enseña.
+    email: "tieneEmail" in yo && pideEmail({ anioNacimiento: yo.anio }, evento) ? yo.email || (yo.tieneEmail ? "Sí" : "No") : null,
+    // Lo dio, pero entró por la puerta general: cómo verlo.
+    emailOculto: Boolean(yo.tieneEmail && !yo.email),
   };
 }
 

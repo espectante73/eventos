@@ -167,6 +167,23 @@ describe("el tablón: quién ha entrado y su colaborador", () => {
   it("su zona, para el importe: el DJ, a 0 €", () => {
     expect(f).toContain(`'zona', trim(coalesce(y."zona", ''))`);
   });
+  // v87.2 (él): «Te falta». La foto de boda, sí o no y solo del matrimonio:
+  // ni la foto ni su ruta. Con «No tienen» marcado, ya no falta.
+  it("si le falta la foto de boda: sí o no, solo al esposo o la esposa", () => {
+    expect(f).toContain(`'faltaFotoBoda', case when y."rolFamiliar" in ('esposo', 'esposa') then not exists (`);
+    expect(f).toContain(`coalesce(f."url", '') <> '' or coalesce(f."sinFotoBoda", false)`);
+    expect(f).not.toMatch(/'\w+',\s*f\."url"/);
+  });
+  // v87.2 (él): ver su email para avisar si está mal escrito. Solo con su
+  // enlace personal (la clave secreta de su ficha) y su año: por la puerta
+  // general, nombre y año se pueden ir probando.
+  it("su email, solo con la clave de su enlace personal y su año", () => {
+    const e = cuerpoDe("tablon_mi_email");
+    expect(e).toContain("from tablon_invitado(p_token, p_respuesta) y");
+    expect(e).toContain(`coalesce(p_clave, '') <> ''`);
+    expect(e).toContain(`y."claveTablon" = p_clave`);
+    expect(e).not.toMatch(/telefono|anioNacimiento/);
+  });
   it("su nombre como en la lista, su colaborador aunque sea él mismo, y si es colaborador", () => {
     expect(f).toContain(`'nombre', y."apellido" || ', ' || y."nombre"`);
     expect(f).toContain(`'colaborador', c."nombre"`);

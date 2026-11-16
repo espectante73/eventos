@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "87.2",
+    cambios: [
+      "Tablón: al entrar, a cada invitado le sale «Te falta» con el resto atenuado. Primero y muy resaltado, el importe de su entrada (nunca al DJ); debajo, más apagados, la foto de boda (solo el matrimonio, sin «No tienen») y las alergias. Se cierra con «Entendido» y vuelve a salir cada vez que lo abre.",
+      "«Comprueba tus datos»: con su enlace personal ve su email entero, para avisar si está mal escrito. Por el enlace general sigue saliendo «Sí» o «No», con cómo verlo.",
+      "Arreglado: sin «De dónde venimos» publicado, al DJ le salía el importe de adulto en la guía del tablón.",
+      "Necesita el SQL «v87.2-tablon-te-falta».",
+    ],
+  },
+  {
     version: "87.1",
     cambios: [
       "Lista de invitados, «Añadir»: también Canciones, Observaciones, Alergias y «Después del evento» (la autorización para guardar sus datos), plegados y en el orden de la ficha del colaborador. Un solo apartado abierto a la vez.",

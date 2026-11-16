@@ -5,7 +5,7 @@
 // algo está mal. Solo se ve. Las reglas de qué se enseña, en
 // lib/registroTablon.js; aparte de VistaTablon para poder dibujarlo en
 // una prueba.
-import { C } from "../theme";
+import { C, OP } from "../theme";
 import { SeccionPlegable } from "../components/SeccionPlegable";
 import { registroDelTablon } from "../lib/registroTablon";
 
@@ -42,7 +42,18 @@ export function RegistroTablon({ yo, evento, abierta, onAlternar }) {
             ))}
           </div>
           {registro.boda && <Linea rotulo="Boda">{registro.boda}</Linea>}
-          {registro.email && <Linea rotulo="Email para la invitación">{registro.email}</Linea>}
+          {/* El email entero se parte donde haga falta: recortado no se
+              vería si está mal escrito (v87.2). */}
+          {registro.email && (
+            <p style={{ overflowWrap: "anywhere" }}>
+              <b>Email para la invitación:</b> {registro.email}
+            </p>
+          )}
+          {registro.email && registro.emailOculto && (
+            <p className="text-xs pl-3" style={{ opacity: OP.secundario }}>
+              Para verlo, entra con tu enlace personal.
+            </p>
+          )}
           <Linea rotulo="Guardar tus datos tras el evento">{registro.conservar}</Linea>
         </div>
       </SeccionPlegable>
