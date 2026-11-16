@@ -437,8 +437,9 @@ export function VentanaCuentas({ data, onCerrar }) {
 
       <SeccionPlegable
         icono={Receipt}
-        titulo="Gastos"
-        resumen={`${gastos.length} · ${euros(totalGastos)}`}
+        // El número, en el título (él, v88.2): «9 · 144 €» se leía 9.144.
+        titulo={`${gastos.length} gasto${gastos.length === 1 ? "" : "s"}`}
+        resumen={euros(totalGastos)}
         abierta={seccionAbierta === "gastos"}
         onAlternar={() => alternar("gastos")}
       >

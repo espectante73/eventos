@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "88.2",
+    cambios: [
+      "Contabilidad: el apartado de gastos, plegado, decía «9 · 144 €» y de un vistazo parecía 9.144. Ahora el número va en el título («9 gastos») y a la derecha solo el total.",
+    ],
+  },
+  {
     version: "88.1",
     cambios: [
       "Arreglado: al publicar la 88, el aviso rojo dijo «Actualización sin número nuevo» sin serlo: la página nueva llegó un momento antes que su número. Ahora, con el número de antes, espera unos minutos; si sigue sin llegar, entonces sí avisa.",

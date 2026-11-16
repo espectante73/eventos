@@ -111,7 +111,7 @@ describe("Contabilidad se puede dibujar", () => {
   });
 
   it("al abrir cada parte", () => {
-    for (const titulo of ["Resumen", "A pagar", "Colaboradores", "Gastos"]) {
+    for (const titulo of ["Resumen", "A pagar", "Recaudado por colaborador", "1 gasto"]) {
       const vista = montar(<VentanaCuentas data={data} onCerrar={() => {}} />);
       const boton = [...vista.contenedor.querySelectorAll("button")].find((b) =>
         b.textContent.includes(titulo)
@@ -187,6 +187,14 @@ describe("Contabilidad se puede dibujar", () => {
     expect(titulos).toContain(`Faltan ${euros(295)}`);
     vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("Resumen")));
     expect(vista.contenedor.textContent).toContain(`${euros(340)}Total a pagar`);
+    vista.desmontar();
+  });
+  // v88.2 (él): «9 · 144 €» se leía 9.144; el número va con la palabra.
+  it("el título de Gastos lleva cuántos son, y a la derecha solo el total", () => {
+    const vista = montar(<VentanaCuentas data={{ ...data, gastos: [...data.gastos, { id: "x2", concepto: "Imprenta", importe: "24" }] }} onCerrar={() => {}} />);
+    const texto = vista.contenedor.textContent;
+    expect(texto).toContain(`2 gastos${euros(144)}`);
+    expect(texto).not.toContain("2 ·");
     vista.desmontar();
   });
   it("al confirmar la entrega, la propina va junto al importe", () => {
