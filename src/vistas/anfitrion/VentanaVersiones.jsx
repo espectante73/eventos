@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "88.5",
+    cambios: [
+      "Revisión de la Lista, aviso nuevo «¿La misma persona con otro nombre?»: dos fichas con el mismo año de nacimiento, el mismo email o teléfono y un nombre en común (por ejemplo, con el apellido de casada y el de soltera). Antes solo se avisaba con el mismo nombre y apellido, y una así se colaba.",
+      "Si es la misma persona, se borra la que sobra; si son dos distintas, se marca como excepción.",
+    ],
+  },
+  {
     version: "88.4",
     cambios: [
       "Arreglado: «Crear acceso directo», «Instalar» o «Añadir a pantalla de inicio» desde el enlace del DJ abría la pantalla de entrada de la app. Ahora abre sus canciones, con el nombre «Canciones» bajo el icono (como el tablón, que ya lo hacía). La clave se pide una vez dentro.",

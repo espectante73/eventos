@@ -13,7 +13,8 @@
 // Cada hallazgo devuelve las personas afectadas para poder saltar a
 // ellas en la propia lista, que sigue siendo donde se corrige.
 import { ROL_FAMILIAR } from "./rolFamiliar";
-import { calcularEdad, familiasSinEmail, claveFamilia, ROLES_CON_EMAIL_FAMILIAR } from "./invitados";
+import { calcularEdad, familiasSinEmail, claveFamilia, ROLES_CON_EMAIL_FAMILIAR, emailDeInvitado } from "./invitados";
+import { limpiarTelefono } from "./telefono";
 import { conyugesSueltos, matrimoniosDeInvitados, EXCEPCION_SIN_PAREJA } from "./matrimonios";
 import { colaboradoresSinFichaEnlazada, mismaPersona } from "./edicionInvitados";
 import { NOMBRES_HABITUALES } from "./nombresHabituales";
@@ -111,6 +112,27 @@ export function nombreParecido(nombre, conocidos = new Set()) {
     if (parecidos.length) return parecidos.slice(0, 2).map((h) => HABITUALES.get(h));
   }
   return null;
+}
+
+// ¿La misma persona en dos fichas con OTRO nombre? (él, v88.5: «error
+// garrafal»: Carmen, una ficha con el apellido de casada y otra con el de
+// soltera, con el mismo email, año y teléfono, y no saltó nada; la de
+// arriba solo mira nombre y apellido.) Las dos con el mismo año de
+// nacimiento, el mismo email o teléfono, y alguna palabra del nombre en
+// común («Mari Carmen» y «Carmen»). Un matrimonio o unos hermanos pueden
+// compartir email o teléfono, pero no el año y el nombre a la vez; si
+// alguna vez pasa, se marca como excepción.
+export function mismaPersonaOtroNombre(a, b, colaboradores = []) {
+  if (!a || !b || a.id === b.id || mismaPersona(a, b)) return false;
+  const anio = (g) => String(g.anioNacimiento || "").trim();
+  if (!anio(a) || anio(a) !== anio(b)) return false;
+  const email = (g) => emailDeInvitado(g, colaboradores).toLowerCase();
+  const telefono = (g) => limpiarTelefono(g.telefono);
+  const mismoContacto = (email(a) && email(a) === email(b)) || (telefono(a) && telefono(a) === telefono(b));
+  if (!mismoContacto) return false;
+  const palabras = (g) => comoElTablon(g.nombre).split(" ").filter((p) => p.length >= 3 && !PARTICULAS.has(p));
+  const deB = new Set(palabras(b));
+  return palabras(a).some((p) => deB.has(p));
 }
 
 function hallazgo(clave, titulo, ayuda, personas, tipo = "error") {
@@ -363,6 +385,31 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
         "La misma persona, dos veces en la lista",
         "Hay dos o más fichas con el mismo nombre y apellido. Cada una cuenta por separado: en el aforo, en la mesa y en las invitaciones. Si de verdad son dos personas distintas que se llaman igual, márcalo como excepción.",
         repetidos,
+        "error"
+      )
+    );
+
+  // La misma persona con otro nombre (mismaPersonaOtroNombre): cada una
+  // junto a la otra, para verlas seguidas.
+  const yaVistos = new Set();
+  const otroNombre = [];
+  for (const g of invitados) {
+    if (yaVistos.has(g.id)) continue;
+    const iguales = invitados.filter((x) => mismaPersonaOtroNombre(g, x, colaboradores));
+    if (!iguales.length) continue;
+    for (const x of [g, ...iguales]) {
+      if (yaVistos.has(x.id)) continue;
+      yaVistos.add(x.id);
+      otroNombre.push(x);
+    }
+  }
+  if (otroNombre.length)
+    hallazgos.push(
+      hallazgo(
+        "mismaPersonaOtroNombre",
+        "¿La misma persona con otro nombre?",
+        "Dos fichas con el mismo año de nacimiento, el mismo email o teléfono y un nombre en común: por ejemplo, una con el apellido de casada y otra con el de soltera. Cada una cuenta por separado (aforo, mesa, pago e invitación). Si es la misma persona, borra la que sobra; si son dos personas distintas, márcalo como excepción.",
+        otroNombre,
         "error"
       )
     );

@@ -281,6 +281,47 @@ describe("la misma persona, dos veces en la lista", () => {
   });
 });
 
+// v88.5 (él, «error garrafal»): Carmen, con el apellido de casada y con el
+// de soltera, el mismo email, año y teléfono, y no saltó nada.
+describe("la misma persona con otro nombre", () => {
+  const carmen = { anioNacimiento: "1958", email: "carmen@correo.com", telefono: "612 345 678" };
+  it("mismo año, mismo email y teléfono, el mismo nombre y otro apellido: salen las dos", () => {
+    const casada = persona({ id: "a", nombre: "Carmen", apellido: "Pacheco", ...carmen });
+    const soltera = persona({ id: "b", nombre: "Carmen", apellido: "Sierra", ...carmen });
+    const h = buscar(revisarInvitados([casada, soltera]), "mismaPersonaOtroNombre");
+    expect(h.personas.map((p) => p.id)).toEqual(["a", "b"]);
+    expect(h.tipo).toBe("error");
+  });
+
+  it("basta el email o el teléfono, con el teléfono escrito de otra manera; y un nombre en común", () => {
+    const uno = persona({ id: "a", nombre: "Mari Carmen", apellido: "Pacheco", anioNacimiento: "1958", telefono: "612345678" });
+    const otro = persona({ id: "b", nombre: "Carmen", apellido: "Sierra", anioNacimiento: "1958", telefono: "+34 612 34 56 78" });
+    expect(claves(revisarInvitados([uno, otro]))).toContain("mismaPersonaOtroNombre");
+  });
+
+  it("un matrimonio con el mismo email o teléfono no lo es (otro nombre); ni la misma con otro año", () => {
+    const esposo = persona({ id: "a", nombre: "Omar", apellido: "Pacheco", ...carmen });
+    const esposa = persona({ id: "b", nombre: "Carmen", apellido: "Sierra", ...carmen });
+    expect(claves(revisarInvitados([esposo, esposa]))).not.toContain("mismaPersonaOtroNombre");
+    const otraEdad = persona({ id: "c", nombre: "Carmen", apellido: "Pacheco", ...carmen, anioNacimiento: "1985" });
+    expect(claves(revisarInvitados([esposa, otraEdad]))).not.toContain("mismaPersonaOtroNombre");
+  });
+
+  it("sin email ni teléfono en común, no", () => {
+    const uno = persona({ id: "a", nombre: "Carmen", apellido: "Pacheco", anioNacimiento: "1958", email: "a@a.com" });
+    const otro = persona({ id: "b", nombre: "Carmen", apellido: "Sierra", anioNacimiento: "1958", email: "b@b.com" });
+    expect(claves(revisarInvitados([uno, otro]))).not.toContain("mismaPersonaOtroNombre");
+  });
+
+  it("con el mismo nombre y apellido ya lo dice «dos veces en la lista»: no sale dos veces", () => {
+    const uno = persona({ id: "a", nombre: "Carmen", apellido: "Sierra", ...carmen });
+    const otro = persona({ id: "b", nombre: "Carmen", apellido: "Sierra", ...carmen });
+    const c = claves(revisarInvitados([uno, otro]));
+    expect(c).toContain("invitadoRepetido");
+    expect(c).not.toContain("mismaPersonaOtroNombre");
+  });
+});
+
 // v64.5: lo que impide entrar al tablón o huele a errata.
 describe("apellidos y nombres mal escritos", () => {
   it("apellido distinto al de su familia; lo que el tablón perdona no cuenta", () => {
