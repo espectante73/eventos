@@ -20,6 +20,16 @@ export async function leerVersionPublicada(pedir = fetch) {
   }
 }
 
+// ¿Se enseña ya el aviso? Al publicar, la página nueva y /version.json no
+// llegan a la vez: una pestaña puede ver el código nuevo con el número de
+// antes y decir «sin número nuevo» sin serlo (pasó en la v88). Con el mismo
+// número se espera ESPERAS_SIN_NUMERO comprobaciones (una por minuto); si
+// sigue igual, entonces sí se avisa. Sin poder leerlo, el aviso de siempre.
+export const ESPERAS_SIN_NUMERO = 3;
+export function avisarYa({ actual, nueva, esperas }) {
+  return !nueva || nueva.version !== actual || esperas >= ESPERAS_SIN_NUMERO;
+}
+
 // Título y texto del aviso. Una actualización sin número nuevo no debería
 // llegar (el freno de subida lo impide): al anfitrión se le dice, para que
 // pregunte antes (él temió algo de fuera al ver una así); al resto, el aviso

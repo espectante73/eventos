@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "88.1",
+    cambios: [
+      "Arreglado: al publicar la 88, el aviso rojo dijo «Actualización sin número nuevo» sin serlo: la página nueva llegó un momento antes que su número. Ahora, con el número de antes, espera unos minutos; si sigue sin llegar, entonces sí avisa.",
+    ],
+  },
+  {
     version: "88",
     cambios: [
       "Contabilidad, apartado nuevo «A pagar»: lo que ENTRA (recaudado + propinas) frente a lo que SALE a cada acreedor —el local, el DJ y tus gastos— y lo que sobra o falta.",

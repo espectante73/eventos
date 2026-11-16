@@ -17,7 +17,7 @@ import { VistaTablon } from "./vistas/VistaTablon";
 import { VistaDj } from "./vistas/VistaDj";
 import { VistaAcreditar, AcreditarSinSesion } from "./vistas/VistaAcreditar";
 import { AvisoActualizar } from "./components/AvisoActualizar";
-import { leerVersionPublicada, textoAvisoVersion } from "./lib/avisoVersion";
+import { leerVersionPublicada, textoAvisoVersion, avisarYa } from "./lib/avisoVersion";
 import { VERSION_APP } from "./constants";
 
 // Las dos vistas grandes se descargan solo cuando hacen falta (2026-09-18).
@@ -225,6 +225,8 @@ export default function App() {
   // A qué versión lleva y qué cambia (v81.6): de /version.json, que escribe
   // cada publicación; null si no se pudo leer.
   const [versionNueva, setVersionNueva] = useState(null);
+  // Cuántas veces se ha visto código nuevo con el número de antes (avisarYa).
+  const esperasSinNumero = useRef(0);
   useEffect(() => {
     const scriptActual = document.querySelector("script[type='module']")?.getAttribute("src");
     if (!scriptActual) return;
@@ -234,8 +236,13 @@ export default function App() {
         const html = await res.text();
         const match = html.match(/<script[^>]*type=["']module["'][^>]*src=["']([^"']+)["']/);
         if (match && match[1] !== scriptActual) {
+          const nueva = await leerVersionPublicada();
+          if (!avisarYa({ actual: VERSION_APP, nueva, esperas: esperasSinNumero.current })) {
+            esperasSinNumero.current += 1;
+            return;
+          }
           setHayNuevaVersion(true);
-          setVersionNueva(await leerVersionPublicada());
+          setVersionNueva(nueva);
         }
       } catch (_) {
         // Sin conexión o fallo de red: no pasa nada, se reintenta luego.

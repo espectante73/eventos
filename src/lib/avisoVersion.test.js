@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
-import { leerVersionPublicada, textoAvisoVersion, TOPE_AVISO } from "./avisoVersion";
+import { leerVersionPublicada, textoAvisoVersion, TOPE_AVISO, avisarYa, ESPERAS_SIN_NUMERO } from "./avisoVersion";
 import { VERSION_APP, AVISO_VERSION } from "../constants";
 import { motivoSinVersion, CAMBIA_LO_PUBLICADO } from "../../scripts/version-subida.mjs";
 
@@ -46,6 +46,19 @@ describe("el aviso de la versión (v81.6)", () => {
 
   it("si no se pudo leer lo publicado, el aviso de siempre", () => {
     expect(textoAvisoVersion({ actual: VERSION_APP, nueva: null, esAnfitrion: true })).toEqual({ titulo: "Hay una versión nueva de la app", texto: "" });
+  });
+});
+
+// v88: al publicar, el código nuevo llegó antes que /version.json y salió
+// «Actualización sin número nuevo» sin serlo.
+describe("con el número de antes, se espera antes de avisar", () => {
+  it("con número nuevo, o sin poder leerlo, se avisa ya", () => {
+    expect(avisarYa({ actual: "88", nueva: { version: "88.1" }, esperas: 0 })).toBe(true);
+    expect(avisarYa({ actual: "88", nueva: null, esperas: 0 })).toBe(true);
+  });
+  it("con el mismo número, solo tras esperar", () => {
+    for (let esperas = 0; esperas < ESPERAS_SIN_NUMERO; esperas++) expect(avisarYa({ actual: "88", nueva: { version: "88" }, esperas })).toBe(false);
+    expect(avisarYa({ actual: "88", nueva: { version: "88" }, esperas: ESPERAS_SIN_NUMERO })).toBe(true);
   });
 });
 
