@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "87.3",
+    cambios: [
+      "Tablón: sin pagar, «Te falta» ya no se cierra (ni X ni «Entendido»): el tablón queda atenuado hasta que su colaborador le marque como pagado, y entonces se abre solo (como mucho en un minuto, o al volver a la pestaña).",
+      "Dice: «Si ya has pagado, dile a tu colaborador que te marque como pagado en la aplicación. Así podrás ver el tablón.» Lleva «Cambiar», para que en un móvil de la familia pueda entrar otro.",
+      "Ya pagado, la foto de boda o las alergias que falten siguen saliendo con «Entendido».",
+    ],
+  },
+  {
     version: "87.2",
     cambios: [
       "Tablón: al entrar, a cada invitado le sale «Te falta» con el resto atenuado. Primero y muy resaltado, el importe de su entrada (nunca al DJ); debajo, más apagados, la foto de boda (solo el matrimonio, sin «No tienen») y las alergias. Se cierra con «Entendido» y vuelve a salir cada vez que lo abre.",

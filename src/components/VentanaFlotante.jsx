@@ -22,19 +22,23 @@ import { realmDe } from "../lib/realm";
 // Lista de invitados). Si no cabe, se desliza de lado; la X, siempre a la vista.
 // `ajustado` (v81.2): del ancho de lo que lleva (la canción más larga), no
 // de `ancho`; los botones de abajo se acomodan a él sin ensancharlo.
-export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720, movible = false, extra, ajustado = false }) {
+// `cerrable={false}` (v87.3, él): sin X, sin Escape y sin tocar fuera. Solo
+// para lo que tiene que quedarse delante hasta que cambie algo fuera (el
+// tablón de quien no ha pagado): la excepción a «su salida arriba» (norma 5).
+export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720, movible = false, extra, ajustado = false, cerrable = true }) {
   const hayCuerpo = Children.toArray(children).some((c) => c !== "");
   // Escape, en la ventana donde está este modal (realmDe): dentro de la
   // Lista de invitados es otra ventana del sistema (v80.1).
   const fondoRef = useRef(null);
   useEffect(() => {
+    if (!cerrable) return undefined;
     const { win } = realmDe(fondoRef.current);
     const onKey = (e) => {
       if (e.key === "Escape") onCerrar();
     };
     win.addEventListener("keydown", onKey);
     return () => win.removeEventListener("keydown", onKey);
-  }, [onCerrar]);
+  }, [onCerrar, cerrable]);
 
   // Un modal de verdad (con fondo oscurecido) tiene que quedar SIEMPRE por
   // delante de cualquier VentanaFlotante que ya estuviera abierta — si no,
@@ -91,6 +95,7 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
     };
   };
   const tocarFuera = () => {
+    if (!cerrable) return;
     if (recienArrastrado.current) {
       recienArrastrado.current = false;
       return;
@@ -154,9 +159,11 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
                 {extra}
               </div>
             )}
-            <button onClick={onCerrar} title="Cerrar" aria-label="Cerrar" className="boton-3d rounded-full p-1.5 flex-shrink-0" style={{ color: C.goldClaro }}>
-              <X size={18} />
-            </button>
+            {cerrable && (
+              <button onClick={onCerrar} title="Cerrar" aria-label="Cerrar" className="boton-3d rounded-full p-1.5 flex-shrink-0" style={{ color: C.goldClaro }}>
+                <X size={18} />
+              </button>
+            )}
           </div>
         </div>
         {/* Sin nada dentro (una pregunta sin texto, «¿Descartar los

@@ -857,8 +857,16 @@ export function VistaTablon({ token }) {
         </div>
       </div>
       {notaAbierta && <NotaPrivacidad evento={evento} onCerrar={() => setNotaAbierta(false)} />}
-      {pendientes && !teFaltaVisto && (
-        <TeFaltaTablon pendientes={pendientes} colaborador={yo?.colaborador} colaboradorEsYo={yo?.colaboradorEsYo} onCerrar={() => setTeFaltaVisto(true)} />
+      {/* Sin pagar, siempre (no se cierra); lo demás, hasta «Entendido». */}
+      {pendientes && (pendientes.importe > 0 || !teFaltaVisto) && (
+        <TeFaltaTablon
+          pendientes={pendientes}
+          nombre={yo?.nombre}
+          colaborador={yo?.colaborador}
+          colaboradorEsYo={yo?.colaboradorEsYo}
+          onCerrar={() => setTeFaltaVisto(true)}
+          onCambiar={cambiarDeNombre}
+        />
       )}
     </div>
   );
