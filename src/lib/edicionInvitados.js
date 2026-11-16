@@ -111,9 +111,15 @@ export function agregarInvitado(invitados, datos) {
   const grupoFamiliar = String(datos?.grupoFamiliar || "").trim();
   if (!nombre || !apellido || !grupoFamiliar) return { invitados, aviso: AVISO_FALTAN };
   // Lo demás que traiga (rol, colaborador, año, email: «Nuevo invitado», v77;
-  // confirmado y año de boda, v81.3).
+  // confirmado y año de boda, v81.3; canciones, observaciones, alergias y la
+  // autorización, v87.1).
   const { rolFamiliar = "", colaboradorId = null, anioNacimiento = "", email = "", telefono = "", anioBoda = "", confirmado = false } = datos || {};
+  const { cancion = "", observaciones = "", alergias = "", conservarDatos = false } = datos || {};
   const nuevo = invitadoNuevo({
+    cancion,
+    observaciones,
+    alergias,
+    conservarDatos: Boolean(conservarDatos),
     nombre,
     apellido,
     grupoFamiliar,
@@ -428,7 +434,7 @@ export const SIN_CAMBIOS = "No has cambiado nada.";
 // las reglas de la Lista: nombre, familia, zona y rol con `cambiarCampo`
 // (avisa si alguien cambia de familia), el colaborador con el rol antes, y
 // «Confirmado» con `confirmarConSuFamilia` (se sienta con su familia). Lo
-// que el formulario no tiene (canción, alergias, pago, mesa) no se toca.
+// que el formulario no tiene (pago, mesa) no se toca.
 export function editarDesdeFormulario(invitados, id, datos, { familiaNueva = false, zonaNueva = false, evento, mesas = [] } = {}) {
   const g = invitados.find((x) => x.id === id);
   if (!g) return { invitados, aviso: "Ese invitado ya no está en la lista." };
@@ -457,6 +463,12 @@ export function editarDesdeFormulario(invitados, id, datos, { familiaNueva = fal
   // El año de boda solo se escribe al esposo o la esposa; a los demás no se
   // les borra el que tuvieran.
   if (pideDatosDeBoda(datos) && limpios.anioBoda !== String(g.anioBoda ?? "")) cambios.anioBoda = limpios.anioBoda;
+  // Canciones, observaciones, alergias y la autorización (v87.1), tal cual
+  // las guarda el colaborador. Si no vienen en el formulario, no se tocan.
+  for (const campo of ["cancion", "observaciones", "alergias"]) {
+    if (datos[campo] !== undefined && String(datos[campo] ?? "") !== String(g[campo] ?? "")) cambios[campo] = String(datos[campo] ?? "");
+  }
+  if (datos.conservarDatos !== undefined && Boolean(datos.conservarDatos) !== Boolean(g.conservarDatos)) cambios.conservarDatos = Boolean(datos.conservarDatos);
   if (Object.keys(cambios).length) lista = lista.map((x) => (x.id === id ? { ...x, ...cambios } : x));
 
   if (Boolean(datos.confirmado) !== Boolean(g.confirmado)) aplicar(confirmarConSuFamilia(lista, id, mesas));

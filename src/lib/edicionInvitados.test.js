@@ -313,6 +313,18 @@ describe("«Nuevo invitado»", () => {
     const { invitados } = nuevoDesdeFormulario(lista, { ...base, anioNacimiento: "2015", email: "n@n.com" }, { evento });
     expect(invitados.at(-1).email).toBe("");
   });
+
+  // v87.1 (él): el resto de lo que pide el formulario del colaborador.
+  it("con canciones, observaciones, alergias y la autorización; sin ellas, vacías y sin autorizar", () => {
+    const datos = { ...base, cancion: "Volare — Gipsy Kings\n\nLa bamba", observaciones: "Silla de ruedas", alergias: "Gluten, Lactosa", conservarDatos: true };
+    expect(nuevoDesdeFormulario(lista, datos, { evento }).invitados.at(-1)).toMatchObject({
+      cancion: "Volare — Gipsy Kings\n\nLa bamba",
+      observaciones: "Silla de ruedas",
+      alergias: "Gluten, Lactosa",
+      conservarDatos: true,
+    });
+    expect(nuevoDesdeFormulario(lista, base, { evento }).invitados.at(-1)).toMatchObject({ cancion: "", observaciones: "", alergias: "", conservarDatos: false });
+  });
 });
 
 // v78.1 (él): el teléfono, desde «Editar» de la Lista.
@@ -393,5 +405,14 @@ describe("editarDesdeFormulario", () => {
     const sinRolConColab = [lista[0], lista[1], { ...lista[2], colaboradorId: "c1" }];
     const { invitados } = editarDesdeFormulario(sinRolConColab, "3", { ...ficha(sinRolConColab[2]), anioNacimiento: "1990" }, { evento, mesas });
     expect(invitados[2].anioNacimiento).toBe("1990");
+  });
+
+  // v87.1 (él): canciones, observaciones, alergias y la autorización.
+  it("las alergias o la autorización: cambia solo eso; la canción que ya tenía, igual", () => {
+    const completa = (g) => ({ ...ficha(g), cancion: g.cancion || "", observaciones: g.observaciones || "", alergias: g.alergias || "", conservarDatos: Boolean(g.conservarDatos) });
+    expect(editarDesdeFormulario(lista, "1", completa(lista[0]), { evento, mesas }).aviso).toBe("No has cambiado nada.");
+    const { invitados } = editarDesdeFormulario(lista, "1", { ...completa(lista[0]), alergias: "No", conservarDatos: true }, { evento, mesas });
+    expect(invitados[0]).toEqual({ ...lista[0], alergias: "No", conservarDatos: true });
+    expect(invitados[1]).toBe(lista[1]);
   });
 });

@@ -204,6 +204,33 @@ it("sin tocar nada no guarda; la ✕ vuelve a «Nuevo invitado», vacío", () =>
   vista.desmontar();
 });
 
+// v87.1 (él): «que pueda completar el resto de datos que pide el formulario».
+it("canciones, observaciones, alergias y la autorización, plegadas y una sola abierta; al guardar, vacías para el siguiente", () => {
+  const { vista, guardados, q, boton } = dibujar();
+  const apartado = (t) => [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim().startsWith(t));
+  const casilla = (t) => [...document.body.querySelectorAll("label")].find((l) => l.textContent.trim().startsWith(t))?.querySelector('input[type="checkbox"]');
+  escribir(q('input[aria-label="Apellido"]'), "Pacheco");
+  escribir(q('input[aria-label="Nombre"]'), "Rubén");
+  vista.elegir(q('select[aria-label="Familia"]'), "Pacheco01");
+  vista.pulsar(apartado("Canciones"));
+  escribir(q('input[aria-label="Canción 1"]'), "Volare");
+  vista.pulsar(apartado("Observaciones"));
+  // Uno solo abierto: al abrir Observaciones se pliegan las Canciones.
+  expect(q('input[aria-label="Canción 1"]')).toBeNull();
+  escribir(q('input[aria-label="Observaciones"]'), "Silla de ruedas");
+  vista.pulsar(apartado("Alergias"));
+  vista.pulsar(casilla("Gluten"));
+  vista.pulsar(casilla("Lactosa"));
+  vista.pulsar(apartado("Después del evento"));
+  expect(casilla("Autorizo expresamente").checked).toBe(false);
+  vista.pulsar(casilla("Autorizo expresamente"));
+  vista.pulsar(boton("Guardar"));
+  expect(guardados.at(-1).at(-1)).toMatchObject({ cancion: "Volare", observaciones: "Silla de ruedas", alergias: "Gluten, Lactosa", conservarDatos: true });
+  vista.pulsar(apartado("Alergias"));
+  expect(casilla("Gluten").checked).toBe(false);
+  vista.desmontar();
+});
+
 it("con algo a medio escribir, elegir a otro pregunta antes de perderlo", () => {
   const { vista, q, boton } = dibujar();
   escribir(q('input[aria-label="Apellido"]'), "Abrante");

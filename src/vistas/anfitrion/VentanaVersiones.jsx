@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "87.1",
+    cambios: [
+      "Lista de invitados, «Añadir»: también Canciones, Observaciones, Alergias y «Después del evento» (la autorización para guardar sus datos), plegados y en el orden de la ficha del colaborador. Un solo apartado abierto a la vez.",
+      "Al editar a uno desde ahí, se guarda solo lo que se toca. Alergias y la autorización son la misma pieza que usa el colaborador.",
+    ],
+  },
+  {
     version: "87",
     cambios: [
       "Contabilidad, «Recaudado por colaborador»: un colaborador puede entregar el dinero en varias veces. Lo cobrado y aún no entregado sale como «Por entregar: 141 € (3 invitados)» con «Confirmar entrega»: su importe, su propina y un acuse solo con esos invitados.",

@@ -22,6 +22,12 @@
 // toca solo el dato que falte. Guardar cambia solo lo tocado, con las
 // reglas de la Lista (editarDesdeFormulario). La ✕ del buscador vuelve a
 // «Nuevo invitado»; con algo a medio escribir, «¿Descartar los cambios?».
+//
+// v87.1 (él): «que pueda completar el resto de datos que pide el
+// formulario». Canciones, Observaciones, Alergias y «Después del evento»,
+// plegados y en el orden de la ficha del colaborador; alergias y la
+// autorización, con su misma pieza (components/CamposFicha.jsx). Como allí,
+// un solo apartado abierto a la vez (norma 5).
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Check } from "lucide-react";
 import { C, DEDO, OP, inputStyle } from "../../theme";
@@ -33,6 +39,9 @@ import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSegu
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { HuecoFoto } from "../../components/HuecoFoto";
 import { BuscadorInvitado } from "../../components/BuscadorInvitado";
+import { CampoCancion } from "../../components/CampoCancion";
+import { ElegirAlergias, CasillaConservarDatos } from "../../components/CamposFicha";
+import { huecosCanciones, textoDeHuecos, resumenCanciones } from "../../lib/canciones";
 import { pideEmail, pideDatosDeBoda } from "../../lib/invitados";
 import { nombreCompleto } from "../../lib/formato";
 import { telefonoParaVer } from "../../lib/telefono";
@@ -40,7 +49,23 @@ import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../../lib/fotosAlmacen";
 import { ROLES_FORMULARIO, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, editarDesdeFormulario, SIN_CAMBIOS, mismaPersona, anioBodaDeLaFamilia } from "../../lib/edicionInvitados";
 
-const VACIO = { apellido: "", nombre: "", grupoFamiliar: "", rolFamiliar: "", zona: "", colaboradorId: "", anioNacimiento: "", telefono: "", email: "", confirmado: false, anioBoda: "" };
+const VACIO = {
+  apellido: "",
+  nombre: "",
+  grupoFamiliar: "",
+  rolFamiliar: "",
+  zona: "",
+  colaboradorId: "",
+  anioNacimiento: "",
+  telefono: "",
+  email: "",
+  confirmado: false,
+  anioBoda: "",
+  cancion: "",
+  observaciones: "",
+  alergias: "",
+  conservarDatos: false,
+};
 
 // El formulario con lo que ya tiene alguien de la lista (v84.7). El año de
 // boda que le falte, el de su familia, como al añadir.
@@ -56,6 +81,10 @@ const fichaDe = (g, invitados) => ({
   email: g.email || "",
   confirmado: Boolean(g.confirmado),
   anioBoda: String(g.anioBoda || (pideDatosDeBoda(g) ? anioBodaDeLaFamilia(invitados, g.grupoFamiliar) : "") || ""),
+  cancion: g.cancion || "",
+  observaciones: g.observaciones || "",
+  alergias: g.alergias || "",
+  conservarDatos: Boolean(g.conservarDatos),
 });
 // Todo del alto de un dedo: es para el móvil.
 const CAMPO = { ...inputStyle, width: "100%", minWidth: 0, minHeight: DEDO };
@@ -100,7 +129,12 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
   // Sin familias todavía, se empieza escribiendo la primera.
   const [familiaNueva, setFamiliaNueva] = useState(familias.length === 0);
   const [zonaNueva, setZonaNueva] = useState(false);
-  const [verDatos, setVerDatos] = useState(false);
+  // Los apartados plegados, uno solo abierto a la vez (norma 5).
+  const [apartado, setApartado] = useState(null);
+  const alternar = (id) => setApartado((a) => (a === id ? null : id));
+  // Las alergias guardan lo marcado dentro (CamposFicha): con otro invitado,
+  // o vacío tras guardar, empiezan de nuevo.
+  const [vuelta, setVuelta] = useState(0);
   const [aviso, setAviso] = useState("");
   const [guardado, setGuardado] = useState("");
   const poner = (campo) => (valor) => setFicha((f) => ({ ...f, [campo]: valor }));
@@ -111,7 +145,6 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
       const g = { ...f, [campo]: valor };
       return pideDatosDeBoda(g) && !g.anioBoda ? { ...g, anioBoda: anioBodaDeLaFamilia(invitados, g.grupoFamiliar) } : g;
     });
-  const [verBoda, setVerBoda] = useState(false);
   // La foto elegida espera aquí y se sube al guardar, como en la ficha.
   const [fotoNueva, setFotoNueva] = useState(null); // { archivo, vista } | null
   const [subiendo, setSubiendo] = useState(false);
@@ -127,8 +160,8 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
     setFamiliaNueva(!id && familias.length === 0);
     setZonaNueva(false);
     setFotoNueva(null);
-    setVerDatos(false);
-    setVerBoda(false);
+    setApartado(null);
+    setVuelta((v) => v + 1);
     setAviso("");
     setGuardado("");
   };
@@ -182,6 +215,7 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
       : { ...VACIO, grupoFamiliar: nuevo.grupoFamiliar, zona: nuevo.zona, colaboradorId: nuevo.colaboradorId || "", confirmado: nuevo.confirmado };
     setFicha(siguienteFicha);
     setBase(siguienteFicha);
+    setVuelta((v) => v + 1);
     setFotoNueva(null);
     setFamiliaNueva(false);
     setZonaNueva(false);
@@ -205,7 +239,7 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
           />
         </div>
       </Field>
-      <div className="space-y-3 mt-3" onKeyDown={(e) => e.key === "Enter" && e.target.tagName === "INPUT" && guardar()}>
+      <div className="space-y-3 mt-3" onKeyDown={(e) => e.key === "Enter" && e.target.tagName === "INPUT" && e.target.type !== "checkbox" && guardar()}>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Apellido *">
             <TextInput aria-label="Apellido" value={ficha.apellido} onChange={(e) => poner("apellido")(e.target.value)} autoComplete="off" style={CAMPO} />
@@ -288,8 +322,8 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
           sencilla
           titulo={conEmail ? "Año nac. · Tel. · Email" : "Año nac."}
           resumen={[ficha.anioNacimiento, conEmail && ficha.telefono, conEmail && ficha.email].filter(Boolean).join(" · ")}
-          abierta={verDatos}
-          onAlternar={() => setVerDatos((v) => !v)}
+          abierta={apartado === "datos"}
+          onAlternar={() => alternar("datos")}
         >
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -307,8 +341,8 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
             sencilla
             titulo="Boda"
             resumen={[ficha.anioBoda, fotoFamilia || fotoNueva ? "con foto" : ""].filter(Boolean).join(" · ")}
-            abierta={verBoda}
-            onAlternar={() => setVerBoda((v) => !v)}
+            abierta={apartado === "boda"}
+            onAlternar={() => alternar("boda")}
           >
             {/* El año y la foto, cada uno con su rótulo como los demás campos
                 (v81.4), en una línea. */}
@@ -339,6 +373,31 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
             </div>
           </SeccionPlegable>
         )}
+
+        {/* El resto de la ficha (v87.1), en el orden del colaborador. */}
+        <SeccionPlegable sencilla titulo="Canciones" resumen={resumenCanciones(ficha.cancion)} abierta={apartado === "cancion"} onAlternar={() => alternar("cancion")}>
+          <div className="flex flex-col gap-2">
+            {huecosCanciones(ficha.cancion).map((hueco, i, huecos) => (
+              <CampoCancion
+                key={i}
+                numero={i + 1}
+                titulo={hueco.titulo}
+                artista={hueco.artista}
+                buscar={data.buscarParaEscuchar}
+                onCambiar={(nueva) => poner("cancion")(textoDeHuecos(huecos.map((h, j) => (j === i ? nueva : h))))}
+              />
+            ))}
+          </div>
+        </SeccionPlegable>
+        <SeccionPlegable sencilla titulo="Observaciones" resumen={ficha.observaciones} abierta={apartado === "observaciones"} onAlternar={() => alternar("observaciones")}>
+          <TextInput aria-label="Observaciones" value={ficha.observaciones} onChange={(e) => poner("observaciones")(e.target.value)} placeholder="Cualquier detalle adicional" autoComplete="off" style={CAMPO} />
+        </SeccionPlegable>
+        <SeccionPlegable sencilla titulo="Alergias" resumen={ficha.alergias} abierta={apartado === "alergias"} onAlternar={() => alternar("alergias")}>
+          <ElegirAlergias key={`${editandoId || "nuevo"}-${vuelta}`} valor={ficha.alergias} onCambiar={poner("alergias")} />
+        </SeccionPlegable>
+        <SeccionPlegable sencilla titulo="Después del evento" resumen={ficha.conservarDatos ? "Autorizado" : ""} abierta={apartado === "despues"} onAlternar={() => alternar("despues")}>
+          <CasillaConservarDatos marcada={ficha.conservarDatos} onCambiar={poner("conservarDatos")} />
+        </SeccionPlegable>
 
         {aviso && <LineaAviso className="text-sm">{aviso}</LineaAviso>}
         {guardado && (

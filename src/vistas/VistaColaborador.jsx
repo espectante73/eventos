@@ -12,6 +12,7 @@ import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegad
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
 import { huecosCanciones, textoDeHuecos, resumenCanciones } from "../lib/canciones";
 import { CampoCancion } from "../components/CampoCancion";
+import { ElegirAlergias, CasillaConservarDatos } from "../components/CamposFicha";
 import { estadoImpago, textoAvisoImpago, PLAZOS_MAX } from "../lib/impagos";
 import { marcarSinGuardar, haySinGuardar, PREGUNTA_DESCARTAR } from "../lib/cambiosSinGuardar";
 import { requisitosActivos } from "../lib/modoPruebas";
@@ -172,23 +173,11 @@ function FormularioDatos({
   // Ninguna casilla marcada por defecto: si no se ha tocado nada, "alergias"
   // se queda vacío de verdad (no cuenta como respondido en "datos X de Y"
   // hasta que el colaborador marque algo, aunque sea "No" explícitamente).
-  const parsearAlergias = (texto) => {
-    const partes = (texto || "").split(",").map((s) => s.trim()).filter(Boolean);
-    return {
-      no: partes.includes("No"),
-      gluten: partes.includes("Gluten"),
-      lactosa: partes.includes("Lactosa"),
-      otras: partes.find((p) => p !== "No" && p !== "Gluten" && p !== "Lactosa") || "",
-    };
-  };
-  const [alergiaSel, setAlergiaSel] = useState(() => parsearAlergias(invitado.alergias));
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   // Seis apartados plegados, con flecha, y uno solo abierto a la vez
   // (norma 5; él, v52). Al abrir la ficha, todos cerrados.
   const [apartado, setApartado] = useState(null);
   const alternarApartado = (id) => setApartado((a) => (a === id ? null : id));
-  // "Otras" en alergias: su campo solo sale marcada (un plegado dentro de otro).
-  const [conOtras, setConOtras] = useState(() => Boolean(parsearAlergias(invitado.alergias).otras));
   const [errorFoto, setErrorFoto] = useState("");
   // `foto` guarda lo que va a la base: desde el 2026-09-17 una RUTA del
   // cajón "fotos-matrimonios" (antes, la foto entera en base64). Para
@@ -203,7 +192,6 @@ function FormularioDatos({
   const [quitandoFoto, setQuitandoFoto] = useState(false);
   useEffect(() => setForm(invitado), [invitado.id]);
   useEffect(() => setFoto(fotoFamiliar || ""), [fotoFamiliar, invitado.id]);
-  useEffect(() => setAlergiaSel(parsearAlergias(invitado.alergias)), [invitado.id]);
   // La vista previa de una foto elegida es un enlace local: se suelta al
   // cambiarla o al cerrar el formulario.
   useEffect(() => () => fotoNueva && URL.revokeObjectURL(fotoNueva.vista), [fotoNueva]);
@@ -308,44 +296,6 @@ function FormularioDatos({
   // Late el APARTADO que tiene algo pendiente, también cerrado.
   const latido = (...campos) => (campos.some((c) => faltan.includes(c)) ? "ficha-incompleta rounded-lg" : undefined);
   const bordeRojo = (campo) => (faltan.includes(campo) ? { borderColor: C.wax } : {});
-
-  const reconstruirAlergias = (sel) => {
-    if (sel.no) return "No";
-    const partes = [];
-    if (sel.gluten) partes.push("Gluten");
-    if (sel.lactosa) partes.push("Lactosa");
-    if (sel.otras.trim()) partes.push(sel.otras.trim());
-    return partes.join(", ");
-  };
-
-  const marcarNo = () => {
-    setConOtras(false);
-    const next = { no: true, gluten: false, lactosa: false, otras: "" };
-    setAlergiaSel(next);
-    setForm({ ...form, alergias: reconstruirAlergias(next) });
-  };
-  const alternarAlergia = (clave) => {
-    const next = { ...alergiaSel, no: false, [clave]: !alergiaSel[clave] };
-    setAlergiaSel(next);
-    setForm({ ...form, alergias: reconstruirAlergias(next) });
-  };
-  const alternarOtras = () => {
-    if (conOtras) {
-      cambiarOtras("");
-      setConOtras(false);
-      return;
-    }
-    const next = { ...alergiaSel, no: false };
-    setAlergiaSel(next);
-    setForm({ ...form, alergias: reconstruirAlergias(next) });
-    setConOtras(true);
-  };
-  const cambiarOtras = (valor) => {
-    const texto = valor.slice(0, 15);
-    const next = { ...alergiaSel, no: false, otras: texto };
-    setAlergiaSel(next);
-    setForm({ ...form, alergias: reconstruirAlergias(next) });
-  };
 
   return (
     <div
@@ -589,34 +539,7 @@ function FormularioDatos({
           abierta={apartado === "alergias"}
           onAlternar={() => alternarApartado("alergias")}
         >
-          <div data-campo="alergias" className="flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
-              <input type="checkbox" checked={alergiaSel.no} onChange={marcarNo} />
-              No
-            </label>
-            <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
-              <input type="checkbox" checked={alergiaSel.gluten} onChange={() => alternarAlergia("gluten")} />
-              Gluten
-            </label>
-            <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
-              <input type="checkbox" checked={alergiaSel.lactosa} onChange={() => alternarAlergia("lactosa")} />
-              Lactosa
-            </label>
-            <label className="flex items-center gap-1 text-sm" style={{ color: C.ink }}>
-              <input type="checkbox" checked={conOtras} onChange={alternarOtras} />
-              Otras
-            </label>
-            {conOtras && (
-              <TextInput
-                value={alergiaSel.otras}
-                onChange={(e) => cambiarOtras(e.target.value)}
-                placeholder="Otra (máx. 15)"
-                maxLength={15}
-                style={{ maxWidth: 140 }}
-                autoFocus
-              />
-            )}
-          </div>
+          <ElegirAlergias key={invitado.id} valor={form.alergias} onCambiar={(alergias) => setForm((f) => ({ ...f, alergias }))} />
         </SeccionPlegable>
       </div>
 
@@ -636,20 +559,7 @@ function FormularioDatos({
         abierta={apartado === "despues"}
         onAlternar={() => alternarApartado("despues")}
       >
-        <label className="flex items-start gap-2 text-sm cursor-pointer" style={{ color: C.ink }}>
-          <input
-            type="checkbox"
-            checked={Boolean(form.conservarDatos)}
-            onChange={(e) => setForm({ ...form, conservarDatos: e.target.checked })}
-            className="flex-shrink-0 mt-0.5"
-          />
-          <span>
-            Autorizo expresamente a que guarden mis datos
-            <span className="block text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-              Para otra ocasión. Si no se marca, se borran a los 3 meses del evento.
-            </span>
-          </span>
-        </label>
+        <CasillaConservarDatos marcada={form.conservarDatos} onCambiar={(conservarDatos) => setForm((f) => ({ ...f, conservarDatos }))} />
       </SeccionPlegable>
 
       {/* La única salida del formulario (él, v50): al final, donde se
