@@ -13,6 +13,7 @@ import { Fragment, useState, useEffect, useCallback, useRef } from "react";
 import { Calendar, Clock, MapPin, Lock, Music, Pause, ArrowLeft, User, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { C, inputStyle, OP, S, T, DEDO, FONDO_VERDE, DORADO, conAlfa } from "../theme";
 import { supabase } from "../supabaseClient";
+import { useFichaInstalacion, fichaDelTablon } from "../lib/fichaInstalacion";
 import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento, opcionesAnios } from "../lib/formato";
 import { entrarTablon, anioDeRespuesta, mismaPersonaEnRespuesta, NO_ENCONTRADO, ANIO_NO_COINCIDE } from "../lib/tablonEntrada";
 import { getClaveTablonFromUrl } from "../lib/url";
@@ -301,21 +302,9 @@ export function VistaTablon({ token }) {
   }, [token, cargarContenido]);
 
   // Su propia ficha de instalación (v85.2, él: «crea un acceso directo en
-  // el escritorio de tu móvil»). La de la app empieza en la portada, y el
-  // acceso directo abría la pantalla de entrada; esta empieza en ESTE
-  // tablón, con su enlace personal si lo trae (api/_manifestTablon.js).
-  useEffect(() => {
-    const ficha = document.querySelector('link[rel="manifest"]');
-    const titulo = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-    const antes = { ficha: ficha?.getAttribute("href"), titulo: titulo?.getAttribute("content") };
-    const clave = getClaveTablonFromUrl();
-    ficha?.setAttribute("href", `/api/manifest-tablon?t=${encodeURIComponent(token)}${clave ? `&yo=${encodeURIComponent(clave)}` : ""}`);
-    titulo?.setAttribute("content", "Tablón");
-    return () => {
-      if (antes.ficha) ficha?.setAttribute("href", antes.ficha);
-      if (antes.titulo) titulo?.setAttribute("content", antes.titulo);
-    };
-  }, [token]);
+  // el escritorio de tu móvil»): empieza en ESTE tablón, con su enlace
+  // personal si lo trae (lib/fichaInstalacion.js).
+  useFichaInstalacion(fichaDelTablon(token, getClaveTablonFromUrl()), "Tablón");
 
   // Refresco periódico -- solo tiene sentido una vez desbloqueado (antes
   // de eso no hay nada real que refrescar).

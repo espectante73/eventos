@@ -1,7 +1,7 @@
-// La ficha de instalación del tablón (v85.2): su acceso directo abre ESE
-// tablón, no la portada de la app.
+// Las fichas de instalación del tablón (v85.2) y del DJ (v88.4): su acceso
+// directo abre ESE enlace, no la portada de la app.
 import { describe, it, expect } from "vitest";
-import { manifestDelTablon, manejadorManifest } from "./_manifestTablon.js";
+import { manifestDelTablon, manifestDelDj, manejadorManifest } from "./_manifest.js";
 
 const token = "11111111-2222-3333-4444-555555555555";
 
@@ -27,5 +27,22 @@ describe("la ficha de instalación del tablón", () => {
     expect(JSON.parse(res.cuerpo).start_url).toBe(`/?tablon=${token}`);
     manejadorManifest({ query: {} }, res);
     expect(res.codigo).toBe(400);
+  });
+});
+
+describe("la ficha de instalación del DJ (v88.4)", () => {
+  it("empieza en sus canciones, sin la clave, y con otro id que la app y el tablón", () => {
+    const dj = manifestDelDj({ dj: token });
+    expect(dj.start_url).toBe(`/?dj=${token}`);
+    expect(dj.id).toBe(dj.start_url);
+    expect(dj.short_name).toBe("Canciones");
+    expect(manifestDelDj({ dj: "x" })).toBeNull();
+  });
+
+  it("la ruta la da con ?dj=", () => {
+    const res = { cabeceras: {}, codigo: 0, cuerpo: null, setHeader(k, v) { this.cabeceras[k] = v; }, status(c) { this.codigo = c; return this; }, send(b) { this.cuerpo = b; return this; }, json(b) { this.cuerpo = b; return this; } };
+    manejadorManifest({ query: { dj: token } }, res);
+    expect(res.codigo).toBe(200);
+    expect(JSON.parse(res.cuerpo).start_url).toBe(`/?dj=${token}`);
   });
 });

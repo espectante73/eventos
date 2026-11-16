@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "88.4",
+    cambios: [
+      "Arreglado: «Crear acceso directo», «Instalar» o «Añadir a pantalla de inicio» desde el enlace del DJ abría la pantalla de entrada de la app. Ahora abre sus canciones, con el nombre «Canciones» bajo el icono (como el tablón, que ya lo hacía). La clave se pide una vez dentro.",
+    ],
+  },
+  {
     version: "88.3",
     cambios: [
       "Portada: «Abrir sección…», cerrado, lleva detrás el mismo velo claro esmerilado que al desplegarlo. Con la mano izquierda el botón cae sobre la parte verde con texto, y ahora se distingue.",

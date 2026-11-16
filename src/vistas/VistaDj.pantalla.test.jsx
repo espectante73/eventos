@@ -86,3 +86,19 @@ it("si el enlace ya no vale, lo dice y pide la clave otra vez", async () => {
   expect(localStorage.getItem("dj-clave:t3")).toBe(null);
   vista.desmontar();
 });
+
+// v88.4 (él): «al crear acceso directo o instalar te lleva a la ventana de
+// login». Mientras se ve, la ficha de instalación es la suya; al salir, la
+// de la app.
+it("su acceso directo abre sus canciones, no la entrada de la app", () => {
+  const ficha = document.createElement("link");
+  ficha.rel = "manifest";
+  ficha.href = "/manifest.webmanifest";
+  document.head.appendChild(ficha);
+  const token = "11111111-2222-3333-4444-555555555555";
+  const vista = montar(<VistaDj token={token} />);
+  expect(ficha.getAttribute("href")).toBe(`/api/manifest?dj=${token}`);
+  vista.desmontar();
+  expect(ficha.getAttribute("href")).toBe("/manifest.webmanifest");
+  ficha.remove();
+});

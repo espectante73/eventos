@@ -16,6 +16,7 @@ import { RecuadroCifras, EncabezadoOrdenable } from "../components/Widgets";
 import { estrellas, ordenarCanciones, tocarOrdenCanciones, ORDEN_CANCIONES_INICIAL } from "../lib/canciones";
 import { cancionesDistintas, duracionTotal, textoDuracion, enlaceDeezer } from "../lib/repasoCanciones";
 import { filasDelDj, filtrarPeticiones, MOTIVOS_DJ } from "../lib/dj";
+import { useFichaInstalacion, fichaDelDj } from "../lib/fichaInstalacion";
 import { descargarCSV } from "../lib/descargas";
 import { EscucharCancion } from "../components/EscucharCancion";
 import { pedirMuestras, consultaDeFila } from "../lib/escuchar";
@@ -57,6 +58,9 @@ export function VistaDj({ token }) {
   const [filtro, setFiltro] = useState({ texto: "", desde: "", hasta: "" });
   const [orden, setOrden] = useState(ORDEN_CANCIONES_INICIAL);
   const [hora, setHora] = useState(null);
+  // Su propia ficha de instalación (v88.4, él): el acceso directo abre sus
+  // canciones, no la entrada de la app.
+  useFichaInstalacion(fichaDelDj(token), "Canciones");
 
   const cargar = useCallback(
     async (conClave) => {
