@@ -322,6 +322,15 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
 // la usa; mantener pulsado y mover lo arrastra, y recuerda dónde se dejó
 // (`clave`). Vive DENTRO de la ventana que lo abre, no en <body>: así
 // cerrarla lo cierra, y queda por debajo de sus preguntas y modales.
+// El borde del velo, desvaneciéndose (v63.7): opaco donde están los
+// botones y transparente al final de cada margen (en px). UNA receta para
+// el velo del menú abierto y el halo de «Abrir sección…» cerrado (v88.3).
+export function mascaraFundida({ izquierda, derecha, arriba, abajo }) {
+  const fundido = (dir, inicio, fin) => `linear-gradient(${dir}, transparent, black ${inicio}px, black calc(100% - ${fin}px), transparent)`;
+  const mascara = `${fundido("to right", izquierda, derecha)}, ${fundido("to bottom", arriba, abajo)}`;
+  return { maskImage: mascara, WebkitMaskImage: mascara, maskComposite: "intersect", WebkitMaskComposite: "source-in" };
+}
+
 export function MenuFlotante({ render, opciones, anchor = "right", persistente = null }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState(null);
@@ -347,19 +356,12 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
     const left = Math.max(0, r.left - DEDO);
     const derecha = Math.min(win.innerWidth, r.right + DEDO);
     const abajo = Math.min(win.innerHeight, r.bottom + DEDO);
-    // Opaco donde están los botones, transparente en el borde del margen.
-    const fundido = (dir, inicio, fin) =>
-      `linear-gradient(${dir}, transparent, black ${inicio}px, black calc(100% - ${fin}px), transparent)`;
-    const mascara = `${fundido("to right", r.left - left, derecha - r.right)}, ${fundido("to bottom", r.top - top, abajo - r.bottom)}`;
     setMarcoVelo({
       top,
       left,
       width: derecha - left,
       height: abajo - top,
-      maskImage: mascara,
-      WebkitMaskImage: mascara,
-      maskComposite: "intersect",
-      WebkitMaskComposite: "source-in",
+      ...mascaraFundida({ izquierda: r.left - left, derecha: derecha - r.right, arriba: r.top - top, abajo: abajo - r.bottom }),
     });
   }, [open, pos, persistente]);
 

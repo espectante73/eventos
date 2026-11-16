@@ -26,10 +26,10 @@ import {
   Clock3,
   Send,
 } from "lucide-react";
-import { C } from "../theme";
+import { C, DEDO, VELO } from "../theme";
 import { UserSolido, Seal } from "./Widgets";
 import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "./VentanaFlotante";
-import { MenuFlotante } from "./MenuFlotante";
+import { MenuFlotante, mascaraFundida } from "./MenuFlotante";
 
 import { ICONOS_VENTANAS, FORMULARIO_INVITADO } from "../lib/iconosVentanas";
 
@@ -237,27 +237,45 @@ export function DesplegableSecciones({
 // las fichas incompletas de quien lo usa, latiendo encima del botón para
 // que se vean con todo cerrado. `posicion`: flota sobre la foto (el
 // anfitrión); sin ella, va en la columna de la portada (el colaborador).
+//
+// Sobre la foto lleva detrás, también cerrado, el mismo velo claro que el
+// menú abierto (él, v88.3): con la mano izquierda el botón cae sobre la
+// parte verde de la portada, con texto, y sin él no se distinguía. Abierto,
+// lo pone el menú (dos velos juntos se verían más blancos). Claro del todo
+// hasta medio dedo alrededor del botón y desvaneciéndose a lo largo del
+// dedo siguiente: con lo claro solo debajo del botón, apenas se veía.
+const MARGEN_HALO = DEDO * 1.5;
+const HALO = { inset: -MARGEN_HALO, ...VELO, ...mascaraFundida({ izquierda: DEDO, derecha: DEDO, arriba: DEDO, abajo: DEDO }) };
+
 export function BotonAbrirSeccion({ opciones, sello = 0, posicion = null }) {
   return (
     <MenuFlotante
       anchor="right"
       opciones={opciones}
-      render={({ ref, toggle: abrirCerrar }) => (
-        <button
-          ref={ref}
-          onClick={abrirCerrar}
-          // Mismo aspecto que "Cerrar sesión" (Portada.jsx): .boton-flotante-imagen
-          // (index.css) lleva el fondo/letra/relieve -- a petición del
-          // usuario, los dos botones que flotan sobre la imagen deben
-          // verse como un mismo par, no dos estilos distintos.
-          className={`boton-3d boton-flotante-imagen cristal-difuminado ${posicion ? "absolute" : ""} flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium`}
-          style={posicion || undefined}
-          title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
-        >
-          Abrir sección…
-          <Seal count={sello} late />
-        </button>
-      )}
+      render={({ ref, open, toggle: abrirCerrar }) => {
+        const boton = (
+          <button
+            ref={ref}
+            onClick={abrirCerrar}
+            // Mismo aspecto que "Cerrar sesión" (Portada.jsx): .boton-flotante-imagen
+            // (index.css) lleva el fondo/letra/relieve -- a petición del
+            // usuario, los dos botones que flotan sobre la imagen deben
+            // verse como un mismo par, no dos estilos distintos.
+            className="boton-3d boton-flotante-imagen cristal-difuminado relative flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium"
+            title="Abre la sección elegida en una ventana flotante; puedes tener varias abiertas a la vez"
+          >
+            Abrir sección…
+            <Seal count={sello} late />
+          </button>
+        );
+        if (!posicion) return boton;
+        return (
+          <div className="absolute" style={posicion}>
+            {!open && <span aria-hidden="true" data-halo-boton className="absolute pointer-events-none" style={HALO} />}
+            {boton}
+          </div>
+        );
+      }}
     />
   );
 }

@@ -72,3 +72,18 @@ it("«Invitados»: «Formulario» abre «Nuevo invitado» y «Lista», la Lista"
   expect(lista).toBe(1);
   vista.desmontar();
 });
+
+// v88.3 (él): con la mano izquierda, «Abrir sección…» cae sobre la parte
+// verde de la portada; cerrado lleva detrás el mismo velo claro que el menú
+// abierto. Abierto, solo el del menú (dos juntos se verían más blancos).
+it("«Abrir sección…» cerrado lleva su velo claro detrás; abierto, solo el del menú", () => {
+  const vista = montar(
+    <Portada evento={evento} editable abierto={{}} toggle={() => {}} colaboradores={[]} onCerrarSesion={() => {}} />
+  );
+  const halo = () => document.body.querySelector("[data-halo-boton]");
+  expect(halo()).toBeTruthy();
+  expect(halo().style.backdropFilter).toContain("blur");
+  vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
+  expect(halo()).toBeNull();
+  vista.desmontar();
+});

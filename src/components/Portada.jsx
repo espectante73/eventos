@@ -137,7 +137,13 @@ export function Portada({
     // hermanos hacía que "ganara" el mayor de los dos (32px) sin importar
     // lo bajo que se pusiera el marginTop de la franja de abajo.
     <div className="mx-auto" style={{ maxWidth: ANCHO_MAXIMO_PORTADA }}>
-      <div className="relative rounded-t-lg overflow-hidden">
+      {/* Las esquinas de arriba, con clip-path y no con rounded-t-lg
+          (v88.3): dentro de un overflow-hidden REDONDEADO, Chrome no
+          difumina el borde del velo de «Abrir sección…» y sale una caja de
+          bordes duros. La misma curva. El overflow-hidden se queda: sin él,
+          en el iPhone el velo que asoma por la derecha movía la página de
+          lado. */}
+      <div className="relative overflow-hidden" style={{ clipPath: "inset(0 round 0.5rem 0.5rem 0 0)" }}>
         {imagenPortada ? (
           // userSelect/WebkitUserSelect + WebkitTouchCallout: la imagen es
           // decorativa (una foto con el diseño de la invitación ya

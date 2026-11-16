@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "88.3",
+    cambios: [
+      "Portada: «Abrir sección…», cerrado, lleva detrás el mismo velo claro esmerilado que al desplegarlo. Con la mano izquierda el botón cae sobre la parte verde con texto, y ahora se distingue.",
+      "Abierto, el velo es solo el del menú (dos juntos se verían más blancos).",
+    ],
+  },
+  {
     version: "88.2",
     cambios: [
       "Contabilidad: el apartado de gastos, plegado, decía «9 · 144 €» y de un vistazo parecía 9.144. Ahora el número va en el título («9 gastos») y a la derecha solo el total.",
