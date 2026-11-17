@@ -13,13 +13,14 @@
 import { cancionesDe } from "./canciones";
 import { anioDelEvento } from "./matrimonios";
 import { pideEmail } from "./invitados";
+import { alergiasUniformes } from "./alergias";
 
 export function registroDelTablon(yo, evento) {
   if (!yo || !("alergias" in yo)) return null;
   const canciones = cancionesDe(yo.cancion);
   return {
     nombre: yo.nombre || "",
-    alergias: String(yo.alergias || "").trim() || "Sin contestar",
+    alergias: alergiasUniformes(yo.alergias) || "Sin contestar",
     canciones: canciones.length ? canciones : [yo.sinCancion ? "Prefieres no pedir ninguna" : "Ninguna todavía"],
     boda: lineaBoda(yo.anioBoda, evento),
     conservar: yo.conservarDatos ? "Sí" : "No",

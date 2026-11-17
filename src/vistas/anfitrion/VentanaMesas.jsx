@@ -39,6 +39,7 @@ import { esAparatoTactil } from "../../lib/mano";
 import { VentanaCambiarMesa } from "./VentanaCambiarMesa";
 import { nombreCompleto, fechaYHora } from "../../lib/formato";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
+import { alergiasUniformes } from "../../lib/alergias";
 import {
   conBorrador,
   borradorDesde,
@@ -119,7 +120,7 @@ function Familia({ familia, cogida, onCoger }) {
             por encima. */}
         {familia.conAlergia.length > 0 && (
           <span
-            title={`Alergias o intolerancias: ${familia.conAlergia.map((g) => `${nombreCompleto(g)} (${g.alergias.trim()})`).join("; ")}`}
+            title={`Alergias o intolerancias: ${familia.conAlergia.map((g) => `${nombreCompleto(g)} (${alergiasUniformes(g.alergias)})`).join("; ")}`}
             aria-label="Alergias o intolerancias"
             style={{ color: C.wax }}
           >

@@ -592,3 +592,26 @@ it("el buscador encuentra «N'gabu» escrito «N´gabu», sin mayúsculas ni til
   expect(html).toContain("N'gabu, Amélie");
   expect(html).not.toContain("Pacheco, Omar");
 });
+
+// v88.9 (él): la ventana de Alergias, con lo escrito uniforme («MARISCO» y
+// «marisco» salen «Marisco») y sin letras rojas, que no se leían.
+describe("la ventana de Alergias", () => {
+  const html = dibujarYSoltar(
+    <SeccionInvitados
+      data={{ ...data, invitados: invitados.map((g) => (g.id === "g4" ? { ...g, alergias: "Gluten, GAMBAS, NUECES Y ALMENDRAS" } : g)) }}
+      asignarColaborador={() => null}
+      ocupacionMesa={() => 1}
+      panelFlotante="alergias"
+      setPanelFlotante={() => {}}
+      colaboradoresPendientes={[]}
+      filtros={FILTROS_VACIOS}
+      setFiltros={() => {}}
+      onCerrar={() => {}}
+      fijo
+    />
+  );
+  it("lo escrito, con la primera letra en mayúscula y el resto en minúscula", () => {
+    expect(html).toContain("Gluten, Gambas, nueces y almendras");
+    expect(html).not.toContain("GAMBAS");
+  });
+});

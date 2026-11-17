@@ -78,6 +78,7 @@ import { EscucharCancion } from "../../components/EscucharCancion";
 import { consultaDeFila } from "../../lib/escuchar";
 import { cancionesDistintas, duracionTotal, textoDuracion, noEncontrada, filasAppleMusic } from "../../lib/repasoCanciones";
 import { pideTelefono, telefonoParaVer } from "../../lib/telefono";
+import { alergiasUniformes } from "../../lib/alergias";
 import { useSeccion } from "../../lib/useSeccion";
 
 // El circulito del tablón tras el nombre (él, v75.2): «estilo semáforo»,
@@ -422,7 +423,7 @@ export function SeccionInvitados({
       const filas = ordenarPorApellidoNombre(invitados.filter(tieneAlergiaReal)).map((g) => [
         `${g.apellido}, ${g.nombre}`,
         g.mesa ?? "",
-        g.alergias,
+        alergiasUniformes(g.alergias),
       ]);
       descargarCSV(`alergias-${evento.nombre || "evento"}.csv`, ["Invitado", "Mesa", "Alergia"], filas);
     }
@@ -1971,9 +1972,8 @@ export function SeccionInvitados({
               : `Alergias — ${evento.nombre || "Evento"}`
           }
           iconoTitulo={panelFlotante === "alergias" ? AlertTriangle : undefined}
-          // El dorado de todas las cabeceras: en verde oscuro (C.ink) sobre
-          // la cabecera verde no se leía (él, v80.2: «no tiene nombre»).
-          colorTitulo={panelFlotante === "alergias" ? C.wax : undefined}
+          // El dorado de todas las cabeceras, también Alergias: en verde
+          // oscuro (v80.2: «no tiene nombre») y en rojo (v88.9) no se leía.
           onCerrar={() => setPanelFlotante(null)}
           movible
           // Las cifras de las canciones, en la cabecera como las de la Lista
@@ -2192,7 +2192,8 @@ export function SeccionInvitados({
                   className="grid text-xs uppercase px-2 py-2"
                   style={{
                     gridTemplateColumns: "1.5fr 0.6fr 2fr",
-                    color: C.wax,
+                    // Dorado y verde, como el resto (él, v88.9: el rojo no se veía bien).
+                    color: C.gold,
                     fontFamily: "'IBM Plex Mono', monospace",
                     borderBottom: `1px solid ${C.line}`,
                   }}
@@ -2216,7 +2217,7 @@ export function SeccionInvitados({
                       {g.apellido}, {g.nombre}
                     </span>
                     <span>{g.mesa ?? "—"}</span>
-                    <span style={{ color: C.wax }}>{g.alergias}</span>
+                    <span style={{ color: C.ink }}>{alergiasUniformes(g.alergias)}</span>
                   </div>
                 ))}
                 {invitados.filter(tieneAlergiaReal).length === 0 && (

@@ -2,11 +2,8 @@
 // colaborador y en «Nuevo invitado» de la Lista (él, v87.1): una sola pieza
 // para los dos (norma 7).
 //
-// - Las alergias: «No», «Gluten», «Lactosa» y «Otras» (con su campo, hasta
-//   MAX_OTRAS_ALERGIAS letras: 15 se quedaban cortas para «GAMBAS, NUECES Y
-//   ALMENDRAS», él, v88.8). Se guardan en un solo texto («Gluten, Lactosa,
-//   Gambas, nueces»; «No» es la respuesta de que no tiene): lo de «Otras»
-//   puede llevar sus propias comas. Lo marcado vive aquí y nace de `valor` al
+// - Las alergias: «No», «Gluten», «Lactosa» y «Otras» (con su campo). Cómo
+//   se guardan, en lib/alergias.js. Lo marcado vive aquí y nace de `valor` al
 //   montar (trampa 2.4): para empezar con otro invitado, la pantalla le
 //   cambia la `key`.
 // - «Autorizo expresamente a que guarden mis datos»: la promete la nota de
@@ -15,29 +12,7 @@
 import { useState } from "react";
 import { C, OP } from "../theme";
 import { TextInput } from "./Formulario";
-
-export const MAX_OTRAS_ALERGIAS = 60;
-
-export function parsearAlergias(texto) {
-  const partes = (texto || "").split(",").map((s) => s.trim()).filter(Boolean);
-  return {
-    no: partes.includes("No"),
-    gluten: partes.includes("Gluten"),
-    lactosa: partes.includes("Lactosa"),
-    // Todo lo demás es «Otras», con sus comas: antes solo se quedaba la
-    // primera parte, y «Gambas, nueces» volvía como «Gambas».
-    otras: partes.filter((p) => p !== "No" && p !== "Gluten" && p !== "Lactosa").join(", "),
-  };
-}
-
-export function textoAlergias(sel) {
-  if (sel.no) return "No";
-  const partes = [];
-  if (sel.gluten) partes.push("Gluten");
-  if (sel.lactosa) partes.push("Lactosa");
-  if (sel.otras.trim()) partes.push(sel.otras.trim());
-  return partes.join(", ");
-}
+import { MAX_OTRAS_ALERGIAS, parsearAlergias, textoAlergias } from "../lib/alergias";
 
 export function ElegirAlergias({ valor, onCambiar }) {
   const [sel, setSel] = useState(() => parsearAlergias(valor));

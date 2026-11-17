@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "88.9",
+    cambios: [
+      "Alergias, «Otras»: se guarda con la primera letra en mayúscula y el resto en minúscula («MARISCO» y «marisco» → «Marisco»). Lo que ya estaba escrito de otra forma se ve igual en todas partes: la ventana de Alergias, su CSV, las mesas y el tablón.",
+      "La ventana de Alergias de la Lista: el título, en el dorado de las demás ventanas, y la lista en verde oscuro. En rojo no se leían bien.",
+    ],
+  },
+  {
     version: "88.8",
     cambios: [
       "Alergias, «Otras»: el campo admitía solo 15 letras; ahora hasta 60, y ocupa todo el ancho para que se lea entero.",
