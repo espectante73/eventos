@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "88.8",
+    cambios: [
+      "Alergias, «Otras»: el campo admitía solo 15 letras; ahora hasta 60, y ocupa todo el ancho para que se lea entero.",
+      "Arreglado: si lo de «Otras» llevaba comas («Gambas, nueces y almendras»), al volver a abrir la ficha solo quedaba la primera parte («Gambas»), y al guardar se perdía el resto. Ahora vuelve entero.",
+    ],
+  },
+  {
     version: "88.7",
     cambios: [
       "Contabilidad → Gastos: tocando el título «Fecha» o «Concepto» se ordenan los gastos, igual que en la Lista de invitados. Primer toque ▲ (de la fecha más antigua a la más reciente, o de la A a la Z), segundo ▼ (al revés), tercero lo quita. La columna que ordena se ve en dorado.",

@@ -474,7 +474,7 @@ describe("el formulario: Guardar y Cancelar", () => {
     abrirApartado(vista, "Alergias");
     const otras = [...document.body.querySelectorAll("label")].find((l) => l.textContent.trim() === "Otras");
     vista.pulsar(otras.querySelector("input"));
-    escribir(vista, document.body.querySelector('input[placeholder="Otra (máx. 15)"]'), valor);
+    escribir(vista, document.body.querySelector('input[aria-label="Otra alergia"]'), valor);
   };
 
   // Omar: esposo, sin alergias, y su familia no tiene email.
@@ -617,7 +617,7 @@ describe("el formulario: Guardar y Cancelar", () => {
     expect(document.body.textContent).toContain("¿Descartar los cambios?");
     // "No" vuelve al formulario con lo escrito.
     vista.pulsar(boton("No"));
-    expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]').value).toBe("Marisco");
+    expect(document.body.querySelector('input[aria-label="Otra alergia"]').value).toBe("Marisco");
     // "Sí, descartar" cierra sin subir nada.
     vista.pulsar(boton("Cancelar"));
     vista.pulsar(boton("Sí, descartar"));
@@ -633,7 +633,7 @@ describe("el formulario: Guardar y Cancelar", () => {
     vista.pulsar(document.body.querySelector('button[aria-label="Cerrar"]'));
     expect(document.body.textContent).toContain("¿Descartar los cambios?");
     vista.pulsar(boton("No"));
-    expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]').value).toBe("Marisco");
+    expect(document.body.querySelector('input[aria-label="Otra alergia"]').value).toBe("Marisco");
     vista.pulsar(document.body.querySelector('button[aria-label="Cerrar"]'));
     vista.pulsar(boton("Sí, descartar"));
     expect(guardados).toHaveLength(0);
@@ -669,10 +669,10 @@ describe("el formulario: Guardar y Cancelar", () => {
   it("en Alergias, el campo de «Otras» solo sale al marcarla", () => {
     const { vista } = abrirOmar();
     abrirApartado(vista, "Alergias");
-    expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]')).toBeFalsy();
+    expect(document.body.querySelector('input[aria-label="Otra alergia"]')).toBeFalsy();
     const otras = [...document.body.querySelectorAll("label")].find((l) => l.textContent.trim() === "Otras");
     vista.pulsar(otras.querySelector("input"));
-    expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]')).toBeTruthy();
+    expect(document.body.querySelector('input[aria-label="Otra alergia"]')).toBeTruthy();
     vista.desmontar();
   });
 
@@ -689,7 +689,7 @@ describe("el formulario: Guardar y Cancelar", () => {
     escribirOtraAlergia(vista, "Marisco");
     vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Lucía")));
     vista.pulsar(botones().find((b) => b.textContent.includes("Pacheco, Omar")));
-    expect(document.body.querySelector('input[placeholder="Otra (máx. 15)"]').value).toBe("Marisco");
+    expect(document.body.querySelector('input[aria-label="Otra alergia"]').value).toBe("Marisco");
     vista.desmontar();
   });
 });
