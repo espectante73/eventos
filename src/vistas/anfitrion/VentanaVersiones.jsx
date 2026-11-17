@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "89",
+    cambios: [
+      "Lista de invitados → Acciones → «Aviso de pago»: una línea por cada persona confirmada que no ha pagado, agrupadas por familia, con lo que debe toda la familia. Arriba se elige la fecha límite.",
+      "Al tocar WhatsApp se abre el chat con el mensaje ya escrito, firmado por el ANFITRIÓN: la fecha de hoy, los días que quedan para la boda, lo que debe la familia, la fecha límite («si el pago no está resuelto antes del…, no podrán continuar como invitados») y su colaborador. Solo falta pulsar «Enviar». Es el mismo mensaje para toda la familia, con el nombre de cada uno.",
+      "Quien no tiene teléfono sale con «Sin teléfono». Enviar a todos de un solo toque no se puede sin el servicio de pago de WhatsApp.",
+    ],
+  },
+  {
     version: "88.9",
     cambios: [
       "Alergias, «Otras»: se guarda con la primera letra en mayúscula y el resto en minúscula («MARISCO» y «marisco» → «Marisco»). Lo que ya estaba escrito de otra forma se ve igual en todas partes: la ventana de Alergias, su CSV, las mesas y el tablón.",

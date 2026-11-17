@@ -75,14 +75,16 @@ const ESTILO_MENSAJE = { enlace: { fondo: DORADO.fondo, color: C.ink } };
 // (sin dejar una en blanco al volver, v82.7). `lado`: su cuadrado.
 // `onMenu(abierto)`: avisa al abrir y al cerrar su menú, para que la fila
 // de esa persona se marque y se vea a quién va el mensaje (v85.2, él).
-export function BotonWhatsapp({ telefono, nombre, mensajes = [], lado = DEDO, onMenu }) {
+// `mensaje`: sin menú, el chat se abre ya con ese texto escrito («Aviso de
+// pago», v89).
+export function BotonWhatsapp({ telefono, nombre, mensajes = [], mensaje = "", lado = DEDO, onMenu }) {
   const abrir = (texto) => abrirWhatsApp({ telefono, mensaje: texto });
   const tactil = esAparatoTactil();
   const caja = { minWidth: lado, minHeight: lado, flexShrink: 0 };
   if (mensajes.length === 0) {
     return (
       <a
-        href={tactil ? enlaceWhatsAppDirecto(telefono) : enlaceWhatsApp(telefono)}
+        href={tactil ? enlaceWhatsAppDirecto(telefono, mensaje) : enlaceWhatsApp(telefono, mensaje)}
         {...(tactil ? {} : { target: "_blank", rel: "noopener noreferrer" })}
         aria-label={`Escribir a ${nombre} por WhatsApp`}
         title="WhatsApp"

@@ -34,6 +34,7 @@ import {
   Headphones,
   Ban,
   Lock,
+  Wallet,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
@@ -70,6 +71,7 @@ import { estadoTablon, contarTablon } from "../../lib/entradasTablon";
 import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
 import { FORMULARIO_INVITADO } from "../../lib/iconosVentanas";
 import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
+import { VentanaAvisoPago } from "./VentanaAvisoPago";
 import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
 import { VentanaRepasarCanciones } from "./VentanaRepasarCanciones";
 import { VentanaCompartirDj } from "./VentanaCompartirDj";
@@ -172,6 +174,7 @@ export function SeccionInvitados({
   const avisarLista = (texto) => texto && preguntar({ titulo: "Lista de invitados", texto, soloAviso: true });
   const [mostrarImport, setMostrarImport] = useState(false);
   const [mostrarImportarTel, setMostrarImportarTel] = useState(false);
+  const [mostrarAvisoPago, setMostrarAvisoPago] = useState(false);
   const [mostrarAnadir, setMostrarAnadir] = useState(false);
   // Por niveles (lib/ordenNiveles.js, v72.5): vacío = por «Apellido, Nombre».
   const [orden, setOrden] = useState([]);
@@ -809,6 +812,14 @@ export function SeccionInvitados({
       marcado: mostrarImportarTel,
       icono: Contact,
       onClick: () => setMostrarImportarTel((v) => !v),
+    },
+    // El anfitrión escribe por WhatsApp a cada uno que no ha pagado (él, v89).
+    {
+      id: "avisoPago",
+      etiqueta: "Aviso de pago",
+      marcado: mostrarAvisoPago,
+      icono: Wallet,
+      onClick: () => setMostrarAvisoPago((v) => !v),
     },
   ];
 
@@ -2292,6 +2303,7 @@ export function SeccionInvitados({
       {/* «Nuevo invitado» (él, v77): un formulario flotante, no campos en la cabecera. */}
       {mostrarAnadir && <VentanaNuevoInvitado data={data} onCerrar={() => setMostrarAnadir(false)} />}
       {mostrarImportarTel && <VentanaImportarTelefonos data={data} onCerrar={() => setMostrarImportarTel(false)} />}
+      {mostrarAvisoPago && <VentanaAvisoPago data={data} onCerrar={() => setMostrarAvisoPago(false)} />}
       {cancionACorregir && <VentanaCorregirCancion data={data} peticion={cancionACorregir} onCerrar={() => setCancionACorregir(null)} />}
       {repasandoCanciones && <VentanaRepasarCanciones data={data} onCerrar={() => setRepasandoCanciones(false)} />}
       {compartiendoDj && <VentanaCompartirDj data={data} onCerrar={() => setCompartiendoDj(false)} />}
