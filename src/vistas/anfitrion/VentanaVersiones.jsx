@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "89.2",
+    cambios: [
+      "Mi cuenta → «Novedades» ya no abre el enlace general del tablón, que con «Solo con el enlace personal» solo dice que se pida el acceso: abre el enlace personal de quien lo pulsa (anfitrión o colaborador), que saluda por su nombre y solo pide el año de nacimiento.",
+    ],
+  },
+  {
     version: "89.1",
     cambios: [
       "«Aviso de pago»: al tocar WhatsApp queda apuntado en la base el día del aviso de esa persona (una marca y el día en su línea), y se ve en el Mac y en el móvil. Si después paga, sale de la lista; reiniciar su pago también borra la marca.",

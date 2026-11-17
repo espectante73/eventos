@@ -137,6 +137,9 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
   // VentanaNovedades.jsx para copiarlo y compartirlo en el grupo de
   // WhatsApp. null hasta que se cargue (o si falla la carga).
   const [tokenTablon, setTokenTablon] = useState(null);
+  // La clave del enlace personal al tablón del propio colaborador (v89.2):
+  // su «Novedades» abre su enlace personal. "" si no tiene o falla.
+  const [miClaveTablon, setMiClaveTablon] = useState("");
   // Pregunta de acceso al tablón público (capa extra sobre el enlace en
   // sí) -- solo el anfitrión la carga/edita, desde VentanaNovedades.jsx.
   // Texto suelto: desde 2026-08-29 el acceso se comprueba por nombre
@@ -424,6 +427,9 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
           // "Best effort", igual que en la rama del anfitrión: es solo el
           // enlace del botón "Novedades" en Portada.
           { data: tokenTablonCargado },
+          ,
+          // También "best effort": sin ella (o sin su SQL), el enlace general.
+          { data: miClaveCargada },
         ] = await Promise.all([
           supabase.rpc("colaborador_mi_perfil", pc),
           leerEvento(supabase),
@@ -431,6 +437,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
           supabase.rpc("colaborador_mis_invitados", pc),
           supabase.rpc("colaborador_obtener_token_tablon", pc),
           cargarFamiliasSinEmail(rol),
+          supabase.rpc("colaborador_mi_clave_tablon", pc),
         ]);
         if (errPerfil) {
           if (mostrarCarga) avisar("No se pudo comprobar el enlace.", errPerfil);
@@ -459,6 +466,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
           if (!errInv) setInvitados(misInvitados || []);
           setMesas([]); // La vista de colaborador nunca necesita las mesas.
           if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
+          setMiClaveTablon(typeof miClaveCargada === "string" ? miClaveCargada : "");
           if (novedadesColaborador) setNovedades(novedadesColaborador);
           setEsAnfitrion(false);
           setLoaded(true);
@@ -1657,6 +1665,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     novedades,
     persistNovedades,
     tokenTablon,
+    miClaveTablon,
     preguntaTablon,
     persistPreguntaTablon,
     accesosTablonSospechosos,

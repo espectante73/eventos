@@ -5,7 +5,7 @@
 // dividir su interior es un cambio aparte, deliberadamente pospuesto (ver
 // CLAUDE.md, Fase 4).
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
-import { construirEnlaceTablon } from "../lib/url";
+import { enlaceNovedades } from "../lib/url";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { abrirMusica } from "../lib/ventanaMusica";
 // La página de Música (?musica) viaja en el trozo de esta vista: ver App.jsx.
@@ -61,7 +61,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   // en "Abrir sección…" (él, v50.6). Se le reconoce por su email de acceso.
   const miColaborador = colaboradorConEmail(colaboradores, emailSesion);
   const misFichasIncompletas = miColaborador ? fichasIncompletasDe(miColaborador.id, data).length : 0;
-  const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
+  // «Novedades» (Mi cuenta): su enlace personal, el de su ficha (v89.2).
+  const enlaceTablon = enlaceNovedades(evento.urlPublica, tokenTablon, { ficha: invitados.find((g) => g.id === miColaborador?.invitadoId) });
   // Ventana Novedades: ventana de verdad del sistema operativo, no una
   // VentanaFlotante -- ver lib/usePopupWindow.js. `abrir` se pasa hasta
   // DesplegableSecciones.jsx (a través de Portada) para que se llame de

@@ -66,6 +66,22 @@ export function construirEnlacePersonalTablon(urlPublica, token, clave) {
   return enlace && clave ? `${enlace}&yo=${encodeURIComponent(clave)}` : "";
 }
 
+// El enlace personal de una ficha, solo si la puerta la deja entrar
+// (confirmada, sin «No asiste», no excluida del tablón) y ya tiene su clave.
+export function enlacePersonalDeFicha(urlPublica, token, g) {
+  if (!g?.confirmado || g.noAsiste || g.excluidoTablon || !g.claveTablon) return "";
+  return construirEnlacePersonalTablon(urlPublica, token, g.claveTablon);
+}
+
+// «Novedades», en Mi cuenta (v89.2, él): el enlace PERSONAL de quien lo
+// pulsa, porque el general puede decir solo «Pídele a tu colaborador el
+// acceso» (v88.6). `ficha`, su ficha de invitado; `clave`, la que da la base
+// si su ficha no está a mano. Sin ninguna de las dos, el general.
+export function enlaceNovedades(urlPublica, token, { ficha, clave } = {}) {
+  const personal = ficha ? enlacePersonalDeFicha(urlPublica, token, ficha) : construirEnlacePersonalTablon(urlPublica, token, clave);
+  return personal || construirEnlaceTablon(urlPublica, token);
+}
+
 // ?dj=<token> — «Canciones para bailar» para el DJ (v81): solo mirar, y
 // además pide la clave que el anfitrión le da por teléfono (VistaDj.jsx).
 export function getTokenDjFromUrl() {

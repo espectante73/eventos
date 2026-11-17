@@ -960,6 +960,18 @@ describe("el tablón, solo con el enlace personal", () => {
   });
 });
 
+// v89.2 (él): «Novedades», en Mi cuenta, abre el enlace PERSONAL de quien
+// lo pulsa; el general puede decir solo que pida el acceso (v88.6).
+describe("el enlace personal del propio colaborador", () => {
+  const f = cuerpoDe("colaborador_mi_clave_tablon");
+  it("solo a él, con su sesión, y solo si la puerta le deja entrar", () => {
+    expect(f).toContain('c."authUserId" = auth.uid()');
+    expect(f).toContain('i."id" = c."invitadoId"');
+    expect(f).toContain('i."confirmado" = true and not coalesce(i."noAsiste", false) and not coalesce(i."excluidoTablon", false)');
+    expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.colaborador_mi_clave_tablon(uuid) FROM PUBLIC, anon;");
+  });
+});
+
 // v89.1 (él): el «Aviso de pago» guarda cuándo se avisó a cada persona, y
 // su texto se puede cambiar como los otros mensajes de WhatsApp.
 describe("el aviso de pago", () => {

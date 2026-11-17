@@ -16,7 +16,7 @@ import { ElegirAlergias, CasillaConservarDatos } from "../components/CamposFicha
 import { estadoImpago, textoAvisoImpago, PLAZOS_MAX } from "../lib/impagos";
 import { marcarSinGuardar, haySinGuardar, PREGUNTA_DESCARTAR } from "../lib/cambiosSinGuardar";
 import { requisitosActivos } from "../lib/modoPruebas";
-import { construirEnlaceTablon, construirEnlacePersonalTablon } from "../lib/url";
+import { enlaceNovedades, enlacePersonalDeFicha } from "../lib/url";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
@@ -1203,8 +1203,14 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const familiasSinEmailAhora = data.esAnfitrion
     ? familiasSinEmail(invitados, colaboradores)
     : new Set(data.familiasSinEmailServidor || []);
-  const enlaceTablon = construirEnlaceTablon(evento.urlPublica, tokenTablon);
   const colaborador = colaboradores.find((c) => c.id === colaboradorId);
+  // «Novedades» (Mi cuenta): su enlace personal (v89.2). Su ficha está en la
+  // lista si se la lleva él (o en la vista previa del anfitrión); si no, la
+  // clave la da la base.
+  const enlaceTablon = enlaceNovedades(evento.urlPublica, tokenTablon, {
+    ficha: invitados.find((g) => g.id === colaborador?.invitadoId),
+    clave: data.miClaveTablon,
+  });
   // Avisos en la ventana de la app, no en la del navegador (norma 9).
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   const aviso = (titulo, texto) => preguntar({ titulo, texto, soloAviso: true });
@@ -1302,8 +1308,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // entrar (confirmado, sin «No asiste», no excluido) y con su clave, que
   // pone la base (invitados."claveTablon").
   function enlacePersonalDe(g) {
-    if (!g.confirmado || g.noAsiste || g.excluidoTablon || !g.claveTablon) return "";
-    return construirEnlacePersonalTablon(evento.urlPublica, tokenTablon, g.claveTablon);
+    return enlacePersonalDeFicha(evento.urlPublica, tokenTablon, g);
   }
   // INCOMPLETA = no está en "N de N" (la misma regla que pinta la fila de
   // rojo, lib/invitados.js). Antes estas secciones solo miraban los datos

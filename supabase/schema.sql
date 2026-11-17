@@ -2968,6 +2968,24 @@ CREATE FUNCTION public.colaborador_obtener_token_tablon(p_colaborador_id uuid) R
   end;
 $$;
 
+-- La clave del enlace personal al tablón del PROPIO colaborador (v89.2):
+-- «Novedades», en su Mi cuenta, abre su enlace personal, porque el general
+-- puede decir solo que pida el acceso (v88.6). Su ficha puede llevarla otro
+-- colaborador, así que no siempre está en colaborador_mis_invitados. Solo a
+-- él, con su sesión, y solo si la puerta le deja entrar.
+CREATE FUNCTION public.colaborador_mi_clave_tablon(p_colaborador_id uuid) RETURNS text
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+  select i."claveTablon" from colaboradores c
+  join invitados i on i."id" = c."invitadoId"
+  where c."id" = p_colaborador_id and c."authUserId" = auth.uid()
+    and i."confirmado" = true and not coalesce(i."noAsiste", false) and not coalesce(i."excluidoTablon", false)
+  limit 1;
+$$;
+REVOKE EXECUTE ON FUNCTION public.colaborador_mi_clave_tablon(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.colaborador_mi_clave_tablon(uuid) TO authenticated;
+
 
 -- ------------------------------------------------------------
 -- El tablón público
