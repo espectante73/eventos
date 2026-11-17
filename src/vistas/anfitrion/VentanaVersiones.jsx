@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "89.1",
+    cambios: [
+      "«Aviso de pago»: al tocar WhatsApp queda apuntado en la base el día del aviso de esa persona (una marca y el día en su línea), y se ve en el Mac y en el móvil. Si después paga, sale de la lista; reiniciar su pago también borra la marca.",
+      "El texto del aviso se cambia en Datos del evento → «Aviso de pago», junto a los otros mensajes de WhatsApp, con deshacer e historial. Mientras no se cambie, a quien viene solo le sale en singular.",
+    ],
+  },
+  {
     version: "89",
     cambios: [
       "Lista de invitados → Acciones → «Aviso de pago»: una línea por cada persona confirmada que no ha pagado, agrupadas por familia, con lo que debe toda la familia. Arriba se elige la fecha límite.",

@@ -23,6 +23,8 @@ import { BotonHistorial } from "./HistorialTexto";
 import { Boton } from "./Boton";
 import { IconoWhatsApp } from "./Contacto";
 import { PLANTILLAS_WHATSAPP, HUECOS_WHATSAPP } from "../lib/mensajesWhatsapp";
+import { AVISO_PAGO, CAMPO_AVISO_PAGO, HUECOS_AVISO_PAGO } from "../lib/avisoPago";
+import { LineaAviso } from "./LineaAviso";
 
 // Las cuatro, con un título corto para la fila plegada (el largo de
 // antes no cabía) y el de siempre como explicación dentro.
@@ -178,6 +180,29 @@ export function PlantillasWhatsapp({ data }) {
           />
         </SeccionPlegable>
       ))}
+      {/* El «Aviso de pago» del anfitrión (v89.1): sale en Lista → Acciones,
+          no en la ficha, y lleva sus propios huecos. */}
+      <SeccionPlegable icono={IconoWhatsApp} titulo="Aviso de pago" resumen={resumenDe(evento[CAMPO_AVISO_PAGO] || AVISO_PAGO.porDefecto)}>
+        {CAMPO_AVISO_PAGO in evento ? (
+          <>
+            <TextoEditableEvento
+              label="Mensaje de WhatsApp"
+              valor={evento[CAMPO_AVISO_PAGO] || AVISO_PAGO.porDefecto}
+              campo={CAMPO_AVISO_PAGO}
+              sinFormato
+              filas={8}
+              obtenerHistorialTexto={obtenerHistorialTexto}
+              onCambio={(v) => persistEvento({ ...evento, [CAMPO_AVISO_PAGO]: v })}
+            />
+            <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
+              Del anfitrión a quien no ha pagado: sale en Lista de invitados → Acciones → «Aviso de pago». Los huecos {HUECOS_AVISO_PAGO.join(" ")} se rellenan solos. Mientras no lo
+              cambies, a quien viene solo le sale en singular; el tuyo vale para todos.
+            </p>
+          </>
+        ) : (
+          <LineaAviso className="text-xs">Falta subir el SQL de la versión 89.1.</LineaAviso>
+        )}
+      </SeccionPlegable>
     </div>
   );
 }

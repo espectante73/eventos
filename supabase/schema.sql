@@ -97,6 +97,9 @@ CREATE TABLE public.evento (
     "plantillaWhatsappPagos" text,
     -- Su enlace personal al tablón (v85.2). Lleva {enlace} donde va el enlace.
     "plantillaWhatsappEnlace" text,
+    -- El «Aviso de pago» del anfitrión a quien no ha pagado (v89.1). Vacío =
+    -- el de src/lib/avisoPago.js. Solo para él: evento_publico lo quita.
+    "plantillaWhatsappAvisoPago" text,
     "enlaceGrupoWhatsapp" text DEFAULT ''::text NOT NULL,
     "cronogramaBloques" jsonb DEFAULT '[{"texto": "Recepción", "duracionMin": 15}, {"texto": "Cóctel", "duracionMin": 30}, {"texto": "Foto 1", "duracionMin": 15}, {"texto": "Mesas", "duracionMin": 15}, {"texto": "Cena", "duracionMin": 90}, {"texto": "Foto 2", "duracionMin": 15}, {"texto": "Postre", "duracionMin": 15}, {"texto": "Baile", "duracionMin": 135}, {"texto": "Final", "duracionMin": 15}]'::jsonb NOT NULL,
     "cronogramaHoraFin" text DEFAULT '23:45'::text NOT NULL,
@@ -211,7 +214,11 @@ CREATE TABLE public.invitados (
     -- ya había (sin tocar ninguna: no salta ningún aviso), y luego a cada
     -- nueva (trg_clave_tablon, también si una foto de Deshacer la trae
     -- vacía). Nadie la escribe desde la app. Sin "not null".
-    "claveTablon" text DEFAULT substr(replace((gen_random_uuid())::text, '-'::text, ''::text), 1, 16)
+    "claveTablon" text DEFAULT substr(replace((gen_random_uuid())::text, '-'::text, ''::text), 1, 16),
+    -- Cuándo le abrió el anfitrión el WhatsApp del «Aviso de pago» (v89.1,
+    -- él): la ventana dice «Avisado 17 nov». Es de cada persona, no de la
+    -- familia (el aviso va a cada una). Sin "not null".
+    "avisoPagoEn" timestamp with time zone
 );
 
 -- Quién ayuda a recoger datos y qué permisos tiene cada uno.
@@ -1114,7 +1121,7 @@ CREATE FUNCTION public.evento_publico() RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-  select to_jsonb(e) - 'enlaceGrupoWhatsapp' - 'emailAnfitrion' - 'acomodaciones' - 'conceptosGastos' - 'catalogoCanciones' - 'cancionesFueraDj' - 'aPagar' from evento e limit 1;
+  select to_jsonb(e) - 'enlaceGrupoWhatsapp' - 'emailAnfitrion' - 'acomodaciones' - 'conceptosGastos' - 'catalogoCanciones' - 'cancionesFueraDj' - 'aPagar' - 'plantillaWhatsappAvisoPago' from evento e limit 1;
 $$;
 
 -- El evento entero, para el anfitrión.
@@ -1965,7 +1972,7 @@ begin
     "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
     "cancion","alergias","observaciones","pagado","rolesTrabajo",
     "excluidoTablon","rolFamiliar","presente","excepcionesRevision","sinCancion","sinEmail",
-    "conservarDatos","noAsiste","pagoPendienteHasta","plazosPago","telefono"
+    "conservarDatos","noAsiste","pagoPendienteHasta","plazosPago","telefono","avisoPagoEn"
   )
   select
     (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
@@ -1986,7 +1993,8 @@ begin
     coalesce((f->>'noAsiste')::boolean, false),
     nullif(f->>'pagoPendienteHasta', '')::date,
     coalesce((f->>'plazosPago')::integer, 0),
-    f->>'telefono'
+    f->>'telefono',
+    nullif(f->>'avisoPagoEn', '')::timestamptz
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update set
     "nombre"=excluded."nombre", "apellido"=excluded."apellido",
@@ -2007,7 +2015,10 @@ begin
     "plazosPago"=excluded."plazosPago",
     -- Una fila sin teléfono (de una pantalla abierta antes de la v78) no
     -- borra el que ya hay.
-    "telefono"=coalesce(excluded."telefono", invitados."telefono");
+    "telefono"=coalesce(excluded."telefono", invitados."telefono"),
+    -- Igual el «Avisado» del aviso de pago (v89.1): una pantalla abierta
+    -- antes no lo conoce, y su guardado no puede borrarlo.
+    "avisoPagoEn"=coalesce(excluded."avisoPagoEn", invitados."avisoPagoEn");
 
   -- Solo se borra si de verdad llega la lista de quién debe quedar: un
   -- p_ids nulo por error no puede vaciar la tabla.
@@ -2285,7 +2296,7 @@ begin
       "avisadoA" = null
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'pago' then
-    update invitados set "pagado" = false, "avisadoA" = null
+    update invitados set "pagado" = false, "avisadoA" = null, "avisoPagoEn" = null
     where "id" = any(p_invitado_ids);
   elsif p_categoria = 'mesa' then
     update invitados set "mesa" = null, "avisadoA" = null
@@ -3839,6 +3850,9 @@ begin
   end if;
   if old."plantillaWhatsappEnlace" is distinct from new."plantillaWhatsappEnlace" then
     perform registrar_historial_texto('plantilla', null, 'plantillaWhatsappEnlace', coalesce(old."plantillaWhatsappEnlace", ''));
+  end if;
+  if old."plantillaWhatsappAvisoPago" is distinct from new."plantillaWhatsappAvisoPago" then
+    perform registrar_historial_texto('plantilla', null, 'plantillaWhatsappAvisoPago', coalesce(old."plantillaWhatsappAvisoPago", ''));
   end if;
   return new;
 end;

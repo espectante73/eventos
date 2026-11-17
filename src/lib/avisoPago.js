@@ -9,7 +9,12 @@
 // vuelve a leer el mensaje mañana o pasado, sabrá que no quedan 24 días»),
 // y la fecha límite que elige él. Sin «cancelar»: si no se resuelve, «no
 // podrán continuar como invitados» (él).
-import { euros, diasHasta, nombreCompleto } from "./formato";
+//
+// v89.1 (él, paso 2): al abrir el chat se guarda cuándo (`avisoPagoEn`, de
+// cada persona) y la ventana dice «Avisado 17 nov»; y el texto se cambia en
+// Datos del evento, con los otros mensajes de WhatsApp. El suyo vale para
+// todos, también para quien viene solo (como los demás mensajes).
+import { euros, diasHasta, nombreCompleto, fechaCorta } from "./formato";
 import { claveFamilia, importeEsperadoInvitado, resolverColaborador } from "./invitados";
 import { saludoWhatsapp, nombreDelEvento } from "./mensajesWhatsapp";
 
@@ -21,6 +26,8 @@ const COMUN =
 // días»), {importe} (lo que debe la familia), {limite} («24 de noviembre») y
 // {colaborador} («su colaborador (Barrios, Jacob)»; sin colaborador, «el
 // anfitrión»).
+export const CAMPO_AVISO_PAGO = "plantillaWhatsappAvisoPago";
+export const HUECOS_AVISO_PAGO = ["{evento}", "{hoy}", "{quedan}", "{importe}", "{limite}", "{colaborador}"];
 export const AVISO_PAGO = {
   porDefecto:
     "Les escribe el ANFITRIÓN de «{evento}». Hoy, {hoy}, {quedan} para la boda y el pago de la familia ({importe}) sigue pendiente. " +
@@ -42,6 +49,12 @@ export function diaYMesISO(iso) {
 }
 
 const rellenar = (plantilla, valores) => plantilla.replace(/\{(evento|hoy|quedan|importe|limite|colaborador)\}/g, (_, h) => valores[h] ?? "");
+
+// «17 nov», el día (en la hora de quien mira) de un momento guardado.
+const diaDe = (momento) => {
+  const d = momento ? new Date(momento) : null;
+  return d && !Number.isNaN(d.getTime()) ? fechaCorta(d.toLocaleDateString("sv-SE")) : "";
+};
 
 const debePagar = (g) => Boolean(g?.confirmado) && !g?.pagado && !g?.noAsiste;
 
@@ -72,15 +85,29 @@ export function avisosDePago({ invitados = [], evento, colaboradores = [], limit
       const col = resolverColaborador(g, colaboradores);
       const importe = euros(pendienteDe.get(claveFamilia(g)) || 0);
       const valores = { ...comunes, importe, colaborador: col ? `${solo ? "tu" : "su"} colaborador (${col.nombre})` : "el anfitrión" };
-      const cuerpo = solo ? AVISO_PAGO.porDefectoSolo : AVISO_PAGO.porDefecto;
+      const propio = String(evento?.[CAMPO_AVISO_PAGO] || "").trim();
+      const cuerpo = propio || (solo ? AVISO_PAGO.porDefectoSolo : AVISO_PAGO.porDefecto);
       return {
         invitado: g,
         nombre: nombreCompleto(g),
         importe,
         telefono: String(g.telefono || "").trim(),
         texto: limite ? `${saludoWhatsapp(g)}:\n${rellenar(cuerpo, valores)}` : null,
+        avisado: diaDe(g.avisoPagoEn),
       };
     })
     .sort((a, b) => saludoWhatsapp(a.invitado).localeCompare(saludoWhatsapp(b.invitado), "es"));
   return { filas, aviso: "" };
+}
+
+// ¿Está subido el SQL de la v89.1? La base trae la columna en cada ficha,
+// aunque vacía.
+export const avisoPagoGuardable = (invitados = []) => invitados.some((g) => g && "avisoPagoEn" in g);
+
+// Apunta que se le acaba de abrir el chat del aviso (norma 14): la lista
+// nueva y un `aviso` si no se pudo.
+export function marcarAvisado(invitados, id, ahora = new Date()) {
+  if (!avisoPagoGuardable(invitados)) return { invitados, aviso: "Falta subir el SQL de la versión 89.1: aún no se guarda «Avisado»." };
+  if (!invitados.some((g) => g.id === id)) return { invitados, aviso: "Esa persona ya no está en la lista." };
+  return { invitados: invitados.map((g) => (g.id === id ? { ...g, avisoPagoEn: ahora.toISOString() } : g)), aviso: "" };
 }

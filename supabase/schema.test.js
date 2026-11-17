@@ -82,6 +82,7 @@ describe("el evento no se lee directamente", () => {
     expect(f).toContain("- 'catalogoCanciones'");
     expect(f).toContain("- 'cancionesFueraDj'");
     expect(f).toContain("- 'aPagar'");
+    expect(f).toContain("- 'plantillaWhatsappAvisoPago'");
   });
 
   it("entero solo al anfitrión; el enlace, al colaborador con permiso de Novedades", () => {
@@ -908,7 +909,8 @@ describe("la acreditación por QR (v83.2)", () => {
 describe("el enlace personal al tablón", () => {
   const f = cuerpoDe("tablon_por_clave");
   it("cada ficha tiene su clave, distinta, puesta por la base y sin «not null»", () => {
-    expect(sql).toContain(`"claveTablon" text DEFAULT substr(replace((gen_random_uuid())::text, '-'::text, ''::text), 1, 16)\n);`);
+    // Sin "not null" (desde la v89.1 ya no es la última columna).
+    expect(sql).toMatch(/"claveTablon" text DEFAULT substr\(replace\(\(gen_random_uuid\(\)\)::text, '-'::text, ''::text\), 1, 16\),?\n/);
     expect(sql).toContain('ADD CONSTRAINT invitados_clave_tablon_key UNIQUE ("claveTablon")');
     expect(sql).toContain("CREATE TRIGGER invitados_clave_tablon BEFORE INSERT ON public.invitados");
     expect(cuerpoDe("trg_clave_tablon")).toContain(`if coalesce(new."claveTablon", '') = '' then`);
@@ -955,6 +957,26 @@ describe("el tablón, solo con el enlace personal", () => {
     expect(f).toContain(`(coalesce(trim(p_nombre), '') <> '' and i."claveTablon" = trim(p_nombre))`);
     expect(f).toContain(`or (not coalesce((select e."tablonSoloPersonal" from evento e limit 1), false)
             and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_nombre))`);
+  });
+});
+
+// v89.1 (él): el «Aviso de pago» guarda cuándo se avisó a cada persona, y
+// su texto se puede cambiar como los otros mensajes de WhatsApp.
+describe("el aviso de pago", () => {
+  it("cuándo se avisó, por persona, sin «not null»", () => {
+    expect(sql).toContain('"avisoPagoEn" timestamp with time zone\n);');
+  });
+  it("lo guarda el anfitrión, y una pantalla abierta antes no lo borra", () => {
+    const g = cuerpoDe("anfitrion_guardar_invitados");
+    expect(g).toContain(`nullif(f->>'avisoPagoEn', '')::timestamptz`);
+    expect(g).toContain(`"avisoPagoEn"=coalesce(excluded."avisoPagoEn", invitados."avisoPagoEn")`);
+  });
+  it("reiniciar el pago lo quita", () => {
+    expect(cuerpoDe("anfitrion_resetear_por_invitados")).toContain(`update invitados set "pagado" = false, "avisadoA" = null, "avisoPagoEn" = null`);
+  });
+  it("su texto, con historial como los demás", () => {
+    expect(sql).toContain('"plantillaWhatsappAvisoPago" text,');
+    expect(cuerpoDe("trg_historial_plantillas_email")).toContain(`registrar_historial_texto('plantilla', null, 'plantillaWhatsappAvisoPago', coalesce(old."plantillaWhatsappAvisoPago", ''))`);
   });
 });
 

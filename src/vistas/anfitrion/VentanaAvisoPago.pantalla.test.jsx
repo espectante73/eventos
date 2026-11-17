@@ -39,3 +39,34 @@ it("sin fecha límite, sin enlace; con ella, el chat de cada uno con su mensaje,
   expect(mensaje).toContain("antes del 24 de noviembre");
   vista.desmontar();
 });
+
+// v89.1: al abrir el chat queda apuntado el día, en la base.
+it("al tocar WhatsApp guarda cuándo, y la fila dice «✓ 17 nov»; sin el SQL, lo avisa", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 10, 17, 12));
+  const persistInvitados = vi.fn();
+  const conColumna = { ...data, persistInvitados, invitados: data.invitados.map((g) => ({ ...g, avisoPagoEn: null })) };
+  const vista = montar(<VentanaAvisoPago data={conColumna} onCerrar={() => {}} />);
+  expect(vista.html).not.toContain("Falta subir el SQL");
+  const fecha = document.body.querySelector('input[aria-label="Fecha límite"]');
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(fecha, "2026-11-24");
+    fecha.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  const enlace = document.body.querySelector('a[aria-label="Escribir a Pacheco, Omar por WhatsApp"]');
+  enlace.addEventListener("click", (e) => e.preventDefault());
+  await act(async () => enlace.click());
+  expect(persistInvitados).toHaveBeenCalledTimes(1);
+  const guardados = persistInvitados.mock.calls[0][0];
+  expect(guardados.find((g) => g.id === "g1").avisoPagoEn).toBe(new Date(2026, 10, 17, 12).toISOString());
+  expect(guardados.find((g) => g.id === "g2").avisoPagoEn).toBeNull();
+  vista.desmontar();
+
+  const yaAvisado = montar(<VentanaAvisoPago data={{ ...conColumna, invitados: guardados }} onCerrar={() => {}} />);
+  expect(yaAvisado.html).toContain('aria-label="Avisado el 17 nov"');
+  yaAvisado.desmontar();
+
+  const sinSql = montar(<VentanaAvisoPago data={{ ...data, persistInvitados }} onCerrar={() => {}} />);
+  expect(sinSql.html).toContain("Falta subir el SQL de la versión 89.1");
+  sinSql.desmontar();
+});

@@ -77,8 +77,12 @@ const ESTILO_MENSAJE = { enlace: { fondo: DORADO.fondo, color: C.ink } };
 // de esa persona se marque y se vea a quién va el mensaje (v85.2, él).
 // `mensaje`: sin menú, el chat se abre ya con ese texto escrito («Aviso de
 // pago», v89).
-export function BotonWhatsapp({ telefono, nombre, mensajes = [], mensaje = "", lado = DEDO, onMenu }) {
-  const abrir = (texto) => abrirWhatsApp({ telefono, mensaje: texto });
+// `onAbrir`: avisa al abrir el chat (el «Aviso de pago» apunta cuándo, v89.1).
+export function BotonWhatsapp({ telefono, nombre, mensajes = [], mensaje = "", lado = DEDO, onMenu, onAbrir }) {
+  const abrir = (texto) => {
+    onAbrir?.();
+    abrirWhatsApp({ telefono, mensaje: texto });
+  };
   const tactil = esAparatoTactil();
   const caja = { minWidth: lado, minHeight: lado, flexShrink: 0 };
   if (mensajes.length === 0) {
@@ -90,7 +94,10 @@ export function BotonWhatsapp({ telefono, nombre, mensajes = [], mensaje = "", l
         title="WhatsApp"
         className="flex items-center justify-center"
         style={caja}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          onAbrir?.();
+        }}
       >
         <IconoWhatsApp />
       </a>

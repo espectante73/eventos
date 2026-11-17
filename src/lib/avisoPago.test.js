@@ -2,7 +2,7 @@
 // mensaje de su familia, con su nombre, la fecha de hoy, los días que
 // quedan, lo que debe la familia y la fecha límite.
 import { describe, it, expect } from "vitest";
-import { avisosDePago, diaYMesISO } from "./avisoPago";
+import { avisosDePago, diaYMesISO, marcarAvisado, avisoPagoGuardable, CAMPO_AVISO_PAGO } from "./avisoPago";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 import { euros } from "./formato";
 
@@ -70,3 +70,38 @@ describe("el aviso de pago del anfitrión", () => {
     expect(diaYMesISO("")).toBe("");
   });
 });
+
+describe("el aviso de pago, paso 2 (v89.1)", () => {
+  const conColumna = invitados.map((g) => ({ ...g, avisoPagoEn: null }));
+  const ahora = new Date(2026, 10, 17, 18, 30);
+
+  it("apunta cuándo se le abrió el chat, solo a esa persona", () => {
+    const { invitados: nuevos, aviso } = marcarAvisado(conColumna, "g1", ahora);
+    expect(aviso).toBe("");
+    expect(nuevos.find((g) => g.id === "g1").avisoPagoEn).toBe(ahora.toISOString());
+    expect(nuevos.filter((g) => g.avisoPagoEn)).toHaveLength(1);
+    const { filas } = avisosDePago({ invitados: nuevos, evento, colaboradores, limite: "2026-11-24", hoy });
+    expect(filas.find((f) => f.invitado.id === "g1").avisado).toBe("17 nov");
+    expect(filas.find((f) => f.invitado.id === "g2").avisado).toBe("");
+  });
+
+  it("sin el SQL subido no toca nada y lo dice", () => {
+    expect(avisoPagoGuardable(invitados)).toBe(false);
+    const r = marcarAvisado(invitados, "g1", ahora);
+    expect(r.invitados).toBe(invitados);
+    expect(r.aviso).toContain("Falta subir el SQL de la versión 89.1");
+  });
+
+  it("si ya no está en la lista, tampoco", () => {
+    const r = marcarAvisado(conColumna, "nadie", ahora);
+    expect(r.invitados).toBe(conColumna);
+    expect(r.aviso).not.toBe("");
+  });
+
+  it("con su texto propio, el suyo para todos, con los huecos rellenos", () => {
+    const propio = { ...evento, [CAMPO_AVISO_PAGO]: "Quedan {quedan}; hoy {hoy}; debe {importe}; antes del {limite}; {colaborador}." };
+    const { filas } = avisosDePago({ invitados, evento: propio, colaboradores, limite: "2026-11-24", hoy });
+    expect(filas.find((f) => f.invitado.id === "g4").texto).toBe(`ABRANTE, Loly:\nQuedan quedan 24 días; hoy 17 de noviembre; debe ${euros(47)}; antes del 24 de noviembre; el anfitrión.`);
+  });
+});
+
