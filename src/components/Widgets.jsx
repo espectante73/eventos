@@ -247,6 +247,11 @@ export function BarraCompacta({ icono: Icono, completado, total, color, claro })
 // invitados, lib/ordenNiveles.js, v72.5): entonces lleva su número de nivel.
 // `invertido`: la columna tiene algo puesto (un filtro o un orden) y su
 // recuadro va en dorado: la letra, en verde (Lista de invitados, v72.6).
+// La columna con un filtro o un orden puesto, con los colores de la
+// cabecera invertidos (él, v72.6: «el resaltado no se nota»): fondo dorado
+// y letra verde (`invertido`). La misma en la Lista y en los Gastos.
+export const TINTA_COLUMNA_ACTIVA = C.goldClaro;
+
 export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, sinDivisor, invertido = false }) {
   const niveles = Array.isArray(orden) ? orden : [orden];
   const posicion = niveles.findIndex((n) => n.columna === columna);

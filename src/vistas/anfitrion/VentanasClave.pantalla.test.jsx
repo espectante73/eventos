@@ -209,3 +209,32 @@ describe("Contabilidad se puede dibujar", () => {
     vista.desmontar();
   });
 });
+
+// v88.7 (él): los gastos se ordenan tocando Fecha o Concepto, como la Lista.
+describe("los gastos se ordenan tocando el título", () => {
+  // Apuntados: Flores, Netlify, Imprenta (lo último, arriba).
+  const gastos = [
+    { id: "g1", fecha: "2026-11-02", concepto: "Netlify", importe: "19", creadoEn: "2026-11-02T10:00:00Z" },
+    { id: "g2", fecha: "2026-10-29", concepto: "Imprenta", importe: "24", creadoEn: "2026-11-03T10:00:00Z" },
+    { id: "g3", fecha: "2026-11-05", concepto: "Flores", importe: "30", creadoEn: "2026-11-01T10:00:00Z" },
+  ];
+  const conceptosEnOrden = (vista) =>
+    [...vista.contenedor.querySelectorAll('select[aria-label="Concepto"]')].slice(1).map((s) => s.value);
+  // El título, no el botón «Conceptos»: su texto, sin la flecha ni el nivel.
+  const tocarTitulo = (vista, texto) =>
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.replace(/[▲▼⇅\d]/g, "") === texto));
+
+  it("Fecha: de la más antigua a la más reciente, al revés y fuera; Concepto: de la A a la Z", () => {
+    const vista = montar(<VentanaCuentas data={{ ...data, evento: { ...evento, conceptosGastos: [] }, gastos }} onCerrar={() => {}} />);
+    vista.pulsar([...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.startsWith("3 gastos")));
+    expect(conceptosEnOrden(vista)).toEqual(["Imprenta", "Netlify", "Flores"]);
+    tocarTitulo(vista, "Fecha");
+    expect(conceptosEnOrden(vista)).toEqual(["Imprenta", "Netlify", "Flores"]);
+    tocarTitulo(vista, "Fecha");
+    expect(conceptosEnOrden(vista)).toEqual(["Flores", "Netlify", "Imprenta"]);
+    tocarTitulo(vista, "Fecha");
+    tocarTitulo(vista, "Concepto");
+    expect(conceptosEnOrden(vista)).toEqual(["Flores", "Imprenta", "Netlify"]);
+    vista.desmontar();
+  });
+});

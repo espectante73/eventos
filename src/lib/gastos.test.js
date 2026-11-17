@@ -8,6 +8,22 @@ describe("los gastos", () => {
     expect(ordenarGastos(gastos).map((g) => g.id)).toEqual(["d", "b", "a", "c"]);
   });
 
+  // v88.7 (él): tocando los títulos, como la Lista de invitados.
+  it("por fecha, por concepto, o por fecha y dentro por concepto; si empatan, lo último apuntado primero", () => {
+    const gastos = [
+      { id: "a", fecha: "2026-11-02", concepto: "Netlify", creadoEn: "2026-11-02T10:00:00Z" },
+      { id: "b", fecha: "2026-10-29", concepto: "Imprenta", creadoEn: "2026-11-03T10:00:00Z" },
+      { id: "c", fecha: "2026-11-02", concepto: "Flores", creadoEn: "2026-11-04T10:00:00Z" },
+      { id: "d", fecha: "2026-10-29", concepto: "Imprenta", creadoEn: "2026-11-05T10:00:00Z" },
+    ];
+    const ids = (niveles) => ordenarGastos(gastos, niveles).map((g) => g.id);
+    expect(ids([])).toEqual(["d", "c", "b", "a"]);
+    expect(ids([{ columna: "fecha", direccion: "asc" }])).toEqual(["d", "b", "c", "a"]);
+    expect(ids([{ columna: "fecha", direccion: "desc" }])).toEqual(["c", "a", "d", "b"]);
+    expect(ids([{ columna: "concepto", direccion: "asc" }])).toEqual(["c", "d", "b", "a"]);
+    expect(ids([{ columna: "fecha", direccion: "desc" }, { columna: "concepto", direccion: "asc" }])).toEqual(["c", "a", "d", "b"]);
+  });
+
   it("el concepto; en los de antes, si solo tenían categoría, esa", () => {
     expect(conceptoDe({ concepto: "Música", categoria: "X" })).toBe("Música");
     expect(conceptoDe({ concepto: "", categoria: "Flores" })).toBe("Flores");

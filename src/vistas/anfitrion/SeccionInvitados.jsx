@@ -43,7 +43,7 @@ import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } fro
 import { descargarCSV } from "../../lib/descargas";
 import { descargarListaAcomodadores, ARCHIVO as ARCHIVO_ACOMODADORES } from "../../lib/pdfAcomodadores";
 import { TextInput, TextInputEnVentanaAparte } from "../../components/Formulario";
-import { EncabezadoOrdenable, GrupoFamiliarInput, RecuadroCifras, Circulito } from "../../components/Widgets";
+import { EncabezadoOrdenable, GrupoFamiliarInput, RecuadroCifras, Circulito, TINTA_COLUMNA_ACTIVA } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { InformeInvitados } from "../../components/InformeInvitados";
@@ -128,10 +128,6 @@ const FILTRO_ES_COLABORADOR = "es-colaborador";
 // El orden de las columnas de la cabecera (y de sus filtros): el índice es
 // el de tintaColumnaCabecera.
 const COLUMNAS_LISTA = ["invitado", "grupoFamiliar", "rolFamiliar", "anioBoda", "zona", "colaborador", "mesa", "confirmado", "datos", "pagado", "presente", "rolTrabajo"];
-// La columna con un filtro o un orden puesto, con los colores de la
-// cabecera invertidos (él, v72.6: «el resaltado no se nota»): fondo dorado
-// y letra verde.
-const TINTA_COLUMNA_ACTIVA = C.goldClaro;
 
 // «Canciones para bailar» (v79.5): estrellas · canción · edad · ▶ (v81.1).
 // La canción, del ancho de la más larga (él, v81.2), y la ventana con ella:

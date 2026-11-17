@@ -4,14 +4,16 @@
 //
 // - Fecha: la del gasto, que se elige en el calendario; empieza en hoy,
 //   pero puede ser de otro día («a lo mejor registro hoy un gasto del mes
-//   pasado»). El orden NO es por ella, sino por cuándo se apuntó
-//   (`creadoEn`), para que lo nuevo no se vaya abajo.
+//   pasado»). El orden de partida NO es por ella, sino por cuándo se apuntó
+//   (`creadoEn`), para que lo nuevo no se vaya abajo; tocando los títulos
+//   Fecha y Concepto se ordena por ellos, como la Lista (v88.7).
 // - Concepto: de una lista propia (evento.conceptosGastos), que sustituye
 //   a la antigua «categoría» («concepto se sujeta más a la ley contable»).
 //   Un concepto puede llevar un precio fijo (las suscripciones): al
 //   elegirlo, el importe se rellena solo, y se corrige en su fila si un mes
 //   cambia, sin tocar los demás.
 import { parsePrecio } from "./formato";
+import { compararPorNiveles } from "./ordenNiveles";
 
 const porNombre = (a, b) => a.nombre.localeCompare(b.nombre, "es");
 const mismo = (a, b) => a.trim().toLocaleLowerCase("es") === b.trim().toLocaleLowerCase("es");
@@ -24,12 +26,18 @@ export const hoy = (ahora = new Date()) => ahora.toLocaleDateString("sv-SE");
 export const conceptoDe = (g) => (g.concepto || "").trim() || (g.categoria || "").trim();
 
 // Lo último apuntado, arriba. Los de antes, sin `creadoEn`, al final y en
-// el orden en que llegan.
-export function ordenarGastos(gastos) {
-  return gastos
+// el orden en que llegan. Con títulos tocados (`niveles`, los de
+// lib/ordenNiveles.js: Fecha y Concepto, él, v88.7), por ellos, como la
+// Lista de invitados; si empatan, lo último apuntado primero.
+const valorOrden = (g, columna) => (columna === "fecha" ? g.fecha || "" : conceptoDe(g));
+export function ordenarGastos(gastos, niveles = []) {
+  const porApunte = gastos
     .map((g, i) => ({ g, i }))
     .sort((a, b) => (b.g.creadoEn || "").localeCompare(a.g.creadoEn || "") || a.i - b.i)
     .map(({ g }) => g);
+  if (niveles.length === 0) return porApunte;
+  const puesto = new Map(porApunte.map((g, i) => [g, i]));
+  return [...porApunte].sort(compararPorNiveles(niveles, valorOrden, (a, b) => puesto.get(a) - puesto.get(b)));
 }
 
 export const totalGastos = (gastos) => gastos.reduce((s, g) => s + parsePrecio(g.importe), 0);

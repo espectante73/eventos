@@ -6,6 +6,8 @@
 import { useState } from "react";
 import { Plus, List } from "lucide-react";
 import { C, R, T, OP, inputStyle } from "../../theme";
+import { tocarTitulo } from "../../lib/ordenNiveles";
+import { EncabezadoOrdenable, TINTA_COLUMNA_ACTIVA } from "../../components/Widgets";
 import { euros, parsePrecio, fechaCorta } from "../../lib/formato";
 import { uid } from "../../lib/id";
 import { hoy, conceptoDe, ordenarGastos, totalGastos, conceptosDe, conConcepto, sinConcepto, conPrecio, precioDe, nuevoGasto } from "../../lib/gastos";
@@ -107,7 +109,10 @@ export function GastosHoja({ data, onConceptos }) {
   const conceptos = conceptosDe(evento?.conceptosGastos, gastos);
   const [nueva, setNueva] = useState({ fecha: hoy(), concepto: "", importe: "" });
   const [aviso, setAviso] = useState("");
-  const filas = ordenarGastos(gastos);
+  // Ordenar tocando Fecha o Concepto (él, v88.7: «igual que los filtros de
+  // invitados»): ▲, ▼ y fuera; el primero tocado manda.
+  const [orden, setOrden] = useState([]);
+  const filas = ordenarGastos(gastos, orden);
 
   // Elegir un concepto con precio fijo pone el importe (se puede cambiar).
   const elegirConcepto = (concepto) => setNueva((n) => ({ ...n, concepto, importe: precioDe(conceptos, concepto) || n.importe }));
@@ -123,6 +128,17 @@ export function GastosHoja({ data, onConceptos }) {
   const quitar = (id) => persistGastos(gastos.filter((g) => g.id !== id));
 
   const fila = (fondo, extra = {}) => ({ display: "grid", gridTemplateColumns: COLUMNAS, alignItems: "center", height: ALTO_FILA, background: fondo, ...extra });
+  // Un título que ordena, con su columna resaltada si manda, como la Lista.
+  const titulo = (columna, texto) => {
+    const activa = orden.some((n) => n.columna === columna);
+    return (
+      <span className="flex" style={{ alignSelf: "stretch", background: activa ? TINTA_COLUMNA_ACTIVA : undefined, borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+        <EncabezadoOrdenable claro sinDivisor invertido={activa} columna={columna} orden={orden} onClick={(c) => setOrden((o) => tocarTitulo(o, c))}>
+          {texto}
+        </EncabezadoOrdenable>
+      </span>
+    );
+  };
 
   return (
     <div className="mt-2">
@@ -136,8 +152,8 @@ export function GastosHoja({ data, onConceptos }) {
 
       <div className="text-sm" style={{ border: `1px solid ${C.line}`, borderRadius: R.caja, overflow: "hidden" }}>
         <div style={fila(C.ink, { height: 34, color: C.goldClaro, fontFamily: "'Fraunces', serif", fontWeight: 700 })}>
-          <span className="px-2 truncate">Fecha</span>
-          <span className="px-2 truncate">Concepto</span>
+          {titulo("fecha", "Fecha")}
+          {titulo("concepto", "Concepto")}
           <span className="px-2 truncate text-right">Importe</span>
           <span />
         </div>

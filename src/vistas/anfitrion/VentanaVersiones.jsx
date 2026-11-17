@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "88.7",
+    cambios: [
+      "Contabilidad → Gastos: tocando el título «Fecha» o «Concepto» se ordenan los gastos, igual que en la Lista de invitados. Primer toque ▲ (de la fecha más antigua a la más reciente, o de la A a la Z), segundo ▼ (al revés), tercero lo quita. La columna que ordena se ve en dorado.",
+      "Se pueden combinar: tocando «Fecha» y luego «Concepto», ordena por fecha y, dentro de cada día, por concepto (el numerito dice cuál manda). Sin ninguno, lo último apuntado sigue arriba.",
+    ],
+  },
+  {
     version: "88.6",
     cambios: [
       "Tablón, casilla nueva «Solo con el enlace personal» (Novedades → Grupo de WhatsApp y pregunta de acceso). Marcada, el enlace general del tablón solo dice «Pídele a tu colaborador el acceso al tablón.», sin pedir nombre ni año: entra solo quien tiene su enlace personal, el que manda su colaborador desde su formulario, y elige su año.",
