@@ -15,7 +15,7 @@ import { C, inputStyle, OP, S, T, DEDO, FONDO_VERDE, DORADO, conAlfa } from "../
 import { supabase } from "../supabaseClient";
 import { useFichaInstalacion, fichaDelTablon } from "../lib/fichaInstalacion";
 import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento, opcionesAnios } from "../lib/formato";
-import { entrarTablon, anioDeRespuesta, mismaPersonaEnRespuesta, NO_ENCONTRADO, ANIO_NO_COINCIDE } from "../lib/tablonEntrada";
+import { entrarTablon, anioDeRespuesta, respuestaGuardadaDelEnlace, esRespuestaPersonal, NO_ENCONTRADO, ANIO_NO_COINCIDE, SOLO_PERSONAL } from "../lib/tablonEntrada";
 import { getClaveTablonFromUrl } from "../lib/url";
 import { InfoItem } from "../components/Portada";
 import { SelloCuentaAtras } from "../components/SelloCuentaAtras";
@@ -117,8 +117,12 @@ export function VistaTablon({ token }) {
   const [pregunta, setPregunta] = useState("Apellido familiar y nombre, tal como los tiene tu colaborador");
   const [respuestaEscrita, setRespuestaEscrita] = useState("");
   // Quién es, si ha entrado con su enlace personal (v85.2): { nombre
-  // «Apellido, Nombre», respuesta «Apellido Nombre» }, o null.
+  // «Apellido, Nombre», respuesta: la clave de su ficha (v88.6) }, o null.
   const [personaEnlace, setPersonaEnlace] = useState(null);
+  // «Solo con enlace personal» (v88.6, él, evento."tablonSoloPersonal"): sin
+  // su enlace, la puerta solo dice SOLO_PERSONAL. Quien decide es la base
+  // (tablon_respuesta_vale); esto solo elige qué puerta enseñar.
+  const [soloPersonal, setSoloPersonal] = useState(false);
   // El año de nacimiento, la otra mitad de la entrada (v70), y los años que
   // ofrece su desplegable (los de la lista, sin decir de quién).
   const [anioEscrito, setAnioEscrito] = useState("");
@@ -200,6 +204,20 @@ export function VistaTablon({ token }) {
         supabase.rpc("tablon_zonas", { p_token: token, p_respuesta: respuestaVerificadaRef.current }),
         clave ? supabase.rpc("tablon_mi_email", { p_token: token, p_clave: clave, p_respuesta: respuestaVerificadaRef.current }) : Promise.resolve({ data: null }),
       ]);
+      // Si él cierra la puerta general con alguien dentro que entró por
+      // ella, al siguiente refresco vuelve a la puerta, que le dice qué hacer.
+      setSoloPersonal(eventoLeido?.tablonSoloPersonal === true);
+      if (eventoLeido?.tablonSoloPersonal === true && !esRespuestaPersonal(respuestaVerificadaRef.current)) {
+        try {
+          window.localStorage.removeItem(claveLocalStorage);
+        } catch (_) {
+          // Sin almacenamiento, no había nada guardado.
+        }
+        respuestaVerificadaRef.current = "";
+        setYo(null);
+        setEstado("bloqueado");
+        return;
+      }
       setEvento(eventoLeido);
       // Con el año con el que entró (v70.1): el importe de su entrada en la guía.
       setYo({
@@ -216,7 +234,7 @@ export function VistaTablon({ token }) {
       // mucho una abierta a la vez (ver `alternar`, más abajo).
       setEstado("listo");
     },
-    [token]
+    [token, claveLocalStorage]
   );
 
   // Primer arranque: valida el token, genera (o recupera) el id de este
@@ -248,6 +266,9 @@ export function VistaTablon({ token }) {
         // dispositivo "nuevo" para el aviso de accesos sospechosos --
         // no afecta a si se puede entrar o no.
       }
+      const eventoPuerta = await leerEvento(supabase);
+      if (cancelado) return;
+      setSoloPersonal(eventoPuerta?.tablonSoloPersonal === true);
       const { data: preguntaTexto } = await supabase.rpc("tablon_obtener_pregunta", { p_token: token });
       if (cancelado) return;
       if (preguntaTexto) setPregunta(preguntaTexto);
@@ -263,9 +284,10 @@ export function VistaTablon({ token }) {
       }
       // El enlace personal (v85.2, ?tablon=…&yo=<clave>): la base dice de
       // quién es, y la puerta solo pide el año. La respuesta guardada en este
-      // móvil vale si es de esa misma persona; si es de otro de la familia,
-      // se pregunta. Sin la función en la base (o con una clave que ya no
-      // vale), la puerta de siempre.
+      // móvil vale si es de esa misma persona (la de antes, con su nombre,
+      // pasa a su clave: v88.6); si es de otro de la familia, se pregunta.
+      // Sin la función en la base (o con una clave que ya no vale), la
+      // puerta de siempre.
       const clave = getClaveTablonFromUrl();
       if (clave) {
         const { data: persona } = await supabase.rpc("tablon_por_clave", { p_token: token, p_clave: clave });
@@ -273,7 +295,7 @@ export function VistaTablon({ token }) {
         if (persona?.respuesta) {
           setPersonaEnlace(persona);
           setRespuestaEscrita(persona.respuesta);
-          if (!mismaPersonaEnRespuesta(guardada, persona.respuesta)) guardada = "";
+          guardada = respuestaGuardadaDelEnlace(guardada, persona);
         }
       }
       if (guardada) {
@@ -284,6 +306,11 @@ export function VistaTablon({ token }) {
         if (cancelado) return;
         if (sigueValiendo === true) {
           respuestaVerificadaRef.current = guardada;
+          try {
+            window.localStorage.setItem(claveLocalStorage, guardada);
+          } catch (_) {
+            // Sin almacenamiento, se volverá a pasar la próxima vez.
+          }
           cargarContenido();
           return;
         }
@@ -462,6 +489,29 @@ export function VistaTablon({ token }) {
     );
   }
 
+  // «Solo con enlace personal» (v88.6, él): el enlace general sigue
+  // abriendo, pero solo para decir esto. Sin formulario: por nombre y año ya
+  // no entra nadie.
+  if (estado === "bloqueado" && soloPersonal && !personaEnlace) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: C.paper, color: C.ink, fontFamily: "'Inter', sans-serif" }}
+      >
+        <div
+          data-solo-personal
+          className="max-w-sm w-full p-6 rounded-lg text-center"
+          style={{ background: C.blanco, border: `1px solid ${C.line}`, boxShadow: S.flotante }}
+        >
+          <Lock size={22} className="mx-auto mb-3" style={{ color: C.gold }} />
+          <h1 className="text-lg" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}>
+            {SOLO_PERSONAL}
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
   if (estado === "bloqueado") {
     return (
       <div
@@ -553,7 +603,7 @@ export function VistaTablon({ token }) {
                   setErrorRespuesta("");
                 }}
               >
-                ¿No eres tú? Entra con tu nombre
+                {soloPersonal ? "¿No eres tú?" : "¿No eres tú? Entra con tu nombre"}
               </EnlaceTexto>
             </div>
           )}

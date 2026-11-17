@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "88.6",
+    cambios: [
+      "Tablón, casilla nueva «Solo con el enlace personal» (Novedades → Grupo de WhatsApp y pregunta de acceso). Marcada, el enlace general del tablón solo dice «Pídele a tu colaborador el acceso al tablón.», sin pedir nombre ni año: entra solo quien tiene su enlace personal, el que manda su colaborador desde su formulario, y elige su año.",
+      "Quien ya había entrado con su enlace personal sigue dentro sin volver a elegir el año. Quien entró por el enlace general, al marcarla vuelve a la puerta y ve el mensaje.",
+      "Necesita el SQL de esta versión; sin él, la casilla sale apagada.",
+    ],
+  },
+  {
     version: "88.5",
     cambios: [
       "Revisión de la Lista, aviso nuevo «¿La misma persona con otro nombre?»: dos fichas con el mismo año de nacimiento, el mismo email o teléfono y un nombre en común (por ejemplo, con el apellido de casada y el de soltera). Antes solo se avisaba con el mismo nombre y apellido, y una así se colaba.",

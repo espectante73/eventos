@@ -160,3 +160,37 @@ it("la noticia de las zonas: sale como automática y su casilla la publica", () 
   expect(guardados.at(-1).zonasTablon).toBe(true);
   vista.desmontar();
 });
+
+// v88.6 (él): «Solo con el enlace personal», en el pie de los ajustes del
+// tablón. Sin el SQL, apagada y diciendo por qué.
+describe("la casilla «Solo con el enlace personal»", () => {
+  const abrirPie = async (vista) => {
+    const pie = [...vista.contenedor.querySelectorAll("button")].find((b) => b.textContent.includes("pregunta de acceso"));
+    await act(async () => pie.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  };
+  const casilla = (vista) =>
+    [...vista.contenedor.querySelectorAll("label")].find((l) => l.textContent.includes("Solo con el enlace personal")).querySelector("input");
+
+  it("sin el SQL de la v88.6, apagada y lo dice", async () => {
+    const vista = montar(<VentanaNovedades data={data} ventana={null} />);
+    await abrirPie(vista);
+    expect(casilla(vista).disabled).toBe(true);
+    expect(vista.html).toContain("Falta subir el SQL de la versión 88.6.");
+    vista.desmontar();
+  });
+
+  it("al marcarla se guarda en el evento y dice qué verá el enlace general", async () => {
+    const guardados = [];
+    const evento = { ...data.evento, tablonSoloPersonal: false };
+    const vista = montar(<VentanaNovedades data={{ ...data, evento, persistEvento: (e) => guardados.push(e) }} ventana={null} />);
+    await abrirPie(vista);
+    expect(casilla(vista).disabled).toBe(false);
+    await act(async () => casilla(vista).click());
+    expect(guardados.at(-1)).toMatchObject({ tablonSoloPersonal: true });
+    vista.desmontar();
+    const marcada = montar(<VentanaNovedades data={{ ...data, evento: { ...evento, tablonSoloPersonal: true } }} ventana={null} />);
+    await abrirPie(marcada);
+    expect(marcada.html).toContain("El enlace general solo dice: «Pídele a tu colaborador el acceso al tablón.»");
+    marcada.desmontar();
+  });
+});

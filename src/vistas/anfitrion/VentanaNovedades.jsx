@@ -27,6 +27,7 @@ import { LineaAviso } from "../../components/LineaAviso";
 import { useSeccion } from "../../lib/useSeccion";
 import { Cargando } from "../../components/Cargando";
 import { tituloZonas, TITULO_ZONAS, zonaDeEjemplo } from "../../lib/zonasTablon";
+import { SOLO_PERSONAL } from "../../lib/tablonEntrada";
 import { TarjetaNoticia, CabeceraNoticia, CuerpoZonas } from "../NoticiaTablon";
 
 // Añade "prefijo" al principio de cada línea tocada por la selección
@@ -429,6 +430,8 @@ function NovedadesCargadas({ data, ventana, soloTexto }) {
   // administrador (quien solo edita texto ya tiene su propio acceso al
   // check de "Publicada", más arriba, sin necesitar nada de este pie).
   const [pieAbierto, setPieAbierto] = useState(false);
+  // Sin el SQL de la v88.6, la base no tiene la casilla.
+  const sinSqlSoloPersonal = !evento || !("tablonSoloPersonal" in evento);
   // Segunda fila plegable del pie, independiente de la anterior -- a
   // petición del usuario, 2026-09-05: la música de fondo del tablón
   // vivía en su propio botón de Configuración ("Fondo musical") solo
@@ -675,6 +678,23 @@ function NovedadesCargadas({ data, ventana, soloTexto }) {
           <LineaAviso className="text-xs">
             {errorPregunta}
           </LineaAviso>
+        )}
+        {/* «Solo con enlace personal» (v88.6, él): por nombre y año ya no
+            entra nadie; el enlace general solo dice SOLO_PERSONAL. Lo
+            comprueba la base (tablon_respuesta_vale). */}
+        <label className="flex items-center gap-1.5 text-xs" style={{ color: C.charcoal, opacity: sinSqlSoloPersonal ? OP.apagado : OP.secundario }}>
+          <input
+            type="checkbox"
+            checked={evento.tablonSoloPersonal === true}
+            disabled={sinSqlSoloPersonal}
+            onChange={(e) => persistEvento({ ...evento, tablonSoloPersonal: e.target.checked })}
+          />
+          Solo con el enlace personal
+        </label>
+        {(sinSqlSoloPersonal || evento.tablonSoloPersonal === true) && (
+          <p data-ayuda-solo-personal className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
+            {sinSqlSoloPersonal ? "Falta subir el SQL de la versión 88.6." : `El enlace general solo dice: «${SOLO_PERSONAL}»`}
+          </p>
         )}
         {accesosTablonSospechosos.length > 0 && (
           <div className="flex items-start gap-2 p-2 rounded text-xs" style={{ background: C.avisoFondo, color: C.peligro }}>

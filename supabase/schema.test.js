@@ -128,14 +128,18 @@ describe("la clave del tablón, con el año de nacimiento", () => {
     expect(c).toContain("trim(coalesce(p_anio, '')) ~ '^[0-9]{4}$'");
     expect(c).toContain("normalizar_nombre_tablon(coalesce(p_apellido, '') || ' ' || coalesce(p_nombre, '') || ' ' || trim(p_anio))");
   });
-  it("la puerta y lo de dentro comparan con la misma clave; ninguna con el nombre solo", () => {
+  it("la puerta y lo de dentro comparan con la misma pieza; ninguna con el nombre solo", () => {
     for (const f of ["tablon_verificar_respuesta", "tablon_invitado"]) {
-      expect(cuerpoDe(f)).toContain('clave_tablon(i."apellido", i."nombre", i."anioNacimiento") = normalizar_nombre_tablon(p_respuesta)');
+      expect(cuerpoDe(f)).toContain('tablon_respuesta_vale(i."claveTablon", i."apellido", i."nombre", i."anioNacimiento", p_respuesta)');
+      expect(cuerpoDe(f)).not.toContain("normalizar_nombre_tablon(p_respuesta)");
     }
-    expect(cuerpoDe("tablon_verificar_respuesta")).not.toContain(`normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_respuesta)`);
+    expect(cuerpoDe("tablon_respuesta_vale")).toContain("clave_tablon(p_apellido, p_nombre, p_anio) = normalizar_nombre_tablon(p_respuesta)");
   });
-  it("la alarma de accesos agrupa por persona, sin el año", () => {
-    expect(cuerpoDe("tablon_listar_novedades")).toContain("regexp_replace(normalizar_nombre_tablon(p_respuesta), ' [0-9]{4}$', '')");
+  it("la alarma de accesos agrupa por persona, con el nombre de su ficha y sin el año", () => {
+    const f = cuerpoDe("tablon_listar_novedades");
+    expect(f).toContain(`select normalizar_nombre_tablon(coalesce(y."apellido", '') || ' ' || coalesce(y."nombre", ''))`);
+    expect(f).toContain("from tablon_invitado(p_token, p_respuesta) y");
+    expect(f).not.toContain("anioNacimiento");
   });
 });
 
@@ -147,9 +151,8 @@ describe("el tablón: quién ha entrado y su colaborador", () => {
     expect(yo).toContain('p_token = (select "token" from tablon_secreto');
     expect(yo).toContain('i."confirmado" = true');
     expect(yo).toContain('i."excluidoTablon" = false');
-    expect(yo).toContain("normalizar_nombre_tablon(p_respuesta)");
     // v70: con el año, la misma clave en la puerta y dentro.
-    expect(yo).toContain('clave_tablon(i."apellido", i."nombre", i."anioNacimiento") = normalizar_nombre_tablon(p_respuesta)');
+    expect(yo).toContain('tablon_respuesta_vale(i."claveTablon", i."apellido", i."nombre", i."anioNacimiento", p_respuesta)');
     expect(yo).toContain("(select count(*) from candidatos) = 1");
     expect(f).toContain("from tablon_invitado(p_token, p_respuesta) y");
   });
@@ -918,9 +921,40 @@ describe("el enlace personal al tablón", () => {
     expect(f).toContain('i."excluidoTablon" = false');
     expect(f).not.toContain("anioNacimiento");
   });
+  // v88.6: la respuesta del enlace es su clave (con el año la añade el
+  // navegador), que entra aunque la puerta general esté cerrada.
+  it("da su clave como respuesta, no su nombre", () => {
+    expect(f).toContain(`'respuesta', i."claveTablon"`);
+  });
   it("su mensaje de WhatsApp, editable y con su historial como los demás", () => {
     expect(sql).toContain('"plantillaWhatsappEnlace" text,');
     expect(cuerpoDe("trg_historial_plantillas_email")).toContain(`registrar_historial_texto('plantilla', null, 'plantillaWhatsappEnlace', coalesce(old."plantillaWhatsappEnlace", ''))`);
+  });
+});
+
+// v88.6 (él): «Solo con enlace personal». El enlace general solo dice que
+// se pida el acceso al colaborador; por nombre y año ya no entra nadie.
+describe("el tablón, solo con el enlace personal", () => {
+  const v = cuerpoDe("tablon_respuesta_vale");
+  it("una casilla en evento, sin «not null» y pública (la puerta la necesita)", () => {
+    expect(sql).toContain('"tablonSoloPersonal" boolean DEFAULT false,');
+    expect(cuerpoDe("evento_publico")).not.toContain("'tablonSoloPersonal'");
+  });
+  it("la clave de su ficha y su año entran siempre; nombre y año, solo con la casilla apagada", () => {
+    expect(v).toContain(`when trim(coalesce(p_respuesta, '')) ~ '^[0-9a-f]{16} [0-9]{4}$'`);
+    expect(v).toContain(`then coalesce(p_clave_ficha, '') = split_part(trim(p_respuesta), ' ', 1)`);
+    expect(v).toContain(`and trim(coalesce(p_anio, '')) = split_part(trim(p_respuesta), ' ', 2)`);
+    expect(v).toContain(`else not coalesce((select e."tablonSoloPersonal" from evento e limit 1), false)`);
+  });
+  it("solo por dentro: desde fuera no se puede ir probando", () => {
+    expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.tablon_respuesta_vale(text, text, text, text, text) FROM PUBLIC, anon, authenticated;");
+    expect(v).not.toContain("SECURITY DEFINER");
+  });
+  it("con la casilla, la puerta no dice si a un nombre le falta el año; a su clave, sí", () => {
+    const f = cuerpoDe("tablon_falta_anio");
+    expect(f).toContain(`(coalesce(trim(p_nombre), '') <> '' and i."claveTablon" = trim(p_nombre))`);
+    expect(f).toContain(`or (not coalesce((select e."tablonSoloPersonal" from evento e limit 1), false)
+            and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_nombre))`);
   });
 });
 

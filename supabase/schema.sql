@@ -137,6 +137,10 @@ CREATE TABLE public.evento (
     -- (partidas con precio de adulto y de niño), lo demás del local y lo del
     -- DJ, ver lib/aPagar.js. Solo el anfitrión.
     "aPagar" jsonb,
+    -- El tablón, solo con el enlace personal (v88.6, él): el general solo
+    -- dice «Pídele a tu colaborador el acceso al tablón.» Lo comprueba
+    -- tablon_respuesta_vale. Público: la puerta lo necesita.
+    "tablonSoloPersonal" boolean DEFAULT false,
     CONSTRAINT evento_id_check CHECK (id)
 );
 
@@ -2969,9 +2973,11 @@ begin
   v_valido := tablon_verificar_respuesta(p_token, p_respuesta);
   if v_valido then
     -- Sin el año (v70): la alarma agrupa por persona, y el año no se le
-    -- enseña ni al anfitrión.
+    -- enseña ni al anfitrión. El nombre, el de su ficha (v88.6): con el
+    -- enlace personal la respuesta lleva su clave, no su nombre.
     insert into tablon_accesos ("nombreNormalizado", "dispositivoId")
-    values (regexp_replace(normalizar_nombre_tablon(p_respuesta), ' [0-9]{4}$', ''), coalesce(nullif(p_dispositivo_id, ''), 'desconocido'))
+    select normalizar_nombre_tablon(coalesce(y."apellido", '') || ' ' || coalesce(y."nombre", '')), coalesce(nullif(p_dispositivo_id, ''), 'desconocido')
+    from tablon_invitado(p_token, p_respuesta) y
     on conflict ("nombreNormalizado", "dispositivoId") do update set "actualizadoEn" = now();
   end if;
 
@@ -3010,7 +3016,30 @@ CREATE FUNCTION public.clave_tablon(p_apellido text, p_nombre text, p_anio text)
   end;
 $$;
 
--- Comprueba el nombre, el apellido y el año contra la lista de confirmados.
+-- ¿Esta respuesta abre la puerta a esta ficha? UNA definición para la
+-- puerta y para todo lo de dentro (tablon_verificar_respuesta,
+-- tablon_invitado). Dos formas:
+-- - la del enlace personal (v88.6): «<claveTablon> <año>», la clave secreta
+--   de su ficha y su año (tablon_por_clave la da sin el año);
+-- - la general (v70): «Apellido Nombre 1975» (clave_tablon), salvo con
+--   «Solo con enlace personal» (evento."tablonSoloPersonal").
+-- ⚠️ La forma de la clave (16 cifras hexadecimales) está también en
+-- lib/tablonEntrada.js (esRespuestaPersonal).
+CREATE FUNCTION public.tablon_respuesta_vale(p_clave_ficha text, p_apellido text, p_nombre text, p_anio text, p_respuesta text) RETURNS boolean
+    LANGUAGE sql STABLE
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+  select case
+    when trim(coalesce(p_respuesta, '')) ~ '^[0-9a-f]{16} [0-9]{4}$'
+      then coalesce(p_clave_ficha, '') = split_part(trim(p_respuesta), ' ', 1)
+        and trim(coalesce(p_anio, '')) = split_part(trim(p_respuesta), ' ', 2)
+    else not coalesce((select e."tablonSoloPersonal" from evento e limit 1), false)
+      and clave_tablon(p_apellido, p_nombre, p_anio) = normalizar_nombre_tablon(p_respuesta)
+  end;
+$$;
+REVOKE EXECUTE ON FUNCTION public.tablon_respuesta_vale(text, text, text, text, text) FROM PUBLIC, anon, authenticated;
+
+-- Comprueba la respuesta contra la lista de confirmados.
 CREATE FUNCTION public.tablon_verificar_respuesta(p_token uuid, p_respuesta text) RETURNS boolean
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
@@ -3020,12 +3049,14 @@ CREATE FUNCTION public.tablon_verificar_respuesta(p_token uuid, p_respuesta text
       select 1 from invitados i
       where i."confirmado" = true
         and i."excluidoTablon" = false
-        and clave_tablon(i."apellido", i."nombre", i."anioNacimiento") = normalizar_nombre_tablon(p_respuesta)
+        and tablon_respuesta_vale(i."claveTablon", i."apellido", i."nombre", i."anioNacimiento", p_respuesta)
     );
 $$;
 
 -- Para el mensaje de la puerta (v70): ese nombre es de un confirmado, pero
--- su ficha aún no tiene el año, así que no puede entrar todavía.
+-- su ficha aún no tiene el año, así que no puede entrar todavía. Con el
+-- enlace personal (v88.6) llega su clave en vez del nombre; y con «Solo con
+-- enlace personal», por nombre nunca: por nombre no se entra.
 CREATE FUNCTION public.tablon_falta_anio(p_token uuid, p_nombre text) RETURNS boolean
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
@@ -3036,7 +3067,11 @@ CREATE FUNCTION public.tablon_falta_anio(p_token uuid, p_nombre text) RETURNS bo
       where i."confirmado" = true
         and i."excluidoTablon" = false
         and clave_tablon(i."apellido", i."nombre", i."anioNacimiento") is null
-        and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_nombre)
+        and (
+          (coalesce(trim(p_nombre), '') <> '' and i."claveTablon" = trim(p_nombre))
+          or (not coalesce((select e."tablonSoloPersonal" from evento e limit 1), false)
+            and normalizar_nombre_tablon(i."apellido" || ' ' || i."nombre") = normalizar_nombre_tablon(p_nombre))
+        )
     );
 $$;
 
@@ -3064,7 +3099,7 @@ CREATE FUNCTION public.tablon_invitado(p_token uuid, p_respuesta text) RETURNS S
     where p_token = (select "token" from tablon_secreto limit 1)
       and i."confirmado" = true
       and i."excluidoTablon" = false
-      and clave_tablon(i."apellido", i."nombre", i."anioNacimiento") = normalizar_nombre_tablon(p_respuesta)
+      and tablon_respuesta_vale(i."claveTablon", i."apellido", i."nombre", i."anioNacimiento", p_respuesta)
   )
   select c.* from candidatos c where (select count(*) from candidatos) = 1;
 $$;
@@ -3072,13 +3107,15 @@ REVOKE EXECUTE ON FUNCTION public.tablon_invitado(uuid, text) FROM PUBLIC, anon,
 
 -- El enlace personal (v85.2, él): con la llave del tablón y la clave de una
 -- ficha, su nombre para la puerta («Hola, Pacheco, Ana») y la respuesta sin
--- el año, que es lo único que se le pide. Solo de quien la puerta deja
--- entrar (confirmado y no excluido). Nunca el año: sigue siendo la llave.
+-- el año, que es lo único que se le pide: su clave (v88.6), que con el año
+-- abre aunque la puerta general esté cerrada (tablon_respuesta_vale). Solo
+-- de quien la puerta deja entrar (confirmado y no excluido). Nunca el año:
+-- sigue siendo la llave.
 CREATE FUNCTION public.tablon_por_clave(p_token uuid, p_clave text) RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-  select jsonb_build_object('nombre', i."apellido" || ', ' || i."nombre", 'respuesta', i."apellido" || ' ' || i."nombre")
+  select jsonb_build_object('nombre', i."apellido" || ', ' || i."nombre", 'respuesta', i."claveTablon")
   from invitados i
   where p_token = (select "token" from tablon_secreto limit 1)
     and coalesce(p_clave, '') <> ''

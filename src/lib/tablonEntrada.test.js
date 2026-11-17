@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { entrarTablon, respuestaTablon, anioDeRespuesta, mismaPersonaEnRespuesta, NO_ENCONTRADO, SIN_ANIO } from "./tablonEntrada";
+import { entrarTablon, respuestaTablon, anioDeRespuesta, mismaPersonaEnRespuesta, esRespuestaPersonal, respuestaGuardadaDelEnlace, NO_ENCONTRADO, SIN_ANIO } from "./tablonEntrada";
 
 // Un servidor de mentira: qué respuestas valen y si a ese nombre le falta el año.
 const servidor = ({ valen = [], faltaAnio = false }) => {
@@ -53,5 +53,34 @@ describe("mismaPersonaEnRespuesta", () => {
   it("otra persona de la familia, no; y sin nombre en el enlace, nunca", () => {
     expect(mismaPersonaEnRespuesta("Pacheco Omar 1983", "Pacheco Ana")).toBe(false);
     expect(mismaPersonaEnRespuesta("", "")).toBe(false);
+  });
+});
+
+// v88.6: «Solo con enlace personal». El enlace entra con la clave de la
+// ficha y el año, y lo guardado de antes con su nombre se pasa a esa forma.
+describe("la respuesta del enlace personal", () => {
+  const ana = { nombre: "Pacheco, Ana", respuesta: "0123456789abcdef" };
+  it("la clave de su ficha (16 cifras hexadecimales) y el año, nada más", () => {
+    expect(esRespuestaPersonal("0123456789abcdef 1975")).toBe(true);
+    expect(esRespuestaPersonal(" 0123456789abcdef 1975 ")).toBe(true);
+    expect(esRespuestaPersonal("0123456789abcdef")).toBe(false);
+    expect(esRespuestaPersonal("Pacheco Ana 1975")).toBe(false);
+    expect(esRespuestaPersonal("0123456789ABCDEF 1975")).toBe(false);
+    expect(esRespuestaPersonal("")).toBe(false);
+  });
+  it("la ya guardada con su clave, tal cual", () => {
+    expect(respuestaGuardadaDelEnlace("0123456789abcdef 1975", ana)).toBe("0123456789abcdef 1975");
+  });
+  it("la guardada con su nombre, de antes, pasa a su clave con el mismo año", () => {
+    expect(respuestaGuardadaDelEnlace("pacheco ana 1975", ana)).toBe("0123456789abcdef 1975");
+    expect(respuestaGuardadaDelEnlace("Pacheco Ana", ana)).toBe("0123456789abcdef");
+  });
+  it("la de otro de la familia, u otra clave, ninguna", () => {
+    expect(respuestaGuardadaDelEnlace("Pacheco Omar 1983", ana)).toBe("");
+    expect(respuestaGuardadaDelEnlace("fedcba9876543210 1983", ana)).toBe("");
+    expect(respuestaGuardadaDelEnlace("", ana)).toBe("");
+  });
+  it("con la base de antes (la respuesta era el nombre), como siempre", () => {
+    expect(respuestaGuardadaDelEnlace("Pacheco Ana 1975", { nombre: "Pacheco, Ana", respuesta: "Pacheco Ana" })).toBe("Pacheco Ana 1975");
   });
 });

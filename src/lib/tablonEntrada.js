@@ -1,6 +1,7 @@
 // La entrada al tablón (él, v70): apellido, nombre Y año de nacimiento. Los
 // tres viajan como una sola respuesta, «Apellido Nombre 1975», y el servidor
-// la compara con su ficha (clave_tablon) en la puerta y en todo lo de dentro.
+// la compara con su ficha (tablon_respuesta_vale) en la puerta y en todo lo
+// de dentro. Con el enlace personal, «<clave de su ficha> 1975» (v88.6).
 // El año, en un desplegable sin teclado, como en las fotos.
 
 // Sin «invitación» (él, v70.2): muchos no la tienen. Lo que manda es el
@@ -33,6 +34,24 @@ export function mismaPersonaEnRespuesta(guardada, delEnlace) {
 }
 
 export const respuestaTablon = (nombre, anio) => `${String(nombre || "").trim()} ${anio || ""}`.trim();
+
+// «Solo con enlace personal» (v88.6, él): el enlace general solo dice esto.
+export const SOLO_PERSONAL = "Pídele a tu colaborador el acceso al tablón.";
+
+// La respuesta del enlace personal (v88.6): la clave de su ficha y su año,
+// «0123456789abcdef 1975». ⚠️ La misma forma que en tablon_respuesta_vale
+// (schema.sql).
+export const esRespuestaPersonal = (respuesta) => /^[0-9a-f]{16} \d{4}$/.test(String(respuesta || "").trim());
+
+// Con su enlace personal, la respuesta guardada en este móvil con la que
+// probar a entrar sin preguntar: la suya, ya en la forma del enlace (la
+// guardada con su nombre, de antes, se pasa a su clave con el mismo año);
+// la de otro de la familia, ninguna. `persona` es la de tablon_por_clave.
+export function respuestaGuardadaDelEnlace(guardada, persona) {
+  if (mismaPersonaEnRespuesta(guardada, persona?.respuesta)) return guardada;
+  if (mismaPersonaEnRespuesta(guardada, persona?.nombre)) return respuestaTablon(persona.respuesta, anioDeRespuesta(guardada));
+  return "";
+}
 
 // El año con el que entró, para no volver a pedirlo en las fotos.
 export const anioDeRespuesta = (respuesta) => (String(respuesta || "").match(/(\d{4})\s*$/) || [])[1] || "";
