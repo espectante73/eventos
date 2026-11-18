@@ -615,3 +615,46 @@ describe("la ventana de Alergias", () => {
     expect(html).not.toContain("GAMBAS");
   });
 });
+
+// v89.3 (él): la Lista reducida. Se ocultan columnas en este aparato, se van
+// con ellas su filtro y su orden, y «Ver todas» lo deshace.
+describe("ocultar columnas de la Lista", () => {
+  it("oculta «Pagado» y su filtro; la línea lo recuerda y «Ver todas» la vuelve a enseñar", () => {
+    localStorage.clear();
+    const setFiltros = vi.fn();
+    const vista = montar(
+      <SeccionInvitados
+        data={data}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante={null}
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={{ ...FILTROS_VACIOS, pagado: "pendiente" }}
+        setFiltros={setFiltros}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+    const botones = () => [...document.body.querySelectorAll("button")];
+    const rejilla = () => document.body.querySelector('[style*="grid-template-columns"]').style.gridTemplateColumns;
+    expect(rejilla()).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.75fr 0.7fr 100px");
+
+    vista.pulsar(botones().find((b) => b.textContent.includes("Acciones")));
+    vista.pulsar(botones().find((b) => b.textContent.trim() === "Columnas"));
+    const casilla = (titulo) => document.body.querySelector(`label span[title="${titulo}"]`)?.closest("label").querySelector("input");
+    expect(casilla("Invitado · siempre"), "el nombre no lleva casilla").toBeFalsy();
+    vista.pulsar(casilla("Pagado"));
+
+    expect(rejilla()).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.7fr 100px");
+    expect(setFiltros).toHaveBeenCalledWith(expect.objectContaining({ pagado: "" }));
+    expect(JSON.parse(localStorage.getItem("listaColumnasOcultas"))).toEqual(["pagado"]);
+    expect(vista.html).toContain("1 columna oculta");
+
+    vista.pulsar([...document.body.querySelectorAll("a, button")].find((b) => b.textContent.trim() === "Ver todas"));
+    expect(rejilla()).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.75fr 0.7fr 100px");
+    expect(localStorage.getItem("listaColumnasOcultas")).toBeNull();
+    expect(vista.html).not.toContain("columna oculta");
+    vista.desmontar();
+  });
+});

@@ -35,6 +35,7 @@ import {
   Ban,
   Lock,
   Wallet,
+  Columns3,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
@@ -49,11 +50,24 @@ import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { InformeInvitados } from "../../components/InformeInvitados";
 import { revisarConExcepciones } from "../../lib/revisionInvitados";
-import { Boton } from "../../components/Boton";
+import { Boton, EnlaceTexto } from "../../components/Boton";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { asignarMesaConSuFamilia, confirmarConSuFamilia, mesaFija } from "../../lib/mesas";
 import { tieneCancion, cancionesPedidas, estrellas, ordenarCanciones, tocarOrdenCanciones, alternarFueraDj, ORDEN_CANCIONES_INICIAL } from "../../lib/canciones";
 import { tocarTitulo, compararPorNiveles } from "../../lib/ordenNiveles";
+import {
+  COLUMNAS_LISTA,
+  tituloColumna,
+  filtroDeColumna,
+  leerColumnasOcultas,
+  guardarColumnasOcultas,
+  plantillaColumnas,
+  anchoMinimoLista,
+  columnaSombreada,
+  filtrosSinOcultas,
+  ordenSinOcultas,
+  textoOcultas,
+} from "../../lib/columnasLista";
 import { ResumenAvisosAsignacion } from "./ResumenAvisosAsignacion";
 import {
   importarInvitados as importarFilas,
@@ -72,6 +86,7 @@ import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
 import { FORMULARIO_INVITADO } from "../../lib/iconosVentanas";
 import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
 import { VentanaAvisoPago } from "./VentanaAvisoPago";
+import { VentanaColumnasLista } from "./VentanaColumnasLista";
 import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
 import { VentanaRepasarCanciones } from "./VentanaRepasarCanciones";
 import { VentanaCompartirDj } from "./VentanaCompartirDj";
@@ -128,9 +143,8 @@ const FILTRO_ES_COLABORADOR = "es-colaborador";
 // initialization"). Pasó el 2026-09-24 al filtrar por Acomodador: el lint
 // y el build lo dieron por bueno, porque solo falla al ejecutarse.
 
-// El orden de las columnas de la cabecera (y de sus filtros): el índice es
-// el de tintaColumnaCabecera.
-const COLUMNAS_LISTA = ["invitado", "grupoFamiliar", "rolFamiliar", "anioBoda", "zona", "colaborador", "mesa", "confirmado", "datos", "pagado", "presente", "rolTrabajo"];
+// Las columnas (título, ancho y orden) viven en lib/columnasLista.js: el
+// índice de cada una ahí es el de tintaColumna, fondoColumna y celda.
 
 // «Canciones para bailar» (v79.5): estrellas · canción · edad · ▶ (v81.1).
 // La canción, del ancho de la más larga (él, v81.2), y la ventana con ella:
@@ -175,6 +189,9 @@ export function SeccionInvitados({
   const [mostrarImport, setMostrarImport] = useState(false);
   const [mostrarImportarTel, setMostrarImportarTel] = useState(false);
   const [mostrarAvisoPago, setMostrarAvisoPago] = useState(false);
+  // La Lista reducida (él, v89.3): las columnas ocultas en ESTE aparato.
+  const [ocultas, setOcultas] = useState(() => leerColumnasOcultas());
+  const [mostrarColumnas, setMostrarColumnas] = useState(false);
   const [mostrarAnadir, setMostrarAnadir] = useState(false);
   // Por niveles (lib/ordenNiveles.js, v72.5): vacío = por «Apellido, Nombre».
   const [orden, setOrden] = useState([]);
@@ -626,9 +643,19 @@ export function SeccionInvitados({
   // En «Editar», una columna más: el Teléfono, junto al nombre (él, v78.1:
   // «solo visible al editar y no visible en normal»).
   const ANCHO_TELEFONO = "120px";
-  // «Datos», 0.75fr → 0.85fr (v85): su filtro dice ahora «Sin alerg.», y
-  // a 0.75 se cortaba el punto.
-  const columnasTabla = `1.5fr ${modoEdicion ? `${ANCHO_TELEFONO} ` : ""}1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.75fr 0.7fr 100px`;
+  // Los anchos, en lib/columnasLista.js; solo las columnas que se ven (v89.3).
+  const anchoTelefono = modoEdicion ? ANCHO_TELEFONO : "";
+  const columnasTabla = plantillaColumnas(ocultas, anchoTelefono);
+  const oculta = (idx) => ocultas.has(COLUMNAS_LISTA[idx].id);
+  // Al ocultar una columna se van su filtro y su orden (lib/columnasLista.js).
+  const cambiarOcultas = (nuevas) => {
+    const limpias = guardarColumnasOcultas(nuevas);
+    setOcultas(limpias);
+    const sinFiltro = filtrosSinOcultas(filtros, limpias);
+    if (sinFiltro !== filtros) setFiltros(sinFiltro);
+    const sinOrden = ordenSinOcultas(orden, limpias);
+    if (sinOrden !== orden) setOrden(sinOrden);
+  };
   // Recuadro que diferencia cada columna en la barra verde (cabecera +
   // filtros), en vez de las pequeñas líneas divisorias de antes (ya
   // quitadas de EncabezadoOrdenable para `claro`) -- sombra suave y
@@ -640,17 +667,19 @@ export function SeccionInvitados({
   // arriba/abajo respectivamente) hace que las dos lean como un único
   // recuadro que "incluye nombre y filtro" -- a petición del usuario,
   // 2026-08-20.
-  const tintaColumnaCabecera = (idx) => (idx % 2 === 1 ? conAlfa(C.blanco, 0.07) : "transparent");
+  // Una sí y otra no, contando solo las que se ven (v89.3).
+  const tintaColumnaCabecera = (idx) => (columnaSombreada(ocultas, COLUMNAS_LISTA[idx].id) ? conAlfa(C.blanco, 0.07) : "transparent");
   // Una columna con algo puesto -- un filtro o un nivel de orden -- queda
   // señalada, como en una hoja de cálculo (él, v72.5: que se vea «no estás
   // viendo más porque esto está filtrado»; ordenar también cuenta). Su
   // título y su filtro, con la misma tinta: se leen como un solo recuadro.
-  const filtroDeColumna = (columna) => ({ invitado: "texto", colaborador: "colaboradorId" })[columna] || columna;
   const columnaActiva = (idx) => {
-    const columna = COLUMNAS_LISTA[idx];
+    const columna = COLUMNAS_LISTA[idx].id;
     return Boolean(filtros[filtroDeColumna(columna)]) || orden.some((n) => n.columna === columna);
   };
   const tintaColumna = (idx) => (columnaActiva(idx) ? TINTA_COLUMNA_ACTIVA : tintaColumnaCabecera(idx));
+  // El recuadro de la cabecera y del filtro; oculta, no se dibuja (v89.3).
+  const fondoColumna = (idx) => ({ background: tintaColumna(idx), ...(oculta(idx) && { display: "none" }) });
   const colorTextoColumna = (idx) => (columnaActiva(idx) ? C.ink : C.goldClaro);
   const estiloFiltroColumna = (idx) => ({ ...filtroColumnaStyle, color: colorTextoColumna(idx) });
 
@@ -821,6 +850,14 @@ export function SeccionInvitados({
       icono: Wallet,
       onClick: () => setMostrarAvisoPago((v) => !v),
     },
+    // Qué columnas se ven en este aparato (él, v89.3).
+    {
+      id: "columnas",
+      etiqueta: "Columnas",
+      marcado: mostrarColumnas,
+      icono: Columns3,
+      onClick: () => setMostrarColumnas((v) => !v),
+    },
   ];
 
   // ---------- Cabecera de columnas + filtros ----------
@@ -899,9 +936,9 @@ export function SeccionInvitados({
                   letterSpacing: "0.03em",
                 }}
               >
-                <span style={{ background: tintaColumna(0), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(0), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(0)} columna="invitado" orden={orden} onClick={cambiarOrden}>
-                    Invitado
+                    {tituloColumna("invitado")}
                   </EncabezadoOrdenable>
                 </span>
                 {modoEdicion && (
@@ -909,9 +946,9 @@ export function SeccionInvitados({
                     Teléfono
                   </span>
                 )}
-                <span style={{ background: tintaColumna(1), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(1), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(1)} columna="grupoFamiliar" orden={orden} onClick={cambiarOrden}>
-                    Familia
+                    {tituloColumna("grupoFamiliar")}
                   </EncabezadoOrdenable>
                 </span>
                 {/* Papel en la familia: O esposo, A esposa, H hijo, y en
@@ -919,9 +956,9 @@ export function SeccionInvitados({
                     para contar los matrimonios y para la ventana
                     "Matrimonios" -- cada pareja tiene su foto de boda y
                     se les hará otra en el evento. */}
-                <span style={{ background: tintaColumna(2), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(2), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(2)} columna="rolFamiliar" orden={orden} onClick={cambiarOrden}>
-                    Rol
+                    {tituloColumna("rolFamiliar")}
                   </EncabezadoOrdenable>
                 </span>
                 {/* Año de boda y los años que cumplen EN EL AÑO DEL
@@ -930,39 +967,39 @@ export function SeccionInvitados({
                     que se quitó la de Matrimonios: filtrando por O sale
                     una fila por pareja, que es justo esa lista
                     (2026-09-04). */}
-                <span style={{ background: tintaColumna(3), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(3), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(3)} columna="anioBoda" orden={orden} onClick={cambiarOrden}>
-                    Boda
+                    {tituloColumna("anioBoda")}
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumna(4), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(4), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(4)} columna="zona" orden={orden} onClick={cambiarOrden}>
-                    Zona
+                    {tituloColumna("zona")}
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumna(5), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(5), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(5)} columna="colaborador" orden={orden} onClick={cambiarOrden}>
-                    Colaborador
+                    {tituloColumna("colaborador")}
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumna(6), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(6), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(6)} columna="mesa" orden={orden} onClick={cambiarOrden}>
-                    Mesa
+                    {tituloColumna("mesa")}
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumna(7), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(7), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(7)} columna="confirmado" orden={orden} onClick={cambiarOrden}>
-                    Confirm.
+                    {tituloColumna("confirmado")}
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumna(8), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(8), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(8)} columna="datos" orden={orden} onClick={cambiarOrden}>
-                    Datos
+                    {tituloColumna("datos")}
                   </EncabezadoOrdenable>
                 </span>
-                <span style={{ background: tintaColumna(9), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(9), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(9)} columna="pagado" orden={orden} onClick={cambiarOrden}>
-                    Pagado
+                    {tituloColumna("pagado")}
                   </EncabezadoOrdenable>
                 </span>
                 {/* Asistencia del día del evento: la marcan los
@@ -970,18 +1007,18 @@ export function SeccionInvitados({
                     su gente (2026-09-06). Aquí es de solo lectura -- el
                     recuento y el filtro son lo que de verdad hace falta
                     desde este lado. */}
-                <span style={{ background: tintaColumna(10), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(10), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(10)} columna="presente" orden={orden} onClick={cambiarOrden}>
-                    Llegó
+                    {tituloColumna("presente")}
                   </EncabezadoOrdenable>
                 </span>
                 {/* El título va ARRIBA y el filtro abajo, como en todas
                     las demás columnas (usuario, 2026-09-23: lo tenía al
                     revés). "Función" es lo que hace esa persona el día
                     del evento — acomodador, barra… */}
-                <span style={{ background: tintaColumna(11), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                <span style={{ ...fondoColumna(11), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
                   <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(11)} columna="rolTrabajo" orden={orden} onClick={cambiarOrden}>
-                    Función
+                    {tituloColumna("rolTrabajo")}
                   </EncabezadoOrdenable>
                 </span>
               </div>
@@ -1014,7 +1051,7 @@ export function SeccionInvitados({
                     juntas, cabecera+filtro se leen como un único
                     recuadro por columna, a petición del usuario,
                     2026-08-20. */}
-                <span style={{ background: tintaColumna(0), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(0), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <TextInputEnVentanaAparte
                     value={filtros.texto}
                     onCambio={(texto) => setFiltros({ ...filtros, texto })}
@@ -1033,7 +1070,7 @@ export function SeccionInvitados({
                   />
                 </span>
                 {modoEdicion && <span />}
-                <span style={{ background: tintaColumna(1), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(1), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.grupoFamiliar}
                     onChange={(e) => setFiltros({ ...filtros, grupoFamiliar: e.target.value })}
@@ -1047,7 +1084,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumna(2), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(2), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.rolFamiliar}
                     onChange={(e) => setFiltros({ ...filtros, rolFamiliar: e.target.value })}
@@ -1086,7 +1123,7 @@ export function SeccionInvitados({
                     <option value="sin">{conCuenta("Sin rol", "sin")}</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumna(3), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(3), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.anioBoda}
                     onChange={(e) => setFiltros({ ...filtros, anioBoda: e.target.value })}
@@ -1098,7 +1135,7 @@ export function SeccionInvitados({
                     <option value="sin">Sin año</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumna(4), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(4), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.zona}
                     onChange={(e) => setFiltros({ ...filtros, zona: e.target.value })}
@@ -1112,7 +1149,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumna(5), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(5), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.colaboradorId}
                     onChange={(e) => setFiltros({ ...filtros, colaboradorId: e.target.value })}
@@ -1127,7 +1164,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumna(6), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(6), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.mesa}
                     onChange={(e) => setFiltros({ ...filtros, mesa: e.target.value })}
@@ -1145,7 +1182,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumna(7), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(7), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.confirmado}
                     onChange={(e) => setFiltros({ ...filtros, confirmado: e.target.value })}
@@ -1157,7 +1194,7 @@ export function SeccionInvitados({
                     {noAsistenCount > 0 && <option value="noAsiste">No asiste</option>}
                   </select>
                 </span>
-                <span style={{ background: tintaColumna(8), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(8), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.datos}
                     onChange={(e) => setFiltros({ ...filtros, datos: e.target.value })}
@@ -1173,7 +1210,7 @@ export function SeccionInvitados({
                     ))}
                   </select>
                 </span>
-                <span style={{ background: tintaColumna(9), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(9), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.pagado}
                     onChange={(e) => setFiltros({ ...filtros, pagado: e.target.value })}
@@ -1184,7 +1221,7 @@ export function SeccionInvitados({
                     <option value="pendiente">Pendiente</option>
                   </select>
                 </span>
-                <span style={{ background: tintaColumna(10), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(10), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   <select
                     value={filtros.presente}
                     onChange={(e) => setFiltros({ ...filtros, presente: e.target.value })}
@@ -1201,7 +1238,7 @@ export function SeccionInvitados({
                     es la última (usuario, 2026-09-23: "de una letra o
                     dos, no más ancho"). Solo aparece si ya hay algún rol
                     creado — si no, sería un desplegable vacío. */}
-                <span style={{ background: tintaColumna(11), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(11), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   {(rolesConocidos.length > 0 || colaboradores.length > 0) && (
                     <select
                       value={filtros.rolTrabajo || ""}
@@ -1492,6 +1529,14 @@ export function SeccionInvitados({
           </div>
         )}
 
+        {/* Que no se olvide que es la Lista recortada (v89.3), como con los
+            filtros. A la derecha, con su espejo para zurdos (1.4). */}
+        {ocultas.size > 0 && (
+          <div className="flex items-center justify-end zurdo:justify-start gap-1 text-xs pt-2 pb-1" style={{ color: C.charcoal, flexShrink: 0 }}>
+            <span style={{ opacity: OP.secundario }}>{textoOcultas(ocultas.size)} ·</span>
+            <EnlaceTexto onClick={() => cambiarOcultas(new Set())}>Ver todas</EnlaceTexto>
+          </div>
+        )}
         <div
           className="rounded"
           style={{
@@ -1512,7 +1557,8 @@ export function SeccionInvitados({
               columna de acciones (captura del usuario, 2026-09-05). Con
               1080 entran las once; si alguna queda justa, el texto se
               recorta con puntos suspensivos, que es la regla de la casa. */}
-          <div style={{ minWidth: 1088 }}>
+          {/* Reducida (v89.3), el de sus columnas: lib/columnasLista.js. */}
+          <div style={{ minWidth: anchoMinimoLista(ocultas, anchoTelefono) }}>
             {cabeceraTabla}
             {/* La cabecera de columnas Y la fila de filtros
                 (Invitado/Familia/... y sus buscadores) viven ahora en la
@@ -1534,7 +1580,7 @@ export function SeccionInvitados({
               // impares -- las pares quedan transparentes, dejando ver el
               // zebra de la fila tal cual.
               const celda = (idx, extra) => ({
-                background: idx % 2 === 1 ? conAlfa(C.ink, 0.07) : "transparent",
+                background: columnaSombreada(ocultas, COLUMNAS_LISTA[idx].id) ? conAlfa(C.ink, 0.07) : "transparent",
                 display: "flex",
                 alignItems: "center",
                 // Datos alineados a la izquierda de su celda, con el
@@ -1558,6 +1604,8 @@ export function SeccionInvitados({
                 // más largo).
                 minWidth: 0,
                 ...extra,
+                // Oculta en este aparato (v89.3): no se dibuja.
+                ...(oculta(idx) && { display: "none" }),
               });
               return (
                 <div
@@ -2304,6 +2352,7 @@ export function SeccionInvitados({
       {mostrarAnadir && <VentanaNuevoInvitado data={data} onCerrar={() => setMostrarAnadir(false)} />}
       {mostrarImportarTel && <VentanaImportarTelefonos data={data} onCerrar={() => setMostrarImportarTel(false)} />}
       {mostrarAvisoPago && <VentanaAvisoPago data={data} onCerrar={() => setMostrarAvisoPago(false)} />}
+      {mostrarColumnas && <VentanaColumnasLista ocultas={ocultas} onCambiar={cambiarOcultas} onCerrar={() => setMostrarColumnas(false)} />}
       {cancionACorregir && <VentanaCorregirCancion data={data} peticion={cancionACorregir} onCerrar={() => setCancionACorregir(null)} />}
       {repasandoCanciones && <VentanaRepasarCanciones data={data} onCerrar={() => setRepasandoCanciones(false)} />}
       {compartiendoDj && <VentanaCompartirDj data={data} onCerrar={() => setCompartiendoDj(false)} />}

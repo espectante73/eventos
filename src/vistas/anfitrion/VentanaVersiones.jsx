@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "89.3",
+    cambios: [
+      "Lista de invitados → Acciones → «Columnas»: una casilla por columna para verla u ocultarla; el nombre se ve siempre. «Volver a la original» las enseña todas.",
+      "Cada aparato recuerda la suya: el móvil puede llevar solo Invitado, Mesa y Llegó, sin deslizar de lado, y el ordenador la Lista entera. Arriba de la Lista, «N columnas ocultas · Ver todas» recuerda que está recortada.",
+      "Al ocultar una columna se quitan también su filtro y su orden, para que no desaparezcan filas por algo que no se ve.",
+    ],
+  },
+  {
     version: "89.2",
     cambios: [
       "Mi cuenta → «Novedades» ya no abre el enlace general del tablón, que con «Solo con el enlace personal» solo dice que se pida el acceso: abre el enlace personal de quien lo pulsa (anfitrión o colaborador), que saluda por su nombre y solo pide el año de nacimiento.",
