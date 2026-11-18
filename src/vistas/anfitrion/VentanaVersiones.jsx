@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "89.6",
+    cambios: [
+      "Lista de invitados: el nombre de quien ya llegó va en una pastilla verde con letra dorada, con un margen alrededor para que las filas se sigan distinguiendo. Se ve de un vistazo, también desde lejos.",
+      "La columna «Llegó» se quita: ya lo dice el nombre. Con ella se van su filtro y su orden; el recuento de arriba («Ya están / Faltan») sigue igual.",
+      "Las llegadas se siguen marcando igual: con el QR de la entrada y desde la pantalla de cada colaborador.",
+    ],
+  },
+  {
     version: "89.5",
     cambios: [
       "En el móvil, la Lista de invitados ocupa la pantalla entera: sin márgenes a los lados y hasta abajo. Se cierra con su X de arriba, como siempre.",

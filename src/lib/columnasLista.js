@@ -1,7 +1,8 @@
 // Las columnas de la Lista de invitados, y cuáles se ocultan (él, v89.3:
 // «una versión reducida de la lista»). La misma Lista, no una copia (norma
 // 8): solo deja de dibujar las columnas ocultas. Paso 1: ocultar y volver a
-// la original; moverlas de sitio, más adelante si hace falta.
+// la original. Moverlas de sitio no hizo falta (v89.6): quién llegó lo dice
+// su nombre, en verde, y la columna «Llegó» se quitó.
 //
 // Se recuerda EN CADA APARATO (localStorage), no en la base: el móvil de la
 // entrada puede llevar la reducida y el Mac la completa. El nombre no se
@@ -22,7 +23,6 @@ export const COLUMNAS_LISTA = [
   // 0.75fr → 0.85fr (v85): su filtro dice «Sin alerg.», y a 0.75 se cortaba.
   { id: "datos", titulo: "Datos", ancho: "0.85fr" },
   { id: "pagado", titulo: "Pagado", ancho: "0.75fr" },
-  { id: "presente", titulo: "Llegó", ancho: "0.7fr" },
   // 100px FIJOS: lleva los tres iconos de cada fila (función, tablón y
   // papelera); con "auto" cada rejilla le daba un ancho y se descuadraban.
   { id: "rolTrabajo", titulo: "Función", ancho: "100px", nota: "y la papelera" },
@@ -84,8 +84,8 @@ export function plantillaColumnas(ocultas, telefono = "") {
 // de siempre: 1088 (Safari no siempre da a una ventana nueva el ancho
 // pedido, y con más se quedaban fuera Pagado y los iconos). Reducida, el de
 // sus columnas: si no, en el móvil habría que seguir deslizando de lado
-// aunque se vean tres. 80 px por «fr»: Invitado, Mesa y Llegó caben en un
-// móvil (≈ 260).
+// aunque se vean tres. 80 px por «fr»: Invitado y Mesa caben de sobra en un
+// móvil (≈ 200).
 export const ANCHO_MINIMO_LISTA = 1088;
 const PX_POR_FR = 80;
 const FILETE = 4;

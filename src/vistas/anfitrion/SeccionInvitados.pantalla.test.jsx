@@ -59,7 +59,6 @@ const FILTROS_VACIOS = {
   confirmado: "",
   datos: "",
   pagado: "",
-  presente: "",
   rolTrabajo: "",
 };
 
@@ -87,6 +86,18 @@ describe("la Lista de invitados se puede dibujar", () => {
     expect(dibujar()).toMatch(/>Familias<\/div><div[^>]*>3</);
   });
 
+  // v89.6 (él, «B2 con margen»): quien ya llegó, en una pastilla verde con
+  // margen; la columna «Llegó» ya no existe.
+  it("quien ya llegó lleva su nombre en verde, y no hay columna «Llegó»", () => {
+    const html = dibujar();
+    const pastillas = [...html.matchAll(/<span data-llego=""[^>]*>(.*?)<\/span><\/span>/g)].map((m) => m[1]);
+    expect(pastillas.length, "solo Lucía ha llegado").toBe(1);
+    expect(pastillas[0]).toContain("Pacheco, Lucía");
+    expect(html).toMatch(/data-llego=""[^>]*style="[^"]*background:/);
+    expect(html).not.toContain(">Llegó<");
+    expect(html).not.toContain("Ya está (");
+  });
+
   it("sin ningún filtro, con todos dentro", () => {
     const html = dibujar();
     expect(html).toContain("Barrios, Jacob");
@@ -108,7 +119,6 @@ describe("la Lista de invitados se puede dibujar", () => {
     ["confirmado", ["si", "no"]],
     ["datos", ["si", "no", "completo", "pendiente", "sinEmail", "sinTelefono", "sinAlergias", "sinAnio"]],
     ["pagado", ["si", "no"]],
-    ["presente", ["si", "no"]],
     ["rolTrabajo", ["Acomodador", "es-colaborador", "sin"]],
   ];
 
@@ -638,7 +648,7 @@ describe("ocultar columnas de la Lista", () => {
     );
     const botones = () => [...document.body.querySelectorAll("button")];
     const rejilla = () => document.body.querySelector('[style*="grid-template-columns"]').style.gridTemplateColumns;
-    expect(rejilla()).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.75fr 0.7fr 100px");
+    expect(rejilla()).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.75fr 100px");
 
     vista.pulsar(botones().find((b) => b.textContent.includes("Acciones")));
     vista.pulsar(botones().find((b) => b.textContent.trim() === "Columnas"));
@@ -650,13 +660,13 @@ describe("ocultar columnas de la Lista", () => {
     vista.pulsar(fila("Pagado"));
     expect(fila("Ver todas"), "el panel sigue abierto, ya con «Ver todas»").toBeTruthy();
 
-    expect(rejilla()).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.7fr 100px");
+    expect(rejilla()).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 100px");
     expect(setFiltros).toHaveBeenCalledWith(expect.objectContaining({ pagado: "" }));
     expect(JSON.parse(localStorage.getItem("listaColumnasOcultas"))).toEqual(["pagado"]);
     expect(vista.html).toContain("1 columna oculta");
 
     vista.pulsar([...document.body.querySelectorAll("a, button")].find((b) => b.textContent.trim() === "Ver todas"));
-    expect(rejilla()).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.75fr 0.7fr 100px");
+    expect(rejilla()).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.75fr 100px");
     expect(localStorage.getItem("listaColumnasOcultas")).toBeNull();
     expect(vista.html).not.toContain("columna oculta");
     vista.desmontar();

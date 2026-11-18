@@ -20,17 +20,17 @@ const almacen = () => {
   const datos = new Map();
   return { getItem: (k) => datos.get(k) ?? null, setItem: (k, v) => datos.set(k, String(v)), removeItem: (k) => datos.delete(k), datos };
 };
-const reducida = new Set(COLUMNAS_LISTA.filter((c) => !["invitado", "mesa", "presente"].includes(c.id)).map((c) => c.id));
+const reducida = new Set(COLUMNAS_LISTA.filter((c) => !["invitado", "mesa", "pagado"].includes(c.id)).map((c) => c.id));
 
 describe("las columnas de la Lista", () => {
   it("entera, la rejilla y el ancho de siempre", () => {
-    expect(plantillaColumnas(new Set())).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.75fr 0.7fr 100px");
+    expect(plantillaColumnas(new Set())).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.75fr 100px");
     expect(plantillaColumnas(new Set(), "120px").startsWith("1.5fr 120px 1fr")).toBe(true);
     expect(anchoMinimoLista(new Set())).toBe(ANCHO_MINIMO_LISTA);
   });
 
-  it("reducida a Invitado, Mesa y Llegó: tres columnas que caben en un móvil", () => {
-    expect(plantillaColumnas(reducida)).toBe("1.5fr 1fr 0.7fr");
+  it("reducida a Invitado, Mesa y Pagado: tres columnas que caben en un móvil", () => {
+    expect(plantillaColumnas(reducida)).toBe("1.5fr 1fr 0.75fr");
     expect(anchoMinimoLista(reducida)).toBeLessThan(300);
   });
 
@@ -67,7 +67,7 @@ describe("las columnas de la Lista", () => {
   it("el sombreado alterno cuenta solo las que se ven", () => {
     expect(columnaSombreada(reducida, "invitado")).toBe(false);
     expect(columnaSombreada(reducida, "mesa")).toBe(true);
-    expect(columnaSombreada(reducida, "presente")).toBe(false);
+    expect(columnaSombreada(reducida, "pagado")).toBe(false);
   });
 
   it("cómo se dice", () => {

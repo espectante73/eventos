@@ -132,6 +132,9 @@ function CirculoTablon({ estado }) {
 // cabecera y los filtros: si solo lo llevaran unas, sus columnas se
 // correrían 4 px y dejarían de cuadrar con las de al lado (norma 6).
 const FILETE_COLABORADOR = 4;
+// Lo que queda sin rellenar alrededor de la pastilla verde de quien ya
+// llegó (v89.6): así se siguen viendo las filas.
+const MARGEN_PASTILLA = 4;
 
 // "Colaborador" entra en el filtro de Función como un papel más (él,
 // 2026-09-24: el filete dorado se ve, pero no se puede filtrar por él).
@@ -523,8 +526,6 @@ export function SeccionInvitados({
         return g.confirmado && datosCompletos(g) ? 2 : g.confirmado ? 1 : 0;
       case "pagado":
         return g.pagado ? 1 : 0;
-      case "presente":
-        return g.presente ? 1 : 0;
       // Los que tienen función, arriba y juntos por función; los que
       // no tienen, al final. Es como se repasa cuando buscas a los
       // acomodadores.
@@ -604,8 +605,6 @@ export function SeccionInvitados({
       // Lo que le falta (v85): se combina con «Confirmado».
       const falta = FALTAS_DATOS.find((f) => f.valor === filtros.datos);
       if (falta && !falta.falta(g, evento)) return false;
-      if (filtros.presente === "si" && !g.presente) return false;
-      if (filtros.presente === "no" && g.presente) return false;
       if (filtros.pagado === "pagado" && !g.pagado) return false;
       if (filtros.pagado === "pendiente" && g.pagado) return false;
       return true;
@@ -1015,22 +1014,12 @@ export function SeccionInvitados({
                     {tituloColumna("pagado")}
                   </EncabezadoOrdenable>
                 </span>
-                {/* Asistencia del día del evento: la marcan los
-                    colaboradores desde su formulario, según va llegando
-                    su gente (2026-09-06). Aquí es de solo lectura -- el
-                    recuento y el filtro son lo que de verdad hace falta
-                    desde este lado. */}
-                <span style={{ ...fondoColumna(10), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
-                  <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(10)} columna="presente" orden={orden} onClick={cambiarOrden}>
-                    {tituloColumna("presente")}
-                  </EncabezadoOrdenable>
-                </span>
                 {/* El título va ARRIBA y el filtro abajo, como en todas
                     las demás columnas (usuario, 2026-09-23: lo tenía al
                     revés). "Función" es lo que hace esa persona el día
                     del evento — acomodador, barra… */}
-                <span style={{ ...fondoColumna(11), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
-                  <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(11)} columna="rolTrabajo" orden={orden} onClick={cambiarOrden}>
+                <span style={{ ...fondoColumna(10), borderRadius: `${R.caja}px ${R.caja}px 0 0` }}>
+                  <EncabezadoOrdenable claro sinDivisor invertido={columnaActiva(10)} columna="rolTrabajo" orden={orden} onClick={cambiarOrden}>
                     {tituloColumna("rolTrabajo")}
                   </EncabezadoOrdenable>
                 </span>
@@ -1234,35 +1223,22 @@ export function SeccionInvitados({
                     <option value="pendiente">Pendiente</option>
                   </select>
                 </span>
-                <span style={{ ...fondoColumna(10), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
-                  <select
-                    value={filtros.presente}
-                    onChange={(e) => setFiltros({ ...filtros, presente: e.target.value })}
-                    style={estiloFiltroColumna(10)}
-                    title="Quién ha llegado al evento"
-                  >
-                    <option value="">Todos</option>
-                    <option value="si">Ya está ({totalPresentes})</option>
-                    <option value="no">Falta ({confirmadosCount - totalPresentes})</option>
-                  </select>
-                </span>
                 {/* Filtro por rol de trabajo, en la misma columna que su
                     icono. Estrecho a propósito: la columna mide 100 px y
                     es la última (usuario, 2026-09-23: "de una letra o
                     dos, no más ancho"). Solo aparece si ya hay algún rol
                     creado — si no, sería un desplegable vacío. */}
-                <span style={{ ...fondoColumna(11), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
+                <span style={{ ...fondoColumna(10), borderRadius: `0 0 ${R.caja}px ${R.caja}px` }}>
                   {(rolesConocidos.length > 0 || colaboradores.length > 0) && (
                     <select
                       value={filtros.rolTrabajo || ""}
                       onChange={(e) => setFiltros({ ...filtros, rolTrabajo: e.target.value })}
                       title="Filtrar por la función del día (acomodador, barra…)"
-                      // Mismo estilo EXACTO que el filtro de al lado
-                      // ("Llegó"): la flecha quitada y el texto centrado
+                      // Mismo estilo EXACTO que el de «Pagado»: la flecha quitada y el texto centrado
                       // son solo de las columnas estrechísimas (rol
                       // familiar, datos), no del resto. Lo señaló el
                       // usuario, 2026-09-23.
-                      style={estiloFiltroColumna(11)}
+                      style={estiloFiltroColumna(10)}
                     >
                       {/* ⚠️ Aquí NO vale "Todos", aunque sea lo que dicen
                           los demás: esta columna es la de los iconos y no
@@ -1636,7 +1612,7 @@ export function SeccionInvitados({
                     color: C.charcoal,
                   }}
                 >
-                  <span style={celda(0)}>
+                  <span style={celda(0, modoEdicion ? undefined : { padding: MARGEN_PASTILLA })}>
                     {modoEdicion ? (
                       <span className="flex gap-1 w-full">
                         <div className="flex-1 min-w-0">
@@ -1653,7 +1629,21 @@ export function SeccionInvitados({
                         </div>
                       </span>
                     ) : (
-                      <>
+                      // Quien ya llegó, en una pastilla verde con margen
+                      // por los cuatro lados (él, v89.6, «B2 con margen»):
+                      // rellena entera, dos seguidos se fundían en un solo
+                      // bloque y dejaban de verse las filas. Sustituye a la
+                      // columna «Llegó», que se quitó.
+                      <span
+                        data-llego={g.presente ? "" : undefined}
+                        title={g.presente ? "Ya ha llegado" : undefined}
+                        className="flex items-center w-full h-full min-w-0"
+                        style={{
+                          padding: "0 8px",
+                          borderRadius: R.caja,
+                          ...(g.presente ? { background: C.ink, color: C.goldClaro, fontWeight: 600 } : {}),
+                        }}
+                      >
                         <span
                           style={
                             comoColaborador(g, colaboradores)
@@ -1670,7 +1660,7 @@ export function SeccionInvitados({
                           {nombreCompleto(g)}
                         </span>
                         <CirculoTablon estado={estadoTablon(g, entradasTablon, evento)} />
-                      </>
+                      </span>
                     )}
                   </span>
                   {/* El teléfono, solo en «Editar» (v78.1); a un menor de 16, «—». */}
@@ -1940,17 +1930,10 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  <span style={celda(10, { justifyContent: "center", textAlign: "center" })}>
-                    {g.presente ? (
-                      <Check size={20} style={{ color: C.ink }} />
-                    ) : (
-                      <span className="text-xs" style={{ opacity: OP.tenue }}>—</span>
-                    )}
-                  </span>
                   {/* Los tres, con la misma pieza Boton que el resto de la app
                       (relieve, se hunde al pulsar). 100px de columna: 92 ya
                       no daba para tres con caja. */}
-                  <span style={{ ...celda(11), gap: 4 }}>
+                  <span style={{ ...celda(10), gap: 4 }}>
                     <Boton
                       tamano="pequeno"
                       onClick={() => setInvitadoRolAbierto(g.id)}
