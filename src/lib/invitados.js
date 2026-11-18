@@ -259,6 +259,34 @@ export function calcularEdad(anioNacimiento, evento) {
   return edad >= 0 && edad < 130 ? edad : null;
 }
 
+// El tramo de edad que filtra la Lista (él, v90: «de tal edad a tal edad»).
+// Un lado vacío = sin límite por ese lado; puesto al revés (90 a 60), vale
+// igual. Sin año no hay edad: con un tramo puesto, esa persona queda fuera.
+function limitesTramo(desde, hasta) {
+  const d = parseInt(desde, 10);
+  const h = parseInt(hasta, 10);
+  return !isNaN(d) && !isNaN(h) && d > h ? [h, d] : [d, h];
+}
+
+export const hayTramo = (desde, hasta) => limitesTramo(desde, hasta).some((n) => !isNaN(n));
+
+export function dentroDelTramo(anioNacimiento, evento, desde, hasta) {
+  if (!hayTramo(desde, hasta)) return true;
+  const [min, max] = limitesTramo(desde, hasta);
+  const edad = calcularEdad(anioNacimiento, evento);
+  if (edad === null) return false;
+  return (isNaN(min) || edad >= min) && (isNaN(max) || edad <= max);
+}
+
+// Cómo se nombra el tramo en la cabecera: «De 60 a 90 años».
+export function textoTramo(desde, hasta) {
+  const [min, max] = limitesTramo(desde, hasta);
+  if (!isNaN(min) && !isNaN(max)) return min === max ? `${min} años` : `De ${min} a ${max} años`;
+  if (!isNaN(min)) return `De ${min} años o más`;
+  if (!isNaN(max)) return `Hasta ${max} años`;
+  return "";
+}
+
 export function edadPromedio(invitados, evento) {
   const edades = invitados
     .map((g) => calcularEdad(g.anioNacimiento, evento))

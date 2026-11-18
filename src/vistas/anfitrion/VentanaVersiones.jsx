@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "90",
+    cambios: [
+      "Lista de invitados: filtro por tramo de edad, sin columna nueva. Se toca el recuadro «Edad media» de arriba y se escribe «De [60] a [90] años»: la lista se filtra mientras se escribe. Con uno de los dos vacío no hay límite por ese lado («de 65» son los de 65 o más).",
+      "Con el tramo puesto, arriba queda en dorado («De 60 a 90 años» y cuántos son), con su X para quitarlo, y al lado la edad media de esas personas. Se combina con los demás filtros.",
+      "La edad es la que cumplen el año del evento. Quien no tiene año de nacimiento queda fuera mientras haya un tramo puesto.",
+    ],
+  },
+  {
     version: "89.9",
     cambios: [
       "Arreglado: «Diseño de la app» y las demás ventanas de «Mi cuenta» (cambiar el email, «¿Qué mano usas?») salían cortadas por los lados y por abajo, metidas dentro de la foto del Inicio. Venía de la 88.3, que redondeó las esquinas de la foto recortándola; ese recorte cortaba también lo que se abría desde dentro.",

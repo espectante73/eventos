@@ -4,7 +4,7 @@
 // confirmación al perder el foco). Movidas fuera de App.jsx en el reparto
 // del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect } from "react";
-import { User } from "lucide-react";
+import { User, X } from "lucide-react";
 import { C, inputStyle, R, T, S, OP, conAlfa } from "../theme";
 
 // "Icono de usuario sólido" (relleno) para distinguir al Anfitrión de
@@ -81,41 +81,80 @@ export function Circulito({ color, titulo }) {
 // simplificado», y v75.4: «el puntito arriba, como si fuera las letras»,
 // para que el recuadro mida lo mismo que los demás); `titulo`, lo que dice
 // al pasar por encima.
+//
+// Una cifra que se TOCA (`onClick`, v90: «Edad media» abre el tramo de edad)
+// es un botón con relieve, y `ref` le cuelga su panel (MenuFlotante). Con
+// `resaltada`, en dorado: hay un filtro puesto; `onQuitar`, su X al lado.
 export function RecuadroCifras({ cifras }) {
   return (
     // Del ancho de sus cifras, sin partir los rótulos: si en la cabecera no
     // cabe (un móvil), se desliza de lado, como todo `extra` (v68.6).
     <div className="flex items-center gap-3 rounded px-2 py-1 w-max flex-shrink-0" style={{ border: `1px solid ${C.gold}` }}>
-      {cifras.map((s) => (
-        <div key={s.label || s.titulo} className="text-center" title={s.titulo}>
-          <div
-            className="text-[10px] uppercase whitespace-nowrap"
-            // El rótulo, tenue; el puntito, con su color pleno, como en las filas.
-            style={{ color: C.goldClaro, opacity: s.punto ? 1 : OP.secundario, fontFamily: "'IBM Plex Mono', monospace" }}
-          >
-            {/* El espacio de ancho cero da al puntito el alto de una línea
-                de rótulo: así el recuadro mide lo mismo que los demás. */}
-            {s.punto ? (
-              <>
-                <Circulito color={s.punto} titulo={s.titulo} />
-                {"\u200b"}
-              </>
-            ) : (
-              s.label
-            )}
-          </div>
-          <div
-            className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
-            style={{
-              background: s.alerta ? C.avisoFondo : conAlfa(C.paper, 0.92),
-              color: s.alerta ? C.peligro : C.ink,
-              fontFamily: "'Fraunces', serif",
-            }}
-          >
-            {s.value}
-          </div>
-        </div>
-      ))}
+      {cifras.map((s) => (s.onClick ? <CifraPulsable key={s.label} s={s} /> : <Cifra key={s.label || s.titulo} s={s} />))}
+    </div>
+  );
+}
+
+function CifraPulsable({ s }) {
+  return (
+    <div
+      className="flex items-start rounded"
+      style={s.resaltada ? { background: C.goldClaro } : undefined}
+    >
+      <button ref={s.ref} type="button" onClick={s.onClick} title={s.titulo} className="boton-3d rounded px-1 py-0.5">
+        <Cifra s={s} />
+      </button>
+      {s.onQuitar && (
+        <button
+          type="button"
+          onClick={s.onQuitar}
+          title={s.tituloQuitar}
+          aria-label={s.tituloQuitar}
+          className="boton-3d rounded-full p-0.5 mt-0.5 mr-0.5"
+          style={{ color: C.ink }}
+        >
+          <X size={14} strokeWidth={2.5} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function Cifra({ s }) {
+  return (
+    <div className="text-center" title={s.onClick ? undefined : s.titulo}>
+      <div
+        className="text-[10px] uppercase whitespace-nowrap"
+        // El rótulo, tenue; el puntito, con su color pleno, como en las
+        // filas; resaltado, en tinta sobre el dorado.
+        style={{
+          color: s.resaltada ? C.ink : C.goldClaro,
+          opacity: s.punto || s.resaltada ? 1 : OP.secundario,
+          fontWeight: s.resaltada ? 700 : undefined,
+          fontFamily: "'IBM Plex Mono', monospace",
+        }}
+      >
+        {/* El espacio de ancho cero da al puntito el alto de una línea
+            de rótulo: así el recuadro mide lo mismo que los demás. */}
+        {s.punto ? (
+          <>
+            <Circulito color={s.punto} titulo={s.titulo} />
+            {"\u200b"}
+          </>
+        ) : (
+          s.label
+        )}
+      </div>
+      <div
+        className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
+        style={{
+          background: s.alerta ? C.avisoFondo : conAlfa(C.paper, 0.92),
+          color: s.alerta ? C.peligro : C.ink,
+          fontFamily: "'Fraunces', serif",
+        }}
+      >
+        {s.value}
+      </div>
     </div>
   );
 }

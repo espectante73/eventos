@@ -352,7 +352,11 @@ export function mascaraFundida({ izquierda, derecha, arriba, abajo }) {
   return { maskImage: mascara, WebkitMaskImage: mascara, maskComposite: "intersect", WebkitMaskComposite: "source-in" };
 }
 
-export function MenuFlotante({ render, opciones, anchor = "right", persistente = null }) {
+// `contenido` (v90), en vez de `opciones`: un panel con lo suyo dentro (el
+// tramo de edad de la Lista: «De [ ] a [ ] años»), con el mismo fondo y
+// borde que un submenú y el mismo colgar, cerrar y velo que el menú. Es una
+// función: recibe `cerrar`, para que Intro cierre el panel.
+export function MenuFlotante({ render, opciones = [], contenido = null, anchor = "right", persistente = null }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState(null);
   // Cuál de las filas de nivel superior tiene su submenú abierto (ver el
@@ -605,22 +609,25 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
             className="fixed rounded-xl overflow-y-auto"
             style={{
               ...pos,
-              width: ANCHO_PANEL,
+              width: contenido ? "max-content" : ANCHO_PANEL,
               maxWidth: "calc(100vw - 2rem)",
-              padding: "4px 0",
+              padding: contenido ? "10px 12px" : "4px 0",
               zIndex: 9999,
+              ...(contenido ? { background: C.ink, border: `1px solid ${C.gold}`, boxShadow: S.flotanteOscura } : {}),
             }}
           >
-            {opciones.map((o) => (
-              <FilaMenu
-                key={o.id}
-                opcion={o}
-                cerrarTodo={() => setOpen(false)}
-                abierto={abiertoId === o.id}
-                onAbrir={() => setAbiertoId(o.id)}
-                onCerrarPropio={() => setAbiertoId(null)}
-              />
-            ))}
+            {contenido
+              ? contenido({ cerrar: () => setOpen(false) })
+              : opciones.map((o) => (
+                  <FilaMenu
+                    key={o.id}
+                    opcion={o}
+                    cerrarTodo={() => setOpen(false)}
+                    abierto={abiertoId === o.id}
+                    onAbrir={() => setAbiertoId(o.id)}
+                    onCerrarPropio={() => setAbiertoId(null)}
+                  />
+                ))}
           </div>
           </>,
           realmDe(botonRef.current).doc.body

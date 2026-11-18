@@ -11,7 +11,7 @@
 // por CADA valor de CADA filtro. No comprueba cómo se ve (para eso sigue
 // haciendo falta su captura, norma 10); comprueba que se puede ver.
 import { describe, it, expect, vi } from "vitest";
-import { act } from "react";
+import { act, useState } from "react";
 import { dibujarYSoltar, montar } from "../../pruebas/dibujar";
 import { SeccionInvitados } from "./SeccionInvitados";
 import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
@@ -60,6 +60,8 @@ const FILTROS_VACIOS = {
   datos: "",
   pagado: "",
   rolTrabajo: "",
+  edadDesde: "",
+  edadHasta: "",
 };
 
 function dibujar(filtros = {}) {
@@ -129,6 +131,8 @@ describe("la Lista de invitados se puede dibujar", () => {
     ["datos", ["si", "no", "completo", "pendiente", "sinEmail", "sinTelefono", "sinAlergias", "sinAnio"]],
     ["pagado", ["si", "no"]],
     ["rolTrabajo", ["Acomodador", "es-colaborador", "sin"]],
+    ["edadDesde", ["0", "60"]],
+    ["edadHasta", ["12"]],
   ];
 
   for (const [campo, valores] of casos) {
@@ -154,6 +158,23 @@ describe("la Lista de invitados se puede dibujar", () => {
     expect(html).toContain("Pacheco, Omar");
     expect(html).toContain("Abrante, Loly");
     expect(html).not.toContain("Pacheco, Míriam");
+  });
+
+  // v90 (él): «de tal edad a tal edad», sin columna. Loly no tiene año:
+  // con un tramo puesto, queda fuera.
+  it("el tramo de edad: de 0 a 12, solo Lucía, y arriba el tramo con su X", () => {
+    const html = dibujar({ edadDesde: "0", edadHasta: "12" });
+    expect(html).toContain("Pacheco, Lucía");
+    expect(html).not.toContain("Pacheco, Omar");
+    expect(html).not.toContain("Abrante, Loly");
+    expect(html).toMatch(/>De 0 a 12 años<\/div><div[^>]*>1</);
+    expect(html).toContain('aria-label="Quitar el tramo de edad"');
+  });
+
+  it("sin tramo, la edad media se puede tocar y no hay X", () => {
+    const html = dibujar();
+    expect(html).toMatch(/<button[^>]*title="Filtrar por tramo de edad"[^>]*>.*?>Edad media</);
+    expect(html).not.toContain("Quitar el tramo de edad");
   });
 
   it("filtrando por Colaborador solo queda quien lo es", () => {
@@ -678,6 +699,49 @@ describe("ocultar columnas de la Lista", () => {
     expect(rejilla()).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.75fr 100px");
     expect(localStorage.getItem("listaColumnasOcultas")).toBeNull();
     expect(vista.html).not.toContain("columna oculta");
+    vista.desmontar();
+  });
+});
+
+// v90: tocar «Edad media», escribir el tramo y ver la lista filtrarse.
+describe("el tramo de edad, de punta a punta", () => {
+  function ConSusFiltros() {
+    const [filtros, setFiltros] = useState(FILTROS_VACIOS);
+    return (
+      <SeccionInvitados
+        data={data}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante={null}
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={filtros}
+        setFiltros={setFiltros}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+  }
+  const escribir = (campo, valor) =>
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(campo, valor);
+      campo.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+  it("De [30] a [ ]: quedan los de 30 o más, y la X lo quita", () => {
+    const vista = montar(<ConSusFiltros />);
+    const edad = document.body.querySelector('button[title="Filtrar por tramo de edad"]');
+    vista.pulsar(edad);
+    const desde = document.body.querySelector('input[aria-label="Desde qué edad"]');
+    expect(desde, "no se abre el tramo").toBeTruthy();
+    expect(document.body.querySelector('input[aria-label="Hasta qué edad"]')).toBeTruthy();
+    escribir(desde, "30");
+    expect(vista.html).toContain("De 30 años o más");
+    expect(vista.html).toContain("Pacheco, Omar");
+    expect(vista.html).not.toContain("Pacheco, Lucía");
+    vista.pulsar(document.body.querySelector('button[aria-label="Quitar el tramo de edad"]'));
+    expect(vista.html).toContain("Pacheco, Lucía");
+    expect(vista.html).not.toContain("De 30 años o más");
     vista.desmontar();
   });
 });

@@ -41,7 +41,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
-import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
+import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, dentroDelTramo, textoTramo, hayTramo, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora, contiene } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } from "../../lib/matrimonios";
@@ -152,6 +152,9 @@ const FILETE_COLABORADOR = 4;
 // Lo que queda sin rellenar alrededor de la pastilla verde de quien ya
 // llegó (v89.6): así se siguen viendo las filas.
 const MARGEN_PASTILLA = 4;
+// El tramo de edad (v90): dos cifras grandes, del ancho de «100».
+const ESTILO_EDAD_TRAMO = { width: 52, fontSize: T.destacado, fontWeight: 700, color: C.ink, textAlign: "center", padding: "4px 0" };
+const soloEdad = (v) => String(v).replace(/\D/g, "").slice(0, 3);
 
 // "Colaborador" entra en el filtro de Función como un papel más (él,
 // 2026-09-24: el filete dorado se ve, pero no se puede filtrar por él).
@@ -624,6 +627,8 @@ export function SeccionInvitados({
       if (falta && !falta.falta(g, evento)) return false;
       if (filtros.pagado === "pagado" && !g.pagado) return false;
       if (filtros.pagado === "pendiente" && g.pagado) return false;
+      // El tramo de edad (v90), sin columna: se elige tocando «Edad media».
+      if (!dentroDelTramo(g.anioNacimiento, evento, filtros.edadDesde, filtros.edadHasta)) return false;
       return true;
     })
     .slice()
@@ -761,21 +766,28 @@ export function SeccionInvitados({
   const { previstos: totalInvitados, confirmados: confirmadosCount, noAsisten: noAsistenCount, sinConfirmar: sinConfirmarCount } =
     cuentaConfirmacion(invitados);
   const edadMedia = edadPromedio(invitadosOrdenados, evento);
+  const textoEdadMedia = edadMedia === null ? "—" : `${edadMedia} años`;
   // "Lista global" -> "Previstos" y "Tentativa" -> "Sin confirmar":
   // nombres más precisos, a petición del usuario 2026-08-20 -- el
   // primero es el TOTAL (confirmados + sin confirmar), y "Lista global"
   // sonaba a lista ya cerrada/definitiva cuando en realidad la mayoría
   // de esas personas todavía no han respondido; el segundo es
   // exactamente eso, quien de ese total no ha confirmado todavía.
+  // De dos en dos, cada pareja en su recuadro (él, 2026-08-20); la edad, en
+  // el suyo (v90): se toca para filtrar por tramo, y con el tramo puesto,
+  // el tramo y cuántos hay en él, al lado de la edad media de esos.
+  const tramoPuesto = hayTramo(filtros.edadDesde, filtros.edadHasta);
+  const recuadrosResumen = [
+    [
+      { label: "Previstos", value: totalInvitados },
+      { label: "Sin confirmar", value: sinConfirmarCount },
+    ],
+    [
+      { label: "Confirmados", value: confirmadosCount },
+      ...(noAsistenCount ? [{ label: "No asisten", value: noAsistenCount }] : []),
+    ],
+  ];
   const resumen = [
-    { label: "Previstos", value: totalInvitados },
-    { label: "Sin confirmar", value: sinConfirmarCount },
-    { label: "Confirmados", value: confirmadosCount },
-    ...(noAsistenCount ? [{ label: "No asisten", value: noAsistenCount }] : []),
-    // Edad media como recuadro más, en vez del texto suelto que llevaba
-    // antes justo debajo del título -- a petición del usuario,
-    // 2026-08-20.
-    { label: "Edad media", value: edadMedia === null ? "—" : `${edadMedia} años` },
     // Matrimonios: un esposO + una esposA dentro del mismo grupo
     // familiar (2026-09-03). Ver lib/matrimonios.js.
     { label: "Familias", value: totalFamilias },
@@ -1399,9 +1411,58 @@ export function SeccionInvitados({
               </div>
             )}
 
-            {[resumen.slice(0, 2), resumen.slice(2, 4), resumen.slice(4)].map((grupo, i) => (
+            {recuadrosResumen.map((grupo, i) => (
               <RecuadroCifras key={i} cifras={grupo} />
             ))}
+            {/* El tramo de edad (él, v90): tocar la edad abre «De [ ] a
+                [ ] años», pegado debajo; la lista se filtra al escribir. */}
+            <MenuFlotante
+              anchor="bottom-left"
+              contenido={({ cerrar }) => (
+                <div className="flex items-center gap-2 text-sm whitespace-nowrap" style={{ color: C.goldClaro }}>
+                  De
+                  <TextInputEnVentanaAparte
+                    value={filtros.edadDesde}
+                    onCambio={(v) => setFiltros((f) => ({ ...f, edadDesde: soloEdad(v) }))}
+                    onKeyDown={(e) => e.key === "Enter" && cerrar()}
+                    inputMode="numeric"
+                    autoFocus
+                    aria-label="Desde qué edad"
+                    style={ESTILO_EDAD_TRAMO}
+                  />
+                  a
+                  <TextInputEnVentanaAparte
+                    value={filtros.edadHasta}
+                    onCambio={(v) => setFiltros((f) => ({ ...f, edadHasta: soloEdad(v) }))}
+                    onKeyDown={(e) => e.key === "Enter" && cerrar()}
+                    inputMode="numeric"
+                    aria-label="Hasta qué edad"
+                    style={ESTILO_EDAD_TRAMO}
+                  />
+                  años
+                </div>
+              )}
+              render={({ ref, toggle }) => (
+                <RecuadroCifras
+                  cifras={[
+                    tramoPuesto
+                      ? {
+                          label: textoTramo(filtros.edadDesde, filtros.edadHasta),
+                          value: invitados.filter((g) => dentroDelTramo(g.anioNacimiento, evento, filtros.edadDesde, filtros.edadHasta)).length,
+                          ref,
+                          onClick: toggle,
+                          titulo: "Cambiar el tramo de edad",
+                          resaltada: true,
+                          onQuitar: () => setFiltros((f) => ({ ...f, edadDesde: "", edadHasta: "" })),
+                          tituloQuitar: "Quitar el tramo de edad",
+                        }
+                      : { label: "Edad media", value: textoEdadMedia, ref, onClick: toggle, titulo: "Filtrar por tramo de edad" },
+                    ...(tramoPuesto ? [{ label: "Edad media", value: textoEdadMedia }] : []),
+                  ]}
+                />
+              )}
+            />
+            <RecuadroCifras cifras={resumen} />
             {/* Quién ha entrado al tablón, contado con sus circulitos y
                 nada más (él, v75.3: «muy simplificado»). Sale cuando han
                 llegado las entradas. */}

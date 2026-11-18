@@ -13,6 +13,9 @@ import {
   pideEmail,
   tieneAlergiaReal,
   calcularEdad,
+  dentroDelTramo,
+  textoTramo,
+  hayTramo,
   edadPromedio,
   importeEsperadoInvitado,
   previstoARecoger,
@@ -71,6 +74,40 @@ describe("contarDatosRellenados", () => {
   it("la foto solo cuenta si a esa persona se le pide foto de boda", () => {
     expect(contarDatosRellenados({}, true)).toBe(0);
     expect(contarDatosRellenados(casado, true)).toBe(1);
+  });
+});
+
+// v90 (él): filtrar la Lista «de tal edad a tal edad».
+describe("el tramo de edad de la Lista", () => {
+  const evento = { fecha: "2026-12-11" };
+  it("de 60 a 90: entran los dos extremos, y nadie de fuera", () => {
+    expect(dentroDelTramo("1966", evento, "60", "90")).toBe(true); // 60
+    expect(dentroDelTramo("1936", evento, "60", "90")).toBe(true); // 90
+    expect(dentroDelTramo("1967", evento, "60", "90")).toBe(false); // 59
+    expect(dentroDelTramo("1935", evento, "60", "90")).toBe(false); // 91
+  });
+  it("un lado vacío es sin límite por ese lado", () => {
+    expect(dentroDelTramo("1930", evento, "65", "")).toBe(true);
+    expect(dentroDelTramo("2020", evento, "", "12")).toBe(true);
+    expect(dentroDelTramo("2010", evento, "", "12")).toBe(false);
+  });
+  it("puesto al revés vale igual", () => {
+    expect(dentroDelTramo("1956", evento, "90", "60")).toBe(true);
+    expect(textoTramo("90", "60")).toBe("De 60 a 90 años");
+  });
+  it("sin tramo entra todo el mundo; con tramo, quien no tiene año no", () => {
+    expect(dentroDelTramo("", evento, "", "")).toBe(true);
+    expect(hayTramo("", "")).toBe(false);
+    expect(dentroDelTramo("", evento, "0", "")).toBe(false);
+  });
+  it("un bebé de 0 años entra en «hasta 2»", () => {
+    expect(dentroDelTramo("2026", evento, "", "2")).toBe(true);
+  });
+  it("cómo se nombra en la cabecera", () => {
+    expect(textoTramo("60", "")).toBe("De 60 años o más");
+    expect(textoTramo("", "12")).toBe("Hasta 12 años");
+    expect(textoTramo("5", "5")).toBe("5 años");
+    expect(textoTramo("", "")).toBe("");
   });
 });
 

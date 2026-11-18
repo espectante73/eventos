@@ -236,6 +236,9 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     confirmado: "",
     datos: "",
     pagado: "",
+    // El tramo de edad (v90): «de 60 a 90 años»; uno vacío, sin límite.
+    edadDesde: "",
+    edadHasta: "",
   });
 
   // ---------- Estado de cuentas (gastos) ----------
