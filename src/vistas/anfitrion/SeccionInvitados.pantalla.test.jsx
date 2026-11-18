@@ -98,6 +98,15 @@ describe("la Lista de invitados se puede dibujar", () => {
     expect(html).not.toContain("Ya está (");
   });
 
+  // v89.7 (él, con su captura): en la celda, el número de la mesa grande y
+  // su ocupación pequeña, sin la palabra «Mesa»; al abrirlo, lo de siempre.
+  it("la mesa: el número grande y la ocupación pequeña, sin «Mesa»", () => {
+    const html = dibujar();
+    expect(html).toMatch(/<span aria-hidden="true"[^>]*><span style="font-size: ?18px;[^"]*">1<\/span><span[^>]*>\(1\/10\)<\/span><\/span>/);
+    expect(html).toContain("Mesa 1 (1/10)</option>");
+    expect(html).toMatch(/<span aria-hidden="true"[^>]*><span style="font-size: ?12px;[^"]*">Sin mesa<\/span><\/span>/);
+  });
+
   it("sin ningún filtro, con todos dentro", () => {
     const html = dibujar();
     expect(html).toContain("Barrios, Jacob");

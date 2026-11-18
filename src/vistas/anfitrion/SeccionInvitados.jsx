@@ -47,7 +47,7 @@ import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
 import { descargarListaAcomodadores, ARCHIVO as ARCHIVO_ACOMODADORES } from "../../lib/pdfAcomodadores";
-import { TextInput, TextInputEnVentanaAparte } from "../../components/Formulario";
+import { TextInput, TextInputEnVentanaAparte, Desplegable } from "../../components/Formulario";
 import { EncabezadoOrdenable, GrupoFamiliarInput, RecuadroCifras, Circulito, TINTA_COLUMNA_ACTIVA } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { MenuFlotante } from "../../components/MenuFlotante";
@@ -104,6 +104,23 @@ import { useSeccion } from "../../lib/useSeccion";
 // El circulito del tablón tras el nombre (él, v75.2): «estilo semáforo»,
 // verde claro si ha entrado y rojo si nunca, sin columna nueva. Quién lo
 // lleva, en lib/entradasTablon.js.
+// La mesa en su celda de la Lista (él, v89.7, con su captura): el número
+// grande y en negrita, la ocupación pequeña; sin la palabra «Mesa».
+function VistaMesa({ mesa, mesas, ocupacionMesa }) {
+  if (!mesa) return <span style={{ fontSize: T.pequeno, color: C.charcoal }}>Sin mesa</span>;
+  const capacidad = mesas.find((m) => m.numero === Number(mesa))?.capacidad;
+  return (
+    <>
+      <span style={{ fontSize: T.destacado, fontWeight: 700, color: C.ink, lineHeight: 1 }}>{mesa}</span>
+      {capacidad != null && (
+        <span style={{ fontSize: T.pequeno, color: C.charcoal, opacity: OP.secundario }}>
+          ({ocupacionMesa(Number(mesa))}/{capacidad})
+        </span>
+      )}
+    </>
+  );
+}
+
 function CirculoTablon({ estado }) {
   if (!estado) return null;
   const titulo = estado.entro
@@ -1815,7 +1832,11 @@ export function SeccionInvitados({
                     {/* Con la invitación enviada, su mesa queda fija (v83.1):
                         se cambia en Acomodación, tocando la familia. */}
                     {mesaFija(g, data.ordenFamiliares) && <Lock size={12} className="flex-shrink-0" aria-label="Mesa fija: invitación enviada" />}
-                    <select
+                    {/* El número de la mesa, grande y en negrita, y su ocupación
+                        pequeña; sin la palabra «Mesa», que ya dice la columna
+                        (él, v89.7). Al abrirlo, las opciones de siempre. */}
+                    <Desplegable
+                      vista={<VistaMesa mesa={g.mesa} mesas={mesas} ocupacionMesa={ocupacionMesa} />}
                       value={g.mesa || ""}
                       onChange={(e) => asignarMesa(g.id, e.target.value)}
                       // Deshabilitado hasta que el invitado esté
@@ -1855,7 +1876,7 @@ export function SeccionInvitados({
                           </option>
                         );
                       })}
-                    </select>
+                    </Desplegable>
                   </span>
                   {/* Confirmado/Datos/Pagado comparten ahora el mismo
                       lenguaje visual: SÍ -> solo un check (centrado,

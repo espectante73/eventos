@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "89.7",
+    cambios: [
+      "Lista de invitados, columna Mesa: se ve solo el número de la mesa, grande y en negrita, y al lado su ocupación entre paréntesis, más pequeña. La palabra «Mesa» sobraba: ya la dice la columna.",
+      "Al tocarla se abre igual que antes, con todas las mesas y cuántos sitios quedan en cada una.",
+    ],
+  },
+  {
     version: "89.6",
     cambios: [
       "Lista de invitados: el nombre de quien ya llegó va en una pastilla verde con letra dorada, con un margen alrededor para que las filas se sigan distinguiendo. Se ve de un vistazo, también desde lejos.",

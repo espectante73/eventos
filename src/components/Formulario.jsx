@@ -2,7 +2,7 @@
 // sección (plegable o no), etiqueta+contenido de un campo, y el input de
 // texto con el estilo estándar. Movidos fuera de App.jsx en el reparto del
 // 2026-08-08 (ver CLAUDE.md).
-import { useId, useRef, useLayoutEffect } from "react";
+import { useId, useRef, useLayoutEffect, Children, isValidElement, cloneElement } from "react";
 import { ChevronDown } from "lucide-react";
 import { C, inputStyle, OP } from "../theme";
 
@@ -98,15 +98,33 @@ export function TextInput(props) {
 // (él, v81.4: en «Nuevo invitado» quedaban más bajos que los campos y los
 // «＋»). Safari no deja cambiar la altura del suyo: se quita su aspecto y la
 // flecha se dibuja aparte. `style`, el del campo (alto, ancho, color).
-export function Desplegable({ style, children, ...props }) {
+// `vista` (v89.7): lo que se ve en el campo, dibujado por quien lo usa, para
+// lo que el navegador no deja dentro de un desplegable (dos tamaños de
+// letra: el número de la mesa grande y su ocupación pequeña, en la Lista).
+// El desplegable sigue debajo, con su texto invisible: tocarlo lo abre igual.
+export function Desplegable({ style, children, vista, ...props }) {
+  const invisible = { color: "transparent", WebkitTextFillColor: "transparent" };
+  // Las opciones, con su color: si no, en el ordenador heredarían el invisible.
+  const opciones = vista
+    ? Children.map(children, (h) => (isValidElement(h) ? cloneElement(h, { style: { color: C.charcoal, WebkitTextFillColor: C.charcoal, ...h.props.style } }) : h))
+    : children;
   return (
     <div className="relative flex-1 min-w-0" style={{ width: style?.width }}>
       <select
         {...props}
-        style={{ ...inputStyle, ...style, width: "100%", appearance: "none", WebkitAppearance: "none", MozAppearance: "none", paddingRight: 28 }}
+        style={{ ...inputStyle, ...style, width: "100%", appearance: "none", WebkitAppearance: "none", MozAppearance: "none", paddingRight: 28, ...(vista ? invisible : {}) }}
       >
-        {children}
+        {opciones}
       </select>
+      {vista && (
+        <span
+          aria-hidden
+          className="absolute inset-y-0 left-0 flex items-center gap-1 pointer-events-none overflow-hidden whitespace-nowrap"
+          style={{ right: 28, paddingLeft: 6, opacity: style?.opacity }}
+        >
+          {vista}
+        </span>
+      )}
       <ChevronDown size={16} aria-hidden className="absolute pointer-events-none" style={{ right: 8, top: "50%", transform: "translateY(-50%)", color: C.charcoal, opacity: OP.secundario }} />
     </div>
   );
