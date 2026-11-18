@@ -136,14 +136,14 @@ export function Portada({
     // marginTop propio -- con mb-8 aquí, el colapso de márgenes entre
     // hermanos hacía que "ganara" el mayor de los dos (32px) sin importar
     // lo bajo que se pusiera el marginTop de la franja de abajo.
-    <div className="mx-auto" style={{ maxWidth: ANCHO_MAXIMO_PORTADA }}>
+    <div className="relative mx-auto" style={{ maxWidth: ANCHO_MAXIMO_PORTADA }}>
       {/* Las esquinas de arriba, con clip-path y no con rounded-t-lg
           (v88.3): dentro de un overflow-hidden REDONDEADO, Chrome no
           difumina el borde del velo de «Abrir sección…» y sale una caja de
           bordes duros. La misma curva. El overflow-hidden se queda: sin él,
           en el iPhone el velo que asoma por la derecha movía la página de
           lado. */}
-      <div className="relative overflow-hidden" style={{ clipPath: "inset(0 round 0.5rem 0.5rem 0 0)" }}>
+      <div data-recorte-foto className="relative overflow-hidden" style={{ clipPath: "inset(0 round 0.5rem 0.5rem 0 0)" }}>
         {imagenPortada ? (
           // userSelect/WebkitUserSelect + WebkitTouchCallout: la imagen es
           // decorativa (una foto con el diseño de la invitación ya
@@ -180,32 +180,6 @@ export function Portada({
           v{VERSION_APP}
         </span>
 
-        {/* Cabecera reducida a un único botón visible ("Mi cuenta") -- a
-            petición del usuario, 2026-08-29: "Cerrar sesión" y el enlace
-            a "Novedades" (antes botones sueltos aquí, cada vez más
-            apretados) ahora viven DENTRO del modal de Mi cuenta, pasados
-            como props. Mismo condicional que antes (solo tiene sentido
-            con una sesión real de Supabase Auth, no con el enlace-token
-            del anfitrión) -- sirve igual para el anfitrión que para
-            cualquier colaborador logueado, sin tocar nada en
-            VistaColaborador.jsx (Fase C, 2026-08-21). */}
-        {/* "Mi cuenta" se abre desde "Abrir sección…", el del anfitrión y
-            el del colaborador (él, v50.6: todos los botones en un solo
-            sitio). Aquí solo queda su ventana. */}
-        {onCerrarSesion && (
-          <div className="absolute top-4 right-4 zurdo:right-auto zurdo:left-4">
-            <MiCuenta
-              onCerrarSesion={onCerrarSesion}
-              enlaceTablon={enlaceTablon}
-              mostrarMapaSitio={mostrarMapaSitio}
-              mostrarDiseno={mostrarDiseno}
-              mostrarErrores={mostrarErrores}
-              avisos={avisosMovil}
-              {...(miCuenta || (editable && toggle ? { abierta: miCuentaAbierta, onCerrar: () => setMiCuentaAbierta(false) } : {}))}
-            />
-          </div>
-        )}
-
         {/* "A los pies de la pareja": sobre la propia foto, no en la
             franja de datos de abajo -- a la derecha a propósito (alcance
             del pulgar derecho en móvil). El % en vez de un valor fijo en
@@ -235,6 +209,37 @@ export function Portada({
           </div>
         )}
       </div>
+
+        {/* FUERA de la foto (v89.9): su recorte (clip-path, v88.3) cortaba
+            también las ventanas de «Mi cuenta» -Diseño de la app, cambiar
+            el email, «¿Qué mano usas?»-, que salían dentro del marco de la
+            foto. Aquí, en la misma esquina: este contenedor empieza donde
+            empieza la foto. */}
+        {/* Cabecera reducida a un único botón visible ("Mi cuenta") -- a
+            petición del usuario, 2026-08-29: "Cerrar sesión" y el enlace
+            a "Novedades" (antes botones sueltos aquí, cada vez más
+            apretados) ahora viven DENTRO del modal de Mi cuenta, pasados
+            como props. Mismo condicional que antes (solo tiene sentido
+            con una sesión real de Supabase Auth, no con el enlace-token
+            del anfitrión) -- sirve igual para el anfitrión que para
+            cualquier colaborador logueado, sin tocar nada en
+            VistaColaborador.jsx (Fase C, 2026-08-21). */}
+        {/* "Mi cuenta" se abre desde "Abrir sección…", el del anfitrión y
+            el del colaborador (él, v50.6: todos los botones en un solo
+            sitio). Aquí solo queda su ventana. */}
+        {onCerrarSesion && (
+          <div className="absolute top-4 right-4 zurdo:right-auto zurdo:left-4">
+            <MiCuenta
+              onCerrarSesion={onCerrarSesion}
+              enlaceTablon={enlaceTablon}
+              mostrarMapaSitio={mostrarMapaSitio}
+              mostrarDiseno={mostrarDiseno}
+              mostrarErrores={mostrarErrores}
+              avisos={avisosMovil}
+              {...(miCuenta || (editable && toggle ? { abierta: miCuentaAbierta, onCerrar: () => setMiCuentaAbierta(false) } : {}))}
+            />
+          </div>
+        )}
 
       {/* Franja de datos EN VIVO, aparte de la imagen (a petición
           expresa del usuario: si el póster ya trae fecha/hora/lugar

@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "89.9",
+    cambios: [
+      "Arreglado: «Diseño de la app» y las demás ventanas de «Mi cuenta» (cambiar el email, «¿Qué mano usas?») salían cortadas por los lados y por abajo, metidas dentro de la foto del Inicio. Venía de la 88.3, que redondeó las esquinas de la foto recortándola; ese recorte cortaba también lo que se abría desde dentro.",
+      "Ahora se abren encima de toda la pantalla, como las demás ventanas.",
+    ],
+  },
+  {
     version: "89.8",
     cambios: [
       "Con el Modo Pruebas activo, el colaborador que tenga el permiso «Acreditar en la entrada» ya puede leer los QR de las invitaciones, para probar la entrada con su móvil. Antes le decía, sin ser verdad, que no tenía permiso.",

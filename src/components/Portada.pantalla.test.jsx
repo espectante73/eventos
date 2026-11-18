@@ -26,6 +26,21 @@ it("anfitrión: «Mi cuenta» está en «Abrir sección…», entre Invitados y 
   vista.desmontar();
 });
 
+// v89.9 (él, captura del Mac): «Diseño de la app» salía cortado por los lados
+// y por abajo. La foto recorta sus esquinas (clip-path), y ese recorte corta
+// también las ventanas que se dibujan dentro de ella: «Mi cuenta» va fuera.
+it("las ventanas de «Mi cuenta» no se dibujan dentro de la foto recortada", () => {
+  const vista = montar(
+    <Portada evento={evento} editable abierto={{}} toggle={() => {}} colaboradores={[]} onCerrarSesion={() => {}} />
+  );
+  vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
+  vista.pulsar(botones().find((b) => b.textContent.trim().endsWith("Mi cuenta")));
+  const ventanas = [...document.body.querySelectorAll(".modal-flotante-fondo")];
+  expect(ventanas.length).toBeGreaterThan(0);
+  for (const v of ventanas) expect(v.closest("[data-recorte-foto]"), "dentro de la foto recortada").toBeNull();
+  vista.desmontar();
+});
+
 it("colaborador: sigue con su botón «Mi cuenta» en la portada", () => {
   const vista = montar(<Portada evento={evento} editable={false} onCerrarSesion={() => {}} />);
   expect(boton("Mi cuenta")).toBeTruthy();
