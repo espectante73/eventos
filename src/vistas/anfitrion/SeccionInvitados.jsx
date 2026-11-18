@@ -1313,6 +1313,8 @@ export function SeccionInvitados({
         // 1180 de tabla + 32 de padding del cuerpo + margen.
         ancho="min(1260px, calc(100vw - 48px))"
         llena
+        // En el móvil, la pantalla entera (él, v89.5).
+        enteraEnMovil
         extra={
           <div className="flex items-center gap-2">
             {/* Previstos/Sin confirmar/Confirmados/Edad media: mudados

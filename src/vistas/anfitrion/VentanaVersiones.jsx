@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "89.5",
+    cambios: [
+      "En el móvil, la Lista de invitados ocupa la pantalla entera: sin márgenes a los lados y hasta abajo. Se cierra con su X de arriba, como siempre.",
+      "En el ordenador no cambia: sigue en su propia ventana.",
+    ],
+  },
+  {
     version: "89.4",
     cambios: [
       "Lista de invitados → Acciones → «Columnas» ya no abre una ventana aparte: sus botones salen pegados al lado, uno por columna. Las que se ven, en dorado; tocar una la enseña o la oculta, y el panel sigue abierto.",

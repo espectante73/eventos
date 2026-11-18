@@ -6,6 +6,7 @@ import { useState, useEffect, useLayoutEffect, useRef, Children } from "react";
 import { X } from "lucide-react";
 import { C, S, VELO, MARGEN_PANTALLA } from "../theme";
 import { realmDe } from "../lib/realm";
+import { esAparatoTactil } from "../lib/mano";
 
 // Ventana flotante genérica: independiente de qué secciones estén plegadas,
 // para que Imprimir/Canciones/Alergias y los avisos de mesas funcionen siempre.
@@ -244,6 +245,9 @@ const ANCHO_MINIMO = 280;
 const ALTO_MINIMO = 200;
 // La franja de abajo de la barra de ventanas, cuando tiene ventanas abiertas
 // (la anuncia en --hueco-barra-ventanas): ninguna ventana baja ahí.
+// `dvh`: en Safari del iPhone, `vh` mide la pantalla sin la barra del
+// navegador, y lo de abajo quedaba tapado.
+const ALTO_ENTERA = "calc(100dvh - var(--hueco-barra-ventanas, 0px))";
 const huecoAbajo = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hueco-barra-ventanas")) || 0;
 // Un valor entre dos límites; si no caben los dos (pantalla diminuta), manda el mínimo.
 const entre = (valor, minimo, maximo) => Math.max(minimo, Math.min(valor, maximo));
@@ -283,7 +287,13 @@ const entre = (valor, minimo, maximo) => Math.max(minimo, Math.min(valor, maximo
 // que flota encima (él, v60.3-60.4). La Lista de invitados en su ventana del
 // sistema no lo lleva: la cierra el sistema y desplaza su tabla, para dejar
 // la cabecera quieta.
-export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo, fijo, fondoCuerpo, pantallaEntera = false, llena = false }) {
+// `enteraEnMovil` (v89.5): en un aparato táctil ocupa la pantalla entera,
+// sin márgenes, sin arrastrar y sin esquina de agrandar; en el ordenador,
+// como siempre. La Lista de invitados (él: «en el móvil no llena el ancho
+// ni alto de pantalla»): allí no hay ventana del sistema y es lo que se
+// mira, sobre todo reducida en la acreditación.
+export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo, fijo, fondoCuerpo, pantallaEntera = false, llena = false, enteraEnMovil = false }) {
+  const [entera] = useState(() => enteraEnMovil && !fijo && esAparatoTactil());
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
   // "left" fijo (no en cascada como antes): todas las ventanas nacen
   // alineadas al mismo borde izquierdo, a petición del usuario -- el
@@ -414,7 +424,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
   return (
     <div
       ref={ventanaRef}
-      className={fijo ? `ventana-fija flex flex-col${pantallaEntera ? " rounded-t-lg" : ""}` : "fixed rounded-lg flex flex-col"}
+      className={fijo ? `ventana-fija flex flex-col${pantallaEntera ? " rounded-t-lg" : ""}` : entera ? "fixed flex flex-col" : "fixed rounded-lg flex flex-col"}
       onMouseDownCapture={fijo ? undefined : traerAlFrente}
       onTouchStartCapture={fijo ? undefined : traerAlFrente}
       style={{
@@ -442,13 +452,17 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
         // que desplazar -- se sentía como "arrastro la ventana y se mueve
         // otra cosa". `contain` corta esa cadena aquí mismo.
         overscrollBehavior: "contain",
+        // Lo de abajo, la barra de ventanas si la hay (--hueco-barra-ventanas).
+        ...(entera ? { top: 0, left: 0, width: "100vw", height: ALTO_ENTERA, maxHeight: ALTO_ENTERA, border: "none", boxShadow: "none" } : {}),
       }}
     >
       <div
-        className={fijo ? `panel-flotante-cristal select-none${pantallaEntera ? " rounded-t-lg" : ""}` : "panel-flotante-cristal rounded-t-lg cursor-move select-none"}
+        className={
+          fijo ? `panel-flotante-cristal select-none${pantallaEntera ? " rounded-t-lg" : ""}` : entera ? "panel-flotante-cristal select-none" : "panel-flotante-cristal rounded-t-lg cursor-move select-none"
+        }
         style={{ touchAction: "none" }}
-        onMouseDown={fijo ? undefined : iniciarArrastre}
-        onTouchStart={fijo ? undefined : iniciarArrastre}
+        onMouseDown={fijo || entera ? undefined : iniciarArrastre}
+        onTouchStart={fijo || entera ? undefined : iniciarArrastre}
       >
         <div className="flex items-start justify-between px-4 py-3">
           <h3
@@ -529,7 +543,7 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
           {acciones}
         </div>
       )}
-      {!fijo && (
+      {!fijo && !entera && (
       <div
         onMouseDown={iniciarRedimension}
         onTouchStart={iniciarRedimension}

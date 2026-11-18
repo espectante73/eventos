@@ -197,3 +197,43 @@ it("sin `movible`, la cabecera no arrastra", async () => {
   expect(document.querySelector(".modal-flotante-caja .cursor-move")).toBe(null);
   vista.desmontar();
 });
+
+// v89.5 (él): «en el móvil no llena el ancho ni alto de pantalla».
+it("`enteraEnMovil`: en un aparato táctil, la pantalla entera y sin agrandar; en el ordenador, como siempre", async () => {
+  const original = window.matchMedia;
+  const pintar = async (tactil) => {
+    window.matchMedia = () => ({ matches: tactil });
+    const div = document.body.appendChild(document.createElement("div"));
+    const raiz = createRoot(div);
+    await act(async () =>
+      raiz.render(
+        <VentanaFlotante titulo="Lista" onCerrar={() => {}} llena enteraEnMovil ancho="min(1260px, calc(100vw - 48px))">
+          <p>tabla</p>
+        </VentanaFlotante>
+      )
+    );
+    const ventana = div.firstElementChild;
+    const resultado = {
+      ancho: ventana.style.width,
+      alto: ventana.style.height,
+      top: ventana.style.top,
+      redondeada: ventana.className.includes("rounded-lg"),
+      esquina: Boolean(div.querySelector('[title="Arrastra para cambiar el tamaño"]')),
+      cerrar: Boolean(div.querySelector('button[aria-label="Cerrar"]')),
+    };
+    await act(async () => raiz.unmount());
+    div.remove();
+    return resultado;
+  };
+  try {
+    const movil = await pintar(true);
+    expect(movil).toMatchObject({ ancho: "100vw", top: "0px", redondeada: false, esquina: false, cerrar: true });
+    expect(movil.alto).toContain("100dvh");
+    const ordenador = await pintar(false);
+    expect(ordenador).toMatchObject({ redondeada: true, esquina: true });
+    expect(ordenador.ancho).toContain("1260px");
+    expect(ordenador.alto).toContain("88vh");
+  } finally {
+    window.matchMedia = original;
+  }
+});
