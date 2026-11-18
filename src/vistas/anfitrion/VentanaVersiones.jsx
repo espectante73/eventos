@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "90.1",
+    cambios: [
+      "Lista de invitados, para acreditar: tocando «Faltan» en el marcador de arriba quedan solo los que aún no han llegado; cada uno que se acredita desaparece de la lista en ese momento. Tocando «Ya están», solo los que están dentro.",
+      "La cifra tocada queda en dorado con su X; tocarla otra vez, o la X, vuelve a enseñar a todos. Cuenta a los mismos que el marcador (confirmados, pagados y sin «No asiste») y se suma a los demás filtros, como el tramo de edad.",
+      "Columna Mesa: el número y su ocupación, centrados en la casilla.",
+    ],
+  },
+  {
     version: "90",
     cambios: [
       "Lista de invitados: filtro por tramo de edad, sin columna nueva. Se toca el recuadro «Edad media» de arriba y se escribe «De [60] a [90] años»: la lista se filtra mientras se escribe. Con uno de los dos vacío no hay límite por ese lado («de 65» son los de 65 o más).",

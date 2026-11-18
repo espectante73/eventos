@@ -112,11 +112,24 @@ export function cuentaConfirmacion(invitados = []) {
 // confirmados que han pagado y no han dicho «No asiste» (en Modo Pruebas,
 // sin mirar el pago). UNA sola cuenta para el marcador grande y el de la
 // cabecera de la Lista: los dos tienen que decir siempre lo mismo.
+export function seEsperaEnLaEntrada(g, evento = {}) {
+  return Boolean(g?.confirmado && !g.noAsiste && (g.pagado || !requisitosActivos(evento)));
+}
+
 export function cuentaLlegadas(invitados = [], evento = {}) {
-  const conPago = requisitosActivos(evento);
-  const esperados = invitados.filter((g) => g.confirmado && !g.noAsiste && (g.pagado || !conPago));
+  const esperados = invitados.filter((g) => seEsperaEnLaEntrada(g, evento));
   const yaEstan = esperados.filter((g) => g.presente).length;
   return { esperados: esperados.length, yaEstan, faltan: esperados.length - yaEstan };
+}
+
+// El filtro del marcador de la Lista (él, v90.1: «al acreditar, ver quién me
+// queda»): tocar «Faltan» o «Ya están» deja en la lista exactamente a quien
+// cuenta esa cifra.
+export const LLEGADA = { FALTAN: "faltan", YA_ESTAN: "yaEstan" };
+export function enLaLlegada(g, evento, llegada) {
+  if (!llegada) return true;
+  if (!seEsperaEnLaEntrada(g, evento)) return false;
+  return llegada === LLEGADA.YA_ESTAN ? Boolean(g.presente) : !g.presente;
 }
 
 export function claveFamilia(g) {

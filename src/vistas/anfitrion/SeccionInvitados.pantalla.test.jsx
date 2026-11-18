@@ -62,6 +62,7 @@ const FILTROS_VACIOS = {
   rolTrabajo: "",
   edadDesde: "",
   edadHasta: "",
+  llegada: "",
 };
 
 function dibujar(filtros = {}) {
@@ -102,11 +103,13 @@ describe("la Lista de invitados se puede dibujar", () => {
 
   // v89.7 (él, con su captura): en la celda, el número de la mesa grande y
   // su ocupación pequeña, sin la palabra «Mesa»; al abrirlo, lo de siempre.
-  it("la mesa: el número grande y la ocupación pequeña, sin «Mesa»", () => {
+  // v90.1 (él): «centra los números de la columna mesa».
+  it("la mesa: el número grande y la ocupación pequeña, sin «Mesa», centrados", () => {
     const html = dibujar();
-    expect(html).toMatch(/<span aria-hidden="true"[^>]*><span style="font-size: ?18px;[^"]*">1<\/span><span[^>]*>\(1\/10\)<\/span><\/span>/);
+    const centro = '<span class="flex items-center justify-center gap-1 w-full">';
+    expect(html).toMatch(new RegExp(`<span aria-hidden="true"[^>]*>${centro}<span style="font-size: ?18px;[^"]*">1</span><span[^>]*>\\(1/10\\)</span></span></span>`));
     expect(html).toContain("Mesa 1 (1/10)</option>");
-    expect(html).toMatch(/<span aria-hidden="true"[^>]*><span style="font-size: ?12px;[^"]*">Sin mesa<\/span><\/span>/);
+    expect(html).toMatch(new RegExp(`<span aria-hidden="true"[^>]*>${centro}<span style="font-size: ?12px;[^"]*">Sin mesa</span></span></span>`));
   });
 
   it("sin ningún filtro, con todos dentro", () => {
@@ -133,6 +136,7 @@ describe("la Lista de invitados se puede dibujar", () => {
     ["rolTrabajo", ["Acomodador", "es-colaborador", "sin"]],
     ["edadDesde", ["0", "60"]],
     ["edadHasta", ["12"]],
+    ["llegada", ["faltan", "yaEstan"]],
   ];
 
   for (const [campo, valores] of casos) {
@@ -742,6 +746,50 @@ describe("el tramo de edad, de punta a punta", () => {
     vista.pulsar(document.body.querySelector('button[aria-label="Quitar el tramo de edad"]'));
     expect(vista.html).toContain("Pacheco, Lucía");
     expect(vista.html).not.toContain("De 30 años o más");
+    vista.desmontar();
+  });
+});
+
+// v90.1 (él): «al acreditar quiero filtrar para ver quién me queda». Se toca
+// la cifra del marcador; deja a los mismos que cuenta.
+describe("el filtro del marcador de llegada", () => {
+  // Lucía ya llegó (y ha pagado); Jacob se espera y falta; Omar no ha
+  // pagado y Loly no ha confirmado: el marcador no los cuenta.
+  const conLlegadas = { ...data, invitados: invitados.map((g) => (g.id === "g4" ? { ...g, pagado: true } : g)) };
+  function ConSusFiltros() {
+    const [filtros, setFiltros] = useState(FILTROS_VACIOS);
+    return (
+      <SeccionInvitados
+        data={conLlegadas}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante={null}
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={filtros}
+        setFiltros={setFiltros}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+  }
+  const boton = (titulo) => document.body.querySelector(`button[title="${titulo}"]`);
+
+  it("«Faltan» deja a quien falta; otra vez, todos; «Ya están», quien está dentro", () => {
+    const vista = montar(<ConSusFiltros />);
+    vista.pulsar(boton("Ver solo a los que faltan"));
+    expect(vista.html).not.toContain("Pacheco, Lucía");
+    expect(vista.html).not.toContain("Pacheco, Omar");
+    expect(vista.html).not.toContain("Abrante, Loly");
+    expect(vista.html).toContain('aria-label="Quitar el filtro «Faltan»"');
+    vista.pulsar(boton("Ver a todos"));
+    expect(vista.html).toContain("Pacheco, Lucía");
+    expect(vista.html).toContain("Abrante, Loly");
+    vista.pulsar(boton("Ver solo a los que ya están"));
+    expect(vista.html).toContain("Pacheco, Lucía");
+    expect(vista.html).not.toContain("Abrante, Loly");
+    vista.pulsar(document.body.querySelector('button[aria-label="Quitar el filtro «Ya están»"]'));
+    expect(vista.html).toContain("Abrante, Loly");
     vista.desmontar();
   });
 });

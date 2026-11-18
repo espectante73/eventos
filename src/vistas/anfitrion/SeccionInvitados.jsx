@@ -41,14 +41,14 @@ import {
   Undo2,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
-import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, dentroDelTramo, textoTramo, hayTramo, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
+import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, dentroDelTramo, textoTramo, hayTramo, enLaLlegada, LLEGADA, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora, contiene } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } from "../../lib/matrimonios";
 import { descargarCSV } from "../../lib/descargas";
 import { descargarListaAcomodadores, ARCHIVO as ARCHIVO_ACOMODADORES } from "../../lib/pdfAcomodadores";
 import { TextInput, TextInputEnVentanaAparte, Desplegable } from "../../components/Formulario";
-import { EncabezadoOrdenable, GrupoFamiliarInput, RecuadroCifras, Circulito, TINTA_COLUMNA_ACTIVA } from "../../components/Widgets";
+import { EncabezadoOrdenable, GrupoFamiliarInput, RecuadroCifras, CifraTocable, Circulito, TINTA_COLUMNA_ACTIVA } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { InformeInvitados } from "../../components/InformeInvitados";
@@ -106,18 +106,25 @@ import { useSeccion } from "../../lib/useSeccion";
 // lleva, en lib/entradasTablon.js.
 // La mesa en su celda de la Lista (él, v89.7, con su captura): el número
 // grande y en negrita, la ocupación pequeña; sin la palabra «Mesa».
+// Centrado en su hueco, a la izquierda de la flecha (él, v90.1).
+const CentroMesa = ({ children }) => <span className="flex items-center justify-center gap-1 w-full">{children}</span>;
 function VistaMesa({ mesa, mesas, ocupacionMesa }) {
-  if (!mesa) return <span style={{ fontSize: T.pequeno, color: C.charcoal }}>Sin mesa</span>;
+  if (!mesa)
+    return (
+      <CentroMesa>
+        <span style={{ fontSize: T.pequeno, color: C.charcoal }}>Sin mesa</span>
+      </CentroMesa>
+    );
   const capacidad = mesas.find((m) => m.numero === Number(mesa))?.capacidad;
   return (
-    <>
+    <CentroMesa>
       <span style={{ fontSize: T.destacado, fontWeight: 700, color: C.ink, lineHeight: 1 }}>{mesa}</span>
       {capacidad != null && (
         <span style={{ fontSize: T.pequeno, color: C.charcoal, opacity: OP.secundario }}>
           ({ocupacionMesa(Number(mesa))}/{capacidad})
         </span>
       )}
-    </>
+    </CentroMesa>
   );
 }
 
@@ -568,6 +575,20 @@ export function SeccionInvitados({
       ? porNombre
       : (a, b) => valorColumna(a, "grupoFamiliar").localeCompare(valorColumna(b, "grupoFamiliar"), "es") || porNombre(a, b);
 
+  const totalPresentes = invitados.filter((g) => g.presente).length;
+  // El marcador de llegada solo tiene sentido EL DÍA del evento: se
+  // enseña ese día (aunque no haya llegado nadie todavía, que es justo
+  // cuando se empieza a mirar) y, fuera de esa fecha, únicamente si hay
+  // alguien marcado -- para poder probarlo antes sin que el resto del
+  // año sea ruido en la cabecera.
+  // Sin fecha cerrada no hay "día del evento" que valga, aunque la fecha
+  // provisional caiga hoy (usuario, 2026-09-21).
+  const hoyEsElEvento = !evento.fechaSinConfirmar && evento.fecha === new Date().toISOString().slice(0, 10);
+  const mostrarLlegada = hoyEsElEvento || totalPresentes > 0;
+  // Su filtro (v90.1) solo vale mientras se ve el marcador: si no, no
+  // habría dónde quitarlo.
+  const filtroLlegada = mostrarLlegada ? filtros.llegada : "";
+
   const invitadosOrdenados = invitados
     .filter((g) => {
       if (filtros.texto) {
@@ -629,6 +650,8 @@ export function SeccionInvitados({
       if (filtros.pagado === "pendiente" && g.pagado) return false;
       // El tramo de edad (v90), sin columna: se elige tocando «Edad media».
       if (!dentroDelTramo(g.anioNacimiento, evento, filtros.edadDesde, filtros.edadHasta)) return false;
+      // «Faltan» / «Ya están» del marcador (v90.1): los mismos que cuenta.
+      if (!enLaLlegada(g, evento, filtroLlegada)) return false;
       return true;
     })
     .slice()
@@ -749,16 +772,6 @@ export function SeccionInvitados({
   }, {});
   const conCuenta = (texto, clave) => `${texto} (${porRol[clave] || 0})`;
   const sinRevisar = invitados.filter((g) => !g.rolFamiliar).length;
-  const totalPresentes = invitados.filter((g) => g.presente).length;
-  // El marcador de llegada solo tiene sentido EL DÍA del evento: se
-  // enseña ese día (aunque no haya llegado nadie todavía, que es justo
-  // cuando se empieza a mirar) y, fuera de esa fecha, únicamente si hay
-  // alguien marcado -- para poder probarlo antes sin que el resto del
-  // año sea ruido en la cabecera.
-  // Sin fecha cerrada no hay "día del evento" que valga, aunque la fecha
-  // provisional caiga hoy (usuario, 2026-09-21).
-  const hoyEsElEvento = !evento.fechaSinConfirmar && evento.fecha === new Date().toISOString().slice(0, 10);
-  const mostrarLlegada = hoyEsElEvento || totalPresentes > 0;
   const llegadas = cuentaLlegadas(invitados, evento);
   // Los que dijeron que no van (él, v61: al cobrar a su familia, o sin
   // pagar a tiempo): ni confirmados ni por confirmar. La misma cuenta que
@@ -1342,32 +1355,28 @@ export function SeccionInvitados({
                 style={{ border: `2px solid ${C.goldClaro}`, background: conAlfa(C.negro, 0.12) }}
               >
                 {[
-                  // La misma cuenta que el marcador grande (v69.2).
-                  { etiqueta: "Ya están", valor: llegadas.yaEstan, color: C.ink },
-                  { etiqueta: "Faltan", valor: llegadas.faltan, color: C.peligro },
-                ].map((m) => (
-                  <div key={m.etiqueta} className="text-center">
-                    <div
-                      className="text-[10px] uppercase"
-                      style={{ color: C.goldClaro, opacity: OP.secundario, fontFamily: "'IBM Plex Mono', monospace" }}
-                    >
-                      {m.etiqueta}
-                    </div>
-                    <div
-                      className="rounded px-2 inline-block"
-                      style={{
-                        background: conAlfa(C.paper, 0.95),
-                        color: m.color,
-                        fontFamily: "'Fraunces', serif",
-                        fontWeight: 700,
-                        fontSize: T.cifra,
-                        lineHeight: 1.1,
+                  // La misma cuenta que el marcador grande (v69.2). Tocar una
+                  // cifra deja en la lista a quien cuenta (él, v90.1: «al
+                  // acreditar, ver quién me queda»); otra vez, o su X, la quita.
+                  { label: "Ya están", value: llegadas.yaEstan, color: C.ink, valor: LLEGADA.YA_ESTAN },
+                  { label: "Faltan", value: llegadas.faltan, color: C.peligro, valor: LLEGADA.FALTAN },
+                ].map(({ valor, ...m }) => {
+                  const puesta = filtros.llegada === valor;
+                  const quitar = () => setFiltros((f) => ({ ...f, llegada: "" }));
+                  return (
+                    <CifraTocable
+                      key={m.label}
+                      s={{
+                        ...m,
+                        grande: true,
+                        resaltada: puesta,
+                        onClick: puesta ? quitar : () => setFiltros((f) => ({ ...f, llegada: valor })),
+                        titulo: puesta ? `Ver a todos` : `Ver solo a los que ${valor === LLEGADA.FALTAN ? "faltan" : "ya están"}`,
+                        ...(puesta ? { onQuitar: quitar, tituloQuitar: `Quitar el filtro «${m.label}»` } : {}),
                       }}
-                    >
-                      {m.valor}
-                    </div>
-                  </div>
-                ))}
+                    />
+                  );
+                })}
                 {/* En PALABRAS, no un puntito con su tooltip: si esto
                     tarda, lo primero que hay que poder decir es si el
                     canal estaba enganchado o no, sin tener que pasar el

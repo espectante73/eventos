@@ -14,6 +14,8 @@ import {
   tieneAlergiaReal,
   calcularEdad,
   dentroDelTramo,
+  enLaLlegada,
+  LLEGADA,
   textoTramo,
   hayTramo,
   edadPromedio,
@@ -74,6 +76,29 @@ describe("contarDatosRellenados", () => {
   it("la foto solo cuenta si a esa persona se le pide foto de boda", () => {
     expect(contarDatosRellenados({}, true)).toBe(0);
     expect(contarDatosRellenados(casado, true)).toBe(1);
+  });
+});
+
+// v90.1 (él): al acreditar, ver quién queda. Cada filtro deja a los mismos
+// que cuenta su cifra del marcador.
+describe("el filtro del marcador de llegada", () => {
+  const evento = { fecha: "2026-12-11" };
+  const lista = [
+    { id: "1", confirmado: true, pagado: true, presente: true },
+    { id: "2", confirmado: true, pagado: true, presente: false },
+    { id: "3", confirmado: true, pagado: false, presente: false }, // sin pagar: no se le espera
+    { id: "4", confirmado: false, noAsiste: true, presente: false },
+    { id: "5", confirmado: false, presente: false },
+  ];
+  const ids = (llegada) => lista.filter((g) => enLaLlegada(g, evento, llegada)).map((g) => g.id);
+  it("«Faltan» y «Ya están» dejan a los que cuenta el marcador", () => {
+    const { yaEstan, faltan } = cuentaLlegadas(lista, evento);
+    expect(ids(LLEGADA.YA_ESTAN)).toEqual(["1"]);
+    expect(ids(LLEGADA.FALTAN)).toEqual(["2"]);
+    expect([ids(LLEGADA.YA_ESTAN).length, ids(LLEGADA.FALTAN).length]).toEqual([yaEstan, faltan]);
+  });
+  it("sin filtro, todos", () => {
+    expect(ids("")).toEqual(["1", "2", "3", "4", "5"]);
   });
 });
 

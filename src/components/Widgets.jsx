@@ -90,12 +90,14 @@ export function RecuadroCifras({ cifras }) {
     // Del ancho de sus cifras, sin partir los rótulos: si en la cabecera no
     // cabe (un móvil), se desliza de lado, como todo `extra` (v68.6).
     <div className="flex items-center gap-3 rounded px-2 py-1 w-max flex-shrink-0" style={{ border: `1px solid ${C.gold}` }}>
-      {cifras.map((s) => (s.onClick ? <CifraPulsable key={s.label} s={s} /> : <Cifra key={s.label || s.titulo} s={s} />))}
+      {cifras.map((s) => (s.onClick ? <CifraTocable key={s.label} s={s} /> : <Cifra key={s.label || s.titulo} s={s} />))}
     </div>
   );
 }
 
-function CifraPulsable({ s }) {
+// Exportada para el marcador de llegada de la Lista (v90.1), que no es un
+// RecuadroCifras pero se toca igual: `grande` y `color`, sus cifras.
+export function CifraTocable({ s }) {
   return (
     <div
       className="flex items-start rounded"
@@ -146,11 +148,12 @@ function Cifra({ s }) {
         )}
       </div>
       <div
-        className="text-sm font-bold rounded px-2 mt-0.5 inline-block"
+        className={`font-bold rounded px-2 inline-block ${s.grande ? "" : "text-sm mt-0.5"}`}
         style={{
-          background: s.alerta ? C.avisoFondo : conAlfa(C.paper, 0.92),
-          color: s.alerta ? C.peligro : C.ink,
+          background: s.alerta ? C.avisoFondo : conAlfa(C.paper, s.grande ? 0.95 : 0.92),
+          color: s.alerta ? C.peligro : s.color || C.ink,
           fontFamily: "'Fraunces', serif",
+          ...(s.grande ? { fontSize: T.cifra, lineHeight: 1.1 } : {}),
         }}
       >
         {s.value}
