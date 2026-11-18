@@ -878,12 +878,22 @@ describe("la acreditación por QR (v83.2)", () => {
   });
 
   it("solo el anfitrión o quien tenga el permiso; las funciones, cerradas a quien no ha entrado", () => {
-    expect(cuerpoDe("puede_acreditar")).toContain("es_anfitrion() or colaborador_tiene_permiso('acreditar_entrada')");
+    expect(cuerpoDe("puede_acreditar")).toMatch(/es_anfitrion\(\) or exists \([\s\S]*c\."authUserId" = auth\.uid\(\)[\s\S]*c\."permisos" \? 'acreditar_entrada'/);
     for (const f of ["acreditar_familia", "acreditar_marcar"]) expect(cuerpoDe(f)).toContain("if not puede_acreditar() then");
     for (const firma of ["puede_acreditar()", "qr_codigo_familia(uuid, text)", "acreditar_familia(text)", "acreditar_marcar(text, uuid[])"]) {
       expect(sql).toContain(`REVOKE EXECUTE ON FUNCTION public.${firma} FROM PUBLIC, anon;`);
     }
     expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.acreditar_estado(text) FROM PUBLIC, anon, authenticated;");
+  });
+
+  // v89.8 (él, «solo los que tienen permisos»): en Modo Pruebas el resto de
+  // colaboradores sigue fuera, pero quien tiene este permiso acredita, para
+  // probar la entrada con su móvil. Lo acreditado se borra al restaurar.
+  it("en Modo Pruebas acredita quien tenga el permiso, y nadie más", () => {
+    const f = cuerpoDe("puede_acreditar");
+    expect(f).not.toContain("modo_pruebas_activo");
+    expect(f).not.toContain("colaborador_tiene_permiso");
+    expect(cuerpoDe("colaborador_tiene_permiso"), "los demás permisos siguen cerrados en pruebas").toMatch(/not modo_pruebas_activo\(\)/);
   });
 
   it("marcar: llegadas abiertas y en regla para quien entra de nuevo, y solo dentro de su familia", () => {

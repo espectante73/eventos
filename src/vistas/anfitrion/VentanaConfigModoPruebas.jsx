@@ -7,7 +7,8 @@
 // activo, no solo lo tocado en esta sesión). Mientras está activo, el
 // anfitrión ve la app con un aviso rojo y sin requisitos de datos
 // (lib/modoPruebas.js), los colaboradores solo ven "Modo pruebas" (App.jsx)
-// y los correos le llegan solo a él (enviar_email en schema.sql).
+// -salvo acreditar en la entrada quien tenga ese permiso (v89.8)- y los
+// correos le llegan solo a él (enviar_email en schema.sql).
 import { useEffect } from "react";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 

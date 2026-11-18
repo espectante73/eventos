@@ -7,7 +7,8 @@
 // Lo que NO se salta: la capacidad de las mesas y que una familia no se
 // separe (reglas del mundo real), ni los permisos. En la base, la pareja
 // de esto es modo_pruebas_activo() (schema.sql): ahí deja fuera a los
-// colaboradores y manda los correos solo al anfitrión.
+// colaboradores (salvo acreditar en la entrada con ese permiso, v89.8) y
+// manda los correos solo al anfitrión.
 export function requisitosActivos(evento) {
   return !evento?.modoPruebasActivo;
 }

@@ -2700,12 +2700,20 @@ end;
 $$;
 
 -- La acreditación por QR (él, v83.2). Quien lee: el anfitrión o un
--- colaborador con el permiso «Acreditar en la entrada».
+-- colaborador con el permiso «Acreditar en la entrada». También en Modo
+-- Pruebas (él, v89.8: «solo los que tienen permisos»), para probar la
+-- entrada con los móviles de los acomodadores: lo acreditado se borra al
+-- restaurar. Por eso no pasa por colaborador_tiene_permiso, que en pruebas
+-- dice que no a todo colaborador.
 CREATE FUNCTION public.puede_acreditar() RETURNS boolean
     LANGUAGE sql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
-  select es_anfitrion() or colaborador_tiene_permiso('acreditar_entrada');
+  select es_anfitrion() or exists (
+    select 1 from colaboradores c
+    where c."authUserId" = auth.uid()
+      and c."permisos" ? 'acreditar_entrada'
+  );
 $$;
 
 REVOKE EXECUTE ON FUNCTION public.puede_acreditar() FROM PUBLIC, anon;

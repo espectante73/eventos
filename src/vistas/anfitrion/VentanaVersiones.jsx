@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "89.8",
+    cambios: [
+      "Con el Modo Pruebas activo, el colaborador que tenga el permiso «Acreditar en la entrada» ya puede leer los QR de las invitaciones, para probar la entrada con su móvil. Antes le decía, sin ser verdad, que no tenía permiso.",
+      "Los demás colaboradores siguen fuera mientras dura la prueba, y lo acreditado se borra al restaurar, como todo lo demás.",
+      "Necesita el SQL de la versión 89.8 subido.",
+    ],
+  },
+  {
     version: "89.7",
     cambios: [
       "Lista de invitados, columna Mesa: se ve solo el número de la mesa, grande y en negrita, y al lado su ocupación entre paréntesis, más pequeña. La palabra «Mesa» sobraba: ya la dice la columna.",

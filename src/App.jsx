@@ -438,7 +438,8 @@ export default function App() {
   }
 
   // Modo Pruebas: los colaboradores no entran (v49). Así nadie trabaja de
-  // verdad sobre datos que se van a restaurar. La base también se lo
+  // verdad sobre datos que se van a restaurar. La acreditación por QR, que
+  // va antes, sí deja a quien tenga ese permiso (v89.8, puede_acreditar). La base también se lo
   // impide (modo_pruebas_activo en schema.sql). El anfitrión sí entra, y
   // ve su vista de colaborador desde Formularios. Texto del usuario.
   if (data.evento?.modoPruebasActivo && !data.esAnfitrion) {
