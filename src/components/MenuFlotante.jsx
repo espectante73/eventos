@@ -92,7 +92,10 @@ function alturaMaximaDisponible(ancladoY, creceHaciaArriba, win = window) {
 // (detectado el 2026-08-09 con "Formularios", en móvil) — aquí se mide
 // el panel ya montado en el DOM y, si se sale por algún borde, se
 // empuja de vuelta dentro sin más.
-function useMantenerDentroDePantalla(activo, ref, pos, setPos) {
+// `subirSiNoCabe` (submenús, v89.4): si cuelga desde una fila baja y sus
+// botones no caben debajo, sube lo justo en vez de quedarse en una caja
+// pequeña con desplazamiento («Columnas», la última de Acciones).
+function useMantenerDentroDePantalla(activo, ref, pos, setPos, subirSiNoCabe = false) {
   useLayoutEffect(() => {
     if (!activo || !pos || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
@@ -103,6 +106,11 @@ function useMantenerDentroDePantalla(activo, ref, pos, setPos) {
     } else if (pos.left !== undefined && rect.right > win.innerWidth - MARGEN_PANTALLA) {
       const ajuste = rect.right - (win.innerWidth - MARGEN_PANTALLA);
       setPos((p) => (p ? { ...p, left: p.left - ajuste } : p));
+    }
+    if (subirSiNoCabe && pos.top !== undefined) {
+      const alto = ref.current.scrollHeight;
+      const top = Math.max(MARGEN_PANTALLA, Math.min(pos.top, win.innerHeight - MARGEN_PANTALLA - alto));
+      if (top < pos.top) setPos((p) => (p ? { ...p, top, maxHeight: win.innerHeight - MARGEN_PANTALLA - top } : p));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activo, pos?.top, pos?.bottom, pos?.left, pos?.right]);
@@ -134,7 +142,10 @@ function SelloFila({ count }) {
 // controla el padre (MenuFlotante o la propia FilaMenu con submenú, ver
 // más abajo), que solo permite un id abierto por nivel -- abrir uno
 // cierra automáticamente cualquier hermano que estuviera abierto.
-function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
+// `conFondo` (v89.4): el submenú de un panel fijo (las Acciones de la
+// Lista) lleva el mismo fondo y borde que el panel, y se lee como una sola
+// pieza pegada a él; sin fondo, la Lista de detrás se transparentaba.
+function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio, conFondo = false }) {
   const [pos, setPos] = useState(null);
   // Mismo mecanismo que arriba, pero para las hermanas DENTRO del propio
   // submenú de esta fila (p.ej. "Anfitrión"/cada colaborador, dentro de
@@ -150,7 +161,15 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
     // Móvil manejado con la izquierda (lib/mano.js): el submenú sale hacia
     // la DERECHA de la fila, en espejo, porque el menú entero está pegado
     // al borde izquierdo.
-    const lado = esZurdo(doc) ? { left: r.right + 4 } : { right: win.innerWidth - r.left + 4 };
+    // Si por ese lado no cabe, por el que tenga más sitio (v89.4):
+    // empujarlo dentro de la pantalla lo montaba encima del propio panel
+    // (Acciones, pegado a un borde).
+    const sitioIzquierda = r.left - 4 - MARGEN_PANTALLA;
+    const sitioDerecha = win.innerWidth - MARGEN_PANTALLA - r.right - 4;
+    const haciaDerecha = esZurdo(doc)
+      ? sitioDerecha >= ANCHO_PANEL || sitioDerecha >= sitioIzquierda
+      : !(sitioIzquierda >= ANCHO_PANEL || sitioIzquierda >= sitioDerecha);
+    const lado = haciaDerecha ? { left: r.right + 4 } : { right: win.innerWidth - r.left + 4 };
     setPos({
       top: r.top,
       ...lado,
@@ -185,7 +204,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
     };
   }, [abierto, onCerrarPropio]);
 
-  useMantenerDentroDePantalla(abierto, panelRef, pos, setPos);
+  useMantenerDentroDePantalla(abierto, panelRef, pos, setPos, true);
 
   if (opcion.encabezado) {
     return (
@@ -247,6 +266,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
                 maxHeight: pos.maxHeight,
                 padding: "4px 0",
                 zIndex: 10000,
+                ...(conFondo ? { background: C.ink, border: `1px solid ${C.gold}`, boxShadow: S.flotanteOscura } : {}),
               }}
             >
               {opcion.submenu.map((hijo) => (
@@ -254,6 +274,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio }) {
                   key={hijo.id}
                   opcion={hijo}
                   cerrarTodo={cerrarTodo}
+                  conFondo={conFondo}
                   abierto={abiertoIdHijo === hijo.id}
                   onAbrir={() => setAbiertoIdHijo(hijo.id)}
                   onCerrarPropio={() => setAbiertoIdHijo(null)}
@@ -556,6 +577,7 @@ export function MenuFlotante({ render, opciones, anchor = "right", persistente =
                 key={o.id}
                 opcion={o}
                 cerrarTodo={() => {}}
+                conFondo
                 abierto={abiertoId === o.id}
                 onAbrir={() => setAbiertoId(o.id)}
                 onCerrarPropio={() => setAbiertoId(null)}

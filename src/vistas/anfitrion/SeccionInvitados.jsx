@@ -36,6 +36,9 @@ import {
   Lock,
   Wallet,
   Columns3,
+  Square,
+  SquareCheck,
+  Undo2,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
@@ -67,6 +70,7 @@ import {
   filtrosSinOcultas,
   ordenSinOcultas,
   textoOcultas,
+  alternarColumna,
 } from "../../lib/columnasLista";
 import { ResumenAvisosAsignacion } from "./ResumenAvisosAsignacion";
 import {
@@ -86,7 +90,6 @@ import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
 import { FORMULARIO_INVITADO } from "../../lib/iconosVentanas";
 import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
 import { VentanaAvisoPago } from "./VentanaAvisoPago";
-import { VentanaColumnasLista } from "./VentanaColumnasLista";
 import { VentanaCorregirCancion } from "./VentanaCorregirCancion";
 import { VentanaRepasarCanciones } from "./VentanaRepasarCanciones";
 import { VentanaCompartirDj } from "./VentanaCompartirDj";
@@ -191,7 +194,6 @@ export function SeccionInvitados({
   const [mostrarAvisoPago, setMostrarAvisoPago] = useState(false);
   // La Lista reducida (él, v89.3): las columnas ocultas en ESTE aparato.
   const [ocultas, setOcultas] = useState(() => leerColumnasOcultas());
-  const [mostrarColumnas, setMostrarColumnas] = useState(false);
   const [mostrarAnadir, setMostrarAnadir] = useState(false);
   // Por niveles (lib/ordenNiveles.js, v72.5): vacío = por «Apellido, Nombre».
   const [orden, setOrden] = useState([]);
@@ -850,13 +852,24 @@ export function SeccionInvitados({
       icono: Wallet,
       onClick: () => setMostrarAvisoPago((v) => !v),
     },
-    // Qué columnas se ven en este aparato (él, v89.3).
+    // Qué columnas se ven en este aparato (él, v89.3). Pegado al botón,
+    // como «Abrir sección…», no una ventana aparte (él, v89.4): una fila
+    // por columna con su casilla; el nombre no sale, se ve siempre.
     {
       id: "columnas",
       etiqueta: "Columnas",
-      marcado: mostrarColumnas,
       icono: Columns3,
-      onClick: () => setMostrarColumnas((v) => !v),
+      submenu: [
+        ...COLUMNAS_LISTA.filter((c) => !c.fija).map((c) => ({
+          id: `columna-${c.id}`,
+          etiqueta: c.titulo,
+          icono: ocultas.has(c.id) ? Square : SquareCheck,
+          // Las que se ven, en dorado: se distingue de un vistazo.
+          marcado: !ocultas.has(c.id),
+          onClick: () => cambiarOcultas(alternarColumna(ocultas, c.id)),
+        })),
+        ...(ocultas.size ? [{ id: "columnas-todas", etiqueta: "Ver todas", icono: Undo2, onClick: () => cambiarOcultas(new Set()) }] : []),
+      ],
     },
   ];
 
@@ -2352,7 +2365,6 @@ export function SeccionInvitados({
       {mostrarAnadir && <VentanaNuevoInvitado data={data} onCerrar={() => setMostrarAnadir(false)} />}
       {mostrarImportarTel && <VentanaImportarTelefonos data={data} onCerrar={() => setMostrarImportarTel(false)} />}
       {mostrarAvisoPago && <VentanaAvisoPago data={data} onCerrar={() => setMostrarAvisoPago(false)} />}
-      {mostrarColumnas && <VentanaColumnasLista ocultas={ocultas} onCambiar={cambiarOcultas} onCerrar={() => setMostrarColumnas(false)} />}
       {cancionACorregir && <VentanaCorregirCancion data={data} peticion={cancionACorregir} onCerrar={() => setCancionACorregir(null)} />}
       {repasandoCanciones && <VentanaRepasarCanciones data={data} onCerrar={() => setRepasandoCanciones(false)} />}
       {compartiendoDj && <VentanaCompartirDj data={data} onCerrar={() => setCompartiendoDj(false)} />}

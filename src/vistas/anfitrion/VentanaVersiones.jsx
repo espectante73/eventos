@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "89.4",
+    cambios: [
+      "Lista de invitados → Acciones → «Columnas» ya no abre una ventana aparte: sus botones salen pegados al lado, uno por columna. Las que se ven, en dorado; tocar una la enseña o la oculta, y el panel sigue abierto.",
+      "Con alguna oculta, al final aparece «Ver todas», que vuelve a la Lista original.",
+      "El panel pegado sale por el lado de la pantalla que tiene sitio, y sube si no cabe hacia abajo.",
+    ],
+  },
+  {
     version: "89.3",
     cambios: [
       "Lista de invitados → Acciones → «Columnas»: una casilla por columna para verla u ocultarla; el nombre se ve siempre. «Volver a la original» las enseña todas.",

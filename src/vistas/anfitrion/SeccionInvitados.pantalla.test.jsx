@@ -642,9 +642,13 @@ describe("ocultar columnas de la Lista", () => {
 
     vista.pulsar(botones().find((b) => b.textContent.includes("Acciones")));
     vista.pulsar(botones().find((b) => b.textContent.trim() === "Columnas"));
-    const casilla = (titulo) => document.body.querySelector(`label span[title="${titulo}"]`)?.closest("label").querySelector("input");
-    expect(casilla("Invitado · siempre"), "el nombre no lleva casilla").toBeFalsy();
-    vista.pulsar(casilla("Pagado"));
+    // Pegado al botón, no una ventana aparte (él, v89.4): una fila por columna.
+    const panel = () => [...document.body.querySelectorAll("[data-menu-panel]")].find((p) => p.textContent.includes("Familia"));
+    const fila = (titulo) => [...panel().querySelectorAll("button")].find((b) => b.textContent.trim() === titulo);
+    expect(fila("Invitado"), "el nombre se ve siempre: no sale").toBeFalsy();
+    expect(fila("Ver todas"), "sin nada oculto no hace falta").toBeFalsy();
+    vista.pulsar(fila("Pagado"));
+    expect(fila("Ver todas"), "el panel sigue abierto, ya con «Ver todas»").toBeTruthy();
 
     expect(rejilla()).toBe("1.5fr 1fr 0.5fr 0.7fr 0.85fr 1.4fr 1fr 0.9fr 0.85fr 0.7fr 100px");
     expect(setFiltros).toHaveBeenCalledWith(expect.objectContaining({ pagado: "" }));
