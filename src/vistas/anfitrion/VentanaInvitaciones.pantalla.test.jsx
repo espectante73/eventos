@@ -17,8 +17,16 @@ const INVITADOS = [
 const COLABORADORES = [{ id: "c1", nombre: "Alonso, Ana", invitadoId: "a", email: "ana@correo.es" }];
 
 const NO_LISTAS = [
-  { clave: "Pérez01", apellido: "Pérez", miembros: 2, motivos: ["No asisten"] },
-  { clave: "García01", apellido: "García", miembros: 3, motivos: ["Sin pagar 2", "Sin mesa 1"] },
+  { clave: "Pérez01", apellido: "Pérez", miembros: 2, motivos: [{ tipo: "noAsiste", texto: "No asisten" }] },
+  {
+    clave: "García01",
+    apellido: "García",
+    miembros: 3,
+    motivos: [
+      { tipo: "pago", texto: "Sin pagar 2" },
+      { tipo: "mesa", texto: "Sin mesa 1" },
+    ],
+  },
 ];
 
 function dibujar({ evento = { imagenInvitacion: "https://x/plantilla.png" }, envioBloqueado = false } = {}) {
@@ -153,5 +161,8 @@ it("las cuentas cuadran (v90.8): «No listas» arriba, y su apartado dice por qu
   expect(texto).toContain("Sin pagar 2");
   expect(texto).toContain("Sin mesa 1");
   expect(texto).toContain("No asisten");
+  // Sin pagar y sin mesa, cada uno de su color (él, v90.9).
+  const color = (t) => vista.contenedor.querySelector(`[data-motivo="${t}"]`).style.color;
+  expect(color("pago")).not.toBe(color("mesa"));
   vista.desmontar();
 });

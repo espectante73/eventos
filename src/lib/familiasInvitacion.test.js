@@ -61,16 +61,16 @@ describe("la lista para acomodadores (v63.4)", () => {
 describe("por qué una familia aún no tiene invitación (v90.8)", () => {
   const p = (extra = {}) => ({ confirmado: true, pagado: true, mesa: 3, ...extra });
   it("nadie confirmado: sin confirmar, o «No asiste(n)» si todos lo dijeron", () => {
-    expect(motivosNoLista([p({ confirmado: false })], [], {})).toEqual(["Sin confirmar"]);
-    expect(motivosNoLista([p({ confirmado: false, noAsiste: true })], [], {})).toEqual(["No asiste"]);
+    expect(motivosNoLista([p({ confirmado: false })], [], {})).toEqual([{ tipo: "confirmar", texto: "Sin confirmar" }]);
+    expect(motivosNoLista([p({ confirmado: false, noAsiste: true })], [], {})).toEqual([{ tipo: "noAsiste", texto: "No asiste" }]);
     const dos = [p({ confirmado: false, noAsiste: true }), p({ confirmado: false, noAsiste: true })];
-    expect(motivosNoLista(dos, [], {})).toEqual(["No asisten"]);
-    expect(motivosNoLista([dos[0], p({ confirmado: false })], [], {})).toEqual(["Sin confirmar"]);
+    expect(motivosNoLista(dos, [], {})).toEqual([{ tipo: "noAsiste", texto: "No asisten" }]);
+    expect(motivosNoLista([dos[0], p({ confirmado: false })], [], {})).toEqual([{ tipo: "confirmar", texto: "Sin confirmar" }]);
   });
 
   it("con confirmados: cuántos sin pagar y cuántos sin mesa; lista, nada", () => {
     const c = [p({ pagado: false }), p({ pagado: false, mesa: null }), p()];
-    expect(motivosNoLista(c, c, {})).toEqual(["Sin pagar 2", "Sin mesa 1"]);
+    expect(motivosNoLista(c, c, {})).toEqual([{ tipo: "pago", texto: "Sin pagar 2" }, { tipo: "mesa", texto: "Sin mesa 1" }]);
     expect(motivosNoLista([p()], [p()], {})).toEqual([]);
   });
 
@@ -89,7 +89,7 @@ describe("las cuentas cuadran (v90.8)", () => {
     ];
     const todas = familiasDelEvento(inv, {}, {});
     expect(todas.filter((f) => f.listaParaInvitacion).length + todas.filter((f) => !f.listaParaInvitacion).length).toBe(3);
-    expect(todas.find((f) => f.clave === "B").motivos).toEqual(["Sin pagar 1"]);
+    expect(todas.find((f) => f.clave === "B").motivos).toEqual([{ tipo: "pago", texto: "Sin pagar 1" }]);
     expect(todas.find((f) => f.clave === "C").miembros).toBe(1);
   });
 });

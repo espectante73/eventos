@@ -20,16 +20,21 @@ function ordenarConfirmados(confirmados, ordenIds) {
 
 // Por qué una familia aún no tiene invitación (él, v90.8: «no me cuadran los
 // números»): nadie confirmado, o confirmados sin pagar o sin mesa. Vacío si
-// está lista. Mismos requisitos que familiaListaParaInvitacion.
+// está lista. Mismos requisitos que familiaListaParaInvitacion. Cada motivo
+// con su `tipo`, que decide su color en la pantalla (él, v90.9: «sin pagar y
+// sin mesa en distinto color»).
 export function motivosNoLista(miembros, confirmados, evento) {
   if (confirmados.length === 0) {
-    if (!miembros.every((m) => m.noAsiste)) return ["Sin confirmar"];
-    return [miembros.length === 1 ? "No asiste" : "No asisten"];
+    if (!miembros.every((m) => m.noAsiste)) return [{ tipo: "confirmar", texto: "Sin confirmar" }];
+    return [{ tipo: "noAsiste", texto: miembros.length === 1 ? "No asiste" : "No asisten" }];
   }
   if (!requisitosActivos(evento)) return [];
   const sinPagar = confirmados.filter((m) => !m.pagado).length;
   const sinMesa = confirmados.filter((m) => !m.mesa).length;
-  return [sinPagar > 0 && `Sin pagar ${sinPagar}`, sinMesa > 0 && `Sin mesa ${sinMesa}`].filter(Boolean);
+  return [
+    sinPagar > 0 && { tipo: "pago", texto: `Sin pagar ${sinPagar}` },
+    sinMesa > 0 && { tipo: "mesa", texto: `Sin mesa ${sinMesa}` },
+  ].filter(Boolean);
 }
 
 // Todas las familias, con sus confirmados ya en el orden de la invitación.
