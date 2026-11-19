@@ -16,6 +16,11 @@ const INVITADOS = [
 ];
 const COLABORADORES = [{ id: "c1", nombre: "Alonso, Ana", invitadoId: "a", email: "ana@correo.es" }];
 
+const NO_LISTAS = [
+  { clave: "Pérez01", apellido: "Pérez", miembros: 2, motivos: ["No asisten"] },
+  { clave: "García01", apellido: "García", miembros: 3, motivos: ["Sin pagar 2", "Sin mesa 1"] },
+];
+
 function dibujar({ evento = { imagenInvitacion: "https://x/plantilla.png" }, envioBloqueado = false } = {}) {
   const guardados = { invitados: [], eventos: [] };
   function Prueba() {
@@ -54,6 +59,7 @@ function dibujar({ evento = { imagenInvitacion: "https://x/plantilla.png" }, env
         setModoCalibracion={() => {}}
         marcarInvitacionEnviada={() => {}}
         envioBloqueado={envioBloqueado}
+        familiasNoListas={NO_LISTAS}
         onCerrar={() => {}}
       />
     );
@@ -133,5 +139,19 @@ it("con la acomodación sin terminar (v90.7): lo dice, y se descarga pero no se 
   expect(enviar.length).toBeGreaterThan(0);
   enviar.forEach((b) => expect(b.disabled).toBe(true));
   vista.contenedor.querySelectorAll('button[aria-label="Descargar la invitación"]').forEach((b) => expect(b.disabled).toBe(false));
+  vista.desmontar();
+});
+
+it("las cuentas cuadran (v90.8): «No listas» arriba, y su apartado dice por qué cada una", () => {
+  const { vista, boton } = dibujar();
+  const cabecera = vista.contenedor.textContent;
+  for (const rotulo of ["Faltan", "Enviadas", "Sin email", "No listas"]) expect(cabecera).toContain(rotulo);
+  expect(cabecera).toContain("2 familias");
+  vista.pulsar(boton("No listas"));
+  const texto = vista.contenedor.textContent;
+  expect(texto).toContain("García");
+  expect(texto).toContain("Sin pagar 2");
+  expect(texto).toContain("Sin mesa 1");
+  expect(texto).toContain("No asisten");
   vista.desmontar();
 });

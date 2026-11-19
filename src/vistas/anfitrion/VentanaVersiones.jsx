@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "90.8",
+    cambios: [
+      "Invitaciones: las cuentas cuadran con la Lista. Arriba, una cifra nueva, «No listas»: Faltan + Enviadas + No listas = todas las familias. En el móvil, la última se ve deslizando el recuadro.",
+      "Apartado nuevo «No listas»: una línea por familia que aún no tiene invitación y por qué (sin confirmar, sin pagar, sin mesa). En gris, las que ya dijeron que no vienen.",
+      "El resumen de «Enviar» dice también cuántas no tienen email.",
+    ],
+  },
+  {
     version: "90.7",
     cambios: [
       "Candado en el envío de invitaciones: arriba de Acomodación, «Acomodación terminada» con Sí/No. Mientras diga «No», no se envía ninguna invitación, ni desde Invitaciones ni desde la pantalla de un colaborador; descargarlas para revisarlas sí se puede.",

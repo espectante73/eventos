@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { familiasDelEvento, lineaFamilia, mesasYCantidad, filasAcomodadores } from "./familiasInvitacion";
+import { familiasDelEvento, lineaFamilia, mesasYCantidad, filasAcomodadores, motivosNoLista } from "./familiasInvitacion";
 
 const inv = (id, nombre, apellido, grupoFamiliar, mesa, extra = {}) => ({
   id, nombre, apellido, grupoFamiliar, mesa, confirmado: true, pagado: true, ...extra,
@@ -54,5 +54,42 @@ describe("la lista para acomodadores (v63.4)", () => {
 
   it("sin nadie confirmado, ninguna fila", () => {
     expect(filasAcomodadores([inv("x", "X", "X", "X01", 1, { confirmado: false })], {})).toEqual({ principal: [], equipo: [] });
+  });
+});
+
+
+describe("por qué una familia aún no tiene invitación (v90.8)", () => {
+  const p = (extra = {}) => ({ confirmado: true, pagado: true, mesa: 3, ...extra });
+  it("nadie confirmado: sin confirmar, o «No asiste(n)» si todos lo dijeron", () => {
+    expect(motivosNoLista([p({ confirmado: false })], [], {})).toEqual(["Sin confirmar"]);
+    expect(motivosNoLista([p({ confirmado: false, noAsiste: true })], [], {})).toEqual(["No asiste"]);
+    const dos = [p({ confirmado: false, noAsiste: true }), p({ confirmado: false, noAsiste: true })];
+    expect(motivosNoLista(dos, [], {})).toEqual(["No asisten"]);
+    expect(motivosNoLista([dos[0], p({ confirmado: false })], [], {})).toEqual(["Sin confirmar"]);
+  });
+
+  it("con confirmados: cuántos sin pagar y cuántos sin mesa; lista, nada", () => {
+    const c = [p({ pagado: false }), p({ pagado: false, mesa: null }), p()];
+    expect(motivosNoLista(c, c, {})).toEqual(["Sin pagar 2", "Sin mesa 1"]);
+    expect(motivosNoLista([p()], [p()], {})).toEqual([]);
+  });
+
+  it("en Modo Pruebas basta un confirmado, como para enviarla", () => {
+    const c = [p({ pagado: false, mesa: null })];
+    expect(motivosNoLista(c, c, { modoPruebasActivo: true })).toEqual([]);
+  });
+});
+
+describe("las cuentas cuadran (v90.8)", () => {
+  it("listas + no listas = todas las familias", () => {
+    const inv = [
+      { id: "1", apellido: "A", confirmado: true, pagado: true, mesa: 1 },
+      { id: "2", apellido: "B", confirmado: true, pagado: false, mesa: 1 },
+      { id: "3", apellido: "C", confirmado: false },
+    ];
+    const todas = familiasDelEvento(inv, {}, {});
+    expect(todas.filter((f) => f.listaParaInvitacion).length + todas.filter((f) => !f.listaParaInvitacion).length).toBe(3);
+    expect(todas.find((f) => f.clave === "B").motivos).toEqual(["Sin pagar 1"]);
+    expect(todas.find((f) => f.clave === "C").miembros).toBe(1);
   });
 });

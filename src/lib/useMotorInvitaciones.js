@@ -21,9 +21,10 @@ export function useMotorInvitaciones(data) {
 
   // Las familias con invitación: la familia entera pagada y con mesa
   // (lib/familiasInvitacion.js, la misma pieza que la lista de acomodadores).
-  const familiasListasParaInvitacion = familiasDelEvento(invitados, ordenFamiliares, evento).filter(
-    (f) => f.listaParaInvitacion
-  );
+  const todasLasFamilias = familiasDelEvento(invitados, ordenFamiliares, evento);
+  const familiasListasParaInvitacion = todasLasFamilias.filter((f) => f.listaParaInvitacion);
+  // Las que aún no (v90.8), con su motivo: listas + no listas = todas.
+  const familiasNoListas = todasLasFamilias.filter((f) => !f.listaParaInvitacion).sort((a, b) => a.apellido.localeCompare(b.apellido, "es"));
 
   // Ficha o cuenta de colaborador: lib/invitados.js.
   const emailDe = (miembro) => emailDeInvitado(miembro, colaboradores);
@@ -158,6 +159,7 @@ export function useMotorInvitaciones(data) {
   return {
     envioBloqueado,
     familiasListasParaInvitacion,
+    familiasNoListas,
     emailDeInvitado: emailDe,
     destinatariosConEmail,
     enviarATodos,

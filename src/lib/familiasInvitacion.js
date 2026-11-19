@@ -4,6 +4,7 @@
 // para que digan siempre lo mismo (norma 7).
 import { listaConY } from "./formato";
 import { familiaListaParaInvitacion, comoColaborador } from "./invitados";
+import { requisitosActivos } from "./modoPruebas";
 
 // Si el anfitrión reordenó los nombres a mano (p.ej. esposo primero),
 // se respeta ese orden; los que falten en él (recién confirmados) van
@@ -15,6 +16,20 @@ function ordenarConfirmados(confirmados, ordenIds) {
   const idsOrdenados = new Set(ordenIds);
   const resto = confirmados.filter((m) => !idsOrdenados.has(m.id));
   return [...ordenados, ...resto];
+}
+
+// Por qué una familia aún no tiene invitación (él, v90.8: «no me cuadran los
+// números»): nadie confirmado, o confirmados sin pagar o sin mesa. Vacío si
+// está lista. Mismos requisitos que familiaListaParaInvitacion.
+export function motivosNoLista(miembros, confirmados, evento) {
+  if (confirmados.length === 0) {
+    if (!miembros.every((m) => m.noAsiste)) return ["Sin confirmar"];
+    return [miembros.length === 1 ? "No asiste" : "No asisten"];
+  }
+  if (!requisitosActivos(evento)) return [];
+  const sinPagar = confirmados.filter((m) => !m.pagado).length;
+  const sinMesa = confirmados.filter((m) => !m.mesa).length;
+  return [sinPagar > 0 && `Sin pagar ${sinPagar}`, sinMesa > 0 && `Sin mesa ${sinMesa}`].filter(Boolean);
 }
 
 // Todas las familias, con sus confirmados ya en el orden de la invitación.
@@ -36,6 +51,8 @@ export function familiasDelEvento(invitados, ordenFamiliares = {}, evento) {
       invitacionEnviada: Boolean(ordenFamiliares?.[clave]?.invitacionEnviada),
       invitacionEnviadaEn: ordenFamiliares?.[clave]?.invitacionEnviadaEn || null,
       listaParaInvitacion: familiaListaParaInvitacion(confirmados, evento),
+      miembros: miembros.length,
+      motivos: motivosNoLista(miembros, confirmados, evento),
     };
   });
 }

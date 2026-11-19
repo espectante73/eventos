@@ -13,7 +13,7 @@
 // generarImagenParaFamilia y modoCalibracion tampoco son exclusivos de
 // esta ventana por el mismo motivo.
 import { useState, useEffect, useRef } from "react";
-import { Check, Image as ImageIcon, ChevronUp, ChevronDown, ChevronRight, Download, Send, Printer, Grid3x3, FolderOpen } from "lucide-react";
+import { Check, Image as ImageIcon, ChevronUp, ChevronDown, ChevronRight, Download, Send, Printer, Grid3x3, FolderOpen, Hourglass } from "lucide-react";
 import { C, T, OP } from "../../theme";
 import { resolverColaborador, comoColaborador, ENVIO_BLOQUEADO } from "../../lib/invitados";
 import { nombreCompleto } from "../../lib/formato";
@@ -48,6 +48,8 @@ const IMPRIMIBLES = [
 export function VentanaInvitaciones({
   data,
   familiasListasParaInvitacion,
+  // Las que aún no tienen invitación, con su motivo (v90.8).
+  familiasNoListas = [],
   destinatariosConEmail,
   enviarATodos,
   descargando,
@@ -213,9 +215,13 @@ export function VentanaInvitaciones({
         extra={
           <RecuadroCifras
             cifras={[
+              // Faltan + Enviadas + No listas = las familias de la Lista (él,
+              // v90.8: «no me cuadran los números»). Las cuatro, aunque en el
+              // móvil la última se vea deslizando (él lo eligió así).
               { label: "Faltan", value: faltan, alerta: faltan > 0, titulo: "Familias listas y sin invitación enviada" },
               { label: "Enviadas", value: enviadas },
               { label: "Sin email", value: sinEmailPendientes, alerta: sinEmailPendientes > 0, titulo: "Familias sin enviar que no tienen ningún email" },
+              { label: "No listas", value: familiasNoListas.length, titulo: "Familias sin confirmados, o con alguno sin pagar o sin mesa" },
             ]}
           />
         }
@@ -232,9 +238,7 @@ export function VentanaInvitaciones({
                 ? "ninguna lista"
                 : faltan === 0
                   ? "todas enviadas"
-                  : envioBloqueado
-                    ? `bloqueado · ${faltan} sin enviar`
-                    : `${faltan} sin enviar`
+                  : [envioBloqueado && "bloqueado", `${faltan} sin enviar`, sinEmailPendientes > 0 && `${sinEmailPendientes} sin email`].filter(Boolean).join(" · ")
             }
             abierta={seccionAbierta === "enviar"}
             onAlternar={() => alternar("enviar")}
@@ -384,6 +388,44 @@ export function VentanaInvitaciones({
                 {colaboradorInvitacionSel
                   ? "Este colaborador no tiene ninguna familia con el pago y la mesa completos todavía."
                   : "Todavía ninguna familia tiene el pago completo y la mesa asignada para todos sus confirmados."}
+              </p>
+            )}
+          </SeccionPlegable>
+
+          {/* Las que aún no (v90.8): una línea por familia y por qué. */}
+          <SeccionPlegable
+            icono={Hourglass}
+            titulo="No listas"
+            resumen={familiasNoListas.length === 0 ? "ninguna" : `${familiasNoListas.length} ${familiasNoListas.length === 1 ? "familia" : "familias"}`}
+            abierta={seccionAbierta === "noListas"}
+            onAlternar={() => alternar("noListas")}
+          >
+            {familiasNoListas.length > 0 ? (
+              <div className="rounded overflow-hidden mt-2" style={{ border: `1px solid ${C.line}` }}>
+                {familiasNoListas.map((familia, i) => (
+                  <div key={familia.clave} className="flex items-center gap-2 px-2 text-sm" style={{ height: ALTO_FILA, background: i % 2 ? C.paperDark : C.blanco }}>
+                    <span className="truncate flex-1 min-w-0" style={{ color: C.ink, fontWeight: 600 }}>
+                      {familia.apellido}
+                      <span className="whitespace-nowrap" style={{ color: C.charcoal, opacity: OP.secundario, fontSize: T.pequeno, fontWeight: 400 }}>
+                        {" "}· {familia.miembros}
+                      </span>
+                    </span>
+                    {familia.motivos.map((m) => (
+                      // «No asiste(n)» ya es una respuesta: sin rojo.
+                      <span
+                        key={m}
+                        className="text-xs px-2 py-0.5 rounded whitespace-nowrap flex-shrink-0"
+                        style={m.startsWith("No asiste") ? { background: C.paperDark, color: C.charcoal } : { background: C.avisoFondo, color: C.peligro }}
+                      >
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm italic mt-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
+                Todas las familias tienen ya su invitación lista.
               </p>
             )}
           </SeccionPlegable>

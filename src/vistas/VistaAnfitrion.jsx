@@ -360,6 +360,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   const {
     envioBloqueado,
     familiasListasParaInvitacion,
+    familiasNoListas,
     destinatariosConEmail,
     enviarATodos,
     marcarInvitacionEnviada,
@@ -472,6 +473,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
           data={data}
           envioBloqueado={envioBloqueado}
           familiasListasParaInvitacion={familiasListasParaInvitacion}
+          familiasNoListas={familiasNoListas}
           destinatariosConEmail={destinatariosConEmail}
           enviarATodos={enviarATodos}
           descargando={descargando}
