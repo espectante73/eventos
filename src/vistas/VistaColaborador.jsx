@@ -3,11 +3,12 @@
 // aviso al anfitrión al terminar). Movida tal cual desde App.jsx en el
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
-import { Bell, Calendar, Check, ChevronDown, ChevronRight, ClipboardList, Euro, Lock, Mail, Megaphone, Send, User, UserCog, X } from "lucide-react";
+import { Bell, Calendar, Check, ChevronDown, ChevronRight, ClipboardList, Euro, Lock, Mail, Megaphone, Music, Send, User, UserCog, X } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
 import { datosCompletos, pideDatosDeBoda, pideEmail, estadoDatos, familiasSinEmail, emailObligatorio, faltanObligatorios, fichasIncompletasDe, claveFamilia, importeEsperadoInvitado, resolverColaborador, fichaCerradaAlColaborador, comoColaborador, esDj } from "../lib/invitados";
 import { colaboradorEsDj, leerEquipo } from "../lib/equipoColaboradores";
+import { VentanaCancionesDj } from "./VentanaCancionesDj";
 import { ordenarPorApellidoNombre, nombreCompleto, euros, fechaCorta } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
@@ -1252,6 +1253,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const puedeVerRepositorio = tienePermiso(colaborador, PERMISOS.REPOSITORIO_VER);
   const [ventanaDatosEventoAbierta, setVentanaDatosEventoAbierta] = useState(false);
   const [ventanaInvitacionesAbierta, setVentanaInvitacionesAbierta] = useState(false);
+  // «Canciones para bailar», la lista del DJ (v91.5).
+  const puedeVerCancionesDj = tienePermiso(colaborador, PERMISOS.CANCIONES_DJ);
+  const [cancionesDjAbierta, setCancionesDjAbierta] = useState(false);
   // De quién se están cambiando las canciones (ya pagado, v82.8). La ventana
   // va aquí, fuera del panel: dentro quedaría recortada por él.
   const [cancionesDeId, setCancionesDeId] = useState(null);
@@ -1597,6 +1601,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             <BotonAbrirSeccion
               sello={pendientes.length}
               opciones={[
+                puedeVerCancionesDj && { id: "canciones-dj", etiqueta: "Canciones para bailar", icono: Music, onClick: () => setCancionesDjAbierta(true) },
                 puedeEditarDatosEvento && { id: "datos-evento", etiqueta: "Datos evento", icono: Calendar, onClick: () => setVentanaDatosEventoAbierta(true) },
                 !soyDj && { id: "formulario", etiqueta: "Formulario", icono: ICONOS_VENTANAS.formulario, onClick: abrirFormulario, sello: pendientes.length },
                 puedeEnviarInvitaciones && { id: "invitaciones", etiqueta: "Invitaciones", icono: Send, onClick: () => setVentanaInvitacionesAbierta(true) },
@@ -1621,6 +1626,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         />
       )}
 
+      {cancionesDjAbierta && <VentanaCancionesDj data={data} onCerrar={() => setCancionesDjAbierta(false)} />}
       {ventanaDatosEventoAbierta && (
         <VentanaConfigDatosEvento data={data} onCerrar={() => setVentanaDatosEventoAbierta(false)} />
       )}

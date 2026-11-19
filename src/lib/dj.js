@@ -3,6 +3,8 @@
 // (cancionesPedidas): una fila por petición, sin nombres.
 import { cancionesPedidas } from "./canciones";
 import { contiene } from "./formato";
+import { calcularEdad } from "./invitados";
+import { cancionesDistintas, duracionTotal, textoDuracion } from "./repasoCanciones";
 
 // Lo que llega de la base: { peticiones: [{ cancion, edad }], catalogo, … }.
 export function filasDelDj(datos) {
@@ -32,3 +34,31 @@ export const MOTIVOS_DJ = {
   bloqueado: "Demasiadas claves equivocadas. Pide al anfitrión un enlace nuevo.",
   enlace: "Este enlace ya no vale. Pide al anfitrión uno nuevo.",
 };
+
+// Lo mismo que trae la base (colaborador_canciones_dj), sacado de los datos
+// del anfitrión: su vista previa de la ventana del DJ con «Cambiar vista»
+// (v91.5). Todos los que piden canción, como en la base.
+export function datosDjDesdeLista(invitados = [], evento = {}) {
+  return {
+    evento: evento?.nombre || "",
+    catalogo: evento?.catalogoCanciones || {},
+    fuera: evento?.cancionesFueraDj || [],
+    peticiones: invitados
+      .filter((g) => String(g.cancion || "").trim())
+      .map((g) => ({ cancion: g.cancion, edad: calcularEdad(g.anioNacimiento, evento) })),
+  };
+}
+
+// Las cifras de arriba: peticiones, canciones distintas y cuánto duran (con
+// «≈» si alguna no tiene su duración de Deezer). La página del enlace y la
+// ventana de la cuenta del DJ dicen lo mismo (norma 7).
+export function cifrasDelDj(datos) {
+  const todas = filasDelDj(datos);
+  const distintas = cancionesDistintas(todas);
+  const { segundos, estimadas } = duracionTotal(distintas, datos?.catalogo || {});
+  return [
+    { label: "Peticiones", value: todas.length },
+    { label: "Distintas", value: distintas.length },
+    { label: "Duración", value: `${estimadas ? "≈ " : ""}${textoDuracion(segundos)}` },
+  ];
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { filasDelDj, filtrarPeticiones } from "./dj";
+import { filasDelDj, filtrarPeticiones, datosDjDesdeLista, cifrasDelDj } from "./dj";
 import { construirEnlaceDj } from "./url";
 
 const datos = {
@@ -57,5 +57,31 @@ describe("la escucha previa (v81.1)", async () => {
     expect(f.mock.calls[0][1].headers.Authorization).toBe("Bearer jwt");
     await pedirMuestras({ consulta: { titulo: "x" }, dj: { token: "d", clave: "K" } }, f);
     expect(JSON.parse(f.mock.calls[1][1].body)).toEqual({ escuchar: { titulo: "x" }, dj: { token: "d", clave: "K" } });
+  });
+});
+
+
+describe("la lista del DJ desde los datos del anfitrión (v91.5)", () => {
+  it("todos los que piden canción, con su edad en el evento; los demás, no", () => {
+    const d = datosDjDesdeLista(
+      [
+        { cancion: "A — B", anioNacimiento: "2000" },
+        { cancion: "  " },
+        { cancion: "C — D" },
+      ],
+      { nombre: "La boda", fecha: "2026-12-11", cancionesFueraDj: ["x"], catalogoCanciones: { y: {} } }
+    );
+    expect(d.peticiones).toEqual([
+      { cancion: "A — B", edad: 26 },
+      { cancion: "C — D", edad: null },
+    ]);
+    expect(d.evento).toBe("La boda");
+    expect(d.fuera).toEqual(["x"]);
+  });
+
+  it("las cifras: peticiones, distintas y duración", () => {
+    const cifras = cifrasDelDj({ peticiones: [{ cancion: "A — B" }, { cancion: "A — B" }], catalogo: {} });
+    expect(cifras.map((c) => c.label)).toEqual(["Peticiones", "Distintas", "Duración"]);
+    expect(cifras[1].value).toBe(1);
   });
 });

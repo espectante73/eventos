@@ -845,6 +845,14 @@ describe("el enlace del DJ", () => {
   it("queda fuera de la foto del Deshacer: lleva la llave", () => {
     expect(cuerpoDe("foto_de_datos")).not.toContain("dj_secreto");
   });
+
+  it("en la cuenta del DJ (v91.5): con el permiso, solo con sesión, y nunca nombres de invitados", () => {
+    const f = cuerpoDe("colaborador_canciones_dj");
+    expect(f).toContain("if not colaborador_tiene_permiso('canciones_dj') then");
+    expect(f).toContain("'cancion', i.\"cancion\", 'edad', edad_en_evento(i.\"anioNacimiento\")");
+    expect(f).not.toMatch(/i\."(nombre|apellido|email|telefono)"/);
+    expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.colaborador_canciones_dj() FROM PUBLIC, anon;");
+  });
 });
 
 describe("las plantillas de WhatsApp (v82.4)", () => {

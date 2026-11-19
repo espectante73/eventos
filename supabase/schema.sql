@@ -795,6 +795,32 @@ begin
 end;
 $$;
 
+-- «Canciones para bailar» en la cuenta del DJ (v91.5, él): lo mismo que
+-- dj_canciones, sin enlace ni clave, para el colaborador con el permiso
+-- «canciones_dj». Nunca nombres. Solo con sesión (el revoke de abajo).
+CREATE OR REPLACE FUNCTION public.colaborador_canciones_dj() RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if not colaborador_tiene_permiso('canciones_dj') then
+    return jsonb_build_object('error', 'permiso');
+  end if;
+  return jsonb_build_object(
+    'nombre', (select c."nombre" from colaboradores c where c."authUserId" = auth.uid() limit 1),
+    'evento', (select e."nombre" from evento e limit 1),
+    'fecha', (select e."fecha" from evento e limit 1),
+    'catalogo', coalesce((select e."catalogoCanciones" from evento e limit 1), '{}'::jsonb),
+    'fuera', coalesce((select e."cancionesFueraDj" from evento e limit 1), '[]'::jsonb),
+    'peticiones', coalesce(
+      (select jsonb_agg(jsonb_build_object('cancion', i."cancion", 'edad', edad_en_evento(i."anioNacimiento")))
+       from invitados i where coalesce(i."cancion", '') <> ''),
+      '[]'::jsonb)
+  );
+end;
+$$;
+REVOKE EXECUTE ON FUNCTION public.colaborador_canciones_dj() FROM PUBLIC, anon;
+
 -- ¿Está activo el Modo Pruebas? Una sola definición (v49): mientras lo
 -- está, ningún colaborador puede escribir nada (las tres funciones de
 -- abajo) y los correos van solo al anfitrión (enviar_email).

@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "91.5",
+    cambios: [
+      "Permiso nuevo en Permisos: «Canciones para bailar (ver la lista del DJ)». Quien lo tiene ve en su menú «Canciones para bailar», con lo mismo que la página del enlace: buscar, tramos de edad, ordenar, exportar, imprimir y escuchar 30 segundos.",
+      "Pensado para el DJ con su cuenta, en los días antes del evento. La página del enlace con clave sigue funcionando hasta que se quite.",
+      "La página del enlace y la ventana nueva usan la misma pieza: dicen siempre lo mismo.",
+    ],
+  },
+  {
     version: "91.4",
     cambios: [
       "El aviso rojo de permisos del colaborador: «Tienes permisos de edición» sale solo con los que dejan editar texto (Novedades y los datos del evento). Enviar invitaciones, Multimedia y acreditar en la entrada salen aparte, como «Tienes permisos en la app».",

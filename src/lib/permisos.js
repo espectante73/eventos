@@ -43,6 +43,10 @@ export const PERMISOS = {
   // Leer el QR de las invitaciones en la entrada (él, v83.2): para los
   // acomodadores que también son colaboradores. Lo comprueba la base.
   ACREDITAR_ENTRADA: "acreditar_entrada",
+  // «Canciones para bailar» dentro de la app (v91.5, él): la lista del DJ,
+  // para el DJ con su cuenta. Solo para mirar; lo comprueba la base
+  // (colaborador_canciones_dj).
+  CANCIONES_DJ: "canciones_dj",
 };
 
 // Etiquetas legibles, para VentanaPermisos.jsx -- un objeto en vez de un
@@ -57,6 +61,7 @@ export const ETIQUETAS_PERMISOS = {
   [PERMISOS.DISENO_VER]: "Ver el diseño de la app (cómo se construye)",
   [PERMISOS.MULTIMEDIA]: "Multimedia (manejar la música y el vídeo con el mando)",
   [PERMISOS.ACREDITAR_ENTRADA]: "Acreditar en la entrada (leer el QR de las invitaciones)",
+  [PERMISOS.CANCIONES_DJ]: "Canciones para bailar (ver la lista del DJ)",
 };
 
 // ⚠️ Hay TRES clases de permiso, y confundirlas ya dio dos fallos reales:
@@ -71,14 +76,14 @@ export const ETIQUETAS_PERMISOS = {
 //   EN LA APP:  dejan HACER algo dentro de la app (enviar invitaciones,
 //               Multimedia, acreditar en la entrada).
 //   VISTA:      solo enseñan algo que ya existe (el mapa, el código, el
-//               diseño). No son responsabilidad de nadie.
+//               diseño, la lista del DJ). No son responsabilidad de nadie.
 //
 // Los de edición y los de la app son responsabilidad: van en el aviso rojo,
 // cada uno con su frase. Al añadir un permiso nuevo hay que meterlo en una
 // de las tres; si no, el test permisos.test.js se pone en rojo.
 export const PERMISOS_DE_EDICION = [PERMISOS.NOVEDADES_EDITAR, PERMISOS.DATOS_EVENTO_EDITAR];
 export const PERMISOS_EN_LA_APP = [PERMISOS.INVITACIONES_ENVIAR, PERMISOS.MULTIMEDIA, PERMISOS.ACREDITAR_ENTRADA];
-export const PERMISOS_DE_VISTA = [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER, PERMISOS.DISENO_VER];
+export const PERMISOS_DE_VISTA = [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER, PERMISOS.DISENO_VER, PERMISOS.CANCIONES_DJ];
 
 export const esDeEdicion = (clave) => PERMISOS_DE_EDICION.includes(clave);
 export const esDeLaApp = (clave) => PERMISOS_EN_LA_APP.includes(clave);
