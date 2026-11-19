@@ -11,9 +11,10 @@ const llamadas = [];
 let soloPersonal = false;
 let valen = [];
 let quien = null;
+let cerradas = false;
 const servidor = {
   tablon_verificar_token: () => true,
-  evento_publico: () => ({ nombre: "Las Bodas de todos", tablonSoloPersonal: soloPersonal }),
+  evento_publico: () => ({ nombre: "Las Bodas de todos", tablonSoloPersonal: soloPersonal, cancionesCerradas: cerradas }),
   tablon_obtener_pregunta: () => "Apellido familiar y nombre",
   tablon_anios: () => ({ desde: 1950, hasta: 2000 }),
   tablon_por_clave: (a) => (a.p_clave === CLAVE ? { nombre: "Pacheco, Ana", respuesta: CLAVE } : null),
@@ -46,6 +47,7 @@ beforeEach(() => {
   soloPersonal = false;
   valen = [];
   quien = null;
+  cerradas = false;
   enlace("");
   try {
     localStorage.clear();
@@ -153,5 +155,37 @@ it("sin la clave en la dirección, pero recordando su enlace personal: puede cam
   expect(texto()).toContain(AVISO_ENLACE_PERSONAL);
   const email = llamadas.find((l) => l.nombre === "tablon_mi_email");
   expect(email.args.p_clave).toBe(CLAVE);
+  vista.desmontar();
+});
+
+// v92.4 (él): con el tablón ya abierto, el anfitrión abrió las canciones y
+// «Cambiar» no salía hasta el minuto. Ahora se vuelve a leer al abrir
+// «Comprueba tus datos» y al volver a su ventana.
+it("si el anfitrión abre las canciones con el tablón abierto, «Cambiar» sale al abrir «Comprueba tus datos»", async () => {
+  valen = [`${CLAVE} 1975`];
+  quien = ANA;
+  cerradas = true;
+  localStorage.setItem("tablon-respuesta-t1", `${CLAVE} 1975`);
+  const vista = await abrir();
+  const cambiar = () => document.body.querySelector('button[title="Cambiar tus canciones"]');
+  await abrirDatos();
+  expect(cambiar()).toBeNull();
+  await abrirDatos(); // plegarlo
+  cerradas = false;
+  await abrirDatos();
+  for (let i = 0; i < 3; i++) await act(async () => {});
+  expect(cambiar()).toBeTruthy();
+  vista.desmontar();
+});
+
+it("al volver a la ventana del tablón, lo vuelve a leer", async () => {
+  valen = [`${CLAVE} 1975`];
+  quien = ANA;
+  localStorage.setItem("tablon-respuesta-t1", `${CLAVE} 1975`);
+  const vista = await abrir();
+  const lecturas = () => llamadas.filter((l) => l.nombre === "evento_publico").length;
+  const antes = lecturas();
+  await act(async () => window.dispatchEvent(new Event("focus")));
+  expect(lecturas()).toBe(antes + 1);
   vista.desmontar();
 });

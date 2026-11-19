@@ -343,19 +343,31 @@ export function VistaTablon({ token }) {
   useFichaInstalacion(fichaDelTablon(token, getClaveTablonFromUrl()), "Tablón");
 
   // Refresco periódico -- solo tiene sentido una vez desbloqueado (antes
-  // de eso no hay nada real que refrescar).
+  // de eso no hay nada real que refrescar). También al volver a él: a la
+  // pestaña y, en el ordenador, a su ventana (v92.4, él: con el tablón
+  // abierto al lado, abrió las canciones y «Cambiar» no salía; volver a una
+  // ventana no cambia la pestaña visible, y esperaba al minuto). Pestaña y
+  // ventana avisan a la vez al cambiar de pestaña: una sola lectura.
+  const ultimaLecturaRef = useRef(0);
+  const refrescar = useCallback(() => {
+    if (Date.now() - ultimaLecturaRef.current < 2000) return;
+    ultimaLecturaRef.current = Date.now();
+    cargarContenido();
+  }, [cargarContenido]);
   useEffect(() => {
     if (estado !== "listo") return;
-    const intervalo = setInterval(() => cargarContenido(), 60 * 1000);
+    const intervalo = setInterval(refrescar, 60 * 1000);
     const alVolverVisible = () => {
-      if (document.visibilityState === "visible") cargarContenido();
+      if (document.visibilityState === "visible") refrescar();
     };
     document.addEventListener("visibilitychange", alVolverVisible);
+    window.addEventListener("focus", refrescar);
     return () => {
       clearInterval(intervalo);
       document.removeEventListener("visibilitychange", alVolverVisible);
+      window.removeEventListener("focus", refrescar);
     };
-  }, [estado, cargarContenido]);
+  }, [estado, refrescar]);
 
   const enviarRespuesta = async (e) => {
     e.preventDefault();
@@ -384,6 +396,15 @@ export function VistaTablon({ token }) {
 
   const alternar = (id) => {
     setIdAbierto((actual) => (actual === id ? null : id));
+  };
+  // «Comprueba tus datos», al abrirlo, con lo último (v92.4): si el
+  // anfitrión acaba de abrir o cerrar las canciones, «Cambiar» ya sale o no.
+  const alternarRegistro = () => {
+    if (idAbierto !== "registro") {
+      ultimaLecturaRef.current = Date.now();
+      cargarContenido();
+    }
+    alternar("registro");
   };
 
   // Sus canciones (v92.1, él): solo con su enlace personal, como su email,
@@ -869,7 +890,7 @@ export function VistaTablon({ token }) {
                         evento={evento}
                         canciones={puedeCambiarCanciones ? { cerradas: Boolean(evento?.cancionesCerradas), onGuardar: guardarCanciones } : null}
                         abierta={idAbierto === "registro"}
-                        onAlternar={() => alternar("registro")}
+                        onAlternar={alternarRegistro}
                       />
                     </li>
                   )}

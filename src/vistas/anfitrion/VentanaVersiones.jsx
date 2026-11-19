@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "92.4",
+    cambios: [
+      "Arreglo: con el tablón ya abierto, si el anfitrión abría las canciones («Canciones cerradas: No»), el botón «Cambiar» no salía hasta pasado un minuto. Ahora el tablón vuelve a leerlo al desplegar «Comprueba tus datos» y al volver a su ventana en el ordenador.",
+    ],
+  },
+  {
     version: "92.3",
     cambios: [
       "Tablón: las canciones vuelven a «Comprueba tus datos», donde están todos los datos que dio cada uno. Con su enlace personal, junto a «Canciones:» sale un botón dorado «Cambiar»; al tocarlo, ahí mismo los 3 huecos con «Cancelar» y «Guardar».",
