@@ -18,6 +18,7 @@ import { useState } from "react";
 import { Plus, Mail, Check, X, CircleHelp } from "lucide-react";
 import { C, OP } from "../../theme";
 import { uid } from "../../lib/id";
+import { colaboradorDesdeFicha } from "../../lib/equipoColaboradores";
 import { datosCompletos, resolverColaborador } from "../../lib/invitados";
 import { BuscadorInvitado } from "../../components/BuscadorInvitado";
 import { ColaboradorCard } from "../../components/ColaboradorCard";
@@ -103,12 +104,8 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
 
     const inv = invitados.find((g) => g.id === nuevoColab.invitadoId);
     if (!inv) return;
-    const nombreFinal = `${inv.apellido}, ${inv.nombre}`.trim();
 
-    persistColaboradores([
-      ...colaboradores,
-      { id: uid(), nombre: nombreFinal, invitadoId: nuevoColab.invitadoId, email: "" },
-    ]);
+    persistColaboradores([...colaboradores, colaboradorDesdeFicha(inv, uid())]);
     setNuevoColab({ invitadoId: "" });
   };
 
@@ -128,11 +125,12 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
 
     let invitadoIdFinal = invitadoId;
     let nombreFinal = nombreNuevo;
+    let emailFinal = "";
     let invitadosSiguientes = invitados;
 
     if (invitadoIdFinal) {
       const inv = invitados.find((g) => g.id === invitadoIdFinal);
-      if (inv) nombreFinal = `${inv.apellido}, ${inv.nombre}`.trim();
+      if (inv) ({ nombre: nombreFinal, email: emailFinal } = colaboradorDesdeFicha(inv, null));
     } else if (nombreFinal) {
       const [apellido = "", nombre = ""] = nombreFinal.split(",").map((s) => s.trim());
       const nuevoInvitadoObj = {
@@ -163,7 +161,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
     persistColaboradores(
       colaboradores
         .filter((c) => c.id !== idAnterior)
-        .concat({ id: nuevoId, nombre: nombreFinal, invitadoId: invitadoIdFinal, email: "" })
+        .concat({ id: nuevoId, nombre: nombreFinal, invitadoId: invitadoIdFinal, email: emailFinal })
     );
     persistInvitados(
       invitadosSiguientes.map((g) =>

@@ -11,6 +11,17 @@ import { fichaDelColaborador } from "./edicionInvitados";
 const ORDEN_ROL = { [ROL_FAMILIAR.ESPOSO]: 0, [ROL_FAMILIAR.ESPOSA]: 1 };
 const comparar = (a, b) => String(a || "").localeCompare(String(b || ""), "es", { sensitivity: "base" });
 
+// Un colaborador nuevo sacado de su ficha de la Lista (norma 8): su nombre
+// y su email, los de la ficha. Antes el email nacía vacío y, como a un
+// colaborador se le cuenta el de su cuenta, quien ya tenía email en su
+// ficha pasaba a «datos incompletos» (él, v91.2, con el DJ).
+export const colaboradorDesdeFicha = (ficha, id) => ({
+  id,
+  nombre: `${ficha.apellido || ""}, ${ficha.nombre || ""}`.trim(),
+  invitadoId: ficha.id,
+  email: String(ficha.email || "").trim(),
+});
+
 // El DJ contratado (él, v91.1: «que tenga login porque quiero que tenga
 // acceso a multimedia»): entra con una cuenta de colaborador con solo ese
 // permiso. Que es el DJ lo dice su ficha de la Lista (zona «DJ», esDj), no

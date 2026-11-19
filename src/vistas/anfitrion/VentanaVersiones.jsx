@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "91.2",
+    cambios: [
+      "Arreglado: al dar de alta a alguien como colaborador desde su ficha, su cuenta empezaba sin email y no cogía el de la ficha. Ahora lo coge, también en un relevo.",
+      "Arreglado: por eso mismo pasaba a «datos incompletos». Mientras su cuenta no tenga email, cuenta el de su ficha.",
+    ],
+  },
+  {
     version: "91.1",
     cambios: [
       "Cuenta para el DJ: se le da de alta como colaborador desde su ficha (la de zona «DJ») y en Permisos se le marca solo «Multimedia». Entra con su email y contraseña y maneja la música, el vídeo y la cortinilla.",

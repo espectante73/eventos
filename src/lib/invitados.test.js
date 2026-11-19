@@ -307,6 +307,12 @@ describe("totalDatosInvitado", () => {
     expect(conEmailDeColaborador(raul, undefined)).toBe(raul);
   });
 
+  it("colaborador con la cuenta aún sin email: vale el de su ficha (v91.2, el DJ)", () => {
+    const dj = { rolFamiliar: "suelto", anioNacimiento: "1985", alergias: "No", email: "dj@ejemplo.com" };
+    expect(conEmailDeColaborador(dj, { id: "c9", invitadoId: "g9", email: "" }).email).toBe("dj@ejemplo.com");
+    expect(conEmailDeColaborador(dj, { id: "c9", invitadoId: "g9", email: "otro@ejemplo.com" }).email).toBe("otro@ejemplo.com");
+  });
+
   it("la foto de boda cuenta si está; sin ella, la ficha sigue completa", () => {
     const casada = { rolFamiliar: "esposa", anioNacimiento: "1962", anioBoda: "1985", alergias: "No" };
     expect(contarDatosRellenados(casada, "", evento)).toBe(totalDatosInvitado(casada, evento, ""));

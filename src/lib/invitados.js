@@ -230,9 +230,12 @@ export function camposQueAplican(g, evento) {
 // de un invitado que también es colaborador vive en dos sitios"). Para
 // contar sus datos vale ese: si no, salía "3 de 4" aunque el anfitrión ya
 // hubiera puesto el email (Raúl Sierra, 2026-09-19).
+// Si su cuenta aún no tiene email, vale el de su ficha (v91.2): el mismo
+// orden de respaldo que emailDeInvitado, para que «datos completos» y el
+// email al que se le escribe no se contradigan.
 export function conEmailDeColaborador(g, colaboradorVinculado) {
   if (!colaboradorVinculado) return g;
-  return { ...g, email: colaboradorVinculado.email || "" };
+  return { ...g, email: colaboradorVinculado.email || g.email || "" };
 }
 
 // La foto de boda, como lo demás que no es obligatorio: cuenta si está.

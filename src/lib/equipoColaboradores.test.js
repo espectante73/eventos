@@ -1,6 +1,6 @@
 // v73.1 (él): el equipo, alfabético por apellido y, en cada matrimonio, el esposo arriba.
 import { it, expect } from "vitest";
-import { ordenarEquipo, equipoDesdeDatos, colaboradorEsDj, colaboradoresSinDj, equipoSinDj } from "./equipoColaboradores";
+import { ordenarEquipo, equipoDesdeDatos, colaboradorEsDj, colaboradoresSinDj, equipoSinDj, colaboradorDesdeFicha } from "./equipoColaboradores";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const p = (apellido, nombre, rol = "", grupo = `${apellido}01`) => ({ apellido, nombre, rolFamiliar: rol, grupoFamiliar: grupo });
@@ -45,4 +45,10 @@ it("el DJ (v91.1): lo dice su ficha; fuera de las listas del equipo, salvo para 
   expect(colaboradoresSinDj(colaboradores, invitados).map((c) => c.id)).toEqual(["c1", "c2"]);
   expect(equipoSinDj(equipoDesdeDatos(colaboradores, invitados, "c1")).map((x) => x.id)).toEqual(["c1", "c2"]);
   expect(equipoSinDj(equipoDesdeDatos(colaboradores, invitados, "c9")).map((x) => x.id)).toEqual(["c1", "c9", "c2"]);
+});
+
+it("un colaborador nuevo sale de su ficha con su nombre y su email (v91.2)", () => {
+  const ficha = { id: "g9", apellido: "Brown", nombre: "Julien", email: " dj@ejemplo.com " };
+  expect(colaboradorDesdeFicha(ficha, "c9")).toEqual({ id: "c9", nombre: "Brown, Julien", invitadoId: "g9", email: "dj@ejemplo.com" });
+  expect(colaboradorDesdeFicha({ id: "g1", apellido: "Sierra", nombre: "Raul" }, "c1").email).toBe("");
 });
