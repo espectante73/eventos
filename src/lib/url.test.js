@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { getRolFromUrl, codigoAcreditarDe, construirEnlaceAcreditar, enlaceNovedades } from "./url";
+import { getRolFromUrl, codigoAcreditarDe, construirEnlaceAcreditar, enlaceNovedades, getQrMesaFromUrl, construirEnlaceMesa } from "./url";
 
 describe("codigoAcreditarDe: el código de un QR leído en la página (v83.8)", () => {
   it("lee el del enlace que lleva la invitación", () => {
@@ -40,5 +40,25 @@ describe("el enlace de «Novedades» en Mi cuenta", () => {
   });
   it("sin la llave del tablón, nada", () => {
     expect(enlaceNovedades(url, null, { ficha })).toBe("");
+  });
+});
+
+// v93 (él): el QR de cada mesa lleva su número y su código secreto.
+describe("el QR de la tarjeta de una mesa", () => {
+  it("el enlace del tablón con la mesa y su código", () => {
+    expect(construirEnlaceMesa("https://ejemplo.com/", "tok", 15, "a1b2c3d4e5f6")).toBe("https://ejemplo.com?tablon=tok&mesa=15&qr=a1b2c3d4e5f6");
+    expect(construirEnlaceMesa("https://ejemplo.com", "tok", 15, "")).toBe("");
+  });
+
+  it("el tablón lo lee de la dirección; mal formado, como si no viniera", () => {
+    window.history.pushState({}, "", "/?tablon=tok&mesa=15&qr=A1B2C3D4E5F6");
+    expect(getQrMesaFromUrl()).toEqual({ mesa: 15, codigo: "a1b2c3d4e5f6" });
+    window.history.pushState({}, "", "/?tablon=tok&mesa=15");
+    expect(getQrMesaFromUrl()).toBeNull();
+    window.history.pushState({}, "", "/?tablon=tok&mesa=0&qr=a1b2c3d4e5f6");
+    expect(getQrMesaFromUrl()).toBeNull();
+    window.history.pushState({}, "", "/?tablon=tok&mesa=7&qr=zz");
+    expect(getQrMesaFromUrl()).toBeNull();
+    window.history.pushState({}, "", "/");
   });
 });

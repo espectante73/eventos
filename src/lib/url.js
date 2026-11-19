@@ -61,6 +61,26 @@ export function getClaveTablonFromUrl() {
   }
 }
 
+// &mesa=<número>&qr=<código> — el QR de la tarjeta de cada mesa (él, v93):
+// el enlace del tablón con el número de la mesa y su código secreto
+// (qr_mesas). El tablón los lee para confirmar el móvil al subir fotos,
+// sin preguntar nada. Solo vale un número y un código bien formados.
+export function getQrMesaFromUrl() {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    const mesa = Number(p.get("mesa"));
+    const codigo = String(p.get("qr") || "").trim().toLowerCase();
+    return Number.isInteger(mesa) && mesa > 0 && /^[0-9a-f]{12}$/.test(codigo) ? { mesa, codigo } : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+export function construirEnlaceMesa(urlPublica, token, mesa, codigo) {
+  const enlace = construirEnlaceTablon(urlPublica, token);
+  return enlace && mesa && codigo ? `${enlace}&mesa=${mesa}&qr=${codigo}` : "";
+}
+
 export function construirEnlacePersonalTablon(urlPublica, token, clave) {
   const enlace = construirEnlaceTablon(urlPublica, token);
   return enlace && clave ? `${enlace}&yo=${encodeURIComponent(clave)}` : "";

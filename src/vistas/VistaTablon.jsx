@@ -16,7 +16,7 @@ import { supabase } from "../supabaseClient";
 import { useFichaInstalacion, fichaDelTablon } from "../lib/fichaInstalacion";
 import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento, opcionesAnios } from "../lib/formato";
 import { entrarTablon, anioDeRespuesta, respuestaGuardadaDelEnlace, esRespuestaPersonal, claveDelEnlacePersonal, NO_ENCONTRADO, ANIO_NO_COINCIDE, SOLO_PERSONAL, AVISO_ENLACE_PERSONAL, AVISO_ENLACE_GENERAL } from "../lib/tablonEntrada";
-import { getClaveTablonFromUrl } from "../lib/url";
+import { getClaveTablonFromUrl, getQrMesaFromUrl } from "../lib/url";
 import { InfoItem } from "../components/Portada";
 import { SelloCuentaAtras } from "../components/SelloCuentaAtras";
 import { Boton, EnlaceTexto } from "../components/Boton";
@@ -27,7 +27,7 @@ import { uid } from "../lib/id";
 import { leerEvento } from "../lib/leerEvento";
 import { rondasTablon, pendientesDelTablon } from "../lib/rondasTablon";
 import { TeFaltaTablon } from "./TeFaltaTablon";
-import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, marcarFotoFamilia } from "../lib/fotosFiesta";
+import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, marcarFotoFamilia, qrMesaDeEsteMovil, olvidarQrMesa } from "../lib/fotosFiesta";
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 import { TarjetaNoticia, CabeceraNoticia, CuerpoZonas } from "./NoticiaTablon";
 import { RegistroTablon } from "./RegistroTablon";
@@ -101,6 +101,9 @@ export function VistaTablon({ token }) {
   // Sus fotos de la fiesta (tablon_fotos, v67.4-68): null si no
   // se le reconoce; con `abierta` falso, la tarjeta no sale.
   const [fotosFiesta, setFotosFiesta] = useState(null);
+  // El QR de su mesa (v93, él): el de la dirección si viene de escanearlo,
+  // o el que ya leyó este móvil. Confirma el móvil para subir fotos solo.
+  const [qrMesa] = useState(() => qrMesaDeEsteMovil(getQrMesaFromUrl()));
   // Solo una novedad abierta a la vez -- a petición del usuario: con 5+
   // novedades, tenerlas todas desplegadas de golpe (o ir abriendo varias
   // sin plegar las anteriores) era un muro de texto imposible de leer.
@@ -456,9 +459,15 @@ export function VistaTablon({ token }) {
   };
   const subirFoto = (archivo) => conFotosAlDia((quien) => subirFotoFiesta(supabase, { ...quien, archivo }));
   const eliminarFoto = (id) => conFotosAlDia((quien) => eliminarFotoFiesta(supabase, { ...quien, id }));
-  // El año, el de la entrada (v70): en las fotos solo se elige la mesa.
-  const verificarFoto = (mesa) =>
-    conFotosAlDia((quien) => verificarFotoFiesta(supabase, { ...quien, anio: anioDeRespuesta(quien.respuesta), mesa }));
+  // El año, el de la entrada (v70); la mesa y su código, los del QR de su
+  // tarjeta (v93). Un QR que no vale, o de otra mesa, se olvida: la próxima
+  // vez se le pide escanear el suyo.
+  const verificarFoto = ({ mesa, codigo }) =>
+    conFotosAlDia(async (quien) => {
+      const resultado = await verificarFotoFiesta(supabase, { ...quien, anio: anioDeRespuesta(quien.respuesta), mesa, codigo });
+      if (resultado.respuesta === "no" || resultado.respuesta === "otra") olvidarQrMesa();
+      return resultado;
+    });
 
   // La foto de familia (v85.5): la marca quien la subió, desde su móvil.
   const marcarFoto = (id, marcar) => conFotosAlDia((quien) => marcarFotoFamilia(supabase, { ...quien, id, marcar }));
@@ -768,7 +777,7 @@ export function VistaTablon({ token }) {
         )}
 
         {diaFotos && (
-          <TarjetaFotosFiesta destacada estado={fotosFiesta} onSubir={subirFoto} onEliminar={eliminarFoto} onVerificar={verificarFoto} onMarcarFamilia={marcarFoto} />
+          <TarjetaFotosFiesta destacada estado={fotosFiesta} qrMesa={qrMesa} onSubir={subirFoto} onEliminar={eliminarFoto} onVerificar={verificarFoto} onMarcarFamilia={marcarFoto} />
         )}
 
         {/* Plegado el día del evento (v85.5): lo básico, y se abre entero. */}

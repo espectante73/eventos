@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "93",
+    cambios: [
+      "Tarjetas QR: cada QR es el de SU mesa, con el número y un código secreto de la mesa (el número solo se ve en la tarjeta y cualquiera podría escribirlo).",
+      "Tablón, Fotos de la fiesta: para confirmar el móvil ya no se elige la mesa. Al escanear el QR de su mesa se comprueba solo; con el de otra mesa: «Ese QR es de otra mesa: escanea el de la tuya.». Sin haberlo escaneado: «Para subir fotos desde este móvil, escanea con la cámara el QR de tu mesa.».",
+      "El QR leído se recuerda en ese móvil: si el tablón no se abre con el QR («Solo con el enlace personal»), al entrar luego con el enlace personal se confirma igual.",
+      "Día del evento: las tarjetas QR solo se descargan con «Acomodación terminada» (las mesas aún pueden cambiar). Necesita el SQL «v93-qr-mesas».",
+    ],
+  },
+  {
     version: "92.9",
     cambios: [
       "Tarjetas QR (Día del evento): una por mesa, dos por folio. En las dos caras, el número de la mesa en grande, en dorado sobre un círculo verde con doble aro, sin la palabra «Mesa».",

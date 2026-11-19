@@ -127,18 +127,30 @@ it("los «Abrir», iguales: rellenos", () => {
 });
 
 // v92.9 (él): una tarjeta QR por mesa, con su número. Sin mesas, lo dice.
-it("las tarjetas QR, una por mesa: sin ninguna mesa, avisa de crearlas en Acomodación", async () => {
-  const data = {
-    evento: { urlPublica: "https://nexuspoint.rsvp" },
+// v93 (él): solo con «Acomodación terminada»; cada QR, con el código de su mesa.
+it("las tarjetas QR: bloqueadas hasta «Acomodación terminada»; sin ninguna mesa, avisa de crearlas", async () => {
+  const pedidos = [];
+  const data = (evento) => ({
+    evento: { urlPublica: "https://nexuspoint.rsvp", ...evento },
     tokenTablon: "0f8fad5b-d9cb-469f-a165-70867728950e",
-    mesas: [],
     persistEvento: () => {},
     obtenerFotosFiesta: sinFotos,
-  };
-  const vista = montar(<VentanaDiaEvento data={data} onCerrar={() => {}} />);
+    obtenerQrMesas: async () => {
+      pedidos.push(1);
+      return [];
+    },
+  });
+  const sinTerminar = montar(<VentanaDiaEvento data={data({ acomodacionTerminada: false })} onCerrar={() => {}} />);
+  await act(async () => {});
+  expect(document.body.textContent).toContain("Bloqueado: falta marcar «Acomodación terminada» en Acomodación.");
+  expect(botones("Descargar")[0].disabled).toBe(true);
+  sinTerminar.desmontar();
+
+  const terminada = montar(<VentanaDiaEvento data={data({ acomodacionTerminada: true })} onCerrar={() => {}} />);
   await act(async () => {});
   expect(document.body.textContent).toContain("Una por mesa, con su número: 2 por folio.");
   await act(async () => botones("Descargar")[0].dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  expect(pedidos).toHaveLength(1);
   expect(document.body.textContent).toContain("No hay ninguna mesa: créalas primero en Acomodación.");
-  vista.desmontar();
+  terminada.desmontar();
 });

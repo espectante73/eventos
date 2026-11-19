@@ -960,6 +960,18 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     return data || [];
   }, [rol]);
 
+  // El código secreto del QR de cada mesa (v93), para sus tarjetas:
+  // [{ numero, codigo }]. null si no se ha podido leer.
+  const obtenerQrMesas = useCallback(async () => {
+    const { data, error } = await supabase.rpc("anfitrion_qr_mesas", { p_token: rol });
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error("No se pudieron leer los códigos de las mesas.", error);
+      return null;
+    }
+    return data || [];
+  }, [rol]);
+
   // "Entendido" sobre el aviso de email sincronizado (ColaboradorCard):
   // el propio colaborador cambió su email de acceso desde "Mi cuenta" y
   // eso actualizó colaboradores.email solo (trigger en schema.sql) --
@@ -1684,6 +1696,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     obtenerHistorialTexto,
     obtenerZonasPrevia,
     obtenerFotosFiesta,
+    obtenerQrMesas,
     obtenerFamilia,
     marcarFamilia,
     marcarMiembros,

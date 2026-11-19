@@ -254,7 +254,12 @@ describe("las fotos de la fiesta", () => {
     expect(v).toContain("from tablon_invitado(p_token, p_respuesta)");
     // Los DOS, siempre (él, v68.3): sin alguno en la ficha no se confirma.
     expect(v).toContain('if not ficha_con_claves(v_yo."anioNacimiento", v_yo."mesa") then');
-    expect(v).toContain('v_acierto := trim(v_yo."anioNacimiento") = trim(coalesce(p_anio, \'\')) and v_yo."mesa" = p_mesa;');
+    // La mesa, la del QR de su tarjeta (v93): número Y código secreto.
+    expect(v).toContain("where q.numero = p_mesa and q.codigo = lower(trim(coalesce(p_codigo, '')))");
+    expect(v).toContain('v_acierto := v_tarjeta and trim(v_yo."anioNacimiento") = trim(coalesce(p_anio, \'\')) and v_yo."mesa" = p_mesa;');
+    // El QR de verdad de otra mesa: se avisa sin contarlo como fallo.
+    expect(v.indexOf("return 'otra';")).toBeGreaterThan(-1);
+    expect(v.indexOf("return 'otra';"), "antes de apuntar el intento").toBeLessThan(v.indexOf("insert into fotos_fiesta_intentos"));
     expect(v).not.toMatch(/"mesa" is null or/);
     expect(v).toMatch(/not i\."acierto"[\s\S]{0,90}interval '15 minutes'\) >= 5 then/);
     expect(v).toContain("insert into fotos_fiesta_intentos");
@@ -883,6 +888,14 @@ describe("la acreditación por QR (v83.2)", () => {
     expect(sql).toContain("ALTER TABLE public.qr_familias ENABLE ROW LEVEL SECURITY;");
     expect(sql).toContain("REVOKE ALL ON public.qr_familias FROM anon, authenticated;");
     expect(cuerpoDe("foto_de_datos")).not.toContain("qr_familias");
+  });
+
+  it("el QR de cada mesa (v93): su código, cerrado y fuera del Deshacer; solo el anfitrión los pide", () => {
+    expect(sql).toContain("ALTER TABLE public.qr_mesas ENABLE ROW LEVEL SECURITY;");
+    expect(sql).toContain("REVOKE ALL ON public.qr_mesas FROM anon, authenticated;");
+    expect(cuerpoDe("foto_de_datos")).not.toContain("qr_mesas");
+    expect(cuerpoDe("anfitrion_qr_mesas")).toContain("if p_token is distinct from (select \"token\" from anfitrion_secreto limit 1) then");
+    expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.anfitrion_qr_mesas(uuid) FROM PUBLIC, anon;");
   });
 
   it("solo el anfitrión o quien tenga el permiso; las funciones, cerradas a quien no ha entrado", () => {

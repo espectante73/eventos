@@ -7,19 +7,19 @@
 // móvil que la subió (`mia`): un impostor con su nombre no le borra nada.
 // A quien tiene 16 o 17 años, su frase del permiso de los padres; a un
 // menor de 16, solo que las suben los mayores. Antes de la primera foto en
-// un móvil, su número de mesa en un desplegable (v68.1-68.2; el año ya lo
-// dio al entrar al tablón, v70): el servidor la coteja con su ficha y ese
-// móvil queda recordado. Sin mesa en su ficha, no se le ofrece y se le dice
-// a quién preguntar.
+// un móvil, su mesa (v68.1; el año ya lo dio al entrar al tablón, v70): el
+// servidor la coteja con su ficha y ese móvil queda recordado. Desde la v93
+// (él), la del QR de su tarjeta, que el tablón lee solo: nadie elige nada.
+// Sin mesa en su ficha, se le dice a quién preguntar.
 //
 // «Elegir foto» busca en la galería (él): el campo va sin `capture`, así el
 // móvil no salta a la cámara. El menú propio del iPhone (Fototeca, Hacer
 // foto, Seleccionar archivo) no se puede quitar. Es el mismo botón-etiqueta
 // con el campo escondido que «Cambiar foto» del formulario (VistaColaborador).
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Camera, Check, ImagePlus } from "lucide-react";
-import { C, OP, T, DEDO, DORADO, inputStyle } from "../theme";
-import { Boton, estilosBoton } from "../components/Boton";
+import { C, OP, T, DEDO, DORADO } from "../theme";
+import { estilosBoton } from "../components/Boton";
 import { BotonQuitar } from "../components/PreguntaSeguridad";
 import { LineaAviso } from "../components/LineaAviso";
 import { HuecoFoto } from "../components/HuecoFoto";
@@ -31,53 +31,32 @@ import {
   FRASE_PERMISO_PADRES,
   SOLO_MAYORES_16,
   FALTAN_CLAVES,
+  ESCANEA_QR_MESA,
+  COMPROBANDO_QR_MESA,
   FRASE_FOTO_FAMILIA,
   FRASE_FOTOS_PERSONALES,
   FRASE_FOTOS_SOLO,
   fraseFotoFamiliaHecha,
 } from "../lib/fotosFiesta";
 
-// La mesa, con su desplegable (sin teclado, v68.2) y el botón del lado del
-// pulgar (norma 6). El año ya lo dio al entrar al tablón (v70): aquí solo
-// la mesa. Lo que se coteja con su ficha lo decide el servidor.
-function ConfirmarMovil({ mesas = [], onVerificar }) {
-  const [mesa, setMesa] = useState("");
-  const [comprobando, setComprobando] = useState(false);
+// La mesa, la del QR de su tarjeta (él, v93): con el QR leído (`qrMesa`,
+// { mesa, codigo }), se comprueba solo al aparecer, una vez; sin él, que lo
+// escanee. Lo que se coteja con su ficha lo decide el servidor.
+function ConfirmarConQr({ qrMesa, onVerificar }) {
+  const [comprobando, setComprobando] = useState(Boolean(qrMesa));
   const [aviso, setAviso] = useState("");
-  const confirmar = async (e) => {
-    e.preventDefault();
-    setAviso("");
-    setComprobando(true);
-    const { aviso: motivo } = await onVerificar(mesa);
-    setComprobando(false);
-    setAviso(motivo);
-  };
-  return (
-    <form onSubmit={confirmar} className="mt-2">
-      <p className="text-sm mb-2">Para subir fotos desde este móvil, elige el número de tu mesa: lo ves en ella.</p>
-      <div className="flex items-center gap-2">
-        <select
-          value={mesa}
-          onChange={(e) => setMesa(e.target.value)}
-          aria-label="Tu número de mesa"
-          className="flex-1 min-w-0"
-          style={{ ...inputStyle, height: DEDO }}
-          required
-        >
-          <option value="">Mesa</option>
-          {mesas.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
-        <Boton type="submit" variante="principal" disabled={comprobando} className="zurdo:order-first">
-          {comprobando ? "Comprobando…" : "Confirmar"}
-        </Boton>
-      </div>
-      {aviso && <LineaAviso className="text-xs mt-2">{aviso}</LineaAviso>}
-    </form>
-  );
+  const hecho = useRef(false);
+  useEffect(() => {
+    if (!qrMesa || hecho.current) return;
+    hecho.current = true;
+    onVerificar(qrMesa).then(({ aviso: motivo }) => {
+      setComprobando(false);
+      setAviso(motivo);
+    });
+  }, [qrMesa, onVerificar]);
+  if (!qrMesa) return <p className="text-sm mt-2">{ESCANEA_QR_MESA}</p>;
+  if (comprobando) return <p className="text-sm mt-2">{COMPROBANDO_QR_MESA}</p>;
+  return aviso ? <LineaAviso className="text-sm mt-2">{aviso}</LineaAviso> : null;
 }
 
 const PREGUNTA_ELIMINAR = {
@@ -89,15 +68,16 @@ const PREGUNTA_ELIMINAR = {
 const estiloAyuda = { color: C.charcoal, opacity: OP.secundario };
 
 // estado: lo que da tablon_fotos ({ maximo, menor, conPermiso, verificado,
-// anios: { desde, hasta }, mesas, fotos: [{ id, creadaEn, mia }] }). onSubir(archivo), onEliminar(id) y
-// onVerificar(mesa) devuelven { aviso }: vacío si salió bien.
+// faltanDatos, fotos: [{ id, creadaEn, mia }] }). onSubir(archivo), onEliminar(id) y
+// onVerificar({ mesa, codigo }) devuelven { aviso }: vacío si salió bien.
+// `qrMesa`: el QR de su mesa leído en este móvil, o null (v93).
 // `destacada` (v85.5, él: el día del evento «sería el protagonista»): la
 // primera del tablón, en el dorado, con la cámara en grande y un latido
 // suave (.tarjeta-latido en index.css), mientras lo demás se pliega.
 // `onMarcarFamilia(id, marcar)` (v85.5): la casilla «Familia» de cada foto
 // suya, si viene en familia. Una por familia: si ya la marcó otro de ella,
 // no sale la casilla y se dice quién.
-export function TarjetaFotosFiesta({ estado, onSubir, onEliminar, onVerificar, onMarcarFamilia, destacada = false }) {
+export function TarjetaFotosFiesta({ estado, onSubir, onEliminar, onVerificar, onMarcarFamilia, qrMesa = null, destacada = false }) {
   const [subiendo, setSubiendo] = useState(false);
   const [aviso, setAviso] = useState("");
   const { fotos, maximo, menor, conPermiso } = estado;
@@ -196,7 +176,7 @@ export function TarjetaFotosFiesta({ estado, onSubir, onEliminar, onVerificar, o
             ) : estado.verificado === false && estado.faltanDatos ? (
               <p className="text-sm mt-2">{FALTAN_CLAVES}</p>
             ) : estado.verificado === false ? (
-              <ConfirmarMovil mesas={estado.mesas} onVerificar={onVerificar} />
+              <ConfirmarConQr qrMesa={qrMesa} onVerificar={onVerificar} />
             ) : (
               <>
                 <div className="flex justify-end zurdo:justify-start mt-3">

@@ -12,6 +12,10 @@
 // «es una obviedad»). Dos por folio, en el orden de las mesas; con un
 // número impar, la última hoja lleva una sola.
 //
+// Cada QR, el de SU mesa (él, v93): el enlace del tablón con el número y el
+// código secreto de la mesa (qr_mesas), que confirma el móvil para subir
+// fotos sin preguntar nada. Se descargan solo con «Acomodación terminada».
+//
 // Hoja blanca y los colores del evento con discreción (él): textos en el
 // verde de la app y el marco dorado de cada cara.
 // El QR, en el verde más oscuro: contrasta con el blanco como el negro.
@@ -204,17 +208,26 @@ function caraQr(pdf, qr, x, y, girada, nombreEvento, mesa) {
   pie(pdf, l, y, nombreEvento);
 }
 
-// Los números de las mesas, de menor a mayor y sin repetir.
-export function numerosDeMesas(mesas = []) {
-  return [...new Set(mesas.map((m) => Number(m?.numero)).filter((n) => Number.isInteger(n) && n > 0))].sort((a, b) => a - b);
+// Una tarjeta por mesa, de menor a mayor y sin repetir: { numero, enlace }.
+// `codigos`, lo que da anfitrion_qr_mesas ([{ numero, codigo }]);
+// `enlaceDe(numero, codigo)`, el enlace de su QR. Sin código, sin tarjeta.
+export function tarjetasDeMesas(codigos = [], enlaceDe) {
+  const vistas = new Set();
+  return codigos
+    .filter((m) => Number.isInteger(m?.numero) && m.numero > 0 && m.codigo)
+    .sort((a, b) => a.numero - b.numero)
+    .filter((m) => !vistas.has(m.numero) && vistas.add(m.numero))
+    .map((m) => ({ numero: m.numero, enlace: enlaceDe(m.numero, m.codigo) }))
+    .filter((t) => t.enlace);
 }
 
 // Dos tarjetas por hoja: la línea de corte, a lo alto y discontinua; la
 // del doblez, a lo ancho y de puntos, bajo las tarjetas que haya. Finas.
-export function dibujarTarjetasQr(pdf, qr, nombreEvento, numeros) {
-  for (let i = 0; i < numeros.length; i += 2) {
+// `tarjetas`: [{ numero, qr }], cada una con el QR de su mesa.
+export function dibujarTarjetasQr(pdf, nombreEvento, tarjetas) {
+  for (let i = 0; i < tarjetas.length; i += 2) {
     if (i) pdf.addPage();
-    const par = numeros.slice(i, i + 2);
+    const par = tarjetas.slice(i, i + 2);
     pdf.setDrawColor(C.line);
     pdf.setLineWidth(0.4);
     pdf.setLineDashPattern([4, 3], 0);
@@ -222,9 +235,9 @@ export function dibujarTarjetasQr(pdf, qr, nombreEvento, numeros) {
     pdf.setLineDashPattern([1, 2], 0);
     pdf.line(0, ALTO_CARA, par.length * ANCHO_CARA, ALTO_CARA);
     pdf.setLineDashPattern([], 0);
-    par.forEach((mesa, j) => {
-      caraTexto(pdf, j * ANCHO_CARA, 0, true, nombreEvento, mesa);
-      caraQr(pdf, qr, j * ANCHO_CARA, ALTO_CARA, false, nombreEvento, mesa);
+    par.forEach(({ numero, qr }, j) => {
+      caraTexto(pdf, j * ANCHO_CARA, 0, true, nombreEvento, numero);
+      caraQr(pdf, qr, j * ANCHO_CARA, ALTO_CARA, false, nombreEvento, numero);
     });
   }
 }
@@ -237,11 +250,15 @@ export function crearQr(qrcode, enlace) {
   return qr;
 }
 
-// `numeros`: los de las mesas (numerosDeMesas), al menos uno.
-export async function descargarTarjetasQr({ enlace, nombreEvento, numeros }) {
+// `tarjetas`: las de las mesas (tarjetasDeMesas), al menos una.
+export async function descargarTarjetasQr({ nombreEvento, tarjetas }) {
   // jsPDF y el QR pesan: se cargan solo al usarlos, como en acomodadores.
   const [{ jsPDF }, { default: qrcode }] = await Promise.all([import("jspdf"), import("qrcode-generator")]);
   const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-  dibujarTarjetasQr(pdf, crearQr(qrcode, enlace), nombreEvento, numeros);
+  dibujarTarjetasQr(
+    pdf,
+    nombreEvento,
+    tarjetas.map((t) => ({ numero: t.numero, qr: crearQr(qrcode, t.enlace) }))
+  );
   descargarBlob(ARCHIVO_TARJETAS_QR, pdf.output("blob"));
 }

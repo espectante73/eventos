@@ -6,7 +6,7 @@ import { act } from "react";
 import { montar } from "../pruebas/dibujar";
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 import { opcionesAnios } from "../lib/formato";
-import { FRASE_HORIZONTAL, FRASE_PERMISO_PADRES } from "../lib/fotosFiesta";
+import { FRASE_HORIZONTAL, FRASE_PERMISO_PADRES, ESCANEA_QR_MESA, COMPROBANDO_QR_MESA } from "../lib/fotosFiesta";
 
 const nada = async () => ({ aviso: "" });
 const foto = (id, mia) => ({ id, quien: "Medina, Ana", mia, creadaEn: "2026-11-13T22:47:00" });
@@ -92,33 +92,39 @@ it("su miniatura, guardada en su móvil; sin ella, el marco vacío", () => {
   window.localStorage.removeItem("fotos-fiesta-miniatura-1");
 });
 
-it("sin confirmar el móvil: solo la mesa, en desplegable (el año lo dio al entrar, v70)", async () => {
+it("sin confirmar el móvil, con el QR de su mesa leído: se comprueba solo, sin elegir nada (v93)", async () => {
   const enviados = [];
+  let responder;
   const vista = montar(
     tarjeta(
-      { fotos: [], verificado: false, mesas: [1, 2, 7] },
+      { fotos: [], verificado: false },
       {
-        onVerificar: async (mesa) => {
-          enviados.push(mesa);
-          return { aviso: "" };
+        qrMesa: { mesa: 15, codigo: "a1b2c3d4e5f6" },
+        onVerificar: (qr) => {
+          enviados.push(qr);
+          return new Promise((r) => (responder = r));
         },
       }
     )
   );
-  expect(document.body.textContent).toContain("elige el número de tu mesa: lo ves en ella");
-  expect(campoFoto()).toBeNull();
-  expect(document.body.querySelectorAll("input")).toHaveLength(0);
-  const selects = document.body.querySelectorAll("select");
-  expect(selects).toHaveLength(1);
-  expect([...selects[0].options].map((o) => o.textContent)).toEqual(["Mesa", "1", "2", "7"]);
-  vista.elegir(selects[0], "7");
-  await act(async () => document.body.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
-  expect(enviados).toEqual(["7"]);
+  expect(enviados).toEqual([{ mesa: 15, codigo: "a1b2c3d4e5f6" }]);
+  expect(document.body.textContent).toContain(COMPROBANDO_QR_MESA);
+  expect(document.body.querySelectorAll("select, input")).toHaveLength(0);
+  await act(async () => responder({ aviso: "Ese QR es de otra mesa: escanea el de la tuya." }));
+  expect(document.body.textContent).toContain("Ese QR es de otra mesa: escanea el de la tuya.");
+  expect(enviados).toHaveLength(1);
   vista.desmontar();
 });
 
-it("si a su ficha le falta la mesa: ni desplegable ni botón, y a quién preguntar", () => {
-  const vista = montar(tarjeta({ fotos: [], verificado: false, faltanDatos: true, anios: { desde: 1950, hasta: 2010 }, mesas: [1] }));
+it("sin confirmar el móvil y sin QR leído: que escanee el de su mesa", () => {
+  const vista = montar(tarjeta({ fotos: [], verificado: false }, { onVerificar: nada }));
+  expect(document.body.textContent).toContain(ESCANEA_QR_MESA);
+  expect(document.body.querySelectorAll("select, input")).toHaveLength(0);
+  vista.desmontar();
+});
+
+it("si a su ficha le falta la mesa: no se comprueba nada, y a quién preguntar", () => {
+  const vista = montar(tarjeta({ fotos: [], verificado: false, faltanDatos: true }, { qrMesa: { mesa: 1, codigo: "a1b2c3d4e5f6" } }));
   expect(document.body.textContent).toContain("tu ficha tiene que tener tu mesa");
   expect(document.body.querySelectorAll("select")).toHaveLength(0);
   expect(campoFoto()).toBeNull();

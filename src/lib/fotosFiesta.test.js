@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, miniaturaFotoFiesta, nombresDescargaFotosFiesta, bajarFotosFiesta, marcarFotoFamilia, archivoFotosEvento, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
+import { prepararFotoFiesta, subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, qrMesaDeEsteMovil, olvidarQrMesa, miniaturaFotoFiesta, nombresDescargaFotosFiesta, bajarFotosFiesta, marcarFotoFamilia, archivoFotosEvento, LIMITE_FOTO_FIESTA } from "./fotosFiesta";
 
 // Una reducción de mentira: el tamaño que «pesaría» cada intento.
 const reducirQuePesa = (pesos) => {
@@ -183,20 +183,32 @@ describe("el ZIP de las fotos (v67.6)", () => {
   });
 });
 
-describe("confirmar el móvil: año y mesa (v68.1)", () => {
-  it("manda lo escrito, limpio, y con «ok» no hay aviso", async () => {
+describe("confirmar el móvil: año y mesa (v68.1; v93: la mesa, del QR de su tarjeta)", () => {
+  it("manda el año, la mesa y el código del QR, limpios, y con «ok» no hay aviso", async () => {
     const s = falso({ rpc: { tablon_verificar_foto: { data: "ok" } } });
-    expect(await verificarFotoFiesta(s, { ...QUIEN, anio: " 1975 ", mesa: "7" })).toEqual({ aviso: "" });
+    expect(await verificarFotoFiesta(s, { ...QUIEN, anio: " 1975 ", mesa: 7, codigo: " a1b2c3d4e5f6 " })).toEqual({ aviso: "", respuesta: "ok" });
     expect(s.llamadas[0]).toEqual([
       "tablon_verificar_foto",
-      { p_token: "t", p_respuesta: "Medina Ana", p_dispositivo: "d1", p_anio: "1975", p_mesa: 7 },
+      { p_token: "t", p_respuesta: "Medina Ana", p_dispositivo: "d1", p_anio: "1975", p_mesa: 7, p_codigo: "a1b2c3d4e5f6" },
     ]);
   });
 
-  it("si no coincide, dice qué revisar y dónde está la mesa", async () => {
+  it("un QR que no vale, o el de otra mesa: qué hacer", async () => {
     const s = falso({ rpc: { tablon_verificar_foto: { data: "no" } } });
-    expect((await verificarFotoFiesta(s, { ...QUIEN, anio: "1975", mesa: "x" })).aviso).toBe("Revisa el número de tu mesa: es el que ves en ella.");
+    expect(await verificarFotoFiesta(s, { ...QUIEN, anio: "1975", mesa: "x" })).toEqual({ aviso: "Ese QR no vale: escanea con la cámara el de tu mesa.", respuesta: "no" });
     expect(s.llamadas[0][1].p_mesa).toBeNull();
+    const otra = falso({ rpc: { tablon_verificar_foto: { data: "otra" } } });
+    expect((await verificarFotoFiesta(otra, { ...QUIEN, anio: "1975", mesa: 3, codigo: "a1b2c3d4e5f6" })).aviso).toBe("Ese QR es de otra mesa: escanea el de la tuya.");
+  });
+
+  it("el QR leído se guarda en el móvil: el de la dirección manda; olvidado, no queda nada", () => {
+    olvidarQrMesa();
+    expect(qrMesaDeEsteMovil(null)).toBeNull();
+    expect(qrMesaDeEsteMovil({ mesa: 15, codigo: "a1b2c3d4e5f6" })).toEqual({ mesa: 15, codigo: "a1b2c3d4e5f6" });
+    expect(qrMesaDeEsteMovil(null)).toEqual({ mesa: 15, codigo: "a1b2c3d4e5f6" });
+    expect(qrMesaDeEsteMovil({ mesa: 11, codigo: "0f0f0f0f0f0f" })).toEqual({ mesa: 11, codigo: "0f0f0f0f0f0f" });
+    olvidarQrMesa();
+    expect(qrMesaDeEsteMovil(null)).toBeNull();
   });
 
   it("si a su ficha le falta el año o la mesa, no se confirma, y se le dice a quién preguntar", async () => {

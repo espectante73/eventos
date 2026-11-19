@@ -56,7 +56,7 @@ vi.mock("./descargas", () => ({ descargarBlob: (nombre) => descargas.push(nombre
 const {
   descargarTarjetasQr,
   crearQr,
-  numerosDeMesas,
+  tarjetasDeMesas,
   nombreEntreComillas,
   queFotosTarjeta,
   TITULO_TARJETA,
@@ -70,11 +70,13 @@ const {
 const { default: qrcode } = await import("qrcode-generator");
 
 const ENLACE = "https://nexuspoint.rsvp?tablon=0f8fad5b-d9cb-469f-a165-70867728950e";
+const enlaceDe = (numero, codigo) => `${ENLACE}&mesa=${numero}&qr=${codigo}`;
+const tarjetas = (...numeros) => numeros.map((numero) => ({ numero, enlace: enlaceDe(numero, "a1b2c3d4e5f6") }));
 const EVENTO = "Las Bodas de todos.";
 
 describe("las tarjetas QR (v67.7; v92.9: una por mesa, texto en una cara y QR en la otra)", () => {
   it("un folio con 2 tarjetas: cada una con su número en las dos caras; el texto, girado, arriba; el QR, abajo", async () => {
-    await descargarTarjetasQr({ enlace: ENLACE, nombreEvento: EVENTO, numeros: [5, 12] });
+    await descargarTarjetasQr({ nombreEvento: EVENTO, tarjetas: tarjetas(5, 12) });
     const hoja = hojas.at(-1);
     const cuenta = (t) => hoja.textos.filter((x) => x === t).length;
     expect(hoja.paginas).toBe(1);
@@ -98,16 +100,29 @@ describe("las tarjetas QR (v67.7; v92.9: una por mesa, texto en una cara y QR en
   });
 
   it("con un número impar de mesas, la última hoja lleva una sola", async () => {
-    await descargarTarjetasQr({ enlace: ENLACE, nombreEvento: EVENTO, numeros: [1, 2, 3] });
+    await descargarTarjetasQr({ nombreEvento: EVENTO, tarjetas: tarjetas(1, 2, 3) });
     const hoja = hojas.at(-1);
     expect(hoja.paginas).toBe(2);
     expect(hoja.marcos).toBe(6);
     for (const n of ["1", "2", "3"]) expect(hoja.textos.filter((x) => x === n)).toHaveLength(2);
   });
 
-  it("los números de las mesas, ordenados y sin repetir", () => {
-    expect(numerosDeMesas([{ numero: 12 }, { numero: 3 }, { numero: 3 }, { numero: null }, { numero: 0 }])).toEqual([3, 12]);
-    expect(numerosDeMesas()).toEqual([]);
+  it("una tarjeta por mesa, ordenadas y sin repetir, cada una con el enlace de SU mesa (v93)", () => {
+    const codigos = [
+      { numero: 12, codigo: "cccccccccccc" },
+      { numero: 3, codigo: "aaaaaaaaaaaa" },
+      { numero: 3, codigo: "bbbbbbbbbbbb" },
+      { numero: null, codigo: "dddddddddddd" },
+      { numero: 0, codigo: "eeeeeeeeeeee" },
+      { numero: 7, codigo: "" },
+    ];
+    expect(tarjetasDeMesas(codigos, enlaceDe)).toEqual([
+      { numero: 3, enlace: enlaceDe(3, "aaaaaaaaaaaa") },
+      { numero: 12, enlace: enlaceDe(12, "cccccccccccc") },
+    ]);
+    expect(tarjetasDeMesas(undefined, enlaceDe)).toEqual([]);
+    // Sin enlace (falta la dirección pública), ninguna.
+    expect(tarjetasDeMesas(codigos, () => "")).toEqual([]);
   });
 
   it("el nombre del evento, entre comillas y sin su punto (él: es su nombre propio)", () => {

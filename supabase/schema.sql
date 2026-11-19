@@ -408,6 +408,19 @@ CREATE TABLE IF NOT EXISTS public.qr_familias (
 ALTER TABLE public.qr_familias ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.qr_familias FROM anon, authenticated;
 
+-- El código secreto del QR de cada mesa, el de su tarjeta (él, v93): el QR
+-- lleva el número y este código, y confirma el móvil para subir fotos sin
+-- preguntar nada (tablon_verificar_foto). El número solo no basta: se ve en
+-- la tarjeta y cualquiera podría escribirlo. Va por NÚMERO, sin atarse a
+-- `mesas`: una mesa que se quita y se vuelve a crear conserva el suyo.
+-- Cerrado como qr_familias y fuera de la foto del Deshacer.
+CREATE TABLE IF NOT EXISTS public.qr_mesas (
+    numero integer PRIMARY KEY,
+    codigo text NOT NULL UNIQUE
+);
+ALTER TABLE public.qr_mesas ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.qr_mesas FROM anon, authenticated;
+
 -- Quién ha entrado al tablón y desde qué dispositivo, para detectar
 -- accesos raros.
 CREATE TABLE public.tablon_accesos (
@@ -445,7 +458,8 @@ CREATE TABLE public.fotos_fiesta (
 
 -- Confirmar que es quien dice para subir fotos (él, v68.1: «está claro
 -- que una no es quien dice ser»): una vez por móvil, su año de nacimiento
--- y su número de mesa, cotejados con su ficha (tablon_verificar_foto).
+-- y su número de mesa (desde la v93, el del QR de su tarjeta), cotejados
+-- con su ficha (tablon_verificar_foto).
 -- Con un `acierto`, ese móvil queda recordado para ese invitado; 5 fallos
 -- en 15 minutos con el mismo nombre bloquean un rato. Historia real:
 -- fuera del Deshacer.
@@ -2796,6 +2810,30 @@ $$;
 REVOKE EXECUTE ON FUNCTION public.qr_codigo_familia(uuid, text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.qr_codigo_familia(uuid, text) TO authenticated;
 
+-- Los códigos del QR de las mesas, para sus tarjetas (v93): solo el
+-- anfitrión. A la mesa que aún no tiene el suyo se le crea al pedirlos.
+CREATE FUNCTION public.anfitrion_qr_mesas(p_token uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
+    raise exception 'Token no válido';
+  end if;
+  insert into qr_mesas (numero, codigo)
+  select m."numero", substr(replace(gen_random_uuid()::text, '-', ''), 1, 12)
+  from mesas m
+  on conflict (numero) do nothing;
+  return coalesce((
+    select jsonb_agg(jsonb_build_object('numero', m."numero", 'codigo', q.codigo) order by m."numero")
+    from mesas m join qr_mesas q on q.numero = m."numero"
+  ), '[]'::jsonb);
+end;
+$$;
+
+REVOKE EXECUTE ON FUNCTION public.anfitrion_qr_mesas(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.anfitrion_qr_mesas(uuid) TO authenticated;
+
 -- Lo que ve quien lee el QR: sus confirmados y si están en regla. Lo justo:
 -- nada de alergias ni contacto.
 CREATE FUNCTION public.acreditar_estado(p_grupo text) RETURNS jsonb
@@ -3300,15 +3338,19 @@ CREATE FUNCTION public.ficha_con_claves(p_anio text, p_mesa integer) RETURNS boo
 -- Confirmar en este móvil que es quien dice (v68.1): su año de nacimiento
 -- y su número de mesa contra su ficha de la lista; los datos de la ficha no
 -- salen de aquí. Los DOS, siempre: sin alguno en su ficha no se confirma
--- (v68.3). Responde 'ok', 'no', 'faltan' (a su ficha le falta alguno),
--- 'bloqueado' (5 fallos en 15 minutos con ese nombre), 'nombre' o 'movil'
--- (el navegador no le da id).
-CREATE FUNCTION public.tablon_verificar_foto(p_token uuid, p_respuesta text, p_dispositivo text, p_anio text, p_mesa integer) RETURNS text
+-- (v68.3). La mesa, desde la v93, la del QR de su tarjeta (él): número y
+-- código secreto (qr_mesas), sin que elija nada; un número sin su código no
+-- vale. Responde 'ok', 'no', 'otra' (el QR de verdad de otra mesa: se ha
+-- equivocado de tarjeta, no cuenta como fallo), 'faltan' (a su ficha le
+-- falta alguno), 'bloqueado' (5 fallos en 15 minutos con ese nombre),
+-- 'nombre' o 'movil' (el navegador no le da id).
+CREATE FUNCTION public.tablon_verificar_foto(p_token uuid, p_respuesta text, p_dispositivo text, p_anio text, p_mesa integer, p_codigo text) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
     AS $$
 declare
   v_yo invitados;
+  v_tarjeta boolean;
   v_acierto boolean;
 begin
   select * into v_yo from tablon_invitado(p_token, p_respuesta);
@@ -3327,7 +3369,14 @@ begin
         and i."creadoEn" > now() - interval '15 minutes') >= 5 then
     return 'bloqueado';
   end if;
-  v_acierto := trim(v_yo."anioNacimiento") = trim(coalesce(p_anio, '')) and v_yo."mesa" = p_mesa;
+  v_tarjeta := exists (
+    select 1 from qr_mesas q
+    where q.numero = p_mesa and q.codigo = lower(trim(coalesce(p_codigo, '')))
+  );
+  if v_tarjeta and v_yo."mesa" is distinct from p_mesa then
+    return 'otra';
+  end if;
+  v_acierto := v_tarjeta and trim(v_yo."anioNacimiento") = trim(coalesce(p_anio, '')) and v_yo."mesa" = p_mesa;
   insert into fotos_fiesta_intentos ("invitadoId", "dispositivoId", "acierto")
   values (v_yo.id, p_dispositivo, v_acierto);
   return case when v_acierto then 'ok' else 'no' end;

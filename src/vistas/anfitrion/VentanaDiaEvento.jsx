@@ -23,8 +23,9 @@ import { supabase } from "../../supabaseClient";
 import { crearZip } from "../../lib/zip";
 import { descargarBlob } from "../../lib/descargas";
 import { bajarFotosFiesta, archivoFotosEvento } from "../../lib/fotosFiesta";
-import { descargarTarjetasQr, numerosDeMesas, ARCHIVO_TARJETAS_QR } from "../../lib/pdfTarjetasQr";
-import { construirEnlaceTablon } from "../../lib/url";
+import { descargarTarjetasQr, tarjetasDeMesas, ARCHIVO_TARJETAS_QR } from "../../lib/pdfTarjetasQr";
+import { construirEnlaceTablon, construirEnlaceMesa } from "../../lib/url";
+import { ENVIO_BLOQUEADO } from "../../lib/invitados";
 
 // «12 fotos» y «De 5 familias, en un ZIP.», contando cada familia una vez.
 // En dos líneas, como las demás filas: en una no cabía junto al botón.
@@ -93,7 +94,7 @@ function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, estados =
 
 // `marcador` (desde VistaAnfitrion): { abierto, abrir, abrirAlAcreditar, cerrar }.
 export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
-  const { evento, persistEvento, obtenerFotosFiesta, tokenTablon, mesas } = data;
+  const { evento, persistEvento, obtenerFotosFiesta, obtenerQrMesas, tokenTablon } = data;
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
   // La acreditación (él, v70.8): las llegadas y el marcador grande, que
@@ -142,24 +143,30 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
     };
   }, [obtenerFotosFiesta, fotosAbiertas]);
 
-  // Las tarjetas QR de las mesas (v67.7): llevan el enlace del tablón, el
-  // mismo de Mi cuenta; una por mesa, con su número (v92.9). Avisa al
-  // terminar (norma 9).
+  // Las tarjetas QR de las mesas (v67.7): una por mesa, con su número
+  // (v92.9) y el QR de SU mesa: el enlace del tablón con el código secreto
+  // de la mesa (v93). Solo con «Acomodación terminada» (él, v93: las mesas
+  // aún pueden cambiar). Avisa al terminar (norma 9).
+  const tarjetasBloqueadas = !evento.acomodacionTerminada;
   const descargarTarjetas = async () => {
-    const enlace = construirEnlaceTablon(evento.urlPublica, tokenTablon);
-    if (!enlace) {
+    if (!construirEnlaceTablon(evento.urlPublica, tokenTablon)) {
       preguntar({ titulo: "Todavía no", texto: "Falta la dirección pública de la app, en Configuración.", soloAviso: true });
       return;
     }
-    const numeros = numerosDeMesas(mesas);
-    if (!numeros.length) {
+    const codigos = await obtenerQrMesas();
+    if (!codigos) {
+      preguntar({ titulo: "No se pudo", texto: "No se pudieron leer los códigos de las mesas. Prueba otra vez.", soloAviso: true });
+      return;
+    }
+    const tarjetas = tarjetasDeMesas(codigos, (numero, codigo) => construirEnlaceMesa(evento.urlPublica, tokenTablon, numero, codigo));
+    if (!tarjetas.length) {
       preguntar({ titulo: "Todavía no", texto: "No hay ninguna mesa: créalas primero en Acomodación.", soloAviso: true });
       return;
     }
-    await descargarTarjetasQr({ enlace, nombreEvento: evento.nombre, numeros });
+    await descargarTarjetasQr({ nombreEvento: evento.nombre, tarjetas });
     preguntar({
       titulo: "Tarjetas descargadas",
-      texto: `${ARCHIVO_TARJETAS_QR}: ${numeros.length === 1 ? "1 tarjeta" : `${numeros.length} tarjetas`}, una por mesa.\nLo tienes en tu carpeta de Descargas.`,
+      texto: `${ARCHIVO_TARJETAS_QR}: ${tarjetas.length === 1 ? "1 tarjeta" : `${tarjetas.length} tarjetas`}, una por mesa.\nLo tienes en tu carpeta de Descargas.`,
       soloAviso: true,
     });
   };
@@ -220,9 +227,9 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
         </FilaAbrirCerrar>
         <Separador fila={4} />
         <CeldaTexto fila={5} Icono={QrCode} titulo={<b>Tarjetas QR</b>}>
-          Una por mesa, con su número: 2 por folio.
+          {tarjetasBloqueadas ? ENVIO_BLOQUEADO : "Una por mesa, con su número: 2 por folio."}
         </CeldaTexto>
-        <Boton onClick={descargarTarjetas} className={CELDA_BOTON} style={{ gridRow: 5 }}>
+        <Boton onClick={descargarTarjetas} disabled={tarjetasBloqueadas} className={CELDA_BOTON} style={{ gridRow: 5 }}>
           Descargar
         </Boton>
         {fotos?.length > 0 && (

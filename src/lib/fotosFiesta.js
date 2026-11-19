@@ -64,34 +64,66 @@ const MOTIVOS = {
   nombre: "No te hemos reconocido: vuelve a entrar con tu nombre.",
   cerrada: "Ya no se pueden subir fotos.",
   menor: SOLO_MAYORES_16,
-  verificar: "Antes de subir fotos, elige el número de tu mesa: lo ves en ella.",
+  verificar: "Antes de subir fotos, escanea con la cámara el QR de tu mesa.",
   completa: textoCompleta(2),
 };
 
 // Confirmar que es quien dice, una vez por móvil (él, v68.1): su número de
 // mesa, más el año con el que entró al tablón (v70), que el servidor coteja
 // con su ficha (tablon_verificar_foto). Los datos de la ficha no viajan al
-// móvil.
+// móvil. La mesa, desde la v93, la del QR de su tarjeta (él): número y
+// código secreto, sin que elija nada.
+export const ESCANEA_QR_MESA = "Para subir fotos desde este móvil, escanea con la cámara el QR de tu mesa.";
+export const COMPROBANDO_QR_MESA = "Comprobando el QR de tu mesa…";
 const RESPUESTAS_VERIFICAR = {
   ok: "",
-  // Las fotos se suben en la fiesta, sentados: el número está en su mesa (él, v70.3).
-  no: "Revisa el número de tu mesa: es el que ves en ella.",
+  no: "Ese QR no vale: escanea con la cámara el de tu mesa.",
+  otra: "Ese QR es de otra mesa: escanea el de la tuya.",
   faltan: FALTAN_CLAVES,
   bloqueado: "Demasiados intentos con este nombre. Espera 15 minutos y vuelve a probar.",
   nombre: MOTIVOS.nombre,
   movil: "Este navegador no deja recordar tu móvil: ábrelo fuera del modo privado y vuelve a probar.",
 };
 
-export async function verificarFotoFiesta(supabase, { token, respuesta, dispositivo, anio, mesa }) {
+// `respuesta` (la del servidor) dice además si el QR guardado ya no sirve
+// ('no', 'otra'): se olvida, y la próxima vez se le pide escanear.
+export async function verificarFotoFiesta(supabase, { token, respuesta, dispositivo, anio, mesa, codigo }) {
   const { data, error } = await supabase.rpc("tablon_verificar_foto", {
     p_token: token,
     p_respuesta: respuesta,
     p_dispositivo: dispositivo,
     p_anio: String(anio || "").trim(),
     p_mesa: Number.parseInt(mesa, 10) || null,
+    p_codigo: String(codigo || "").trim(),
   });
   if (error || !Object.hasOwn(RESPUESTAS_VERIFICAR, data || "")) return { aviso: "No se pudo comprobar. Prueba otra vez.", detalle: error?.message };
-  return { aviso: RESPUESTAS_VERIFICAR[data] };
+  return { aviso: RESPUESTAS_VERIFICAR[data], respuesta: data };
+}
+
+// El QR de la mesa leído en ESTE móvil (v93), guardado: con «Solo con el
+// enlace personal», el QR solo no abre el tablón; si después entra con su
+// enlace personal, el móvil se confirma igual sin volver a escanear.
+// `delUrl`, el que trae la dirección (getQrMesaFromUrl): manda sobre el
+// guardado. Sin almacenamiento, solo el de la dirección.
+const CLAVE_QR_MESA = "tablon-qr-mesa";
+export function qrMesaDeEsteMovil(delUrl) {
+  try {
+    if (delUrl) {
+      window.localStorage.setItem(CLAVE_QR_MESA, JSON.stringify(delUrl));
+      return delUrl;
+    }
+    const guardado = JSON.parse(window.localStorage.getItem(CLAVE_QR_MESA) || "null");
+    return guardado && Number.isInteger(guardado.mesa) && typeof guardado.codigo === "string" ? guardado : null;
+  } catch {
+    return delUrl || null;
+  }
+}
+export function olvidarQrMesa() {
+  try {
+    window.localStorage.removeItem(CLAVE_QR_MESA);
+  } catch {
+    // Sin almacenamiento, no había nada guardado.
+  }
 }
 
 // La miniatura de las que sube cada uno, guardada en SU móvil (él, v67.5):
