@@ -536,6 +536,17 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
           <p className="text-sm mb-3" style={{ color: C.ink }}>
             {previewInvitacion.destinatarios.filter(Boolean).join(", ") || "El anfitrión (Modo Pruebas)"}
           </p>
+          {/* Arriba, debajo de los emails (él, v91.9: abajo la barra de
+              ventanas del móvil los tapaba), y del lado del pulgar que cada
+              uno elige, como en la del colaborador. */}
+          <div className="flex flex-wrap gap-2 justify-end zurdo:flex-row-reverse mb-4">
+            <Boton variante="secundario" onClick={() => setPreviewInvitacion(null)}>
+              Cancelar
+            </Boton>
+            <Boton variante="principal" onClick={confirmarEnvioInvitacion} disabled={enviandoInvitacion}>
+              {enviandoInvitacion ? "Enviando…" : "Aceptar y enviar"}
+            </Boton>
+          </div>
           <p
             className="text-xs uppercase mb-1"
             style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}
@@ -555,18 +566,10 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
             Mensaje del email
           </p>
           <div
-            className="p-4 rounded text-sm mb-4"
+            className="p-4 rounded text-sm"
             style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
             dangerouslySetInnerHTML={{ __html: evento.plantillaInvitacionFamilia || "" }}
           />
-          <div className="flex flex-wrap gap-2">
-            <Boton variante="principal" onClick={confirmarEnvioInvitacion} disabled={enviandoInvitacion}>
-              {enviandoInvitacion ? "Enviando…" : "Aceptar y enviar"}
-            </Boton>
-            <Boton variante="secundario" onClick={() => setPreviewInvitacion(null)}>
-              Cancelar
-            </Boton>
-          </div>
         </ModalFlotante>
       )}
 

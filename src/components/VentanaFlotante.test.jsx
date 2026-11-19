@@ -64,6 +64,20 @@ it("una ventana encima pone detrás el velo claro", async () => {
   caja.remove();
 });
 
+// v91.9 (él, captura del móvil): la barra de ventanas tapaba «Aceptar y
+// enviar» y «Cancelar» al final de la vista previa de la invitación. El
+// modal deja abajo el hueco que la barra anuncia.
+it("un modal deja abajo el hueco de la barra de ventanas del móvil", async () => {
+  const caja = document.createElement("div");
+  document.body.appendChild(caja);
+  const raiz = createRoot(caja);
+  await act(async () => raiz.render(<ModalFlotante titulo="Enviar invitación" onCerrar={() => {}}>Algo</ModalFlotante>));
+  expect(document.querySelector(".modal-flotante-fondo").style.paddingBottom).toContain("--hueco-barra-ventanas");
+  expect(document.querySelector(".modal-flotante-caja").style.maxHeight).toContain("--hueco-barra-ventanas");
+  await act(async () => raiz.unmount());
+  caja.remove();
+});
+
 // Norma 5: la salida, arriba y a la vista. Con el móvil en horizontal, lo
 // de la cabecera de la Lista de invitados empujaba la X fuera (v68.6).
 it("la X nunca va dentro de lo que se desplaza de la cabecera, y `llena` reparte el alto", async () => {

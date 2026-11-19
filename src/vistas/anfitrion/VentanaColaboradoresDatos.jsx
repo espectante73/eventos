@@ -416,15 +416,16 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
               ),
             }}
           />
-          <div className="flex flex-wrap gap-2">
-            <Boton variante="principal" onClick={confirmarEnvioAvisoPreview} disabled={enviandoAvisoPreview}>
-              {enviandoAvisoPreview ? "Enviando…" : "Aceptar y enviar"}
+          {/* Del lado del pulgar que cada uno elige (v91.9), como la de la invitación. */}
+          <div className="flex flex-wrap gap-2 justify-end zurdo:flex-row-reverse">
+            <Boton variante="secundario" onClick={irAEditarAsignacion}>
+              Editar asignación
             </Boton>
             <Boton variante="secundario" onClick={() => setAvisoPreview(null)}>
               Cancelar
             </Boton>
-            <Boton variante="secundario" onClick={irAEditarAsignacion}>
-              Editar asignación
+            <Boton variante="principal" onClick={confirmarEnvioAvisoPreview} disabled={enviandoAvisoPreview}>
+              {enviandoAvisoPreview ? "Enviando…" : "Aceptar y enviar"}
             </Boton>
           </div>
         </ModalFlotante>

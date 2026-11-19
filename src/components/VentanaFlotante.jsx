@@ -27,6 +27,8 @@ import { useCapaBarra } from "../lib/capaBarra";
 // `cerrable={false}` (v87.3, él): sin X, sin Escape y sin tocar fuera. Solo
 // para lo que tiene que quedarse delante hasta que cambie algo fuera (el
 // tablón de quien no ha pagado): la excepción a «su salida arriba» (norma 5).
+const HUECO_ABAJO_MODAL = "calc(1rem + var(--hueco-barra-ventanas, 0px))";
+
 export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720, movible = false, extra, ajustado = false, cerrable = true }) {
   const hayCuerpo = Children.toArray(children).some((c) => c !== "");
   // Escape, en la ventana donde está este modal (realmDe): dentro de la
@@ -118,7 +120,9 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
       // por el usuario, 2026-08-29 (ver también el comentario de
       // #zona-imprimible en index.css).
       className="fixed inset-0 flex items-center justify-center p-4 modal-flotante-fondo"
-      style={{ ...VELO, zIndex }}
+      // Abajo, el hueco de la barra de ventanas del móvil si se ve: sin él,
+      // la barra tapaba el final del modal, botones incluidos (v91.9).
+      style={{ ...VELO, zIndex, paddingBottom: HUECO_ABAJO_MODAL }}
       onClick={tocarFuera}
     >
       <div
@@ -130,7 +134,7 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
           // `minWidth: 0`: sin él, en el móvil no encogía por debajo de lo
           // que mide su cabecera y se salía por la derecha, X incluida.
           ...(ajustado ? { width: "max-content", maxWidth: "100%", minWidth: 0 } : { maxWidth: ancho }),
-          maxHeight: "88vh",
+          maxHeight: "calc(88vh - var(--hueco-barra-ventanas, 0px))",
           boxShadow: S.flotanteOscura,
           transform: desplazado.x || desplazado.y ? `translate(${desplazado.x}px, ${desplazado.y}px)` : undefined,
         }}

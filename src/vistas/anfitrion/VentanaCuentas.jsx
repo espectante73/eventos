@@ -500,16 +500,17 @@ export function VentanaCuentas({ data, onCerrar }) {
           className="rounded mb-3"
           style={{ width: "100%", height: 420, border: `1px solid ${C.line}` }}
         />
-        <div className="flex flex-wrap gap-2">
+        {/* Del lado del pulgar que cada uno elige (v91.9), como la de la invitación. */}
+        <div className="flex flex-wrap gap-2 justify-end zurdo:flex-row-reverse">
+          <Boton variante="secundario" onClick={() => setPreviewAcuse(null)}>
+            Cancelar
+          </Boton>
           <Boton variante="principal" onClick={confirmarEnvioAcuse} disabled={enviandoAcuse || !previewAcuse.colaborador.email}>
             {enviandoAcuse
               ? "Enviando…"
               : previewAcuse.tipo === "confirmar"
               ? "Aceptar y confirmar"
               : "Aceptar y enviar"}
-          </Boton>
-          <Boton variante="secundario" onClick={() => setPreviewAcuse(null)}>
-            Cancelar
           </Boton>
         </div>
       </ModalFlotante>

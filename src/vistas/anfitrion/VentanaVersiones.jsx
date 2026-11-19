@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "91.9",
+    cambios: [
+      "Vista previa de la invitación: «Aceptar y enviar» y «Cancelar» pasan arriba, justo debajo de los emails, y se ponen del lado del pulgar que cada uno elige.",
+      "En el móvil, la barra de ventanas de abajo ya no tapa el final de ninguna ventana de este tipo (vistas previas, preguntas).",
+      "Las vistas previas del acuse de pago y del aviso al colaborador también respetan el lado del pulgar.",
+    ],
+  },
+  {
     version: "91.8",
     cambios: [
       "Ventana Permisos plegada, como el resto de la app: cada zona muestra solo su título y cuántos permisos tiene marcados el colaborador (por ejemplo «Música 2 de 2»). Se abre tocándola, y una a la vez.",
