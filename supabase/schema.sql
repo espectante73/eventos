@@ -149,6 +149,11 @@ CREATE TABLE public.evento (
     -- envioInvitacionesBloqueado). Público: el colaborador con permiso de
     -- enviar también la necesita.
     "acomodacionTerminada" boolean DEFAULT false,
+    -- «Canciones cerradas» (v92.1, él): mientras diga «No», cada invitado
+    -- cambia sus canciones en el tablón con su enlace personal
+    -- (tablon_guardar_canciones); con «Sí», ya solo se ven. Público: el
+    -- tablón lo necesita para enseñarlas cerradas.
+    "cancionesCerradas" boolean DEFAULT false,
     CONSTRAINT evento_id_check CHECK (id)
 );
 
@@ -3205,6 +3210,42 @@ CREATE FUNCTION public.tablon_mi_email(p_token uuid, p_clave text, p_respuesta t
   from tablon_invitado(p_token, p_respuesta) y
   where coalesce(p_clave, '') <> ''
     and y."claveTablon" = p_clave;
+$$;
+
+-- Sus canciones para bailar, desde el tablón (v92.1, él). SOLO con su
+-- enlace personal, como su email (tablon_mi_email): la clave de su ficha Y
+-- su respuesta con el año; por la puerta general, nombre y año se pueden ir
+-- probando. Solo toca su «cancion» (hasta 3, una por línea, como en la
+-- app), y no con «Canciones cerradas». Sin rozar el pago ni la mesa: ni
+-- caduca la invitación (trg_invalidar_invitacion_familia) ni salta ningún
+-- aviso a su colaborador. Si escribe alguna, deja de constar que prefiere
+-- no pedir ninguna.
+CREATE FUNCTION public.tablon_guardar_canciones(p_token uuid, p_clave text, p_respuesta text, p_cancion text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'extensions', 'pg_temp'
+    AS $$
+declare
+  v_id uuid;
+  v_cancion text;
+begin
+  select y."id" into v_id
+  from tablon_invitado(p_token, p_respuesta) y
+  where coalesce(p_clave, '') <> '' and y."claveTablon" = p_clave;
+  if v_id is null then
+    return jsonb_build_object('error', 'llave');
+  end if;
+  if coalesce((select e."cancionesCerradas" from evento e limit 1), false) then
+    return jsonb_build_object('error', 'cerradas');
+  end if;
+
+  v_cancion := array_to_string((string_to_array(left(coalesce(p_cancion, ''), 600), E'\n'))[1:3], E'\n');
+  perform set_config('eventos.recalculo_aviso_activo', 'off', true);
+  update invitados
+  set "cancion" = v_cancion,
+      "sinCancion" = case when v_cancion ~ '[^[:space:]]' then false else "sinCancion" end
+  where "id" = v_id;
+  return jsonb_build_object('ok', true);
+end;
 $$;
 
 -- La clave de familia de un invitado, igual que claveFamilia en la app.

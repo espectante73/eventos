@@ -34,6 +34,7 @@ import {
   Headphones,
   Ban,
   Lock,
+  LockOpen,
   Wallet,
   Columns3,
   Square,
@@ -48,6 +49,7 @@ import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } fro
 import { descargarCSV } from "../../lib/descargas";
 import { descargarListaAcomodadores, ARCHIVO as ARCHIVO_ACOMODADORES } from "../../lib/pdfAcomodadores";
 import { TextInput, TextInputEnVentanaAparte, Desplegable } from "../../components/Formulario";
+import { RecuadroSiNo } from "../../components/RecuadroSiNo";
 import { EncabezadoOrdenable, GrupoFamiliarInput, RecuadroCifras, CifraTocable, Circulito, TINTA_COLUMNA_ACTIVA } from "../../components/Widgets";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { MenuFlotante } from "../../components/MenuFlotante";
@@ -2250,6 +2252,19 @@ export function SeccionInvitados({
 
             {panelFlotante === "canciones" && (
               <>
+                {/* «Canciones cerradas» (él, v92.1: «check para cerrar a
+                    mano»): mientras diga «No», cada invitado cambia las suyas
+                    en el tablón con su enlace personal. Del ancho de la lista,
+                    sin ensancharla; y no sale al imprimir. */}
+                <RecuadroSiNo
+                  className="mb-2 oculto-al-imprimir"
+                  style={{ width: 0, minWidth: "100%" }}
+                  titulo="Canciones cerradas"
+                  valor={Boolean(evento.cancionesCerradas)}
+                  onCambiar={(si) => si !== Boolean(evento.cancionesCerradas) && persistEvento({ ...evento, cancionesCerradas: si })}
+                  icono={evento.cancionesCerradas ? Lock : LockOpen}
+                  nota={evento.cancionesCerradas ? "En el tablón ya solo se ven." : "Cada invitado puede cambiar las suyas en el tablón, con su enlace personal."}
+                />
                 <div style={{ display: "grid", gridTemplateColumns: COLUMNAS_CANCIONES, columnGap: 4 }}>
                 <div
                   className="grid text-xs uppercase px-2 py-2"

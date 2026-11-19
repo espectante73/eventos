@@ -17,7 +17,9 @@ function Linea({ rotulo, children }) {
   );
 }
 
-export function RegistroTablon({ yo, evento, abierta, onAlternar }) {
+// `sinCanciones` (v92.1): con su enlace personal las cambia él mismo en
+// «Tus canciones para bailar», justo debajo; aquí no salen dos veces.
+export function RegistroTablon({ yo, evento, sinCanciones, abierta, onAlternar }) {
   const registro = registroDelTablon(yo, evento);
   if (!registro) return null;
   return (
@@ -33,14 +35,16 @@ export function RegistroTablon({ yo, evento, abierta, onAlternar }) {
           </p>
           {registro.nombre && <Linea rotulo="Nombre">{registro.nombre}</Linea>}
           <Linea rotulo="Alergias">{registro.alergias}</Linea>
-          <div>
-            <b>Canciones:</b>
-            {registro.canciones.map((c) => (
-              <p key={c} className="truncate pl-3">
-                {c}
-              </p>
-            ))}
-          </div>
+          {!sinCanciones && (
+            <div>
+              <b>Canciones:</b>
+              {registro.canciones.map((c) => (
+                <p key={c} className="truncate pl-3">
+                  {c}
+                </p>
+              ))}
+            </div>
+          )}
           {registro.boda && <Linea rotulo="Boda">{registro.boda}</Linea>}
           {/* El email entero se parte donde haga falta: recortado no se
               vería si está mal escrito (v87.2). */}

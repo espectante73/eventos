@@ -31,6 +31,8 @@ import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, marcarFotoFam
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 import { TarjetaNoticia, CabeceraNoticia, CuerpoZonas } from "./NoticiaTablon";
 import { RegistroTablon } from "./RegistroTablon";
+import { CancionesTablon } from "./CancionesTablon";
+import { guardarCancionesTablon } from "../lib/cancionesTablon";
 import { tituloZonas } from "../lib/zonasTablon";
 
 const BUCKET_MUSICA = "musica-ambiental";
@@ -382,6 +384,19 @@ export function VistaTablon({ token }) {
 
   const alternar = (id) => {
     setIdAbierto((actual) => (actual === id ? null : id));
+  };
+
+  // Sus canciones (v92.1, él): solo con su enlace personal, como su email.
+  const puedeCambiarCanciones = Boolean(personaEnlace && yo) && esRespuestaPersonal(respuestaVerificadaRef.current);
+  const guardarCanciones = async (huecos) => {
+    const { cancion, aviso } = await guardarCancionesTablon(supabase, {
+      token,
+      clave: getClaveTablonFromUrl(),
+      respuesta: respuestaVerificadaRef.current,
+      huecos,
+    });
+    if (!aviso) setYo((y) => (y ? { ...y, cancion, sinCancion: cancion.trim() ? false : y.sinCancion } : y));
+    return aviso;
   };
 
   // En un móvil que comparte la familia, cada uno entra con su nombre y ve
@@ -847,7 +862,7 @@ export function VistaTablon({ token }) {
                       sola cosa abierta, con las novedades. */}
                   {r.id === "datos" && (
                     <li className="pl-6">
-                      <RegistroTablon yo={yo} evento={evento} abierta={idAbierto === "registro"} onAlternar={() => alternar("registro")} />
+                      <RegistroTablon yo={yo} evento={evento} sinCanciones={puedeCambiarCanciones} abierta={idAbierto === "registro"} onAlternar={() => alternar("registro")} />
                     </li>
                   )}
                   </Fragment>
@@ -855,6 +870,16 @@ export function VistaTablon({ token }) {
               </ul>
             )}
           </div>
+        )}
+
+        {puedeCambiarCanciones && (
+          <CancionesTablon
+            cancion={yo.cancion}
+            cerradas={Boolean(evento?.cancionesCerradas)}
+            abierta={idAbierto === "canciones"}
+            onAlternar={() => alternar("canciones")}
+            onGuardar={guardarCanciones}
+          />
         )}
 
         {/* Quién le atiende antes del evento (él, v64), bien a la vista:

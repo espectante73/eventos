@@ -142,10 +142,14 @@ export function corregirCancion(invitados, invitadoId, hueco, { titulo = "", art
 
 // Las canciones de un invitado, los huecos enteros (v82.8): lo que le queda
 // abierto al colaborador cuando ya ha pagado. Si no cambia nada, la misma lista.
+// Lo que se guarda de los 3 huecos: cada uno sin espacios de más. El mismo
+// para el colaborador y para el invitado desde el tablón (norma 7).
+export const textoLimpioDeHuecos = (huecos) => textoDeHuecos(huecos.map(({ titulo = "", artista = "" }) => ({ titulo: titulo.trim(), artista: artista.trim() })));
+
 export function cambiarCanciones(invitados, invitadoId, huecos) {
   const g = invitados.find((x) => x.id === invitadoId);
   if (!g) return { invitados, aviso: "Ese invitado ya no está en la lista." };
-  const cancion = textoDeHuecos(huecos.map(({ titulo = "", artista = "" }) => ({ titulo: titulo.trim(), artista: artista.trim() })));
+  const cancion = textoLimpioDeHuecos(huecos);
   if (cancion === textoDeHuecos(huecosCanciones(g.cancion))) return { invitados, aviso: "" };
   return { invitados: invitados.map((x) => (x.id === invitadoId ? { ...x, cancion } : x)), aviso: "" };
 }

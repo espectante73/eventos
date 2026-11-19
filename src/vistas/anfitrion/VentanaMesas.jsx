@@ -34,7 +34,7 @@ import { PlanoMesas } from "../../components/PlanoMesas";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { cuentaConfirmacion, esDj, confirmadosSinMesa } from "../../lib/invitados";
-import { ElegirSiNo } from "../../components/Formulario";
+import { RecuadroSiNo } from "../../components/RecuadroSiNo";
 import { MarcaDj } from "../../components/MarcaDj";
 import { esAparatoTactil } from "../../lib/mano";
 import { VentanaCambiarMesa } from "./VentanaCambiarMesa";
@@ -178,7 +178,6 @@ function Columna({ nombre, cabecera, llena, familias, cogida, onCoger, onSoltar,
 
 const porNombre = (a, b) => a.nombre.localeCompare(b.nombre, "es");
 const CIFRA = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno };
-const ANCHO_SI_NO = 104;
 
 // «Acomodación terminada» (él, v90.7): el candado del envío de invitaciones.
 // Mientras diga «No», ni él ni ningún colaborador puede enviar una
@@ -201,22 +200,14 @@ function AcomodacionTerminada({ evento, invitados, hayPrueba, persistEvento, pre
       alConfirmar: () => persistEvento({ ...evento, acomodacionTerminada: true }),
     });
   };
-  const Icono = terminada ? LockOpen : Lock;
   return (
-    <div className="mb-2 px-3 py-2 rounded" style={{ background: terminada ? C.okFondo : C.avisoFondo, border: `1px solid ${C.line}` }}>
-      <div className="flex items-center gap-2">
-        <Icono size={18} aria-hidden style={{ color: terminada ? C.ink : C.peligro, flexShrink: 0 }} />
-        <span className="text-sm font-semibold flex-1 whitespace-nowrap" style={{ color: C.ink }}>
-          Acomodación terminada
-        </span>
-        <div style={{ width: ANCHO_SI_NO }}>
-          <ElegirSiNo etiqueta="Acomodación terminada" valor={terminada} onCambiar={cambiar} />
-        </div>
-      </div>
-      <p className="text-xs mt-1" style={{ color: terminada ? C.charcoal : C.peligro }}>
-        {terminada ? "Ya se pueden enviar las invitaciones." : "Mientras diga «No», no se envía ninguna invitación."}
-      </p>
-    </div>
+    <RecuadroSiNo
+      titulo="Acomodación terminada"
+      valor={terminada}
+      onCambiar={cambiar}
+      icono={terminada ? LockOpen : Lock}
+      nota={terminada ? "Ya se pueden enviar las invitaciones." : "Mientras diga «No», no se envía ninguna invitación."}
+    />
   );
 }
 

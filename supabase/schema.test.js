@@ -960,6 +960,30 @@ describe("el candado de las invitaciones", () => {
   });
 });
 
+// v92.1 (él): cada invitado cambia sus canciones en el tablón, solo con su
+// enlace personal, hasta que el anfitrión marca «Canciones cerradas».
+describe("las canciones desde el tablón", () => {
+  const f = cuerpoDe("tablon_guardar_canciones");
+  it("«Canciones cerradas», en evento, sin «not null» y pública (el tablón la necesita)", () => {
+    expect(sql).toContain('"cancionesCerradas" boolean DEFAULT false,');
+    expect(cuerpoDe("evento_publico")).not.toContain("'cancionesCerradas'");
+  });
+  it("solo con el enlace personal: la clave de su ficha y su respuesta, como su email", () => {
+    expect(f).toContain("tablon_invitado(p_token, p_respuesta)");
+    expect(f).toContain(`y."claveTablon" = p_clave`);
+    expect(f).toContain("coalesce(p_clave, '') <> ''");
+  });
+  it("con «Canciones cerradas», no guarda", () => {
+    expect(f).toContain(`'error', 'cerradas'`);
+  });
+  it("solo su canción, hasta 3 líneas, y sin avisar a su colaborador", () => {
+    expect(f).toMatch(/update invitados\s+set "cancion" = v_cancion,\s+"sinCancion"/);
+    expect(f).toContain("[1:3]");
+    expect(f).toContain("set_config('eventos.recalculo_aviso_activo', 'off', true)");
+    expect(f).toContain(`where "id" = v_id`);
+  });
+});
+
 // v88.6 (él): «Solo con enlace personal». El enlace general solo dice que
 // se pida el acceso al colaborador; por nombre y año ya no entra nadie.
 describe("el tablón, solo con el enlace personal", () => {

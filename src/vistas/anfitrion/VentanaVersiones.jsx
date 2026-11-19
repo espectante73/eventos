@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "92.1",
+    cambios: [
+      "Tablón: quien entra con su enlace personal tiene, plegada bajo el recuadro verde, «Tus canciones para bailar»: los mismos 3 huecos (canción y artista) que usa el colaborador, con «Cancelar» y «Guardar». Por la puerta general, no.",
+      "«Canciones para bailar» del anfitrión: arriba, la casilla «Canciones cerradas». Con «Sí», en el tablón ya solo se ven, con «Si necesitas cambiar algo, díselo a tu colaborador».",
+      "Lo que cambia un invitado le sale al DJ en rojo, y en «Repasar» como pendiente. Ni caduca la invitación ni avisa al colaborador.",
+      "«Comprueba tus datos» ya no repite las canciones a quien las puede cambiar en su tarjeta.",
+    ],
+  },
+  {
     version: "92",
     cambios: [
       "Cuenta del DJ: si hay canciones nuevas o cambiadas, le sale un aviso rojo en su inicio («2 canciones nuevas o cambiadas desde el 18 nov»); al tocarlo se abre la lista.",

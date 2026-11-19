@@ -330,6 +330,30 @@ describe("las canciones, en lista", () => {
       .slice(1)
       .map((f) => [...f.children].slice(0, 3).map((c) => c.textContent).join("|"));
 
+  // v92.1 (él): «check para cerrar a mano» las canciones del tablón.
+  it("«Canciones cerradas» arriba: «Sí» las cierra en el tablón", () => {
+    const guardados = [];
+    const vista = montar(
+      <SeccionInvitados
+        data={{ ...conCanciones, persistEvento: (e) => guardados.push(e) }}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante="canciones"
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+    expect(document.body.textContent).toContain("Cada invitado puede cambiar las suyas en el tablón, con su enlace personal.");
+    const si = [...document.body.querySelectorAll('button[role="radio"]')].find((b) => b.textContent.trim() === "Sí");
+    vista.pulsar(si);
+    expect(guardados.at(-1).cancionesCerradas).toBe(true);
+    vista.desmontar();
+  });
+
   it("sin nombres; la misma canción, una fila por quien la pidió y escrita igual", () => {
     const vista = abrir();
     expect(filas()).toEqual(["★★|Bailando — Enrique Iglesias|41", "★★|Bailando — Enrique Iglesias|36", "★|La bamba — Ritchie Valens|36"]);

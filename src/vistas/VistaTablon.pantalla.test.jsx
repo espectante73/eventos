@@ -10,6 +10,7 @@ const CLAVE = "0123456789abcdef";
 const llamadas = [];
 let soloPersonal = false;
 let valen = [];
+let quien = null;
 const servidor = {
   tablon_verificar_token: () => true,
   evento_publico: () => ({ nombre: "Las Bodas de todos", tablonSoloPersonal: soloPersonal }),
@@ -18,6 +19,7 @@ const servidor = {
   tablon_por_clave: (a) => (a.p_clave === CLAVE ? { nombre: "Pacheco, Ana", respuesta: CLAVE } : null),
   tablon_verificar_respuesta: (a) => valen.includes(a.p_respuesta),
   tablon_falta_anio: () => false,
+  tablon_quien_soy: () => quien,
 };
 vi.mock("../supabaseClient", () => ({
   supabase: {
@@ -43,6 +45,7 @@ beforeEach(() => {
   llamadas.length = 0;
   soloPersonal = false;
   valen = [];
+  quien = null;
   enlace("");
   try {
     localStorage.clear();
@@ -102,5 +105,24 @@ it("con la casilla, lo guardado con el nombre por el enlace general ya no entra:
   const vista = await abrir();
   expect(texto()).toContain(SOLO_PERSONAL);
   expect(localStorage.getItem("tablon-respuesta-t1")).toBeNull();
+  vista.desmontar();
+});
+
+// v92.1 (él): sus canciones, desde el tablón, solo con su enlace personal.
+it("dentro con su enlace personal sale «Tus canciones para bailar»; por la puerta general, no", async () => {
+  valen = [`${CLAVE} 1975`, "Pacheco Ana 1975"];
+  quien = { nombre: "Pacheco, Ana", cancion: "Titanium — David Guetta" };
+  enlace(`&yo=${CLAVE}`);
+  localStorage.setItem("tablon-respuesta-t1", `${CLAVE} 1975`);
+  let vista = await abrir();
+  expect(texto()).toContain("Has entrado como Pacheco, Ana");
+  expect(texto()).toContain("Tus canciones para bailar");
+  vista.desmontar();
+
+  enlace("");
+  localStorage.setItem("tablon-respuesta-t1", "Pacheco Ana 1975");
+  vista = await abrir();
+  expect(texto()).toContain("Has entrado como Pacheco, Ana");
+  expect(texto()).not.toContain("Tus canciones para bailar");
   vista.desmontar();
 });
