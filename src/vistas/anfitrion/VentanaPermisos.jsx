@@ -11,9 +11,9 @@
 // invitaciones (solo confirmados y pagados)") para que ninguna rompa
 // línea. El colaborador se elige con un <select> (uno a la vez, no una
 // lista larga con todos a la vista) -- los checkboxes de sus permisos
-// quedan siempre visibles debajo, sin ningún desplegable adicional que
-// abrir: es justo el <select> el que hace pequeña la ventana, no un
-// acordeón por persona (primer intento, descartado por el usuario). El
+// quedan debajo: es el <select> el que hace pequeña la ventana, no un
+// acordeón por persona (primer intento, descartado por el usuario). Lo que
+// sí se pliega es cada zona de permisos (v91.8, él). El
 // checkbox va a la DERECHA de su etiqueta -- mismo criterio "pulgar
 // derecho" ya aplicado al resto de la app (botones flotantes, Modo
 // Pruebas).
@@ -24,11 +24,11 @@ import { ETIQUETAS_PERMISOS, GRUPOS_PERMISOS, ordenarPermisos } from "../../lib/
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 
-const ROTULO_GRUPO = { color: C.gold, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" };
-
 export function VentanaPermisos({ data, onCerrar }) {
   const { colaboradores, persistColaboradores } = data;
   const [seleccionadoId, setSeleccionadoId] = useState(colaboradores[0]?.id ?? null);
+  // La zona de permisos abierta (una a la vez), o null: todas plegadas.
+  const [abierto, setAbierto] = useState(null);
   const colaborador = colaboradores.find((c) => c.id === seleccionadoId) || null;
   const permisos = Array.isArray(colaborador?.permisos) ? colaborador.permisos : [];
   const colaboradoresConPermisos = colaboradores.filter((c) => Array.isArray(c.permisos) && c.permisos.length > 0);
@@ -83,26 +83,36 @@ export function VentanaPermisos({ data, onCerrar }) {
             </select>
           </div>
 
-          {/* Por zona de la app, cada grupo con su título (él, v91.7); el
-              rótulo, el mismo que el de los campos de un formulario. */}
-          <div className="flex flex-col gap-4">
+          {/* Por zona de la app (él, v91.7), y plegado como toda la app
+              (él, v91.8: «la ventana permisos plegada, que es la filosofía
+              de la app»): una zona abierta a la vez, con su rótulo y la
+              flecha de los apartados de un formulario (SeccionPlegable
+              sencilla); el resumen dice cuántos tiene marcados. */}
+          <div className="flex flex-col">
             {GRUPOS_PERMISOS.map((grupo) => (
-              <div key={grupo.titulo} role="group" aria-label={grupo.titulo} className="flex flex-col gap-2">
-                <p className="uppercase tracking-wide text-xs" style={ROTULO_GRUPO}>
-                  {grupo.titulo}
-                </p>
-                {grupo.claves.map((clave) => (
-                  <label key={clave} className="flex items-center justify-between gap-3 text-sm py-0.5" style={{ color: C.charcoal }}>
-                    <span>{ETIQUETAS_PERMISOS[clave]}</span>
-                    <input
-                      type="checkbox"
-                      checked={permisos.includes(clave)}
-                      onChange={() => alternarPermiso(clave)}
-                      className="flex-shrink-0"
-                      style={{ width: 18, height: 18 }}
-                    />
-                  </label>
-                ))}
+              <div key={grupo.titulo} role="group" aria-label={grupo.titulo}>
+                <SeccionPlegable
+                  sencilla
+                  titulo={grupo.titulo}
+                  resumen={`${grupo.claves.filter((c) => permisos.includes(c)).length} de ${grupo.claves.length}`}
+                  abierta={abierto === grupo.titulo}
+                  onAlternar={() => setAbierto((a) => (a === grupo.titulo ? null : grupo.titulo))}
+                >
+                  <div className="flex flex-col gap-2 pb-2">
+                    {grupo.claves.map((clave) => (
+                      <label key={clave} className="flex items-center justify-between gap-3 text-sm py-0.5" style={{ color: C.charcoal }}>
+                        <span>{ETIQUETAS_PERMISOS[clave]}</span>
+                        <input
+                          type="checkbox"
+                          checked={permisos.includes(clave)}
+                          onChange={() => alternarPermiso(clave)}
+                          className="flex-shrink-0"
+                          style={{ width: 18, height: 18 }}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </SeccionPlegable>
               </div>
             ))}
           </div>

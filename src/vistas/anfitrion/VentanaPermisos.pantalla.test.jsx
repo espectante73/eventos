@@ -1,6 +1,7 @@
 // La ventana Permisos, DIBUJADA (v91.7, él: «deberían estar ordenados por
 // secciones, música y multimedia no están juntos»): un título por zona de
-// la app y, debajo, sus casillas.
+// la app y, debajo, sus casillas; plegadas, una zona abierta a la vez
+// (v91.8, él: «plegada, que es la filosofía de la app»).
 import { it, expect } from "vitest";
 import { montar } from "../../pruebas/dibujar";
 import { PERMISOS, ETIQUETAS_PERMISOS, GRUPOS_PERMISOS } from "../../lib/permisos";
@@ -12,21 +13,36 @@ function dibujar(colaboradores) {
   return { vista, guardados };
 }
 const grupo = (titulo) => document.body.querySelector(`[role="group"][aria-label="${titulo}"]`);
+const abrir = (vista, titulo) => vista.pulsar(grupo(titulo).querySelector("button[aria-expanded]"));
+const casillas = () => document.body.querySelectorAll('input[type="checkbox"]');
 
-it("cada grupo, con su título y sus casillas; Multimedia y Canciones para bailar, juntas en «Música»", () => {
+it("todo plegado al abrir; cada zona, con su título y cuántos tiene marcados", () => {
+  const { vista } = dibujar([{ id: "c1", nombre: "Brown, Julien", permisos: [PERMISOS.MULTIMEDIA] }]);
+  expect(casillas().length).toBe(0);
+  for (const g of GRUPOS_PERMISOS) expect(grupo(g.titulo), g.titulo).not.toBeNull();
+  expect(grupo("Música").textContent).toContain("1 de 2");
+  expect(grupo("Textos del evento").textContent).toContain("0 de 2");
+  vista.desmontar();
+});
+
+it("una zona abierta a la vez; Multimedia y Canciones para bailar, juntas en «Música»", () => {
   const { vista } = dibujar([{ id: "c1", nombre: "Brown, Julien", permisos: [] }]);
   for (const g of GRUPOS_PERMISOS) {
-    const caja = grupo(g.titulo);
-    expect(caja, g.titulo).not.toBeNull();
-    expect(caja.querySelectorAll('input[type="checkbox"]').length).toBe(g.claves.length);
+    abrir(vista, g.titulo);
+    expect(casillas().length, g.titulo).toBe(g.claves.length);
+    expect(grupo(g.titulo).querySelectorAll('input[type="checkbox"]').length).toBe(g.claves.length);
   }
+  abrir(vista, "Música");
   expect(grupo("Música").textContent).toContain(ETIQUETAS_PERMISOS[PERMISOS.MULTIMEDIA]);
   expect(grupo("Música").textContent).toContain(ETIQUETAS_PERMISOS[PERMISOS.CANCIONES_DJ]);
+  abrir(vista, "Música");
+  expect(casillas().length).toBe(0);
   vista.desmontar();
 });
 
 it("marcar una casilla guarda ese permiso al colaborador elegido", () => {
   const { vista, guardados } = dibujar([{ id: "c1", nombre: "Brown, Julien", permisos: [PERMISOS.MULTIMEDIA] }]);
+  abrir(vista, "Música");
   vista.pulsar(grupo("Música").querySelectorAll('input[type="checkbox"]')[1]);
   expect(guardados.at(-1)[0].permisos).toEqual([PERMISOS.MULTIMEDIA, PERMISOS.CANCIONES_DJ]);
   vista.desmontar();

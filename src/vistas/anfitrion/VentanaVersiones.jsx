@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "91.8",
+    cambios: [
+      "Ventana Permisos plegada, como el resto de la app: cada zona muestra solo su título y cuántos permisos tiene marcados el colaborador (por ejemplo «Música 2 de 2»). Se abre tocándola, y una a la vez.",
+    ],
+  },
+  {
     version: "91.7",
     cambios: [
       "Ventana Permisos ordenada por zonas de la app, cada una con su título: Textos del evento, Invitaciones y entrada, Música (Multimedia y Canciones para bailar, juntas) y Cómo está hecha la app.",
