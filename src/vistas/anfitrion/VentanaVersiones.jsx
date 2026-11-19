@@ -42,6 +42,10 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "91",
+    cambios: ["Invitaciones, apartado «No listas»: «Sin mesa» en rojo lleno con letra blanca."],
+  },
+  {
     version: "90.9",
     cambios: [
       "Invitaciones, apartado «No listas»: «Sin pagar» en dorado, el del importe, y «Sin mesa» en rojo, para distinguirlos de un vistazo. «No asiste» se ve también en las filas de fondo oscuro.",

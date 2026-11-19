@@ -40,11 +40,11 @@ const ALTO_FILA_NOMBRE = 34;
 const ANCHO_ROTULO = 70;
 const ANCHO_SI_NO = 140;
 // El color de cada motivo de «No listas» (v90.9): el dinero, en el dorado de
-// la pastilla del importe; lo demás que falta, en rojo; «No asiste(n)» ya es
-// una respuesta, en gris.
+// la pastilla del importe; la mesa, rojo lleno con letra blanca (él, v91);
+// sin confirmar, rojo suave; «No asiste(n)» ya es una respuesta, en gris.
 const COLOR_MOTIVO = {
   pago: { background: C.champanClaro, color: C.champanTinta },
-  mesa: { background: C.avisoFondo, color: C.peligro },
+  mesa: { background: C.peligro, color: C.blanco },
   confirmar: { background: C.avisoFondo, color: C.peligro },
   // Con borde: en las filas alternas, un fondo gris se perdería.
   noAsiste: { border: `1px solid ${C.line}`, color: C.charcoal },
