@@ -10,7 +10,7 @@
 // la monta ANTES de tocar nada de sesión/login en cuanto detecta
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
 import { Fragment, useState, useEffect, useCallback, useRef } from "react";
-import { Calendar, Clock, MapPin, Lock, Music, Pause, ArrowLeft, User, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, CalendarPlus, Clock, MapPin, Lock, Music, Pause, ArrowLeft, User, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { C, inputStyle, OP, S, T, DEDO, FONDO_VERDE, DORADO, conAlfa } from "../theme";
 import { supabase } from "../supabaseClient";
 import { useFichaInstalacion, fichaDelTablon } from "../lib/fichaInstalacion";
@@ -33,6 +33,7 @@ import { TarjetaNoticia, CabeceraNoticia, CuerpoZonas } from "./NoticiaTablon";
 import { RegistroTablon } from "./RegistroTablon";
 import { guardarCancionesTablon } from "../lib/cancionesTablon";
 import { pedirMuestras } from "../lib/escuchar";
+import { eventoDelCalendario, RUTA_CALENDARIO } from "../lib/calendario";
 import { tituloZonas } from "../lib/zonasTablon";
 
 const BUCKET_MUSICA = "musica-ambiental";
@@ -858,6 +859,24 @@ export function VistaTablon({ token }) {
                   su dirección detrás, como en la Portada (v69.3). */}
               <InfoItem claro icon={MapPin} label="Lugar" value={lineasLugar(evento)} />
             </div>
+            {/* «Añadir a mi calendario» (él, v92.6), junto a la fecha y del
+                lado del pulgar: el evento en el calendario de su móvil, con
+                aviso la víspera. Solo con la fecha confirmada y a la vista
+                (lib/calendario.js). */}
+            {eventoDelCalendario(evento) && (
+              <div className="mt-3 flex justify-end zurdo:justify-start">
+                <Boton
+                  variante="secundario"
+                  oscuro
+                  icono={CalendarPlus}
+                  onClick={() => {
+                    window.location.href = RUTA_CALENDARIO;
+                  }}
+                >
+                  Añadir a mi calendario
+                </Boton>
+              </div>
+            )}
             {/* La guía de las tres rondas (él, v69.4), al ritmo de cada uno
                 (lib/rondasTablon.js): la suya en negrita y con «Ahora»; las
                 cumplidas, claras y con su visto; las demás, difuminadas

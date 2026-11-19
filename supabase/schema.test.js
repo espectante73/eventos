@@ -1095,3 +1095,14 @@ describe("las entregas de dinero de cada colaborador", () => {
     expect(f).toContain(`"entregas"->-1->>'id' = p_entrega_id`);
   });
 });
+
+// v92.6 (él): «Añadir a mi calendario» al final de la invitación, la misma
+// dirección que el botón del tablón y con la misma condición (lib/calendario.js).
+describe("el calendario en la invitación", () => {
+  it("el botón va tras «Ubicación del evento», solo con la fecha confirmada y a la vista", () => {
+    const c = cuerpoDe("anfitrion_enviar_invitacion_familia");
+    expect(c).toContain('href="https://nexuspoint.rsvp/api/calendario"');
+    expect(c).toContain(`"fecha" ~ '^\\d{4}-\\d{2}-\\d{2}$' and not coalesce("fechaSinConfirmar", false) and not coalesce("tablonOcultarFecha", false)`);
+    expect(c.indexOf("Ubicación del evento")).toBeLessThan(c.indexOf("Añadir a mi calendario"));
+  });
+});

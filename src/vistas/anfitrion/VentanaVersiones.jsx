@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "92.6",
+    cambios: [
+      "Tablón: bajo la fecha, la hora y el lugar, «Añadir a mi calendario». Guarda el evento en el calendario del móvil con un aviso la víspera; en Android abre Google Calendar con el evento ya escrito. Solo con la fecha confirmada.",
+      "Empieza a la hora del evento y acaba a la del fin del cronograma. Lo ya añadido no cambia solo si luego cambia la fecha.",
+      "El mismo botón al final del email de la invitación, debajo de «Ubicación del evento», en cuanto se suba su SQL.",
+    ],
+  },
+  {
     version: "92.5",
     cambios: [
       "Tablón: al cambiar sus canciones en «Comprueba tus datos», cada una escrita lleva su ▶ de escucha previa (30 s de Deezer), como en el formulario del colaborador. Solo con el enlace personal.",

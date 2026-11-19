@@ -12,9 +12,10 @@ let soloPersonal = false;
 let valen = [];
 let quien = null;
 let cerradas = false;
+let fechas = {};
 const servidor = {
   tablon_verificar_token: () => true,
-  evento_publico: () => ({ nombre: "Las Bodas de todos", tablonSoloPersonal: soloPersonal, cancionesCerradas: cerradas }),
+  evento_publico: () => ({ nombre: "Las Bodas de todos", tablonSoloPersonal: soloPersonal, cancionesCerradas: cerradas, ...fechas }),
   tablon_obtener_pregunta: () => "Apellido familiar y nombre",
   tablon_anios: () => ({ desde: 1950, hasta: 2000 }),
   tablon_por_clave: (a) => (a.p_clave === CLAVE ? { nombre: "Pacheco, Ana", respuesta: CLAVE } : null),
@@ -48,6 +49,7 @@ beforeEach(() => {
   valen = [];
   quien = null;
   cerradas = false;
+  fechas = {};
   enlace("");
   try {
     localStorage.clear();
@@ -187,5 +189,21 @@ it("al volver a la ventana del tablón, lo vuelve a leer", async () => {
   const antes = lecturas();
   await act(async () => window.dispatchEvent(new Event("focus")));
   expect(lecturas()).toBe(antes + 1);
+  vista.desmontar();
+});
+
+// v92.6 (él): «Añadir a mi calendario», solo con la fecha confirmada.
+it("con la fecha confirmada, «Añadir a mi calendario»; sin confirmar, no", async () => {
+  valen = [`${CLAVE} 1975`];
+  quien = ANA;
+  localStorage.setItem("tablon-respuesta-t1", `${CLAVE} 1975`);
+  fechas = { fecha: "2026-12-11", hora: "19:00", fechaSinConfirmar: false, tablonOcultarFecha: false };
+  let vista = await abrir();
+  expect(texto()).toContain("Añadir a mi calendario");
+  vista.desmontar();
+  fechas = { fecha: "2026-12-11", hora: "19:00", fechaSinConfirmar: true, tablonOcultarFecha: false };
+  vista = await abrir();
+  expect(texto()).toContain("Has entrado como Pacheco, Ana");
+  expect(texto()).not.toContain("Añadir a mi calendario");
   vista.desmontar();
 });

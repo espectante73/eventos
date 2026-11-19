@@ -1760,6 +1760,7 @@ CREATE FUNCTION public.anfitrion_enviar_invitacion_familia(p_token uuid, p_email
     AS $$
 declare
   v_mapa text;
+  v_calendario boolean;
 begin
   if p_token is distinct from (select "token" from anfitrion_secreto limit 1) then
     return;
@@ -1768,7 +1769,13 @@ begin
   -- El botón "Ubicación del evento", con el mismo aspecto que los de los
   -- demás correos. Solo con un enlace https sin comillas ni espacios: va
   -- pegado dentro del HTML.
-  select coalesce("enlaceMapa", '') into v_mapa from evento limit 1;
+  -- Y debajo, «Añadir a mi calendario» (v92.6, él: «solo, al final»): la
+  -- misma dirección que el botón del tablón (src/lib/calendario.js), solo
+  -- con la fecha confirmada y a la vista, como allí (fechaApuntable).
+  select coalesce("enlaceMapa", ''),
+         "fecha" ~ '^\d{4}-\d{2}-\d{2}$' and not coalesce("fechaSinConfirmar", false) and not coalesce("tablonOcultarFecha", false)
+    into v_mapa, v_calendario
+  from evento limit 1;
 
   perform enviar_email(
     p_email, p_asunto,
@@ -1779,6 +1786,14 @@ begin
         '" style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
         'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
         'font-weight:600;font-family:sans-serif;">Ubicación del evento</a></div>'
+      else ''
+    end ||
+    case
+      when coalesce(v_calendario, false) then
+        '<div style="margin-top:12px;"><a href="https://nexuspoint.rsvp/api/calendario"' ||
+        ' style="display:inline-block;background:#1F3A2E;color:#EFE9DE;' ||
+        'padding:10px 22px;border-radius:6px;text-decoration:none;' ||
+        'font-weight:600;font-family:sans-serif;">Añadir a mi calendario</a></div>'
       else ''
     end,
     'invitacion.png', p_imagen_base64,
