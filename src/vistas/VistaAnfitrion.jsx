@@ -16,6 +16,7 @@ import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
 import { C } from "../theme";
 import { ModalFlotante } from "../components/VentanaFlotante";
 import { Portada } from "../components/Portada";
+import { CapaBarra, VENTANAS_DEL_ANFITRION } from "../components/BarraVentanas";
 import { VentanaAniversarios } from "./anfitrion/VentanaAniversarios";
 import { VentanaNovedades } from "./anfitrion/VentanaNovedades";
 import { VentanaPermisos } from "./anfitrion/VentanaPermisos";
@@ -55,7 +56,8 @@ const VentanaVersiones = lazy(() =>
 // `abrirMusicaDentro`: Música dentro de la app, con la barra de ventanas
 // del móvil (App.jsx). Vive allí y no aquí para seguir abierta al pasar a
 // otra vista (el formulario del colaborador).
-export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, emailSesion = "", abrirMusicaDentro }) {
+// `barra`: esa misma barra, para Contabilidad e Invitaciones (v90.3).
+export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, emailSesion = "", abrirMusicaDentro, barra }) {
   const { evento, colaboradores, invitados, persistInvitados, tokenTablon } = data;
   // El anfitrión también es colaborador: sus fichas incompletas le laten
   // en "Abrir sección…" (él, v50.6). Se le reconoce por su email de acceso.
@@ -289,7 +291,22 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     cuentas: false,
     versiones: false,
   });
-  const toggle = (clave) => setAbierto((a) => ({ ...a, [clave]: !a[clave] }));
+  // En el móvil, Contabilidad e Invitaciones van a la barra de ventanas
+  // (él, v90.3: «no hay un icono en el pie como sí pasa con otras
+  // ventanas»), como el Formulario: a pantalla entera, con su cuadradito, y
+  // siguen como se dejaron al pasar a otra. Quién está abierta lo sabe la
+  // barra (App.jsx): así sigue ahí al volver de la vista de un colaborador.
+  const enBarra = (clave) => Boolean(barra) && VENTANAS_DEL_ANFITRION.includes(clave) && esAparatoTactil();
+  const estaAbierta = (clave) => (enBarra(clave) ? barra.abiertas.includes(clave) : abierto[clave]);
+  // Desde el menú, una de la barra se abre o se pone delante; nunca se cierra.
+  const toggle = (clave) => (enBarra(clave) ? barra.abrir(clave) : setAbierto((a) => ({ ...a, [clave]: !a[clave] })));
+  const cerrar = (clave) => (enBarra(clave) ? barra.cerrar(clave) : setAbierto((a) => ({ ...a, [clave]: false })));
+  // Su capa: delante, la ventana; si no, oculta sin desmontarse.
+  const enSuCapa = (clave, ventana) => (
+    <CapaBarra activa={enBarra(clave)} delante={barra?.delante === clave} arriba={barra?.arriba || 0} marco>
+      {ventana}
+    </CapaBarra>
+  );
 
   const abrirInvitados = useCallback(() => {
     if (esAparatoTactil() || !abrirInvitadosPopup()) toggle("invitados");
@@ -346,7 +363,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
       <Portada
         evento={evento}
         editable
-        abierto={abierto}
+        abierto={{ ...abierto, cuentas: estaAbierta("cuentas"), invitaciones: estaAbierta("invitaciones") }}
         toggle={toggle}
         colaboradores={colaboradores}
         onCambiarRol={setRol}
@@ -428,8 +445,9 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
       )}
 
       {/* Invitaciones */}
-      {abierto.invitaciones && (
+      {estaAbierta("invitaciones") && enSuCapa("invitaciones",
         <VentanaInvitaciones
+          enBarra={enBarra("invitaciones")}
           data={data}
           familiasListasParaInvitacion={familiasListasParaInvitacion}
           destinatariosConEmail={destinatariosConEmail}
@@ -441,14 +459,12 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
           modoCalibracion={modoCalibracion}
           setModoCalibracion={setModoCalibracion}
           marcarInvitacionEnviada={marcarInvitacionEnviada}
-          onCerrar={() => toggle("invitaciones")}
+          onCerrar={() => cerrar("invitaciones")}
         />
       )}
 
       {/* Estado de cuentas */}
-      {abierto.cuentas && (
-        <VentanaCuentas data={data} onCerrar={() => toggle("cuentas")} />
-      )}
+      {estaAbierta("cuentas") && enSuCapa("cuentas", <VentanaCuentas data={data} enBarra={enBarra("cuentas")} onCerrar={() => cerrar("cuentas")} />)}
 
       {/* Día del evento: las llegadas y, después, las fotos (v66) */}
       {abierto.diaEvento && (

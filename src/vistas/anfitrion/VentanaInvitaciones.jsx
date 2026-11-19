@@ -44,6 +44,8 @@ export function VentanaInvitaciones({
   setModoCalibracion,
   marcarInvitacionEnviada,
   onCerrar,
+  // v90.3: en el móvil, a pantalla entera en la barra de ventanas.
+  enBarra = false,
 }) {
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
   const { evento, colaboradores, invitados, persistEvento, persistInvitados } = data;
@@ -180,6 +182,8 @@ export function VentanaInvitaciones({
           familiasListasParaInvitacion.length > 0 ? ` (${familiasListasParaInvitacion.length})` : ""
         }`}
         onCerrar={onCerrar}
+        fijo={enBarra}
+        pantallaEntera={enBarra}
       >
         {/* Las tres cifras venían de la ventana "Avisos" (retirada el
             2026-09-05): su bloque "Invitaciones a familias" repetía la

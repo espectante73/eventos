@@ -34,10 +34,15 @@ export const Z_BARRA = 10000;
 export const Z_INICIO = 45;
 
 // Las ventanas que pueden ir en la barra. El icono, el del menú.
+// Contabilidad e Invitaciones (él, v90.3: «no hay un icono en el pie como
+// sí pasa con otras ventanas»), del anfitrión: viven en VistaAnfitrion.
 export const VENTANAS_MOVIL = {
   formulario: { clave: "formulario", titulo: "Formulario", icono: ICONOS_VENTANAS.formulario },
   musica: { clave: "musica", titulo: "Multimedia", icono: ICONOS_VENTANAS.musicaEvento },
+  cuentas: { clave: "cuentas", titulo: "Contabilidad", icono: ICONOS_VENTANAS.cuentas },
+  invitaciones: { clave: "invitaciones", titulo: "Invitaciones", icono: ICONOS_VENTANAS.invitaciones },
 };
+export const VENTANAS_DEL_ANFITRION = ["cuentas", "invitaciones"];
 const INICIO = { clave: "inicio", titulo: "Inicio", icono: Home };
 const IconoEquipo = ICONOS_VENTANAS.equipo;
 

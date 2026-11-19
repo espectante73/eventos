@@ -30,6 +30,16 @@ describe("la barra de ventanas", () => {
     vista.desmontar();
   });
 
+  // v90.3 (él: «no hay un icono en el pie como sí pasa con otras ventanas»).
+  it("Contabilidad e Invitaciones tienen su cuadradito, con su X", () => {
+    const { vista, boton } = dibujar({ abiertas: ["cuentas", "invitaciones"], delante: "cuentas" });
+    expect(boton("Contabilidad").getAttribute("aria-pressed")).toBe("true");
+    expect(boton("Invitaciones").getAttribute("aria-pressed")).toBe("false");
+    expect(boton("Cerrar Contabilidad")).toBeTruthy();
+    expect(boton("Cerrar Invitaciones")).toBeTruthy();
+    vista.desmontar();
+  });
+
   it("tocar un cuadradito pone esa ventana delante", () => {
     const { vista, llamadas, boton } = dibujar();
     vista.pulsar(boton("Inicio"));

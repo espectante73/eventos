@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "90.3",
+    cambios: [
+      "En el móvil, Contabilidad e Invitaciones entran en la barra de ventanas de abajo, como el Formulario y Multimedia: se abren a pantalla entera, con su cuadradito (la cartera y el sobre) junto a la casita y Equipo.",
+      "Se pasa de una a otra con un toque y cada una sigue como se dejó; la X de su cuadradito la cierra. En el ordenador, siguen como siempre.",
+    ],
+  },
+  {
     version: "90.2",
     cambios: [
       "Contabilidad, ventana «Conceptos»: el nombre de cada concepto ya se puede corregir. Se toca, se escribe y se guarda al salir o con Intro, igual que el precio fijo. Antes solo se podía quitar.",

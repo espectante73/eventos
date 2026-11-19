@@ -30,7 +30,8 @@ import { resumenAPagar } from "../../lib/aPagar";
 const conPropina = (importe, propina, { corto = false } = {}) =>
   propina > 0 ? `${euros(importe)} + ${euros(propina)} ${corto ? "" : "de "}propina` : euros(importe);
 
-export function VentanaCuentas({ data, onCerrar }) {
+// `enBarra` (v90.3): en el móvil, a pantalla entera en la barra de ventanas.
+export function VentanaCuentas({ data, onCerrar, enBarra = false }) {
   const {
     evento,
     invitados,
@@ -218,7 +219,7 @@ export function VentanaCuentas({ data, onCerrar }) {
 
   return (
     <>
-    <VentanaFlotante clave="cuentas" titulo="Contabilidad" onCerrar={onCerrar}>
+    <VentanaFlotante clave="cuentas" titulo="Contabilidad" onCerrar={onCerrar} fijo={enBarra} pantallaEntera={enBarra}>
       {/* Los gastos llegan al abrir la ventana (v72.3): sin ellos, el
           balance y la lista mentirían. */}
       {!lista ? (

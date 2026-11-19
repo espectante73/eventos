@@ -8,7 +8,7 @@ import { PERMISOS, tienePermiso } from "./lib/permisos";
 import { C, OP, S, conAlfa } from "./theme";
 import { VistaLogin } from "./vistas/VistaLogin";
 import { PantallaCargando } from "./components/PantallaCargando";
-import { BarraVentanas, CapaBarra, ALTO_BARRA } from "./components/BarraVentanas";
+import { BarraVentanas, CapaBarra, ALTO_BARRA, VENTANAS_DEL_ANFITRION } from "./components/BarraVentanas";
 import { SelloCuentaAtras, HUECO_SELLO } from "./components/SelloCuentaAtras";
 import { VentanaEquipo } from "./vistas/VentanaEquipo";
 import { esFalloDelServidor } from "./lib/servidor";
@@ -121,10 +121,12 @@ export default function App() {
   // inicio del anfitrión y en el del colaborador, por eso vive aquí.
   const [equipoAbierto, setEquipoAbierto] = useState(false);
   const [delante, setDelante] = useState("inicio");
-  const abrirMusicaDentro = useCallback(() => {
-    setVentanasMovil((v) => (v.includes("musica") ? v : [...v, "musica"]));
-    setDelante("musica");
+  // Abrir una ventana en la barra: entra (si no estaba) y se pone delante.
+  const abrirEnBarra = useCallback((clave) => {
+    setVentanasMovil((v) => (v.includes(clave) ? v : [...v, clave]));
+    setDelante(clave);
   }, []);
+  const abrirMusicaDentro = useCallback(() => abrirEnBarra("musica"), [abrirEnBarra]);
   const cerrarVentanaMovil = useCallback((clave) => {
     setVentanasMovil((v) => v.filter((c) => c !== clave));
     setDelante((d) => (d === clave ? "inicio" : d));
@@ -139,6 +141,9 @@ export default function App() {
   }, []);
   const cambiarVistaPrevia = (destino) => {
     setVistaPrevia(destino === anfitrionToken ? null : destino);
+    // Contabilidad e Invitaciones viven en la vista del anfitrión: en la de
+    // un colaborador no hay nada que poner delante.
+    if (destino !== anfitrionToken) setDelante((d) => (VENTANAS_DEL_ANFITRION.includes(d) ? "inicio" : d));
   };
 
   // ---------- Login real (Supabase Auth) ----------
@@ -579,6 +584,7 @@ export default function App() {
             anfitrionToken={anfitrionToken}
             onCerrarSesion={session ? () => supabase.auth.signOut() : null}
             abrirMusicaDentro={abrirMusicaDentro}
+            barra={{ delante, abiertas: ventanasMovil, abrir: abrirEnBarra, cerrar: cerrarVentanaMovil, arriba: alturaBanners }}
           />
         ) : data.esAnfitrion && vistaPrevia ? (
           <VistaColaborador
@@ -651,6 +657,8 @@ export default function App() {
             // El anfitrión pudo volver a su vista: el formulario es de un
             // colaborador, así que se vuelve a la de ese colaborador.
             if (clave === "formulario" && data.esAnfitrion && vistaPrevia !== formularioDe) setVistaPrevia(formularioDe);
+            // Y las suyas (Contabilidad, Invitaciones), a la suya.
+            if (VENTANAS_DEL_ANFITRION.includes(clave) && vistaPrevia) setVistaPrevia(null);
             setDelante(clave);
           }}
           onCerrar={cerrarVentanaMovil}
