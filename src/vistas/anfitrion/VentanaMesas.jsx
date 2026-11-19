@@ -24,7 +24,7 @@
 // sitios, plano y quién se sienta dónde). Cargar una la pone como prueba,
 // mesas incluidas: mientras está cargada, también las mesas son prueba.
 import { useState } from "react";
-import { Check, AlertTriangle, Lock, Plus, Minus, Bookmark, Map as IconoPlano } from "lucide-react";
+import { Check, AlertTriangle, Lock, LockOpen, Plus, Minus, Bookmark, Map as IconoPlano } from "lucide-react";
 import { C, OP, R, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -33,7 +33,8 @@ import { RecuadroCifras } from "../../components/Widgets";
 import { PlanoMesas } from "../../components/PlanoMesas";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { MenuFlotante } from "../../components/MenuFlotante";
-import { cuentaConfirmacion, esDj } from "../../lib/invitados";
+import { cuentaConfirmacion, esDj, confirmadosSinMesa } from "../../lib/invitados";
+import { ElegirSiNo } from "../../components/Formulario";
 import { MarcaDj } from "../../components/MarcaDj";
 import { esAparatoTactil } from "../../lib/mano";
 import { VentanaCambiarMesa } from "./VentanaCambiarMesa";
@@ -177,6 +178,47 @@ function Columna({ nombre, cabecera, llena, familias, cogida, onCoger, onSoltar,
 
 const porNombre = (a, b) => a.nombre.localeCompare(b.nombre, "es");
 const CIFRA = { fontFamily: "'IBM Plex Mono', monospace", fontSize: T.pequeno };
+const ANCHO_SI_NO = 104;
+
+// «Acomodación terminada» (él, v90.7): el candado del envío de invitaciones.
+// Mientras diga «No», ni él ni ningún colaborador puede enviar una
+// (lib/invitados.js, envioInvitacionesBloqueado). Abrirlo pregunta antes,
+// con las cifras de lo que aún falta; cerrarlo otra vez, no.
+function AcomodacionTerminada({ evento, invitados, hayPrueba, persistEvento, preguntar }) {
+  const terminada = Boolean(evento?.acomodacionTerminada);
+  const sinMesa = confirmadosSinMesa(invitados);
+  const cambiar = (si) => {
+    if (si === terminada) return;
+    if (!si) return persistEvento({ ...evento, acomodacionTerminada: false });
+    preguntar({
+      titulo: "¿Acomodación terminada?",
+      texto:
+        "Desde ahora se podrán enviar las invitaciones, con la mesa que tenga cada familia en la Lista." +
+        (sinMesa > 0 ? ` ${sinMesa === 1 ? "Queda 1 confirmado" : `Quedan ${sinMesa} confirmados`} sin mesa: su familia no la recibirá hasta tenerla.` : "") +
+        (hayPrueba ? " Hay una prueba sin aplicar: las invitaciones llevan las mesas de la Lista, no las de la prueba." : ""),
+      rotulo: "Sí",
+      peligro: false,
+      alConfirmar: () => persistEvento({ ...evento, acomodacionTerminada: true }),
+    });
+  };
+  const Icono = terminada ? LockOpen : Lock;
+  return (
+    <div className="mb-2 px-3 py-2 rounded" style={{ background: terminada ? C.okFondo : C.avisoFondo, border: `1px solid ${C.line}` }}>
+      <div className="flex items-center gap-2">
+        <Icono size={18} aria-hidden style={{ color: terminada ? C.ink : C.peligro, flexShrink: 0 }} />
+        <span className="text-sm font-semibold flex-1 whitespace-nowrap" style={{ color: C.ink }}>
+          Acomodación terminada
+        </span>
+        <div style={{ width: ANCHO_SI_NO }}>
+          <ElegirSiNo etiqueta="Acomodación terminada" valor={terminada} onCambiar={cambiar} />
+        </div>
+      </div>
+      <p className="text-xs mt-1" style={{ color: terminada ? C.charcoal : C.peligro }}>
+        {terminada ? "Ya se pueden enviar las invitaciones." : "Mientras diga «No», no se envía ninguna invitación."}
+      </p>
+    </div>
+  );
+}
 
 export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   const { invitados, evento, persistInvitados, persistMesas, persistEvento, ordenFamiliares } = data;
@@ -425,6 +467,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
       }
     >
       <div className="flex flex-col" style={{ flex: 1, minHeight: 0 }}>
+        <AcomodacionTerminada evento={evento} invitados={invitados} hayPrueba={hayPrueba} persistEvento={persistEvento} preguntar={preguntar} />
         <div className="flex items-center gap-2 flex-wrap mb-2">
           <span className="text-xs px-2 py-0.5 rounded" style={{ background: C.paperDark, color: C.charcoal }}>
             {!hayPrueba

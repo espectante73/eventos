@@ -15,7 +15,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Check, Image as ImageIcon, ChevronUp, ChevronDown, ChevronRight, Download, Send, Printer, Grid3x3, FolderOpen } from "lucide-react";
 import { C, T, OP } from "../../theme";
-import { resolverColaborador, comoColaborador } from "../../lib/invitados";
+import { resolverColaborador, comoColaborador, ENVIO_BLOQUEADO } from "../../lib/invitados";
 import { nombreCompleto } from "../../lib/formato";
 import { requisitosActivos } from "../../lib/modoPruebas";
 import { redimensionarImagenArchivo, guardarArchivoInvitacion, obtenerCarpetaInvitaciones, leerHandleCarpeta } from "../../lib/descargas";
@@ -57,6 +57,8 @@ export function VentanaInvitaciones({
   modoCalibracion,
   setModoCalibracion,
   marcarInvitacionEnviada,
+  // Hasta «Acomodación terminada», no se envía (v90.7, lib/invitados.js).
+  envioBloqueado = false,
   onCerrar,
 }) {
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
@@ -226,11 +228,22 @@ export function VentanaInvitaciones({
             icono={IconoMovilQr}
             titulo="Enviar"
             resumen={
-              familiasListasParaInvitacion.length === 0 ? "ninguna lista" : faltan > 0 ? `${faltan} sin enviar` : "todas enviadas"
+              familiasListasParaInvitacion.length === 0
+                ? "ninguna lista"
+                : faltan === 0
+                  ? "todas enviadas"
+                  : envioBloqueado
+                    ? `bloqueado · ${faltan} sin enviar`
+                    : `${faltan} sin enviar`
             }
             abierta={seccionAbierta === "enviar"}
             onAlternar={() => alternar("enviar")}
           >
+            {envioBloqueado && (
+              <LineaAviso className="text-sm mt-2">
+                {ENVIO_BLOQUEADO} Se puede descargar para revisar, pero no enviar.
+              </LineaAviso>
+            )}
             {/* Envío por bloques: se elige un colaborador y solo se ven y
                 envían las familias de sus invitados, con un resumen antes de
                 mandar nada, para no arriesgarse a un envío masivo por error. */}
@@ -252,8 +265,8 @@ export function VentanaInvitaciones({
                   variante="principal"
                   icono={Send}
                   onClick={() => setMostrarResumenLoteInvitaciones(true)}
-                  disabled={familiasPendientesDeEnviar.length === 0}
-                  titulo="Solo las que aún no tienen la invitación; antes se revisa"
+                  disabled={envioBloqueado || familiasPendientesDeEnviar.length === 0}
+                  titulo={envioBloqueado ? ENVIO_BLOQUEADO : "Solo las que aún no tienen la invitación; antes se revisa"}
                 >
                   Enviar a {familiasPendientesDeEnviar.length}
                 </Boton>
@@ -305,9 +318,9 @@ export function VentanaInvitaciones({
                           tamano="pequeno"
                           variante="principal"
                           icono={Send}
-                          titulo={familia.invitacionEnviada ? "Enviar otra vez por email" : "Enviar por email"}
+                          titulo={envioBloqueado ? ENVIO_BLOQUEADO : familia.invitacionEnviada ? "Enviar otra vez por email" : "Enviar por email"}
                           onClick={() => abrirPreviewInvitacion(familia)}
-                          disabled={generando}
+                          disabled={generando || envioBloqueado}
                         />
                       </div>
                       {abierta && (
@@ -551,7 +564,7 @@ export function VentanaInvitaciones({
             })}
           </ul>
           <div className="flex flex-wrap gap-2">
-            <Boton variante="principal" onClick={confirmarEnvioLoteInvitaciones} disabled={enviandoLoteInvitaciones}>
+            <Boton variante="principal" onClick={confirmarEnvioLoteInvitaciones} disabled={enviandoLoteInvitaciones || envioBloqueado}>
               {enviandoLoteInvitaciones
                 ? "Enviando…"
                 : `Confirmar y enviar ${familiasPendientesDeEnviar.length} invitaciones`}

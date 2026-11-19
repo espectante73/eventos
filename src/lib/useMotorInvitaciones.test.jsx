@@ -6,7 +6,7 @@ import { useMotorInvitaciones } from "./useMotorInvitaciones";
 
 function motorCon(extra = {}) {
   const visto = {};
-  const data = { evento: { nombre: "La boda" }, colaboradores: [], invitados: [], ordenFamiliares: {}, persistOrdenFamiliares: () => {}, enviarInvitacionFamilia: async () => true, ...extra };
+  const data = { evento: { nombre: "La boda", acomodacionTerminada: true }, colaboradores: [], invitados: [], ordenFamiliares: {}, persistOrdenFamiliares: () => {}, enviarInvitacionFamilia: async () => true, ...extra };
   function Prueba() {
     Object.assign(visto, useMotorInvitaciones(data));
     return null;
@@ -39,5 +39,32 @@ describe("a quién llega la invitación", () => {
     });
     expect(r).toEqual({ enviados: ["a@a.com"], fallidos: ["mal@a.com"] });
     vista.desmontar();
+  });
+});
+
+describe("«Acomodación terminada» (v90.7): hasta marcarla, no sale ninguna", () => {
+  it("sin marcar, no se envía nada aunque algo llegue a pedirlo", async () => {
+    const pedidos = [];
+    const { visto, vista } = motorCon({
+      evento: { nombre: "La boda" },
+      enviarInvitacionFamilia: async (c) => (pedidos.push(c), true),
+    });
+    expect(visto.envioBloqueado).toBe(true);
+    let r;
+    await act(async () => {
+      r = await visto.enviarATodos(["a@a.com"], "<p>x</p>", "QUJD");
+    });
+    expect(r).toEqual({ enviados: [], fallidos: ["a@a.com"] });
+    expect(pedidos).toEqual([]);
+    vista.desmontar();
+  });
+
+  it("marcada, o en Modo Pruebas (los correos van al anfitrión), se puede", () => {
+    let m = motorCon();
+    expect(m.visto.envioBloqueado).toBe(false);
+    m.vista.desmontar();
+    m = motorCon({ evento: { modoPruebasActivo: true } });
+    expect(m.visto.envioBloqueado).toBe(false);
+    m.vista.desmontar();
   });
 });

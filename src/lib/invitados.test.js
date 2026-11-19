@@ -493,3 +493,25 @@ describe("FALTAS_DATOS", () => {
     expect(falta("sinAlergias", { alergias: "No" })).toBe(false);
   });
 });
+
+import { envioInvitacionesBloqueado, confirmadosSinMesa } from "./invitados";
+
+describe("el candado del envío de invitaciones (v90.7)", () => {
+  it("cerrado hasta «Acomodación terminada»; en Modo Pruebas, abierto", () => {
+    expect(envioInvitacionesBloqueado({})).toBe(true);
+    expect(envioInvitacionesBloqueado(null)).toBe(true);
+    expect(envioInvitacionesBloqueado({ acomodacionTerminada: true })).toBe(false);
+    expect(envioInvitacionesBloqueado({ modoPruebasActivo: true })).toBe(false);
+  });
+
+  it("cuenta los confirmados sin mesa; los «No asiste» y los sin confirmar, no", () => {
+    const lista = [
+      { confirmado: true, mesa: null },
+      { confirmado: true, mesa: 0 },
+      { confirmado: true, mesa: 3 },
+      { confirmado: true, noAsiste: true, mesa: null },
+      { confirmado: false, mesa: null },
+    ];
+    expect(confirmadosSinMesa(lista)).toBe(1);
+  });
+});

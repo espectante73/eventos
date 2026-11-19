@@ -9,7 +9,7 @@
 // tener que duplicar el filtro en dos sitios.
 import { useState } from "react";
 import { generarInvitacionImagen } from "./imagenInvitacion";
-import { resolverColaborador, emailDeInvitado } from "./invitados";
+import { resolverColaborador, emailDeInvitado, envioInvitacionesBloqueado, ENVIO_BLOQUEADO } from "./invitados";
 import { familiasDelEvento, mesasYCantidad } from "./familiasInvitacion";
 import { requisitosActivos } from "./modoPruebas";
 import { avisoEnPantalla } from "./avisos";
@@ -50,6 +50,9 @@ export function useMotorInvitaciones(data) {
 
   const [descargando, setDescargando] = useState(null);
   const [modoCalibracion, setModoCalibracion] = useState(false);
+  // Hasta «Acomodación terminada», no sale ninguna (v90.7). Las ventanas
+  // apagan sus botones; aquí se cierra también por si alguno se escapa.
+  const envioBloqueado = envioInvitacionesBloqueado(evento);
 
   const generarImagenParaFamilia = async (familia, mostrarCuadricula = modoCalibracion) => {
     // Fraunces tiene que estar realmente cargada antes de dibujar en el
@@ -95,6 +98,10 @@ export function useMotorInvitaciones(data) {
   const [enviandoInvitacion, setEnviandoInvitacion] = useState(false);
 
   const abrirPreviewInvitacion = async (familia) => {
+    if (envioBloqueado) {
+      avisoEnPantalla(ENVIO_BLOQUEADO, "Envío de invitaciones");
+      return;
+    }
     const destinatarios = destinatariosConEmail(familia);
     // En Modo Pruebas el correo va al anfitrión, así que se prueba igual.
     if (!destinatarios.length) {
@@ -124,6 +131,7 @@ export function useMotorInvitaciones(data) {
   const enviarATodos = async (correos, html, base64) => {
     const enviados = [];
     const fallidos = [];
+    if (envioBloqueado) return { enviados, fallidos: [...correos] };
     for (const correo of correos) {
       if (await enviarInvitacionFamilia(correo, `Tu invitación — ${evento.nombre || "evento"}`, html, base64)) enviados.push(correo);
       else fallidos.push(correo);
@@ -148,6 +156,7 @@ export function useMotorInvitaciones(data) {
   };
 
   return {
+    envioBloqueado,
     familiasListasParaInvitacion,
     emailDeInvitado: emailDe,
     destinatariosConEmail,

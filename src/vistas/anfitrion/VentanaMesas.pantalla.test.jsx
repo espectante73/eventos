@@ -20,14 +20,20 @@ const mesas = [
   { numero: 7, capacidad: 9 },
 ];
 
-function dibujar({ conMesas = mesas, lista = invitados } = {}) {
+function dibujar({ conMesas = mesas, lista = invitados, evento = {} } = {}) {
   const guardados = [];
   const mesasGuardadas = [];
+  const eventos = [];
   function Prueba() {
     const [prueba, setPrueba] = useState(PRUEBA_VACIA);
+    const [ev, setEv] = useState(evento);
+    const persistEvento = (e) => {
+      eventos.push(e);
+      setEv(e);
+    };
     return (
       <VentanaMesas
-        data={{ invitados: lista, mesas: conMesas, persistInvitados: (l) => guardados.push(l), persistMesas: (l) => void mesasGuardadas.push(l) }}
+        data={{ invitados: lista, mesas: conMesas, evento: ev, persistEvento, persistInvitados: (l) => guardados.push(l), persistMesas: (l) => void mesasGuardadas.push(l) }}
         prueba={prueba}
         setPrueba={setPrueba}
         onCerrar={() => {}}
@@ -37,10 +43,38 @@ function dibujar({ conMesas = mesas, lista = invitados } = {}) {
   const vista = montar(<Prueba />);
   const familia = (n) => vista.contenedor.querySelector(`[data-familia="${n}"]`);
   const columna = (t) => vista.contenedor.querySelector(`[data-columna="${t}"]`);
-  const boton = (t) => [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === t || b.title === t);
+  // Sin las mitades del Sí/No de «Acomodación terminada»: el «Sí» que se
+  // busca es el de la pregunta.
+  const boton = (t) => [...document.body.querySelectorAll('button:not([role="radio"])')].find((b) => b.textContent.trim() === t || b.title === t);
   const enMesa = (n, t) => [...columna(`Mesa ${n}`).querySelectorAll("button")].find((b) => b.textContent.trim() === t || b.title === t);
-  return { vista, guardados, mesasGuardadas, familia, columna, boton, enMesa };
+  return { vista, guardados, mesasGuardadas, eventos, familia, columna, boton, enMesa };
 }
+
+describe("«Acomodación terminada», el candado de las invitaciones (v90.7)", () => {
+  const mitad = (vista, t) => [...vista.contenedor.querySelectorAll('[aria-label="Acomodación terminada"] button')].find((b) => b.textContent === t);
+
+  it("sin marcar dice que no se envía ninguna; «Sí» pregunta antes, con los confirmados sin mesa", () => {
+    const { vista, eventos, boton } = dibujar();
+    expect(vista.contenedor.textContent).toContain("Mientras diga «No», no se envía ninguna invitación.");
+    expect(mitad(vista, "No").getAttribute("aria-checked")).toBe("true");
+    vista.pulsar(mitad(vista, "Sí"));
+    expect(document.body.textContent).toContain("¿Acomodación terminada?");
+    expect(document.body.textContent).toContain("Quedan 2 confirmados sin mesa");
+    expect(eventos).toEqual([]);
+    vista.pulsar(boton("Sí"));
+    expect(eventos.at(-1).acomodacionTerminada).toBe(true);
+    expect(vista.contenedor.textContent).toContain("Ya se pueden enviar las invitaciones.");
+    vista.desmontar();
+  });
+
+  it("volver a «No» cierra el envío sin preguntar", () => {
+    const { vista, eventos } = dibujar({ evento: { acomodacionTerminada: true } });
+    vista.pulsar(mitad(vista, "No"));
+    expect(document.body.textContent).not.toContain("¿Acomodación terminada?");
+    expect(eventos.at(-1).acomodacionTerminada).toBe(false);
+    vista.desmontar();
+  });
+});
 
 it("el DJ contratado se distingue: blanco, en negrita y con sus auriculares (v84.2)", () => {
   const { vista, familia } = dibujar({ lista: [...invitados, g("9", "Brown", "Julien", ROL_FAMILIAR.SUELTO, { zona: "DJ" })] });

@@ -20,7 +20,7 @@ function abrir(extra = {}) {
   const data = {
     invitados: [...invitados, ...lleno],
     mesas: [{ numero: 1, capacidad: 10 }, { numero: 2, capacidad: 8 }, { numero: 3, capacidad: 3 }],
-    evento: { nombre: "La boda", plantillaInvitacionFamilia: "Aquí tienes tu invitación." },
+    evento: { nombre: "La boda", plantillaInvitacionFamilia: "Aquí tienes tu invitación.", acomodacionTerminada: true },
     colaboradores: [],
     ordenFamiliares: { García01: { invitacionEnviada: true } },
     persistOrdenFamiliares: (o) => llamadas.push(["orden", o]),
@@ -69,6 +69,15 @@ describe("cambiar una mesa ya enviada", () => {
     expect(base64).toBe("QUJD");
     expect(llamadas[2][1]["García01"].invitacionEnviada).toBe(true);
     expect(document.body.textContent).toContain("Invitación nueva enviada a i@i.com");
+    vista.desmontar();
+  });
+
+  it("con «Acomodación terminada» sin marcar (v90.7), ni se cambia la mesa ni sale correo", async () => {
+    const { vista, llamadas, elegir, boton } = abrir({ evento: { nombre: "La boda" } });
+    await elegir("2");
+    expect(document.body.textContent).toContain("Bloqueado: falta marcar «Acomodación terminada» en Acomodación.");
+    expect(boton("Cambiar y enviar").disabled).toBe(true);
+    expect(llamadas).toEqual([]);
     vista.desmontar();
   });
 

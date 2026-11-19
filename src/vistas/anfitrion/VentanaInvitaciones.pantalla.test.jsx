@@ -16,7 +16,7 @@ const INVITADOS = [
 ];
 const COLABORADORES = [{ id: "c1", nombre: "Alonso, Ana", invitadoId: "a", email: "ana@correo.es" }];
 
-function dibujar({ evento = { imagenInvitacion: "https://x/plantilla.png" } } = {}) {
+function dibujar({ evento = { imagenInvitacion: "https://x/plantilla.png" }, envioBloqueado = false } = {}) {
   const guardados = { invitados: [], eventos: [] };
   function Prueba() {
     const [invitados, setInvitados] = useState(INVITADOS);
@@ -53,6 +53,7 @@ function dibujar({ evento = { imagenInvitacion: "https://x/plantilla.png" } } = 
         modoCalibracion={false}
         setModoCalibracion={() => {}}
         marcarInvitacionEnviada={() => {}}
+        envioBloqueado={envioBloqueado}
         onCerrar={() => {}}
       />
     );
@@ -120,5 +121,17 @@ it("«Plantilla»: quitarla es el círculo rojo de la app y pregunta antes", () 
   vista.pulsar(boton("Quitar la plantilla"));
   expect(document.body.textContent).toContain("¿Quitar la plantilla?");
   expect(guardados.eventos).toEqual([]);
+  vista.desmontar();
+});
+
+it("con la acomodación sin terminar (v90.7): lo dice, y se descarga pero no se envía", () => {
+  const { vista, boton } = dibujar({ envioBloqueado: true });
+  expect(vista.contenedor.textContent).toContain("bloqueado · 1 sin enviar");
+  vista.pulsar(boton("Enviar"));
+  expect(vista.contenedor.textContent).toContain("Bloqueado: falta marcar «Acomodación terminada» en Acomodación.");
+  const enviar = [...vista.contenedor.querySelectorAll('button[aria-label="Enviar por email"], button[aria-label="Enviar otra vez por email"], button[title*="Acomodación terminada"]')];
+  expect(enviar.length).toBeGreaterThan(0);
+  enviar.forEach((b) => expect(b.disabled).toBe(true));
+  vista.contenedor.querySelectorAll('button[aria-label="Descargar la invitación"]').forEach((b) => expect(b.disabled).toBe(false));
   vista.desmontar();
 });

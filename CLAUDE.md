@@ -392,7 +392,9 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
    `scripts/version-subida.mjs`.
 5. **La plantilla de invitación DEBE traer dibujado el sello «PAGADO»**:
    la app no lo dibuja, y lo pregunta antes de subir una. Nunca miente:
-   solo hay invitación con toda la familia pagada y con mesa.
+   solo hay invitación con toda la familia pagada y con mesa. Y no sale
+   ninguna hasta que él marca «Acomodación terminada»
+   (`envioInvitacionesBloqueado`), salvo en Modo Pruebas.
 
 ## 1.12 Lo que está esperando, y por qué no es un fallo
 

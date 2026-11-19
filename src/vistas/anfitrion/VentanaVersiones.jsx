@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "90.7",
+    cambios: [
+      "Candado en el envío de invitaciones: arriba de Acomodación, «Acomodación terminada» con Sí/No. Mientras diga «No», no se envía ninguna invitación, ni desde Invitaciones ni desde la pantalla de un colaborador; descargarlas para revisarlas sí se puede.",
+      "Marcar «Sí» pregunta antes y avisa si quedan confirmados sin mesa o una prueba sin aplicar. Volver a «No» cierra el envío otra vez, sin preguntar.",
+      "En Modo Pruebas no cierra nada: los correos le llegan al anfitrión.",
+    ],
+  },
+  {
     version: "90.6",
     cambios: [
       "Invitaciones, renovada como Contabilidad: al abrirla, todo plegado, con las cifras arriba (Faltan, Enviadas, Sin email) y cuatro apartados con su resumen: Enviar, Plantilla, Qué se imprime y Calibración (y Carpeta, en el ordenador). Uno abierto a la vez.",

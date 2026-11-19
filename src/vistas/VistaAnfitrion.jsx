@@ -358,6 +358,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   // ver lib/permisos.js). Mismo comportamiento de siempre, solo cambia
   // dónde vive el código.
   const {
+    envioBloqueado,
     familiasListasParaInvitacion,
     destinatariosConEmail,
     enviarATodos,
@@ -469,6 +470,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
         "invitaciones",
         <VentanaInvitaciones
           data={data}
+          envioBloqueado={envioBloqueado}
           familiasListasParaInvitacion={familiasListasParaInvitacion}
           destinatariosConEmail={destinatariosConEmail}
           enviarATodos={enviarATodos}

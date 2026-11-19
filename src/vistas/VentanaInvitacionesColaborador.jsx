@@ -18,9 +18,11 @@ import { C, OP } from "../theme";
 import { VentanaFlotante, ModalFlotante } from "../components/VentanaFlotante";
 import { Boton } from "../components/Boton";
 import { usePreguntaSeguridad } from "../components/PreguntaSeguridad";
+import { LineaAviso } from "../components/LineaAviso";
 
 export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
   const {
+    envioBloqueado,
     familiasListasParaInvitacion,
     destinatariosConEmail,
     descargando,
@@ -51,6 +53,8 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
         asignada. Antes de cada envío se te pedirá confirmar que ya tienes el dinero en tu
         poder.
       </p>
+      {/* Hasta que el anfitrión da la acomodación por terminada (v90.7). */}
+      {envioBloqueado && <LineaAviso className="text-sm mb-3">Todavía no se pueden enviar: el anfitrión aún no ha terminado de colocar las mesas.</LineaAviso>}
 
       {pendientes.length === 0 ? (
         <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
@@ -74,7 +78,7 @@ export function VentanaInvitacionesColaborador({ motor, onCerrar }) {
                     {correos.join(", ") || "sin email"}
                   </div>
                 </div>
-                <Boton variante="principal" tamano="pequeno" onClick={() => intentarEnviar(f)} disabled={!correos.length || descargando === f.clave}>
+                <Boton variante="principal" tamano="pequeno" onClick={() => intentarEnviar(f)} disabled={envioBloqueado || !correos.length || descargando === f.clave}>
                   <Send size={13} /> {descargando === f.clave ? "Generando…" : "Enviar"}
                 </Boton>
               </div>

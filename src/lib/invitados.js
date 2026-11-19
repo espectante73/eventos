@@ -362,6 +362,20 @@ export function familiaListaParaInvitacion(confirmados, evento) {
   return confirmados.every((m) => m.pagado && m.mesa);
 }
 
+// El envío de invitaciones, cerrado hasta que él marca «Acomodación
+// terminada» en Acomodación (él, v90.7: «así me aseguro de tener a todos
+// asignados con la combinación correcta y no envío invitación por error»).
+// Cierra el del anfitrión y el del colaborador con permiso. En Modo
+// Pruebas no: los correos le llegan a él.
+export function envioInvitacionesBloqueado(evento) {
+  return requisitosActivos(evento) && !evento?.acomodacionTerminada;
+}
+export const ENVIO_BLOQUEADO = "Bloqueado: falta marcar «Acomodación terminada» en Acomodación.";
+
+// Los confirmados que aún no tienen mesa en la Lista (los «No asiste» no
+// cuentan): lo que avisa al dar la acomodación por terminada.
+export const confirmadosSinMesa = (invitados = []) => invitados.filter((g) => g.confirmado && !g.noAsiste && g.mesa == null).length;
+
 // La asignación de colaborador es siempre manual y exclusiva del Anfitrión.
 // La cuenta de colaborador de ESTE invitado, si lo es: la que tiene su
 // ficha enlazada (`invitadoId`). No confundir con resolverColaborador, que

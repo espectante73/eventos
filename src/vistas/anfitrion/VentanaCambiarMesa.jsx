@@ -20,6 +20,7 @@ import { asignarMesaConSuFamilia, claveInvitacion, ocupacion, textoCambioMesa } 
 import { familiasDelEvento } from "../../lib/familiasInvitacion";
 import { useMotorInvitaciones } from "../../lib/useMotorInvitaciones";
 import { requisitosActivos } from "../../lib/modoPruebas";
+import { ENVIO_BLOQUEADO } from "../../lib/invitados";
 
 export function VentanaCambiarMesa({ data, familia, onCerrar }) {
   const { invitados, mesas, evento, ordenFamiliares, persistInvitados } = data;
@@ -47,6 +48,8 @@ export function VentanaCambiarMesa({ data, familia, onCerrar }) {
       setAviso(motivo);
       setEnviando(false);
     };
+    // Con el envío cerrado (v90.7), la mesa cambiaría y el correo no saldría.
+    if (motor.envioBloqueado) return fallar(`No se ha cambiado nada. ${ENVIO_BLOQUEADO}`);
     // Sin `ordenFamiliares`: esta es la única puerta que puede mover una mesa fija.
     const { invitados: siguiente, aviso: motivo } = asignarMesaConSuFamilia(invitados, familia.representante.id, destino, mesas, { conSinConfirmar: true });
     if (motivo) return fallar(motivo);
@@ -112,11 +115,12 @@ export function VentanaCambiarMesa({ data, familia, onCerrar }) {
               </>
             )}
             {aviso && <LineaAviso className="text-sm">{aviso}</LineaAviso>}
+            {!aviso && motor.envioBloqueado && <LineaAviso className="text-sm">{ENVIO_BLOQUEADO}</LineaAviso>}
             <div className="grid grid-cols-2 gap-2 pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
               <Boton variante="secundario" onClick={onCerrar} disabled={enviando} style={{ minHeight: DEDO }}>
                 Cancelar
               </Boton>
-              <Boton variante="principal" icono={Send} onClick={pedirConfirmacion} disabled={!destino || enviando} className="zurdo:order-first" style={{ minHeight: DEDO }}>
+              <Boton variante="principal" icono={Send} onClick={pedirConfirmacion} disabled={!destino || enviando || motor.envioBloqueado} className="zurdo:order-first" style={{ minHeight: DEDO }}>
                 {enviando ? "Enviando…" : "Cambiar y enviar"}
               </Boton>
             </div>

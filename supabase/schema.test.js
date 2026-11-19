@@ -944,6 +944,14 @@ describe("el enlace personal al tablón", () => {
   });
 });
 
+// v90.7 (él): «Acomodación terminada», el candado del envío de invitaciones.
+describe("el candado de las invitaciones", () => {
+  it("una casilla en evento, sin «not null» (fotos del Deshacer de antes) y pública (el colaborador la necesita)", () => {
+    expect(sql).toContain('"acomodacionTerminada" boolean DEFAULT false,');
+    expect(cuerpoDe("evento_publico")).not.toContain("'acomodacionTerminada'");
+  });
+});
+
 // v88.6 (él): «Solo con enlace personal». El enlace general solo dice que
 // se pida el acceso al colaborador; por nombre y año ya no entra nadie.
 describe("el tablón, solo con el enlace personal", () => {

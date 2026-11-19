@@ -144,6 +144,11 @@ CREATE TABLE public.evento (
     -- dice «Pídele a tu colaborador el acceso al tablón.» Lo comprueba
     -- tablon_respuesta_vale. Público: la puerta lo necesita.
     "tablonSoloPersonal" boolean DEFAULT false,
+    -- «Acomodación terminada» (v90.7, él): hasta marcarla en Acomodación no
+    -- se envía ninguna invitación (lib/invitados.js,
+    -- envioInvitacionesBloqueado). Público: el colaborador con permiso de
+    -- enviar también la necesita.
+    "acomodacionTerminada" boolean DEFAULT false,
     CONSTRAINT evento_id_check CHECK (id)
 );
 
