@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PERMISOS, ETIQUETAS_PERMISOS, PERMISOS_DE_VISTA, esDeEdicion, tienePermiso } from "./permisos";
+import { PERMISOS, ETIQUETAS_PERMISOS, PERMISOS_DE_VISTA, PERMISOS_DE_EDICION, PERMISOS_EN_LA_APP, esDeEdicion, esDeLaApp, tienePermiso } from "./permisos";
 
 // El fallo que da origen a esto (usuario, 2026-09-21): el aviso rojo del
 // colaborador decía "Tienes permisos de edición" y metía en la lista
@@ -17,12 +17,26 @@ describe("los dos tipos de permiso", () => {
     expect(esDeEdicion(PERMISOS.MAPA_SITIO_VER)).toBe(false);
   });
 
-  it("editar novedades, datos del evento, enviar invitaciones y multimedia SÍ lo son", () => {
+  it("de edición, solo los que cambian texto: Novedades y datos del evento (él, v91.4)", () => {
     expect(esDeEdicion(PERMISOS.NOVEDADES_EDITAR)).toBe(true);
     expect(esDeEdicion(PERMISOS.DATOS_EVENTO_EDITAR)).toBe(true);
-    expect(esDeEdicion(PERMISOS.INVITACIONES_ENVIAR)).toBe(true);
-    // Manejar la música en plena boda es responsabilidad: va en el aviso rojo.
-    expect(esDeEdicion(PERMISOS.MULTIMEDIA)).toBe(true);
+    expect(esDeEdicion(PERMISOS.INVITACIONES_ENVIAR)).toBe(false);
+    expect(esDeEdicion(PERMISOS.MULTIMEDIA)).toBe(false);
+  });
+
+  it("enviar invitaciones, Multimedia y acreditar son permisos en la app (y van en el aviso rojo)", () => {
+    expect(esDeLaApp(PERMISOS.INVITACIONES_ENVIAR)).toBe(true);
+    // Manejar la música en plena boda es responsabilidad.
+    expect(esDeLaApp(PERMISOS.MULTIMEDIA)).toBe(true);
+    expect(esDeLaApp(PERMISOS.ACREDITAR_ENTRADA)).toBe(true);
+    expect(esDeLaApp(PERMISOS.NOVEDADES_EDITAR)).toBe(false);
+  });
+
+  it("cada permiso, en una sola de las tres clases", () => {
+    for (const clave of claves) {
+      const en = [PERMISOS_DE_EDICION, PERMISOS_EN_LA_APP, PERMISOS_DE_VISTA].filter((l) => l.includes(clave)).length;
+      expect(en, clave).toBe(1);
+    }
   });
 
   it("la lista de vista solo contiene permisos que existen", () => {
@@ -32,6 +46,7 @@ describe("los dos tipos de permiso", () => {
   it("un permiso que solo deja mirar no enciende el aviso rojo", () => {
     const soloMira = { permisos: [PERMISOS.REPOSITORIO_VER] };
     expect(soloMira.permisos.filter(esDeEdicion)).toEqual([]);
+    expect(soloMira.permisos.filter(esDeLaApp)).toEqual([]);
     // Pero el permiso sigue estando: el enlace tiene que verse.
     expect(tienePermiso(soloMira, PERMISOS.REPOSITORIO_VER)).toBe(true);
   });

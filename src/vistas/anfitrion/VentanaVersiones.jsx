@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "91.4",
+    cambios: [
+      "El aviso rojo de permisos del colaborador: «Tienes permisos de edición» sale solo con los que dejan editar texto (Novedades y los datos del evento). Enviar invitaciones, Multimedia y acreditar en la entrada salen aparte, como «Tienes permisos en la app».",
+      "La etiqueta de Multimedia, con el mismo estilo que las demás: «Multimedia (manejar la música y el vídeo con el mando)».",
+    ],
+  },
+  {
     version: "91.3",
     cambios: [
       "Datos de colaboradores: si la cuenta de un colaborador no tiene email y su ficha de la Lista sí, junto al campo sale «Usar el de su ficha», que lo pone con un toque. Para los creados antes de la 91.2, que nacían sin email.",

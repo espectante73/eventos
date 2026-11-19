@@ -21,7 +21,7 @@ import { enlaceNovedades, enlacePersonalDeFicha } from "../lib/url";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../lib/fotosAlmacen";
 import { usePopupWindow } from "../lib/usePopupWindow";
 import { useMotorInvitaciones } from "../lib/useMotorInvitaciones";
-import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso, esDeEdicion } from "../lib/permisos";
+import { PERMISOS, ETIQUETAS_PERMISOS, tienePermiso, esDeEdicion, esDeLaApp } from "../lib/permisos";
 import { generarImagenCronograma } from "../lib/cronograma";
 import { C, R, T, OP, DORADO, conAlfa } from "../theme";
 import { URL_REPOSITORIO } from "../constants";
@@ -1493,6 +1493,8 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // no son responsabilidad de nadie y no pintan nada en un aviso rojo
   // -- ver la nota de los dos tipos en lib/permisos.js.
   const permisosDeEdicion = permisosActivos.filter(esDeEdicion);
+  const permisosDeLaApp = permisosActivos.filter(esDeLaApp);
+  const etiquetas = (lista) => lista.map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ");
 
   return (
     <div className="space-y-8">
@@ -1509,11 +1511,18 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
           (Aquí hubo un rodeo: primero se puso con relieve, y dos días
           después la norma 4 se reescribió para decir que un link va
           subrayado. Ahora lo está.) */}
-      {(permisosDeEdicion.length > 0 || puedeVerRepositorio) && (
-        <div className="p-4 rounded text-sm" style={{ background: C.peligro, color: C.blanco }}>
+      {(permisosDeEdicion.length > 0 || permisosDeLaApp.length > 0 || puedeVerRepositorio) && (
+        <div className="p-4 rounded text-sm space-y-2" style={{ background: C.peligro, color: C.blanco }}>
+          {/* «De edición», solo lo que cambia texto; lo demás que deja
+              hacer algo, «en la app» (él, v91.4; lib/permisos.js). */}
           {permisosDeEdicion.length > 0 && (
             <p style={{ fontWeight: 600 }}>
-              🔑 Tienes permisos de edición: {permisosDeEdicion.map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ")}.
+              🔑 {permisosDeEdicion.length === 1 ? "Tienes permiso de edición" : "Tienes permisos de edición"}: {etiquetas(permisosDeEdicion)}.
+            </p>
+          )}
+          {permisosDeLaApp.length > 0 && (
+            <p style={{ fontWeight: 600 }}>
+              🔑 {permisosDeLaApp.length === 1 ? "Tienes permiso en la app" : "Tienes permisos en la app"}: {etiquetas(permisosDeLaApp)}.
             </p>
           )}
           {puedeVerRepositorio && (
@@ -1525,7 +1534,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                Norma 4: es un LINK, así que va subrayado y sin
                relieve. Al ir dentro de la frase tampoco puede irse al
                lado del pulgar -- es texto, no un acceso suelto. */
-            <p style={{ fontWeight: 600 }} className={permisosDeEdicion.length > 0 ? "mt-2" : ""}>
+            <p style={{ fontWeight: 600 }}>
               🔑 Tienes permiso para{" "}
               <EnlaceTexto
                 href={URL_REPOSITORIO}

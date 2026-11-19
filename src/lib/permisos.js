@@ -55,29 +55,33 @@ export const ETIQUETAS_PERMISOS = {
   [PERMISOS.MAPA_SITIO_VER]: "Ver el mapa del sitio (dónde está cada cosa en la app)",
   [PERMISOS.REPOSITORIO_VER]: "Ver el proyecto en GitHub",
   [PERMISOS.DISENO_VER]: "Ver el diseño de la app (cómo se construye)",
-  [PERMISOS.MULTIMEDIA]: "Multimedia: manejar la música y el vídeo con el mando",
+  [PERMISOS.MULTIMEDIA]: "Multimedia (manejar la música y el vídeo con el mando)",
   [PERMISOS.ACREDITAR_ENTRADA]: "Acreditar en la entrada (leer el QR de las invitaciones)",
 };
 
-// ⚠️ Hay DOS clases de permiso, y confundirlas ya dio un fallo real
-// (usuario, 2026-09-21): el aviso rojo del colaborador decía "Tienes
-// permisos de edición" y metía en la misma lista "Ver el código de la
-// app", que no deja editar nada. El texto se escribió para los de
-// EDICIÓN y los de VISTA se colaron después en la misma lista.
+// ⚠️ Hay TRES clases de permiso, y confundirlas ya dio dos fallos reales:
+// el aviso rojo del colaborador decía "Tienes permisos de edición" y metía
+// "Ver el código de la app", que no deja editar nada (usuario,
+// 2026-09-21); y llamaba "de edición" a Multimedia, que es un permiso
+// dentro de la app (él, v91.4: «solamente hay permiso de edición cuando se
+// le permite editar texto»).
 //
-//   EDICIÓN: dejan CAMBIAR algo del evento. Hay que avisar de ellos: es
-//            responsabilidad, y el colaborador tiene que saber que la
-//            tiene.
-//   VISTA:   solo enseñan algo que ya existe (el mapa, el código). No
-//            son responsabilidad de nadie y no van en un aviso rojo.
+//   EDICIÓN:    dejan cambiar TEXTO del evento (Novedades, los datos del
+//               evento y sus emails). Solo estos se llaman «de edición».
+//   EN LA APP:  dejan HACER algo dentro de la app (enviar invitaciones,
+//               Multimedia, acreditar en la entrada).
+//   VISTA:      solo enseñan algo que ya existe (el mapa, el código, el
+//               diseño). No son responsabilidad de nadie.
 //
-// Al añadir un permiso nuevo hay que meterlo aquí; si no, el test
-// permisos.test.js se pone en rojo.
+// Los de edición y los de la app son responsabilidad: van en el aviso rojo,
+// cada uno con su frase. Al añadir un permiso nuevo hay que meterlo en una
+// de las tres; si no, el test permisos.test.js se pone en rojo.
+export const PERMISOS_DE_EDICION = [PERMISOS.NOVEDADES_EDITAR, PERMISOS.DATOS_EVENTO_EDITAR];
+export const PERMISOS_EN_LA_APP = [PERMISOS.INVITACIONES_ENVIAR, PERMISOS.MULTIMEDIA, PERMISOS.ACREDITAR_ENTRADA];
 export const PERMISOS_DE_VISTA = [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER, PERMISOS.DISENO_VER];
 
-export function esDeEdicion(clave) {
-  return !PERMISOS_DE_VISTA.includes(clave);
-}
+export const esDeEdicion = (clave) => PERMISOS_DE_EDICION.includes(clave);
+export const esDeLaApp = (clave) => PERMISOS_EN_LA_APP.includes(clave);
 
 export function tienePermiso(colaborador, clave) {
   return Array.isArray(colaborador?.permisos) && colaborador.permisos.includes(clave);

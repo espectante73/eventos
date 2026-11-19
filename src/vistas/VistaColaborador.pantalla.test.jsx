@@ -941,3 +941,20 @@ it("el DJ ve Multimedia y Mi cuenta, sin «Formulario»", () => {
   expect(rotulos).not.toContain("Formulario");
   vista.desmontar();
 });
+
+// El aviso rojo (v91.4, él: «solamente hay permiso de edición cuando se le
+// permite editar texto»): Multimedia es un permiso en la app.
+it("el aviso rojo: «de edición» solo para texto; Multimedia, «en la app»", () => {
+  let vista = montar(
+    <VistaColaborador data={{ ...data, colaboradores: [{ ...colaboradores[0], permisos: ["multimedia"] }] }} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+  );
+  expect(vista.contenedor.textContent).toContain("Tienes permiso en la app: Multimedia (manejar la música y el vídeo con el mando).");
+  expect(vista.contenedor.textContent).not.toContain("edición");
+  vista.desmontar();
+  vista = montar(
+    <VistaColaborador data={{ ...data, colaboradores: [{ ...colaboradores[0], permisos: ["novedades_editar", "multimedia"] }] }} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+  );
+  expect(vista.contenedor.textContent).toContain("Tienes permiso de edición: Editar el texto de Novedades.");
+  expect(vista.contenedor.textContent).toContain("Tienes permiso en la app: Multimedia");
+  vista.desmontar();
+});
