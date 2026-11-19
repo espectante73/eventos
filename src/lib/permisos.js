@@ -64,6 +64,27 @@ export const ETIQUETAS_PERMISOS = {
   [PERMISOS.CANCIONES_DJ]: "Canciones para bailar (ver la lista del DJ)",
 };
 
+// Cómo se ENSEÑAN en Permisos: por zona de la app, con su título (él,
+// v91.7: «deberían estar ordenados por secciones, música y multimedia no
+// están juntos»). Es otra cosa que las tres clases de abajo, que deciden
+// qué dice el aviso rojo del colaborador: Multimedia es «en la app» y
+// Canciones para bailar «de vista», pero las dos son de la música. Un
+// permiso nuevo entra en un grupo; si no, permisos.test.js se pone en rojo.
+export const GRUPOS_PERMISOS = [
+  { titulo: "Textos del evento", claves: [PERMISOS.NOVEDADES_EDITAR, PERMISOS.DATOS_EVENTO_EDITAR] },
+  { titulo: "Invitaciones y entrada", claves: [PERMISOS.INVITACIONES_ENVIAR, PERMISOS.ACREDITAR_ENTRADA] },
+  { titulo: "Música", claves: [PERMISOS.MULTIMEDIA, PERMISOS.CANCIONES_DJ] },
+  { titulo: "Cómo está hecha la app", claves: [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER, PERMISOS.DISENO_VER] },
+];
+
+// Los permisos de alguien en el orden de los grupos (para «Permisos
+// concedidos»); una clave que ya no existe, al final.
+const ORDEN_PERMISOS = GRUPOS_PERMISOS.flatMap((g) => g.claves);
+export function ordenarPermisos(claves = []) {
+  const posicion = (c) => (ORDEN_PERMISOS.includes(c) ? ORDEN_PERMISOS.indexOf(c) : ORDEN_PERMISOS.length);
+  return [...claves].sort((a, b) => posicion(a) - posicion(b));
+}
+
 // ⚠️ Hay TRES clases de permiso, y confundirlas ya dio dos fallos reales:
 // el aviso rojo del colaborador decía "Tienes permisos de edición" y metía
 // "Ver el código de la app", que no deja editar nada (usuario,

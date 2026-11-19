@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PERMISOS, ETIQUETAS_PERMISOS, PERMISOS_DE_VISTA, PERMISOS_DE_EDICION, PERMISOS_EN_LA_APP, esDeEdicion, esDeLaApp, tienePermiso } from "./permisos";
+import { PERMISOS, ETIQUETAS_PERMISOS, PERMISOS_DE_VISTA, PERMISOS_DE_EDICION, PERMISOS_EN_LA_APP, esDeEdicion, esDeLaApp, tienePermiso, GRUPOS_PERMISOS, ordenarPermisos } from "./permisos";
 
 // El fallo que da origen a esto (usuario, 2026-09-21): el aviso rojo del
 // colaborador decía "Tienes permisos de edición" y metía en la lista
@@ -59,5 +59,31 @@ describe("los dos tipos de permiso", () => {
   // permiso.
   it("la etiqueta dice a dónde lleva", () => {
     expect(ETIQUETAS_PERMISOS[PERMISOS.REPOSITORIO_VER]).toMatch(/github/i);
+  });
+});
+
+// Permisos, por zona de la app (él, v91.7): Multimedia y Canciones para
+// bailar, juntas en «Música».
+describe("los grupos de la ventana Permisos", () => {
+  const claves = Object.values(PERMISOS);
+  const agrupadas = GRUPOS_PERMISOS.flatMap((g) => g.claves);
+
+  it("cada permiso, en un solo grupo: uno nuevo sin grupo no saldría en la ventana", () => {
+    for (const clave of claves) expect(agrupadas.filter((c) => c === clave).length, clave).toBe(1);
+    expect(agrupadas.length).toBe(claves.length);
+  });
+
+  it("la música, junta", () => {
+    const musica = GRUPOS_PERMISOS.find((g) => g.titulo === "Música");
+    expect(musica.claves).toEqual([PERMISOS.MULTIMEDIA, PERMISOS.CANCIONES_DJ]);
+  });
+
+  it("ordenarPermisos sigue el orden de los grupos y deja al final lo que ya no existe", () => {
+    expect(ordenarPermisos(["viejo", PERMISOS.CANCIONES_DJ, PERMISOS.NOVEDADES_EDITAR, PERMISOS.MULTIMEDIA])).toEqual([
+      PERMISOS.NOVEDADES_EDITAR,
+      PERMISOS.MULTIMEDIA,
+      PERMISOS.CANCIONES_DJ,
+      "viejo",
+    ]);
   });
 });

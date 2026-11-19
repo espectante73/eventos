@@ -336,7 +336,6 @@ describe("cada pantalla tiene una prueba que la dibuja", () => {
     "VentanaConfigDatosEvento",
     "VentanaConfigZonaPeligro",
     "VentanaConfigZonaReinicio",
-    "VentanaPermisos",
     "VentanaVersiones",
   ];
 

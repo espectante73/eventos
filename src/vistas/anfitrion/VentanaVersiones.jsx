@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "91.7",
+    cambios: [
+      "Ventana Permisos ordenada por zonas de la app, cada una con su título: Textos del evento, Invitaciones y entrada, Música (Multimedia y Canciones para bailar, juntas) y Cómo está hecha la app.",
+      "«Permisos concedidos» los cuenta en ese mismo orden.",
+    ],
+  },
+  {
     version: "91.6",
     cambios: [
       "Tablón: con el enlace personal, el aviso rojo de arriba dice «Es tu enlace personal: te lo ha enviado tu colaborador y es solo para ti.», en vez de hablar del grupo de WhatsApp.",

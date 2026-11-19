@@ -1,9 +1,9 @@
 // Ventana "Permisos": qué colaborador tiene acceso a qué zona de la app,
 // más allá de sus invitados asignados de siempre -- a petición del
 // usuario, 2026-08-25, empezando por poder editar el texto de Novedades.
-// Diseñada para crecer: cada fila de PERMISOS (lib/permisos.js) se
-// convierte sola en una fila de checkbox aquí, sin tocar este fichero al
-// añadir una zona nueva.
+// Diseñada para crecer: cada permiso de GRUPOS_PERMISOS (lib/permisos.js)
+// sale solo aquí, bajo el título de su zona (v91.7), sin tocar este
+// fichero al añadir uno nuevo.
 //
 // Rediseño a petición del usuario (misma sesión): una sola columna (no
 // varias etiquetas por fila, que obligaba a leer en zigzag), con el
@@ -20,13 +20,14 @@
 import { useState } from "react";
 import { KeyRound } from "lucide-react";
 import { C, inputStyle, OP } from "../../theme";
-import { PERMISOS, ETIQUETAS_PERMISOS } from "../../lib/permisos";
+import { ETIQUETAS_PERMISOS, GRUPOS_PERMISOS, ordenarPermisos } from "../../lib/permisos";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 
+const ROTULO_GRUPO = { color: C.gold, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.06em" };
+
 export function VentanaPermisos({ data, onCerrar }) {
   const { colaboradores, persistColaboradores } = data;
-  const claves = Object.values(PERMISOS);
   const [seleccionadoId, setSeleccionadoId] = useState(colaboradores[0]?.id ?? null);
   const colaborador = colaboradores.find((c) => c.id === seleccionadoId) || null;
   const permisos = Array.isArray(colaborador?.permisos) ? colaborador.permisos : [];
@@ -82,18 +83,27 @@ export function VentanaPermisos({ data, onCerrar }) {
             </select>
           </div>
 
-          <div className="flex flex-col gap-2">
-            {claves.map((clave) => (
-              <label key={clave} className="flex items-center justify-between gap-3 text-sm py-0.5" style={{ color: C.charcoal }}>
-                <span>{ETIQUETAS_PERMISOS[clave]}</span>
-                <input
-                  type="checkbox"
-                  checked={permisos.includes(clave)}
-                  onChange={() => alternarPermiso(clave)}
-                  className="flex-shrink-0"
-                  style={{ width: 18, height: 18 }}
-                />
-              </label>
+          {/* Por zona de la app, cada grupo con su título (él, v91.7); el
+              rótulo, el mismo que el de los campos de un formulario. */}
+          <div className="flex flex-col gap-4">
+            {GRUPOS_PERMISOS.map((grupo) => (
+              <div key={grupo.titulo} role="group" aria-label={grupo.titulo} className="flex flex-col gap-2">
+                <p className="uppercase tracking-wide text-xs" style={ROTULO_GRUPO}>
+                  {grupo.titulo}
+                </p>
+                {grupo.claves.map((clave) => (
+                  <label key={clave} className="flex items-center justify-between gap-3 text-sm py-0.5" style={{ color: C.charcoal }}>
+                    <span>{ETIQUETAS_PERMISOS[clave]}</span>
+                    <input
+                      type="checkbox"
+                      checked={permisos.includes(clave)}
+                      onChange={() => alternarPermiso(clave)}
+                      className="flex-shrink-0"
+                      style={{ width: 18, height: 18 }}
+                    />
+                  </label>
+                ))}
+              </div>
             ))}
           </div>
 
@@ -109,7 +119,7 @@ export function VentanaPermisos({ data, onCerrar }) {
                 {colaboradoresConPermisos.map((c) => (
                   <div key={c.id} className="text-sm" style={{ color: C.charcoal }}>
                     <span style={{ fontWeight: 600 }}>{c.nombre}:</span>{" "}
-                    {c.permisos.map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ")}
+                    {ordenarPermisos(c.permisos).map((p) => ETIQUETAS_PERMISOS[p] || p).join(", ")}
                   </div>
                 ))}
               </div>
