@@ -48,6 +48,17 @@ export const AVISO_ENLACE_GENERAL =
 // (schema.sql).
 export const esRespuestaPersonal = (respuesta) => /^[0-9a-f]{16} \d{4}$/.test(String(respuesta || "").trim());
 
+// La clave de su ficha, venga de donde venga (v92.2): del enlace que abre
+// (…&yo=<clave>) o de la respuesta que este móvil recuerda de cuando entró
+// con él. Sin esto, abrir el tablón desde el enlace general, el icono
+// instalado o un marcador escondía lo que es solo del enlace personal (sus
+// canciones, su email) aunque hubiera entrado con él (él: «no veo dónde
+// editar las canciones»). La base comprueba lo mismo: la clave Y el año.
+export function claveDelEnlacePersonal(claveDeLaUrl, respuesta) {
+  if (claveDeLaUrl) return claveDeLaUrl;
+  return esRespuestaPersonal(respuesta) ? String(respuesta).trim().split(" ")[0] : null;
+}
+
 // Con su enlace personal, la respuesta guardada en este móvil con la que
 // probar a entrar sin preguntar: la suya, ya en la forma del enlace (la
 // guardada con su nombre, de antes, se pasa a su clave con el mismo año);

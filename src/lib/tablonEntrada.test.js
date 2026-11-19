@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { entrarTablon, respuestaTablon, anioDeRespuesta, mismaPersonaEnRespuesta, esRespuestaPersonal, respuestaGuardadaDelEnlace, NO_ENCONTRADO, SIN_ANIO } from "./tablonEntrada";
+import { entrarTablon, respuestaTablon, anioDeRespuesta, mismaPersonaEnRespuesta, esRespuestaPersonal, respuestaGuardadaDelEnlace, claveDelEnlacePersonal, NO_ENCONTRADO, SIN_ANIO } from "./tablonEntrada";
 
 // Un servidor de mentira: qué respuestas valen y si a ese nombre le falta el año.
 const servidor = ({ valen = [], faltaAnio = false }) => {
@@ -82,5 +82,20 @@ describe("la respuesta del enlace personal", () => {
   });
   it("con la base de antes (la respuesta era el nombre), como siempre", () => {
     expect(respuestaGuardadaDelEnlace("Pacheco Ana 1975", { nombre: "Pacheco, Ana", respuesta: "Pacheco Ana" })).toBe("Pacheco Ana 1975");
+  });
+});
+
+// v92.2 (él: «no veo dónde editar las canciones»): la clave del enlace
+// personal, también cuando abre el tablón sin ella en la dirección.
+describe("claveDelEnlacePersonal", () => {
+  it("la del enlace, si viene", () => {
+    expect(claveDelEnlacePersonal("0123456789abcdef", "")).toBe("0123456789abcdef");
+  });
+  it("sin ella, la de la respuesta que recuerda el móvil, si entró con su enlace", () => {
+    expect(claveDelEnlacePersonal(null, "0123456789abcdef 1975")).toBe("0123456789abcdef");
+  });
+  it("por la puerta general, ninguna", () => {
+    expect(claveDelEnlacePersonal(null, "Pacheco Ana 1975")).toBeNull();
+    expect(claveDelEnlacePersonal(null, "")).toBeNull();
   });
 });

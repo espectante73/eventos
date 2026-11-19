@@ -15,7 +15,7 @@ import { C, inputStyle, OP, S, T, DEDO, FONDO_VERDE, DORADO, conAlfa } from "../
 import { supabase } from "../supabaseClient";
 import { useFichaInstalacion, fichaDelTablon } from "../lib/fichaInstalacion";
 import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento, opcionesAnios } from "../lib/formato";
-import { entrarTablon, anioDeRespuesta, respuestaGuardadaDelEnlace, esRespuestaPersonal, NO_ENCONTRADO, ANIO_NO_COINCIDE, SOLO_PERSONAL, AVISO_ENLACE_PERSONAL, AVISO_ENLACE_GENERAL } from "../lib/tablonEntrada";
+import { entrarTablon, anioDeRespuesta, respuestaGuardadaDelEnlace, esRespuestaPersonal, claveDelEnlacePersonal, NO_ENCONTRADO, ANIO_NO_COINCIDE, SOLO_PERSONAL, AVISO_ENLACE_PERSONAL, AVISO_ENLACE_GENERAL } from "../lib/tablonEntrada";
 import { getClaveTablonFromUrl } from "../lib/url";
 import { InfoItem } from "../components/Portada";
 import { SelloCuentaAtras } from "../components/SelloCuentaAtras";
@@ -130,8 +130,6 @@ export function VistaTablon({ token }) {
   // su enlace, la puerta solo dice SOLO_PERSONAL. Quien decide es la base
   // (tablon_respuesta_vale); esto solo elige qué puerta enseñar.
   const [soloPersonal, setSoloPersonal] = useState(false);
-  // Con la casilla, todo el que está dentro entró con su enlace personal.
-  const enlacePersonal = soloPersonal || Boolean(personaEnlace);
   // El año de nacimiento, la otra mitad de la entrada (v70), y los años que
   // ofrece su desplegable (los de la lista, sin decir de quién).
   const [anioEscrito, setAnioEscrito] = useState("");
@@ -149,6 +147,9 @@ export function VistaTablon({ token }) {
   // vive en un ref (no en estado) porque no hace falta que dispare
   // ningún re-render por sí sola.
   const respuestaVerificadaRef = useRef("");
+  // Con la casilla, todo el que está dentro entró con su enlace personal.
+  // Y quien entró con él y lo recuerda este móvil (claveDelEnlacePersonal).
+  const enlacePersonal = soloPersonal || Boolean(personaEnlace) || esRespuestaPersonal(respuestaVerificadaRef.current);
 
   // ---------- Música ambiental ----------
   // Los navegadores bloquean el audio automático hasta que la propia
@@ -196,7 +197,7 @@ export function VistaTablon({ token }) {
       // Su email, solo con su enlace personal (v87.2, tablon_mi_email): la
       // clave de su ficha y su año. Sin la función en la base, nada: sale
       // «Sí» o «No», como antes.
-      const clave = getClaveTablonFromUrl();
+      const clave = claveDelEnlacePersonal(getClaveTablonFromUrl(), respuestaVerificadaRef.current);
       const [eventoLeido, { data: novedadesFilas }, { data: quien }, { data: fotos }, { data: zonasLeidas }, { data: miEmail }] = await Promise.all([
         leerEvento(supabase),
         supabase.rpc("tablon_listar_novedades", {
@@ -387,11 +388,12 @@ export function VistaTablon({ token }) {
   };
 
   // Sus canciones (v92.1, él): solo con su enlace personal, como su email.
-  const puedeCambiarCanciones = Boolean(personaEnlace && yo) && esRespuestaPersonal(respuestaVerificadaRef.current);
+  // Con la clave del enlace o la que recuerda este móvil (claveDelEnlacePersonal).
+  const puedeCambiarCanciones = Boolean(yo) && esRespuestaPersonal(respuestaVerificadaRef.current);
   const guardarCanciones = async (huecos) => {
     const { cancion, aviso } = await guardarCancionesTablon(supabase, {
       token,
-      clave: getClaveTablonFromUrl(),
+      clave: claveDelEnlacePersonal(getClaveTablonFromUrl(), respuestaVerificadaRef.current),
       respuesta: respuestaVerificadaRef.current,
       huecos,
     });

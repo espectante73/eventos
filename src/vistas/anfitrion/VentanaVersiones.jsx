@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "92.2",
+    cambios: [
+      "Arreglo: «Tus canciones para bailar» no salía si el tablón se abría sin la clave personal en la dirección (desde el enlace general, el icono instalado o un marcador), aunque en ese móvil ya se hubiera entrado con el enlace personal. Ahora sale.",
+      "Lo mismo para el email en «Comprueba tus datos» y para el aviso rojo de arriba («Es tu enlace personal…»).",
+    ],
+  },
+  {
     version: "92.1",
     cambios: [
       "Tablón: quien entra con su enlace personal tiene, plegada bajo el recuadro verde, «Tus canciones para bailar»: los mismos 3 huecos (canción y artista) que usa el colaborador, con «Cancelar» y «Guardar». Por la puerta general, no.",

@@ -126,3 +126,19 @@ it("dentro con su enlace personal sale «Tus canciones para bailar»; por la pue
   expect(texto()).not.toContain("Tus canciones para bailar");
   vista.desmontar();
 });
+
+// v92.2 (él: «no veo dónde editar las canciones»): abrió el tablón sin su
+// clave en la dirección (enlace general, icono, marcador), pero este móvil
+// recuerda que entró con su enlace personal.
+it("sin la clave en la dirección, pero recordando su enlace personal: sus canciones, y lo guarda con su clave", async () => {
+  valen = [`${CLAVE} 1975`];
+  quien = { nombre: "Pacheco, Ana", cancion: "Titanium — David Guetta" };
+  localStorage.setItem("tablon-respuesta-t1", `${CLAVE} 1975`);
+  const vista = await abrir();
+  expect(texto()).toContain("Tus canciones para bailar");
+  expect(texto()).toContain(AVISO_ENLACE_PERSONAL);
+  // Su email se pide con esa misma clave.
+  const email = llamadas.find((l) => l.nombre === "tablon_mi_email");
+  expect(email.args.p_clave).toBe(CLAVE);
+  vista.desmontar();
+});
