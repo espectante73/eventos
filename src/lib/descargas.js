@@ -164,11 +164,13 @@ function descargarDataUrlClasico(dataUrl, nombreArchivo) {
 // Guarda directamente en la carpeta elegida si el navegador lo permite;
 // si no (Safari/Firefox, o el usuario nunca eligió carpeta), cae al método
 // clásico de descarga (va a la carpeta de Descargas de siempre).
+// Devuelve el nombre de la carpeta donde quedó, o null si fue a la de
+// Descargas de siempre: quien la llama avisa de dónde está (norma 9).
 export async function guardarArchivoInvitacion(dataUrl, nombreArchivo) {
   const carpeta = await obtenerCarpetaInvitaciones({ forzarElegir: false });
   if (!carpeta) {
     descargarDataUrlClasico(dataUrl, nombreArchivo);
-    return;
+    return null;
   }
   try {
     const respuesta = await fetch(dataUrl);
@@ -177,7 +179,9 @@ export async function guardarArchivoInvitacion(dataUrl, nombreArchivo) {
     const writable = await fileHandle.createWritable();
     await writable.write(blob);
     await writable.close();
+    return carpeta.name;
   } catch (_) {
     descargarDataUrlClasico(dataUrl, nombreArchivo);
+    return null;
   }
 }

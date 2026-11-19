@@ -1,6 +1,8 @@
-// Ventana "Invitaciones": plantilla de imagen, modo calibración, carpeta
-// de guardado, envío por bloques (elige un colaborador y revisa antes de
-// mandar) y la lista de familias listas con su orden de nombres y email.
+// Ventana "Invitaciones": envío (por bloques: elige un colaborador y revisa
+// antes de mandar; o una a una), con la lista de familias listas, su orden
+// de nombres y su email; y los ajustes: plantilla, qué se imprime,
+// calibración y carpeta de guardado. Desde v90.6, con el modelo de
+// Contabilidad: apartados plegados, uno abierto a la vez.
 // Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08 (Fase 4,
 // Ronda 4).
 //
@@ -11,25 +13,37 @@
 // generarImagenParaFamilia y modoCalibracion tampoco son exclusivos de
 // esta ventana por el mismo motivo.
 import { useState, useEffect, useRef } from "react";
-import { Check, Mail, Image as ImageIcon, ChevronUp, ChevronDown } from "lucide-react";
-import { C, inputStyle, T, OP } from "../../theme";
+import { Check, Image as ImageIcon, ChevronUp, ChevronDown, ChevronRight, Download, Send, Printer, Grid3x3, FolderOpen } from "lucide-react";
+import { C, T, OP } from "../../theme";
 import { resolverColaborador, comoColaborador } from "../../lib/invitados";
 import { nombreCompleto } from "../../lib/formato";
 import { requisitosActivos } from "../../lib/modoPruebas";
 import { redimensionarImagenArchivo, guardarArchivoInvitacion, obtenerCarpetaInvitaciones, leerHandleCarpeta } from "../../lib/descargas";
 import { guardarImagenEvento, IMAGEN_EVENTO } from "../../lib/imagenesEvento";
-import { Field } from "../../components/Formulario";
-import { GrupoFamiliarInput } from "../../components/Widgets";
+import { Desplegable, ElegirSiNo } from "../../components/Formulario";
+import { GrupoFamiliarInput, RecuadroCifras } from "../../components/Widgets";
+import { IconoMovilQr } from "../../components/IconoMovilQr";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { Boton } from "../../components/Boton";
-import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
+import { usePreguntaSeguridad, BotonQuitar } from "../../components/PreguntaSeguridad";
 import { avisoEnPantalla } from "../../lib/avisos";
 import { LineaAviso } from "../../components/LineaAviso";
 
 // La columna del nombre en el orden de la invitación: cabe «Apellido, Nombre»
-// normal; uno muy largo se recorta y se lee entero al pasar el ratón.
-const ANCHO_NOMBRE = 150;
+// normal en un móvil; uno muy largo se recorta y se lee entero al pasar.
+const ANCHO_NOMBRE = 110;
+// Una familia, una línea (norma 6): todas del mismo alto, con dedo.
+const ALTO_FILA = 40;
+const ALTO_FILA_NOMBRE = 34;
+// «Qué se imprime»: rótulo y Sí/No en una línea, en columna.
+const ANCHO_ROTULO = 70;
+const ANCHO_SI_NO = 140;
+const IMPRIMIBLES = [
+  { campo: "imprimirFecha", etiqueta: "Fecha" },
+  { campo: "imprimirHora", etiqueta: "Hora" },
+  { campo: "imprimirLugar", etiqueta: "Lugar" },
+];
 
 export function VentanaInvitaciones({
   data,
@@ -110,7 +124,9 @@ export function VentanaInvitaciones({
       return;
     }
     const nombreArchivo = `${evento.nombre || "evento"}_${familia.clave}.png`.replace(/[\\/:*?"<>|]/g, "-");
-    await guardarArchivoInvitacion(dataUrl, nombreArchivo);
+    const carpeta = await guardarArchivoInvitacion(dataUrl, nombreArchivo);
+    // Lo que pasa fuera de la pantalla avisa al terminar, y dónde está (norma 9).
+    avisoEnPantalla(carpeta ? `Está en la carpeta «${carpeta}».` : "Está en la carpeta de Descargas.", `Invitación de la familia ${familia.apellido} guardada`);
   };
 
   // Envío por bloques: se elige un colaborador y solo se ven/envían las
@@ -172,86 +188,214 @@ export function VentanaInvitaciones({
     );
   };
 
+  // Una sola cosa abierta (norma 5): un apartado, y dentro de «Enviar»,
+  // una familia.
+  const [seccionAbierta, setSeccionAbierta] = useState(null);
+  const alternar = (id) => setSeccionAbierta((s) => (s === id ? null : id));
+  const [familiaAbierta, setFamiliaAbierta] = useState(null);
+
+  const sinEmail = (familia) => destinatariosConEmail(familia).filter(Boolean).length === 0;
+  const faltan = familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada).length;
+  const enviadas = familiasListasParaInvitacion.length - faltan;
+  const sinEmailPendientes = familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada && sinEmail(f)).length;
+  const queSeImprime = IMPRIMIBLES.filter((x) => evento[x.campo] !== false).map((x) => x.etiqueta);
+
   return (
     <>
       <VentanaFlotante
         clave="invitaciones"
-        titulo={`Invitaciones${
-          familiasListasParaInvitacion.length > 0 ? ` (${familiasListasParaInvitacion.length})` : ""
-        }`}
+        titulo="Invitaciones"
         onCerrar={onCerrar}
+        // Arriba, las cifras (venían de la ventana "Avisos", retirada el
+        // 2026-09-05), con el recuadro de la Lista y de Mesas (v90.6).
+        extra={
+          <RecuadroCifras
+            cifras={[
+              { label: "Faltan", value: faltan, alerta: faltan > 0, titulo: "Familias listas y sin invitación enviada" },
+              { label: "Enviadas", value: enviadas },
+              { label: "Sin email", value: sinEmailPendientes, alerta: sinEmailPendientes > 0, titulo: "Familias sin enviar que no tienen ningún email" },
+            ]}
+          />
+        }
       >
-        {/* Las tres cifras venían de la ventana "Avisos" (retirada el
-            2026-09-05): su bloque "Invitaciones a familias" repetía la
-            lista que esta ventana ya tenía, así que se descartó entero
-            salvo estos contadores, que aquí sí faltaban. */}
-        <div className="grid grid-cols-3 gap-2 mb-3">
-          {[
-            {
-              etiqueta: "Pendientes",
-              valor: familiasListasParaInvitacion.filter((f) => !f.invitacionEnviada).length,
-              alerta: true,
-            },
-            {
-              etiqueta: "Enviadas",
-              valor: familiasListasParaInvitacion.filter((f) => f.invitacionEnviada).length,
-              alerta: false,
-            },
-            {
-              etiqueta: "Sin email",
-              valor: familiasListasParaInvitacion.filter(
-                (f) => !f.invitacionEnviada && destinatariosConEmail(f).filter(Boolean).length === 0
-              ).length,
-              alerta: true,
-            },
-          ].map((cifra) => (
-            <div key={cifra.etiqueta} className="text-center p-2 rounded" style={{ background: C.paperDark }}>
-              <div
-                style={{
-                  fontFamily: "'Fraunces', serif",
-                  color: cifra.alerta && cifra.valor > 0 ? C.wax : C.ink,
-                  fontWeight: 700,
-                  fontSize: T.destacado,
-                }}
+        {/* Remodelada en v90.6 (él: «no sigue los principios básicos de la
+            app»), con el modelo de Contabilidad: todo plegado, un apartado
+            abierto a la vez y su resumen a la vista. */}
+        <div className="space-y-2">
+          <SeccionPlegable
+            icono={IconoMovilQr}
+            titulo="Enviar"
+            resumen={
+              familiasListasParaInvitacion.length === 0 ? "ninguna lista" : faltan > 0 ? `${faltan} sin enviar` : "todas enviadas"
+            }
+            abierta={seccionAbierta === "enviar"}
+            onAlternar={() => alternar("enviar")}
+          >
+            {/* Envío por bloques: se elige un colaborador y solo se ven y
+                envían las familias de sus invitados, con un resumen antes de
+                mandar nada, para no arriesgarse a un envío masivo por error. */}
+            <div className="flex items-center gap-2 mt-2 mb-2 zurdo:flex-row-reverse">
+              <Desplegable
+                aria-label="Colaborador"
+                value={colaboradorInvitacionSel}
+                onChange={(e) => setColaboradorInvitacionSel(e.target.value)}
               >
-                {cifra.valor}
-              </div>
-              <div className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-                {cifra.etiqueta}
-              </div>
+                <option value="">Todos</option>
+                {colaboradores.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </Desplegable>
+              {colaboradorInvitacionSel && (
+                <Boton
+                  variante="principal"
+                  icono={Send}
+                  onClick={() => setMostrarResumenLoteInvitaciones(true)}
+                  disabled={familiasPendientesDeEnviar.length === 0}
+                  titulo="Solo las que aún no tienen la invitación; antes se revisa"
+                >
+                  Enviar a {familiasPendientesDeEnviar.length}
+                </Boton>
+              )}
             </div>
-          ))}
-        </div>
+            {familiasParaMostrarInvitacion.length > 0 ? (
+              <div className="rounded overflow-hidden" style={{ border: `1px solid ${C.line}` }}>
+                {familiasParaMostrarInvitacion.map((familia, i) => {
+                  const abierta = familiaAbierta === familia.clave;
+                  const fondo = i % 2 ? C.paperDark : C.blanco;
+                  const generando = descargando === familia.clave;
+                  return (
+                    <div key={familia.clave} style={{ background: fondo }}>
+                      {/* Una línea por familia, todas del mismo alto (norma 6). */}
+                      <div className="flex items-center gap-2 px-2 text-sm" style={{ height: ALTO_FILA }}>
+                        <button
+                          type="button"
+                          onClick={() => setFamiliaAbierta(abierta ? null : familia.clave)}
+                          aria-expanded={abierta}
+                          className="flex items-center gap-1 flex-1 min-w-0 text-left"
+                          style={{ color: C.ink, minHeight: ALTO_FILA }}
+                          title="Orden de los nombres y emails"
+                        >
+                          {abierta ? <ChevronDown size={16} className="flex-shrink-0" /> : <ChevronRight size={16} className="flex-shrink-0" />}
+                          <span className="truncate" style={{ fontWeight: 600 }}>
+                            {familia.apellido}
+                          </span>
+                          <span className="whitespace-nowrap flex-shrink-0" style={{ color: C.charcoal, opacity: OP.secundario, fontSize: T.pequeno }}>
+                            · {familia.confirmados.length}
+                          </span>
+                        </button>
+                        {familia.invitacionEnviada ? (
+                          <span
+                            className="flex items-center gap-1 text-xs px-2 py-0.5 rounded flex-shrink-0"
+                            style={{ background: C.ink, color: C.goldClaro }}
+                            title={familia.invitacionEnviadaEn ? new Date(familia.invitacionEnviadaEn).toLocaleString("es-ES") : undefined}
+                          >
+                            <Check size={12} /> Enviada
+                          </span>
+                        ) : (
+                          sinEmail(familia) && (
+                            <span className="text-xs flex-shrink-0" style={{ color: C.wax }}>
+                              Sin email
+                            </span>
+                          )
+                        )}
+                        <Boton tamano="pequeno" icono={Download} titulo="Descargar la invitación" onClick={() => descargarInvitacion(familia)} disabled={generando} />
+                        <Boton
+                          tamano="pequeno"
+                          variante="principal"
+                          icono={Send}
+                          titulo={familia.invitacionEnviada ? "Enviar otra vez por email" : "Enviar por email"}
+                          onClick={() => abrirPreviewInvitacion(familia)}
+                          disabled={generando}
+                        />
+                      </div>
+                      {abierta && (
+                        <div className="px-2 pb-2">
+                          {familia.confirmados.map((m, k) => {
+                            // Si esta persona es también colaborador, su email se
+                            // edita solo en Colaboradores (igual que en su propio
+                            // formulario de datos): aquí se ve, sin poder cambiarlo.
+                            const colaboradorVinculado = comoColaborador(m, colaboradores);
+                            return (
+                              <div key={m.id} className="flex items-center gap-2 text-xs" style={{ height: ALTO_FILA_NOMBRE, borderTop: `1px solid ${C.line}` }}>
+                                {/* «Apellido, Nombre» (norma 15), con ancho fijo: las
+                                    flechas caen en la misma columna en todas (norma 6). */}
+                                <span className="truncate flex-shrink-0" style={{ color: C.ink, width: ANCHO_NOMBRE }} title={nombreCompleto(m)}>
+                                  {nombreCompleto(m)}
+                                </span>
+                                <Boton tamano="pequeno" icono={ChevronUp} titulo="Mover antes" onClick={() => moverNombreFamilia(familia, m.id, -1)} disabled={k === 0} />
+                                <Boton
+                                  tamano="pequeno"
+                                  icono={ChevronDown}
+                                  titulo="Mover después"
+                                  onClick={() => moverNombreFamilia(familia, m.id, 1)}
+                                  disabled={k === familia.confirmados.length - 1}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  {colaboradorVinculado ? (
+                                    <span
+                                      className="block truncate"
+                                      style={{ color: colaboradorVinculado.email ? C.charcoal : C.wax, opacity: colaboradorVinculado.email ? OP.secundario : 1 }}
+                                      title="Se cambia en Colaboradores"
+                                    >
+                                      {colaboradorVinculado.email || "sin email"}
+                                    </span>
+                                  ) : (
+                                    // El email, en su ficha: el mismo de la Lista (él, v90.6:
+                                    // «deja poder corregir aquí»).
+                                    <GrupoFamiliarInput
+                                      aria-label={`Email de ${nombreCompleto(m)}`}
+                                      type="email"
+                                      inputMode="email"
+                                      placeholder="sin email"
+                                      value={m.email || ""}
+                                      onCommit={(v) => asignarEmailInvitado(m.id, v)}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          <p className="text-xs pt-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
+                            Las flechas cambian el orden de los nombres en la invitación. El email se guarda en la ficha de cada uno.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
+                {colaboradorInvitacionSel
+                  ? "Este colaborador no tiene ninguna familia con el pago y la mesa completos todavía."
+                  : "Todavía ninguna familia tiene el pago completo y la mesa asignada para todos sus confirmados."}
+              </p>
+            )}
+          </SeccionPlegable>
 
-        {/* Texto escrito por el usuario, palabra por palabra. La
-            invitación va solo por email: no añadir otras vías. */}
-        <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
-          Cuando han pagado, genera la invitación familiar con su mesa ya asignada. Se envía
-          al email de la familia registrado en la app.
-        </p>
-        {/* Plegado (norma: todo plegado y una sola cosa abierta). Es un
-            ajuste que se toca una vez y luego estorba: lo que se viene a
-            hacer aquí es mandar invitaciones, y esa lista queda debajo. */}
-        <SeccionPlegable
-          icono={ImageIcon}
-          titulo="Plantilla de la invitación"
-          resumen={evento.imagenInvitacion ? "imagen puesta" : "sin imagen"}
-        >
-          <Field label="Imagen de la plantilla de invitación (vertical, para móvil)">
-            <div className="flex items-center gap-3 flex-wrap">
+          {/* Un ajuste que se toca una vez y luego estorba. */}
+          <SeccionPlegable
+            icono={ImageIcon}
+            titulo="Plantilla"
+            resumen={evento.imagenInvitacion ? "imagen puesta" : "la incluida"}
+            abierta={seccionAbierta === "plantilla"}
+            onAlternar={() => alternar("plantilla")}
+          >
+            <div className="flex items-center gap-3 mt-2 zurdo:flex-row-reverse">
               {evento.imagenInvitacion && (
                 <img
                   src={evento.imagenInvitacion}
                   alt="Plantilla de invitación"
                   className="rounded object-cover"
-                  style={{ width: 40, height: 60, border: `1px solid ${C.line}` }}
+                  style={{ width: 48, height: 72, border: `1px solid ${C.line}` }}
                 />
               )}
               {/* Antes de elegir el archivo, la pregunta del sello: la app
                   no lo dibuja (CLAUDE.md 1.11), así que una plantilla sin
                   él saca invitaciones sin "PAGADO". */}
               <Boton
-                tamano="pequeno"
                 disabled={subiendoPlantillaInvitacion}
                 onClick={() =>
                   preguntar({
@@ -263,238 +407,109 @@ export function VentanaInvitaciones({
                   })
                 }
               >
-                {subiendoPlantillaInvitacion ? "Procesando…" : "Subir archivo desde el dispositivo"}
+                {subiendoPlantillaInvitacion ? "Procesando…" : evento.imagenInvitacion ? "Cambiar imagen" : "Subir imagen"}
               </Boton>
-              <input
-                ref={inputPlantillaRef}
-                type="file"
-                accept="image/*"
-                onChange={onSeleccionarArchivoPlantillaInvitacion}
-                className="sr-only"
-              />
+              <input ref={inputPlantillaRef} type="file" accept="image/*" onChange={onSeleccionarArchivoPlantillaInvitacion} className="sr-only" />
               {evento.imagenInvitacion && (
-                <Boton
-                  tamano="pequeno"
-                  onClick={() =>
-                    preguntar({
-                      titulo: "¿Quitar la plantilla?",
-                      texto: "Se usará la plantilla incluida en la app.",
-                      rotulo: "Sí",
-                      alConfirmar: () => persistEvento({ ...evento, imagenInvitacion: "" }),
-                    })
-                  }
-                >
-                  Quitar y usar la plantilla incluida
-                </Boton>
+                <BotonQuitar
+                  titulo="Quitar la plantilla"
+                  pregunta={{ titulo: "¿Quitar la plantilla?", texto: "Se usará la plantilla incluida en la app.", rotulo: "Sí" }}
+                  onClick={() => persistEvento({ ...evento, imagenInvitacion: "" })}
+                />
               )}
             </div>
-          </Field>
-          {errorPlantillaInvitacion && (
-            <p className="text-xs mt-1" style={{ color: C.wax }}>
-              {errorPlantillaInvitacion}
+            {errorPlantillaInvitacion && <LineaAviso className="text-xs mt-2">{errorPlantillaInvitacion}</LineaAviso>}
+            <p className="text-xs mt-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
+              Vertical, para móvil, y con el sello PAGADO ya dibujado.
             </p>
-          )}
-        </SeccionPlegable>
+          </SeccionPlegable>
 
-        {/* Qué se imprime en la imagen -- a petición del usuario,
-            2026-08-27: poder quitar fecha/hora/lugar sueltos sin tener que
-            vaciar esos campos en Datos del evento (que también los usa la
-            portada y el tablón público). Por defecto los 3 activos --
-            "!== false" en vez de comprobar solo el booleano, para que una
-            fila de evento sin este dato todavía (antes de pegar el SQL)
-            se comporte igual que hoy: mostrando los 3. */}
-        <div className="mb-4 flex items-center gap-4 flex-wrap text-xs" style={{ color: C.charcoal }}>
-          <span style={{ opacity: OP.secundario }}>Imprimir:</span>
-          <label className="flex items-center gap-1.5">
-            <input
-              type="checkbox"
-              checked={evento.imprimirFecha !== false}
-              onChange={(e) => persistEvento({ ...evento, imprimirFecha: e.target.checked })}
-            />
-            Fecha
-          </label>
-          <label className="flex items-center gap-1.5">
-            <input
-              type="checkbox"
-              checked={evento.imprimirHora !== false}
-              onChange={(e) => persistEvento({ ...evento, imprimirHora: e.target.checked })}
-            />
-            Hora
-          </label>
-          <label className="flex items-center gap-1.5">
-            <input
-              type="checkbox"
-              checked={evento.imprimirLugar !== false}
-              onChange={(e) => persistEvento({ ...evento, imprimirLugar: e.target.checked })}
-            />
-            Lugar
-          </label>
-        </div>
-
-        <label
-          className="mb-4 flex items-center gap-2 text-xs p-2 rounded cursor-pointer"
-          style={{ background: modoCalibracion ? C.calibracionFondo : C.paperDark, border: `1px dashed ${C.line}` }}
-        >
-          <input
-            type="checkbox"
-            checked={modoCalibracion}
-            onChange={(e) => setModoCalibracion(e.target.checked)}
-          />
-          <span>
-            Modo calibración: dibuja una cuadrícula con las coordenadas (cada 5% del ancho/alto) sobre
-            la imagen — actívalo, descarga o previsualiza una invitación, y pásame esos números para ajustar
-            mejor la posición del texto. Desactívalo cuando termines.
-          </span>
-        </label>
-
-        {window.showDirectoryPicker && (
-          <div className="mb-4 flex items-center gap-2 flex-wrap">
-            <Boton variante="secundario" tamano="pequeno" onClick={async () => { const carpeta = await obtenerCarpetaInvitaciones({ forzarElegir: true }); setNombreCarpetaInvitaciones(carpeta ? carpeta.name : null); }}>
-              {nombreCarpetaInvitaciones ? "Cambiar carpeta" : "Elegir carpeta de guardado"}
-            </Boton>
-            <span className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-              {nombreCarpetaInvitaciones
-                ? `Guardando en: "${nombreCarpetaInvitaciones}"`
-                : "Sin elegir — se descargará a la carpeta de Descargas de siempre."}
-            </span>
-          </div>
-        )}
-
-        <div className="mb-4 p-4 rounded flex flex-wrap items-end gap-2" style={{ background: C.paperDark, border: `1px dashed ${C.line}` }}>
-          <Field label="Envío por bloques: elige un colaborador">
-            <select
-              value={colaboradorInvitacionSel}
-              onChange={(e) => setColaboradorInvitacionSel(e.target.value)}
-              style={{ ...inputStyle, minWidth: 220 }}
-            >
-              <option value="">Ver todas las familias (sin agrupar)</option>
-              {colaboradores.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre}
-                </option>
-              ))}
-            </select>
-          </Field>
-          {colaboradorInvitacionSel && (
-            <Boton
-              variante="principal"
-              onClick={() => setMostrarResumenLoteInvitaciones(true)}
-              disabled={familiasPendientesDeEnviar.length === 0}
-            >
-              Revisar y enviar a {familiasPendientesDeEnviar.length} familia
-              {familiasPendientesDeEnviar.length === 1 ? "" : "s"} (sin enviar todavía)
-            </Boton>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          {familiasParaMostrarInvitacion.map((familia) => (
-            <div
-              key={familia.clave}
-              className="p-4 rounded text-sm"
-              style={{ background: C.paperDark, border: `1px solid ${C.line}` }}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <span className="flex items-center gap-2">
-                  <span style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 600 }}>
-                    Familia {familia.apellido}
-                  </span>
-                  {familia.invitacionEnviada && (
-                    <span
-                      className="flex items-center gap-1 text-xs px-2 py-0.5 rounded"
-                      style={{ background: C.ink, color: C.paper }}
-                      title={
-                        familia.invitacionEnviadaEn
-                          ? new Date(familia.invitacionEnviadaEn).toLocaleString("es-ES")
-                          : ""
-                      }
-                    >
-                      <Check size={11} /> Invitación enviada
-                    </span>
-                  )}
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  <Boton variante="principal" tamano="pequeno" onClick={() => descargarInvitacion(familia)} disabled={descargando === familia.clave}>
-                    <ImageIcon size={13} />
-                    {descargando === familia.clave ? "Generando..." : "Descargar"}
-                  </Boton>
-                  <Boton
-                    variante="principal"
-                    tamano="pequeno"
-                    icono={Mail}
-                    onClick={() => abrirPreviewInvitacion(familia)}
-                    disabled={descargando === familia.clave}
-                  >
-                    {descargando === familia.clave ? "Generando..." : "Enviar por email"}
-                  </Boton>
+          {/* Qué se imprime en la imagen (él, 2026-08-27): quitar fecha, hora
+              o lugar sin vaciarlos en Datos del evento, que también los usan
+              la portada y el tablón. "!== false": sin el dato, los tres. */}
+          <SeccionPlegable
+            icono={Printer}
+            titulo="Qué se imprime"
+            resumen={queSeImprime.length ? queSeImprime.join(" · ") : "solo los nombres"}
+            abierta={seccionAbierta === "imprimir"}
+            onAlternar={() => alternar("imprimir")}
+          >
+            <div className="space-y-2 mt-2">
+              {IMPRIMIBLES.map((x) => (
+                <div key={x.campo} className="flex items-center gap-3 text-sm">
+                  <span style={{ width: ANCHO_ROTULO, color: C.ink }}>{x.etiqueta}</span>
+                  <div style={{ width: ANCHO_SI_NO }}>
+                    <ElegirSiNo
+                      etiqueta={`Imprimir ${x.etiqueta.toLowerCase()}`}
+                      valor={evento[x.campo] !== false}
+                      onCambiar={(si) => persistEvento({ ...evento, [x.campo]: si })}
+                    />
+                  </div>
                 </div>
-              </div>
-              <p className="text-xs mb-1" style={{ color: C.charcoal, opacity: OP.secundario }}>
-                Orden de los nombres en la invitación (usa las flechas para cambiarlo) y su
-                email de contacto: la invitación llega a todos los que lo tengan.
-              </p>
-              <div className="space-y-1">
-                {familia.confirmados.map((m, i) => {
-                    // Si esta persona es también colaborador, su email se
-                    // edita solo en Colaboradores (igual que en su propio
-                    // formulario de datos) — aquí se muestra de solo
-                    // lectura, no un campo editable que parecería vacío.
-                    const colaboradorVinculado = comoColaborador(m, colaboradores);
-                    return (
-                      <div
-                        key={m.id}
-                        className="flex items-center gap-2 px-2 py-1 rounded text-xs"
-                        style={{ background: C.blanco, border: `1px solid ${C.line}` }}
-                      >
-                        {/* «Apellido, Nombre» (norma 15), con ancho fijo: así las flechas
-                            caen en la misma columna en todas las filas (norma 6). */}
-                        <span className="truncate flex-shrink-0" style={{ color: C.ink, width: ANCHO_NOMBRE }} title={nombreCompleto(m)}>
-                          {nombreCompleto(m)}
-                        </span>
-                        <Boton
-                          tamano="pequeno"
-                          icono={ChevronUp}
-                          titulo="Mover antes"
-                          onClick={() => moverNombreFamilia(familia, m.id, -1)}
-                          disabled={i === 0}
-                        />
-                        <Boton
-                          tamano="pequeno"
-                          icono={ChevronDown}
-                          titulo="Mover después"
-                          onClick={() => moverNombreFamilia(familia, m.id, 1)}
-                          disabled={i === familia.confirmados.length - 1}
-                        />
-                        <div className="flex-1">
-                          {colaboradorVinculado ? (
-                            <div
-                              className="px-2 py-1 rounded"
-                              style={{ background: C.paperDark, color: C.charcoal, opacity: OP.secundario }}
-                              title="Se edita en Colaboradores, no aquí"
-                            >
-                              {colaboradorVinculado.email || "sin registrar"}
-                            </div>
-                          ) : (
-                            <GrupoFamiliarInput
-                              value={m.email || ""}
-                              onCommit={(v) => asignarEmailInvitado(m.id, v)}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    );
-                })}
+              ))}
+            </div>
+          </SeccionPlegable>
+
+          <SeccionPlegable
+            icono={Grid3x3}
+            titulo="Calibración"
+            resumen={modoCalibracion ? "encendida" : "apagada"}
+            abierta={seccionAbierta === "calibracion"}
+            onAlternar={() => alternar("calibracion")}
+          >
+            <div className="flex items-center gap-3 text-sm mt-2">
+              <span style={{ color: C.ink }}>Cuadrícula</span>
+              <div style={{ width: ANCHO_SI_NO }}>
+                <ElegirSiNo etiqueta="Cuadrícula de calibración" valor={modoCalibracion} onCambiar={setModoCalibracion} />
               </div>
             </div>
-          ))}
-          {familiasParaMostrarInvitacion.length === 0 && (
-            <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
-              {colaboradorInvitacionSel
-                ? "Este colaborador no tiene ninguna familia con el pago y la mesa completos todavía."
-                : "Todavía ninguna familia tiene el pago completo y la mesa asignada para todos sus confirmados."}
+            <p className="text-xs mt-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
+              Dibuja sobre la invitación una cuadrícula con sus coordenadas (cada 5 % del ancho y del alto), para ajustar dónde va el texto. Se descarga o se previsualiza una, y al terminar se apaga.
             </p>
+          </SeccionPlegable>
+
+          {/* Solo donde el navegador deja elegir carpeta (el Mac). */}
+          {window.showDirectoryPicker && (
+            <SeccionPlegable
+              icono={FolderOpen}
+              titulo="Carpeta"
+              resumen={nombreCarpetaInvitaciones ? `«${nombreCarpetaInvitaciones}»` : "Descargas"}
+              abierta={seccionAbierta === "carpeta"}
+              onAlternar={() => alternar("carpeta")}
+            >
+              <div className="flex items-center gap-3 mt-2 zurdo:flex-row-reverse">
+                <Boton
+                  onClick={async () => {
+                    const carpeta = await obtenerCarpetaInvitaciones({ forzarElegir: true });
+                    setNombreCarpetaInvitaciones(carpeta ? carpeta.name : null);
+                  }}
+                >
+                  {nombreCarpetaInvitaciones ? "Cambiar carpeta" : "Elegir carpeta"}
+                </Boton>
+              </div>
+              <p className="text-xs mt-2" style={{ color: C.charcoal, opacity: OP.secundario }}>
+                {nombreCarpetaInvitaciones
+                  ? `Las invitaciones descargadas se guardan en «${nombreCarpetaInvitaciones}».`
+                  : "Sin elegir, se guardan en la carpeta de Descargas de siempre."}
+              </p>
+            </SeccionPlegable>
           )}
         </div>
+
+        {/* La ayuda, al pie y plegada (norma 5). El primer párrafo, escrito
+            por él palabra por palabra. La invitación va solo por email: no
+            añadir otras vías. */}
+        <details className="text-xs mt-3" style={{ color: C.charcoal }}>
+          <summary className="cursor-pointer select-none" style={{ opacity: OP.secundario }}>
+            Cómo funciona
+          </summary>
+          <p className="mt-2" style={{ opacity: OP.secundario }}>
+            Cuando han pagado, genera la invitación familiar con su mesa ya asignada. Se envía al email de la familia registrado en la app.
+          </p>
+          <p className="mt-2" style={{ opacity: OP.secundario }}>
+            «Enviar a…» manda, de las familias de ese colaborador, solo las que aún no tienen la invitación, y antes enseña la lista para revisarla. Las ya enviadas se pueden mandar otra vez, una a una.
+          </p>
+        </details>
         {ventanaPregunta}
       </VentanaFlotante>
 

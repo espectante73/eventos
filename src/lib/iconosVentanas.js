@@ -6,8 +6,7 @@ import {
   Heart,
   Users,
   Settings,
-  Wallet,
-  Mail,
+  Euro,
   List,
   Utensils,
   MonitorPlay,
@@ -27,6 +26,7 @@ import {
   Clock3,
   Send,
 } from "lucide-react";
+import { IconoMovilQr } from "../components/IconoMovilQr";
 
 // «Formulario» (él, v87.4; antes «Añadir»): «ahora no solo añade, sino que
 // busca o confirma o hace cambios». Su nombre y su icono, una sola pieza
@@ -37,13 +37,17 @@ export const ICONOS_VENTANAS = {
   aniversarios: Heart,
   colaboradores: Users,
   configuracion: Settings,
-  cuentas: Wallet,
+  // El euro (él, v90.6: «el símbolo de euro o de dólar, el que veas mejor»):
+  // todos los importes de la app van en euros.
+  cuentas: Euro,
   diaEvento: CalendarHeart,
   // El equipo de colaboradores del panel de cada uno (v73.1): el mismo grupo de personas.
   equipo: Users,
   marcador: UserCheck,
   formulario: ClipboardList,
-  invitaciones: Mail,
+  // Un móvil con el QR en la pantalla (él, v90.6): la invitación llega al
+  // móvil y con su QR se entra. Antes, el sobre.
+  invitaciones: IconoMovilQr,
   invitados: List,
   mesas: Utensils,
   // Multimedia: una pantalla con su botón de reproducir, sonido e imagen.

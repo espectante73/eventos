@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "90.6",
+    cambios: [
+      "Invitaciones, renovada como Contabilidad: al abrirla, todo plegado, con las cifras arriba (Faltan, Enviadas, Sin email) y cuatro apartados con su resumen: Enviar, Plantilla, Qué se imprime y Calibración (y Carpeta, en el ordenador). Uno abierto a la vez.",
+      "En «Enviar», una línea por familia con «Enviada», descargar y enviar. Tocar el apellido enseña el orden de los nombres con sus flechas y el email de cada uno, que se puede corregir ahí mismo y se guarda en su ficha.",
+      "Fecha, hora y lugar se eligen con el Sí/No de la app; quitar la plantilla, con el círculo rojo, que pregunta antes; y al descargar una invitación avisa de en qué carpeta quedó.",
+      "Iconos nuevos: Contabilidad, el euro; Invitaciones, un móvil con un QR en la pantalla.",
+    ],
+  },
+  {
     version: "90.5",
     cambios: [
       "Barra de ventanas del móvil: la casita ya no se desliza con las demás. Queda quieta en la esquina del pulgar (a la derecha; a la izquierda para el zurdo), y las ventanas se deslizan a su lado.",
