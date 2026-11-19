@@ -31,7 +31,6 @@ import { subirFotoFiesta, eliminarFotoFiesta, verificarFotoFiesta, marcarFotoFam
 import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 import { TarjetaNoticia, CabeceraNoticia, CuerpoZonas } from "./NoticiaTablon";
 import { RegistroTablon } from "./RegistroTablon";
-import { CancionesTablon } from "./CancionesTablon";
 import { guardarCancionesTablon } from "../lib/cancionesTablon";
 import { tituloZonas } from "../lib/zonasTablon";
 
@@ -387,8 +386,9 @@ export function VistaTablon({ token }) {
     setIdAbierto((actual) => (actual === id ? null : id));
   };
 
-  // Sus canciones (v92.1, él): solo con su enlace personal, como su email.
-  // Con la clave del enlace o la que recuerda este móvil (claveDelEnlacePersonal).
+  // Sus canciones (v92.1, él): solo con su enlace personal, como su email,
+  // y dentro de «Comprueba tus datos» (v92.3). Con la clave del enlace o la
+  // que recuerda este móvil (claveDelEnlacePersonal).
   const puedeCambiarCanciones = Boolean(yo) && esRespuestaPersonal(respuestaVerificadaRef.current);
   const guardarCanciones = async (huecos) => {
     const { cancion, aviso } = await guardarCancionesTablon(supabase, {
@@ -864,7 +864,13 @@ export function VistaTablon({ token }) {
                       sola cosa abierta, con las novedades. */}
                   {r.id === "datos" && (
                     <li className="pl-6">
-                      <RegistroTablon yo={yo} evento={evento} sinCanciones={puedeCambiarCanciones} abierta={idAbierto === "registro"} onAlternar={() => alternar("registro")} />
+                      <RegistroTablon
+                        yo={yo}
+                        evento={evento}
+                        canciones={puedeCambiarCanciones ? { cerradas: Boolean(evento?.cancionesCerradas), onGuardar: guardarCanciones } : null}
+                        abierta={idAbierto === "registro"}
+                        onAlternar={() => alternar("registro")}
+                      />
                     </li>
                   )}
                   </Fragment>
@@ -872,16 +878,6 @@ export function VistaTablon({ token }) {
               </ul>
             )}
           </div>
-        )}
-
-        {puedeCambiarCanciones && (
-          <CancionesTablon
-            cancion={yo.cancion}
-            cerradas={Boolean(evento?.cancionesCerradas)}
-            abierta={idAbierto === "canciones"}
-            onAlternar={() => alternar("canciones")}
-            onGuardar={guardarCanciones}
-          />
         )}
 
         {/* Quién le atiende antes del evento (él, v64), bien a la vista:

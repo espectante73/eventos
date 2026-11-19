@@ -108,36 +108,49 @@ it("con la casilla, lo guardado con el nombre por el enlace general ya no entra:
   vista.desmontar();
 });
 
-// v92.1 (él): sus canciones, desde el tablón, solo con su enlace personal.
-it("dentro con su enlace personal sale «Tus canciones para bailar»; por la puerta general, no", async () => {
+// v92.1 (él): sus canciones, desde el tablón, solo con su enlace personal;
+// v92.3: dentro de «Comprueba tus datos», con «Cambiar».
+const ANA = { nombre: "Pacheco, Ana", cancion: "Titanium — David Guetta", alergias: "", datosCompletos: true };
+const abrirDatos = async () => {
+  const titulo = [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Comprueba tus datos"));
+  await act(async () => titulo.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+};
+
+it("dentro con su enlace personal, «Cambiar» junto a sus canciones; por la puerta general, solo se ven", async () => {
   valen = [`${CLAVE} 1975`, "Pacheco Ana 1975"];
-  quien = { nombre: "Pacheco, Ana", cancion: "Titanium — David Guetta" };
+  quien = ANA;
   enlace(`&yo=${CLAVE}`);
   localStorage.setItem("tablon-respuesta-t1", `${CLAVE} 1975`);
   let vista = await abrir();
   expect(texto()).toContain("Has entrado como Pacheco, Ana");
-  expect(texto()).toContain("Tus canciones para bailar");
+  await abrirDatos();
+  expect(texto()).toContain("Titanium — David Guetta");
+  expect(document.body.querySelector('button[title="Cambiar tus canciones"]')).toBeTruthy();
+  // La tarjeta aparte de la v92.1 ya no está.
+  expect(texto()).not.toContain("Tus canciones para bailar");
   vista.desmontar();
 
   enlace("");
   localStorage.setItem("tablon-respuesta-t1", "Pacheco Ana 1975");
   vista = await abrir();
   expect(texto()).toContain("Has entrado como Pacheco, Ana");
-  expect(texto()).not.toContain("Tus canciones para bailar");
+  await abrirDatos();
+  expect(texto()).toContain("Titanium — David Guetta");
+  expect(document.body.querySelector('button[title="Cambiar tus canciones"]')).toBeNull();
   vista.desmontar();
 });
 
 // v92.2 (él: «no veo dónde editar las canciones»): abrió el tablón sin su
 // clave en la dirección (enlace general, icono, marcador), pero este móvil
 // recuerda que entró con su enlace personal.
-it("sin la clave en la dirección, pero recordando su enlace personal: sus canciones, y lo guarda con su clave", async () => {
+it("sin la clave en la dirección, pero recordando su enlace personal: puede cambiarlas, y su email se pide con su clave", async () => {
   valen = [`${CLAVE} 1975`];
-  quien = { nombre: "Pacheco, Ana", cancion: "Titanium — David Guetta" };
+  quien = ANA;
   localStorage.setItem("tablon-respuesta-t1", `${CLAVE} 1975`);
   const vista = await abrir();
-  expect(texto()).toContain("Tus canciones para bailar");
+  await abrirDatos();
+  expect(document.body.querySelector('button[title="Cambiar tus canciones"]')).toBeTruthy();
   expect(texto()).toContain(AVISO_ENLACE_PERSONAL);
-  // Su email se pide con esa misma clave.
   const email = llamadas.find((l) => l.nombre === "tablon_mi_email");
   expect(email.args.p_clave).toBe(CLAVE);
   vista.desmontar();
