@@ -122,3 +122,27 @@ it("sin el SQL de la v76, «Conceptos» y apuntar salen apagados y se dice por q
   expect(document.body.textContent).toContain("Falta subir el SQL de la versión 76");
   vista.desmontar();
 });
+
+// v90.2 (él: «solo puedo quitarlos, no editarlos»): el nombre se corrige
+// en su fila, y los gastos apuntados con él cambian también (él: «sí»).
+it("corregir el nombre de un concepto lo cambia en la lista y en sus gastos", () => {
+  const { vista, guardados, eventos, todos } = dibujar();
+  const nombre = todos('input[aria-label="Nombre del concepto"]').find((i) => i.value === "Música");
+  expect(nombre, "el nombre no se puede tocar").toBeTruthy();
+  escribir(nombre, "Música en directo");
+  act(() => nombre.dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
+  expect(eventos.at(-1).conceptosGastos.map((c) => c.nombre)).toEqual(["Música en directo", "Suscripción ChatGPT"]);
+  expect(guardados.at(-1).find((g) => g.id === "a").concepto).toBe("Música en directo");
+  vista.desmontar();
+});
+
+it("un nombre repetido no se guarda: se dice por qué y vuelve el que había", () => {
+  const { vista, eventos, todos } = dibujar();
+  const nombre = todos('input[aria-label="Nombre del concepto"]').find((i) => i.value === "Música");
+  escribir(nombre, "suscripción chatgpt");
+  act(() => nombre.dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
+  expect(eventos).toEqual([]);
+  expect(document.body.textContent).toContain("«suscripción chatgpt» ya está en la lista.");
+  expect(todos('input[aria-label="Nombre del concepto"]').map((i) => i.value)).toContain("Música");
+  vista.desmontar();
+});

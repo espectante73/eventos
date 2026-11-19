@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "90.2",
+    cambios: [
+      "Contabilidad, ventana «Conceptos»: el nombre de cada concepto ya se puede corregir. Se toca, se escribe y se guarda al salir o con Intro, igual que el precio fijo. Antes solo se podía quitar.",
+      "El nombre corregido cambia también en los gastos ya apuntados con ese concepto, para que no queden dos nombres para lo mismo. Si el nombre nuevo ya está en la lista, lo dice y deja el que había.",
+    ],
+  },
+  {
     version: "90.1",
     cambios: [
       "Lista de invitados, para acreditar: tocando «Faltan» en el marcador de arriba quedan solo los que aún no han llegado; cada uno que se acredita desaparece de la lista en ese momento. Tocando «Ya están», solo los que están dentro.",

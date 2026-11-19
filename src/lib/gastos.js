@@ -64,6 +64,22 @@ export function conConcepto(conceptos, nombre, precio = "") {
 
 export const sinConcepto = (conceptos, nombre) => conceptos.filter((c) => c.nombre !== nombre);
 
+// Corregir el nombre de un concepto (él, v90.2: «solo puedo quitarlos, no
+// editarlos»). Es el mismo concepto, mal escrito: cambian también los
+// gastos ya apuntados con él (él: «sí»), para que no queden dos nombres
+// para lo mismo; el precio fijo se queda. Devuelve { conceptos, gastos,
+// aviso }: con aviso, no se cambió nada.
+export function renombrarConcepto(conceptos, gastos, viejo, nuevo) {
+  const limpio = nuevo.trim();
+  if (!limpio) return { conceptos, gastos, aviso: "Escribe el concepto." };
+  if (conceptos.some((c) => c.nombre !== viejo && mismo(c.nombre, limpio))) return { conceptos, gastos, aviso: `«${limpio}» ya está en la lista.` };
+  return {
+    conceptos: conceptos.map((c) => (c.nombre === viejo ? { ...c, nombre: limpio } : c)).sort(porNombre),
+    gastos: gastos.map((g) => (mismo(conceptoDe(g), viejo) ? { ...g, concepto: limpio } : g)),
+    aviso: "",
+  };
+}
+
 export const conPrecio = (conceptos, nombre, precio) => conceptos.map((c) => (c.nombre === nombre ? { ...c, precio: precio.trim() } : c));
 
 // El precio fijo de un concepto, o "" si no tiene.

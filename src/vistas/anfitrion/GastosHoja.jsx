@@ -10,7 +10,7 @@ import { tocarTitulo } from "../../lib/ordenNiveles";
 import { EncabezadoOrdenable, TINTA_COLUMNA_ACTIVA } from "../../components/Widgets";
 import { euros, parsePrecio, fechaCorta } from "../../lib/formato";
 import { uid } from "../../lib/id";
-import { hoy, conceptoDe, ordenarGastos, totalGastos, conceptosDe, conConcepto, sinConcepto, conPrecio, precioDe, nuevoGasto } from "../../lib/gastos";
+import { hoy, conceptoDe, ordenarGastos, totalGastos, conceptosDe, conConcepto, sinConcepto, conPrecio, precioDe, nuevoGasto, renombrarConcepto } from "../../lib/gastos";
 import { TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -231,9 +231,9 @@ export function GastosHoja({ data, onConceptos }) {
 
 // La lista de conceptos (él, v76: «un lugar donde yo pueda poner los
 // conceptos y solo elegirlos»), cada uno con su precio si es fijo. Quitar
-// uno no cambia los gastos ya apuntados.
+// uno no cambia los gastos ya apuntados; corregir su nombre (v90.2), sí.
 export function VentanaConceptos({ data, onCerrar }) {
-  const { evento, gastos, persistEvento } = data;
+  const { evento, gastos, persistEvento, persistGastos } = data;
   const conceptos = conceptosDe(evento?.conceptosGastos, gastos);
   const [nombre, setNombre] = useState("");
   const [precio, setPrecio] = useState("");
@@ -248,6 +248,13 @@ export function VentanaConceptos({ data, onCerrar }) {
     setNombre("");
     setPrecio("");
   };
+  const renombrar = (viejo, nuevo) => {
+    const r = renombrarConcepto(conceptos, gastos, viejo, nuevo);
+    setAviso(r.aviso);
+    if (r.aviso || nuevo.trim() === viejo) return;
+    guardar(r.conceptos);
+    if (r.gastos.some((g, i) => g !== gastos[i])) persistGastos(r.gastos);
+  };
 
   return (
     <VentanaFlotante clave="conceptosGastos" titulo="Conceptos" onCerrar={onCerrar} ancho="min(400px, calc(100vw - 48px))">
@@ -260,8 +267,16 @@ export function VentanaConceptos({ data, onCerrar }) {
       <div className="text-sm" style={{ border: `1px solid ${C.line}`, borderRadius: R.caja, overflow: "hidden" }}>
         {conceptos.map((c, i) => (
           <div key={c.nombre} className="flex items-center gap-2 px-2" style={{ height: ALTO_FILA, background: i % 2 ? C.paperDark : C.blanco }}>
-            <span className="flex-1 truncate">{c.nombre}</span>
-            <CeldaPrecio valor={c.precio} onGuardar={(p) => guardar(conPrecio(conceptos, c.nombre, p))} />
+            <CeldaEscrita aria-label="Nombre del concepto" title="Corregir el nombre" valor={c.nombre} onGuardar={(n) => renombrar(c.nombre, n)} style={{ flex: 1, paddingLeft: 0 }} />
+            <CeldaEscrita
+              aria-label="Precio fijo"
+              title="Cambiar el precio fijo"
+              placeholder="—"
+              inputMode="decimal"
+              valor={c.precio}
+              onGuardar={(p) => guardar(conPrecio(conceptos, c.nombre, p))}
+              style={{ width: 96, flex: "none", textAlign: "right" }}
+            />
             <BotonQuitar
               titulo="Quitar este concepto"
               pregunta={{ titulo: `¿Quitar «${c.nombre}» de la lista?`, texto: "Los gastos ya apuntados con este concepto no cambian.", rotulo: "Sí" }}
@@ -283,19 +298,22 @@ export function VentanaConceptos({ data, onCerrar }) {
         <p className="mt-2" style={{ opacity: OP.secundario }}>
           Con precio fijo (una suscripción), al elegir el concepto en la hoja el importe se pone solo; si un mes cambia, se corrige en la fila de ese gasto.
         </p>
+        <p className="mt-2" style={{ opacity: OP.secundario }}>
+          Para corregir un nombre o un precio, tócalo y escribe; se guarda al salir o con Intro. Un nombre corregido cambia también en los gastos ya apuntados.
+        </p>
       </details>
     </VentanaFlotante>
   );
 }
 
-// El precio fijo de un concepto, editable en su fila; se guarda al salir.
-function CeldaPrecio({ valor, onGuardar }) {
+// Lo que se escribe en la fila de un concepto (su nombre y su precio
+// fijo): se guarda al salir o con Intro. Si no se pudo (un nombre vacío o
+// repetido), vuelve a enseñar el que había.
+function CeldaEscrita({ valor, onGuardar, style, ...resto }) {
   const [texto, setTexto] = useState(null);
   return (
     <input
-      aria-label="Precio fijo"
-      placeholder="—"
-      inputMode="decimal"
+      {...resto}
       value={texto ?? valor}
       onChange={(e) => setTexto(e.target.value)}
       onBlur={() => {
@@ -303,7 +321,7 @@ function CeldaPrecio({ valor, onGuardar }) {
         setTexto(null);
       }}
       onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-      style={{ ...CELDA, width: 96, textAlign: "right" }}
+      style={{ ...CELDA, ...style }}
     />
   );
 }

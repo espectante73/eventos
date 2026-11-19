@@ -1,6 +1,6 @@
 // v76 (él): los gastos como hoja de cálculo.
 import { describe, it, expect } from "vitest";
-import { hoy, conceptoDe, ordenarGastos, totalGastos, conceptosDe, conConcepto, sinConcepto, conPrecio, precioDe, nuevoGasto } from "./gastos";
+import { hoy, conceptoDe, ordenarGastos, totalGastos, conceptosDe, conConcepto, sinConcepto, conPrecio, precioDe, nuevoGasto, renombrarConcepto } from "./gastos";
 
 describe("los gastos", () => {
   it("lo último apuntado, arriba; los de antes, al final en su orden", () => {
@@ -40,6 +40,30 @@ describe("los gastos", () => {
     const { gasto } = nuevoGasto({ fecha: "2026-09-12", concepto: "App", importe: " 15 " }, "1", ahora);
     expect(gasto).toMatchObject({ id: "1", fecha: "2026-09-12", concepto: "App", importe: "15", pagado: true });
     expect(nuevoGasto({ concepto: "App", importe: "15" }, "1", ahora).gasto.fecha).toBe(hoy(ahora));
+  });
+});
+
+// v90.2 (él): corregir el nombre; los gastos apuntados con él, también.
+describe("corregir el nombre de un concepto", () => {
+  const lista = [{ nombre: "Netflx", precio: "12,99" }, { nombre: "Música", precio: "" }];
+  const gastos = [
+    { id: "a", concepto: "Netflx", importe: "12,99" },
+    { id: "b", concepto: "Música", importe: "250" },
+    { id: "c", concepto: "", categoria: "netflx", importe: "12,99" }, // de antes de la v76
+  ];
+  it("cambia en la lista (con su precio) y en los gastos ya apuntados", () => {
+    const r = renombrarConcepto(lista, gastos, "Netflx", " Netflix ");
+    expect(r.aviso).toBe("");
+    expect(r.conceptos).toEqual([{ nombre: "Música", precio: "" }, { nombre: "Netflix", precio: "12,99" }]);
+    expect(r.gastos.map(conceptoDe)).toEqual(["Netflix", "Música", "Netflix"]);
+    expect(r.gastos[1]).toBe(gastos[1]);
+  });
+  it("vacío, o con el nombre de otro, no cambia nada y dice por qué", () => {
+    expect(renombrarConcepto(lista, gastos, "Netflx", "  ")).toEqual({ conceptos: lista, gastos, aviso: "Escribe el concepto." });
+    expect(renombrarConcepto(lista, gastos, "Netflx", "música").aviso).toBe("«música» ya está en la lista.");
+  });
+  it("solo cambiar mayúsculas del mismo vale", () => {
+    expect(renombrarConcepto(lista, gastos, "Música", "MÚSICA").aviso).toBe("");
   });
 });
 
