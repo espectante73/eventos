@@ -1,6 +1,6 @@
 // v73.1 (él): el equipo, alfabético por apellido y, en cada matrimonio, el esposo arriba.
 import { it, expect } from "vitest";
-import { ordenarEquipo, equipoDesdeDatos } from "./equipoColaboradores";
+import { ordenarEquipo, equipoDesdeDatos, colaboradorEsDj, colaboradoresSinDj, equipoSinDj } from "./equipoColaboradores";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const p = (apellido, nombre, rol = "", grupo = `${apellido}01`) => ({ apellido, nombre, rolFamiliar: rol, grupoFamiliar: grupo });
@@ -31,4 +31,18 @@ it("el anfitrión lo saca de sus datos: el nombre y la zona, de la ficha", () =>
   const equipo = equipoDesdeDatos(colaboradores, invitados, "c1");
   expect(equipo[0]).toMatchObject({ apellido: "Pacheco", nombre: "Scarly", zona: "Icod", esYo: true });
   expect(equipo[1]).toMatchObject({ apellido: "Sierra", nombre: "Raul", zona: "", esYo: false });
+});
+
+it("el DJ (v91.1): lo dice su ficha; fuera de las listas del equipo, salvo para él mismo", () => {
+  const invitados = [
+    { id: "g1", apellido: "Pacheco", nombre: "Scarly", zona: "Icod" },
+    { id: "g9", apellido: "Brown", nombre: "Julien", zona: " dj " },
+  ];
+  const colaboradores = [{ id: "c1", invitadoId: "g1" }, { id: "c9", invitadoId: "g9" }, { id: "c2" }];
+  expect(colaboradorEsDj(colaboradores[1], invitados)).toBe(true);
+  expect(colaboradorEsDj(colaboradores[0], invitados)).toBe(false);
+  expect(colaboradorEsDj(colaboradores[2], invitados)).toBe(false);
+  expect(colaboradoresSinDj(colaboradores, invitados).map((c) => c.id)).toEqual(["c1", "c2"]);
+  expect(equipoSinDj(equipoDesdeDatos(colaboradores, invitados, "c1")).map((x) => x.id)).toEqual(["c1", "c2"]);
+  expect(equipoSinDj(equipoDesdeDatos(colaboradores, invitados, "c9")).map((x) => x.id)).toEqual(["c1", "c9", "c2"]);
 });

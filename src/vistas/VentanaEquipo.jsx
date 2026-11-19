@@ -12,7 +12,7 @@ import { VentanaFlotante } from "../components/VentanaFlotante";
 import { Cargando } from "../components/Cargando";
 import { LineaAviso } from "../components/LineaAviso";
 import { nombreCompleto } from "../lib/formato";
-import { ordenarEquipo, equipoDesdeDatos, leerEquipo } from "../lib/equipoColaboradores";
+import { ordenarEquipo, equipoDesdeDatos, leerEquipo, equipoSinDj } from "../lib/equipoColaboradores";
 
 export const NOTA_EQUIPO =
   "Este es el equipo al completo: todos somos compañeros con las mismas tareas, para consultarles cuando lo necesites.";
@@ -43,7 +43,7 @@ export function VentanaEquipo({ data, colaboradorId, onCerrar }) {
   }, [delAnfitrion, colaboradorId]);
 
   const equipo = delAnfitrion ? equipoDesdeDatos(data.colaboradores, data.invitados, colaboradorId) : delServidor;
-  const ordenado = equipo ? ordenarEquipo(equipo) : null;
+  const ordenado = equipo ? ordenarEquipo(equipoSinDj(equipo)) : null;
 
   return (
     <VentanaFlotante clave="equipo" titulo="Equipo" onCerrar={onCerrar} ancho="min(420px, calc(100vw - 48px))">

@@ -23,6 +23,7 @@ import { GastosHoja, VentanaConceptos } from "./GastosHoja";
 import { APagarHoja, VentanaLocal } from "./APagar";
 import { totalGastos as sumaGastos } from "../../lib/gastos";
 import { resumenAPagar } from "../../lib/aPagar";
+import { colaboradoresSinDj } from "../../lib/equipoColaboradores";
 
 // Lo entregado, con la propina si la hubo (v85.9): la misma frase en la
 // vista previa y en cada entrega; `corto`, sin «de», para que la línea de
@@ -95,7 +96,9 @@ export function VentanaCuentas({ data, onCerrar }) {
   const previsto = previstoARecoger(invitados, evento).total;
   // Arriba los que tienen algo por entregar; abajo, los que lo han entregado
   // todo (v86.1, v87). Dentro de cada grupo, alfabético.
-  const ordenados = ordenarPorEntregas(colaboradores, invitados, evento);
+  // Sin el DJ (v91.1): no recoge dinero de nadie.
+  const delEquipo = colaboradoresSinDj(colaboradores, invitados);
+  const ordenados = ordenarPorEntregas(delEquipo, invitados, evento);
 
   // Lo cobrado por un colaborador y aún no entregado (lib/entregas.js): el
   // desglose del acuse de la entrega nueva y su importe.
@@ -307,7 +310,7 @@ export function VentanaCuentas({ data, onCerrar }) {
       <SeccionPlegable
         icono={Users}
         titulo="Recaudado por colaborador"
-        resumen={`${colaboradores.length} colaborador${colaboradores.length !== 1 ? "es" : ""}`}
+        resumen={`${delEquipo.length} colaborador${delEquipo.length !== 1 ? "es" : ""}`}
         abierta={seccionAbierta === "colaboradores"}
         onAlternar={() => alternar("colaboradores")}
       >
@@ -424,7 +427,7 @@ export function VentanaCuentas({ data, onCerrar }) {
               </div>
             );
           })}
-          {colaboradores.length === 0 && (
+          {delEquipo.length === 0 && (
             <p className="text-sm italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
               Todavía no hay colaboradores.
             </p>

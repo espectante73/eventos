@@ -17,6 +17,7 @@ import { BarraCompacta } from "../../components/Widgets";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { tieneCancion } from "../../lib/canciones";
 import { estadoEntregas } from "../../lib/entregas";
+import { colaboradoresSinDj } from "../../lib/equipoColaboradores";
 
 // `anfitrionToken`: para leer si cada colaborador tiene ya cuenta (v58.7).
 export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
@@ -73,7 +74,7 @@ export function VentanaProgreso({ data, onCerrar, anfitrionToken }) {
         />
       </div>
       <div className="grid grid-cols-3 gap-1.5 pt-1" style={{ borderTop: `1px solid ${C.line}` }}>
-        {colaboradores.map((c) => {
+        {colaboradoresSinDj(colaboradores, invitados).map((c) => {
           const suyos = invitados.filter(
             (g) => resolverColaborador(g, colaboradores)?.id === c.id && g.confirmado
           );

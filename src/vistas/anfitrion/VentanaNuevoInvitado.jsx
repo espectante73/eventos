@@ -51,6 +51,7 @@ import { telefonoParaVer } from "../../lib/telefono";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../../lib/fotosAlmacen";
 import { ROLES_FORMULARIO, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, editarDesdeFormulario, SIN_CAMBIOS, mismaPersona, anioBodaDeLaFamilia } from "../../lib/edicionInvitados";
+import { colaboradoresSinDj } from "../../lib/equipoColaboradores";
 
 const VACIO = {
   apellido: "",
@@ -123,6 +124,8 @@ function ElegirONuevo({ nombre, opciones, vacio, valor, nuevo, onValor, onNuevo,
 
 export function VentanaNuevoInvitado({ data, onCerrar }) {
   const { invitados, colaboradores, evento, mesas = [], persistInvitados, fotosFamiliares = {}, persistFotosFamiliares } = data;
+  // A quién se puede asignar: todos menos el DJ (v91.1).
+  const asignables = colaboradoresSinDj(colaboradores, invitados);
   const familias = familiasDe(invitados);
   const zonas = zonasDe(invitados);
   const [ficha, setFicha] = useState(VACIO);
@@ -250,7 +253,7 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
             >
               <option value="">Todos los colaboradores</option>
               <option value={SIN_COLABORADOR}>Sin colaborador ({cuantosDe(SIN_COLABORADOR)})</option>
-              {colaboradores.map((c) => (
+              {asignables.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre} ({cuantosDe(c.id)})
                 </option>
@@ -332,7 +335,7 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
           <Field label="Colaborador">
             <Desplegable aria-label="Colaborador" value={ficha.colaboradorId} onChange={(e) => poner("colaboradorId")(e.target.value)} style={{ ...CAMPO, color: ficha.colaboradorId ? C.charcoal : C.line }}>
               <option value="">Sin asignar</option>
-              {colaboradores.map((c) => (
+              {asignables.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre}
                 </option>

@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "91.1",
+    cambios: [
+      "Cuenta para el DJ: se le da de alta como colaborador desde su ficha (la de zona «DJ») y en Permisos se le marca solo «Multimedia». Entra con su email y contraseña y maneja la música, el vídeo y la cortinilla.",
+      "Como no lleva invitados, queda fuera de los desplegables para asignarlos (Lista y Nuevo invitado), de Progreso, de «Recaudado por colaborador», de «Avisar al equipo», del colaborador de Invitaciones y del Equipo que ven los demás. Sigue en Permisos, en Datos de colaboradores y en «Cambiar vista».",
+      "En su pantalla no sale «Formulario»: solo Multimedia y Mi cuenta.",
+    ],
+  },
+  {
     version: "91",
     cambios: ["Invitaciones, apartado «No listas»: «Sin mesa» en rojo lleno con letra blanca."],
   },

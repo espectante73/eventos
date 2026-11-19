@@ -29,6 +29,7 @@ import { Boton } from "../../components/Boton";
 import { usePreguntaSeguridad, BotonQuitar } from "../../components/PreguntaSeguridad";
 import { avisoEnPantalla } from "../../lib/avisos";
 import { LineaAviso } from "../../components/LineaAviso";
+import { colaboradoresSinDj } from "../../lib/equipoColaboradores";
 
 // La columna del nombre en el orden de la invitación: cabe «Apellido, Nombre»
 // normal en un móvil; uno muy largo se recorta y se lee entero al pasar.
@@ -268,7 +269,7 @@ export function VentanaInvitaciones({
                 onChange={(e) => setColaboradorInvitacionSel(e.target.value)}
               >
                 <option value="">Todos</option>
-                {colaboradores.map((c) => (
+                {colaboradoresSinDj(colaboradores, invitados).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.nombre}
                   </option>

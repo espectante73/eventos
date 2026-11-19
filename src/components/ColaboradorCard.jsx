@@ -13,6 +13,7 @@ import { BuscadorInvitado } from "./BuscadorInvitado";
 import { Boton } from "./Boton";
 import { BotonQuitar } from "./PreguntaSeguridad";
 import { LineaAviso } from "./LineaAviso";
+import { colaboradoresSinDj } from "../lib/equipoColaboradores";
 
 export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEliminar, onRelevar, onAsignarColaborador, onCambiarEmail, onProbarEmail, onEnviarInvitacionLogin, onConfirmarEmailActualizado, onAvisar }) {
   const [relevando, setRelevando] = useState(false);
@@ -288,7 +289,7 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
                 style={{ ...inputStyle, padding: "2px 4px", fontSize: T.pequeno }}
               >
                 <option value="">Sin asignar</option>
-                {colaboradores.map((otro) => (
+                {colaboradoresSinDj(colaboradores, invitados).map((otro) => (
                   <option key={otro.id} value={otro.id}>
                     {otro.nombre}
                   </option>

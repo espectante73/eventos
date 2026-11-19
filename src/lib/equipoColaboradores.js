@@ -5,11 +5,24 @@
 // esposa, como en el resto de la app (él: «todos los que son matrimonio,
 // el esposo está arriba»).
 import { ROL_FAMILIAR } from "./rolFamiliar";
-import { claveFamilia } from "./invitados";
+import { claveFamilia, esDj } from "./invitados";
 import { fichaDelColaborador } from "./edicionInvitados";
 
 const ORDEN_ROL = { [ROL_FAMILIAR.ESPOSO]: 0, [ROL_FAMILIAR.ESPOSA]: 1 };
 const comparar = (a, b) => String(a || "").localeCompare(String(b || ""), "es", { sensitivity: "base" });
+
+// El DJ contratado (él, v91.1: «que tenga login porque quiero que tenga
+// acceso a multimedia»): entra con una cuenta de colaborador con solo ese
+// permiso. Que es el DJ lo dice su ficha de la Lista (zona «DJ», esDj), no
+// una copia. No lleva invitados: fuera de las listas para asignarlos, de
+// Progreso, de Contabilidad, de «Avisar al equipo» y del Equipo; dentro de
+// Permisos, de Datos de colaboradores y de «Cambiar vista», para darle la
+// cuenta y el permiso y ver lo que ve él.
+export const colaboradorEsDj = (c, invitados = []) => esDj(invitados.find((g) => g.id === c?.invitadoId));
+export const colaboradoresSinDj = (colaboradores = [], invitados = []) => colaboradores.filter((c) => !colaboradorEsDj(c, invitados));
+// El Equipo (filas con su zona, del servidor o de equipoDesdeDatos): sin el
+// DJ, salvo para él mismo.
+export const equipoSinDj = (equipo = []) => equipo.filter((p) => p.esYo || !esDj(p));
 
 export function ordenarEquipo(equipo = []) {
   return [...equipo].sort(

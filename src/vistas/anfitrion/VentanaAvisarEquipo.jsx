@@ -12,12 +12,15 @@ import { Cargando } from "../../components/Cargando";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { useSeccion } from "../../lib/useSeccion";
+import { colaboradoresSinDj } from "../../lib/equipoColaboradores";
 
 // Lo que cabe en un aviso sin que el móvil lo corte.
 const LARGO_MAXIMO = 180;
 
 export function VentanaAvisarEquipo({ data, onCerrar }) {
-  const { colaboradores, colaboradoresConAvisos, avisarAlEquipo } = data;
+  // Sin el DJ (v91.1): no es del equipo que lleva invitados.
+  const colaboradores = colaboradoresSinDj(data.colaboradores, data.invitados);
+  const { colaboradoresConAvisos, avisarAlEquipo } = data;
   const listo = useSeccion(data, "avisosMovil");
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);

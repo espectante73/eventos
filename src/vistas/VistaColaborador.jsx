@@ -6,7 +6,8 @@ import { useState, useEffect, useRef } from "react";
 import { Bell, Calendar, Check, ChevronDown, ChevronRight, ClipboardList, Euro, Lock, Mail, Megaphone, Send, User, UserCog, X } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
-import { datosCompletos, pideDatosDeBoda, pideEmail, estadoDatos, familiasSinEmail, emailObligatorio, faltanObligatorios, fichasIncompletasDe, claveFamilia, importeEsperadoInvitado, resolverColaborador, fichaCerradaAlColaborador, comoColaborador } from "../lib/invitados";
+import { datosCompletos, pideDatosDeBoda, pideEmail, estadoDatos, familiasSinEmail, emailObligatorio, faltanObligatorios, fichasIncompletasDe, claveFamilia, importeEsperadoInvitado, resolverColaborador, fichaCerradaAlColaborador, comoColaborador, esDj } from "../lib/invitados";
+import { colaboradorEsDj, leerEquipo } from "../lib/equipoColaboradores";
 import { ordenarPorApellidoNombre, nombreCompleto, euros, fechaCorta } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
@@ -1284,6 +1285,21 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const misInvitados = invitados.filter(
     (g) => resolverColaborador(g, colaboradores)?.id === colaboradorId
   );
+  // ¿Es el DJ? (v91.1: entra solo para Multimedia y no lleva invitados, así
+  // que sin «Formulario»). Lo dice su ficha: el anfitrión la tiene; el
+  // colaborador lo sabe por su fila del Equipo, que trae su zona.
+  const [soyDjServidor, setSoyDjServidor] = useState(false);
+  useEffect(() => {
+    if (data.esAnfitrion) return undefined;
+    let vivo = true;
+    leerEquipo(supabase, colaboradorId)
+      .then(({ equipo }) => vivo && equipo && setSoyDjServidor(equipo.some((p) => p.esYo && esDj(p))))
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, [data.esAnfitrion, colaboradorId]);
+  const soyDj = data.esAnfitrion ? colaboradorEsDj(colaborador, invitados) : soyDjServidor;
   // Solo confirmados: desde el 2026-08-12, colaborador_mis_invitados ya
   // no manda tentativa al navegador del colaborador (ver schema.sql) --
   // este filtro es ahora un no-op de refuerzo, no la barrera real.
@@ -1573,7 +1589,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               sello={pendientes.length}
               opciones={[
                 puedeEditarDatosEvento && { id: "datos-evento", etiqueta: "Datos evento", icono: Calendar, onClick: () => setVentanaDatosEventoAbierta(true) },
-                { id: "formulario", etiqueta: "Formulario", icono: ICONOS_VENTANAS.formulario, onClick: abrirFormulario, sello: pendientes.length },
+                !soyDj && { id: "formulario", etiqueta: "Formulario", icono: ICONOS_VENTANAS.formulario, onClick: abrirFormulario, sello: pendientes.length },
                 puedeEnviarInvitaciones && { id: "invitaciones", etiqueta: "Invitaciones", icono: Send, onClick: () => setVentanaInvitacionesAbierta(true) },
                 onCerrarSesion && { id: "mi-cuenta", etiqueta: "Mi cuenta", icono: UserCog, onClick: () => setMiCuentaAbierta(true), ...ESTILO_MI_CUENTA },
                 puedeMultimedia && { id: "musica", etiqueta: "Multimedia", icono: ICONOS_VENTANAS.musicaEvento, onClick: () => abrirMusica(abrirMusicaDentro) },

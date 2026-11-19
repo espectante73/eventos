@@ -100,6 +100,7 @@ import { cancionesDistintas, duracionTotal, textoDuracion, noEncontrada, filasAp
 import { pideTelefono, telefonoParaVer } from "../../lib/telefono";
 import { alergiasUniformes } from "../../lib/alergias";
 import { useSeccion } from "../../lib/useSeccion";
+import { colaboradoresSinDj } from "../../lib/equipoColaboradores";
 
 // El circulito del tablón tras el nombre (él, v75.2): «estilo semáforo»,
 // verde claro si ha entrado y rojo si nunca, sin columna nueva. Quién lo
@@ -205,6 +206,8 @@ export function SeccionInvitados({
   fijo,
 }) {
   const { evento, persistEvento, colaboradores, invitados, mesas, persistInvitados, avisarColaborador, asistenciaEnVivo } = data;
+  // A quién se pueden asignar invitados: todos menos el DJ (v91.1).
+  const colaboradoresAsignables = colaboradoresSinDj(colaboradores, invitados);
   // Quién ha entrado al tablón: llega al abrir la Lista (sin esperar a
   // pintarla) y se pone al día con ella abierta.
   useSeccion(data, "entradasTablon");
@@ -1201,7 +1204,7 @@ export function SeccionInvitados({
                   >
                     <option value="">Todos</option>
                     <option value="sin">Sin asignar ({porColaborador.sin || 0})</option>
-                    {colaboradores.map((c) => (
+                    {colaboradoresAsignables.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.nombre} ({porColaborador[c.id] || 0})
                       </option>
@@ -1881,7 +1884,7 @@ export function SeccionInvitados({
                       style={{ ...inputStyle, border: "none", background: "transparent", padding: "3px 5px", fontSize: T.pequeno, width: "100%", minWidth: 0, minHeight: 28, borderRadius: R.caja }}
                     >
                       <option value="">Sin asignar</option>
-                      {colaboradores.map((c) => (
+                      {colaboradoresAsignables.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.nombre}
                         </option>

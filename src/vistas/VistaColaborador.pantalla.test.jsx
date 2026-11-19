@@ -918,3 +918,26 @@ it("la fila lleva teléfono y WhatsApp; su menú trae «Enlace tablón» y marca
   expect(whatsapp.closest("[data-escribiendole]")).toBeTruthy();
   vista.desmontar();
 });
+
+// El DJ (v91.1): cuenta de colaborador solo para Multimedia. Sin invitados,
+// sin «Formulario». Aquí, como lo ve el anfitrión con «Cambiar vista».
+it("el DJ ve Multimedia y Mi cuenta, sin «Formulario»", () => {
+  const dj = { id: "g9", nombre: "Julien", apellido: "Brown", grupoFamiliar: "Brown01", zona: "DJ", rolFamiliar: ROL_FAMILIAR.SUELTO, confirmado: true };
+  const vista = montar(
+    <VistaColaborador
+      data={{ ...data, esAnfitrion: true, invitados: [...invitados, dj], colaboradores: [...colaboradores, { id: "c9", nombre: "Brown, Julien", invitadoId: "g9", email: "dj@dj.com", permisos: ["multimedia"] }] }}
+      colaboradorId="c9"
+      esAnfitrionOriginal={false}
+      setRol={() => {}}
+      anfitrionToken={null}
+      onCerrarSesion={() => {}}
+    />
+  );
+  const botones = () => [...document.body.querySelectorAll("button")];
+  vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
+  const rotulos = botones().map((b) => b.textContent.trim().replace(/^\d+|\d+$/g, ""));
+  expect(rotulos).toContain("Multimedia");
+  expect(rotulos).toContain("Mi cuenta");
+  expect(rotulos).not.toContain("Formulario");
+  vista.desmontar();
+});
