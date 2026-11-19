@@ -104,6 +104,12 @@ it("con su enlace personal, «Cambiar» abre ahí mismo sus 3 huecos con lo que 
   expect(boton("Cambiar")).toBeUndefined();
   // v92.7 (él): nunca se promete que el DJ las pondrá; no es para eso.
   expect(vista.contenedor.textContent).not.toMatch(/pondr[áa]|sonar[áa]n?/i);
+  // v92.8 (él): para qué son, en una línea y plegado.
+  const ayuda = vista.contenedor.querySelector("details");
+  expect(ayuda.querySelector("summary").textContent).toBe("Hasta 3 canciones, ¿para qué son?");
+  expect(ayuda.open).toBe(false);
+  expect(ayuda.textContent).toContain("perfil musical y generacional de todos los invitados");
+  expect(ayuda.textContent).toContain("No será posible ponerlas todas");
   // Sin cambios, «Guardar» no hace nada.
   expect(boton("Guardar").disabled).toBe(true);
   vista.desmontar();

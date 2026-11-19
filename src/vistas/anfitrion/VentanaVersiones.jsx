@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "92.8",
+    cambios: [
+      "Tablón: al cambiar sus canciones, en una sola línea, «Hasta 3 canciones, ¿para qué son?». Al tocar la pregunta se abre: «Con ellas conocemos el perfil musical y generacional de todos los invitados, para crear un ambiente que integre a todos por igual. No será posible ponerlas todas, pero tus canciones sirven de orientación para dar forma a la identidad musical del evento.»",
+    ],
+  },
+  {
     version: "92.7",
     cambios: [
       "Arreglo: al cambiar sus canciones en el tablón decía «Las pondrá el DJ en la fiesta». No es así: las canciones sirven para conocer el perfil musical y generacional de cada invitado, no para ponerlas todas. Ahora solo dice «Hasta 3.».",

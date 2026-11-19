@@ -100,10 +100,21 @@ export function RegistroTablon({ yo, evento, canciones, abierta, onAlternar }) {
               <div className="space-y-2 pt-1 pb-1">
                 {/* Nunca prometer que sonarán (él, v92.7): sirven para conocer
                     el perfil musical y generacional de cada uno, no para
-                    ponerlas todas (CLAUDE.md 1.11). */}
-                <p className="text-xs" style={{ opacity: OP.secundario }}>
-                  Hasta 3.
-                </p>
+                    ponerlas todas (CLAUDE.md 1.11). Para qué son, en una sola
+                    línea y plegado como toda ayuda (él, v92.8; norma 5); su
+                    texto, el suyo. */}
+                <details className="text-xs">
+                  <summary className="cursor-pointer select-none">
+                    <span style={{ opacity: OP.secundario }}>Hasta 3 canciones, </span>
+                    <span className="underline" style={{ color: C.goldClaro }}>
+                      ¿para qué son?
+                    </span>
+                  </summary>
+                  <p className="mt-1" style={{ opacity: OP.secundario }}>
+                    Con ellas conocemos el perfil musical y generacional de todos los invitados, para crear un ambiente que integre a todos por
+                    igual. No será posible ponerlas todas, pero tus canciones sirven de orientación para dar forma a la identidad musical del evento.
+                  </p>
+                </details>
                 {/* Sobre papel, como en el formulario del colaborador: el ▶
                     y lo que encuentra (v92.5) están hechos para fondo claro;
                     sobre el verde no se leerían. */}
