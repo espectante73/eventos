@@ -55,13 +55,13 @@ describe("escuchar antes", () => {
     "Tu cariñito": { data: [PISTA(1, "Tu Cariñito", "Luisito Ayala"), { ...PISTA(2, "Tu Cariñito", "Edwin Rivera"), preview: "" }, PISTA(3, "Tu Cariñito", "Edén Muñoz")] },
     "despasito Luis Fonsi": { data: [PISTA(4, "Despacito", "Luis Fonsi")] },
   };
-  function montar2({ colaborador = false, djBueno = true } = {}) {
+  function montar2({ colaborador = false, djBueno = true, invitadoBueno = true } = {}) {
     const llamadas = [];
     const fetch = vi.fn(async (url, opciones) => {
       if (url.includes("/rpc/")) {
         const nombre = url.split("/rpc/")[1];
-        llamadas.push({ nombre, autorizacion: opciones.headers.Authorization });
-        const respuesta = { anfitrion_verificar_token: true, dj_puede: djBueno, es_colaborador: colaborador }[nombre];
+        llamadas.push({ nombre, autorizacion: opciones.headers.Authorization, cuerpo: JSON.parse(opciones.body) });
+        const respuesta = { anfitrion_verificar_token: true, dj_puede: djBueno, es_colaborador: colaborador, tablon_verificar_respuesta: invitadoBueno }[nombre];
         return { ok: true, status: 200, json: async () => respuesta };
       }
       if (url.includes("/track/")) return { ok: true, json: async () => PISTA(99, "Exacta", "Por número") };
@@ -106,5 +106,22 @@ describe("escuchar antes", () => {
     const si = montar2();
     await si.manejador({ method: "POST", body: { dj: { token: "d", clave: "K7M4R" }, escuchar: { titulo: "despasito", artista: "Luis Fonsi" } } }, si.res);
     expect(si.res.codigo).toBe(200);
+  });
+
+  // v92.5 (él): el invitado que cambia sus canciones en el tablón, solo con
+  // su enlace personal (su clave y su año), como el guardarlas.
+  it("un invitado del tablón, con su enlace personal; por la puerta general o con mala respuesta, nada", async () => {
+    const si = montar2();
+    await si.manejador({ method: "POST", body: { tablon: { token: "t1", respuesta: "0123456789abcdef 1975" }, escuchar: { titulo: "despasito", artista: "Luis Fonsi" } } }, si.res);
+    expect(si.res.codigo).toBe(200);
+    expect(si.llamadas.find((l) => l.nombre === "tablon_verificar_respuesta").cuerpo).toEqual({ p_token: "t1", p_respuesta: "0123456789abcdef 1975" });
+    // Por la puerta general (nombre y año): ni se pregunta a la base.
+    const general = montar2();
+    await general.manejador({ method: "POST", body: { tablon: { token: "t1", respuesta: "Pacheco Ana 1975" }, escuchar: { titulo: "despasito" } } }, general.res);
+    expect(general.res.codigo).toBe(403);
+    expect(general.llamadas).toEqual([]);
+    const mala = montar2({ invitadoBueno: false });
+    await mala.manejador({ method: "POST", body: { tablon: { token: "t1", respuesta: "0123456789abcdef 1900" }, escuchar: { titulo: "despasito" } } }, mala.res);
+    expect(mala.res.codigo).toBe(403);
   });
 });

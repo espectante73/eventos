@@ -11,14 +11,16 @@ export function consultaDeFila(f, catalogo) {
   return { titulo, artista: artista.join(" — "), ...(e?.deezer && !e.noEncontrada && !e.descartada ? { deezer: e.deezer } : {}) };
 }
 
-// Al buscador: con la llave del anfitrión, la sesión de un colaborador o el
-// enlace y la clave del DJ. Devuelve { candidatos, soloTitulo } o { error }.
-export async function pedirMuestras({ consulta, token = null, sesion = null, dj = null }, f = fetch) {
+// Al buscador: con la llave del anfitrión, la sesión de un colaborador, el
+// enlace y la clave del DJ o, en el tablón, la llave y la respuesta del
+// invitado con su enlace personal (`tablon`, v92.5). Devuelve
+// { candidatos, soloTitulo } o { error }.
+export async function pedirMuestras({ consulta, token = null, sesion = null, dj = null, tablon = null }, f = fetch) {
   try {
     const r = await f("/api/canciones", {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(sesion ? { Authorization: `Bearer ${sesion}` } : {}) },
-      body: JSON.stringify({ escuchar: consulta, ...(token ? { token } : {}), ...(dj ? { dj } : {}) }),
+      body: JSON.stringify({ escuchar: consulta, ...(token ? { token } : {}), ...(dj ? { dj } : {}), ...(tablon ? { tablon } : {}) }),
     });
     const datos = await r.json().catch(() => ({}));
     return r.ok ? datos : { error: datos.error || `El buscador respondió ${r.status}.` };

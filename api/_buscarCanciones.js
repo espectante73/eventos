@@ -6,14 +6,17 @@
 // src/lib/repasoCanciones.js.
 //
 // Y la escucha previa (v81.1, `escuchar`): hasta 3 canciones de Deezer con
-// su muestra de 30 s, para el anfitrión, un colaborador (con su sesión) o
-// el DJ (con su enlace y su clave). Tolera lo mal escrito: Deezer ya
+// su muestra de 30 s, para el anfitrión, un colaborador (con su sesión), el
+// DJ (con su enlace y su clave) o un invitado que cambia las suyas en el
+// tablón (v92.5, él: «no veo la opción de escucha previa»), solo con su
+// enlace personal, como el guardarlas. Tolera lo mal escrito: Deezer ya
 // perdona letras de más o de menos; si con el cantante no sale nada (un
 // cantante equivocado), se busca solo por el título. La muestra caduca en
 // unas horas: se pide al pulsar ▶, nunca se guarda.
 //
 // Separado de api/canciones.js (la ruta) para poder probarlo sin red.
 import { crearRpc } from "./_rpc.js";
+import { esRespuestaPersonal } from "../src/lib/tablonEntrada.js";
 
 export const MAXIMO_CONSULTAS = 10;
 
@@ -62,21 +65,26 @@ export function crearManejador({ fetch, env }) {
     if (primero.length || !t || !a) return { candidatos: primero, soloTitulo: false };
     return { candidatos: await varias(t), soloTitulo: true };
   };
-  // ¿Puede escuchar? El anfitrión (su llave), el DJ (enlace y clave) o un
-  // colaborador (su sesión, en la cabecera).
-  const autorizado = async (req, { token, dj }) => {
+  // ¿Puede escuchar? El anfitrión (su llave), el DJ (enlace y clave), un
+  // invitado en el tablón (su llave y su respuesta con la clave personal y
+  // el año) o un colaborador (su sesión, en la cabecera).
+  const autorizado = async (req, { token, dj, tablon }) => {
     if (token) return Boolean(await rpc("anfitrion_verificar_token", { p_token: token }));
     if (dj?.token) return Boolean(await rpc("dj_puede", { p_token: dj.token, p_clave: dj.clave || "" }));
+    if (tablon?.token) {
+      if (!esRespuestaPersonal(tablon.respuesta)) return false;
+      return Boolean(await rpc("tablon_verificar_respuesta", { p_token: tablon.token, p_respuesta: String(tablon.respuesta).trim() }));
+    }
     const sesion = String(req.headers?.authorization || "").replace(/^Bearer\s+/i, "");
     return Boolean(sesion) && Boolean(await rpc("es_colaborador", {}, sesion));
   };
 
   return async function manejador(req, res) {
     if (req.method !== "POST") return res.status(405).json({ error: "Solo POST." });
-    const { token, consultas, escuchar: consulta, dj } = req.body || {};
+    const { token, consultas, escuchar: consulta, dj, tablon } = req.body || {};
     if (consulta) {
       try {
-        if (!(await autorizado(req, { token, dj }))) return res.status(403).json({ error: "No autorizado." });
+        if (!(await autorizado(req, { token, dj, tablon }))) return res.status(403).json({ error: "No autorizado." });
       } catch (e) {
         return res.status(403).json({ error: `No autorizado (${e.message}).` });
       }

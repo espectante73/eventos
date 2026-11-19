@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "92.5",
+    cambios: [
+      "Tablón: al cambiar sus canciones en «Comprueba tus datos», cada una escrita lleva su ▶ de escucha previa (30 s de Deezer), como en el formulario del colaborador. Solo con el enlace personal.",
+      "Los 3 huecos van sobre un recuadro claro dentro del verde, para que el ▶ y lo que encuentra se lean bien.",
+    ],
+  },
+  {
     version: "92.4",
     cambios: [
       "Arreglo: con el tablón ya abierto, si el anfitrión abría las canciones («Canciones cerradas: No»), el botón «Cambiar» no salía hasta pasado un minuto. Ahora el tablón vuelve a leerlo al desplegar «Comprueba tus datos» y al volver a su ventana en el ordenador.",

@@ -8,14 +8,15 @@
 // Sus canciones las cambia él mismo AQUÍ (v92.3, él: «donde están todos los
 // datos que ha dado… ahí buscará sus canciones»; en una tarjeta aparte, la
 // v92.1, no las encontraba): `canciones` = { cerradas, onGuardar } solo con
-// su enlace personal; sin él, null, y todo se ve sin tocar. «Cambiar» en el
+// su enlace personal (y `buscar`, su ▶ de escucha previa, v92.5); sin él,
+// null, y todo se ve sin tocar. «Cambiar» en el
 // dorado lleno de los botones sobre verde, para que destaque (él: «no queda
 // nada resaltado»). Guardar, en lib/cancionesTablon.js.
 //
 // Lo escrito no se recopia de `yo.cancion` al refrescarse el tablón (trampa
 // 2.4): se toma al pulsar «Cambiar», y si se pliega a medias, sigue ahí.
 import { useState } from "react";
-import { C, DEDO, OP } from "../theme";
+import { C, DEDO, OP, R } from "../theme";
 import { SeccionPlegable } from "../components/SeccionPlegable";
 import { CampoCancion } from "../components/CampoCancion";
 import { Boton } from "../components/Boton";
@@ -100,13 +101,17 @@ export function RegistroTablon({ yo, evento, canciones, abierta, onAlternar }) {
                 <p className="text-xs" style={{ opacity: OP.secundario }}>
                   Hasta 3. Las pondrá el DJ en la fiesta.
                 </p>
-                <div className="flex flex-col gap-2" style={{ color: C.charcoal }}>
+                {/* Sobre papel, como en el formulario del colaborador: el ▶
+                    y lo que encuentra (v92.5) están hechos para fondo claro;
+                    sobre el verde no se leerían. */}
+                <div className="flex flex-col gap-2 p-2" style={{ color: C.charcoal, background: C.paper, borderRadius: R.caja }}>
                   {huecos.map((hueco, i) => (
                     <CampoCancion
                       key={i}
                       numero={i + 1}
                       titulo={hueco.titulo}
                       artista={hueco.artista}
+                      buscar={canciones.buscar}
                       onCambiar={(nuevo) => setHuecos(huecos.map((h, j) => (j === i ? nuevo : h)))}
                     />
                   ))}

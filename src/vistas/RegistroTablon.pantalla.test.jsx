@@ -55,7 +55,7 @@ it("con su enlace personal, el email entero; sin él, «Sí» y cómo verlo", ()
 // v92.3 (él: «donde están todos los datos que ha dado… ahí buscará sus
 // canciones»): con su enlace personal, «Cambiar» junto a «Canciones:» y
 // ahí mismo los 3 huecos; sin él, o cerradas, solo se ven.
-function conCanciones({ cerradas = false, respuesta = "" } = {}) {
+function conCanciones({ cerradas = false, respuesta = "", buscar } = {}) {
   const guardadas = [];
   const vista = montar(
     <RegistroTablon
@@ -63,6 +63,7 @@ function conCanciones({ cerradas = false, respuesta = "" } = {}) {
       evento={evento}
       canciones={{
         cerradas,
+        buscar,
         onGuardar: async (h) => {
           guardadas.push(h);
           return respuesta;
@@ -147,5 +148,18 @@ it("cerradas: se ven, sin «Cambiar», y lo dice", () => {
   expect(vista.contenedor.textContent).toContain("Ya están cerradas.");
   expect(vista.contenedor.textContent).not.toContain("Tus canciones las cambias tú");
   expect(boton("Cambiar")).toBeUndefined();
+  vista.desmontar();
+});
+
+// v92.5 (él: «no veo la opción de escucha previa»): el mismo ▶ que en el
+// formulario del colaborador, en cuanto hay algo escrito.
+it("con su enlace personal, cada canción escrita lleva su ▶ de escucha previa", () => {
+  const { vista } = conCanciones({ buscar: async () => ({ candidatos: [], soloTitulo: false }) });
+  vista.pulsar(boton("Cambiar"));
+  const escuchar = () => document.body.querySelectorAll('button[title="Escuchar 30 segundos"]');
+  // Tiene una escrita: un ▶; al escribir otra, dos.
+  expect(escuchar().length).toBe(1);
+  escribir(campo("Canción 2"), "Bamboleo");
+  expect(escuchar().length).toBe(2);
   vista.desmontar();
 });

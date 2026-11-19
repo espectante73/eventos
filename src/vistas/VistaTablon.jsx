@@ -32,6 +32,7 @@ import { TarjetaFotosFiesta } from "./TarjetaFotosFiesta";
 import { TarjetaNoticia, CabeceraNoticia, CuerpoZonas } from "./NoticiaTablon";
 import { RegistroTablon } from "./RegistroTablon";
 import { guardarCancionesTablon } from "../lib/cancionesTablon";
+import { pedirMuestras } from "../lib/escuchar";
 import { tituloZonas } from "../lib/zonasTablon";
 
 const BUCKET_MUSICA = "musica-ambiental";
@@ -421,6 +422,9 @@ export function VistaTablon({ token }) {
     if (!aviso) setYo((y) => (y ? { ...y, cancion, sinCancion: cancion.trim() ? false : y.sinCancion } : y));
     return aviso;
   };
+  // Su ▶ de escucha previa (v92.5, él), como el del colaborador: con la
+  // misma respuesta personal que guarda las canciones.
+  const escucharCancion = (consulta) => pedirMuestras({ consulta, tablon: { token, respuesta: respuestaVerificadaRef.current } });
 
   // En un móvil que comparte la familia, cada uno entra con su nombre y ve
   // a su colaborador (v64.2): «Cambiar» olvida el nombre guardado aquí y
@@ -888,7 +892,7 @@ export function VistaTablon({ token }) {
                       <RegistroTablon
                         yo={yo}
                         evento={evento}
-                        canciones={puedeCambiarCanciones ? { cerradas: Boolean(evento?.cancionesCerradas), onGuardar: guardarCanciones } : null}
+                        canciones={puedeCambiarCanciones ? { cerradas: Boolean(evento?.cancionesCerradas), onGuardar: guardarCanciones, buscar: escucharCancion } : null}
                         abierta={idAbierto === "registro"}
                         onAlternar={alternarRegistro}
                       />
