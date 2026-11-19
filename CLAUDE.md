@@ -395,6 +395,10 @@ Sin esto escrito, yo propondría deshacerlas creyendo que mejoro algo.
    solo hay invitación con toda la familia pagada y con mesa. Y no sale
    ninguna hasta que él marca «Acomodación terminada»
    (`envioInvitacionesBloqueado`), salvo en Modo Pruebas.
+6. **Las canciones que pide cada invitado (hasta 3) no son una lista
+   para ponerla**: sirven para conocer su perfil musical y generacional y
+   acercarse lo más posible. Lo pedido dura horas, el baile dos o tres, y
+   van de los 7 a los 77 años. Ningún texto de la app promete que sonarán.
 
 ## 1.12 Lo que está esperando, y por qué no es un fallo
 

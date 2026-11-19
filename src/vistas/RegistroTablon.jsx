@@ -98,8 +98,11 @@ export function RegistroTablon({ yo, evento, canciones, abierta, onAlternar }) {
             </div>
             {editando ? (
               <div className="space-y-2 pt-1 pb-1">
+                {/* Nunca prometer que sonarán (él, v92.7): sirven para conocer
+                    el perfil musical y generacional de cada uno, no para
+                    ponerlas todas (CLAUDE.md 1.11). */}
                 <p className="text-xs" style={{ opacity: OP.secundario }}>
-                  Hasta 3. Las pondrá el DJ en la fiesta.
+                  Hasta 3.
                 </p>
                 {/* Sobre papel, como en el formulario del colaborador: el ▶
                     y lo que encuentra (v92.5) están hechos para fondo claro;

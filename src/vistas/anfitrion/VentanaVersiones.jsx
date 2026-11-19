@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "92.7",
+    cambios: [
+      "Arreglo: al cambiar sus canciones en el tablón decía «Las pondrá el DJ en la fiesta». No es así: las canciones sirven para conocer el perfil musical y generacional de cada invitado, no para ponerlas todas. Ahora solo dice «Hasta 3.».",
+    ],
+  },
+  {
     version: "92.6",
     cambios: [
       "Tablón: bajo la fecha, la hora y el lugar, «Añadir a mi calendario». Guarda el evento en el calendario del móvil con un aviso la víspera; en Android abre Google Calendar con el evento ya escrito. Solo con la fecha confirmada.",

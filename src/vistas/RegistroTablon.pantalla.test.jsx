@@ -102,6 +102,8 @@ it("con su enlace personal, «Cambiar» abre ahí mismo sus 3 huecos con lo que 
   expect(campo("Artista 1").value).toBe("David Guetta");
   expect(campo("Canción 3")).not.toBeNull();
   expect(boton("Cambiar")).toBeUndefined();
+  // v92.7 (él): nunca se promete que el DJ las pondrá; no es para eso.
+  expect(vista.contenedor.textContent).not.toMatch(/pondr[áa]|sonar[áa]n?/i);
   // Sin cambios, «Guardar» no hace nada.
   expect(boton("Guardar").disabled).toBe(true);
   vista.desmontar();
