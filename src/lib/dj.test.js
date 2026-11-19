@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { filasDelDj, filtrarPeticiones, datosDjDesdeLista, cifrasDelDj } from "./dj";
+import { filasDelDj, filtrarPeticiones, datosDjDesdeLista, cifrasDelDj, clavesDelDj, diaDe, referenciaCancionesDj, memoriaCancionesDj, clavesNuevas, textoCancionesNuevas } from "./dj";
 import { construirEnlaceDj } from "./url";
 
 const datos = {
@@ -83,5 +83,59 @@ describe("la lista del DJ desde los datos del anfitrión (v91.5)", () => {
     const cifras = cifrasDelDj({ peticiones: [{ cancion: "A — B" }, { cancion: "A — B" }], catalogo: {} });
     expect(cifras.map((c) => c.label)).toEqual(["Peticiones", "Distintas", "Duración"]);
     expect(cifras[1].value).toBe(1);
+  });
+});
+
+// v92 (él): «a fecha de hoy, este es el número de canciones; cuando vuelvas
+// a abrir, ¿ha cambiado? Entonces hay un cambio, hay que señalarlo».
+describe("canciones nuevas o cambiadas para el DJ (v92)", () => {
+  const AYER = "2026-11-18";
+  const HOY = "2026-11-19";
+  const MANANA = "2026-11-20";
+  // Lo que pasa al abrir la lista: con qué se compara, qué sale nuevo y qué se recuerda.
+  const abrir = (memoria, dia, claves) => {
+    const { referencia, desde } = referenciaCancionesDj(memoria, dia, claves);
+    return { nuevas: [...clavesNuevas(claves, referencia)], desde, memoria: memoriaCancionesDj(memoria, dia, claves) };
+  };
+
+  it("la primera vez de todas, nada sale como nuevo", () => {
+    expect(abrir(null, HOY, ["a", "b"]).nuevas).toEqual([]);
+  });
+
+  it("su ejemplo: lo de las 11:00 sale a las 12:00; lo de las 23:00, al día siguiente", () => {
+    let m = abrir(null, AYER, ["a", "b"]).memoria; // ayer a las 20:00
+    let r = abrir(m, HOY, ["a", "b", "c"]); // hoy 10:00: «c» llegó por la noche
+    expect(r.nuevas).toEqual(["c"]);
+    expect(r.desde).toBe(AYER);
+    r = abrir(r.memoria, HOY, ["a", "b", "c", "d"]); // 12:00: «d», de las 11:00
+    expect(r.nuevas).toEqual(["c", "d"]); // lo de las 10:00 sigue marcado todo el día
+    m = r.memoria;
+    r = abrir(m, MANANA, ["a", "b", "c", "d", "e"]); // «e», de las 23:00
+    expect(r.nuevas).toEqual(["e"]);
+    expect(r.desde).toBe(HOY);
+  });
+
+  it("cambiar una canción por otra deja el número igual, y aun así sale", () => {
+    const m = abrir(null, AYER, ["a", "b"]).memoria;
+    expect(abrir(m, HOY, ["a", "c"]).nuevas).toEqual(["c"]);
+  });
+
+  it("varios días sin abrir: le salen juntos todos los cambios desde la última vez", () => {
+    const m = abrir(null, "2026-11-10", ["a"]).memoria;
+    const r = abrir(m, HOY, ["a", "b", "c"]);
+    expect(r.nuevas).toEqual(["b", "c"]);
+    expect(r.desde).toBe("2026-11-10");
+  });
+
+  it("la misma canción pedida por otro no es nueva; escrita de otra forma, tampoco", () => {
+    const antes = { peticiones: [{ cancion: "Bailando — Enrique Iglesias", edad: 40 }] };
+    const ahora = { peticiones: [...antes.peticiones, { cancion: "bailando", edad: 20 }] };
+    expect(clavesDelDj(ahora)).toEqual(clavesDelDj(antes));
+  });
+
+  it("el día, en la hora del aparato; y el texto del aviso", () => {
+    expect(diaDe(new Date(2026, 10, 9, 23, 59))).toBe("2026-11-09");
+    expect(textoCancionesNuevas(1, HOY, HOY)).toBe("1 canción nueva o cambiada hoy");
+    expect(textoCancionesNuevas(5, AYER, HOY)).toMatch(/^5 canciones nuevas o cambiadas desde el 18 nov/);
   });
 });

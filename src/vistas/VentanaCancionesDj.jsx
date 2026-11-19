@@ -4,55 +4,21 @@
 // clave: la base mira el permiso (colaborador_canciones_dj). Él la usa los
 // días antes, para prepararlo todo; el día del evento ya trae las listas.
 // El anfitrión, con «Cambiar vista», la ve con sus propios datos.
-import { useCallback, useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+//
+// Los datos y lo nuevo (v92) llegan ya hechos de useCancionesDj, el mismo
+// que alimenta el aviso rojo de su inicio.
 import { VentanaFlotante } from "../components/VentanaFlotante";
 import { RecuadroCifras } from "../components/Widgets";
 import { LineaAviso } from "../components/LineaAviso";
 import { ListaCancionesDj } from "../components/ListaCancionesDj";
-import { cifrasDelDj, datosDjDesdeLista } from "../lib/dj";
+import { cifrasDelDj } from "../lib/dj";
 
-const CADA = 60 * 1000;
-
-export function VentanaCancionesDj({ data, onCerrar }) {
-  const [delServidor, setDelServidor] = useState(null);
-  const [motivo, setMotivo] = useState("");
-  const [hora, setHora] = useState(null);
-
-  const cargar = useCallback(async () => {
-    try {
-      const { data: d, error } = await supabase.rpc("colaborador_canciones_dj");
-      if (error || d?.error) {
-        setMotivo("No se ha podido cargar la lista. Si sigue sin salir, pide al anfitrión que revise tu permiso «Canciones para bailar».");
-        return;
-      }
-      setMotivo("");
-      setDelServidor(d);
-      setHora(new Date());
-    } catch {
-      setMotivo("No se ha podido cargar la lista. Prueba otra vez en un momento.");
-    }
-  }, []);
-
-  // Al abrirla, cada minuto y al volver a la pestaña, como la del enlace.
-  useEffect(() => {
-    if (data.esAnfitrion) return undefined;
-    cargar();
-    const t = setInterval(cargar, CADA);
-    const alVolver = () => document.visibilityState === "visible" && cargar();
-    document.addEventListener("visibilitychange", alVolver);
-    return () => {
-      clearInterval(t);
-      document.removeEventListener("visibilitychange", alVolver);
-    };
-  }, [data.esAnfitrion, cargar]);
-
-  const datos = data.esAnfitrion ? datosDjDesdeLista(data.invitados, data.evento) : delServidor;
-
+export function VentanaCancionesDj({ canciones, esAnfitrion, escuchar, onCerrar }) {
+  const { datos, motivo, hora, nuevas, desde } = canciones;
   return (
     <VentanaFlotante clave="cancionesDj" titulo="Canciones para bailar" onCerrar={onCerrar} extra={datos ? <RecuadroCifras cifras={cifrasDelDj(datos)} /> : undefined}>
       {datos ? (
-        <ListaCancionesDj datos={datos} escuchar={data.buscarParaEscuchar} hora={data.esAnfitrion ? null : hora} motivo={motivo} />
+        <ListaCancionesDj datos={datos} escuchar={escuchar} hora={esAnfitrion ? null : hora} motivo={motivo} nuevas={nuevas} desde={desde} />
       ) : (
         motivo && <LineaAviso className="text-sm">{motivo}</LineaAviso>
       )}

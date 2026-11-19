@@ -7,8 +7,11 @@
 //
 // `datos`: lo que trae la base ({ peticiones, catalogo, fuera, evento }).
 // `escuchar(consulta)`: la escucha previa, con la llave de quien mira.
+// `nuevas` (claves) y `desde` (v92, solo en la cuenta del DJ): las nuevas o
+// cambiadas, con el título en rojo, y arriba un recuadro rojo con cuántas
+// que, al tocarlo, deja solo esas, también en lo que se imprime y se exporta.
 import { useState } from "react";
-import { Copy, Printer, ExternalLink } from "lucide-react";
+import { Copy, Printer, ExternalLink, Music } from "lucide-react";
 import { C, OP, T, inputStyle } from "../theme";
 import { Boton } from "./Boton";
 import { TextInput } from "./Formulario";
@@ -17,7 +20,7 @@ import { EncabezadoOrdenable } from "./Widgets";
 import { EscucharCancion } from "./EscucharCancion";
 import { estrellas, ordenarCanciones, tocarOrdenCanciones, ORDEN_CANCIONES_INICIAL } from "../lib/canciones";
 import { enlaceDeezer } from "../lib/repasoCanciones";
-import { filasDelDj, filtrarPeticiones } from "../lib/dj";
+import { filasDelDj, filtrarPeticiones, textoCancionesNuevas } from "../lib/dj";
 import { descargarCSV } from "../lib/descargas";
 import { consultaDeFila } from "../lib/escuchar";
 
@@ -29,13 +32,21 @@ const FILA = { gridColumn: "1 / -1", gridTemplateColumns: "subgrid" };
 // Lo que va con la lista (filtros, botones) se acomoda a su ancho sin ensancharla.
 const A_SU_ANCHO = { width: 0, minWidth: "100%" };
 
-export function ListaCancionesDj({ datos, escuchar, hora, motivo }) {
+const SIN_NUEVAS = new Set();
+// Una canción nueva: su título en el mismo rojo que el aviso de arriba.
+const MARCA_NUEVA = { color: C.peligro, fontWeight: 600 };
+
+export function ListaCancionesDj({ datos, escuchar, hora, motivo, nuevas = SIN_NUEVAS, desde }) {
   const [filtro, setFiltro] = useState({ texto: "", desde: "", hasta: "" });
   const [orden, setOrden] = useState(ORDEN_CANCIONES_INICIAL);
+  const [soloNuevas, setSoloNuevas] = useState(false);
 
   const catalogo = datos.catalogo || {};
   const todas = filasDelDj(datos);
-  const filas = ordenarCanciones(filtrarPeticiones(todas, filtro), orden);
+  // Sin ninguna nueva (al día siguiente, por ejemplo), el filtro no se queda puesto.
+  const filtrandoNuevas = soloNuevas && nuevas.size > 0;
+  const base = filtrandoNuevas ? todas.filter((f) => nuevas.has(f.clave)) : todas;
+  const filas = ordenarCanciones(filtrarPeticiones(base, filtro), orden);
   const poner = (campo) => (e) => setFiltro((f) => ({ ...f, [campo]: e.target.value }));
   const exportar = () =>
     descargarCSV(
@@ -47,6 +58,24 @@ export function ListaCancionesDj({ datos, escuchar, hora, motivo }) {
 
   return (
     <div className="space-y-3">
+      {/* Todo el recuadro se toca, como el aviso de su inicio: un botón de
+          contorno sobre el rojo no se leía. */}
+      {nuevas.size > 0 && (
+        <button
+          onClick={() => setSoloNuevas(!filtrandoNuevas)}
+          aria-pressed={filtrandoNuevas}
+          className="boton-3d flex items-center gap-3 rounded px-3 py-2.5 text-sm text-left oculto-al-imprimir zurdo:flex-row-reverse zurdo:text-right"
+          style={{ ...A_SU_ANCHO, background: C.peligro, color: C.blanco }}
+        >
+          <Music size={16} className="flex-shrink-0" aria-hidden />
+          <span className="flex-1 min-w-0" style={{ fontWeight: 600 }}>
+            {textoCancionesNuevas(nuevas.size, desde)}
+          </span>
+          <span className="flex-shrink-0 whitespace-nowrap" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
+            {filtrandoNuevas ? "Ver todas" : "Ver solo esas"}
+          </span>
+        </button>
+      )}
       {/* Los filtros, en una línea (norma 6). */}
       <div className="flex items-center gap-2 oculto-al-imprimir" style={A_SU_ANCHO}>
         <TextInput value={filtro.texto} onChange={poner("texto")} placeholder="Buscar canción o artista" aria-label="Buscar canción o artista" className="flex-1 min-w-0" />
@@ -77,8 +106,11 @@ export function ListaCancionesDj({ datos, escuchar, hora, motivo }) {
             </span>
             {/* Escucharla en Deezer, en otra pestaña. */}
             <a href={enlaceDeezer(f, catalogo)} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 min-w-0" style={{ color: C.charcoal }} title="Escucharla en Deezer">
-              <span className="truncate" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
+              {/* Las nuevas, con el título en rojo: una etiqueta al lado
+                  dejaba el título en tres letras en el móvil. */}
+              <span className="truncate" style={{ textDecoration: "underline", textUnderlineOffset: 3, ...(nuevas.has(f.clave) ? MARCA_NUEVA : {}) }}>
                 {f.cancion}
+                {nuevas.has(f.clave) && <span className="sr-only"> (nueva o cambiada)</span>}
               </span>
               <ExternalLink size={12} className="flex-shrink-0 oculto-al-imprimir" style={{ opacity: OP.secundario }} aria-hidden />
             </a>

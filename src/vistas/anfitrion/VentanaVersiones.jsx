@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "92",
+    cambios: [
+      "Cuenta del DJ: si hay canciones nuevas o cambiadas, le sale un aviso rojo en su inicio («2 canciones nuevas o cambiadas desde el 18 nov»); al tocarlo se abre la lista.",
+      "En «Canciones para bailar», las nuevas llevan el título en rojo, y el recuadro rojo de arriba, al tocarlo, deja solo esas: también al imprimir o exportar.",
+      "Sin pulsar nada: la app compara con la última lista que vio un día anterior. Lo nuevo sigue marcado todo el día aunque abra varias veces, y lo que llega cuando ya no mira le sale al día siguiente.",
+      "Se recuerda en cada aparato: si lo ve en el móvil y luego abre el ordenador, ahí le vuelve a salir.",
+    ],
+  },
+  {
     version: "91.9",
     cambios: [
       "Vista previa de la invitación: «Aceptar y enviar» y «Cancelar» pasan arriba, justo debajo de los emails, y se ponen del lado del pulgar que cada uno elige.",

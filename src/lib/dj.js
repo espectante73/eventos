@@ -62,3 +62,69 @@ export function cifrasDelDj(datos) {
     { label: "Duración", value: `${estimadas ? "≈ " : ""}${textoDuracion(segundos)}` },
   ];
 }
+
+// ---------- Canciones nuevas o cambiadas (él, v92) ----------
+// Sin esperar a que nadie pulse nada («se puede despistar»): la app recuerda
+// la lista que el DJ vio por última vez y, cada día, compara con la última
+// que vio UN DÍA ANTERIOR. Así lo nuevo sigue marcado todo el día aunque
+// abra varias veces, y lo que llega cuando ya no mira le sale al día
+// siguiente: no se le escapa nada. Se compara QUÉ canciones hay, no
+// cuántas: cambiar una por otra deja el número igual. Una canción es la
+// misma por su clave (claveCancion: el título sin mayúsculas ni tildes);
+// una cambiada sale como nueva, porque la lista no dice de quién es.
+// Se recuerda en cada aparato (sin SQL): si lo ve en el móvil y luego abre
+// el ordenador, ahí le vuelve a salir. Sobra algún aviso, nunca falta.
+
+// Las canciones distintas de su lista, por su clave.
+export const clavesDelDj = (datos) => [...new Set(filasDelDj(datos).map((f) => f.clave))].sort();
+
+// «2026-11-19», en la hora de este aparato.
+export function diaDe(fecha = new Date()) {
+  const dos = (n) => String(n).padStart(2, "0");
+  return `${fecha.getFullYear()}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}`;
+}
+
+// Con qué se compara hoy, y de qué día es. La primera vez de todas, con lo
+// que hay: nada sale como nuevo.
+// `memoria`: { dia, desde, referencia, ultima } (ver memoriaCancionesDj).
+export function referenciaCancionesDj(memoria, dia, claves) {
+  if (!memoria?.dia) return { referencia: claves, desde: dia };
+  if (memoria.dia === dia) return { referencia: memoria.referencia || [], desde: memoria.desde || dia };
+  return { referencia: memoria.ultima || [], desde: memoria.dia };
+}
+
+// Lo que se recuerda tras verla hoy: con qué se compara y lo último que vio.
+export function memoriaCancionesDj(memoria, dia, claves) {
+  return { dia, ...referenciaCancionesDj(memoria, dia, claves), ultima: claves };
+}
+
+// Las claves de las que no estaban en la referencia.
+export const clavesNuevas = (claves, referencia) => new Set(claves.filter((c) => !referencia.includes(c)));
+
+// «5 canciones nuevas o cambiadas desde el 18 nov» / «… hoy».
+export function textoCancionesNuevas(n, desde, hoy = diaDe()) {
+  const cuantas = n === 1 ? "1 canción nueva o cambiada" : `${n} canciones nuevas o cambiadas`;
+  if (!desde || desde === hoy) return `${cuantas} hoy`;
+  const [a, m, d] = desde.split("-").map(Number);
+  return `${cuantas} desde el ${new Date(a, m - 1, d).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}`;
+}
+
+// En la memoria de este aparato, una por persona (el anfitrión que mira con
+// «Cambiar vista» no pisa la del DJ). Sin memoria (modo privado), no hay
+// aviso: nada sale como nuevo.
+const claveMemoria = (quien) => `canciones-dj-vistas-${quien || "yo"}`;
+export function leerMemoriaDj(quien) {
+  try {
+    const texto = window.localStorage.getItem(claveMemoria(quien));
+    return texto ? JSON.parse(texto) : null;
+  } catch {
+    return null;
+  }
+}
+export function guardarMemoriaDj(quien, memoria) {
+  try {
+    window.localStorage.setItem(claveMemoria(quien), JSON.stringify(memoria));
+  } catch {
+    // Sin memoria en este aparato: la próxima vez, como la primera.
+  }
+}

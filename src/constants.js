@@ -1,13 +1,13 @@
 // Constantes de app compartidas entre App.jsx y los componentes bajo
 // src/components/. Movida fuera de App.jsx en el reparto del 2026-08-08.
-export const VERSION_APP = "91.9";
+export const VERSION_APP = "92";
 
 // Lo que dice el aviso rojo de «Actualizar» a TODOS los que entran con su
 // cuenta, junto al número (él, v81.6): qué cambia, se corrige o se añade,
 // en 2 o 3 líneas del móvil (TOPE_AVISO, lib/avisoVersion.js), para
 // cualquiera: tú/ustedes, sin «yo». Va con cada número nuevo, y sin él no
 // se sube (.githooks/pre-push → scripts/version-subida.mjs).
-export const AVISO_VERSION = "Vista previa de la invitación: «Aceptar y enviar» y «Cancelar», arriba y del lado de tu pulgar.";
+export const AVISO_VERSION = "DJ: aviso en rojo con las canciones nuevas o cambiadas, marcadas en la lista y con «Ver solo esas».";
 
 // Dirección del código de la app. La enseña "Mi cuenta" a quien tenga el
 // permiso "Ver el código de la app" (lib/permisos.js).

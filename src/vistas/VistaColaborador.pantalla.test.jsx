@@ -954,6 +954,35 @@ it("con el permiso de la lista (v91.5), sale «Canciones para bailar» en su men
   vista.desmontar();
 });
 
+// v92 (él): «si hay cambios, un aviso al DJ en rojo "canciones nuevas o
+// cambiadas"». Como lo ve el anfitrión con «Cambiar vista», con lo que el DJ
+// vio ayer guardado en este aparato.
+it("el DJ con canciones nuevas desde ayer: aviso rojo en su inicio, que abre la lista", async () => {
+  const dj = { id: "g9", nombre: "Julien", apellido: "Brown", grupoFamiliar: "Brown01", zona: "DJ", rolFamiliar: ROL_FAMILIAR.SUELTO, confirmado: true };
+  const conCancion = [
+    { ...invitados[0], cancion: "Bamboleo — Gipsy Kings", anioNacimiento: "1990" },
+    { ...invitados[1], cancion: "Titanium — David Guetta", anioNacimiento: "1990" },
+  ];
+  localStorage.setItem("canciones-dj-vistas-c9", JSON.stringify({ dia: "2026-11-18", desde: "2026-11-18", referencia: ["bamboleo"], ultima: ["bamboleo"] }));
+  const vista = montar(
+    <VistaColaborador
+      data={{ ...data, esAnfitrion: true, invitados: [...conCancion, ...invitados.slice(2), dj], colaboradores: [...colaboradores, { id: "c9", nombre: "Brown, Julien", invitadoId: "g9", email: "dj@dj.com", permisos: ["multimedia", "canciones_dj"] }] }}
+      colaboradorId="c9"
+      esAnfitrionOriginal={false}
+      setRol={() => {}}
+      anfitrionToken={null}
+      onCerrarSesion={() => {}}
+    />
+  );
+  await act(async () => {});
+  const aviso = [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("canción nueva o cambiada"));
+  expect(aviso.textContent).toContain("1 canción nueva o cambiada desde el 18 nov");
+  vista.pulsar(aviso);
+  expect(document.body.textContent).toContain("Ver solo esas");
+  vista.desmontar();
+  localStorage.clear();
+});
+
 // El aviso rojo (v91.4, él: «solamente hay permiso de edición cuando se le
 // permite editar texto»): Multimedia es un permiso en la app.
 it("el aviso rojo: «de edición» solo para texto; Multimedia, «en la app»", () => {

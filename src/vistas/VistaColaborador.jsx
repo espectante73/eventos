@@ -9,6 +9,8 @@ import { MenuFlotante } from "../components/MenuFlotante";
 import { datosCompletos, pideDatosDeBoda, pideEmail, estadoDatos, familiasSinEmail, emailObligatorio, faltanObligatorios, fichasIncompletasDe, claveFamilia, importeEsperadoInvitado, resolverColaborador, fichaCerradaAlColaborador, comoColaborador, esDj } from "../lib/invitados";
 import { colaboradorEsDj, leerEquipo } from "../lib/equipoColaboradores";
 import { VentanaCancionesDj } from "./VentanaCancionesDj";
+import { useCancionesDj } from "../lib/useCancionesDj";
+import { textoCancionesNuevas } from "../lib/dj";
 import { ordenarPorApellidoNombre, nombreCompleto, euros, fechaCorta } from "../lib/formato";
 import { preguntaFamilia, textoPreguntaFamilia } from "../lib/familiaCobroLlegada";
 import { agruparFamilias, miembrosDesdeLista } from "../lib/familiasColaborador";
@@ -1256,6 +1258,16 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // «Canciones para bailar», la lista del DJ (v91.5).
   const puedeVerCancionesDj = tienePermiso(colaborador, PERMISOS.CANCIONES_DJ);
   const [cancionesDjAbierta, setCancionesDjAbierta] = useState(false);
+  // La lista y lo nuevo en ella (v92): lo usan el aviso rojo del inicio y la
+  // ventana. Mirarla es tenerla abierta; ver el aviso no cuenta.
+  const cancionesDj = useCancionesDj({
+    activo: puedeVerCancionesDj,
+    esAnfitrion: data.esAnfitrion,
+    invitados: data.invitados,
+    evento: data.evento,
+    quien: colaboradorId,
+    mirando: cancionesDjAbierta,
+  });
   // De quién se están cambiando las canciones (ya pagado, v82.8). La ventana
   // va aquí, fuera del panel: dentro quedaría recortada por él.
   const [cancionesDeId, setCancionesDeId] = useState(null);
@@ -1504,6 +1516,19 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
     <div className="space-y-8">
       {/* «Lo nuevo» (él, v81.9): lo más arriba posible, temporal. */}
       {loNuevo && <AvisoLoNuevo />}
+      {/* Al DJ, en rojo, si hay canciones nuevas o cambiadas desde la
+          última vez que miró la lista (él, v92). Tocarlo la abre. */}
+      {cancionesDj.nuevas.size > 0 && (
+        <button
+          onClick={() => setCancionesDjAbierta(true)}
+          className="boton-3d w-full flex items-center gap-2.5 p-4 rounded text-sm text-left zurdo:flex-row-reverse zurdo:text-right"
+          style={{ background: C.peligro, color: C.blanco, fontWeight: 600 }}
+        >
+          <Music size={18} className="flex-shrink-0" aria-hidden />
+          <span className="flex-1 min-w-0">{textoCancionesNuevas(cancionesDj.nuevas.size, cancionesDj.desde)}</span>
+          <ChevronRight size={18} className="flex-shrink-0 zurdo:rotate-180" aria-hidden />
+        </button>
+      )}
       {/* El aviso de permisos. El usuario lo quiere mantener (2026-09-21):
           es lo primero que se ve y ahí se entera uno de lo que puede
           hacer. Dos partes distintas a propósito:
@@ -1601,7 +1626,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             <BotonAbrirSeccion
               sello={pendientes.length}
               opciones={[
-                puedeVerCancionesDj && { id: "canciones-dj", etiqueta: "Canciones para bailar", icono: Music, onClick: () => setCancionesDjAbierta(true) },
+                puedeVerCancionesDj && { id: "canciones-dj", etiqueta: "Canciones para bailar", icono: Music, onClick: () => setCancionesDjAbierta(true), sello: cancionesDj.nuevas.size },
                 puedeEditarDatosEvento && { id: "datos-evento", etiqueta: "Datos evento", icono: Calendar, onClick: () => setVentanaDatosEventoAbierta(true) },
                 !soyDj && { id: "formulario", etiqueta: "Formulario", icono: ICONOS_VENTANAS.formulario, onClick: abrirFormulario, sello: pendientes.length },
                 puedeEnviarInvitaciones && { id: "invitaciones", etiqueta: "Invitaciones", icono: Send, onClick: () => setVentanaInvitacionesAbierta(true) },
@@ -1626,7 +1651,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         />
       )}
 
-      {cancionesDjAbierta && <VentanaCancionesDj data={data} onCerrar={() => setCancionesDjAbierta(false)} />}
+      {cancionesDjAbierta && (
+        <VentanaCancionesDj canciones={cancionesDj} esAnfitrion={data.esAnfitrion} escuchar={data.buscarParaEscuchar} onCerrar={() => setCancionesDjAbierta(false)} />
+      )}
       {ventanaDatosEventoAbierta && (
         <VentanaConfigDatosEvento data={data} onCerrar={() => setVentanaDatosEventoAbierta(false)} />
       )}
