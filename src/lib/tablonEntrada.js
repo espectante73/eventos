@@ -37,6 +37,11 @@ export const respuestaTablon = (nombre, anio) => `${String(nombre || "").trim()}
 
 // «Solo con enlace personal» (v88.6, él): el enlace general solo dice esto.
 export const SOLO_PERSONAL = "Pídele a tu colaborador el acceso al tablón.";
+// Debajo de «NO COMPARTAS ESTE ENLACE.», según el enlace que tiene en la
+// mano (v91.6): el personal lo manda su colaborador; el general es el del grupo.
+export const AVISO_ENLACE_PERSONAL = "Es tu enlace personal: te lo ha enviado tu colaborador y es solo para ti.";
+export const AVISO_ENLACE_GENERAL =
+  "Este es un enlace exclusivo para los invitados confirmados que tienen acceso a él a través del grupo de WhatsApp.";
 
 // La respuesta del enlace personal (v88.6): la clave de su ficha y su año,
 // «0123456789abcdef 1975». ⚠️ La misma forma que en tablon_respuesta_vale

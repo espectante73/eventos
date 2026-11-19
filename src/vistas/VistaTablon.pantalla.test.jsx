@@ -4,7 +4,7 @@
 import { it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act } from "react";
 import { montar } from "../pruebas/dibujar";
-import { SOLO_PERSONAL } from "../lib/tablonEntrada";
+import { SOLO_PERSONAL, AVISO_ENLACE_PERSONAL, AVISO_ENLACE_GENERAL } from "../lib/tablonEntrada";
 
 const CLAVE = "0123456789abcdef";
 const llamadas = [];
@@ -65,6 +65,7 @@ it("sin la casilla, la puerta de siempre: apellido, nombre y año", async () => 
   const vista = await abrir();
   expect(texto()).not.toContain(SOLO_PERSONAL);
   expect(document.body.querySelector('input[placeholder="Ej.: Apellido Nombre"]')).not.toBeNull();
+  expect(texto()).toContain(AVISO_ENLACE_GENERAL);
   vista.desmontar();
 });
 
@@ -73,6 +74,9 @@ it("con la casilla, el enlace personal pide solo el año, y «¿No eres tú?» l
   enlace(`&yo=${CLAVE}`);
   const vista = await abrir();
   expect(texto()).toContain("Hola, Pacheco, Ana");
+  // El aviso rojo: lo manda su colaborador, no el grupo de WhatsApp (v91.6).
+  expect(texto()).toContain(AVISO_ENLACE_PERSONAL);
+  expect(texto()).not.toContain("WhatsApp");
   expect(document.body.querySelector('input[placeholder="Ej.: Apellido Nombre"]')).toBeNull();
   const noSoyYo = [...document.body.querySelectorAll("button")].find((b) => b.textContent === "¿No eres tú?");
   expect(noSoyYo).toBeTruthy();

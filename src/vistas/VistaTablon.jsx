@@ -15,7 +15,7 @@ import { C, inputStyle, OP, S, T, DEDO, FONDO_VERDE, DORADO, conAlfa } from "../
 import { supabase } from "../supabaseClient";
 import { useFichaInstalacion, fichaDelTablon } from "../lib/fichaInstalacion";
 import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento, opcionesAnios } from "../lib/formato";
-import { entrarTablon, anioDeRespuesta, respuestaGuardadaDelEnlace, esRespuestaPersonal, NO_ENCONTRADO, ANIO_NO_COINCIDE, SOLO_PERSONAL } from "../lib/tablonEntrada";
+import { entrarTablon, anioDeRespuesta, respuestaGuardadaDelEnlace, esRespuestaPersonal, NO_ENCONTRADO, ANIO_NO_COINCIDE, SOLO_PERSONAL, AVISO_ENLACE_PERSONAL, AVISO_ENLACE_GENERAL } from "../lib/tablonEntrada";
 import { getClaveTablonFromUrl } from "../lib/url";
 import { InfoItem } from "../components/Portada";
 import { SelloCuentaAtras } from "../components/SelloCuentaAtras";
@@ -41,7 +41,13 @@ const BUCKET_MUSICA = "musica-ambiental";
 // de la pregunta y el tablón ya abierto -- así que vive aquí una sola
 // vez: retocar el texto en un sitio y olvidar el otro es justo el fallo
 // que esto evita.
-function AvisoNoCompartir() {
+//
+// Lo que dice sale del enlace que tiene en la mano (él, v91.6: «ya no es
+// algo que se accede desde el grupo de WhatsApp, ahora es un acceso que
+// envía tu colaborador»): el personal se lo manda su colaborador; el
+// general, solo abierto sin la casilla «Solo con el enlace personal», es
+// el del grupo.
+function AvisoNoCompartir({ personal }) {
   return (
     <div
       className="flex items-start gap-2.5 rounded-lg px-4 py-3.5"
@@ -53,8 +59,7 @@ function AvisoNoCompartir() {
           NO COMPARTAS ESTE ENLACE.
         </p>
         <p className="text-lg mt-1.5" style={{ lineHeight: 1.45 }}>
-          Este es un enlace exclusivo para los invitados confirmados que tienen acceso a él a
-          través del grupo de WhatsApp.
+          {personal ? AVISO_ENLACE_PERSONAL : AVISO_ENLACE_GENERAL}
         </p>
       </div>
     </div>
@@ -123,6 +128,8 @@ export function VistaTablon({ token }) {
   // su enlace, la puerta solo dice SOLO_PERSONAL. Quien decide es la base
   // (tablon_respuesta_vale); esto solo elige qué puerta enseñar.
   const [soloPersonal, setSoloPersonal] = useState(false);
+  // Con la casilla, todo el que está dentro entró con su enlace personal.
+  const enlacePersonal = soloPersonal || Boolean(personaEnlace);
   // El año de nacimiento, la otra mitad de la entrada (v70), y los años que
   // ofrece su desplegable (los de la lista, sin decir de quién).
   const [anioEscrito, setAnioEscrito] = useState("");
@@ -520,7 +527,7 @@ export function VistaTablon({ token }) {
       >
         <div className="max-w-sm w-full">
         <div className="mb-4">
-          <AvisoNoCompartir />
+          <AvisoNoCompartir personal={enlacePersonal} />
         </div>
         <form
           onSubmit={enviarRespuesta}
@@ -696,7 +703,7 @@ export function VistaTablon({ token }) {
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         <div className="mb-4">
-          <AvisoNoCompartir />
+          <AvisoNoCompartir personal={enlacePersonal} />
         </div>
 
         <div className="flex items-center gap-2 mb-4">

@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "91.6",
+    cambios: [
+      "Tablón: con el enlace personal, el aviso rojo de arriba dice «Es tu enlace personal: te lo ha enviado tu colaborador y es solo para ti.», en vez de hablar del grupo de WhatsApp.",
+      "Con el enlace general (solo si está quitada la casilla «Solo con el enlace personal») sigue diciendo lo del grupo, que es de donde viene.",
+    ],
+  },
+  {
     version: "91.5",
     cambios: [
       "Permiso nuevo en Permisos: «Canciones para bailar (ver la lista del DJ)». Quien lo tiene ve en su menú «Canciones para bailar», con lo mismo que la página del enlace: buscar, tramos de edad, ordenar, exportar, imprimir y escuchar 30 segundos.",
