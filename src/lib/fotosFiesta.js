@@ -15,12 +15,12 @@ import { horaCorta } from "./formato";
 export const CUBO_FOTOS_FIESTA = "fotos-fiesta";
 
 // Su frase, pulida con él: «en UNA pantalla», no «en la pantalla» (no se
-// proyectan ese día en el local). Va junto al botón del tablón y en las
-// tarjetas QR: una sola copia.
+// proyectan ese día en el local). Va junto al botón del tablón (en las
+// tarjetas QR ya no, v92.9: él la quitó).
 export const FRASE_HORIZONTAL =
   "Puedes hacerla en horizontal o en vertical; solo ten en cuenta que en horizontal se verá mejor en una pantalla.";
-// Su frase para quien tiene 16 o 17 años (él, v68), en el tablón y en las
-// tarjetas QR.
+// Su frase para quien tiene 16 o 17 años (él, v68), en el tablón (la
+// tarjeta QR lleva la suya, v92.9).
 export const FRASE_PERMISO_PADRES = "Puedes subir la foto con el permiso de tus padres, si eres menor de edad.";
 // Qué foto es cada una (v85.5, él): una de toda la familia, que sube solo
 // uno de ellos, y las demás personales. A quien viene solo, solo lo suyo.

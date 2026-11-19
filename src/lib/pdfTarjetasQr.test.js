@@ -12,6 +12,8 @@ vi.mock("jspdf", () => ({
       this.cuadrados = 0;
       this.marcos = 0;
       this.giradas = 0;
+      this.circulos = 0;
+      this.paginas = 1;
       hojas.push(this);
     }
     setFont() {}
@@ -27,6 +29,12 @@ vi.mock("jspdf", () => ({
     }
     roundedRect() {
       this.marcos += 1;
+    }
+    circle() {
+      this.circulos += 1;
+    }
+    addPage() {
+      this.paginas += 1;
     }
     splitTextToSize(t) {
       return [t];
@@ -45,26 +53,68 @@ vi.mock("jspdf", () => ({
 }));
 vi.mock("./descargas", () => ({ descargarBlob: (nombre) => descargas.push(nombre) }));
 
-const { descargarTarjetasQr, crearQr, partirEnDos, TITULO_TARJETA, MAYORES_TARJETA, ENTRAR_TARJETA, ARCHIVO_TARJETAS_QR } = await import("./pdfTarjetasQr");
-const { FRASE_HORIZONTAL, FRASE_PERMISO_PADRES } = await import("./fotosFiesta");
+const {
+  descargarTarjetasQr,
+  crearQr,
+  numerosDeMesas,
+  nombreEntreComillas,
+  queFotosTarjeta,
+  TITULO_TARJETA,
+  EDAD_TARJETA,
+  ENTRAR_TARJETA,
+  SI_NO_SE_ABRE_TARJETA,
+  VER_CODIGO_TARJETA,
+  VER_TEXTO_TARJETA,
+  ARCHIVO_TARJETAS_QR,
+} = await import("./pdfTarjetasQr");
 const { default: qrcode } = await import("qrcode-generator");
 
 const ENLACE = "https://nexuspoint.rsvp?tablon=0f8fad5b-d9cb-469f-a165-70867728950e";
+const EVENTO = "Las Bodas de todos.";
 
-describe("las tarjetas QR (v67.7)", () => {
-  it("un folio con 2 tarjetas de pie: 4 caras iguales, las de arriba giradas para leerse dobladas", async () => {
-    await descargarTarjetasQr({ enlace: ENLACE, nombreEvento: "Las Bodas de todos." });
+describe("las tarjetas QR (v67.7; v92.9: una por mesa, texto en una cara y QR en la otra)", () => {
+  it("un folio con 2 tarjetas: cada una con su número en las dos caras; el texto, girado, arriba; el QR, abajo", async () => {
+    await descargarTarjetasQr({ enlace: ENLACE, nombreEvento: EVENTO, numeros: [5, 12] });
     const hoja = hojas.at(-1);
     const cuenta = (t) => hoja.textos.filter((x) => x === t).length;
-    const permiso = partirEnDos(FRASE_PERMISO_PADRES);
-    for (const linea of [...TITULO_TARJETA, MAYORES_TARJETA, ...ENTRAR_TARJETA, FRASE_HORIZONTAL, ...permiso, "Las Bodas de todos."])
-      expect(cuenta(linea)).toBe(4);
-    // Media hoja, del revés: título (2), mayores, entrar (2), horizontal,
-    // permiso (2) y evento, por 2 caras.
-    expect(hoja.giradas).toBe(2 * 9);
+    expect(hoja.paginas).toBe(1);
+    // El número, en las dos caras de su tarjeta, cada una en su círculo de doble aro.
+    expect(cuenta("5")).toBe(2);
+    expect(cuenta("12")).toBe(2);
+    expect(hoja.circulos).toBe(4 * 2);
+    // La cara del texto: una por tarjeta.
+    const texto = [...TITULO_TARJETA, ...queFotosTarjeta(EVENTO).flat(), "1.", "2.", ...EDAD_TARJETA, VER_CODIGO_TARJETA];
+    for (const linea of texto) expect(cuenta(linea)).toBe(2);
+    // La cara del QR: una por tarjeta.
+    for (const linea of [ENTRAR_TARJETA, ...SI_NO_SE_ABRE_TARJETA, VER_TEXTO_TARJETA]) expect(cuenta(linea)).toBe(2);
+    // El nombre al pie de las 4 caras.
+    expect(cuenta(EVENTO)).toBe(4);
+    // Girada, la cara del texto entera: número, título (2), lista (2 números
+    // y 6 líneas), edad (2), «al otro lado» y el pie.
+    expect(hoja.giradas).toBe(2 * (1 + 2 + 8 + 2 + 1 + 1));
     expect(hoja.marcos).toBe(4);
-    expect(hoja.cuadrados).toBeGreaterThan(4 * 50);
-    expect(descargas).toEqual([ARCHIVO_TARJETAS_QR]);
+    expect(hoja.cuadrados).toBeGreaterThan(2 * 50);
+    expect(descargas.at(-1)).toBe(ARCHIVO_TARJETAS_QR);
+  });
+
+  it("con un número impar de mesas, la última hoja lleva una sola", async () => {
+    await descargarTarjetasQr({ enlace: ENLACE, nombreEvento: EVENTO, numeros: [1, 2, 3] });
+    const hoja = hojas.at(-1);
+    expect(hoja.paginas).toBe(2);
+    expect(hoja.marcos).toBe(6);
+    for (const n of ["1", "2", "3"]) expect(hoja.textos.filter((x) => x === n)).toHaveLength(2);
+  });
+
+  it("los números de las mesas, ordenados y sin repetir", () => {
+    expect(numerosDeMesas([{ numero: 12 }, { numero: 3 }, { numero: 3 }, { numero: null }, { numero: 0 }])).toEqual([3, 12]);
+    expect(numerosDeMesas()).toEqual([]);
+  });
+
+  it("el nombre del evento, entre comillas y sin su punto (él: es su nombre propio)", () => {
+    expect(nombreEntreComillas("Las Bodas de todos.")).toBe("«Las Bodas de todos»");
+    expect(queFotosTarjeta("Las Bodas de todos.")[1].at(-1)).toBe("«Las Bodas de todos».");
+    // Ya no se entra con el nombre: la tarjeta no lo pide.
+    expect([ENTRAR_TARJETA, ...SI_NO_SE_ABRE_TARJETA].join(" ")).not.toMatch(/apellido/i);
   });
 
   it("el QR lleva sus tres esquinas de lectura, de 7 x 7", () => {
@@ -81,10 +131,5 @@ describe("las tarjetas QR (v67.7)", () => {
       expect(qr.isDark(f + 1, c + 1)).toBe(false);
       expect(qr.isDark(f + 3, c + 3)).toBe(true);
     }
-  });
-
-  it("la frase del permiso, en dos líneas parejas", () => {
-    expect(partirEnDos(FRASE_PERMISO_PADRES)).toEqual(["Puedes subir la foto con el permiso", "de tus padres, si eres menor de edad."]);
-    expect(partirEnDos("Una")).toEqual(["Una"]);
   });
 });

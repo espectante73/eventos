@@ -23,7 +23,7 @@ import { supabase } from "../../supabaseClient";
 import { crearZip } from "../../lib/zip";
 import { descargarBlob } from "../../lib/descargas";
 import { bajarFotosFiesta, archivoFotosEvento } from "../../lib/fotosFiesta";
-import { descargarTarjetasQr, ARCHIVO_TARJETAS_QR } from "../../lib/pdfTarjetasQr";
+import { descargarTarjetasQr, numerosDeMesas, ARCHIVO_TARJETAS_QR } from "../../lib/pdfTarjetasQr";
 import { construirEnlaceTablon } from "../../lib/url";
 
 // «12 fotos» y «De 5 familias, en un ZIP.», contando cada familia una vez.
@@ -93,7 +93,7 @@ function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, estados =
 
 // `marcador` (desde VistaAnfitrion): { abierto, abrir, abrirAlAcreditar, cerrar }.
 export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
-  const { evento, persistEvento, obtenerFotosFiesta, tokenTablon } = data;
+  const { evento, persistEvento, obtenerFotosFiesta, tokenTablon, mesas } = data;
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
   // La acreditación (él, v70.8): las llegadas y el marcador grande, que
@@ -143,15 +143,25 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
   }, [obtenerFotosFiesta, fotosAbiertas]);
 
   // Las tarjetas QR de las mesas (v67.7): llevan el enlace del tablón, el
-  // mismo de Mi cuenta. Avisa al terminar (norma 9).
+  // mismo de Mi cuenta; una por mesa, con su número (v92.9). Avisa al
+  // terminar (norma 9).
   const descargarTarjetas = async () => {
     const enlace = construirEnlaceTablon(evento.urlPublica, tokenTablon);
     if (!enlace) {
       preguntar({ titulo: "Todavía no", texto: "Falta la dirección pública de la app, en Configuración.", soloAviso: true });
       return;
     }
-    await descargarTarjetasQr({ enlace, nombreEvento: evento.nombre });
-    preguntar({ titulo: "Tarjetas descargadas", texto: `${ARCHIVO_TARJETAS_QR}\nLo tienes en tu carpeta de Descargas.`, soloAviso: true });
+    const numeros = numerosDeMesas(mesas);
+    if (!numeros.length) {
+      preguntar({ titulo: "Todavía no", texto: "No hay ninguna mesa: créalas primero en Acomodación.", soloAviso: true });
+      return;
+    }
+    await descargarTarjetasQr({ enlace, nombreEvento: evento.nombre, numeros });
+    preguntar({
+      titulo: "Tarjetas descargadas",
+      texto: `${ARCHIVO_TARJETAS_QR}: ${numeros.length === 1 ? "1 tarjeta" : `${numeros.length} tarjetas`}, una por mesa.\nLo tienes en tu carpeta de Descargas.`,
+      soloAviso: true,
+    });
   };
 
   // Todas en un ZIP, y avisa al terminar (norma 9: pasa fuera de la pantalla).
@@ -210,7 +220,7 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
         </FilaAbrirCerrar>
         <Separador fila={4} />
         <CeldaTexto fila={5} Icono={QrCode} titulo={<b>Tarjetas QR</b>}>
-          Para las mesas, de pie: 2 por folio.
+          Una por mesa, con su número: 2 por folio.
         </CeldaTexto>
         <Boton onClick={descargarTarjetas} className={CELDA_BOTON} style={{ gridRow: 5 }}>
           Descargar

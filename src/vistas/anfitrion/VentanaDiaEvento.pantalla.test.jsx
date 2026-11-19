@@ -125,3 +125,20 @@ it("los «Abrir», iguales: rellenos", () => {
   expect(new Set(fondos).size).toBe(1);
   vista.desmontar();
 });
+
+// v92.9 (él): una tarjeta QR por mesa, con su número. Sin mesas, lo dice.
+it("las tarjetas QR, una por mesa: sin ninguna mesa, avisa de crearlas en Acomodación", async () => {
+  const data = {
+    evento: { urlPublica: "https://nexuspoint.rsvp" },
+    tokenTablon: "0f8fad5b-d9cb-469f-a165-70867728950e",
+    mesas: [],
+    persistEvento: () => {},
+    obtenerFotosFiesta: sinFotos,
+  };
+  const vista = montar(<VentanaDiaEvento data={data} onCerrar={() => {}} />);
+  await act(async () => {});
+  expect(document.body.textContent).toContain("Una por mesa, con su número: 2 por folio.");
+  await act(async () => botones("Descargar")[0].dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  expect(document.body.textContent).toContain("No hay ninguna mesa: créalas primero en Acomodación.");
+  vista.desmontar();
+});

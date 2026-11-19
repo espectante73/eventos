@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "92.9",
+    cambios: [
+      "Tarjetas QR (Día del evento): una por mesa, dos por folio. En las dos caras, el número de la mesa en grande, en dorado sobre un círculo verde con doble aro, sin la palabra «Mesa».",
+      "Una cara lleva el texto: «Puedes subir hasta 2 fotos del evento:», con «1. La foto de tu unidad familiar, hecha hoy, el día del evento (la sube solo uno).» y «2. Lo que para ti significó el evento: un momento que describa «Las Bodas de todos».»; «Si eres menor, solo a partir de 16 años y con el permiso de tus padres.» y «El código para subirlas, al otro lado.».",
+      "La otra, el QR: «Escanea el código: se abre tu tablón.», «Si no se abre, usa el enlace que tu colaborador te envió a tu WhatsApp semanas antes.» y «Qué fotos subir, al otro lado.». Fuera la frase de horizontal o vertical y la de entrar con el apellido y el nombre.",
+      "Sin mesas, avisa de crearlas primero en Acomodación.",
+    ],
+  },
+  {
     version: "92.8",
     cambios: [
       "Tablón: al cambiar sus canciones, en una sola línea, «Hasta 3 canciones, ¿para qué son?». Al tocar la pregunta se abre: «Con ellas conocemos el perfil musical y generacional de todos los invitados, para crear un ambiente que integre a todos por igual. No será posible ponerlas todas, pero tus canciones sirven de orientación para dar forma a la identidad musical del evento.»",
