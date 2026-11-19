@@ -53,6 +53,9 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
   };
 
   const asignados = invitados.filter((g) => resolverColaborador(g, colaboradores)?.id === c.id);
+  // Su cuenta sin email y su ficha con uno (los creados antes de v91.2, que
+  // nacían vacíos): se ofrece el de la ficha, con un toque (norma 8).
+  const emailDeSuFicha = c.email ? "" : String(invitados.find((g) => g.id === c.invitadoId)?.email || "").trim();
   // Los invitados en tentativa nunca se nombran en el email al colaborador
   // (ver anfitrion_avisar_colaborador) — así que tampoco cuentan aquí como
   // "pendiente de avisar", o el botón "Avisar ahora" mandaría un email
@@ -166,7 +169,12 @@ export function ColaboradorCard({ c, pendientes, invitados, colaboradores, onEli
             }}
           />
         </div>
-        {!c.email && (
+        {!c.email && emailDeSuFicha && (
+          <Boton tamano="pequeno" titulo={`Poner ${emailDeSuFicha}, el de su ficha`} onClick={() => onCambiarEmail(c.id, emailDeSuFicha)}>
+            Usar el de su ficha
+          </Boton>
+        )}
+        {!c.email && !emailDeSuFicha && (
           <span className="text-xs whitespace-nowrap" style={{ color: C.charcoal, opacity: OP.tenue }}>
             sin email (no recibirá avisos)
           </span>

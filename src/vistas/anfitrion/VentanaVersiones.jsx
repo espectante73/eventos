@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "91.3",
+    cambios: [
+      "Datos de colaboradores: si la cuenta de un colaborador no tiene email y su ficha de la Lista sí, junto al campo sale «Usar el de su ficha», que lo pone con un toque. Para los creados antes de la 91.2, que nacían sin email.",
+    ],
+  },
+  {
     version: "91.2",
     cambios: [
       "Arreglado: al dar de alta a alguien como colaborador desde su ficha, su cuenta empezaba sin email y no cogía el de la ficha. Ahora lo coge, también en un relevo.",
