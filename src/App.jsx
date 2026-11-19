@@ -644,9 +644,11 @@ export default function App() {
           </Suspense>
         </CapaBarra>
       )}
-      {/* El sello de los días y, del otro lado, la barra con Equipo: siempre,
-          en el inicio del anfitrión y en el del colaborador (él, v73.3). */}
-      {enUnaVista && <SelloCuentaAtras evento={data.evento} />}
+      {/* El sello de los días y, del otro lado, la barra con Equipo: en el
+          inicio del anfitrión y en el del colaborador (él, v73.3). Los dos,
+          solo sin ventanas en la barra (v90.5): con ellas, su fila llega a
+          ese lado y el sello quedaba borroso bajo su halo. */}
+      {enUnaVista && !ventanasMovil.length && <SelloCuentaAtras evento={data.evento} />}
       {equipoAbierto && <VentanaEquipo data={data} colaboradorId={yoEnElEquipo} onCerrar={() => setEquipoAbierto(false)} />}
       {enUnaVista && (
         <BarraVentanas

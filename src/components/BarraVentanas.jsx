@@ -9,8 +9,9 @@
 // querer. Y si se le da, pregunta antes.
 //
 // Si no caben (él, v90.4: todas las ventanas van a la barra), la fila se
-// desliza de lado con el dedo; Equipo se queda quieto en su esquina, y el
-// borde que esconde alguna se difumina para que se note que hay más.
+// desliza de lado con el dedo, y el borde que esconde alguna se difumina
+// para que se note que hay más. La casita, quieta en la esquina del pulgar
+// (él, v90.5: «el icono inicio no debería moverse»).
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Home } from "lucide-react";
 import { Boton } from "./Boton";
@@ -100,8 +101,7 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar, onEquipo 
     raiz.style.setProperty("--hueco-barra-ventanas", `${ALTO_BARRA}px`);
     return () => raiz.style.removeProperty("--hueco-barra-ventanas");
   }, [conVentanas]);
-  // La casita, solo si hay alguna ventana a la que volver desde ella.
-  const ventanas = conVentanas ? [INICIO, ...abiertas.map((clave) => VENTANAS_MOVIL[clave]).filter(Boolean)] : [];
+  const ventanas = abiertas.map((clave) => VENTANAS_MOVIL[clave]).filter(Boolean);
 
   // La fila que se desliza: qué lado esconde algún cuadradito.
   const fila = useRef(null);
@@ -159,55 +159,55 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar, onEquipo 
                 : {}),
             }}
           >
-            {ventanas.map(({ clave, titulo, icono: Icono }) => {
-              const esDelante = clave === delante;
-              return (
-                <div key={clave} className="flex flex-col items-center flex-shrink-0" style={{ gap: HUECO_X }}>
-                  {clave !== "inicio" && (
-                    <BotonQuitar
-                      titulo={`Cerrar ${titulo}`}
-                      pregunta={haySinGuardar(clave) ? PREGUNTA_DESCARTAR : { titulo: `¿Cerrar ${titulo}?`, rotulo: "Sí", peligro: false }}
-                      onClick={() => onCerrar(clave)}
-                    />
-                  )}
-                  <Boton
-                    variante={esDelante ? "principal" : "secundario"}
-                    titulo={titulo}
-                    aria-label={titulo}
-                    aria-pressed={esDelante}
-                    onClick={() => onElegir(clave)}
-                    // El que está delante, en verde (principal); los demás, sobre
-                    // fondo opaco: la barra flota encima del contenido.
-                    style={{ width: TAM_CUADRITO, height: TAM_CUADRITO, padding: 0, ...(esDelante ? {} : { background: C.paper }) }}
-                  >
-                    <Icono size={26} />
-                  </Boton>
-                </div>
-              );
-            })}
+            {ventanas.map(({ clave, titulo, icono }) => (
+              <div key={clave} className="flex flex-col items-center flex-shrink-0" style={{ gap: HUECO_X }}>
+                <BotonQuitar
+                  titulo={`Cerrar ${titulo}`}
+                  pregunta={haySinGuardar(clave) ? PREGUNTA_DESCARTAR : { titulo: `¿Cerrar ${titulo}?`, rotulo: "Sí", peligro: false }}
+                  onClick={() => onCerrar(clave)}
+                />
+                <Cuadradito titulo={titulo} icono={icono} delante={clave === delante} onClick={() => onElegir(clave)} />
+              </div>
+            ))}
           </div>
         )}
-        {/* Equipo, en la misma esquina siempre: el último (derecha) y, para el
-            zurdo, el primero (izquierda). Sin X: no es una ventana de la barra.
-            Fuera de la fila que se desliza: no se mueve nunca. */}
-        {onEquipo && (
+        {/* En la esquina del pulgar, quieto, fuera de la fila que se
+            desliza: el último (derecha) y, para el zurdo, el primero
+            (izquierda). Con ventanas, la casita para volver al inicio (sin
+            X); sin ellas, Equipo (él, v90.5: «solo visible si no hay
+            ventanas abiertas»). */}
+        {(conVentanas || onEquipo) && (
           <div
             className="relative flex flex-col items-center flex-shrink-0 pointer-events-auto order-last zurdo:order-first"
             style={{ padding: `0 ${RELLENO_FILA.lado}px ${RELLENO_FILA.abajo}px` }}
           >
-            <Boton
-              variante="secundario"
-              titulo="Equipo"
-              aria-label="Equipo"
-              onClick={onEquipo}
-              style={{ width: TAM_CUADRITO, height: TAM_CUADRITO, padding: 0, background: C.paper }}
-            >
-              <IconoEquipo size={26} />
-            </Boton>
+            {conVentanas ? (
+              <Cuadradito titulo={INICIO.titulo} icono={INICIO.icono} delante={delante === INICIO.clave} onClick={() => onElegir(INICIO.clave)} />
+            ) : (
+              <Cuadradito titulo="Equipo" icono={IconoEquipo} onClick={onEquipo} />
+            )}
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+// Un cuadradito de la barra: el que está delante, en verde (principal); los
+// demás, sobre fondo opaco, que la barra flota encima del contenido.
+// `delante` undefined (Equipo): no es una ventana, no lleva aria-pressed.
+function Cuadradito({ titulo, icono: Icono, delante, onClick }) {
+  return (
+    <Boton
+      variante={delante ? "principal" : "secundario"}
+      titulo={titulo}
+      aria-label={titulo}
+      aria-pressed={delante}
+      onClick={onClick}
+      style={{ width: TAM_CUADRITO, height: TAM_CUADRITO, padding: 0, ...(delante ? {} : { background: C.paper }) }}
+    >
+      <Icono size={26} />
+    </Boton>
   );
 }
 

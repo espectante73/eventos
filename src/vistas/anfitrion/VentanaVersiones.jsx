@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "90.5",
+    cambios: [
+      "Barra de ventanas del móvil: la casita ya no se desliza con las demás. Queda quieta en la esquina del pulgar (a la derecha; a la izquierda para el zurdo), y las ventanas se deslizan a su lado.",
+      "Equipo sale solo cuando no hay ventanas abiertas, en esa misma esquina. El sello de los días, igual: con ventanas abiertas quedaba borroso debajo de la barra.",
+    ],
+  },
+  {
     version: "90.4",
     cambios: [
       "En el móvil, TODAS las ventanas entran en la barra de abajo (Lista, Acomodación, Progreso, Día del evento, Acreditación, Datos del evento, Permisos, Versiones…): se abren a pantalla entera, con su cuadradito, y se pasa de una a otra con un toque.",

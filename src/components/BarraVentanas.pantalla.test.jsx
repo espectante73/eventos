@@ -54,7 +54,7 @@ describe("la barra de ventanas", () => {
     vista.desmontar();
   });
 
-  it("si no caben, la fila se desliza de lado; Equipo se queda fuera de ella, quieto", () => {
+  it("si no caben, la fila se desliza de lado; la casita se queda fuera de ella, quieta", () => {
     const { vista, boton } = dibujar({
       abiertas: ["cuentas", "invitaciones", "mesas", "progreso", "versiones"],
       delante: "cuentas",
@@ -63,8 +63,8 @@ describe("la barra de ventanas", () => {
     const fila = document.body.querySelector("[data-fila-ventanas]");
     expect(fila.className).toContain("overflow-x-auto");
     expect(fila.contains(boton("Versiones"))).toBe(true);
-    expect(fila.contains(boton("Inicio"))).toBe(true);
-    expect(fila.contains(boton("Equipo"))).toBe(false);
+    expect(fila.contains(boton("Contabilidad"))).toBe(true);
+    expect(fila.contains(boton("Inicio"))).toBe(false);
     vista.desmontar();
   });
 
@@ -132,13 +132,25 @@ describe("el cuadradito de Equipo", () => {
     vista.desmontar();
   });
 
-  it("con ventanas, Equipo se queda en la esquina: el último, y el primero para el zurdo", () => {
-    const { vista, boton } = dibujar({ onEquipo: () => {} });
-    expect(boton("Inicio")).toBeTruthy();
+  it("sin ventanas, Equipo va en la esquina del pulgar: el último, y el primero para el zurdo", () => {
+    const { vista, boton } = dibujar({ abiertas: [], delante: "inicio", onEquipo: () => {} });
     const pieza = boton("Equipo").parentElement;
     expect(pieza.className).toContain("order-last");
     expect(pieza.className).toContain("zurdo:order-first");
     expect(boton("Cerrar Equipo")).toBeFalsy();
+    vista.desmontar();
+  });
+
+  // v90.5 (él): «el icono inicio no debería moverse, mejor el primero de la
+  // derecha, según elección pulgar y estático, y el icono colaboradores solo
+  // visible si no hay ventanas abiertas».
+  it("con ventanas, Equipo no sale y la casita ocupa su esquina, quieta", () => {
+    const { vista, boton } = dibujar({ abiertas: ["cuentas", "invitaciones"], delante: "cuentas", onEquipo: () => {} });
+    expect(boton("Equipo")).toBeFalsy();
+    const pieza = boton("Inicio").parentElement;
+    expect(pieza.className).toContain("order-last");
+    expect(pieza.className).toContain("zurdo:order-first");
+    expect(document.body.querySelector("[data-fila-ventanas]").contains(boton("Inicio"))).toBe(false);
     vista.desmontar();
   });
 });
@@ -158,7 +170,7 @@ describe("las capas", () => {
   it("con ventanas de la barra abiertas (el móvil), va por encima y deja su hueco", async () => {
     const { Z_BARRA } = await import("./BarraVentanas");
     const { vista, boton } = dibujar({ onEquipo: () => {} });
-    expect(Number(boton("Equipo").closest(".fixed").style.zIndex)).toBe(Z_BARRA);
+    expect(Number(boton("Inicio").closest(".fixed").style.zIndex)).toBe(Z_BARRA);
     expect(document.documentElement.style.getPropertyValue("--hueco-barra-ventanas")).toBe(`${ALTO_BARRA}px`);
     vista.desmontar();
   });
