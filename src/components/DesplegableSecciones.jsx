@@ -12,24 +12,11 @@
 //   Anfitrión + cada colaborador, para cambiar de vista y previsualizar
 //   su formulario (sustituye a la barra ancha de arriba que existía
 //   antes en App.jsx, ahora eliminada — reparto del 2026-08-09).
-import {
-  Gauge,
-  History,
-  UserCog,
-  Eye,
-  User,
-  Calendar,
-  FlaskConical,
-  RotateCcw,
-  Trash2,
-  KeyRound,
-  Clock3,
-  Send,
-} from "lucide-react";
-import { C, DEDO, VELO } from "../theme";
+import { UserCog, Eye, User } from "lucide-react";
+import { C } from "../theme";
 import { UserSolido, Seal } from "./Widgets";
 import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "./VentanaFlotante";
-import { MenuFlotante, mascaraFundida } from "./MenuFlotante";
+import { MenuFlotante, HALO } from "./MenuFlotante";
 
 import { ICONOS_VENTANAS, FORMULARIO_INVITADO } from "../lib/iconosVentanas";
 
@@ -45,16 +32,17 @@ import { ICONOS_VENTANAS, FORMULARIO_INVITADO } from "../lib/iconosVentanas";
 // Se exporta para que scripts/dibujar-mapa.test.js pueda comprobar que el
 // plano de la aplicación (public/mapa-de-la-aplicacion.png) sigue listando
 // las mismas secciones que el menú real.
+// Los iconos, los de lib/iconosVentanas.js: los mismos en la barra del móvil.
 export const SUBMENU_CONFIGURACION = [
-  { id: "config-zona-peligro", etiqueta: "Borrado total", icono: Trash2, fondo: C.peligro, color: C.paper },
-  { id: "config-cronograma", etiqueta: "Cronograma", icono: Clock3 },
-  { id: "config-datos-evento", etiqueta: "Datos evento", icono: Calendar },
-  { id: "config-modo-pruebas", etiqueta: "Modo pruebas", icono: FlaskConical, fondo: C.wax, color: C.paper },
-  { id: "permisos", etiqueta: "Permisos", icono: KeyRound },
-  { id: "progreso", etiqueta: "Progreso", icono: Gauge },
-  { id: "config-zona-reinicio", etiqueta: "Reinicios", icono: RotateCcw },
-  { id: "versiones", etiqueta: "Versiones", icono: History },
-];
+  { id: "config-zona-peligro", etiqueta: "Borrado total", fondo: C.peligro, color: C.paper },
+  { id: "config-cronograma", etiqueta: "Cronograma" },
+  { id: "config-datos-evento", etiqueta: "Datos evento" },
+  { id: "config-modo-pruebas", etiqueta: "Modo pruebas", fondo: C.wax, color: C.paper },
+  { id: "permisos", etiqueta: "Permisos" },
+  { id: "progreso", etiqueta: "Progreso" },
+  { id: "config-zona-reinicio", etiqueta: "Reinicios" },
+  { id: "versiones", etiqueta: "Versiones" },
+].map((s) => ({ ...s, icono: ICONOS_VENTANAS[s.id] }));
 
 // "Mi cuenta" es una línea especial, pero no de peligro (él, v51.3): relleno
 // champán y letra verde, con el mismo contorno dorado que las demás. El
@@ -152,14 +140,14 @@ export function DesplegableSecciones({
             id: "avisar-equipo",
             etiqueta: "Avisar equipo",
             marcado: Boolean(abierto["avisar-equipo"]),
-            icono: Send,
+            icono: ICONOS_VENTANAS["avisar-equipo"],
             onClick: () => toggle("avisar-equipo"),
           },
           {
             id: "colaboradores-datos",
             etiqueta: "Datos Colab.",
             marcado: Boolean(abierto["colaboradores-datos"]),
-            icono: UserCog,
+            icono: ICONOS_VENTANAS["colaboradores-datos"],
             onClick: () => toggle("colaboradores-datos"),
           },
           {
@@ -244,8 +232,7 @@ export function DesplegableSecciones({
 // lo pone el menú (dos velos juntos se verían más blancos). Claro del todo
 // hasta medio dedo alrededor del botón y desvaneciéndose a lo largo del
 // dedo siguiente: con lo claro solo debajo del botón, apenas se veía.
-const MARGEN_HALO = DEDO * 1.5;
-const HALO = { inset: -MARGEN_HALO, ...VELO, ...mascaraFundida({ izquierda: DEDO, derecha: DEDO, arriba: DEDO, abajo: DEDO }) };
+// (HALO, en MenuFlotante: el mismo detrás de la barra del móvil.)
 
 export function BotonAbrirSeccion({ opciones, sello = 0, posicion = null }) {
   return (

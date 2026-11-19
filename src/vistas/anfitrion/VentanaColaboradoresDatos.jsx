@@ -34,7 +34,8 @@ const ETIQUETA_TIPO_AVISO = {
   invitacion: "Invitación",
 };
 
-export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros, setAbierto, onCerrar }) {
+// `onIrALaLista`: abre la Lista y cierra esta (en el móvil, por la barra).
+export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros, onIrALaLista, onCerrar }) {
   const {
     evento,
     colaboradores,
@@ -69,7 +70,7 @@ export function VentanaColaboradoresDatos({ data, asignarColaborador, setFiltros
   const irAEditarAsignacion = () => {
     if (avisoPreview) setFiltros((f) => ({ ...f, colaboradorId: avisoPreview.id }));
     setAvisoPreview(null);
-    setAbierto((a) => ({ ...a, invitados: true, "colaboradores-datos": false }));
+    onIrALaLista();
   };
 
   // ---------- Historial de emails enviados ----------

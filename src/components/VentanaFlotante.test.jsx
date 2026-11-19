@@ -237,3 +237,50 @@ it("`enteraEnMovil`: en un aparato táctil, la pantalla entera y sin agrandar; e
     window.matchMedia = original;
   }
 });
+
+// v90.4 (él, opción A): en el móvil, todas las ventanas van a la barra. La
+// que su capa nombra se pone a pantalla entera sola; las que se abren
+// dentro de ella (p. ej. Conceptos en Contabilidad) siguen flotando.
+it("en su capa de la barra, la ventana va a pantalla entera; las de dentro siguen flotando", async () => {
+  const { CapaBarra } = await import("./BarraVentanas");
+  const div = document.body.appendChild(document.createElement("div"));
+  const raiz = createRoot(div);
+  await act(async () =>
+    raiz.render(
+      <CapaBarra clave="cuentas" activa delante marco>
+        <VentanaFlotante clave="cuentas" titulo="Contabilidad" onCerrar={() => {}}>
+          <VentanaFlotante clave="conceptosGastos" titulo="Conceptos" onCerrar={() => {}}>
+            dentro
+          </VentanaFlotante>
+        </VentanaFlotante>
+      </CapaBarra>
+    )
+  );
+  const ventana = (titulo) => [...div.querySelectorAll("h3")].find((h) => h.textContent === titulo).closest(".flex-col");
+  expect(ventana("Contabilidad").className).toContain("ventana-fija");
+  expect(ventana("Contabilidad").className).toContain("rounded-t-lg");
+  expect(ventana("Conceptos").className).not.toContain("ventana-fija");
+  // Su X, a la vista (norma 5).
+  expect(ventana("Contabilidad").querySelector('button[aria-label="Cerrar"]')).toBeTruthy();
+  await act(async () => raiz.unmount());
+  div.remove();
+});
+
+it("fuera de la barra (el ordenador), la misma ventana flota como siempre", async () => {
+  const { CapaBarra } = await import("./BarraVentanas");
+  const div = document.body.appendChild(document.createElement("div"));
+  const raiz = createRoot(div);
+  await act(async () =>
+    raiz.render(
+      <CapaBarra clave="cuentas" activa={false} delante={false}>
+        <VentanaFlotante clave="cuentas" titulo="Contabilidad" onCerrar={() => {}}>
+          algo
+        </VentanaFlotante>
+      </CapaBarra>
+    )
+  );
+  const h3 = [...div.querySelectorAll("h3")].find((h) => h.textContent === "Contabilidad");
+  expect(h3.closest(".flex-col").className).not.toContain("ventana-fija");
+  await act(async () => raiz.unmount());
+  div.remove();
+});

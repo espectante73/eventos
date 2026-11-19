@@ -40,6 +40,44 @@ describe("la barra de ventanas", () => {
     vista.desmontar();
   });
 
+  // v90.4 (él, opción A): todas las ventanas del anfitrión van a la barra.
+  it("cualquier ventana del anfitrión tiene su cuadradito, con nombre e icono", async () => {
+    const { VENTANAS_DEL_ANFITRION, VENTANAS_MOVIL } = await import("./BarraVentanas");
+    for (const clave of VENTANAS_DEL_ANFITRION) {
+      expect(VENTANAS_MOVIL[clave].titulo).toBeTruthy();
+      expect(VENTANAS_MOVIL[clave].icono).toBeTruthy();
+    }
+    const { vista, boton } = dibujar({ abiertas: ["mesas", "config-zona-peligro", "nuevo-invitado"], delante: "mesas" });
+    expect(boton("Acomodación").getAttribute("aria-pressed")).toBe("true");
+    expect(boton("Cerrar Borrado total")).toBeTruthy();
+    expect(boton("Cerrar Nuevo invitado")).toBeTruthy();
+    vista.desmontar();
+  });
+
+  it("si no caben, la fila se desliza de lado; Equipo se queda fuera de ella, quieto", () => {
+    const { vista, boton } = dibujar({
+      abiertas: ["cuentas", "invitaciones", "mesas", "progreso", "versiones"],
+      delante: "cuentas",
+      onEquipo: () => {},
+    });
+    const fila = document.body.querySelector("[data-fila-ventanas]");
+    expect(fila.className).toContain("overflow-x-auto");
+    expect(fila.contains(boton("Versiones"))).toBe(true);
+    expect(fila.contains(boton("Inicio"))).toBe(true);
+    expect(fila.contains(boton("Equipo"))).toBe(false);
+    vista.desmontar();
+  });
+
+  it("detrás de los cuadraditos, el halo claro de «Abrir sección…»", async () => {
+    const { HALO } = await import("./MenuFlotante");
+    const { vista } = dibujar({ onEquipo: () => {} });
+    const halo = document.body.querySelector("[data-halo-barra]");
+    expect(halo).toBeTruthy();
+    expect(halo.style.backdropFilter).toBe(HALO.backdropFilter);
+    expect(halo.className).toContain("pointer-events-none");
+    vista.desmontar();
+  });
+
   it("tocar un cuadradito pone esa ventana delante", () => {
     const { vista, llamadas, boton } = dibujar();
     vista.pulsar(boton("Inicio"));

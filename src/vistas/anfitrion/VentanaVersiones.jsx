@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "90.4",
+    cambios: [
+      "En el móvil, TODAS las ventanas entran en la barra de abajo (Lista, Acomodación, Progreso, Día del evento, Acreditación, Datos del evento, Permisos, Versiones…): se abren a pantalla entera, con su cuadradito, y se pasa de una a otra con un toque.",
+      "Si hay más cuadraditos de los que caben, la barra se desliza de lado con el dedo; el borde que esconde alguno se difumina, y la recién abierta se ve siempre. Equipo se queda quieto en su esquina.",
+      "Detrás de los cuadraditos, el mismo halo claro que «Abrir sección…», para que se lean bien encima de lo que haya. En el ordenador, las ventanas siguen flotando como siempre.",
+    ],
+  },
+  {
     version: "90.3",
     cambios: [
       "En el móvil, Contabilidad e Invitaciones entran en la barra de ventanas de abajo, como el Formulario y Multimedia: se abren a pantalla entera, con su cuadradito (la cartera y el sobre) junto a la casita y Equipo.",

@@ -352,6 +352,14 @@ export function mascaraFundida({ izquierda, derecha, arriba, abajo }) {
   return { maskImage: mascara, WebkitMaskImage: mascara, maskComposite: "intersect", WebkitMaskComposite: "source-in" };
 }
 
+// El halo claro detrás de un botón que flota encima de algo (la foto, una
+// ventana): el velo, claro del todo hasta medio dedo alrededor y
+// desvaneciéndose a lo largo del dedo siguiente. «Abrir sección…» sobre la
+// foto (él, v88.3) y la barra de ventanas del móvil (él, v90.4: «el halo
+// blanco difuminado que llevan los botones, para que se lean bien»).
+// Se pone en un <span> absoluto detrás de lo que aclara.
+export const HALO = { inset: -DEDO * 1.5, ...VELO, ...mascaraFundida({ izquierda: DEDO, derecha: DEDO, arriba: DEDO, abajo: DEDO }) };
+
 // `contenido` (v90), en vez de `opciones`: un panel con lo suyo dentro (el
 // tramo de edad de la Lista: «De [ ] a [ ] años»), con el mismo fondo y
 // borde que un submenú y el mismo colgar, cerrar y velo que el menú. Es una

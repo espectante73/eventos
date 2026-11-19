@@ -235,7 +235,7 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
   const conEmail = pideEmail({ anioNacimiento: ficha.anioNacimiento }, evento);
 
   return (
-    <VentanaFlotante clave="nuevoInvitado" titulo={editandoId ? "Editar invitado" : "Nuevo invitado"} onCerrar={onCerrar} ancho="min(440px, calc(100vw - 48px))">
+    <VentanaFlotante clave="nuevo-invitado" titulo={editandoId ? "Editar invitado" : "Nuevo invitado"} onCerrar={onCerrar} ancho="min(440px, calc(100vw - 48px))">
       {/* Buscar a uno que ya está (v84.7), fuera del Enter que guarda. */}
       <Field label={editandoId ? "Editando" : "Buscar en la lista"}>
         {/* Por colaborador (v87.4, él): «Elegir invitado» enseña solo los

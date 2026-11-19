@@ -46,7 +46,7 @@ export function VentanaAvisarEquipo({ data, onCerrar }) {
     });
 
   return (
-    <VentanaFlotante clave="avisarEquipo" titulo="Avisar al equipo" onCerrar={onCerrar} ancho="min(420px, calc(100vw - 48px))">
+    <VentanaFlotante clave="avisar-equipo" titulo="Avisar al equipo" onCerrar={onCerrar} ancho="min(420px, calc(100vw - 48px))">
       {!listo || colaboradoresConAvisos === null ? (
         <Cargando />
       ) : (

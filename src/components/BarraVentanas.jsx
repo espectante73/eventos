@@ -7,19 +7,27 @@
 // BotonQuitar: se ve pequeña y el dedo acierta en 44px). Va ENCIMA y
 // separada, no en la esquina: así tocar el icono nunca le da a la X sin
 // querer. Y si se le da, pregunta antes.
-import { useEffect } from "react";
+//
+// Si no caben (él, v90.4: todas las ventanas van a la barra), la fila se
+// desliza de lado con el dedo; Equipo se queda quieto en su esquina, y el
+// borde que esconde alguna se difumina para que se note que hay más.
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Home } from "lucide-react";
 import { Boton } from "./Boton";
 import { BotonQuitar, TAMANO_BOTON_QUITAR } from "./PreguntaSeguridad";
+import { mascaraFundida, HALO } from "./MenuFlotante";
 import { C } from "../theme";
 import { ICONOS_VENTANAS } from "../lib/iconosVentanas";
 import { useSinGuardar, PREGUNTA_DESCARTAR } from "../lib/cambiosSinGuardar";
+import { ContextoCapaBarra } from "../lib/capaBarra";
 
 // Al menos 44, el mínimo del dedo; algo más, que se usa de pie y deprisa.
 export const TAM_CUADRITO = 52;
 const SEPARACION_ABAJO = 16;
 // De la X al cuadradito: la zona de toque de la X (44) no llega al icono.
 const HUECO_X = 14;
+// Entre cuadradito y cuadradito.
+const GAP = 12;
 // Lo que la barra tapa por abajo: el contenido de detrás deja ese hueco.
 export const ALTO_BARRA = SEPARACION_ABAJO + TAM_CUADRITO + HUECO_X + TAMANO_BOTON_QUITAR + 12;
 // Las capas (él, v74.5: «el sello y el botón son para verlos al abrir; con
@@ -33,17 +41,46 @@ export const ALTO_BARRA = SEPARACION_ABAJO + TAM_CUADRITO + HUECO_X + TAMANO_BOT
 export const Z_BARRA = 10000;
 export const Z_INICIO = 45;
 
-// Las ventanas que pueden ir en la barra. El icono, el del menú.
-// Contabilidad e Invitaciones (él, v90.3: «no hay un icono en el pie como
-// sí pasa con otras ventanas»), del anfitrión: viven en VistaAnfitrion.
+// Las ventanas que pueden ir en la barra. El icono, el del menú; el
+// nombre, para su X («¿Cerrar Contabilidad?») y para quien no ve el icono.
+// Las del anfitrión viven en VistaAnfitrion: Contabilidad e Invitaciones
+// desde v90.3 (él: «no hay un icono en el pie como sí pasa con otras
+// ventanas») y todas las demás desde v90.4 (él, opción A: todas, y la
+// barra se desliza si no caben).
+const NOMBRES_DEL_ANFITRION = {
+  aniversarios: "Aniversarios",
+  "avisar-equipo": "Avisar al equipo",
+  "colaboradores-datos": "Datos de colaboradores",
+  cuentas: "Contabilidad",
+  diaEvento: "Día del evento",
+  invitaciones: "Invitaciones",
+  invitados: "Lista de invitados",
+  marcador: "Acreditación",
+  mesas: "Acomodación",
+  "nuevo-invitado": "Nuevo invitado",
+  permisos: "Permisos",
+  progreso: "Progreso",
+  versiones: "Versiones",
+  "config-datos-evento": "Datos del evento",
+  "config-modo-pruebas": "Modo pruebas",
+  "config-zona-reinicio": "Reinicios",
+  "config-zona-peligro": "Borrado total",
+};
+export const VENTANAS_DEL_ANFITRION = Object.keys(NOMBRES_DEL_ANFITRION);
 export const VENTANAS_MOVIL = {
   formulario: { clave: "formulario", titulo: "Formulario", icono: ICONOS_VENTANAS.formulario },
   musica: { clave: "musica", titulo: "Multimedia", icono: ICONOS_VENTANAS.musicaEvento },
-  cuentas: { clave: "cuentas", titulo: "Contabilidad", icono: ICONOS_VENTANAS.cuentas },
-  invitaciones: { clave: "invitaciones", titulo: "Invitaciones", icono: ICONOS_VENTANAS.invitaciones },
+  ...Object.fromEntries(
+    Object.entries(NOMBRES_DEL_ANFITRION).map(([clave, titulo]) => [clave, { clave, titulo, icono: ICONOS_VENTANAS[clave] }])
+  ),
 };
-export const VENTANAS_DEL_ANFITRION = ["cuentas", "invitaciones"];
 const INICIO = { clave: "inicio", titulo: "Inicio", icono: Home };
+// Lo que la fila deslizante deja alrededor de los cuadraditos: arriba, la
+// zona de toque de la X (44 px aunque se vea de 24, index.css); a los lados
+// y abajo, su sombra. Sin ello, el deslizamiento los recortaría.
+const RELLENO_FILA = { arriba: 10, lado: 4, abajo: 4 };
+// Cuánto se difumina el borde que esconde algún cuadradito.
+const FUNDIDO = 28;
 const IconoEquipo = ICONOS_VENTANAS.equipo;
 
 // `onEquipo` (él, v73.3): el cuadradito de Equipo, SIEMPRE, el primero y
@@ -65,55 +102,111 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar, onEquipo 
   }, [conVentanas]);
   // La casita, solo si hay alguna ventana a la que volver desde ella.
   const ventanas = conVentanas ? [INICIO, ...abiertas.map((clave) => VENTANAS_MOVIL[clave]).filter(Boolean)] : [];
+
+  // La fila que se desliza: qué lado esconde algún cuadradito.
+  const fila = useRef(null);
+  const [escondidas, setEscondidas] = useState({ antes: false, despues: false });
+  const medir = () => {
+    const el = fila.current;
+    if (!el) return;
+    const antes = el.scrollLeft > 1;
+    const despues = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+    setEscondidas((e) => (e.antes === antes && e.despues === despues ? e : { antes, despues }));
+  };
+  // La que se pone delante (la recién abierta, sobre todo), siempre a la
+  // vista: si quedaba escondida, la fila se desliza hasta ella.
+  useLayoutEffect(() => {
+    const el = fila.current;
+    const pieza = el?.querySelector('[aria-pressed="true"]')?.parentElement;
+    if (pieza) {
+      const f = el.getBoundingClientRect();
+      const p = pieza.getBoundingClientRect();
+      if (p.left < f.left) el.scrollLeft -= f.left - p.left + RELLENO_FILA.lado;
+      else if (p.right > f.right) el.scrollLeft += p.right - f.right + RELLENO_FILA.lado;
+    }
+    medir();
+  }, [delante, abiertas.length]);
+  useEffect(() => {
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, []);
+
   return (
     <div
-      className="fixed left-0 right-0 flex items-end justify-end zurdo:justify-start gap-3 px-4 pointer-events-none"
+      className="fixed left-0 right-0 flex justify-end zurdo:justify-start px-4 pointer-events-none"
       // Por encima de todo, también de las ventanas flotantes: tiene que
       // poder tocarse con una abierta. Ellas se acortan para no quedar
       // debajo (--hueco-barra-ventanas, en VentanaFlotante.jsx).
-      style={{ bottom: SEPARACION_ABAJO, zIndex: conVentanas ? Z_BARRA : Z_INICIO }}
+      style={{ bottom: SEPARACION_ABAJO - RELLENO_FILA.abajo, zIndex: conVentanas ? Z_BARRA : Z_INICIO }}
     >
-      {ventanas.map(({ clave, titulo, icono: Icono }) => {
-        const esDelante = clave === delante;
-        return (
-          <div key={clave} className="flex flex-col items-center pointer-events-auto" style={{ gap: HUECO_X }}>
-            {clave !== "inicio" && (
-              <BotonQuitar
-                titulo={`Cerrar ${titulo}`}
-                pregunta={haySinGuardar(clave) ? PREGUNTA_DESCARTAR : { titulo: `¿Cerrar ${titulo}?`, rotulo: "Sí", peligro: false }}
-                onClick={() => onCerrar(clave)}
-              />
-            )}
+      <div className="relative flex items-end min-w-0" style={{ gap: GAP - RELLENO_FILA.lado }}>
+        {/* Detrás, el halo claro de «Abrir sección…» (él, v90.4): los
+            cuadraditos se leen bien encima de lo que haya. */}
+        <span aria-hidden="true" data-halo-barra className="absolute pointer-events-none" style={HALO} />
+        {conVentanas && (
+          <div
+            ref={fila}
+            data-fila-ventanas
+            onScroll={medir}
+            className="relative flex items-end min-w-0 overflow-x-auto pointer-events-auto"
+            style={{
+              gap: GAP,
+              padding: `${RELLENO_FILA.arriba}px ${RELLENO_FILA.lado}px ${RELLENO_FILA.abajo}px`,
+              scrollbarWidth: "none",
+              overscrollBehavior: "contain",
+              ...(escondidas.antes || escondidas.despues
+                ? mascaraFundida({ izquierda: escondidas.antes ? FUNDIDO : 0, derecha: escondidas.despues ? FUNDIDO : 0, arriba: 0, abajo: 0 })
+                : {}),
+            }}
+          >
+            {ventanas.map(({ clave, titulo, icono: Icono }) => {
+              const esDelante = clave === delante;
+              return (
+                <div key={clave} className="flex flex-col items-center flex-shrink-0" style={{ gap: HUECO_X }}>
+                  {clave !== "inicio" && (
+                    <BotonQuitar
+                      titulo={`Cerrar ${titulo}`}
+                      pregunta={haySinGuardar(clave) ? PREGUNTA_DESCARTAR : { titulo: `¿Cerrar ${titulo}?`, rotulo: "Sí", peligro: false }}
+                      onClick={() => onCerrar(clave)}
+                    />
+                  )}
+                  <Boton
+                    variante={esDelante ? "principal" : "secundario"}
+                    titulo={titulo}
+                    aria-label={titulo}
+                    aria-pressed={esDelante}
+                    onClick={() => onElegir(clave)}
+                    // El que está delante, en verde (principal); los demás, sobre
+                    // fondo opaco: la barra flota encima del contenido.
+                    style={{ width: TAM_CUADRITO, height: TAM_CUADRITO, padding: 0, ...(esDelante ? {} : { background: C.paper }) }}
+                  >
+                    <Icono size={26} />
+                  </Boton>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {/* Equipo, en la misma esquina siempre: el último (derecha) y, para el
+            zurdo, el primero (izquierda). Sin X: no es una ventana de la barra.
+            Fuera de la fila que se desliza: no se mueve nunca. */}
+        {onEquipo && (
+          <div
+            className="relative flex flex-col items-center flex-shrink-0 pointer-events-auto order-last zurdo:order-first"
+            style={{ padding: `0 ${RELLENO_FILA.lado}px ${RELLENO_FILA.abajo}px` }}
+          >
             <Boton
-              variante={esDelante ? "principal" : "secundario"}
-              titulo={titulo}
-              aria-label={titulo}
-              aria-pressed={esDelante}
-              onClick={() => onElegir(clave)}
-              // El que está delante, en verde (principal); los demás, sobre
-              // fondo opaco: la barra flota encima del contenido.
-              style={{ width: TAM_CUADRITO, height: TAM_CUADRITO, padding: 0, ...(esDelante ? {} : { background: C.paper }) }}
+              variante="secundario"
+              titulo="Equipo"
+              aria-label="Equipo"
+              onClick={onEquipo}
+              style={{ width: TAM_CUADRITO, height: TAM_CUADRITO, padding: 0, background: C.paper }}
             >
-              <Icono size={26} />
+              <IconoEquipo size={26} />
             </Boton>
           </div>
-        );
-      })}
-      {/* Equipo, en la misma esquina siempre: el último (derecha) y, para el
-          zurdo, el primero (izquierda). Sin X: no es una ventana de la barra. */}
-      {onEquipo && (
-        <div className="flex flex-col items-center pointer-events-auto order-last zurdo:order-first">
-          <Boton
-            variante="secundario"
-            titulo="Equipo"
-            aria-label="Equipo"
-            onClick={onEquipo}
-            style={{ width: TAM_CUADRITO, height: TAM_CUADRITO, padding: 0, background: C.paper }}
-          >
-            <IconoEquipo size={26} />
-          </Boton>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -125,20 +218,24 @@ export function BarraVentanas({ abiertas, delante, onElegir, onCerrar, onEquipo 
 // con un poco de margen a los lados para que se vean sus bordes; la barra
 // flota encima y la ventana le deja el hueco dentro (VentanaFlotante
 // pantallaEntera). Multimedia, sin marco: es una página entera.
-export function CapaBarra({ activa, delante, arriba = 0, marco = false, children }) {
+// `clave`: la ventana que va en ella; esa VentanaFlotante se pone a
+// pantalla entera sola (lib/capaBarra.js).
+export function CapaBarra({ activa, delante, arriba = 0, marco = false, clave = null, children }) {
   if (!activa) return children;
   return (
-    <div
-      className="fixed left-0 right-0"
-      style={{
-        top: arriba,
-        bottom: marco ? 0 : ALTO_BARRA,
-        ...(marco ? { padding: "6px 6px 0" } : {}),
-        zIndex: 40,
-        display: delante ? undefined : "none",
-      }}
-    >
-      {children}
-    </div>
+    <ContextoCapaBarra.Provider value={clave}>
+      <div
+        className="fixed left-0 right-0"
+        style={{
+          top: arriba,
+          bottom: marco ? 0 : ALTO_BARRA,
+          ...(marco ? { padding: "6px 6px 0" } : {}),
+          zIndex: 40,
+          display: delante ? undefined : "none",
+        }}
+      >
+        {children}
+      </div>
+    </ContextoCapaBarra.Provider>
   );
 }

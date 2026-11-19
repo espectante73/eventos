@@ -56,7 +56,8 @@ const VentanaVersiones = lazy(() =>
 // `abrirMusicaDentro`: Música dentro de la app, con la barra de ventanas
 // del móvil (App.jsx). Vive allí y no aquí para seguir abierta al pasar a
 // otra vista (el formulario del colaborador).
-// `barra`: esa misma barra, para Contabilidad e Invitaciones (v90.3).
+// `barra`: esa misma barra, para las ventanas del anfitrión en el móvil
+// (Contabilidad e Invitaciones en v90.3; todas en v90.4).
 export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, emailSesion = "", abrirMusicaDentro, barra }) {
   const { evento, colaboradores, invitados, persistInvitados, tokenTablon } = data;
   // El anfitrión también es colaborador: sus fichas incompletas le laten
@@ -202,6 +203,16 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     (c) => invitadosPendientesDe(c.id).length > 0
   );
 
+  const esAparatoTactil = () => window.matchMedia?.("(pointer: coarse) and (hover: none)").matches;
+  // En el móvil, las ventanas van a la barra de ventanas, como el
+  // Formulario: a pantalla entera, con su cuadradito, y siguen como se
+  // dejaron al pasar a otra. Contabilidad e Invitaciones desde v90.3 (él:
+  // «no hay un icono en el pie como sí pasa con otras ventanas»); todas
+  // desde v90.4 (él, opción A). Quién está abierta lo sabe la barra
+  // (App.jsx): así sigue ahí al volver de la vista de un colaborador.
+  const enBarra = (clave) => Boolean(barra) && VENTANAS_DEL_ANFITRION.includes(clave) && esAparatoTactil();
+  const listaEnLaBarra = enBarra("invitados") && barra.abiertas.includes("invitados");
+
   // La Lista en su ventana propia del Mac se cierra con el botón rojo del
   // sistema, sin pasar por su X: al cerrarse, si hay colaboradores por
   // avisar, la misma pregunta sale aquí (él, v73.4: allí no salía nunca).
@@ -209,10 +220,18 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   const [enviandoAvisosLista, setEnviandoAvisosLista] = useState(false);
   const listaEnVentanaAntes = useRef(false);
   const hayAvisosPendientes = colaboradoresPendientes.length > 0;
+  // En el móvil pasa igual con la X de su cuadradito en la barra (v90.4):
+  // cierra sin pasar por la Lista. Su propia X ya pregunta dentro, y
+  // entonces aquí no se vuelve a preguntar.
+  const listaCerradaDesdeDentro = useRef(false);
+  const listaFuera = invitadosEnVentana || listaEnLaBarra;
   useEffect(() => {
-    if (listaEnVentanaAntes.current && !invitadosEnVentana && hayAvisosPendientes) setAvisosAlCerrarLista(true);
-    listaEnVentanaAntes.current = invitadosEnVentana;
-  }, [invitadosEnVentana, hayAvisosPendientes]);
+    if (listaEnVentanaAntes.current && !listaFuera) {
+      if (hayAvisosPendientes && !listaCerradaDesdeDentro.current) setAvisosAlCerrarLista(true);
+      listaCerradaDesdeDentro.current = false;
+    }
+    listaEnVentanaAntes.current = listaFuera;
+  }, [listaFuera, hayAvisosPendientes]);
   const enviarAvisosAlCerrarLista = async () => {
     setEnviandoAvisosLista(true);
     for (const c of colaboradoresPendientes) await data.avisarColaborador(c.id);
@@ -280,8 +299,6 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
   // La misma cuenta que al asignar (lib/mesas.js): con los sitios reservados.
   const ocupacionMesa = (numero) => ocupacion(invitados, numero);
 
-  const esAparatoTactil = () => window.matchMedia?.("(pointer: coarse) and (hover: none)").matches;
-
   const [abierto, setAbierto] = useState({
     progreso: false,
     "colaboradores-datos": false,
@@ -291,22 +308,21 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     cuentas: false,
     versiones: false,
   });
-  // En el móvil, Contabilidad e Invitaciones van a la barra de ventanas
-  // (él, v90.3: «no hay un icono en el pie como sí pasa con otras
-  // ventanas»), como el Formulario: a pantalla entera, con su cuadradito, y
-  // siguen como se dejaron al pasar a otra. Quién está abierta lo sabe la
-  // barra (App.jsx): así sigue ahí al volver de la vista de un colaborador.
-  const enBarra = (clave) => Boolean(barra) && VENTANAS_DEL_ANFITRION.includes(clave) && esAparatoTactil();
-  const estaAbierta = (clave) => (enBarra(clave) ? barra.abiertas.includes(clave) : abierto[clave]);
+  const estaAbierta = (clave) => (enBarra(clave) ? barra.abiertas.includes(clave) : Boolean(abierto[clave]));
   // Desde el menú, una de la barra se abre o se pone delante; nunca se cierra.
   const toggle = (clave) => (enBarra(clave) ? barra.abrir(clave) : setAbierto((a) => ({ ...a, [clave]: !a[clave] })));
+  const abrir = (clave) => (enBarra(clave) ? barra.abrir(clave) : setAbierto((a) => ({ ...a, [clave]: true })));
   const cerrar = (clave) => (enBarra(clave) ? barra.cerrar(clave) : setAbierto((a) => ({ ...a, [clave]: false })));
-  // Su capa: delante, la ventana; si no, oculta sin desmontarse.
-  const enSuCapa = (clave, ventana) => (
-    <CapaBarra activa={enBarra(clave)} delante={barra?.delante === clave} arriba={barra?.arriba || 0} marco>
-      {ventana}
-    </CapaBarra>
-  );
+  // Lo que el menú marca como abierto: en el móvil, lo que hay en la barra.
+  const abiertoEnMenu = { ...abierto, ...Object.fromEntries(VENTANAS_DEL_ANFITRION.map((clave) => [clave, estaAbierta(clave)])) };
+  // Una ventana, si está abierta, en su capa: delante, a pantalla entera;
+  // si no, oculta sin desmontarse. En el ordenador, flotando como siempre.
+  const ventana = (clave, contenido) =>
+    estaAbierta(clave) && (
+      <CapaBarra clave={clave} activa={enBarra(clave)} delante={barra?.delante === clave} arriba={barra?.arriba || 0} marco>
+        {contenido}
+      </CapaBarra>
+    );
 
   const abrirInvitados = useCallback(() => {
     if (esAparatoTactil() || !abrirInvitadosPopup()) toggle("invitados");
@@ -320,16 +336,16 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
     if (esAparatoTactil() || !abrirMesasPopup()) toggle("mesas");
   }, [abrirMesasPopup]);
   const marcador = {
-    abierto: marcadorEnVentana || Boolean(abierto.marcador),
+    abierto: marcadorEnVentana || estaAbierta("marcador"),
     abrir: () => {
-      if (esAparatoTactil() || !abrirMarcadorPopup()) setAbierto((a) => ({ ...a, marcador: true }));
+      if (esAparatoTactil() || !abrirMarcadorPopup()) abrir("marcador");
     },
     abrirAlAcreditar: () => {
       if (!esAparatoTactil()) abrirMarcadorPopup();
     },
     cerrar: () => {
       cerrarMarcadorPopup();
-      setAbierto((a) => ({ ...a, marcador: false }));
+      cerrar("marcador");
     },
   };
   // null | "tabla" | "canciones" | "alergias" | "avisosMesas" — controla la
@@ -363,7 +379,7 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
       <Portada
         evento={evento}
         editable
-        abierto={{ ...abierto, cuentas: estaAbierta("cuentas"), invitaciones: estaAbierta("invitaciones") }}
+        abierto={abiertoEnMenu}
         toggle={toggle}
         colaboradores={colaboradores}
         onCambiarRol={setRol}
@@ -389,29 +405,29 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
           del evento) que sueltos en la Portada. */}
 
       {/* Progreso de recopilación */}
-      {abierto.progreso && (
-        <VentanaProgreso data={data} anfitrionToken={anfitrionToken} onCerrar={() => toggle("progreso")} />
-      )}
+      {ventana("progreso", <VentanaProgreso data={data} anfitrionToken={anfitrionToken} onCerrar={() => cerrar("progreso")} />)}
 
       {/* Colaboradores: "Datos Colab." abre esta ventana; "Formularios" no
           abre ninguna — cambia de vista directamente (ver DesplegableSecciones.jsx) */}
-      {abierto["avisar-equipo"] && <VentanaAvisarEquipo data={data} onCerrar={() => toggle("avisar-equipo")} />}
+      {ventana("avisar-equipo", <VentanaAvisarEquipo data={data} onCerrar={() => cerrar("avisar-equipo")} />)}
       {/* «Nuevo invitado» desde Abrir sección → Invitados → Añadir (v81.5). */}
-      {abierto["nuevo-invitado"] && <VentanaNuevoInvitado data={data} onCerrar={() => toggle("nuevo-invitado")} />}
-      {abierto["colaboradores-datos"] && (
+      {ventana("nuevo-invitado", <VentanaNuevoInvitado data={data} onCerrar={() => cerrar("nuevo-invitado")} />)}
+      {ventana(
+        "colaboradores-datos",
         <VentanaColaboradoresDatos
           data={data}
           asignarColaborador={asignarColaborador}
           setFiltros={setFiltros}
-          setAbierto={setAbierto}
-          onCerrar={() => toggle("colaboradores-datos")}
+          onIrALaLista={() => {
+            abrir("invitados");
+            cerrar("colaboradores-datos");
+          }}
+          onCerrar={() => cerrar("colaboradores-datos")}
         />
       )}
 
       {/* Mesas */}
-      {abierto.mesas && (
-        <VentanaMesas data={data} prueba={pruebaMesas} setPrueba={setPruebaMesas} onCerrar={() => toggle("mesas")} />
-      )}
+      {ventana("mesas", <VentanaMesas data={data} prueba={pruebaMesas} setPrueba={setPruebaMesas} onCerrar={() => cerrar("mesas")} />)}
 
       {/* Lista de invitados, en la página (móvil, o si el navegador
           bloqueara la ventana). En el ordenador vive en su propia
@@ -430,7 +446,8 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
           onNoAvisar={() => setAvisosAlCerrarLista(false)}
         />
       )}
-      {abierto.invitados && (
+      {ventana(
+        "invitados",
         <SeccionInvitados
           data={data}
           asignarColaborador={asignarColaborador}
@@ -440,14 +457,17 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
           colaboradoresPendientes={colaboradoresPendientes}
           filtros={filtros}
           setFiltros={setFiltros}
-          onCerrar={() => toggle("invitados")}
+          onCerrar={() => {
+            listaCerradaDesdeDentro.current = true;
+            cerrar("invitados");
+          }}
         />
       )}
 
       {/* Invitaciones */}
-      {estaAbierta("invitaciones") && enSuCapa("invitaciones",
+      {ventana(
+        "invitaciones",
         <VentanaInvitaciones
-          enBarra={enBarra("invitaciones")}
           data={data}
           familiasListasParaInvitacion={familiasListasParaInvitacion}
           destinatariosConEmail={destinatariosConEmail}
@@ -464,54 +484,37 @@ export function VistaAnfitrion({ data, setRol, anfitrionToken, onCerrarSesion, e
       )}
 
       {/* Estado de cuentas */}
-      {estaAbierta("cuentas") && enSuCapa("cuentas", <VentanaCuentas data={data} enBarra={enBarra("cuentas")} onCerrar={() => cerrar("cuentas")} />)}
+      {ventana("cuentas", <VentanaCuentas data={data} onCerrar={() => cerrar("cuentas")} />)}
 
       {/* Día del evento: las llegadas y, después, las fotos (v66) */}
-      {abierto.diaEvento && (
-        <VentanaDiaEvento
-          data={data}
-          onCerrar={() => toggle("diaEvento")}
-          marcador={marcador}
-        />
-      )}
-      {abierto.marcador && <VentanaMarcador data={data} onCerrar={() => toggle("marcador")} />}
+      {ventana("diaEvento", <VentanaDiaEvento data={data} onCerrar={() => cerrar("diaEvento")} marcador={marcador} />)}
+      {ventana("marcador", <VentanaMarcador data={data} onCerrar={() => cerrar("marcador")} />)}
 
       {/* Configuración ya no tiene ventana propia: se abre directo desde el
           submenú "Configuración" de "Abrir sección…" (ver DesplegableSecciones.jsx) */}
-      {abierto["config-datos-evento"] && (
-        <VentanaConfigDatosEvento data={data} onCerrar={() => toggle("config-datos-evento")} />
-      )}
+      {ventana("config-datos-evento", <VentanaConfigDatosEvento data={data} onCerrar={() => cerrar("config-datos-evento")} />)}
 
 
       {/* Cronograma: ventana emergente de verdad (ver arriba), no pasa
           por `abierto`/`toggle` -- se abre con abrirCronograma. */}
 
       {/* Permisos */}
-      {abierto.permisos && (
-        <VentanaPermisos data={data} onCerrar={() => toggle("permisos")} />
-      )}
+      {ventana("permisos", <VentanaPermisos data={data} onCerrar={() => cerrar("permisos")} />)}
 
-      {abierto["config-modo-pruebas"] && (
-        <VentanaConfigModoPruebas data={data} onCerrar={() => toggle("config-modo-pruebas")} />
-      )}
+      {ventana("config-modo-pruebas", <VentanaConfigModoPruebas data={data} onCerrar={() => cerrar("config-modo-pruebas")} />)}
 
-      {abierto["config-zona-reinicio"] && (
-        <VentanaConfigZonaReinicio data={data} onCerrar={() => toggle("config-zona-reinicio")} />
-      )}
+      {ventana("config-zona-reinicio", <VentanaConfigZonaReinicio data={data} onCerrar={() => cerrar("config-zona-reinicio")} />)}
 
-      {abierto["config-zona-peligro"] && (
-        <VentanaConfigZonaPeligro data={data} onCerrar={() => toggle("config-zona-peligro")} />
-      )}
+      {ventana("config-zona-peligro", <VentanaConfigZonaPeligro data={data} onCerrar={() => cerrar("config-zona-peligro")} />)}
 
       {/* Aniversarios: carga de las dos fotos de cada matrimonio */}
-      {abierto.aniversarios && (
-        <VentanaAniversarios data={data} onCerrar={() => toggle("aniversarios")} />
-      )}
+      {ventana("aniversarios", <VentanaAniversarios data={data} onCerrar={() => cerrar("aniversarios")} />)}
 
       {/* Versiones */}
-      {abierto.versiones && (
+      {ventana(
+        "versiones",
         <Suspense fallback={null}>
-          <VentanaVersiones onCerrar={() => toggle("versiones")} />
+          <VentanaVersiones onCerrar={() => cerrar("versiones")} />
         </Suspense>
       )}
 

@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import { C, S, VELO, MARGEN_PANTALLA } from "../theme";
 import { realmDe } from "../lib/realm";
 import { esAparatoTactil } from "../lib/mano";
+import { useCapaBarra } from "../lib/capaBarra";
 
 // Ventana flotante genérica: independiente de qué secciones estén plegadas,
 // para que Imprimir/Canciones/Alergias y los avisos de mesas funcionen siempre.
@@ -292,7 +293,14 @@ const entre = (valor, minimo, maximo) => Math.max(minimo, Math.min(valor, maximo
 // como siempre. La Lista de invitados (él: «en el móvil no llena el ancho
 // ni alto de pantalla»): allí no hay ventana del sistema y es lo que se
 // mira, sobre todo reducida en la acreditación.
-export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo, fijo, fondoCuerpo, pantallaEntera = false, llena = false, enteraEnMovil = false }) {
+// En la barra de ventanas del móvil (él, v90.4: todas las ventanas allí),
+// la que su capa nombra (CapaBarra, lib/capaBarra.js) va `fijo` y
+// `pantallaEntera` sola. La Lista (`enteraEnMovil`) ya llena la pantalla
+// por sí misma: se queda como está.
+export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, extra, ancho, subtitulo, fijo: fijoPedido, fondoCuerpo, pantallaEntera: pantallaEnteraPedida = false, llena = false, enteraEnMovil = false }) {
+  const enLaBarra = useCapaBarra() === clave && !enteraEnMovil;
+  const fijo = fijoPedido || enLaBarra;
+  const pantallaEntera = pantallaEnteraPedida || enLaBarra;
   const [entera] = useState(() => enteraEnMovil && !fijo && esAparatoTactil());
   const idx = Math.min(Math.max(ORDEN_VENTANAS.indexOf(clave), 0), 4);
   // "left" fijo (no en cascada como antes): todas las ventanas nacen
@@ -521,8 +529,17 @@ export function VentanaFlotante({ clave, titulo, onCerrar, children, acciones, e
       <div
         className="ventana-cuerpo p-4"
         style={
-          (fijo && !pantallaEntera) || (llena && !fijo)
-            ? { flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
+          // `llena` en la barra (Mesas): reparte igual, y lo de abajo queda
+          // por encima de la barra que flota.
+          (fijo && !pantallaEntera) || llena
+            ? {
+                flex: 1,
+                minHeight: 0,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                ...(pantallaEntera ? { paddingBottom: "calc(1rem + var(--hueco-barra-ventanas, 0px))" } : {}),
+              }
             : {
                 flex: 1,
                 minHeight: 0,

@@ -2,7 +2,31 @@
 // sección…" (DesplegableSecciones.jsx) y en la barra de ventanas del
 // móvil (BarraVentanas.jsx). Una sola pieza: si cambia aquí, cambia en
 // los dos sitios.
-import { Heart, Users, Settings, Wallet, Mail, List, Utensils, MonitorPlay, Megaphone, KeyRound, ClipboardList, CalendarHeart, UserCheck, ClipboardPen } from "lucide-react";
+import {
+  Heart,
+  Users,
+  Settings,
+  Wallet,
+  Mail,
+  List,
+  Utensils,
+  MonitorPlay,
+  Megaphone,
+  KeyRound,
+  ClipboardList,
+  CalendarHeart,
+  UserCheck,
+  ClipboardPen,
+  Gauge,
+  History,
+  UserCog,
+  Calendar,
+  FlaskConical,
+  RotateCcw,
+  Trash2,
+  Clock3,
+  Send,
+} from "lucide-react";
 
 // «Formulario» (él, v87.4; antes «Añadir»): «ahora no solo añade, sino que
 // busca o confirma o hace cambios». Su nombre y su icono, una sola pieza
@@ -26,4 +50,16 @@ export const ICONOS_VENTANAS = {
   musicaEvento: MonitorPlay,
   novedades: Megaphone,
   permisos: KeyRound,
+  // Las de los submenús (Colaboradores, Configuración, Invitados): también
+  // van a la barra del móvil (v90.4).
+  "avisar-equipo": Send,
+  "colaboradores-datos": UserCog,
+  "nuevo-invitado": FORMULARIO_INVITADO.icono,
+  progreso: Gauge,
+  versiones: History,
+  "config-cronograma": Clock3,
+  "config-datos-evento": Calendar,
+  "config-modo-pruebas": FlaskConical,
+  "config-zona-reinicio": RotateCcw,
+  "config-zona-peligro": Trash2,
 };
