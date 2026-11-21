@@ -7,7 +7,7 @@ import { act } from "react";
 import { montar } from "../../pruebas/dibujar";
 import { euros } from "../../lib/formato";
 import { resumenAPagar } from "../../lib/aPagar";
-import { APagarHoja, VentanaLocal, VentanaCuentaLocal } from "./APagar";
+import { APagarHoja, VentanaLocal, CuentaLocalHoja } from "./APagar";
 
 const escribir = (input, valor) =>
   act(() => {
@@ -53,7 +53,7 @@ function dibujar({ evento = EVENTO, ventana = false } = {}) {
 it("sin precios todavía: lo dice, y sale solo lo de los gastos", () => {
   const { vista } = dibujar();
   const texto = document.body.textContent;
-  expect(texto).toContain("Sin precios todavía");
+  expect(texto).toContain("Sin precios del local todavía");
   expect(texto).not.toContain("gratis");
   // Entra 129 + 10; sale 30 de gastos.
   expect(texto).toContain(`Total que entra${euros(139)}`);
@@ -134,8 +134,8 @@ it("la ventanita: Cancelar con algo escrito pregunta antes de descartar", () => 
   vista.desmontar();
 });
 
-// v93.1 (él): la cuenta del local, para enseñársela al pagarle: en su
-// propia ventana, sin lo recaudado.
+// v93.1 (él): la cuenta del local, para enseñársela al pagarle, sin lo
+// recaudado; v93.3: su propia sección, con los precios en su ruedita.
 it("la cuenta del local: las personas, cada servicio con su desglose y el total; nada de lo recaudado", () => {
   const aPagar = {
     partidas: [
@@ -145,7 +145,7 @@ it("la cuenta del local: las personas, cada servicio con su desglose y el total;
     otros: [{ id: "3", concepto: "Montaje", importe: "100" }],
     dj: "200",
   };
-  const vista = montar(<VentanaCuentaLocal data={{ evento: { ...EVENTO, aPagar }, invitados: INVITADOS }} onCerrar={() => {}} />);
+  const vista = montar(<CuentaLocalHoja data={{ evento: { ...EVENTO, aPagar }, invitados: INVITADOS }} onPrecios={() => {}} />);
   const texto = document.body.textContent;
   // 3 adultos (el DJ también), 1 niño, 1 bebé gratis.
   expect(texto).toContain("Adultos3");
@@ -161,13 +161,12 @@ it("la cuenta del local: las personas, cada servicio con su desglose y el total;
   vista.desmontar();
 });
 
-it("«A pagar»: «Cuenta del local» abre su ventana", () => {
+it("la cuenta del local: la ruedita abre los precios del local; sin precios, lo dice", () => {
   const abiertas = [];
-  const data = { evento: EVENTO, invitados: INVITADOS, persistEvento: () => {} };
-  const resumen = resumenAPagar({ evento: EVENTO, invitados: INVITADOS, gastos: [], recaudado: 0, propinas: 0 });
-  const vista = montar(<APagarHoja data={data} resumen={resumen} recaudado={0} propinas={0} onLocal={() => {}} onCuentaLocal={() => abiertas.push(1)} />);
-  const boton = [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === "Cuenta del local");
-  act(() => boton.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  const vista = montar(<CuentaLocalHoja data={{ evento: EVENTO, invitados: INVITADOS }} onPrecios={() => abiertas.push(1)} />);
+  expect(document.body.textContent).toContain("Sin precios todavía: ponlos en la ruedita.");
+  const ruedita = document.body.querySelector('button[aria-label="Precios del local"], button[title="Precios del local"]');
+  act(() => ruedita.dispatchEvent(new MouseEvent("click", { bubbles: true })));
   expect(abiertas).toHaveLength(1);
   vista.desmontar();
 });

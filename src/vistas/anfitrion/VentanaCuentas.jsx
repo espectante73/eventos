@@ -5,7 +5,7 @@
 // v76) y balance. Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08
 // (Fase 4, Ronda 4).
 import { useState } from "react";
-import { Mail, Undo2, Calculator, Users, Receipt, Scale } from "lucide-react";
+import { Mail, Undo2, Calculator, Users, Receipt, Scale, Utensils } from "lucide-react";
 import { C, T, OP } from "../../theme";
 import { importeEsperadoInvitado, previstoARecoger } from "../../lib/invitados";
 import { fechaCorta, euros, parsePrecio } from "../../lib/formato";
@@ -20,7 +20,7 @@ import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { useSeccion } from "../../lib/useSeccion";
 import { Cargando } from "../../components/Cargando";
 import { GastosHoja, VentanaConceptos } from "./GastosHoja";
-import { APagarHoja, VentanaLocal, VentanaCuentaLocal } from "./APagar";
+import { APagarHoja, CuentaLocalHoja, VentanaLocal } from "./APagar";
 import { totalGastos as sumaGastos } from "../../lib/gastos";
 import { resumenAPagar } from "../../lib/aPagar";
 import { colaboradoresSinDj } from "../../lib/equipoColaboradores";
@@ -71,8 +71,6 @@ export function VentanaCuentas({ data, onCerrar }) {
   const [verConceptos, setVerConceptos] = useState(false);
   // Lo que cobra el local, en la suya (v88).
   const [verLocal, setVerLocal] = useState(false);
-  // La cuenta del local, para enseñársela al pagarle (v93.1).
-  const [verCuentaLocal, setVerCuentaLocal] = useState(false);
 
   const confirmados = invitados.filter((g) => g.confirmado);
   const recaudado = confirmados
@@ -306,7 +304,19 @@ export function VentanaCuentas({ data, onCerrar }) {
         abierta={seccionAbierta === "aPagar"}
         onAlternar={() => alternar("aPagar")}
       >
-        <APagarHoja data={data} resumen={aPagar} recaudado={recaudado} propinas={propinas} onLocal={() => setVerLocal(true)} onCuentaLocal={() => setVerCuentaLocal(true)} />
+        <APagarHoja data={data} resumen={aPagar} recaudado={recaudado} propinas={propinas} />
+      </SeccionPlegable>
+
+      {/* La cuenta del local (él, v93.3): su propia sección, para
+          enseñársela al pagarle; los precios, en su ruedita. */}
+      <SeccionPlegable
+        icono={Utensils}
+        titulo="Cuenta del local"
+        resumen={`Total ${euros(aPagar.local.total)}`}
+        abierta={seccionAbierta === "cuentaLocal"}
+        onAlternar={() => alternar("cuentaLocal")}
+      >
+        <CuentaLocalHoja data={data} onPrecios={() => setVerLocal(true)} />
       </SeccionPlegable>
 
       <SeccionPlegable
@@ -459,7 +469,6 @@ export function VentanaCuentas({ data, onCerrar }) {
 
     {verConceptos && <VentanaConceptos data={data} onCerrar={() => setVerConceptos(false)} />}
     {verLocal && <VentanaLocal data={data} onCerrar={() => setVerLocal(false)} />}
-    {verCuentaLocal && <VentanaCuentaLocal data={data} onCerrar={() => setVerCuentaLocal(false)} />}
 
     {previewAcuse && (
       <ModalFlotante

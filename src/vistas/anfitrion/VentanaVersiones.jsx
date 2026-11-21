@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "93.3",
+    cambios: [
+      "Contabilidad: «Cuenta del local» pasa a ser su propia sección, después de «A pagar», con su total a la vista estando plegada. Dentro, lo mismo de la 93.1: personas, cada servicio con su desglose y «Total a pagar al local».",
+      "«Precios del local» es ahora su configuración: la ruedita dentada de la sección, del lado del pulgar. «A pagar» ya no lleva botones.",
+    ],
+  },
+  {
     version: "93.2",
     cambios: [
       "Arreglo: enviar el acuse de recogida tardaba un minuto o más. El PDF llevaba la hoja como imagen sin comprimir, casi 6 MB, que el móvil tenía que subir entera. Ahora va comprimida, sin perder nitidez: unos 160 KB, y se envía en segundos. El colaborador también lo recibe mucho más ligero.",

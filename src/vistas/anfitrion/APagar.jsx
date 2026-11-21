@@ -1,10 +1,12 @@
 // «A pagar», en Contabilidad (él, v88): lo que entra (recaudado + propinas)
 // frente a lo que sale a cada acreedor —el local, el DJ y sus gastos— y lo
 // que sobra o falta. Como una hoja de cálculo: una línea por concepto (norma
-// 6). Los precios del local se escriben en su ventanita (VentanaLocal, aquí
-// abajo); lo del DJ, en su propia línea. Las cuentas, en lib/aPagar.js.
+// 6). Lo del DJ, en su propia línea. Las cuentas, en lib/aPagar.js.
+// La cuenta del local (CuentaLocalHoja, v93.1-93.3) es su propia sección de
+// Contabilidad, y los precios del local, su configuración: la ruedita de
+// esa sección abre su ventanita (VentanaLocal, aquí abajo).
 import { useState } from "react";
-import { Plus, Receipt, Utensils } from "lucide-react";
+import { Plus, Settings } from "lucide-react";
 import { C, R, T, OP, DEDO, inputStyle } from "../../theme";
 import { euros, parsePrecio } from "../../lib/formato";
 import { uid } from "../../lib/id";
@@ -52,7 +54,7 @@ const Cabecera = ({ children }) => (
 // La línea del total de cada bloque, como el Total de la hoja de Gastos.
 const Total = ({ concepto, importe }) => <Linea concepto={concepto} importe={importe} fondo={C.paper} estilo={{ borderTop: `2px solid ${C.ink}`, color: C.ink, ...SERIF }} />;
 
-export function APagarHoja({ data, resumen, recaudado, propinas, onLocal, onCuentaLocal }) {
+export function APagarHoja({ data, resumen, recaudado, propinas }) {
   const { evento, persistEvento } = data;
   const faltaSql = faltaSqlAPagar(evento);
   const [aviso, setAviso] = useState("");
@@ -67,16 +69,6 @@ export function APagarHoja({ data, resumen, recaudado, propinas, onLocal, onCuen
 
   return (
     <div className="mt-2">
-      {/* Los dos del local, iguales (norma 4): su cuenta, para enseñársela
-          al pagarle (v93.1), y sus precios. */}
-      <div className="grid grid-cols-2 gap-2 mb-2">
-        <Boton variante="secundario" icono={Receipt} titulo="Lo que se le debe al local, para enseñárselo al pagarle" onClick={onCuentaLocal}>
-          Cuenta del local
-        </Boton>
-        <Boton variante="secundario" icono={Utensils} disabled={faltaSql} titulo={faltaSql ? "Falta subir el SQL de la versión 88" : "Lo que cobra el local por persona, y lo demás del local"} onClick={onLocal}>
-          Precios del local
-        </Boton>
-      </div>
       {faltaSql && <LineaAviso className="text-xs mb-2">Falta subir el SQL de la versión 88: hasta entonces no se guardan los precios del local ni lo del DJ.</LineaAviso>}
       {aviso && <LineaAviso className="text-sm mb-2">{aviso}</LineaAviso>}
 
@@ -89,7 +81,7 @@ export function APagarHoja({ data, resumen, recaudado, propinas, onLocal, onCuen
         <Cabecera>Sale</Cabecera>
         <Linea concepto="Local" importe={euros(local.total)} />
         {guardado.partidas.length === 0 ? (
-          <Linea detalle concepto="Sin precios todavía" importe="" />
+          <Linea detalle concepto="Sin precios del local todavía" importe="" />
         ) : (
           <>
             <Linea detalle concepto={`${plural(personas.adulto, "adulto", "adultos")} × ${euros(local.porPersona.adulto)}`} importe={euros(local.adultos)} />
@@ -143,17 +135,30 @@ function edadesDeTramos(evento) {
   return { nino: ` (de ${desde} a ${hasta - 1} años)`, bebe: ` (hasta ${desde - 1} años)` };
 }
 
-// Lo que se le debe al local, para enseñárselo al pagarle (él, v93.1): en su
-// propia ventana, sin lo recaudado ni nada más de la Contabilidad. Las
-// personas y, por cada partida (cóctel, cena, tarta…), sus adultos y sus
-// niños, como en «A pagar»; al pie, el total.
-export function VentanaCuentaLocal({ data, onCerrar }) {
+// Lo que se le debe al local, para enseñárselo al pagarle (él, v93.1), sin
+// lo recaudado. Su propia sección de Contabilidad (él, v93.3), con los
+// precios del local como su configuración: la ruedita, del lado del
+// pulgar, abre «Lo que cobra el local» (`onPrecios`). Las personas y, por
+// cada partida (cóctel, cena, tarta…), sus adultos y sus niños, como en «A
+// pagar»; al pie, el total.
+export function CuentaLocalHoja({ data, onPrecios }) {
   const { evento, invitados } = data;
+  const faltaSql = faltaSqlAPagar(evento);
   const personas = personasDelLocal(invitados, evento);
   const cuenta = cuentaDelLocal(aPagarDe(evento), personas);
   const edades = edadesDeTramos(evento);
   return (
-    <VentanaFlotante clave="cuentaLocal" titulo="Cuenta del local" onCerrar={onCerrar} ancho="min(400px, calc(100vw - 48px))">
+    <div className="mt-2">
+      <div className="flex justify-end zurdo:justify-start mb-2">
+        <Boton
+          variante="secundario"
+          icono={Settings}
+          disabled={faltaSql}
+          titulo={faltaSql ? "Falta subir el SQL de la versión 88" : "Precios del local"}
+          onClick={onPrecios}
+          style={{ minHeight: DEDO, minWidth: DEDO }}
+        />
+      </div>
       <div className="text-sm" style={CAJA}>
         <Cabecera>Personas</Cabecera>
         <Linea concepto="Adultos" importe={personas.adulto} />
@@ -161,7 +166,7 @@ export function VentanaCuentaLocal({ data, onCerrar }) {
         {personas.bebe > 0 && <Linea concepto={`Bebés${edades.bebe}`} importe={`${personas.bebe} · gratis`} />}
 
         <Cabecera>Servicios</Cabecera>
-        {cuenta.partidas.length === 0 && <Linea detalle concepto="Sin precios todavía: ponlos en «Precios del local»." importe="" />}
+        {cuenta.partidas.length === 0 && <Linea detalle concepto="Sin precios todavía: ponlos en la ruedita." importe="" />}
         {cuenta.partidas.map((p, i) => (
           <div key={p.id} style={{ background: i % 2 ? C.paperDark : C.blanco }}>
             <Linea concepto={p.concepto} importe={euros(p.total)} fondo="transparent" estilo={{ fontWeight: 600 }} />
@@ -181,7 +186,7 @@ export function VentanaCuentaLocal({ data, onCerrar }) {
           {plural(personas.sinAnio, "persona sin año de nacimiento: cuenta", "personas sin año de nacimiento: cuentan")} como adulto.
         </p>
       )}
-    </VentanaFlotante>
+    </div>
   );
 }
 
