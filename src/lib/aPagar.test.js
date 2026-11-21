@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { aPagarDe, faltaSqlAPagar, personasDelLocal, precioPorPersona, costeLocal, resumenAPagar, limpiarLocal, conDj } from "./aPagar";
+import { aPagarDe, faltaSqlAPagar, personasDelLocal, precioPorPersona, costeLocal, cuentaDelLocal, resumenAPagar, limpiarLocal, conDj } from "./aPagar";
 import { importeEsperadoInvitado, tramoDeEdad, calcularEdad } from "./invitados";
 
 // Las edades de la app: 0-3 gratis, 4-7 niño, 8 en adelante adulto.
@@ -73,6 +73,31 @@ describe("costeLocal", () => {
       otros: 200,
       total: 9200,
     });
+  });
+});
+
+describe("cuentaDelLocal (v93.1): la cuenta para pagarle, partida a partida", () => {
+  it("cada partida con sus adultos y sus niños; lo demás del local; el total, el mismo de «A pagar»", () => {
+    const aPagar = {
+      partidas: [
+        { id: "1", concepto: "Cóctel", adulto: "15", nino: "8" },
+        { id: "2", concepto: "Cena", adulto: "55", nino: "25" },
+        { id: "3", concepto: "Tarta de boda", adulto: "6,50", nino: "" },
+      ],
+      otros: [{ id: "4", concepto: "Montaje", importe: "200" }],
+      dj: "600",
+    };
+    const personas = { adulto: 98, nino: 14, bebe: 3, sinAnio: 0 };
+    const cuenta = cuentaDelLocal(aPagar, personas);
+    expect(cuenta.partidas).toEqual([
+      { id: "1", concepto: "Cóctel", adulto: 15, nino: 8, adultos: 1470, ninos: 112, total: 1582 },
+      { id: "2", concepto: "Cena", adulto: 55, nino: 25, adultos: 5390, ninos: 350, total: 5740 },
+      { id: "3", concepto: "Tarta de boda", adulto: 6.5, nino: 0, adultos: 637, ninos: 0, total: 637 },
+    ]);
+    expect(cuenta.otros).toEqual([{ id: "4", concepto: "Montaje", importe: 200 }]);
+    // Sin el DJ (eso no es del local): 1582 + 5740 + 637 + 200.
+    expect(cuenta.total).toBe(8159);
+    expect(cuenta.total).toBe(costeLocal(aPagar, personas).total);
   });
 });
 

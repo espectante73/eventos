@@ -57,6 +57,22 @@ export function costeLocal(aPagar, personas) {
   return { porPersona, adultos, ninos, otros, total: redondear(adultos + ninos + otros) };
 }
 
+// La cuenta del local, para pagarle (él, v93.1): cada partida (cóctel,
+// cena, tarta…) con sus adultos y sus niños, y lo demás del local. Sin lo
+// recaudado: es lo que se le enseña al local. El total es el mismo de «A
+// pagar» (costeLocal).
+export function cuentaDelLocal(aPagar, personas) {
+  const partidas = aPagar.partidas.map((p) => {
+    const adulto = parsePrecio(p.adulto);
+    const nino = parsePrecio(p.nino);
+    const adultos = redondear(personas.adulto * adulto);
+    const ninos = redondear(personas.nino * nino);
+    return { id: p.id, concepto: p.concepto, adulto, nino, adultos, ninos, total: redondear(adultos + ninos) };
+  });
+  const otros = aPagar.otros.map((o) => ({ id: o.id, concepto: o.concepto, importe: parsePrecio(o.importe) }));
+  return { partidas, otros, total: costeLocal(aPagar, personas).total };
+}
+
 // Todo junto: lo que entra, lo que sale a cada uno y lo que sobra (o falta,
 // si `diferencia` es negativa).
 export function resumenAPagar({ evento, invitados, gastos = [], recaudado = 0, propinas = 0 }) {

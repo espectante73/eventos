@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "93.1",
+    cambios: [
+      "Contabilidad › A pagar: botón nuevo «Cuenta del local», junto a «Precios del local». Abre su propia ventana, sin lo recaudado ni las propinas, para enseñársela al local al pagarle.",
+      "Arriba, las personas: adultos, niños (con sus edades) y bebés, gratis; los confirmados de la Lista, el DJ también. Debajo, cada servicio de «Precios del local» (cóctel, cena, tarta…) con su total y el desglose «98 adultos × 15 €», «14 niños × 8 €»; lo demás del local; y «Total a pagar al local», el mismo de la línea «Local».",
+    ],
+  },
+  {
     version: "93",
     cambios: [
       "Tarjetas QR: cada QR es el de SU mesa, con el número y un código secreto de la mesa (el número solo se ve en la tarjeta y cualquiera podría escribirlo).",
