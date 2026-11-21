@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "93.2",
+    cambios: [
+      "Arreglo: enviar el acuse de recogida tardaba un minuto o más. El PDF llevaba la hoja como imagen sin comprimir, casi 6 MB, que el móvil tenía que subir entera. Ahora va comprimida, sin perder nitidez: unos 160 KB, y se envía en segundos. El colaborador también lo recibe mucho más ligero.",
+      "De paso, los iconos del PDF de los acomodadores, también comprimidos.",
+    ],
+  },
+  {
     version: "93.1",
     cambios: [
       "Contabilidad › A pagar: botón nuevo «Cuenta del local», junto a «Precios del local». Abre su propia ventana, sin lo recaudado ni las propinas, para enseñársela al local al pagarle.",

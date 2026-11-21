@@ -251,6 +251,9 @@ export async function generarPdfAcuse({ evento, colaborador, items, total, propi
   // momento (2026-09-18).
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-  pdf.addImage(imagenPng, "PNG", 0, 0, PAGINA_ANCHO, PAGINA_ALTO);
+  // Comprimida (v93.2): sin «FAST» la hoja entera iba píxel a píxel, casi
+  // 6 MB, y enviar el acuse desde el móvil tardaba un minuto o más. Así,
+  // unos 160 KB, igual de nítida (no pierde nada).
+  pdf.addImage(imagenPng, "PNG", 0, 0, PAGINA_ANCHO, PAGINA_ALTO, undefined, "FAST");
   return pdf.output("datauristring"); // "data:application/pdf;base64,...."
 }

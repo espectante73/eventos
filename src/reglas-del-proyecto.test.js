@@ -594,3 +594,15 @@ describe("el versionado: tras el .9 viene el siguiente entero", () => {
   });
 });
 
+
+// v93.2: el acuse de recogida pesaba casi 6 MB (la imagen de la hoja entra
+// en el PDF sin comprimir, píxel a píxel): desde el móvil tardaba un minuto
+// o más en enviarse. Comprimida («FAST», sin perder nitidez), 162 KB.
+describe("las imágenes de un PDF, comprimidas", () => {
+  it("todo addImage lleva su compresión", () => {
+    for (const f of archivos) {
+      const llamadas = sinComentarios(leer(f)).match(/addImage\([^;]*\);/g) || [];
+      for (const l of llamadas) expect(l, f).toMatch(/"FAST"\)/);
+    }
+  });
+});

@@ -77,7 +77,7 @@ function cabecera(pdf, cols, iconos) {
   const arribaIcono = ARRIBA_TABLA + (ALTO_FILA - ICONO) / 2;
   for (const c of cols) {
     if (c.nombre === "familia") pdf.text("Familia", c.x + RELLENO, base);
-    else pdf.addImage(c.nombre === "mesa" ? iconos.mesa : iconos.persona, "PNG", c.centro - ICONO / 2, arribaIcono, ICONO, ICONO);
+    else pdf.addImage(c.nombre === "mesa" ? iconos.mesa : iconos.persona, "PNG", c.centro - ICONO / 2, arribaIcono, ICONO, ICONO, undefined, "FAST");
   }
   pdf.setDrawColor(C.ink);
   pdf.setLineWidth(0.8);
