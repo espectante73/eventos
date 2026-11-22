@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { familiaDe, preguntaFamilia, textoPreguntaFamilia } from "./familiaCobroLlegada";
+import { importeEsperadoInvitado } from "./invitados";
 
 const evento = { fecha: "2026-11-13", precioAdulto: "45", precioNino: "20", edadNinoDesde: "3", edadNinoHasta: "12" };
 const g = (id, nombre, extra = {}) => ({
@@ -27,10 +28,12 @@ describe("la familia para el pago y la llegada", () => {
 
   // v85.8 (él): el DJ no paga. La copia de la familia guarda su zona, o
   // cobrarle por familia le sumaría el precio de adulto.
-  it("el DJ, a 0 € también al cobrar por familia", () => {
+  // v95.2 (él): el DJ paga como todos, también al cobrar por familia.
+  it("el DJ, su entrada como todos también al cobrar por familia", () => {
     const dj = { ...g("j", "Brown"), apellido: "Brown", grupoFamiliar: "", zona: "DJ" };
     const p = preguntaFamilia(familiaDe([dj], dj), "pagado", true, { evento });
-    expect(p.total).toBe(0);
+    expect(p.total).toBe(importeEsperadoInvitado(dj, evento));
+    expect(p.total).toBeGreaterThan(0);
   });
 
   it("si a alguien le faltan datos, no se puede a toda la familia y dice quién", () => {

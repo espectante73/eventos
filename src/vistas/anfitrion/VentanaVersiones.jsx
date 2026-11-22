@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "95.2",
+    cambios: [
+      "El DJ (la zona DJ) paga su entrada como cualquier invitado, según su edad: 47 € de adulto. Se acaba el «0 € para el DJ» en la Lista, el tablón, el cobro por familias, lo previsto a recoger y Contabilidad. Sigue sin recoger dinero como colaborador.",
+    ],
+  },
+  {
     version: "95.1",
     cambios: [
       "Permisos: «Ver la contabilidad» sale en el aviso rojo del colaborador que lo tiene («Tienes permiso en la app»), como los demás permisos que son una responsabilidad.",

@@ -18,11 +18,12 @@ describe("tramoDeEdad (la misma para la entrada y para el local)", () => {
     expect(calcularEdad("2026", evento)).toBe(0);
     expect(importeEsperadoInvitado({ anioNacimiento: "2026" }, evento)).toBe(0);
   });
-  it("la entrada sigue igual: 47 adulto, 35 niño, 0 bebé y DJ", () => {
+  // El DJ, como todos (v95.2, él: que se anule el «0 € para el DJ»).
+  it("la entrada sigue igual: 47 adulto, 35 niño, 0 bebé; el DJ, 47 como todos", () => {
     expect(importeEsperadoInvitado({ anioNacimiento: "1980" }, evento)).toBe(47);
     expect(importeEsperadoInvitado({ anioNacimiento: "2020" }, evento)).toBe(35);
     expect(importeEsperadoInvitado({ anioNacimiento: "2024" }, evento)).toBe(0);
-    expect(importeEsperadoInvitado({ anioNacimiento: "1980", zona: "DJ" }, evento)).toBe(0);
+    expect(importeEsperadoInvitado({ anioNacimiento: "1980", zona: "DJ" }, evento)).toBe(47);
   });
 });
 
@@ -158,7 +159,7 @@ describe("conDj", () => {
 });
 
 describe("desgloseRecaudado (v94.5: cuántos pagaron como adultos y como niños)", () => {
-  it("los pagados por su edad, sin el DJ; los bebés, todos los confirmados; la suma es «Recaudado»", () => {
+  it("los pagados por su edad, el DJ también (v95.2); los bebés, todos los confirmados; la suma es «Recaudado»", () => {
     const invitados = [
       { id: "a", confirmado: true, pagado: true, anioNacimiento: "1980" },
       { id: "s", confirmado: true, pagado: true, anioNacimiento: "" }, // sin año: adulto
@@ -169,7 +170,7 @@ describe("desgloseRecaudado (v94.5: cuántos pagaron como adultos y como niños)
       { id: "x", confirmado: false, pagado: true, anioNacimiento: "1990" },
     ];
     const d = desgloseRecaudado(invitados, evento);
-    expect(d.adulto).toEqual({ personas: 2, importe: 94 });
+    expect(d.adulto).toEqual({ personas: 3, importe: 141 });
     expect(d.nino).toEqual({ personas: 1, importe: 35 });
     expect(d.bebe).toEqual({ personas: 1 });
     expect(d.precioAdulto).toBe(47);
