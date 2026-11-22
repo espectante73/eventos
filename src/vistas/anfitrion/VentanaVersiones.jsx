@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "95.1",
+    cambios: [
+      "Permisos: «Ver la contabilidad» sale en el aviso rojo del colaborador que lo tiene («Tienes permiso en la app»), como los demás permisos que son una responsabilidad.",
+    ],
+  },
+  {
     version: "95",
     cambios: [
       "Permisos › Contabilidad: «Ver la contabilidad (solo cifras, para repasarla)». Quien lo tenga ve en su menú «Contabilidad»: el Resumen, A pagar, la Cuenta del local, sus Gastos y lo entregado y por entregar de cada colaborador, sin un solo nombre de invitado y sin poder tocar nada. Necesita su SQL.",

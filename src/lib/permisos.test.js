@@ -29,6 +29,9 @@ describe("los dos tipos de permiso", () => {
     // Manejar la música en plena boda es responsabilidad.
     expect(esDeLaApp(PERMISOS.MULTIMEDIA)).toBe(true);
     expect(esDeLaApp(PERMISOS.ACREDITAR_ENTRADA)).toBe(true);
+    // v95.1 (él: «no aparece el banner de permisos que tienen los demás»):
+    // repasar la contabilidad solo mira, pero es una responsabilidad.
+    expect(esDeLaApp(PERMISOS.CONTABILIDAD_VER)).toBe(true);
     expect(esDeLaApp(PERMISOS.NOVEDADES_EDITAR)).toBe(false);
   });
 

@@ -102,7 +102,9 @@ export function ordenarPermisos(claves = []) {
 //   EDICIÓN:    dejan cambiar TEXTO del evento (Novedades, los datos del
 //               evento y sus emails). Solo estos se llaman «de edición».
 //   EN LA APP:  dejan HACER algo dentro de la app (enviar invitaciones,
-//               Multimedia, acreditar en la entrada).
+//               Multimedia, acreditar en la entrada, repasar la
+//               contabilidad: solo mira, pero es una responsabilidad, v95.1,
+//               él: «no aparece el banner de permisos que tienen los demás»).
 //   VISTA:      solo enseñan algo que ya existe (el mapa, el código, el
 //               diseño, la lista del DJ). No son responsabilidad de nadie.
 //
@@ -110,8 +112,8 @@ export function ordenarPermisos(claves = []) {
 // cada uno con su frase. Al añadir un permiso nuevo hay que meterlo en una
 // de las tres; si no, el test permisos.test.js se pone en rojo.
 export const PERMISOS_DE_EDICION = [PERMISOS.NOVEDADES_EDITAR, PERMISOS.DATOS_EVENTO_EDITAR];
-export const PERMISOS_EN_LA_APP = [PERMISOS.INVITACIONES_ENVIAR, PERMISOS.MULTIMEDIA, PERMISOS.ACREDITAR_ENTRADA];
-export const PERMISOS_DE_VISTA = [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER, PERMISOS.DISENO_VER, PERMISOS.CANCIONES_DJ, PERMISOS.CONTABILIDAD_VER];
+export const PERMISOS_EN_LA_APP = [PERMISOS.INVITACIONES_ENVIAR, PERMISOS.MULTIMEDIA, PERMISOS.ACREDITAR_ENTRADA, PERMISOS.CONTABILIDAD_VER];
+export const PERMISOS_DE_VISTA = [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER, PERMISOS.DISENO_VER, PERMISOS.CANCIONES_DJ];
 
 export const esDeEdicion = (clave) => PERMISOS_DE_EDICION.includes(clave);
 export const esDeLaApp = (clave) => PERMISOS_EN_LA_APP.includes(clave);
