@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "94.1",
+    cambios: [
+      "Mesas › Plano de mesas: + y − en la esquina para acercar o alejar el plano, solo para mirar (no se guarda ni sale en el papel). Ampliado, el plano se desliza con el dedo o arrastrando el fondo con el ratón; arrastrar una mesa la sigue moviendo.",
+      "Mesas › Plano de mesas: «Tamaño de las mesas» las agranda o encoge, de 10 en 10 %, para que encajen en el dibujo del local como en la realidad. Se guarda y sale igual al imprimir.",
+    ],
+  },
+  {
     version: "94",
     cambios: [
       "Mesas › Plano de mesas: botón «Plano del local» para poner de fondo el dibujo del local (sin las mesas: las pone la app). Las mesas se arrastran encima y ahora crecen y encogen con el plano, para que guarden la proporción con el local. Se imprime todo junto en A2.",

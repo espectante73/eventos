@@ -457,7 +457,9 @@ label:has(> input[type="file"].sr-only:focus-visible) {
     position: fixed;
     left: 0;
     top: 0;
-    width: 100%;
+    /* !important: el zoom de la pantalla (v94.1) la ensancha a mano; en el
+       papel, siempre el plano entero. */
+    width: 100% !important;
     height: auto;
   }
 

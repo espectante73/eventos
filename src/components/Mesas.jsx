@@ -5,19 +5,14 @@
 import { useState, useEffect, useRef } from "react";
 import { C, T } from "../theme";
 import { realmDe } from "../lib/realm";
-
-// Lo que mide una mesa del plano, con sus sillas: un 10 % del ancho del
-// plano (v94, él: «ordenarla en el plano teniendo en cuenta cómo estarán
-// las mesas en el local»). Crece y encoge con él, como el dibujo del local
-// de fondo; en píxeles fijos, al agrandar la ventana el local crecía y la
-// mesa no, y el plano engañaba. El 10 % sale de su dibujo del local.
-export const ANCHO_MESA_PLANO = 10;
+import { ANCHO_MESA_PLANO } from "../lib/planoMesas";
 
 // Mesa arrastrable dentro del lienzo del plano — la posición se guarda como
 // porcentaje (0-100) del ancho/alto del lienzo, no en píxeles, para que
 // siga siendo válida aunque se cambie el tamaño de la ventana o se imprima
 // en otro formato.
-export function MesaPlano({ m, ocupados, canvasRef, onMover }) {
+// `ancho`: lo que mide, en % del ancho del plano (lib/planoMesas.js).
+export function MesaPlano({ m, ocupados, canvasRef, onMover, ancho = ANCHO_MESA_PLANO }) {
   const arrastrando = useRef(false);
   // Posición visual mientras se arrastra — no llama a guardar hasta soltar,
   // para no disparar una petición a la base de datos en cada píxel de
@@ -75,9 +70,10 @@ export function MesaPlano({ m, ocupados, canvasRef, onMover }) {
     <div
       onMouseDown={() => (arrastrando.current = true)}
       onTouchStart={() => (arrastrando.current = true)}
+      data-mesa-plano
       className="absolute select-none"
       style={{
-        width: `${ANCHO_MESA_PLANO}%`,
+        width: `${ancho}%`,
         aspectRatio: "1",
         left: `${posVisual.x}%`,
         top: `${posVisual.y}%`,

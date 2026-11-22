@@ -21,6 +21,7 @@ const EVENTO_POR_DEFECTO = {
   imagen: "/cabecera-defecto.jpg",
   imagenInvitacion: "/invitacion-defecto.jpg",
   planoLocal: "",
+  tamanoMesasPlano: null,
   lugar: "",
   direccion: "",
   enlaceMapa: "",

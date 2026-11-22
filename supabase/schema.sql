@@ -158,6 +158,9 @@ CREATE TABLE public.evento (
     -- en el cajón `imagenes-evento`. Vacío = sin dibujo. Público: el cajón ya
     -- lo es y el nombre es fijo (lib/imagenesEvento.js).
     "planoLocal" text,
+    -- El tamaño de las mesas en ese plano, en % (v94.1, lib/planoMesas.js).
+    -- Vacío = 100 %. Sale igual en el papel.
+    "tamanoMesasPlano" integer,
     CONSTRAINT evento_id_check CHECK (id)
 );
 

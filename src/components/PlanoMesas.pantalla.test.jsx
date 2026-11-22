@@ -5,7 +5,8 @@
 import { it, expect } from "vitest";
 import { montar } from "../pruebas/dibujar";
 import { PlanoMesas } from "./PlanoMesas";
-import { ANCHO_MESA_PLANO } from "./Mesas";
+import { readFileSync } from "node:fs";
+import { ANCHO_MESA_PLANO } from "../lib/planoMesas";
 
 const datos = (evento) => ({
   mesas: [{ numero: 1, capacidad: 10, posX: 50, posY: 50 }],
@@ -36,4 +37,36 @@ it("la mesa mide un tanto por ciento del plano: crece y encoge con él", () => {
   expect(mesa.style.width).toBe(`${ANCHO_MESA_PLANO}%`);
   expect(mesa.querySelector("svg").getAttribute("viewBox")).toBe("0 0 60 60");
   vista.desmontar();
+});
+
+// v94.1 (él: «falta que se pueda hacer zoom o reducir» y «también zoom en las
+// mesas»): el zoom es solo para mirar; el tamaño de las mesas se guarda.
+it("el tamaño de las mesas se guarda en el evento y cambia lo que miden", () => {
+  let guardado = null;
+  const vista = montar(
+    <PlanoMesas data={{ ...datos({ tamanoMesasPlano: 120 }), persistEvento: (e) => (guardado = e) }} ocupacionMesa={() => 4} />
+  );
+  expect(vista.contenedor.querySelector('[title^="Mesa 1"]').style.width).toBe(`${ANCHO_MESA_PLANO * 1.2}%`);
+  vista.pulsar(vista.contenedor.querySelector('[title="Mesas más grandes"]'));
+  expect(guardado.tamanoMesasPlano).toBe(130);
+  vista.desmontar();
+});
+
+it("el zoom ensancha el plano en pantalla, sin guardar nada", () => {
+  let guardado = null;
+  const vista = montar(<PlanoMesas data={{ ...datos({}), persistEvento: (e) => (guardado = e) }} ocupacionMesa={() => 4} />);
+  const zona = vista.contenedor.querySelector("#zona-imprimible-plano");
+  expect(zona.style.width).toBe("100%");
+  vista.pulsar(vista.contenedor.querySelector('[title="Acercar el plano"]'));
+  expect(zona.style.width).toBe("150%");
+  vista.pulsar(vista.contenedor.querySelector('[title="Alejar el plano"]'));
+  expect(zona.style.width).toBe("100%");
+  expect(guardado).toBeNull();
+  vista.desmontar();
+});
+
+it("en el papel, el plano siempre entero: la impresión pisa el zoom", () => {
+  const css = readFileSync("src/index.css", "utf-8");
+  const regla = css.match(/#zona-imprimible-plano\s*\{[^}]*\}/)[0];
+  expect(regla).toMatch(/width:\s*100%\s*!important/);
 });
