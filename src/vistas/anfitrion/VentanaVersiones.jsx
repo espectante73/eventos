@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "93.9",
+    cambios: [
+      "Mesas › Plano de mesas: en el Mac, las mesas del plano no se movían. Mesas es una ventana aparte y la mesa escuchaba el ratón en la ventana principal (el mismo fallo que la v80.1 arregló en las ventanas flotantes de la Lista). Ahora escucha en la suya; una prueba vigila que nada vuelva a escuchar el ratón en la principal.",
+    ],
+  },
+  {
     version: "93.8",
     cambios: [
       "Las ventanas aparte (Lista de invitados, Novedades, Cronograma, Mesas, marcador) se veían rotas unos segundos al abrirse: volvían a pedir los estilos por internet y, mientras llegaban, salían sin formato. Ahora copian los que la app ya tiene cargados y se abren bien desde el primer momento.",

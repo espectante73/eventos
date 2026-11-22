@@ -4,6 +4,7 @@
 // reparto del 2026-08-08 (ver CLAUDE.md).
 import { useState, useEffect, useRef } from "react";
 import { C, T } from "../theme";
+import { realmDe } from "../lib/realm";
 
 // Mesa arrastrable dentro del lienzo del plano — la posición se guarda como
 // porcentaje (0-100) del ancho/alto del lienzo, no en píxeles, para que
@@ -38,15 +39,19 @@ export function MesaPlano({ m, ocupados, canvasRef, onMover }) {
       arrastrando.current = false;
       onMover(m.numero, posFinal.current.x, posFinal.current.y);
     };
-    window.addEventListener("mousemove", mover);
-    window.addEventListener("mouseup", soltar);
-    window.addEventListener("touchmove", mover);
-    window.addEventListener("touchend", soltar);
+    // El ratón de la ventana donde está el plano (v93.9, él: «en Mesas no
+    // se pueden mover»): en el Mac, Mesas es otra ventana del sistema, y
+    // escuchando en la principal la mesa no se enteraba de nada.
+    const { win } = realmDe(canvasRef.current);
+    win.addEventListener("mousemove", mover);
+    win.addEventListener("mouseup", soltar);
+    win.addEventListener("touchmove", mover);
+    win.addEventListener("touchend", soltar);
     return () => {
-      window.removeEventListener("mousemove", mover);
-      window.removeEventListener("mouseup", soltar);
-      window.removeEventListener("touchmove", mover);
-      window.removeEventListener("touchend", soltar);
+      win.removeEventListener("mousemove", mover);
+      win.removeEventListener("mouseup", soltar);
+      win.removeEventListener("touchmove", mover);
+      win.removeEventListener("touchend", soltar);
     };
   }, [m.numero, canvasRef, onMover]);
 

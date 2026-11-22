@@ -92,6 +92,22 @@ describe("norma 4: rótulos de menú que caben en su botón", () => {
   });
 });
 
+// El ratón, en la ventana donde vive lo que se arrastra (realmDe,
+// lib/realm.js): la Lista y Mesas son otras ventanas del sistema en el Mac,
+// y escuchando en la principal nada se movía (v80.1 las ventanas
+// flotantes; v93.9 las mesas del plano).
+describe("arrastrar, con el ratón de su propia ventana", () => {
+  it("nadie escucha el ratón ni el dedo en `window` directamente", () => {
+    const fuera = archivos.flatMap((r) =>
+      sinComentarios(leer(r))
+        .split("\n")
+        .filter((l) => /\bwindow\.addEventListener\(\s*["'](mouse|touch|pointer)/.test(l))
+        .map((l) => `${r}: ${l.trim()}`)
+    );
+    expect(fuera).toEqual([]);
+  });
+});
+
 // v63: el evento se lee a través del servidor (lib/leerEvento.js), que
 // quita lo privado. La tabla está cerrada: leerla directamente fallaría.
 describe("el evento, solo por leerEvento", () => {
