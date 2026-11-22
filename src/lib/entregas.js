@@ -44,6 +44,44 @@ export function itemsDeEntrega(entrega, invitados, evento) {
   }));
 }
 
+// Lo que dicen los acuses frente a lo que cuenta la app (él, v94.5: «no me
+// cuadra», «todo se repasó varias veces antes de entregar acuse»). Lo
+// entregado (importe y propina de cada acuse) más lo que aún tienen los
+// colaboradores tiene que dar lo recaudado más las propinas. Si no, la
+// diferencia, y las causas que la app puede ver:
+// - `sinColaborador`: pagados que no lleva nadie: no están en ningún acuse;
+// - `yaNoPagados`: de un acuse, pero hoy sin pagar o sin confirmar;
+// - `acusesDistintos`: acuses cuyo importe no es el de hoy (cambiado a mano
+//   al entregar, o cambió después un precio o una edad).
+const redondear = (n) => Math.round(n * 100) / 100;
+export function cuadreEntregas({ invitados = [], evento, colaboradores = [], recaudado = 0, propinas = 0 }) {
+  const todos = colaboradores || [];
+  const lasEntregas = todos.flatMap((c) => entregasDe(c));
+  const entregado = redondear(lasEntregas.reduce((s, e) => s + (Number(e.importe) || 0) + (Number(e.propina) || 0), 0));
+  const pendiente = redondear(todos.reduce((s, c) => s + porEntregar(c, invitados, evento, todos).total, 0));
+  const porId = new Map(invitados.map((g) => [g.id, g]));
+  const ids = new Set(todos.map((c) => c.id));
+  const sinColaborador = invitados.filter(
+    (g) => g.confirmado && g.pagado && importeEsperadoInvitado(g, evento) > 0 && !ids.has(g.colaboradorId)
+  ).length;
+  const yaNoPagados = [...entregados(todos)].filter((id) => {
+    const g = porId.get(id);
+    return !g || !g.confirmado || !g.pagado;
+  }).length;
+  const acusesDistintos = lasEntregas.filter((e) => {
+    const deHoy = (e.invitados || []).reduce((s, id) => s + (porId.has(id) ? importeEsperadoInvitado(porId.get(id), evento) : 0), 0);
+    return Math.abs((Number(e.importe) || 0) - deHoy) > 0.005;
+  }).length;
+  return {
+    entregado,
+    porEntregar: pendiente,
+    diferencia: redondear(recaudado + propinas - entregado - pendiente),
+    sinColaborador,
+    yaNoPagados,
+    acusesDistintos,
+  };
+}
+
 // Todas las propinas entregadas: suman al balance (v85.9).
 export const propinasTotales = (colaboradores) =>
   (colaboradores || []).reduce((s, c) => s + entregasDe(c).reduce((t, e) => t + (Number(e.propina) || 0), 0), 0);

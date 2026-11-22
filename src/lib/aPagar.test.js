@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { aPagarDe, faltaSqlAPagar, personasDelLocal, precioPorPersona, costeLocal, cuentaDelLocal, resumenAPagar, limpiarLocal, conDj } from "./aPagar";
+import { aPagarDe, faltaSqlAPagar, personasDelLocal, precioPorPersona, costeLocal, cuentaDelLocal, resumenAPagar, limpiarLocal, conDj, desgloseRecaudado } from "./aPagar";
 import { importeEsperadoInvitado, tramoDeEdad, calcularEdad } from "./invitados";
 
 // Las edades de la app: 0-3 gratis, 4-7 niño, 8 en adelante adulto.
@@ -154,5 +154,27 @@ describe("conDj", () => {
     expect(conDj(actual, " 600 ")).toEqual({ valor: { ...actual, dj: "600" }, aviso: "" });
     expect(conDj(actual, "")).toEqual({ valor: { ...actual, dj: "" }, aviso: "" });
     expect(conDj(actual, "seiscientos")).toEqual({ valor: actual, aviso: expect.stringContaining("DJ") });
+  });
+});
+
+describe("desgloseRecaudado (v94.5: cuántos pagaron como adultos y como niños)", () => {
+  it("los pagados por su edad, sin el DJ; los bebés, todos los confirmados; la suma es «Recaudado»", () => {
+    const invitados = [
+      { id: "a", confirmado: true, pagado: true, anioNacimiento: "1980" },
+      { id: "s", confirmado: true, pagado: true, anioNacimiento: "" }, // sin año: adulto
+      { id: "n", confirmado: true, pagado: true, anioNacimiento: "2020" },
+      { id: "np", confirmado: true, pagado: false, anioNacimiento: "2021" }, // niño sin pagar
+      { id: "b", confirmado: true, pagado: false, anioNacimiento: "2025" },
+      { id: "dj", confirmado: true, pagado: true, anioNacimiento: "1975", zona: "DJ" },
+      { id: "x", confirmado: false, pagado: true, anioNacimiento: "1990" },
+    ];
+    const d = desgloseRecaudado(invitados, evento);
+    expect(d.adulto).toEqual({ personas: 2, importe: 94 });
+    expect(d.nino).toEqual({ personas: 1, importe: 35 });
+    expect(d.bebe).toEqual({ personas: 1 });
+    expect(d.precioAdulto).toBe(47);
+    expect(d.precioNino).toBe(35);
+    const recaudado = invitados.filter((g) => g.confirmado && g.pagado).reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
+    expect(d.adulto.importe + d.nino.importe).toBe(recaudado);
   });
 });

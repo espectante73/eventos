@@ -54,9 +54,10 @@ it("sin precios todavía: lo dice, y sale solo lo de los gastos", () => {
   const { vista } = dibujar();
   const texto = document.body.textContent;
   expect(texto).toContain("Sin precios del local todavía");
-  expect(texto).not.toContain("gratis");
+  // Sin precios, el local no desglosa a nadie (los bebés de «Entra» son otra cosa).
+  expect(texto.slice(texto.indexOf("Sale"))).not.toContain("gratis");
   // Entra 129 + 10; sale 30 de gastos.
-  expect(texto).toContain(`Total que entra${euros(139)}`);
+  expect(texto).toContain(`Total bruto que entra${euros(139)}`);
   expect(texto).toContain(`Total que sale${euros(30)}`);
   expect(texto).toContain(`Sobran${euros(109)}`);
   vista.desmontar();
@@ -168,5 +169,21 @@ it("la cuenta del local: la ruedita abre los precios del local; sin precios, lo 
   const ruedita = document.body.querySelector('button[aria-label="Precios del local"], button[title="Precios del local"]');
   act(() => ruedita.dispatchEvent(new MouseEvent("click", { bubbles: true })));
   expect(abiertas).toHaveLength(1);
+  vista.desmontar();
+});
+
+// v94.5 (él: «cuántos de más de 8 años pagaron los 47 €, cuántos como niños,
+// cuánta propina»): lo recaudado por edades, y el cuadre con los acuses.
+it("«Entra» desglosado por edades, y comprobado con los acuses", () => {
+  const { vista } = dibujar();
+  const texto = document.body.textContent;
+  expect(texto).toContain(`2 adultos (8 años o más) × ${euros(47)}${euros(94)}`);
+  expect(texto).toContain(`1 niño (de 4 a 7 años) × ${euros(35)}${euros(35)}`);
+  expect(texto).toContain("1 bebé (hasta 3 años)gratis");
+  // Sin colaboradores en la prueba: nada entregado, y los 3 pagados no los
+  // lleva nadie.
+  expect(texto).toContain(`Ya entregado (acuses, con propinas)${euros(0)}`);
+  expect(texto).toContain(`No cuadra: diferencia${euros(139)}`);
+  expect(texto).toContain("Pagados sin colaborador3 personas");
   vista.desmontar();
 });

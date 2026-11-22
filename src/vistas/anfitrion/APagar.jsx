@@ -10,7 +10,8 @@ import { Plus, Settings } from "lucide-react";
 import { C, R, T, OP, DEDO, inputStyle } from "../../theme";
 import { euros, parsePrecio } from "../../lib/formato";
 import { uid } from "../../lib/id";
-import { aPagarDe, faltaSqlAPagar, precioPorPersona, limpiarLocal, conDj, personasDelLocal, cuentaDelLocal } from "../../lib/aPagar";
+import { aPagarDe, faltaSqlAPagar, precioPorPersona, limpiarLocal, conDj, personasDelLocal, cuentaDelLocal, desgloseRecaudado } from "../../lib/aPagar";
+import { cuadreEntregas } from "../../lib/entregas";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import { TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
@@ -55,7 +56,14 @@ const Cabecera = ({ children }) => (
 const Total = ({ concepto, importe }) => <Linea concepto={concepto} importe={importe} fondo={C.paper} estilo={{ borderTop: `2px solid ${C.ink}`, color: C.ink, ...SERIF }} />;
 
 export function APagarHoja({ data, resumen, recaudado, propinas }) {
-  const { evento, persistEvento } = data;
+  const { evento, persistEvento, invitados = [], colaboradores = [] } = data;
+  // Lo recaudado por edades y el cuadre con los acuses (v94.5, él: «cuántos
+  // de más de 8 años pagaron los 47 €, cuántos como niños, cuánta propina:
+  // ese es el total bruto que he de tener»).
+  const desglose = desgloseRecaudado(invitados, evento);
+  const cuadre = cuadreEntregas({ invitados, evento, colaboradores, recaudado, propinas });
+  const noCuadra = Math.abs(cuadre.diferencia) >= 0.005;
+  const edades = edadesDeTramos(evento);
   const faltaSql = faltaSqlAPagar(evento);
   const [aviso, setAviso] = useState("");
   const { personas, local, tusGastos, entra, sale, diferencia } = resumen;
@@ -75,8 +83,26 @@ export function APagarHoja({ data, resumen, recaudado, propinas }) {
       <div className="text-sm" style={{ border: `1px solid ${C.line}`, borderRadius: R.caja, overflow: "hidden" }}>
         <Cabecera>Entra</Cabecera>
         <Linea concepto="Recaudado" importe={euros(recaudado)} />
+        <Linea detalle concepto={`${plural(desglose.adulto.personas, "adulto", "adultos")}${edades.adulto} × ${euros(desglose.precioAdulto)}`} importe={euros(desglose.adulto.importe)} />
+        {(desglose.nino.personas > 0 || desglose.precioNino > 0) && (
+          <Linea detalle concepto={`${plural(desglose.nino.personas, "niño", "niños")}${edades.nino} × ${euros(desglose.precioNino)}`} importe={euros(desglose.nino.importe)} />
+        )}
+        {desglose.bebe.personas > 0 && <Linea detalle concepto={`${plural(desglose.bebe.personas, "bebé", "bebés")}${edades.bebe}`} importe="gratis" />}
         <Linea concepto="Propinas" importe={euros(propinas)} fondo={C.paperDark} />
-        <Total concepto="Total que entra" importe={euros(entra)} />
+        <Total concepto="Total bruto que entra" importe={euros(entra)} />
+        {/* Lo que dicen los acuses: entregado + lo que aún tienen los
+            colaboradores = el total bruto. Si no, la diferencia, rosa como
+            el «Faltan», y lo que la app ve que la explica. */}
+        <Linea detalle concepto="Ya entregado (acuses, con propinas)" importe={euros(cuadre.entregado)} />
+        <Linea detalle concepto="Por entregar (con los colaboradores)" importe={euros(cuadre.porEntregar)} />
+        {noCuadra && (
+          <>
+            <Linea concepto="No cuadra: diferencia" importe={euros(cuadre.diferencia)} fondo={C.cuidadoFondo} estilo={{ color: C.ink, ...SERIF }} />
+            {cuadre.sinColaborador > 0 && <Linea detalle fondo={C.cuidadoFondo} concepto="Pagados sin colaborador" importe={plural(cuadre.sinColaborador, "persona", "personas")} />}
+            {cuadre.yaNoPagados > 0 && <Linea detalle fondo={C.cuidadoFondo} concepto="De un acuse, hoy sin pagar" importe={plural(cuadre.yaNoPagados, "persona", "personas")} />}
+            {cuadre.acusesDistintos > 0 && <Linea detalle fondo={C.cuidadoFondo} concepto="Acuses con otro importe" importe={plural(cuadre.acusesDistintos, "acuse", "acuses")} />}
+          </>
+        )}
 
         <Cabecera>Sale</Cabecera>
         <Linea concepto="Local" importe={euros(local.total)} />
@@ -118,7 +144,7 @@ export function APagarHoja({ data, resumen, recaudado, propinas }) {
           Cómo se calcula
         </summary>
         <p className="mt-2" style={{ opacity: OP.secundario }}>
-          Entra lo ya recaudado y las propinas. Sale lo del local (los confirmados de la Lista, el DJ también, por lo que cobra el local por persona, más lo demás del local), lo del DJ y la suma de tu hoja de Gastos. El precio de la entrada de los invitados no cambia nada de esto: solo se comparten las edades.
+          Entra lo ya recaudado —cada pagado por el precio de su entrada, según su edad— y las propinas de los acuses: el total bruto que tiene que haber. Debajo, lo que dicen los acuses y lo que aún tienen los colaboradores; si no suman lo mismo, sale la diferencia en rosa y, si la app la ve, la causa: pagados que no lleva ningún colaborador, invitados de un acuse que ya no figuran como pagados, o acuses con otro importe que el de hoy (cambiado a mano, o cambió después un precio o una edad). Sale lo del local (los confirmados de la Lista, el DJ también, por lo que cobra el local por persona, más lo demás del local), lo del DJ y la suma de tu hoja de Gastos. El precio de la entrada de los invitados no cambia nada de esto: solo se comparten las edades.
         </p>
       </details>
     </div>
@@ -131,8 +157,8 @@ export function APagarHoja({ data, resumen, recaudado, propinas }) {
 function edadesDeTramos(evento) {
   const desde = parseInt(evento?.edadNinoDesde, 10);
   const hasta = parseInt(evento?.edadNinoHasta, 10);
-  if (isNaN(desde) || isNaN(hasta)) return { nino: "", bebe: "" };
-  return { nino: ` (de ${desde} a ${hasta - 1} años)`, bebe: ` (hasta ${desde - 1} años)` };
+  if (isNaN(desde) || isNaN(hasta)) return { adulto: "", nino: "", bebe: "" };
+  return { adulto: ` (${hasta} años o más)`, nino: ` (de ${desde} a ${hasta - 1} años)`, bebe: ` (hasta ${desde - 1} años)` };
 }
 
 // Lo que se le debe al local, para enseñárselo al pagarle (él, v93.1), sin

@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "94.5",
+    cambios: [
+      "Contabilidad › A pagar: «Recaudado» desglosado por edades: cuántos pagaron como adultos (8 años o más) y como niños, a qué precio y cuánto suma cada grupo; los bebés, gratis. Debajo, «Total bruto que entra» (recaudado más propinas).",
+      "Contabilidad › A pagar: la comprobación con los acuses: lo ya entregado (con propinas) y lo que aún tienen los colaboradores. Si no suman el total bruto, sale la diferencia en rosa y, si la app la ve, la causa: pagados sin colaborador, invitados de un acuse que ya no figuran como pagados o acuses con otro importe que el de hoy.",
+    ],
+  },
+  {
     version: "94.4",
     cambios: [
       "Mesas › Plano de mesas: la lupa acerca y aleja de 10 en 10 % (100, 110, 120… hasta 300), como el tamaño de las mesas.",
