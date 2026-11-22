@@ -5,7 +5,7 @@ import { it, expect } from "vitest";
 import { useState } from "react";
 import { act } from "react";
 import { montar } from "../../pruebas/dibujar";
-import { euros } from "../../lib/formato";
+import { euros, fechaCorta } from "../../lib/formato";
 import { resumenAPagar } from "../../lib/aPagar";
 import { APagarHoja, VentanaLocal, CuentaLocalHoja } from "./APagar";
 
@@ -27,7 +27,7 @@ const INVITADOS = [
 ];
 const GASTOS = [{ id: "g", concepto: "Imprenta", importe: "30" }];
 
-function dibujar({ evento = EVENTO, ventana = false } = {}) {
+function dibujar({ evento = EVENTO, ventana = false, colaboradores = [] } = {}) {
   const eventos = [];
   function Prueba() {
     const [ev, setEv] = useState(evento);
@@ -35,6 +35,7 @@ function dibujar({ evento = EVENTO, ventana = false } = {}) {
       evento: ev,
       invitados: INVITADOS,
       gastos: GASTOS,
+      colaboradores,
       persistEvento: (e) => {
         eventos.push(e);
         setEv(e);
@@ -185,5 +186,25 @@ it("«Entra» desglosado por edades, y comprobado con los acuses", () => {
   expect(texto).toContain(`Ya entregado (acuses, con propinas)${euros(0)}`);
   expect(texto).toContain(`No cuadra: diferencia${euros(139)}`);
   expect(texto).toContain("Pagados sin colaborador3 personas");
+  vista.desmontar();
+});
+
+// v94.6 (él: «tengo 66 € y el programa me marca 77 €, desglosa las
+// propinas»): bajo «Propinas», cada una con su colaborador y su día.
+it("bajo «Propinas», cada propina con su colaborador y su día", () => {
+  const colaboradores = [
+    { id: "c1", nombre: "Sierra, Raúl", entregas: [{ id: "e1", fecha: "2026-11-20", importe: 94, propina: 6, invitados: [] }, { id: "e2", fecha: "2026-11-21", importe: 35, propina: 0, invitados: [] }] },
+    { id: "c2", nombre: "Abreu, Ana", entregas: [{ id: "e3", fecha: "2026-11-02", importe: 0, propina: 4, invitados: [] }] },
+  ];
+  const { vista, todos } = dibujar({ colaboradores });
+  const texto = document.body.textContent;
+  expect(texto).toContain(`Abreu, Ana · ${fechaCorta("2026-11-02")}${euros(4)}`);
+  expect(texto).toContain(`Sierra, Raúl · ${fechaCorta("2026-11-20")}${euros(6)}`);
+  // La entrega sin propina no sale.
+  expect(texto).not.toContain(fechaCorta("2026-11-21"));
+  // Y van justo debajo de «Propinas», antes del total.
+  const lineas = todos("span").map((s) => s.textContent);
+  const i = lineas.indexOf("Propinas");
+  expect(lineas[i + 2]).toBe(`Abreu, Ana · ${fechaCorta("2026-11-02")}`);
   vista.desmontar();
 });

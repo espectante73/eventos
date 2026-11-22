@@ -8,10 +8,10 @@
 import { useState } from "react";
 import { Plus, Settings } from "lucide-react";
 import { C, R, T, OP, DEDO, inputStyle } from "../../theme";
-import { euros, parsePrecio } from "../../lib/formato";
+import { euros, parsePrecio, fechaCorta } from "../../lib/formato";
 import { uid } from "../../lib/id";
 import { aPagarDe, faltaSqlAPagar, precioPorPersona, limpiarLocal, conDj, personasDelLocal, cuentaDelLocal, desgloseRecaudado } from "../../lib/aPagar";
-import { cuadreEntregas } from "../../lib/entregas";
+import { cuadreEntregas, desglosePropinas } from "../../lib/entregas";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import { TextInput } from "../../components/Formulario";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
@@ -89,6 +89,11 @@ export function APagarHoja({ data, resumen, recaudado, propinas }) {
         )}
         {desglose.bebe.personas > 0 && <Linea detalle concepto={`${plural(desglose.bebe.personas, "bebé", "bebés")}${edades.bebe}`} importe="gratis" />}
         <Linea concepto="Propinas" importe={euros(propinas)} fondo={C.paperDark} />
+        {/* Cada propina, de qué colaborador y de qué día (v94.6), para
+            comprobarlas con lo apuntado. */}
+        {desglosePropinas(colaboradores).map((p) => (
+          <Linea key={p.id} detalle fondo={C.paperDark} concepto={`${p.colaborador} · ${fechaCorta(p.fecha)}`} importe={euros(p.propina)} />
+        ))}
         <Total concepto="Total bruto que entra" importe={euros(entra)} />
         {/* Lo que dicen los acuses: entregado + lo que aún tienen los
             colaboradores = el total bruto. Si no, la diferencia, rosa como

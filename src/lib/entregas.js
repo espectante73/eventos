@@ -86,6 +86,19 @@ export function cuadreEntregas({ invitados = [], evento, colaboradores = [], rec
 export const propinasTotales = (colaboradores) =>
   (colaboradores || []).reduce((s, c) => s + entregasDe(c).reduce((t, e) => t + (Number(e.propina) || 0), 0), 0);
 
+// Cada propina, para comprobarla con lo que él apuntó (v94.6, él: «tengo
+// 66 € y el programa me marca 77 €, desglosa las propinas»): una por acuse
+// que la lleva, por colaborador y, dentro, por fecha. Suman `propinasTotales`.
+export function desglosePropinas(colaboradores) {
+  return (colaboradores || [])
+    .flatMap((c) =>
+      entregasDe(c)
+        .filter((e) => (Number(e.propina) || 0) > 0)
+        .map((e) => ({ id: e.id, colaborador: c.nombre || "", fecha: String(e.fecha || "").slice(0, 10), propina: Number(e.propina) }))
+    )
+    .sort((x, y) => x.colaborador.localeCompare(y.colaborador, "es") || x.fecha.localeCompare(y.fecha));
+}
+
 // En qué punto está: «pendiente» (tiene algo por entregar), «sin empezar» (ni
 // entregas ni nada cobrado) o «entregado» (lo ha entregado todo). Ordena la
 // lista de Contabilidad: arriba lo pendiente, abajo lo entregado (v86.1).

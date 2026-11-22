@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "94.6",
+    cambios: [
+      "Contabilidad › A pagar: bajo «Propinas», cada propina en su línea, con el colaborador y el día del acuse, para comprobarlas con lo apuntado.",
+      "Contabilidad: el acuse de un colaborador con muchos invitados (más de 15) sigue en una segunda hoja; ya no se cortan el total, la fecha ni la firma. Con menos, sale igual que antes.",
+    ],
+  },
+  {
     version: "94.5",
     cambios: [
       "Contabilidad › A pagar: «Recaudado» desglosado por edades: cuántos pagaron como adultos (8 años o más) y como niños, a qué precio y cuánto suma cada grupo; los bebés, gratis. Debajo, «Total bruto que entra» (recaudado más propinas).",

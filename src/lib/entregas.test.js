@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { entregasDe, porEntregar, itemsDeEntrega, propinasTotales, estadoEntregas, ordenarPorEntregas, cuadreEntregas } from "./entregas";
+import { entregasDe, porEntregar, itemsDeEntrega, propinasTotales, desglosePropinas, estadoEntregas, ordenarPorEntregas, cuadreEntregas } from "./entregas";
 
 // v87 (él): un colaborador entrega lo cobrado en varias rondas; cada una con
 // su importe, su propina y su acuse, solo con los invitados de esa entrega.
@@ -48,6 +48,21 @@ describe("las entregas de dinero de un colaborador", () => {
       { id: "c2", entregas: null },
     ];
     expect(propinasTotales(colaboradores)).toBe(25);
+  });
+
+  it("el desglose de las propinas: una por acuse con propina, y suman el total", () => {
+    const colaboradores = [
+      { id: "c2", nombre: "Sierra, Raúl", entregas: [{ id: "e3", fecha: "2026-11-20T10:00", propina: "6" }, { id: "e2", fecha: "2026-11-02", propina: 5 }] },
+      { id: "c1", nombre: "Abreu, Ana", entregas: [{ id: "e1", fecha: "2026-11-10", propina: 0 }, { id: "e4", fecha: "2026-11-12", propina: 11 }] },
+      { id: "c3", nombre: "Paz, Eva", entregas: null },
+    ];
+    const lineas = desglosePropinas(colaboradores);
+    expect(lineas).toEqual([
+      { id: "e4", colaborador: "Abreu, Ana", fecha: "2026-11-12", propina: 11 },
+      { id: "e2", colaborador: "Sierra, Raúl", fecha: "2026-11-02", propina: 5 },
+      { id: "e3", colaborador: "Sierra, Raúl", fecha: "2026-11-20", propina: 6 },
+    ]);
+    expect(lineas.reduce((s, l) => s + l.propina, 0)).toBe(propinasTotales(colaboradores));
   });
 
   it("arriba lo pendiente, luego sin empezar, abajo lo entregado", () => {
