@@ -38,6 +38,33 @@ import { AvisosGlobales } from "../components/AvisosGlobales.jsx";
 import { aplicarMano, alCambiarMano } from "./mano";
 import { activarRespuestaTactil } from "./respuestaTactil";
 
+// Las hojas de estilo de la pestaña (Tailwind + index.css en un <link>,
+// más los <style>), copiadas a la ventana YA LEÍDAS, en un <style> (v93.8,
+// él: «la lista se ve como rota unos segundos y luego abre»). Clonar el
+// <link> obligaba a la ventana a pedir el CSS otra vez —el servidor no deja
+// guardarlo: max-age=0— y, mientras llegaba, la Lista salía sin formato.
+// Las reglas ya están en la pestaña: copiarlas no espera a nadie. Una hoja
+// que no deja leer sus reglas (de otra web) se clona como antes.
+export function copiarEstilos(origen, destino) {
+  origen.querySelectorAll('link[rel="stylesheet"], style').forEach((nodo) => {
+    let reglas = null;
+    try {
+      if (nodo.sheet) reglas = [...nodo.sheet.cssRules].map((r) => r.cssText).join("\n");
+    } catch (_) {
+      reglas = null;
+    }
+    if (reglas === null) {
+      destino.head.appendChild(nodo.cloneNode(true));
+      return;
+    }
+    const estilo = destino.createElement("style");
+    const medio = nodo.sheet.media?.mediaText;
+    if (medio) estilo.media = medio;
+    estilo.textContent = reglas;
+    destino.head.appendChild(estilo);
+  });
+}
+
 export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
   const [abierta, setAbierta] = useState(false);
   // Además de la ref (para comprobaciones internas de control como
@@ -93,14 +120,8 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
     metaViewport.content = "width=device-width, initial-scale=1";
     ventana.document.head.appendChild(metaViewport);
 
-    // Copia las hojas de estilo ya cargadas (Tailwind + index.css,
-    // compiladas por Vite en un único <link>, más cualquier <style> que
-    // hubiera inyectado el propio navegador) -- sin esto, el contenido
-    // se vería sin ningún estilo dentro de la ventana nueva, que
-    // arranca con un document en blanco propio.
-    document.querySelectorAll('link[rel="stylesheet"], style').forEach((nodo) => {
-      ventana.document.head.appendChild(nodo.cloneNode(true));
-    });
+    // Los estilos de la app: la ventana arranca con un documento en blanco.
+    copiarEstilos(document, ventana.document);
     ventana.document.body.style.margin = "0";
     // La mano del móvil (lib/mano.js) va en el <html> de CADA documento:
     // esta ventana tiene el suyo propio, y sin el atributo la variante

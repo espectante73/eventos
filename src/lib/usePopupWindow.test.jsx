@@ -4,7 +4,7 @@
 import { it, expect, vi, afterEach } from "vitest";
 import { act, Component, useEffect, useState } from "react";
 import { montar } from "../pruebas/dibujar";
-import { usePopupWindow } from "./usePopupWindow";
+import { usePopupWindow, copiarEstilos } from "./usePopupWindow";
 
 // Una ventana de mentira: su propio documento, como la de verdad.
 function ventanaFalsa() {
@@ -97,4 +97,26 @@ it("al irse la pestaña (recarga por versión nueva), cierra su ventana", () => 
   window.dispatchEvent(new Event("pagehide"));
   expect(nueva.close).toHaveBeenCalled();
   vista.desmontar();
+});
+
+// v93.8 (él: «la lista se ve como rota unos segundos y luego abre»): la
+// ventana copia los estilos YA LEÍDOS, no un <link> que tiene que volver a
+// pedir el CSS por internet y, mientras llega, deja la Lista sin formato.
+it("los estilos pasan ya leídos, en un <style>, sin volver a pedir el CSS", () => {
+  const destino = document.implementation.createHTMLDocument("");
+  const enlace = { sheet: { cssRules: [{ cssText: ".fila { display: flex; }" }], media: { mediaText: "" } }, cloneNode: vi.fn() };
+  copiarEstilos({ querySelectorAll: () => [enlace] }, destino);
+  expect(enlace.cloneNode).not.toHaveBeenCalled();
+  expect(destino.head.querySelector("link")).toBeNull();
+  expect(destino.head.querySelector("style").textContent).toBe(".fila { display: flex; }");
+});
+
+it("una hoja que no deja leer sus reglas (de otra web) se clona como antes", () => {
+  const destino = document.implementation.createHTMLDocument("");
+  const ajena = document.createElement("link");
+  ajena.rel = "stylesheet";
+  ajena.href = "https://otra.web/estilo.css";
+  Object.defineProperty(ajena, "sheet", { get: () => ({ get cssRules() { throw new Error("SecurityError"); } }) });
+  copiarEstilos({ querySelectorAll: () => [ajena] }, destino);
+  expect(destino.head.querySelector('link[rel="stylesheet"]').href).toBe("https://otra.web/estilo.css");
 });

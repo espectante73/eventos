@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "93.8",
+    cambios: [
+      "Las ventanas aparte (Lista de invitados, Novedades, Cronograma, Mesas, marcador) se veían rotas unos segundos al abrirse: volvían a pedir los estilos por internet y, mientras llegaban, salían sin formato. Ahora copian los que la app ya tiene cargados y se abren bien desde el primer momento.",
+    ],
+  },
+  {
     version: "93.7",
     cambios: [
       "Lista › Acciones: «Importar tel.» y «Exportar contactos» son ahora «Contactos», con un icono de entrada y otro de salida (al pasar el ratón dice cuál es cuál): «Exportar contactos» se salía del botón.",
