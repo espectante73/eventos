@@ -154,6 +154,10 @@ CREATE TABLE public.evento (
     -- (tablon_guardar_canciones); con «Sí», ya solo se ven. Público: el
     -- tablón lo necesita para enseñarlas cerradas.
     "cancionesCerradas" boolean DEFAULT false,
+    -- El dibujo del local, de fondo en el Plano de mesas (v94): su dirección
+    -- en el cajón `imagenes-evento`. Vacío = sin dibujo. Público: el cajón ya
+    -- lo es y el nombre es fijo (lib/imagenesEvento.js).
+    "planoLocal" text,
     CONSTRAINT evento_id_check CHECK (id)
 );
 

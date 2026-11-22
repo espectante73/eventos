@@ -61,6 +61,7 @@ export function VentanaConfigZonaPeligro({ data, onCerrar }) {
       precio: "",
       imagen: "/cabecera-defecto.jpg",
       imagenInvitacion: "/invitacion-defecto.jpg",
+      planoLocal: "",
       lugar: "",
       direccion: "",
       precioAdulto: "",

@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "94",
+    cambios: [
+      "Mesas › Plano de mesas: botón «Plano del local» para poner de fondo el dibujo del local (sin las mesas: las pone la app). Las mesas se arrastran encima y ahora crecen y encogen con el plano, para que guarden la proporción con el local. Se imprime todo junto en A2.",
+      "Mesas › Plano de mesas: «Imprimir» imprime la ventana del plano; en el Mac, Mesas es una ventana aparte y se imprimía la de detrás.",
+    ],
+  },
+  {
     version: "93.9",
     cambios: [
       "Mesas › Plano de mesas: en el Mac, las mesas del plano no se movían. Mesas es una ventana aparte y la mesa escuchaba el ratón en la ventana principal (el mismo fallo que la v80.1 arregló en las ventanas flotantes de la Lista). Ahora escucha en la suya; una prueba vigila que nada vuelva a escuchar el ratón en la principal.",

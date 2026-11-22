@@ -1,5 +1,6 @@
-// Las dos imágenes del evento —la portada y la plantilla de invitación—
-// guardadas en el ALMACÉN, no dentro de la fila de `evento` (2026-09-24).
+// Las imágenes del evento —la portada, la plantilla de invitación y el
+// plano del local (v94)— guardadas en el ALMACÉN, no dentro de la fila de
+// `evento` (2026-09-24).
 //
 // El motivo es el mismo que ya estaba escrito para las fotos de boda, y
 // por eso esto no es una idea nueva sino una norma que se incumplía: una
@@ -18,11 +19,14 @@ import { supabase } from "../supabaseClient";
 
 export const CUBO_IMAGENES_EVENTO = "imagenes-evento";
 
-// Los dos únicos nombres que se usan. Fijos, no con fecha: así reemplazar
+// Los únicos nombres que se usan. Fijos, no con fecha: así reemplazar
 // la portada no va dejando archivos viejos olvidados en el cajón.
 export const IMAGEN_EVENTO = {
   PORTADA: "portada",
   INVITACION: "plantilla-invitacion",
+  // El dibujo del local, de fondo en el Plano de mesas. Público como las
+  // otras: un dibujo del local no tiene nada privado.
+  PLANO_LOCAL: "plano-local",
 };
 
 function tipoDe(dataUrl) {

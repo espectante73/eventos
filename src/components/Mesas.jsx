@@ -6,6 +6,13 @@ import { useState, useEffect, useRef } from "react";
 import { C, T } from "../theme";
 import { realmDe } from "../lib/realm";
 
+// Lo que mide una mesa del plano, con sus sillas: un 10 % del ancho del
+// plano (v94, él: «ordenarla en el plano teniendo en cuenta cómo estarán
+// las mesas en el local»). Crece y encoge con él, como el dibujo del local
+// de fondo; en píxeles fijos, al agrandar la ventana el local crecía y la
+// mesa no, y el plano engañaba. El 10 % sale de su dibujo del local.
+export const ANCHO_MESA_PLANO = 10;
+
 // Mesa arrastrable dentro del lienzo del plano — la posición se guarda como
 // porcentaje (0-100) del ancho/alto del lienzo, no en píxeles, para que
 // siga siendo válida aunque se cambie el tamaño de la ventana o se imprima
@@ -55,11 +62,14 @@ export function MesaPlano({ m, ocupados, canvasRef, onMover }) {
     };
   }, [m.numero, canvasRef, onMover]);
 
+  // El dibujo, en unidades propias (las del viewBox): 60 de lado, con la
+  // mesa de 44 y las sillas alrededor. El navegador lo escala al tamaño
+  // de la caja, con letras y sillas en la misma proporción.
+  const lado = 60;
   const diametro = 44;
   const sillas = Math.max(0, Math.min(m.capacidad, 16));
   const radioSillas = diametro / 2 + 6;
-  const lienzoMesa = diametro + 16;
-  const centro = lienzoMesa / 2;
+  const centro = lado / 2;
 
   return (
     <div
@@ -67,8 +77,8 @@ export function MesaPlano({ m, ocupados, canvasRef, onMover }) {
       onTouchStart={() => (arrastrando.current = true)}
       className="absolute select-none"
       style={{
-        width: lienzoMesa,
-        height: lienzoMesa,
+        width: `${ANCHO_MESA_PLANO}%`,
+        aspectRatio: "1",
         left: `${posVisual.x}%`,
         top: `${posVisual.y}%`,
         transform: "translate(-50%, -50%)",
@@ -77,48 +87,36 @@ export function MesaPlano({ m, ocupados, canvasRef, onMover }) {
       }}
       title={`Mesa ${m.numero} — ${ocupados}/${m.capacidad}`}
     >
-      {/* Sillas alrededor — su número sigue a la capacidad, igual que en
-          la sección Mesas, para que el plano refleje lo mismo. */}
-      {Array.from({ length: sillas }).map((_, i) => {
-        const angulo = (2 * Math.PI * i) / sillas - Math.PI / 2;
-        const cx = centro + radioSillas * Math.cos(angulo);
-        const cy = centro + radioSillas * Math.sin(angulo);
-        return (
-          <div
-            key={i}
-            className="absolute rounded-sm"
-            style={{
-              width: 6,
-              height: 4,
-              left: cx - 3,
-              top: cy - 2,
-              background: C.paperDark,
-              border: `1px solid ${C.line}`,
-              transform: `rotate(${(angulo * 180) / Math.PI + 90}deg)`,
-            }}
-          />
-        );
-      })}
-      <div
-        className="absolute rounded-full flex items-center justify-center"
-        style={{
-          width: diametro,
-          height: diametro,
-          left: (lienzoMesa - diametro) / 2,
-          top: (lienzoMesa - diametro) / 2,
-          background: C.okFondo,
-          border: `2px solid ${C.line}`,
-        }}
-      >
-        <div className="text-center leading-tight">
-          <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.pequeno, color: C.ink }}>
-            {m.numero}
-          </div>
-          <div style={{ fontSize: T.micro, color: C.charcoal }}>
-            {ocupados}/{m.capacidad}
-          </div>
-        </div>
-      </div>
+      <svg viewBox={`0 0 ${lado} ${lado}`} width="100%" height="100%" className="block" aria-hidden="true">
+        {/* Sillas alrededor — su número sigue a la capacidad, igual que en
+            la sección Mesas, para que el plano refleje lo mismo. */}
+        {Array.from({ length: sillas }).map((_, i) => {
+          const angulo = (2 * Math.PI * i) / sillas - Math.PI / 2;
+          const cx = centro + radioSillas * Math.cos(angulo);
+          const cy = centro + radioSillas * Math.sin(angulo);
+          return (
+            <rect
+              key={i}
+              x={cx - 2.5}
+              y={cy - 1.5}
+              width={5}
+              height={3}
+              rx={1}
+              fill={C.paperDark}
+              stroke={C.line}
+              strokeWidth={1}
+              transform={`rotate(${(angulo * 180) / Math.PI + 90} ${cx} ${cy})`}
+            />
+          );
+        })}
+        <circle cx={centro} cy={centro} r={diametro / 2 - 1} fill={C.okFondo} stroke={C.line} strokeWidth={2} />
+        <text x={centro} y={centro - 1.5} textAnchor="middle" fontFamily="'Fraunces', serif" fontWeight={700} fontSize={T.pequeno} fill={C.ink}>
+          {m.numero}
+        </text>
+        <text x={centro} y={centro + 10.5} textAnchor="middle" fontSize={T.micro} fill={C.charcoal}>
+          {ocupados}/{m.capacidad}
+        </text>
+      </svg>
     </div>
   );
 }
