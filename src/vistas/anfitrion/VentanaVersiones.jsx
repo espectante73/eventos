@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "94.3",
+    cambios: [
+      "Mesas › Plano de mesas: la lupa acerca y aleja de 25 en 25 % (100, 125, 150… hasta 300); antes saltaba de 100 a 150 de golpe.",
+    ],
+  },
+  {
     version: "94.2",
     cambios: [
       "Mesas › Plano de mesas: todos los botones (dibujo del local, imprimir, tamaño de las mesas y zoom) en una sola línea arriba, que se queda quieta: lo que se desliza es solo el plano. Al 100 % el plano cabe entero en la ventana. La ayuda, al pie y plegada. En el móvil, solo iconos.",
