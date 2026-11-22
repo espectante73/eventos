@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "95.5",
+    cambios: [
+      "Contabilidad › A pagar: cuando la diferencia en rosa es la entrada del DJ que entró en un acuse cerrado mientras era gratis, lo dice: «Entrada del DJ (acuse a 0 €)», con su importe, en vez de «Acuses con otro importe».",
+    ],
+  },
+  {
     version: "95.4",
     cambios: [
       "Vuelve lo de la 95.2, que era lo correcto: el DJ paga su entrada (47 € de adulto) y cuenta como uno más de los adultos en «Recaudado» y en la cuenta del local. La 95.3 lo había quitado por error.",

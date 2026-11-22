@@ -106,6 +106,7 @@ export function APagarHoja({ data, resumen, recaudado, propinas, soloLectura = f
             {cuadre.sinColaborador > 0 && <Linea detalle fondo={C.cuidadoFondo} concepto="Pagados sin colaborador" importe={plural(cuadre.sinColaborador, "persona", "personas")} />}
             {cuadre.yaNoPagados > 0 && <Linea detalle fondo={C.cuidadoFondo} concepto="De un acuse, hoy sin pagar" importe={plural(cuadre.yaNoPagados, "persona", "personas")} />}
             {cuadre.acusesDistintos > 0 && <Linea detalle fondo={C.cuidadoFondo} concepto="Acuses con otro importe" importe={plural(cuadre.acusesDistintos, "acuse", "acuses")} />}
+            {cuadre.entradaDj > 0 && <Linea detalle fondo={C.cuidadoFondo} concepto="Entrada del DJ (acuse a 0 €)" importe={euros(cuadre.entradaDj)} />}
           </>
         )}
 
@@ -153,7 +154,7 @@ export function APagarHoja({ data, resumen, recaudado, propinas, soloLectura = f
           Cómo se calcula
         </summary>
         <p className="mt-2" style={{ opacity: OP.secundario }}>
-          Entra lo ya recaudado —cada pagado por el precio de su entrada, según su edad— y las propinas de los acuses: el total bruto que tiene que haber. Debajo, lo que dicen los acuses y lo que aún tienen los colaboradores; si no suman lo mismo, sale la diferencia en rosa y, si la app la ve, la causa: pagados que no lleva ningún colaborador, invitados de un acuse que ya no figuran como pagados, o acuses con otro importe que el de hoy (cambiado a mano, o cambió después un precio o una edad). Sale lo del local (los confirmados de la Lista, el DJ también, por lo que cobra el local por persona, más lo demás del local), lo del DJ y la suma de tu hoja de Gastos. El precio de la entrada de los invitados no cambia nada de esto: solo se comparten las edades.
+          Entra lo ya recaudado —cada pagado por el precio de su entrada, según su edad— y las propinas de los acuses: el total bruto que tiene que haber. Debajo, lo que dicen los acuses y lo que aún tienen los colaboradores; si no suman lo mismo, sale la diferencia en rosa y, si la app la ve, la causa: pagados que no lleva ningún colaborador, invitados de un acuse que ya no figuran como pagados, o acuses con otro importe que el de hoy (cambiado a mano, o cambió después un precio o una edad); si lo que falta es la entrada del DJ, de un acuse cerrado cuando era gratis, lo dice. Sale lo del local (los confirmados de la Lista, el DJ también, por lo que cobra el local por persona, más lo demás del local), lo del DJ y la suma de tu hoja de Gastos. El precio de la entrada de los invitados no cambia nada de esto: solo se comparten las edades.
         </p>
       </details>
     </div>

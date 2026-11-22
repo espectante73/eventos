@@ -86,7 +86,7 @@ describe("el cuadre de los acuses con lo recaudado", () => {
     const invitados = [g("a", "Ruiz"), g("b", "Abreu"), g("n", "Sosa", { anioNacimiento: "2020" })];
     const colaboradores = [{ id: "c1", entregas: [{ id: "e1", importe: 82, propina: 5, invitados: ["b", "n"] }] }];
     const c = cuadreEntregas({ invitados, evento, colaboradores, recaudado: recaudadoDe(invitados), propinas: 5 });
-    expect(c).toEqual({ entregado: 87, porEntregar: 47, diferencia: 0, sinColaborador: 0, yaNoPagados: 0, acusesDistintos: 0 });
+    expect(c).toEqual({ entregado: 87, porEntregar: 47, diferencia: 0, sinColaborador: 0, yaNoPagados: 0, acusesDistintos: 0, entradaDj: 0 });
   });
 
   it("un pagado sin colaborador: la diferencia es su entrada, y se dice", () => {
@@ -104,5 +104,24 @@ describe("el cuadre de los acuses con lo recaudado", () => {
     expect(c.diferencia).toBe(-43);
     expect(c.yaNoPagados).toBe(1);
     expect(c.acusesDistintos).toBe(1);
+  });
+
+  // v95.5 (él: «prefiero que eso en rosa diga de qué es: el dinero entrada
+  // DJ»): su acuse se cerró cuando el DJ entraba a 0 €; hoy paga 47 €.
+  it("el acuse cerrado con el DJ a 0 €: la diferencia es la entrada del DJ, no un acuse distinto", () => {
+    const invitados = [
+      { id: "a", colaboradorId: "c1", confirmado: true, pagado: true, anioNacimiento: "1980" },
+      { id: "dj", colaboradorId: "c1", confirmado: true, pagado: true, anioNacimiento: "1975", zona: "DJ" },
+    ];
+    const colaboradores = [{ id: "c1", entregas: [{ id: "e1", importe: 47, invitados: ["a", "dj"] }] }];
+    const c = cuadreEntregas({ invitados, evento, colaboradores, recaudado: 94, propinas: 0 });
+    expect(c.diferencia).toBe(47);
+    expect(c.entradaDj).toBe(47);
+    expect(c.acusesDistintos).toBe(0);
+    // Si lo que falta no es justo lo del DJ, es un acuse distinto, como siempre.
+    const otro = [{ id: "c1", entregas: [{ id: "e1", importe: 40, invitados: ["a", "dj"] }] }];
+    const d = cuadreEntregas({ invitados, evento, colaboradores: otro, recaudado: 94, propinas: 0 });
+    expect(d.entradaDj).toBe(0);
+    expect(d.acusesDistintos).toBe(1);
   });
 });

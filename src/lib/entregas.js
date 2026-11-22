@@ -7,7 +7,7 @@
 // `colaboradores.entregas` de la base, con los invitados de cada una. Lo que
 // falta por entregar se calcula: sus confirmados ya pagados que no están en
 // ninguna entrega. Una foto de Deshacer anterior trae la lista vacía (null).
-import { importeEsperadoInvitado } from "./invitados";
+import { importeEsperadoInvitado, esDj } from "./invitados";
 import { ordenarPorApellidoNombre } from "./formato";
 
 export const entregasDe = (c) => (Array.isArray(c?.entregas) ? c.entregas : []);
@@ -52,7 +52,10 @@ export function itemsDeEntrega(entrega, invitados, evento) {
 // - `sinColaborador`: pagados que no lleva nadie: no están en ningún acuse;
 // - `yaNoPagados`: de un acuse, pero hoy sin pagar o sin confirmar;
 // - `acusesDistintos`: acuses cuyo importe no es el de hoy (cambiado a mano
-//   al entregar, o cambió después un precio o una edad).
+//   al entregar, o cambió después un precio o una edad);
+// - `entradaDj`: lo que falta en un acuse que lleva al DJ cerrado cuando su
+//   entrada valía 0 € (v95.5, él: «prefiero que eso en rosa diga de qué es:
+//   el dinero entrada DJ»). En euros; ese acuse ya no cuenta como distinto.
 const redondear = (n) => Math.round(n * 100) / 100;
 export function cuadreEntregas({ invitados = [], evento, colaboradores = [], recaudado = 0, propinas = 0 }) {
   const todos = colaboradores || [];
@@ -68,10 +71,18 @@ export function cuadreEntregas({ invitados = [], evento, colaboradores = [], rec
     const g = porId.get(id);
     return !g || !g.confirmado || !g.pagado;
   }).length;
-  const acusesDistintos = lasEntregas.filter((e) => {
-    const deHoy = (e.invitados || []).reduce((s, id) => s + (porId.has(id) ? importeEsperadoInvitado(porId.get(id), evento) : 0), 0);
-    return Math.abs((Number(e.importe) || 0) - deHoy) > 0.005;
-  }).length;
+  const deHoy = (ids, filtro = () => true) =>
+    ids.reduce((s, id) => s + (porId.has(id) && filtro(porId.get(id)) ? importeEsperadoInvitado(porId.get(id), evento) : 0), 0);
+  let acusesDistintos = 0;
+  let entradaDj = 0;
+  for (const e of lasEntregas) {
+    const suyos = e.invitados || [];
+    const falta = deHoy(suyos) - (Number(e.importe) || 0);
+    if (Math.abs(falta) <= 0.005) continue;
+    const delDj = deHoy(suyos, esDj);
+    if (delDj > 0 && Math.abs(falta - delDj) <= 0.005) entradaDj += delDj;
+    else acusesDistintos++;
+  }
   return {
     entregado,
     porEntregar: pendiente,
@@ -79,6 +90,7 @@ export function cuadreEntregas({ invitados = [], evento, colaboradores = [], rec
     sinColaborador,
     yaNoPagados,
     acusesDistintos,
+    entradaDj: redondear(entradaDj),
   };
 }
 
