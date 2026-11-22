@@ -43,7 +43,7 @@ import {
   BookUser,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
-import { contactosDeInvitados, ARCHIVO_CONTACTOS } from "../../lib/exportarContactos";
+import { contactosDeInvitados, notaDelEvento, ARCHIVO_CONTACTOS } from "../../lib/exportarContactos";
 import { descargarBlob } from "../../lib/descargas";
 import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, dentroDelTramo, textoTramo, hayTramo, enLaLlegada, LLEGADA, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora, contiene } from "../../lib/formato";
@@ -228,7 +228,7 @@ export function SeccionInvitados({
   // con los que ya tiene deja «Actualizar». Avisa al terminar y dónde está
   // (norma 9). Las reglas, en lib/exportarContactos.js.
   const exportarContactos = () => {
-    const { texto, cuantos } = contactosDeInvitados(invitados, colaboradores);
+    const { texto, cuantos } = contactosDeInvitados(invitados, colaboradores, evento);
     if (!cuantos) {
       preguntar({ titulo: "Nada que exportar", texto: "Ningún invitado tiene todavía teléfono ni email.", soloAviso: true });
       return;
@@ -236,7 +236,7 @@ export function SeccionInvitados({
     descargarBlob(ARCHIVO_CONTACTOS, new Blob([texto], { type: "text/vcard;charset=utf-8" }));
     preguntar({
       titulo: "Contactos exportados",
-      texto: `${ARCHIVO_CONTACTOS}: ${cuantos === 1 ? "1 contacto" : `${cuantos} contactos`}, con su teléfono y su email.\nLo tienes en tu carpeta de Descargas.\nEn el Mac: Contactos › Archivo › Importar…, y en los que ya tienes, «Actualizar».`,
+      texto: `${ARCHIVO_CONTACTOS}: ${cuantos === 1 ? "1 contacto" : `${cuantos} contactos`}, con su teléfono, su email y en Notas «${notaDelEvento(evento)}».\nLo tienes en tu carpeta de Descargas.\nEn el Mac: Contactos › Archivo › Importar…, y en los que ya tienes, «Actualizar».`,
       soloAviso: true,
     });
   };

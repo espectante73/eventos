@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "93.5",
+    cambios: [
+      "«Exportar contactos»: cada contacto lleva además, en Notas, «Evento: Las Bodas de todos» (el nombre del evento, sin el punto final), para saber de qué se conoce a cada uno.",
+    ],
+  },
+  {
     version: "93.4",
     cambios: [
       "Lista de invitados › Acciones: «Exportar contactos», lo contrario de «Importar tel.». Descarga contactos-invitados.vcf, una ficha por invitado con nombre, apellidos, teléfono y email (de todos), para completar la agenda del teléfono.",

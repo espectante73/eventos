@@ -21,6 +21,12 @@ describe("exportar contactos", () => {
     );
   });
 
+  it("de qué los conoce (v93.5): en Notas, «Evento: Las Bodas de todos», sin el punto", () => {
+    const ficha = fichaVCard(ANA, [], { nombre: "Las Bodas de todos." });
+    expect(ficha).toContain("NOTE:Evento: Las Bodas de todos\r\nEND:VCARD");
+    expect(fichaVCard(ANA, [], {})).not.toContain("NOTE");
+  });
+
   it("sin teléfono o sin email, solo lo que tiene; sin ninguno de los dos, nada", () => {
     expect(fichaVCard({ ...ANA, telefono: "" })).not.toContain("TEL");
     expect(fichaVCard({ ...ANA, email: "" })).not.toContain("EMAIL");
@@ -38,7 +44,7 @@ describe("exportar contactos", () => {
 
   it("todo el archivo: una ficha por invitado con algo que añadir, y «Importar tel.» lo lee igual", () => {
     const invitados = [ANA, { id: "b", nombre: "Luis", apellido: "Abreu", telefono: "+34611222333", email: "" }, { id: "c", nombre: "Sin", apellido: "Datos" }];
-    const { texto, cuantos } = contactosDeInvitados(invitados);
+    const { texto, cuantos } = contactosDeInvitados(invitados, [], { nombre: "Las Bodas de todos." });
     expect(cuantos).toBe(2);
     const leidos = leerVCard(texto);
     expect(leidos.map((c) => [c.apellidos, c.nombre, c.telefonos[0].numero])).toEqual([

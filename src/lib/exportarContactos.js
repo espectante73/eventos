@@ -8,6 +8,11 @@
 // El email, de TODOS (él): la nota de privacidad habla de lo guardado en la
 // app; su agenda es suya y la mayoría ya estaban en ella. Se arma en el
 // navegador y solo sale a su carpeta de Descargas.
+//
+// Y de qué los conoce (él, v93.5): en «Notas», «Evento: Las Bodas de
+// todos» (él lo eligió ahí, en la agenda del iPhone). La nota es un solo
+// campo: al «Actualizar», en un contacto que ya tenía la suya, Contactos
+// podría cambiarla; se le dijo.
 import { emailDeInvitado } from "./invitados";
 
 export const ARCHIVO_CONTACTOS = "contactos-invitados.vcf";
@@ -26,7 +31,13 @@ const plegar = (linea) => {
 // La ficha de un invitado, o "" si no tiene nada que añadir a una agenda
 // (ni teléfono ni email). Apellidos y nombre como los lee Contactos: «N»
 // es «Apellidos;Nombre».
-export function fichaVCard(g, colaboradores = []) {
+// `evento`: su nombre, sin el punto final, va en la nota.
+export const notaDelEvento = (evento) => {
+  const nombre = texto(evento?.nombre).replace(/\.$/, "");
+  return nombre ? `Evento: ${nombre}` : "";
+};
+export function fichaVCard(g, colaboradores = [], evento = null) {
+  const nota = notaDelEvento(evento);
   const nombre = texto(g.nombre);
   const apellido = texto(g.apellido);
   const telefono = texto(g.telefono);
@@ -39,6 +50,7 @@ export function fichaVCard(g, colaboradores = []) {
     `FN:${escapar([nombre, apellido].filter(Boolean).join(" "))}`,
     ...(telefono ? [`TEL;type=CELL;type=VOICE;type=pref:${escapar(telefono)}`] : []),
     ...(email ? [`EMAIL;type=INTERNET;type=HOME;type=pref:${escapar(email)}`] : []),
+    ...(nota ? [`NOTE:${escapar(nota)}`] : []),
     "END:VCARD",
   ]
     .map(plegar)
@@ -47,7 +59,7 @@ export function fichaVCard(g, colaboradores = []) {
 
 // Todo el archivo: una ficha por invitado de la Lista, en el orden de la
 // Lista. `cuantos`, las fichas que lleva.
-export function contactosDeInvitados(invitados = [], colaboradores = []) {
-  const fichas = invitados.map((g) => fichaVCard(g, colaboradores)).filter(Boolean);
+export function contactosDeInvitados(invitados = [], colaboradores = [], evento = null) {
+  const fichas = invitados.map((g) => fichaVCard(g, colaboradores, evento)).filter(Boolean);
   return { texto: fichas.length ? fichas.join("\r\n") + "\r\n" : "", cuantos: fichas.length };
 }
