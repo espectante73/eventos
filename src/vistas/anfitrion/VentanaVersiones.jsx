@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "94.2",
+    cambios: [
+      "Mesas › Plano de mesas: todos los botones (dibujo del local, imprimir, tamaño de las mesas y zoom) en una sola línea arriba, que se queda quieta: lo que se desliza es solo el plano. Al 100 % el plano cabe entero en la ventana. La ayuda, al pie y plegada. En el móvil, solo iconos.",
+      "Mesas › Plano de mesas: si falta el SQL de la 94.1, los botones del tamaño de las mesas lo dicen y no dejan tocarlo; antes parecía guardarse y volvía solo al 100 %.",
+    ],
+  },
+  {
     version: "94.1",
     cambios: [
       "Mesas › Plano de mesas: + y − en la esquina para acercar o alejar el plano, solo para mirar (no se guarda ni sale en el papel). Ampliado, el plano se desliza con el dedo o arrastrando el fondo con el ratón; arrastrar una mesa la sigue moviendo.",

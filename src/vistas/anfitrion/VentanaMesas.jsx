@@ -516,7 +516,9 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
         {verPlano ? (
           // El plano, de lo que se ve en pantalla, como el resto de la ventana:
           // con una memoria cargada, sus mesas, y moverlas es parte de la prueba.
-          <div className="overflow-y-auto" style={{ flex: 1, minHeight: 0 }}>
+          // Sin desplazar aquí (v94.2): lo que se desliza es el plano, dentro
+          // de su marco; su línea de mandos se queda quieta arriba.
+          <div className="flex flex-col" style={{ flex: 1, minHeight: 0 }}>
             <PlanoMesas data={{ ...data, mesas, persistMesas: cambiarMesas }} ocupacionMesa={(numero) => ocupacion(vista, numero)} />
           </div>
         ) : (

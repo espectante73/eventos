@@ -19,8 +19,13 @@
 // la zona del plano dentro de un marco que se desliza (con el dedo, o
 // arrastrando el fondo con el ratón); al imprimir, index.css la devuelve al
 // 100 %: el zoom nunca sale en el papel.
+//
+// Todos los mandos en UNA línea, quieta arriba (v94.2, él: «rompes la regla
+// de todo en una línea; al mover se esconden los botones»): lo que se
+// desliza es el plano, dentro de su marco, nunca la línea. Al 100 %, el
+// plano entero cabe en el marco (a lo ancho o a lo alto, lo que mande).
 import { useRef, useState, useLayoutEffect } from "react";
-import { Printer, Image as IconoImagen, Plus, Minus } from "lucide-react";
+import { Printer, Image as IconoImagen, Plus, Minus, ZoomIn, ZoomOut } from "lucide-react";
 import { C, OP, R, conAlfa } from "../theme";
 import { MesaPlano } from "./Mesas";
 import { Boton } from "./Boton";
@@ -38,11 +43,13 @@ import {
   TAMANO_MESAS,
 } from "../lib/planoMesas";
 
+const PROPORCION_A2 = 594 / 420;
+
 // La cifra entre el − y el +: se lee, no se pulsa.
-function Cifra({ children }) {
+function Cifra({ children, className = "" }) {
   return (
     <span
-      className="px-1.5 py-0.5 text-xs text-center tabular-nums min-w-[3.25rem]"
+      className={`px-1.5 py-0.5 text-xs text-center tabular-nums whitespace-nowrap ${className}`}
       style={{ background: C.paper, color: C.ink, border: `1px solid ${C.line}`, borderRadius: R.caja }}
     >
       {children}
@@ -71,6 +78,10 @@ export function PlanoMesas({ data, ocupacionMesa }) {
   const [errorPlano, setErrorPlano] = useState("");
   const planoLocal = evento?.planoLocal || "";
   const tamano = tamanoMesasDe(evento);
+  // Sin su columna en la base (falta el SQL de la v94.1), guardar no hace
+  // nada y al releer el evento el tamaño vuelve solo al 100 % (él lo vio:
+  // «salta solo de 70 % a 100 %»). Mejor decirlo y no dejar tocarlo.
+  const faltaSqlTamano = Boolean(evento) && !("tamanoMesasPlano" in evento);
   const anchoMesa = anchoMesaPlano(tamano);
   const cambiarTamano = (direccion) =>
     persistEvento({ ...evento, tamanoMesasPlano: tamanoMesasSiguiente(tamano, direccion) });
@@ -91,6 +102,23 @@ export function PlanoMesas({ data, ocupacionMesa }) {
     }
     setZoom((z) => zoomSiguiente(z, direccion));
   };
+  // Lo que mide el marco, para que al 100 % quepa el plano entero. Con el
+  // ResizeObserver de la ventana donde está (en el Mac, Mesas es otra).
+  const [marcoMide, setMarcoMide] = useState(null);
+  useLayoutEffect(() => {
+    const marco = marcoRef.current;
+    const Observador = marco && realmDe(marco).win.ResizeObserver;
+    if (!Observador) return undefined;
+    const observador = new Observador(() => setMarcoMide({ ancho: marco.clientWidth, alto: marco.clientHeight }));
+    observador.observe(marco);
+    return () => observador.disconnect();
+  }, []);
+  const anchoBase = marcoMide
+    ? marcoMide.alto > 0
+      ? Math.min(marcoMide.ancho, marcoMide.alto * PROPORCION_A2)
+      : marcoMide.ancho
+    : null;
+
   useLayoutEffect(() => {
     const marco = marcoRef.current;
     const centro = centroPendiente.current;
@@ -146,34 +174,36 @@ export function PlanoMesas({ data, ocupacionMesa }) {
   };
 
   return (
-    <div className="pt-1">
-      <p className="text-xs mb-3" style={{ color: C.charcoal, opacity: OP.secundario }}>
-        Arrastra cada mesa a su sitio en el local; se guarda sola. «Plano del local» pone de
-        fondo el dibujo del local, sin las mesas, y «Tamaño de las mesas» las ajusta a él. El
-        + y el − de la esquina acercan o alejan solo para mirar. Para imprimirlo, pulsa
-        «Imprimir» y elige papel A2.
-      </p>
-      <div className="flex items-center gap-2 mb-3 justify-end zurdo:justify-start">
-        {planoLocal && (
-          <BotonQuitar
-            titulo="Quitar el plano del local"
-            pregunta={{ titulo: "¿Quitar el plano del local?", texto: "Las mesas se quedan donde están.", rotulo: "Sí" }}
-            onClick={() => persistEvento({ ...evento, planoLocal: "" })}
-          />
-        )}
-        {/* Los dos, del mismo ancho (norma 4). */}
-        <div className="grid grid-cols-2 gap-2">
+    <div className="flex flex-col" style={{ flex: 1, minHeight: 0 }}>
+      {/* Una sola línea, quieta (v94.2). Tres grupos: el dibujo, las mesas y
+          el zoom (lo más usado, en el lado del pulgar). Los zurdos ven los
+          grupos al revés; dentro de cada uno, el − antes que el +, como el
+          mando de la música. En el móvil, solo iconos (su nombre al pasar o
+          tocar y mantener). */}
+      <div data-linea-mandos className="flex items-center gap-3 mb-2 justify-end zurdo:flex-row-reverse whitespace-nowrap">
+        <div className="flex items-center gap-1">
+          {planoLocal && (
+            <BotonQuitar
+              titulo="Quitar el plano del local"
+              pregunta={{ titulo: "¿Quitar el plano del local?", texto: "Las mesas se quedan donde están.", rotulo: "Sí" }}
+              onClick={() => persistEvento({ ...evento, planoLocal: "" })}
+            />
+          )}
           <Boton
             variante="principal"
+            tamano="pequeno"
             icono={IconoImagen}
+            titulo={planoLocal ? "Cambiar el dibujo del local" : "Poner de fondo el dibujo del local, sin las mesas"}
             disabled={subiendoPlano}
             onClick={() => inputPlanoRef.current?.click()}
           >
-            {subiendoPlano ? "Subiendo…" : "Plano del local"}
+            <span className="hidden sm:inline">{subiendoPlano ? "Subiendo…" : "Plano del local"}</span>
           </Boton>
           <Boton
             variante="principal"
+            tamano="pequeno"
             icono={Printer}
+            titulo="Imprimir el plano entero: elige papel A2"
             onClick={() => {
               // La ventana del plano, no la pestaña (v94): en el Mac, Mesas
               // es otra ventana del sistema, y la pestaña no tiene el plano.
@@ -187,98 +217,102 @@ export function PlanoMesas({ data, ocupacionMesa }) {
               }, 60);
             }}
           >
-            Imprimir (A2)
+            <span className="hidden sm:inline">Imprimir</span>
           </Boton>
+          <input ref={inputPlanoRef} type="file" accept="image/*" onChange={onElegirPlano} className="sr-only" />
         </div>
-        <input ref={inputPlanoRef} type="file" accept="image/*" onChange={onElegirPlano} className="sr-only" />
-      </div>
-      {errorPlano && <LineaAviso className="text-xs mb-3">{errorPlano}</LineaAviso>}
-      {/* Se guarda y sale en el papel. El − antes que el +, como se lee, y
-          sin invertir para zurdos (como el mando de la música). */}
-      <div className="flex items-center gap-2 mb-3 justify-end zurdo:justify-start">
-        <span className="text-sm" style={{ color: C.charcoal }}>Tamaño de las mesas</span>
-        <Boton
-          variante="principal"
-          icono={Minus}
-          titulo="Mesas más pequeñas"
-          disabled={tamano <= TAMANO_MESAS.minimo}
-          onClick={() => cambiarTamano(-1)}
-        />
-        <Cifra>{tamano} %</Cifra>
-        <Boton
-          variante="principal"
-          icono={Plus}
-          titulo="Mesas más grandes"
-          disabled={tamano >= TAMANO_MESAS.maximo}
-          onClick={() => cambiarTamano(1)}
-        />
-      </div>
-      <div className="relative">
-        <div
-          ref={marcoRef}
-          className="rounded"
-          onMouseDown={empezarDesplazar}
-          style={{ aspectRatio: "594 / 420", overflow: ampliado ? "auto" : "hidden", cursor: ampliado ? "grab" : undefined }}
-        >
-          <div id="zona-imprimible-plano" style={{ width: `${zoom}%` }}>
-            <div
-              ref={lienzoPlanoRef}
-              className="relative w-full rounded"
-              style={{
-                aspectRatio: "594 / 420",
-                background: C.papelPlano,
-                backgroundImage:
-                  `linear-gradient(${conAlfa(C.negro, 0.05)} 1px, transparent 1px), linear-gradient(90deg, ${conAlfa(C.negro, 0.05)} 1px, transparent 1px)`,
-                backgroundSize: "5% 5%",
-                border: `1px solid ${C.line}`,
-              }}
-            >
-              {planoLocal && (
-                <img
-                  src={planoLocal}
-                  alt="Plano del local"
-                  draggable={false}
-                  className="absolute inset-0 w-full h-full rounded pointer-events-none select-none"
-                  style={{ objectFit: "contain" }}
-                />
-              )}
-              {mesas.map((m, i) => {
-                const ocupados = ocupacionMesa(m.numero);
-                const posDefecto = posicionPorDefecto(i, mesas.length);
-                const posX = m.posX ?? posDefecto.posX;
-                const posY = m.posY ?? posDefecto.posY;
-                return (
-                  <MesaPlano
-                    key={m.numero}
-                    m={{ ...m, posX, posY }}
-                    ocupados={ocupados}
-                    canvasRef={lienzoPlanoRef}
-                    onMover={moverMesaPlano}
-                    ancho={anchoMesa}
-                  />
-                );
-              })}
-            </div>
-          </div>
-        </div>
-        {/* El zoom, como en un mapa: en la esquina del lado del pulgar. Fuera
-            de la zona imprimible: no sale en el papel. */}
-        <div className="absolute bottom-2 right-2 zurdo:right-auto zurdo:left-2 flex flex-col items-center gap-1.5">
+        {/* Se guarda y sale en el papel. */}
+        <div className="flex items-center gap-1">
           <Boton
             variante="principal"
-            icono={Plus}
-            titulo="Acercar el plano"
-            disabled={zoom >= PASOS_ZOOM_PLANO[PASOS_ZOOM_PLANO.length - 1]}
-            onClick={() => cambiarZoom(1)}
-          />
-          <Cifra>{zoom} %</Cifra>
-          <Boton
-            variante="principal"
+            tamano="pequeno"
             icono={Minus}
+            titulo={faltaSqlTamano ? "Falta subir el SQL de la versión 94.1" : "Mesas más pequeñas"}
+            disabled={faltaSqlTamano || tamano <= TAMANO_MESAS.minimo}
+            onClick={() => cambiarTamano(-1)}
+          />
+          <Cifra>Mesas {tamano} %</Cifra>
+          <Boton
+            variante="principal"
+            tamano="pequeno"
+            icono={Plus}
+            titulo={faltaSqlTamano ? "Falta subir el SQL de la versión 94.1" : "Mesas más grandes"}
+            disabled={faltaSqlTamano || tamano >= TAMANO_MESAS.maximo}
+            onClick={() => cambiarTamano(1)}
+          />
+        </div>
+        {/* Solo para mirar: ni se guarda ni sale en el papel. */}
+        <div className="flex items-center gap-1">
+          <Boton
+            variante="principal"
+            tamano="pequeno"
+            icono={ZoomOut}
             titulo="Alejar el plano"
             disabled={!ampliado}
             onClick={() => cambiarZoom(-1)}
           />
+          {/* En el móvil no cabe en la línea, y para mirar no hace falta. */}
+          <Cifra className="hidden sm:inline">{zoom} %</Cifra>
+          <Boton
+            variante="principal"
+            tamano="pequeno"
+            icono={ZoomIn}
+            titulo="Acercar el plano"
+            disabled={zoom >= PASOS_ZOOM_PLANO[PASOS_ZOOM_PLANO.length - 1]}
+            onClick={() => cambiarZoom(1)}
+          />
+        </div>
+      </div>
+      {errorPlano && <LineaAviso className="text-xs mb-2">{errorPlano}</LineaAviso>}
+      <div
+        ref={marcoRef}
+        className="rounded"
+        onMouseDown={empezarDesplazar}
+        style={{ flex: 1, minHeight: 0, overflow: ampliado ? "auto" : "hidden", cursor: ampliado ? "grab" : undefined }}
+      >
+        <div
+          id="zona-imprimible-plano"
+          className="mx-auto"
+          style={{ width: anchoBase ? `${(anchoBase * zoom) / 100}px` : `${zoom}%` }}
+        >
+          <div
+            ref={lienzoPlanoRef}
+            className="relative w-full rounded"
+            style={{
+              aspectRatio: "594 / 420",
+              background: C.papelPlano,
+              backgroundImage:
+                `linear-gradient(${conAlfa(C.negro, 0.05)} 1px, transparent 1px), linear-gradient(90deg, ${conAlfa(C.negro, 0.05)} 1px, transparent 1px)`,
+              backgroundSize: "5% 5%",
+              border: `1px solid ${C.line}`,
+            }}
+          >
+            {planoLocal && (
+              <img
+                src={planoLocal}
+                alt="Plano del local"
+                draggable={false}
+                className="absolute inset-0 w-full h-full rounded pointer-events-none select-none"
+                style={{ objectFit: "contain" }}
+              />
+            )}
+            {mesas.map((m, i) => {
+              const ocupados = ocupacionMesa(m.numero);
+              const posDefecto = posicionPorDefecto(i, mesas.length);
+              const posX = m.posX ?? posDefecto.posX;
+              const posY = m.posY ?? posDefecto.posY;
+              return (
+                <MesaPlano
+                  key={m.numero}
+                  m={{ ...m, posX, posY }}
+                  ocupados={ocupados}
+                  canvasRef={lienzoPlanoRef}
+                  onMover={moverMesaPlano}
+                  ancho={anchoMesa}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
       {mesas.length === 0 && (
@@ -286,6 +320,18 @@ export function PlanoMesas({ data, ocupacionMesa }) {
           Todavía no hay mesas — créalas primero en "Mesas".
         </p>
       )}
+      {/* La ayuda, al pie y plegada (norma 5). */}
+      <details className="text-xs mt-2" style={{ color: C.charcoal }}>
+        <summary className="cursor-pointer select-none" style={{ opacity: OP.secundario }}>
+          Cómo se usa
+        </summary>
+        <p className="mt-2" style={{ opacity: OP.secundario }}>
+          Arrastra cada mesa a su sitio en el local; se guarda sola. El primer botón pone de fondo
+          el dibujo del local, sin las mesas, y «Mesas» las agranda o encoge para que encajen en él:
+          eso sale en el papel. La lupa acerca o aleja solo para mirar; ampliado, arrastra el fondo
+          para moverte. Para imprimir, elige papel A2.
+        </p>
+      </details>
     </div>
   );
 }
