@@ -83,11 +83,12 @@ describe("miembrosDesdeLista", () => {
     ]);
   });
   // v85.8 (él): el DJ no paga; sin su zona, «por cobrar» le sumaba 47 €.
-  it("conserva la zona: el DJ no suma nada por cobrar", () => {
+  // v95.2 (él): el DJ paga como todos.
+  it("conserva la zona, y el DJ suma su entrada por cobrar como todos", () => {
     const invitados = [{ id: "9", nombre: "Brown", apellido: "Dj", colaboradorId: "c1", confirmado: true, zona: "DJ", anioNacimiento: "1985" }];
     const miembros = miembrosDesdeLista(invitados, "c1", datosCompletos);
     expect(miembros[0].zona).toBe("DJ");
     const [familia] = agruparFamilias(miembros, {}, { fecha: "2026-12-11", precioAdulto: "47" });
-    expect(familia.totalPorPagar).toBe(0);
+    expect(familia.totalPorPagar).toBe(47);
   });
 });

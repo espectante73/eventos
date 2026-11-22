@@ -19,7 +19,8 @@ import { euros } from "./formato";
 // `yo` viene de tablon_quien_soy: solo sí o no, nunca sus datos. Sin esos
 // tres (el servidor aún sin el SQL v69.4) no hay guía: mejor nada que una
 // ronda equivocada.
-// El importe de su entrada: el año con el que entró y su zona (el DJ, 0 €).
+// El importe de su entrada: el año con el que entró (el DJ paga como todos
+// desde la v95.2).
 // Una sola cuenta para la guía y para «Te falta» (norma 7).
 const importeDe = (yo, evento) => (yo?.anio ? importeEsperadoInvitado({ anioNacimiento: yo.anio, zona: yo.zona }, evento) : 0);
 

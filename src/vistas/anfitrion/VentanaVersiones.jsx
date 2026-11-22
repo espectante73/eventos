@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "95.4",
+    cambios: [
+      "Vuelve lo de la 95.2, que era lo correcto: el DJ paga su entrada (47 € de adulto) y cuenta como uno más de los adultos en «Recaudado» y en la cuenta del local. La 95.3 lo había quitado por error.",
+    ],
+  },
+  {
     version: "95.3",
     cambios: [
       "Se deshace la 95.2, que fue un malentendido: el DJ no paga entrada (0 €), como antes. Lo que cobra el local no cambia: el DJ siempre ha contado ahí como un adulto más.",

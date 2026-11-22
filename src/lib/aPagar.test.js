@@ -18,11 +18,12 @@ describe("tramoDeEdad (la misma para la entrada y para el local)", () => {
     expect(calcularEdad("2026", evento)).toBe(0);
     expect(importeEsperadoInvitado({ anioNacimiento: "2026" }, evento)).toBe(0);
   });
-  it("la entrada sigue igual: 47 adulto, 35 niño, 0 bebé y DJ", () => {
+  // El DJ, como todos (v95.2, él: que se anule el «0 € para el DJ»).
+  it("la entrada sigue igual: 47 adulto, 35 niño, 0 bebé; el DJ, 47 como todos", () => {
     expect(importeEsperadoInvitado({ anioNacimiento: "1980" }, evento)).toBe(47);
     expect(importeEsperadoInvitado({ anioNacimiento: "2020" }, evento)).toBe(35);
     expect(importeEsperadoInvitado({ anioNacimiento: "2024" }, evento)).toBe(0);
-    expect(importeEsperadoInvitado({ anioNacimiento: "1980", zona: "DJ" }, evento)).toBe(0);
+    expect(importeEsperadoInvitado({ anioNacimiento: "1980", zona: "DJ" }, evento)).toBe(47);
   });
 });
 
@@ -50,13 +51,12 @@ describe("personasDelLocal", () => {
     ];
     expect(personasDelLocal(invitados, evento)).toEqual({ adulto: 3, nino: 1, bebe: 1, sinAnio: 1 });
   });
-  // v95.3 (él: «te pedí que el DJ no pagaba y lo metiste en la cuenta de
-  // todos los adultos con 47 €»): dos cuentas distintas. La entrada del DJ,
-  // 0 €; el local, en cambio, le cobra como a un adulto más.
-  it("el DJ no paga entrada, pero el local sí le cuenta como adulto", () => {
+  // v95.4 (él: «ahora sí paga y es parte de los 117 adultos»): el DJ, uno más
+  // de los adultos en lo recaudado y en el local. La v95.3 lo quitó por error.
+  it("el DJ pagado es un adulto más: en lo recaudado (47 €) y en el local", () => {
     const dj = { confirmado: true, pagado: true, anioNacimiento: "1985", zona: "DJ" };
-    expect(importeEsperadoInvitado(dj, evento)).toBe(0);
-    expect(desgloseRecaudado([dj], evento).adulto).toEqual({ personas: 0, importe: 0 });
+    expect(importeEsperadoInvitado(dj, evento)).toBe(47);
+    expect(desgloseRecaudado([dj], evento).adulto).toEqual({ personas: 1, importe: 47 });
     expect(personasDelLocal([dj], evento).adulto).toBe(1);
   });
 });
@@ -167,7 +167,7 @@ describe("conDj", () => {
 });
 
 describe("desgloseRecaudado (v94.5: cuántos pagaron como adultos y como niños)", () => {
-  it("los pagados por su edad, sin el DJ; los bebés, todos los confirmados; la suma es «Recaudado»", () => {
+  it("los pagados por su edad, el DJ también (v95.2); los bebés, todos los confirmados; la suma es «Recaudado»", () => {
     const invitados = [
       { id: "a", confirmado: true, pagado: true, anioNacimiento: "1980" },
       { id: "s", confirmado: true, pagado: true, anioNacimiento: "" }, // sin año: adulto
@@ -178,7 +178,7 @@ describe("desgloseRecaudado (v94.5: cuántos pagaron como adultos y como niños)
       { id: "x", confirmado: false, pagado: true, anioNacimiento: "1990" },
     ];
     const d = desgloseRecaudado(invitados, evento);
-    expect(d.adulto).toEqual({ personas: 2, importe: 94 });
+    expect(d.adulto).toEqual({ personas: 3, importe: 141 });
     expect(d.nino).toEqual({ personas: 1, importe: 35 });
     expect(d.bebe).toEqual({ personas: 1 });
     expect(d.precioAdulto).toBe(47);
