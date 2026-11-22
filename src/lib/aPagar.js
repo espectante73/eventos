@@ -13,7 +13,7 @@
 // Las personas las cuenta la app: los confirmados de la Lista, el DJ también
 // (el local le sirve como a uno más); sin año, como adulto.
 import { parsePrecio } from "./formato";
-import { calcularEdad, tramoDeEdad, importeEsperadoInvitado, TRAMO } from "./invitados";
+import { calcularEdad, tramoDeEdad, importeEsperadoInvitado, esDj, TRAMO } from "./invitados";
 import { totalGastos } from "./gastos";
 
 const texto = (v) => String(v ?? "").trim();
@@ -74,13 +74,13 @@ export function cuentaDelLocal(aPagar, personas) {
 }
 
 // Lo recaudado, por edades (él, v94.5: «cuántos de más de 8 años pagaron los
-// 47 €, cuántos como niños»): los confirmados ya pagados, el DJ también
-// (v95.2), cada uno por el precio de su entrada (importeEsperadoInvitado: la suma es la misma
+// 47 €, cuántos como niños»): los confirmados ya pagados, sin el DJ, cada uno
+// por el precio de su entrada (importeEsperadoInvitado: la suma es la misma
 // de «Recaudado»). Los bebés no pagan: salen todos los confirmados.
 export function desgloseRecaudado(invitados = [], evento) {
   const tramos = { adulto: { personas: 0, importe: 0 }, nino: { personas: 0, importe: 0 }, bebe: { personas: 0 } };
   for (const g of invitados) {
-    if (!g.confirmado) continue;
+    if (!g.confirmado || esDj(g)) continue;
     const tramo = tramoDeEdad(g.anioNacimiento, evento);
     if (tramo === TRAMO.BEBE) {
       tramos.bebe.personas++;

@@ -22,8 +22,7 @@ export function comoMiembro(g) {
     datosCompletos: datosCompletos(g),
     pagado: Boolean(g.pagado),
     presente: Boolean(g.presente),
-    // La zona (la marca del DJ). Ya no cambia el importe: el DJ paga como
-    // todos desde la v95.2.
+    // La zona, para el importe: el DJ entra a 0 € (esDj, v85.8).
     zona: g.zona || "",
   };
 }

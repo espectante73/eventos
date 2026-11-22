@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "95.3",
+    cambios: [
+      "Se deshace la 95.2, que fue un malentendido: el DJ no paga entrada (0 €), como antes. Lo que cobra el local no cambia: el DJ siempre ha contado ahí como un adulto más.",
+    ],
+  },
+  {
     version: "95.2",
     cambios: [
       "El DJ (la zona DJ) paga su entrada como cualquier invitado, según su edad: 47 € de adulto. Se acaba el «0 € para el DJ» en la Lista, el tablón, el cobro por familias, lo previsto a recoger y Contabilidad. Sigue sin recoger dinero como colaborador.",

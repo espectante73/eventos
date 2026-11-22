@@ -165,11 +165,9 @@ describe("edadPromedio", () => {
 });
 
 describe("importeEsperadoInvitado", () => {
-  // v84.2 el DJ no pagaba; v95.2 (él: que se anule el «0 € para el DJ», «precio
-  // normal de adulto como a los demás invitados»): paga como todos.
-  it("el DJ contratado (la zona DJ, escrita como sea) paga como los demás, por su edad", () => {
+  it("el DJ contratado (la zona DJ, escrita como sea) no paga; los demás, su precio (v84.2)", () => {
     const ev = { fecha: "2026-12-11", precioAdulto: "45", precioNino: "20", edadNinoDesde: "2", edadNinoHasta: "12" };
-    for (const zona of ["DJ", " dj "]) expect(importeEsperadoInvitado({ anioNacimiento: "1985", zona }, ev)).toBe(45);
+    for (const zona of ["DJ", " dj "]) expect(importeEsperadoInvitado({ anioNacimiento: "1985", zona }, ev)).toBe(0);
     expect(importeEsperadoInvitado({ anioNacimiento: "1985", zona: "Icod" }, ev)).toBe(45);
   });
 
@@ -459,14 +457,14 @@ describe("previstoARecoger", () => {
     { id: "1", confirmado: true, anioNacimiento: "1985" }, // adulto: 50
     { id: "2", confirmado: true, anioNacimiento: "2020" }, // niño: 25
     { id: "3", confirmado: true, anioNacimiento: "2025" }, // bebé: 0
-    { id: "4", confirmado: true, anioNacimiento: "1980", zona: "DJ" }, // el DJ, como todos: 50 (v95.2)
+    { id: "4", confirmado: true, anioNacimiento: "1980", zona: "DJ" }, // el DJ: 0
     { id: "5", confirmado: false, anioNacimiento: "2020" }, // sin confirmar: como adulto, 50
     { id: "6", confirmado: false }, // sin confirmar: 50
     { id: "7", confirmado: false, noAsiste: true, anioNacimiento: "1985" }, // no asiste: fuera
   ];
 
   it("confirmados con su edad, y los sin confirmar todos como adultos; «No asiste», fuera", () => {
-    expect(previstoARecoger(lista, evento)).toEqual({ total: 225, deConfirmados: 125, deSinConfirmar: 100, sinConfirmar: 2 });
+    expect(previstoARecoger(lista, evento)).toEqual({ total: 175, deConfirmados: 75, deSinConfirmar: 100, sinConfirmar: 2 });
   });
 
   it("lo de los confirmados es lo mismo que suman importeEsperadoInvitado de cada uno", () => {
