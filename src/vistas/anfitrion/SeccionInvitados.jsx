@@ -40,8 +40,11 @@ import {
   Square,
   SquareCheck,
   Undo2,
+  BookUser,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
+import { contactosDeInvitados, ARCHIVO_CONTACTOS } from "../../lib/exportarContactos";
+import { descargarBlob } from "../../lib/descargas";
 import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, dentroDelTramo, textoTramo, hayTramo, enLaLlegada, LLEGADA, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora, contiene } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
@@ -220,6 +223,23 @@ export function SeccionInvitados({
   // Los avisos de las mesas salen en una ventanita en medio de la pantalla:
   // el aviso de arriba de la lista no se ve si se está en la fila 100.
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
+
+  // «Exportar contactos» (v93.4): el archivo para Contactos del Mac, que
+  // con los que ya tiene deja «Actualizar». Avisa al terminar y dónde está
+  // (norma 9). Las reglas, en lib/exportarContactos.js.
+  const exportarContactos = () => {
+    const { texto, cuantos } = contactosDeInvitados(invitados, colaboradores);
+    if (!cuantos) {
+      preguntar({ titulo: "Nada que exportar", texto: "Ningún invitado tiene todavía teléfono ni email.", soloAviso: true });
+      return;
+    }
+    descargarBlob(ARCHIVO_CONTACTOS, new Blob([texto], { type: "text/vcard;charset=utf-8" }));
+    preguntar({
+      titulo: "Contactos exportados",
+      texto: `${ARCHIVO_CONTACTOS}: ${cuantos === 1 ? "1 contacto" : `${cuantos} contactos`}, con su teléfono y su email.\nLo tienes en tu carpeta de Descargas.\nEn el Mac: Contactos › Archivo › Importar…, y en los que ya tienes, «Actualizar».`,
+      soloAviso: true,
+    });
+  };
   const avisarMesa = (texto) => texto && preguntar({ titulo: "Mesa sin cambiar", texto, soloAviso: true });
   // Los avisos de las operaciones de lib/edicionInvitados.js: si traen
   // texto, es que NO se ha hecho el cambio (o se hizo con una salvedad).
@@ -889,6 +909,13 @@ export function SeccionInvitados({
       marcado: mostrarImportarTel,
       icono: Contact,
       onClick: () => setMostrarImportarTel((v) => !v),
+    },
+    // Al revés (él, v93.4): sus datos, a la agenda del teléfono.
+    {
+      id: "exportarContactos",
+      etiqueta: "Exportar contactos",
+      icono: BookUser,
+      onClick: () => exportarContactos(),
     },
     // El anfitrión escribe por WhatsApp a cada uno que no ha pagado (él, v89).
     {

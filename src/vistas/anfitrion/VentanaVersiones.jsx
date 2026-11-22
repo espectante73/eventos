@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "93.4",
+    cambios: [
+      "Lista de invitados › Acciones: «Exportar contactos», lo contrario de «Importar tel.». Descarga contactos-invitados.vcf, una ficha por invitado con nombre, apellidos, teléfono y email (de todos), para completar la agenda del teléfono.",
+      "En el Mac: Contactos › Archivo › Importar…; con los que ya están, «Actualizar» añade lo que falta a la misma ficha sin repetirla. Contactos los reconoce por el nombre. Mejor en el Mac que en el iPhone, que los duplicaría.",
+    ],
+  },
+  {
     version: "93.3",
     cambios: [
       "Contabilidad: «Cuenta del local» pasa a ser su propia sección, después de «A pagar», con su total a la vista estando plegada. Dentro, lo mismo de la 93.1: personas, cada servicio con su desglose y «Total a pagar al local».",
