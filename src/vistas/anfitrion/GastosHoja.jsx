@@ -103,7 +103,10 @@ function OpcionesConcepto({ conceptos, actual }) {
   );
 }
 
-export function GastosHoja({ data, onConceptos }) {
+// `soloLectura` (v95): para quien solo repasa la contabilidad. Las mismas
+// columnas, sin la fila de escribir, sin Conceptos y sin quitar; cada celda,
+// su texto.
+export function GastosHoja({ data, onConceptos, soloLectura = false }) {
   const { evento, gastos, persistGastos } = data;
   const faltaSql = faltaSqlGastos(evento);
   const conceptos = conceptosDe(evento?.conceptosGastos, gastos);
@@ -142,12 +145,12 @@ export function GastosHoja({ data, onConceptos }) {
 
   return (
     <div className="mt-2">
-      <div className="flex items-center justify-end zurdo:justify-start mb-2">
+      {!soloLectura && <div className="flex items-center justify-end zurdo:justify-start mb-2">
         <Boton variante="secundario" icono={List} disabled={faltaSql} titulo={faltaSql ? "Falta subir el SQL de la versión 76" : "Añadir o quitar conceptos, con su precio si es fijo"} onClick={onConceptos}>
           Conceptos
         </Boton>
-      </div>
-      {faltaSql && <LineaAviso className="text-xs mb-2">Falta subir el SQL de la versión 76: hasta entonces no se guardan la fecha ni los conceptos.</LineaAviso>}
+      </div>}
+      {faltaSql && !soloLectura && <LineaAviso className="text-xs mb-2">Falta subir el SQL de la versión 76: hasta entonces no se guardan la fecha ni los conceptos.</LineaAviso>}
       {aviso && <LineaAviso className="text-sm mb-2">{aviso}</LineaAviso>}
 
       <div className="text-sm" style={{ border: `1px solid ${C.line}`, borderRadius: R.caja, overflow: "hidden" }}>
@@ -159,7 +162,7 @@ export function GastosHoja({ data, onConceptos }) {
         </div>
 
         {/* La fila de escribir, siempre arriba: crema y con raya dorada. */}
-        <div style={fila(C.papelPlano, { borderBottom: `2px solid ${C.gold}` })}>
+        {!soloLectura && <div style={fila(C.papelPlano, { borderBottom: `2px solid ${C.gold}` })}>
           <span className="px-1">
             <CeldaFecha valor={nueva.fecha} onCambio={(fecha) => setNueva((n) => ({ ...n, fecha }))} estilo={CAMPO} />
           </span>
@@ -183,9 +186,17 @@ export function GastosHoja({ data, onConceptos }) {
           <span className="flex justify-center">
             <Boton variante="principal" tamano="pequeno" icono={Plus} titulo="Apuntar el gasto" disabled={faltaSql} onClick={apuntar} />
           </span>
-        </div>
+        </div>}
 
-        {filas.map((g, i) => (
+        {soloLectura && filas.map((g, i) => (
+          <div key={g.id} style={fila(i % 2 ? C.paperDark : C.blanco)} data-gasto>
+            <span className="px-2 truncate" style={PEQUENA}>{g.fecha ? fechaCorta(g.fecha) : "—"}</span>
+            <span className="px-2 truncate" style={PEQUENA}>{conceptoDe(g)}</span>
+            <span className="px-2 truncate text-right">{g.importe ? euros(parsePrecio(g.importe)) : ""}</span>
+            <span />
+          </div>
+        ))}
+        {!soloLectura && filas.map((g, i) => (
           <div key={g.id} style={fila(i % 2 ? C.paperDark : C.blanco)}>
             <span className="px-1">
               <CeldaFecha valor={g.fecha} onCambio={(fecha) => cambiar(g.id, { fecha })} estilo={CELDA} />

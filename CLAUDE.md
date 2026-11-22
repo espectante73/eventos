@@ -144,7 +144,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    botones. Los textos de ayuda, al pie y
    plegados (`<details>`). Todo panel tiene su **salida ARRIBA y a la
    vista**, y salir deja la pantalla como estaba; un formulario acaba en
-   **«Guardar» y «Cancelar»**.
+   **«Guardar» y «Cancelar»**. Una vista previa antes de enviar
+   (invitación, acuse) lleva sus botones ARRIBA, del lado del pulgar; la
+   del acuse, a pantalla entera (`pantallaEntera` de `ModalFlotante`).
 6. **Tablas y listas: una sola línea por fila**, todas de la misma altura
    y sin aire extra (con 140 invitados, una lista con aire no cabe). Si
    no cabe, se ensancha o se recorta. Los anchos de las columnas, **fijos

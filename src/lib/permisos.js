@@ -47,6 +47,11 @@ export const PERMISOS = {
   // para el DJ con su cuenta. Solo para mirar; lo comprueba la base
   // (colaborador_canciones_dj).
   CANCIONES_DJ: "canciones_dj",
+  // Ver Contabilidad para repasarla (v95, él: «es para repasar lo que se me
+  // escape a mí, no necesita nombres de personas»): solo cifras, sin nombres
+  // de invitados (la nota de privacidad: ningún colaborador ve los invitados
+  // de otro) y solo para mirar. Lo comprueba la base (colaborador_contabilidad).
+  CONTABILIDAD_VER: "contabilidad_ver",
 };
 
 // Etiquetas legibles, para VentanaPermisos.jsx -- un objeto en vez de un
@@ -62,6 +67,7 @@ export const ETIQUETAS_PERMISOS = {
   [PERMISOS.MULTIMEDIA]: "Multimedia (manejar la música y el vídeo con el mando)",
   [PERMISOS.ACREDITAR_ENTRADA]: "Acreditar en la entrada (leer el QR de las invitaciones)",
   [PERMISOS.CANCIONES_DJ]: "Canciones para bailar (ver la lista del DJ)",
+  [PERMISOS.CONTABILIDAD_VER]: "Ver la contabilidad (solo cifras, para repasarla)",
 };
 
 // Cómo se ENSEÑAN en Permisos: por zona de la app, con su título (él,
@@ -74,6 +80,7 @@ export const GRUPOS_PERMISOS = [
   { titulo: "Textos del evento", claves: [PERMISOS.NOVEDADES_EDITAR, PERMISOS.DATOS_EVENTO_EDITAR] },
   { titulo: "Invitaciones y entrada", claves: [PERMISOS.INVITACIONES_ENVIAR, PERMISOS.ACREDITAR_ENTRADA] },
   { titulo: "Música", claves: [PERMISOS.MULTIMEDIA, PERMISOS.CANCIONES_DJ] },
+  { titulo: "Contabilidad", claves: [PERMISOS.CONTABILIDAD_VER] },
   { titulo: "Cómo está hecha la app", claves: [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER, PERMISOS.DISENO_VER] },
 ];
 
@@ -104,7 +111,7 @@ export function ordenarPermisos(claves = []) {
 // de las tres; si no, el test permisos.test.js se pone en rojo.
 export const PERMISOS_DE_EDICION = [PERMISOS.NOVEDADES_EDITAR, PERMISOS.DATOS_EVENTO_EDITAR];
 export const PERMISOS_EN_LA_APP = [PERMISOS.INVITACIONES_ENVIAR, PERMISOS.MULTIMEDIA, PERMISOS.ACREDITAR_ENTRADA];
-export const PERMISOS_DE_VISTA = [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER, PERMISOS.DISENO_VER, PERMISOS.CANCIONES_DJ];
+export const PERMISOS_DE_VISTA = [PERMISOS.MAPA_SITIO_VER, PERMISOS.REPOSITORIO_VER, PERMISOS.DISENO_VER, PERMISOS.CANCIONES_DJ, PERMISOS.CONTABILIDAD_VER];
 
 export const esDeEdicion = (clave) => PERMISOS_DE_EDICION.includes(clave);
 export const esDeLaApp = (clave) => PERMISOS_EN_LA_APP.includes(clave);

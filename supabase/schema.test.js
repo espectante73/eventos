@@ -858,6 +858,17 @@ describe("el enlace del DJ", () => {
     expect(f).not.toMatch(/i\."(nombre|apellido|email|telefono)"/);
     expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.colaborador_canciones_dj() FROM PUBLIC, anon;");
   });
+
+  it("la Contabilidad para repasarla (v95): con el permiso, solo con sesión, y solo cifras", () => {
+    const f = cuerpoDe("colaborador_contabilidad");
+    expect(f).toContain("if not colaborador_tiene_permiso('contabilidad_ver') then");
+    // Ni el nombre ni el contacto de ningún invitado, ni su zona (solo si es el DJ).
+    expect(f).not.toMatch(/i\."(nombre|apellido|email|telefono|alergias|observaciones|cancion|mesa)"/);
+    expect(f).toContain("case when upper(trim(i.\"zona\")) = 'DJ' then 'DJ' else '' end");
+    // De los colaboradores, ni su email ni su cuenta.
+    expect(f).not.toMatch(/c\."(email|authUserId|permisos)"/);
+    expect(sql).toContain("REVOKE EXECUTE ON FUNCTION public.colaborador_contabilidad() FROM PUBLIC, anon;");
+  });
 });
 
 describe("las plantillas de WhatsApp (v82.4)", () => {

@@ -28,8 +28,13 @@ import { useCapaBarra } from "../lib/capaBarra";
 // para lo que tiene que quedarse delante hasta que cambie algo fuera (el
 // tablón de quien no ha pagado): la excepción a «su salida arriba» (norma 5).
 const HUECO_ABAJO_MODAL = "calc(1rem + var(--hueco-barra-ventanas, 0px))";
+// `pantallaEntera` (v95, él: la vista previa del acuse, «que la ventana ocupe
+// la pantalla»): todo el ancho y todo el alto, menos un margen y la barra de
+// ventanas del móvil; su contenido, en columna, para que lo grande (el PDF)
+// se lleve lo que sobre con `flex: 1`.
+const ALTO_PANTALLA_ENTERA = "calc(100dvh - 1.5rem - var(--hueco-barra-ventanas, 0px))";
 
-export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720, movible = false, extra, ajustado = false, cerrable = true }) {
+export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, children, acciones, colorTitulo, ancho = 720, movible = false, extra, ajustado = false, cerrable = true, pantallaEntera = false }) {
   const hayCuerpo = Children.toArray(children).some((c) => c !== "");
   // Escape, en la ventana donde está este modal (realmDe): dentro de la
   // Lista de invitados es otra ventana del sistema (v80.1).
@@ -119,7 +124,7 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
       // recortaba la impresión a una sola página. Bug real reportado
       // por el usuario, 2026-08-29 (ver también el comentario de
       // #zona-imprimible en index.css).
-      className="fixed inset-0 flex items-center justify-center p-4 modal-flotante-fondo"
+      className={`fixed inset-0 flex items-center justify-center ${pantallaEntera ? "p-2" : "p-4"} modal-flotante-fondo`}
       // Abajo, el hueco de la barra de ventanas del móvil si se ve: sin él,
       // la barra tapaba el final del modal, botones incluidos (v91.9).
       style={{ ...VELO, zIndex, paddingBottom: HUECO_ABAJO_MODAL }}
@@ -133,8 +138,9 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
           border: `1px solid ${C.line}`,
           // `minWidth: 0`: sin él, en el móvil no encogía por debajo de lo
           // que mide su cabecera y se salía por la derecha, X incluida.
-          ...(ajustado ? { width: "max-content", maxWidth: "100%", minWidth: 0 } : { maxWidth: ancho }),
-          maxHeight: "calc(88vh - var(--hueco-barra-ventanas, 0px))",
+          ...(pantallaEntera
+            ? { maxWidth: "none", height: ALTO_PANTALLA_ENTERA, maxHeight: ALTO_PANTALLA_ENTERA }
+            : { ...(ajustado ? { width: "max-content", maxWidth: "100%", minWidth: 0 } : { maxWidth: ancho }), maxHeight: "calc(88vh - var(--hueco-barra-ventanas, 0px))" }),
           boxShadow: S.flotanteOscura,
           transform: desplazado.x || desplazado.y ? `translate(${desplazado.x}px, ${desplazado.y}px)` : undefined,
         }}
@@ -175,7 +181,10 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
         {/* Sin nada dentro (una pregunta sin texto, «¿Descartar los
             cambios?»), sin cuerpo: dejaba una franja vacía (v61.3). */}
         {hayCuerpo && (
-          <div className="p-4 modal-flotante-cuerpo" style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain" }}>
+          <div
+            className="p-4 modal-flotante-cuerpo"
+            style={{ flex: 1, overflowY: "auto", overscrollBehavior: "contain", ...(pantallaEntera ? { display: "flex", flexDirection: "column", minHeight: 0 } : {}) }}
+          >
             {children}
           </div>
         )}

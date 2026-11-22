@@ -8,6 +8,7 @@ import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
 import { datosCompletos, pideDatosDeBoda, pideEmail, estadoDatos, familiasSinEmail, emailObligatorio, faltanObligatorios, fichasIncompletasDe, claveFamilia, importeEsperadoInvitado, resolverColaborador, fichaCerradaAlColaborador, comoColaborador, esDj } from "../lib/invitados";
 import { colaboradorEsDj, leerEquipo } from "../lib/equipoColaboradores";
+import { VentanaContabilidadColaborador } from "./VentanaContabilidadColaborador";
 import { VentanaCancionesDj } from "./VentanaCancionesDj";
 import { useCancionesDj } from "../lib/useCancionesDj";
 import { textoCancionesNuevas } from "../lib/dj";
@@ -1258,6 +1259,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   // «Canciones para bailar», la lista del DJ (v91.5).
   const puedeVerCancionesDj = tienePermiso(colaborador, PERMISOS.CANCIONES_DJ);
   const [cancionesDjAbierta, setCancionesDjAbierta] = useState(false);
+  // «Contabilidad», solo cifras, para repasarla (v95).
+  const puedeVerContabilidad = tienePermiso(colaborador, PERMISOS.CONTABILIDAD_VER);
+  const [contabilidadAbierta, setContabilidadAbierta] = useState(false);
   // La lista y lo nuevo en ella (v92): lo usan el aviso rojo del inicio y la
   // ventana. Mirarla es tenerla abierta; ver el aviso no cuenta.
   const cancionesDj = useCancionesDj({
@@ -1629,6 +1633,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
               sello={pendientes.length}
               opciones={[
                 puedeVerCancionesDj && { id: "canciones-dj", etiqueta: "Canciones", icono: Music, onClick: () => setCancionesDjAbierta(true), sello: cancionesDj.nuevas.size },
+                puedeVerContabilidad && { id: "contabilidad", etiqueta: "Contabilidad", icono: ICONOS_VENTANAS.cuentas, onClick: () => setContabilidadAbierta(true) },
                 puedeEditarDatosEvento && { id: "datos-evento", etiqueta: "Datos evento", icono: Calendar, onClick: () => setVentanaDatosEventoAbierta(true) },
                 !soyDj && { id: "formulario", etiqueta: "Formulario", icono: ICONOS_VENTANAS.formulario, onClick: abrirFormulario, sello: pendientes.length },
                 puedeEnviarInvitaciones && { id: "invitaciones", etiqueta: "Invitaciones", icono: Send, onClick: () => setVentanaInvitacionesAbierta(true) },
@@ -1653,6 +1658,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
         />
       )}
 
+      {contabilidadAbierta && <VentanaContabilidadColaborador data={data} onCerrar={() => setContabilidadAbierta(false)} />}
       {cancionesDjAbierta && (
         <VentanaCancionesDj canciones={cancionesDj} esAnfitrion={data.esAnfitrion} escuchar={data.buscarParaEscuchar} onCerrar={() => setCancionesDjAbierta(false)} />
       )}

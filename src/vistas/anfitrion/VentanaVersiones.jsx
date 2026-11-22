@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "95",
+    cambios: [
+      "Permisos › Contabilidad: «Ver la contabilidad (solo cifras, para repasarla)». Quien lo tenga ve en su menú «Contabilidad»: el Resumen, A pagar, la Cuenta del local, sus Gastos y lo entregado y por entregar de cada colaborador, sin un solo nombre de invitado y sin poder tocar nada. Necesita su SQL.",
+      "Contabilidad › Recaudado por colaborador › Entregas: un botón con un ojo, «Ver», enseña el acuse de esa entrega sin enviarlo a nadie, con «Descargar».",
+      "Contabilidad: la vista previa del acuse ocupa toda la pantalla, con «Cancelar» y «Aceptar» arriba, del lado del pulgar.",
+    ],
+  },
+  {
     version: "94.6",
     cambios: [
       "Contabilidad › A pagar: bajo «Propinas», cada propina en su línea, con el colaborador y el día del acuse, para comprobarlas con lo apuntado.",

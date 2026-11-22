@@ -847,6 +847,43 @@ end;
 $$;
 REVOKE EXECUTE ON FUNCTION public.colaborador_canciones_dj() FROM PUBLIC, anon;
 
+-- La Contabilidad para repasarla (v95, él: «es para repasar lo que se me
+-- escape a mí, no necesita nombres de personas»), para el colaborador con
+-- el permiso «contabilidad_ver». Solo cifras: los invitados SIN nombre ni
+-- contacto, con lo justo para las cuentas (edad, confirmado, pagado, si es
+-- el DJ —la zona no sale— y su colaborador). Los colaboradores, con su
+-- nombre y sus entregas. Solo con sesión (el revoke de abajo).
+CREATE OR REPLACE FUNCTION public.colaborador_contabilidad() RETURNS jsonb
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+begin
+  if not colaborador_tiene_permiso('contabilidad_ver') then
+    return jsonb_build_object('error', 'permiso');
+  end if;
+  return jsonb_build_object(
+    'evento', (select jsonb_build_object(
+        'fecha', e."fecha", 'precioAdulto', e."precioAdulto", 'precioNino', e."precioNino",
+        'edadNinoDesde', e."edadNinoDesde", 'edadNinoHasta', e."edadNinoHasta",
+        'aPagar', e."aPagar", 'conceptosGastos', e."conceptosGastos")
+      from evento e limit 1),
+    'invitados', coalesce((select jsonb_agg(jsonb_build_object(
+        'id', i."id", 'colaboradorId', i."colaboradorId", 'confirmado', i."confirmado",
+        'noAsiste', i."noAsiste", 'pagado', i."pagado", 'anioNacimiento', i."anioNacimiento",
+        'zona', case when upper(trim(i."zona")) = 'DJ' then 'DJ' else '' end))
+      from invitados i), '[]'::jsonb),
+    'colaboradores', coalesce((select jsonb_agg(jsonb_build_object(
+        'id', c."id", 'nombre', c."nombre", 'invitadoId', c."invitadoId", 'entregas', c."entregas"))
+      from colaboradores c), '[]'::jsonb),
+    'gastos', coalesce((select jsonb_agg(jsonb_build_object(
+        'id', g."id", 'concepto', g."concepto", 'categoria', g."categoria",
+        'importe', g."importe", 'pagado', g."pagado", 'fecha', g."fecha"))
+      from gastos g), '[]'::jsonb)
+  );
+end;
+$$;
+REVOKE EXECUTE ON FUNCTION public.colaborador_contabilidad() FROM PUBLIC, anon;
+
 -- ¿Está activo el Modo Pruebas? Una sola definición (v49): mientras lo
 -- está, ningún colaborador puede escribir nada (las tres funciones de
 -- abajo) y los correos van solo al anfitrión (enviar_email).

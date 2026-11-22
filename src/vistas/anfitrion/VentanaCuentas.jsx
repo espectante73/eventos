@@ -5,13 +5,14 @@
 // v76) y balance. Extraída de VistaAnfitrion.jsx en el reparto del 2026-08-08
 // (Fase 4, Ronda 4).
 import { useState } from "react";
-import { Mail, Undo2, Calculator, Users, Receipt, Scale, Utensils } from "lucide-react";
+import { Mail, Undo2, Calculator, Users, Receipt, Scale, Utensils, Eye, Download } from "lucide-react";
 import { C, T, OP } from "../../theme";
 import { importeEsperadoInvitado, previstoARecoger } from "../../lib/invitados";
 import { fechaCorta, euros, parsePrecio } from "../../lib/formato";
 import { entregasDe, porEntregar, itemsDeEntrega, propinasTotales, ordenarPorEntregas } from "../../lib/entregas";
 import { construirAsuntoAcuse, construirHtmlAcuse, parrafosAcuse } from "../../lib/acuseRecogida";
 import { generarPdfAcuse } from "../../lib/acuseImagen";
+import { descargarBlob } from "../../lib/descargas";
 import { TextInput } from "../../components/Formulario";
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -19,6 +20,7 @@ import { SeccionPlegable } from "../../components/SeccionPlegable";
 import { usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { useSeccion } from "../../lib/useSeccion";
 import { Cargando } from "../../components/Cargando";
+import { LineaAviso } from "../../components/LineaAviso";
 import { GastosHoja, VentanaConceptos } from "./GastosHoja";
 import { APagarHoja, CuentaLocalHoja, VentanaLocal } from "./APagar";
 import { totalGastos as sumaGastos } from "../../lib/gastos";
@@ -33,7 +35,13 @@ const conPropina = (importe, propina, { corto = false } = {}) =>
 
 // En el móvil va a pantalla entera en la barra de ventanas (v90.3): lo
 // decide su capa (CapaBarra), no ella.
-export function VentanaCuentas({ data, onCerrar }) {
+// `soloCifras` (v95, él: «la contabilidad es para repasar lo que se me escape
+// a mí, no necesita nombres de personas»): la del colaborador con el permiso
+// «Ver la contabilidad». Las mismas cuentas y las mismas piezas (norma 7),
+// solo para mirar: ni un nombre de invitado, ni entregas, ni acuses, ni
+// precios o gastos que tocar. Sus datos, de colaborador_contabilidad
+// (VentanaContabilidadColaborador); `data.cargando` mientras llegan.
+export function VentanaCuentas({ data, onCerrar, soloCifras = false }) {
   const {
     evento,
     invitados,
@@ -43,7 +51,7 @@ export function VentanaCuentas({ data, onCerrar }) {
     reenviarAcuseColaborador,
     deshacerEntregaColaborador,
   } = data;
-  const lista = useSeccion(data, "cuentas");
+  const lista = useSeccion(data, "cuentas") && !data.cargando;
   // Las tres partes, plegadas y como mucho UNA abierta: la filosofía del
   // tablón, a petición del usuario (2026-09-19). Antes el resumen estaba
   // siempre a la vista y solo las otras dos se plegaban.
@@ -145,10 +153,9 @@ export function VentanaCuentas({ data, onCerrar }) {
   };
 
   // El acuse de una entrega ya hecha, otra vez: sus invitados, su importe,
-  // su propina y su fecha.
-  const reenviarAcuse = async (c, entrega, numero) => {
-    setEnviandoId(entrega.id);
-    const dataUrl = await generarPdfAcuse({
+  // su propina y su fecha. Lo usan «Reenviar» y «Ver».
+  const acuseDeEntrega = (c, entrega) =>
+    generarPdfAcuse({
       evento,
       colaborador: c,
       items: itemsDeEntrega(entrega, invitados, evento),
@@ -156,6 +163,9 @@ export function VentanaCuentas({ data, onCerrar }) {
       propina: Number(entrega.propina) || 0,
       fechaISO: String(entrega.fecha).slice(0, 10),
     });
+  const reenviarAcuse = async (c, entrega, numero) => {
+    setEnviandoId(entrega.id);
+    const dataUrl = await acuseDeEntrega(c, entrega);
     await reenviarAcuseColaborador(
       c.email,
       construirAsuntoAcuse(evento),
@@ -164,6 +174,24 @@ export function VentanaCuentas({ data, onCerrar }) {
       dataUrl.split(",")[1] || ""
     );
     setEnviandoId(null);
+  };
+
+  // «Ver» (v95, él: «el administrador los envía pero no tiene registro de lo
+  // que envió para poder chequear»): el acuse de esa entrega en pantalla, sin
+  // enviarlo a nadie, y con «Descargar».
+  const [viendoId, setViendoId] = useState(null);
+  const [descargado, setDescargado] = useState("");
+  const verAcuse = async (c, entrega, numero) => {
+    setViendoId(entrega.id);
+    const dataUrl = await acuseDeEntrega(c, entrega);
+    setViendoId(null);
+    setDescargado("");
+    setPreviewAcuse({ tipo: "ver", colaborador: c, dataUrl, fecha: String(entrega.fecha).slice(0, 10), archivo: nombreArchivoAcuse(c, numero) });
+  };
+  const descargarAcuse = async () => {
+    const blob = await (await fetch(previewAcuse.dataUrl)).blob();
+    descargarBlob(previewAcuse.archivo, blob);
+    setDescargado(previewAcuse.archivo);
   };
 
   // «Probar acuse»: el de lo que tiene por entregar AHORA, sin apuntar
@@ -226,7 +254,9 @@ export function VentanaCuentas({ data, onCerrar }) {
     <VentanaFlotante clave="cuentas" titulo="Contabilidad" onCerrar={onCerrar}>
       {/* Los gastos llegan al abrir la ventana (v72.3): sin ellos, el
           balance y la lista mentirían. */}
-      {!lista ? (
+      {data.motivo ? (
+        <LineaAviso className="text-sm">{data.motivo}</LineaAviso>
+      ) : !lista ? (
         <Cargando />
       ) : (
       <div className="space-y-2">
@@ -304,7 +334,7 @@ export function VentanaCuentas({ data, onCerrar }) {
         abierta={seccionAbierta === "aPagar"}
         onAlternar={() => alternar("aPagar")}
       >
-        <APagarHoja data={data} resumen={aPagar} recaudado={recaudado} propinas={propinas} />
+        <APagarHoja data={data} resumen={aPagar} recaudado={recaudado} propinas={propinas} soloLectura={soloCifras} />
       </SeccionPlegable>
 
       {/* La cuenta del local (él, v93.3): su propia sección, para
@@ -316,7 +346,7 @@ export function VentanaCuentas({ data, onCerrar }) {
         abierta={seccionAbierta === "cuentaLocal"}
         onAlternar={() => alternar("cuentaLocal")}
       >
-        <CuentaLocalHoja data={data} onPrecios={() => setVerLocal(true)} />
+        <CuentaLocalHoja data={data} onPrecios={soloCifras ? undefined : () => setVerLocal(true)} />
       </SeccionPlegable>
 
       <SeccionPlegable
@@ -335,7 +365,7 @@ export function VentanaCuentas({ data, onCerrar }) {
                 <div style={{ color: C.ink, fontWeight: 600 }}>
                   Recaudado por {c.nombre}: {euros(recaudadoPor(c))}
                 </div>
-                {!c.email && (
+                {!soloCifras && !c.email && (
                   <div className="text-xs" style={{ color: C.wax }}>
                     Sin email — no se podrá enviar el acuse automáticamente
                   </div>
@@ -343,7 +373,11 @@ export function VentanaCuentas({ data, onCerrar }) {
 
                 {/* Lo cobrado y aún no entregado (v87): su entrega nueva. */}
                 {pendiente.items.length > 0 &&
-                  (confirmandoId === c.id ? (
+                  (soloCifras ? (
+                    <div className="text-sm" style={{ color: C.wax, fontWeight: 600 }} data-por-entregar>
+                      Por entregar: {euros(pendiente.total)} ({pendiente.items.length} invitado{pendiente.items.length !== 1 ? "s" : ""})
+                    </div>
+                  ) : confirmandoId === c.id ? (
                     // Los campos en una línea y los botones debajo.
                     <div className="flex flex-wrap items-center gap-2">
                       {/* Cada campo con su «€» y su rótulo, juntos (norma 6). */}
@@ -406,15 +440,27 @@ export function VentanaCuentas({ data, onCerrar }) {
                             >
                               {fechaCorta(String(e.fecha).slice(0, 10))} · {conPropina(Number(e.importe) || 0, Number(e.propina) || 0, { corto: true })}
                             </span>
-                            <Boton
-                              variante="secundario"
-                              tamano="pequeno"
-                              icono={Mail}
-                              titulo={enviandoId === e.id ? "Enviando…" : "Reenviar el acuse de esta entrega"}
-                              onClick={() => reenviarAcuse(c, e, numero)}
-                              disabled={enviandoId === e.id || !c.email}
-                            />
-                            {ultima && (
+                            {!soloCifras && (
+                              <Boton
+                                variante="secundario"
+                                tamano="pequeno"
+                                icono={Eye}
+                                titulo={viendoId === e.id ? "Preparando…" : "Ver el acuse de esta entrega, sin enviarlo"}
+                                onClick={() => verAcuse(c, e, numero)}
+                                disabled={viendoId === e.id}
+                              />
+                            )}
+                            {!soloCifras && (
+                              <Boton
+                                variante="secundario"
+                                tamano="pequeno"
+                                icono={Mail}
+                                titulo={enviandoId === e.id ? "Enviando…" : "Reenviar el acuse de esta entrega"}
+                                onClick={() => reenviarAcuse(c, e, numero)}
+                                disabled={enviandoId === e.id || !c.email}
+                              />
+                            )}
+                            {!soloCifras && ultima && (
                               <Boton
                                 tamano="pequeno"
                                 icono={Undo2}
@@ -444,11 +490,11 @@ export function VentanaCuentas({ data, onCerrar }) {
               Todavía no hay colaboradores.
             </p>
           )}
-          <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
+          {!soloCifras && <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Cada entrega manda por email al propio colaborador un acuse con los
             invitados de esa entrega, el importe, la fecha y la firma — para que lo
             guarde como comprobante.
-          </p>
+          </p>}
         </div>
       </SeccionPlegable>
 
@@ -460,7 +506,7 @@ export function VentanaCuentas({ data, onCerrar }) {
         abierta={seccionAbierta === "gastos"}
         onAlternar={() => alternar("gastos")}
       >
-      <GastosHoja data={data} onConceptos={() => setVerConceptos(true)} />
+      <GastosHoja data={data} onConceptos={() => setVerConceptos(true)} soloLectura={soloCifras} />
       </SeccionPlegable>
       </div>
       )}
@@ -471,60 +517,89 @@ export function VentanaCuentas({ data, onCerrar }) {
     {verLocal && <VentanaLocal data={data} onCerrar={() => setVerLocal(false)} />}
 
     {previewAcuse && (
+      // A pantalla entera y con los botones ARRIBA, del lado del pulgar (él,
+      // v95: «pedí que el botón cancelar / enviar estuviera en lo alto de la
+      // ventana y que la ventana ocupe la pantalla»), como la de la
+      // invitación (v91.9). «Ver» (una entrega ya hecha): solo el acuse y
+      // «Descargar».
       <ModalFlotante
+        pantallaEntera
         titulo={
-          (previewAcuse.tipo === "confirmar" ? "Confirmar entrega — " : "Probar acuse — ") +
-          previewAcuse.colaborador.nombre
+          previewAcuse.tipo === "ver"
+            ? `Acuse — ${previewAcuse.colaborador.nombre} · ${fechaCorta(previewAcuse.fecha)}`
+            : (previewAcuse.tipo === "confirmar" ? "Confirmar entrega — " : "Probar acuse — ") + previewAcuse.colaborador.nombre
         }
         onCerrar={() => setPreviewAcuse(null)}
       >
-        <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
-          Destinatario
-        </p>
-        <p className="text-sm mb-3" style={{ color: previewAcuse.colaborador.email ? C.ink : C.wax }}>
-          {previewAcuse.colaborador.email || "Sin email — no se podrá enviar"}
-        </p>
-        {previewAcuse.tipo === "confirmar" && (
+        {previewAcuse.tipo !== "ver" && (
           <>
             <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
-              Importe a confirmar
+              Destinatario
             </p>
-            <p className="text-sm mb-3" style={{ color: C.ink }}>{conPropina(previewAcuse.importe, previewAcuse.propina)}</p>
+            <p className="text-sm mb-3" style={{ color: previewAcuse.colaborador.email ? C.ink : C.wax }}>
+              {previewAcuse.colaborador.email || "Sin email — no se podrá enviar"}
+            </p>
+            {previewAcuse.tipo === "confirmar" && (
+              <>
+                <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
+                  Importe a confirmar
+                </p>
+                <p className="text-sm mb-3" style={{ color: C.ink }}>{conPropina(previewAcuse.importe, previewAcuse.propina)}</p>
+              </>
+            )}
           </>
         )}
-        {/* El email tal cual llega (v86): su asunto y su texto, de la misma
-            pieza que lo envía (parrafosAcuse). */}
-        <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
-          Texto del email
-        </p>
-        <div data-texto-email className="text-sm mb-3 p-2 rounded space-y-2" style={{ background: C.blanco, border: `1px solid ${C.line}`, color: C.ink }}>
-          <p style={{ fontWeight: 600 }}>{previewAcuse.asunto}</p>
-          {parrafosAcuse({ colaborador: previewAcuse.colaborador }).map((parrafo) => (
-            <p key={parrafo}>{parrafo}</p>
-          ))}
+        <div className="flex flex-wrap items-center gap-2 justify-end zurdo:flex-row-reverse mb-3" data-botones-acuse>
+          {previewAcuse.tipo === "ver" ? (
+            <Boton variante="principal" icono={Download} onClick={descargarAcuse}>
+              Descargar
+            </Boton>
+          ) : (
+            <>
+              <Boton variante="secundario" onClick={() => setPreviewAcuse(null)}>
+                Cancelar
+              </Boton>
+              <Boton variante="principal" onClick={confirmarEnvioAcuse} disabled={enviandoAcuse || !previewAcuse.colaborador.email}>
+                {enviandoAcuse
+                  ? "Enviando…"
+                  : previewAcuse.tipo === "confirmar"
+                  ? "Aceptar y confirmar"
+                  : "Aceptar y enviar"}
+              </Boton>
+            </>
+          )}
         </div>
-        <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
-          Acuse (PDF) — revisa que todo esté bien antes de continuar
-        </p>
+        {/* La descarga pasa fuera de la pantalla: dice dónde está (norma 9). */}
+        {previewAcuse.tipo === "ver" && descargado && (
+          <p className="text-xs mb-3" style={{ color: C.ink }}>
+            Descargado: {descargado}. Lo tienes en tu carpeta de Descargas.
+          </p>
+        )}
+        {previewAcuse.tipo !== "ver" && (
+          <>
+            {/* El email tal cual llega (v86): su asunto y su texto, de la misma
+                pieza que lo envía (parrafosAcuse). */}
+            <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
+              Texto del email
+            </p>
+            <div data-texto-email className="text-sm mb-3 p-2 rounded space-y-2" style={{ background: C.blanco, border: `1px solid ${C.line}`, color: C.ink }}>
+              <p style={{ fontWeight: 600 }}>{previewAcuse.asunto}</p>
+              {parrafosAcuse({ colaborador: previewAcuse.colaborador }).map((parrafo) => (
+                <p key={parrafo}>{parrafo}</p>
+              ))}
+            </div>
+            <p className="text-xs uppercase mb-1" style={{ color: C.gold, fontFamily: "'IBM Plex Mono', monospace" }}>
+              Acuse (PDF) — revisa que todo esté bien antes de continuar
+            </p>
+          </>
+        )}
+        {/* El PDF se lleva todo el alto que queda. */}
         <iframe
           src={previewAcuse.dataUrl}
           title="Vista previa del acuse"
-          className="rounded mb-3"
-          style={{ width: "100%", height: 420, border: `1px solid ${C.line}` }}
+          className="rounded"
+          style={{ width: "100%", flex: 1, minHeight: 420, border: `1px solid ${C.line}` }}
         />
-        {/* Del lado del pulgar que cada uno elige (v91.9), como la de la invitación. */}
-        <div className="flex flex-wrap gap-2 justify-end zurdo:flex-row-reverse">
-          <Boton variante="secundario" onClick={() => setPreviewAcuse(null)}>
-            Cancelar
-          </Boton>
-          <Boton variante="principal" onClick={confirmarEnvioAcuse} disabled={enviandoAcuse || !previewAcuse.colaborador.email}>
-            {enviandoAcuse
-              ? "Enviando…"
-              : previewAcuse.tipo === "confirmar"
-              ? "Aceptar y confirmar"
-              : "Aceptar y enviar"}
-          </Boton>
-        </div>
       </ModalFlotante>
     )}
     </>

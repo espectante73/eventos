@@ -10,14 +10,19 @@
 // `lib/cronograma.test.js` (el reparto proporcional), y aquí lo que se
 // comprueba es que la VENTANA se puede abrir.
 import { describe, it, expect, vi } from "vitest";
+import { act } from "react";
 import { dibujarYSoltar, montar } from "../../pruebas/dibujar";
 import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
-import { euros } from "../../lib/formato";
+import { euros, fechaCorta } from "../../lib/formato";
 
 vi.mock("../../lib/cronograma", async (original) => ({
   ...(await original()),
   generarImagenCronograma: () => "",
 }));
+
+// El acuse se dibuja en un <canvas>, que aquí no existe: lo que pinta ya
+// tiene sus pruebas (lib/acuseImagen.test.js). Aquí, la ventana.
+vi.mock("../../lib/acuseImagen", () => ({ generarPdfAcuse: async () => "data:application/pdf;base64,QUJD" }));
 
 const { VentanaConfigCronograma } = await import("./VentanaConfigCronograma");
 const { VentanaCuentas } = await import("./VentanaCuentas");
@@ -211,6 +216,79 @@ describe("Contabilidad se puede dibujar", () => {
 });
 
 // v88.7 (él): los gastos se ordenan tocando Fecha o Concepto, como la Lista.
+// v95 (él: «la contabilidad es para repasar lo que se me escape a mí, no
+// necesita nombres de personas»): la del colaborador con el permiso.
+describe("Contabilidad, solo cifras", () => {
+  const boton = (texto) => [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes(texto));
+  const conEntrega = [{ ...colaboradores[0], entregas: [{ id: "e1", fecha: "2026-11-14T10:00:00Z", importe: 45, propina: 5, invitados: ["g1"] }] }];
+  const pagaOmar = invitados.map((g) => (g.id === "g2" ? { ...g, pagado: true } : g));
+
+  it("las mismas cifras, sin un nombre de invitado y sin nada que tocar", () => {
+    const vista = montar(<VentanaCuentas data={{ ...data, invitados: pagaOmar, colaboradores: conEntrega }} soloCifras onCerrar={() => {}} />);
+    // Una parte abierta cada vez (norma 5): se mira cada una al abrirla.
+    const vistas = {};
+    for (const titulo of ["Resumen", "A pagar", "Cuenta del local", "1 gasto", "Recaudado por colaborador", "Entregas (1)"]) {
+      vista.pulsar(boton(titulo));
+      vistas[titulo] = document.body.textContent;
+      // Los invitados (Omar y Lucía Pacheco), nunca.
+      expect(vistas[titulo]).not.toMatch(/Pacheco|Omar|Lucía/);
+      // Ni entregar, ni acuses, ni precios, ni gastos que tocar.
+      for (const fuera of ["Confirmar entrega", "Probar acuse", "Conceptos"]) expect(boton(fuera)).toBeUndefined();
+      expect(document.body.querySelector('button[title="Ver el acuse de esta entrega, sin enviarlo"], button[title^="Reenviar"], button[title^="Deshacer"], button[title="Precios del local"]')).toBeNull();
+      expect(document.body.querySelectorAll("input, select")).toHaveLength(0);
+    }
+    expect(vistas["1 gasto"]).toContain("Flores");
+    expect(vistas["Entregas (1)"]).toContain(`Por entregar: ${euros(45)} (1 invitado)`);
+    expect(vistas["Entregas (1)"]).toContain(`${euros(45)} + ${euros(5)} propina`);
+    vista.desmontar();
+  });
+
+  it("mientras llegan los datos, «Cargando»; si no llegan, el motivo", () => {
+    const vacios = { evento: {}, invitados: [], colaboradores: [], gastos: [] };
+    expect(dibujarYSoltar(<VentanaCuentas data={{ ...vacios, cargando: true }} soloCifras onCerrar={() => {}} />)).not.toContain("Resumen");
+    expect(dibujarYSoltar(<VentanaCuentas data={{ ...vacios, cargando: true, motivo: "No se ha podido cargar" }} soloCifras onCerrar={() => {}} />)).toContain("No se ha podido cargar");
+  });
+});
+
+// v95 (él: «el administrador los envía pero no tiene registro de lo que envió
+// para poder chequear», «botón ver y que permita descargar»; y la vista previa
+// «con el botón cancelar / enviar en lo alto y que ocupe la pantalla»).
+describe("el acuse de una entrega, a la vista", () => {
+  const boton = (texto) => [...document.body.querySelectorAll("button")].find((b) => b.textContent.includes(texto));
+  const conEntrega = [{ ...colaboradores[0], entregas: [{ id: "e1", fecha: "2026-11-14T10:00:00Z", importe: 45, propina: 5, invitados: ["g1"] }] }];
+
+  it("«Ver» lo enseña sin enviarlo, con «Descargar» arriba", async () => {
+    const vista = montar(<VentanaCuentas data={{ ...data, colaboradores: conEntrega }} onCerrar={() => {}} />);
+    vista.pulsar(boton("Recaudado por colaborador"));
+    vista.pulsar(boton("Entregas (1)"));
+    await act(async () => document.body.querySelector('button[title="Ver el acuse de esta entrega, sin enviarlo"]').click());
+    const texto = document.body.textContent;
+    expect(texto).toContain(`Acuse — Barrios, Jacob · ${fechaCorta("2026-11-14")}`);
+    expect(boton("Descargar")).toBeDefined();
+    expect(boton("Aceptar y enviar")).toBeUndefined();
+    expect(texto).not.toContain("Texto del email");
+    const botones = document.body.querySelector("[data-botones-acuse]");
+    const pdf = document.body.querySelector('iframe[title="Vista previa del acuse"]');
+    expect(botones.compareDocumentPosition(pdf) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    vista.desmontar();
+  });
+
+  it("«Probar acuse»: Cancelar y Aceptar ARRIBA, antes del email y del PDF, y a pantalla entera", async () => {
+    const pagaOmar = invitados.map((g) => (g.id === "g2" ? { ...g, pagado: true } : g));
+    const vista = montar(<VentanaCuentas data={{ ...data, invitados: pagaOmar }} onCerrar={() => {}} />);
+    vista.pulsar(boton("Recaudado por colaborador"));
+    await act(async () => boton("Probar acuse").click());
+    const botones = document.body.querySelector("[data-botones-acuse]");
+    expect(botones.textContent).toContain("Cancelar");
+    expect(botones.textContent).toContain("Aceptar y enviar");
+    const email = document.body.querySelector("[data-texto-email]");
+    expect(botones.compareDocumentPosition(email) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const caja = botones.closest(".modal-flotante-caja");
+    expect(caja.style.height).toContain("100dvh");
+    vista.desmontar();
+  });
+});
+
 describe("los gastos se ordenan tocando el título", () => {
   // Apuntados: Flores, Netlify, Imprenta (lo último, arriba).
   const gastos = [

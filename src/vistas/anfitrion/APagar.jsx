@@ -55,7 +55,7 @@ const Cabecera = ({ children }) => (
 // La línea del total de cada bloque, como el Total de la hoja de Gastos.
 const Total = ({ concepto, importe }) => <Linea concepto={concepto} importe={importe} fondo={C.paper} estilo={{ borderTop: `2px solid ${C.ink}`, color: C.ink, ...SERIF }} />;
 
-export function APagarHoja({ data, resumen, recaudado, propinas }) {
+export function APagarHoja({ data, resumen, recaudado, propinas, soloLectura = false }) {
   const { evento, persistEvento, invitados = [], colaboradores = [] } = data;
   // Lo recaudado por edades y el cuadre con los acuses (v94.5, él: «cuántos
   // de más de 8 años pagaron los 47 €, cuántos como niños, cuánta propina:
@@ -77,7 +77,7 @@ export function APagarHoja({ data, resumen, recaudado, propinas }) {
 
   return (
     <div className="mt-2">
-      {faltaSql && <LineaAviso className="text-xs mb-2">Falta subir el SQL de la versión 88: hasta entonces no se guardan los precios del local ni lo del DJ.</LineaAviso>}
+      {faltaSql && !soloLectura && <LineaAviso className="text-xs mb-2">Falta subir el SQL de la versión 88: hasta entonces no se guardan los precios del local ni lo del DJ.</LineaAviso>}
       {aviso && <LineaAviso className="text-sm mb-2">{aviso}</LineaAviso>}
 
       <div className="text-sm" style={{ border: `1px solid ${C.line}`, borderRadius: R.caja, overflow: "hidden" }}>
@@ -121,12 +121,16 @@ export function APagarHoja({ data, resumen, recaudado, propinas }) {
           </>
         )}
         {local.otros > 0 && <Linea detalle concepto="Otros del local" importe={euros(local.otros)} />}
-        <div style={fila(C.paperDark)}>
-          <span className="px-2 truncate">DJ</span>
-          <span className="px-1">
-            <CeldaImporte campo etiqueta="Lo que cobra el DJ" placeholder="Escribe" valor={guardado.dj} onGuardar={guardarDj} />
-          </span>
-        </div>
+        {soloLectura ? (
+          <Linea concepto="DJ" importe={guardado.dj ? euros(parsePrecio(guardado.dj)) : "—"} fondo={C.paperDark} />
+        ) : (
+          <div style={fila(C.paperDark)}>
+            <span className="px-2 truncate">DJ</span>
+            <span className="px-1">
+              <CeldaImporte campo etiqueta="Lo que cobra el DJ" placeholder="Escribe" valor={guardado.dj} onGuardar={guardarDj} />
+            </span>
+          </div>
+        )}
         <Linea concepto="Tus gastos" importe={euros(tusGastos)} />
         <Total concepto="Total que sale" importe={euros(sale)} />
 
@@ -171,7 +175,8 @@ function edadesDeTramos(evento) {
 // precios del local como su configuración: la ruedita, del lado del
 // pulgar, abre «Lo que cobra el local» (`onPrecios`). Las personas y, por
 // cada partida (cóctel, cena, tarta…), sus adultos y sus niños, como en «A
-// pagar»; al pie, el total.
+// pagar»; al pie, el total. Sin `onPrecios` (quien solo la repasa, v95), sin
+// ruedita.
 export function CuentaLocalHoja({ data, onPrecios }) {
   const { evento, invitados } = data;
   const faltaSql = faltaSqlAPagar(evento);
@@ -180,16 +185,18 @@ export function CuentaLocalHoja({ data, onPrecios }) {
   const edades = edadesDeTramos(evento);
   return (
     <div className="mt-2">
-      <div className="flex justify-end zurdo:justify-start mb-2">
-        <Boton
-          variante="secundario"
-          icono={Settings}
-          disabled={faltaSql}
-          titulo={faltaSql ? "Falta subir el SQL de la versión 88" : "Precios del local"}
-          onClick={onPrecios}
-          style={{ minHeight: DEDO, minWidth: DEDO }}
-        />
-      </div>
+      {onPrecios && (
+        <div className="flex justify-end zurdo:justify-start mb-2">
+          <Boton
+            variante="secundario"
+            icono={Settings}
+            disabled={faltaSql}
+            titulo={faltaSql ? "Falta subir el SQL de la versión 88" : "Precios del local"}
+            onClick={onPrecios}
+            style={{ minHeight: DEDO, minWidth: DEDO }}
+          />
+        </div>
+      )}
       <div className="text-sm" style={CAJA}>
         <Cabecera>Personas</Cabecera>
         <Linea concepto="Adultos" importe={personas.adulto} />
@@ -197,7 +204,7 @@ export function CuentaLocalHoja({ data, onPrecios }) {
         {personas.bebe > 0 && <Linea concepto={`Bebés${edades.bebe}`} importe={`${personas.bebe} · gratis`} />}
 
         <Cabecera>Servicios</Cabecera>
-        {cuenta.partidas.length === 0 && <Linea detalle concepto="Sin precios todavía: ponlos en la ruedita." importe="" />}
+        {cuenta.partidas.length === 0 && <Linea detalle concepto={onPrecios ? "Sin precios todavía: ponlos en la ruedita." : "Sin precios todavía."} importe="" />}
         {cuenta.partidas.map((p, i) => (
           <div key={p.id} style={{ background: i % 2 ? C.paperDark : C.blanco }}>
             <Linea concepto={p.concepto} importe={euros(p.total)} fondo="transparent" estilo={{ fontWeight: 600 }} />
