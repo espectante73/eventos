@@ -1,4 +1,5 @@
-// «Exportar contactos» (él, v93.4): lo contrario de «Importar tel.» (lib/
+// «Exportar contactos» (él, v93.4; en el menú, «Contactos» con el icono de
+// salida desde v93.7): lo contrario de «Importar teléfonos» (lib/
 // importarTelefonos.js). Los datos de los invitados que van en una agenda
 // —nombre, apellidos, teléfono y email— en un archivo de contactos (vCard,
 // .vcf) para completar la del teléfono: a algunos no tenía su email.

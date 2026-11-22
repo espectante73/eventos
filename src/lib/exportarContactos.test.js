@@ -1,5 +1,5 @@
 // «Exportar contactos» (v93.4): la ficha de cada invitado en un .vcf que
-// Contactos del Mac sabe importar, y que «Importar tel.» sabe leer.
+// Contactos del Mac sabe importar, y que «Importar teléfonos» sabe leer.
 import { describe, it, expect } from "vitest";
 import { fichaVCard, contactosDeInvitados } from "./exportarContactos";
 import { leerVCard } from "./importarTelefonos";
@@ -42,7 +42,7 @@ describe("exportar contactos", () => {
     expect(fichaVCard({ ...ANA, nombre: "Ana; María", apellido: "Medina, hija" })).toContain("N:Medina\\, hija;Ana\\; María;;;");
   });
 
-  it("todo el archivo: una ficha por invitado con algo que añadir, y «Importar tel.» lo lee igual", () => {
+  it("todo el archivo: una ficha por invitado con algo que añadir, y «Importar teléfonos» lo lee igual", () => {
     const invitados = [ANA, { id: "b", nombre: "Luis", apellido: "Abreu", telefono: "+34611222333", email: "" }, { id: "c", nombre: "Sin", apellido: "Datos" }];
     const { texto, cuantos } = contactosDeInvitados(invitados, [], { nombre: "Las Bodas de todos." });
     expect(cuantos).toBe(2);

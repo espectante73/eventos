@@ -630,7 +630,7 @@ describe("la columna Teléfono", () => {
     expect(document.body.textContent).not.toContain("Teléfono");
     const botones = () => [...document.body.querySelectorAll("button")];
     vista.pulsar(botones().find((b) => b.textContent.includes("Acciones")));
-    vista.pulsar(botones().find((b) => b.textContent.trim().endsWith("Editar")));
+    vista.pulsar(botones().find((b) => b.textContent.trim().endsWith("Edición")));
     expect(document.body.textContent).toContain("Teléfono");
     expect(telefono("Barrios, Jacob").value).toBe("612 34 56 78");
     expect(telefono("Pacheco, Omar").value).toBe("");

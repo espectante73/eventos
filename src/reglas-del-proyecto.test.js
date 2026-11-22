@@ -74,6 +74,24 @@ describe("norma 4: en los menús, iconos que llenan su cuadrado", () => {
   });
 });
 
+// Norma 4 (él, v93.7): «Exportar contactos» se salía del botón del menú
+// (146 px de fila, ANCHO_FILA_MENU en MenuFlotante.jsx). Medido a ancho de
+// móvil: con icono caben 13 letras («Aviso de pago»); «Terminar edición»
+// y «Canciones para bailar» se salían. Si no cabe, se abrevia.
+describe("norma 4: rótulos de menú que caben en su botón", () => {
+  // Sin icono hay más sitio: medido, cabe.
+  const MEDIDOS = new Set(["Para Apple Music"]);
+  it("ningún rótulo de más de 13 letras", () => {
+    const fuera = archivos.flatMap((r) =>
+      [...sinComentarios(leer(r)).matchAll(/etiqueta: "([^"]+)"/g)]
+        .map((m) => m[1])
+        .filter((e) => e.length > 13 && !MEDIDOS.has(e))
+        .map((e) => `${r}: «${e}»`)
+    );
+    expect(fuera).toEqual([]);
+  });
+});
+
 // v63: el evento se lee a través del servidor (lib/leerEvento.js), que
 // quita lo privado. La tabla está cerrada: leerla directamente fallaría.
 describe("el evento, solo por leerEvento", () => {

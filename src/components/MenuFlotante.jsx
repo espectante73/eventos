@@ -306,6 +306,9 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio, conFon
       // `marcado`: lo que ya está abierto se pinta en dorado, con la letra
       // verde (él, v62.1: un icono más empujaba el texto fuera del botón).
       aria-pressed={opcion.marcado === undefined ? undefined : Boolean(opcion.marcado)}
+      // `titulo`: lo que dice al pasar el ratón, si dos filas comparten
+      // rótulo y solo el icono las distingue (él, v93.7: «Contactos»).
+      title={opcion.titulo}
       style={{
         color: opcion.marcado ? C.ink : opcion.color || C.goldClaro,
         ...(opcion.fondo ? { background: opcion.fondo } : {}),

@@ -22,7 +22,7 @@ import {
   Plus,
   Pencil,
   Copy,
-  Contact,
+  LogIn,
   Printer,
   MoreHorizontal,
   Tag,
@@ -40,7 +40,7 @@ import {
   Square,
   SquareCheck,
   Undo2,
-  BookUser,
+  LogOut,
 } from "lucide-react";
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { contactosDeInvitados, notaDelEvento, ARCHIVO_CONTACTOS } from "../../lib/exportarContactos";
@@ -890,7 +890,9 @@ export function SeccionInvitados({
     },
     {
       id: "editar",
-      etiqueta: modoEdicion ? "Terminar edición" : "Editar",
+      // «Edición» siempre (él, v93.7), dorada si está abierta y verde si no,
+      // como Formulario o Importar: «Terminar edición» no cabía en el botón.
+      etiqueta: "Edición",
       marcado: modoEdicion,
       icono: Pencil,
       onClick: () => setModoEdicion((v) => !v),
@@ -902,19 +904,23 @@ export function SeccionInvitados({
       icono: Copy,
       onClick: () => setMostrarImport((v) => !v),
     },
-    // Los teléfonos, desde el archivo de Contactos (él, v78.2).
+    // Las dos con la agenda, «Contactos» y un icono de entrada o de salida
+    // (él, v93.7): «Exportar contactos» no cabía en el botón (norma 4).
+    // Entran los teléfonos desde el archivo de Contactos (v78.2)…
     {
       id: "importarTelefonos",
-      etiqueta: "Importar tel.",
+      etiqueta: "Contactos",
+      titulo: "Importar teléfonos desde Contactos",
       marcado: mostrarImportarTel,
-      icono: Contact,
+      icono: LogIn,
       onClick: () => setMostrarImportarTel((v) => !v),
     },
-    // Al revés (él, v93.4): sus datos, a la agenda del teléfono.
+    // …y salen sus datos a la agenda del teléfono (v93.4).
     {
       id: "exportarContactos",
-      etiqueta: "Exportar contactos",
-      icono: BookUser,
+      etiqueta: "Contactos",
+      titulo: "Exportar a Contactos",
+      icono: LogOut,
       onClick: () => exportarContactos(),
     },
     // El anfitrión escribe por WhatsApp a cada uno que no ha pagado (él, v89).

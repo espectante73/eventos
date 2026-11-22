@@ -939,18 +939,18 @@ it("el DJ ve Multimedia y Mi cuenta, sin «Formulario»", () => {
   expect(rotulos).toContain("Multimedia");
   expect(rotulos).toContain("Mi cuenta");
   expect(rotulos).not.toContain("Formulario");
-  // Sin el permiso de la lista, no sale «Canciones para bailar».
-  expect(rotulos).not.toContain("Canciones para bailar");
+  // Sin el permiso de la lista, no sale «Canciones» (v93.7: así se llama en el menú).
+  expect(rotulos).not.toContain("Canciones");
   vista.desmontar();
 });
 
-it("con el permiso de la lista (v91.5), sale «Canciones para bailar» en su menú", () => {
+it("con el permiso de la lista (v91.5), sale «Canciones» en su menú", () => {
   const vista = montar(
     <VistaColaborador data={{ ...data, colaboradores: [{ ...colaboradores[0], permisos: ["multimedia", "canciones_dj"] }] }} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
   );
   const botones = () => [...document.body.querySelectorAll("button")];
   vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
-  expect(botones().map((b) => b.textContent.trim())).toContain("Canciones para bailar");
+  expect(botones().map((b) => b.textContent.trim())).toContain("Canciones");
   vista.desmontar();
 });
 

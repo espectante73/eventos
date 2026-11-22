@@ -1619,6 +1619,8 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
                 )}
               />
             )}
+            {/* «Canciones» (v93.7), como en el menú de la Lista del anfitrión:
+                «Canciones para bailar» no cabía en el botón. */}
             {/* Todo en un solo botón, como el del anfitrión (él, v50.6),
                 con el sello de sus fichas incompletas encima: se ve con
                 todo cerrado. Solo sus líneas, en orden alfabético; las de
@@ -1626,7 +1628,7 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
             <BotonAbrirSeccion
               sello={pendientes.length}
               opciones={[
-                puedeVerCancionesDj && { id: "canciones-dj", etiqueta: "Canciones para bailar", icono: Music, onClick: () => setCancionesDjAbierta(true), sello: cancionesDj.nuevas.size },
+                puedeVerCancionesDj && { id: "canciones-dj", etiqueta: "Canciones", icono: Music, onClick: () => setCancionesDjAbierta(true), sello: cancionesDj.nuevas.size },
                 puedeEditarDatosEvento && { id: "datos-evento", etiqueta: "Datos evento", icono: Calendar, onClick: () => setVentanaDatosEventoAbierta(true) },
                 !soyDj && { id: "formulario", etiqueta: "Formulario", icono: ICONOS_VENTANAS.formulario, onClick: abrirFormulario, sello: pendientes.length },
                 puedeEnviarInvitaciones && { id: "invitaciones", etiqueta: "Invitaciones", icono: Send, onClick: () => setVentanaInvitacionesAbierta(true) },

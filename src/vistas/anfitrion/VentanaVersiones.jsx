@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "93.7",
+    cambios: [
+      "Lista › Acciones: «Importar tel.» y «Exportar contactos» son ahora «Contactos», con un icono de entrada y otro de salida (al pasar el ratón dice cuál es cuál): «Exportar contactos» se salía del botón.",
+      "Por lo mismo, «Editar» / «Terminar edición» es siempre «Edición», en dorado mientras está abierta, como Formulario o Importar; y, en el menú del colaborador, «Canciones para bailar» es «Canciones», como en el del anfitrión. Una prueba vigila que ningún rótulo de menú pase de 13 letras.",
+    ],
+  },
+  {
     version: "93.6",
     cambios: [
       "«Exportar contactos»: el aviso ya no habla de «Actualizar». En el Mac, si Contactos avisa de repetidos, se acepta y los une en una sola ficha con las dos notas: la que ya tenía y la del evento. «Revisar» cierra Contactos (fallo de Apple).",
