@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "94.4",
+    cambios: [
+      "Mesas › Plano de mesas: la lupa acerca y aleja de 10 en 10 % (100, 110, 120… hasta 300), como el tamaño de las mesas.",
+    ],
+  },
+  {
     version: "94.3",
     cambios: [
       "Mesas › Plano de mesas: la lupa acerca y aleja de 25 en 25 % (100, 125, 150… hasta 300); antes saltaba de 100 a 150 de golpe.",

@@ -13,9 +13,9 @@
 // local crecía y la mesa no, y el plano engañaba. El 10 % sale de su dibujo.
 export const ANCHO_MESA_PLANO = 10;
 
-// De 25 en 25 % (v94.3, él: «salto de 100 a 150 en el plano es mucha
-// franja»).
-export const PASOS_ZOOM_PLANO = [100, 125, 150, 175, 200, 225, 250, 275, 300];
+// De 10 en 10 %, como el tamaño de las mesas (él: «salto de 100 a 150 en el
+// plano es mucha franja», v94.3; y de 25 en 25, «mejor de 10 en 10», v94.4).
+export const PASOS_ZOOM_PLANO = Array.from({ length: 21 }, (_, i) => 100 + i * 10);
 
 export const TAMANO_MESAS = { minimo: 50, maximo: 200, paso: 10 };
 

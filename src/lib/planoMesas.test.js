@@ -2,13 +2,14 @@ import { it, expect } from "vitest";
 import { zoomSiguiente, tamanoMesasDe, tamanoMesasSiguiente, anchoMesaPlano, ANCHO_MESA_PLANO } from "./planoMesas";
 
 it("el zoom va de paso en paso y se queda en los extremos", () => {
-  // De 25 en 25 (él: «de 100 a 150 es mucha franja»).
-  expect(zoomSiguiente(100, 1)).toBe(125);
-  expect(zoomSiguiente(125, 1)).toBe(150);
+  // De 10 en 10, hasta 300 (él: «mejor de 10 en 10»).
+  expect(zoomSiguiente(100, 1)).toBe(110);
+  expect(zoomSiguiente(110, 1)).toBe(120);
+  expect(zoomSiguiente(290, 1)).toBe(300);
   expect(zoomSiguiente(300, 1)).toBe(300);
-  expect(zoomSiguiente(125, -1)).toBe(100);
+  expect(zoomSiguiente(110, -1)).toBe(100);
   expect(zoomSiguiente(100, -1)).toBe(100);
-  expect(zoomSiguiente(123, 1)).toBe(125);
+  expect(zoomSiguiente(123, 1)).toBe(110);
 });
 
 it("el tamaño de las mesas: sin guardar es el 100 %, y no sale de sus límites", () => {

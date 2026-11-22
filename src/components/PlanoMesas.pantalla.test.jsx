@@ -59,7 +59,7 @@ it("el zoom ensancha el plano en pantalla, sin guardar nada", () => {
   const zona = vista.contenedor.querySelector("#zona-imprimible-plano");
   expect(zona.style.width).toBe("100%");
   vista.pulsar(vista.contenedor.querySelector('[title="Acercar el plano"]'));
-  expect(zona.style.width).toBe("125%");
+  expect(zona.style.width).toBe("110%");
   vista.pulsar(vista.contenedor.querySelector('[title="Alejar el plano"]'));
   expect(zona.style.width).toBe("100%");
   expect(guardado).toBeNull();
