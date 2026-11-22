@@ -2,17 +2,17 @@
 // importarTelefonos.js). Los datos de los invitados que van en una agenda
 // —nombre, apellidos, teléfono y email— en un archivo de contactos (vCard,
 // .vcf) para completar la del teléfono: a algunos no tenía su email.
-// Contactos del Mac lo importa y, con los que ya tiene, deja elegir
-// «Actualizar»: añade lo que falta a la misma ficha, sin repetirla.
+// Contactos del Mac lo importa y, con los que ya tiene (por el nombre),
+// avisa de repetidos: al aceptar, los une en una sola ficha (probado por
+// él, v93.6). «Revisar» cierra Contactos: fallo de Apple, no del archivo.
 //
 // El email, de TODOS (él): la nota de privacidad habla de lo guardado en la
 // app; su agenda es suya y la mayoría ya estaban en ella. Se arma en el
 // navegador y solo sale a su carpeta de Descargas.
 //
 // Y de qué los conoce (él, v93.5): en «Notas», «Evento: Las Bodas de
-// todos» (él lo eligió ahí, en la agenda del iPhone). La nota es un solo
-// campo: al «Actualizar», en un contacto que ya tenía la suya, Contactos
-// podría cambiarla; se le dijo.
+// todos» (él lo eligió ahí, en la agenda del iPhone). Al unir, Contactos
+// suma las dos notas: la suya queda arriba y la del evento debajo.
 import { emailDeInvitado } from "./invitados";
 
 export const ARCHIVO_CONTACTOS = "contactos-invitados.vcf";

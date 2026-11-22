@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "93.6",
+    cambios: [
+      "«Exportar contactos»: el aviso ya no habla de «Actualizar». En el Mac, si Contactos avisa de repetidos, se acepta y los une en una sola ficha con las dos notas: la que ya tenía y la del evento. «Revisar» cierra Contactos (fallo de Apple).",
+    ],
+  },
+  {
     version: "93.5",
     cambios: [
       "«Exportar contactos»: cada contacto lleva además, en Notas, «Evento: Las Bodas de todos» (el nombre del evento, sin el punto final), para saber de qué se conoce a cada uno.",

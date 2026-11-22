@@ -225,7 +225,7 @@ export function SeccionInvitados({
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
   // «Exportar contactos» (v93.4): el archivo para Contactos del Mac, que
-  // con los que ya tiene deja «Actualizar». Avisa al terminar y dónde está
+  // une los repetidos al aceptar (v93.6). Avisa al terminar y dónde está
   // (norma 9). Las reglas, en lib/exportarContactos.js.
   const exportarContactos = () => {
     const { texto, cuantos } = contactosDeInvitados(invitados, colaboradores, evento);
@@ -236,7 +236,7 @@ export function SeccionInvitados({
     descargarBlob(ARCHIVO_CONTACTOS, new Blob([texto], { type: "text/vcard;charset=utf-8" }));
     preguntar({
       titulo: "Contactos exportados",
-      texto: `${ARCHIVO_CONTACTOS}: ${cuantos === 1 ? "1 contacto" : `${cuantos} contactos`}, con su teléfono, su email y en Notas «${notaDelEvento(evento)}».\nLo tienes en tu carpeta de Descargas.\nEn el Mac: Contactos › Archivo › Importar…, y en los que ya tienes, «Actualizar».`,
+      texto: `${ARCHIVO_CONTACTOS}: ${cuantos === 1 ? "1 contacto" : `${cuantos} contactos`}, con su teléfono, su email y en Notas «${notaDelEvento(evento)}».\nLo tienes en tu carpeta de Descargas.\nEn el Mac: Contactos › Archivo › Importar…; si avisa de repetidos, acepta: los une y guarda tu nota y la del evento. No pulses «Revisar»: Contactos se cierra.`,
       soloAviso: true,
     });
   };
