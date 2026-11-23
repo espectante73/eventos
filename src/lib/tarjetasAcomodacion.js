@@ -56,15 +56,17 @@ const MARGEN_MINIMO = 10;
 // desechamos»). Papel blanco, el adorno de la esquina, el APELLIDO en Fraunces (la letra de «LAS BODAS»), el nombre en
 // letra caligráfica dorada («de todos») con el corazón debajo, y el número
 // de la mesa en el círculo dorado. Cambia el marco: `marcos`, cada uno
-// [distancia al corte, grosor]; el grueso, 1,5 (él, v99.4: «el marco grueso
-// más grueso, para que se note mejor la diferencia»; era 0,9). (Los seis de
+// [distancia al corte, grosor]; el grueso, 3, y 6 entre las dos líneas (él,
+// v99.6: «el grueso más grueso, el doble; el aire, el doble»; eran 1,5 y 3).
+// Esquinas rectas (él, v99.6: «recuadro menos redondeado», eligió la recta
+// del todo). (Los seis de
 // antes —verdes, champán, rectángulo dorado— y el del aura, quitados por
 // él: no volver a ellos.)
 const LINEA_INVITACION = { marco: C.gold, letra: C.ink, letraNombre: C.gold, familia: C.ink, contornoNumero: C.gold };
 export const ACABADOS = [
   { ...LINEA_INVITACION, id: "blancoHojas", rotulo: "Marco fino", marcos: [[9, 0.5]] },
-  { ...LINEA_INVITACION, id: "blancoHojasGruesoFuera", rotulo: "Doble marco, grueso fuera", marcos: [[8, 1.5], [11, 0.4]] },
-  { ...LINEA_INVITACION, id: "blancoHojasGruesoDentro", rotulo: "Doble marco, grueso dentro", marcos: [[8, 0.4], [11, 1.5]] },
+  { ...LINEA_INVITACION, id: "blancoHojasGruesoFuera", rotulo: "Doble marco, grueso fuera", marcos: [[8, 3], [14, 0.4]] },
+  { ...LINEA_INVITACION, id: "blancoHojasGruesoDentro", rotulo: "Doble marco, grueso dentro", marcos: [[8, 0.4], [14, 3]] },
 ];
 const acabado = (id) => ACABADOS.find((a) => a.id === id) || ACABADOS[0];
 // Con qué se van a cortar, y así, qué marcas lleva la hoja (él, v99: «la
@@ -131,20 +133,24 @@ export function tarjetasDeAcomodacion(invitados = []) {
 
 // Las medidas de la cara, en puntos.
 const MARCO = 14; // del corte (o del doblez) al hueco del nombre y la letra de la familia
-const R_NUM = 30; // el círculo del número
+// El círculo del número: 40 de ancho, con el número a su escala (él, v99.6:
+// «baja el número con el círculo»; eran 60 y 38).
+const R_NUM = 20;
 const TAM_FAMILIA = 11;
 const ALTO_CIFRA = 0.716; // alto de las mayúsculas y las cifras, por punto de letra
-// El adorno de la esquina (él, v99.4): entero, cerca del borde y con el
-// marco pasando por debajo. Antes, unas hojas cortadas por el borde y el
-// marco cortado donde empezaban: «mal presentado»; dentro del marco, «muy
-// adentro».
+// El adorno de la esquina (él, v99.4): entero y con el marco pasando por
+// debajo. Antes, unas hojas cortadas por el borde y el marco cortado donde
+// empezaban: «mal presentado». Desde v99.6 (él: «más adentro, que apenas
+// toque el marco grueso»), sus puntas llegan justo al centro de la línea
+// gruesa (en el marco fino, de la única): con el grueso dentro, la fina de
+// fuera queda fuera del adorno.
 const ESQUINA_ANCHO = 82;
-const ESQUINA_MARGEN = 3; // del borde de la cara
+const lineaDelAdorno = (marcos) => marcos.reduce((a, b) => (b[1] > a[1] ? b : a))[0];
 const TAM_APELLIDO = 16; // el de entrada; si no cabe, encoge
 export const ESPACIADO_APELLIDO = 1.5; // entre letras, como «LAS BODAS»
 const TAM_NOMBRE = 30; // el de entrada; si no cabe, encoge
 export const ALTO_CALIGRAFICA = 0.62; // lo que sube la caligráfica, por punto de letra
-const TAM_NUMERO = 38;
+const TAM_NUMERO = 25;
 // Los nombres de las dos letras de la invitación: en jsPDF y en el lienzo
 // (pdfEnLienzo.js). Si no se cargaron, las de siempre de jsPDF. También
 // las usan los sobres de los matrimonios (v99.3).
@@ -178,10 +184,11 @@ function cara(pdf, x, y, ancho, alto, girada, t, estilo, adornos) {
   pdf.setDrawColor(estilo.marco);
   for (const [m, grosor] of estilo.marcos) {
     pdf.setLineWidth(grosor);
-    pdf.roundedRect(x + m, y + m, ancho - 2 * m, alto - 2 * m, 2, 2, "S");
+    pdf.rect(x + m, y + m, ancho - 2 * m, alto - 2 * m, "S");
   }
   // El adorno, encima: el marco pasa por debajo, entero.
-  if (adornos) imagen("esquina", x + ESQUINA_MARGEN, y + ESQUINA_MARGEN, ESQUINA_ANCHO);
+  const enLinea = lineaDelAdorno(estilo.marcos);
+  if (adornos) imagen("esquina", x + enLinea, y + enLinea, ESQUINA_ANCHO);
   // El número de la mesa, en su círculo dorado.
   const nx = x + ancho - MARCO - 8 - R_NUM;
   pdf.setFillColor(C.goldClaro);

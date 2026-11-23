@@ -63,14 +63,24 @@ function hojaDePega() {
   const rellenos = [];
   const recuadros = [];
   const imagenes = [];
+  const posiciones = [];
+  const trazos = [];
+  const circulos = [];
+  let grosor = 1;
   let colorTexto = null;
   let fuente = "helvetica";
   const pdf = {
     setTextColor: (c) => (colorTexto = c),
     setFont: (f) => (fuente = f),
-    rect: (x, y, w, h, estilo) => rellenos.push(estilo),
+    // v99.6: los marcos, con esquinas rectas (rect con «S»); un relleno, con «F».
+    rect: (x, y, w, h, estilo) => {
+      (estilo === "S" ? recuadros : rellenos).push(estilo);
+      if (estilo === "S") trazos.push({ x, y, grosor });
+    },
+    setLineWidth: (g) => (grosor = g),
+    circle: (x, y, r) => circulos.push(r),
     roundedRect: (x, y, w, h, rx, ry, estilo) => recuadros.push(estilo),
-    addImage: (dato) => imagenes.push(dato),
+    addImage: (dato, formato, x, y, w) => imagenes.push(dato) && posiciones.push({ dato, x, y, w }),
     paginas: 1,
     addPage() { this.paginas++; },
     getTextWidth: (t) => t.length * 5,
@@ -78,8 +88,8 @@ function hojaDePega() {
   };
   pdf.GState = class { constructor(o) { Object.assign(this, o); } };
   pdf.setGState = () => {};
-  for (const f of ["setFillColor", "setDrawColor", "setLineWidth", "setLineDashPattern", "setFontSize", "circle", "line"]) pdf[f] = () => {};
-  return { pdf, textos, rellenos, recuadros, imagenes };
+  for (const f of ["setFillColor", "setDrawColor", "setLineDashPattern", "setFontSize", "line"]) pdf[f] = () => {};
+  return { pdf, textos, rellenos, recuadros, imagenes, posiciones, trazos, circulos };
 }
 
 describe("dibujarTarjetasAcomodacion", () => {
@@ -274,9 +284,24 @@ describe("los acabados de la invitación", () => {
   const ana = { id: "1", nombre: "Ana", apellido: "Medina", mesa: 3, familia: "A" };
 
   it("tres: uno de marco fino y dos de doble marco, grueso fuera y grueso dentro; la letra de la familia, en verde oscuro", () => {
-    // v99.4 (él): «el marco grueso más grueso, para que se note mejor la diferencia».
-    expect(ACABADOS.map((a) => a.marcos.map(([, grosor]) => grosor))).toEqual([[0.5], [1.5, 0.4], [0.4, 1.5]]);
+    // v99.6 (él): «el grueso más grueso, el doble; el aire, el doble» (eran 1,5 y 3).
+    expect(ACABADOS.map((a) => a.marcos)).toEqual([[[9, 0.5]], [[8, 3], [14, 0.4]], [[8, 0.4], [14, 3]]]);
     for (const a of ACABADOS) expect(a.familia).toBe(C.ink);
+  });
+  // v99.6 (él): «recuadro menos redondeado» (eligió la esquina recta), «el
+  // adorno más adentro, que apenas toque el marco grueso» y el círculo de 40.
+  it("esquinas rectas; el adorno, con sus puntas en la línea gruesa (o la única); el círculo del número, de 40", () => {
+    for (const a of ACABADOS) {
+      const h = hojaDePega();
+      dibujarTarjetasAcomodacion(h.pdf, [ana], { hoja: "a4", acabado: a.id }, ADORNOS);
+      // Ningún marco redondeado: todos son rect con «S».
+      expect(h.trazos).toHaveLength(2 * a.marcos.length);
+      const gruesa = Math.max(...a.marcos.map(([, g]) => g));
+      const adorno = h.posiciones.find((p) => p.dato === "esquina");
+      expect(h.trazos.some((t) => t.grosor === gruesa && t.x === adorno.x && t.y === adorno.y), a.id).toBe(true);
+      // Radio 20 menos medio borde (el borde dorado, de 3, cae dentro de los 40).
+      expect(h.circulos).toEqual([18.5, 18.5]);
+    }
   });
   it("cada cara: el adorno y el corazón (girados en la de arriba), el APELLIDO en Fraunces con aire entre letras y el nombre en la caligráfica dorada", () => {
     const { pdf, textos, imagenes, recuadros, rellenos } = hojaDePega();

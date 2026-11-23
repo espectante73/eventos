@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "99.6",
+    cambios: [
+      "Tarjetas de acomodación: los marcos, con esquinas rectas. En los dos de doble marco, la línea gruesa es el doble de gruesa y hay el doble de aire entre la fina y la gruesa.",
+      "Tarjetas de acomodación: el adorno de la esquina, más adentro, con las puntas de las hojas justo sobre la línea gruesa (en el marco fino, sobre su línea).",
+      "Tarjetas de acomodación: el círculo del número, más pequeño (de 60 a 40 puntos de ancho), con el número a su escala.",
+    ],
+  },
+  {
     version: "99.5",
     cambios: [
       "Revisión, «Fotos sin familia»: cada familia lleva su papelera. Pregunta antes y borra para siempre sus fotos (de la app y del almacén). La ayuda ya no da por hecho que se cambió el código: también puede ser una familia borrada.",
