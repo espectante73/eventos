@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { rejilla, tarjetasDeAcomodacion, textoAncho, dibujarTarjetasAcomodacion, PdfEnLienzo, ACABADOS } from "./tarjetasAcomodacion";
+import { rejilla, tarjetasDeAcomodacion, textoAncho, dibujarTarjetasAcomodacion, ACABADOS } from "./tarjetasAcomodacion";
+import { PdfEnLienzo, PUNTOS_POR_MM } from "./pdfEnLienzo";
 import { C } from "../theme";
 
 describe("rejilla (cuántas caben por hoja)", () => {
@@ -103,7 +104,7 @@ describe("dibujarTarjetasAcomodacion", () => {
     expect(ana.at(-1).color).toBe(C.goldClaro);
   });
   it("sin lienzo (las pruebas) no se rompe", () => {
-    const lienzo = new PdfEnLienzo({ hoja: "a4", escala: 1, crearLienzo: () => ({}) });
+    const lienzo = new PdfEnLienzo({ medida: { ancho: 210 * PUNTOS_POR_MM, alto: 297 * PUNTOS_POR_MM }, escala: 1, crearLienzo: () => ({}) });
     expect(dibujarTarjetasAcomodacion(lienzo, muchas, { hoja: "a4", ancho: 85.6 })).toBe(3);
     expect(lienzo.paginas).toHaveLength(3);
   });

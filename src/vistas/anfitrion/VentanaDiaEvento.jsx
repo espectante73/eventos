@@ -14,7 +14,7 @@
 // Las fotos se eligen FUERA de la app (él, v67.6): aquí solo se descargan
 // todas en un ZIP, en una sola carpeta (v85.5). Sin ventana para verlas.
 import { useEffect, useState } from "react";
-import { DoorOpen, DoorClosed, Camera, CameraOff, Download, QrCode, Contact } from "lucide-react";
+import { DoorOpen, DoorClosed, Camera, CameraOff, Download, QrCode, Contact, Mail } from "lucide-react";
 import { C, OP, conAlfa } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton, EnlaceTexto } from "../../components/Boton";
@@ -27,6 +27,7 @@ import { descargarTarjetasQr, tarjetasDeMesas, ARCHIVO_TARJETAS_QR } from "../..
 import { construirEnlaceTablon, construirEnlaceMesa } from "../../lib/url";
 import { ENVIO_BLOQUEADO } from "../../lib/invitados";
 import { VentanaTarjetasAcomodacion } from "./VentanaTarjetasAcomodacion";
+import { VentanaSobresMatrimonios } from "./VentanaSobresMatrimonios";
 
 // «12 fotos» y «De 5 familias, en un ZIP.», contando cada familia una vez.
 // En dos líneas, como las demás filas: en una no cabía junto al botón.
@@ -175,6 +176,8 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
   // Las tarjetas de acomodación (v97): una por invitado, con su mesa. Como las QR,
   // con la acomodación terminada: antes, las mesas aún pueden cambiar.
   const [verTarjetasAcomodacion, setVerTarjetasAcomodacion] = useState(false);
+  // Los sobres de los matrimonios (v98): también con el número de su mesa.
+  const [verSobres, setVerSobres] = useState(false);
 
   // Todas en un ZIP, y avisa al terminar (norma 9: pasa fuera de la pantalla).
   const [descargando, setDescargando] = useState(false);
@@ -244,19 +247,27 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
         <Boton onClick={() => setVerTarjetasAcomodacion(true)} disabled={tarjetasBloqueadas} className={CELDA_BOTON} style={{ gridRow: 7 }}>
           Ver
         </Boton>
+        <Separador fila={8} />
+        <CeldaTexto fila={9} Icono={Mail} titulo={<b>Sobres de matrimonios</b>}>
+          {tarjetasBloqueadas ? ENVIO_BLOQUEADO : "Uno por matrimonio, con sus nombres, su mesa y el logo."}
+        </CeldaTexto>
+        <Boton onClick={() => setVerSobres(true)} disabled={tarjetasBloqueadas} className={CELDA_BOTON} style={{ gridRow: 9 }}>
+          Ver
+        </Boton>
         {fotos?.length > 0 && (
           <>
-            <Separador fila={8} />
-            <CeldaTexto fila={9} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
+            <Separador fila={10} />
+            <CeldaTexto fila={11} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
               {cuentaFotosFiesta(fotos).detalle}
             </CeldaTexto>
-            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 9 }}>
+            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 11 }}>
               {descargando ? "Preparando…" : "Descargar"}
             </Boton>
           </>
         )}
       </div>
       {verTarjetasAcomodacion && <VentanaTarjetasAcomodacion invitados={invitados || []} onCerrar={() => setVerTarjetasAcomodacion(false)} />}
+      {verSobres && <VentanaSobresMatrimonios invitados={invitados || []} fechaEvento={evento.fecha} onCerrar={() => setVerSobres(false)} />}
       {ventanaPregunta}
     </VentanaFlotante>
   );

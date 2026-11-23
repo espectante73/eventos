@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "98",
+    cambios: [
+      "Nuevo en «Día del evento», con «Acomodación terminada»: «Sobres de matrimonios». Un sobre por cada matrimonio confirmado, para imprimir directamente en sobres blancos: sus nombres en una línea («Luis y Ana», o con el apellido: «ABREU, Luis y Ana»), el círculo dorado con el número de su mesa y el logo del evento, sin fondo.",
+      "Antes de descargar, la vista previa de todos. Se elige el sobre (Foto 10×15 (C6), Americano o C5, cada uno con sus medidas al lado), el nombre con o sin apellido, dónde va (esquinas o centro) y dónde el logo (encima, debajo, al lado, en el centro del sobre o sin logo). Lo elegido se recuerda en ese aparato.",
+      "Salen en el orden de las mesas; los matrimonios sin mesa, al final y sin número, y se avisa cuántos son.",
+    ],
+  },
+  {
     version: "97.2",
     cambios: [
       "La edad para dar el email y el teléfono, y para subir las fotos de la fiesta, baja de 16 a 15 años (cumplidos el día del evento). Cambia también en la Lista, en el formulario del colaborador, en el tablón y en el texto de las tarjetas QR («solo a partir de 15 años»).",

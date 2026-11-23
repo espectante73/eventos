@@ -25,6 +25,7 @@
 import { C } from "../theme";
 import { claveFamiliaMesa } from "./mesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
+import { PdfEnLienzo, PUNTOS_POR_MM, crearCanvas } from "./pdfEnLienzo";
 
 export const ARCHIVO_TARJETAS_ACOMODACION = "tarjetas-de-acomodacion.pdf";
 
@@ -71,7 +72,7 @@ export const ACABADOS = [
 const acabado = (id) => ACABADOS.find((a) => a.id === id) || ACABADOS[0];
 export const OPCIONES_POR_DEFECTO = { hoja: "a3", ancho: 85.6, acabado: ACABADOS[0].id };
 
-const MM = 72 / 25.4; // puntos por milímetro
+const MM = PUNTOS_POR_MM;
 
 // Cuántas caben por hoja, con el margen mínimo alrededor.
 export function rejilla(hoja, ancho) {
@@ -271,96 +272,10 @@ export async function pdfTarjetasAcomodacion(tarjetas, opciones) {
 
 // ---------- La vista previa ----------
 
-// Un lienzo que entiende las órdenes de jsPDF que usa el dibujo: así la
-// vista previa sale del MISMO dibujo que el PDF (norma 7), y se ve igual en
-// el ordenador y en el móvil (un PDF dentro de la página, en el iPhone, solo
-// enseña la primera hoja). `crearLienzo(ancho, alto)` da un <canvas>.
-// `medida` (en puntos), en vez de una hoja: la muestra de un acabado.
-export class PdfEnLienzo {
-  constructor({ hoja, medida, escala, crearLienzo }) {
-    const papel = HOJAS[hoja] || HOJAS.a3;
-    this.ancho = medida ? medida.ancho : papel.ancho * MM;
-    this.alto = medida ? medida.alto : papel.alto * MM;
-    this.escala = escala;
-    this.crearLienzo = crearLienzo;
-    this.paginas = [];
-    this.estilo = "normal";
-    this.tam = 12;
-    this.colorTexto = C.ink;
-    this.addPage();
-  }
-  addPage() {
-    const lienzo = this.crearLienzo(Math.round(this.ancho * this.escala), Math.round(this.alto * this.escala));
-    const ctx = lienzo.getContext?.("2d");
-    this.paginas.push(lienzo);
-    this.ctx = ctx || null;
-    if (!ctx) return;
-    ctx.scale(this.escala, this.escala);
-    ctx.fillStyle = C.blanco;
-    ctx.fillRect(0, 0, this.ancho, this.alto);
-    this.fuente();
-  }
-  fuente() {
-    if (this.ctx) this.ctx.font = `${this.estilo === "bold" ? "bold " : ""}${this.tam}px Helvetica, Arial, sans-serif`;
-  }
-  pintar(estilo = "S") {
-    if (!this.ctx) return;
-    if (estilo.includes("F")) this.ctx.fill();
-    if (estilo.includes("S") || estilo.includes("D")) this.ctx.stroke();
-  }
-  setFillColor(c) { if (this.ctx) this.ctx.fillStyle = c; }
-  setDrawColor(c) { if (this.ctx) this.ctx.strokeStyle = c; }
-  setTextColor(c) { this.colorTexto = c; }
-  setLineWidth(w) { if (this.ctx) this.ctx.lineWidth = w; }
-  setLineDashPattern(patron) { this.ctx?.setLineDash(patron); }
-  // La transparencia, como en jsPDF: setGState(new pdf.GState({ opacity })).
-  GState = class { constructor(o) { Object.assign(this, o); } };
-  setGState(g) { if (this.ctx) this.ctx.globalAlpha = g.opacity ?? 1; }
-  setFont(_familia, estilo = "normal") { this.estilo = estilo; this.fuente(); }
-  setFontSize(tam) { this.tam = tam; this.fuente(); }
-  getTextWidth(texto) { return this.ctx ? this.ctx.measureText(texto).width : 0; }
-  rect(x, y, w, h, estilo) {
-    if (!this.ctx) return;
-    this.ctx.beginPath();
-    this.ctx.rect(x, y, w, h);
-    this.pintar(estilo);
-  }
-  roundedRect(x, y, w, h, rx, _ry, estilo) {
-    if (!this.ctx) return;
-    this.ctx.beginPath();
-    this.ctx.roundRect ? this.ctx.roundRect(x, y, w, h, rx) : this.ctx.rect(x, y, w, h);
-    this.pintar(estilo);
-  }
-  circle(x, y, r, estilo) {
-    if (!this.ctx) return;
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, r, 0, 2 * Math.PI);
-    this.pintar(estilo);
-  }
-  line(x1, y1, x2, y2) {
-    if (!this.ctx) return;
-    this.ctx.beginPath();
-    this.ctx.moveTo(x1, y1);
-    this.ctx.lineTo(x2, y2);
-    this.ctx.stroke();
-  }
-  text(texto, x, y, { angle = 0 } = {}) {
-    if (!this.ctx) return;
-    const ctx = this.ctx;
-    ctx.save();
-    ctx.fillStyle = this.colorTexto;
-    ctx.textBaseline = "alphabetic";
-    ctx.translate(x, y);
-    if (angle) ctx.rotate((-angle * Math.PI) / 180);
-    ctx.fillText(texto, 0, 0);
-    ctx.restore();
-  }
-}
-
 // Las hojas de la vista previa, como imágenes. `escala`: píxeles por punto.
-export function vistaPreviaTarjetasAcomodacion(tarjetas, opciones, { escala = 1.4, crearLienzo } = {}) {
-  const hacer = crearLienzo || ((ancho, alto) => Object.assign(document.createElement("canvas"), { width: ancho, height: alto }));
-  const lienzo = new PdfEnLienzo({ hoja: opciones?.hoja || OPCIONES_POR_DEFECTO.hoja, escala, crearLienzo: hacer });
+export function vistaPreviaTarjetasAcomodacion(tarjetas, opciones, { escala = 1.4, crearLienzo = crearCanvas } = {}) {
+  const papel = HOJAS[opciones?.hoja] || HOJAS[OPCIONES_POR_DEFECTO.hoja];
+  const lienzo = new PdfEnLienzo({ medida: { ancho: papel.ancho * MM, alto: papel.alto * MM }, escala, crearLienzo });
   dibujarTarjetasAcomodacion(lienzo, tarjetas, opciones);
   if (!lienzo.ctx) return [];
   return lienzo.paginas.map((p) => p.toDataURL("image/jpeg", 0.85));
@@ -369,10 +284,9 @@ export function vistaPreviaTarjetasAcomodacion(tarjetas, opciones, { escala = 1.
 // La muestra de un acabado, para elegirlo: una cara de una tarjeta de
 // ejemplo, del mismo dibujo que el PDF.
 const EJEMPLO = { nombre: "Luis", apellido: "Abreu", mesa: 3, familia: "A" };
-export function muestraAcabado(idAcabado, ancho = OPCIONES_POR_DEFECTO.ancho, { escala = 1, crearLienzo } = {}) {
-  const hacer = crearLienzo || ((w, h) => Object.assign(document.createElement("canvas"), { width: w, height: h }));
+export function muestraAcabado(idAcabado, ancho = OPCIONES_POR_DEFECTO.ancho, { escala = 1, crearLienzo = crearCanvas } = {}) {
   const medida = { ancho: ancho * MM, alto: (ALTO_TARJETA * MM) / 2 };
-  const lienzo = new PdfEnLienzo({ medida, escala, crearLienzo: hacer });
+  const lienzo = new PdfEnLienzo({ medida, escala, crearLienzo });
   cara(lienzo, 0, 0, medida.ancho, medida.alto, false, EJEMPLO, acabado(idAcabado));
   return lienzo.ctx ? lienzo.paginas[0].toDataURL("image/png") : "";
 }
