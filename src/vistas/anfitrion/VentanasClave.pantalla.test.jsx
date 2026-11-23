@@ -81,8 +81,7 @@ describe("el Cronograma se puede dibujar", () => {
   // salía dos veces (norma 16).
   it("al desplegar «¿Quién lo atiende?», cada persona sale UNA vez", () => {
     const vista = montar(<VentanaConfigCronograma data={data} ventana={null} />);
-    // El primer bloque (Recepción) lo atienden los colaboradores solos,
-    // sin lista que elegir: hay que pasar al siguiente.
+    // Se mira en el Cóctel (la Recepción tiene su propia prueba abajo).
     // ⚠️ El primer <select> de la ventana es la hora de inicio, no el
     // bloque: se busca por lo que lleva dentro.
     const elegirBloque = [...vista.contenedor.querySelectorAll("select")].find((sel) =>
@@ -100,6 +99,23 @@ describe("el Cronograma se puede dibujar", () => {
     expect(veces).toBe(1);
     // Y con su papel al lado, no en una fila aparte.
     expect(html).toContain("Acomodador");
+  });
+
+  // v95.7 (él: «ahora tenemos un sistema de acreditación en la puerta con
+  // QR y lo hará un acomodador; lo pueden acompañar otros acomodadores»):
+  // la Recepción ya no es automática; se elige como cualquier bloque.
+  it("en la Recepción se elige quién la atiende, como en cualquier bloque (ya no es automática)", () => {
+    const vista = montar(<VentanaConfigCronograma data={data} ventana={null} />);
+    const desplegar = [...vista.contenedor.querySelectorAll("button")].find((b) =>
+      b.textContent.includes("¿Quién lo atiende?")
+    );
+    vista.pulsar(desplegar);
+    const html = vista.html;
+    vista.desmontar();
+    expect(html).not.toContain("Automático");
+    expect(html).toContain("Interno");
+    expect(html).toContain("Pacheco, Omar");
+    expect((html.match(/type="checkbox"/g) || []).length).toBeGreaterThanOrEqual(2);
   });
 });
 

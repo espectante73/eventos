@@ -31,7 +31,6 @@ import {
   estaAsignada,
   alternarPersonaAsignada,
 } from "../../lib/cronograma";
-import { resolverColaborador } from "../../lib/invitados";
 import { Boton } from "../../components/Boton";
 import { BotonQuitar } from "../../components/PreguntaSeguridad";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
@@ -70,17 +69,12 @@ function nombreDuracion(minutos) {
 export function VentanaConfigCronograma({ data, ventana }) {
   const { evento, persistEvento, colaboradores, invitados } = data;
   const bloques = Array.isArray(evento.cronogramaBloques) ? evento.cronogramaBloques : [];
-  // "Recepción" -- siempre el primer bloque del día -- la cubren los
-  // propios colaboradores, cada uno recibiendo a sus invitados ya
-  // asignados (dato que ya existe: quién tiene algún confirmado a su
-  // cargo). Automático a propósito, a petición del usuario: no hace
-  // falta "asignar" nada ahí, ya se sabe solo.
-  const colaboradoresConConfirmados = colaboradores.filter((c) =>
-    invitados.some((g) => g.confirmado && resolverColaborador(g, colaboradores)?.id === c.id)
-  );
+  // La Recepción ya NO es automática (v95.7, él: «ahora tenemos un sistema
+  // de acreditación en la puerta con QR y lo hará un acomodador; lo pueden
+  // acompañar otros acomodadores»). Antes la cubrían solos los colaboradores
+  // con confirmados a su cargo; ahora se elige como cualquier otro bloque.
   // Invitados con algún rol de trabajo (acomodador, etc.) -- el otro
-  // grupo asignable, además de los colaboradores, a los bloques que NO
-  // son la Recepción.
+  // grupo asignable, además de los colaboradores.
   const invitadosConRol = invitados.filter((g) => Array.isArray(g.rolesTrabajo) && g.rolesTrabajo.length > 0);
   const responsablesRol = evento.rolesTrabajoResponsables || {};
   const horaInicio = evento.cronogramaHoraInicio || "18:00";
@@ -171,7 +165,6 @@ export function VentanaConfigCronograma({ data, ventana }) {
   // atiende" hasta que se despliega a propósito.
   const resumenAtiende = (() => {
     if (!bloqueActual) return "";
-    if (seleccionado === 0) return "Automático (colaboradores)";
     if (tipoAtiende === "interno") {
       const n = Array.isArray(bloqueActual.asignados) ? bloqueActual.asignados.length : 0;
       return n > 0 ? `Interno (${n})` : "Interno -- nadie elegido todavía";
@@ -321,10 +314,8 @@ export function VentanaConfigCronograma({ data, ventana }) {
           {/* Quién atiende este bloque -- plegado por defecto, a
               petición del usuario, 2026-08-29. Dos cosas distintas
               aparte, no una sola: "¿está cubierto?" y "¿lo he
-              comprobado yo?". El primer bloque (Recepción) es
-              automático: lo cubren los colaboradores con invitados
-              confirmados a su cargo, sin nada que marcar a mano ni
-              elegir interno/externo. Para el resto, primero se elige
+              comprobado yo?". En todos, también la Recepción (v95.7),
+              primero se elige
               Interno (colaboradores/invitados con rol) o Externo (del
               local o contratado -- gente ajena a la lista de
               invitados, como el equipo del restaurante en la Cena o un
@@ -342,78 +333,68 @@ export function VentanaConfigCronograma({ data, ventana }) {
               abierta={atiendeAbierto}
               onAlternar={() => setAtiendeAbierto((a) => !a)}
             >
-              {seleccionado === 0 ? (
-                <p className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-                  Automático: cada colaborador recibe a sus propios invitados —{" "}
-                  {colaboradoresConConfirmados.length === 0
-                    ? "todavía ninguno tiene confirmados."
-                    : colaboradoresConConfirmados.map((c) => c.nombre).join(", ")}
-                  .
-                </p>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2 mb-2">
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <BotonOpcion
+                    activo={tipoAtiende === "interno"}
+                    onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "interno")}
+                  >
+                    Interno
+                  </BotonOpcion>
+                  <BotonOpcion
+                    activo={tipoAtiende === "externo"}
+                    onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "externo")}
+                  >
+                    Externo
+                  </BotonOpcion>
+                </div>
+
+                {tipoAtiende === "interno" &&
+                  (personas.length === 0 ? (
+                    <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.tenue }}>
+                      Todavía no hay ningún colaborador ni invitado con rol de trabajo.
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-1">
+                      {personas.map((p) => (
+                        <label key={p.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
+                          <input
+                            type="checkbox"
+                            checked={estaAsignada(bloqueActual.asignados, p)}
+                            onChange={() =>
+                              cambiarBloque(
+                                seleccionado,
+                                "asignados",
+                                alternarPersonaAsignada(bloqueActual.asignados, p)
+                              )
+                            }
+                          />
+                          {p.nombre}
+                          {p.roles.length > 0 && (
+                            <span style={{ opacity: OP.secundario }}>({p.roles.join(", ")})</span>
+                          )}
+                        </label>
+                      ))}
+                    </div>
+                  ))}
+
+                {tipoAtiende === "externo" && (
+                  <div className="flex items-center gap-2">
                     <BotonOpcion
-                      activo={tipoAtiende === "interno"}
-                      onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "interno")}
+                      activo={bloqueActual.tipoExterno === "local"}
+                      onClick={() => cambiarBloque(seleccionado, "tipoExterno", "local")}
                     >
-                      Interno
+                      Del local
                     </BotonOpcion>
                     <BotonOpcion
-                      activo={tipoAtiende === "externo"}
-                      onClick={() => cambiarBloque(seleccionado, "tipoAtiende", "externo")}
+                      activo={bloqueActual.tipoExterno === "contratado"}
+                      onClick={() => cambiarBloque(seleccionado, "tipoExterno", "contratado")}
                     >
-                      Externo
+                      Contratado
                     </BotonOpcion>
                   </div>
-
-                  {tipoAtiende === "interno" &&
-                    (personas.length === 0 ? (
-                      <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.tenue }}>
-                        Todavía no hay ningún colaborador ni invitado con rol de trabajo.
-                      </p>
-                    ) : (
-                      <div className="flex flex-col gap-1">
-                        {personas.map((p) => (
-                          <label key={p.id} className="flex items-center gap-1.5 text-sm" style={{ color: C.charcoal }}>
-                            <input
-                              type="checkbox"
-                              checked={estaAsignada(bloqueActual.asignados, p)}
-                              onChange={() =>
-                                cambiarBloque(
-                                  seleccionado,
-                                  "asignados",
-                                  alternarPersonaAsignada(bloqueActual.asignados, p)
-                                )
-                              }
-                            />
-                            {p.nombre}
-                            {p.roles.length > 0 && (
-                              <span style={{ opacity: OP.secundario }}>({p.roles.join(", ")})</span>
-                            )}
-                          </label>
-                        ))}
-                      </div>
-                    ))}
-
-                  {tipoAtiende === "externo" && (
-                    <div className="flex items-center gap-2">
-                      <BotonOpcion
-                        activo={bloqueActual.tipoExterno === "local"}
-                        onClick={() => cambiarBloque(seleccionado, "tipoExterno", "local")}
-                      >
-                        Del local
-                      </BotonOpcion>
-                      <BotonOpcion
-                        activo={bloqueActual.tipoExterno === "contratado"}
-                        onClick={() => cambiarBloque(seleccionado, "tipoExterno", "contratado")}
-                      >
-                        Contratado
-                      </BotonOpcion>
-                    </div>
-                  )}
-                </>
-              )}
+                )}
+              </>
             </SeccionPlegable>
           </div>
 

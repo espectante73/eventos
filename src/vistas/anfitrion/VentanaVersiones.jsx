@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "95.7",
+    cambios: [
+      "Cronograma: la Recepción ya no es automática. Antes la atendían solos los colaboradores con invitados confirmados; ahora, con la acreditación por QR en la puerta, se elige en «¿Quién lo atiende?» como en cualquier otro bloque: el acomodador y quienes le acompañen.",
+    ],
+  },
+  {
     version: "95.6",
     cambios: [
       "Contabilidad: el DJ no paga entrada, lo invita el evento. En «Entra» sale aparte, «1 DJ, lo invita el evento», a 0 €, y los acuses cuadran sin la línea rosa.",
