@@ -22,7 +22,7 @@
 // Un solo dibujo para el PDF y la vista previa (PdfEnLienzo).
 import { C } from "../theme";
 import { matrimoniosConLosQueVienenSolos, nombresMatrimonio } from "./matrimonios";
-import { PdfEnLienzo, PUNTOS_POR_MM as MM, crearCanvas } from "./pdfEnLienzo";
+import { PdfEnLienzo, PUNTOS_POR_MM as MM, crearCanvas, cargarImagen } from "./pdfEnLienzo";
 
 export const ARCHIVO_SOBRES = "sobres-matrimonios.pdf";
 // El logo del evento («Las bodas de todos»), sin fondo.
@@ -218,16 +218,4 @@ export function vistaPreviaSobres(sobres, opciones, logo, { escala = 1.2, crearL
 }
 
 // El logo, cargado una vez: el dato para el PDF y la imagen para el lienzo.
-export async function cargarLogo(ruta = RUTA_LOGO) {
-  const blob = await (await fetch(ruta)).blob();
-  const dato = await new Promise((ok, mal) => {
-    const lector = new FileReader();
-    lector.onload = () => ok(lector.result);
-    lector.onerror = mal;
-    lector.readAsDataURL(blob);
-  });
-  const imagen = new Image();
-  imagen.src = dato;
-  await imagen.decode();
-  return { dato, imagen, proporcion: imagen.naturalHeight / imagen.naturalWidth };
-}
+export const cargarLogo = (ruta = RUTA_LOGO) => cargarImagen(ruta);

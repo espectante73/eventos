@@ -12,8 +12,15 @@ export const PUNTOS_POR_MM = 72 / 25.4;
 
 export const crearCanvas = (ancho, alto) => Object.assign(document.createElement("canvas"), { width: ancho, height: alto });
 
-// Las familias de letra de jsPDF, en el navegador.
-const FAMILIAS = { helvetica: "Helvetica, Arial, sans-serif", times: "'Times New Roman', Times, serif" };
+// Las familias de letra de jsPDF, en el navegador. Las dos de la
+// invitación (tarjetas de acomodación, v99.2), con el mismo archivo que va
+// dentro del PDF (cargarAdornos las registra con estos nombres).
+const FAMILIAS = {
+  helvetica: "Helvetica, Arial, sans-serif",
+  times: "'Times New Roman', Times, serif",
+  fraunces: "'Fraunces Tarjeta', 'Fraunces', serif",
+  alexbrush: "'Alex Brush Tarjeta', 'Alex Brush', cursive",
+};
 
 export class PdfEnLienzo {
   constructor({ medida, escala, crearLienzo = crearCanvas, imagenes = new Map() }) {
@@ -90,7 +97,9 @@ export class PdfEnLienzo {
     const imagen = this.imagenes.get(dato);
     if (this.ctx && imagen) this.ctx.drawImage(imagen, x, y, w, h);
   };
-  text(texto, x, y, { angle = 0 } = {}) {
+  // `charSpace`: el aire entre letras, como en jsPDF (letra a letra: así
+  // sale igual en todos los navegadores).
+  text(texto, x, y, { angle = 0, charSpace = 0 } = {}) {
     if (!this.ctx) return;
     const ctx = this.ctx;
     ctx.save();
@@ -98,7 +107,30 @@ export class PdfEnLienzo {
     ctx.textBaseline = "alphabetic";
     ctx.translate(x, y);
     if (angle) ctx.rotate((-angle * Math.PI) / 180);
-    ctx.fillText(texto, 0, 0);
+    if (!charSpace) ctx.fillText(texto, 0, 0);
+    else {
+      let dx = 0;
+      for (const letra of texto) {
+        ctx.fillText(letra, dx, 0);
+        dx += ctx.measureText(letra).width + charSpace;
+      }
+    }
     ctx.restore();
   }
+}
+
+// Una imagen de la app (el logo de los sobres, los adornos de las
+// tarjetas), cargada una vez: el dato para el PDF y la imagen para el lienzo.
+export async function cargarImagen(ruta) {
+  const blob = await (await fetch(ruta)).blob();
+  const dato = await new Promise((ok, mal) => {
+    const lector = new FileReader();
+    lector.onload = () => ok(lector.result);
+    lector.onerror = mal;
+    lector.readAsDataURL(blob);
+  });
+  const imagen = new Image();
+  imagen.src = dato;
+  await imagen.decode();
+  return { dato, imagen, proporcion: imagen.naturalHeight / imagen.naturalWidth };
 }

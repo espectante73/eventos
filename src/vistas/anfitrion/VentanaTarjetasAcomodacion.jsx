@@ -3,7 +3,7 @@
 // de todas las hojas (él: «no sea que no me guste cómo quede»), y la hoja
 // (A4 o A3). La tarjeta, siempre la bancaria: cada cara, de su tamaño (él,
 // v98.9; retiró el ancho de 9,5 cm). Con qué se cortan (v99: guillotina,
-// tijera o plóter), que decide las marcas. Y el acabado, de una paleta de seis (él:
+// tijera o plóter), que decide las marcas. Y el acabado: los tres de la línea de la invitación (v99.2) (él:
 // «poder editar yo mismo el acabado… y verlo antes»).
 //
 // A pantalla entera y con los botones ARRIBA, del lado del pulgar, como la
@@ -22,6 +22,7 @@ import {
   CORTES,
   ARCHIVO_MUESTRA_ACABADOS,
   ARCHIVO_TARJETAS_ACOMODACION,
+  cargarAdornos as cargarAdornosDeLaApp,
   HOJAS,
   muestraAcabado,
   OPCIONES_POR_DEFECTO,
@@ -61,13 +62,20 @@ function guardarOpciones(o) {
   }
 }
 
-// La paleta de acabados: UNA pieza partida en seis, como «Sí / No»
+// La paleta de acabados: UNA pieza partida en partes iguales, como «Sí / No»
 // (ElegirSiNo), y en cada parte la muestra de la tarjeta con ese acabado.
-// El elegido, enmarcado en el dorado de lo marcado (el de los menús): el
-// relleno verde de «Sí / No» se confundiría con las muestras verdes.
+// Las partes llenan el ancho; si no cupieran en una fila (el móvil),
+// pasarían a la siguiente: cada muestra, de 56 px como poco.
+// El elegido, enmarcado en el dorado de lo marcado (el de los menús), como
+// cuando había muestras verdes, que el relleno de «Sí / No» confundía.
 function ElegirAcabado({ valor, onCambiar, muestras }) {
   return (
-    <div role="radiogroup" aria-label="Acabado" className="flex gap-1" style={{ ...inputStyle, padding: 3, minHeight: DEDO }}>
+    <div
+      role="radiogroup"
+      aria-label="Acabado"
+      className="grid gap-1"
+      style={{ ...inputStyle, padding: 3, minHeight: DEDO, gridTemplateColumns: "repeat(auto-fit, minmax(56px, 1fr))" }}
+    >
       {ACABADOS.map((a) => {
         const elegido = valor === a.id;
         return (
@@ -95,13 +103,15 @@ function ElegirAcabado({ valor, onCambiar, muestras }) {
 }
 
 // `vistaPrevia` y `muestra`: quien dibuja las hojas y las muestras (las
-// pruebas pasan unos sin lienzo); `pdfMuestra`, la hoja de muestra.
+// pruebas pasan unos sin lienzo); `pdfMuestra`, la hoja de muestra;
+// `cargarAdornos`, quien trae las hojas y las letras de la invitación.
 export function VentanaTarjetasAcomodacion({
   invitados,
   onCerrar,
   vistaPrevia = vistaPreviaTarjetasAcomodacion,
   muestra = muestraAcabado,
   pdfMuestra = pdfMuestraAcabados,
+  cargarAdornos = cargarAdornosDeLaApp,
 }) {
   const [opciones, setOpciones] = useState(leerOpciones);
   const elegir = (cambio) => {
@@ -114,17 +124,34 @@ export function VentanaTarjetasAcomodacion({
   const hojas = Math.max(1, Math.ceil(tarjetas.length / porHoja));
   const hoja = HOJAS[opciones.hoja];
   const elegido = ACABADOS.find((a) => a.id === opciones.acabado) || ACABADOS[0];
-  // Las muestras: una cara, tal cual saldrá.
-  const muestras = useMemo(() => Object.fromEntries(ACABADOS.map((a) => [a.id, muestra(a.id, { escala: 0.6 })])), [muestra]);
+  // Las hojas y las letras de la invitación (v99.2), una vez; si no
+  // llegan, sus acabados salen sin ellas y se dice. undefined: cargando.
+  const [adornos, setAdornos] = useState(undefined);
+  useEffect(() => {
+    let vivo = true;
+    cargarAdornos()
+      .then((a) => vivo && setAdornos(a))
+      .catch(() => vivo && setAdornos(null));
+    return () => {
+      vivo = false;
+    };
+  }, [cargarAdornos]);
 
-  // Las hojas se dibujan justo después de abrir: la ventana sale al
-  // momento y la vista previa, en cuanto está.
+  // Las muestras: una cara, tal cual saldrá.
+  const muestras = useMemo(
+    () => (adornos === undefined ? {} : Object.fromEntries(ACABADOS.map((a) => [a.id, muestra(a.id, adornos, { escala: 0.6 })]))),
+    [muestra, adornos],
+  );
+
+  // Las hojas se dibujan justo después de abrir (y de tener los adornos):
+  // la ventana sale al momento y la vista previa, en cuanto está.
   const [imagenes, setImagenes] = useState(null);
   useEffect(() => {
+    if (adornos === undefined) return undefined;
     setImagenes(null);
-    const t = setTimeout(() => setImagenes(vistaPrevia(tarjetas, opciones)), 30);
+    const t = setTimeout(() => setImagenes(vistaPrevia(tarjetas, opciones, adornos)), 30);
     return () => clearTimeout(t);
-  }, [tarjetas, opciones, vistaPrevia]);
+  }, [tarjetas, opciones, vistaPrevia, adornos]);
 
   // Lo que se está preparando: "" (nada), "tarjetas" o "muestra".
   const [descargando, setDescargando] = useState("");
@@ -135,10 +162,10 @@ export function VentanaTarjetasAcomodacion({
     setDescargando("");
     setDescargado(archivo);
   };
-  const descargar = () => bajar("tarjetas", ARCHIVO_TARJETAS_ACOMODACION, () => pdfTarjetasAcomodacion(tarjetas, opciones));
-  // La hoja de muestra (él, v99.1): los seis acabados en una hoja, para
+  const descargar = () => bajar("tarjetas", ARCHIVO_TARJETAS_ACOMODACION, () => pdfTarjetasAcomodacion(tarjetas, opciones, adornos));
+  // La hoja de muestra (él, v99.1): todos los acabados, para
   // imprimirla y elegir en vivo; con la hoja y las marcas elegidas.
-  const descargarMuestra = () => bajar("muestra", ARCHIVO_MUESTRA_ACABADOS, () => pdfMuestra(opciones));
+  const descargarMuestra = () => bajar("muestra", ARCHIVO_MUESTRA_ACABADOS, () => pdfMuestra(opciones, adornos));
 
   return (
     <ModalFlotante pantallaEntera titulo="Tarjetas de acomodación" onCerrar={onCerrar}>
@@ -146,10 +173,10 @@ export function VentanaTarjetasAcomodacion({
         <Boton variante="secundario" onClick={onCerrar}>
           Cancelar
         </Boton>
-        <Boton variante="secundario" icono={Palette} onClick={descargarMuestra} disabled={!!descargando} data-muestra-acabados>
+        <Boton variante="secundario" icono={Palette} onClick={descargarMuestra} disabled={!!descargando || adornos === undefined} data-muestra-acabados>
           {descargando === "muestra" ? "Preparando…" : "Muestra"}
         </Boton>
-        <Boton variante="principal" icono={Download} onClick={descargar} disabled={!!descargando || !tarjetas.length}>
+        <Boton variante="principal" icono={Download} onClick={descargar} disabled={!!descargando || !tarjetas.length || adornos === undefined}>
           {descargando === "tarjetas" ? "Preparando…" : "Descargar"}
         </Boton>
       </div>
@@ -190,6 +217,12 @@ export function VentanaTarjetasAcomodacion({
           ? `${plural(tarjetas.length, "tarjeta", "tarjetas")} en ${plural(hojas, `hoja ${hoja.rotulo}`, `hojas ${hoja.rotulo}`)}, ${porHoja} por hoja.`
           : "Nadie tiene mesa todavía."}
       </p>
+      {adornos === null && (
+        <p className="text-sm mb-1" style={{ color: C.wax }} data-sin-adornos>
+          No se pudieron cargar las hojas y las letras de la invitación: sus acabados salen sin ellas. Vuelve a abrir la ventana para
+          intentarlo otra vez.
+        </p>
+      )}
       {sinMesa > 0 && (
         <p className="text-sm mb-1" style={{ color: C.wax }} data-sin-mesa>
           {sinMesa === 1 ? "1 confirmado sin mesa se queda sin tarjeta." : `${sinMesa} confirmados sin mesa se quedan sin tarjeta.`}
@@ -216,7 +249,7 @@ export function VentanaTarjetasAcomodacion({
           cada forma de cortar: rayitas en los bordes para la guillotina, líneas enteras para tijera o cúter, y marcas en las esquinas para
           el plóter (cada marca de plóter tiene las suyas: confírmalo con quien corte). Salen mesa por mesa, y la letra pequeña de la
           esquina es su familia dentro de la mesa, para repartirlas sin separar a nadie; quien viene solo no lleva letra. «Muestra»
-          descarga una hoja con los seis acabados, uno en cada cara y con su número, para imprimirla y elegir viéndolos de verdad.
+          descarga los acabados, uno en cada cara y con su número, para imprimirlos y elegir viéndolos de verdad.
         </p>
       </details>
     </ModalFlotante>

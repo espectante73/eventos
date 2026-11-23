@@ -10,10 +10,13 @@
 //   para leerse desde el otro lado de la mesa (como las tarjetas QR); de
 //   ancho, el de la bancaria, 8,56 cm, el único (él, v98.9: retiró el de
 //   9,5 cm: «nos quedamos con el modelo de tarjeta bancaria»);
-// - fondo verde del evento a sangre, letra champán, marco fino;
-// - el APELLIDO arriba, en mayúsculas y negrita para que no se confundan
-//   («MESA, Sara», «TOMÁS, Elena»), y el nombre debajo (él, v98.9; antes
-//   «APELLIDO, Nombre» en una línea); si no cabe, la letra encoge;
+// - con el estilo de la invitación (v99.2, la línea que él eligió): papel
+//   blanco, las hojas de olivo en la esquina y el marco dorado, fino o
+//   doble (ACABADOS);
+// - el APELLIDO arriba, en mayúsculas para que no se confundan («MESA,
+//   Sara», «TOMÁS, Elena»), y el nombre debajo en caligráfica dorada, con
+//   el corazón de la invitación (él, v98.9; antes «APELLIDO, Nombre» en
+//   una línea); si no cabe, la letra encoge;
 // - el número de la mesa en un círculo dorado;
 // - la letra de su familia DENTRO de la mesa (A, B, C…), pequeña, en la
 //   esquina: se imprimen mesa por mesa y familia seguida, y así no se
@@ -29,7 +32,7 @@
 import { C } from "../theme";
 import { claveFamiliaMesa } from "./mesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
-import { PdfEnLienzo, PUNTOS_POR_MM, crearCanvas } from "./pdfEnLienzo";
+import { PdfEnLienzo, PUNTOS_POR_MM, crearCanvas, cargarImagen } from "./pdfEnLienzo";
 
 export const ARCHIVO_TARJETAS_ACOMODACION = "tarjetas-de-acomodacion.pdf";
 
@@ -46,34 +49,21 @@ export const ALTO_TARJETA = 2 * ALTO_CARA;
 // Lo mínimo hasta el borde del papel: menos, y la impresora cortaría el
 // verde.
 const MARGEN_MINIMO = 10;
-// El acabado (él: «una paleta con cuatro o cinco posibilidades, y verlo
-// antes»; luego pidió el sexto). `fondo`: el de toda la tarjeta, de corte a corte (null = el
-// papel, blanco, sin tinta); `recuadro`: el relleno de dentro del marco
-// (null = se ve el fondo); `marco`: su línea; el círculo del número, igual
-// en todas (dorado), con su contorno; `lineas`: el doblez y los cortes, si
-// el gris de siempre no se ve sobre el fondo (el dorado), y su grosor
-// (`grosorLineas`); `familia`: la letra de la familia (sobre blanco,
-// siempre el verde oscuro, él: se lee mejor que el dorado).
-// (Hubo un séptimo, letra dorada con un aura verde difuminada: tras muchas
-// pruebas, él lo quitó: no llegaba a lo que buscaba.)
+// El acabado: la línea de la invitación (él, v99.2: «con esta parte de la
+// invitación, poner su motivo o estilo en la tarjeta en modo claro»; eligió
+// el boceto 3 y, con el doble marco del 2, las dos maneras; luego: «me quedo
+// solo con estos 3 modelos que serán la nueva línea y los otros 6 los
+// desechamos»). Papel blanco, las hojas de olivo de la invitación en la
+// esquina, el APELLIDO en Fraunces (la letra de «LAS BODAS»), el nombre en
+// letra caligráfica dorada («de todos») con el corazón debajo, y el número
+// de la mesa en el círculo dorado. Cambia el marco: `marcos`, cada uno
+// [distancia al corte, grosor]. (Los seis de antes —verdes, champán,
+// rectángulo dorado— y el del aura, quitados por él: no volver a ellos.)
+const LINEA_INVITACION = { marco: C.gold, letra: C.ink, letraNombre: C.gold, familia: C.ink, contornoNumero: C.gold };
 export const ACABADOS = [
-  // El de los bocetos: verde a sangre y letra champán.
-  { id: "verde", rotulo: "Verde, letra champán", fondo: C.ink, recuadro: null, marco: C.champanClaro, grosorMarco: 0.3, letra: C.champan, familia: C.champanClaro, contornoNumero: C.champan },
-  // Blanco con la letra «como está»: el champán no se lee sobre blanco, así
-  // que va su tono oscuro, el dorado.
-  { id: "blancoDorado", rotulo: "Blanco, letra dorada", fondo: null, recuadro: null, marco: C.gold, grosorMarco: 0.5, letra: C.gold, familia: C.ink, contornoNumero: C.gold },
-  // Blanco, letra oscura y el marco en verde.
-  { id: "blancoVerde", rotulo: "Blanco, letra verde y marco verde", fondo: null, recuadro: null, marco: C.ink, grosorMarco: 1, letra: C.ink, familia: C.ink, contornoNumero: C.gold },
-  // El recuadro verde y por fuera blanco.
-  { id: "recuadroVerde", rotulo: "Recuadro verde, borde blanco", fondo: null, recuadro: C.ink, marco: C.ink, grosorMarco: 0.3, letra: C.champan, familia: C.champanClaro, contornoNumero: C.champan },
-  // Al revés: por fuera verde y el recuadro blanco.
-  { id: "recuadroBlanco", rotulo: "Borde verde, recuadro blanco", fondo: C.ink, recuadro: C.blanco, marco: C.champanClaro, grosorMarco: 0.3, letra: C.ink, familia: C.ink, contornoNumero: C.gold },
-  // Blanco con el rectángulo dorado (él, v98.2: «quitamos el dorado
-  // exterior, pero dejamos el rectángulo dorado»): el marco, grueso y en el
-  // dorado del círculo. Antes llevaba todo el borde dorado, y por eso el
-  // doblez y los cortes iban en verde; sobre blanco, los de siempre. El id
-  // se queda: es lo que cada aparato tiene guardado.
-  { id: "recuadroBlancoDorado", rotulo: "Blanco, rectángulo dorado", fondo: null, recuadro: null, marco: C.goldClaro, grosorMarco: 1.5, letra: C.ink, familia: C.ink, contornoNumero: C.gold },
+  { ...LINEA_INVITACION, id: "blancoHojas", rotulo: "Marco fino", marcos: [[9, 0.5]] },
+  { ...LINEA_INVITACION, id: "blancoHojasGruesoFuera", rotulo: "Doble marco, grueso fuera", marcos: [[8, 0.9], [11, 0.4]] },
+  { ...LINEA_INVITACION, id: "blancoHojasGruesoDentro", rotulo: "Doble marco, grueso dentro", marcos: [[8, 0.4], [11, 0.9]] },
 ];
 const acabado = (id) => ACABADOS.find((a) => a.id === id) || ACABADOS[0];
 // Con qué se van a cortar, y así, qué marcas lleva la hoja (él, v99: «la
@@ -138,85 +128,107 @@ export function tarjetasDeAcomodacion(invitados = []) {
 
 // ---------- El dibujo ----------
 
-// Con la cara del doble de alto (v98.9), todo algo más grande; el ancho es
-// el mismo, así que el nombre sigue encogiendo si no cabe.
-const MARCO = 14; // del corte (o del doblez) al marco, en puntos
+// Las medidas de la cara, en puntos.
+const MARCO = 14; // del corte (o del doblez) al hueco del nombre y la letra de la familia
 const R_NUM = 30; // el círculo del número
-const TAM_NUMERO = 40;
-const TAM_NOMBRE = 20; // el de entrada; si no cabe, encoge
 const TAM_FAMILIA = 11;
-const ALTO_CIFRA = 0.716; // alto de las cifras de Helvetica, por punto de letra
+const ALTO_CIFRA = 0.716; // alto de las mayúsculas y las cifras, por punto de letra
+const HOJAS_ANCHO = 70; // las hojas de la esquina
+const TAM_APELLIDO = 16; // el de entrada; si no cabe, encoge
+const ESPACIADO_APELLIDO = 1.5; // entre letras, como «LAS BODAS»
+const TAM_NOMBRE = 30; // el de entrada; si no cabe, encoge
+const ALTO_CALIGRAFICA = 0.62; // lo que sube la caligráfica, por punto de letra
+const TAM_NUMERO = 38;
+// Los nombres de las dos letras de la invitación: en jsPDF y en el lienzo
+// (pdfEnLienzo.js). Si no se cargaron, las de siempre de jsPDF.
+const SERIF = "fraunces";
+const CALIGRAFICA = "alexbrush";
 
-// Una cara de la tarjeta. Si va girada, cada punto da la vuelta alrededor
-// del centro de la cara.
-function cara(pdf, x, y, ancho, alto, girada, t, estilo) {
+// Una cara de la tarjeta: el marco o los dos marcos, las hojas en la
+// esquina de arriba a la izquierda (cortadas por el borde, como en la
+// invitación), el número de la mesa en su círculo dorado y, en medio del
+// hueco de la izquierda, el APELLIDO, el nombre en caligráfica y el
+// corazón. Si va girada, cada punto da la vuelta alrededor del centro de
+// la cara. Sin `adornos` (no se cargaron), sin hojas ni corazón y con la
+// letra de siempre: se sigue pudiendo imprimir.
+function cara(pdf, x, y, ancho, alto, girada, t, estilo, adornos) {
   const cx = x + ancho / 2;
   const cy = y + alto / 2;
   const p = (px, py) => (girada ? [2 * cx - px, 2 * cy - py] : [px, py]);
-  const escribir = (texto, px, base, { centrado = false } = {}) => {
-    const desde = centrado ? px - pdf.getTextWidth(texto) / 2 : px;
-    if (!girada) pdf.text(texto, desde, base);
-    else pdf.text(texto, ...p(desde, base), { angle: 180 });
+  // Una caja, en su sitio de la cara girada (la imagen, ya girada).
+  const caja = (bx, by, w, h) => (girada ? [2 * cx - bx - w, 2 * cy - by - h, w, h] : [bx, by, w, h]);
+  const escribir = (texto, px, base, charSpace = 0) => {
+    if (!girada) pdf.text(texto, px, base, { charSpace });
+    else pdf.text(texto, ...p(px, base), { angle: 180, charSpace });
   };
-  // El fondo, de corte a corte (sin fondo, el papel).
-  if (estilo.fondo) {
-    pdf.setFillColor(estilo.fondo);
-    pdf.rect(x, y, ancho, alto, "F");
-  }
-  // El marco, y lo de dentro si va relleno.
+  const imagen = (cual, bx, by, w) => {
+    const im = girada ? adornos[`${cual}Girada`] : adornos[cual];
+    pdf.addImage(im.dato, "PNG", ...caja(bx, by, w, w * im.proporcion), `${cual}${girada ? "Girada" : ""}`, "FAST");
+  };
+  const [serif, estiloSerif] = adornos ? [SERIF, "normal"] : ["helvetica", "bold"];
+  const caligrafica = adornos ? CALIGRAFICA : "helvetica";
+  // Los marcos (iguales girados: están centrados).
   pdf.setDrawColor(estilo.marco);
-  pdf.setLineWidth(estilo.grosorMarco);
-  if (estilo.recuadro) pdf.setFillColor(estilo.recuadro);
-  const [fx, fy] = p(girada ? x + ancho - MARCO : x + MARCO, girada ? y + alto - MARCO : y + MARCO);
-  pdf.roundedRect(fx, fy, ancho - 2 * MARCO, alto - 2 * MARCO, 3, 3, estilo.recuadro ? "FD" : "S");
+  for (const [m, grosor] of estilo.marcos) {
+    pdf.setLineWidth(grosor);
+    pdf.roundedRect(x + m, y + m, ancho - 2 * m, alto - 2 * m, 2, 2, "S");
+  }
+  if (adornos) imagen("hojas", x, y, HOJAS_ANCHO);
   // El número de la mesa, en su círculo dorado.
   const nx = x + ancho - MARCO - 8 - R_NUM;
   pdf.setFillColor(C.goldClaro);
   pdf.setDrawColor(estilo.contornoNumero);
   pdf.setLineWidth(3);
   pdf.circle(...p(nx, cy), R_NUM - 1.5, "FD");
-  pdf.setFont("helvetica", "bold");
+  pdf.setFont(serif, estiloSerif);
   pdf.setFontSize(TAM_NUMERO);
   pdf.setTextColor(C.ink);
-  escribir(String(t.mesa), nx, cy + (TAM_NUMERO * ALTO_CIFRA) / 2, { centrado: true });
-  // En dos líneas (él, v98.9, con la cara del doble de alto): arriba el
-  // APELLIDO, en mayúsculas y negrita para que no se confundan («MESA,
-  // Sara», «TOMÁS, Elena»), y debajo el nombre; ya sin la coma. Centrado en
-  // el hueco de la izquierda, las dos de la misma letra; si alguna no cabe,
-  // encogen las dos (hasta 7 puntos: más vale pequeño que montado sobre el
-  // círculo). Sin apellido, solo el nombre.
-  const apellido = t.apellido ? t.apellido.toLocaleUpperCase("es") : "";
+  const numero = String(t.mesa);
+  escribir(numero, nx - pdf.getTextWidth(numero) / 2, cy + (TAM_NUMERO * ALTO_CIFRA) / 2);
+  // El nombre, en dos líneas (él, v98.9): arriba el APELLIDO, en
+  // mayúsculas para que no se confundan («MESA, Sara», «TOMÁS, Elena»), y
+  // debajo el nombre. Si no cabe, encoge cada línea por su lado.
   const desde = x + MARCO + 8;
   const hasta = nx - R_NUM - 7;
   const medio = (desde + hasta) / 2;
-  let tam = TAM_NOMBRE;
-  const anchos = () => {
+  const hueco = hasta - desde;
+  const apellido = t.apellido ? t.apellido.toLocaleUpperCase("es") : "";
+  const anchoApellido = (tam) => {
+    pdf.setFont(serif, estiloSerif);
     pdf.setFontSize(tam);
-    pdf.setFont("helvetica", "bold");
-    const a = pdf.getTextWidth(apellido);
-    pdf.setFont("helvetica", "normal");
-    return [a, pdf.getTextWidth(t.nombre)];
+    return pdf.getTextWidth(apellido) + ESPACIADO_APELLIDO * Math.max(0, apellido.length - 1);
   };
-  while (tam > 7 && Math.max(...anchos()) > hasta - desde) tam -= 0.5;
-  const [anchoApellido, anchoNombre] = anchos();
-  const alto1 = tam * ALTO_CIFRA;
-  const entreLineas = tam * 1.3;
-  pdf.setTextColor(estilo.letra);
+  const anchoNombre = (tam) => {
+    pdf.setFont(caligrafica, "normal");
+    pdf.setFontSize(tam);
+    return pdf.getTextWidth(t.nombre);
+  };
+  let ta = TAM_APELLIDO;
+  while (apellido && ta > 8 && anchoApellido(ta) > hueco) ta -= 0.5;
+  let tn = adornos ? TAM_NOMBRE : TAM_APELLIDO;
+  while (tn > 8 && anchoNombre(tn) > hueco) tn -= 0.5;
+  const anchoCorazon = hueco * 0.85;
+  const altoCorazon = adornos ? anchoCorazon * adornos.corazon.proporcion : 0;
+  const altoApellido = apellido ? ta * ALTO_CIFRA + 7 : 0;
+  const altoNombre = tn * (adornos ? ALTO_CALIGRAFICA : ALTO_CIFRA);
+  const bloque = altoApellido + altoNombre + (altoCorazon ? 4 + altoCorazon : 0);
+  let base = cy - bloque / 2;
   if (apellido) {
-    // Las dos líneas, centradas en alto: de lo alto de las mayúsculas a la
-    // base del nombre.
-    const base1 = cy + (alto1 - entreLineas) / 2;
-    pdf.setFont("helvetica", "bold");
-    escribir(apellido, medio - anchoApellido / 2, base1);
-    pdf.setFont("helvetica", "normal");
-    escribir(t.nombre, medio - anchoNombre / 2, base1 + entreLineas);
-  } else {
-    pdf.setFont("helvetica", "normal");
-    escribir(t.nombre, medio - anchoNombre / 2, cy + alto1 / 2);
+    base += ta * ALTO_CIFRA;
+    const w = anchoApellido(ta);
+    pdf.setTextColor(estilo.letra);
+    escribir(apellido, medio - w / 2, base, ESPACIADO_APELLIDO);
+    base += 7;
   }
-  // La letra de su familia en la mesa, pequeña, en la esquina de abajo.
+  base += altoNombre;
+  const w = anchoNombre(tn);
+  pdf.setTextColor(estilo.letraNombre);
+  escribir(t.nombre, medio - w / 2, base);
+  if (adornos) imagen("corazon", medio - anchoCorazon / 2, base + 4, anchoCorazon);
+  // La letra de su familia dentro de la mesa (o, en la hoja de muestra, el
+  // número del acabado), pequeña, en la esquina de abajo.
   if (t.familia) {
-    pdf.setFont("helvetica", "bold");
+    pdf.setFont(serif, estiloSerif);
     pdf.setFontSize(TAM_FAMILIA);
     pdf.setTextColor(estilo.familia);
     escribir(t.familia, x + MARCO + 6, y + alto - MARCO - 6);
@@ -226,13 +238,13 @@ function cara(pdf, x, y, ancho, alto, girada, t, estilo) {
 // Una tarjeta abierta: la cara de arriba, girada, y la de abajo. Las dos
 // iguales, salvo en la hoja de muestra (una con cada acabado): por eso cada
 // cara lleva lo suyo, [tarjeta, estilo].
-function tarjeta(pdf, x, y, ancho, [tArriba, estiloArriba], [tAbajo, estiloAbajo] = [tArriba, estiloArriba]) {
+function tarjeta(pdf, x, y, ancho, adornos, [tArriba, estiloArriba], [tAbajo, estiloAbajo] = [tArriba, estiloArriba]) {
   const alto = ALTO_CARA * MM;
-  cara(pdf, x, y, ancho, alto, true, tArriba, estiloArriba);
-  cara(pdf, x, y + alto, ancho, alto, false, tAbajo, estiloAbajo);
+  cara(pdf, x, y, ancho, alto, true, tArriba, estiloArriba, adornos);
+  cara(pdf, x, y + alto, ancho, alto, false, tAbajo, estiloAbajo, adornos);
   // El doblez, de puntos.
-  pdf.setDrawColor(estiloAbajo.lineas || C.line);
-  pdf.setLineWidth(estiloAbajo.grosorLineas || 0.4);
+  pdf.setDrawColor(C.line);
+  pdf.setLineWidth(0.4);
   pdf.setLineDashPattern([1, 2], 0);
   pdf.line(x, y + alto, x + ancho, y + alto);
   pdf.setLineDashPattern([], 0);
@@ -240,15 +252,16 @@ function tarjeta(pdf, x, y, ancho, [tArriba, estiloArriba], [tAbajo, estiloAbajo
 
 // Todas las hojas: las tarjetas en rejilla, centradas, y por fuera las
 // marcas para cortar, las de la forma de cortar elegida. `pdf` es un jsPDF o un
-// PdfEnLienzo (la vista previa). Devuelve cuántas hojas salieron.
-export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, acabado: idAcabado } = {}) {
+// PdfEnLienzo (la vista previa); `adornos`, las hojas y las letras de la
+// invitación (cargarAdornos), si se cargaron. Devuelve cuántas hojas salieron.
+export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, acabado: idAcabado } = {}, adornos = null) {
   const estilo = acabado(idAcabado);
   const sitio = colocacion(hoja);
   const hojas = Math.max(1, Math.ceil(tarjetas.length / sitio.porHoja));
   for (let h = 0; h < hojas; h++) {
     if (h > 0) pdf.addPage(hoja, "portrait");
     const deEsta = tarjetas.slice(h * sitio.porHoja, (h + 1) * sitio.porHoja);
-    deEsta.forEach((t, i) => tarjeta(pdf, ...sitio.hueco(i), sitio.W, [t, estilo]));
+    deEsta.forEach((t, i) => tarjeta(pdf, ...sitio.hueco(i), sitio.W, adornos, [t, estilo]));
     marcasDeLaHoja(pdf, sitio, deEsta.length, corte);
   }
   return hojas;
@@ -279,52 +292,123 @@ function marcasDeLaHoja(pdf, { columnas, filas, W, H, x0, y0 }, cuantas, corte) 
 
 // La tarjeta de ejemplo: la de las muestras de la paleta y la de la hoja de
 // muestra. La mesa, de dos cifras (v99.1): se ve cómo queda en el círculo y
-// no se confunde con el número del acabado de la esquina (del 1 al 6).
+// no se confunde con el número del acabado de la esquina.
 const EJEMPLO = { nombre: "Luis", apellido: "Abreu", mesa: 12, familia: "A" };
 
 // Él (v99.1): «una hoja modelo… que me aparezcan los 6 modelos… y poder
-// verlo en vivo». Tres tarjetas de ejemplo, cada CARA con un acabado (en
-// una cara uno y en la otra otro): los seis en una sola hoja, por una sola
-// cara del papel. En la esquina de cada cara, donde va la letra de la
-// familia, su número; y arriba, la leyenda, en el orden de la paleta.
+// verlo en vivo». Tarjetas de ejemplo, cada CARA con un acabado (en una
+// cara uno y en la otra otro), por una sola cara del papel. En la esquina
+// de cada cara, donde va la letra de la familia, su número; y arriba, la
+// leyenda, en el orden de la paleta. Si no caben en una hoja, siguen en la
+// siguiente (con los tres de ahora, caben en una). Devuelve cuántas hojas.
 export const ARCHIVO_MUESTRA_ACABADOS = "muestra-acabados-tarjetas.pdf";
 const TAM_LEYENDA = 9;
-export function dibujarMuestraAcabados(pdf, { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte } = {}) {
+export function dibujarMuestraAcabados(pdf, { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte } = {}, adornos = null) {
   const sitio = colocacion(hoja);
   const conNumero = (i) => [{ ...EJEMPLO, familia: String(i + 1) }, ACABADOS[i]];
   const cuantas = Math.ceil(ACABADOS.length / 2);
-  for (let i = 0; i < cuantas; i++) {
-    const abajo = ACABADOS[2 * i + 1] ? conNumero(2 * i + 1) : conNumero(2 * i);
-    tarjeta(pdf, ...sitio.hueco(i), sitio.W, conNumero(2 * i), abajo);
+  const hojas = Math.ceil(cuantas / sitio.porHoja);
+  const lineas = [`Muestra de los ${ACABADOS.length} acabados: el número de cada uno, en la esquina de su cara.`];
+  for (let d = 0; d < ACABADOS.length; d += 3) lineas.push(ACABADOS.slice(d, d + 3).map((a, i) => `${d + i + 1} ${a.rotulo}`).join("  ·  "));
+  for (let h = 0; h < hojas; h++) {
+    if (h > 0) pdf.addPage(hoja, "portrait");
+    const deEsta = Math.min(sitio.porHoja, cuantas - h * sitio.porHoja);
+    for (let j = 0; j < deEsta; j++) {
+      const i = h * sitio.porHoja + j;
+      const abajo = ACABADOS[2 * i + 1] ? conNumero(2 * i + 1) : conNumero(2 * i);
+      tarjeta(pdf, ...sitio.hueco(j), sitio.W, adornos, conNumero(2 * i), abajo);
+    }
+    marcasDeLaHoja(pdf, sitio, deEsta, corte);
+    // La leyenda, centrada en el margen de arriba, de tres en tres.
+    pdf.setFontSize(TAM_LEYENDA);
+    pdf.setTextColor(C.ink);
+    lineas.forEach((texto, i) => {
+      pdf.setFont("helvetica", i === 0 ? "bold" : "normal");
+      pdf.text(texto, (sitio.papel.ancho * MM - pdf.getTextWidth(texto)) / 2, (10 + 4.5 * i) * MM);
+    });
   }
-  marcasDeLaHoja(pdf, sitio, cuantas, corte);
-  // La leyenda, centrada en el margen de arriba, de tres en tres.
-  const lineas = [
-    `Muestra de los ${ACABADOS.length} acabados: el número de cada uno, en la esquina de su cara.`,
-    ...[0, 3].map((d) => ACABADOS.slice(d, d + 3).map((a, i) => `${d + i + 1} ${a.rotulo}`).join("  ·  ")),
-  ];
-  pdf.setFontSize(TAM_LEYENDA);
-  pdf.setTextColor(C.ink);
-  lineas.forEach((texto, i) => {
-    pdf.setFont("helvetica", i === 0 ? "bold" : "normal");
-    pdf.text(texto, (sitio.papel.ancho * MM - pdf.getTextWidth(texto)) / 2, (10 + 4.5 * i) * MM);
-  });
-  return 1;
+  return hojas;
 }
 
-export async function pdfMuestraAcabados(opciones) {
-  const { jsPDF } = await import("jspdf");
-  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: opciones?.hoja || OPCIONES_POR_DEFECTO.hoja });
-  dibujarMuestraAcabados(pdf, opciones);
+export async function pdfMuestraAcabados(opciones, adornos = null) {
+  const pdf = await nuevoPdf(opciones, adornos);
+  dibujarMuestraAcabados(pdf, opciones, adornos);
   return pdf.output("blob");
 }
 
-// La hoja de muestra, como imagen (el boceto y las pruebas).
-export function vistaPreviaMuestraAcabados(opciones, { escala = 1.4, crearLienzo = crearCanvas } = {}) {
-  const papel = HOJAS[opciones?.hoja] || HOJAS[OPCIONES_POR_DEFECTO.hoja];
-  const lienzo = new PdfEnLienzo({ medida: { ancho: papel.ancho * MM, alto: papel.alto * MM }, escala, crearLienzo });
-  dibujarMuestraAcabados(lienzo, opciones);
-  return lienzo.ctx ? lienzo.paginas[0].toDataURL("image/jpeg", 0.85) : "";
+// ---------- Las hojas y las letras de la invitación ----------
+
+// Las hojas de olivo y el corazón, recortados de la imagen de la
+// invitación (sin el fondo crema); y sus dos letras: Fraunces SemiBold, la
+// de la app, para el apellido, y Alex Brush, la caligráfica, para el
+// nombre (licencia libre, public/tarjetas/LICENCIA-FUENTES.txt). En el PDF
+// van dentro (jsPDF no tiene más que las suyas); en la vista previa, con
+// el mismo archivo, para que se vea lo mismo.
+export const RUTAS_ADORNOS = {
+  hojas: "/tarjetas/hojas.png",
+  corazon: "/tarjetas/corazon.png",
+  serif: "/tarjetas/Fraunces-SemiBold.ttf",
+  caligrafica: "/tarjetas/AlexBrush-Regular.ttf",
+};
+// Las hojas, el corazón y las letras, cargados una vez (como el logo de los
+// sobres): la imagen para el lienzo y el dato para el PDF, cada una también
+// girada (la cara de arriba); las letras, registradas en el navegador para
+// la vista previa y en base64 para meterlas en el PDF.
+export async function cargarAdornos(rutas = RUTAS_ADORNOS) {
+  const [hojas, corazon, serif, caligrafica] = await Promise.all([
+    cargarImagen(rutas.hojas),
+    cargarImagen(rutas.corazon),
+    fetch(rutas.serif).then((r) => r.arrayBuffer()),
+    fetch(rutas.caligrafica).then((r) => r.arrayBuffer()),
+  ]);
+  await Promise.all(
+    [
+      ["Fraunces Tarjeta", serif],
+      ["Alex Brush Tarjeta", caligrafica],
+    ].map(async ([nombre, datos]) => document.fonts.add(await new FontFace(nombre, datos).load())),
+  );
+  return {
+    hojas,
+    hojasGirada: await girarImagen(hojas),
+    corazon,
+    corazonGirada: await girarImagen(corazon),
+    fuentes: { [SERIF]: aBase64(serif), [CALIGRAFICA]: aBase64(caligrafica) },
+  };
+}
+
+async function girarImagen({ imagen, proporcion }) {
+  const lienzo = crearCanvas(imagen.naturalWidth, imagen.naturalHeight);
+  const ctx = lienzo.getContext("2d");
+  ctx.translate(lienzo.width, lienzo.height);
+  ctx.rotate(Math.PI);
+  ctx.drawImage(imagen, 0, 0);
+  const dato = lienzo.toDataURL("image/png");
+  const girada = new Image();
+  girada.src = dato;
+  await girada.decode();
+  return { dato, imagen: girada, proporcion };
+}
+
+function aBase64(datos) {
+  const bytes = new Uint8Array(datos);
+  let texto = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) texto += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(texto);
+}
+
+// Las imágenes de los adornos, para el lienzo: por su dato, como addImage.
+const imagenesDe = (adornos) =>
+  new Map(adornos ? ["hojas", "hojasGirada", "corazon", "corazonGirada"].map((k) => [adornos[k].dato, adornos[k].imagen]) : []);
+
+// Un jsPDF, con las dos letras de la invitación dentro si se cargaron.
+async function nuevoPdf(opciones, adornos) {
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: opciones?.hoja || OPCIONES_POR_DEFECTO.hoja });
+  for (const [familia, datos] of Object.entries(adornos?.fuentes || {})) {
+    pdf.addFileToVFS(`${familia}.ttf`, datos);
+    pdf.addFont(`${familia}.ttf`, familia, "normal");
+  }
+  return pdf;
 }
 
 // Las marcas de corte, como las de imprenta (él, v98.9: las pidió el
@@ -393,20 +477,19 @@ function marcasDeRegistro(pdf, x0, y0, xFin, yFin) {
 }
 
 // El PDF para descargar. jsPDF pesa: se carga solo al usarlo.
-export async function pdfTarjetasAcomodacion(tarjetas, opciones) {
-  const { jsPDF } = await import("jspdf");
-  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: opciones?.hoja || OPCIONES_POR_DEFECTO.hoja });
-  dibujarTarjetasAcomodacion(pdf, tarjetas, opciones);
+export async function pdfTarjetasAcomodacion(tarjetas, opciones, adornos = null) {
+  const pdf = await nuevoPdf(opciones, adornos);
+  dibujarTarjetasAcomodacion(pdf, tarjetas, opciones, adornos);
   return pdf.output("blob");
 }
 
 // ---------- La vista previa ----------
 
 // Las hojas de la vista previa, como imágenes. `escala`: píxeles por punto.
-export function vistaPreviaTarjetasAcomodacion(tarjetas, opciones, { escala = 1.4, crearLienzo = crearCanvas } = {}) {
+export function vistaPreviaTarjetasAcomodacion(tarjetas, opciones, adornos = null, { escala = 1.4, crearLienzo = crearCanvas } = {}) {
   const papel = HOJAS[opciones?.hoja] || HOJAS[OPCIONES_POR_DEFECTO.hoja];
-  const lienzo = new PdfEnLienzo({ medida: { ancho: papel.ancho * MM, alto: papel.alto * MM }, escala, crearLienzo });
-  dibujarTarjetasAcomodacion(lienzo, tarjetas, opciones);
+  const lienzo = new PdfEnLienzo({ medida: { ancho: papel.ancho * MM, alto: papel.alto * MM }, escala, crearLienzo, imagenes: imagenesDe(adornos) });
+  dibujarTarjetasAcomodacion(lienzo, tarjetas, opciones, adornos);
   if (!lienzo.ctx) return [];
   return lienzo.paginas.map((p) => p.toDataURL("image/jpeg", 0.85));
 }
@@ -414,10 +497,10 @@ export function vistaPreviaTarjetasAcomodacion(tarjetas, opciones, { escala = 1.
 // La muestra de un acabado, para elegirlo: una cara de una tarjeta de
 // ejemplo, del mismo dibujo que el PDF. En la esquina, su número, el mismo
 // que en la hoja de muestra (v99.1): lo impreso y la paleta, a la par.
-export function muestraAcabado(idAcabado, { escala = 1, crearLienzo = crearCanvas } = {}) {
+export function muestraAcabado(idAcabado, adornos = null, { escala = 1, crearLienzo = crearCanvas } = {}) {
   const medida = { ancho: ANCHO_TARJETA * MM, alto: ALTO_CARA * MM };
-  const lienzo = new PdfEnLienzo({ medida, escala, crearLienzo });
+  const lienzo = new PdfEnLienzo({ medida, escala, crearLienzo, imagenes: imagenesDe(adornos) });
   const numero = ACABADOS.findIndex((a) => a.id === idAcabado) + 1;
-  cara(lienzo, 0, 0, medida.ancho, medida.alto, false, { ...EJEMPLO, familia: numero ? String(numero) : EJEMPLO.familia }, acabado(idAcabado));
+  cara(lienzo, 0, 0, medida.ancho, medida.alto, false, { ...EJEMPLO, familia: numero ? String(numero) : EJEMPLO.familia }, acabado(idAcabado), adornos);
   return lienzo.ctx ? lienzo.paginas[0].toDataURL("image/png") : "";
 }

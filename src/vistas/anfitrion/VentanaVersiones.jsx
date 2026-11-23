@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "99.2",
+    cambios: [
+      "Tarjetas de acomodación: línea nueva con el estilo de la invitación, en blanco. Las hojas de olivo en la esquina, el APELLIDO con la letra de «LAS BODAS», el nombre en letra caligráfica dorada con el corazón debajo, y el número de la mesa en su círculo dorado.",
+      "Tres acabados: marco fino, doble marco grueso por fuera y doble marco grueso por dentro. Los seis de antes se quitan; quien tuviera uno elegido pasa al de marco fino.",
+      "La hoja de muestra trae los tres en una sola hoja, A4 o A3. Las letras y las hojas van dentro del PDF, así que salen igual en cualquier impresora.",
+    ],
+  },
+  {
     version: "99.1",
     cambios: [
       "Tarjetas de acomodación: botón «Muestra», entre «Cancelar» y «Descargar». Descarga un PDF de una sola hoja con los seis acabados: tres tarjetas de ejemplo, cada cara con un acabado distinto, para imprimirla y elegir viéndolos de verdad. Lleva la hoja y las marcas de corte elegidas.",

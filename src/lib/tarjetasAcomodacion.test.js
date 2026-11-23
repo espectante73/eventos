@@ -62,20 +62,24 @@ function hojaDePega() {
   const textos = [];
   const rellenos = [];
   const recuadros = [];
+  const imagenes = [];
   let colorTexto = null;
+  let fuente = "helvetica";
   const pdf = {
     setTextColor: (c) => (colorTexto = c),
+    setFont: (f) => (fuente = f),
     rect: (x, y, w, h, estilo) => rellenos.push(estilo),
     roundedRect: (x, y, w, h, rx, ry, estilo) => recuadros.push(estilo),
+    addImage: (dato) => imagenes.push(dato),
     paginas: 1,
     addPage() { this.paginas++; },
     getTextWidth: (t) => t.length * 5,
-    text: (t, x, y, o) => textos.push({ t, x, y, angle: o?.angle || 0, color: colorTexto }),
+    text: (t, x, y, o) => textos.push({ t, x, y, angle: o?.angle || 0, color: colorTexto, fuente, charSpace: o?.charSpace || 0 }),
   };
   pdf.GState = class { constructor(o) { Object.assign(this, o); } };
   pdf.setGState = () => {};
-  for (const f of ["setFillColor", "setDrawColor", "setLineWidth", "setLineDashPattern", "setFont", "setFontSize", "circle", "line"]) pdf[f] = () => {};
-  return { pdf, textos, rellenos, recuadros };
+  for (const f of ["setFillColor", "setDrawColor", "setLineWidth", "setLineDashPattern", "setFontSize", "circle", "line"]) pdf[f] = () => {};
+  return { pdf, textos, rellenos, recuadros, imagenes };
 }
 
 describe("dibujarTarjetasAcomodacion", () => {
@@ -98,23 +102,25 @@ describe("dibujarTarjetasAcomodacion", () => {
     expect(derecha("Ana").y).toBeGreaterThan(derecha("MEDINA").y);
     expect(textos.filter((x) => x.t === "3")).toHaveLength(2);
   });
-  it("el acabado: fondo a sangre solo si lo lleva, recuadro relleno solo si lo lleva, y el color de la letra", () => {
+  it("el acabado: un marco por cara o dos, sin fondo de color; el nombre, dorado", () => {
     const ver = (acabado) => {
       const h = hojaDePega();
       dibujarTarjetasAcomodacion(h.pdf, [muchas[0]], { hoja: "a4", acabado });
-      return { fondo: h.rellenos.length, recuadro: h.recuadros, letra: h.textos.find((x) => x.t === "Ana").color };
+      return { fondo: h.rellenos.length, marcos: h.recuadros.length, nombre: h.textos.find((x) => x.t === "Ana").color };
     };
-    expect(ver("verde")).toEqual({ fondo: 2, recuadro: ["S", "S"], letra: C.champan });
-    expect(ver("blancoVerde")).toEqual({ fondo: 0, recuadro: ["S", "S"], letra: C.ink });
-    expect(ver("recuadroVerde")).toEqual({ fondo: 0, recuadro: ["FD", "FD"], letra: C.champan });
-    expect(ver("recuadroBlanco")).toEqual({ fondo: 2, recuadro: ["FD", "FD"], letra: C.ink });
-    // Uno que ya no exista (guardado de antes): el de siempre.
-    expect(ver("otro")).toEqual(ver("verde"));
-    expect(ACABADOS).toHaveLength(6);
+    expect(ver("blancoHojas")).toEqual({ fondo: 0, marcos: 2, nombre: C.gold });
+    expect(ver("blancoHojasGruesoFuera")).toEqual({ fondo: 0, marcos: 4, nombre: C.gold });
+    expect(ver("blancoHojasGruesoDentro")).toEqual({ fondo: 0, marcos: 4, nombre: C.gold });
   });
-  it("la letra de la familia, sobre blanco, en el verde oscuro (él); el modelo del aura, quitado", () => {
-    for (const a of ACABADOS.filter((a) => !a.fondo && !a.recuadro)) expect(a.familia).toBe(C.ink);
-    expect(ACABADOS.some((a) => a.id === "blancoDoradoAura")).toBe(false);
+  // v99.2 (él): «me quedo solo con estos 3 modelos que serán la nueva línea y los otros 6 los desechamos».
+  it("solo los tres de la línea de la invitación; uno de los de antes, guardado en un aparato, sale como el primero", () => {
+    expect(ACABADOS.map((a) => a.id)).toEqual(["blancoHojas", "blancoHojasGruesoFuera", "blancoHojasGruesoDentro"]);
+    const textos = (acabado) => {
+      const h = hojaDePega();
+      dibujarTarjetasAcomodacion(h.pdf, [muchas[0]], { hoja: "a4", acabado });
+      return { textos: h.textos, marcos: h.recuadros };
+    };
+    for (const antiguo of ["verde", "blancoDorado", "recuadroBlancoDorado", "blancoDoradoAura"]) expect(textos(antiguo)).toEqual(textos("blancoHojas"));
   });
   it("sin lienzo (las pruebas) no se rompe", () => {
     const lienzo = new PdfEnLienzo({ medida: { ancho: 210 * PUNTOS_POR_MM, alto: 297 * PUNTOS_POR_MM }, escala: 1, crearLienzo: () => ({}) });
@@ -226,16 +232,18 @@ describe("con qué se corta (las marcas de cada forma)", () => {
 
 // v99.1 (él): «una hoja modelo… que me aparezcan los 6 modelos… y poder verlo en vivo».
 describe("la hoja de muestra de los acabados", () => {
-  it("una sola hoja: tres tarjetas, cada cara con un acabado y su número en la esquina", () => {
-    const { pdf, textos } = hojaDePega();
-    expect(dibujarMuestraAcabados(pdf, { hoja: "a4" })).toBe(1);
-    expect(pdf.paginas).toBe(1);
-    // 6 caras con el ejemplo (3 tarjetas × 2).
-    expect(textos.filter((x) => x.t === "ABREU")).toHaveLength(ACABADOS.length);
-    for (let i = 1; i <= ACABADOS.length; i++) expect(textos.filter((x) => x.t === String(i))).toHaveLength(1);
-    // Cada cara con el color de letra de su acabado, en orden: arriba (girada) el impar, abajo el par.
-    const letras = textos.filter((x) => x.t === "Luis").map((x) => x.color);
-    expect(letras).toEqual(ACABADOS.map((a) => a.letra));
+  it("cada cara con un acabado y su número en la esquina; los tres, en una hoja, A4 o A3", () => {
+    for (const hoja of ["a4", "a3"]) {
+      const { pdf, textos, recuadros } = hojaDePega();
+      expect(dibujarMuestraAcabados(pdf, { hoja })).toBe(1);
+      expect(pdf.paginas).toBe(1);
+      // 2 tarjetas: 4 caras; la última repite el 3.
+      expect(textos.filter((x) => x.t === "ABREU")).toHaveLength(4);
+      expect(["1", "2", "3"].map((n) => textos.filter((x) => x.t === n).length)).toEqual([1, 1, 2]);
+      // En orden: arriba (girada) el 1 y abajo el 2; luego el 3 en las dos caras. Marcos: 1 + 2 + 2 + 2.
+      expect(recuadros).toHaveLength(7);
+      expect(textos.filter((x) => x.t.startsWith("Muestra de los 3 acabados"))).toHaveLength(1);
+    }
   });
   it("arriba, la leyenda: el nombre de cada acabado con su número", () => {
     const { pdf, textos } = hojaDePega();
@@ -245,11 +253,53 @@ describe("la hoja de muestra de los acabados", () => {
   });
   it("con las marcas de la forma de cortar elegida", () => {
     const guillotina = hojaQueApunta();
-    dibujarMuestraAcabados(guillotina.pdf, { hoja: "a4", corte: "guillotina" });
-    // 3 tarjetas en 2 × 2: 3 cortes de arriba abajo y 3 de lado a lado, con sus dos marcas.
-    expect(guillotina.lineas.filter((l) => l.color === C.negro && !l.discontinua)).toHaveLength(12);
+    dibujarMuestraAcabados(guillotina.pdf, { hoja: "a3", corte: "guillotina" });
+    // 2 tarjetas en una fila: 3 cortes de arriba abajo y 2 de lado a lado, con sus dos marcas.
+    expect(guillotina.lineas.filter((l) => l.color === C.negro && !l.discontinua)).toHaveLength(10);
     const ploter = hojaQueApunta();
-    dibujarMuestraAcabados(ploter.pdf, { hoja: "a4", corte: "ploter" });
+    dibujarMuestraAcabados(ploter.pdf, { hoja: "a3", corte: "ploter" });
     expect(ploter.negros).toHaveLength(7);
+  });
+});
+
+// v99.2 (él): «con esta parte de la invitación, poner su motivo o estilo en la
+// tarjeta en modo claro»; eligió el boceto 3 y, con el doble marco del 2, las dos maneras.
+describe("los acabados de la invitación", () => {
+  const ADORNOS = {
+    hojas: { dato: "hojas", proporcion: 0.6 },
+    hojasGirada: { dato: "hojasGirada", proporcion: 0.6 },
+    corazon: { dato: "corazon", proporcion: 0.12 },
+    corazonGirada: { dato: "corazonGirada", proporcion: 0.12 },
+  };
+  const ana = { id: "1", nombre: "Ana", apellido: "Medina", mesa: 3, familia: "A" };
+
+  it("tres: uno de marco fino y dos de doble marco, grueso fuera y grueso dentro; la letra de la familia, en verde oscuro", () => {
+    expect(ACABADOS.map((a) => a.marcos.map(([, grosor]) => grosor))).toEqual([[0.5], [0.9, 0.4], [0.4, 0.9]]);
+    for (const a of ACABADOS) expect(a.familia).toBe(C.ink);
+  });
+  it("cada cara: las hojas y el corazón (girados en la de arriba), el APELLIDO en Fraunces con aire entre letras y el nombre en la caligráfica dorada", () => {
+    const { pdf, textos, imagenes, recuadros } = hojaDePega();
+    dibujarTarjetasAcomodacion(pdf, [ana], { hoja: "a4", acabado: "blancoHojasGruesoFuera" }, ADORNOS);
+    expect(imagenes).toEqual(["hojasGirada", "corazonGirada", "hojas", "corazon"]);
+    expect(textos.filter((x) => x.t === "MEDINA").map((x) => [x.angle, x.fuente, x.charSpace])).toEqual([
+      [180, "fraunces", 1.5],
+      [0, "fraunces", 1.5],
+    ]);
+    expect(textos.filter((x) => x.t === "Ana").map((x) => [x.fuente, x.color])).toEqual([
+      ["alexbrush", C.gold],
+      ["alexbrush", C.gold],
+    ]);
+    // Dos marcos por cara.
+    expect(recuadros).toEqual(["S", "S", "S", "S"]);
+    // En la cara derecha, el nombre debajo del apellido; la letra de la familia, en su esquina.
+    const derecha = (t) => textos.find((x) => x.t === t && x.angle === 0);
+    expect(derecha("Ana").y).toBeGreaterThan(derecha("MEDINA").y);
+    expect(derecha("A").fuente).toBe("fraunces");
+  });
+  it("si las hojas y las letras no se cargaron, sale como uno blanco de marco dorado, con la letra de siempre", () => {
+    const { pdf, textos, imagenes } = hojaDePega();
+    dibujarTarjetasAcomodacion(pdf, [ana], { hoja: "a4", acabado: "blancoHojas" });
+    expect(imagenes).toHaveLength(0);
+    expect(textos.find((x) => x.t === "MEDINA").fuente).toBe("helvetica");
   });
 });
