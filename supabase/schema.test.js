@@ -894,6 +894,29 @@ describe("la invitación caduca solo con cambios reales (v83.1)", () => {
   });
 });
 
+describe("lo que cuelga del código de familia se muda con ella (v98.3)", () => {
+  // Él perdió de vista las dos fotos de los Luis al cambiar su código a
+  // Luis03: se quedaron colgadas de «Luis».
+  it("al cambiar el código de una familia entera, se mudan fotos, orden, invitación, QR y fotos de la fiesta", () => {
+    const f = cuerpoDe("trg_mudar_datos_familia");
+    for (const t of ["fotos_familiares", "orden_familias", "qr_familias", "fotos_fiesta"]) expect(f).toContain(`update ${t} set`);
+    expect(sql).toContain(
+      'CREATE TRIGGER invitados_mudar_datos_familia AFTER UPDATE OF "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_mudar_datos_familia();'
+    );
+  });
+  it("solo si ya no queda nadie con el código viejo, y sin pisar lo que tenga el nuevo", () => {
+    const f = cuerpoDe("trg_mudar_datos_familia");
+    expect(f.indexOf("if exists (select 1 from invitados"), "antes de mudar nada").toBeLessThan(f.indexOf("update fotos_familiares"));
+    for (const t of ["fotos_familiares", "orden_familias", "qr_familias"]) {
+      expect(f).toContain(`and not exists (select 1 from ${t} where "grupoFamiliar" = nueva)`);
+    }
+    expect(f).toContain('and not exists (select 1 from fotos_fiesta where "familia" = nueva_fiesta)');
+  });
+  it("va detrás del que caduca la invitación (los AFTER van por orden alfabético)", () => {
+    expect("invitados_invalidar_invitacion" < "invitados_mudar_datos_familia").toBe(true);
+  });
+});
+
 describe("la acreditación por QR (v83.2)", () => {
   it("los códigos, cerrados y fuera de la foto del Deshacer", () => {
     expect(sql).toContain("ALTER TABLE public.qr_familias ENABLE ROW LEVEL SECURITY;");

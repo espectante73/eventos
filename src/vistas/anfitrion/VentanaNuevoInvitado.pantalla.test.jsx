@@ -260,3 +260,23 @@ it("con algo a medio escribir, elegir a otro pregunta antes de perderlo", () => 
   expect(q('input[aria-label="Apellido"]').value).toBe("Sierra");
   vista.desmontar();
 });
+
+// v98.3 (él): cambiar el código de una familia con fotos deja las fotos
+// colgando del viejo si no se tiene cuidado: antes de guardar, se pregunta.
+it("cambiar la familia de quien tiene foto de boda pregunta antes; con «No», nada se guarda", () => {
+  const { vista, guardados, q, boton } = dibujar(INVITADOS, { Pacheco01: "boda/pacheco.jpg" });
+  // «Sí»/«No» de la pregunta, no los de «Confirmado»: la pregunta va al final.
+  const responder = (t) => vista.pulsar([...document.body.querySelectorAll("button")].filter((b) => b.textContent.trim() === t).at(-1));
+  vista.elegir(q('select[aria-label="Elegir invitado"]'), "1");
+  vista.elegir(q('select[aria-label="Familia"]'), "Sierra01");
+  vista.pulsar(boton("Guardar"));
+  expect(document.body.textContent).toContain("¿Pasar la familia «Pacheco01» a «Sierra01»?");
+  expect(document.body.textContent).toContain("Su familia tiene foto de boda");
+  responder("No");
+  expect(document.body.textContent).not.toContain("¿Pasar la familia");
+  expect(guardados).toEqual([]);
+  vista.pulsar(boton("Guardar"));
+  responder("Sí");
+  expect(guardados.at(-1)[0]).toMatchObject({ id: "1", grupoFamiliar: "Sierra01" });
+  vista.desmontar();
+});

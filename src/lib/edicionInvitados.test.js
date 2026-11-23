@@ -3,7 +3,7 @@ import {
   agregarInvitado, importarInvitados, eliminarInvitado, mismaPersona,
   cambiarCampo, alternarRolTrabajo, alternarExcluidoTablon,
   permitirExcepcion, quitarExcepcion, marcarResponsable,
-  colaboradoresSinFichaEnlazada, fichaDelColaborador, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, editarDesdeFormulario, cambiarTelefono, anioBodaDeLaFamilia } from "./edicionInvitados";
+  colaboradoresSinFichaEnlazada, fichaDelColaborador, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, editarDesdeFormulario, cambiarTelefono, anioBodaDeLaFamilia, preguntaCambioFamilia } from "./edicionInvitados";
 
 // La lista de invitados es la base de toda la app: si aquí se pierde
 // alguien, no se nota hasta que falta en la boda. Estas pruebas son el
@@ -414,5 +414,54 @@ describe("editarDesdeFormulario", () => {
     const { invitados } = editarDesdeFormulario(lista, "1", { ...completa(lista[0]), alergias: "No", conservarDatos: true }, { evento, mesas });
     expect(invitados[0]).toEqual({ ...lista[0], alergias: "No", conservarDatos: true });
     expect(invitados[1]).toBe(lista[1]);
+  });
+});
+
+// Al cambiar «Luis» por «Luis03» se quedaron colgando sus dos fotos (él,
+// v98.3). Antes de cambiar el código de una familia con fotos o la
+// invitación enviada, se pregunta.
+describe("preguntaCambioFamilia", () => {
+  const luis = { id: "l1", nombre: "Pedro", apellido: "Luis", grupoFamiliar: "Luis", confirmado: true };
+  const luisa = { id: "l2", nombre: "Rosa", apellido: "Luis", grupoFamiliar: "Luis", confirmado: true };
+  const fotos = { fotosFamiliares: { Luis: "boda/luis.jpg" }, fotosAniversario: { Luis: "aniversario/luis.jpg" } };
+  const cambiar = (lista, id, campo, valor) => cambiarCampo(lista, id, campo, valor).invitados;
+
+  it("sin fotos ni invitación enviada, no pregunta", () => {
+    const lista = [luis];
+    expect(preguntaCambioFamilia(lista, cambiar(lista, "l1", "grupoFamiliar", "Luis03"), "l1", {})).toBeNull();
+  });
+  it("si el código no cambia (otro campo, o el apellido con grupo puesto), no pregunta", () => {
+    const lista = [luis];
+    expect(preguntaCambioFamilia(lista, cambiar(lista, "l1", "nombre", "Juan"), "l1", fotos)).toBeNull();
+    expect(preguntaCambioFamilia(lista, cambiar(lista, "l1", "apellido", "Lewis"), "l1", fotos)).toBeNull();
+  });
+  it("la familia entera: se va todo con ella, y si está confirmado, lo dice", () => {
+    const lista = [luis];
+    const p = preguntaCambioFamilia(lista, cambiar(lista, "l1", "grupoFamiliar", "Luis03"), "l1", fotos);
+    expect(p.titulo).toBe("¿Pasar la familia «Luis» a «Luis03»?");
+    expect(p.texto).toMatch(/^Es un invitado confirmado\. Su familia tiene foto de boda y foto de aniversario: se va todo con ella a «Luis03»\.$/);
+  });
+  it("con la invitación enviada, avisa de reenviarla; sin confirmar, no dice «confirmado»", () => {
+    const lista = [{ ...luis, confirmado: false }];
+    const p = preguntaCambioFamilia(lista, cambiar(lista, "l1", "grupoFamiliar", "Luis03"), "l1", { ordenFamiliares: { Luis: { invitacionEnviada: true } } });
+    expect(p.texto).toMatch(/^Su familia tiene la invitación enviada/);
+    expect(p.texto).toMatch(/volver a enviarla/);
+  });
+  it("si el código nuevo ya tiene sus fotos, no se pisan y lo dice", () => {
+    const lista = [luis];
+    const p = preguntaCambioFamilia(lista, cambiar(lista, "l1", "grupoFamiliar", "Luis03"), "l1", { ...fotos, fotosFamiliares: { ...fotos.fotosFamiliares, Luis03: "boda/otra.jpg" } });
+    expect(p.texto).toMatch(/«Luis03» ya tiene sus propias fotos: no se pisan/);
+  });
+  it("si se va uno solo, las fotos se quedan con los demás, y ya no se sienta con ellos", () => {
+    const lista = [luis, luisa];
+    const p = preguntaCambioFamilia(lista, cambiar(lista, "l1", "grupoFamiliar", "Luis03"), "l1", fotos);
+    expect(p.titulo).toBe("¿Sacar a Luis, Pedro de la familia «Luis»?");
+    expect(p.texto).toMatch(/se queda con el otro, no pasa a «Luis03»/);
+    expect(p.texto).toMatch(/ya no se sentará con el otro de su familia/);
+  });
+  it("solo cambia mayúsculas: la mesa sigue igual, pero las fotos (clave exacta) preguntan", () => {
+    const lista = [luis, luisa];
+    const p = preguntaCambioFamilia(lista, cambiar(lista, "l1", "grupoFamiliar", "LUIS"), "l1", fotos);
+    expect(p.texto).not.toMatch(/sentará/);
   });
 });

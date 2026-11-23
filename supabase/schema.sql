@@ -4015,6 +4015,57 @@ begin
 end;
 $$;
 
+-- Cuando una familia entera cambia de código («Luis» → «Luis03»), lo que
+-- cuelga de ese código se muda con ella (él, v98.3): sus fotos (la original
+-- y la de aniversario), el QR de su invitación, su orden y su «invitación
+-- enviada», y las fotos de la fiesta. Antes se quedaban colgadas del código
+-- viejo: no se borraban, pero la familia dejaba de verlas, y el QR de una
+-- invitación ya enviada no la habría encontrado en la entrada. Solo cuando
+-- ya no queda NADIE con el código viejo (si se va una persona sola, todo se
+-- queda con los que siguen), y nunca pisa: si el código nuevo ya tiene lo
+-- suyo, lo viejo se queda donde está y la Revisión lo enseña («Fotos sin
+-- familia»). La invitación enviada la caduca antes trg_invalidar_invitacion_familia
+-- (el disparador va detrás por orden alfabético): habrá que reenviarla, con
+-- el mismo QR.
+CREATE FUNCTION public.trg_mudar_datos_familia() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public', 'pg_temp'
+    AS $$
+declare
+  vieja text := coalesce(nullif(old."grupoFamiliar", ''), old."apellido");
+  nueva text := coalesce(nullif(new."grupoFamiliar", ''), new."apellido");
+  vieja_fiesta text := clave_familia(old."grupoFamiliar", old."apellido");
+  nueva_fiesta text := clave_familia(new."grupoFamiliar", new."apellido");
+begin
+  if vieja is not distinct from nueva or coalesce(vieja, '') = '' or coalesce(nueva, '') = '' then
+    return null;
+  end if;
+  -- Si queda alguien con el código viejo, todo se queda con él.
+  if exists (select 1 from invitados where coalesce(nullif("grupoFamiliar", ''), "apellido") = vieja) then
+    return null;
+  end if;
+
+  update fotos_familiares set "grupoFamiliar" = nueva
+  where "grupoFamiliar" = vieja
+    and not exists (select 1 from fotos_familiares where "grupoFamiliar" = nueva);
+  update orden_familias set "grupoFamiliar" = nueva
+  where "grupoFamiliar" = vieja
+    and not exists (select 1 from orden_familias where "grupoFamiliar" = nueva);
+  update qr_familias set "grupoFamiliar" = nueva
+  where "grupoFamiliar" = vieja
+    and not exists (select 1 from qr_familias where "grupoFamiliar" = nueva);
+
+  -- Las de la fiesta van por la clave en minúsculas (clave_familia).
+  if vieja_fiesta is distinct from nueva_fiesta
+     and not exists (select 1 from invitados where clave_familia("grupoFamiliar", "apellido") = vieja_fiesta) then
+    update fotos_fiesta set "familia" = nueva_fiesta
+    where "familia" = vieja_fiesta
+      and not exists (select 1 from fotos_fiesta where "familia" = nueva_fiesta);
+  end if;
+  return null;
+end;
+$$;
+
 -- Al cambiar el texto de una novedad, guarda el anterior.
 CREATE FUNCTION public.trg_historial_novedad_cuerpo() RETURNS trigger
     LANGUAGE plpgsql
@@ -4128,6 +4179,8 @@ CREATE TRIGGER invitados_avisar_anfitrion AFTER UPDATE ON public.invitados REFER
 CREATE TRIGGER invitados_clave_tablon BEFORE INSERT ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_clave_tablon();
 
 CREATE TRIGGER invitados_invalidar_invitacion AFTER INSERT OR UPDATE OF confirmado, pagado, mesa, "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_invalidar_invitacion_familia();
+
+CREATE TRIGGER invitados_mudar_datos_familia AFTER UPDATE OF "grupoFamiliar", apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_mudar_datos_familia();
 
 CREATE TRIGGER invitados_nombre_colaborador AFTER INSERT OR UPDATE OF nombre, apellido ON public.invitados FOR EACH ROW EXECUTE FUNCTION public.trg_nombre_colaborador_al_cambiar_ficha();
 

@@ -18,6 +18,7 @@ import { limpiarTelefono } from "./telefono";
 import { conyugesSueltos, matrimoniosDeInvitados, EXCEPCION_SIN_PAREJA } from "./matrimonios";
 import { colaboradoresSinFichaEnlazada, mismaPersona } from "./edicionInvitados";
 import { NOMBRES_HABITUALES } from "./nombresHabituales";
+import { claveInvitacion } from "./mesas";
 
 // Quién necesita a un adulto suyo al lado en la mesa.
 //
@@ -139,7 +140,24 @@ function hallazgo(clave, titulo, ayuda, personas, tipo = "error") {
   return { clave, titulo, ayuda, tipo, personas };
 }
 
-function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
+// Fotos sin familia (él, v98.3): las fotos cuelgan del código de la
+// familia (`claveInvitacion`). Si ya nadie lleva ese código —se cambió
+// antes de que la base las mudara sola, o el nuevo ya tenía las suyas—,
+// no se ven en ninguna parte. Devuelve `[{ familia, que }]`.
+export function fotosSinFamilia(invitados = [], { fotosFamiliares = {}, fotosAniversario = {}, fotosBodaFinal = {} } = {}) {
+  const conGente = new Set(invitados.map(claveInvitacion));
+  const familias = new Set([fotosFamiliares, fotosAniversario, fotosBodaFinal].flatMap((m) => Object.keys(m)));
+  return [...familias]
+    .filter((f) => f && !conGente.has(f))
+    .map((familia) => ({
+      familia,
+      que: [(fotosFamiliares[familia] || fotosBodaFinal[familia]) && "foto de boda", fotosAniversario[familia] && "foto de aniversario"].filter(Boolean),
+    }))
+    .filter((x) => x.que.length)
+    .sort((a, b) => a.familia.localeCompare(b.familia, "es"));
+}
+
+function todosLosHallazgos(invitados = [], evento = {}, colaboradores = [], fotos = {}) {
   const grupos = agruparPorFamilia(invitados);
   const hallazgos = [];
 
@@ -521,6 +539,22 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = []) {
       )
     );
 
+  const sueltas = fotosSinFamilia(invitados, fotos);
+  if (sueltas.length)
+    hallazgos.push(
+      hallazgo(
+        "fotosSinFamilia",
+        "Fotos sin familia",
+        "Son de un código de familia que ya no lleva nadie, así que no se ven en ninguna parte. Para devolverlas, pon ese código a su familia en la Lista.",
+        sueltas.map((s) => ({
+          id: `fotos-${s.familia}`,
+          etiqueta: `«${s.familia}»`,
+          detalle: s.que.join(" y "),
+          filtros: { texto: apellidoDelGrupo(s.familia) || s.familia },
+        }))
+      )
+    );
+
   // ⚠️ Aquí NO se comprueban los datos incompletos, ni quién no ha
   // pagado, ni quién está sin revisar, ni quién no tiene mesa: todo eso
   // ya son columnas de la lista, con su filtro y su cifra en la
@@ -542,10 +576,11 @@ function aceptada(g, clave) {
   return Array.isArray(g?.excepcionesRevision) && g.excepcionesRevision.includes(clave);
 }
 
-export function revisarConExcepciones(invitados = [], evento = {}, colaboradores = []) {
+// `fotos`: los mapas de fotos por familia, para «Fotos sin familia».
+export function revisarConExcepciones(invitados = [], evento = {}, colaboradores = [], fotos = {}) {
   const hallazgos = [];
   const excepciones = [];
-  for (const h of todosLosHallazgos(invitados, evento, colaboradores)) {
+  for (const h of todosLosHallazgos(invitados, evento, colaboradores, fotos)) {
     const pendientesDeVer = [];
     for (const g of h.personas) {
       if (aceptada(g, h.clave)) excepciones.push({ clave: h.clave, titulo: h.titulo, persona: g });
@@ -557,6 +592,6 @@ export function revisarConExcepciones(invitados = [], evento = {}, colaboradores
 }
 
 // Solo los avisos que quedan, ya sin las excepciones aceptadas.
-export function revisarInvitados(invitados = [], evento = {}, colaboradores = []) {
-  return revisarConExcepciones(invitados, evento, colaboradores).hallazgos;
+export function revisarInvitados(invitados = [], evento = {}, colaboradores = [], fotos = {}) {
+  return revisarConExcepciones(invitados, evento, colaboradores, fotos).hallazgos;
 }

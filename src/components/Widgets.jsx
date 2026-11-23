@@ -355,6 +355,8 @@ export function EncabezadoOrdenable({ columna, orden, onClick, children, claro, 
 }
 
 // `resto`: lo propio de cada casilla (aria-label, inputMode, placeholder).
+// `onCommit(texto, volver)`: si quien guarda pregunta antes y le dicen
+// «No», `volver()` deja escrito lo de antes (v98.3).
 export function GrupoFamiliarInput({ value, onCommit, ...resto }) {
   const [v, setV] = useState(value);
   useEffect(() => setV(value), [value]);
@@ -363,7 +365,7 @@ export function GrupoFamiliarInput({ value, onCommit, ...resto }) {
       {...resto}
       value={v}
       onChange={(e) => setV(e.target.value)}
-      onBlur={() => onCommit(v)}
+      onBlur={() => onCommit(v, () => setV(value))}
       style={{ ...inputStyle, padding: "3px 5px", fontSize: T.pequeno, width: "100%", minWidth: 0 }}
     />
   );

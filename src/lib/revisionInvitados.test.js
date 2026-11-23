@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { revisarInvitados, revisarConExcepciones } from "./revisionInvitados";
+import { revisarInvitados, revisarConExcepciones, fotosSinFamilia } from "./revisionInvitados";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const persona = (extra) => ({
@@ -384,5 +384,27 @@ describe("datos y escritura, solo de los confirmados", () => {
       persona({ ...sinAnio, nombre: "Ana", rolFamiliar: ROL_FAMILIAR.ESPOSA }),
     ]);
     expect(claves(hallazgos)).not.toContain("matrimonioSinAnioBoda");
+  });
+});
+
+// Las fotos cuelgan del código de la familia: si ya no lo lleva nadie, no
+// se ven en ninguna parte (él, v98.3).
+describe("Fotos sin familia", () => {
+  const lista = [{ id: "1", nombre: "Pedro", apellido: "Luis", grupoFamiliar: "Luis03" }, { id: "2", nombre: "Ana", apellido: "Abreu" }];
+  const fotos = {
+    fotosFamiliares: { Luis: "boda/luis.jpg", Luis03: "", Abreu: "boda/abreu.jpg", Vacia: null },
+    fotosAniversario: { Luis: "aniversario/luis.jpg" },
+    fotosBodaFinal: {},
+  };
+  it("encuentra las de un código que no lleva nadie, con lo que tienen; las vacías no cuentan", () => {
+    expect(fotosSinFamilia(lista, fotos)).toEqual([{ familia: "Luis", que: ["foto de boda", "foto de aniversario"] }]);
+  });
+  it("la Revisión las enseña como error, sin botón de excepción, y buscando su apellido", () => {
+    const h = revisarInvitados(lista, {}, [], fotos).find((x) => x.clave === "fotosSinFamilia");
+    expect(h.tipo).toBe("error");
+    expect(h.personas).toEqual([{ id: "fotos-Luis", etiqueta: "«Luis»", detalle: "foto de boda y foto de aniversario", filtros: { texto: "Luis" } }]);
+  });
+  it("sin fotos, nada", () => {
+    expect(revisarInvitados(lista).map((x) => x.clave)).not.toContain("fotosSinFamilia");
   });
 });

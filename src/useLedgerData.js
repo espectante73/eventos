@@ -12,6 +12,7 @@ import { respuestaImpago } from "./lib/impagos";
 import { datosCompletos } from "./lib/invitados";
 import { leerEvento } from "./lib/leerEvento";
 import { quitarNoConFoto } from "./lib/fotosAlmacen";
+import { claveInvitacion } from "./lib/mesas";
 
 const EVENTO_POR_DEFECTO = {
   nombre: "",
@@ -1038,6 +1039,27 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     return true;
   }, [esAnfitrion, rol]);
 
+  // Vuelve a leer lo que cuelga del código de cada familia (fotos, orden e
+  // «invitación enviada»): lo cambia la base por su cuenta al reiniciar o
+  // al mudar una familia de código (trg_mudar_datos_familia, v98.3).
+  const recargarFamilias = useCallback(async () => {
+    const [{ data: fotosFilas }, { data: ordenFilas }] = await Promise.all([
+      supabase.from("fotos_familiares").select("*"),
+      supabase.from("orden_familias").select("*"),
+    ]);
+    if (fotosFilas) repartirFilasDeFotos(fotosFilas);
+    if (ordenFilas) {
+      setOrdenFamiliares(
+        Object.fromEntries(
+          ordenFilas.map((r) => [
+            r.grupoFamiliar,
+            { orden: r.orden, invitacionEnviada: r.invitacionEnviada, invitacionEnviadaEn: r.invitacionEnviadaEn },
+          ])
+        )
+      );
+    }
+  }, []);
+
   const persistInvitados = useCallback(
     async (next) => {
       const anterior = invitadosRef.current;
@@ -1084,6 +1106,12 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
         });
         if (error) avisar("No se pudieron guardar los invitados.", error);
         else llegadasCambiadas.forEach((g) => avisarLlegada(g.id, Boolean(g.presente)));
+        // Alguien cambió de código de familia: si era el último, la base ha
+        // mudado las fotos y la invitación de su familia al código nuevo.
+        const clavePorId = Object.fromEntries(anterior.map((g) => [g.id, claveInvitacion(g)]));
+        if (!error && cambiadas.some((g) => g.id in clavePorId && clavePorId[g.id] !== claveInvitacion(g))) {
+          await recargarFamilias();
+        }
         // Una reasignación marca "avisoPendiente" en el propio invitado, en
         // el servidor — recargamos para que se vea al momento. Si el guardado
         // falló y esta recarga también falla, no hay verdad del servidor que
@@ -1209,7 +1237,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
         }
       }
     },
-    [esAnfitrion, rol, avisarLlegada, cargarFamiliasSinEmail]
+    [esAnfitrion, rol, avisarLlegada, cargarFamiliasSinEmail, recargarFamilias]
   );
 
   // El pago y la llegada para TODA la familia (norma 11). El anfitrión
@@ -1564,36 +1592,17 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
         avisar("No se pudo ejecutar el reinicio.", error);
         return false;
       }
-      const [{ data: todosInvitados }, { data: fotosFilas }, { data: ordenFilas }] =
-        await Promise.all([
-          supabase.rpc("anfitrion_listar_invitados", { p_token: rol }),
-          supabase.from("fotos_familiares").select("*"),
-          supabase.from("orden_familias").select("*"),
-        ]);
+      const [{ data: todosInvitados }] = await Promise.all([
+        supabase.rpc("anfitrion_listar_invitados", { p_token: rol }),
+        recargarFamilias(),
+      ]);
       if (todosInvitados) {
         setInvitados(todosInvitados);
         invitadosRef.current = todosInvitados;
       }
-      if (fotosFilas) {
-        repartirFilasDeFotos(fotosFilas);
-      }
-      if (ordenFilas) {
-        setOrdenFamiliares(
-          Object.fromEntries(
-            ordenFilas.map((r) => [
-              r.grupoFamiliar,
-              {
-                orden: r.orden,
-                invitacionEnviada: r.invitacionEnviada,
-                invitacionEnviadaEn: r.invitacionEnviadaEn,
-              },
-            ])
-          )
-        );
-      }
       return true;
     },
-    [esAnfitrion, rol]
+    [esAnfitrion, rol, recargarFamilias]
   );
 
   // El código del QR de una familia, para su invitación (v83.2). Lo crea la

@@ -83,6 +83,7 @@ import {
   eliminarInvitado as borrarInvitado,
   PREGUNTA_ELIMINAR_COLABORADOR_DESDE_INVITADOS,
   cambiarCampo,
+  preguntaCambioFamilia,
   cambiarTelefono,
   alternarRolTrabajo as alternarRol,
   alternarExcluidoTablon as alternarTablon,
@@ -327,14 +328,21 @@ export function SeccionInvitados({
   // Los cinco campos pasan por la misma función de lib/edicionInvitados.js
   // (antes era el mismo `map` copiado cinco veces). Cambiar el apellido o
   // el grupo familiar saca a esa persona de su familia: eso lo avisa la
-  // propia función, con la cifra de cuántos se quedan atrás.
-  const editarCampo = (id, campo) => (valor) => {
+  // propia función, con la cifra de cuántos se quedan atrás. Y si la
+  // familia tiene fotos o la invitación enviada, antes se pregunta (v98.3);
+  // con «No», `volver` deja el campo como estaba.
+  const editarCampo = (id, campo) => (valor, volver) => {
     const { invitados: siguiente, aviso } = cambiarCampo(invitados, id, campo, valor);
-    if (siguiente !== invitados) persistInvitados(siguiente);
-    avisarLista(aviso);
+    if (siguiente === invitados) return avisarLista(aviso);
+    const pregunta = preguntaCambioFamilia(invitados, siguiente, id, data);
+    if (!pregunta) {
+      persistInvitados(siguiente);
+      return avisarLista(aviso);
+    }
+    preguntar({ ...pregunta, rotulo: "Sí", peligro: false, alConfirmar: () => persistInvitados(siguiente), alCancelar: volver });
   };
-  const asignarGrupoFamiliar = (id, v) => editarCampo(id, "grupoFamiliar")(v);
-  const asignarApellido = (id, v) => editarCampo(id, "apellido")(v);
+  const asignarGrupoFamiliar = (id, v, volver) => editarCampo(id, "grupoFamiliar")(v, volver);
+  const asignarApellido = (id, v, volver) => editarCampo(id, "apellido")(v, volver);
   const asignarNombre = (id, v) => editarCampo(id, "nombre")(v);
   const asignarZona = (id, v) => editarCampo(id, "zona")(v);
   const asignarRolFamiliar = (id, v) => editarCampo(id, "rolFamiliar")(v);
@@ -766,7 +774,7 @@ export function SeccionInvitados({
   };
   // Informe de revisión: solo lee, no toca nada. Ver
   // lib/revisionInvitados.js para lo que comprueba y por qué.
-  const { hallazgos, excepciones: excepcionesRevision } = revisarConExcepciones(invitados, evento, colaboradores);
+  const { hallazgos, excepciones: excepcionesRevision } = revisarConExcepciones(invitados, evento, colaboradores, data);
 
   // Dar por bueno un caso concreto que la Revisión señala (usuario,
   // 2026-09-19): pregunta antes, y se guarda en el propio invitado.
@@ -1743,7 +1751,7 @@ export function SeccionInvitados({
                         <div className="flex-1 min-w-0">
                           <GrupoFamiliarInput
                             value={g.apellido ?? ""}
-                            onCommit={(v) => asignarApellido(g.id, v)}
+                            onCommit={(v, volver) => asignarApellido(g.id, v, volver)}
                           />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1809,7 +1817,7 @@ export function SeccionInvitados({
                     {modoEdicion ? (
                       <GrupoFamiliarInput
                         value={g.grupoFamiliar ?? g.apellido ?? ""}
-                        onCommit={(v) => asignarGrupoFamiliar(g.id, v)}
+                        onCommit={(v, volver) => asignarGrupoFamiliar(g.id, v, volver)}
                       />
                     ) : (
                       g.grupoFamiliar || g.apellido || "—"

@@ -50,7 +50,7 @@ import { nombreCompleto } from "../../lib/formato";
 import { telefonoParaVer } from "../../lib/telefono";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import { subirFotoMatrimonio, useEnlaceFoto, CARPETA } from "../../lib/fotosAlmacen";
-import { ROLES_FORMULARIO, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, editarDesdeFormulario, SIN_CAMBIOS, mismaPersona, anioBodaDeLaFamilia } from "../../lib/edicionInvitados";
+import { ROLES_FORMULARIO, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, editarDesdeFormulario, preguntaCambioFamilia, SIN_CAMBIOS, mismaPersona, anioBodaDeLaFamilia } from "../../lib/edicionInvitados";
 import { colaboradoresSinDj } from "../../lib/equipoColaboradores";
 
 const VACIO = {
@@ -193,10 +193,17 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
   const detalleOpcion = (g) =>
     [repetidos.has(g.id) ? g.grupoFamiliar : "", g.confirmado ? "" : g.noAsiste ? "no asiste" : "sin confirmar"].filter(Boolean).join(" · ");
 
-  const guardar = async () => {
+  // Si cambia el código de una familia con fotos o la invitación enviada,
+  // antes se pregunta (v98.3, como en la Lista); con «No», nada se guarda.
+  const guardar = () => {
     const { invitados: siguiente, aviso: motivo } = editandoId
       ? editarDesdeFormulario(invitados, editandoId, ficha, { familiaNueva, zonaNueva, evento, mesas })
       : nuevoDesdeFormulario(invitados, ficha, { familiaNueva, zonaNueva, evento });
+    const pregunta = editandoId && siguiente !== invitados ? preguntaCambioFamilia(invitados, siguiente, editandoId, data) : null;
+    if (pregunta) preguntar({ ...pregunta, rotulo: "Sí", peligro: false, alConfirmar: () => terminarGuardado(siguiente, motivo) });
+    else terminarGuardado(siguiente, motivo);
+  };
+  const terminarGuardado = async (siguiente, motivo) => {
     const nuevo = editandoId ? siguiente.find((g) => g.id === editandoId) : siguiente.at(-1);
     const conFoto = Boolean(fotoNueva && nuevo && pideDatosDeBoda(nuevo) && !fotoFamilia);
     // Al editar, la foto sola también es un cambio.

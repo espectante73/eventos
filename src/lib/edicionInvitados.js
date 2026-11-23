@@ -19,8 +19,8 @@
 // ejemplo, al añadir a alguien que se llama igual que otro—, porque
 // bloquearlo sería decidir por él.
 import { uid } from "./id";
-import { claveFamiliaMesa, confirmarConSuFamilia } from "./mesas";
-import { nombreCompleto } from "./formato";
+import { claveFamiliaMesa, claveInvitacion, confirmarConSuFamilia } from "./mesas";
+import { nombreCompleto, listaConY } from "./formato";
 import { comoColaborador, calcularEdad, pideEmail, pideDatosDeBoda, EDAD_EMAIL } from "./invitados";
 import { emailValido } from "./validacion";
 import { ROL_FAMILIAR, LETRA_ROL } from "./rolFamiliar";
@@ -244,6 +244,63 @@ export function cambiarCampo(invitados, id, campo, valor) {
     }
   }
   return { invitados: siguiente, aviso: "" };
+}
+
+// ¿Se pregunta antes de cambiarle el código de familia a alguien? (él,
+// v98.3). Las fotos, el QR de la invitación y su orden cuelgan del código
+// de la familia (`claveInvitacion`): al cambiar «Luis» por «Luis03» se
+// quedaron colgando del viejo. Ahora la base se los lleva al nuevo cuando
+// la familia ENTERA cambia (`trg_mudar_datos_familia`); si se va uno solo,
+// se quedan con los demás. Si la familia ya tiene fotos o la invitación
+// enviada, se pregunta Sí/No antes. Se le pasa la lista de antes y la de
+// después (la de `cambiarCampo` o `editarDesdeFormulario`); devuelve
+// `null` si no hace falta preguntar, o `{ titulo, texto }`.
+export function preguntaCambioFamilia(invitados, siguiente, id, { fotosFamiliares = {}, fotosAniversario = {}, fotosBodaFinal = {}, ordenFamiliares = {} } = {}) {
+  const antes = invitados.find((x) => x.id === id);
+  const despues = siguiente.find((x) => x.id === id);
+  if (!antes || !despues) return null;
+  const vieja = claveInvitacion(antes);
+  const nueva = claveInvitacion(despues);
+  if (vieja === nueva) return null;
+
+  const fotoBoda = Boolean(fotosFamiliares[vieja] || fotosBodaFinal[vieja]);
+  const fotoAniversario = Boolean(fotosAniversario[vieja]);
+  const enviada = Boolean(ordenFamiliares[vieja]?.invitacionEnviada);
+  if (!fotoBoda && !fotoAniversario && !enviada) return null;
+
+  const tiene = listaConY([fotoBoda && "foto de boda", fotoAniversario && "foto de aniversario", enviada && "la invitación enviada"].filter(Boolean));
+  const confirmado = antes.confirmado ? "Es un invitado confirmado. " : "";
+  const reenviar = enviada ? " La invitación habrá que volver a enviarla; el QR que lleva sigue sirviendo." : "";
+  // La mesa va por la familia sin mirar mayúsculas (como `cambiarCampo`).
+  const conLaMesa = invitados.filter((x) => x.id !== id && claveFamiliaMesa(x) === claveFamiliaMesa(antes)).length;
+  const sinMesa =
+    claveFamiliaMesa(antes) !== claveFamiliaMesa(despues) && conLaMesa > 0
+      ? ` Y ya no se sentará con ${conLaMesa === 1 ? "el otro" : `los otros ${conLaMesa}`} de su familia.`
+      : "";
+
+  const quedan = invitados.filter((x) => x.id !== id && claveInvitacion(x) === vieja).length;
+  if (quedan === 0) {
+    // La base no pisa nada: si el código nuevo ya tiene sus fotos, las del
+    // viejo se quedan aparte y las enseña la Revisión («Fotos sin familia»).
+    const yaTiene = [fotosFamiliares, fotosAniversario, fotosBodaFinal].some((m) => m[nueva]);
+    return {
+      titulo: `¿Pasar la familia «${vieja}» a «${nueva}»?`,
+      texto:
+        `${confirmado}Su familia tiene ${tiene}` +
+        (yaTiene
+          ? `. Pero «${nueva}» ya tiene sus propias fotos: no se pisan, y las de «${vieja}» se quedan aparte (las enseña la Revisión).`
+          : `: se va todo con ella a «${nueva}».`) +
+        reenviar +
+        sinMesa,
+    };
+  }
+  return {
+    titulo: `¿Sacar a ${nombreCompleto(antes)} de la familia «${vieja}»?`,
+    texto:
+      `${confirmado}La familia tiene ${tiene}: se queda con ${quedan === 1 ? "el otro" : `los otros ${quedan}`}, no pasa a «${nueva}». ` +
+      "Si cambia de código la familia entera, cámbialo a todos: con el último, se va todo con ellos." +
+      sinMesa,
+  };
 }
 
 // ---------- Roles de trabajo del día ----------

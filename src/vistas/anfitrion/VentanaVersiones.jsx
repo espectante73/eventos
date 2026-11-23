@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "98.3",
+    cambios: [
+      "Al cambiar el código de una familia (por ejemplo «Luis» por «Luis03»), sus fotos de boda y de aniversario, el QR de su invitación y su orden se van con ella al código nuevo. Antes se quedaban colgando del viejo y no se veían. Si el código nuevo ya tiene sus fotos, no se pisan.",
+      "Antes de hacer ese cambio en la Lista o en «Editar invitado», si la familia tiene fotos o la invitación enviada, la app pregunta Sí/No y dice qué pasará. Si se va uno solo, todo se queda con los demás.",
+      "La Revisión de la Lista enseña «Fotos sin familia»: las de un código que ya no lleva nadie, para devolvérselas a su familia.",
+    ],
+  },
+  {
     version: "98.2",
     cambios: [
       "Tarjetas de acomodación, modelo 6: sin el dorado de fuera. Fondo blanco con el rectángulo dorado, una línea gruesa del dorado del círculo. El doblez y los cortes, en el gris de siempre, como en los demás sobre blanco.",
