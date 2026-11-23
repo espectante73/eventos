@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "98.6",
+    cambios: [
+      "Acomodación: el círculo dorado con el número de la mesa, casi el doble de grande y en el centro del recuadro verde. La cuenta de sentados y sillas (4/10) pasa a estar entre el + y el − de las sillas, en pequeño; en rojo si la mesa se pasa.",
+    ],
+  },
+  {
     version: "98.5",
     cambios: [
       "Acomodación, la cabecera de cada mesa: el número va en el círculo dorado de las tarjetas de acomodación y los sobres, en lugar de «Mesa 1», con la ocupación debajo. Poner y quitar sillas, en vertical; «Vaciar», debajo de la X roja; y sin la raya dorada.",

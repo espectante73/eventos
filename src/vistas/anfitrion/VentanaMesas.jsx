@@ -400,32 +400,37 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
         className="rounded px-2 py-1.5 mb-2"
         style={{ background: C.ink, color: C.goldClaro, cursor: arrastrarMesas ? "grab" : undefined }}
       >
-        {/* En una sola fila (él, v98.5): a un lado las sillas en vertical
-            (poner arriba, quitar abajo); en medio, el número en su círculo
-            dorado, el de las tarjetas, con la ocupación debajo; al otro,
-            quitar la mesa y debajo «Vaciar». Sin la raya dorada. Las
-            alergias, en cada familia (v74.9). */}
-        <div data-controles className="flex items-center justify-between gap-1 zurdo:flex-row-reverse">
-          <span className="flex flex-col items-center gap-0.5" title={`${m.capacidad} sitios`}>
-            <Boton variante="secundario" oscuro tamano="pequeno" icono={Plus} titulo="Un sitio más" onClick={() => cambiarSitios(m.numero, m.capacidad + 1)} />
-            <span style={CIFRA}>{m.capacidad}</span>
-            <Boton
-              variante="secundario"
-              oscuro
-              tamano="pequeno"
-              icono={Minus}
-              titulo={m.capacidad <= ocupados ? "Está llena: saca antes a alguien" : "Un sitio menos"}
-              disabled={m.capacidad <= Math.max(ocupados, 1)}
-              onClick={() => cambiarSitios(m.numero, m.capacidad - 1)}
-            />
-          </span>
-          <span className="flex flex-col items-center gap-1 font-semibold">
-            <CirculoMesa numero={m.numero} />
-            <span className="px-1 rounded" style={{ ...CIFRA, ...(ocupados > m.capacidad ? { background: C.peligro, color: C.blanco } : {}) }}>
-              {ocupados}/{m.capacidad}
+        {/* En una sola fila (él, v98.5-98.6): en el centro del recuadro, el
+            número en su círculo dorado, grande, el de las tarjetas; a un
+            lado las sillas en vertical (poner arriba, quitar abajo) con la
+            cuenta «sentados/sitios» entre las dos; al otro, quitar la mesa y
+            debajo «Vaciar». Los dos lados, del mismo ancho (flex-1), para que
+            el círculo quede en medio. Sin la raya dorada. Las alergias, en
+            cada familia (v74.9). */}
+        <div data-controles className="flex items-center gap-1 zurdo:flex-row-reverse">
+          <span className="flex-1 flex justify-start zurdo:justify-end">
+            <span className="flex flex-col items-center gap-0.5">
+              <Boton variante="secundario" oscuro tamano="pequeno" icono={Plus} titulo="Un sitio más" onClick={() => cambiarSitios(m.numero, m.capacidad + 1)} />
+              <span
+                className="px-1 rounded"
+                title={`${ocupados} sentados de ${m.capacidad} sitios`}
+                style={{ ...CIFRA, ...(ocupados > m.capacidad ? { background: C.peligro, color: C.blanco } : {}) }}
+              >
+                {ocupados}/{m.capacidad}
+              </span>
+              <Boton
+                variante="secundario"
+                oscuro
+                tamano="pequeno"
+                icono={Minus}
+                titulo={m.capacidad <= ocupados ? "Está llena: saca antes a alguien" : "Un sitio menos"}
+                disabled={m.capacidad <= Math.max(ocupados, 1)}
+                onClick={() => cambiarSitios(m.numero, m.capacidad - 1)}
+              />
             </span>
           </span>
-          <span className="flex flex-col items-end gap-1 zurdo:items-start">
+          <CirculoMesa numero={m.numero} tamano={72} letra={T.gigante} />
+          <span className="flex-1 flex flex-col items-end gap-1 zurdo:items-start">
             <BotonQuitar
               titulo={fijos > 0 ? "Tiene familias con su invitación enviada: no se puede quitar" : "Quitar esta mesa"}
               disabled={fijos > 0}
