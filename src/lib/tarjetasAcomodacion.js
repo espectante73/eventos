@@ -62,10 +62,12 @@ export const ACABADOS = [
   { id: "recuadroVerde", rotulo: "Recuadro verde, borde blanco", fondo: null, recuadro: C.ink, marco: C.ink, grosorMarco: 0.3, letra: C.champan, familia: C.champanClaro, contornoNumero: C.champan },
   // Al revés: por fuera verde y el recuadro blanco.
   { id: "recuadroBlanco", rotulo: "Borde verde, recuadro blanco", fondo: C.ink, recuadro: C.blanco, marco: C.champanClaro, grosorMarco: 0.3, letra: C.ink, familia: C.ink, contornoNumero: C.gold },
-  // El 5 con el borde dorado en vez de verde (él): el dorado del círculo.
-  // El doblez y los cortes, en verde y más gruesos: en dorado no se veían
-  // sobre el dorado (él).
-  { id: "recuadroBlancoDorado", rotulo: "Borde dorado, recuadro blanco", fondo: C.goldClaro, recuadro: C.blanco, marco: C.gold, grosorMarco: 0.3, letra: C.ink, familia: C.ink, contornoNumero: C.gold, lineas: C.ink, grosorLineas: 0.7 },
+  // Blanco con el rectángulo dorado (él, v98.2: «quitamos el dorado
+  // exterior, pero dejamos el rectángulo dorado»): el marco, grueso y en el
+  // dorado del círculo. Antes llevaba todo el borde dorado, y por eso el
+  // doblez y los cortes iban en verde; sobre blanco, los de siempre. El id
+  // se queda: es lo que cada aparato tiene guardado.
+  { id: "recuadroBlancoDorado", rotulo: "Blanco, rectángulo dorado", fondo: null, recuadro: null, marco: C.goldClaro, grosorMarco: 1.5, letra: C.ink, familia: C.ink, contornoNumero: C.gold },
 ];
 const acabado = (id) => ACABADOS.find((a) => a.id === id) || ACABADOS[0];
 export const OPCIONES_POR_DEFECTO = { hoja: "a3", ancho: 85.6, acabado: ACABADOS[0].id };

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "98.2",
+    cambios: [
+      "Tarjetas de acomodación, modelo 6: sin el dorado de fuera. Fondo blanco con el rectángulo dorado, una línea gruesa del dorado del círculo. El doblez y los cortes, en el gris de siempre, como en los demás sobre blanco.",
+    ],
+  },
+  {
     version: "98.1",
     cambios: [
       "Tarjetas de acomodación: se quita el acabado 7 (letra dorada con aura verde). Tras varias pruebas no llegaba a lo buscado; quedan seis. Quien lo tuviera elegido vuelve al primero.",
