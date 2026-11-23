@@ -1,7 +1,7 @@
 // v74 (él): probar el reparto moviendo familias enteras; que no deje sentar
 // a más de los que caben; y nada se guarda hasta «Aplicar a la Lista».
 import { describe, it, expect } from "vitest";
-import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador, moverMesa, vaciarMesaEnBorrador, fijosEnMesa, quitarMesaRenumerando } from "./repartoMesas";
+import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador, moverMesa, vaciarMesaEnBorrador, fijosEnMesa, quitarMesaRenumerando, cifraFamilia, anchoColumnas } from "./repartoMesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const g = (id, apellido, nombre, rol, extra = {}) => ({ id, apellido, nombre, grupoFamiliar: `${apellido}01`, rolFamiliar: rol, confirmado: true, mesa: null, ...extra });
@@ -297,5 +297,25 @@ describe("quitarMesaRenumerando", () => {
     expect(quitarMesaRenumerando(lista, tres, 1, orden).aviso).toBe("No se puede: la mesa 2 tiene invitaciones enviadas y cambiaría de número.");
     // La última sí: no cambia el número de nadie.
     expect(quitarMesaRenumerando(lista, tres, 3, orden).mesas.map((m) => m.numero)).toEqual([1, 2]);
+  });
+});
+
+// v98.7 (él): «que el ancho del recuadro de las mesas corresponda al largo
+// del nombre más largo».
+describe("anchoColumnas", () => {
+  const f = (nombre, extra = {}) => ({ nombre, cuantos: 2, sinConfirmar: 0, conAlergia: [], representante: { zona: "" }, ...extra });
+  const medidas = { medirNombre: (t, negrita) => t.length * (negrita ? 8 : 7), medirCifra: (t) => t.length * 9, icono: 20, fijo: 60, minimo: 212 };
+  it("el del nombre más largo, con su cifra, sus iconos y los márgenes", () => {
+    const largo = "Hernández Gonçalves, María del Carmen";
+    expect(anchoColumnas([f("Sosa, Ana"), f(largo, { fija: true, conAlergia: [{}] })], medidas)).toBe(largo.length * 7 + 9 + 20 + 20 + 60);
+  });
+  it("nunca menos que la cabecera de la mesa; sin familias, ese mínimo", () => {
+    expect(anchoColumnas([f("Sosa, Ana")], medidas)).toBe(212);
+    expect(anchoColumnas([], medidas)).toBe(212);
+  });
+  it("la cifra, como en la pastilla: con parte sin confirmar, «2+1»", () => {
+    expect(cifraFamilia(f("A", { cuantos: 3, sinConfirmar: 1 }))).toBe("2+1");
+    expect(cifraFamilia(f("A", { cuantos: 3, sinConfirmar: 3 }))).toBe("3");
+    expect(cifraFamilia(f("A"))).toBe("2");
   });
 });

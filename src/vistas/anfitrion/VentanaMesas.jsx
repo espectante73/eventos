@@ -23,8 +23,8 @@
 // «Memorias» (él, v75): Acomodación 1, 2 y 3, una foto de todo (mesas,
 // sitios, plano y quién se sienta dónde). Cargar una la pone como prueba,
 // mesas incluidas: mientras está cargada, también las mesas son prueba.
-import { useState } from "react";
-import { Check, AlertTriangle, Lock, LockOpen, Plus, Minus, Bookmark, Map as IconoPlano } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { Check, AlertTriangle, Lock, LockOpen, Plus, Minus, Bookmark, ChevronDown, ChevronUp, Map as IconoPlano } from "lucide-react";
 import { C, OP, R, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -60,11 +60,19 @@ import {
   conMemoria,
   cargarMemoria,
   quitarMesaRenumerando,
+  cifraFamilia,
+  anchoColumnas,
 } from "../../lib/repartoMesas";
 
-// El ancho de una columna, una sola vez (norma 6): 224 px = `sm:w-56` de
-// «Sin mesa», que en el móvil va arriba, a todo lo ancho.
-const ANCHO_COLUMNA = 224;
+// El ancho de los recuadros, uno para todos (norma 6), el del nombre más
+// largo (él, v98.7; `anchoColumnas`). Nunca menos de lo que pide la
+// cabecera de una mesa (las sillas, el círculo y «Vaciar»), y lo que suman
+// márgenes y bordes de la pastilla (px-3, borde 2, hueco 2) y del recuadro
+// (p-1.5, borde 3), con un poco de holgura.
+const ANCHO_MINIMO = 212;
+const MEDIDAS_PASTILLA = { icono: 20, fijo: 24 + 4 + 8 + 12 + 2 * 3 + 6, minimo: ANCHO_MINIMO };
+// «Sin mesa» plegada o no (él, v98.7), en este aparato.
+const CLAVE_SIN_MESA_PLEGADA = "acomodacion-sin-mesa-plegada";
 // Lo que lleva una mesa al arrastrarla (v83), para no confundirla con una
 // familia: las dos se sueltan en la misma columna.
 const MESA_ARRASTRADA = "mesa:";
@@ -77,7 +85,7 @@ function Familia({ familia, cogida, onCoger }) {
   // Sin confirmar todavía: sombreada hasta que confirmen (él, v74.2); su
   // sitio, reservado. Con parte sin confirmar: «2+1».
   const nadieConfirmado = familia.sinConfirmar === familia.cuantos;
-  const cifra = familia.sinConfirmar && !nadieConfirmado ? `${familia.cuantos - familia.sinConfirmar}+${familia.sinConfirmar}` : familia.cuantos;
+  const cifra = cifraFamilia(familia);
   // El DJ contratado se localiza de un vistazo (él, v84.2): en blanco y en
   // negrita, con sus auriculares. Verde no: es la cabecera de una mesa.
   const dj = esDj(familia.representante);
@@ -236,6 +244,44 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   const confirmacion = cuentaConfirmacion(invitados);
   const familias = familiasParaRepartir(vista, { conSinConfirmar, ordenFamiliares });
   const sinMesa = familias.filter((f) => f.mesa == null).sort(porNombre);
+
+  // El ancho del nombre más largo (v98.7): se mide con un texto escondido,
+  // con la letra de verdad de la pastilla. Sin medidas (las pruebas), el mínimo.
+  const medidorRef = useRef(null);
+  const [ancho, setAncho] = useState(ANCHO_MINIMO);
+  useLayoutEffect(() => {
+    const span = medidorRef.current;
+    if (!span) return;
+    const medir = (texto, estilo) => {
+      Object.assign(span.style, estilo);
+      span.textContent = texto;
+      return span.getBoundingClientRect().width;
+    };
+    const nuevo = anchoColumnas(familias, {
+      ...MEDIDAS_PASTILLA,
+      medirNombre: (t, negrita) => medir(t, { fontFamily: "", fontWeight: negrita ? "700" : "400" }),
+      medirCifra: (t) => medir(t, { fontFamily: "'Fraunces', serif", fontWeight: "700" }),
+    });
+    span.textContent = "";
+    setAncho(nuevo);
+  });
+
+  const [sinMesaPlegada, setSinMesaPlegada] = useState(() => {
+    try {
+      return window.localStorage.getItem(CLAVE_SIN_MESA_PLEGADA) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const plegarSinMesa = () =>
+    setSinMesaPlegada((p) => {
+      try {
+        window.localStorage.setItem(CLAVE_SIN_MESA_PLEGADA, p ? "0" : "1");
+      } catch {
+        // Sin almacenamiento: se pliega solo esta vez.
+      }
+      return !p;
+    });
   const cambian = familiasQueCambian(invitados, borrador);
   const hayPrueba = cambian > 0 || prueba.mesas != null;
   const ordenadas = [...mesas].sort((a, b) => a.numero - b.numero);
@@ -530,6 +576,8 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
           </p>
         )}
 
+        {/* El medidor del nombre más largo (v98.7): escondido, con la letra de las pastillas. */}
+        <span ref={medidorRef} aria-hidden className="text-sm" style={{ position: "absolute", left: 0, top: 0, visibility: "hidden", whiteSpace: "nowrap", pointerEvents: "none" }} />
         {verPlano ? (
           // El plano, de lo que se ve en pantalla, como el resto de la ventana:
           // con una memoria cargada, sus mesas, y moverlas es parte de la prueba.
@@ -543,7 +591,8 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
           // barra; en el móvil no caben juntas: «Sin mesa» arriba, las mesas
           // debajo (una por fila) y una sola barra para todo.
           <div className="flex flex-col sm:flex-row gap-3 overflow-y-auto sm:overflow-visible" style={{ flex: 1, minHeight: 0 }}>
-            <div className="w-full sm:w-56 flex-shrink-0 sm:overflow-y-auto">
+            {/* Del mismo ancho que las mesas; en el móvil, centrada como ellas. */}
+            <div className="flex-shrink-0 mx-auto sm:mx-0 sm:overflow-y-auto" style={{ width: ancho, maxWidth: "100%" }}>
               <Columna
                 nombre="Sin mesa"
                 cabecera={
@@ -556,20 +605,36 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
                       </Boton>
                     </div>
                     <div className="mx-2 my-1.5" style={{ borderTop: `1px solid ${C.gold}` }} />
-                    <div className="flex items-baseline justify-center gap-2 font-semibold">
-                      Sin mesa <span style={CIFRA}>· {sinMesa.length}</span>
+                    {/* Plegable (él, v98.7): plegada, solo esta cabecera, y
+                        se sigue pudiendo soltar familias en ella. La flecha,
+                        del lado del pulgar; el título, en el centro. */}
+                    <div className="flex items-center gap-2 font-semibold zurdo:flex-row-reverse">
+                      <span className="flex-1" />
+                      <span>
+                        Sin mesa <span style={CIFRA}>· {sinMesa.length}</span>
+                      </span>
+                      <span data-controles className="flex-1 flex justify-end zurdo:justify-start">
+                        <Boton
+                          variante="secundario"
+                          tamano="pequeno"
+                          icono={sinMesaPlegada ? ChevronDown : ChevronUp}
+                          titulo={sinMesaPlegada ? "Desplegar «Sin mesa»" : "Plegar «Sin mesa»"}
+                          aria-expanded={!sinMesaPlegada}
+                          onClick={plegarSinMesa}
+                        />
+                      </span>
                     </div>
                   </div>
                 }
-                familias={sinMesa}
+                familias={sinMesaPlegada ? [] : sinMesa}
                 cogida={cogida}
                 onCoger={coger}
                 onSoltar={(id) => soltar(id, null)}
               />
             </div>
             <div
-              className="grid gap-3 content-start sm:flex-1 sm:min-h-0 sm:overflow-y-auto"
-              style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${ANCHO_COLUMNA}px, 1fr))` }}
+              className="grid gap-3 content-start justify-center sm:justify-start sm:flex-1 sm:min-h-0 sm:overflow-y-auto"
+              style={{ gridTemplateColumns: `repeat(auto-fill, minmax(0, ${ancho}px))` }}
             >
               {ordenadas.map((m) => {
                 const ocupados = ocupacion(vista, m.numero);

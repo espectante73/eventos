@@ -9,7 +9,7 @@
 // confirma a alguien, al aplicar no se le pisa (norma 12).
 import { asignarMesaConSuFamilia, autoAsignarMesas, claveFamiliaMesa, mesaFija, ocupacion, seSientaEnMesa } from "./mesas";
 import { nombreCompleto } from "./formato";
-import { tieneAlergiaReal } from "./invitados";
+import { tieneAlergiaReal, esDj } from "./invitados";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 // La Lista tal como quedaría con el borrador.
@@ -58,6 +58,30 @@ export function moverFamilia(invitados, borrador, idRepresentante, numero, mesas
   });
   if (aviso) return { borrador, aviso };
   return { borrador: borradorDesde(invitados, tras), aviso: "" };
+}
+
+// La cifra de una familia en su pastilla: cuántos son; con parte sin
+// confirmar, «2+1» (sombreada si no ha confirmado nadie: él, v74.2).
+export function cifraFamilia(f) {
+  return f.sinConfirmar && f.sinConfirmar !== f.cuantos ? `${f.cuantos - f.sinConfirmar}+${f.sinConfirmar}` : String(f.cuantos);
+}
+
+// El ancho de los recuadros de «Sin mesa» y de las mesas (él, v98.7: «que
+// corresponda al largo del nombre más largo»): lo que pide la pastilla de
+// la familia más larga, de todas (también las de «Sin mesa» plegada, para
+// que plegarla no lo cambie), y nunca menos que la cabecera de una mesa
+// (`minimo`). Lo mide quien dibuja: `medirNombre(texto, negrita)` y
+// `medirCifra(texto)`, en px; `icono`, lo que ocupa cada icono con su
+// hueco; `fijo`, márgenes y bordes de la pastilla y del recuadro.
+export function anchoColumnas(familias, { medirNombre, medirCifra, icono, fijo, minimo }) {
+  let mayor = minimo;
+  for (const f of familias) {
+    const dj = esDj(f.representante);
+    const nombre = medirNombre(f.nombre, dj) + (dj ? icono : 0);
+    const resto = medirCifra(cifraFamilia(f)) + (f.fija ? icono : 0) + (f.conAlergia?.length ? icono : 0);
+    mayor = Math.max(mayor, Math.ceil(nombre + resto + fijo));
+  }
+  return mayor;
 }
 
 // El borrador que lleva de la Lista real a `propuesta`: solo las mesas que cambian.

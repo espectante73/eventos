@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "98.7",
+    cambios: [
+      "Acomodación: «Sin mesa» se pliega con su flecha; plegada queda solo su cabecera, y en ella se pueden seguir dejando familias. Cada aparato recuerda cómo la dejaste.",
+      "Los recuadros de «Sin mesa» y de las mesas, todos del mismo ancho: el del nombre más largo, y nunca más estrechos que la cabecera de la mesa. En el móvil, centrados; en el Mac, caben más mesas por fila.",
+    ],
+  },
+  {
     version: "98.6",
     cambios: [
       "Acomodación: el círculo dorado con el número de la mesa, casi el doble de grande y en el centro del recuadro verde. La cuenta de sentados y sillas (4/10) pasa a estar entre el + y el − de las sillas, en pequeño; en rojo si la mesa se pasa.",

@@ -464,3 +464,18 @@ describe("una familia con su invitación enviada", () => {
     vista.desmontar();
   });
 });
+
+// v98.7 (él): «Sin mesa» se pliega; plegada, se sigue pudiendo dejar ahí una familia.
+it("«Sin mesa» se pliega y se despliega; plegada, tocarla deja ahí a la familia cogida", () => {
+  const { vista, columna, familia, boton } = dibujar();
+  expect(columna("Sin mesa").contains(familia("García, Isaias"))).toBe(true);
+  vista.pulsar(boton("Plegar «Sin mesa»"));
+  expect(familia("García, Isaias")).toBeNull();
+  expect(columna("Sin mesa").textContent).toContain("Sin mesa");
+  vista.pulsar(familia("Expósito, Rosi"));
+  vista.pulsar(columna("Sin mesa"));
+  expect(columna("Mesa 6").contains(familia("Expósito, Rosi"))).toBe(false);
+  vista.pulsar(boton("Desplegar «Sin mesa»"));
+  expect(columna("Sin mesa").contains(familia("Expósito, Rosi"))).toBe(true);
+  vista.desmontar();
+});
