@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "98.1",
+    cambios: [
+      "Tarjetas de acomodación: se quita el acabado 7 (letra dorada con aura verde). Tras varias pruebas no llegaba a lo buscado; quedan seis. Quien lo tuviera elegido vuelve al primero.",
+      "La letra de la familia (A, B, C…), sobre fondo blanco, en el verde oscuro de la app: se lee mejor que el dorado.",
+    ],
+  },
+  {
     version: "98",
     cambios: [
       "Nuevo en «Día del evento», con «Acomodación terminada»: «Sobres de matrimonios». Un sobre por cada matrimonio confirmado, para imprimir directamente en sobres blancos: sus nombres en una línea («Luis y Ana», o con el apellido: «ABREU, Luis y Ana»), el círculo dorado con el número de su mesa y el logo del evento, sin fondo.",

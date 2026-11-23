@@ -92,16 +92,11 @@ describe("dibujarTarjetasAcomodacion", () => {
     expect(ver("recuadroBlanco")).toEqual({ fondo: 2, recuadro: ["FD", "FD"], letra: C.ink });
     // Uno que ya no exista (guardado de antes): el de siempre.
     expect(ver("otro")).toEqual(ver("verde"));
-    expect(ACABADOS).toHaveLength(7);
+    expect(ACABADOS).toHaveLength(6);
   });
-  it("el aura: el nombre se repite debajo en verde, y encima una sola vez en dorado claro", () => {
-    const h = hojaDePega();
-    dibujarTarjetasAcomodacion(h.pdf, [muchas[0]], { hoja: "a4", ancho: 85.6, acabado: "blancoDoradoAura" });
-    const ana = h.textos.filter((x) => x.t === "Ana");
-    expect(ana.filter((x) => x.color === C.goldClaro)).toHaveLength(2);
-    expect(ana.filter((x) => x.color === C.ink).length).toBeGreaterThan(40);
-    // Lo dorado, encima: después de su aura.
-    expect(ana.at(-1).color).toBe(C.goldClaro);
+  it("la letra de la familia, sobre blanco, en el verde oscuro (él); el modelo del aura, quitado", () => {
+    for (const a of ACABADOS.filter((a) => !a.fondo && !a.recuadro)) expect(a.familia).toBe(C.ink);
+    expect(ACABADOS.some((a) => a.id === "blancoDoradoAura")).toBe(false);
   });
   it("sin lienzo (las pruebas) no se rompe", () => {
     const lienzo = new PdfEnLienzo({ medida: { ancho: 210 * PUNTOS_POR_MM, alto: 297 * PUNTOS_POR_MM }, escala: 1, crearLienzo: () => ({}) });

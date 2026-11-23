@@ -56,12 +56,12 @@ it("los botones van ARRIBA, antes de las opciones y de la vista previa", () => {
   vista.desmontar();
 });
 
-it("la paleta: siete acabados, cada uno con su muestra; elegir uno rehace la vista previa y se recuerda", async () => {
+it("la paleta: seis acabados, cada uno con su muestra; elegir uno rehace la vista previa y se recuerda", async () => {
   const llamadas = [];
   const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={(t, o) => (llamadas.push(o), [])} muestra={muestra} />);
   const radios = [...document.body.querySelectorAll('[role="radiogroup"][aria-label="Acabado"] [role="radio"]')];
-  expect(radios).toHaveLength(7);
-  expect(radios.map((r) => r.querySelector("img").getAttribute("src"))).toEqual(["verde", "blancoDorado", "blancoVerde", "recuadroVerde", "recuadroBlanco", "recuadroBlancoDorado", "blancoDoradoAura"].map(muestra));
+  expect(radios).toHaveLength(6);
+  expect(radios.map((r) => r.querySelector("img").getAttribute("src"))).toEqual(["verde", "blancoDorado", "blancoVerde", "recuadroVerde", "recuadroBlanco", "recuadroBlancoDorado"].map(muestra));
   expect(radios[0].getAttribute("aria-checked")).toBe("true");
   vista.pulsar(radios[3]);
   await esperar();

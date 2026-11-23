@@ -46,14 +46,16 @@ const MARGEN_MINIMO = 10;
 // (null = se ve el fondo); `marco`: su línea; el círculo del número, igual
 // en todas (dorado), con su contorno; `lineas`: el doblez y los cortes, si
 // el gris de siempre no se ve sobre el fondo (el dorado), y su grosor
-// (`grosorLineas`); `aura`: el color
-// del halo difuminado bajo el nombre.
+// (`grosorLineas`); `familia`: la letra de la familia (sobre blanco,
+// siempre el verde oscuro, él: se lee mejor que el dorado).
+// (Hubo un séptimo, letra dorada con un aura verde difuminada: tras muchas
+// pruebas, él lo quitó: no llegaba a lo que buscaba.)
 export const ACABADOS = [
   // El de los bocetos: verde a sangre y letra champán.
   { id: "verde", rotulo: "Verde, letra champán", fondo: C.ink, recuadro: null, marco: C.champanClaro, grosorMarco: 0.3, letra: C.champan, familia: C.champanClaro, contornoNumero: C.champan },
   // Blanco con la letra «como está»: el champán no se lee sobre blanco, así
   // que va su tono oscuro, el dorado.
-  { id: "blancoDorado", rotulo: "Blanco, letra dorada", fondo: null, recuadro: null, marco: C.gold, grosorMarco: 0.5, letra: C.gold, familia: C.gold, contornoNumero: C.gold },
+  { id: "blancoDorado", rotulo: "Blanco, letra dorada", fondo: null, recuadro: null, marco: C.gold, grosorMarco: 0.5, letra: C.gold, familia: C.ink, contornoNumero: C.gold },
   // Blanco, letra oscura y el marco en verde.
   { id: "blancoVerde", rotulo: "Blanco, letra verde y marco verde", fondo: null, recuadro: null, marco: C.ink, grosorMarco: 1, letra: C.ink, familia: C.ink, contornoNumero: C.gold },
   // El recuadro verde y por fuera blanco.
@@ -64,10 +66,6 @@ export const ACABADOS = [
   // El doblez y los cortes, en verde y más gruesos: en dorado no se veían
   // sobre el dorado (él).
   { id: "recuadroBlancoDorado", rotulo: "Borde dorado, recuadro blanco", fondo: C.goldClaro, recuadro: C.blanco, marco: C.gold, grosorMarco: 0.3, letra: C.ink, familia: C.ink, contornoNumero: C.gold, lineas: C.ink, grosorLineas: 0.7 },
-  // El 2 con un aura verde difuminada bajo las letras, para leerlas de más
-  // lejos (él). La letra, en el dorado claro (el del círculo): el dorado
-  // del 2 sobre el verde se empastaba.
-  { id: "blancoDoradoAura", rotulo: "Blanco, letra dorada con aura verde", fondo: null, recuadro: null, marco: C.gold, grosorMarco: 0.5, letra: C.goldClaro, familia: C.gold, contornoNumero: C.gold, aura: C.ink },
 ];
 const acabado = (id) => ACABADOS.find((a) => a.id === id) || ACABADOS[0];
 export const OPCIONES_POR_DEFECTO = { hoja: "a3", ancho: 85.6, acabado: ACABADOS[0].id };
@@ -122,20 +120,6 @@ export function tarjetasDeAcomodacion(invitados = []) {
 // ---------- El dibujo ----------
 
 const MARCO = 11; // del corte (o del doblez) al marco, en puntos
-// El aura: el PDF no sabe difuminar, así que el nombre se escribe muchas
-// veces debajo, en su color, casi transparente y corrido un poco en todas
-// direcciones; donde se suman muchas (pegado a la letra) queda intenso y
-// hacia fuera se desvanece. Anillos (distancia en puntos y opacidad) y
-// direcciones por anillo.
-const AURA = [
-  { r: 1, alfa: 0.09 },
-  { r: 2, alfa: 0.07 },
-  { r: 3.2, alfa: 0.05 },
-  { r: 4.6, alfa: 0.03 },
-  { r: 6.2, alfa: 0.018 },
-];
-const DIRECCIONES_AURA = 16;
-const opacidad = (pdf, alfa) => pdf.setGState(new pdf.GState({ opacity: alfa }));
 const R_NUM = 20; // el círculo del número
 const ALTO_CIFRA = 0.716; // alto de las cifras de Helvetica, por punto de letra
 
@@ -191,23 +175,6 @@ function cara(pdf, x, y, ancho, alto, girada, t, estilo) {
   const base = cy + (tam * ALTO_CIFRA) / 2;
   pdf.setFont("helvetica", "bold");
   const anchoApellido = pdf.getTextWidth(apellido);
-  if (estilo.aura) {
-    pdf.setTextColor(estilo.aura);
-    for (const { r, alfa } of AURA) {
-      opacidad(pdf, alfa);
-      for (let d = 0; d < DIRECCIONES_AURA; d++) {
-        const ang = (2 * Math.PI * d) / DIRECCIONES_AURA;
-        const dx = r * Math.cos(ang);
-        const dy = r * Math.sin(ang);
-        pdf.setFont("helvetica", "bold");
-        escribir(apellido, x1 + dx, base + dy);
-        pdf.setFont("helvetica", "normal");
-        escribir(t.nombre, x1 + anchoApellido + dx, base + dy);
-      }
-    }
-    opacidad(pdf, 1);
-    pdf.setFont("helvetica", "bold");
-  }
   pdf.setTextColor(estilo.letra);
   escribir(apellido, x1, base);
   pdf.setFont("helvetica", "normal");

@@ -3,7 +3,7 @@
 // de todas las hojas (él: «no sea que no me guste cómo quede»), y dos
 // opciones: la hoja (A4 o A3) y el ancho de la tarjeta (8,56 cm, la
 // bancaria, o 9,5 cm, que en A4 cabe a dos columnas). El alto, siempre el
-// de la tarjeta bancaria (él). Y el acabado, de una paleta de siete (él:
+// de la tarjeta bancaria (él). Y el acabado, de una paleta de seis (él:
 // «poder editar yo mismo el acabado… y verlo antes»).
 //
 // A pantalla entera y con los botones ARRIBA, del lado del pulgar, como la
@@ -55,7 +55,7 @@ function guardarOpciones(o) {
   }
 }
 
-// La paleta de acabados: UNA pieza partida en siete, como «Sí / No»
+// La paleta de acabados: UNA pieza partida en seis, como «Sí / No»
 // (ElegirSiNo), y en cada parte la muestra de la tarjeta con ese acabado.
 // El elegido, enmarcado en el dorado de lo marcado (el de los menús): el
 // relleno verde de «Sí / No» se confundiría con las muestras verdes.
