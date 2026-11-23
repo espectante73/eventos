@@ -223,13 +223,16 @@ function cara(pdf, x, y, ancho, alto, girada, t, estilo) {
   }
 }
 
-function tarjeta(pdf, x, y, ancho, t, estilo) {
+// Una tarjeta abierta: la cara de arriba, girada, y la de abajo. Las dos
+// iguales, salvo en la hoja de muestra (una con cada acabado): por eso cada
+// cara lleva lo suyo, [tarjeta, estilo].
+function tarjeta(pdf, x, y, ancho, [tArriba, estiloArriba], [tAbajo, estiloAbajo] = [tArriba, estiloArriba]) {
   const alto = ALTO_CARA * MM;
-  cara(pdf, x, y, ancho, alto, true, t, estilo);
-  cara(pdf, x, y + alto, ancho, alto, false, t, estilo);
+  cara(pdf, x, y, ancho, alto, true, tArriba, estiloArriba);
+  cara(pdf, x, y + alto, ancho, alto, false, tAbajo, estiloAbajo);
   // El doblez, de puntos.
-  pdf.setDrawColor(estilo.lineas || C.line);
-  pdf.setLineWidth(estilo.grosorLineas || 0.4);
+  pdf.setDrawColor(estiloAbajo.lineas || C.line);
+  pdf.setLineWidth(estiloAbajo.grosorLineas || 0.4);
   pdf.setLineDashPattern([1, 2], 0);
   pdf.line(x, y + alto, x + ancho, y + alto);
   pdf.setLineDashPattern([], 0);
@@ -239,24 +242,89 @@ function tarjeta(pdf, x, y, ancho, t, estilo) {
 // marcas para cortar, las de la forma de cortar elegida. `pdf` es un jsPDF o un
 // PdfEnLienzo (la vista previa). Devuelve cuántas hojas salieron.
 export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, acabado: idAcabado } = {}) {
-  const papel = HOJAS[hoja] || HOJAS.a3;
   const estilo = acabado(idAcabado);
+  const sitio = colocacion(hoja);
+  const hojas = Math.max(1, Math.ceil(tarjetas.length / sitio.porHoja));
+  for (let h = 0; h < hojas; h++) {
+    if (h > 0) pdf.addPage(hoja, "portrait");
+    const deEsta = tarjetas.slice(h * sitio.porHoja, (h + 1) * sitio.porHoja);
+    deEsta.forEach((t, i) => tarjeta(pdf, ...sitio.hueco(i), sitio.W, [t, estilo]));
+    marcasDeLaHoja(pdf, sitio, deEsta.length, corte);
+  }
+  return hojas;
+}
+
+// Dónde va cada tarjeta en la hoja: la rejilla, centrada. Una sola cuenta
+// para las tarjetas y para la hoja de muestra.
+function colocacion(hoja) {
+  const papel = HOJAS[hoja] || HOJAS.a3;
   const { columnas, filas, porHoja } = rejilla(hoja);
   const W = ANCHO_TARJETA * MM;
   const H = ALTO_TARJETA * MM;
   const x0 = (papel.ancho * MM - columnas * W) / 2;
   const y0 = (papel.alto * MM - filas * H) / 2;
-  const hojas = Math.max(1, Math.ceil(tarjetas.length / porHoja));
-  for (let h = 0; h < hojas; h++) {
-    if (h > 0) pdf.addPage(hoja, "portrait");
-    const deEsta = tarjetas.slice(h * porHoja, (h + 1) * porHoja);
-    deEsta.forEach((t, i) => tarjeta(pdf, x0 + (i % columnas) * W, y0 + Math.floor(i / columnas) * H, W, t, estilo));
-    // Las de registro, en el mismo sitio en todas las hojas: las esquinas
-    // de la rejilla entera, haya o no tarjetas.
-    if (corte === "ploter") marcasDeRegistro(pdf, x0, y0, x0 + columnas * W, y0 + filas * H);
-    marcasDeCorte(pdf, x0, y0, W, H, Math.min(columnas, Math.max(1, deEsta.length)), Math.max(1, Math.ceil(deEsta.length / columnas)), corte);
+  const hueco = (i) => [x0 + (i % columnas) * W, y0 + Math.floor(i / columnas) * H];
+  return { papel, columnas, filas, porHoja, W, H, x0, y0, hueco };
+}
+
+// Las marcas para cortar de una hoja con `cuantas` tarjetas. Las de
+// registro, en el mismo sitio en todas las hojas: las esquinas de la
+// rejilla entera, haya o no tarjetas.
+function marcasDeLaHoja(pdf, { columnas, filas, W, H, x0, y0 }, cuantas, corte) {
+  if (corte === "ploter") marcasDeRegistro(pdf, x0, y0, x0 + columnas * W, y0 + filas * H);
+  marcasDeCorte(pdf, x0, y0, W, H, Math.min(columnas, Math.max(1, cuantas)), Math.max(1, Math.ceil(cuantas / columnas)), corte);
+}
+
+// ---------- La hoja de muestra ----------
+
+// La tarjeta de ejemplo: la de las muestras de la paleta y la de la hoja de
+// muestra. La mesa, de dos cifras (v99.1): se ve cómo queda en el círculo y
+// no se confunde con el número del acabado de la esquina (del 1 al 6).
+const EJEMPLO = { nombre: "Luis", apellido: "Abreu", mesa: 12, familia: "A" };
+
+// Él (v99.1): «una hoja modelo… que me aparezcan los 6 modelos… y poder
+// verlo en vivo». Tres tarjetas de ejemplo, cada CARA con un acabado (en
+// una cara uno y en la otra otro): los seis en una sola hoja, por una sola
+// cara del papel. En la esquina de cada cara, donde va la letra de la
+// familia, su número; y arriba, la leyenda, en el orden de la paleta.
+export const ARCHIVO_MUESTRA_ACABADOS = "muestra-acabados-tarjetas.pdf";
+const TAM_LEYENDA = 9;
+export function dibujarMuestraAcabados(pdf, { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte } = {}) {
+  const sitio = colocacion(hoja);
+  const conNumero = (i) => [{ ...EJEMPLO, familia: String(i + 1) }, ACABADOS[i]];
+  const cuantas = Math.ceil(ACABADOS.length / 2);
+  for (let i = 0; i < cuantas; i++) {
+    const abajo = ACABADOS[2 * i + 1] ? conNumero(2 * i + 1) : conNumero(2 * i);
+    tarjeta(pdf, ...sitio.hueco(i), sitio.W, conNumero(2 * i), abajo);
   }
-  return hojas;
+  marcasDeLaHoja(pdf, sitio, cuantas, corte);
+  // La leyenda, centrada en el margen de arriba, de tres en tres.
+  const lineas = [
+    `Muestra de los ${ACABADOS.length} acabados: el número de cada uno, en la esquina de su cara.`,
+    ...[0, 3].map((d) => ACABADOS.slice(d, d + 3).map((a, i) => `${d + i + 1} ${a.rotulo}`).join("  ·  ")),
+  ];
+  pdf.setFontSize(TAM_LEYENDA);
+  pdf.setTextColor(C.ink);
+  lineas.forEach((texto, i) => {
+    pdf.setFont("helvetica", i === 0 ? "bold" : "normal");
+    pdf.text(texto, (sitio.papel.ancho * MM - pdf.getTextWidth(texto)) / 2, (10 + 4.5 * i) * MM);
+  });
+  return 1;
+}
+
+export async function pdfMuestraAcabados(opciones) {
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: opciones?.hoja || OPCIONES_POR_DEFECTO.hoja });
+  dibujarMuestraAcabados(pdf, opciones);
+  return pdf.output("blob");
+}
+
+// La hoja de muestra, como imagen (el boceto y las pruebas).
+export function vistaPreviaMuestraAcabados(opciones, { escala = 1.4, crearLienzo = crearCanvas } = {}) {
+  const papel = HOJAS[opciones?.hoja] || HOJAS[OPCIONES_POR_DEFECTO.hoja];
+  const lienzo = new PdfEnLienzo({ medida: { ancho: papel.ancho * MM, alto: papel.alto * MM }, escala, crearLienzo });
+  dibujarMuestraAcabados(lienzo, opciones);
+  return lienzo.ctx ? lienzo.paginas[0].toDataURL("image/jpeg", 0.85) : "";
 }
 
 // Las marcas de corte, como las de imprenta (él, v98.9: las pidió el
@@ -344,11 +412,12 @@ export function vistaPreviaTarjetasAcomodacion(tarjetas, opciones, { escala = 1.
 }
 
 // La muestra de un acabado, para elegirlo: una cara de una tarjeta de
-// ejemplo, del mismo dibujo que el PDF.
-const EJEMPLO = { nombre: "Luis", apellido: "Abreu", mesa: 3, familia: "A" };
+// ejemplo, del mismo dibujo que el PDF. En la esquina, su número, el mismo
+// que en la hoja de muestra (v99.1): lo impreso y la paleta, a la par.
 export function muestraAcabado(idAcabado, { escala = 1, crearLienzo = crearCanvas } = {}) {
   const medida = { ancho: ANCHO_TARJETA * MM, alto: ALTO_CARA * MM };
   const lienzo = new PdfEnLienzo({ medida, escala, crearLienzo });
-  cara(lienzo, 0, 0, medida.ancho, medida.alto, false, EJEMPLO, acabado(idAcabado));
+  const numero = ACABADOS.findIndex((a) => a.id === idAcabado) + 1;
+  cara(lienzo, 0, 0, medida.ancho, medida.alto, false, { ...EJEMPLO, familia: numero ? String(numero) : EJEMPLO.familia }, acabado(idAcabado));
   return lienzo.ctx ? lienzo.paginas[0].toDataURL("image/png") : "";
 }

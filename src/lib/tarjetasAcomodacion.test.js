@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rejilla, tarjetasDeAcomodacion, dibujarTarjetasAcomodacion, ACABADOS, ANCHO_TARJETA, OPCIONES_POR_DEFECTO, CORTES } from "./tarjetasAcomodacion";
+import { rejilla, tarjetasDeAcomodacion, dibujarTarjetasAcomodacion, dibujarMuestraAcabados, ACABADOS, ANCHO_TARJETA, OPCIONES_POR_DEFECTO, CORTES } from "./tarjetasAcomodacion";
 import { PdfEnLienzo, PUNTOS_POR_MM } from "./pdfEnLienzo";
 import { C } from "../theme";
 
@@ -221,5 +221,35 @@ describe("con qué se corta (las marcas de cada forma)", () => {
     const una = hojaQueApunta();
     dibujarTarjetasAcomodacion(una.pdf, cuatro.slice(0, 1), { hoja: "a4", corte: "ploter" });
     expect(una.negros).toEqual(llena.negros);
+  });
+});
+
+// v99.1 (él): «una hoja modelo… que me aparezcan los 6 modelos… y poder verlo en vivo».
+describe("la hoja de muestra de los acabados", () => {
+  it("una sola hoja: tres tarjetas, cada cara con un acabado y su número en la esquina", () => {
+    const { pdf, textos } = hojaDePega();
+    expect(dibujarMuestraAcabados(pdf, { hoja: "a4" })).toBe(1);
+    expect(pdf.paginas).toBe(1);
+    // 6 caras con el ejemplo (3 tarjetas × 2).
+    expect(textos.filter((x) => x.t === "ABREU")).toHaveLength(ACABADOS.length);
+    for (let i = 1; i <= ACABADOS.length; i++) expect(textos.filter((x) => x.t === String(i))).toHaveLength(1);
+    // Cada cara con el color de letra de su acabado, en orden: arriba (girada) el impar, abajo el par.
+    const letras = textos.filter((x) => x.t === "Luis").map((x) => x.color);
+    expect(letras).toEqual(ACABADOS.map((a) => a.letra));
+  });
+  it("arriba, la leyenda: el nombre de cada acabado con su número", () => {
+    const { pdf, textos } = hojaDePega();
+    dibujarMuestraAcabados(pdf, { hoja: "a3" });
+    const leyenda = textos.map((x) => x.t).join(" ");
+    ACABADOS.forEach((a, i) => expect(leyenda).toContain(`${i + 1} ${a.rotulo}`));
+  });
+  it("con las marcas de la forma de cortar elegida", () => {
+    const guillotina = hojaQueApunta();
+    dibujarMuestraAcabados(guillotina.pdf, { hoja: "a4", corte: "guillotina" });
+    // 3 tarjetas en 2 × 2: 3 cortes de arriba abajo y 3 de lado a lado, con sus dos marcas.
+    expect(guillotina.lineas.filter((l) => l.color === C.negro && !l.discontinua)).toHaveLength(12);
+    const ploter = hojaQueApunta();
+    dibujarMuestraAcabados(ploter.pdf, { hoja: "a4", corte: "ploter" });
+    expect(ploter.negros).toHaveLength(7);
   });
 });

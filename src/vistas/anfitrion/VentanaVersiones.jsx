@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "99.1",
+    cambios: [
+      "Tarjetas de acomodación: botón «Muestra», entre «Cancelar» y «Descargar». Descarga un PDF de una sola hoja con los seis acabados: tres tarjetas de ejemplo, cada cara con un acabado distinto, para imprimirla y elegir viéndolos de verdad. Lleva la hoja y las marcas de corte elegidas.",
+      "En la esquina de cada cara, el número del acabado (1 a 6), y arriba la leyenda con sus nombres. La paleta de la ventana enseña los mismos números. La tarjeta de ejemplo lleva ahora la mesa 12, para que no se confunda con esos números.",
+    ],
+  },
+  {
     version: "99",
     cambios: [
       "Tarjetas de acomodación: junto a «Hoja», «Cortar con», para que la hoja lleve las marcas de cada forma de cortar. Guillotina (la de entrada): rayitas cortas fuera de las tarjetas, como las de imprenta. Tijera o cúter: una línea entera por cada corte. Plóter: un cuadrado y tres escuadras en las esquinas, las que lee la máquina.",

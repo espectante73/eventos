@@ -11,7 +11,7 @@
 // descarga: la vista previa y el PDF salen del mismo dibujo
 // (lib/tarjetasAcomodacion.js, norma 7).
 import { useEffect, useMemo, useState } from "react";
-import { Download } from "lucide-react";
+import { Download, Palette } from "lucide-react";
 import { C, OP, DEDO, DORADO, inputStyle } from "../../theme";
 import { ModalFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -20,10 +20,12 @@ import { descargarBlob } from "../../lib/descargas";
 import {
   ACABADOS,
   CORTES,
+  ARCHIVO_MUESTRA_ACABADOS,
   ARCHIVO_TARJETAS_ACOMODACION,
   HOJAS,
   muestraAcabado,
   OPCIONES_POR_DEFECTO,
+  pdfMuestraAcabados,
   pdfTarjetasAcomodacion,
   rejilla,
   tarjetasDeAcomodacion,
@@ -93,8 +95,14 @@ function ElegirAcabado({ valor, onCambiar, muestras }) {
 }
 
 // `vistaPrevia` y `muestra`: quien dibuja las hojas y las muestras (las
-// pruebas pasan unos sin lienzo).
-export function VentanaTarjetasAcomodacion({ invitados, onCerrar, vistaPrevia = vistaPreviaTarjetasAcomodacion, muestra = muestraAcabado }) {
+// pruebas pasan unos sin lienzo); `pdfMuestra`, la hoja de muestra.
+export function VentanaTarjetasAcomodacion({
+  invitados,
+  onCerrar,
+  vistaPrevia = vistaPreviaTarjetasAcomodacion,
+  muestra = muestraAcabado,
+  pdfMuestra = pdfMuestraAcabados,
+}) {
   const [opciones, setOpciones] = useState(leerOpciones);
   const elegir = (cambio) => {
     const nuevas = { ...opciones, ...cambio };
@@ -118,14 +126,19 @@ export function VentanaTarjetasAcomodacion({ invitados, onCerrar, vistaPrevia = 
     return () => clearTimeout(t);
   }, [tarjetas, opciones, vistaPrevia]);
 
-  const [descargando, setDescargando] = useState(false);
+  // Lo que se está preparando: "" (nada), "tarjetas" o "muestra".
+  const [descargando, setDescargando] = useState("");
   const [descargado, setDescargado] = useState("");
-  const descargar = async () => {
-    setDescargando(true);
-    descargarBlob(ARCHIVO_TARJETAS_ACOMODACION, await pdfTarjetasAcomodacion(tarjetas, opciones));
-    setDescargando(false);
-    setDescargado(ARCHIVO_TARJETAS_ACOMODACION);
+  const bajar = async (que, archivo, hacer) => {
+    setDescargando(que);
+    descargarBlob(archivo, await hacer());
+    setDescargando("");
+    setDescargado(archivo);
   };
+  const descargar = () => bajar("tarjetas", ARCHIVO_TARJETAS_ACOMODACION, () => pdfTarjetasAcomodacion(tarjetas, opciones));
+  // La hoja de muestra (él, v99.1): los seis acabados en una hoja, para
+  // imprimirla y elegir en vivo; con la hoja y las marcas elegidas.
+  const descargarMuestra = () => bajar("muestra", ARCHIVO_MUESTRA_ACABADOS, () => pdfMuestra(opciones));
 
   return (
     <ModalFlotante pantallaEntera titulo="Tarjetas de acomodación" onCerrar={onCerrar}>
@@ -133,8 +146,11 @@ export function VentanaTarjetasAcomodacion({ invitados, onCerrar, vistaPrevia = 
         <Boton variante="secundario" onClick={onCerrar}>
           Cancelar
         </Boton>
-        <Boton variante="principal" icono={Download} onClick={descargar} disabled={descargando || !tarjetas.length}>
-          {descargando ? "Preparando…" : "Descargar"}
+        <Boton variante="secundario" icono={Palette} onClick={descargarMuestra} disabled={!!descargando} data-muestra-acabados>
+          {descargando === "muestra" ? "Preparando…" : "Muestra"}
+        </Boton>
+        <Boton variante="principal" icono={Download} onClick={descargar} disabled={!!descargando || !tarjetas.length}>
+          {descargando === "tarjetas" ? "Preparando…" : "Descargar"}
         </Boton>
       </div>
       {/* La descarga pasa fuera de la pantalla: dice dónde está (norma 9). */}
@@ -199,7 +215,8 @@ export function VentanaTarjetasAcomodacion({ invitados, onCerrar, vistaPrevia = 
           Corta por las rayas y dobla cada tarjeta por los puntos: el nombre se lee por los dos lados. «Cortar con» pone las marcas de
           cada forma de cortar: rayitas en los bordes para la guillotina, líneas enteras para tijera o cúter, y marcas en las esquinas para
           el plóter (cada marca de plóter tiene las suyas: confírmalo con quien corte). Salen mesa por mesa, y la letra pequeña de la
-          esquina es su familia dentro de la mesa, para repartirlas sin separar a nadie; quien viene solo no lleva letra.
+          esquina es su familia dentro de la mesa, para repartirlas sin separar a nadie; quien viene solo no lleva letra. «Muestra»
+          descarga una hoja con los seis acabados, uno en cada cara y con su número, para imprimirla y elegir viéndolos de verdad.
         </p>
       </details>
     </ModalFlotante>

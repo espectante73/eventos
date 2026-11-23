@@ -69,6 +69,24 @@ it("«Cortar con»: guillotina, tijera o cúter y plóter; elegir una rehace la 
   vista.desmontar();
 });
 
+// v99.1 (él): la hoja de muestra con los seis acabados.
+it("«Muestra» descarga la hoja de muestra con la hoja y las marcas elegidas, y dice dónde está", async () => {
+  const pedidas = [];
+  const crear = URL.createObjectURL;
+  URL.createObjectURL = () => "blob:muestra";
+  const vista = montar(
+    <VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={() => []} muestra={muestra} pdfMuestra={async (o) => (pedidas.push(o), new Blob(["%PDF"]))} />,
+  );
+  const boton = document.body.querySelector("[data-botones-tarjetas] [data-muestra-acabados]");
+  expect(boton.textContent).toBe("Muestra");
+  vista.pulsar(boton);
+  await esperar();
+  expect(pedidas).toEqual([{ hoja: "a3", corte: "guillotina", acabado: "verde" }]);
+  expect(document.body.querySelector("[data-descargado]").textContent).toContain("muestra-acabados-tarjetas.pdf");
+  URL.createObjectURL = crear;
+  vista.desmontar();
+});
+
 it("los botones van ARRIBA, antes de las opciones y de la vista previa", () => {
   const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={() => []} muestra={muestra} />);
   const botones = document.body.querySelector("[data-botones-tarjetas]");
