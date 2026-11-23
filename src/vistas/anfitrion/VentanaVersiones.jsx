@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "97",
+    cambios: [
+      "Tarjetas de acomodación, en «Día del evento» (con la acomodación terminada): una por invitado, bebés incluidos, con «APELLIDO, Nombre», el número de su mesa y la letra de su familia en la mesa. Se doblan a lo largo y se leen por los dos lados.",
+      "Antes de descargar, la vista previa de todas las hojas, tal cual saldrán en el PDF.",
+      "Se elige la hoja (A4 o A3), el ancho de la tarjeta (8,56 cm, la de una tarjeta bancaria, o 9,5 cm) y el acabado, de una paleta de siete: verde, blanco con letra dorada, blanco con letra y marco verdes, recuadro verde, borde verde, borde dorado y blanco con aura verde bajo el nombre. Se recuerda lo elegido en cada aparato.",
+      "La ventana «Día del evento», un poco más ancha: ya no se corta ningún rótulo.",
+    ],
+  },
+  {
     version: "96.2",
     cambios: [
       "Mapa de la app: ahora se dibuja leyendo el menú de verdad, no una lista aparte. Ya enseña lo de dentro de «Invitados» (Formulario, Invitaciones, Lista) y «Avisar equipo» en Colaboradores, que faltaban.",

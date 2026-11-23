@@ -14,7 +14,7 @@
 // Las fotos se eligen FUERA de la app (él, v67.6): aquí solo se descargan
 // todas en un ZIP, en una sola carpeta (v85.5). Sin ventana para verlas.
 import { useEffect, useState } from "react";
-import { DoorOpen, DoorClosed, Camera, CameraOff, Download, QrCode } from "lucide-react";
+import { DoorOpen, DoorClosed, Camera, CameraOff, Download, QrCode, Contact } from "lucide-react";
 import { C, OP, conAlfa } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton, EnlaceTexto } from "../../components/Boton";
@@ -26,6 +26,7 @@ import { bajarFotosFiesta, archivoFotosEvento } from "../../lib/fotosFiesta";
 import { descargarTarjetasQr, tarjetasDeMesas, ARCHIVO_TARJETAS_QR } from "../../lib/pdfTarjetasQr";
 import { construirEnlaceTablon, construirEnlaceMesa } from "../../lib/url";
 import { ENVIO_BLOQUEADO } from "../../lib/invitados";
+import { VentanaTarjetasAcomodacion } from "./VentanaTarjetasAcomodacion";
 
 // «12 fotos» y «De 5 familias, en un ZIP.», contando cada familia una vez.
 // En dos líneas, como las demás filas: en una no cabía junto al botón.
@@ -94,7 +95,7 @@ function FilaAbrirCerrar({ fila, abierta, Icono, IconoCerrada, rotulo, estados =
 
 // `marcador` (desde VistaAnfitrion): { abierto, abrir, abrirAlAcreditar, cerrar }.
 export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
-  const { evento, persistEvento, obtenerFotosFiesta, obtenerQrMesas, tokenTablon } = data;
+  const { evento, invitados, persistEvento, obtenerFotosFiesta, obtenerQrMesas, tokenTablon } = data;
   const { preguntar, ventanaPregunta } = usePreguntaSeguridad();
 
   // La acreditación (él, v70.8): las llegadas y el marcador grande, que
@@ -171,6 +172,10 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
     });
   };
 
+  // Las tarjetas de acomodación (v97): una por invitado, con su mesa. Como las QR,
+  // con la acomodación terminada: antes, las mesas aún pueden cambiar.
+  const [verTarjetasAcomodacion, setVerTarjetasAcomodacion] = useState(false);
+
   // Todas en un ZIP, y avisa al terminar (norma 9: pasa fuera de la pantalla).
   const [descargando, setDescargando] = useState(false);
   const descargarFotos = async () => {
@@ -194,7 +199,7 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
   };
 
   return (
-    <VentanaFlotante clave="diaEvento" titulo="Día del evento" onCerrar={onCerrar} ancho="min(300px, calc(100vw - 48px))">
+    <VentanaFlotante clave="diaEvento" titulo="Día del evento" onCerrar={onCerrar} ancho="min(340px, calc(100vw - 48px))">
       <div className="grid grid-cols-[1fr_auto] zurdo:grid-cols-[auto_1fr] items-center gap-x-2 gap-y-3">
         <FilaAbrirCerrar
           fila={1}
@@ -232,18 +237,26 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
         <Boton onClick={descargarTarjetas} disabled={tarjetasBloqueadas} className={CELDA_BOTON} style={{ gridRow: 5 }}>
           Descargar
         </Boton>
+        <Separador fila={6} />
+        <CeldaTexto fila={7} Icono={Contact} titulo={<b>Tarjetas de acomodación</b>}>
+          {tarjetasBloqueadas ? ENVIO_BLOQUEADO : "Una por invitado, con su nombre y su mesa."}
+        </CeldaTexto>
+        <Boton onClick={() => setVerTarjetasAcomodacion(true)} disabled={tarjetasBloqueadas} className={CELDA_BOTON} style={{ gridRow: 7 }}>
+          Ver
+        </Boton>
         {fotos?.length > 0 && (
           <>
-            <Separador fila={6} />
-            <CeldaTexto fila={7} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
+            <Separador fila={8} />
+            <CeldaTexto fila={9} Icono={Download} titulo={<b>{cuentaFotosFiesta(fotos).titulo}</b>}>
               {cuentaFotosFiesta(fotos).detalle}
             </CeldaTexto>
-            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 7 }}>
+            <Boton onClick={descargarFotos} disabled={descargando} className={CELDA_BOTON} style={{ gridRow: 9 }}>
               {descargando ? "Preparando…" : "Descargar"}
             </Boton>
           </>
         )}
       </div>
+      {verTarjetasAcomodacion && <VentanaTarjetasAcomodacion invitados={invitados || []} onCerrar={() => setVerTarjetasAcomodacion(false)} />}
       {ventanaPregunta}
     </VentanaFlotante>
   );
