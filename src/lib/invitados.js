@@ -323,12 +323,16 @@ export function esDj(g) {
 // Importe que le corresponde a un invitado según su edad (calculada a partir del
 // año de nacimiento y la fecha del evento) y el rango/precios fijados en Configuración.
 // Por debajo de "desde" no paga (bebés); entre "desde" y "hasta" paga precio niño;
-// de "hasta" en adelante paga precio adulto. El DJ, como todos (v95.2, él:
-// que se anule el «0 € para el DJ», «precio normal de adulto, 47 €, como a
-// los demás invitados»): no volver a ponerle 0 €. ⚠️ La v95.3 lo deshizo por
-// un malentendido mío y la v95.4 lo repuso (él: «ahora sí paga y es parte
-// de los 117 adultos»). Quién le pone el dinero no es cosa de la app.
+// de "hasta" en adelante paga precio adulto.
+// ⚠️ El DJ NO paga entrada: lo invita el evento (v95.6, decidido con él tras
+// razonarlo: «él no me los ha dado; el evento lo invita a su entrada»; sus
+// 47 € salían del sobrante, y cobrarlos y apuntarlos de gasto los contaba dos
+// veces). El local SÍ le cobra como a un adulto más, y eso va en su propio
+// apunte, «Invitación del DJ» (personasDelLocal `dj`, costeLocal `invitacionDj`):
+// él, «la invitación al DJ tiene que quedar como un asiento independiente».
+// Las v95.2-95.5 le cobraron 47 €: no volver a hacerlo.
 export function importeEsperadoInvitado(g, evento) {
+  if (esDj(g)) return 0;
   const tramo = tramoDeEdad(g?.anioNacimiento, evento);
   if (tramo === TRAMO.BEBE) return 0;
   return parsePrecio(tramo === TRAMO.NINO ? evento?.precioNino : evento?.precioAdulto);
@@ -351,13 +355,12 @@ export function tramoDeEdad(anioNacimiento, evento) {
 // Lo que se debería recoger en total (él, v84.8, en Contabilidad): los
 // confirmados con su edad (importeEsperadoInvitado) y los sin confirmar
 // TODOS como adultos —él: «suponiendo que sean adultos»; es la cifra más
-// alta—. Los de «No asiste», fuera (cuentaConfirmacion); el DJ, como todos
-// (v95.2).
+// alta—. Los de «No asiste», fuera (cuentaConfirmacion); el DJ, a 0.
 export function previstoARecoger(invitados = [], evento) {
   const precioAdulto = parsePrecio(evento?.precioAdulto);
   const sinConfirmar = invitados.filter((g) => !g.confirmado && !g.noAsiste);
   const deConfirmados = invitados.filter((g) => g.confirmado).reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
-  const deSinConfirmar = sinConfirmar.length * precioAdulto;
+  const deSinConfirmar = sinConfirmar.reduce((s, g) => s + (esDj(g) ? 0 : precioAdulto), 0);
   return { total: deConfirmados + deSinConfirmar, deConfirmados, deSinConfirmar, sinConfirmar: sinConfirmar.length };
 }
 

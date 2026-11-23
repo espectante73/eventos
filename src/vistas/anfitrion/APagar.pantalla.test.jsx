@@ -64,11 +64,13 @@ it("sin precios todavía: lo dice, y sale solo lo de los gastos", () => {
   vista.desmontar();
 });
 
-it("con los precios del local: adultos (el DJ también), niños y bebés gratis; y lo que falta", () => {
+it("con los precios del local: adultos, la invitación del DJ en su apunte, niños y bebés gratis; y lo que falta", () => {
   const aPagar = { partidas: [{ id: "1", concepto: "Menú", adulto: "60", nino: "30" }, { id: "2", concepto: "Tarta", adulto: "5", nino: "5" }], otros: [{ id: "3", concepto: "Montaje", importe: "100" }], dj: "200" };
   const { vista } = dibujar({ evento: { ...EVENTO, aPagar } });
   const texto = document.body.textContent;
-  expect(texto).toContain(`3 adultos × ${euros(65)}${euros(195)}`);
+  // v95.6: el DJ, que invita el evento, en su propio apunte; 130 + 65 = 195.
+  expect(texto).toContain(`2 adultos × ${euros(65)}${euros(130)}`);
+  expect(texto).toContain(`Invitación del DJ: 1 adulto × ${euros(65)}${euros(65)}`);
   expect(texto).toContain(`1 niño × ${euros(35)}${euros(35)}`);
   expect(texto).toContain("1 bebégratis");
   expect(texto).toContain(`Otros del local${euros(100)}`);
@@ -149,8 +151,9 @@ it("la cuenta del local: las personas, cada servicio con su desglose y el total;
   };
   const vista = montar(<CuentaLocalHoja data={{ evento: { ...EVENTO, aPagar }, invitados: INVITADOS }} onPrecios={() => {}} />);
   const texto = document.body.textContent;
-  // 3 adultos (el DJ también), 1 niño, 1 bebé gratis.
+  // 3 adultos (uno es el DJ: lo invita el evento), 1 niño, 1 bebé gratis.
   expect(texto).toContain("Adultos3");
+  expect(texto).toContain("De ellos, el DJ: lo invita el evento1");
   expect(texto).toContain("Niños (de 4 a 7 años)1");
   expect(texto).toContain("Bebés (hasta 3 años)1 · gratis");
   expect(texto).toContain(`Cóctel${euros(53)}`);
@@ -159,7 +162,9 @@ it("la cuenta del local: las personas, cada servicio con su desglose y el total;
   expect(texto).toContain(`Cena${euros(190)}`);
   expect(texto).toContain(`Montaje${euros(100)}`);
   expect(texto).toContain(`Total a pagar al local${euros(343)}`);
-  for (const ajeno of ["Recaudado", "Propinas", "DJ", "Sobran", "Faltan"]) expect(texto).not.toContain(ajeno);
+  for (const ajeno of ["Recaudado", "Propinas", "Sobran", "Faltan"]) expect(texto).not.toContain(ajeno);
+  // Lo que cobra el DJ (200) no es del local.
+  expect(texto).not.toContain(euros(200));
   vista.desmontar();
 });
 
@@ -179,6 +184,8 @@ it("«Entra» desglosado por edades, y comprobado con los acuses", () => {
   const { vista } = dibujar();
   const texto = document.body.textContent;
   expect(texto).toContain(`2 adultos (8 años o más) × ${euros(47)}${euros(94)}`);
+  // v95.6: el DJ no paga entrada, lo invita el evento; se ve, a 0 €.
+  expect(texto).toContain(`1 DJ, lo invita el evento${euros(0)}`);
   expect(texto).toContain(`1 niño (de 4 a 7 años) × ${euros(35)}${euros(35)}`);
   expect(texto).toContain("1 bebé (hasta 3 años)gratis");
   // Sin colaboradores en la prueba: nada entregado, y los 3 pagados no los

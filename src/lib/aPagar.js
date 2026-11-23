@@ -13,7 +13,7 @@
 // Las personas las cuenta la app: los confirmados de la Lista, el DJ también
 // (el local le sirve como a uno más); sin año, como adulto.
 import { parsePrecio } from "./formato";
-import { calcularEdad, tramoDeEdad, importeEsperadoInvitado, TRAMO } from "./invitados";
+import { calcularEdad, tramoDeEdad, importeEsperadoInvitado, esDj, TRAMO } from "./invitados";
 import { totalGastos } from "./gastos";
 
 const texto = (v) => String(v ?? "").trim();
@@ -36,12 +36,16 @@ export const faltaSqlAPagar = (evento) => !evento || !("aPagar" in evento);
 
 // Los confirmados, por tramo de edad. `sinAnio`: cuántos de los adultos lo
 // son por no tener año (se enseña, para que se sepa que la cifra puede bajar).
+// `dj`: cuántos de los adultos son el DJ, que el evento invita (v95.6): el
+// local le cobra igual, pero su parte va en su propio apunte.
 export function personasDelLocal(invitados = [], evento) {
-  const cuenta = { adulto: 0, nino: 0, bebe: 0, sinAnio: 0 };
+  const cuenta = { adulto: 0, nino: 0, bebe: 0, sinAnio: 0, dj: 0 };
   for (const g of invitados) {
     if (!g.confirmado) continue;
-    cuenta[tramoDeEdad(g.anioNacimiento, evento)]++;
+    const tramo = tramoDeEdad(g.anioNacimiento, evento);
+    cuenta[tramo]++;
     if (calcularEdad(g.anioNacimiento, evento) === null) cuenta.sinAnio++;
+    if (esDj(g) && tramo === TRAMO.ADULTO) cuenta.dj++;
   }
   return cuenta;
 }
@@ -49,12 +53,17 @@ export function personasDelLocal(invitados = [], evento) {
 // Lo que cobra el local por cada persona: la suma de sus partidas.
 export const precioPorPersona = (partidas = []) => ({ adulto: suma(partidas, "adulto"), nino: suma(partidas, "nino") });
 
+// `invitacionDj`: lo que cuesta en el local el DJ, que invita el evento
+// (v95.6, él: «un asiento independiente»); ya está dentro de `adultos`, y
+// `adultosSinDj` es el resto, para enseñarlos por separado sin que la suma
+// cambie ni un céntimo.
 export function costeLocal(aPagar, personas) {
   const porPersona = precioPorPersona(aPagar.partidas);
   const adultos = redondear(personas.adulto * porPersona.adulto);
+  const invitacionDj = redondear((personas.dj || 0) * porPersona.adulto);
   const ninos = redondear(personas.nino * porPersona.nino);
   const otros = suma(aPagar.otros, "importe");
-  return { porPersona, adultos, ninos, otros, total: redondear(adultos + ninos + otros) };
+  return { porPersona, adultos, adultosSinDj: redondear(adultos - invitacionDj), invitacionDj, ninos, otros, total: redondear(adultos + ninos + otros) };
 }
 
 // La cuenta del local, para pagarle (él, v93.1): cada partida (cóctel,
@@ -74,13 +83,18 @@ export function cuentaDelLocal(aPagar, personas) {
 }
 
 // Lo recaudado, por edades (él, v94.5: «cuántos de más de 8 años pagaron los
-// 47 €, cuántos como niños»): los confirmados ya pagados, el DJ también
-// (v95.2), cada uno por el precio de su entrada (importeEsperadoInvitado: la suma es la misma
+// 47 €, cuántos como niños»): los confirmados ya pagados, sin el DJ (lo
+// invita el evento: va aparte, `dj`, v95.6), cada uno
+// por el precio de su entrada (importeEsperadoInvitado: la suma es la misma
 // de «Recaudado»). Los bebés no pagan: salen todos los confirmados.
 export function desgloseRecaudado(invitados = [], evento) {
-  const tramos = { adulto: { personas: 0, importe: 0 }, nino: { personas: 0, importe: 0 }, bebe: { personas: 0 } };
+  const tramos = { adulto: { personas: 0, importe: 0 }, nino: { personas: 0, importe: 0 }, bebe: { personas: 0 }, dj: { personas: 0 } };
   for (const g of invitados) {
     if (!g.confirmado) continue;
+    if (esDj(g)) {
+      tramos.dj.personas++;
+      continue;
+    }
     const tramo = tramoDeEdad(g.anioNacimiento, evento);
     if (tramo === TRAMO.BEBE) {
       tramos.bebe.personas++;

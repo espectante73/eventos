@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "95.6",
+    cambios: [
+      "Contabilidad: el DJ no paga entrada, lo invita el evento. En «Entra» sale aparte, «1 DJ, lo invita el evento», a 0 €, y los acuses cuadran sin la línea rosa.",
+      "Contabilidad › A pagar › Sale: lo que cobra el local por el DJ va en su propio apunte, «Invitación del DJ: 1 adulto × precio», separado del resto de los adultos; el total del local no cambia.",
+      "Cuenta del local: bajo «Adultos», «De ellos, el DJ: lo invita el evento».",
+    ],
+  },
+  {
     version: "95.5",
     cambios: [
       "Contabilidad › A pagar: cuando la diferencia en rosa es la entrada del DJ que entró en un acuse cerrado mientras era gratis, lo dice: «Entrada del DJ (acuse a 0 €)», con su importe, en vez de «Acuses con otro importe».",

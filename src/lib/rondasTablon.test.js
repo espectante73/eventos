@@ -5,11 +5,10 @@ import { euros } from "./formato";
 const estados = (yo, evento = {}) => rondasTablon(yo, evento).map((r) => `${r.id}:${r.estado}`);
 
 describe("la guía de las tres rondas, al ritmo de cada uno (v69.4)", () => {
-  // v84.2 el DJ no pagaba; v95.2 (él): paga como todos.
-  it("el DJ contratado, «Pagado» con su importe como todos", () => {
+  it("el DJ contratado no pagó nada: «Pagado», sin importe (v84.2)", () => {
     const evento = { fecha: "2026-12-11", precioAdulto: "45", precioNino: "20", edadNinoDesde: "2", edadNinoHasta: "12" };
     const yo = { datosCompletos: true, pagado: true, presente: false, anio: "1985" };
-    expect(rondasTablon({ ...yo, zona: "DJ" }, evento)[1].nota).toBe(`Pagado · ${euros(45)}`);
+    expect(rondasTablon({ ...yo, zona: "DJ" }, evento)[1].nota).toBe("Pagado");
     expect(rondasTablon(yo, evento)[1].nota).toBe(`Pagado · ${euros(45)}`);
   });
 
@@ -60,9 +59,9 @@ describe("lo que le falta, al abrir el tablón", () => {
     expect(pendientesDelTablon({ ...yo, anio: "2020" }, evento).importe).toBe(35);
   });
 
-  it("pagado, el importe no sale; el DJ sin pagar, sí (v95.2: paga como todos)", () => {
+  it("pagado, o el DJ que no paga: el importe no sale", () => {
     expect(pendientesDelTablon({ ...yo, pagado: true }, evento)).toBeNull();
-    expect(pendientesDelTablon({ ...yo, zona: "DJ" }, evento)).toEqual(pendientesDelTablon(yo, evento));
+    expect(pendientesDelTablon({ ...yo, zona: "DJ" }, evento)).toBeNull();
   });
 
   it("la foto de boda y las alergias, también ya pagado", () => {
