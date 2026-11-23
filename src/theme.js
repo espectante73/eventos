@@ -88,9 +88,11 @@ export const MARGEN_PANTALLA = 12;
 
 // El velo detrás de lo que se abre encima (él, v63.5): una ventana que hay
 // que atender o un menú desplegado. El marfil de la app, translúcido y
-// esmerilado: aclara el fondo en vez de oscurecerlo.
+// esmerilado: aclara el fondo en vez de oscurecerlo. Un poco menos blanco
+// desde v95.9 (él: «en todos los difuminados, un poquito más suave, no tan
+// blanco»): era 0,55.
 export const VELO = {
-  background: conAlfa(C.paper, 0.55),
+  background: conAlfa(C.paper, 0.42),
   backdropFilter: "blur(6px)",
   WebkitBackdropFilter: "blur(6px)",
 };

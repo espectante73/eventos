@@ -41,6 +41,10 @@ const ANCHO_PANEL = 158;
 // Cuánto hay que mover el dedo para que un toque pase a ser un arrastre
 // (panel persistente): por debajo, es un toque y la opción se usa.
 const UMBRAL_ARRASTRE = 6;
+// La capa de los menús: el velo del primero, su panel encima, y cada
+// submenú dos más arriba (su velo y su panel). Por encima de la barra de
+// ventanas del móvil (Z_BARRA, 10000), para que también quede difuminada.
+const Z_MENU = 10010;
 
 // Dónde dejó cada uno el panel persistente, en este aparato.
 function posicionGuardada(clave) {
@@ -266,7 +270,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio, conFon
               <div
                 data-velo-submenu
                 className="fixed inset-0"
-                style={{ ...VELO, zIndex: 9998 + 2 * nivel }}
+                style={{ ...VELO, zIndex: Z_MENU + 2 * nivel }}
                 onClick={onCerrarPropio}
               />
             )}
@@ -287,7 +291,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio, conFon
                 maxWidth: "calc(100vw - 2rem)",
                 maxHeight: pos.maxHeight,
                 padding: "4px 0",
-                zIndex: 9999 + 2 * nivel,
+                zIndex: Z_MENU + 1 + 2 * nivel,
                 ...(conFondo ? { background: C.ink, border: `1px solid ${C.gold}`, boxShadow: S.flotanteOscura } : {}),
               }}
             >
@@ -391,7 +395,11 @@ export const HALO = { inset: -DEDO * 1.5, ...VELO, ...mascaraFundida({ izquierda
 // tramo de edad de la Lista: «De [ ] a [ ] años»), con el mismo fondo y
 // borde que un submenú y el mismo colgar, cerrar y velo que el menú. Es una
 // función: recibe `cerrar`, para que Intro cierre el panel.
-export function MenuFlotante({ render, opciones = [], contenido = null, anchor = "right", persistente = null }) {
+// `veloEntero` (v95.9, él: «esta idea también cuando apriete el botón de
+// inicio»): el velo del primer menú a pantalla entera, como el de los
+// submenús, en vez de solo alrededor de sus botones. Lo lleva «Abrir
+// sección…»; los demás menús, solo alrededor (él, v63.6).
+export function MenuFlotante({ render, opciones = [], contenido = null, anchor = "right", persistente = null, veloEntero = false }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState(null);
   // Cuál de las filas de nivel superior tiene su submenú abierto (ver el
@@ -410,6 +418,10 @@ export function MenuFlotante({ render, opciones = [], contenido = null, anchor =
       setMarcoVelo(null);
       return;
     }
+    if (veloEntero) {
+      setMarcoVelo({ inset: 0 });
+      return;
+    }
     const r = listaRef.current.getBoundingClientRect();
     const { win } = realmDe(botonRef.current);
     const top = Math.max(0, r.top - DEDO);
@@ -423,7 +435,7 @@ export function MenuFlotante({ render, opciones = [], contenido = null, anchor =
       height: abajo - top,
       ...mascaraFundida({ izquierda: r.left - left, derecha: derecha - r.right, arriba: r.top - top, abajo: abajo - r.bottom }),
     });
-  }, [open, pos, persistente]);
+  }, [open, pos, persistente, veloEntero]);
 
   const abrir = () => {
     const r = botonRef.current.getBoundingClientRect();
@@ -634,7 +646,7 @@ export function MenuFlotante({ render, opciones = [], contenido = null, anchor =
           <>
           {/* El velo claro esmerilado detrás de los botones (él, v63.5-63.6).
               Tocarlo es tocar fuera: cierra. */}
-          {marcoVelo && <div data-velo-menu className="fixed" style={{ ...marcoVelo, ...VELO, zIndex: 9998 }} />}
+          {marcoVelo && <div data-velo-menu className="fixed" style={{ ...marcoVelo, ...VELO, zIndex: Z_MENU }} />}
           <div
             ref={listaRef}
             data-menu-panel
@@ -649,7 +661,7 @@ export function MenuFlotante({ render, opciones = [], contenido = null, anchor =
               width: contenido ? "max-content" : ANCHO_PANEL,
               maxWidth: "calc(100vw - 2rem)",
               padding: contenido ? "10px 12px" : "4px 0",
-              zIndex: 9999,
+              zIndex: Z_MENU + 1,
               ...(contenido ? { background: C.ink, border: `1px solid ${C.gold}`, boxShadow: S.flotanteOscura } : {}),
             }}
           >

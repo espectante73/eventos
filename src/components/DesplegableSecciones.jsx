@@ -238,6 +238,7 @@ export function BotonAbrirSeccion({ opciones, sello = 0, posicion = null }) {
   return (
     <MenuFlotante
       anchor="right"
+      veloEntero
       opciones={opciones}
       render={({ ref, open, toggle: abrirCerrar }) => {
         const boton = (

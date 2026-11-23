@@ -53,13 +53,13 @@ it("una ventana de pregunta sin texto no deja franja vacía", async () => {
 });
 
 // v63.5: lo que se abre encima aclara el fondo (velo marfil esmerilado),
-// no lo oscurece.
+// no lo oscurece. v95.9: un poco menos blanco (0,42; era 0,55).
 it("una ventana encima pone detrás el velo claro", async () => {
   const caja = document.createElement("div");
   document.body.appendChild(caja);
   const raiz = createRoot(caja);
   await act(async () => raiz.render(<ModalFlotante titulo="Mi cuenta" onCerrar={() => {}}>Algo</ModalFlotante>));
-  expect(document.querySelector(".modal-flotante-fondo").style.background).toBe("rgba(239, 233, 222, 0.55)");
+  expect(document.querySelector(".modal-flotante-fondo").style.background).toBe("rgba(239, 233, 222, 0.42)");
   await act(async () => raiz.unmount());
   caja.remove();
 });

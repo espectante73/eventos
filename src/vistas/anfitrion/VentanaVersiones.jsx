@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "95.9",
+    cambios: [
+      "Todos los difuminados de la app, un poco más suaves: menos blancos.",
+      "«Abrir sección…» difumina ahora toda la pantalla al abrirse, como los submenús, en vez de solo alrededor de sus botones.",
+    ],
+  },
+  {
     version: "95.8",
     cambios: [
       "Menús en el móvil: cada submenú que se abre deja detrás todo lo anterior difuminado, y solo él se ve nítido. Antes, en «Abrir sección… › Colaboradores › Formularios», la lista de colaboradores caía encima del primer menú y se mezclaban los botones.",

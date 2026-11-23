@@ -703,18 +703,19 @@ describe("el «Abrir sección…» del colaborador", () => {
       <VistaColaborador data={{ ...data, ...extra }} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
     );
 
-  // v63.5-63.6: al desplegarse, el velo claro esmerilado detrás de los
-  // botones y un dedo alrededor, no en toda la pantalla; tocarlo cierra.
-  it("desplegado, pone el velo claro detrás de sus botones", () => {
+  // v63.5: al desplegarse, el velo claro esmerilado detrás; tocarlo cierra.
+  // v95.9 (él: «esta idea también cuando apriete el botón de inicio»): a
+  // pantalla entera, como el de los submenús (en la v63.6 era solo un dedo
+  // alrededor de los botones), y un poco menos blanco.
+  it("desplegado, pone el velo claro detrás, a pantalla entera", () => {
     const vista = montarVista();
     vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
     const velo = document.body.querySelector("[data-velo-menu]");
     expect(velo, "el velo del menú").toBeTruthy();
-    expect(velo.style.background).toBe("rgba(239, 233, 222, 0.55)");
+    expect(velo.style.background).toBe("rgba(239, 233, 222, 0.42)");
     vista.desmontar();
-    // No a pantalla entera: a la medida de los botones.
-    expect(velo.classList.contains("inset-0")).toBe(false);
-    expect(velo.style.width).not.toBe("");
+    expect(velo.style.inset).toBe("0px");
+    expect(velo.style.width).toBe("");
   });
 
   it("lleva el sello encima, y ya no hay botones sueltos", () => {

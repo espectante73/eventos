@@ -140,8 +140,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
      `reglas-del-proyecto.test.js`).
 5. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
    protagonista, y lo que se abre encima aclara el fondo con `VELO`: tras
-   una ventana que atender, todo; tras un menú, solo alrededor de sus
-   botones; tras cada submenú, todo lo anterior (tocarlo, un paso atrás).
+   una ventana que atender, todo; tras «Abrir sección…» y cada submenú,
+   también todo (tocarlo, un paso atrás); tras otro menú, solo alrededor
+   de sus botones.
    Los textos de ayuda, al pie y
    plegados (`<details>`). Todo panel tiene su **salida ARRIBA y a la
    vista**, y salir deja la pantalla como estaba; un formulario acaba en
