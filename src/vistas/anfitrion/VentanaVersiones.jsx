@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "98.8",
+    cambios: [
+      "Acomodación, en el Mac: «Sin mesa» se pliega a la izquierda, en una tira estrecha con su nombre en vertical, y las mesas ganan el sitio. En la tira se siguen dejando familias. En el móvil se sigue plegando hacia arriba.",
+      "La X roja de quitar la mesa, en la esquina de arriba del recuadro verde; «Vaciar», abajo, a la altura del −.",
+    ],
+  },
+  {
     version: "98.7",
     cambios: [
       "Acomodación: «Sin mesa» se pliega con su flecha; plegada queda solo su cabecera, y en ella se pueden seguir dejando familias. Cada aparato recuerda cómo la dejaste.",

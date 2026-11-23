@@ -24,7 +24,7 @@
 // sitios, plano y quién se sienta dónde). Cargar una la pone como prueba,
 // mesas incluidas: mientras está cargada, también las mesas son prueba.
 import { useLayoutEffect, useRef, useState } from "react";
-import { Check, AlertTriangle, Lock, LockOpen, Plus, Minus, Bookmark, ChevronDown, ChevronUp, Map as IconoPlano } from "lucide-react";
+import { Check, AlertTriangle, Lock, LockOpen, Plus, Minus, Bookmark, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Map as IconoPlano } from "lucide-react";
 import { C, OP, R, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -476,7 +476,8 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
             </span>
           </span>
           <CirculoMesa numero={m.numero} tamano={72} letra={T.gigante} />
-          <span className="flex-1 flex flex-col items-end gap-1 zurdo:items-start">
+          {/* La X, en la esquina de arriba; «Vaciar», abajo, a la altura del − (él, v98.8). */}
+          <span className="flex-1 self-stretch flex flex-col items-end justify-between gap-1 zurdo:items-start">
             <BotonQuitar
               titulo={fijos > 0 ? "Tiene familias con su invitación enviada: no se puede quitar" : "Quitar esta mesa"}
               disabled={fijos > 0}
@@ -497,6 +498,58 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
       </div>
     );
   };
+
+  // La cabecera de «Sin mesa», como la de una mesa: arriba, su botón
+  // («Vaciar mesas», él, v75.1: aquí es adonde van todos); debajo, el
+  // título. Plegable (él, v98.7): plegada, en el móvil queda solo ella; en
+  // el Mac se pliega a la izquierda (él, v98.8: «plegado a la izquierda»),
+  // en una tira estrecha, y las mesas ganan el sitio. En las dos se siguen
+  // soltando familias. La flecha, del lado del pulgar; el título, en medio.
+  const cabeceraSinMesa = (
+    <div className="rounded px-2 py-1.5 mb-2" style={{ background: C.paperDark, color: C.ink, border: `2px dashed ${C.line}` }}>
+      <div data-controles className="flex justify-center">
+        <Boton variante="secundario" tamano="pequeno" titulo="Deja todas las mesas vacías, en la prueba; las mesas se quedan" disabled={sentados === 0} onClick={vaciarTodas}>
+          Vaciar mesas
+        </Boton>
+      </div>
+      <div className="mx-2 my-1.5" style={{ borderTop: `1px solid ${C.gold}` }} />
+      <div className="flex items-center gap-2 font-semibold zurdo:flex-row-reverse">
+        <span className="flex-1" />
+        <span>
+          Sin mesa <span style={CIFRA}>· {sinMesa.length}</span>
+        </span>
+        <span data-controles className="flex-1 flex justify-end zurdo:justify-start">
+          {/* En el móvil se pliega hacia arriba; en el Mac, a la izquierda. */}
+          <span className="sm:hidden">
+            <Boton
+              variante="secundario"
+              tamano="pequeno"
+              icono={sinMesaPlegada ? ChevronDown : ChevronUp}
+              titulo={sinMesaPlegada ? "Desplegar «Sin mesa»" : "Plegar «Sin mesa»"}
+              aria-expanded={!sinMesaPlegada}
+              onClick={plegarSinMesa}
+            />
+          </span>
+          <span className="hidden sm:inline-flex">
+            <Boton variante="secundario" tamano="pequeno" icono={ChevronLeft} titulo="Plegar «Sin mesa»" aria-expanded onClick={plegarSinMesa} />
+          </span>
+        </span>
+      </div>
+    </div>
+  );
+  const tiraSinMesa = (
+    <div
+      className="hidden sm:flex flex-col items-center gap-2 rounded py-1.5"
+      style={{ background: C.paperDark, color: C.ink, border: `2px dashed ${C.line}`, minHeight: 200 }}
+    >
+      <span data-controles>
+        <Boton variante="secundario" tamano="pequeno" icono={ChevronRight} titulo="Desplegar «Sin mesa»" aria-expanded={false} onClick={plegarSinMesa} />
+      </span>
+      <span className="font-semibold whitespace-nowrap" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}>
+        Sin mesa <span style={CIFRA}>· {sinMesa.length}</span>
+      </span>
+    </div>
+  );
 
   const familiaCambiando = cambiandoMesa ? familias.find((f) => f.representante.id === cambiandoMesa) : null;
 
@@ -592,39 +645,19 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
           // debajo (una por fila) y una sola barra para todo.
           <div className="flex flex-col sm:flex-row gap-3 overflow-y-auto sm:overflow-visible" style={{ flex: 1, minHeight: 0 }}>
             {/* Del mismo ancho que las mesas; en el móvil, centrada como ellas. */}
-            <div className="flex-shrink-0 mx-auto sm:mx-0 sm:overflow-y-auto" style={{ width: ancho, maxWidth: "100%" }}>
+            {/* Plegada, en el Mac, una tira estrecha (v98.8). */}
+            <div className={`flex-shrink-0 mx-auto sm:mx-0 sm:overflow-y-auto ${sinMesaPlegada ? "sm:!w-14" : ""}`} style={{ width: ancho, maxWidth: "100%" }}>
               <Columna
                 nombre="Sin mesa"
                 cabecera={
-                  // Como la cabecera de una mesa: arriba, su botón («Vaciar
-                  // mesas», él, v75.1: aquí es adonde van todos); debajo, el título.
-                  <div className="rounded px-2 py-1.5 mb-2" style={{ background: C.paperDark, color: C.ink, border: `2px dashed ${C.line}` }}>
-                    <div data-controles className="flex justify-center">
-                      <Boton variante="secundario" tamano="pequeno" titulo="Deja todas las mesas vacías, en la prueba; las mesas se quedan" disabled={sentados === 0} onClick={vaciarTodas}>
-                        Vaciar mesas
-                      </Boton>
-                    </div>
-                    <div className="mx-2 my-1.5" style={{ borderTop: `1px solid ${C.gold}` }} />
-                    {/* Plegable (él, v98.7): plegada, solo esta cabecera, y
-                        se sigue pudiendo soltar familias en ella. La flecha,
-                        del lado del pulgar; el título, en el centro. */}
-                    <div className="flex items-center gap-2 font-semibold zurdo:flex-row-reverse">
-                      <span className="flex-1" />
-                      <span>
-                        Sin mesa <span style={CIFRA}>· {sinMesa.length}</span>
-                      </span>
-                      <span data-controles className="flex-1 flex justify-end zurdo:justify-start">
-                        <Boton
-                          variante="secundario"
-                          tamano="pequeno"
-                          icono={sinMesaPlegada ? ChevronDown : ChevronUp}
-                          titulo={sinMesaPlegada ? "Desplegar «Sin mesa»" : "Plegar «Sin mesa»"}
-                          aria-expanded={!sinMesaPlegada}
-                          onClick={plegarSinMesa}
-                        />
-                      </span>
-                    </div>
-                  </div>
+                  sinMesaPlegada ? (
+                    <>
+                      <div className="sm:hidden">{cabeceraSinMesa}</div>
+                      {tiraSinMesa}
+                    </>
+                  ) : (
+                    cabeceraSinMesa
+                  )
                 }
                 familias={sinMesaPlegada ? [] : sinMesa}
                 cogida={cogida}
