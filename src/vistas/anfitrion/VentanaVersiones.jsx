@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "98.5",
+    cambios: [
+      "Acomodación, la cabecera de cada mesa: el número va en el círculo dorado de las tarjetas de acomodación y los sobres, en lugar de «Mesa 1», con la ocupación debajo. Poner y quitar sillas, en vertical; «Vaciar», debajo de la X roja; y sin la raya dorada.",
+    ],
+  },
+  {
     version: "98.4",
     cambios: [
       "Acomodación: al quitar una mesa, las demás se corren y quedan 1, 2, 3…, sin huecos; cada una se lleva a su gente, sus sitios y su lugar en el plano, como al arrastrarlas. Quien estaba en la quitada, sin mesa. Si alguna con invitaciones enviadas cambiara de número, no se quita y se dice.",

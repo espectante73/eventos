@@ -370,3 +370,20 @@ export function GrupoFamiliarInput({ value, onCommit, ...resto }) {
     />
   );
 }
+
+// El número de la mesa en su círculo dorado (él, v98.5): el mismo de las
+// tarjetas de acomodación y los sobres (relleno dorado claro, borde dorado
+// y la cifra en verde oscuro), en pantalla.
+export function CirculoMesa({ numero, tamano = 40 }) {
+  return (
+    <span
+      data-circulo-mesa={numero}
+      aria-label={`Mesa ${numero}`}
+      title={`Mesa ${numero}`}
+      className="inline-flex items-center justify-center flex-shrink-0 font-bold"
+      style={{ width: tamano, height: tamano, borderRadius: R.redondo, background: C.goldClaro, border: `2px solid ${C.gold}`, color: C.ink, fontSize: T.titulo, lineHeight: 1 }}
+    >
+      {numero}
+    </span>
+  );
+}

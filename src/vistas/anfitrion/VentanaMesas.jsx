@@ -29,7 +29,7 @@ import { C, OP, R, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
-import { RecuadroCifras } from "../../components/Widgets";
+import { RecuadroCifras, CirculoMesa } from "../../components/Widgets";
 import { PlanoMesas } from "../../components/PlanoMesas";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { MenuFlotante } from "../../components/MenuFlotante";
@@ -400,10 +400,15 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
         className="rounded px-2 py-1.5 mb-2"
         style={{ background: C.ink, color: C.goldClaro, cursor: arrastrarMesas ? "grab" : undefined }}
       >
-        {/* Arriba, los controles (él, v74.6); debajo, «Mesa 3 · 5/9». Las
+        {/* En una sola fila (él, v98.5): a un lado las sillas en vertical
+            (poner arriba, quitar abajo); en medio, el número en su círculo
+            dorado, el de las tarjetas, con la ocupación debajo; al otro,
+            quitar la mesa y debajo «Vaciar». Sin la raya dorada. Las
             alergias, en cada familia (v74.9). */}
-        <div data-controles className="flex items-center justify-between gap-1">
-          <span className="flex items-center gap-1" title={`${m.capacidad} sitios`}>
+        <div data-controles className="flex items-center justify-between gap-1 zurdo:flex-row-reverse">
+          <span className="flex flex-col items-center gap-0.5" title={`${m.capacidad} sitios`}>
+            <Boton variante="secundario" oscuro tamano="pequeno" icono={Plus} titulo="Un sitio más" onClick={() => cambiarSitios(m.numero, m.capacidad + 1)} />
+            <span style={CIFRA}>{m.capacidad}</span>
             <Boton
               variante="secundario"
               oscuro
@@ -413,31 +418,29 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
               disabled={m.capacidad <= Math.max(ocupados, 1)}
               onClick={() => cambiarSitios(m.numero, m.capacidad - 1)}
             />
-            <span style={CIFRA}>{m.capacidad}</span>
-            <Boton variante="secundario" oscuro tamano="pequeno" icono={Plus} titulo="Un sitio más" onClick={() => cambiarSitios(m.numero, m.capacidad + 1)} />
           </span>
-          <Boton variante="secundario" oscuro tamano="pequeno" titulo="Deja sus familias sin mesa, en la prueba; las que ya tienen su invitación se quedan" disabled={ocupados - fijos <= 0} onClick={() => vaciar(m.numero)}>
-            Vaciar
-          </Boton>
-          <BotonQuitar
-            titulo={fijos > 0 ? "Tiene familias con su invitación enviada: no se puede quitar" : "Quitar esta mesa"}
-            disabled={fijos > 0}
-            pregunta={{
-              titulo: `¿Quitar la mesa ${m.numero}?`,
-              texto:
-                (ocupados > 0 ? `Tiene ${ocupados} invitado${ocupados !== 1 ? "s" : ""}: volverán a quedar sin mesa. No se borra a nadie.` : "Está vacía.") +
-                (ordenadas.filter((x) => x.numero !== m.numero).some((x, k) => x.numero !== k + 1) ? " Las demás quedan 1, 2, 3…, cada una con su gente." : ""),
-              rotulo: "Sí",
-            }}
-            onClick={() => quitarMesa(m.numero)}
-          />
-        </div>
-        {/* Una línea dorada fina entre los dos, sin llegar al borde (él, v74.8). */}
-        <div className="mx-2 my-1.5" style={{ borderTop: `1px solid ${C.gold}` }} />
-        <div className="flex items-baseline justify-center gap-2 font-semibold">
-          Mesa {m.numero}
-          <span className="px-1 rounded" style={{ ...CIFRA, ...(ocupados > m.capacidad ? { background: C.peligro, color: C.blanco } : {}) }}>
-            {ocupados}/{m.capacidad}
+          <span className="flex flex-col items-center gap-1 font-semibold">
+            <CirculoMesa numero={m.numero} />
+            <span className="px-1 rounded" style={{ ...CIFRA, ...(ocupados > m.capacidad ? { background: C.peligro, color: C.blanco } : {}) }}>
+              {ocupados}/{m.capacidad}
+            </span>
+          </span>
+          <span className="flex flex-col items-end gap-1 zurdo:items-start">
+            <BotonQuitar
+              titulo={fijos > 0 ? "Tiene familias con su invitación enviada: no se puede quitar" : "Quitar esta mesa"}
+              disabled={fijos > 0}
+              pregunta={{
+                titulo: `¿Quitar la mesa ${m.numero}?`,
+                texto:
+                  (ocupados > 0 ? `Tiene ${ocupados} invitado${ocupados !== 1 ? "s" : ""}: volverán a quedar sin mesa. No se borra a nadie.` : "Está vacía.") +
+                  (ordenadas.filter((x) => x.numero !== m.numero).some((x, k) => x.numero !== k + 1) ? " Las demás quedan 1, 2, 3…, cada una con su gente." : ""),
+                rotulo: "Sí",
+              }}
+              onClick={() => quitarMesa(m.numero)}
+            />
+            <Boton variante="secundario" oscuro tamano="pequeno" titulo="Deja sus familias sin mesa, en la prueba; las que ya tienen su invitación se quedan" disabled={ocupados - fijos <= 0} onClick={() => vaciar(m.numero)}>
+              Vaciar
+            </Boton>
           </span>
         </div>
       </div>
