@@ -224,14 +224,18 @@ it("«Añadir mesa» la crea al momento, con el número siguiente", () => {
   vista.desmontar();
 });
 
-it("quitar una mesa pregunta antes; con «Sí», quien estaba en ella se queda sin mesa", async () => {
-  const { vista, guardados, mesasGuardadas, enMesa, boton } = dibujar();
+// v98.4 (él): al quitar una, las demás se renumeran; antes quedaba un hueco.
+it("quitar una mesa pregunta antes; con «Sí», quien estaba en ella se queda sin mesa y las demás quedan 1, 2, 3…", async () => {
+  const conGente = [...invitados, g("4", "Pérez", "Loli", ROL_FAMILIAR.SUELTO, { mesa: 7 })];
+  const { vista, guardados, mesasGuardadas, enMesa, boton } = dibujar({ lista: conGente });
   vista.pulsar(enMesa(6, "Quitar esta mesa"));
   expect(document.body.textContent).toContain("¿Quitar la mesa 6?");
+  expect(document.body.textContent).toContain("Las demás quedan 1, 2, 3…, cada una con su gente.");
   expect(mesasGuardadas).toEqual([]);
   await act(async () => boton("Sí").dispatchEvent(new MouseEvent("click", { bubbles: true })));
-  expect(mesasGuardadas.at(-1).map((m) => m.numero)).toEqual([7]);
+  expect(mesasGuardadas.at(-1)).toEqual([{ numero: 1, capacidad: 9 }]);
   expect(guardados.at(-1).find((x) => x.id === "3").mesa).toBe(null);
+  expect(guardados.at(-1).find((x) => x.id === "4").mesa, "la de la 7 se va con su mesa, que ahora es la 1").toBe(1);
   vista.desmontar();
 });
 

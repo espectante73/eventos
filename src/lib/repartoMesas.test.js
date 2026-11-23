@@ -1,7 +1,7 @@
 // v74 (él): probar el reparto moviendo familias enteras; que no deje sentar
 // a más de los que caben; y nada se guarda hasta «Aplicar a la Lista».
 import { describe, it, expect } from "vitest";
-import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador, moverMesa, vaciarMesaEnBorrador, fijosEnMesa } from "./repartoMesas";
+import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador, moverMesa, vaciarMesaEnBorrador, fijosEnMesa, quitarMesaRenumerando } from "./repartoMesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const g = (id, apellido, nombre, rol, extra = {}) => ({ id, apellido, nombre, grupoFamiliar: `${apellido}01`, rolFamiliar: rol, confirmado: true, mesa: null, ...extra });
@@ -258,5 +258,44 @@ describe("con la invitación enviada, la mesa queda fija (v83.1)", () => {
 
   it("una familia sin invitación enviada o sin mesa no está fija", () => {
     expect(moverFamilia(lista, {}, "d", 2, dos, { ordenFamiliares: { Sentar01: { invitacionEnviada: true } } }).aviso).toBe("");
+  });
+});
+
+// v98.4 (él): «al ordenar o mover las mesas se renumeran»; al quitar la 1
+// quedaban empezando por la 2.
+describe("quitarMesaRenumerando", () => {
+  const persona = (id, familia, mesa) => g(id, familia, "X", ROL_FAMILIAR.SUELTO, { mesa });
+  const tres = [
+    { numero: 1, capacidad: 10, posX: 1, posY: 1 },
+    { numero: 2, capacidad: 8, posX: 2, posY: 2 },
+    { numero: 3, capacidad: 6, posX: 3, posY: 3 },
+  ];
+  const lista = [persona("a", "Uno", 1), persona("b", "Dos", 2), persona("c", "Tres", 3), persona("d", "Nadie", null)];
+
+  it("quitar la 1: las demás bajan un número con su gente, sus sitios y su lugar en el plano; los de la 1, sin mesa", () => {
+    const { invitados, mesas, aviso } = quitarMesaRenumerando(lista, tres, 1);
+    expect(aviso).toBe("");
+    expect(mesas).toEqual([
+      { numero: 1, capacidad: 8, posX: 2, posY: 2 },
+      { numero: 2, capacidad: 6, posX: 3, posY: 3 },
+    ]);
+    expect(invitados.map((x) => x.mesa)).toEqual([null, 1, 2, null]);
+    expect(invitados[3], "quien no cambia, el mismo objeto").toBe(lista[3]);
+  });
+  it("con huecos de antes, también los cierra", () => {
+    const conHuecos = [{ numero: 2, capacidad: 5 }, { numero: 5, capacidad: 6 }, { numero: 9, capacidad: 7 }];
+    const { invitados, mesas } = quitarMesaRenumerando([persona("a", "A", 5), persona("b", "B", 9)], conHuecos, 2);
+    expect(mesas.map((m) => m.numero)).toEqual([1, 2]);
+    expect(invitados.map((x) => x.mesa)).toEqual([1, 2]);
+  });
+  it("una mesa que no existe: nada cambia", () => {
+    expect(quitarMesaRenumerando(lista, tres, 9)).toEqual({ invitados: lista, mesas: tres, aviso: "" });
+  });
+  it("con invitaciones enviadas: ni la suya se quita, ni se quita otra que le cambie el número", () => {
+    const orden = { Dos01: { invitacionEnviada: true } };
+    expect(quitarMesaRenumerando(lista, tres, 2, orden)).toMatchObject({ invitados: lista, mesas: tres, aviso: "No se puede: la mesa 2 tiene invitaciones enviadas." });
+    expect(quitarMesaRenumerando(lista, tres, 1, orden).aviso).toBe("No se puede: la mesa 2 tiene invitaciones enviadas y cambiaría de número.");
+    // La última sí: no cambia el número de nadie.
+    expect(quitarMesaRenumerando(lista, tres, 3, orden).mesas.map((m) => m.numero)).toEqual([1, 2]);
   });
 });

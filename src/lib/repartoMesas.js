@@ -84,17 +84,43 @@ export function moverMesa(invitados, borrador, mesas, desde, hasta, ordenFamilia
   if (i === -1 || j === -1 || i === j) return { borrador, mesas, aviso: "" };
   const [cogida] = orden.splice(i, 1);
   orden.splice(j, 0, cogida);
-  const numeroNuevo = new Map(orden.map((m, k) => [m.numero, k + 1]));
-  const fijas = [...new Set(invitados.filter((g) => mesaFija(g, ordenFamiliares) && numeroNuevo.has(g.mesa) && numeroNuevo.get(g.mesa) !== g.mesa).map((g) => g.mesa))].sort((a, b) => a - b);
-  if (fijas.length > 0) {
-    return {
-      borrador,
-      mesas,
-      aviso: `No se puede: ${fijas.length === 1 ? `la mesa ${fijas[0]} tiene` : `las mesas ${fijas.join(", ")} tienen`} invitaciones enviadas y cambiaría${fijas.length === 1 ? "" : "n"} de número.`,
-    };
-  }
+  const { numeroNuevo, aviso } = renumerar(invitados, orden, ordenFamiliares);
+  if (aviso) return { borrador, mesas, aviso };
   const propuesta = conBorrador(invitados, borrador).map((g) => (numeroNuevo.has(g.mesa) ? { ...g, mesa: numeroNuevo.get(g.mesa) } : g));
   return { borrador: borradorDesde(invitados, propuesta), mesas: orden.map((m, k) => ({ ...m, numero: k + 1 })), aviso: "" };
+}
+
+// Las mesas, 1, 2, 3… en el orden dado: el número nuevo de cada una. Si
+// alguna con invitaciones enviadas cambiaría de número, el `aviso`.
+function renumerar(invitados, orden, ordenFamiliares) {
+  const numeroNuevo = new Map(orden.map((m, k) => [m.numero, k + 1]));
+  const fijas = [...new Set(invitados.filter((g) => mesaFija(g, ordenFamiliares) && numeroNuevo.has(g.mesa) && numeroNuevo.get(g.mesa) !== g.mesa).map((g) => g.mesa))].sort((a, b) => a - b);
+  const aviso = fijas.length
+    ? `No se puede: ${fijas.length === 1 ? `la mesa ${fijas[0]} tiene` : `las mesas ${fijas.join(", ")} tienen`} invitaciones enviadas y cambiaría${fijas.length === 1 ? "" : "n"} de número.`
+    : "";
+  return { numeroNuevo, aviso };
+}
+
+// Quitar una mesa (él, v98.4: «al ordenar o mover las mesas se renumeran»):
+// las demás quedan 1, 2, 3…, sin huecos, y cada una se lleva a su gente,
+// sus sitios y su lugar en el plano. Quien estaba en ella, sin mesa; no se
+// borra a nadie. Como al moverlas, una mesa con invitaciones enviadas no
+// cambia de número: si fuera a cambiar, no se quita y se dice. Recibe la
+// lista que se ve (la de verdad, o la de la prueba) y devuelve
+// { invitados, mesas, aviso }.
+export function quitarMesaRenumerando(invitados, mesas, numero, ordenFamiliares) {
+  const orden = [...mesas].sort((a, b) => a.numero - b.numero).filter((m) => m.numero !== numero);
+  if (orden.length === mesas.length) return { invitados, mesas, aviso: "" };
+  if (invitados.some((g) => g.mesa === numero && mesaFija(g, ordenFamiliares))) {
+    return { invitados, mesas, aviso: `No se puede: la mesa ${numero} tiene invitaciones enviadas.` };
+  }
+  const { numeroNuevo, aviso } = renumerar(invitados, orden, ordenFamiliares);
+  if (aviso) return { invitados, mesas, aviso };
+  const siguiente = invitados.map((g) => {
+    if (g.mesa === numero) return { ...g, mesa: null };
+    return numeroNuevo.has(g.mesa) && numeroNuevo.get(g.mesa) !== g.mesa ? { ...g, mesa: numeroNuevo.get(g.mesa) } : g;
+  });
+  return { invitados: siguiente, mesas: orden.map((m, k) => ({ ...m, numero: k + 1 })), aviso: "" };
 }
 
 // «Vaciar» una mesa, en la prueba: todas sus familias a «Sin mesa».

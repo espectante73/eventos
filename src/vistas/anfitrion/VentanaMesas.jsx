@@ -59,6 +59,7 @@ import {
   memoriaDesde,
   conMemoria,
   cargarMemoria,
+  quitarMesaRenumerando,
 } from "../../lib/repartoMesas";
 
 // El ancho de una columna, una sola vez (norma 6): 224 px = `sm:w-56` de
@@ -364,17 +365,23 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   };
   const cambiarSitios = (numero, capacidad) => cambiarMesas(mesas.map((m) => (m.numero === numero ? { ...m, capacidad } : m)));
   // Quien estaba en ella se queda sin mesa, en la Lista y en la prueba; no
-  // se borra a nadie.
-  const quitarMesa = (numero) => {
-    const sinEsaMesa = (lista) => lista.map((g) => (g.mesa === numero ? { ...g, mesa: null } : g));
+  // se borra a nadie. Las demás quedan 1, 2, 3…, cada una con su gente (él,
+  // v98.4), con la regla de lib/repartoMesas.js.
+  const quitarMesa = async (numero) => {
+    limpiarAvisos();
     if (prueba.mesas) {
-      cambiar({ mesas: mesas.filter((m) => m.numero !== numero), borrador: borradorDesde(invitados, sinEsaMesa(vista)) });
-      return;
+      const { invitados: enLaPrueba, mesas: siguientes, aviso: motivo } = quitarMesaRenumerando(vista, mesas, numero, ordenFamiliares);
+      if (motivo) return setAviso(motivo);
+      return cambiar({ mesas: siguientes, borrador: borradorDesde(invitados, enLaPrueba) });
     }
-    const lista = sinEsaMesa(invitados);
-    if (invitados.some((g) => g.mesa === numero)) persistInvitados(lista);
-    persistMesas(mesas.filter((m) => m.numero !== numero));
-    setBorrador(borradorDesde(lista, sinEsaMesa(conBorrador(lista, borrador))));
+    const { invitados: lista, mesas: siguientes, aviso: motivo } = quitarMesaRenumerando(invitados, mesas, numero, ordenFamiliares);
+    if (motivo) return setAviso(motivo);
+    // Primero las mesas, y esperando: un invitado no puede apuntar a un
+    // número que todavía no existe (como al aplicar).
+    if (await persistMesas(siguientes)) return;
+    if (lista.some((g, k) => g !== invitados[k])) persistInvitados(lista);
+    // La prueba a medias, con los números nuevos.
+    if (Object.keys(borrador).length) setBorrador(borradorDesde(lista, quitarMesaRenumerando(vista, mesas, numero, ordenFamiliares).invitados));
   };
 
   // Con ratón, la cabecera entera se arrastra (él, v83); en el móvil, no.
@@ -417,7 +424,9 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
             disabled={fijos > 0}
             pregunta={{
               titulo: `¿Quitar la mesa ${m.numero}?`,
-              texto: ocupados > 0 ? `Tiene ${ocupados} invitado${ocupados !== 1 ? "s" : ""}: volverán a quedar sin mesa. No se borra a nadie.` : "Está vacía.",
+              texto:
+                (ocupados > 0 ? `Tiene ${ocupados} invitado${ocupados !== 1 ? "s" : ""}: volverán a quedar sin mesa. No se borra a nadie.` : "Está vacía.") +
+                (ordenadas.filter((x) => x.numero !== m.numero).some((x, k) => x.numero !== k + 1) ? " Las demás quedan 1, 2, 3…, cada una con su gente." : ""),
               rotulo: "Sí",
             }}
             onClick={() => quitarMesa(m.numero)}
@@ -588,7 +597,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
             <p className="mt-2" style={{ opacity: OP.secundario }}>
               Arrastra cada familia a su mesa; en el móvil, tócala y luego toca la mesa. Sombreadas, las que aún no han
               confirmado: su sitio queda reservado. Sentar, Vaciar y Auto-asignar son una prueba hasta «Aplicar a la
-              Lista»; las mesas y sus sitios se guardan al momento. Con candado, las familias que ya tienen su invitación: su mesa queda fija; tócalas si hubiera que cambiarla. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba.
+              Lista»; las mesas y sus sitios se guardan al momento. Con candado, las familias que ya tienen su invitación: su mesa queda fija; tócalas si hubiera que cambiarla. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba. Al quitar una, las demás se corren y quedan 1, 2, 3…
             </p>
           </details>
           <Boton variante="secundario" onClick={descartar} disabled={!hayPrueba}>

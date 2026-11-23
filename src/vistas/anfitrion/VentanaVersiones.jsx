@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "98.4",
+    cambios: [
+      "Acomodación: al quitar una mesa, las demás se corren y quedan 1, 2, 3…, sin huecos; cada una se lleva a su gente, sus sitios y su lugar en el plano, como al arrastrarlas. Quien estaba en la quitada, sin mesa. Si alguna con invitaciones enviadas cambiara de número, no se quita y se dice.",
+    ],
+  },
+  {
     version: "98.3",
     cambios: [
       "Al cambiar el código de una familia (por ejemplo «Luis» por «Luis03»), sus fotos de boda y de aniversario, el QR de su invitación y su orden se van con ella al código nuevo. Antes se quedaban colgando del viejo y no se veían. Si el código nuevo ya tiene sus fotos, no se pisan.",
