@@ -140,19 +140,24 @@ function hallazgo(clave, titulo, ayuda, personas, tipo = "error") {
   return { clave, titulo, ayuda, tipo, personas };
 }
 
+// Qué fotos tiene una familia, dicho como se le enseña: «foto de boda»,
+// «foto de aniversario». Lo usan la Revisión y la pregunta antes de borrar
+// a la última persona de una familia (norma 7).
+export function fotosDeLaFamilia(familia, { fotosFamiliares = {}, fotosAniversario = {}, fotosBodaFinal = {} } = {}) {
+  return [(fotosFamiliares[familia] || fotosBodaFinal[familia]) && "foto de boda", fotosAniversario[familia] && "foto de aniversario"].filter(Boolean);
+}
+
 // Fotos sin familia (él, v98.3): las fotos cuelgan del código de la
-// familia (`claveInvitacion`). Si ya nadie lleva ese código —se cambió
-// antes de que la base las mudara sola, o el nuevo ya tenía las suyas—,
-// no se ven en ninguna parte. Devuelve `[{ familia, que }]`.
-export function fotosSinFamilia(invitados = [], { fotosFamiliares = {}, fotosAniversario = {}, fotosBodaFinal = {} } = {}) {
+// familia (`claveInvitacion`). Si ya nadie lleva ese código —se borró a
+// toda la familia antes de la v99.5, o se cambió el código y el nuevo ya
+// tenía las suyas—, no se ven en ninguna parte. Devuelve `[{ familia, que }]`.
+export function fotosSinFamilia(invitados = [], fotos = {}) {
+  const { fotosFamiliares = {}, fotosAniversario = {}, fotosBodaFinal = {} } = fotos;
   const conGente = new Set(invitados.map(claveInvitacion));
   const familias = new Set([fotosFamiliares, fotosAniversario, fotosBodaFinal].flatMap((m) => Object.keys(m)));
   return [...familias]
     .filter((f) => f && !conGente.has(f))
-    .map((familia) => ({
-      familia,
-      que: [(fotosFamiliares[familia] || fotosBodaFinal[familia]) && "foto de boda", fotosAniversario[familia] && "foto de aniversario"].filter(Boolean),
-    }))
+    .map((familia) => ({ familia, que: fotosDeLaFamilia(familia, fotos) }))
     .filter((x) => x.que.length)
     .sort((a, b) => a.familia.localeCompare(b.familia, "es"));
 }
@@ -545,12 +550,21 @@ function todosLosHallazgos(invitados = [], evento = {}, colaboradores = [], foto
       hallazgo(
         "fotosSinFamilia",
         "Fotos sin familia",
-        "Son de un código de familia que ya no lleva nadie, así que no se ven en ninguna parte. Para devolverlas, pon ese código a su familia en la Lista.",
+        "Son de una familia que ya no está en la Lista, así que no se ven en ninguna parte. Si se borró, bórralas con la papelera. Si sigue en la Lista con otro código, ponle este y vuelven a verse.",
+        // v99.5 (él: «fotos que no hay de personas que fueron eliminadas»):
+        // la papelera las borra; antes solo se podían devolver.
         sueltas.map((s) => ({
           id: `fotos-${s.familia}`,
           etiqueta: `«${s.familia}»`,
-          detalle: s.que.join(" y "),
+          // Corto, para que la papelera quepa al lado en el móvil (norma 6).
+          detalle: s.que.map((q) => q.replace(/^foto de /, "")).join(" y "),
           filtros: { texto: apellidoDelGrupo(s.familia) || s.familia },
+          familia: s.familia,
+          borrar: {
+            titulo: "¿Borrar estas fotos?",
+            texto: `Se borran para siempre la ${s.que.join(" y la ")} de «${s.familia}».`,
+            rotulo: "Sí, eliminar",
+          },
         }))
       )
     );

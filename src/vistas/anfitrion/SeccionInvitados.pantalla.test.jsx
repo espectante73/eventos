@@ -249,6 +249,64 @@ describe("eliminar desde la Lista a quien es colaborador", () => {
 });
 
 
+// v99.5 (él): las fotos de una familia borrada se quedaban en «Fotos sin
+// familia». Ahora se van con su última persona, y la pregunta lo dice.
+describe("eliminar a la última de su familia", () => {
+  const montarCon = (extra) =>
+    montar(
+      <SeccionInvitados
+        data={{ ...data, fotosFamiliares: { Abrante01: "boda/abrante01.jpg", Pacheco01: "boda/pacheco01.jpg" }, fotosAniversario: {}, fotosBodaFinal: {}, ...extra }}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante={null}
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+  const papeleraDe = (nombre) => [...document.body.querySelectorAll("button")].find((b) => b.getAttribute("aria-label") === `Eliminar a ${nombre}`);
+
+  it("la pregunta dice que también se borran sus fotos, y al decir «Sí, eliminar» se borran", async () => {
+    const guardados = [];
+    const borradas = [];
+    const vista = montarCon({
+      persistInvitados: async (lista) => (guardados.push(lista.map((g) => g.id)), null),
+      borrarFotosDeFamilias: async (familias) => (borradas.push(familias), null),
+    });
+    vista.pulsar(papeleraDe("Abrante, Loly"));
+    expect(document.body.textContent).toContain("Es la última persona de «Abrante01»: también se borran la foto de boda.");
+    const si = [...document.body.querySelectorAll("button")].find((b) => b.textContent === "Sí, eliminar");
+    await act(async () => si.click());
+    expect(guardados).toEqual([["g1", "g2", "g3", "g4"]]);
+    expect(borradas).toEqual([["Abrante01"]]);
+    vista.desmontar();
+  });
+
+  it("si queda alguien de su familia, ni lo dice ni borra fotos", async () => {
+    const borradas = [];
+    const vista = montarCon({ persistInvitados: async () => null, borrarFotosDeFamilias: async (f) => (borradas.push(f), null) });
+    vista.pulsar(papeleraDe("Pacheco, Lucía"));
+    expect(document.body.textContent).not.toContain("Es la última persona de");
+    const si = [...document.body.querySelectorAll("button")].find((b) => b.textContent === "Sí, eliminar");
+    await act(async () => si.click());
+    expect(borradas).toEqual([]);
+    vista.desmontar();
+  });
+
+  it("si no se pudo guardar la Lista, las fotos no se tocan", async () => {
+    const borradas = [];
+    const vista = montarCon({ persistInvitados: async () => new Error("red"), borrarFotosDeFamilias: async (f) => (borradas.push(f), null) });
+    vista.pulsar(papeleraDe("Abrante, Loly"));
+    const si = [...document.body.querySelectorAll("button")].find((b) => b.textContent === "Sí, eliminar");
+    await act(async () => si.click());
+    expect(borradas).toEqual([]);
+    vista.desmontar();
+  });
+});
+
 // Las dos listas para acomodadores salen del Imprimir de la Lista (él,
 // v54.1): sin pantalla nueva, y solo ahí, no en canciones ni alergias.
 describe("Imprimir: la lista para acomodadores", () => {

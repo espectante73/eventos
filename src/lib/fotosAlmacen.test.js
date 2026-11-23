@@ -7,6 +7,7 @@ import {
   nombreDescargaBoda,
   faltaParaEncargo,
   quitarNoConFoto,
+  sinFotosDeFamilias,
   matrimoniosParaEncargo,
   hojaDeEncargo,
 } from "./fotosAlmacen";
@@ -161,5 +162,33 @@ describe("foto de boda o «No», nunca las dos (v82.9)", () => {
   it("sin nada que limpiar, el mismo objeto", () => {
     const sinBoda = { b: true };
     expect(quitarNoConFoto(sinBoda, { a: "boda/a.jpg" })).toBe(sinBoda);
+  });
+});
+
+// v99.5 (él): las fotos de una familia que se va se borran, no se quedan
+// colgando en «Fotos sin familia».
+describe("las fotos de una familia que se va", () => {
+  const fotos = {
+    boda: { Luis05: "boda/luis05.jpg", Abreu: "boda/abreu.jpg" },
+    aniversario: { Luis05: "aniversario/luis05.jpg" },
+    bodaFinal: { Luis05: "data:image/jpeg;base64,AAA" },
+    sinBoda: { Gil: true },
+  };
+  it("vacía sus fotos en los cuatro mapas, deja las demás y da las rutas del cajón", () => {
+    const r = sinFotosDeFamilias(fotos, ["Luis05", "Gil", "Nadie"]);
+    expect(r.familias).toEqual(["Luis05", "Gil"]);
+    expect(r.boda).toEqual({ Luis05: "", Abreu: "boda/abreu.jpg" });
+    expect(r.aniversario).toEqual({ Luis05: "" });
+    expect(r.bodaFinal).toEqual({ Luis05: "" });
+    expect(r.sinBoda).toEqual({ Gil: false });
+    // La de base64 no está en el cajón: no hay archivo que borrar.
+    expect(r.rutas).toEqual(["boda/luis05.jpg", "aniversario/luis05.jpg"]);
+  });
+  it("sin nada de esas familias, los mismos mapas y ninguna ruta", () => {
+    const r = sinFotosDeFamilias(fotos, ["Nadie"]);
+    expect(r.familias).toEqual([]);
+    expect(r.boda).toBe(fotos.boda);
+    expect(r.sinBoda).toBe(fotos.sinBoda);
+    expect(r.rutas).toEqual([]);
   });
 });

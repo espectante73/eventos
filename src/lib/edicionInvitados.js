@@ -200,6 +200,15 @@ export function eliminarInvitado(invitados, id, colaboradores = []) {
   return { invitados: siguiente, aviso };
 }
 
+// Las familias que se quedan sin nadie al borrar (v99.5): las de quien ya no
+// está, si nadie más lleva su código. Un cambio de código no cuenta (la
+// persona sigue): de eso se ocupa la base, que muda las fotos.
+export function familiasQueSeQuedanSinNadie(antes = [], despues = []) {
+  const siguen = new Set(despues.map((g) => g.id));
+  const conGente = new Set(despues.map(claveInvitacion));
+  return [...new Set(antes.filter((g) => !siguen.has(g.id)).map(claveInvitacion))].filter((f) => f && !conGente.has(f));
+}
+
 // La pregunta antes de eliminar a un invitado que es colaborador. Texto del
 // usuario, palabra por palabra (v53.8).
 export const PREGUNTA_ELIMINAR_COLABORADOR_DESDE_INVITADOS =

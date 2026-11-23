@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { revisarInvitados, revisarConExcepciones, fotosSinFamilia } from "./revisionInvitados";
+import { revisarInvitados, revisarConExcepciones, fotosSinFamilia, fotosDeLaFamilia } from "./revisionInvitados";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const persona = (extra) => ({
@@ -402,7 +402,26 @@ describe("Fotos sin familia", () => {
   it("la Revisión las enseña como error, sin botón de excepción, y buscando su apellido", () => {
     const h = revisarInvitados(lista, {}, [], fotos).find((x) => x.clave === "fotosSinFamilia");
     expect(h.tipo).toBe("error");
-    expect(h.personas).toEqual([{ id: "fotos-Luis", etiqueta: "«Luis»", detalle: "foto de boda y foto de aniversario", filtros: { texto: "Luis" } }]);
+    expect(h.personas).toEqual([
+      {
+        id: "fotos-Luis",
+        etiqueta: "«Luis»",
+        detalle: "boda y aniversario",
+        filtros: { texto: "Luis" },
+        familia: "Luis",
+        borrar: { titulo: "¿Borrar estas fotos?", texto: "Se borran para siempre la foto de boda y la foto de aniversario de «Luis».", rotulo: "Sí, eliminar" },
+      },
+    ]);
+  });
+  // v99.5 (él): las de una familia borrada no se pueden «devolver».
+  it("la ayuda dice que se borran con la papelera si la familia se borró", () => {
+    const h = revisarInvitados(lista, {}, [], fotos).find((x) => x.clave === "fotosSinFamilia");
+    expect(h.ayuda).toContain("Si se borró, bórralas con la papelera");
+  });
+  it("qué fotos tiene una familia, dicho como se enseña", () => {
+    expect(fotosDeLaFamilia("Luis", fotos)).toEqual(["foto de boda", "foto de aniversario"]);
+    expect(fotosDeLaFamilia("Luis03", fotos)).toEqual([]);
+    expect(fotosDeLaFamilia("Otra", { fotosBodaFinal: { Otra: "boda-final/otra.jpg" } })).toEqual(["foto de boda"]);
   });
   it("sin fotos, nada", () => {
     expect(revisarInvitados(lista).map((x) => x.clave)).not.toContain("fotosSinFamilia");

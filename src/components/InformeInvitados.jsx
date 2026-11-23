@@ -14,7 +14,9 @@ import { BotonQuitar } from "./PreguntaSeguridad";
 
 // `excepciones`: los casos aceptados a propósito (lib/revisionInvitados.js).
 // `onExcepcion(persona, hallazgo)` / `onQuitarExcepcion(persona, clave)`.
-export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerrar, onExcepcion, onQuitarExcepcion }) {
+// `onBorrar(item, hallazgo)`: lo que trae `borrar` (su pregunta) se puede
+// borrar desde aquí, con la papelera (v99.5: «Fotos sin familia»).
+export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerrar, onExcepcion, onQuitarExcepcion, onBorrar }) {
   // Nace ABIERTO: se llega hasta aquí desde "Acciones" → Revisión, así
   // que quien lo abre quiere verlo ya, no volver a desplegarlo.
   const [abierto, setAbierto] = useState(true);
@@ -129,6 +131,7 @@ export function InformeInvitados({ hallazgos, excepciones = [], onBuscar, onCerr
                         Excepción
                       </Boton>
                     )}
+                    {g.borrar && onBorrar && <BotonQuitar borrar titulo={`Borrar ${g.etiqueta || ""}`.trim()} pregunta={g.borrar} onClick={() => onBorrar(g, h)} />}
                   </span>
                 ))}
                 {h.personas.length > 12 && (

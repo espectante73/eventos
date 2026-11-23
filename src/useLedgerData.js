@@ -11,7 +11,7 @@ import { miembrosDesdeLista } from "./lib/familiasColaborador";
 import { respuestaImpago } from "./lib/impagos";
 import { datosCompletos } from "./lib/invitados";
 import { leerEvento } from "./lib/leerEvento";
-import { quitarNoConFoto } from "./lib/fotosAlmacen";
+import { quitarNoConFoto, sinFotosDeFamilias, borrarFotosDelAlmacen } from "./lib/fotosAlmacen";
 import { claveInvitacion } from "./lib/mesas";
 
 const EVENTO_POR_DEFECTO = {
@@ -682,6 +682,44 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
       setFotosSinBoda(anterior);
       fotosSinBodaRef.current = anterior;
     }
+  }, [guardarFilasDeFotos]);
+
+  // Las fotos de las familias que se van (v99.5): al borrar a su última
+  // persona en la Lista, o con la papelera de «Fotos sin familia». Primero
+  // la fila (deja de verse en la app) y después los archivos del cajón: al
+  // revés, un fallo dejaría la fila apuntando a un archivo que ya no está.
+  // Devuelve el error, si lo hay (ya avisado).
+  const borrarFotosDeFamilias = useCallback(async (familias) => {
+    const r = sinFotosDeFamilias(
+      {
+        boda: fotosFamiliaresRef.current,
+        aniversario: fotosAniversarioRef.current,
+        bodaFinal: fotosBodaFinalRef.current,
+        sinBoda: fotosSinBodaRef.current,
+      },
+      familias
+    );
+    if (r.familias.length === 0) return null;
+    const error = await guardarFilasDeFotos(r.boda, r.aniversario, r.bodaFinal, r.sinBoda);
+    if (error) {
+      avisar("No se pudieron borrar las fotos de la familia. No se ha borrado nada.", error);
+      return error;
+    }
+    setFotosFamiliares(r.boda);
+    fotosFamiliaresRef.current = r.boda;
+    setFotosAniversario(r.aniversario);
+    fotosAniversarioRef.current = r.aniversario;
+    setFotosBodaFinal(r.bodaFinal);
+    fotosBodaFinalRef.current = r.bodaFinal;
+    setFotosSinBoda(r.sinBoda);
+    fotosSinBodaRef.current = r.sinBoda;
+    try {
+      await borrarFotosDelAlmacen(r.rutas);
+    } catch (e) {
+      avisar("Las fotos ya no salen en la app, pero sus archivos no se pudieron borrar del almacén.", e);
+      return e;
+    }
+    return null;
   }, [guardarFilasDeFotos]);
 
   const persistOrdenFamiliares = useCallback(async (next) => {
@@ -1661,6 +1699,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     persistInvitados,
     persistMesas,
     persistFotosFamiliares,
+    borrarFotosDeFamilias,
     persistFotosAniversario,
     persistFotosBodaFinal,
     persistFotosSinBoda,

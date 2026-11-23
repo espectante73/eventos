@@ -3,7 +3,7 @@ import {
   agregarInvitado, importarInvitados, eliminarInvitado, mismaPersona,
   cambiarCampo, alternarRolTrabajo, alternarExcluidoTablon,
   permitirExcepcion, quitarExcepcion, marcarResponsable,
-  colaboradoresSinFichaEnlazada, fichaDelColaborador, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, editarDesdeFormulario, cambiarTelefono, anioBodaDeLaFamilia, preguntaCambioFamilia } from "./edicionInvitados";
+  colaboradoresSinFichaEnlazada, fichaDelColaborador, zonasDe, familiasDe, familiaNuevaPara, nuevoDesdeFormulario, editarDesdeFormulario, cambiarTelefono, anioBodaDeLaFamilia, preguntaCambioFamilia, familiasQueSeQuedanSinNadie } from "./edicionInvitados";
 
 // La lista de invitados es la base de toda la app: si aquí se pierde
 // alguien, no se nota hasta que falta en la boda. Estas pruebas son el
@@ -110,6 +110,19 @@ describe("eliminar un invitado", () => {
     const { invitados, aviso } = eliminarInvitado([juan, ana], "1", colaboradores);
     expect(invitados).toEqual([ana]);
     expect(aviso).toBe("");
+  });
+});
+
+// v99.5: la última persona de una familia se lleva sus fotos.
+describe("familias que se quedan sin nadie", () => {
+  const rosa = { id: "3", nombre: "Rosa", apellido: "Medina" };
+  it("al borrar a la última de su familia, esa familia; si queda alguien, ninguna", () => {
+    expect(familiasQueSeQuedanSinNadie([juan, ana, rosa], [juan, ana])).toEqual(["Medina"]);
+    expect(familiasQueSeQuedanSinNadie([juan, ana, rosa], [ana, rosa])).toEqual([]);
+    expect(familiasQueSeQuedanSinNadie([juan, ana, rosa], [rosa])).toEqual(["Gatell01"]);
+  });
+  it("un cambio de código no es borrar: la persona sigue", () => {
+    expect(familiasQueSeQuedanSinNadie([juan, rosa], [juan, { ...rosa, grupoFamiliar: "Medina01" }])).toEqual([]);
   });
 });
 

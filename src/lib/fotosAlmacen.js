@@ -148,6 +148,37 @@ export async function borrarFotoMatrimonio(ruta) {
   if (error) throw error;
 }
 
+// Varias de una vez, cada una con su miniatura (v99.5: las de una familia
+// que se va).
+export async function borrarFotosDelAlmacen(rutas) {
+  const todas = (rutas || []).filter(esRutaAlmacen).flatMap((r) => [r, rutaMiniatura(r)]).filter(Boolean);
+  if (todas.length === 0) return;
+  const { error } = await supabase.storage.from(CUBO_FOTOS).remove(todas);
+  if (error) throw error;
+}
+
+// Las fotos de una familia que se va (v99.5): al borrar a la última persona
+// que lleva su código, o desde «Fotos sin familia» de la Revisión (privacidad,
+// CLAUDE.md 2.6: una foto de boda se borra). Devuelve los cuatro mapas con
+// esas familias vacías —la fila se queda, sin nada: el guardado de las fotos
+// no borra filas—, las familias que de verdad tenían algo y las rutas del
+// cajón que hay que borrar.
+export function sinFotosDeFamilias({ boda = {}, aniversario = {}, bodaFinal = {}, sinBoda = {} } = {}, familias = []) {
+  const conAlgo = [...new Set(familias)].filter((f) => f && (boda[f] || aniversario[f] || bodaFinal[f] || sinBoda[f]));
+  const vaciar = (mapa, vacio) => {
+    const llenas = conAlgo.filter((f) => mapa[f]);
+    return llenas.length ? { ...mapa, ...Object.fromEntries(llenas.map((f) => [f, vacio])) } : mapa;
+  };
+  return {
+    familias: conAlgo,
+    boda: vaciar(boda, ""),
+    aniversario: vaciar(aniversario, ""),
+    bodaFinal: vaciar(bodaFinal, ""),
+    sinBoda: vaciar(sinBoda, false),
+    rutas: conAlgo.flatMap((f) => [boda[f], aniversario[f], bodaFinal[f]]).filter(esRutaAlmacen),
+  };
+}
+
 // Pide un enlace temporal para cada ruta. Devuelve { ruta: enlace }. Las
 // que fallen simplemente no salen en el resultado: quien pinta decide qué
 // hacer con un hueco, en vez de romperse toda la ventana por una foto.

@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "99.5",
+    cambios: [
+      "Revisión, «Fotos sin familia»: cada familia lleva su papelera. Pregunta antes y borra para siempre sus fotos (de la app y del almacén). La ayuda ya no da por hecho que se cambió el código: también puede ser una familia borrada.",
+      "Lista de invitados: al eliminar a la última persona de una familia, la pregunta avisa de que también se borran sus fotos, y se borran con ella. Antes se quedaban colgando en «Fotos sin familia».",
+    ],
+  },
+  {
     version: "99.4",
     cambios: [
       "Tarjetas QR: el número, como en los sobres: círculo dorado claro con el número en verde, en la letra de «LAS BODAS», y algo más pequeño que antes.",

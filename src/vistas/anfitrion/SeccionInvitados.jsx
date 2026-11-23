@@ -57,10 +57,10 @@ import { EncabezadoOrdenable, GrupoFamiliarInput, RecuadroCifras, CifraTocable, 
 import { VentanaFlotante, ModalFlotante } from "../../components/VentanaFlotante";
 import { MenuFlotante } from "../../components/MenuFlotante";
 import { InformeInvitados } from "../../components/InformeInvitados";
-import { revisarConExcepciones } from "../../lib/revisionInvitados";
+import { revisarConExcepciones, fotosDeLaFamilia } from "../../lib/revisionInvitados";
 import { Boton, EnlaceTexto } from "../../components/Boton";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
-import { asignarMesaConSuFamilia, confirmarConSuFamilia, mesaFija } from "../../lib/mesas";
+import { asignarMesaConSuFamilia, confirmarConSuFamilia, mesaFija, claveInvitacion } from "../../lib/mesas";
 import { tieneCancion, cancionesPedidas, estrellas, ordenarCanciones, tocarOrdenCanciones, alternarFueraDj, ORDEN_CANCIONES_INICIAL } from "../../lib/canciones";
 import { tocarTitulo, compararPorNiveles } from "../../lib/ordenNiveles";
 import {
@@ -81,6 +81,7 @@ import { ResumenAvisosAsignacion } from "./ResumenAvisosAsignacion";
 import {
   importarInvitados as importarFilas,
   eliminarInvitado as borrarInvitado,
+  familiasQueSeQuedanSinNadie,
   PREGUNTA_ELIMINAR_COLABORADOR_DESDE_INVITADOS,
   cambiarCampo,
   preguntaCambioFamilia,
@@ -211,7 +212,7 @@ export function SeccionInvitados({
   ventana,
   fijo,
 }) {
-  const { evento, persistEvento, colaboradores, invitados, mesas, persistInvitados, avisarColaborador, asistenciaEnVivo } = data;
+  const { evento, persistEvento, colaboradores, invitados, mesas, persistInvitados, avisarColaborador, asistenciaEnVivo, borrarFotosDeFamilias } = data;
   // A quién se pueden asignar invitados: todos menos el DJ (v91.1).
   const colaboradoresAsignables = colaboradoresSinDj(colaboradores, invitados);
   // Quién ha entrado al tablón: llega al abrir la Lista (sin esperar a
@@ -386,10 +387,23 @@ export function SeccionInvitados({
     avisarMesa(motivo);
   };
 
-  const eliminarInvitado = (id) => {
+  // Si era la última de su familia, sus fotos se van con ella (v99.5, él:
+  // se quedaban en «Fotos sin familia»); la pregunta ya lo ha dicho.
+  const eliminarInvitado = async (id) => {
     const { invitados: siguiente, aviso } = borrarInvitado(invitados, id, colaboradores);
-    if (siguiente !== invitados) persistInvitados(siguiente);
     avisarLista(aviso);
+    if (siguiente === invitados) return;
+    const sinNadie = familiasQueSeQuedanSinNadie(invitados, siguiente);
+    const error = await persistInvitados(siguiente);
+    if (!error && sinNadie.length) await borrarFotosDeFamilias(sinNadie);
+  };
+  // Lo que la pregunta de borrar añade si se lleva las fotos de su familia.
+  const cuantosPorFamilia = new Map();
+  for (const g of invitados) cuantosPorFamilia.set(claveInvitacion(g), (cuantosPorFamilia.get(claveInvitacion(g)) || 0) + 1);
+  const fotosQueSeVanCon = (g) => {
+    const familia = claveInvitacion(g);
+    const que = cuantosPorFamilia.get(familia) === 1 ? fotosDeLaFamilia(familia, data) : [];
+    return que.length ? ` Es la última persona de «${familia}»: también se borran la ${que.join(" y la ")}.` : "";
   };
 
   // ---------- Rol de trabajo (2026-08-27) ----------
@@ -1612,6 +1626,7 @@ export function SeccionInvitados({
             excepciones={excepcionesRevision}
             onExcepcion={permitirExcepcion}
             onQuitarExcepcion={quitarExcepcion}
+            onBorrar={(g) => borrarFotosDeFamilias([g.familia])}
           />
           </div>
         )}
@@ -2115,9 +2130,10 @@ export function SeccionInvitados({
                       pregunta={{
                         titulo: "¿Eliminar de la lista?",
                         // Si es colaborador, se elimina del todo (v53.8).
-                        texto: comoColaborador(g, colaboradores)
-                          ? PREGUNTA_ELIMINAR_COLABORADOR_DESDE_INVITADOS
-                          : nombreCompleto(g) + " se borra de la lista de invitados.",
+                        texto:
+                          (comoColaborador(g, colaboradores)
+                            ? PREGUNTA_ELIMINAR_COLABORADOR_DESDE_INVITADOS
+                            : nombreCompleto(g) + " se borra de la lista de invitados.") + fotosQueSeVanCon(g),
                         rotulo: "Sí, eliminar",
                       }}
                       onClick={() => eliminarInvitado(g.id)}
