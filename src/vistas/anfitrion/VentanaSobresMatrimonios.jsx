@@ -7,7 +7,8 @@
 //
 // Como «Tarjetas de acomodación»: a pantalla entera, botones ARRIBA del
 // lado del pulgar (norma 5), opciones en una línea, y la vista previa y el
-// PDF del mismo dibujo (lib/sobresMatrimonios.js).
+// PDF del mismo dibujo (lib/sobresMatrimonios.js). Desde v99.3, con sus
+// mismas letras y su corazón (él), cargados como allí.
 import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { C, OP, DEDO } from "../../theme";
@@ -27,6 +28,7 @@ import {
   sobresDeMatrimonios,
   vistaPreviaSobres,
 } from "../../lib/sobresMatrimonios";
+import { cargarAdornos as cargarAdornosDeLaApp } from "../../lib/tarjetasAcomodacion";
 
 // Lo elegido se recuerda en este aparato (los sobres que tiene en casa).
 const CLAVE_OPCIONES = "sobres-matrimonios-opciones";
@@ -64,9 +66,17 @@ function Opcion({ etiqueta, valor, opciones, onCambiar, vista }) {
   );
 }
 
-// `vistaPrevia` y `cargarLogo`: quien dibuja y quien trae el logo (las
-// pruebas pasan unos sin lienzo ni red).
-export function VentanaSobresMatrimonios({ invitados, fechaEvento, onCerrar, vistaPrevia = vistaPreviaSobres, cargarLogo = cargarLogoDeLaApp }) {
+// `vistaPrevia`, `cargarLogo` y `cargarAdornos`: quien dibuja, quien trae el
+// logo y quien las letras y el corazón (las pruebas pasan unos sin lienzo ni
+// red).
+export function VentanaSobresMatrimonios({
+  invitados,
+  fechaEvento,
+  onCerrar,
+  vistaPrevia = vistaPreviaSobres,
+  cargarLogo = cargarLogoDeLaApp,
+  cargarAdornos = cargarAdornosDeLaApp,
+}) {
   const [opciones, setOpciones] = useState(leerOpciones);
   const elegir = (cambio) => {
     const nuevas = { ...opciones, ...cambio };
@@ -87,20 +97,32 @@ export function VentanaSobresMatrimonios({ invitados, fechaEvento, onCerrar, vis
       vivo = false;
     };
   }, [cargarLogo]);
+  // Las letras y el corazón, igual: si no llegan, la letra de siempre.
+  const [adornos, setAdornos] = useState(undefined);
+  useEffect(() => {
+    let vivo = true;
+    cargarAdornos()
+      .then((a) => vivo && setAdornos(a))
+      .catch(() => vivo && setAdornos(null));
+    return () => {
+      vivo = false;
+    };
+  }, [cargarAdornos]);
+  const cargando = logo === undefined || adornos === undefined;
 
   const [imagenes, setImagenes] = useState(null);
   useEffect(() => {
-    if (logo === undefined) return undefined;
+    if (cargando) return undefined;
     setImagenes(null);
-    const t = setTimeout(() => setImagenes(vistaPrevia(sobres, opciones, logo)), 30);
+    const t = setTimeout(() => setImagenes(vistaPrevia(sobres, opciones, logo, adornos)), 30);
     return () => clearTimeout(t);
-  }, [sobres, opciones, logo, vistaPrevia]);
+  }, [sobres, opciones, logo, adornos, cargando, vistaPrevia]);
 
   const [descargando, setDescargando] = useState(false);
   const [descargado, setDescargado] = useState("");
   const descargar = async () => {
     setDescargando(true);
-    descargarBlob(ARCHIVO_SOBRES, await pdfSobres(sobres, opciones, logo));
+    descargarBlob(ARCHIVO_SOBRES, await pdfSobres(sobres, opciones, logo, adornos));
     setDescargando(false);
     setDescargado(ARCHIVO_SOBRES);
   };
@@ -111,7 +133,7 @@ export function VentanaSobresMatrimonios({ invitados, fechaEvento, onCerrar, vis
         <Boton variante="secundario" onClick={onCerrar}>
           Cancelar
         </Boton>
-        <Boton variante="principal" icono={Download} onClick={descargar} disabled={descargando || !sobres.length || logo === undefined}>
+        <Boton variante="principal" icono={Download} onClick={descargar} disabled={descargando || !sobres.length || cargando}>
           {descargando ? "Preparando…" : "Descargar"}
         </Boton>
       </div>
@@ -146,6 +168,12 @@ export function VentanaSobresMatrimonios({ invitados, fechaEvento, onCerrar, vis
       {logo === null && (
         <p className="text-sm mb-1" style={{ color: C.wax }}>
           No se pudo cargar el logo: los sobres salen sin él. Prueba a cerrar y abrir otra vez.
+        </p>
+      )}
+      {adornos === null && (
+        <p className="text-sm mb-1" style={{ color: C.wax }} data-sin-adornos>
+          No se pudieron cargar las letras y el corazón de la invitación: los sobres salen con la letra de siempre. Prueba a cerrar y abrir
+          otra vez.
         </p>
       )}
       <div className="flex flex-col gap-3 mt-2" data-vista-previa>

@@ -1,18 +1,21 @@
 // Los sobres de los matrimonios (él, v98): uno por matrimonio confirmado,
 // para imprimir directamente en el sobre: los nombres, el número de su mesa
-// en el círculo dorado de las tarjetas de acomodación (él: «al lado del
-// nombre, el circulito dorado con la mesa») y el logo del evento.
+// en el círculo dorado de las tarjetas de acomodación y el logo del evento.
 //
 // Qué es un matrimonio confirmado, lo dice UNA pieza (norma 7): la de
 // Aniversarios (lib/matrimonios.js), así la cuenta de sobres es la misma
 // que ve allí: esposo y esposa de una familia que vienen los dos, y los
 // casados que vienen sin su pareja dados por buenos en la Revisión.
 //
-// El nombre, en UNA línea (él): «Luis y Ana» o, con el apellido del
-// esposo, «ABREU, Luis y Ana» («Apellido, Nombre», como en toda la app).
-// Por defecto, solo los nombres (él: «como es más cercana, le podemos
-// quitar el apellido»; con la mesa al lado, no se confunde con otra
-// familia).
+// Con la letra y el corazón de las tarjetas de acomodación (él, v99.3:
+// «aprovechamos esta tipografía y filigrana para los sobres»), en una sola
+// columna centrada (él: con la mesa al lado «queda mal el encuadre»): el
+// APELLIDO del esposo arriba, si se elige, en mayúsculas y con la letra de
+// «LAS BODAS»; los nombres en la caligráfica dorada («Luis y Ana»); el
+// corazón; y debajo, la mesa. Por defecto, solo los nombres (él: «como es
+// más cercana, le podemos quitar el apellido»; con la mesa, no se confunde
+// con otra familia). Si no se cargan las letras, la de siempre y sin
+// corazón: se sigue pudiendo imprimir.
 //
 // Se configura (él): el tamaño del sobre, el nombre con o sin apellido,
 // dónde va (una esquina o el centro) y dónde el logo (encima, debajo o al lado del nombre, en el
@@ -23,6 +26,7 @@
 import { C } from "../theme";
 import { matrimoniosConLosQueVienenSolos, nombresMatrimonio } from "./matrimonios";
 import { PdfEnLienzo, PUNTOS_POR_MM as MM, crearCanvas, cargarImagen } from "./pdfEnLienzo";
+import { SERIF, CALIGRAFICA, ALTO_CALIGRAFICA, ESPACIADO_APELLIDO, registrarLetras } from "./tarjetasAcomodacion";
 
 export const ARCHIVO_SOBRES = "sobres-matrimonios.pdf";
 // El logo del evento («Las bodas de todos»), sin fondo.
@@ -77,71 +81,114 @@ export function sobresDeMatrimonios(invitados = [], fechaEvento = "") {
 // ---------- El dibujo ----------
 
 const MARGEN = 15 * MM; // del borde del sobre a lo impreso
-const TAM_NOMBRE = 18; // y si no cabe, encoge
-const TAM_NOMBRE_MINIMO = 10;
-const R_MESA = 17; // el círculo de la mesa
-const TAM_MESA = 22;
-const ALTO_CIFRA = 0.716; // alto de las cifras de Helvetica, por punto de letra
-const HUECO = 10; // entre el nombre y el círculo, y entre el bloque y el logo
+// Las letras: cada una, si no cabe, encoge. Cinco puntos más que el primer
+// boceto (él, v99.3: «a los dos que ya subiste, 3 puntos más»), en todos
+// los sobres.
+const TAM_APELLIDO = 18;
+const TAM_NOMBRES = 35; // en la caligráfica
+const TAM_NOMBRES_SIN_LETRAS = 18; // si no se cargaron las de la invitación
+const TAM_MINIMO = 10;
+const R_MESA = 19; // el círculo de la mesa
+const TAM_MESA = 24;
+const ALTO_CIFRA = 0.716; // alto de las mayúsculas y las cifras, por punto de letra
+// El corazón, un poco más ancho que el nombre, pero no más que bajo uno
+// corto («Luis y Ana»): bajo «Richard y María del Carmen» se comía el sobre.
+const CORAZON = 1.15;
+const ANCHO_CORAZON_MAXIMO = 150;
+const ENTRE_APELLIDO = 8; // del APELLIDO a los nombres
+const ENTRE_CORAZON = 5; // de los nombres al corazón
+const ENTRE_MESA = 6; // del corazón (o los nombres) a la mesa
+const HUECO = 10; // entre el bloque del nombre y el logo
 const ALTO_LOGO = 24 * MM; // pegado al nombre
 const ALTO_LOGO_CENTRO = 40 * MM; // solo, en el centro del sobre
 
-// El bloque del nombre: una línea y, a su derecha, el círculo con la mesa.
-// `cabe`: el ancho que tiene; si no cabe, la letra encoge.
-function medirNombre(pdf, sobre, formato, cabe) {
-  const apellido = formato === "apellido" && sobre.apellido ? `${sobre.apellido.toLocaleUpperCase("es")}, ` : "";
-  const conMesa = sobre.mesa != null;
-  const deMesa = conMesa ? HUECO + 2 * R_MESA : 0;
-  let tam = TAM_NOMBRE;
-  const medir = () => {
+// El bloque del nombre, una columna centrada: el APELLIDO (si se elige), los
+// nombres, el corazón y la mesa. `cabe`: el ancho que tiene.
+function medirNombre(pdf, sobre, formato, cabe, adornos) {
+  const [serif, estiloSerif] = adornos ? [SERIF, "normal"] : ["helvetica", "bold"];
+  const caligrafica = adornos ? CALIGRAFICA : "helvetica";
+  const apellido = formato === "apellido" && sobre.apellido ? sobre.apellido.toLocaleUpperCase("es") : "";
+  const anchoApellido = (tam) => {
+    if (!apellido) return 0;
+    pdf.setFont(serif, estiloSerif);
     pdf.setFontSize(tam);
-    pdf.setFont("helvetica", "bold");
-    const anchoApellido = pdf.getTextWidth(apellido);
-    pdf.setFont("helvetica", "normal");
-    return { anchoApellido, anchoTexto: anchoApellido + pdf.getTextWidth(sobre.nombres) };
+    return pdf.getTextWidth(apellido) + ESPACIADO_APELLIDO * (apellido.length - 1);
   };
-  let m = medir();
-  while (tam > TAM_NOMBRE_MINIMO && m.anchoTexto + deMesa > cabe) {
-    tam -= 0.5;
-    m = medir();
-  }
-  return { ...m, apellido, tam, ancho: m.anchoTexto + deMesa, alto: Math.max(tam * 1.3, conMesa ? 2 * R_MESA : 0) };
+  const anchoNombres = (tam) => {
+    pdf.setFont(caligrafica, "normal");
+    pdf.setFontSize(tam);
+    return pdf.getTextWidth(sobre.nombres);
+  };
+  let ta = TAM_APELLIDO;
+  while (ta > TAM_MINIMO && anchoApellido(ta) > cabe) ta -= 0.5;
+  let tn = adornos ? TAM_NOMBRES : TAM_NOMBRES_SIN_LETRAS;
+  while (tn > TAM_MINIMO && anchoNombres(tn) > cabe) tn -= 0.5;
+  const anchoTexto = Math.max(anchoApellido(ta), anchoNombres(tn));
+  const anchoCorazon = adornos ? Math.min(anchoTexto * CORAZON, ANCHO_CORAZON_MAXIMO, cabe) : 0;
+  const altoCorazon = adornos ? anchoCorazon * adornos.corazon.proporcion : 0;
+  const subeNombres = tn * (adornos ? ALTO_CALIGRAFICA : ALTO_CIFRA);
+  const conMesa = sobre.mesa != null;
+  const alto =
+    (apellido ? ta * ALTO_CIFRA + ENTRE_APELLIDO : 0) + subeNombres + (altoCorazon ? ENTRE_CORAZON + altoCorazon : 0) + (conMesa ? ENTRE_MESA + 2 * R_MESA : 0);
+  return {
+    apellido,
+    ta,
+    tn,
+    serif,
+    estiloSerif,
+    caligrafica,
+    subeNombres,
+    anchoCorazon,
+    altoCorazon,
+    ancho: Math.max(anchoTexto, anchoCorazon, conMesa ? 2 * R_MESA : 0),
+    alto,
+  };
 }
 
-function dibujarNombre(pdf, sobre, medida, x, y) {
-  const { apellido, anchoApellido, anchoTexto, tam, alto } = medida;
-  const base = y + alto / 2 + (tam * ALTO_CIFRA) / 2;
-  pdf.setFontSize(tam);
-  pdf.setTextColor(C.ink);
-  if (apellido) {
-    pdf.setFont("helvetica", "bold");
-    pdf.text(apellido, x, base);
+// Cada línea, centrada en el bloque, de arriba abajo.
+function dibujarNombre(pdf, sobre, m, x, y, adornos) {
+  const medio = x + m.ancho / 2;
+  let base = y;
+  if (m.apellido) {
+    base += m.ta * ALTO_CIFRA;
+    pdf.setFont(m.serif, m.estiloSerif);
+    pdf.setFontSize(m.ta);
+    pdf.setTextColor(C.ink);
+    const w = pdf.getTextWidth(m.apellido) + ESPACIADO_APELLIDO * (m.apellido.length - 1);
+    pdf.text(m.apellido, medio - w / 2, base, { charSpace: ESPACIADO_APELLIDO });
+    base += ENTRE_APELLIDO;
   }
-  pdf.setFont("helvetica", "normal");
-  pdf.text(sobre.nombres, x + anchoApellido, base);
+  base += m.subeNombres;
+  pdf.setFont(m.caligrafica, "normal");
+  pdf.setFontSize(m.tn);
+  pdf.setTextColor(C.gold);
+  pdf.text(sobre.nombres, medio - pdf.getTextWidth(sobre.nombres) / 2, base);
+  if (m.altoCorazon) {
+    pdf.addImage(adornos.corazon.dato, "PNG", medio - m.anchoCorazon / 2, base + ENTRE_CORAZON, m.anchoCorazon, m.altoCorazon, "corazon", "FAST");
+    base += ENTRE_CORAZON + m.altoCorazon;
+  }
   if (sobre.mesa == null) return;
   // El círculo dorado de las tarjetas de acomodación.
-  const cx = x + anchoTexto + HUECO + R_MESA;
-  const cy = y + alto / 2;
+  const cy = base + ENTRE_MESA + R_MESA;
   pdf.setFillColor(C.goldClaro);
   pdf.setDrawColor(C.gold);
   pdf.setLineWidth(2);
-  pdf.circle(cx, cy, R_MESA - 1, "FD");
-  pdf.setFont("helvetica", "bold");
+  pdf.circle(medio, cy, R_MESA - 1, "FD");
+  pdf.setFont(m.serif, m.estiloSerif);
   pdf.setFontSize(TAM_MESA);
   pdf.setTextColor(C.ink);
   const numero = String(sobre.mesa);
-  pdf.text(numero, cx - pdf.getTextWidth(numero) / 2, cy + (TAM_MESA * ALTO_CIFRA) / 2);
+  pdf.text(numero, medio - pdf.getTextWidth(numero) / 2, cy + (TAM_MESA * ALTO_CIFRA) / 2);
 }
 
-function dibujarSobre(pdf, sobre, opciones, logo, W, H) {
+function dibujarSobre(pdf, sobre, opciones, logo, adornos, W, H) {
   const posLogo = logo ? opciones.logo : "sin";
   // El logo en el centro con el nombre también en el centro: encima.
   const logoSuelto = posLogo === "centro" && opciones.nombre !== "centro";
   const logoPegado = posLogo !== "sin" && !logoSuelto ? (posLogo === "centro" ? "encima" : posLogo) : null;
   const tamLogo = (alto) => ({ ancho: alto / logo.proporcion, alto });
   const lp = logoPegado ? tamLogo(ALTO_LOGO) : null;
-  const nombre = medirNombre(pdf, sobre, opciones.formato, W - 2 * MARGEN - (logoPegado === "alLado" ? lp.ancho + HUECO : 0));
+  const nombre = medirNombre(pdf, sobre, opciones.formato, W - 2 * MARGEN - (logoPegado === "alLado" ? lp.ancho + HUECO : 0), adornos);
 
   // El bloque entero (nombre y, si va pegado, el logo).
   let anchoBloque = nombre.ancho;
@@ -174,7 +221,7 @@ function dibujarSobre(pdf, sobre, opciones, logo, W, H) {
     nx = bx + lp.ancho + HUECO;
     ny = by + (altoBloque - nombre.alto) / 2;
   }
-  dibujarNombre(pdf, sobre, nombre, nx, ny);
+  dibujarNombre(pdf, sobre, nombre, nx, ny, adornos);
 
   if (logoSuelto) {
     const ls = tamLogo(Math.min(ALTO_LOGO_CENTRO, H - 2 * MARGEN));
@@ -189,30 +236,33 @@ const medidaSobre = (opciones) => {
 
 // Todos los sobres, uno por página. `logo`: { dato (data URL del PNG),
 // imagen (la misma, cargada), proporcion (alto / ancho) }, o null.
-export function dibujarSobres(pdf, sobres, opciones = OPCIONES_SOBRES_POR_DEFECTO, logo = null) {
+// `adornos`: las letras y el corazón de la invitación (cargarAdornos de las
+// tarjetas de acomodación), o null.
+export function dibujarSobres(pdf, sobres, opciones = OPCIONES_SOBRES_POR_DEFECTO, logo = null, adornos = null) {
   const o = { ...OPCIONES_SOBRES_POR_DEFECTO, ...opciones };
   const { ancho, alto } = medidaSobre(o);
   sobres.forEach((s, i) => {
     if (i > 0) pdf.addPage([ancho, alto], "landscape");
-    dibujarSobre(pdf, s, o, logo, ancho, alto);
+    dibujarSobre(pdf, s, o, logo, adornos, ancho, alto);
   });
   return Math.max(1, sobres.length);
 }
 
 // El PDF para descargar: cada página, del tamaño del sobre.
-export async function pdfSobres(sobres, opciones, logo) {
+export async function pdfSobres(sobres, opciones, logo, adornos = null) {
   const { jsPDF } = await import("jspdf");
   const { ancho, alto } = medidaSobre(opciones);
   const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: [ancho, alto] });
-  dibujarSobres(pdf, sobres, opciones, logo);
+  registrarLetras(pdf, adornos);
+  dibujarSobres(pdf, sobres, opciones, logo, adornos);
   return pdf.output("blob");
 }
 
 // Los sobres de la vista previa, como imágenes.
-export function vistaPreviaSobres(sobres, opciones, logo, { escala = 1.2, crearLienzo = crearCanvas } = {}) {
-  const imagenes = logo ? new Map([[logo.dato, logo.imagen]]) : new Map();
+export function vistaPreviaSobres(sobres, opciones, logo, adornos = null, { escala = 1.2, crearLienzo = crearCanvas } = {}) {
+  const imagenes = new Map([logo, adornos?.corazon].filter(Boolean).map((i) => [i.dato, i.imagen]));
   const lienzo = new PdfEnLienzo({ medida: medidaSobre(opciones), escala, crearLienzo, imagenes });
-  dibujarSobres(lienzo, sobres, opciones, logo);
+  dibujarSobres(lienzo, sobres, opciones, logo, adornos);
   if (!lienzo.ctx) return [];
   return lienzo.paginas.map((p) => p.toDataURL("image/jpeg", 0.85));
 }

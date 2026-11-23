@@ -55,6 +55,7 @@ vi.mock("./descargas", () => ({ descargarBlob: (nombre) => descargas.push(nombre
 
 const {
   descargarTarjetasQr,
+  vistaPreviaTarjetasQr,
   crearQr,
   tarjetasDeMesas,
   nombreEntreComillas,
@@ -146,5 +147,21 @@ describe("las tarjetas QR (v67.7; v92.9: una por mesa, texto en una cara y QR en
       expect(qr.isDark(f + 1, c + 1)).toBe(false);
       expect(qr.isDark(f + 3, c + 3)).toBe(true);
     }
+  });
+
+  // v99.3 (él): «primero ver, después descargar». Del mismo dibujo, en un
+  // lienzo de pega que apunta lo que se escribe.
+  it("la vista previa: un folio por cada 2 mesas, del mismo dibujo que el PDF", async () => {
+    const escritos = [];
+    const ctx = new Proxy(
+      { fillText: (t) => escritos.push(t), measureText: (t) => ({ width: 5 * t.length }) },
+      { get: (o, k) => (k in o ? o[k] : () => {}) },
+    );
+    const crearLienzo = () => ({ getContext: () => ctx, toDataURL: () => "data:image/jpeg;base64,A" });
+    const imagenes = await vistaPreviaTarjetasQr({ nombreEvento: EVENTO, tarjetas: tarjetas(1, 2, 3) }, { crearLienzo });
+    expect(imagenes).toHaveLength(2);
+    expect(escritos.filter((t) => t === TITULO_TARJETA[0])).toHaveLength(3);
+    expect(escritos.filter((t) => t === ENTRAR_TARJETA)).toHaveLength(3);
+    for (const n of ["1", "2", "3"]) expect(escritos.filter((t) => t === n)).toHaveLength(2);
   });
 });

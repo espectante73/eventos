@@ -23,11 +23,12 @@ import { supabase } from "../../supabaseClient";
 import { crearZip } from "../../lib/zip";
 import { descargarBlob } from "../../lib/descargas";
 import { bajarFotosFiesta, archivoFotosEvento } from "../../lib/fotosFiesta";
-import { descargarTarjetasQr, tarjetasDeMesas, ARCHIVO_TARJETAS_QR } from "../../lib/pdfTarjetasQr";
+import { tarjetasDeMesas } from "../../lib/pdfTarjetasQr";
 import { construirEnlaceTablon, construirEnlaceMesa } from "../../lib/url";
 import { ENVIO_BLOQUEADO } from "../../lib/invitados";
 import { VentanaTarjetasAcomodacion } from "./VentanaTarjetasAcomodacion";
 import { VentanaSobresMatrimonios } from "./VentanaSobresMatrimonios";
+import { VentanaTarjetasQr } from "./VentanaTarjetasQr";
 
 // «12 fotos» y «De 5 familias, en un ZIP.», contando cada familia una vez.
 // En dos líneas, como las demás filas: en una no cabía junto al botón.
@@ -148,9 +149,12 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
   // Las tarjetas QR de las mesas (v67.7): una por mesa, con su número
   // (v92.9) y el QR de SU mesa: el enlace del tablón con el código secreto
   // de la mesa (v93). Solo con «Acomodación terminada» (él, v93: las mesas
-  // aún pueden cambiar). Avisa al terminar (norma 9).
+  // aún pueden cambiar). «Ver» abre la vista previa, y desde ella se
+  // descarga (él, v99.3: «primero ver, después descargar», como las de
+  // debajo); si falta algo, lo dice aquí, antes de abrirla.
   const tarjetasBloqueadas = !evento.acomodacionTerminada;
-  const descargarTarjetas = async () => {
+  const [tarjetasQr, setTarjetasQr] = useState(null);
+  const verTarjetasQr = async () => {
     if (!construirEnlaceTablon(evento.urlPublica, tokenTablon)) {
       preguntar({ titulo: "Todavía no", texto: "Falta la dirección pública de la app, en Configuración.", soloAviso: true });
       return;
@@ -165,12 +169,7 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
       preguntar({ titulo: "Todavía no", texto: "No hay ninguna mesa: créalas primero en Acomodación.", soloAviso: true });
       return;
     }
-    await descargarTarjetasQr({ nombreEvento: evento.nombre, tarjetas });
-    preguntar({
-      titulo: "Tarjetas descargadas",
-      texto: `${ARCHIVO_TARJETAS_QR}: ${tarjetas.length === 1 ? "1 tarjeta" : `${tarjetas.length} tarjetas`}, una por mesa.\nLo tienes en tu carpeta de Descargas.`,
-      soloAviso: true,
-    });
+    setTarjetasQr(tarjetas);
   };
 
   // Las tarjetas de acomodación (v97): una por invitado, con su mesa. Como las QR,
@@ -237,8 +236,8 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
         <CeldaTexto fila={5} Icono={QrCode} titulo={<b>Tarjetas QR</b>}>
           {tarjetasBloqueadas ? ENVIO_BLOQUEADO : "Una por mesa, con su número: 2 por folio."}
         </CeldaTexto>
-        <Boton onClick={descargarTarjetas} disabled={tarjetasBloqueadas} className={CELDA_BOTON} style={{ gridRow: 5 }}>
-          Descargar
+        <Boton onClick={verTarjetasQr} disabled={tarjetasBloqueadas} className={CELDA_BOTON} style={{ gridRow: 5 }}>
+          Ver
         </Boton>
         <Separador fila={6} />
         <CeldaTexto fila={7} Icono={Contact} titulo={<b>Tarjetas de acomodación</b>}>
@@ -266,6 +265,7 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
           </>
         )}
       </div>
+      {tarjetasQr && <VentanaTarjetasQr nombreEvento={evento.nombre} tarjetas={tarjetasQr} onCerrar={() => setTarjetasQr(null)} />}
       {verTarjetasAcomodacion && <VentanaTarjetasAcomodacion invitados={invitados || []} onCerrar={() => setVerTarjetasAcomodacion(false)} />}
       {verSobres && <VentanaSobresMatrimonios invitados={invitados || []} fechaEvento={evento.fecha} onCerrar={() => setVerSobres(false)} />}
       {ventanaPregunta}

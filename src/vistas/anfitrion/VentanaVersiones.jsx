@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "99.3",
+    cambios: [
+      "Sobres de matrimonios: con las letras y el corazón de las tarjetas de acomodación. El APELLIDO encima (si se elige «Con apellido»), los nombres en letra caligráfica dorada, el corazón debajo y, bajo él, el número de la mesa en su círculo dorado: todo en una columna centrada. La letra, más grande que en el primer boceto, en todos los tamaños de sobre.",
+      "Bajo un nombre largo, el corazón no crece más que bajo uno corto.",
+      "Tarjetas QR: «Ver» en vez de «Descargar», como las tarjetas de acomodación y los sobres. Abre la vista previa de todos los folios y, desde ella, «Descargar».",
+    ],
+  },
+  {
     version: "99.2",
     cambios: [
       "Tarjetas de acomodación: línea nueva con el estilo de la invitación, en blanco. Las hojas de olivo en la esquina, el APELLIDO con la letra de «LAS BODAS», el nombre en letra caligráfica dorada con el corazón debajo, y el número de la mesa en su círculo dorado.",

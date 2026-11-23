@@ -135,14 +135,15 @@ const TAM_FAMILIA = 11;
 const ALTO_CIFRA = 0.716; // alto de las mayúsculas y las cifras, por punto de letra
 const HOJAS_ANCHO = 70; // las hojas de la esquina
 const TAM_APELLIDO = 16; // el de entrada; si no cabe, encoge
-const ESPACIADO_APELLIDO = 1.5; // entre letras, como «LAS BODAS»
+export const ESPACIADO_APELLIDO = 1.5; // entre letras, como «LAS BODAS»
 const TAM_NOMBRE = 30; // el de entrada; si no cabe, encoge
-const ALTO_CALIGRAFICA = 0.62; // lo que sube la caligráfica, por punto de letra
+export const ALTO_CALIGRAFICA = 0.62; // lo que sube la caligráfica, por punto de letra
 const TAM_NUMERO = 38;
 // Los nombres de las dos letras de la invitación: en jsPDF y en el lienzo
-// (pdfEnLienzo.js). Si no se cargaron, las de siempre de jsPDF.
-const SERIF = "fraunces";
-const CALIGRAFICA = "alexbrush";
+// (pdfEnLienzo.js). Si no se cargaron, las de siempre de jsPDF. También
+// las usan los sobres de los matrimonios (v99.3).
+export const SERIF = "fraunces";
+export const CALIGRAFICA = "alexbrush";
 
 // Una cara de la tarjeta: el marco o los dos marcos, las hojas en la
 // esquina de arriba a la izquierda (cortadas por el borde, como en la
@@ -400,14 +401,20 @@ function aBase64(datos) {
 const imagenesDe = (adornos) =>
   new Map(adornos ? ["hojas", "hojasGirada", "corazon", "corazonGirada"].map((k) => [adornos[k].dato, adornos[k].imagen]) : []);
 
-// Un jsPDF, con las dos letras de la invitación dentro si se cargaron.
-async function nuevoPdf(opciones, adornos) {
-  const { jsPDF } = await import("jspdf");
-  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: opciones?.hoja || OPCIONES_POR_DEFECTO.hoja });
+// Las dos letras de la invitación, dentro del PDF, si se cargaron (también
+// en los sobres).
+export function registrarLetras(pdf, adornos) {
   for (const [familia, datos] of Object.entries(adornos?.fuentes || {})) {
     pdf.addFileToVFS(`${familia}.ttf`, datos);
     pdf.addFont(`${familia}.ttf`, familia, "normal");
   }
+}
+
+// Un jsPDF, con las dos letras de la invitación dentro si se cargaron.
+async function nuevoPdf(opciones, adornos) {
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: opciones?.hoja || OPCIONES_POR_DEFECTO.hoja });
+  registrarLetras(pdf, adornos);
   return pdf;
 }
 

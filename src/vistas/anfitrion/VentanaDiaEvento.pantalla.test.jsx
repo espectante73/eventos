@@ -66,17 +66,18 @@ it("la cuenta: fotos y familias, cada familia una vez", () => {
   });
 });
 
-it("«Descargar» las fotos solo sale con alguna; el de las tarjetas QR, siempre", async () => {
+// v99.3: las tarjetas QR ya no se descargan aquí, sino tras verlas («Ver»).
+it("«Descargar» las fotos solo sale con alguna", async () => {
   const conFotos = () => Promise.resolve([{ id: "1", familia: "medina", quien: "Medina, Ana", ruta: "fiesta/1.jpg", creadaEn: "2026-11-13T22:47:00" }]);
   const sin = montar(<VentanaDiaEvento data={{ evento: {}, persistEvento: () => {}, obtenerFotosFiesta: sinFotos }} onCerrar={() => {}} />);
   await act(async () => {});
-  expect(botones("Descargar")).toHaveLength(1);
+  expect(botones("Descargar")).toHaveLength(0);
   sin.desmontar();
 
   const con = montar(<VentanaDiaEvento data={{ evento: {}, persistEvento: () => {}, obtenerFotosFiesta: conFotos }} onCerrar={() => {}} />);
   await act(async () => {});
   expect(document.body.textContent).toContain("1 foto");
-  expect(botones("Descargar")).toHaveLength(2);
+  expect(botones("Descargar")).toHaveLength(1);
   con.desmontar();
 });
 
@@ -143,14 +144,40 @@ it("las tarjetas QR: bloqueadas hasta «Acomodación terminada»; sin ninguna me
   const sinTerminar = montar(<VentanaDiaEvento data={data({ acomodacionTerminada: false })} onCerrar={() => {}} />);
   await act(async () => {});
   expect(document.body.textContent).toContain("Bloqueado: falta marcar «Acomodación terminada» en Acomodación.");
-  expect(botones("Descargar")[0].disabled).toBe(true);
+  expect(boton("Ver").disabled).toBe(true);
   sinTerminar.desmontar();
 
   const terminada = montar(<VentanaDiaEvento data={data({ acomodacionTerminada: true })} onCerrar={() => {}} />);
   await act(async () => {});
   expect(document.body.textContent).toContain("Una por mesa, con su número: 2 por folio.");
-  await act(async () => botones("Descargar")[0].dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  await act(async () => boton("Ver").dispatchEvent(new MouseEvent("click", { bubbles: true })));
   expect(pedidos).toHaveLength(1);
   expect(document.body.textContent).toContain("No hay ninguna mesa: créalas primero en Acomodación.");
+  expect(document.body.querySelector("[data-botones-qr]")).toBeNull();
   terminada.desmontar();
+});
+
+// v99.3 (él): «primero ver, después descargar», como las de debajo.
+it("las tarjetas QR: «Ver», con mesas, abre la vista previa con una tarjeta por mesa", async () => {
+  const vista = montar(
+    <VentanaDiaEvento
+      data={{
+        evento: { urlPublica: "https://nexuspoint.rsvp", acomodacionTerminada: true, nombre: "Las Bodas de todos." },
+        tokenTablon: "0f8fad5b-d9cb-469f-a165-70867728950e",
+        persistEvento: () => {},
+        obtenerFotosFiesta: sinFotos,
+        obtenerQrMesas: async () => [
+          { numero: 2, codigo: "bbbbbbbbbbbb" },
+          { numero: 1, codigo: "aaaaaaaaaaaa" },
+          { numero: 3, codigo: "cccccccccccc" },
+        ],
+      }}
+      onCerrar={() => {}}
+    />
+  );
+  await act(async () => {});
+  await act(async () => boton("Ver").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  expect(document.body.querySelector("[data-botones-qr]").textContent).toContain("Descargar");
+  expect(document.body.querySelector("[data-resumen-qr]").textContent).toBe("3 tarjetas, una por mesa, en 2 folios A4: 2 por folio.");
+  vista.desmontar();
 });

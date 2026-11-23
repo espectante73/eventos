@@ -37,16 +37,21 @@ function hojaDePega() {
   const textos = [];
   const imagenes = [];
   const paginas = [];
+  const circulos = [];
+  let fuente = "";
   const pdf = {
     addPage: (formato, orientacion) => paginas.push([formato, orientacion]),
     getTextWidth: (t) => t.length * 6,
-    text: (t, x, y) => textos.push({ t, x, y }),
+    text: (t, x, y, o = {}) => textos.push({ t, x, y, fuente, ...o }),
     addImage: (...a) => imagenes.push(a),
+    setFont: (f) => (fuente = f),
+    circle: (x, y, r) => circulos.push({ x, y, r }),
   };
-  for (const f of ["setFillColor", "setDrawColor", "setTextColor", "setLineWidth", "setFont", "setFontSize", "circle"]) pdf[f] = () => {};
-  return { pdf, textos, imagenes, paginas };
+  for (const f of ["setFillColor", "setDrawColor", "setTextColor", "setLineWidth", "setFontSize"]) pdf[f] = () => {};
+  return { pdf, textos, imagenes, paginas, circulos };
 }
 const LOGO = { dato: "data:image/png;base64,AAA", imagen: null, proporcion: 0.9 };
+const ADORNOS = { corazon: { dato: "data:image/png;base64,COR", imagen: null, proporcion: 0.12 }, fuentes: {} };
 
 describe("dibujarSobres", () => {
   const { sobres } = sobresDeMatrimonios(INVITADOS, "2026-12-11");
@@ -57,14 +62,53 @@ describe("dibujarSobres", () => {
     const mm = 72 / 25.4;
     expect(h.paginas[0][0][0]).toBeCloseTo(SOBRES.c6.ancho * mm);
   });
-  it("una línea: «Jacob y Lucía» (por defecto) o «BARRIOS, Jacob y Lucía», y el número de su mesa; sin mesa, sin número", () => {
+  it("«Jacob y Lucía» (por defecto) o, con el apellido, «BARRIOS» encima; y el número de su mesa; sin mesa, sin número", () => {
     const solo = hojaDePega();
     dibujarSobres(solo.pdf, sobres, { sobre: "americano", nombre: "abajoDerecha", logo: "sin" }, LOGO);
     expect(solo.textos.map((x) => x.t)).toEqual(["Jacob y Lucía", "3", "Luis y Ana", "7", "Daniel y Sara"]);
     const con = hojaDePega();
     dibujarSobres(con.pdf, sobres, { sobre: "americano", formato: "apellido", nombre: "abajoDerecha", logo: "sin" }, LOGO);
-    expect(con.textos.map((x) => x.t).slice(0, 3)).toEqual(["BARRIOS, ", "Jacob y Lucía", "3"]);
+    expect(con.textos.map((x) => x.t).slice(0, 3)).toEqual(["BARRIOS", "Jacob y Lucía", "3"]);
     expect(con.imagenes).toHaveLength(0);
+  });
+  // v99.3 (él): la letra y el corazón de las tarjetas, y la mesa DEBAJO
+  // («con la mesa al lado queda mal el encuadre»): una columna centrada.
+  it("con las letras de la invitación: APELLIDO, nombres, corazón y mesa, de arriba abajo y centrados", () => {
+    const h = hojaDePega();
+    dibujarSobres(h.pdf, [sobres[0]], { sobre: "c6", formato: "apellido", nombre: "centro", logo: "sin" }, LOGO, ADORNOS);
+    const [apellido, nombres, mesa] = h.textos;
+    expect([apellido.t, nombres.t, mesa.t]).toEqual(["BARRIOS", "Jacob y Lucía", "3"]);
+    expect([apellido.fuente, nombres.fuente, mesa.fuente]).toEqual(["fraunces", "alexbrush", "fraunces"]);
+    expect(apellido.charSpace).toBeGreaterThan(0);
+    const corazon = h.imagenes.find((i) => i[0] === ADORNOS.corazon.dato);
+    const [, , cx, cy, cw, ch] = corazon;
+    expect(apellido.y).toBeLessThan(nombres.y);
+    expect(nombres.y).toBeLessThan(cy);
+    const [circulo] = h.circulos;
+    expect(cy + ch).toBeLessThan(circulo.y - circulo.r);
+    // Todo, centrado en el mismo eje (la mitad del sobre).
+    const medio = (SOBRES.c6.ancho * 72) / 25.4 / 2;
+    expect(cx + cw / 2).toBeCloseTo(medio);
+    expect(circulo.x).toBeCloseTo(medio);
+    expect(nombres.x + (nombres.t.length * 6) / 2).toBeCloseTo(medio);
+  });
+  it("bajo un nombre largo, el corazón no crece más que bajo uno corto, y el nombre cabe en el sobre", () => {
+    const largo = { ...sobres[0], nombres: "Richard y María del Carmen" };
+    const h = hojaDePega();
+    dibujarSobres(h.pdf, [largo, sobres[0]], { sobre: "c6", nombre: "centro", logo: "sin" }, LOGO, ADORNOS);
+    const [conLargo, conCorto] = h.imagenes.map((i) => i[4]);
+    expect(conLargo).toBeLessThanOrEqual(150);
+    expect(conCorto).toBeLessThanOrEqual(conLargo);
+    const nombre = h.textos.find((x) => x.t === largo.nombres);
+    const mm = 72 / 25.4;
+    expect(nombre.x).toBeGreaterThanOrEqual(15 * mm - 0.01);
+  });
+  it("sin las letras (no se cargaron): la de siempre y sin corazón, pero la mesa también debajo", () => {
+    const h = hojaDePega();
+    dibujarSobres(h.pdf, [sobres[0]], { sobre: "c6", nombre: "centro", logo: "sin" }, LOGO, null);
+    expect(h.textos.map((x) => x.fuente)).toEqual(["helvetica", "helvetica"]);
+    expect(h.imagenes).toHaveLength(0);
+    expect(h.textos[0].y).toBeLessThan(h.circulos[0].y - h.circulos[0].r);
   });
   it("el logo donde se elige; sin logo cargado, no se dibuja", () => {
     for (const logo of ["encima", "debajo", "alLado", "centro"]) {

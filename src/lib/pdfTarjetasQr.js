@@ -21,9 +21,14 @@
 // El QR, en el verde más oscuro: contrasta con el blanco como el negro.
 // Se dibuja con cuadrados del propio PDF, no como imagen: sale nítido a
 // cualquier tamaño de impresión.
+//
+// Antes de descargar, la vista previa (él, v99.3: «primero ver, después
+// descargar», como las tarjetas de acomodación y los sobres): del MISMO
+// dibujo, en un lienzo que entiende sus órdenes (PdfEnLienzo).
 import { C } from "../theme";
 import { descargarBlob } from "./descargas";
 import { EDAD_EMAIL } from "./invitados";
+import { PdfEnLienzo, crearCanvas } from "./pdfEnLienzo";
 
 export const ARCHIVO_TARJETAS_QR = "tarjetas-qr.pdf";
 // Su texto (él, v68: 2 por persona de 16 o más), en dos líneas parejas.
@@ -251,15 +256,22 @@ export function crearQr(qrcode, enlace) {
   return qr;
 }
 
+const conQr = (qrcode, tarjetas) => tarjetas.map((t) => ({ numero: t.numero, qr: crearQr(qrcode, t.enlace) }));
+
 // `tarjetas`: las de las mesas (tarjetasDeMesas), al menos una.
 export async function descargarTarjetasQr({ nombreEvento, tarjetas }) {
   // jsPDF y el QR pesan: se cargan solo al usarlos, como en acomodadores.
   const [{ jsPDF }, { default: qrcode }] = await Promise.all([import("jspdf"), import("qrcode-generator")]);
   const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-  dibujarTarjetasQr(
-    pdf,
-    nombreEvento,
-    tarjetas.map((t) => ({ numero: t.numero, qr: crearQr(qrcode, t.enlace) }))
-  );
+  dibujarTarjetasQr(pdf, nombreEvento, conQr(qrcode, tarjetas));
   descargarBlob(ARCHIVO_TARJETAS_QR, pdf.output("blob"));
+}
+
+// La vista previa: cada folio, como imagen.
+export async function vistaPreviaTarjetasQr({ nombreEvento, tarjetas }, { escala = 1.2, crearLienzo = crearCanvas } = {}) {
+  const { default: qrcode } = await import("qrcode-generator");
+  const lienzo = new PdfEnLienzo({ medida: { ancho: ANCHO_PAGINA, alto: ALTO_PAGINA }, escala, crearLienzo });
+  dibujarTarjetasQr(lienzo, nombreEvento, conQr(qrcode, tarjetas));
+  if (!lienzo.ctx) return [];
+  return lienzo.paginas.map((p) => p.toDataURL("image/jpeg", 0.9));
 }

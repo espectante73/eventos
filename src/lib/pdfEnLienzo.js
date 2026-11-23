@@ -98,8 +98,9 @@ export class PdfEnLienzo {
     if (this.ctx && imagen) this.ctx.drawImage(imagen, x, y, w, h);
   };
   // `charSpace`: el aire entre letras, como en jsPDF (letra a letra: así
-  // sale igual en todos los navegadores).
-  text(texto, x, y, { angle = 0, charSpace = 0 } = {}) {
+  // sale igual en todos los navegadores). `align: "center"`, centrado en x
+  // (las tarjetas QR, v99.3).
+  text(texto, x, y, { angle = 0, charSpace = 0, align } = {}) {
     if (!this.ctx) return;
     const ctx = this.ctx;
     ctx.save();
@@ -107,10 +108,12 @@ export class PdfEnLienzo {
     ctx.textBaseline = "alphabetic";
     ctx.translate(x, y);
     if (angle) ctx.rotate((-angle * Math.PI) / 180);
-    if (!charSpace) ctx.fillText(texto, 0, 0);
+    const letras = [...texto];
+    const ancho = charSpace ? letras.reduce((s, l) => s + ctx.measureText(l).width, 0) + charSpace * Math.max(0, letras.length - 1) : ctx.measureText(texto).width;
+    let dx = align === "center" ? -ancho / 2 : align === "right" ? -ancho : 0;
+    if (!charSpace) ctx.fillText(texto, dx, 0);
     else {
-      let dx = 0;
-      for (const letra of texto) {
+      for (const letra of letras) {
         ctx.fillText(letra, dx, 0);
         dx += ctx.measureText(letra).width + charSpace;
       }
