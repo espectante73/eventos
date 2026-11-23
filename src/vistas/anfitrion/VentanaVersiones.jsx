@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "96.1",
+    cambios: [
+      "«Invitaciones» pasa del menú principal de «Abrir sección…» a «Invitados», como tercer botón junto a «Formulario» y «Lista»: es un paso que llega después de tener atendidos a todos los invitados.",
+    ],
+  },
+  {
     version: "96",
     cambios: [
       "«Novedades» pasa del menú principal de «Abrir sección…» a Configuración, entre «Modo pruebas» y «Permisos»: es algo que se edita y se configura. Se abre igual, en su propia ventana.",

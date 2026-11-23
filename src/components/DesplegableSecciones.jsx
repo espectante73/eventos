@@ -86,7 +86,9 @@ export function DesplegableSecciones({
     // puede cerrar con la X del sistema sin que este menú se entere).
     // Dos opciones (él, v81.5): «Formulario» (antes «Añadir», v87.4), el de
     // «Nuevo invitado» sin abrir antes la Lista, y «Lista». Mismos iconos
-    // que en la Lista (FORMULARIO_INVITADO).
+    // que en la Lista (FORMULARIO_INVITADO). Y una tercera, «Invitaciones»
+    // (v96.1, él: «es un proceso que surge después de haber atendido a todos
+    // los invitados; pertenece a la sección Invitados»). Por orden alfabético.
     if (clave === "invitados") {
       return {
         id: clave,
@@ -94,6 +96,13 @@ export function DesplegableSecciones({
         icono: ICONOS_VENTANAS[clave],
         submenu: [
           { id: "nuevo-invitado", ...FORMULARIO_INVITADO, marcado: Boolean(abierto["nuevo-invitado"]), onClick: () => toggle("nuevo-invitado") },
+          {
+            id: "invitaciones",
+            etiqueta: ETIQUETAS_VENTANAS.invitaciones,
+            icono: ICONOS_VENTANAS.invitaciones,
+            marcado: Boolean(abierto.invitaciones),
+            onClick: () => toggle("invitaciones"),
+          },
           { id: "invitados-lista", etiqueta: "Lista", icono: ICONOS_VENTANAS[clave], onClick: abrirInvitados },
         ],
       };

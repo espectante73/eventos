@@ -217,7 +217,8 @@ export const ORDEN_VENTANAS = [
   "configuracion",
   "cuentas",
   "diaEvento",
-  "invitaciones",
+  // «Invitaciones» va dentro de «Invitados» (v96.1, él: «es un proceso
+  // que surge después de haber atendido a todos los invitados»).
   "invitados",
   "mesas",
   "musicaEvento",

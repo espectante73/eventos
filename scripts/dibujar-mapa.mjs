@@ -260,7 +260,6 @@ const nivel1 = [
   ["Configuración", { tipo: "abre" }],
   ["Contabilidad", {}],
   ["Día del evento", {}],
-  ["Invitaciones", {}],
   ["Invitados", { fuera: true }],
   ["Mi cuenta", {}],
   ["Multimedia", { fuera: true }],
