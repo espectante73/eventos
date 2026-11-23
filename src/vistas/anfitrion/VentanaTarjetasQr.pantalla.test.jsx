@@ -6,7 +6,13 @@ import { montar } from "../../pruebas/dibujar";
 import { VentanaTarjetasQr } from "./VentanaTarjetasQr";
 
 const tarjetas = [1, 2, 3].map((numero) => ({ numero, enlace: `https://nexuspoint.rsvp?mesa=${numero}` }));
-const esperar = () => act(() => new Promise((r) => setTimeout(r, 30)));
+const esperar = async () => {
+  await act(() => new Promise((r) => setTimeout(r, 30)));
+  await act(() => new Promise((r) => setTimeout(r, 30)));
+};
+// El adorno y las letras de la invitación (v99.4): aquí no hay red.
+const ADORNOS = { de: "pega" };
+const cargarAdornos = () => Promise.resolve(ADORNOS);
 
 it("enseña un folio por cada dos mesas y, al descargar, dice dónde está", async () => {
   const dibujadas = [];
@@ -16,28 +22,47 @@ it("enseña un folio por cada dos mesas y, al descargar, dice dónde está", asy
       nombreEvento="Las Bodas de todos."
       tarjetas={tarjetas}
       onCerrar={() => {}}
-      vistaPrevia={async (o) => (dibujadas.push(o), ["data:image/jpeg;base64,A", "data:image/jpeg;base64,B"])}
-      descargar={async (o) => bajadas.push(o)}
+      vistaPrevia={async (o, a) => (dibujadas.push([o, a]), ["data:image/jpeg;base64,A", "data:image/jpeg;base64,B"])}
+      descargar={async (o, a) => bajadas.push([o, a])}
+      cargarAdornos={cargarAdornos}
     />,
   );
   await esperar();
-  expect(dibujadas).toEqual([{ nombreEvento: "Las Bodas de todos.", tarjetas }]);
+  expect(dibujadas).toEqual([[{ nombreEvento: "Las Bodas de todos.", tarjetas }, ADORNOS]]);
   expect(document.body.querySelectorAll("[data-vista-previa] img")).toHaveLength(2);
   expect(document.body.querySelector("[data-resumen-qr]").textContent).toBe("3 tarjetas, una por mesa, en 2 folios A4: 2 por folio.");
   vista.pulsar([...document.body.querySelectorAll("[data-botones-qr] button")].find((b) => b.textContent === "Descargar"));
   await esperar();
-  expect(bajadas).toEqual([{ nombreEvento: "Las Bodas de todos.", tarjetas }]);
+  expect(bajadas).toEqual([[{ nombreEvento: "Las Bodas de todos.", tarjetas }, ADORNOS]]);
   expect(document.body.querySelector("[data-descargado]").textContent).toContain("tarjetas-qr.pdf");
   vista.desmontar();
 });
 
 it("los botones van ARRIBA, antes del resumen y de la vista previa; «Cancelar» cierra", () => {
   let cerrada = 0;
-  const vista = montar(<VentanaTarjetasQr nombreEvento="" tarjetas={tarjetas.slice(0, 1)} onCerrar={() => (cerrada += 1)} vistaPrevia={async () => []} descargar={async () => {}} />);
+  const vista = montar(<VentanaTarjetasQr nombreEvento="" tarjetas={tarjetas.slice(0, 1)} onCerrar={() => (cerrada += 1)} vistaPrevia={async () => []} descargar={async () => {}} cargarAdornos={cargarAdornos} />);
   const botones = document.body.querySelector("[data-botones-qr]");
   expect(botones.compareDocumentPosition(document.body.querySelector("[data-resumen-qr]")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(document.body.querySelector("[data-resumen-qr]").textContent).toBe("1 tarjeta, una por mesa, en 1 folio A4: 2 por folio.");
   vista.pulsar([...botones.querySelectorAll("button")].find((b) => b.textContent === "Cancelar"));
   expect(cerrada).toBe(1);
+  vista.desmontar();
+});
+
+it("si el adorno y las letras no llegan, la vista previa sale igual (sin ellos) y se dice", async () => {
+  const dibujadas = [];
+  const vista = montar(
+    <VentanaTarjetasQr
+      nombreEvento=""
+      tarjetas={tarjetas}
+      onCerrar={() => {}}
+      vistaPrevia={async (o, a) => (dibujadas.push(a), [])}
+      descargar={async () => {}}
+      cargarAdornos={() => Promise.reject(new Error("red"))}
+    />,
+  );
+  await esperar();
+  expect(dibujadas).toEqual([null]);
+  expect(document.body.querySelector("[data-sin-adornos]").textContent).toContain("las tarjetas salen sin ellos");
   vista.desmontar();
 });

@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "99.4",
+    cambios: [
+      "Tarjetas QR: el número, como en los sobres: círculo dorado claro con el número en verde, en la letra de «LAS BODAS», y algo más pequeño que antes.",
+      "Tarjetas QR y tarjetas de acomodación: en la esquina, un adorno nuevo de hojas de olivo y volutas doradas, entero y cerca del borde. El marco dorado pasa entero por debajo. Sustituye a las hojas de antes, que salían cortadas por el borde.",
+      "Tarjetas de acomodación: en los dos acabados de doble marco, la línea gruesa es casi el doble de gruesa, para que se note bien la diferencia con la fina.",
+    ],
+  },
+  {
     version: "99.3",
     cambios: [
       "Sobres de matrimonios: con las letras y el corazón de las tarjetas de acomodación. El APELLIDO encima (si se elige «Con apellido»), los nombres en letra caligráfica dorada, el corazón debajo y, bajo él, el número de la mesa en su círculo dorado: todo en una columna centrada. La letra, más grande que en el primer boceto, en todos los tamaños de sobre.",

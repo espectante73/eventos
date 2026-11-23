@@ -14,9 +14,21 @@ vi.mock("jspdf", () => ({
       this.giradas = 0;
       this.circulos = 0;
       this.paginas = 1;
+      this.imagenes = [];
+      this.fuentes = [];
+      this.letras = [];
       hojas.push(this);
     }
-    setFont() {}
+    setFont(f) {
+      this.fuentes.push(f);
+    }
+    addImage(dato) {
+      this.imagenes.push(dato);
+    }
+    addFileToVFS() {}
+    addFont(archivo, familia) {
+      this.letras.push(familia);
+    }
     setFontSize() {}
     setTextColor() {}
     setFillColor() {}
@@ -81,10 +93,14 @@ describe("las tarjetas QR (v67.7; v92.9: una por mesa, texto en una cara y QR en
     const hoja = hojas.at(-1);
     const cuenta = (t) => hoja.textos.filter((x) => x === t).length;
     expect(hoja.paginas).toBe(1);
-    // El número, en las dos caras de su tarjeta, cada una en su círculo de doble aro.
+    // El número, en las dos caras de su tarjeta, cada una en su círculo
+    // (v99.4: el de los sobres, sin el aro de dentro).
     expect(cuenta("5")).toBe(2);
     expect(cuenta("12")).toBe(2);
-    expect(hoja.circulos).toBe(4 * 2);
+    expect(hoja.circulos).toBe(4);
+    // Sin el adorno y las letras (no se pasan): sin imágenes, la de siempre.
+    expect(hoja.imagenes).toEqual([]);
+    expect(hoja.fuentes).not.toContain("fraunces");
     // La cara del texto: una por tarjeta.
     const texto = [...TITULO_TARJETA, ...queFotosTarjeta(EVENTO).flat(), "1.", "2.", ...EDAD_TARJETA, VER_CODIGO_TARJETA];
     for (const linea of texto) expect(cuenta(linea)).toBe(2);
@@ -158,10 +174,27 @@ describe("las tarjetas QR (v67.7; v92.9: una por mesa, texto en una cara y QR en
       { get: (o, k) => (k in o ? o[k] : () => {}) },
     );
     const crearLienzo = () => ({ getContext: () => ctx, toDataURL: () => "data:image/jpeg;base64,A" });
-    const imagenes = await vistaPreviaTarjetasQr({ nombreEvento: EVENTO, tarjetas: tarjetas(1, 2, 3) }, { crearLienzo });
+    const imagenes = await vistaPreviaTarjetasQr({ nombreEvento: EVENTO, tarjetas: tarjetas(1, 2, 3) }, null, { crearLienzo });
     expect(imagenes).toHaveLength(2);
     expect(escritos.filter((t) => t === TITULO_TARJETA[0])).toHaveLength(3);
     expect(escritos.filter((t) => t === ENTRAR_TARJETA)).toHaveLength(3);
     for (const n of ["1", "2", "3"]) expect(escritos.filter((t) => t === n)).toHaveLength(2);
+  });
+
+  // v99.4 (él): el número como en los sobres, con la letra de «LAS BODAS», y
+  // el adorno de las tarjetas de acomodación en cada cara (girado arriba).
+  it("con el adorno y las letras: el adorno en cada cara, girado en la de arriba, y el número en Fraunces dentro del PDF", async () => {
+    const ADORNOS = {
+      esquina: { dato: "esquina", proporcion: 0.7 },
+      esquinaGirada: { dato: "esquinaGirada", proporcion: 0.7 },
+      corazon: { dato: "corazon", proporcion: 0.12 },
+      corazonGirada: { dato: "corazonGirada", proporcion: 0.12 },
+      fuentes: { fraunces: "AAA", alexbrush: "BBB" },
+    };
+    await descargarTarjetasQr({ nombreEvento: EVENTO, tarjetas: tarjetas(5) }, ADORNOS);
+    const hoja = hojas.at(-1);
+    expect(hoja.imagenes).toEqual(["esquinaGirada", "esquina"]);
+    expect(hoja.letras).toEqual(["fraunces", "alexbrush"]);
+    expect(hoja.fuentes).toContain("fraunces");
   });
 });

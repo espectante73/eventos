@@ -6,11 +6,13 @@
 // suben sus fotos de la fiesta. Desde v92.9, una cara lleva el texto y la
 // otra el QR (él), y cada una dice que lo demás está al otro lado.
 //
-// Una tarjeta por mesa (él, v92.9): arriba, su número lo más grande que
-// cabe («el número, lo protagonista»), en dorado sobre un círculo verde con
-// doble aro, como el sello de la cuenta atrás. Sin la palabra «Mesa» (él:
-// «es una obviedad»). Dos por folio, en el orden de las mesas; con un
-// número impar, la última hoja lleva una sola.
+// Una tarjeta por mesa (él, v92.9): arriba, su número grande («el número,
+// lo protagonista»). Desde v99.4, como en los sobres y las tarjetas de
+// acomodación (él, versión A del boceto): círculo dorado claro con el
+// número en verde y la letra de «LAS BODAS», algo más pequeño que antes; y
+// en la esquina, el adorno de las de acomodación, con el marco pasando por
+// debajo. Sin la palabra «Mesa» (él: «es una obviedad»). Dos por folio, en
+// el orden de las mesas; con un número impar, la última hoja lleva una sola.
 //
 // Cada QR, el de SU mesa (él, v93): el enlace del tablón con el número y el
 // código secreto de la mesa (qr_mesas), que confirma el móvil para subir
@@ -29,6 +31,7 @@ import { C } from "../theme";
 import { descargarBlob } from "./descargas";
 import { EDAD_EMAIL } from "./invitados";
 import { PdfEnLienzo, crearCanvas } from "./pdfEnLienzo";
+import { SERIF, imagenesDe, registrarLetras } from "./tarjetasAcomodacion";
 
 export const ARCHIVO_TARJETAS_QR = "tarjetas-qr.pdf";
 // Su texto (él, v68: 2 por persona de 16 o más), en dos líneas parejas.
@@ -70,13 +73,17 @@ const ALTO_CARA = ALTO_PAGINA / 2;
 const MARCO = 14; // del corte (o del doblez) al marco dorado
 // El QR, solo en su cara (v92.9): 4,8 cm.
 const LADO_QR = 136;
-// El círculo del número y su letra, lo más grandes que caben: «12», la más
-// ancha, cabe dentro del aro de dentro.
-const RADIO_NUMERO = 68;
-const LETRA_NUMERO = 90;
-// Alto de las cifras de Helvetica negrita, por punto de letra: para
-// centrarlas de arriba abajo en el círculo.
+// El círculo del número y su letra (él, v99.4: «bajamos un poco el tamaño
+// del círculo»; era de 68 y la letra de 90), con el mismo centro de antes.
+const CENTRO_NUMERO = 22 + 68;
+const RADIO_NUMERO = 56;
+const LETRA_NUMERO = 72;
+// Alto de las cifras, por punto de letra: para centrarlas de arriba abajo
+// en el círculo.
 const ALTO_CIFRA = 0.716;
+// El adorno de la esquina (como en las tarjetas de acomodación).
+const ESQUINA_ANCHO = 120;
+const ESQUINA_MARGEN = 5;
 
 // Lo que se dibuja en una cara, en sus coordenadas de siempre; si va
 // girada, cada punto se da la vuelta alrededor del centro de la cara.
@@ -90,6 +97,9 @@ function lienzo(pdf, x0, y0, girada) {
     rect: (x, y, w, h) => pdf.rect(...caja(x, y, w, h), "F"),
     circulo: (x, y, r, estilo) => pdf.circle(...punto(x, y), r, estilo),
     marco: (x, y, w, h, r) => pdf.roundedRect(...caja(x, y, w, h), r, r),
+    // Una imagen (girada, la ya girada) en su caja.
+    imagen: (im, alias, x, y, w) => pdf.addImage(im.dato, "PNG", ...caja(x, y, w, w * im.proporcion), alias, "FAST"),
+    girada,
     // Líneas que empiezan en x, la primera en y (girada, del revés).
     izquierda(lineas, x, y, interlineado) {
       lineas.forEach((linea, i) => {
@@ -131,23 +141,25 @@ function dibujarQr(pdf, l, qr, x, y, lado) {
   }
 }
 
-// El marco de la cara y, arriba, el número de la mesa en su círculo: igual
-// en las dos caras.
-function marcoYNumero(pdf, l, x, y, mesa) {
+// El marco de la cara, el adorno en su esquina (encima del marco) y,
+// arriba, el número de la mesa en su círculo: igual en las dos caras. Sin
+// `adornos` (no se cargaron), sin adorno y con la letra de siempre.
+function marcoYNumero(pdf, l, x, y, mesa, adornos) {
   pdf.setDrawColor(C.gold);
   pdf.setLineWidth(0.6);
   l.marco(x + MARCO, y + MARCO, ANCHO_CARA - 2 * MARCO, ALTO_CARA - 2 * MARCO, 6);
-  const cy = y + 22 + RADIO_NUMERO;
-  pdf.setFillColor(C.ink);
+  if (adornos) {
+    const im = l.girada ? adornos.esquinaGirada : adornos.esquina;
+    l.imagen(im, l.girada ? "esquinaGirada" : "esquina", x + ESQUINA_MARGEN, y + ESQUINA_MARGEN, ESQUINA_ANCHO);
+  }
+  const cy = y + CENTRO_NUMERO;
+  pdf.setFillColor(C.goldClaro);
   pdf.setDrawColor(C.gold);
-  pdf.setLineWidth(1.6);
-  l.circulo(l.cx, cy, RADIO_NUMERO, "FD");
-  pdf.setDrawColor(C.goldClaro);
-  pdf.setLineWidth(0.5);
-  l.circulo(l.cx, cy, RADIO_NUMERO - 5, "S");
-  pdf.setFont("helvetica", "bold");
+  pdf.setLineWidth(3);
+  l.circulo(l.cx, cy, RADIO_NUMERO - 1.5, "FD");
+  pdf.setFont(...(adornos ? [SERIF, "normal"] : ["helvetica", "bold"]));
   pdf.setFontSize(LETRA_NUMERO);
-  pdf.setTextColor(C.goldClaro);
+  pdf.setTextColor(C.ink);
   l.centrado([String(mesa)], l.cx, cy + (LETRA_NUMERO * ALTO_CIFRA) / 2, 0);
 }
 
@@ -162,9 +174,9 @@ function pie(pdf, l, y, nombreEvento) {
 // La cara del texto (él, v92.9: «todo el texto en un lado y el QR en el
 // otro, y el número en los dos»): qué fotos y quién; abajo, que el código
 // está al otro lado.
-function caraTexto(pdf, x, y, girada, nombreEvento, mesa) {
+function caraTexto(pdf, x, y, girada, nombreEvento, mesa, adornos) {
   const l = lienzo(pdf, x, y, girada);
-  marcoYNumero(pdf, l, x, y, mesa);
+  marcoYNumero(pdf, l, x, y, mesa, adornos);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(16);
   pdf.setTextColor(C.ink);
@@ -196,9 +208,9 @@ function caraTexto(pdf, x, y, girada, nombreEvento, mesa) {
 
 // La cara del QR: el código bien grande, por dónde entrar si no se abre y,
 // abajo, que lo que se sube se explica al otro lado.
-function caraQr(pdf, qr, x, y, girada, nombreEvento, mesa) {
+function caraQr(pdf, qr, x, y, girada, nombreEvento, mesa, adornos) {
   const l = lienzo(pdf, x, y, girada);
-  marcoYNumero(pdf, l, x, y, mesa);
+  marcoYNumero(pdf, l, x, y, mesa, adornos);
   dibujarQr(pdf, l, qr, l.cx - LADO_QR / 2, y + 174, LADO_QR);
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(11);
@@ -229,8 +241,9 @@ export function tarjetasDeMesas(codigos = [], enlaceDe) {
 
 // Dos tarjetas por hoja: la línea de corte, a lo alto y discontinua; la
 // del doblez, a lo ancho y de puntos, bajo las tarjetas que haya. Finas.
-// `tarjetas`: [{ numero, qr }], cada una con el QR de su mesa.
-export function dibujarTarjetasQr(pdf, nombreEvento, tarjetas) {
+// `tarjetas`: [{ numero, qr }], cada una con el QR de su mesa. `adornos`: el
+// adorno y las letras (cargarAdornos de las tarjetas de acomodación), o null.
+export function dibujarTarjetasQr(pdf, nombreEvento, tarjetas, adornos = null) {
   for (let i = 0; i < tarjetas.length; i += 2) {
     if (i) pdf.addPage();
     const par = tarjetas.slice(i, i + 2);
@@ -242,8 +255,8 @@ export function dibujarTarjetasQr(pdf, nombreEvento, tarjetas) {
     pdf.line(0, ALTO_CARA, par.length * ANCHO_CARA, ALTO_CARA);
     pdf.setLineDashPattern([], 0);
     par.forEach(({ numero, qr }, j) => {
-      caraTexto(pdf, j * ANCHO_CARA, 0, true, nombreEvento, numero);
-      caraQr(pdf, qr, j * ANCHO_CARA, ALTO_CARA, false, nombreEvento, numero);
+      caraTexto(pdf, j * ANCHO_CARA, 0, true, nombreEvento, numero, adornos);
+      caraQr(pdf, qr, j * ANCHO_CARA, ALTO_CARA, false, nombreEvento, numero, adornos);
     });
   }
 }
@@ -259,19 +272,20 @@ export function crearQr(qrcode, enlace) {
 const conQr = (qrcode, tarjetas) => tarjetas.map((t) => ({ numero: t.numero, qr: crearQr(qrcode, t.enlace) }));
 
 // `tarjetas`: las de las mesas (tarjetasDeMesas), al menos una.
-export async function descargarTarjetasQr({ nombreEvento, tarjetas }) {
+export async function descargarTarjetasQr({ nombreEvento, tarjetas }, adornos = null) {
   // jsPDF y el QR pesan: se cargan solo al usarlos, como en acomodadores.
   const [{ jsPDF }, { default: qrcode }] = await Promise.all([import("jspdf"), import("qrcode-generator")]);
   const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-  dibujarTarjetasQr(pdf, nombreEvento, conQr(qrcode, tarjetas));
+  registrarLetras(pdf, adornos);
+  dibujarTarjetasQr(pdf, nombreEvento, conQr(qrcode, tarjetas), adornos);
   descargarBlob(ARCHIVO_TARJETAS_QR, pdf.output("blob"));
 }
 
 // La vista previa: cada folio, como imagen.
-export async function vistaPreviaTarjetasQr({ nombreEvento, tarjetas }, { escala = 1.2, crearLienzo = crearCanvas } = {}) {
+export async function vistaPreviaTarjetasQr({ nombreEvento, tarjetas }, adornos = null, { escala = 1.2, crearLienzo = crearCanvas } = {}) {
   const { default: qrcode } = await import("qrcode-generator");
-  const lienzo = new PdfEnLienzo({ medida: { ancho: ANCHO_PAGINA, alto: ALTO_PAGINA }, escala, crearLienzo });
-  dibujarTarjetasQr(lienzo, nombreEvento, conQr(qrcode, tarjetas));
+  const lienzo = new PdfEnLienzo({ medida: { ancho: ANCHO_PAGINA, alto: ALTO_PAGINA }, escala, crearLienzo, imagenes: imagenesDe(adornos) });
+  dibujarTarjetasQr(lienzo, nombreEvento, conQr(qrcode, tarjetas), adornos);
   if (!lienzo.ctx) return [];
   return lienzo.paginas.map((p) => p.toDataURL("image/jpeg", 0.9));
 }

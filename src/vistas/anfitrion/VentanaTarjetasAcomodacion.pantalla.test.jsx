@@ -15,7 +15,7 @@ const muestra = (id) => `data:image/png;base64,${id}`;
 // Las hojas y las letras de la invitación: aquí no hay red; basta con algo.
 const ADORNOS = { de: "pega" };
 const cargarAdornos = () => Promise.resolve(ADORNOS);
-// Dos vueltas: primero llegan las hojas y las letras de la invitación
+// Dos vueltas: primero llegan el adorno y las letras de la invitación
 // (cargarAdornos) y, con ellas, se dibuja la vista previa.
 const esperar = async () => {
   await act(() => new Promise((r) => setTimeout(r, 60)));
@@ -97,7 +97,7 @@ it("«Muestra» descarga la hoja de muestra con la hoja y las marcas elegidas, y
   );
   const boton = document.body.querySelector("[data-botones-tarjetas] [data-muestra-acabados]");
   expect(boton.textContent).toBe("Muestra");
-  // Hasta que llegan las hojas y las letras de la invitación, espera.
+  // Hasta que llegan el adorno y las letras de la invitación, espera.
   expect(boton.disabled).toBe(true);
   await esperar();
   expect(boton.disabled).toBe(false);
@@ -122,7 +122,7 @@ it("los botones van ARRIBA, antes de las opciones y de la vista previa", () => {
 it("la paleta: los tres de la invitación, cada uno con su muestra; elegir uno rehace la vista previa y se recuerda", async () => {
   const llamadas = [];
   const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={(t, o) => (llamadas.push(o), [])} muestra={muestra} cargarAdornos={cargarAdornos} />);
-  // Las muestras, en cuanto llegan las hojas y las letras de la invitación.
+  // Las muestras, en cuanto llegan el adorno y las letras de la invitación.
   await esperar();
   const radios = [...document.body.querySelectorAll('[role="radiogroup"][aria-label="Acabado"] [role="radio"]')];
   expect(radios.map((r) => r.querySelector("img").getAttribute("src"))).toEqual(["blancoHojas", "blancoHojasGruesoFuera", "blancoHojasGruesoDentro"].map(muestra));
@@ -138,7 +138,7 @@ it("la paleta: los tres de la invitación, cada uno con su muestra; elegir uno r
 
 
 // v99.2: los acabados de la invitación necesitan sus hojas y sus letras.
-it("las hojas y las letras de la invitación llegan a la vista previa, a las muestras y a la hoja de muestra", async () => {
+it("el adorno y las letras de la invitación llegan a la vista previa, a las muestras y a la hoja de muestra", async () => {
   const previa = [];
   const muestras = [];
   const pedidas = [];
@@ -178,6 +178,6 @@ it("si no llegan, la vista previa sale igual (sin ellas) y se dice", async () =>
   );
   await esperar();
   expect(previa.at(-1)).toBeNull();
-  expect(document.body.querySelector("[data-sin-adornos]").textContent).toContain("No se pudieron cargar las hojas y las letras");
+  expect(document.body.querySelector("[data-sin-adornos]").textContent).toContain("No se pudieron cargar el adorno y las letras");
   vista.desmontar();
 });

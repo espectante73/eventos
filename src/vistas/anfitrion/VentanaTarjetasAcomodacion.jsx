@@ -104,7 +104,7 @@ function ElegirAcabado({ valor, onCambiar, muestras }) {
 
 // `vistaPrevia` y `muestra`: quien dibuja las hojas y las muestras (las
 // pruebas pasan unos sin lienzo); `pdfMuestra`, la hoja de muestra;
-// `cargarAdornos`, quien trae las hojas y las letras de la invitación.
+// `cargarAdornos`, quien trae el adorno y las letras de la invitación.
 export function VentanaTarjetasAcomodacion({
   invitados,
   onCerrar,
@@ -219,7 +219,7 @@ export function VentanaTarjetasAcomodacion({
       </p>
       {adornos === null && (
         <p className="text-sm mb-1" style={{ color: C.wax }} data-sin-adornos>
-          No se pudieron cargar las hojas y las letras de la invitación: sus acabados salen sin ellas. Vuelve a abrir la ventana para
+          No se pudieron cargar el adorno y las letras de la invitación: sus acabados salen sin ellos. Vuelve a abrir la ventana para
           intentarlo otra vez.
         </p>
       )}

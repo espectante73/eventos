@@ -266,21 +266,24 @@ describe("la hoja de muestra de los acabados", () => {
 // tarjeta en modo claro»; eligió el boceto 3 y, con el doble marco del 2, las dos maneras.
 describe("los acabados de la invitación", () => {
   const ADORNOS = {
-    hojas: { dato: "hojas", proporcion: 0.6 },
-    hojasGirada: { dato: "hojasGirada", proporcion: 0.6 },
+    esquina: { dato: "esquina", proporcion: 0.7 },
+    esquinaGirada: { dato: "esquinaGirada", proporcion: 0.7 },
     corazon: { dato: "corazon", proporcion: 0.12 },
     corazonGirada: { dato: "corazonGirada", proporcion: 0.12 },
   };
   const ana = { id: "1", nombre: "Ana", apellido: "Medina", mesa: 3, familia: "A" };
 
   it("tres: uno de marco fino y dos de doble marco, grueso fuera y grueso dentro; la letra de la familia, en verde oscuro", () => {
-    expect(ACABADOS.map((a) => a.marcos.map(([, grosor]) => grosor))).toEqual([[0.5], [0.9, 0.4], [0.4, 0.9]]);
+    // v99.4 (él): «el marco grueso más grueso, para que se note mejor la diferencia».
+    expect(ACABADOS.map((a) => a.marcos.map(([, grosor]) => grosor))).toEqual([[0.5], [1.5, 0.4], [0.4, 1.5]]);
     for (const a of ACABADOS) expect(a.familia).toBe(C.ink);
   });
-  it("cada cara: las hojas y el corazón (girados en la de arriba), el APELLIDO en Fraunces con aire entre letras y el nombre en la caligráfica dorada", () => {
-    const { pdf, textos, imagenes, recuadros } = hojaDePega();
+  it("cada cara: el adorno y el corazón (girados en la de arriba), el APELLIDO en Fraunces con aire entre letras y el nombre en la caligráfica dorada", () => {
+    const { pdf, textos, imagenes, recuadros, rellenos } = hojaDePega();
     dibujarTarjetasAcomodacion(pdf, [ana], { hoja: "a4", acabado: "blancoHojasGruesoFuera" }, ADORNOS);
-    expect(imagenes).toEqual(["hojasGirada", "corazonGirada", "hojas", "corazon"]);
+    expect(imagenes).toEqual(["esquinaGirada", "corazonGirada", "esquina", "corazon"]);
+    // v99.4 (él): el marco, entero, pasa por debajo del adorno: nada lo tapa.
+    expect(rellenos).toEqual([]);
     expect(textos.filter((x) => x.t === "MEDINA").map((x) => [x.angle, x.fuente, x.charSpace])).toEqual([
       [180, "fraunces", 1.5],
       [0, "fraunces", 1.5],
@@ -296,10 +299,11 @@ describe("los acabados de la invitación", () => {
     expect(derecha("Ana").y).toBeGreaterThan(derecha("MEDINA").y);
     expect(derecha("A").fuente).toBe("fraunces");
   });
-  it("si las hojas y las letras no se cargaron, sale como uno blanco de marco dorado, con la letra de siempre", () => {
-    const { pdf, textos, imagenes } = hojaDePega();
+  it("si el adorno y las letras no se cargaron, sale como uno blanco de marco dorado, con la letra de siempre", () => {
+    const { pdf, textos, imagenes, rellenos } = hojaDePega();
     dibujarTarjetasAcomodacion(pdf, [ana], { hoja: "a4", acabado: "blancoHojas" });
     expect(imagenes).toHaveLength(0);
+    expect(rellenos).toHaveLength(0);
     expect(textos.find((x) => x.t === "MEDINA").fuente).toBe("helvetica");
   });
 });

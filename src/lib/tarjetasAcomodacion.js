@@ -11,8 +11,8 @@
 //   ancho, el de la bancaria, 8,56 cm, el único (él, v98.9: retiró el de
 //   9,5 cm: «nos quedamos con el modelo de tarjeta bancaria»);
 // - con el estilo de la invitación (v99.2, la línea que él eligió): papel
-//   blanco, las hojas de olivo en la esquina y el marco dorado, fino o
-//   doble (ACABADOS);
+//   blanco, el adorno de hojas y volutas en la esquina (el suyo, v99.4) y
+//   el marco dorado, fino o doble (ACABADOS);
 // - el APELLIDO arriba, en mayúsculas para que no se confundan («MESA,
 //   Sara», «TOMÁS, Elena»), y el nombre debajo en caligráfica dorada, con
 //   el corazón de la invitación (él, v98.9; antes «APELLIDO, Nombre» en
@@ -53,17 +53,18 @@ const MARGEN_MINIMO = 10;
 // invitación, poner su motivo o estilo en la tarjeta en modo claro»; eligió
 // el boceto 3 y, con el doble marco del 2, las dos maneras; luego: «me quedo
 // solo con estos 3 modelos que serán la nueva línea y los otros 6 los
-// desechamos»). Papel blanco, las hojas de olivo de la invitación en la
-// esquina, el APELLIDO en Fraunces (la letra de «LAS BODAS»), el nombre en
+// desechamos»). Papel blanco, el adorno de la esquina, el APELLIDO en Fraunces (la letra de «LAS BODAS»), el nombre en
 // letra caligráfica dorada («de todos») con el corazón debajo, y el número
 // de la mesa en el círculo dorado. Cambia el marco: `marcos`, cada uno
-// [distancia al corte, grosor]. (Los seis de antes —verdes, champán,
-// rectángulo dorado— y el del aura, quitados por él: no volver a ellos.)
+// [distancia al corte, grosor]; el grueso, 1,5 (él, v99.4: «el marco grueso
+// más grueso, para que se note mejor la diferencia»; era 0,9). (Los seis de
+// antes —verdes, champán, rectángulo dorado— y el del aura, quitados por
+// él: no volver a ellos.)
 const LINEA_INVITACION = { marco: C.gold, letra: C.ink, letraNombre: C.gold, familia: C.ink, contornoNumero: C.gold };
 export const ACABADOS = [
   { ...LINEA_INVITACION, id: "blancoHojas", rotulo: "Marco fino", marcos: [[9, 0.5]] },
-  { ...LINEA_INVITACION, id: "blancoHojasGruesoFuera", rotulo: "Doble marco, grueso fuera", marcos: [[8, 0.9], [11, 0.4]] },
-  { ...LINEA_INVITACION, id: "blancoHojasGruesoDentro", rotulo: "Doble marco, grueso dentro", marcos: [[8, 0.4], [11, 0.9]] },
+  { ...LINEA_INVITACION, id: "blancoHojasGruesoFuera", rotulo: "Doble marco, grueso fuera", marcos: [[8, 1.5], [11, 0.4]] },
+  { ...LINEA_INVITACION, id: "blancoHojasGruesoDentro", rotulo: "Doble marco, grueso dentro", marcos: [[8, 0.4], [11, 1.5]] },
 ];
 const acabado = (id) => ACABADOS.find((a) => a.id === id) || ACABADOS[0];
 // Con qué se van a cortar, y así, qué marcas lleva la hoja (él, v99: «la
@@ -133,7 +134,12 @@ const MARCO = 14; // del corte (o del doblez) al hueco del nombre y la letra de 
 const R_NUM = 30; // el círculo del número
 const TAM_FAMILIA = 11;
 const ALTO_CIFRA = 0.716; // alto de las mayúsculas y las cifras, por punto de letra
-const HOJAS_ANCHO = 70; // las hojas de la esquina
+// El adorno de la esquina (él, v99.4): entero, cerca del borde y con el
+// marco pasando por debajo. Antes, unas hojas cortadas por el borde y el
+// marco cortado donde empezaban: «mal presentado»; dentro del marco, «muy
+// adentro».
+const ESQUINA_ANCHO = 82;
+const ESQUINA_MARGEN = 3; // del borde de la cara
 const TAM_APELLIDO = 16; // el de entrada; si no cabe, encoge
 export const ESPACIADO_APELLIDO = 1.5; // entre letras, como «LAS BODAS»
 const TAM_NOMBRE = 30; // el de entrada; si no cabe, encoge
@@ -145,13 +151,13 @@ const TAM_NUMERO = 38;
 export const SERIF = "fraunces";
 export const CALIGRAFICA = "alexbrush";
 
-// Una cara de la tarjeta: el marco o los dos marcos, las hojas en la
-// esquina de arriba a la izquierda (cortadas por el borde, como en la
-// invitación), el número de la mesa en su círculo dorado y, en medio del
-// hueco de la izquierda, el APELLIDO, el nombre en caligráfica y el
-// corazón. Si va girada, cada punto da la vuelta alrededor del centro de
-// la cara. Sin `adornos` (no se cargaron), sin hojas ni corazón y con la
-// letra de siempre: se sigue pudiendo imprimir.
+// Una cara de la tarjeta: el marco o los dos marcos, el adorno en la
+// esquina de arriba a la izquierda, por encima del marco, el número de la
+// mesa en su círculo dorado y, en medio del hueco de la izquierda, el
+// APELLIDO, el nombre en caligráfica y el corazón. Si va girada, cada punto
+// da la vuelta alrededor del centro de la cara. Sin `adornos` (no se
+// cargaron), sin adorno ni corazón y con la letra de siempre: se sigue
+// pudiendo imprimir.
 function cara(pdf, x, y, ancho, alto, girada, t, estilo, adornos) {
   const cx = x + ancho / 2;
   const cy = y + alto / 2;
@@ -174,7 +180,8 @@ function cara(pdf, x, y, ancho, alto, girada, t, estilo, adornos) {
     pdf.setLineWidth(grosor);
     pdf.roundedRect(x + m, y + m, ancho - 2 * m, alto - 2 * m, 2, 2, "S");
   }
-  if (adornos) imagen("hojas", x, y, HOJAS_ANCHO);
+  // El adorno, encima: el marco pasa por debajo, entero.
+  if (adornos) imagen("esquina", x + ESQUINA_MARGEN, y + ESQUINA_MARGEN, ESQUINA_ANCHO);
   // El número de la mesa, en su círculo dorado.
   const nx = x + ancho - MARCO - 8 - R_NUM;
   pdf.setFillColor(C.goldClaro);
@@ -253,7 +260,7 @@ function tarjeta(pdf, x, y, ancho, adornos, [tArriba, estiloArriba], [tAbajo, es
 
 // Todas las hojas: las tarjetas en rejilla, centradas, y por fuera las
 // marcas para cortar, las de la forma de cortar elegida. `pdf` es un jsPDF o un
-// PdfEnLienzo (la vista previa); `adornos`, las hojas y las letras de la
+// PdfEnLienzo (la vista previa); `adornos`, el adorno y las letras de la
 // invitación (cargarAdornos), si se cargaron. Devuelve cuántas hojas salieron.
 export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, acabado: idAcabado } = {}, adornos = null) {
   const estilo = acabado(idAcabado);
@@ -337,27 +344,28 @@ export async function pdfMuestraAcabados(opciones, adornos = null) {
   return pdf.output("blob");
 }
 
-// ---------- Las hojas y las letras de la invitación ----------
+// ---------- El adorno, el corazón y las letras de la invitación ----------
 
-// Las hojas de olivo y el corazón, recortados de la imagen de la
-// invitación (sin el fondo crema); y sus dos letras: Fraunces SemiBold, la
+// El adorno de la esquina, hojas de olivo y volutas doradas, sin fondo (lo
+// dio él, v99.4); el corazón, recortado de la imagen de la invitación (sin
+// el fondo crema); y sus dos letras: Fraunces SemiBold, la
 // de la app, para el apellido, y Alex Brush, la caligráfica, para el
 // nombre (licencia libre, public/tarjetas/LICENCIA-FUENTES.txt). En el PDF
 // van dentro (jsPDF no tiene más que las suyas); en la vista previa, con
 // el mismo archivo, para que se vea lo mismo.
 export const RUTAS_ADORNOS = {
-  hojas: "/tarjetas/hojas.png",
+  esquina: "/tarjetas/esquina.png",
   corazon: "/tarjetas/corazon.png",
   serif: "/tarjetas/Fraunces-SemiBold.ttf",
   caligrafica: "/tarjetas/AlexBrush-Regular.ttf",
 };
-// Las hojas, el corazón y las letras, cargados una vez (como el logo de los
+// El adorno, el corazón y las letras, cargados una vez (como el logo de los
 // sobres): la imagen para el lienzo y el dato para el PDF, cada una también
 // girada (la cara de arriba); las letras, registradas en el navegador para
 // la vista previa y en base64 para meterlas en el PDF.
 export async function cargarAdornos(rutas = RUTAS_ADORNOS) {
-  const [hojas, corazon, serif, caligrafica] = await Promise.all([
-    cargarImagen(rutas.hojas),
+  const [esquina, corazon, serif, caligrafica] = await Promise.all([
+    cargarImagen(rutas.esquina),
     cargarImagen(rutas.corazon),
     fetch(rutas.serif).then((r) => r.arrayBuffer()),
     fetch(rutas.caligrafica).then((r) => r.arrayBuffer()),
@@ -369,8 +377,8 @@ export async function cargarAdornos(rutas = RUTAS_ADORNOS) {
     ].map(async ([nombre, datos]) => document.fonts.add(await new FontFace(nombre, datos).load())),
   );
   return {
-    hojas,
-    hojasGirada: await girarImagen(hojas),
+    esquina,
+    esquinaGirada: await girarImagen(esquina),
     corazon,
     corazonGirada: await girarImagen(corazon),
     fuentes: { [SERIF]: aBase64(serif), [CALIGRAFICA]: aBase64(caligrafica) },
@@ -397,9 +405,10 @@ function aBase64(datos) {
   return btoa(texto);
 }
 
-// Las imágenes de los adornos, para el lienzo: por su dato, como addImage.
-const imagenesDe = (adornos) =>
-  new Map(adornos ? ["hojas", "hojasGirada", "corazon", "corazonGirada"].map((k) => [adornos[k].dato, adornos[k].imagen]) : []);
+// Las imágenes de los adornos, para el lienzo: por su dato, como addImage
+// (también las tarjetas QR).
+export const imagenesDe = (adornos) =>
+  new Map(adornos ? ["esquina", "esquinaGirada", "corazon", "corazonGirada"].map((k) => [adornos[k].dato, adornos[k].imagen]) : []);
 
 // Las dos letras de la invitación, dentro del PDF, si se cargaron (también
 // en los sobres).
