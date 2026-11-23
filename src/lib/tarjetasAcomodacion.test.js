@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rejilla, tarjetasDeAcomodacion, dibujarTarjetasAcomodacion, dibujarMuestraAcabados, ACABADOS, ANCHO_TARJETA, OPCIONES_POR_DEFECTO, CORTES } from "./tarjetasAcomodacion";
+import { rejilla, tarjetasDeAcomodacion, dibujarTarjetasAcomodacion, dibujarMuestraAcabados, ACABADOS, ANCHO_TARJETA, OPCIONES_POR_DEFECTO, CORTES, FORMATOS } from "./tarjetasAcomodacion";
 import { PdfEnLienzo, PUNTOS_POR_MM } from "./pdfEnLienzo";
 import { C } from "../theme";
 
@@ -8,6 +8,15 @@ describe("rejilla (cuántas caben por hoja)", () => {
   it("A4: 4; A3: 9", () => {
     expect(rejilla("a4")).toEqual({ columnas: 2, filas: 2, porHoja: 4 });
     expect(rejilla("a3")).toEqual({ columnas: 3, filas: 3, porHoja: 9 });
+  });
+  // v99.8 (él): «la opción de tarjeta para plegar o que sea solo tamaño de
+  // una cara tarjeta bancaria».
+  it("de una cara: A4, 10; A3, 21; para plegar, como siempre (y es lo de entrada)", () => {
+    expect(FORMATOS.map((f) => [f.id, f.rotulo])).toEqual([["plegar", "Para plegar"], ["cara", "Una cara"]]);
+    expect(OPCIONES_POR_DEFECTO.formato).toBe("plegar");
+    expect(rejilla("a4", "cara")).toEqual({ columnas: 2, filas: 5, porHoja: 10 });
+    expect(rejilla("a3", "cara")).toEqual({ columnas: 3, filas: 7, porHoja: 21 });
+    expect(rejilla("a4", "plegar")).toEqual(rejilla("a4"));
   });
   // v98.9 (él): «retiramos la opción más ancha y nos quedamos con el modelo
   // de tarjeta bancaria».
@@ -193,6 +202,31 @@ describe("las marcas de corte", () => {
       expect(Math.min(l.x1, l.x2)).toBeGreaterThanOrEqual(3 * PUNTOS_POR_MM - 0.01);
       expect(Math.max(l.x1, l.x2)).toBeLessThanOrEqual((210 - 3) * PUNTOS_POR_MM + 0.01);
     }
+  });
+});
+
+// v99.8 (él): la tarjeta de una cara, plana y sin doblez.
+describe("de una cara", () => {
+  const doce = Array.from({ length: 12 }, (_, i) => ({ id: String(i), nombre: "Ana", apellido: "Medina", mesa: 3, familia: "" }));
+  it("una cara por tarjeta, sin girar; 12 en A4 son 2 hojas", () => {
+    const h = hojaDePega();
+    expect(dibujarTarjetasAcomodacion(h.pdf, doce, { hoja: "a4", formato: "cara" })).toBe(2);
+    const apellidos = h.textos.filter((x) => x.t === "MEDINA");
+    expect(apellidos).toHaveLength(12);
+    expect(apellidos.every((x) => x.angle === 0)).toBe(true);
+  });
+  it("sin la raya discontinua del doblez; las de corte, sí", () => {
+    const { pdf, lineas } = hojaQueApunta();
+    dibujarTarjetasAcomodacion(pdf, doce.slice(0, 1), { hoja: "a4", formato: "cara" });
+    expect(lineas.filter((l) => l.color === C.negro && l.discontinua)).toHaveLength(0);
+    expect(lineas.filter((l) => l.color === C.negro && !l.discontinua)).toHaveLength(8);
+  });
+  it("la hoja de muestra: una tarjeta por acabado, cada una con su número", () => {
+    const { pdf, textos, recuadros } = hojaDePega();
+    expect(dibujarMuestraAcabados(pdf, { hoja: "a4", formato: "cara" })).toBe(1);
+    expect(textos.filter((x) => x.t === "ABREU" && x.angle === 0)).toHaveLength(4);
+    expect(["1", "2", "3", "4"].map((n) => textos.filter((x) => x.t === n).length)).toEqual([1, 1, 1, 1]);
+    expect(recuadros).toHaveLength(6);
   });
 });
 

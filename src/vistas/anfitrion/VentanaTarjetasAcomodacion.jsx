@@ -2,7 +2,7 @@
 // imprimir, doblar y poner en el plato. Antes de descargar, la VISTA PREVIA
 // de todas las hojas (él: «no sea que no me guste cómo quede»), y la hoja
 // (A4 o A3). La tarjeta, siempre la bancaria: cada cara, de su tamaño (él,
-// v98.9; retiró el ancho de 9,5 cm). Con qué se cortan (v99: guillotina,
+// v98.9; retiró el ancho de 9,5 cm), plegada o de una cara (v99.8). Con qué se cortan (v99: guillotina,
 // tijera o plóter), que decide las marcas. Y el acabado: los de la línea de la invitación (v99.2; el cuarto, v99.7) (él:
 // «poder editar yo mismo el acabado… y verlo antes»).
 //
@@ -20,6 +20,7 @@ import { descargarBlob } from "../../lib/descargas";
 import {
   ACABADOS,
   CORTES,
+  FORMATOS,
   ARCHIVO_MUESTRA_ACABADOS,
   ARCHIVO_TARJETAS_ACOMODACION,
   cargarAdornos as cargarAdornosDeLaApp,
@@ -35,7 +36,7 @@ import {
 
 const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 
-// La hoja, la forma de cortar y el acabado se recuerdan en este aparato: es la
+// La hoja, la forma de cortar, el formato y el acabado se recuerdan en este aparato: es la
 // impresora de casa la que manda.
 const CLAVE_OPCIONES = "tarjetas-acomodacion-opciones";
 function leerOpciones() {
@@ -47,6 +48,7 @@ function leerOpciones() {
         hoja: o.hoja,
         corte: CORTES.some((c) => c.id === o.corte) ? o.corte : OPCIONES_POR_DEFECTO.corte,
         acabado: ACABADOS.some((a) => a.id === o.acabado) ? o.acabado : OPCIONES_POR_DEFECTO.acabado,
+        formato: FORMATOS.some((f) => f.id === o.formato) ? o.formato : OPCIONES_POR_DEFECTO.formato,
       };
     }
   } catch {
@@ -120,7 +122,7 @@ export function VentanaTarjetasAcomodacion({
     guardarOpciones(nuevas);
   };
   const { tarjetas, sinMesa } = useMemo(() => tarjetasDeAcomodacion(invitados), [invitados]);
-  const { porHoja } = rejilla(opciones.hoja);
+  const { porHoja } = rejilla(opciones.hoja, opciones.formato);
   const hojas = Math.max(1, Math.ceil(tarjetas.length / porHoja));
   const hoja = HOJAS[opciones.hoja];
   const elegido = ACABADOS.find((a) => a.id === opciones.acabado) || ACABADOS[0];
@@ -186,8 +188,10 @@ export function VentanaTarjetasAcomodacion({
           Descargado: {descargado}. Lo tienes en tu carpeta de Descargas.
         </p>
       )}
-      {/* La hoja y con qué se corta, en una sola línea (norma 6). */}
-      <div className="grid grid-cols-2 gap-2 mb-2" data-opciones-tarjetas>
+      {/* La hoja, con qué se corta y el formato, en una sola línea (norma 6).
+          La hoja solo dice «A4» o «A3»: más estrecha, para que «Para plegar»
+          y «Tijera o cúter» quepan enteros en el móvil. */}
+      <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: "minmax(0, 0.6fr) minmax(0, 1.2fr) minmax(0, 1.2fr)" }} data-opciones-tarjetas>
         <Field label="Hoja">
           <Desplegable aria-label="Hoja" value={opciones.hoja} onChange={(e) => elegir({ hoja: e.target.value })} style={{ minHeight: DEDO }}>
             {Object.entries(HOJAS).map(([clave, h]) => (
@@ -202,6 +206,15 @@ export function VentanaTarjetasAcomodacion({
             {CORTES.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.rotulo}
+              </option>
+            ))}
+          </Desplegable>
+        </Field>
+        <Field label="Formato">
+          <Desplegable aria-label="Formato" value={opciones.formato} onChange={(e) => elegir({ formato: e.target.value })} style={{ minHeight: DEDO }}>
+            {FORMATOS.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.rotulo}
               </option>
             ))}
           </Desplegable>
@@ -245,7 +258,8 @@ export function VentanaTarjetasAcomodacion({
           Cómo se usa
         </summary>
         <p className="mt-2" style={{ opacity: OP.secundario }}>
-          Corta por las rayas y dobla cada tarjeta por los puntos: el nombre se lee por los dos lados. «Cortar con» pone las marcas de
+          «Para plegar»: corta por las rayas y dobla cada tarjeta por los puntos; queda de pie y el nombre se lee por los dos lados.
+          «Una cara»: cada tarjeta, plana y del tamaño de una tarjeta bancaria; solo se corta, y caben más por hoja. «Cortar con» pone las marcas de
           cada forma de cortar: rayitas en los bordes para la guillotina, líneas enteras para tijera o cúter, y marcas en las esquinas para
           el plóter (cada marca de plóter tiene las suyas: confírmalo con quien corte). Salen mesa por mesa, y la letra pequeña de la
           esquina es su familia dentro de la mesa, para repartirlas sin separar a nadie; quien viene solo no lleva letra. «Muestra»

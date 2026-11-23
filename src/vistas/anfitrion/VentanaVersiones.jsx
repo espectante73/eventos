@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "99.8",
+    cambios: [
+      "Tarjetas de acomodación: nuevo desplegable «Formato», junto a «Hoja» y «Cortar con». «Para plegar», como hasta ahora: dos caras que se doblan y quedan de pie. «Una cara»: cada tarjeta, plana y del tamaño de una tarjeta bancaria, sin doblez; caben 10 por A4 y 21 por A3. Vale para los cuatro acabados y también para la hoja de muestra.",
+    ],
+  },
+  {
     version: "99.7",
     cambios: [
       "Tarjetas de acomodación: un cuarto acabado para elegir, «Marco fino, número grande». Sin círculo: «MESA» y el número grande a la derecha, separados del nombre por una línea dorada. También sale en la hoja de muestra, con el número 4.",

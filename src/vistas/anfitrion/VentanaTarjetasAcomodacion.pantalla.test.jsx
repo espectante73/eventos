@@ -30,7 +30,7 @@ it("cuenta tarjetas y hojas, avisa de quien no tiene mesa y enseña la vista pre
   expect(document.body.querySelector("[data-sin-mesa]").textContent).toBe("1 confirmado sin mesa se queda sin tarjeta.");
   await esperar();
   expect(document.body.querySelectorAll("[data-vista-previa] img")).toHaveLength(2);
-  expect(llamadas.at(-1)).toEqual({ n: 12, hoja: "a3", corte: "guillotina", acabado: "blancoHojas" });
+  expect(llamadas.at(-1)).toEqual({ n: 12, hoja: "a3", corte: "guillotina", acabado: "blancoHojas", formato: "plegar" });
   vista.desmontar();
 });
 
@@ -40,15 +40,15 @@ it("cambiar la hoja rehace la vista previa y se recuerda en el aparato; el ancho
   const vistaPrevia = (tarjetas, opciones) => (llamadas.push(opciones), []);
   const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={vistaPrevia} muestra={muestra} cargarAdornos={cargarAdornos} />);
   const selects = document.body.querySelectorAll("[data-opciones-tarjetas] select");
-  expect([...selects].map((s) => s.getAttribute("aria-label"))).toEqual(["Hoja", "Cortar con"]);
+  expect([...selects].map((s) => s.getAttribute("aria-label"))).toEqual(["Hoja", "Cortar con", "Formato"]);
   act(() => {
     selects[0].value = "a4";
     selects[0].dispatchEvent(new Event("change", { bubbles: true }));
   });
   await esperar();
-  expect(llamadas.at(-1)).toEqual({ hoja: "a4", corte: "guillotina", acabado: "blancoHojas" });
+  expect(llamadas.at(-1)).toEqual({ hoja: "a4", corte: "guillotina", acabado: "blancoHojas", formato: "plegar" });
   expect(document.body.querySelector("[data-resumen-tarjetas]").textContent).toBe("12 tarjetas en 3 hojas A4, 4 por hoja.");
-  expect(JSON.parse(window.localStorage.getItem("tarjetas-acomodacion-opciones"))).toEqual({ hoja: "a4", corte: "guillotina", acabado: "blancoHojas" });
+  expect(JSON.parse(window.localStorage.getItem("tarjetas-acomodacion-opciones"))).toEqual({ hoja: "a4", corte: "guillotina", acabado: "blancoHojas", formato: "plegar" });
   vista.desmontar();
 });
 
@@ -57,7 +57,7 @@ it("lo guardado de antes con el ancho de 9,5 cm se respeta en hoja y acabado, y 
   const llamadas = [];
   const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={(t, o) => (llamadas.push(o), [])} muestra={muestra} cargarAdornos={cargarAdornos} />);
   await esperar();
-  expect(llamadas.at(-1)).toEqual({ hoja: "a4", corte: "guillotina", acabado: "blancoHojasGruesoDentro" });
+  expect(llamadas.at(-1)).toEqual({ hoja: "a4", corte: "guillotina", acabado: "blancoHojasGruesoDentro", formato: "plegar" });
   vista.desmontar();
 });
 
@@ -67,7 +67,24 @@ it("un acabado de los de antes, guardado en el aparato, pasa al primero de la l�
   const llamadas = [];
   const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={(t, o) => (llamadas.push(o), [])} muestra={muestra} cargarAdornos={cargarAdornos} />);
   await esperar();
-  expect(llamadas.at(-1)).toEqual({ hoja: "a3", corte: "tijera", acabado: "blancoHojas" });
+  expect(llamadas.at(-1)).toEqual({ hoja: "a3", corte: "tijera", acabado: "blancoHojas", formato: "plegar" });
+  vista.desmontar();
+});
+
+// v99.8 (él): plegada o de una cara.
+it("«Formato»: para plegar o una cara; una cara cabe más por hoja, rehace la vista previa y se recuerda", async () => {
+  const llamadas = [];
+  const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={(t, o) => (llamadas.push(o), [])} muestra={muestra} cargarAdornos={cargarAdornos} />);
+  const formato = document.body.querySelector('[data-opciones-tarjetas] select[aria-label="Formato"]');
+  expect([...formato.options].map((o) => o.textContent)).toEqual(["Para plegar", "Una cara"]);
+  act(() => {
+    formato.value = "cara";
+    formato.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await esperar();
+  expect(llamadas.at(-1).formato).toBe("cara");
+  expect(document.body.querySelector("[data-resumen-tarjetas]").textContent).toBe("12 tarjetas en 1 hoja A3, 21 por hoja.");
+  expect(JSON.parse(window.localStorage.getItem("tarjetas-acomodacion-opciones")).formato).toBe("cara");
   vista.desmontar();
 });
 
@@ -103,7 +120,7 @@ it("«Muestra» descarga la hoja de muestra con la hoja y las marcas elegidas, y
   expect(boton.disabled).toBe(false);
   vista.pulsar(boton);
   await esperar();
-  expect(pedidas).toEqual([{ hoja: "a3", corte: "guillotina", acabado: "blancoHojas" }]);
+  expect(pedidas).toEqual([{ hoja: "a3", corte: "guillotina", acabado: "blancoHojas", formato: "plegar" }]);
   expect(document.body.querySelector("[data-descargado]").textContent).toContain("muestra-acabados-tarjetas.pdf");
   URL.createObjectURL = crear;
   vista.desmontar();

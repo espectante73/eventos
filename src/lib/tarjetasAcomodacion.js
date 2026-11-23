@@ -85,15 +85,23 @@ export const CORTES = [
   { id: "tijera", rotulo: "Tijera o cúter" },
   { id: "ploter", rotulo: "Plóter" },
 ];
-export const OPCIONES_POR_DEFECTO = { hoja: "a3", corte: CORTES[0].id, acabado: ACABADOS[0].id };
+// Plegada o de una cara (él, v99.8: «que tenga la opción de tarjeta para
+// plegar o que sea solo tamaño de una cara tarjeta bancaria»): de una cara,
+// plana, sin doblez; caben el doble y algo más por hoja.
+export const FORMATOS = [
+  { id: "plegar", rotulo: "Para plegar" },
+  { id: "cara", rotulo: "Una cara" },
+];
+export const OPCIONES_POR_DEFECTO = { hoja: "a3", corte: CORTES[0].id, acabado: ACABADOS[0].id, formato: FORMATOS[0].id };
+const deUnaCara = (formato) => formato === "cara";
 
 const MM = PUNTOS_POR_MM;
 
 // Cuántas caben por hoja, con el margen mínimo alrededor.
-export function rejilla(hoja) {
+export function rejilla(hoja, formato = OPCIONES_POR_DEFECTO.formato) {
   const papel = HOJAS[hoja] || HOJAS.a3;
   const columnas = Math.max(1, Math.floor((papel.ancho - 2 * MARGEN_MINIMO + 0.01) / ANCHO_TARJETA));
-  const filas = Math.max(1, Math.floor((papel.alto - 2 * MARGEN_MINIMO + 0.01) / ALTO_TARJETA));
+  const filas = Math.max(1, Math.floor((papel.alto - 2 * MARGEN_MINIMO + 0.01) / (deUnaCara(formato) ? ALTO_CARA : ALTO_TARJETA)));
   return { columnas, filas, porHoja: columnas * filas };
 }
 
@@ -302,38 +310,48 @@ function tarjeta(pdf, x, y, ancho, adornos, [tArriba, estiloArriba], [tAbajo, es
 // marcas para cortar, las de la forma de cortar elegida. `pdf` es un jsPDF o un
 // PdfEnLienzo (la vista previa); `adornos`, el adorno y las letras de la
 // invitación (cargarAdornos), si se cargaron. Devuelve cuántas hojas salieron.
-export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, acabado: idAcabado } = {}, adornos = null) {
+export function dibujarTarjetasAcomodacion(
+  pdf,
+  tarjetas,
+  { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, acabado: idAcabado, formato = OPCIONES_POR_DEFECTO.formato } = {},
+  adornos = null,
+) {
   const estilo = acabado(idAcabado);
-  const sitio = colocacion(hoja);
+  const sitio = colocacion(hoja, formato);
   const hojas = Math.max(1, Math.ceil(tarjetas.length / sitio.porHoja));
   for (let h = 0; h < hojas; h++) {
     if (h > 0) pdf.addPage(hoja, "portrait");
     const deEsta = tarjetas.slice(h * sitio.porHoja, (h + 1) * sitio.porHoja);
-    deEsta.forEach((t, i) => tarjeta(pdf, ...sitio.hueco(i), sitio.W, adornos, [t, estilo]));
+    deEsta.forEach((t, i) => sitio.poner(pdf, ...sitio.hueco(i), adornos, [t, estilo]));
     marcasDeLaHoja(pdf, sitio, deEsta.length, corte);
   }
   return hojas;
 }
 
-// Dónde va cada tarjeta en la hoja: la rejilla, centrada. Una sola cuenta
-// para las tarjetas y para la hoja de muestra.
-function colocacion(hoja) {
+// Dónde va cada tarjeta en la hoja: la rejilla, centrada, y cómo se pone
+// (plegada: dos caras; de una cara: una, sin girar). Una sola cuenta para
+// las tarjetas y para la hoja de muestra.
+function colocacion(hoja, formato) {
   const papel = HOJAS[hoja] || HOJAS.a3;
-  const { columnas, filas, porHoja } = rejilla(hoja);
+  const { columnas, filas, porHoja } = rejilla(hoja, formato);
+  const plegada = !deUnaCara(formato);
   const W = ANCHO_TARJETA * MM;
-  const H = ALTO_TARJETA * MM;
+  const H = (plegada ? ALTO_TARJETA : ALTO_CARA) * MM;
   const x0 = (papel.ancho * MM - columnas * W) / 2;
   const y0 = (papel.alto * MM - filas * H) / 2;
   const hueco = (i) => [x0 + (i % columnas) * W, y0 + Math.floor(i / columnas) * H];
-  return { papel, columnas, filas, porHoja, W, H, x0, y0, hueco };
+  const poner = plegada
+    ? (pdf, x, y, adornos, arriba, abajo) => tarjeta(pdf, x, y, W, adornos, arriba, abajo)
+    : (pdf, x, y, adornos, [t, estilo]) => cara(pdf, x, y, W, H, false, t, estilo, adornos);
+  return { papel, columnas, filas, porHoja, W, H, x0, y0, hueco, poner, plegada };
 }
 
 // Las marcas para cortar de una hoja con `cuantas` tarjetas. Las de
 // registro, en el mismo sitio en todas las hojas: las esquinas de la
 // rejilla entera, haya o no tarjetas.
-function marcasDeLaHoja(pdf, { columnas, filas, W, H, x0, y0 }, cuantas, corte) {
+function marcasDeLaHoja(pdf, { columnas, filas, W, H, x0, y0, plegada }, cuantas, corte) {
   if (corte === "ploter") marcasDeRegistro(pdf, x0, y0, x0 + columnas * W, y0 + filas * H);
-  marcasDeCorte(pdf, x0, y0, W, H, Math.min(columnas, Math.max(1, cuantas)), Math.max(1, Math.ceil(cuantas / columnas)), corte);
+  marcasDeCorte(pdf, x0, y0, W, H, Math.min(columnas, Math.max(1, cuantas)), Math.max(1, Math.ceil(cuantas / columnas)), corte, plegada);
 }
 
 // ---------- La hoja de muestra ----------
@@ -351,10 +369,16 @@ const EJEMPLO = { nombre: "Luis", apellido: "Abreu", mesa: 12, familia: "A" };
 // siguiente (con los cuatro de ahora, caben en una). Devuelve cuántas hojas.
 export const ARCHIVO_MUESTRA_ACABADOS = "muestra-acabados-tarjetas.pdf";
 const TAM_LEYENDA = 9;
-export function dibujarMuestraAcabados(pdf, { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte } = {}, adornos = null) {
-  const sitio = colocacion(hoja);
+export function dibujarMuestraAcabados(
+  pdf,
+  { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, formato = OPCIONES_POR_DEFECTO.formato } = {},
+  adornos = null,
+) {
+  const sitio = colocacion(hoja, formato);
   const conNumero = (i) => [{ ...EJEMPLO, familia: String(i + 1) }, ACABADOS[i]];
-  const cuantas = Math.ceil(ACABADOS.length / 2);
+  // Plegadas, un acabado en cada cara; de una cara, uno por tarjeta.
+  const porTarjeta = sitio.plegada ? 2 : 1;
+  const cuantas = Math.ceil(ACABADOS.length / porTarjeta);
   const hojas = Math.ceil(cuantas / sitio.porHoja);
   const lineas = [`Muestra de los ${ACABADOS.length} acabados: el número de cada uno, en la esquina de su cara.`];
   for (let d = 0; d < ACABADOS.length; d += 3) lineas.push(ACABADOS.slice(d, d + 3).map((a, i) => `${d + i + 1} ${a.rotulo}`).join("  ·  "));
@@ -363,8 +387,9 @@ export function dibujarMuestraAcabados(pdf, { hoja = OPCIONES_POR_DEFECTO.hoja, 
     const deEsta = Math.min(sitio.porHoja, cuantas - h * sitio.porHoja);
     for (let j = 0; j < deEsta; j++) {
       const i = h * sitio.porHoja + j;
-      const abajo = ACABADOS[2 * i + 1] ? conNumero(2 * i + 1) : conNumero(2 * i);
-      tarjeta(pdf, ...sitio.hueco(j), sitio.W, adornos, conNumero(2 * i), abajo);
+      const primera = porTarjeta * i;
+      const abajo = sitio.plegada && ACABADOS[primera + 1] ? conNumero(primera + 1) : conNumero(primera);
+      sitio.poner(pdf, ...sitio.hueco(j), adornos, conNumero(primera), abajo);
     }
     marcasDeLaHoja(pdf, sitio, deEsta, corte);
     // La leyenda, centrada en el margen de arriba, de tres en tres.
@@ -471,7 +496,7 @@ async function nuevoPdf(opciones, adornos) {
 // rotulista; las rayas grises de puntos de antes, de lado a lado, no se
 // veían): cortas, negras y continuas, FUERA de las tarjetas, una en cada
 // extremo de cada corte, con un hueco para que no asomen en la tarjeta
-// cortada. A los lados, a la altura de cada doblez, otra discontinua. Solo
+// cortada. A los lados, a la altura de cada doblez (si se pliega), otra discontinua. Solo
 // hasta donde hay tarjetas. El largo, el que quepa en el margen, dejando
 // 3 mm hasta el borde del papel. Con tijera o cúter, cada corte entero, de
 // la marca de un lado a la del otro; con el plóter, solo las del doblez
@@ -479,7 +504,7 @@ async function nuevoPdf(opciones, adornos) {
 const HUECO_MARCA = 2 * MM;
 const LARGO_MARCA = 6 * MM;
 const BORDE_PAPEL = 3 * MM;
-function marcasDeCorte(pdf, x0, y0, W, H, columnas, filas, corte) {
+function marcasDeCorte(pdf, x0, y0, W, H, columnas, filas, corte, plegada = true) {
   const xFin = x0 + columnas * W;
   const yFin = y0 + filas * H;
   const largo = (margen) => Math.max(2 * MM, Math.min(LARGO_MARCA, margen - HUECO_MARCA - BORDE_PAPEL));
@@ -503,6 +528,7 @@ function marcasDeCorte(pdf, x0, y0, W, H, columnas, filas, corte) {
     for (let f = 0; f <= filas; f++) horizontal(y0 + f * H);
   }
   // El doblez, en medio de cada fila.
+  if (!plegada) return;
   pdf.setLineDashPattern([2, 2], 0);
   for (let f = 0; f < filas; f++) horizontal(y0 + f * H + H / 2, false);
   pdf.setLineDashPattern([], 0);
