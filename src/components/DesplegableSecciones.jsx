@@ -31,6 +31,13 @@ const ESTILO_PELIGRO = {
   suave: { fondo: C.wax, color: C.paper },
 };
 
+// Lo que tiene que destacar siempre en el menú (él, v97.1: «Día del
+// evento», que quede bien señalado): marco dorado y brillo (opción B de
+// su boceto). El RELLENO dorado ya
+// dice «abierta», así que destaca con el marco y al abrirla se rellena
+// como las demás.
+const REALZADAS = new Set(["diaEvento"]);
+
 // Los iconos que no son el de su ventana en la barra.
 const ICONOS_PROPIOS = { "colaboradores-formularios": Eye, "invitados-lista": ICONOS_VENTANAS.invitados, miCuenta: UserCog };
 
@@ -100,6 +107,7 @@ export function DesplegableSecciones({
     return {
       ...base,
       ...(e.peligro ? ESTILO_PELIGRO[e.peligro] : {}),
+      ...(REALZADAS.has(e.id) ? { realce: true } : {}),
       ...(acciones[e.id] || { marcado: Boolean(abierto[e.id]), onClick: () => toggle(e.id) }),
     };
   };

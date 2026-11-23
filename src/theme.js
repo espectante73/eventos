@@ -171,6 +171,12 @@ export const DORADO = {
   relieve: "inset 0 1px 0 rgba(255,244,214,0.55), inset 0 -1px 0 rgba(90,62,20,0.35)",
   relieveFlotante:
     "inset 0 1px 0 rgba(255,244,214,0.55), inset 0 -1px 0 rgba(90,62,20,0.35), 0 2px 6px rgba(0,0,0,0.35)",
+  // Lo que tiene que destacar siempre en el menú (él, v97.1: «Día del
+  // evento», opción B del boceto): un brillo dorado alrededor, con el
+  // mismo relieve de dentro que las demás filas (.boton-flotante-imagen).
+  brillo: "0 0 12px 3px rgba(217,183,120,0.75), inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 3px rgba(0,0,0,0.35)",
+  // Su marco: más grueso que el contorno tenue de las demás filas.
+  marcoRealce: `3px solid ${C.goldClaro}`,
 };
 
 export const inputStyle = {

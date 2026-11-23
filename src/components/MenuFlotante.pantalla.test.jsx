@@ -4,6 +4,7 @@
 import { it, expect } from "vitest";
 import { montar } from "../pruebas/dibujar";
 import { MenuFlotante } from "./MenuFlotante";
+import { DORADO } from "../theme";
 
 const OPCIONES = ["Revisión", "Imprimir", "Canciones", "Alergias", "Formulario", "Edición", "Importar"].map((etiqueta) => ({
   id: etiqueta,
@@ -129,4 +130,32 @@ it("cada submenú, con su velo detrás y encima de lo anterior; tocar el velo vu
   expect(document.body.textContent).toContain("Datos Colab.");
   expect(document.body.textContent).toContain("Novedades");
   vista.desmontar();
+});
+
+// «Día del evento» destaca siempre (él, v97.1): marco y brillo dorados;
+// abierta, el relleno dorado de todas y sin el brillo.
+it("una opción con realce lleva marco y brillo dorados; marcada, solo el relleno de abierta", () => {
+  const pintar = (marcado) =>
+    montar(
+      <MenuFlotante
+        opciones={[{ id: "dia", etiqueta: "Día del evento", realce: true, marcado, onClick: () => {} }, { id: "otra", etiqueta: "Otra", onClick: () => {} }]}
+        render={({ ref, toggle }) => (
+          <button ref={ref} onClick={toggle}>
+            Abrir
+          </button>
+        )}
+      />
+    );
+  const fila = (texto) => [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === texto);
+  const cerrada = pintar(false);
+  cerrada.pulsar(fila("Abrir"));
+  expect(fila("Día del evento").style.boxShadow).toBe(DORADO.brillo);
+  expect(fila("Día del evento").style.border).toContain("3px solid");
+  expect(fila("Otra").style.boxShadow).toBe("");
+  cerrada.desmontar();
+  const abierta = pintar(true);
+  abierta.pulsar(fila("Abrir"));
+  expect(fila("Día del evento").style.boxShadow).toBe("");
+  expect(fila("Día del evento").style.background).toContain("linear-gradient");
+  abierta.desmontar();
 });

@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "97.1",
+    cambios: [
+      "«Día del evento» destaca en el menú de «Abrir sección…»: marco dorado más grueso y un brillo dorado alrededor. Con su ventana abierta, se rellena de dorado como las demás, así se sigue viendo si está abierta.",
+    ],
+  },
+  {
     version: "97",
     cambios: [
       "Tarjetas de acomodación, en «Día del evento» (con la acomodación terminada): una por invitado, bebés incluidos, con «APELLIDO, Nombre», el número de su mesa y la letra de su familia en la mesa. Se doblan a lo largo y se leen por los dos lados.",

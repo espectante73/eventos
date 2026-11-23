@@ -342,6 +342,10 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio, conFon
         ...(opcion.fondo ? { background: opcion.fondo } : {}),
         // Solo el color: en negrita el texto se ensancha y llega al borde.
         ...(opcion.marcado ? { background: DORADO.fondo } : {}),
+        // `realce`: lo que tiene que destacar siempre (Día del evento, él
+        // v97.1): marco dorado grueso y un brillo alrededor. Abierta, se
+        // rellena de dorado como las demás (el relleno dice «abierta»).
+        ...(opcion.realce && !opcion.marcado ? { border: DORADO.marcoRealce, boxShadow: DORADO.brillo } : {}),
         margin: "5px 6px",
         width: "calc(100% - 12px)",
         borderRadius: R.redondo,
