@@ -76,7 +76,20 @@ export const ACABADOS = [
   { id: "recuadroBlancoDorado", rotulo: "Blanco, rectángulo dorado", fondo: null, recuadro: null, marco: C.goldClaro, grosorMarco: 1.5, letra: C.ink, familia: C.ink, contornoNumero: C.gold },
 ];
 const acabado = (id) => ACABADOS.find((a) => a.id === id) || ACABADOS[0];
-export const OPCIONES_POR_DEFECTO = { hoja: "a3", acabado: ACABADOS[0].id };
+// Con qué se van a cortar, y así, qué marcas lleva la hoja (él, v99: «la
+// opción de poner unas marcas u otras para el corte»; lo decide quien
+// corta, el rotulista):
+// - guillotina: las marcas de imprenta, cortas, en los bordes (v98.9);
+// - tijera o cúter: la línea entera de cada corte, de punta a punta;
+// - plóter: marcas de REGISTRO en las cuatro esquinas, las que lee la
+//   máquina para saber dónde está la hoja (un cuadrado y tres escuadras,
+//   las más corrientes; cada marca de plóter tiene las suyas).
+export const CORTES = [
+  { id: "guillotina", rotulo: "Guillotina" },
+  { id: "tijera", rotulo: "Tijera o cúter" },
+  { id: "ploter", rotulo: "Plóter" },
+];
+export const OPCIONES_POR_DEFECTO = { hoja: "a3", corte: CORTES[0].id, acabado: ACABADOS[0].id };
 
 const MM = PUNTOS_POR_MM;
 
@@ -222,10 +235,10 @@ function tarjeta(pdf, x, y, ancho, t, estilo) {
   pdf.setLineDashPattern([], 0);
 }
 
-// Todas las hojas: las tarjetas en rejilla, centradas, y los cortes
-// discontinuos asomando un poco por fuera. `pdf` es un jsPDF o un
+// Todas las hojas: las tarjetas en rejilla, centradas, y por fuera las
+// marcas para cortar, las de la forma de cortar elegida. `pdf` es un jsPDF o un
 // PdfEnLienzo (la vista previa). Devuelve cuántas hojas salieron.
-export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_DEFECTO.hoja, acabado: idAcabado } = {}) {
+export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, acabado: idAcabado } = {}) {
   const papel = HOJAS[hoja] || HOJAS.a3;
   const estilo = acabado(idAcabado);
   const { columnas, filas, porHoja } = rejilla(hoja);
@@ -238,7 +251,10 @@ export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_
     if (h > 0) pdf.addPage(hoja, "portrait");
     const deEsta = tarjetas.slice(h * porHoja, (h + 1) * porHoja);
     deEsta.forEach((t, i) => tarjeta(pdf, x0 + (i % columnas) * W, y0 + Math.floor(i / columnas) * H, W, t, estilo));
-    marcasDeCorte(pdf, x0, y0, W, H, Math.min(columnas, Math.max(1, deEsta.length)), Math.max(1, Math.ceil(deEsta.length / columnas)));
+    // Las de registro, en el mismo sitio en todas las hojas: las esquinas
+    // de la rejilla entera, haya o no tarjetas.
+    if (corte === "ploter") marcasDeRegistro(pdf, x0, y0, x0 + columnas * W, y0 + filas * H);
+    marcasDeCorte(pdf, x0, y0, W, H, Math.min(columnas, Math.max(1, deEsta.length)), Math.max(1, Math.ceil(deEsta.length / columnas)), corte);
   }
   return hojas;
 }
@@ -249,32 +265,63 @@ export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_
 // extremo de cada corte, con un hueco para que no asomen en la tarjeta
 // cortada. A los lados, a la altura de cada doblez, otra discontinua. Solo
 // hasta donde hay tarjetas. El largo, el que quepa en el margen, dejando
-// 3 mm hasta el borde del papel.
+// 3 mm hasta el borde del papel. Con tijera o cúter, cada corte entero, de
+// la marca de un lado a la del otro; con el plóter, solo las del doblez
+// (dónde cortar lo saca él de las marcas de registro).
 const HUECO_MARCA = 2 * MM;
 const LARGO_MARCA = 6 * MM;
 const BORDE_PAPEL = 3 * MM;
-function marcasDeCorte(pdf, x0, y0, W, H, columnas, filas) {
+function marcasDeCorte(pdf, x0, y0, W, H, columnas, filas, corte) {
   const xFin = x0 + columnas * W;
   const yFin = y0 + filas * H;
   const largo = (margen) => Math.max(2 * MM, Math.min(LARGO_MARCA, margen - HUECO_MARCA - BORDE_PAPEL));
   const largoV = largo(y0);
   const largoH = largo(x0);
+  const entera = corte === "tijera";
   const vertical = (x) => {
+    if (entera) return pdf.line(x, y0 - HUECO_MARCA - largoV, x, yFin + HUECO_MARCA + largoV);
     pdf.line(x, y0 - HUECO_MARCA - largoV, x, y0 - HUECO_MARCA);
     pdf.line(x, yFin + HUECO_MARCA, x, yFin + HUECO_MARCA + largoV);
   };
-  const horizontal = (y) => {
+  const horizontal = (y, toda = entera) => {
+    if (toda) return pdf.line(x0 - HUECO_MARCA - largoH, y, xFin + HUECO_MARCA + largoH, y);
     pdf.line(x0 - HUECO_MARCA - largoH, y, x0 - HUECO_MARCA, y);
     pdf.line(xFin + HUECO_MARCA, y, xFin + HUECO_MARCA + largoH, y);
   };
   pdf.setDrawColor(C.negro);
   pdf.setLineWidth(0.5);
-  for (let c = 0; c <= columnas; c++) vertical(x0 + c * W);
-  for (let f = 0; f <= filas; f++) horizontal(y0 + f * H);
+  if (corte !== "ploter") {
+    for (let c = 0; c <= columnas; c++) vertical(x0 + c * W);
+    for (let f = 0; f <= filas; f++) horizontal(y0 + f * H);
+  }
   // El doblez, en medio de cada fila.
   pdf.setLineDashPattern([2, 2], 0);
-  for (let f = 0; f < filas; f++) horizontal(y0 + f * H + H / 2);
+  for (let f = 0; f < filas; f++) horizontal(y0 + f * H + H / 2, false);
   pdf.setLineDashPattern([], 0);
+}
+
+// Las marcas de registro del plóter: un cuadrado negro arriba a la
+// izquierda y una escuadra en cada una de las otras tres esquinas, a 4 mm
+// de las tarjetas (fuera de lo que se corta).
+const LADO_REGISTRO = 5 * MM;
+const BRAZO_REGISTRO = 10 * MM;
+const GROSOR_REGISTRO = 0.5 * MM;
+const AIRE_REGISTRO = 4 * MM;
+function marcasDeRegistro(pdf, x0, y0, xFin, yFin) {
+  const izq = x0 - AIRE_REGISTRO - LADO_REGISTRO;
+  const arr = y0 - AIRE_REGISTRO - LADO_REGISTRO;
+  const der = xFin + AIRE_REGISTRO + LADO_REGISTRO;
+  const aba = yFin + AIRE_REGISTRO + LADO_REGISTRO;
+  pdf.setFillColor(C.negro);
+  pdf.rect(izq, arr, LADO_REGISTRO, LADO_REGISTRO, "F");
+  // La escuadra con el pico en (x, y); sus brazos van hacia dentro.
+  const escuadra = (x, y, haciaDerecha, haciaAbajo) => {
+    pdf.rect(haciaDerecha ? x : x - BRAZO_REGISTRO, haciaAbajo ? y : y - GROSOR_REGISTRO, BRAZO_REGISTRO, GROSOR_REGISTRO, "F");
+    pdf.rect(haciaDerecha ? x : x - GROSOR_REGISTRO, haciaAbajo ? y : y - BRAZO_REGISTRO, GROSOR_REGISTRO, BRAZO_REGISTRO, "F");
+  };
+  escuadra(der, arr, false, true);
+  escuadra(izq, aba, true, false);
+  escuadra(der, aba, false, false);
 }
 
 // El PDF para descargar. jsPDF pesa: se carga solo al usarlo.

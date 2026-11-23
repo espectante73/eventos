@@ -2,7 +2,8 @@
 // imprimir, doblar y poner en el plato. Antes de descargar, la VISTA PREVIA
 // de todas las hojas (él: «no sea que no me guste cómo quede»), y la hoja
 // (A4 o A3). La tarjeta, siempre la bancaria: cada cara, de su tamaño (él,
-// v98.9; retiró el ancho de 9,5 cm). Y el acabado, de una paleta de seis (él:
+// v98.9; retiró el ancho de 9,5 cm). Con qué se cortan (v99: guillotina,
+// tijera o plóter), que decide las marcas. Y el acabado, de una paleta de seis (él:
 // «poder editar yo mismo el acabado… y verlo antes»).
 //
 // A pantalla entera y con los botones ARRIBA, del lado del pulgar, como la
@@ -18,6 +19,7 @@ import { Field, Desplegable } from "../../components/Formulario";
 import { descargarBlob } from "../../lib/descargas";
 import {
   ACABADOS,
+  CORTES,
   ARCHIVO_TARJETAS_ACOMODACION,
   HOJAS,
   muestraAcabado,
@@ -30,7 +32,7 @@ import {
 
 const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 
-// La hoja y el acabado elegidos se recuerdan en este aparato: es la
+// La hoja, la forma de cortar y el acabado se recuerdan en este aparato: es la
 // impresora de casa la que manda.
 const CLAVE_OPCIONES = "tarjetas-acomodacion-opciones";
 function leerOpciones() {
@@ -38,7 +40,11 @@ function leerOpciones() {
     const o = JSON.parse(window.localStorage.getItem(CLAVE_OPCIONES) || "null");
     // (Lo guardado de antes traía también el ancho: ya no cuenta.)
     if (o && HOJAS[o.hoja]) {
-      return { hoja: o.hoja, acabado: ACABADOS.some((a) => a.id === o.acabado) ? o.acabado : OPCIONES_POR_DEFECTO.acabado };
+      return {
+        hoja: o.hoja,
+        corte: CORTES.some((c) => c.id === o.corte) ? o.corte : OPCIONES_POR_DEFECTO.corte,
+        acabado: ACABADOS.some((a) => a.id === o.acabado) ? o.acabado : OPCIONES_POR_DEFECTO.acabado,
+      };
     }
   } catch {
     // Sin almacenamiento (ventana privada): las de siempre.
@@ -137,13 +143,22 @@ export function VentanaTarjetasAcomodacion({ invitados, onCerrar, vistaPrevia = 
           Descargado: {descargado}. Lo tienes en tu carpeta de Descargas.
         </p>
       )}
-      {/* La hoja, en la mitad de la línea, como cuando iba con el ancho (norma 6). */}
+      {/* La hoja y con qué se corta, en una sola línea (norma 6). */}
       <div className="grid grid-cols-2 gap-2 mb-2" data-opciones-tarjetas>
         <Field label="Hoja">
           <Desplegable aria-label="Hoja" value={opciones.hoja} onChange={(e) => elegir({ hoja: e.target.value })} style={{ minHeight: DEDO }}>
             {Object.entries(HOJAS).map(([clave, h]) => (
               <option key={clave} value={clave}>
                 {h.rotulo}
+              </option>
+            ))}
+          </Desplegable>
+        </Field>
+        <Field label="Cortar con">
+          <Desplegable aria-label="Cortar con" value={opciones.corte} onChange={(e) => elegir({ corte: e.target.value })} style={{ minHeight: DEDO }}>
+            {CORTES.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.rotulo}
               </option>
             ))}
           </Desplegable>
@@ -181,8 +196,10 @@ export function VentanaTarjetasAcomodacion({ invitados, onCerrar, vistaPrevia = 
           Cómo se usa
         </summary>
         <p className="mt-2" style={{ opacity: OP.secundario }}>
-          Corta por las rayas y dobla cada tarjeta por los puntos: el nombre se lee por los dos lados. Salen mesa por mesa, y la letra pequeña
-          de la esquina es su familia dentro de la mesa, para repartirlas sin separar a nadie; quien viene solo no lleva letra.
+          Corta por las rayas y dobla cada tarjeta por los puntos: el nombre se lee por los dos lados. «Cortar con» pone las marcas de
+          cada forma de cortar: rayitas en los bordes para la guillotina, líneas enteras para tijera o cúter, y marcas en las esquinas para
+          el plóter (cada marca de plóter tiene las suyas: confírmalo con quien corte). Salen mesa por mesa, y la letra pequeña de la
+          esquina es su familia dentro de la mesa, para repartirlas sin separar a nadie; quien viene solo no lleva letra.
         </p>
       </details>
     </ModalFlotante>

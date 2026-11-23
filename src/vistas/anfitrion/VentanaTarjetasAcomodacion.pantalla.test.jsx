@@ -22,7 +22,7 @@ it("cuenta tarjetas y hojas, avisa de quien no tiene mesa y enseña la vista pre
   expect(document.body.querySelector("[data-sin-mesa]").textContent).toBe("1 confirmado sin mesa se queda sin tarjeta.");
   await esperar();
   expect(document.body.querySelectorAll("[data-vista-previa] img")).toHaveLength(2);
-  expect(llamadas.at(-1)).toEqual({ n: 12, hoja: "a3", acabado: "verde" });
+  expect(llamadas.at(-1)).toEqual({ n: 12, hoja: "a3", corte: "guillotina", acabado: "verde" });
   vista.desmontar();
 });
 
@@ -32,15 +32,15 @@ it("cambiar la hoja rehace la vista previa y se recuerda en el aparato; el ancho
   const vistaPrevia = (tarjetas, opciones) => (llamadas.push(opciones), []);
   const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={vistaPrevia} muestra={muestra} />);
   const selects = document.body.querySelectorAll("[data-opciones-tarjetas] select");
-  expect([...selects].map((s) => s.getAttribute("aria-label"))).toEqual(["Hoja"]);
+  expect([...selects].map((s) => s.getAttribute("aria-label"))).toEqual(["Hoja", "Cortar con"]);
   act(() => {
     selects[0].value = "a4";
     selects[0].dispatchEvent(new Event("change", { bubbles: true }));
   });
   await esperar();
-  expect(llamadas.at(-1)).toEqual({ hoja: "a4", acabado: "verde" });
+  expect(llamadas.at(-1)).toEqual({ hoja: "a4", corte: "guillotina", acabado: "verde" });
   expect(document.body.querySelector("[data-resumen-tarjetas]").textContent).toBe("12 tarjetas en 3 hojas A4, 4 por hoja.");
-  expect(JSON.parse(window.localStorage.getItem("tarjetas-acomodacion-opciones"))).toEqual({ hoja: "a4", acabado: "verde" });
+  expect(JSON.parse(window.localStorage.getItem("tarjetas-acomodacion-opciones"))).toEqual({ hoja: "a4", corte: "guillotina", acabado: "verde" });
   vista.desmontar();
 });
 
@@ -49,7 +49,23 @@ it("lo guardado de antes con el ancho de 9,5 cm se respeta en hoja y acabado, y 
   const llamadas = [];
   const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={(t, o) => (llamadas.push(o), [])} muestra={muestra} />);
   await esperar();
-  expect(llamadas.at(-1)).toEqual({ hoja: "a4", acabado: "blancoVerde" });
+  expect(llamadas.at(-1)).toEqual({ hoja: "a4", corte: "guillotina", acabado: "blancoVerde" });
+  vista.desmontar();
+});
+
+// v99 (él): las marcas, según con qué se corte, en un desplegable.
+it("«Cortar con»: guillotina, tijera o cúter y plóter; elegir una rehace la vista previa y se recuerda", async () => {
+  const llamadas = [];
+  const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={(t, o) => (llamadas.push(o), [])} muestra={muestra} />);
+  const cortar = document.body.querySelector('[data-opciones-tarjetas] select[aria-label="Cortar con"]');
+  expect([...cortar.options].map((o) => o.textContent)).toEqual(["Guillotina", "Tijera o cúter", "Plóter"]);
+  act(() => {
+    cortar.value = "ploter";
+    cortar.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await esperar();
+  expect(llamadas.at(-1).corte).toBe("ploter");
+  expect(JSON.parse(window.localStorage.getItem("tarjetas-acomodacion-opciones")).corte).toBe("ploter");
   vista.desmontar();
 });
 

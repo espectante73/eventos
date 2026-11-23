@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rejilla, tarjetasDeAcomodacion, dibujarTarjetasAcomodacion, ACABADOS, ANCHO_TARJETA, OPCIONES_POR_DEFECTO } from "./tarjetasAcomodacion";
+import { rejilla, tarjetasDeAcomodacion, dibujarTarjetasAcomodacion, ACABADOS, ANCHO_TARJETA, OPCIONES_POR_DEFECTO, CORTES } from "./tarjetasAcomodacion";
 import { PdfEnLienzo, PUNTOS_POR_MM } from "./pdfEnLienzo";
 import { C } from "../theme";
 
@@ -123,22 +123,29 @@ describe("dibujarTarjetasAcomodacion", () => {
   });
 });
 
+// Una hoja de pega que apunta las líneas y los rellenos negros: lo justo
+// para mirar las marcas.
+function hojaQueApunta() {
+  const lineas = [];
+  let color = null;
+  let discontinua = false;
+  const negros = [];
+  let relleno = null;
+  const pdf = {
+    setDrawColor: (c) => (color = c),
+    setFillColor: (c) => (relleno = c),
+    setLineDashPattern: (p) => (discontinua = p.length > 0),
+    line: (x1, y1, x2, y2) => lineas.push({ x1, y1, x2, y2, color, discontinua }),
+    rect: (x, y, w, h, estilo) => relleno === C.negro && estilo === "F" && negros.push({ x, y, w, h }),
+    addPage() {},
+    getTextWidth: (t) => t.length * 5,
+  };
+  for (const f of ["setLineWidth", "setFont", "setFontSize", "setTextColor", "circle", "roundedRect", "text"]) pdf[f] = () => {};
+  return { pdf, lineas, negros };
+}
+
 // v98.9 (él): el rotulista pidió marcas de corte que se vean, como las de imprenta.
 describe("las marcas de corte", () => {
-  function hojaQueApunta() {
-    const lineas = [];
-    let color = null;
-    let discontinua = false;
-    const pdf = {
-      setDrawColor: (c) => (color = c),
-      setLineDashPattern: (p) => (discontinua = p.length > 0),
-      line: (x1, y1, x2, y2) => lineas.push({ x1, y1, x2, y2, color, discontinua }),
-      addPage() {},
-      getTextWidth: (t) => t.length * 5,
-    };
-    for (const f of ["setFillColor", "setLineWidth", "setFont", "setFontSize", "setTextColor", "circle", "rect", "roundedRect", "text"]) pdf[f] = () => {};
-    return { pdf, lineas };
-  }
   const una = [{ id: "1", nombre: "Ana", apellido: "Medina", mesa: 3, familia: "A" }];
 
   it("negras, continuas y cortas, una en cada extremo de cada corte, y ninguna dentro de las tarjetas", () => {
@@ -166,5 +173,53 @@ describe("las marcas de corte", () => {
       expect(Math.min(l.x1, l.x2)).toBeGreaterThanOrEqual(3 * PUNTOS_POR_MM - 0.01);
       expect(Math.max(l.x1, l.x2)).toBeLessThanOrEqual((210 - 3) * PUNTOS_POR_MM + 0.01);
     }
+  });
+});
+
+// v99 (él): «la opción de poner unas marcas u otras para el corte».
+describe("con qué se corta (las marcas de cada forma)", () => {
+  const cuatro = Array.from({ length: 4 }, (_, i) => ({ id: String(i), nombre: "Ana", apellido: "Medina", mesa: 3, familia: "" }));
+  const W = 85.6 * PUNTOS_POR_MM;
+  const H = 2 * 53.98 * PUNTOS_POR_MM;
+  const x0 = (210 * PUNTOS_POR_MM - 2 * W) / 2;
+  const y0 = (297 * PUNTOS_POR_MM - 2 * H) / 2;
+  const corte = (lineas) => lineas.filter((l) => l.color === C.negro && !l.discontinua);
+
+  it("tres formas, en un desplegable; la guillotina, la de siempre", () => {
+    expect(CORTES.map((c) => c.id)).toEqual(["guillotina", "tijera", "ploter"]);
+    expect(OPCIONES_POR_DEFECTO.corte).toBe("guillotina");
+  });
+  it("tijera o cúter: cada corte, una línea entera que cruza todas las tarjetas", () => {
+    const { pdf, lineas, negros } = hojaQueApunta();
+    dibujarTarjetasAcomodacion(pdf, cuatro, { hoja: "a4", corte: "tijera" });
+    // 2 columnas y 2 filas: 3 cortes de arriba abajo y 3 de lado a lado.
+    expect(corte(lineas)).toHaveLength(6);
+    for (const l of corte(lineas)) {
+      if (l.x1 === l.x2) expect(Math.min(l.y1, l.y2) < y0 && Math.max(l.y1, l.y2) > y0 + 2 * H).toBe(true);
+      else expect(Math.min(l.x1, l.x2) < x0 && Math.max(l.x1, l.x2) > x0 + 2 * W).toBe(true);
+    }
+    expect(negros).toHaveLength(0);
+  });
+  it("plóter: un cuadrado y tres escuadras en las esquinas, fuera de las tarjetas y del borde; sin rayas de corte", () => {
+    const { pdf, lineas, negros } = hojaQueApunta();
+    dibujarTarjetasAcomodacion(pdf, cuatro, { hoja: "a4", corte: "ploter" });
+    expect(corte(lineas)).toHaveLength(0);
+    // El doblez sigue marcado a los lados.
+    expect(lineas.filter((l) => l.color === C.negro && l.discontinua)).toHaveLength(4);
+    // Cuadrado (1) + 3 escuadras de 2 brazos.
+    expect(negros).toHaveLength(7);
+    const fuera = (r) => r.x + r.w <= x0 || r.x >= x0 + 2 * W || r.y + r.h <= y0 || r.y >= y0 + 2 * H;
+    for (const r of negros) {
+      expect(fuera(r)).toBe(true);
+      expect(r.x).toBeGreaterThanOrEqual(3 * PUNTOS_POR_MM);
+      expect(r.x + r.w).toBeLessThanOrEqual((210 - 3) * PUNTOS_POR_MM);
+    }
+  });
+  it("plóter: las marcas, en el mismo sitio en todas las hojas, aunque la última vaya medio vacía", () => {
+    const llena = hojaQueApunta();
+    dibujarTarjetasAcomodacion(llena.pdf, cuatro, { hoja: "a4", corte: "ploter" });
+    const una = hojaQueApunta();
+    dibujarTarjetasAcomodacion(una.pdf, cuatro.slice(0, 1), { hoja: "a4", corte: "ploter" });
+    expect(una.negros).toEqual(llena.negros);
   });
 });

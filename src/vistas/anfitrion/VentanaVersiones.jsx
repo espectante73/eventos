@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "99",
+    cambios: [
+      "Tarjetas de acomodación: junto a «Hoja», «Cortar con», para que la hoja lleve las marcas de cada forma de cortar. Guillotina (la de entrada): rayitas cortas fuera de las tarjetas, como las de imprenta. Tijera o cúter: una línea entera por cada corte. Plóter: un cuadrado y tres escuadras en las esquinas, las que lee la máquina.",
+      "En las tres, el doblez sigue marcado a los lados con una raya de puntos. Se recuerda lo elegido en cada aparato.",
+    ],
+  },
+  {
     version: "98.9",
     cambios: [
       "Tarjetas de acomodación: cada cara, del tamaño de una tarjeta bancaria (8,56 × 5,4 cm); abierta, el doble de alto. Caben 4 por hoja A4 y 9 por A3. El ancho de 9,5 cm se retira: solo queda el de la tarjeta bancaria.",
