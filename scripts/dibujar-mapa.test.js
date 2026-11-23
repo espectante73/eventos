@@ -1,56 +1,68 @@
-// El plano de la aplicación (public/mapa-de-la-aplicacion.png) se dibuja con
-// scripts/dibujar-mapa.mjs, y ese script lleva la lista de secciones
-// escrita a mano: no puede importar los componentes de la app porque son
-// JSX y porque depende de `canvas`, que no está instalado en el proyecto.
+// El plano de la aplicación (public/mapa-de-la-aplicacion.png) lo dibuja
+// scripts/dibujar-mapa.mjs a partir del menú DE VERDAD: lib/menuAnfitrion.js,
+// la misma pieza con la que «Abrir sección…» arma sus botones. Antes el
+// script llevaba la lista escrita a mano y se quedó atrás dos veces (la
+// última, él, v96.2: faltaban «Avisar equipo» y lo de dentro de «Invitados»).
 //
-// Esa copia a mano ya se quedó desactualizada una vez (el primer nivel del
-// menú pasó de 14 entradas a 8 y el plano siguió mostrando las 14). Este
-// test es el guardia: si alguien añade, quita o renombra una sección del
-// menú y no toca el script, se pone en rojo aquí, en `npm test`, en vez de
-// descubrirse meses después mirando la imagen.
-//
-// Y desde el 2026-09-23 comprueba TAMBIÉN que la imagen esté regenerada.
-// Antes no: bastaba con que las listas coincidieran, así que el mapa podía
-// llevar semanas enseñando una versión vieja sin que nada se quejara. Pasó
-// (el usuario: "no coincide la versión del mapa con la que estamos"): la
-// imagen era del 19 de septiembre y la app iba por la v39.4.
-// El script deja una ficha (mapa-generado.json) con la versión que dibujó;
-// aquí se compara con VERSION_APP. Regenerar pasa a ser parte de subir una
-// versión, no algo que haya que acordarse de hacer.
+// Lo que se vigila aquí:
+// - que el menú que se ve sale de esa pieza, entrada por entrada;
+// - que la imagen se redibujó con el menú de ahora (la ficha
+//   mapa-generado.json guarda lo que se dibujó) y con la versión de ahora.
+// Si alguien cambia el menú y no la redibuja, esto se pone en rojo y git no
+// deja subir.
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "../src/components/VentanaFlotante";
 import { VERSION_APP } from "../src/constants.js";
-import { SUBMENU_CONFIGURACION } from "../src/components/DesplegableSecciones";
+import { estructuraMenuAnfitrion } from "../src/lib/menuAnfitrion.js";
+import { DesplegableSecciones } from "../src/components/DesplegableSecciones";
 
 const aqui = dirname(fileURLToPath(import.meta.url));
 const script = readFileSync(join(aqui, "dibujar-mapa.mjs"), "utf-8");
 
-// Saca las etiquetas de un array del script: const nombre = [ ["Etiqueta", {...}], ... ];
-function etiquetasDelScript(nombre) {
-  const bloque = script.match(new RegExp(`const ${nombre} = \\[([\\s\\S]*?)\\n\\];`));
-  expect(bloque, `no encuentro la lista \`${nombre}\` en dibujar-mapa.mjs`).not.toBeNull();
-  return [...bloque[1].matchAll(/\[\s*"([^"]+)"/g)].map((m) => m[1]);
-}
+// Igual que en el script: cada entrada por su nombre y lo que hay dentro.
+// El tercer nivel (cada colaborador) cambia con los datos: no entra.
+const resumen = (entradas) => entradas.map((e) => (e.submenu && !e.porColaborador ? { [e.etiqueta]: resumen(e.submenu) } : e.etiqueta));
+const nada = () => {};
+const menuQueSeVe = () =>
+  DesplegableSecciones({
+    abierto: {},
+    toggle: nada,
+    colaboradores: [{ id: "c1", nombre: "Ruiz, Ana" }],
+    onCambiarRol: nada,
+    anfitrionToken: "t",
+    abrirNovedades: nada,
+    abrirCronograma: nada,
+    abrirMusicaEvento: nada,
+    abrirInvitados: nada,
+    abrirMesas: nada,
+    abrirMiCuenta: nada,
+  }).props.opciones;
 
-describe("el plano de la aplicación lista las mismas secciones que el menú", () => {
-  it("primer nivel: las secciones de \"Abrir sección...\"", () => {
-    // "Mi cuenta" no es una ventana flotante, pero vive en el menú (v51).
-    const enLaApp = [...ORDEN_VENTANAS.map((clave) => ETIQUETAS_VENTANAS[clave]), "Mi cuenta"];
-    expect(etiquetasDelScript("nivel1").sort()).toEqual([...enLaApp].sort());
+describe("el menú y el mapa salen de la misma pieza", () => {
+  it("«Abrir sección…» enseña, nivel a nivel, lo que dice lib/menuAnfitrion.js", () => {
+    const quitarTercerNivel = (ops) => ops.map((o) => (o.submenu && o.id !== "colaboradores-formularios" ? { ...o, submenu: quitarTercerNivel(o.submenu) } : { ...o, submenu: undefined }));
+    expect(resumen(quitarTercerNivel(menuQueSeVe()))).toEqual(resumen(estructuraMenuAnfitrion()));
   });
 
-  it("segundo nivel: el submenú de Configuración", () => {
-    const enLaApp = SUBMENU_CONFIGURACION.map((s) => s.etiqueta);
-    expect(etiquetasDelScript("config").sort()).toEqual([...enLaApp].sort());
+  it("cada botón del menú lleva su icono y hace algo al tocarlo", () => {
+    const repasar = (ops) => {
+      for (const o of ops) {
+        expect(o.icono, `«${o.etiqueta}» sin icono`).toBeTruthy();
+        if (o.submenu) repasar(o.submenu);
+        else expect(typeof o.onClick, `«${o.etiqueta}» no hace nada`).toBe("function");
+      }
+    };
+    repasar(menuQueSeVe());
   });
 
-  it("toda sección del menú tiene etiqueta (si no, el plano dibujaría un hueco)", () => {
-    for (const clave of ORDEN_VENTANAS) {
-      expect(ETIQUETAS_VENTANAS[clave], `falta la etiqueta de "${clave}"`).toBeTruthy();
-    }
+  it("la imagen se dibujó con el menú de ahora", () => {
+    const ficha = JSON.parse(readFileSync(join(aqui, "mapa-generado.json"), "utf-8"));
+    expect(
+      ficha.menu,
+      'El menú ha cambiado y el mapa no se ha redibujado. Regenéralo:  node scripts/dibujar-mapa.mjs'
+    ).toEqual(resumen(estructuraMenuAnfitrion()));
   });
 });
 

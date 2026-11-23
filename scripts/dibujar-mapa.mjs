@@ -10,12 +10,12 @@
 // Vercel intentara compilarla en cada despliegue. Si falta, instalarla
 // solo en local:  npm i -D canvas --no-save
 //
-// ⚠️ AL CAMBIAR EL MENÚ hay que actualizar las listas `nivel1` y
-// `config` de más abajo. La fuente de verdad es ORDEN_VENTANAS /
-// ETIQUETAS_VENTANAS (components/VentanaFlotante.jsx) y
-// SUBMENU_CONFIGURACION (components/DesplegableSecciones.jsx) -- el
-// mapa anterior quedó desactualizado justo por no hacer esto cuando el
-// primer nivel pasó de 14 entradas a 8.
+// Lo que dibuja SALE DEL MENÚ DE VERDAD (lib/menuAnfitrion.js, la misma
+// pieza que usa «Abrir sección…»), no de una lista escrita aquí. La había,
+// y se quedó atrás dos veces: el primer nivel pasó de 14 entradas a 8 y el
+// mapa siguió con 14; luego faltaban «Avisar equipo» y lo de dentro de
+// «Invitados» (él, v96.2: «cada vez que hagamos un cambio en la estructura,
+// el mapa se redibuja»). Cada submenú es una sección, colocada donde quepa.
 // La versión y la fecha salen de la app, no escritas a mano: las dos se
 // quedaron antiguas (el mapa decía "v24.3 · 7 septiembre" en pleno v29)
 // porque nadie se acuerda de tocarlas al regenerar.
@@ -30,6 +30,7 @@
 // rojo si no coincide con VERSION_APP. Regenerar es entonces parte de
 // subir una versión, no algo que hay que acordarse de hacer.
 import { VERSION_APP } from "../src/constants.js";
+import { estructuraMenuAnfitrion } from "../src/lib/menuAnfitrion.js";
 import { C as TEMA } from "../src/theme.js";
 import { createCanvas, registerFont } from "canvas";
 import { writeFileSync, existsSync, mkdirSync } from "node:fs";
@@ -243,7 +244,10 @@ function entrada(cx, cy, nombre, { tipo = "normal", fuera = false } = {}) {
   }
 }
 
-// --- Columna 1 ---
+const MENU = estructuraMenuAnfitrion();
+const tipoDe = (e) => (e.submenu || e.porColaborador ? "abre" : e.peligro === "fuerte" ? "rojoFuerte" : e.peligro === "suave" ? "rojoSuave" : "normal");
+
+// --- Columna 1: el primer nivel ---
 tituloNivel(COLS[0], 268, "Primer nivel");
 x.fillStyle = velado(C.oro, 0.12);
 redondeado(COLS[0], 292, 196, 44, 22); x.fill();
@@ -253,56 +257,50 @@ x.font = inter(19, 600); x.fillStyle = C.oro;
 x.fillText("Abrir sección…", COLS[0] + 26, 320);
 
 let y = 362;
-const nivel1 = [
-  ["Acomodación", { fuera: true }],
-  ["Aniversarios", {}],
-  ["Colaboradores", { tipo: "abre" }],
-  ["Configuración", { tipo: "abre" }],
-  ["Contabilidad", {}],
-  ["Día del evento", {}],
-  ["Invitados", { fuera: true }],
-  ["Mi cuenta", {}],
-  ["Multimedia", { fuera: true }],
-];
-for (const [n, o] of nivel1) { entrada(COLS[0], y, n, o); y += SALTO; }
+for (const e of MENU) { entrada(COLS[0], y, e.etiqueta, { tipo: tipoDe(e), fuera: e.aparte }); y += SALTO; }
 
-// --- Columna 2 ---
-tituloNivel(COLS[1], 268, "Colaboradores");
-y = 300;
-entrada(COLS[1], y, "Datos Colab.", {}); y += SALTO;
-entrada(COLS[1], y, "Formularios", { tipo: "abre" }); y += ALTO + 12;
+// El tercer nivel (Formularios): el anfitrión y cada colaborador, en una
+// caja anidada con filete discontinuo.
+const ALTO_TERCER_NIVEL = 150;
+function tercerNivel(cx, cy) {
+  const bx = cx + 34;
+  x.strokeStyle = lineaFirme; x.lineWidth = 1;
+  x.setLineDash([4, 4]);
+  x.beginPath(); x.moveTo(bx + 0.5, cy); x.lineTo(bx + 0.5, cy + ALTO_TERCER_NIVEL); x.stroke();
+  x.setLineDash([]);
+  x.font = inter(12, 600); x.fillStyle = C.oroHondo;
+  espaciado("TERCER NIVEL", bx + 20, cy + 22, 2);
+  x.font = fraunces(19); x.fillStyle = C.texto;
+  x.fillText("Anfitrión", bx + 20, cy + 52);
+  x.font = inter(16); x.fillStyle = tenue;
+  x.fillText("…y cada colaborador, uno por línea", bx + 20, cy + 80);
+  x.font = inter(15);
+  x.fillText("Cambia la vista para ver su formulario tal y", bx + 20, cy + 110);
+  x.fillText("como lo ve esa persona, sin salir de tu sesión.", bx + 20, cy + 132);
+}
 
-// Tercer nivel: caja anidada con filete discontinuo
-const bx = COLS[1] + 34, bw = COL_W - 34, bh = 150;
-x.strokeStyle = lineaFirme; x.lineWidth = 1;
-x.setLineDash([4, 4]);
-x.beginPath(); x.moveTo(bx + 0.5, y); x.lineTo(bx + 0.5, y + bh); x.stroke();
-x.setLineDash([]);
-x.font = inter(12, 600); x.fillStyle = C.oroHondo;
-espaciado("TERCER NIVEL", bx + 20, y + 22, 2);
-x.font = fraunces(19); x.fillStyle = C.texto;
-x.fillText("Anfitrión", bx + 20, y + 52);
-x.font = inter(16); x.fillStyle = tenue;
-x.fillText("…y cada colaborador, uno por línea", bx + 20, y + 80);
-x.font = inter(15);
-x.fillText("Cambia la vista para ver su formulario tal y", bx + 20, y + 110);
-x.fillText("como lo ve esa persona, sin salir de tu sesión.", bx + 20, y + 132);
-
-// --- Columna 3 ---
-tituloNivel(COLS[2], 268, "Configuración");
-y = 300;
-const config = [
-  ["Borrado total", { tipo: "rojoFuerte" }],
-  ["Cronograma", { fuera: true }],
-  ["Datos evento", {}],
-  ["Modo pruebas", { tipo: "rojoSuave" }],
-  ["Novedades", { fuera: true }],
-  ["Permisos", {}],
-  ["Progreso", {}],
-  ["Reinicios", {}],
-  ["Versiones", {}],
-];
-for (const [n, o] of config) { entrada(COLS[2], y, n, o); y += SALTO; }
+// --- Columnas 2 y 3: un apartado por submenú ---
+// Cada uno, en la columna que tenga más sitio libre arriba; si no cabe en
+// ninguna, el script avisa en vez de dibujar encima del pie.
+const TOPE = 970, ENTRE_APARTADOS = 40;
+const altoApartado = (sub) => 32 + sub.reduce((h, e) => h + (e.porColaborador ? ALTO + 12 + ALTO_TERCER_NIVEL + 12 : SALTO), 0);
+const libre = [268, 268];
+for (const seccion of MENU.filter((e) => e.submenu)) {
+  const alto = altoApartado(seccion.submenu);
+  const col = libre[0] <= libre[1] ? 0 : 1;
+  if (libre[col] + alto > TOPE) throw new Error(`El apartado «${seccion.etiqueta}» no cabe en el mapa: hay que repartirlo de otra forma.`);
+  const cx = COLS[col + 1];
+  tituloNivel(cx, libre[col], seccion.etiqueta);
+  let yy = libre[col] + 32;
+  for (const e of seccion.submenu) {
+    entrada(cx, yy, e.etiqueta, { tipo: tipoDe(e), fuera: e.aparte });
+    if (e.porColaborador) {
+      tercerNivel(cx, yy + ALTO + 12);
+      yy += ALTO + 12 + ALTO_TERCER_NIVEL + 12;
+    } else yy += SALTO;
+  }
+  libre[col] = yy + ENTRE_APARTADOS;
+}
 
 // ---------- Pie ----------
 hairline(PAD, 985, W - PAD);
@@ -329,7 +327,9 @@ px += 16 + 12;
 x.fillStyle = tenue; x.fillText("Sin vuelta atrás", px, 1022);
 
 x.font = inter(15); x.fillStyle = C.oroHondo;
-const nota = "Las cuatro «ventana aparte» pueden no abrirse en iPhone";
+const aparte = MENU.flatMap((e) => [e, ...(e.submenu || [])]).filter((e) => e.aparte).length;
+const NUMEROS = ["ninguna", "una", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez"];
+const nota = `Las ${NUMEROS[aparte] ?? aparte} «ventana aparte» pueden no abrirse en iPhone`;
 x.fillText(nota, W - PAD - x.measureText(nota).width, 1022);
 
 // En public/ y no en docs/: así hay UNA sola copia, la misma que sirve la
@@ -339,11 +339,17 @@ x.fillText(nota, W - PAD - x.measureText(nota).width, 1022);
 const destino = process.argv[2] || "public/mapa-de-la-aplicacion.png";
 writeFileSync(destino, c.toBuffer("image/png"));
 
+// Lo dibujado, en corto: cada entrada por su nombre y, si abre otro nivel,
+// con lo que hay dentro. Lo compara el test con el menú de ahora.
+function resumenMenu(entradas) {
+  return entradas.map((e) => (e.submenu ? { [e.etiqueta]: resumenMenu(e.submenu) } : e.etiqueta));
+}
+
 // La ficha de lo que se acaba de dibujar. No es documentación: es lo que
 // mira el test para saber si la imagen está al día. Va en scripts/ y no
 // en public/ porque no hay que servirla a nadie.
 writeFileSync(
   "scripts/mapa-generado.json",
-  JSON.stringify({ version: VERSION_APP, generadoEn: new Date().toISOString().slice(0, 10) }, null, 2) + "\n"
+  JSON.stringify({ version: VERSION_APP, generadoEn: new Date().toISOString().slice(0, 10), menu: resumenMenu(MENU) }, null, 2) + "\n"
 );
 console.log(`escrito: ${destino} (v${VERSION_APP})`);

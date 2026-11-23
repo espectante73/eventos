@@ -1,4 +1,39 @@
 {
-  "version": "96.1",
-  "generadoEn": "2026-11-23"
+  "version": "96.2",
+  "generadoEn": "2026-11-23",
+  "menu": [
+    "Acomodación",
+    "Aniversarios",
+    {
+      "Colaboradores": [
+        "Avisar equipo",
+        "Datos Colab.",
+        "Formularios"
+      ]
+    },
+    {
+      "Configuración": [
+        "Borrado total",
+        "Cronograma",
+        "Datos evento",
+        "Modo pruebas",
+        "Novedades",
+        "Permisos",
+        "Progreso",
+        "Reinicios",
+        "Versiones"
+      ]
+    },
+    "Contabilidad",
+    "Día del evento",
+    {
+      "Invitados": [
+        "Formulario",
+        "Invitaciones",
+        "Lista"
+      ]
+    },
+    "Mi cuenta",
+    "Multimedia"
+  ]
 }

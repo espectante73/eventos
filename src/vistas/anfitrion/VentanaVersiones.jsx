@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "96.2",
+    cambios: [
+      "Mapa de la app: ahora se dibuja leyendo el menú de verdad, no una lista aparte. Ya enseña lo de dentro de «Invitados» (Formulario, Invitaciones, Lista) y «Avisar equipo» en Colaboradores, que faltaban.",
+      "Si el menú cambia y el mapa no se redibuja, la app no deja publicar la versión.",
+    ],
+  },
+  {
     version: "96.1",
     cambios: [
       "«Invitaciones» pasa del menú principal de «Abrir sección…» a «Invitados», como tercer botón junto a «Formulario» y «Lista»: es un paso que llega después de tener atendidos a todos los invitados.",

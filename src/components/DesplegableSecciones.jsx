@@ -15,37 +15,24 @@
 import { UserCog, Eye, User } from "lucide-react";
 import { C } from "../theme";
 import { UserSolido, Seal } from "./Widgets";
-import { ORDEN_VENTANAS, ETIQUETAS_VENTANAS } from "./VentanaFlotante";
 import { MenuFlotante, HALO } from "./MenuFlotante";
+import { ICONOS_VENTANAS } from "../lib/iconosVentanas";
+import { estructuraMenuAnfitrion } from "../lib/menuAnfitrion";
 
-import { ICONOS_VENTANAS, FORMULARIO_INVITADO } from "../lib/iconosVentanas";
+// QUÉ hay en el menú y en qué orden lo dice lib/menuAnfitrion.js, la misma
+// pieza que dibuja el mapa de la app (v96.2). Aquí solo se le pone a cada
+// entrada su icono (lib/iconosVentanas.js, los mismos que en la barra del
+// móvil), su color y lo que hace al tocarla.
 
-// Submenú de "Configuración": cada parte se abre en su propia ventana,
-// igual que antes — solo cambia cómo se llega hasta ella. "Modo
-// pruebas" y "Borrado total" llevan su propio chip de fondo rojo (letra
-// clara) de distinta intensidad: Borrado total es lo más irreversible
-// de los dos, así que se ve más rojo — a petición del usuario,
-// 2026-08-12. Orden alfabético por etiqueta (no por fecha de creación
-// ni por importancia) — a petición del usuario, 2026-08-26: así, al
-// crecer, se sabe siempre dónde buscar algo sin tener que recordar en
-// qué orden se fue añadiendo.
-// Se exporta para que scripts/dibujar-mapa.test.js pueda comprobar que el
-// plano de la aplicación (public/mapa-de-la-aplicacion.png) sigue listando
-// las mismas secciones que el menú real.
-// Los iconos, los de lib/iconosVentanas.js: los mismos en la barra del móvil.
-export const SUBMENU_CONFIGURACION = [
-  { id: "config-zona-peligro", etiqueta: "Borrado total", fondo: C.peligro, color: C.paper },
-  { id: "config-cronograma", etiqueta: "Cronograma" },
-  { id: "config-datos-evento", etiqueta: "Datos evento" },
-  { id: "config-modo-pruebas", etiqueta: "Modo pruebas", fondo: C.wax, color: C.paper },
-  // Del menú principal a Configuración (v96, él: «es parte de algo que se
-  // puede editar o configurar»).
-  { id: "novedades", etiqueta: "Novedades" },
-  { id: "permisos", etiqueta: "Permisos" },
-  { id: "progreso", etiqueta: "Progreso" },
-  { id: "config-zona-reinicio", etiqueta: "Reinicios" },
-  { id: "versiones", etiqueta: "Versiones" },
-].map((s) => ({ ...s, icono: ICONOS_VENTANAS[s.id] }));
+// El rojo de «Borrado total» (más fuerte: lo más irreversible) y el de
+// «Modo pruebas» (él, con letra clara).
+const ESTILO_PELIGRO = {
+  fuerte: { fondo: C.peligro, color: C.paper },
+  suave: { fondo: C.wax, color: C.paper },
+};
+
+// Los iconos que no son el de su ventana en la barra.
+const ICONOS_PROPIOS = { "colaboradores-formularios": Eye, "invitados-lista": ICONOS_VENTANAS.invitados, miCuenta: UserCog };
 
 // "Mi cuenta" es una línea especial, pero no de peligro (él, v51.3): relleno
 // champán y letra verde, con el mismo contorno dorado que las demás. El
@@ -78,143 +65,45 @@ export function DesplegableSecciones({
   miColaboradorId = null,
   posicion = { bottom: 8, right: 8 },
 }) {
-  const opciones = ORDEN_VENTANAS.map((clave) => {
-    // La Lista de invitados abre en su propia ventana del sistema
-    // (o dentro de la página en un aparato táctil): mismo caso que
-    // Novedades, Logística y Música -- no pasa por el `toggle` genérico
-    // y no lleva el "✓ " (no hay estado fiable de "sigue abierta": se
-    // puede cerrar con la X del sistema sin que este menú se entere).
-    // Dos opciones (él, v81.5): «Formulario» (antes «Añadir», v87.4), el de
-    // «Nuevo invitado» sin abrir antes la Lista, y «Lista». Mismos iconos
-    // que en la Lista (FORMULARIO_INVITADO). Y una tercera, «Invitaciones»
-    // (v96.1, él: «es un proceso que surge después de haber atendido a todos
-    // los invitados; pertenece a la sección Invitados»). Por orden alfabético.
-    if (clave === "invitados") {
-      return {
-        id: clave,
-        etiqueta: ETIQUETAS_VENTANAS[clave],
-        icono: ICONOS_VENTANAS[clave],
-        submenu: [
-          { id: "nuevo-invitado", ...FORMULARIO_INVITADO, marcado: Boolean(abierto["nuevo-invitado"]), onClick: () => toggle("nuevo-invitado") },
-          {
-            id: "invitaciones",
-            etiqueta: ETIQUETAS_VENTANAS.invitaciones,
-            icono: ICONOS_VENTANAS.invitaciones,
-            marcado: Boolean(abierto.invitaciones),
-            onClick: () => toggle("invitaciones"),
-          },
-          { id: "invitados-lista", etiqueta: "Lista", icono: ICONOS_VENTANAS[clave], onClick: abrirInvitados },
-        ],
-      };
-    }
-    // «Mesas y acomodación» (v74.6), igual: en el Mac, su propia ventana.
-    if (clave === "mesas" && abrirMesas) {
-      return {
-        id: clave,
-        etiqueta: ETIQUETAS_VENTANAS[clave],
-        icono: ICONOS_VENTANAS[clave],
-        onClick: abrirMesas,
-      };
-    }
-    if (clave === "musicaEvento") {
-      return {
-        id: clave,
-        etiqueta: ETIQUETAS_VENTANAS[clave],
-        icono: ICONOS_VENTANAS[clave],
-        onClick: abrirMusicaEvento,
-      };
-    }
-    if (clave === "colaboradores") {
-      return {
-        id: clave,
-        etiqueta: ETIQUETAS_VENTANAS[clave],
-        icono: ICONOS_VENTANAS[clave],
-        // El sello marca el camino hasta tu formulario: Colaboradores →
-        // Formularios → tu nombre.
-        sello,
-        submenu: [
-          // Un aviso al móvil de todo el equipo (v79). Por orden alfabético, la primera.
-          {
-            id: "avisar-equipo",
-            etiqueta: "Avisar equipo",
-            marcado: Boolean(abierto["avisar-equipo"]),
-            icono: ICONOS_VENTANAS["avisar-equipo"],
-            onClick: () => toggle("avisar-equipo"),
-          },
-          {
-            id: "colaboradores-datos",
-            etiqueta: "Datos Colab.",
-            marcado: Boolean(abierto["colaboradores-datos"]),
-            icono: ICONOS_VENTANAS["colaboradores-datos"],
-            onClick: () => toggle("colaboradores-datos"),
-          },
-          {
-            id: "colaboradores-formularios",
-            etiqueta: "Formularios",
-            icono: Eye,
-            sello,
-            submenu: [
-              { id: "rol-anfitrion", etiqueta: "Anfitrión", icono: UserSolido, onClick: () => onCambiarRol(anfitrionToken) },
-              ...colaboradores.map((c) => ({
-                id: `rol-${c.id}`,
-                etiqueta: c.nombre,
-                icono: User,
-                onClick: () => onCambiarRol(c.id),
-                sello: c.id === miColaboradorId ? sello : 0,
-              })),
-            ],
-          },
-        ],
-      };
-    }
-    if (clave === "configuracion") {
-      return {
-        id: clave,
-        etiqueta: ETIQUETAS_VENTANAS[clave],
-        icono: ICONOS_VENTANAS[clave],
-        // "Cronograma" abre una ventana de verdad del sistema operativo
-        // (ver lib/usePopupWindow.js), igual que Novedades/Logística --
-        // a petición del usuario, 2026-08-29. Por eso no pasa por
-        // "toggle(s.id)" ni lleva el visto de abierta (mismo motivo: no hay
-        // estado fiable de "sigue abierta" que reflejar aquí).
-        // «Novedades» (v96), igual: su propia ventana del sistema.
-        submenu: SUBMENU_CONFIGURACION.map((s) =>
-          s.id === "config-cronograma" || s.id === "novedades"
-            ? { id: s.id, etiqueta: s.etiqueta, icono: s.icono, onClick: s.id === "novedades" ? abrirNovedades : abrirCronograma }
-            : {
-                id: s.id,
-                etiqueta: s.etiqueta,
-                marcado: Boolean(abierto[s.id]),
-                icono: s.icono,
-                color: s.color,
-                fondo: s.fondo,
-                onClick: () => toggle(s.id),
-              }
-        ),
-      };
-    }
+  // Lo que no abre su ventana flotante de siempre (`toggle`): las que van en
+  // su propia ventana del sistema (Novedades, Cronograma, Multimedia, la
+  // Lista y, en el Mac, Acomodación) y «Mi cuenta». Esas no llevan el
+  // dorado de «abierta»: se pueden cerrar con la X del sistema sin que este
+  // menú se entere.
+  const acciones = {
+    novedades: { onClick: abrirNovedades },
+    "config-cronograma": { onClick: abrirCronograma },
+    musicaEvento: { onClick: abrirMusicaEvento },
+    "invitados-lista": { onClick: abrirInvitados },
+    ...(abrirMesas ? { mesas: { onClick: abrirMesas } } : {}),
+    // «Mi cuenta» del anfitrión (v50.6), entre las demás.
+    miCuenta: { onClick: abrirMiCuenta, ...ESTILO_MI_CUENTA },
+  };
+  // Formularios: el anfitrión y cada colaborador, para cambiar de vista y
+  // ver su formulario (sustituye a la barra ancha que había en App.jsx).
+  const formularios = () => [
+    { id: "rol-anfitrion", etiqueta: "Anfitrión", icono: UserSolido, onClick: () => onCambiarRol(anfitrionToken) },
+    ...colaboradores.map((c) => ({
+      id: `rol-${c.id}`,
+      etiqueta: c.nombre,
+      icono: User,
+      onClick: () => onCambiarRol(c.id),
+      sello: c.id === miColaboradorId ? sello : 0,
+    })),
+  ];
+  const vestir = (e) => {
+    const base = { id: e.id, etiqueta: e.etiqueta, icono: ICONOS_PROPIOS[e.id] || ICONOS_VENTANAS[e.id] };
+    // El sello marca el camino hasta tu formulario: Colaboradores →
+    // Formularios → tu nombre.
+    if (e.porColaborador) return { ...base, sello, submenu: formularios() };
+    if (e.submenu) return { ...base, ...(e.id === "colaboradores" ? { sello } : {}), submenu: e.submenu.map(vestir) };
     return {
-      id: clave,
-      etiqueta: ETIQUETAS_VENTANAS[clave],
-      marcado: Boolean(abierto[clave]),
-      icono: ICONOS_VENTANAS[clave],
-      onClick: () => toggle(clave),
+      ...base,
+      ...(e.peligro ? ESTILO_PELIGRO[e.peligro] : {}),
+      ...(acciones[e.id] || { marcado: Boolean(abierto[e.id]), onClick: () => toggle(e.id) }),
     };
-  });
-
-  if (abrirMiCuenta) {
-    opciones.push({
-      id: "miCuenta",
-      etiqueta: "Mi cuenta",
-      icono: UserCog,
-      onClick: abrirMiCuenta,
-      ...ESTILO_MI_CUENTA,
-    });
-  }
-  // En orden alfabético por lo que se lee (él): «Acomodación» (v74.7) va
-  // la primera aunque su ventana sea la de Mesas, y «Mi cuenta», entre
-  // Invitados y Multimedia.
-  opciones.sort((x, y) => x.etiqueta.localeCompare(y.etiqueta, "es"));
+  };
+  const opciones = estructuraMenuAnfitrion({ conMiCuenta: Boolean(abrirMiCuenta) }).map(vestir);
 
   return <BotonAbrirSeccion opciones={opciones} sello={sello} posicion={posicion} />;
 }

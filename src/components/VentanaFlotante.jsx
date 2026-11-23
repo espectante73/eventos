@@ -8,6 +8,7 @@ import { C, S, VELO, MARGEN_PANTALLA } from "../theme";
 import { realmDe } from "../lib/realm";
 import { esAparatoTactil } from "../lib/mano";
 import { useCapaBarra } from "../lib/capaBarra";
+import { ORDEN_VENTANAS } from "../lib/menuAnfitrion";
 
 // Ventana flotante genérica: independiente de qué secciones estén plegadas,
 // para que Imprimir/Canciones/Alergias y los avisos de mesas funcionen siempre.
@@ -201,60 +202,9 @@ export function ModalFlotante({ titulo, iconoTitulo: IconoTitulo, onCerrar, chil
   );
 }
 
-// Orden fijo de apertura en cascada — cada sección siempre aparece en el
-// mismo sitio relativo, en vez de saltar de posición según el orden en que
-// se abran.
-// Orden alfabético (por la etiqueta visible, no por la clave interna) —
-// así el desplegable es predecible según crece: siempre se sabe dónde
-// buscar algo sin tener que recordar un grupo temático.
 // Contador compartido por todas las VentanaFlotante para decidir cuál va
 // por delante: cada vez que se toca o se abre una, sube y se lo queda ella.
 let contadorZIndexVentanas = 50;
-
-export const ORDEN_VENTANAS = [
-  "aniversarios",
-  "colaboradores",
-  "configuracion",
-  "cuentas",
-  "diaEvento",
-  // «Invitaciones» va dentro de «Invitados» (v96.1, él: «es un proceso
-  // que surge después de haber atendido a todos los invitados»).
-  "invitados",
-  "mesas",
-  "musicaEvento",
-  // «Novedades» ya no va aquí: está dentro de Configuración (v96, él: «es
-  // parte de algo que se puede editar o configurar»).
-];
-
-// Etiquetas cortas (una palabra donde sea posible) -- son solo las del
-// menú "Abrir sección..." (DesplegableSecciones.jsx); el título completo
-// de cada ventana ya abierta se define aparte, en su propio fichero
-// (p.ej. VentanaVersiones.jsx sigue titulándose "Versiones").
-//
-// Incluye también las que ya NO son entradas de primer nivel pero
-// siguen abriéndose como ventana desde el submenú de Configuración
-// (Permisos, Backup): la etiqueta se usa igual al pintarlas.
-export const ETIQUETAS_VENTANAS = {
-  aniversarios: "Aniversarios",
-  progreso: "Progreso",
-  colaboradores: "Colaboradores",
-  // «Acomodación» (él, v74.7): «Mesas y acomodación» no cabía en el botón.
-  mesas: "Acomodación",
-  invitaciones: "Invitaciones",
-  invitados: "Invitados",
-  // "Contabilidad" (antes "Cuentas"): se confundía con "Mi cuenta" (él, v51.3).
-  cuentas: "Contabilidad",
-  // Lo que se abre o se usa ese día: las llegadas y, después, las fotos (él, v66).
-  diaEvento: "Día del evento",
-  // Se abre desde «Día del evento», no desde «Abrir sección…» (él, v69.2).
-  marcador: "Acreditación",
-  configuracion: "Configuración",
-  versiones: "Versiones",
-  novedades: "Novedades",
-  permisos: "Permisos",
-  // "Multimedia" (antes "Música"): sonido hoy y vídeo después (él, v57.3).
-  musicaEvento: "Multimedia",
-};
 
 // Lo más pequeña que se puede dejar una ventana al encogerla a mano.
 const ANCHO_MINIMO = 280;

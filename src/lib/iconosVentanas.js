@@ -27,11 +27,12 @@ import {
   Send,
 } from "lucide-react";
 import { IconoMovilQr } from "../components/IconoMovilQr";
+import { ETIQUETA_FORMULARIO_INVITADO } from "./menuAnfitrion";
 
 // «Formulario» (él, v87.4; antes «Añadir»): «ahora no solo añade, sino que
 // busca o confirma o hace cambios». Su nombre y su icono, una sola pieza
 // para la cabecera de la Lista y el menú «Invitados» de la Portada.
-export const FORMULARIO_INVITADO = { etiqueta: "Formulario", icono: ClipboardPen };
+export const FORMULARIO_INVITADO = { etiqueta: ETIQUETA_FORMULARIO_INVITADO, icono: ClipboardPen };
 
 export const ICONOS_VENTANAS = {
   aniversarios: Heart,
