@@ -42,6 +42,15 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "98.9",
+    cambios: [
+      "Tarjetas de acomodación: cada cara, del tamaño de una tarjeta bancaria (8,56 × 5,4 cm); abierta, el doble de alto. Caben 4 por hoja A4 y 9 por A3. El ancho de 9,5 cm se retira: solo queda el de la tarjeta bancaria.",
+      "El APELLIDO arriba, en mayúsculas y negrita, y el nombre debajo, en dos líneas.",
+      "Marcas de corte como las piden las imprentas: rayitas negras, cortas y bien visibles, fuera de las tarjetas, en cada línea de corte; y a los lados, una discontinua a la altura del doblez.",
+      "La letra de la familia (A, B, C…) solo la llevan las familias de dos o más en la mesa: quien viene solo, sin letra, para que no parezca que va con otro.",
+    ],
+  },
+  {
     version: "98.8",
     cambios: [
       "Acomodación, en el Mac: «Sin mesa» se pliega a la izquierda, en una tira estrecha con su nombre en vertical, y las mesas ganan el sitio. En la tira se siguen dejando familias. En el móvil se sigue plegando hacia arriba.",

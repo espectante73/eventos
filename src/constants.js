@@ -1,13 +1,13 @@
 // Constantes de app compartidas entre App.jsx y los componentes bajo
 // src/components/. Movida fuera de App.jsx en el reparto del 2026-08-08.
-export const VERSION_APP = "98.8";
+export const VERSION_APP = "98.9";
 
 // Lo que dice el aviso rojo de «Actualizar» a TODOS los que entran con su
 // cuenta, junto al número (él, v81.6): qué cambia, se corrige o se añade,
 // en 2 o 3 líneas del móvil (TOPE_AVISO, lib/avisoVersion.js), para
 // cualquiera: tú/ustedes, sin «yo». Va con cada número nuevo, y sin él no
 // se sube (.githooks/pre-push → scripts/version-subida.mjs).
-export const AVISO_VERSION = "Acomodación: en el Mac, «Sin mesa» se pliega a la izquierda; la X de cada mesa, en su esquina.";
+export const AVISO_VERSION = "Tarjetas de acomodación: del tamaño de una tarjeta bancaria, nombre en dos líneas y marcas de corte.";
 
 // Dirección del código de la app. La enseña "Mi cuenta" a quien tenga el
 // permiso "Ver el código de la app" (lib/permisos.js).

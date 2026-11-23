@@ -4,19 +4,23 @@
 // INCLUIDOS (él: «tarjetas para todos»): los confirmados con mesa.
 //
 // Cómo son (decidido con él a base de bocetos):
-// - del alto de una tarjeta bancaria, 5,4 cm, doblada a lo largo: dos caras
-//   iguales de 2,7 cm, la de arriba girada 180° para leerse desde el otro
-//   lado de la mesa (como las tarjetas QR); el ancho lo elige él: 8,56 cm
-//   (la bancaria) o 9,5 cm (la que cabe a dos columnas en un A4);
+// - doblada a lo largo: dos caras iguales, CADA UNA del alto de una
+//   tarjeta bancaria, 5,4 cm (él, v98.9: «la medida de tarjeta bancaria por
+//   cada lado»; antes las dos juntas medían eso), la de arriba girada 180°
+//   para leerse desde el otro lado de la mesa (como las tarjetas QR); de
+//   ancho, el de la bancaria, 8,56 cm, el único (él, v98.9: retiró el de
+//   9,5 cm: «nos quedamos con el modelo de tarjeta bancaria»);
 // - fondo verde del evento a sangre, letra champán, marco fino;
-// - «APELLIDO, Nombre» en una línea: el apellido en mayúsculas y negrita
-//   para que no se confundan («MESA, Sara», «TOMÁS, Elena»); si no cabe,
-//   la letra encoge;
+// - el APELLIDO arriba, en mayúsculas y negrita para que no se confundan
+//   («MESA, Sara», «TOMÁS, Elena»), y el nombre debajo (él, v98.9; antes
+//   «APELLIDO, Nombre» en una línea); si no cabe, la letra encoge;
 // - el número de la mesa en un círculo dorado;
 // - la letra de su familia DENTRO de la mesa (A, B, C…), pequeña, en la
 //   esquina: se imprimen mesa por mesa y familia seguida, y así no se
 //   separa a nadie al repartirlas (el apellido no basta: matrimonios con
-//   apellidos distintos, Abreu01 y Abreu02).
+//   apellidos distintos, Abreu01 y Abreu02). Solo la llevan las familias
+//   de dos o más en esa mesa: quien viene solo, sin letra (él, v98.9: dos
+//   solteros con A y B parecían ir juntos);
 //
 // UN solo dibujo para el PDF y para la vista previa (él: «una vista previa
 // antes de descargar, no sea que no me guste cómo quede»): se dibuja con
@@ -29,16 +33,18 @@ import { PdfEnLienzo, PUNTOS_POR_MM, crearCanvas } from "./pdfEnLienzo";
 
 export const ARCHIVO_TARJETAS_ACOMODACION = "tarjetas-de-acomodacion.pdf";
 
-// Las hojas y los anchos que se pueden elegir (él), en milímetros.
+// Las hojas que se pueden elegir (él), en milímetros.
 export const HOJAS = {
   a4: { rotulo: "A4", ancho: 210, alto: 297 },
   a3: { rotulo: "A3", ancho: 297, alto: 420 },
 };
-export const ANCHOS_TARJETA = [85.6, 95];
-// El alto, siempre el de la tarjeta bancaria (él).
-export const ALTO_TARJETA = 53.98;
+// La tarjeta bancaria: su ancho, y cada cara de su alto (él, v98.9);
+// abierta, el doble de alto.
+export const ANCHO_TARJETA = 85.6;
+export const ALTO_CARA = 53.98;
+export const ALTO_TARJETA = 2 * ALTO_CARA;
 // Lo mínimo hasta el borde del papel: menos, y la impresora cortaría el
-// verde (él eligió 9,5 cm para que en A4 quepan dos columnas con esto).
+// verde.
 const MARGEN_MINIMO = 10;
 // El acabado (él: «una paleta con cuatro o cinco posibilidades, y verlo
 // antes»; luego pidió el sexto). `fondo`: el de toda la tarjeta, de corte a corte (null = el
@@ -70,20 +76,17 @@ export const ACABADOS = [
   { id: "recuadroBlancoDorado", rotulo: "Blanco, rectángulo dorado", fondo: null, recuadro: null, marco: C.goldClaro, grosorMarco: 1.5, letra: C.ink, familia: C.ink, contornoNumero: C.gold },
 ];
 const acabado = (id) => ACABADOS.find((a) => a.id === id) || ACABADOS[0];
-export const OPCIONES_POR_DEFECTO = { hoja: "a3", ancho: 85.6, acabado: ACABADOS[0].id };
+export const OPCIONES_POR_DEFECTO = { hoja: "a3", acabado: ACABADOS[0].id };
 
 const MM = PUNTOS_POR_MM;
 
 // Cuántas caben por hoja, con el margen mínimo alrededor.
-export function rejilla(hoja, ancho) {
+export function rejilla(hoja) {
   const papel = HOJAS[hoja] || HOJAS.a3;
-  const columnas = Math.max(1, Math.floor((papel.ancho - 2 * MARGEN_MINIMO + 0.01) / ancho));
+  const columnas = Math.max(1, Math.floor((papel.ancho - 2 * MARGEN_MINIMO + 0.01) / ANCHO_TARJETA));
   const filas = Math.max(1, Math.floor((papel.alto - 2 * MARGEN_MINIMO + 0.01) / ALTO_TARJETA));
   return { columnas, filas, porHoja: columnas * filas };
 }
-
-// «8,56 cm», como se escribe aquí.
-export const textoAncho = (ancho) => `${String(Number((ancho / 10).toFixed(2))).replace(".", ",")} cm`;
 
 const ORDEN_ROL = { [ROL_FAMILIAR.ESPOSO]: 0, [ROL_FAMILIAR.ESPOSA]: 1 };
 const comparar = (a, b) => String(a || "").localeCompare(String(b || ""), "es", { numeric: true, sensitivity: "base" });
@@ -101,28 +104,34 @@ export function tarjetasDeAcomodacion(invitados = []) {
   for (const mesa of mesas) {
     const deLaMesa = conMesa.filter((g) => g.mesa === mesa);
     const familias = [...new Set(deLaMesa.map(claveFamiliaMesa))].sort(comparar);
-    familias.forEach((clave, i) => {
-      deLaMesa
+    let letras = 0;
+    for (const clave of familias) {
+      const suyos = deLaMesa
         .filter((g) => claveFamiliaMesa(g) === clave)
-        .sort((a, b) => (ORDEN_ROL[a.rolFamiliar] ?? 2) - (ORDEN_ROL[b.rolFamiliar] ?? 2) || comparar(a.nombre, b.nombre))
-        .forEach((g) =>
-          tarjetas.push({
-            id: g.id,
-            nombre: String(g.nombre || "").trim(),
-            apellido: String(g.apellido || "").trim(),
-            mesa,
-            familia: letraFamilia(i),
-          })
-        );
-    });
+        .sort((a, b) => (ORDEN_ROL[a.rolFamiliar] ?? 2) - (ORDEN_ROL[b.rolFamiliar] ?? 2) || comparar(a.nombre, b.nombre));
+      const letra = suyos.length > 1 ? letraFamilia(letras++) : "";
+      for (const g of suyos)
+        tarjetas.push({
+          id: g.id,
+          nombre: String(g.nombre || "").trim(),
+          apellido: String(g.apellido || "").trim(),
+          mesa,
+          familia: letra,
+        });
+    }
   }
   return { tarjetas, sinMesa: vienen.length - conMesa.length };
 }
 
 // ---------- El dibujo ----------
 
-const MARCO = 11; // del corte (o del doblez) al marco, en puntos
-const R_NUM = 20; // el círculo del número
+// Con la cara del doble de alto (v98.9), todo algo más grande; el ancho es
+// el mismo, así que el nombre sigue encogiendo si no cabe.
+const MARCO = 14; // del corte (o del doblez) al marco, en puntos
+const R_NUM = 30; // el círculo del número
+const TAM_NUMERO = 40;
+const TAM_NOMBRE = 20; // el de entrada; si no cabe, encoge
+const TAM_FAMILIA = 11;
 const ALTO_CIFRA = 0.716; // alto de las cifras de Helvetica, por punto de letra
 
 // Una cara de la tarjeta. Si va girada, cada punto da la vuelta alrededor
@@ -151,47 +160,58 @@ function cara(pdf, x, y, ancho, alto, girada, t, estilo) {
   const nx = x + ancho - MARCO - 8 - R_NUM;
   pdf.setFillColor(C.goldClaro);
   pdf.setDrawColor(estilo.contornoNumero);
-  pdf.setLineWidth(2.4);
-  pdf.circle(...p(nx, cy), R_NUM - 1.2, "FD");
+  pdf.setLineWidth(3);
+  pdf.circle(...p(nx, cy), R_NUM - 1.5, "FD");
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(26);
+  pdf.setFontSize(TAM_NUMERO);
   pdf.setTextColor(C.ink);
-  escribir(String(t.mesa), nx, cy + (26 * ALTO_CIFRA) / 2, { centrado: true });
-  // «APELLIDO, Nombre», centrado en el hueco de la izquierda; si no cabe,
-  // encoge (hasta 7 puntos: el boceto paraba en 9, pero más vale pequeño
-  // que montado sobre el círculo).
-  const apellido = t.apellido ? `${t.apellido.toLocaleUpperCase("es")}, ` : "";
+  escribir(String(t.mesa), nx, cy + (TAM_NUMERO * ALTO_CIFRA) / 2, { centrado: true });
+  // En dos líneas (él, v98.9, con la cara del doble de alto): arriba el
+  // APELLIDO, en mayúsculas y negrita para que no se confundan («MESA,
+  // Sara», «TOMÁS, Elena»), y debajo el nombre; ya sin la coma. Centrado en
+  // el hueco de la izquierda, las dos de la misma letra; si alguna no cabe,
+  // encogen las dos (hasta 7 puntos: más vale pequeño que montado sobre el
+  // círculo). Sin apellido, solo el nombre.
+  const apellido = t.apellido ? t.apellido.toLocaleUpperCase("es") : "";
   const desde = x + MARCO + 8;
   const hasta = nx - R_NUM - 7;
-  let tam = 15;
-  const anchoNombre = () => {
+  const medio = (desde + hasta) / 2;
+  let tam = TAM_NOMBRE;
+  const anchos = () => {
     pdf.setFontSize(tam);
     pdf.setFont("helvetica", "bold");
     const a = pdf.getTextWidth(apellido);
     pdf.setFont("helvetica", "normal");
-    return a + pdf.getTextWidth(t.nombre);
+    return [a, pdf.getTextWidth(t.nombre)];
   };
-  while (tam > 7 && anchoNombre() > hasta - desde) tam -= 0.5;
-  const total = anchoNombre();
-  const x1 = (desde + hasta) / 2 - total / 2;
-  const base = cy + (tam * ALTO_CIFRA) / 2;
-  pdf.setFont("helvetica", "bold");
-  const anchoApellido = pdf.getTextWidth(apellido);
+  while (tam > 7 && Math.max(...anchos()) > hasta - desde) tam -= 0.5;
+  const [anchoApellido, anchoNombre] = anchos();
+  const alto1 = tam * ALTO_CIFRA;
+  const entreLineas = tam * 1.3;
   pdf.setTextColor(estilo.letra);
-  escribir(apellido, x1, base);
-  pdf.setFont("helvetica", "normal");
-  escribir(t.nombre, x1 + anchoApellido, base);
+  if (apellido) {
+    // Las dos líneas, centradas en alto: de lo alto de las mayúsculas a la
+    // base del nombre.
+    const base1 = cy + (alto1 - entreLineas) / 2;
+    pdf.setFont("helvetica", "bold");
+    escribir(apellido, medio - anchoApellido / 2, base1);
+    pdf.setFont("helvetica", "normal");
+    escribir(t.nombre, medio - anchoNombre / 2, base1 + entreLineas);
+  } else {
+    pdf.setFont("helvetica", "normal");
+    escribir(t.nombre, medio - anchoNombre / 2, cy + alto1 / 2);
+  }
   // La letra de su familia en la mesa, pequeña, en la esquina de abajo.
   if (t.familia) {
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(8);
+    pdf.setFontSize(TAM_FAMILIA);
     pdf.setTextColor(estilo.familia);
-    escribir(t.familia, x + MARCO + 4, y + alto - MARCO - 4);
+    escribir(t.familia, x + MARCO + 6, y + alto - MARCO - 6);
   }
 }
 
 function tarjeta(pdf, x, y, ancho, t, estilo) {
-  const alto = (ALTO_TARJETA * MM) / 2;
+  const alto = ALTO_CARA * MM;
   cara(pdf, x, y, ancho, alto, true, t, estilo);
   cara(pdf, x, y + alto, ancho, alto, false, t, estilo);
   // El doblez, de puntos.
@@ -205,11 +225,11 @@ function tarjeta(pdf, x, y, ancho, t, estilo) {
 // Todas las hojas: las tarjetas en rejilla, centradas, y los cortes
 // discontinuos asomando un poco por fuera. `pdf` es un jsPDF o un
 // PdfEnLienzo (la vista previa). Devuelve cuántas hojas salieron.
-export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_DEFECTO.hoja, ancho = OPCIONES_POR_DEFECTO.ancho, acabado: idAcabado } = {}) {
+export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_DEFECTO.hoja, acabado: idAcabado } = {}) {
   const papel = HOJAS[hoja] || HOJAS.a3;
   const estilo = acabado(idAcabado);
-  const { columnas, filas, porHoja } = rejilla(hoja, ancho);
-  const W = ancho * MM;
+  const { columnas, filas, porHoja } = rejilla(hoja);
+  const W = ANCHO_TARJETA * MM;
   const H = ALTO_TARJETA * MM;
   const x0 = (papel.ancho * MM - columnas * W) / 2;
   const y0 = (papel.alto * MM - filas * H) / 2;
@@ -218,17 +238,43 @@ export function dibujarTarjetasAcomodacion(pdf, tarjetas, { hoja = OPCIONES_POR_
     if (h > 0) pdf.addPage(hoja, "portrait");
     const deEsta = tarjetas.slice(h * porHoja, (h + 1) * porHoja);
     deEsta.forEach((t, i) => tarjeta(pdf, x0 + (i % columnas) * W, y0 + Math.floor(i / columnas) * H, W, t, estilo));
-    // Los cortes, solo hasta donde hay tarjetas.
-    const filasUsadas = Math.max(1, Math.ceil(deEsta.length / columnas));
-    const columnasUsadas = Math.min(columnas, Math.max(1, deEsta.length));
-    pdf.setDrawColor(estilo.lineas || C.line);
-    pdf.setLineWidth(estilo.grosorLineas || 0.4);
-    pdf.setLineDashPattern([4, 3], 0);
-    for (let c = 0; c <= columnasUsadas; c++) pdf.line(x0 + c * W, y0 - 12, x0 + c * W, y0 + filasUsadas * H + 12);
-    for (let f = 0; f <= filasUsadas; f++) pdf.line(x0 - 12, y0 + f * H, x0 + columnasUsadas * W + 12, y0 + f * H);
-    pdf.setLineDashPattern([], 0);
+    marcasDeCorte(pdf, x0, y0, W, H, Math.min(columnas, Math.max(1, deEsta.length)), Math.max(1, Math.ceil(deEsta.length / columnas)));
   }
   return hojas;
+}
+
+// Las marcas de corte, como las de imprenta (él, v98.9: las pidió el
+// rotulista; las rayas grises de puntos de antes, de lado a lado, no se
+// veían): cortas, negras y continuas, FUERA de las tarjetas, una en cada
+// extremo de cada corte, con un hueco para que no asomen en la tarjeta
+// cortada. A los lados, a la altura de cada doblez, otra discontinua. Solo
+// hasta donde hay tarjetas. El largo, el que quepa en el margen, dejando
+// 3 mm hasta el borde del papel.
+const HUECO_MARCA = 2 * MM;
+const LARGO_MARCA = 6 * MM;
+const BORDE_PAPEL = 3 * MM;
+function marcasDeCorte(pdf, x0, y0, W, H, columnas, filas) {
+  const xFin = x0 + columnas * W;
+  const yFin = y0 + filas * H;
+  const largo = (margen) => Math.max(2 * MM, Math.min(LARGO_MARCA, margen - HUECO_MARCA - BORDE_PAPEL));
+  const largoV = largo(y0);
+  const largoH = largo(x0);
+  const vertical = (x) => {
+    pdf.line(x, y0 - HUECO_MARCA - largoV, x, y0 - HUECO_MARCA);
+    pdf.line(x, yFin + HUECO_MARCA, x, yFin + HUECO_MARCA + largoV);
+  };
+  const horizontal = (y) => {
+    pdf.line(x0 - HUECO_MARCA - largoH, y, x0 - HUECO_MARCA, y);
+    pdf.line(xFin + HUECO_MARCA, y, xFin + HUECO_MARCA + largoH, y);
+  };
+  pdf.setDrawColor(C.negro);
+  pdf.setLineWidth(0.5);
+  for (let c = 0; c <= columnas; c++) vertical(x0 + c * W);
+  for (let f = 0; f <= filas; f++) horizontal(y0 + f * H);
+  // El doblez, en medio de cada fila.
+  pdf.setLineDashPattern([2, 2], 0);
+  for (let f = 0; f < filas; f++) horizontal(y0 + f * H + H / 2);
+  pdf.setLineDashPattern([], 0);
 }
 
 // El PDF para descargar. jsPDF pesa: se carga solo al usarlo.
@@ -253,8 +299,8 @@ export function vistaPreviaTarjetasAcomodacion(tarjetas, opciones, { escala = 1.
 // La muestra de un acabado, para elegirlo: una cara de una tarjeta de
 // ejemplo, del mismo dibujo que el PDF.
 const EJEMPLO = { nombre: "Luis", apellido: "Abreu", mesa: 3, familia: "A" };
-export function muestraAcabado(idAcabado, ancho = OPCIONES_POR_DEFECTO.ancho, { escala = 1, crearLienzo = crearCanvas } = {}) {
-  const medida = { ancho: ancho * MM, alto: (ALTO_TARJETA * MM) / 2 };
+export function muestraAcabado(idAcabado, { escala = 1, crearLienzo = crearCanvas } = {}) {
+  const medida = { ancho: ANCHO_TARJETA * MM, alto: ALTO_CARA * MM };
   const lienzo = new PdfEnLienzo({ medida, escala, crearLienzo });
   cara(lienzo, 0, 0, medida.ancho, medida.alto, false, EJEMPLO, acabado(idAcabado));
   return lienzo.ctx ? lienzo.paginas[0].toDataURL("image/png") : "";

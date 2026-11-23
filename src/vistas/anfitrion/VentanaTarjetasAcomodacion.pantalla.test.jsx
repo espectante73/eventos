@@ -18,31 +18,38 @@ it("cuenta tarjetas y hojas, avisa de quien no tiene mesa y enseña la vista pre
   const llamadas = [];
   const vistaPrevia = (tarjetas, opciones) => (llamadas.push({ n: tarjetas.length, ...opciones }), ["data:image/jpeg;base64,AAA", "data:image/jpeg;base64,BBB"]);
   const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={vistaPrevia} muestra={muestra} />);
-  expect(document.body.querySelector("[data-resumen-tarjetas]").textContent).toBe("12 tarjetas en 1 hoja A3, 21 por hoja.");
+  expect(document.body.querySelector("[data-resumen-tarjetas]").textContent).toBe("12 tarjetas en 2 hojas A3, 9 por hoja.");
   expect(document.body.querySelector("[data-sin-mesa]").textContent).toBe("1 confirmado sin mesa se queda sin tarjeta.");
   await esperar();
   expect(document.body.querySelectorAll("[data-vista-previa] img")).toHaveLength(2);
-  expect(llamadas.at(-1)).toEqual({ n: 12, hoja: "a3", ancho: 85.6, acabado: "verde" });
+  expect(llamadas.at(-1)).toEqual({ n: 12, hoja: "a3", acabado: "verde" });
   vista.desmontar();
 });
 
-it("cambiar la hoja y el ancho rehace la vista previa y se recuerda en el aparato", async () => {
+// v98.9 (él): solo la tarjeta bancaria; el ancho ya no se elige.
+it("cambiar la hoja rehace la vista previa y se recuerda en el aparato; el ancho ya no se elige", async () => {
   const llamadas = [];
   const vistaPrevia = (tarjetas, opciones) => (llamadas.push(opciones), []);
   const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={vistaPrevia} muestra={muestra} />);
-  const [hoja, ancho] = document.body.querySelectorAll("[data-opciones-tarjetas] select");
+  const selects = document.body.querySelectorAll("[data-opciones-tarjetas] select");
+  expect([...selects].map((s) => s.getAttribute("aria-label"))).toEqual(["Hoja"]);
   act(() => {
-    hoja.value = "a4";
-    hoja.dispatchEvent(new Event("change", { bubbles: true }));
-  });
-  act(() => {
-    ancho.value = "95";
-    ancho.dispatchEvent(new Event("change", { bubbles: true }));
+    selects[0].value = "a4";
+    selects[0].dispatchEvent(new Event("change", { bubbles: true }));
   });
   await esperar();
-  expect(llamadas.at(-1)).toEqual({ hoja: "a4", ancho: 95, acabado: "verde" });
-  expect(document.body.querySelector("[data-resumen-tarjetas]").textContent).toBe("12 tarjetas en 2 hojas A4, 10 por hoja.");
-  expect(JSON.parse(window.localStorage.getItem("tarjetas-acomodacion-opciones"))).toEqual({ hoja: "a4", ancho: 95, acabado: "verde" });
+  expect(llamadas.at(-1)).toEqual({ hoja: "a4", acabado: "verde" });
+  expect(document.body.querySelector("[data-resumen-tarjetas]").textContent).toBe("12 tarjetas en 3 hojas A4, 4 por hoja.");
+  expect(JSON.parse(window.localStorage.getItem("tarjetas-acomodacion-opciones"))).toEqual({ hoja: "a4", acabado: "verde" });
+  vista.desmontar();
+});
+
+it("lo guardado de antes con el ancho de 9,5 cm se respeta en hoja y acabado, y el ancho se olvida", async () => {
+  window.localStorage.setItem("tarjetas-acomodacion-opciones", JSON.stringify({ hoja: "a4", ancho: 95, acabado: "blancoVerde" }));
+  const llamadas = [];
+  const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={(t, o) => (llamadas.push(o), [])} muestra={muestra} />);
+  await esperar();
+  expect(llamadas.at(-1)).toEqual({ hoja: "a4", acabado: "blancoVerde" });
   vista.desmontar();
 });
 

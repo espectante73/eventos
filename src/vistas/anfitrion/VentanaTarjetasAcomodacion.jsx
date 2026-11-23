@@ -1,9 +1,8 @@
 // Tarjetas de acomodación (él, v97): el nombre de cada invitado en su mesa, para
 // imprimir, doblar y poner en el plato. Antes de descargar, la VISTA PREVIA
-// de todas las hojas (él: «no sea que no me guste cómo quede»), y dos
-// opciones: la hoja (A4 o A3) y el ancho de la tarjeta (8,56 cm, la
-// bancaria, o 9,5 cm, que en A4 cabe a dos columnas). El alto, siempre el
-// de la tarjeta bancaria (él). Y el acabado, de una paleta de seis (él:
+// de todas las hojas (él: «no sea que no me guste cómo quede»), y la hoja
+// (A4 o A3). La tarjeta, siempre la bancaria: cada cara, de su tamaño (él,
+// v98.9; retiró el ancho de 9,5 cm). Y el acabado, de una paleta de seis (él:
 // «poder editar yo mismo el acabado… y verlo antes»).
 //
 // A pantalla entera y con los botones ARRIBA, del lado del pulgar, como la
@@ -19,7 +18,6 @@ import { Field, Desplegable } from "../../components/Formulario";
 import { descargarBlob } from "../../lib/descargas";
 import {
   ACABADOS,
-  ANCHOS_TARJETA,
   ARCHIVO_TARJETAS_ACOMODACION,
   HOJAS,
   muestraAcabado,
@@ -27,20 +25,20 @@ import {
   pdfTarjetasAcomodacion,
   rejilla,
   tarjetasDeAcomodacion,
-  textoAncho,
   vistaPreviaTarjetasAcomodacion,
 } from "../../lib/tarjetasAcomodacion";
 
 const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 
-// La hoja y el ancho elegidos se recuerdan en este aparato: es la
+// La hoja y el acabado elegidos se recuerdan en este aparato: es la
 // impresora de casa la que manda.
 const CLAVE_OPCIONES = "tarjetas-acomodacion-opciones";
 function leerOpciones() {
   try {
     const o = JSON.parse(window.localStorage.getItem(CLAVE_OPCIONES) || "null");
-    if (o && HOJAS[o.hoja] && ANCHOS_TARJETA.includes(o.ancho)) {
-      return { ...o, acabado: ACABADOS.some((a) => a.id === o.acabado) ? o.acabado : OPCIONES_POR_DEFECTO.acabado };
+    // (Lo guardado de antes traía también el ancho: ya no cuenta.)
+    if (o && HOJAS[o.hoja]) {
+      return { hoja: o.hoja, acabado: ACABADOS.some((a) => a.id === o.acabado) ? o.acabado : OPCIONES_POR_DEFECTO.acabado };
     }
   } catch {
     // Sin almacenamiento (ventana privada): las de siempre.
@@ -98,12 +96,12 @@ export function VentanaTarjetasAcomodacion({ invitados, onCerrar, vistaPrevia = 
     guardarOpciones(nuevas);
   };
   const { tarjetas, sinMesa } = useMemo(() => tarjetasDeAcomodacion(invitados), [invitados]);
-  const { porHoja } = rejilla(opciones.hoja, opciones.ancho);
+  const { porHoja } = rejilla(opciones.hoja);
   const hojas = Math.max(1, Math.ceil(tarjetas.length / porHoja));
   const hoja = HOJAS[opciones.hoja];
   const elegido = ACABADOS.find((a) => a.id === opciones.acabado) || ACABADOS[0];
-  // Las muestras, con el ancho elegido: la tarjeta tal cual saldrá.
-  const muestras = useMemo(() => Object.fromEntries(ACABADOS.map((a) => [a.id, muestra(a.id, opciones.ancho, { escala: 0.6 })])), [muestra, opciones.ancho]);
+  // Las muestras: una cara, tal cual saldrá.
+  const muestras = useMemo(() => Object.fromEntries(ACABADOS.map((a) => [a.id, muestra(a.id, { escala: 0.6 })])), [muestra]);
 
   // Las hojas se dibujan justo después de abrir: la ventana sale al
   // momento y la vista previa, en cuanto está.
@@ -139,22 +137,13 @@ export function VentanaTarjetasAcomodacion({ invitados, onCerrar, vistaPrevia = 
           Descargado: {descargado}. Lo tienes en tu carpeta de Descargas.
         </p>
       )}
-      {/* Las dos opciones, en una sola línea (norma 6). */}
+      {/* La hoja, en la mitad de la línea, como cuando iba con el ancho (norma 6). */}
       <div className="grid grid-cols-2 gap-2 mb-2" data-opciones-tarjetas>
         <Field label="Hoja">
           <Desplegable aria-label="Hoja" value={opciones.hoja} onChange={(e) => elegir({ hoja: e.target.value })} style={{ minHeight: DEDO }}>
             {Object.entries(HOJAS).map(([clave, h]) => (
               <option key={clave} value={clave}>
                 {h.rotulo}
-              </option>
-            ))}
-          </Desplegable>
-        </Field>
-        <Field label="Ancho">
-          <Desplegable aria-label="Ancho" value={String(opciones.ancho)} onChange={(e) => elegir({ ancho: Number(e.target.value) })} style={{ minHeight: DEDO }}>
-            {ANCHOS_TARJETA.map((a) => (
-              <option key={a} value={String(a)}>
-                {textoAncho(a)}
               </option>
             ))}
           </Desplegable>
@@ -193,7 +182,7 @@ export function VentanaTarjetasAcomodacion({ invitados, onCerrar, vistaPrevia = 
         </summary>
         <p className="mt-2" style={{ opacity: OP.secundario }}>
           Corta por las rayas y dobla cada tarjeta por los puntos: el nombre se lee por los dos lados. Salen mesa por mesa, y la letra pequeña
-          de la esquina es su familia dentro de la mesa, para repartirlas sin separar a nadie.
+          de la esquina es su familia dentro de la mesa, para repartirlas sin separar a nadie; quien viene solo no lleva letra.
         </p>
       </details>
     </ModalFlotante>
