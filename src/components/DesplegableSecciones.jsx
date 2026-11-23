@@ -38,6 +38,9 @@ export const SUBMENU_CONFIGURACION = [
   { id: "config-cronograma", etiqueta: "Cronograma" },
   { id: "config-datos-evento", etiqueta: "Datos evento" },
   { id: "config-modo-pruebas", etiqueta: "Modo pruebas", fondo: C.wax, color: C.paper },
+  // Del menú principal a Configuración (v96, él: «es parte de algo que se
+  // puede editar o configurar»).
+  { id: "novedades", etiqueta: "Novedades" },
   { id: "permisos", etiqueta: "Permisos" },
   { id: "progreso", etiqueta: "Progreso" },
   { id: "config-zona-reinicio", etiqueta: "Reinicios" },
@@ -76,20 +79,6 @@ export function DesplegableSecciones({
   posicion = { bottom: 8, right: 8 },
 }) {
   const opciones = ORDEN_VENTANAS.map((clave) => {
-    // Novedades y Logística abren cada una una ventana de verdad del
-    // sistema operativo, no una VentanaFlotante (ver lib/usePopupWindow.js)
-    // -- por eso no pasan por el "toggle(clave)" genérico de las demás, y
-    // no llevan el prefijo "✓ " (no hay ningún estado fiable de "abierta"
-    // que reflejar aquí: la persona puede haberla cerrado a mano con la X
-    // del sistema operativo sin que este menú se entere al momento).
-    if (clave === "novedades") {
-      return {
-        id: clave,
-        etiqueta: ETIQUETAS_VENTANAS[clave],
-        icono: ICONOS_VENTANAS[clave],
-        onClick: abrirNovedades,
-      };
-    }
     // La Lista de invitados abre en su propia ventana del sistema
     // (o dentro de la página en un aparato táctil): mismo caso que
     // Novedades, Logística y Música -- no pasa por el `toggle` genérico
@@ -179,9 +168,10 @@ export function DesplegableSecciones({
         // a petición del usuario, 2026-08-29. Por eso no pasa por
         // "toggle(s.id)" ni lleva el visto de abierta (mismo motivo: no hay
         // estado fiable de "sigue abierta" que reflejar aquí).
+        // «Novedades» (v96), igual: su propia ventana del sistema.
         submenu: SUBMENU_CONFIGURACION.map((s) =>
-          s.id === "config-cronograma"
-            ? { id: s.id, etiqueta: s.etiqueta, icono: s.icono, onClick: abrirCronograma }
+          s.id === "config-cronograma" || s.id === "novedades"
+            ? { id: s.id, etiqueta: s.etiqueta, icono: s.icono, onClick: s.id === "novedades" ? abrirNovedades : abrirCronograma }
             : {
                 id: s.id,
                 etiqueta: s.etiqueta,

@@ -221,7 +221,8 @@ export const ORDEN_VENTANAS = [
   "invitados",
   "mesas",
   "musicaEvento",
-  "novedades",
+  // «Novedades» ya no va aquí: está dentro de Configuración (v96, él: «es
+  // parte de algo que se puede editar o configurar»).
 ];
 
 // Etiquetas cortas (una palabra donde sea posible) -- son solo las del

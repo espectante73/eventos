@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "96",
+    cambios: [
+      "«Novedades» pasa del menú principal de «Abrir sección…» a Configuración, entre «Modo pruebas» y «Permisos»: es algo que se edita y se configura. Se abre igual, en su propia ventana.",
+    ],
+  },
+  {
     version: "95.9",
     cambios: [
       "Todos los difuminados de la app, un poco más suaves: menos blancos.",

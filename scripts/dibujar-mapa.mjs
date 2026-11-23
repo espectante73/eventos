@@ -264,7 +264,6 @@ const nivel1 = [
   ["Invitados", { fuera: true }],
   ["Mi cuenta", {}],
   ["Multimedia", { fuera: true }],
-  ["Novedades", { fuera: true }],
 ];
 for (const [n, o] of nivel1) { entrada(COLS[0], y, n, o); y += SALTO; }
 
@@ -298,6 +297,7 @@ const config = [
   ["Cronograma", { fuera: true }],
   ["Datos evento", {}],
   ["Modo pruebas", { tipo: "rojoSuave" }],
+  ["Novedades", { fuera: true }],
   ["Permisos", {}],
   ["Progreso", {}],
   ["Reinicios", {}],
