@@ -221,7 +221,7 @@ CREATE TABLE public.invitados (
     -- nuevo; pasarlo a otro colaborador, sí. Sin "not null".
     "avisadoA" uuid,
     -- Su teléfono (v78, él): para que su colaborador le llame o le escriba
-    -- por WhatsApp. Opcional, desde los 16 años, como el email. Se guarda
+    -- por WhatsApp. Opcional, desde los 15 años (16 hasta la v98), como el email. Se guarda
     -- limpio, con el prefijo (+34612345678). Lo ven el anfitrión y el
     -- colaborador de este invitado. Sin "not null".
     "telefono" text DEFAULT ''::text,
@@ -3516,8 +3516,9 @@ begin
   return jsonb_build_object(
     'abierta', coalesce((select "fotosFiestaAbierta" from evento limit 1), false),
     'maximo', 2,
-    'menor', coalesce(v_edad < 16, false),
-    'conPermiso', coalesce(v_edad between 16 and 17, false),
+    -- Desde los 15 (él, v98; antes, 16): la edad del email (EDAD_EMAIL).
+    'menor', coalesce(v_edad < 15, false),
+    'conPermiso', coalesce(v_edad between 15 and 17, false),
     'verificado', foto_fiesta_movil_verificado(v_yo.id, p_dispositivo),
     'faltanDatos', not ficha_con_claves(v_yo."anioNacimiento", v_yo."mesa"),
     'anios', (
@@ -3549,7 +3550,7 @@ end;
 $$;
 
 -- Reserva el sitio de una foto antes de subirla (v68): recogida abierta,
--- invitado reconocido, de 16 años o más, con el móvil confirmado (v68.1) y
+-- invitado reconocido, de 15 años o más (16 hasta la v98), con el móvil confirmado (v68.1) y
 -- con menos de 2 (contando las reservas de los últimos 15 minutos). Apunta
 -- el móvil que la sube.
 -- Devuelve la ruta donde subirla, o el motivo.
@@ -3570,7 +3571,7 @@ begin
   if not coalesce((select "fotosFiestaAbierta" from evento limit 1), false) then
     return jsonb_build_object('error', 'cerrada');
   end if;
-  if coalesce(edad_en_evento(v_yo."anioNacimiento") < 16, false) then
+  if coalesce(edad_en_evento(v_yo."anioNacimiento") < 15, false) then
     return jsonb_build_object('error', 'menor');
   end if;
   if not foto_fiesta_movil_verificado(v_yo.id, p_dispositivo) then

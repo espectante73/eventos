@@ -1788,7 +1788,7 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  {/* El teléfono, solo en «Editar» (v78.1); a un menor de 16, «—». */}
+                  {/* El teléfono, solo en «Editar» (v78.1); a un menor de 15, «—». */}
                   {modoEdicion && (
                     <span style={celda(0)}>
                       {pideTelefono(g, evento) ? (

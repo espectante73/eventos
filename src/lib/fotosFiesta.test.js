@@ -75,9 +75,9 @@ describe("subirFotoFiesta", () => {
     expect(s.llamadas.map((l) => l[0])).toEqual(["tablon_reservar_foto"]);
   });
 
-  it("un menor de 16 no sube nada, y se le dice por qué", async () => {
+  it("un menor de 15 no sube nada, y se le dice por qué", async () => {
     const s = falso({ rpc: { tablon_reservar_foto: { data: { error: "menor" } } } });
-    expect((await subirFotoFiesta(s, { ...QUIEN, archivo: {} }, PEQUENA)).aviso).toBe("Las fotos las suben los mayores de 16 años.");
+    expect((await subirFotoFiesta(s, { ...QUIEN, archivo: {} }, PEQUENA)).aviso).toBe("Las fotos se suben a partir de los 15 años.");
     expect(s.llamadas.map((l) => l[0])).toEqual(["tablon_reservar_foto"]);
   });
 

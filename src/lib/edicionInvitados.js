@@ -21,7 +21,7 @@
 import { uid } from "./id";
 import { claveFamiliaMesa, confirmarConSuFamilia } from "./mesas";
 import { nombreCompleto } from "./formato";
-import { comoColaborador, calcularEdad, pideEmail, pideDatosDeBoda } from "./invitados";
+import { comoColaborador, calcularEdad, pideEmail, pideDatosDeBoda, EDAD_EMAIL } from "./invitados";
 import { emailValido } from "./validacion";
 import { ROL_FAMILIAR, LETRA_ROL } from "./rolFamiliar";
 import { limpiarTelefono, telefonoValido, pideTelefono, AVISO_TELEFONO } from "./telefono";
@@ -308,14 +308,14 @@ export function marcarResponsable(responsables, rol, invitadoId) {
 }
 
 // El teléfono, desde «Editar» de la Lista (él, v78.1: «solo visible al
-// editar»). Las mismas reglas que en la ficha: desde los 16, y limpio, con
+// editar»). Las mismas reglas que en la ficha: desde EDAD_EMAIL (15), y limpio, con
 // su prefijo; si no parece un teléfono, no se guarda y se dice. Vacío, se
 // borra.
 export function cambiarTelefono(invitados, id, valor, evento) {
   const g = invitados.find((x) => x.id === id);
   if (!g) return { invitados, aviso: "" };
   const escrito = String(valor ?? "").trim();
-  if (escrito && !pideTelefono(g, evento)) return { invitados, aviso: `${nombreCompleto(g)} tiene menos de 16 años: como el email, sin teléfono.` };
+  if (escrito && !pideTelefono(g, evento)) return { invitados, aviso: `${nombreCompleto(g)} tiene menos de ${EDAD_EMAIL} años: como el email, sin teléfono.` };
   if (escrito && !telefonoValido(escrito)) return { invitados, aviso: AVISO_TELEFONO };
   const telefono = limpiarTelefono(escrito);
   if (telefono === limpiarTelefono(g.telefono)) return { invitados, aviso: "" };
@@ -399,10 +399,10 @@ function revisarFormulario(invitados, datos, { familiaNueva, zonaNueva, evento, 
   if (anioNacimiento && (!/^\d{4}$/.test(anioNacimiento) || calcularEdad(anioNacimiento, evento) === null)) {
     return { error: "El año de nacimiento son cuatro cifras, como 1988." };
   }
-  // El email, como en el formulario del colaborador: desde los 16 años.
+  // El email, como en el formulario del colaborador: desde EDAD_EMAIL (15).
   if (!pideEmail({ anioNacimiento }, evento)) email = "";
   if (email && !emailValido(email)) return { error: "Ese email no parece válido: revisa que tenga @ y un punto." };
-  // El teléfono, igual (v78): desde los 16, y limpio, con su prefijo.
+  // El teléfono, igual (v78): desde EDAD_EMAIL, y limpio, con su prefijo.
   if (!pideTelefono({ anioNacimiento }, evento)) telefono = "";
   if (telefono && !telefonoValido(telefono)) return { error: AVISO_TELEFONO };
   telefono = limpiarTelefono(telefono);

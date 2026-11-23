@@ -25,7 +25,7 @@ describe("registroDelTablon", () => {
     expect(registroDelTablon({ ...yo, tieneEmail: false, email: "" }, evento)).toMatchObject({ email: "No", emailOculto: false });
   });
 
-  it("el email, Sí o No y solo desde los 16; sin el dato (base sin la v85.2), no sale", () => {
+  it("el email, Sí o No y solo desde los 15; sin el dato (base sin la v85.2), no sale", () => {
     expect(registroDelTablon({ ...yo, tieneEmail: false }, evento).email).toBe("No");
     expect(registroDelTablon({ ...yo, anio: "2015", tieneEmail: false }, evento).email).toBeNull();
     const sinDato = { ...yo };

@@ -22,9 +22,9 @@ describe("estadoTablon", () => {
     expect(estadoTablon(g({ noAsiste: true }), {}, evento)).toBe(null);
   });
 
-  it("los de 16 cumplidos sí; los menores, no", () => {
-    expect(estadoTablon(g({ anioNacimiento: "2010" }), {}, evento)).toEqual({ entro: false, sinAnio: false });
-    expect(estadoTablon(g({ anioNacimiento: "2011" }), {}, evento)).toBe(null);
+  it("los de 15 cumplidos sí; los menores, no", () => {
+    expect(estadoTablon(g({ anioNacimiento: "2011" }), {}, evento)).toEqual({ entro: false, sinAnio: false });
+    expect(estadoTablon(g({ anioNacimiento: "2012" }), {}, evento)).toBe(null);
   });
 
   it("sin año no puede entrar todavía: rojo, y se dice por qué", () => {

@@ -1,5 +1,5 @@
 // Las fotos de la fiesta desde el tablón (v67.4; v68, él: 2 por persona de
-// 16 años o más, «3 por familia» era injusto con las grandes) y 1,5 MB como
+// 16 años o más —15 desde la v98—, «3 por familia» era injusto con las grandes) y 1,5 MB como
 // mucho, en el cajón CERRADO «fotos-fiesta». Quien cuenta y decide es el
 // servidor (tablon_reservar_foto): aquí solo se prepara la foto y se sube.
 //
@@ -11,6 +11,7 @@
 import { nombreDelEvento } from "./mensajesWhatsapp";
 import { reducirImagen } from "./fotosAlmacen";
 import { horaCorta } from "./formato";
+import { EDAD_EMAIL } from "./invitados";
 
 export const CUBO_FOTOS_FIESTA = "fotos-fiesta";
 
@@ -19,7 +20,7 @@ export const CUBO_FOTOS_FIESTA = "fotos-fiesta";
 // tarjetas QR ya no, v92.9: él la quitó).
 export const FRASE_HORIZONTAL =
   "Puedes hacerla en horizontal o en vertical; solo ten en cuenta que en horizontal se verá mejor en una pantalla.";
-// Su frase para quien tiene 16 o 17 años (él, v68), en el tablón (la
+// Su frase para quien tiene de 15 a 17 años (él, v68; 15 desde la v98), en el tablón (la
 // tarjeta QR lleva la suya, v92.9).
 export const FRASE_PERMISO_PADRES = "Puedes subir la foto con el permiso de tus padres, si eres menor de edad.";
 // Qué foto es cada una (v85.5, él): una de toda la familia, que sube solo
@@ -29,7 +30,8 @@ export const FRASE_FOTOS_PERSONALES = "Las demás son personales: lo que para ti
 export const FRASE_FOTOS_SOLO = "Son personales: lo que para ti ha sido el evento.";
 export const fraseFotoFamiliaHecha = (quien) => `Foto de familia: ya la subió ${quien}.`;
 
-export const SOLO_MAYORES_16 = "Las fotos las suben los mayores de 16 años.";
+// La edad, la del email (v98, él: 15).
+export const SOLO_MAYORES = `Las fotos se suben a partir de los ${EDAD_EMAIL} años.`;
 // Sin mesa en su ficha no se confirma el móvil (el año ya lo pide la
 // entrada del tablón, v70; las dos claves siguen siendo obligatorias).
 export const FALTAN_CLAVES = "Para subir fotos, tu ficha tiene que tener tu mesa. Pregúntale a tu colaborador.";
@@ -63,7 +65,7 @@ export const textoCompleta = (maximo) => `Ya tienes tus ${maximo} fotos.`;
 const MOTIVOS = {
   nombre: "No te hemos reconocido: vuelve a entrar con tu nombre.",
   cerrada: "Ya no se pueden subir fotos.",
-  menor: SOLO_MAYORES_16,
+  menor: SOLO_MAYORES,
   verificar: "Antes de subir fotos, escanea con la cámara el QR de tu mesa.",
   completa: textoCompleta(2),
 };

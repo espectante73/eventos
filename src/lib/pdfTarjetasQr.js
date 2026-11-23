@@ -23,6 +23,7 @@
 // cualquier tamaño de impresión.
 import { C } from "../theme";
 import { descargarBlob } from "./descargas";
+import { EDAD_EMAIL } from "./invitados";
 
 export const ARCHIVO_TARJETAS_QR = "tarjetas-qr.pdf";
 // Su texto (él, v68: 2 por persona de 16 o más), en dos líneas parejas.
@@ -40,9 +41,9 @@ export const queFotosTarjeta = (nombreEvento) => [
   ["Lo que para ti significó el evento:", "un momento que describa", `${nombreEvento ? nombreEntreComillas(nombreEvento) : "el evento"}.`],
 ];
 // La edad y el permiso, en una sola frase y solo para los menores (él,
-// v92.9: «si eres menor, solo a partir de 16 años», con el permiso de sus
+// v92.9: «si eres menor, solo a partir de 16 años» —15 desde la v98—, con el permiso de sus
 // padres; la del permiso de abajo sobraba).
-export const EDAD_TARJETA = ["Si eres menor, solo a partir de 16 años", "y con el permiso de tus padres."];
+export const EDAD_TARJETA = [`Si eres menor, solo a partir de ${EDAD_EMAIL} años`, "y con el permiso de tus padres."];
 // Ya no se entra con el apellido y el nombre (él, v92.9: «ha quedado
 // obsoleto»): el QR abre el tablón, que en un móvil que ya entró con su
 // enlace personal se abre solo. Sin la frase de horizontal o vertical

@@ -5,7 +5,7 @@
 import { pideEmail } from "./invitados";
 import { esAparatoTactil } from "./mano";
 
-// El mismo criterio que el email: desde los 16 años cumplidos (norma 7).
+// El mismo criterio que el email: desde EDAD_EMAIL (15) cumplidos (norma 7).
 export const pideTelefono = pideEmail;
 
 export function limpiarTelefono(texto) {

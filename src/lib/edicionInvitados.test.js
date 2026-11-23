@@ -309,7 +309,7 @@ describe("«Nuevo invitado»", () => {
     expect(anioBodaDeLaFamilia(conBoda, "Sierra01")).toBe("");
   });
 
-  it("a un menor de 16 no se le guarda email, como en el formulario del colaborador", () => {
+  it("a un menor de 15 no se le guarda email, como en el formulario del colaborador", () => {
     const { invitados } = nuevoDesdeFormulario(lista, { ...base, anioNacimiento: "2015", email: "n@n.com" }, { evento });
     expect(invitados.at(-1).email).toBe("");
   });
@@ -340,9 +340,9 @@ describe("cambiarTelefono", () => {
     expect(cambiarTelefono(lista, "1", "612 34 56 78", evento).invitados[0].telefono).toBe("+34612345678");
   });
 
-  it("si no parece un teléfono, o es un menor de 16, no se guarda y se dice", () => {
+  it("si no parece un teléfono, o es un menor de 15, no se guarda y se dice", () => {
     expect(cambiarTelefono(lista, "1", "6123", evento)).toEqual({ invitados: lista, aviso: expect.stringContaining("no parece válido") });
-    expect(cambiarTelefono(lista, "2", "612 34 56 78", evento).aviso).toContain("menos de 16 años");
+    expect(cambiarTelefono(lista, "2", "612 34 56 78", evento).aviso).toContain("menos de 15 años");
   });
 
   it("verlo con espacios no es cambiarlo; vacío, se borra", () => {

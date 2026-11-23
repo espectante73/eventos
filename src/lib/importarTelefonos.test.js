@@ -50,7 +50,7 @@ describe("repasoTelefonos", () => {
   const repaso = repasoTelefonos(invitados, leerVCard(VCF), evento);
   const ids = (grupo) => repaso[grupo].map((x) => x.invitado.id);
 
-  it("en cinco grupos, y los menores de 16, fuera", () => {
+  it("en cinco grupos, y los menores de 15, fuera", () => {
     expect(ids("nuevos")).toEqual(["1"]);
     expect(ids("distintos")).toEqual(["2"]);
     expect(ids("dudosos")).toEqual(["3"]);

@@ -81,7 +81,7 @@ function casa(g, contacto) {
 const textoContacto = (c) => [c.nombre, c.apellidos].filter(Boolean).join(" ") || c.completo;
 
 // La lista de repaso. Solo los invitados a los que se les pide teléfono
-// (16 años o más). En cinco grupos:
+// (EDAD_EMAIL, 15 años o más). En cinco grupos:
 // - nuevos: sin teléfono en la app y un solo contacto suyo (se marcan).
 // - distintos: ya tienen uno y su contacto trae otro (no se marcan).
 // - dudosos: más de un contacto posible (se elige o nada).

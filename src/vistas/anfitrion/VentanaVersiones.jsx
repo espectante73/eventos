@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "97.2",
+    cambios: [
+      "La edad para dar el email y el teléfono, y para subir las fotos de la fiesta, baja de 16 a 15 años (cumplidos el día del evento). Cambia también en la Lista, en el formulario del colaborador, en el tablón y en el texto de las tarjetas QR («solo a partir de 15 años»).",
+      "Las fotos, en la base de datos: hace falta pegar el SQL de esta versión en Supabase.",
+    ],
+  },
+  {
     version: "97.1",
     cambios: [
       "«Día del evento» destaca en el menú de «Abrir sección…»: marco dorado más grueso y un brillo dorado alrededor. Con su ventana abierta, se rellena de dorado como las demás, así se sigue viendo si está abierta.",

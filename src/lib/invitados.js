@@ -16,9 +16,10 @@ export function datosCompletos(g) {
 }
 
 // Lo que le falta a alguien, para el filtro «Datos» de la Lista (él, v85:
-// «¿a cuántos confirmados de 16 en adelante les falta el email?», y por
+// «¿a cuántos confirmados de 16 en adelante les falta el email?»; desde
+// la v98, de 15, y por
 // los demás datos, «por ejemplo, las alergias»). Una línea por dato: su
-// rótulo (corto: la columna «Datos» es estrecha) y cuándo falta. El email y el teléfono, desde los 16, la misma
+// rótulo (corto: la columna «Datos» es estrecha) y cuándo falta. El email y el teléfono, desde EDAD_EMAIL, la misma
 // regla que el formulario (pideEmail). No mira si está confirmado: eso se
 // combina con el filtro «Confirmado».
 export const FALTAS_DATOS = [
@@ -72,12 +73,14 @@ export function pideDatosDeBoda(g) {
   return g?.rolFamiliar === ROL_FAMILIAR.ESPOSO || g?.rolFamiliar === ROL_FAMILIAR.ESPOSA;
 }
 
-// Email desde los 16 años, cumplidos el día del evento (él, v71.6; antes,
-// 18): la misma edad que las fotos de la fiesta. Al hijo de 16 o 17 no se
-// le exige: el de la familia lo da un adulto (ROLES_CON_EMAIL_FAMILIAR).
+// Email desde los 15 años, cumplidos el día del evento (él, v98; antes, 16,
+// y antes, 18): la misma edad que el teléfono, las fotos de la fiesta
+// (también en la base: tablon_fotos y tablon_reservar_foto) y la entrada al
+// tablón. Al hijo de 15 a 17 no se le exige: el de la familia lo da un
+// adulto (ROLES_CON_EMAIL_FAMILIAR).
 // Sin año de nacimiento la edad es desconocida y se pide: si no, el email
 // quedaría bloqueado justo antes de que el colaborador rellene la edad.
-export const EDAD_EMAIL = 16;
+export const EDAD_EMAIL = 15;
 export function pideEmail(g, evento) {
   const edad = calcularEdad(g?.anioNacimiento, evento);
   return edad === null || edad >= EDAD_EMAIL;

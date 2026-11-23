@@ -349,7 +349,7 @@ function FormularioDatos({
       </div>
       {/* Seis apartados plegados, uno abierto a la vez (él, v52). Cerrado,
           cada uno enseña lo que tiene. El año de nacimiento va EL PRIMERO:
-          de él depende si se pide email (a un menor de 16, no). */}
+          de él depende si se pide email (a un menor de 15, no: EDAD_EMAIL). */}
       <div data-apartado="datos" className={latido("anioNacimiento", "email")}>
         <SeccionPlegable
           sencilla
@@ -374,7 +374,7 @@ function FormularioDatos({
                 style={{ width: ANCHO_ANIO, ...bordeRojo("anioNacimiento") }}
               />
             </div>
-            {/* El teléfono, opcional y como el email: desde los 16 (pideTelefono). */}
+            {/* El teléfono, opcional y como el email: desde los 15 (pideTelefono). */}
             {pideTelefono(form, evento) && (
               <div data-campo="telefono" className="flex-1 min-w-0">
                 <TextInput

@@ -253,10 +253,10 @@ describe("pideDatosDeBoda", () => {
 describe("pideEmail", () => {
   const evento = { fecha: "2026-11-13" };
 
-  // v71.6 (él): desde los 16, con la edad que tendrá el día del evento.
-  it("los 16 justos ya pueden dar email; con 15, no", () => {
-    expect(pideEmail({ anioNacimiento: "2010" }, evento)).toBe(true); // 16
-    expect(pideEmail({ anioNacimiento: "2011" }, evento)).toBe(false); // 15
+  // v71.6 (él): desde los 16; v98, desde los 15. Con la edad que tendrá el día del evento.
+  it("los 15 justos ya pueden dar email; con 14, no", () => {
+    expect(pideEmail({ anioNacimiento: "2011" }, evento)).toBe(true); // 15
+    expect(pideEmail({ anioNacimiento: "2012" }, evento)).toBe(false); // 14
     expect(pideEmail({ anioNacimiento: "1990" }, evento)).toBe(true);
   });
 
@@ -482,9 +482,9 @@ describe("FALTAS_DATOS", () => {
   const evento = { fecha: "2026-12-11" };
   const falta = (valor, g) => FALTAS_DATOS.find((f) => f.valor === valor).falta(g, evento);
 
-  it("el email y el teléfono, desde los 16 (los de 16 cuentan; los de 15, no)", () => {
-    expect(falta("sinEmail", { anioNacimiento: "2010", email: "" })).toBe(true);
-    expect(falta("sinEmail", { anioNacimiento: "2011", email: "" })).toBe(false);
+  it("el email y el teléfono, desde los 15 (los de 15 cuentan; los de 14, no)", () => {
+    expect(falta("sinEmail", { anioNacimiento: "2011", email: "" })).toBe(true);
+    expect(falta("sinEmail", { anioNacimiento: "2012", email: "" })).toBe(false);
     expect(falta("sinTelefono", { anioNacimiento: "1980" })).toBe(true);
     expect(falta("sinTelefono", { anioNacimiento: "1980", telefono: "+34612345678" })).toBe(false);
   });

@@ -24,9 +24,9 @@ describe("el teléfono", () => {
     expect(enlaceWhatsApp("612 34 56 78")).toBe("https://wa.me/34612345678");
   });
 
-  it("como el email, desde los 16 años", () => {
+  it("como el email, desde los 15 años", () => {
     const evento = { fecha: "2026-12-11" };
-    expect(pideTelefono({ anioNacimiento: "2010" }, evento)).toBe(true);
-    expect(pideTelefono({ anioNacimiento: "2011" }, evento)).toBe(false);
+    expect(pideTelefono({ anioNacimiento: "2011" }, evento)).toBe(true);
+    expect(pideTelefono({ anioNacimiento: "2012" }, evento)).toBe(false);
   });
 });

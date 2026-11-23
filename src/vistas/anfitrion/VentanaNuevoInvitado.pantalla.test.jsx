@@ -95,7 +95,7 @@ it("sin lo obligatorio no se guarda, y se dice qué falta", () => {
   vista.desmontar();
 });
 
-it("el email solo aparece si tiene 16 años cumplidos, como en el formulario del colaborador", () => {
+it("el email solo aparece si tiene 15 años cumplidos, como en el formulario del colaborador", () => {
   const { vista, q } = dibujar();
   vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Año nac.")));
   escribir(q('input[aria-label="Año de nacimiento"]'), "2015");
@@ -106,7 +106,7 @@ it("el email solo aparece si tiene 16 años cumplidos, como en el formulario del
 });
 
 // v78 (él): el teléfono, también al añadir a alguien.
-it("el teléfono, desde los 16 y limpio, con su prefijo; si no parece uno, se dice", () => {
+it("el teléfono, desde los 15 y limpio, con su prefijo; si no parece uno, se dice", () => {
   const { vista, guardados, q, boton } = dibujar();
   escribir(q('input[aria-label="Apellido"]'), "Pacheco");
   escribir(q('input[aria-label="Nombre"]'), "Rubén");

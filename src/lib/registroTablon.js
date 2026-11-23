@@ -24,7 +24,7 @@ export function registroDelTablon(yo, evento) {
     canciones: canciones.length ? canciones : [yo.sinCancion ? "Prefieres no pedir ninguna" : "Ninguna todavía"],
     boda: lineaBoda(yo.anioBoda, evento),
     conservar: yo.conservarDatos ? "Sí" : "No",
-    // Solo a quien se le pide (desde los 16, con el año con el que entró).
+    // Solo a quien se le pide (desde EDAD_EMAIL, con el año con el que entró).
     // null: no se enseña.
     email: "tieneEmail" in yo && pideEmail({ anioNacimiento: yo.anio }, evento) ? yo.email || (yo.tieneEmail ? "Sí" : "No") : null,
     // Lo dio, pero entró por la puerta general: cómo verlo.

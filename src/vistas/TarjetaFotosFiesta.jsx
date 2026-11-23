@@ -1,12 +1,12 @@
 // Las fotos de la fiesta en el tablón (él, v67.4): solo con la recogida
 // abierta, y SIN ver las de los demás. Desde la v68, personal (él: «3 por
-// familia» era injusto con las grandes): 2 por persona de 16 años o más,
+// familia» era injusto con las grandes): 2 por persona de 15 años o más (16 hasta la v98),
 // «Tus fotos · 1 de 2», una línea por foto suya con su miniatura (guardada
 // en su propio móvil, v67.5) y la papelera para cambiarla por otra:
 // «tendrán muchas fotos y tendrán que elegir». La papelera, solo en el
 // móvil que la subió (`mia`): un impostor con su nombre no le borra nada.
-// A quien tiene 16 o 17 años, su frase del permiso de los padres; a un
-// menor de 16, solo que las suben los mayores. Antes de la primera foto en
+// A quien tiene de 15 a 17 años, su frase del permiso de los padres; a un
+// menor de 15, solo que las suben los mayores. Antes de la primera foto en
 // un móvil, su mesa (v68.1; el año ya lo dio al entrar al tablón, v70): el
 // servidor la coteja con su ficha y ese móvil queda recordado. Desde la v93
 // (él), la del QR de su tarjeta, que el tablón lee solo: nadie elige nada.
@@ -29,7 +29,7 @@ import {
   textoCompleta,
   FRASE_HORIZONTAL,
   FRASE_PERMISO_PADRES,
-  SOLO_MAYORES_16,
+  SOLO_MAYORES,
   FALTAN_CLAVES,
   ESCANEA_QR_MESA,
   COMPROBANDO_QR_MESA,
@@ -122,7 +122,7 @@ export function TarjetaFotosFiesta({ estado, onSubir, onEliminar, onVerificar, o
         </div>
 
         {menor ? (
-          <p className="text-sm mt-1">{SOLO_MAYORES_16}</p>
+          <p className="text-sm mt-1">{SOLO_MAYORES}</p>
         ) : (
           <>
             <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: T.destacado }}>

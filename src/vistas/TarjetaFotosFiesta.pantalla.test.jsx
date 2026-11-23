@@ -45,15 +45,15 @@ it("con las 2: sin botón, y dice cómo cambiar una", () => {
   vista.desmontar();
 });
 
-it("con 16 o 17 años, además, su frase del permiso de los padres", () => {
+it("con 15 a 17 años, además, su frase del permiso de los padres", () => {
   const vista = montar(tarjeta({ fotos: [], conPermiso: true }));
   expect(document.body.textContent).toContain(FRASE_PERMISO_PADRES);
   vista.desmontar();
 });
 
-it("un menor de 16: solo que las suben los mayores, sin botón", () => {
+it("un menor de 15: solo desde qué edad se suben, sin botón", () => {
   const vista = montar(tarjeta({ fotos: [], menor: true }));
-  expect(document.body.textContent).toContain("Las fotos las suben los mayores de 16 años.");
+  expect(document.body.textContent).toContain("Las fotos se suben a partir de los 15 años.");
   expect(document.body.textContent).not.toContain("Tus fotos");
   expect(campoFoto()).toBeNull();
   vista.desmontar();

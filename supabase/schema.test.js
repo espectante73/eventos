@@ -211,7 +211,7 @@ describe("el tablón: quién ha entrado y su colaborador", () => {
 });
 
 // v67-68: las fotos de la fiesta. Solo las sube quien entra al tablón con
-// su nombre, con la recogida abierta, de 16 años o más y 2 por persona;
+// su nombre, con la recogida abierta, de 15 años o más (v98) y 2 por persona;
 // solo las quita el móvil que las subió; nadie las ve salvo el anfitrión;
 // el almacén rechaza lo que pase de 1,5 MB.
 describe("las fotos de la fiesta", () => {
@@ -219,7 +219,7 @@ describe("las fotos de la fiesta", () => {
     const f = cuerpoDe("tablon_reservar_foto");
     expect(f).toContain("from tablon_invitado(p_token, p_respuesta)");
     expect(f).toContain('"fotosFiestaAbierta"');
-    expect(f).toContain("edad_en_evento(v_yo.\"anioNacimiento\") < 16");
+    expect(f).toContain("edad_en_evento(v_yo.\"anioNacimiento\") < 15");
     expect(f).toContain("hashtext('fotos_fiesta:' || v_yo.id)");
     expect(f).toMatch(/f\."invitadoId" = v_yo\.id and not f\."quitada"[\s\S]{0,120}\) >= 2 then/);
     expect(f).toContain("interval '15 minutes'");

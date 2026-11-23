@@ -6,7 +6,7 @@
 //
 // Llevan circulito solo quienes PUEDEN entrar: la puerta deja pasar a los
 // confirmados que no están excluidos del tablón (tablon_verificar_respuesta);
-// y, de ellos, los de 16 años cumplidos (él: «menores de 16 no cuentan»; la
+// y, de ellos, los de EDAD_EMAIL cumplidos (él: «menores de 16 no cuentan»; 15 desde la v98; la
 // misma edad que el email propio y las fotos de la fiesta). «No asiste»,
 // tampoco.
 import { calcularEdad, EDAD_EMAIL } from "./invitados";
