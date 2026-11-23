@@ -67,6 +67,8 @@ function hojaDePega() {
   const trazos = [];
   const circulos = [];
   let grosor = 1;
+  let tamano = 16;
+  const lineas = [];
   let colorTexto = null;
   let fuente = "helvetica";
   const pdf = {
@@ -78,18 +80,20 @@ function hojaDePega() {
       if (estilo === "S") trazos.push({ x, y, grosor });
     },
     setLineWidth: (g) => (grosor = g),
+    line: (x1, y1, x2, y2) => lineas.push({ x1, y1, x2, y2 }),
+    setFontSize: (t) => (tamano = t),
     circle: (x, y, r) => circulos.push(r),
     roundedRect: (x, y, w, h, rx, ry, estilo) => recuadros.push(estilo),
     addImage: (dato, formato, x, y, w) => imagenes.push(dato) && posiciones.push({ dato, x, y, w }),
     paginas: 1,
     addPage() { this.paginas++; },
     getTextWidth: (t) => t.length * 5,
-    text: (t, x, y, o) => textos.push({ t, x, y, angle: o?.angle || 0, color: colorTexto, fuente, charSpace: o?.charSpace || 0 }),
+    text: (t, x, y, o) => textos.push({ t, x, y, angle: o?.angle || 0, color: colorTexto, fuente, charSpace: o?.charSpace || 0, tam: tamano }),
   };
   pdf.GState = class { constructor(o) { Object.assign(this, o); } };
   pdf.setGState = () => {};
-  for (const f of ["setFillColor", "setDrawColor", "setLineDashPattern", "setFontSize", "line"]) pdf[f] = () => {};
-  return { pdf, textos, rellenos, recuadros, imagenes, posiciones, trazos, circulos };
+  for (const f of ["setFillColor", "setDrawColor", "setLineDashPattern"]) pdf[f] = () => {};
+  return { pdf, textos, rellenos, recuadros, imagenes, posiciones, trazos, circulos, lineas };
 }
 
 describe("dibujarTarjetasAcomodacion", () => {
@@ -123,8 +127,8 @@ describe("dibujarTarjetasAcomodacion", () => {
     expect(ver("blancoHojasGruesoDentro")).toEqual({ fondo: 0, marcos: 4, nombre: C.gold });
   });
   // v99.2 (él): «me quedo solo con estos 3 modelos que serán la nueva línea y los otros 6 los desechamos».
-  it("solo los tres de la línea de la invitación; uno de los de antes, guardado en un aparato, sale como el primero", () => {
-    expect(ACABADOS.map((a) => a.id)).toEqual(["blancoHojas", "blancoHojasGruesoFuera", "blancoHojasGruesoDentro"]);
+  it("solo los de la línea de la invitación (y el número grande, v99.7); uno de los de antes, guardado en un aparato, sale como el primero", () => {
+    expect(ACABADOS.map((a) => a.id)).toEqual(["blancoHojas", "blancoHojasGruesoFuera", "blancoHojasGruesoDentro", "blancoHojasNumeroGrande"]);
     const textos = (acabado) => {
       const h = hojaDePega();
       dibujarTarjetasAcomodacion(h.pdf, [muchas[0]], { hoja: "a4", acabado });
@@ -242,17 +246,17 @@ describe("con qué se corta (las marcas de cada forma)", () => {
 
 // v99.1 (él): «una hoja modelo… que me aparezcan los 6 modelos… y poder verlo en vivo».
 describe("la hoja de muestra de los acabados", () => {
-  it("cada cara con un acabado y su número en la esquina; los tres, en una hoja, A4 o A3", () => {
+  it("cada cara con un acabado y su número en la esquina; los cuatro, en una hoja, A4 o A3", () => {
     for (const hoja of ["a4", "a3"]) {
       const { pdf, textos, recuadros } = hojaDePega();
       expect(dibujarMuestraAcabados(pdf, { hoja })).toBe(1);
       expect(pdf.paginas).toBe(1);
-      // 2 tarjetas: 4 caras; la última repite el 3.
+      // 2 tarjetas: 4 caras, una con cada acabado.
       expect(textos.filter((x) => x.t === "ABREU")).toHaveLength(4);
-      expect(["1", "2", "3"].map((n) => textos.filter((x) => x.t === n).length)).toEqual([1, 1, 2]);
-      // En orden: arriba (girada) el 1 y abajo el 2; luego el 3 en las dos caras. Marcos: 1 + 2 + 2 + 2.
-      expect(recuadros).toHaveLength(7);
-      expect(textos.filter((x) => x.t.startsWith("Muestra de los 3 acabados"))).toHaveLength(1);
+      expect(["1", "2", "3", "4"].map((n) => textos.filter((x) => x.t === n).length)).toEqual([1, 1, 1, 1]);
+      // En orden: arriba (girada) el 1 y abajo el 2; luego el 3 y el 4. Marcos: 1 + 2 + 2 + 1.
+      expect(recuadros).toHaveLength(6);
+      expect(textos.filter((x) => x.t.startsWith("Muestra de los 4 acabados"))).toHaveLength(1);
     }
   });
   it("arriba, la leyenda: el nombre de cada acabado con su número", () => {
@@ -285,7 +289,7 @@ describe("los acabados de la invitación", () => {
 
   it("tres: uno de marco fino y dos de doble marco, grueso fuera y grueso dentro; la letra de la familia, en verde oscuro", () => {
     // v99.6 (él): «el grueso más grueso, el doble; el aire, el doble» (eran 1,5 y 3).
-    expect(ACABADOS.map((a) => a.marcos)).toEqual([[[9, 0.5]], [[8, 3], [14, 0.4]], [[8, 0.4], [14, 3]]]);
+    expect(ACABADOS.map((a) => a.marcos)).toEqual([[[9, 0.5]], [[8, 3], [14, 0.4]], [[8, 0.4], [14, 3]], [[9, 0.5]]]);
     for (const a of ACABADOS) expect(a.familia).toBe(C.ink);
   });
   // v99.6 (él): «recuadro menos redondeado» (eligió la esquina recta), «el
@@ -299,9 +303,35 @@ describe("los acabados de la invitación", () => {
       const gruesa = Math.max(...a.marcos.map(([, g]) => g));
       const adorno = h.posiciones.find((p) => p.dato === "esquina");
       expect(h.trazos.some((t) => t.grosor === gruesa && t.x === adorno.x && t.y === adorno.y), a.id).toBe(true);
-      // Radio 20 menos medio borde (el borde dorado, de 3, cae dentro de los 40).
-      expect(h.circulos).toEqual([18.5, 18.5]);
+      // Radio 20 menos medio borde (el borde dorado, de 3, cae dentro de los
+      // 40); el de número grande, sin círculo.
+      expect(h.circulos).toEqual(a.numero === "grande" ? [] : [18.5, 18.5]);
     }
+  });
+  // v99.7 (él): el plan B2, como cuarta opción.
+  it("número grande: sin círculo, «MESA» y el número tras una línea dorada; un número ancho encoge", () => {
+    const h = hojaDePega();
+    dibujarTarjetasAcomodacion(h.pdf, [ana], { hoja: "a4", acabado: "blancoHojasNumeroGrande" }, ADORNOS);
+    expect(h.circulos).toEqual([]);
+    // Una línea dorada por cara, de arriba abajo (las demás son marcas de corte).
+    expect(h.lineas.filter((l) => l.x1 === l.x2 && Math.abs(l.y2 - l.y1) === 93)).toHaveLength(2);
+    expect(h.textos.filter((x) => x.t === "MESA").map((x) => [x.angle, x.fuente, x.charSpace])).toEqual([
+      [180, "fraunces", 2.5],
+      [0, "fraunces", 2.5],
+    ]);
+    const derecha = (t) => h.textos.find((x) => x.t === t && x.angle === 0);
+    // El número, debajo de «MESA» y a la derecha del nombre.
+    expect(derecha("3").y).toBeGreaterThan(derecha("MESA").y);
+    expect(derecha("3").x).toBeGreaterThan(derecha("MEDINA").x);
+    expect(derecha("3").tam).toBe(44);
+    const ancha = hojaDePega();
+    // Aquí el ancho sí depende del tamaño de la letra.
+    let tam = 16;
+    const ponerTamano = ancha.pdf.setFontSize;
+    ancha.pdf.setFontSize = (t) => ((tam = t), ponerTamano(t));
+    ancha.pdf.getTextWidth = (t) => t.length * tam * 0.55;
+    dibujarTarjetasAcomodacion(ancha.pdf, [{ ...ana, mesa: 12345 }], { hoja: "a4", acabado: "blancoHojasNumeroGrande" }, ADORNOS);
+    expect(ancha.textos.find((x) => x.t === "12345" && x.angle === 0).tam).toBeLessThan(44);
   });
   it("cada cara: el adorno y el corazón (girados en la de arriba), el APELLIDO en Fraunces con aire entre letras y el nombre en la caligráfica dorada", () => {
     const { pdf, textos, imagenes, recuadros, rellenos } = hojaDePega();

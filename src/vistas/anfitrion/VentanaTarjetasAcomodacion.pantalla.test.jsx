@@ -119,13 +119,13 @@ it("los botones van ARRIBA, antes de las opciones y de la vista previa", () => {
   vista.desmontar();
 });
 
-it("la paleta: los tres de la invitación, cada uno con su muestra; elegir uno rehace la vista previa y se recuerda", async () => {
+it("la paleta: los cuatro (los tres de la invitación y el número grande), cada uno con su muestra; elegir uno rehace la vista previa y se recuerda", async () => {
   const llamadas = [];
   const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={(t, o) => (llamadas.push(o), [])} muestra={muestra} cargarAdornos={cargarAdornos} />);
   // Las muestras, en cuanto llegan el adorno y las letras de la invitación.
   await esperar();
   const radios = [...document.body.querySelectorAll('[role="radiogroup"][aria-label="Acabado"] [role="radio"]')];
-  expect(radios.map((r) => r.querySelector("img").getAttribute("src"))).toEqual(["blancoHojas", "blancoHojasGruesoFuera", "blancoHojasGruesoDentro"].map(muestra));
+  expect(radios.map((r) => r.querySelector("img").getAttribute("src"))).toEqual(["blancoHojas", "blancoHojasGruesoFuera", "blancoHojasGruesoDentro", "blancoHojasNumeroGrande"].map(muestra));
   expect(radios[0].getAttribute("aria-checked")).toBe("true");
   vista.pulsar(radios[2]);
   await esperar();

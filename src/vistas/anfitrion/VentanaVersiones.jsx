@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "99.7",
+    cambios: [
+      "Tarjetas de acomodación: un cuarto acabado para elegir, «Marco fino, número grande». Sin círculo: «MESA» y el número grande a la derecha, separados del nombre por una línea dorada. También sale en la hoja de muestra, con el número 4.",
+    ],
+  },
+  {
     version: "99.6",
     cambios: [
       "Tarjetas de acomodación: los marcos, con esquinas rectas. En los dos de doble marco, la línea gruesa es el doble de gruesa y hay el doble de aire entre la fina y la gruesa.",

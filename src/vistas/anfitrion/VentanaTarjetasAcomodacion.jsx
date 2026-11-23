@@ -3,7 +3,7 @@
 // de todas las hojas (él: «no sea que no me guste cómo quede»), y la hoja
 // (A4 o A3). La tarjeta, siempre la bancaria: cada cara, de su tamaño (él,
 // v98.9; retiró el ancho de 9,5 cm). Con qué se cortan (v99: guillotina,
-// tijera o plóter), que decide las marcas. Y el acabado: los tres de la línea de la invitación (v99.2) (él:
+// tijera o plóter), que decide las marcas. Y el acabado: los de la línea de la invitación (v99.2; el cuarto, v99.7) (él:
 // «poder editar yo mismo el acabado… y verlo antes»).
 //
 // A pantalla entera y con los botones ARRIBA, del lado del pulgar, como la

@@ -67,6 +67,9 @@ export const ACABADOS = [
   { ...LINEA_INVITACION, id: "blancoHojas", rotulo: "Marco fino", marcos: [[9, 0.5]] },
   { ...LINEA_INVITACION, id: "blancoHojasGruesoFuera", rotulo: "Doble marco, grueso fuera", marcos: [[8, 3], [14, 0.4]] },
   { ...LINEA_INVITACION, id: "blancoHojasGruesoDentro", rotulo: "Doble marco, grueso dentro", marcos: [[8, 0.4], [14, 3]] },
+  // El plan B (él, v99.7: «añadimos a las 3 opciones existentes B2»): sin
+  // círculo; «MESA» y el número grande a la derecha, tras una línea dorada.
+  { ...LINEA_INVITACION, id: "blancoHojasNumeroGrande", rotulo: "Marco fino, número grande", marcos: [[9, 0.5]], numero: "grande" },
 ];
 const acabado = (id) => ACABADOS.find((a) => a.id === id) || ACABADOS[0];
 // Con qué se van a cortar, y así, qué marcas lleva la hoja (él, v99: «la
@@ -151,6 +154,12 @@ export const ESPACIADO_APELLIDO = 1.5; // entre letras, como «LAS BODAS»
 const TAM_NOMBRE = 30; // el de entrada; si no cabe, encoge
 export const ALTO_CALIGRAFICA = 0.62; // lo que sube la caligráfica, por punto de letra
 const TAM_NUMERO = 25;
+// El número grande (plan B2): su columna, a la derecha de una línea dorada.
+const COLUMNA_NUMERO = 56; // de la línea al hueco del marco
+const TAM_NUMERO_GRANDE = 44;
+const TAM_MESA = 8;
+const ESPACIADO_MESA = 2.5;
+const MEDIO_ALTO_LINEA = 46.5; // la línea, de arriba abajo desde el centro
 // Los nombres de las dos letras de la invitación: en jsPDF y en el lienzo
 // (pdfEnLienzo.js). Si no se cargaron, las de siempre de jsPDF. También
 // las usan los sobres de los matrimonios (v99.3).
@@ -189,22 +198,46 @@ function cara(pdf, x, y, ancho, alto, girada, t, estilo, adornos) {
   // El adorno, encima: el marco pasa por debajo, entero.
   const enLinea = lineaDelAdorno(estilo.marcos);
   if (adornos) imagen("esquina", x + enLinea, y + enLinea, ESQUINA_ANCHO);
-  // El número de la mesa, en su círculo dorado.
-  const nx = x + ancho - MARCO - 8 - R_NUM;
-  pdf.setFillColor(C.goldClaro);
-  pdf.setDrawColor(estilo.contornoNumero);
-  pdf.setLineWidth(3);
-  pdf.circle(...p(nx, cy), R_NUM - 1.5, "FD");
-  pdf.setFont(serif, estiloSerif);
-  pdf.setFontSize(TAM_NUMERO);
-  pdf.setTextColor(C.ink);
   const numero = String(t.mesa);
-  escribir(numero, nx - pdf.getTextWidth(numero) / 2, cy + (TAM_NUMERO * ALTO_CIFRA) / 2);
+  let hasta;
+  if (estilo.numero === "grande") {
+    // «MESA» y el número grande, en su columna tras la línea dorada; si un
+    // número no cabe a lo ancho, encoge.
+    const lx = x + ancho - MARCO - COLUMNA_NUMERO;
+    const nx = lx + COLUMNA_NUMERO / 2;
+    pdf.setDrawColor(estilo.marco);
+    pdf.setLineWidth(0.6);
+    pdf.line(...p(lx, cy - MEDIO_ALTO_LINEA), ...p(lx, cy + MEDIO_ALTO_LINEA));
+    pdf.setFont(serif, estiloSerif);
+    let tam = TAM_NUMERO_GRANDE;
+    pdf.setFontSize(tam);
+    while (tam > 20 && pdf.getTextWidth(numero) > COLUMNA_NUMERO - 6) pdf.setFontSize((tam -= 1));
+    const altoBloque = TAM_MESA * ALTO_CIFRA + 6 + tam * ALTO_CIFRA;
+    const anchoNumero = pdf.getTextWidth(numero);
+    pdf.setTextColor(C.ink);
+    escribir(numero, nx - anchoNumero / 2, cy + altoBloque / 2);
+    pdf.setFontSize(TAM_MESA);
+    pdf.setTextColor(estilo.marco);
+    const anchoMesa = pdf.getTextWidth("MESA") + ESPACIADO_MESA * 3;
+    escribir("MESA", nx - anchoMesa / 2, cy - altoBloque / 2 + TAM_MESA * ALTO_CIFRA, ESPACIADO_MESA);
+    hasta = lx - 8;
+  } else {
+    // El número de la mesa, en su círculo dorado.
+    const nx = x + ancho - MARCO - 8 - R_NUM;
+    pdf.setFillColor(C.goldClaro);
+    pdf.setDrawColor(estilo.contornoNumero);
+    pdf.setLineWidth(3);
+    pdf.circle(...p(nx, cy), R_NUM - 1.5, "FD");
+    pdf.setFont(serif, estiloSerif);
+    pdf.setFontSize(TAM_NUMERO);
+    pdf.setTextColor(C.ink);
+    escribir(numero, nx - pdf.getTextWidth(numero) / 2, cy + (TAM_NUMERO * ALTO_CIFRA) / 2);
+    hasta = nx - R_NUM - 7;
+  }
   // El nombre, en dos líneas (él, v98.9): arriba el APELLIDO, en
   // mayúsculas para que no se confundan («MESA, Sara», «TOMÁS, Elena»), y
   // debajo el nombre. Si no cabe, encoge cada línea por su lado.
   const desde = x + MARCO + 8;
-  const hasta = nx - R_NUM - 7;
   const medio = (desde + hasta) / 2;
   const hueco = hasta - desde;
   const apellido = t.apellido ? t.apellido.toLocaleUpperCase("es") : "";
@@ -315,7 +348,7 @@ const EJEMPLO = { nombre: "Luis", apellido: "Abreu", mesa: 12, familia: "A" };
 // cara uno y en la otra otro), por una sola cara del papel. En la esquina
 // de cada cara, donde va la letra de la familia, su número; y arriba, la
 // leyenda, en el orden de la paleta. Si no caben en una hoja, siguen en la
-// siguiente (con los tres de ahora, caben en una). Devuelve cuántas hojas.
+// siguiente (con los cuatro de ahora, caben en una). Devuelve cuántas hojas.
 export const ARCHIVO_MUESTRA_ACABADOS = "muestra-acabados-tarjetas.pdf";
 const TAM_LEYENDA = 9;
 export function dibujarMuestraAcabados(pdf, { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte } = {}, adornos = null) {
