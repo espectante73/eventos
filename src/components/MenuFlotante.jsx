@@ -145,7 +145,10 @@ function SelloFila({ count }) {
 // `conFondo` (v89.4): el submenú de un panel fijo (las Acciones de la
 // Lista) lleva el mismo fondo y borde que el panel, y se lee como una sola
 // pieza pegada a él; sin fondo, la Lista de detrás se transparentaba.
-function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio, conFondo = false }) {
+// `nivel` (v95.8): en qué panel está esta fila (1, el primero). Su submenú
+// es el nivel siguiente, y va por encima de todo lo anterior, con el velo
+// detrás (VELO_SUBMENU, más abajo).
+function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio, conFondo = false, nivel = 1 }) {
   const [pos, setPos] = useState(null);
   // Mismo mecanismo que arriba, pero para las hermanas DENTRO del propio
   // submenú de esta fila (p.ej. "Anfitrión"/cada colaborador, dentro de
@@ -192,7 +195,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio, conFon
     // basta con comprobar filaRef/panelRef (ver el mismo comentario, más
     // detallado, en MenuFlotante más abajo).
     const cerrarSiFuera = (e) => {
-      if (filaRef.current?.contains(e.target) || e.target.closest?.("[data-menu-panel]")) return;
+      if (filaRef.current?.contains(e.target) || e.target.closest?.("[data-menu-panel]") || e.target.closest?.("[data-velo-submenu]")) return;
       onCerrarPropio();
     };
     const { doc } = realmDe(filaRef.current);
@@ -248,6 +251,25 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio, conFon
         {abierto &&
           pos &&
           createPortal(
+            <>
+            {/* El velo del submenú (v95.8, él: «el que quede protagonista,
+                en primer plano, deje todo lo demás difuminado; que no se
+                confundan los botones»). En el móvil no caben tres paneles
+                en fila y el tercero caía encima del primero. A pantalla
+                entera, por encima de los paneles de atrás: cuanto más
+                atrás, más velos y más borroso. Tocarlo vuelve un paso
+                atrás (cierra solo este submenú), en el clic y no al
+                apoyar el dedo, para que ese toque no use lo de debajo. El
+                panel fijo (Acciones) no lo lleva: es para trabajar con la
+                Lista a la vista. */}
+            {!conFondo && (
+              <div
+                data-velo-submenu
+                className="fixed inset-0"
+                style={{ ...VELO, zIndex: 9998 + 2 * nivel }}
+                onClick={onCerrarPropio}
+              />
+            )}
             <div
               ref={panelRef}
               data-menu-panel
@@ -265,7 +287,7 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio, conFon
                 maxWidth: "calc(100vw - 2rem)",
                 maxHeight: pos.maxHeight,
                 padding: "4px 0",
-                zIndex: 10000,
+                zIndex: 9999 + 2 * nivel,
                 ...(conFondo ? { background: C.ink, border: `1px solid ${C.gold}`, boxShadow: S.flotanteOscura } : {}),
               }}
             >
@@ -275,12 +297,14 @@ function FilaMenu({ opcion, cerrarTodo, abierto, onAbrir, onCerrarPropio, conFon
                   opcion={hijo}
                   cerrarTodo={cerrarTodo}
                   conFondo={conFondo}
+                  nivel={nivel + 1}
                   abierto={abiertoIdHijo === hijo.id}
                   onAbrir={() => setAbiertoIdHijo(hijo.id)}
                   onCerrarPropio={() => setAbiertoIdHijo(null)}
                 />
               ))}
-            </div>,
+            </div>
+            </>,
             realmDe(filaRef.current).doc.body
           )}
       </div>
@@ -521,8 +545,10 @@ export function MenuFlotante({ render, opciones = [], contenido = null, anchor =
     // data-menu-panel de refuerzo, ese clic se interpretaba como "fuera"
     // y cerraba TODO el árbol de menús antes de que el propio onClick del
     // hijo llegara a disparar -- por eso los submenús no abrían nada.
+    // El velo de un submenú tampoco es «fuera»: tocarlo vuelve un paso
+    // atrás, no cierra el menú entero (v95.8).
     const cerrarSiFuera = (e) => {
-      if (botonRef.current?.contains(e.target) || e.target.closest?.("[data-menu-panel]")) return;
+      if (botonRef.current?.contains(e.target) || e.target.closest?.("[data-menu-panel]") || e.target.closest?.("[data-velo-submenu]")) return;
       setOpen(false);
     };
     const onKey = (e) => {

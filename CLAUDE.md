@@ -141,7 +141,8 @@ en la propuesta cuáles se han comprobado. Lo fuerza
 5. **Todo plegado y una sola cosa abierta**; en el móvil lo abierto es el
    protagonista, y lo que se abre encima aclara el fondo con `VELO`: tras
    una ventana que atender, todo; tras un menú, solo alrededor de sus
-   botones. Los textos de ayuda, al pie y
+   botones; tras cada submenú, todo lo anterior (tocarlo, un paso atrás).
+   Los textos de ayuda, al pie y
    plegados (`<details>`). Todo panel tiene su **salida ARRIBA y a la
    vista**, y salir deja la pantalla como estaba; un formulario acaba en
    **«Guardar» y «Cancelar»**. Una vista previa antes de enviar

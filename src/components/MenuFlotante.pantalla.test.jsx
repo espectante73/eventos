@@ -77,3 +77,56 @@ it("el submenú de un panel fijo sale por el lado con sitio y con el fondo del p
     Element.prototype.getBoundingClientRect = original;
   }
 });
+
+// v95.8 (él: «a medida que vaya abriendo menús y submenús, el que quede
+// protagonista, en primer plano, deje todo lo demás difuminado; que no se
+// confundan los botones»): en el móvil el tercer nivel caía encima del
+// primero. Cada submenú lleva su velo detrás, por encima de lo anterior;
+// tocarlo vuelve un paso atrás, sin cerrar el menú entero.
+it("cada submenú, con su velo detrás y encima de lo anterior; tocar el velo vuelve un paso atrás", () => {
+  const vista = montar(
+    <MenuFlotante
+      anchor="right"
+      opciones={[
+        {
+          id: "colaboradores",
+          etiqueta: "Colaboradores",
+          submenu: [
+            { id: "datos", etiqueta: "Datos Colab.", onClick: () => {} },
+            { id: "formularios", etiqueta: "Formularios", submenu: [{ id: "ana", etiqueta: "Ruiz, Ana", onClick: () => {} }] },
+          ],
+        },
+        { id: "novedades", etiqueta: "Novedades", onClick: () => {} },
+      ]}
+      render={({ ref, toggle }) => (
+        <button ref={ref} onClick={toggle}>
+          Abrir sección…
+        </button>
+      )}
+    />
+  );
+  const boton = (texto) => [...document.body.querySelectorAll("button")].find((b) => b.textContent === texto);
+  const velos = () => [...document.body.querySelectorAll("[data-velo-submenu]")];
+  const panel = (texto) => [...document.body.querySelectorAll("[data-menu-panel]")].find((p) => p.textContent.includes(texto) && !p.textContent.includes("Novedades"));
+  vista.pulsar(boton("Abrir sección…"));
+  expect(velos()).toHaveLength(0);
+  vista.pulsar(boton("Colaboradores"));
+  expect(velos()).toHaveLength(1);
+  const z = (el) => Number(el.style.zIndex);
+  const segundo = panel("Datos Colab.");
+  expect(z(velos()[0])).toBeGreaterThan(9999); // por encima del primer panel
+  expect(z(segundo)).toBeGreaterThan(z(velos()[0]));
+  vista.pulsar(boton("Formularios"));
+  expect(velos()).toHaveLength(2);
+  const tercero = panel("Ruiz, Ana");
+  const veloTercero = velos().find((v) => z(v) > z(segundo));
+  expect(veloTercero, "el velo del tercero, por encima del segundo").toBeTruthy();
+  expect(z(tercero)).toBeGreaterThan(z(veloTercero));
+  // Tocar el velo: se cierra el tercero; el segundo y el menú siguen.
+  vista.pulsar(veloTercero);
+  expect(velos()).toHaveLength(1);
+  expect(document.body.textContent).not.toContain("Ruiz, Ana");
+  expect(document.body.textContent).toContain("Datos Colab.");
+  expect(document.body.textContent).toContain("Novedades");
+  vista.desmontar();
+});

@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "95.8",
+    cambios: [
+      "Menús en el móvil: cada submenú que se abre deja detrás todo lo anterior difuminado, y solo él se ve nítido. Antes, en «Abrir sección… › Colaboradores › Formularios», la lista de colaboradores caía encima del primer menú y se mezclaban los botones.",
+      "Tocar fuera de un submenú vuelve un paso atrás (cierra solo ese), sin cerrar el menú entero.",
+    ],
+  },
+  {
     version: "95.7",
     cambios: [
       "Cronograma: la Recepción ya no es automática. Antes la atendían solos los colaboradores con invitados confirmados; ahora, con la acreditación por QR en la puerta, se elige en «¿Quién lo atiende?» como en cualquier otro bloque: el acomodador y quienes le acompañen.",
