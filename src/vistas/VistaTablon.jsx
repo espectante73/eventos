@@ -592,8 +592,9 @@ export function VistaTablon({ token }) {
               {personaEnlace ? `Hola, ${personaEnlace.nombre}` : "Antes de entrar…"}
             </h1>
           </div>
-          {/* Con aire entre el texto, el desplegable y el botón (él, v100). */}
-          <p className="text-sm mb-5" style={{ color: C.charcoal }}>
+          {/* Con aire entre el texto, el desplegable y el botón (él, v100;
+              v100.1: «más aire»). */}
+          <p className="text-sm mb-8" style={{ color: C.charcoal }}>
             {personaEnlace ? "Para entrar, elige tu año de nacimiento." : pregunta}
           </p>
           {/* Apellido y nombre, y el año al lado, en la misma línea
@@ -638,7 +639,7 @@ export function VistaTablon({ token }) {
               El apellido debe ser el familiar, el mismo que tiene tu colaborador en su formulario, no otro apellido que tengas.
             </p>
           )}
-          {personaEnlace && <div className="mb-5" />}
+          {personaEnlace && <div className="mb-8" />}
           {errorRespuesta && (
             <p className="text-sm mb-2" style={{ color: C.wax }}>
               {errorRespuesta}

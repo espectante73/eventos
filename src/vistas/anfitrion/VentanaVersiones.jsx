@@ -42,6 +42,10 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "100.1",
+    cambios: ["Entrada al tablón: todavía más aire entre el texto, el desplegable del año y el botón «Entrar» (de 20 a 32 puntos)."],
+  },
+  {
     version: "100",
     cambios: [
       "Entrada al tablón con el enlace personal: más aire entre «Para entrar, elige tu año de nacimiento.», el desplegable del año y el botón «Entrar».",
