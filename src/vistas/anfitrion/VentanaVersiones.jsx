@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "100",
+    cambios: [
+      "Entrada al tablón con el enlace personal: más aire entre «Para entrar, elige tu año de nacimiento.», el desplegable del año y el botón «Entrar».",
+    ],
+  },
+  {
     version: "99.9",
     cambios: [
       "Tablón, «De dónde venimos»: tocando una zona, se abre debajo quién viene de ella, una línea por familia como en la invitación («Abreu: Luis y Ana»), por orden alfabético. Una zona abierta a la vez, en dorado. Solo nombres y apellidos: nada más de la ficha. La vista previa de Novedades lo enseña igual.",
