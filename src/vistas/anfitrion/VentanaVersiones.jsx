@@ -42,6 +42,10 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "100.2",
+    cambios: ["Entrada al tablón: entre el texto, el año y «Entrar», tres huecos iguales (32 puntos), y bajo el título «Hola…», el doble (64)."],
+  },
+  {
     version: "100.1",
     cambios: ["Entrada al tablón: todavía más aire entre el texto, el desplegable del año y el botón «Entrar» (de 20 a 32 puntos)."],
   },

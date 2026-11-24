@@ -586,14 +586,15 @@ export function VistaTablon({ token }) {
           className="w-full p-6 rounded-lg"
           style={{ background: C.blanco, border: `1px solid ${C.line}`, boxShadow: S.flotante }}
         >
-          <div className="flex items-center gap-2 mb-3" style={{ color: C.gold }}>
+          <div className="flex items-center gap-2 mb-16" style={{ color: C.gold }}>
             <Lock size={18} />
             <h1 className="text-lg min-w-0 truncate" style={{ fontFamily: "'Fraunces', serif", color: C.ink, fontWeight: 700 }}>
               {personaEnlace ? `Hola, ${personaEnlace.nombre}` : "Antes de entrar…"}
             </h1>
           </div>
           {/* Con aire entre el texto, el desplegable y el botón (él, v100;
-              v100.1: «más aire»). */}
+              v100.1: «más aire»): los tres huecos iguales, y bajo el
+              título, el doble (v100.2). */}
           <p className="text-sm mb-8" style={{ color: C.charcoal }}>
             {personaEnlace ? "Para entrar, elige tu año de nacimiento." : pregunta}
           </p>
