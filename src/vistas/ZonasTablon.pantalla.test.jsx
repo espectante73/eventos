@@ -18,7 +18,7 @@ it("las zonas en orden alfabético, la suya marcada, y el total", () => {
   );
   const zonas = [...vista.contenedor.querySelectorAll("[data-zona]")];
   expect(zonas.map((z) => z.dataset.zona)).toEqual(["F. España", "Icod", "Puerto"]);
-  expect(zonas[1].style.background).not.toBe(zonas[0].style.background);
+  expect(zonas[1].firstElementChild.style.background).not.toBe(zonas[0].firstElementChild.style.background);
   expect(vista.contenedor.textContent).toContain("45 confirmados · 3 zonas");
   // Las cantidades, en negrita (v84): las de cada zona y las del total.
   expect([...vista.contenedor.querySelectorAll("p b")].map((b) => b.textContent)).toEqual(["45", "3"]);
@@ -44,4 +44,45 @@ it("mientras llega, «Cargando…»; sin confirmados, lo dice", () => {
   const vacia = montar(<ZonasTablon datos={{ miZona: "", zonas: [] }} />);
   expect(vacia.html).toContain("Todavía no hay ningún confirmado.");
   vacia.desmontar();
+});
+
+it("tocando una zona, sus familias como en la invitación; una abierta a la vez (v99.9)", () => {
+  const vista = montar(
+    <ZonasTablon
+      datos={{
+        miZona: "Puerto",
+        zonas: [
+          { zona: "Puerto", confirmados: 2, familias: [{ apellido: "González", nombres: ["Darnell", "Sara"] }] },
+          {
+            zona: "Icod",
+            confirmados: 4,
+            familias: [
+              { apellido: "Pérez", nombres: ["Tomás", "Elena"] },
+              { apellido: "Abreu", nombres: ["Luis", "Ana"] },
+            ],
+          },
+        ],
+      }}
+    />
+  );
+  const boton = (zona) => vista.contenedor.querySelector(`[data-zona="${zona}"] button`);
+  expect(vista.contenedor.querySelector("[data-familias]")).toBeNull();
+  vista.pulsar(boton("Icod"));
+  const lineas = [...vista.contenedor.querySelectorAll('[data-familias="Icod"] li')].map((li) => li.textContent);
+  expect(lineas).toEqual(["Abreu: Luis y Ana", "Pérez: Tomás y Elena"]);
+  expect(boton("Icod").getAttribute("aria-expanded")).toBe("true");
+  // Otra zona cierra la anterior.
+  vista.pulsar(boton("Puerto"));
+  expect(vista.contenedor.querySelector('[data-familias="Icod"]')).toBeNull();
+  expect(vista.contenedor.querySelector('[data-familias="Puerto"]').textContent).toContain("González: Darnell y Sara");
+  // Y otra vez la misma, la cierra.
+  vista.pulsar(boton("Puerto"));
+  expect(vista.contenedor.querySelector("[data-familias]")).toBeNull();
+  vista.desmontar();
+});
+
+it("sin familias del servidor, las zonas no se tocan", () => {
+  const vista = montar(<ZonasTablon datos={{ miZona: "", zonas: [{ zona: "Icod", confirmados: 3 }] }} />);
+  expect(vista.contenedor.querySelector("button")).toBeNull();
+  vista.desmontar();
 });

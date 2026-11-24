@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "99.9",
+    cambios: [
+      "Tablón, «De dónde venimos»: tocando una zona, se abre debajo quién viene de ella, una línea por familia como en la invitación («Abreu: Luis y Ana»), por orden alfabético. Una zona abierta a la vez, en dorado. Solo nombres y apellidos: nada más de la ficha. La vista previa de Novedades lo enseña igual.",
+      "Nota de privacidad: en «Quién lo ve» se añade que entre los invitados solo se ven los nombres, los apellidos y la zona de quienes vienen.",
+    ],
+  },
+  {
     version: "99.8",
     cambios: [
       "Tarjetas de acomodación: nuevo desplegable «Formato», junto a «Hoja» y «Cortar con». «Para plegar», como hasta ahora: dos caras que se doblan y quedan de pie. «Una cara»: cada tarjeta, plana y del tamaño de una tarjeta bancaria, sin doblez; caben 10 por A4 y 21 por A3. Vale para los cuatro acabados y también para la hoja de muestra.",

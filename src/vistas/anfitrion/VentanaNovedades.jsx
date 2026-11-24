@@ -320,7 +320,7 @@ function NovedadZonas({ evento, persistEvento, expandida, onAlternar, soloTexto,
       {expandida && (
         <div className="px-3 pb-3 space-y-2">
           <p className="text-xs italic" style={{ color: C.charcoal, opacity: OP.secundario }}>
-            Las zonas de los confirmados, y cuántos de cada una, tal como están escritas en la Lista. Se rellena sola.
+            Las zonas de los confirmados, y cuántos de cada una, tal como están escritas en la Lista. Tocando una zona, sus familias, como en la invitación. Se rellena sola.
           </p>
           {!soloTexto && obtenerZonasPrevia && <VistaPreviaZonas key={lecturaPrevia} obtener={obtenerZonasPrevia} titulo={tituloZonas({ zonasTablonTitulo: titulo })} />}
           <label

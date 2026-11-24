@@ -3429,27 +3429,60 @@ $$;
 
 -- «De dónde venimos» (v73, él): las zonas de los confirmados (sin los que
 -- dijeron «No asiste») y cuántos de cada una, tal como están escritas en
--- la Lista. Solo cifras, nunca nombres, y solo a un invitado identificado
--- (la misma llave que tablon_fotos), con la noticia publicada. Su propia
--- zona, para marcarla. El orden alfabético lo pone la app.
+-- la Lista. Solo a un invitado identificado (la misma llave que
+-- tablon_fotos), con la noticia publicada. Su propia zona, para marcarla. El
+-- orden alfabético lo pone la app.
 -- La cuenta, una sola para el tablón y la vista previa (v83.9): las zonas y
 -- cuántos niños vienen. Solo en total, nunca por zona (él: en una zona
 -- pequeña señalaría a un niño concreto). Cerrada: la llaman esas dos. La
 -- zona «DJ» solo sale si él marca su casilla (zonaDjVisible, v84.1): oculta,
 -- tampoco suma en el total; los niños se cuentan igual.
+-- Y las familias de cada zona (v99.9, él: «entre los invitados se verán los
+-- nombres y apellidos y zona»), para verlas al tocarla, como en la
+-- invitación: «Abreu: Luis y Ana». Solo el nombre de pila y el apellido de la
+-- familia: nada más de la ficha. Familia, apellido y orden, los de la
+-- invitación (lib/familiasInvitacion.js, familiasDelEvento): la clave es
+-- grupoFamiliar, o el apellido, o la ficha; el apellido, el primero de sus
+-- miembros en el orden de la Lista; los nombres, en el orden que él puso
+-- (orden_familias) y luego los demás.
 CREATE FUNCTION public.resumen_zonas() RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
+  with familias as (
+    select i.*, coalesce(nullif(i."grupoFamiliar", ''), nullif(i."apellido", ''), i.id::text) as clave
+    from invitados i
+  ),
+  apellidos as (
+    select f.clave,
+      (array_agg(trim(f."apellido") order by f."apellido", f."nombre") filter (where trim(f."apellido") <> ''))[1] as apellido
+    from familias f
+    group by f.clave
+  ),
+  vienen as (
+    select f.*, trim(f."zona") as z
+    from familias f
+    where f."confirmado" and not coalesce(f."noAsiste", false) and trim(coalesce(f."zona", '')) <> ''
+      and (upper(trim(f."zona")) <> 'DJ' or coalesce((select e."zonaDjVisible" from evento e limit 1), false))
+  ),
+  por_familia as (
+    select v.z, count(*) as n,
+      jsonb_build_object(
+        'apellido', coalesce(a.apellido, ''),
+        'nombres', jsonb_agg(trim(v."nombre") order by array_position(o."orden", v.id::text) nulls last, v."apellido", v."nombre")
+      ) as familia
+    from vienen v
+    join apellidos a on a.clave = v.clave
+    left join orden_familias o on o."grupoFamiliar" = v.clave
+    group by v.z, v.clave, a.apellido
+  )
   select jsonb_build_object(
     'zonas', coalesce((
-      select jsonb_agg(jsonb_build_object('zona', z.zona, 'confirmados', z.n))
+      select jsonb_agg(jsonb_build_object('zona', z.z, 'confirmados', z.n, 'familias', z.familias))
       from (
-        select trim(i."zona") as zona, count(*) as n
-        from invitados i
-        where i."confirmado" and not coalesce(i."noAsiste", false) and trim(coalesce(i."zona", '')) <> ''
-          and (upper(trim(i."zona")) <> 'DJ' or coalesce((select e."zonaDjVisible" from evento e limit 1), false))
-        group by trim(i."zona")
+        select p.z, sum(p.n)::int as n, jsonb_agg(p.familia order by p.familia->>'apellido') as familias
+        from por_familia p
+        group by p.z
       ) z
     ), '[]'::jsonb),
     'ninos', (
