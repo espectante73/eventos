@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "101",
+    cambios: [
+      "Acomodación: cada mesa lleva bajo su número una casilla «Bloquear», para los invitados que sí o sí tienen que ir en esa mesa. Bloqueada, nadie sale de ella: ni moviéndolo (lo avisa), ni con su «Vaciar», ni con «Vaciar mesas», y no se puede quitar. Sus sitios libres sí se pueden llenar, a mano o con «Auto-asignar». Se guarda al momento, como los sitios, y va en las memorias.",
+    ],
+  },
+  {
     version: "100.3",
     cambios: ["Entrada al tablón: bajo el título «Hola…», 20 puntos en vez de 64 (la opción B). Entre el texto, el año y «Entrar» se quedan los 32."],
   },

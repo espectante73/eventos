@@ -1,7 +1,7 @@
 // v74 (él): probar el reparto moviendo familias enteras; que no deje sentar
 // a más de los que caben; y nada se guarda hasta «Aplicar a la Lista».
 import { describe, it, expect } from "vitest";
-import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador, moverMesa, vaciarMesaEnBorrador, fijosEnMesa, quitarMesaRenumerando, cifraFamilia, anchoColumnas } from "./repartoMesas";
+import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador, moverMesa, vaciarMesaEnBorrador, fijosEnMesa, quitarMesaRenumerando, cifraFamilia, anchoColumnas, mesaBloqueada, conBloqueo } from "./repartoMesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const g = (id, apellido, nombre, rol, extra = {}) => ({ id, apellido, nombre, grupoFamiliar: `${apellido}01`, rolFamiliar: rol, confirmado: true, mesa: null, ...extra });
@@ -317,5 +317,47 @@ describe("anchoColumnas", () => {
     expect(cifraFamilia(f("A", { cuantos: 3, sinConfirmar: 1 }))).toBe("2+1");
     expect(cifraFamilia(f("A", { cuantos: 3, sinConfirmar: 3 }))).toBe("3");
     expect(cifraFamilia(f("A"))).toBe("2");
+  });
+});
+
+describe("una mesa bloqueada (v101)", () => {
+  const conLa6 = conBloqueo(mesas, 6, true);
+
+  it("se marca y se desmarca, sin tocar las demás", () => {
+    expect(conLa6).toEqual([{ numero: 6, capacidad: 3, bloqueada: true }, { numero: 7, capacidad: 10 }]);
+    expect(mesaBloqueada(conLa6, 6)).toBe(true);
+    expect(mesaBloqueada(conLa6, 7)).toBe(false);
+    expect(mesaBloqueada(conLa6, null)).toBe(false);
+    expect(mesaBloqueada(conBloqueo(conLa6, 6, false), 6)).toBe(false);
+  });
+
+  it("nadie sale de ella, y lo dice", () => {
+    const { borrador, aviso } = moverFamilia(invitados, {}, "4", 7, conLa6);
+    expect(borrador).toEqual({});
+    expect(aviso).toBe("La mesa 6 está bloqueada: nadie sale de ella. Desmarca «Bloqueada» para cambiarla.");
+    expect(moverFamilia(invitados, {}, "4", null, conLa6).aviso).toContain("bloqueada");
+  });
+
+  it("sus huecos libres sí se llenan, a mano y con Auto-asignar", () => {
+    const pareja = [...invitados.filter((x) => x.id === "4"), g("8", "Luz", "Mar", ROL_FAMILIAR.ESPOSA), g("9", "Luz", "Sol", ROL_FAMILIAR.ESPOSO)];
+    expect(moverFamilia(pareja, {}, "8", 6, conLa6)).toEqual({ borrador: { 8: 6, 9: 6 }, aviso: "" });
+    expect(autoAsignarEnBorrador(pareja, {}, [conLa6[0]]).borrador).toEqual({ 8: 6, 9: 6 });
+  });
+
+  it("«Vaciar» no la vacía, y «Vaciar mesas» se la salta", () => {
+    const sentados = { 1: 7, 2: 7, 3: 7 };
+    expect(vaciarMesaEnBorrador(invitados, sentados, 6, undefined, conLa6)).toBe(sentados);
+    const borrador = vaciarTodasEnBorrador(invitados, sentados, undefined, conLa6);
+    expect(borrador).toEqual({});
+    expect(conBorrador(invitados, borrador).find((x) => x.id === "4").mesa).toBe(6);
+  });
+
+  it("no se puede quitar", () => {
+    expect(quitarMesaRenumerando(invitados, conLa6, 6)).toEqual({ invitados, mesas: conLa6, aviso: "No se puede: la mesa 6 está bloqueada." });
+  });
+
+  it("cambia de orden con su gente y su marca", () => {
+    const { mesas: nuevas } = moverMesa(invitados, {}, conLa6, 6, 7);
+    expect(nuevas).toEqual([{ numero: 1, capacidad: 10 }, { numero: 2, capacidad: 3, bloqueada: true }]);
   });
 });

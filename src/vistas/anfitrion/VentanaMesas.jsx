@@ -17,6 +17,10 @@
 // candado, no se arrastra, y «Vaciar», «Auto-asignar» y las memorias la
 // respetan. Tocarla abre la salvaguarda, VentanaCambiarMesa.
 //
+// «Bloquear» una mesa (él, v101), con su casilla bajo el número: los que
+// están «sí o sí tienen que ir en esa mesa». Es del mobiliario (al momento);
+// la regla, en lib/repartoMesas.js (mesaBloqueada).
+//
 // Con ratón, una mesa se arrastra por su cabecera sobre otra (él, v83): ocupa
 // su lugar y todas se renumeran, en la PRUEBA, llevándose a su gente.
 //
@@ -62,6 +66,8 @@ import {
   quitarMesaRenumerando,
   cifraFamilia,
   anchoColumnas,
+  conBloqueo,
+  mesaBloqueada,
 } from "../../lib/repartoMesas";
 
 // El ancho de los recuadros, uno para todos (norma 6), el del nombre más
@@ -324,20 +330,24 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   // Vaciar va a la prueba: no pregunta, se deshace con «Descartar».
   const vaciar = (numero) => {
     limpiarAvisos();
-    setBorrador(vaciarMesaEnBorrador(invitados, borrador, numero, ordenFamiliares));
+    setBorrador(vaciarMesaEnBorrador(invitados, borrador, numero, ordenFamiliares, mesas));
   };
   // «Vaciar mesas» (él, v75.1): todas a la vez; mueve a todo el mundo,
   // así que pregunta antes. Las mesas se quedan.
-  const sentados = mesas.reduce((total, m) => total + ocupacion(vista, m.numero) - fijosEnMesa(vista, m.numero, ordenFamiliares), 0);
+  // Las bloqueadas (v101) se quedan con su gente.
+  const sentados = mesas.filter((m) => !m.bloqueada).reduce((total, m) => total + ocupacion(vista, m.numero) - fijosEnMesa(vista, m.numero, ordenFamiliares), 0);
+  const bloqueadas = mesas.filter((m) => m.bloqueada).map((m) => m.numero).sort((a, b) => a - b);
   const vaciarTodas = () =>
     preguntar({
       titulo: "¿Vaciar todas las mesas?",
-      texto: `${sentados === 1 ? "1 invitado pasa" : `${sentados} invitados pasan`} a «Sin mesa», en la prueba. Las mesas se quedan; «Descartar» lo deshace.`,
+      texto:
+        `${sentados === 1 ? "1 invitado pasa" : `${sentados} invitados pasan`} a «Sin mesa», en la prueba. Las mesas se quedan; «Descartar» lo deshace.` +
+        (bloqueadas.length ? ` ${bloqueadas.length === 1 ? `La mesa ${bloqueadas[0]}, bloqueada, se queda como está.` : `Las mesas ${bloqueadas.join(", ")}, bloqueadas, se quedan como están.`}` : ""),
       rotulo: "Sí",
       peligro: false,
       alConfirmar: () => {
         limpiarAvisos();
-        setBorrador(vaciarTodasEnBorrador(invitados, borrador, ordenFamiliares));
+        setBorrador(vaciarTodasEnBorrador(invitados, borrador, ordenFamiliares, mesas));
       },
     });
   const autoAsignar = () => {
@@ -410,6 +420,13 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
     cambiarMesas([...mesas, { numero: siguiente, capacidad: 10 }]);
   };
   const cambiarSitios = (numero, capacidad) => cambiarMesas(mesas.map((m) => (m.numero === numero ? { ...m, capacidad } : m)));
+  // «Bloquear» (v101), al momento como los sitios. Sin la columna en la base
+  // (falta subir el SQL de la v101), la casilla no sale: no se guardaría.
+  const hayBloqueo = data.mesas.some((m) => Object.hasOwn(m, "bloqueada"));
+  const bloquear = (numero, si) => {
+    limpiarAvisos();
+    cambiarMesas(conBloqueo(mesas, numero, si));
+  };
   // Quien estaba en ella se queda sin mesa, en la Lista y en la prueba; no
   // se borra a nadie. Las demás quedan 1, 2, 3…, cada una con su gente (él,
   // v98.4), con la regla de lib/repartoMesas.js.
@@ -434,6 +451,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   const arrastrarMesas = !esAparatoTactil();
   const cabeceraMesa = (m, ocupados) => {
     const fijos = fijosEnMesa(vista, m.numero, ordenFamiliares);
+    const bloqueada = mesaBloqueada(mesas, m.numero);
     return (
       <div
         data-cabecera-mesa={m.numero}
@@ -479,8 +497,8 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
           {/* La X, en la esquina de arriba; «Vaciar», abajo, a la altura del − (él, v98.8). */}
           <span className="flex-1 self-stretch flex flex-col items-end justify-between gap-1 zurdo:items-start">
             <BotonQuitar
-              titulo={fijos > 0 ? "Tiene familias con su invitación enviada: no se puede quitar" : "Quitar esta mesa"}
-              disabled={fijos > 0}
+              titulo={bloqueada ? "Está bloqueada: no se puede quitar" : fijos > 0 ? "Tiene familias con su invitación enviada: no se puede quitar" : "Quitar esta mesa"}
+              disabled={bloqueada || fijos > 0}
               pregunta={{
                 titulo: `¿Quitar la mesa ${m.numero}?`,
                 texto:
@@ -490,11 +508,40 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
               }}
               onClick={() => quitarMesa(m.numero)}
             />
-            <Boton variante="secundario" oscuro tamano="pequeno" titulo="Deja sus familias sin mesa, en la prueba; las que ya tienen su invitación se quedan" disabled={ocupados - fijos <= 0} onClick={() => vaciar(m.numero)}>
+            <Boton
+              variante="secundario"
+              oscuro
+              tamano="pequeno"
+              titulo={bloqueada ? "Está bloqueada: su gente se queda" : "Deja sus familias sin mesa, en la prueba; las que ya tienen su invitación se quedan"}
+              disabled={bloqueada || ocupados - fijos <= 0}
+              onClick={() => vaciar(m.numero)}
+            >
               Vaciar
             </Boton>
           </span>
         </div>
+        {/* «Bloquear» (él, v101), bajo el círculo: nadie sale de ella; sus
+            huecos libres, sí se llenan. */}
+        {hayBloqueo && (
+          <div data-controles className="flex justify-center mt-1.5">
+            <label className="inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer" style={{ color: C.goldClaro }}>
+              <input
+                type="checkbox"
+                checked={bloqueada}
+                onChange={(e) => bloquear(m.numero, e.target.checked)}
+                aria-label={`Bloquear la mesa ${m.numero}`}
+                style={{ accentColor: C.goldClaro, width: 15, height: 15 }}
+              />
+              {bloqueada ? (
+                <>
+                  <Lock size={13} aria-hidden /> Bloqueada
+                </>
+              ) : (
+                "Bloquear"
+              )}
+            </label>
+          </div>
+        )}
       </div>
     );
   };
@@ -703,7 +750,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
             <p className="mt-2" style={{ opacity: OP.secundario }}>
               Arrastra cada familia a su mesa; en el móvil, tócala y luego toca la mesa. Sombreadas, las que aún no han
               confirmado: su sitio queda reservado. Sentar, Vaciar y Auto-asignar son una prueba hasta «Aplicar a la
-              Lista»; las mesas y sus sitios se guardan al momento. Con candado, las familias que ya tienen su invitación: su mesa queda fija; tócalas si hubiera que cambiarla. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba. Al quitar una, las demás se corren y quedan 1, 2, 3…
+              Lista»; las mesas y sus sitios se guardan al momento. Con candado, las familias que ya tienen su invitación: su mesa queda fija; tócalas si hubiera que cambiarla. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba. Al quitar una, las demás se corren y quedan 1, 2, 3… «Bloquear», bajo el número de la mesa: nadie sale de ella, ni con «Vaciar mesas», y no se puede quitar; sus sitios libres sí se pueden llenar.
             </p>
           </details>
           <Boton variante="secundario" onClick={descartar} disabled={!hayPrueba}>

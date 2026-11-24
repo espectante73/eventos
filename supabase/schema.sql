@@ -260,6 +260,10 @@ CREATE TABLE public.mesas (
     capacidad integer DEFAULT 10 NOT NULL,
     "posX" numeric,
     "posY" numeric,
+    -- «Bloqueada» (él, v101): nadie sale de ella (ni con «Vaciar mesas») y
+    -- no se quita; sus huecos libres sí se llenan. Sin "not null" (1.7,
+    -- regla 7): una foto anterior la trae vacía.
+    "bloqueada" boolean DEFAULT false,
     CONSTRAINT mesas_capacidad_check CHECK ((capacidad >= 0)),
     -- Antes había un tope de 15 mesas. Se quitó en la app hace tiempo,
     -- pero el tope seguía puesto en la base: la mesa 16 habría dado error.
@@ -2159,16 +2163,18 @@ begin
     delete from mesas where not ("numero" = any(p_numeros));
   end if;
 
-  insert into mesas ("numero", "capacidad", "posX", "posY")
+  insert into mesas ("numero", "capacidad", "posX", "posY", "bloqueada")
   select (v->>'numero')::int,
          coalesce((v->>'capacidad')::int, 10),
          (v->>'posX')::numeric,
-         (v->>'posY')::numeric
+         (v->>'posY')::numeric,
+         coalesce((v->>'bloqueada')::boolean, false)
   from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
   on conflict ("numero") do update set
     "capacidad" = excluded."capacidad",
     "posX"      = excluded."posX",
-    "posY"      = excluded."posY";
+    "posY"      = excluded."posY",
+    "bloqueada" = excluded."bloqueada";
 end;
 $$;
 

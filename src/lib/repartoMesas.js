@@ -51,6 +51,10 @@ export function familiasParaRepartir(vista, { conSinConfirmar = false, ordenFami
 export function moverFamilia(invitados, borrador, idRepresentante, numero, mesas, { conSinConfirmar = false, ordenFamiliares } = {}) {
   const vista = conBorrador(invitados, borrador);
   const representante = vista.find((g) => g.id === idRepresentante);
+  const desde = representante?.mesa ?? null;
+  if (desde != null && desde !== numero && mesaBloqueada(mesas, desde)) {
+    return { borrador, aviso: `La mesa ${desde} está bloqueada: nadie sale de ella. Desmarca «Bloqueada» para cambiarla.` };
+  }
   const { invitados: tras, aviso } = asignarMesaConSuFamilia(vista, idRepresentante, numero, mesas, {
     comoSeLlama: representante && `de ${nombreCompleto(representante)}`,
     conSinConfirmar,
@@ -58,6 +62,19 @@ export function moverFamilia(invitados, borrador, idRepresentante, numero, mesas
   });
   if (aviso) return { borrador, aviso };
   return { borrador: borradorDesde(invitados, tras), aviso: "" };
+}
+
+// Una mesa bloqueada (él, v101: «los invitados que sí o sí tienen que ir en
+// esa mesa»): nadie sale de ella —ni moviéndolo, ni con «Vaciar» o «Vaciar
+// mesas»— y no se puede quitar. Sus huecos libres sí se llenan, a mano o con
+// Auto-asignar (él: «bloquear deja sitios libres si los hay»). La marca vive
+// en la mesa (`bloqueada`, tabla mesas): se guarda al momento, como sus
+// sitios, y va en las memorias con ella.
+export const mesaBloqueada = (mesas = [], numero) => numero != null && mesas.some((m) => m.numero === numero && m.bloqueada);
+
+// Marcar o desmarcar «Bloqueada»: las mesas con ese cambio.
+export function conBloqueo(mesas, numero, bloqueada) {
+  return mesas.map((m) => (m.numero === numero ? { ...m, bloqueada: Boolean(bloqueada) } : m));
 }
 
 // La cifra de una familia en su pastilla: cuántos son; con parte sin
@@ -135,6 +152,7 @@ function renumerar(invitados, orden, ordenFamiliares) {
 export function quitarMesaRenumerando(invitados, mesas, numero, ordenFamiliares) {
   const orden = [...mesas].sort((a, b) => a.numero - b.numero).filter((m) => m.numero !== numero);
   if (orden.length === mesas.length) return { invitados, mesas, aviso: "" };
+  if (mesaBloqueada(mesas, numero)) return { invitados, mesas, aviso: `No se puede: la mesa ${numero} está bloqueada.` };
   if (invitados.some((g) => g.mesa === numero && mesaFija(g, ordenFamiliares))) {
     return { invitados, mesas, aviso: `No se puede: la mesa ${numero} tiene invitaciones enviadas.` };
   }
@@ -148,16 +166,19 @@ export function quitarMesaRenumerando(invitados, mesas, numero, ordenFamiliares)
 }
 
 // «Vaciar» una mesa, en la prueba: todas sus familias a «Sin mesa».
-// Las familias con la mesa fija se quedan.
-export function vaciarMesaEnBorrador(invitados, borrador, numero, ordenFamiliares) {
+// Las familias con la mesa fija se quedan; una mesa bloqueada, entera.
+export function vaciarMesaEnBorrador(invitados, borrador, numero, ordenFamiliares, mesas = []) {
+  if (mesaBloqueada(mesas, numero)) return borrador;
   const propuesta = conBorrador(invitados, borrador).map((g) => (g.mesa === numero && !mesaFija(g, ordenFamiliares) ? { ...g, mesa: null } : g));
   return borradorDesde(invitados, propuesta);
 }
 
 // «Vaciar mesas» (él, v75.1), en la prueba: todas las mesas, vacías; las
-// mesas se quedan.
-export function vaciarTodasEnBorrador(invitados, borrador, ordenFamiliares) {
-  const propuesta = conBorrador(invitados, borrador).map((g) => (g.mesa != null && !mesaFija(g, ordenFamiliares) ? { ...g, mesa: null } : g));
+// mesas se quedan. Las bloqueadas (v101), con su gente.
+export function vaciarTodasEnBorrador(invitados, borrador, ordenFamiliares, mesas = []) {
+  const propuesta = conBorrador(invitados, borrador).map((g) =>
+    g.mesa != null && !mesaFija(g, ordenFamiliares) && !mesaBloqueada(mesas, g.mesa) ? { ...g, mesa: null } : g
+  );
   return borradorDesde(invitados, propuesta);
 }
 

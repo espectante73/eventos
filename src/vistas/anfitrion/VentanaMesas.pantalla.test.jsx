@@ -479,3 +479,55 @@ it("«Sin mesa» se pliega y se despliega; plegada, tocarla deja ahí a la famil
   expect(columna("Sin mesa").contains(familia("Expósito, Rosi"))).toBe(true);
   vista.desmontar();
 });
+
+describe("«Bloquear» una mesa (v101)", () => {
+  const conMarca = [
+    { numero: 6, capacidad: 2, bloqueada: true },
+    { numero: 7, capacidad: 9, bloqueada: false },
+  ];
+  const casilla = (vista, n) => vista.contenedor.querySelector(`[aria-label="Bloquear la mesa ${n}"]`);
+
+  it("sin el SQL subido (la mesa no trae la marca), no sale la casilla", () => {
+    const { vista } = dibujar();
+    expect(casilla(vista, 6)).toBeNull();
+    vista.desmontar();
+  });
+
+  it("marcarla se guarda al momento; bloqueada, ni «Vaciar» ni quitarla", () => {
+    const { vista, mesasGuardadas, enMesa } = dibujar({ conMesas: conMarca });
+    expect(casilla(vista, 6).checked).toBe(true);
+    expect(vista.contenedor.querySelector('[data-columna="Mesa 6"]').textContent).toContain("Bloqueada");
+    expect(enMesa(6, "Vaciar").disabled).toBe(true);
+    expect(enMesa(6, "Está bloqueada: no se puede quitar").disabled).toBe(true);
+    vista.pulsar(casilla(vista, 7));
+    expect(mesasGuardadas.at(-1)).toEqual([conMarca[0], { numero: 7, capacidad: 9, bloqueada: true }]);
+    vista.desmontar();
+  });
+
+  it("nadie sale de ella: lo dice, y la prueba no cambia", () => {
+    const { vista, familia, columna } = dibujar({ conMesas: conMarca });
+    vista.pulsar(familia("Expósito, Rosi"));
+    vista.pulsar(columna("Mesa 7"));
+    expect(vista.contenedor.textContent).toContain("La mesa 6 está bloqueada: nadie sale de ella.");
+    expect(columna("Mesa 6").textContent).toContain("Expósito, Rosi");
+    vista.desmontar();
+  });
+
+  it("«Vaciar mesas» se la salta, y la pregunta lo dice", () => {
+    const sentados = invitados.map((x) => (x.apellido === "García" ? { ...x, mesa: 7 } : x));
+    const { vista, boton, columna } = dibujar({ conMesas: conMarca, lista: sentados });
+    vista.pulsar(boton("Vaciar mesas"));
+    expect(document.body.textContent).toContain("2 invitados pasan a «Sin mesa»");
+    expect(document.body.textContent).toContain("La mesa 6, bloqueada, se queda como está.");
+    vista.pulsar(boton("Sí"));
+    expect(columna("Mesa 6").textContent).toContain("Expósito, Rosi");
+    expect(columna("Mesa 7").textContent).not.toContain("García");
+    vista.desmontar();
+  });
+
+  it("si la única gente sentada está en una bloqueada, «Vaciar mesas» se apaga", () => {
+    const { vista, boton } = dibujar({ conMesas: conMarca });
+    expect(boton("Vaciar mesas").disabled).toBe(true);
+    vista.desmontar();
+  });
+});
