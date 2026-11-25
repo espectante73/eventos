@@ -32,7 +32,7 @@
 // sitios, plano y quién se sienta dónde). Cargar una la pone como prueba,
 // mesas incluidas: mientras está cargada, también las mesas son prueba.
 import { useLayoutEffect, useRef, useState } from "react";
-import { Check, AlertTriangle, Lock, LockOpen, Plus, Minus, Bookmark, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Link2, Map as IconoPlano } from "lucide-react";
+import { Check, AlertTriangle, Lock, LockOpen, Plus, Minus, Bookmark, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Link2, Settings, Map as IconoPlano } from "lucide-react";
 import { C, OP, R, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -47,6 +47,8 @@ import { MarcaDj } from "../../components/MarcaDj";
 import { esAparatoTactil } from "../../lib/mano";
 import { VentanaCambiarMesa } from "./VentanaCambiarMesa";
 import { VentanaVanJuntos, MarcaJuntos } from "./VentanaVanJuntos";
+import { VentanaMesasLocal } from "./VentanaMesasLocal";
+import { faltaSqlMesasLocal, mesasLocalDe, usoDelLocal, subirSitio, anadirMesaDelLocal } from "../../lib/mesasLocal";
 import { nombreCompleto, fechaYHora } from "../../lib/formato";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import { alergiasUniformes } from "../../lib/alergias";
@@ -265,6 +267,9 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
   // Sin la columna en la base (falta subir el SQL de la v101.1), no hay «Van juntos».
   const hayJuntos = Object.values(ordenFamiliares || {}).some((d) => d && Object.hasOwn(d, "vanJuntos"));
   const [verJuntos, setVerJuntos] = useState(false);
+  // «Mesas del local» (v101.2): el máximo de mesas de cada tamaño.
+  const [verLocal, setVerLocal] = useState(false);
+  const local = mesasLocalDe(evento);
   const sinMesa = familias.filter((f) => f.mesa == null).sort(porNombre);
 
   // El ancho del nombre más largo (v98.7): se mide con un texto escondido,
@@ -441,9 +446,19 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
 
   // ---------- Las mesas: al momento (con una memoria cargada, en la prueba) ----------
   const cambiarMesas = (siguientes) => (prueba.mesas ? cambiar({ mesas: siguientes }) : persistMesas(siguientes));
+  // Con las mesas del local (v101.2), del tamaño más grande que quede
+  // libre, y el «+» no pasa de lo que tiene; sin configurar, como siempre.
   const anadirMesa = () => {
-    const siguiente = mesas.reduce((max, m) => Math.max(max, m.numero), 0) + 1;
-    cambiarMesas([...mesas, { numero: siguiente, capacidad: 10 }]);
+    limpiarAvisos();
+    const { mesas: siguientes, aviso: motivo } = anadirMesaDelLocal(mesas, local);
+    if (motivo) return setAviso(motivo);
+    cambiarMesas(siguientes);
+  };
+  const subirUnSitio = (numero) => {
+    limpiarAvisos();
+    const { mesas: siguientes, aviso: motivo } = subirSitio(mesas, numero, local);
+    if (motivo) return setAviso(motivo);
+    cambiarMesas(siguientes);
   };
   const cambiarSitios = (numero, capacidad) => cambiarMesas(mesas.map((m) => (m.numero === numero ? { ...m, capacidad } : m)));
   // «Bloquear» (v101), al momento como los sitios. Sin la columna en la base
@@ -500,7 +515,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
         <div data-controles className="flex items-center gap-1 zurdo:flex-row-reverse">
           <span className="flex-1 flex justify-start zurdo:justify-end">
             <span className="flex flex-col items-center gap-0.5">
-              <Boton variante="secundario" oscuro tamano="pequeno" icono={Plus} titulo="Un sitio más" onClick={() => cambiarSitios(m.numero, m.capacidad + 1)} />
+              <Boton variante="secundario" oscuro tamano="pequeno" icono={Plus} titulo="Un sitio más" onClick={() => subirUnSitio(m.numero)} />
               <span
                 className="px-1 rounded"
                 title={`${ocupados} sentados de ${m.capacidad} sitios`}
@@ -659,8 +674,8 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
                   : `PRUEBA · ${cambian} ${cambian === 1 ? "familia cambia" : "familias cambian"} de mesa, aún sin guardar`}
           </span>
           <span className="flex-1" />
-          {/* Los cinco, del mismo ancho (norma 4); en el móvil, de dos en dos. */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 w-full sm:w-auto">
+          {/* Los seis, del mismo ancho (norma 4); en el móvil, de dos en dos. */}
+          <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 w-full sm:w-auto">
             <Boton variante="secundario" icono={IconoPlano} aria-pressed={verPlano} onClick={() => setVerPlano((v) => !v)}>
               {verPlano ? "Ver las mesas" : "Plano de mesas"}
             </Boton>
@@ -697,8 +712,34 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
             >
               Van juntos
             </Boton>
+            {/* La configuración de la sección, su ruedita (como «Precios del local»). */}
+            <Boton
+              variante="secundario"
+              icono={Settings}
+              disabled={faltaSqlMesasLocal(evento)}
+              titulo={faltaSqlMesasLocal(evento) ? "Falta subir el SQL de la versión 101.2" : "Las mesas que tiene el local, por tamaño: el máximo"}
+              onClick={() => setVerLocal(true)}
+            >
+              Del local
+            </Boton>
           </div>
         </div>
+        {/* Cuántas quedan libres de cada tamaño, en su propia línea (en la
+            cabecera, en el móvil, no se verían); en rojo, si faltan. */}
+        {local.length > 0 && (
+          <div data-libres-local className="flex mb-2">
+            <div className="rounded p-1" style={{ background: C.ink }}>
+              <RecuadroCifras
+                cifras={usoDelLocal(local, mesas).map((t) => ({
+                  label: `Libres de ${t.sitios}`,
+                  value: t.faltan ? `${t.faltan === 1 ? "falta" : "faltan"} ${t.faltan}` : `${t.cuantas - t.usadas} de ${t.cuantas}`,
+                  alerta: t.faltan > 0,
+                  titulo: `Mesas de ${t.sitios} sitios: el local tiene ${t.cuantas}; en Acomodación se usan ${t.usadas + t.faltan}`,
+                }))}
+              />
+            </div>
+          </div>
+        )}
         {aviso && <LineaAviso className="text-sm mb-2">{aviso}</LineaAviso>}
         {avisosAuto.map((a) => (
           <LineaAviso key={a.familia} className="text-sm mb-1">
@@ -785,7 +826,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
             <p className="mt-2" style={{ opacity: OP.secundario }}>
               Arrastra cada familia a su mesa; en el móvil, tócala y luego toca la mesa. Sombreadas, las que aún no han
               confirmado: su sitio queda reservado. Sentar, Vaciar y Auto-asignar son una prueba hasta «Aplicar a la
-              Lista»; las mesas y sus sitios se guardan al momento. Con candado, las familias que ya tienen su invitación: su mesa queda fija; tócalas si hubiera que cambiarla. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba. Al quitar una, las demás se corren y quedan 1, 2, 3… «Bloquear», bajo el número de la mesa: nadie sale de ella, ni con «Vaciar mesas», y no se puede quitar; sus sitios libres sí se pueden llenar. «Van juntos»: familias que se sientan juntas sin ser una familia; la cadena 🔗 con su número las señala, y al mover una va todo el grupo.
+              Lista»; las mesas y sus sitios se guardan al momento. Con candado, las familias que ya tienen su invitación: su mesa queda fija; tócalas si hubiera que cambiarla. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba. Al quitar una, las demás se corren y quedan 1, 2, 3… «Bloquear», bajo el número de la mesa: nadie sale de ella, ni con «Vaciar mesas», y no se puede quitar; sus sitios libres sí se pueden llenar. «Van juntos»: familias que se sientan juntas sin ser una familia; la cadena 🔗 con su número las señala, y al mover una va todo el grupo. «Del local»: cuántas mesas tiene el local de cada tamaño; es el máximo: ninguna mesa pasa de su tamaño ni hay más de las que tiene, y debajo de los botones se ve cuántas quedan libres.
             </p>
           </details>
           <Boton variante="secundario" onClick={descartar} disabled={!hayPrueba}>
@@ -799,6 +840,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
       {ventanaPregunta}
     </VentanaFlotante>
     {familiaCambiando && <VentanaCambiarMesa data={data} familia={familiaCambiando} onCerrar={() => setCambiandoMesa(null)} />}
+    {verLocal && <VentanaMesasLocal evento={evento} persistEvento={persistEvento} onCerrar={() => setVerLocal(false)} />}
     {verJuntos && <VentanaVanJuntos familias={familias} grupos={grupos} onJuntar={juntar} onSeparar={separar} onCerrar={() => setVerJuntos(false)} />}
     </>
   );

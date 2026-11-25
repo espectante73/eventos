@@ -161,6 +161,10 @@ CREATE TABLE public.evento (
     -- El tamaño de las mesas en ese plano, en % (v94.1, lib/planoMesas.js).
     -- Vacío = 100 %. Sale igual en el papel.
     "tamanoMesasPlano" integer,
+    -- «Mesas del local» (v101.2, él): cuántas mesas tiene el local de cada
+    -- tamaño, [{ sitios, cuantas }], el máximo de Acomodación (ver
+    -- lib/mesasLocal.js). Vacío = sin límites. Público: no es nada personal.
+    "mesasLocal" jsonb,
     CONSTRAINT evento_id_check CHECK (id)
 );
 

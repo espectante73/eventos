@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "101.2",
+    cambios: [
+      "Acomodación: botón «Del local» (con la ruedita), para poner cuántas mesas tiene el local de cada tamaño (por ejemplo, 4 de 11 y 10 de 9). Al pie dice cuántos comensales caben como mucho.",
+      "Es el máximo: el «+» de una mesa no pasa del tamaño más grande, ni deja tener más mesas de un tamaño de las que hay; bajar sitios y mover mesas, siempre. «Añadir mesa» la crea del tamaño más grande que quede libre, y si no queda ninguna, lo dice. Cada mesa ocupa una del local, la más pequeña en que cabe (una de 10, una de 11).",
+      "Debajo de los botones, cuántas quedan libres de cada tamaño («Libres de 11: 1 de 4»); en rojo, si faltan. Sin configurar, Acomodación sigue sin límites.",
+    ],
+  },
+  {
     version: "101.1",
     cambios: [
       "Acomodación: botón «Van juntos», para familias que viajan juntas y deben sentarse juntas sin hacerlas una familia (la invitación, el pago y las fotos siguen siendo de cada una). En su ventanita se elige una familia «con» otra y «Juntar»; si la segunda ya tiene mesa, la primera se sienta con ella, en la prueba, y si no caben no se juntan y lo dice con la cifra. Cada grupo, en una línea con su X para separarlas.",
