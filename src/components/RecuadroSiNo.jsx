@@ -19,7 +19,8 @@ export function RecuadroSiNo({ titulo, valor, onCambiar, icono: Icono, nota, com
     <div className={`${className} ${compacto ? "px-2 py-1 w-max max-w-full" : "px-3 py-2"} rounded`} title={compacto ? nota : undefined} style={{ background: valor ? C.okFondo : C.avisoFondo, border: `1px solid ${C.line}`, ...style }}>
       <div className="flex items-center gap-2 zurdo:flex-row-reverse">
         <Icono size={18} aria-hidden style={{ color: valor ? C.ink : C.peligro, flexShrink: 0 }} />
-        <span className="text-sm font-semibold whitespace-nowrap" style={{ color: C.ink }}>
+        {/* Compacto, si no cabe (un móvil estrecho), se acorta el rótulo, nunca el Sí/No. */}
+        <span className={`text-sm font-semibold whitespace-nowrap ${compacto ? "truncate min-w-0" : ""}`} style={{ color: C.ink }}>
           {titulo}
         </span>
         <div style={{ width: ANCHO_SI_NO, flexShrink: 0 }}>

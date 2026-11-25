@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "101.4",
+    cambios: [
+      "Acomodación: «Vaciar mesas» deja de estar encima de «Sin mesa» y pasa a la fila de botones, junto a «Auto-asignar»: siete botones iguales, en una sola línea con «Acomodación terminada» (en el móvil, los siete iconos en una fila).",
+      "Los siete, algo más estrechos (mismo alto y misma letra) para caber en una línea. En un móvil estrecho, si no cabe, se acorta el rótulo «Acomodación terminada», nunca su Sí/No.",
+    ],
+  },
+  {
     version: "101.3",
     cambios: [
       "Acomodación, arriba en una sola línea: «Acomodación terminada» con su Sí/No pegado al rótulo (antes, con la ventana a pantalla entera, quedaba al otro extremo) y, al lado, los seis botones iguales. En el móvil, los botones van solo con su icono, los seis en una fila.",

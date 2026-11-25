@@ -27,6 +27,10 @@ import { C, R, T, OP } from "../theme";
 const TAMANOS = {
   normal: { padding: "6px 12px", fontSize: T.normal, minHeight: 36 },
   pequeno: { padding: "3px 8px", fontSize: T.pequeno, minHeight: 28 },
+  // El mismo perfil que «normal» (alto y letra), con menos aire a los
+  // lados: para una fila de botones que tiene que caber en una línea
+  // (Acomodación, v101.4).
+  estrecho: { padding: "6px 8px", fontSize: T.normal, minHeight: 36 },
 };
 
 // `oscuro`: el botón vive sobre fondo verde (cabeceras de ventana), donde el
