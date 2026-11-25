@@ -1,5 +1,21 @@
 import { describe, it, expect } from "vitest";
-import { rejilla, tarjetasDeAcomodacion, dibujarTarjetasAcomodacion, dibujarMuestraAcabados, ACABADOS, ANCHO_TARJETA, OPCIONES_POR_DEFECTO, CORTES, FORMATOS } from "./tarjetasAcomodacion";
+import {
+  rejilla,
+  tarjetasDeAcomodacion,
+  dibujarTarjetasAcomodacion,
+  dibujarMuestraAcabados,
+  descargaTarjetasAcomodacion,
+  vistaPreviaTarjetasAcomodacion,
+  papelDe,
+  HOJAS,
+  ACABADOS,
+  ANCHO_TARJETA,
+  ALTO_CARA,
+  OPCIONES_POR_DEFECTO,
+  CORTES,
+  FORMATOS,
+} from "./tarjetasAcomodacion";
+import { crc32 } from "./zip";
 import { PdfEnLienzo, PUNTOS_POR_MM } from "./pdfEnLienzo";
 import { C } from "../theme";
 
@@ -394,5 +410,93 @@ describe("los acabados de la invitación", () => {
     expect(imagenes).toHaveLength(0);
     expect(rellenos).toHaveLength(0);
     expect(textos.find((x) => x.t === "MEDINA").fuente).toBe("helvetica");
+  });
+});
+
+// v101.7 (él): «al rotulista no le vale el formato actual… cada una es un
+// archivo independiente… sin cambiar las medidas»; y la salida en PNG.
+describe("«Suelta», para el rotulista: cada tarjeta, su archivo", () => {
+  const MMp = PUNTOS_POR_MM;
+  const tres = [
+    { id: "1", nombre: "Luis", apellido: "Abreu", mesa: 1, familia: "A" },
+    { id: "2", nombre: "José María", apellido: "de la Cruz", mesa: 1, familia: "" },
+    { id: "3", nombre: "Ana", apellido: "Muñoz", mesa: 12, familia: "" },
+  ];
+  const latin1 = async (blob) => new TextDecoder("latin1").decode(new Uint8Array(await blob.arrayBuffer()));
+  // Un lienzo de pega que da un PNG mínimo (firma, cabecera y fin).
+  const bloque = (tipo, datos = []) => {
+    const b = new Uint8Array(12 + datos.length);
+    const v = new DataView(b.buffer);
+    v.setUint32(0, datos.length);
+    b.set([...tipo].map((c) => c.charCodeAt(0)), 4);
+    b.set(datos, 8);
+    v.setUint32(8 + datos.length, crc32(b.subarray(4, 8 + datos.length)));
+    return [...b];
+  };
+  const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ...bloque("IHDR", new Array(13).fill(1)), ...bloque("IEND")]);
+  const ctx = new Proxy({ measureText: (t) => ({ width: 5 * t.length }) }, { get: (o, k) => (k in o ? o[k] : () => {}) });
+  const medidas = [];
+  const crearLienzo = (ancho, alto) => (medidas.push([ancho, alto]), { getContext: () => ctx, toBlob: (r) => r(new Blob([PNG])), toDataURL: () => "data:image/jpeg;base64,A" });
+
+  it("una por página, de la medida de siempre: plegada, 8,56 × 10,8 cm; de una cara, 8,56 × 5,4", () => {
+    expect(HOJAS.suelta.rotulo).toBe("Suelta");
+    expect(rejilla("suelta")).toEqual({ columnas: 1, filas: 1, porHoja: 1 });
+    expect(papelDe("suelta", "plegar")).toEqual({ ancho: 85.6, alto: 107.96 });
+    expect(papelDe("suelta", "cara")).toEqual({ ancho: 85.6, alto: 53.98 });
+    expect(papelDe("a4")).toBe(HOJAS.a4);
+  });
+
+  it("sin marcas de corte (el borde es el corte): solo el doblez de dentro, el de siempre", () => {
+    const { pdf, lineas } = hojaDePega();
+    expect(dibujarTarjetasAcomodacion(pdf, tres, { hoja: "suelta", corte: "ploter" })).toBe(3);
+    expect(pdf.paginas).toBe(3);
+    expect(lineas).toEqual(Array(3).fill({ x1: 0, y1: ALTO_CARA * MMp, x2: ANCHO_TARJETA * MMp, y2: ALTO_CARA * MMp }));
+    const cara = hojaDePega();
+    dibujarTarjetasAcomodacion(cara.pdf, tres, { hoja: "suelta", formato: "cara" });
+    expect(cara.lineas).toEqual([]);
+  });
+
+  it("en PDF: un .zip con un archivo por tarjeta, en el orden de las mesas, cada uno de la medida de la tarjeta", async () => {
+    const r = await descargaTarjetasAcomodacion(tres, { hoja: "suelta", formato: "plegar" }, null, { salida: "pdf" });
+    expect([r.nombre, r.archivos]).toEqual(["tarjetas-de-acomodacion-sueltas-pdf.zip", 3]);
+    const texto = await latin1(r.blob);
+    for (const n of ["001-mesa-01-ABREU-Luis.pdf", "002-mesa-01-DE-LA-CRUZ-Jose-Maria.pdf", "003-mesa-12-MUNOZ-Ana.pdf"]) expect(texto).toContain(n);
+    expect(texto.match(/\/MediaBox \[0 0 242\.6\d* 306\.0\d*\]/g)).toHaveLength(3);
+    // De una cara, apaisada: 8,56 de ancho y 5,4 de alto.
+    const cara = await latin1((await descargaTarjetasAcomodacion(tres.slice(0, 1), { hoja: "suelta", formato: "cara" }, null, { salida: "pdf" })).blob);
+    expect(cara).toMatch(/\/MediaBox \[0 0 242\.6\d* 153\.0\d*\]/);
+  });
+
+  it("con A4 o A3, en PDF, un solo archivo, como siempre", async () => {
+    const r = await descargaTarjetasAcomodacion(tres, { hoja: "a3" }, null, { salida: "pdf" });
+    expect([r.nombre, r.archivos]).toEqual(["tarjetas-de-acomodacion.pdf", 1]);
+  });
+
+  it("en PNG: suelta, uno por tarjeta, a 300 ppp; con A3, uno por hoja; el botón cuenta", async () => {
+    medidas.length = 0;
+    const pasos = [];
+    const r = await descargaTarjetasAcomodacion(tres, { hoja: "suelta" }, null, { salida: "png", crearLienzo, alAvanzar: (h, t) => pasos.push(`${h}/${t}`) });
+    expect([r.nombre, r.archivos]).toEqual(["tarjetas-de-acomodacion-sueltas-png.zip", 3]);
+    expect(await latin1(r.blob)).toContain("003-mesa-12-MUNOZ-Ana.png");
+    expect(medidas).toEqual(Array(3).fill([1011, 1275]));
+    expect(pasos).toEqual(["1/3", "2/3", "3/3"]);
+    const a3 = await descargaTarjetasAcomodacion(tres, { hoja: "a3" }, null, { salida: "png", crearLienzo });
+    expect([a3.nombre, a3.archivos]).toEqual(["tarjetas-de-acomodacion-png.zip", 1]);
+    expect(await latin1(a3.blob)).toContain("hoja-01.png");
+  });
+
+  it("la vista previa, una imagen por tarjeta, de su medida", () => {
+    medidas.length = 0;
+    expect(vistaPreviaTarjetasAcomodacion(tres, { hoja: "suelta", formato: "cara" }, null, { escala: 1, crearLienzo })).toHaveLength(3);
+    expect(medidas).toEqual(Array(3).fill([243, 153]));
+  });
+
+  it("la hoja de muestra, para imprimirla en casa: con «Suelta», en A4 y con su leyenda", () => {
+    const suelta = hojaDePega();
+    const a4 = hojaDePega();
+    dibujarMuestraAcabados(suelta.pdf, { hoja: "suelta" });
+    dibujarMuestraAcabados(a4.pdf, { hoja: "a4" });
+    expect(suelta.textos).toEqual(a4.textos);
+    expect(suelta.textos.some((x) => x.t.startsWith("Muestra de los"))).toBe(true);
   });
 });

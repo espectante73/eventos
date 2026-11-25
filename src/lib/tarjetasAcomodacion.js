@@ -33,14 +33,26 @@ import { C } from "../theme";
 import { claveFamiliaMesa } from "./mesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 import { PdfEnLienzo, PUNTOS_POR_MM, crearCanvas, cargarImagen } from "./pdfEnLienzo";
+import { bytesDePdf, conCeros, nombreDeArchivo, paginaEnPng, zipDeArchivos } from "./archivosImprenta";
 
 export const ARCHIVO_TARJETAS_ACOMODACION = "tarjetas-de-acomodacion.pdf";
 
-// Las hojas que se pueden elegir (él), en milímetros.
+// Las hojas que se pueden elegir (él), en milímetros. «Suelta» (él,
+// v101.7, para el rotulista): cada tarjeta, su archivo, a su medida de
+// siempre, sin marcas (el borde de la página es el corte).
 export const HOJAS = {
   a4: { rotulo: "A4", ancho: 210, alto: 297 },
   a3: { rotulo: "A3", ancho: 297, alto: 420 },
+  suelta: { rotulo: "Suelta", suelta: true },
 };
+export const esSuelta = (hoja) => !!HOJAS[hoja]?.suelta;
+// El papel, en milímetros: el de la hoja o, suelta, la tarjeta misma.
+export function papelDe(hoja, formato = OPCIONES_POR_DEFECTO.formato) {
+  if (esSuelta(hoja)) return { ancho: ANCHO_TARJETA, alto: deUnaCara(formato) ? ALTO_CARA : ALTO_TARJETA };
+  return HOJAS[hoja] || HOJAS.a3;
+}
+// La hoja de muestra es para imprimirla en casa y elegir: suelta, en A4.
+export const hojaDeMuestra = (hoja) => (esSuelta(hoja) ? "a4" : hoja);
 // La tarjeta bancaria: su ancho, y cada cara de su alto (él, v98.9);
 // abierta, el doble de alto.
 export const ANCHO_TARJETA = 85.6;
@@ -99,6 +111,7 @@ const MM = PUNTOS_POR_MM;
 
 // Cuántas caben por hoja, con el margen mínimo alrededor.
 export function rejilla(hoja, formato = OPCIONES_POR_DEFECTO.formato) {
+  if (esSuelta(hoja)) return { columnas: 1, filas: 1, porHoja: 1 };
   const papel = HOJAS[hoja] || HOJAS.a3;
   const columnas = Math.max(1, Math.floor((papel.ancho - 2 * MARGEN_MINIMO + 0.01) / ANCHO_TARJETA));
   const filas = Math.max(1, Math.floor((papel.alto - 2 * MARGEN_MINIMO + 0.01) / (deUnaCara(formato) ? ALTO_CARA : ALTO_TARJETA)));
@@ -320,19 +333,27 @@ export function dibujarTarjetasAcomodacion(
   const sitio = colocacion(hoja, formato);
   const hojas = Math.max(1, Math.ceil(tarjetas.length / sitio.porHoja));
   for (let h = 0; h < hojas; h++) {
-    if (h > 0) pdf.addPage(hoja, "portrait");
+    if (h > 0) nuevaPagina(pdf, hoja, formato);
     const deEsta = tarjetas.slice(h * sitio.porHoja, (h + 1) * sitio.porHoja);
     deEsta.forEach((t, i) => sitio.poner(pdf, ...sitio.hueco(i), adornos, [t, estilo]));
-    marcasDeLaHoja(pdf, sitio, deEsta.length, corte);
+    if (!sitio.suelta) marcasDeLaHoja(pdf, sitio, deEsta.length, corte);
   }
   return hojas;
+}
+
+// Otra página: la hoja o, suelta, la tarjeta. Si no se le dice, jsPDF pone
+// de pie la que es más ancha que alta (la de una cara).
+function nuevaPagina(pdf, hoja, formato) {
+  if (!esSuelta(hoja)) return pdf.addPage(hoja, "portrait");
+  const { ancho, alto } = papelDe(hoja, formato);
+  pdf.addPage([ancho * MM, alto * MM], ancho > alto ? "landscape" : "portrait");
 }
 
 // Dónde va cada tarjeta en la hoja: la rejilla, centrada, y cómo se pone
 // (plegada: dos caras; de una cara: una, sin girar). Una sola cuenta para
 // las tarjetas y para la hoja de muestra.
 function colocacion(hoja, formato) {
-  const papel = HOJAS[hoja] || HOJAS.a3;
+  const papel = papelDe(hoja, formato);
   const { columnas, filas, porHoja } = rejilla(hoja, formato);
   const plegada = !deUnaCara(formato);
   const W = ANCHO_TARJETA * MM;
@@ -343,7 +364,7 @@ function colocacion(hoja, formato) {
   const poner = plegada
     ? (pdf, x, y, adornos, arriba, abajo) => tarjeta(pdf, x, y, W, adornos, arriba, abajo)
     : (pdf, x, y, adornos, [t, estilo]) => cara(pdf, x, y, W, H, false, t, estilo, adornos);
-  return { papel, columnas, filas, porHoja, W, H, x0, y0, hueco, poner, plegada };
+  return { papel, columnas, filas, porHoja, W, H, x0, y0, hueco, poner, plegada, suelta: esSuelta(hoja) };
 }
 
 // Las marcas para cortar de una hoja con `cuantas` tarjetas. Las de
@@ -366,14 +387,16 @@ const EJEMPLO = { nombre: "Luis", apellido: "Abreu", mesa: 12, familia: "A" };
 // cara uno y en la otra otro), por una sola cara del papel. En la esquina
 // de cada cara, donde va la letra de la familia, su número; y arriba, la
 // leyenda, en el orden de la paleta. Si no caben en una hoja, siguen en la
-// siguiente (con los cuatro de ahora, caben en una). Devuelve cuántas hojas.
+// siguiente (con los cuatro de ahora, caben en una). Con «Suelta», en A4
+// (hojaDeMuestra). Devuelve cuántas hojas.
 export const ARCHIVO_MUESTRA_ACABADOS = "muestra-acabados-tarjetas.pdf";
 const TAM_LEYENDA = 9;
 export function dibujarMuestraAcabados(
   pdf,
-  { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, formato = OPCIONES_POR_DEFECTO.formato } = {},
+  { hoja: hojaElegida = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, formato = OPCIONES_POR_DEFECTO.formato } = {},
   adornos = null,
 ) {
+  const hoja = hojaDeMuestra(hojaElegida);
   const sitio = colocacion(hoja, formato);
   const conNumero = (i) => [{ ...EJEMPLO, familia: String(i + 1) }, ACABADOS[i]];
   // Plegadas, un acabado en cada cara; de una cara, uno por tarjeta.
@@ -404,7 +427,7 @@ export function dibujarMuestraAcabados(
 }
 
 export async function pdfMuestraAcabados(opciones, adornos = null) {
-  const pdf = await nuevoPdf(opciones, adornos);
+  const pdf = await nuevoPdf({ ...opciones, hoja: hojaDeMuestra(opciones?.hoja || OPCIONES_POR_DEFECTO.hoja) }, adornos);
   dibujarMuestraAcabados(pdf, opciones, adornos);
   return pdf.output("blob");
 }
@@ -485,9 +508,14 @@ export function registrarLetras(pdf, adornos) {
 }
 
 // Un jsPDF, con las dos letras de la invitación dentro si se cargaron.
+// Suelta, de la medida de la tarjeta.
 async function nuevoPdf(opciones, adornos) {
   const { jsPDF } = await import("jspdf");
-  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: opciones?.hoja || OPCIONES_POR_DEFECTO.hoja });
+  const hoja = opciones?.hoja || OPCIONES_POR_DEFECTO.hoja;
+  const { ancho, alto } = papelDe(hoja, opciones?.formato);
+  const pdf = esSuelta(hoja)
+    ? new jsPDF({ orientation: ancho > alto ? "landscape" : "portrait", unit: "pt", format: [ancho * MM, alto * MM] })
+    : new jsPDF({ orientation: "portrait", unit: "pt", format: hoja });
   registrarLetras(pdf, adornos);
   return pdf;
 }
@@ -565,15 +593,64 @@ export async function pdfTarjetasAcomodacion(tarjetas, opciones, adornos = null)
   return pdf.output("blob");
 }
 
+// Las tarjetas de cada página: tantas como quepan por hoja (suelta, una).
+// Sin ninguna, una página vacía, como el PDF.
+function porPaginas(tarjetas, opciones) {
+  const { porHoja } = rejilla(opciones?.hoja || OPCIONES_POR_DEFECTO.hoja, opciones?.formato);
+  const paginas = [];
+  for (let i = 0; i < tarjetas.length; i += porHoja) paginas.push(tarjetas.slice(i, i + porHoja));
+  return paginas.length ? paginas : [[]];
+}
+
+const medidaDe = (opciones) => {
+  const papel = papelDe(opciones?.hoja || OPCIONES_POR_DEFECTO.hoja, opciones?.formato);
+  return { ancho: papel.ancho * MM, alto: papel.alto * MM };
+};
+
+// Lo que se descarga (él, v101.7): en PDF con A4 o A3, un solo archivo con
+// todas las hojas, como siempre. Si no, un .zip con un archivo por página:
+// con «Suelta», uno por tarjeta, numerados en el orden de las mesas
+// («001-mesa-01-ABREU-Luis.pdf»); en PNG con A4 o A3, uno por hoja.
+// `salida`: "pdf" o "png". Devuelve { nombre, blob, archivos }.
+export async function descargaTarjetasAcomodacion(tarjetas, opciones, adornos = null, { salida = "pdf", alAvanzar, crearLienzo } = {}) {
+  const suelta = esSuelta(opciones?.hoja);
+  if (salida === "pdf" && !suelta) return { nombre: ARCHIVO_TARJETAS_ACOMODACION, blob: await pdfTarjetasAcomodacion(tarjetas, opciones, adornos), archivos: 1 };
+  const paginas = porPaginas(tarjetas, opciones);
+  const imagenes = imagenesDe(adornos);
+  const blob = await zipDeArchivos(
+    paginas.length,
+    async (i) => {
+      const deEsta = paginas[i];
+      const t = deEsta[0];
+      const nombre = suelta ? nombreDeArchivo(conCeros(i + 1, 3), "mesa", conCeros(t.mesa), t.apellido.toLocaleUpperCase("es"), t.nombre) : nombreDeArchivo("hoja", conCeros(i + 1));
+      if (salida === "png") {
+        const datos = await paginaEnPng((l) => dibujarTarjetasAcomodacion(l, deEsta, opciones, adornos), medidaDe(opciones), { imagenes, crearLienzo });
+        return { nombre: `${nombre}.png`, datos };
+      }
+      const pdf = await nuevoPdf(opciones, adornos);
+      dibujarTarjetasAcomodacion(pdf, deEsta, opciones, adornos);
+      return { nombre: `${nombre}.pdf`, datos: bytesDePdf(pdf) };
+    },
+    alAvanzar,
+  );
+  return { nombre: `tarjetas-de-acomodacion-${suelta ? "sueltas-" : ""}${salida}.zip`, blob, archivos: paginas.length };
+}
+
 // ---------- La vista previa ----------
 
-// Las hojas de la vista previa, como imágenes. `escala`: píxeles por punto.
+// Las páginas de la vista previa, como imágenes: cada hoja o, suelta, cada
+// tarjeta. Una a una (126 tarjetas sueltas, todas a la vez, pesan en un
+// móvil). `escala`: píxeles por punto.
 export function vistaPreviaTarjetasAcomodacion(tarjetas, opciones, adornos = null, { escala = 1.4, crearLienzo = crearCanvas } = {}) {
-  const papel = HOJAS[opciones?.hoja] || HOJAS[OPCIONES_POR_DEFECTO.hoja];
-  const lienzo = new PdfEnLienzo({ medida: { ancho: papel.ancho * MM, alto: papel.alto * MM }, escala, crearLienzo, imagenes: imagenesDe(adornos) });
-  dibujarTarjetasAcomodacion(lienzo, tarjetas, opciones, adornos);
-  if (!lienzo.ctx) return [];
-  return lienzo.paginas.map((p) => p.toDataURL("image/jpeg", 0.85));
+  const imagenes = imagenesDe(adornos);
+  const salida = [];
+  for (const deEsta of porPaginas(tarjetas, opciones)) {
+    const lienzo = new PdfEnLienzo({ medida: medidaDe(opciones), escala, crearLienzo, imagenes });
+    dibujarTarjetasAcomodacion(lienzo, deEsta, opciones, adornos);
+    if (!lienzo.ctx) return [];
+    salida.push(lienzo.paginas[0].toDataURL("image/jpeg", 0.85));
+  }
+  return salida;
 }
 
 // La muestra de un acabado, para elegirlo: una cara de una tarjeta de

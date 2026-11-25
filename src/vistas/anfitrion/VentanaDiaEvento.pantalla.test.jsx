@@ -177,7 +177,8 @@ it("las tarjetas QR: «Ver», con mesas, abre la vista previa con una tarjeta po
   );
   await act(async () => {});
   await act(async () => boton("Ver").dispatchEvent(new MouseEvent("click", { bubbles: true })));
-  expect(document.body.querySelector("[data-botones-qr]").textContent).toContain("Descargar");
+  // v101.7: «Descargar», en dos, PDF y PNG.
+  expect(document.body.querySelector('[data-botones-qr] [data-descargar="pdf"]').textContent).toBe("PDF");
   expect(document.body.querySelector("[data-resumen-qr]").textContent).toBe("3 tarjetas, una por mesa, en 2 folios A4: 2 por folio.");
   vista.desmontar();
 });

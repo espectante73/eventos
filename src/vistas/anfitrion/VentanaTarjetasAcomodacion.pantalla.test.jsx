@@ -131,8 +131,96 @@ it("los botones van ARRIBA, antes de las opciones y de la vista previa", () => {
   const botones = document.body.querySelector("[data-botones-tarjetas]");
   const opciones = document.body.querySelector("[data-opciones-tarjetas]");
   expect(botones.compareDocumentPosition(opciones) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(botones.textContent).toContain("Cancelar");
-  expect(botones.textContent).toContain("Descargar");
+  // v101.7: «Descargar», en dos, PDF y PNG; los cuatro, iguales (norma 4).
+  expect([...botones.querySelectorAll("button")].map((x) => x.textContent)).toEqual(["Cancelar", "Muestra", "PDF", "PNG"]);
+  expect(botones.className).toContain("grid-cols-4");
+  vista.desmontar();
+});
+
+// v101.7 (él): «al rotulista no le vale el formato actual… cada una es un
+// archivo independiente… sin cambiar las medidas»; y la salida en PNG.
+it("hoja «Suelta»: cada tarjeta en su archivo, de su medida; sin marcas («Cortar con», apagado); vista previa en rejilla", async () => {
+  const llamadas = [];
+  const vistaPrevia = (t, o) => (llamadas.push(o), ["data:image/jpeg;base64,A", "data:image/jpeg;base64,B"]);
+  const vista = montar(<VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={vistaPrevia} muestra={muestra} cargarAdornos={cargarAdornos} />);
+  const hoja = document.body.querySelector('[data-opciones-tarjetas] select[aria-label="Hoja"]');
+  expect([...hoja.options].map((o) => o.textContent)).toEqual(["A4", "A3", "Suelta"]);
+  act(() => {
+    hoja.value = "suelta";
+    hoja.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await esperar();
+  expect(llamadas.at(-1).hoja).toBe("suelta");
+  expect(document.body.querySelector("[data-resumen-tarjetas]").textContent).toBe("12 tarjetas, cada una en su archivo, de 8,56 × 10,8 cm.");
+  expect(document.body.querySelector('select[aria-label="Cortar con"]').disabled).toBe(true);
+  expect(document.body.querySelector("[data-vista-previa]").className).toContain("grid");
+  expect(document.body.querySelector("[data-vista-previa] img").getAttribute("alt")).toBe("Tarjeta 1 de 2");
+  const formato = document.body.querySelector('select[aria-label="Formato"]');
+  act(() => {
+    formato.value = "cara";
+    formato.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  expect(document.body.querySelector("[data-resumen-tarjetas]").textContent).toBe("12 tarjetas, cada una en su archivo, de 8,56 × 5,4 cm.");
+  expect(JSON.parse(window.localStorage.getItem("tarjetas-acomodacion-opciones")).hoja).toBe("suelta");
+  vista.desmontar();
+});
+
+it("«PDF» y «PNG» piden cada uno su formato, el botón cuenta los archivos y, al acabar, dice dónde está el .zip", async () => {
+  window.localStorage.setItem("tarjetas-acomodacion-opciones", JSON.stringify({ hoja: "suelta", corte: "guillotina", acabado: "blancoHojas", formato: "plegar" }));
+  const pedidas = [];
+  let seguir;
+  const crear = URL.createObjectURL;
+  URL.createObjectURL = () => "blob:tarjetas";
+  const descargarTarjetas = (tarjetas, opciones, adornos, { salida, alAvanzar }) =>
+    new Promise((r) => {
+      pedidas.push({ n: tarjetas.length, hoja: opciones.hoja, adornos, salida });
+      alAvanzar(5, 12);
+      seguir = () => r({ nombre: `tarjetas-de-acomodacion-sueltas-${salida}.zip`, blob: new Blob(["zip"]), archivos: 12 });
+    });
+  const vista = montar(
+    <VentanaTarjetasAcomodacion invitados={invitados} onCerrar={() => {}} vistaPrevia={() => []} muestra={muestra} cargarAdornos={cargarAdornos} descargarTarjetas={descargarTarjetas} />,
+  );
+  await esperar();
+  vista.pulsar(document.body.querySelector('[data-descargar="png"]'));
+  await esperar();
+  expect(pedidas).toEqual([{ n: 12, hoja: "suelta", adornos: ADORNOS, salida: "png" }]);
+  expect(document.body.querySelector('[data-descargar="png"]').textContent).toBe("5/12");
+  expect(document.body.querySelector('[data-descargar="pdf"]').disabled).toBe(true);
+  seguir();
+  await esperar();
+  expect(document.body.querySelector("[data-descargado]").textContent).toBe(
+    "Descargado: tarjetas-de-acomodacion-sueltas-png.zip, con 12 archivos. Lo tienes en tu carpeta de Descargas: ábrelo con doble clic.",
+  );
+  expect(document.body.querySelector('[data-descargar="png"]').textContent).toBe("PNG");
+  vista.pulsar(document.body.querySelector('[data-descargar="pdf"]'));
+  await esperar();
+  expect(pedidas.at(-1).salida).toBe("pdf");
+  seguir();
+  await esperar();
+  URL.createObjectURL = crear;
+  vista.desmontar();
+});
+
+it("si la descarga falla, lo dice y qué probar (norma 13)", async () => {
+  const vista = montar(
+    <VentanaTarjetasAcomodacion
+      invitados={invitados}
+      onCerrar={() => {}}
+      vistaPrevia={() => []}
+      muestra={muestra}
+      cargarAdornos={cargarAdornos}
+      descargarTarjetas={async () => {
+        throw new Error("La imagen es demasiado grande para este navegador.");
+      }}
+    />,
+  );
+  await esperar();
+  vista.pulsar(document.body.querySelector('[data-descargar="png"]'));
+  await esperar();
+  const fallo = document.body.querySelector("[data-fallo-descarga]").textContent;
+  expect(fallo).toContain("No se pudo preparar la descarga. Prueba otra vez o, si sigue, desde el ordenador");
+  expect(fallo).toContain("(La imagen es demasiado grande para este navegador.)");
+  expect(document.body.querySelector("[data-descargado]")).toBeNull();
   vista.desmontar();
 });
 

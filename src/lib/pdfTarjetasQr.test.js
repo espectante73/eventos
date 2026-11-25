@@ -7,7 +7,9 @@ const hojas = [];
 
 vi.mock("jspdf", () => ({
   jsPDF: class {
-    constructor() {
+    constructor(opciones) {
+      this.opciones = opciones;
+      this.lineas = [];
       this.textos = [];
       this.cuadrados = 0;
       this.marcos = 0;
@@ -35,7 +37,9 @@ vi.mock("jspdf", () => ({
     setLineWidth() {}
     setDrawColor() {}
     setLineDashPattern() {}
-    line() {}
+    line(...l) {
+      this.lineas.push(l);
+    }
     rect() {
       this.cuadrados += 1;
     }
@@ -58,8 +62,8 @@ vi.mock("jspdf", () => ({
       this.textos.push(t);
       if (opciones.angle === 180) this.giradas += 1;
     }
-    output() {
-      return "blob";
+    output(tipo) {
+      return tipo === "arraybuffer" ? new Uint8Array([37, 80, 68, 70]).buffer : "blob";
     }
   },
 }));
@@ -79,6 +83,7 @@ const {
   VER_CODIGO_TARJETA,
   VER_TEXTO_TARJETA,
   ARCHIVO_TARJETAS_QR,
+  HOJAS_QR,
 } = await import("./pdfTarjetasQr");
 const { default: qrcode } = await import("qrcode-generator");
 
@@ -196,5 +201,39 @@ describe("las tarjetas QR (v67.7; v92.9: una por mesa, texto en una cara y QR en
     expect(hoja.imagenes).toEqual(["esquinaGirada", "esquina"]);
     expect(hoja.letras).toEqual(["fraunces", "alexbrush"]);
     expect(hoja.fuentes).toContain("fraunces");
+  });
+
+  // v101.7 (él): «cada una de las 14 tarjetas QR es un archivo
+  // independiente», sin cambiar las medidas.
+  it("«Suelta»: un PDF por mesa, de la medida de siempre (10,5 × 29,7 cm), sin la línea de corte y con el doblez; todos en un .zip", async () => {
+    expect(HOJAS_QR.map((h) => h.rotulo)).toEqual(["A4", "Suelta"]);
+    const antes = hojas.length;
+    const r = await descargarTarjetasQr({ nombreEvento: EVENTO, tarjetas: tarjetas(1, 2, 12) }, null, { hoja: "suelta", salida: "pdf" });
+    expect(r).toEqual({ nombre: "tarjetas-qr-sueltas-pdf.zip", archivos: 3 });
+    expect(descargas.at(-1)).toBe("tarjetas-qr-sueltas-pdf.zip");
+    const nuevas = hojas.slice(antes);
+    expect(nuevas).toHaveLength(3);
+    for (const h of nuevas) {
+      expect(h.opciones.format).toEqual([595.28 / 2, 841.89]);
+      expect(h.paginas).toBe(1);
+      // Solo el doblez, a lo ancho y a media altura.
+      expect(h.lineas).toEqual([[0, 841.89 / 2, 595.28 / 2, 841.89 / 2]]);
+    }
+  });
+
+  it("con A4 en PDF, un solo archivo, como siempre (y la línea de corte a lo alto)", async () => {
+    const r = await descargarTarjetasQr({ nombreEvento: EVENTO, tarjetas: tarjetas(1, 2) }, null, { hoja: "a4", salida: "pdf" });
+    expect(r).toEqual({ nombre: ARCHIVO_TARJETAS_QR, archivos: 1 });
+    const h = hojas.at(-1);
+    expect(h.opciones.format).toBe("a4");
+    expect(h.lineas[0]).toEqual([595.28 / 2, 0, 595.28 / 2, 841.89]);
+  });
+
+  it("la vista previa, suelta: una imagen por mesa, de la medida de la tarjeta", async () => {
+    const medidas = [];
+    const ctx = new Proxy({ measureText: (t) => ({ width: 5 * t.length }) }, { get: (o, k) => (k in o ? o[k] : () => {}) });
+    const crearLienzo = (ancho, alto) => (medidas.push([ancho, alto]), { getContext: () => ctx, toDataURL: () => "data:image/jpeg;base64,A" });
+    expect(await vistaPreviaTarjetasQr({ nombreEvento: EVENTO, tarjetas: tarjetas(1, 2, 3) }, null, { hoja: "suelta", escala: 1, crearLienzo })).toHaveLength(3);
+    expect(medidas).toEqual(Array(3).fill([298, 842]));
   });
 });

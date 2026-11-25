@@ -153,7 +153,8 @@ it("la cuenta del local: las personas, cada servicio con su desglose y el total;
   const texto = document.body.textContent;
   // 3 adultos (uno es el DJ: lo invita el evento), 1 niño, 1 bebé gratis.
   expect(texto).toContain("Adultos3");
-  expect(texto).toContain("De ellos, el DJ: lo invita el evento1");
+  // Aclaratorio, entre paréntesis y sin cifra (él, v101.7).
+  expect(texto).toContain("Adultos3(El DJ lo invita el evento)Niños");
   expect(texto).toContain("Niños (de 4 a 7 años)1");
   expect(texto).toContain("Bebés (hasta 3 años)1 · gratis");
   expect(texto).toContain(`Cóctel${euros(53)}`);

@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "101.7",
+    cambios: [
+      "Tarjetas de acomodación y tarjetas QR, para el rotulista: en «Hoja», la nueva «Suelta». Cada tarjeta sale en su propio archivo, con la medida de siempre (8,56 × 10,8 cm la de plegar, 8,56 × 5,4 la de una cara; las QR, 10,5 × 29,7 abiertas) y sin marcas de corte: el borde es el corte. Llegan todas juntas en un .zip, numeradas en el orden de las mesas. Con vista previa, como siempre.",
+      "«Descargar» se parte en dos: «PDF» y «PNG». El PNG, a calidad de imprenta (300 ppp) y con su medida dentro. Con A4 o A3, el PDF es el de siempre; el PNG, una imagen por hoja.",
+      "Contabilidad, Cuenta del local: bajo «Adultos», «(El DJ lo invita el evento)», entre paréntesis y sin el 1, que confundía: ya está dentro de los adultos.",
+    ],
+  },
+  {
     version: "101.6",
     cambios: [
       "Recuento del tablón en la Lista: el negro es quien NO PUEDE entrar, porque no tiene teléfono, tenga la edad que tenga; el rojo, quien puede y aún no ha entrado; el verde, quien ya entró. Los menores, que antes no contaban, cuentan como todos: con teléfono, rojo o verde; sin él, negro.",

@@ -4,7 +4,9 @@
 // (A4 o A3). La tarjeta, siempre la bancaria: cada cara, de su tamaño (él,
 // v98.9; retiró el ancho de 9,5 cm), plegada o de una cara (v99.8). Con qué se cortan (v99: guillotina,
 // tijera o plóter), que decide las marcas. Y el acabado: los de la línea de la invitación (v99.2; el cuarto, v99.7) (él:
-// «poder editar yo mismo el acabado… y verlo antes»).
+// «poder editar yo mismo el acabado… y verlo antes»). Para el rotulista
+// (v101.7): la hoja «Suelta», cada tarjeta en su archivo, y la descarga en
+// PDF o en PNG (lib/archivosImprenta.js).
 //
 // A pantalla entera y con los botones ARRIBA, del lado del pulgar, como la
 // vista previa del acuse (v95, norma 5). Lo que se ve es lo que se
@@ -22,19 +24,21 @@ import {
   CORTES,
   FORMATOS,
   ARCHIVO_MUESTRA_ACABADOS,
-  ARCHIVO_TARJETAS_ACOMODACION,
   cargarAdornos as cargarAdornosDeLaApp,
+  descargaTarjetasAcomodacion,
+  esSuelta,
   HOJAS,
   muestraAcabado,
   OPCIONES_POR_DEFECTO,
+  papelDe,
   pdfMuestraAcabados,
-  pdfTarjetasAcomodacion,
   rejilla,
   tarjetasDeAcomodacion,
   vistaPreviaTarjetasAcomodacion,
 } from "../../lib/tarjetasAcomodacion";
 
 const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+const cm = (mm) => (mm / 10).toLocaleString("es-ES", { maximumFractionDigits: 2 });
 
 // La hoja, la forma de cortar, el formato y el acabado se recuerdan en este aparato: es la
 // impresora de casa la que manda.
@@ -106,13 +110,15 @@ function ElegirAcabado({ valor, onCambiar, muestras }) {
 
 // `vistaPrevia` y `muestra`: quien dibuja las hojas y las muestras (las
 // pruebas pasan unos sin lienzo); `pdfMuestra`, la hoja de muestra;
-// `cargarAdornos`, quien trae el adorno y las letras de la invitación.
+// `descargarTarjetas`, los archivos de las tarjetas; `cargarAdornos`, quien
+// trae el adorno y las letras de la invitación.
 export function VentanaTarjetasAcomodacion({
   invitados,
   onCerrar,
   vistaPrevia = vistaPreviaTarjetasAcomodacion,
   muestra = muestraAcabado,
   pdfMuestra = pdfMuestraAcabados,
+  descargarTarjetas = descargaTarjetasAcomodacion,
   cargarAdornos = cargarAdornosDeLaApp,
 }) {
   const [opciones, setOpciones] = useState(leerOpciones);
@@ -125,6 +131,8 @@ export function VentanaTarjetasAcomodacion({
   const { porHoja } = rejilla(opciones.hoja, opciones.formato);
   const hojas = Math.max(1, Math.ceil(tarjetas.length / porHoja));
   const hoja = HOJAS[opciones.hoja];
+  const suelta = esSuelta(opciones.hoja);
+  const papel = papelDe(opciones.hoja, opciones.formato);
   const elegido = ACABADOS.find((a) => a.id === opciones.acabado) || ACABADOS[0];
   // Las hojas y las letras de la invitación (v99.2), una vez; si no
   // llegan, sus acabados salen sin ellas y se dice. undefined: cargando.
@@ -155,43 +163,90 @@ export function VentanaTarjetasAcomodacion({
     return () => clearTimeout(t);
   }, [tarjetas, opciones, vistaPrevia, adornos]);
 
-  // Lo que se está preparando: "" (nada), "tarjetas" o "muestra".
+  // Lo que se está preparando: "" (nada), "muestra", "pdf" o "png"; con
+  // muchos archivos, el botón cuenta («37/126»).
   const [descargando, setDescargando] = useState("");
-  const [descargado, setDescargado] = useState("");
-  const bajar = async (que, archivo, hacer) => {
+  const [progreso, setProgreso] = useState("");
+  const [descargado, setDescargado] = useState(null);
+  const [fallo, setFallo] = useState("");
+  const bajar = async (que, hacer) => {
     setDescargando(que);
-    descargarBlob(archivo, await hacer());
+    setProgreso("");
+    setFallo("");
+    try {
+      const { nombre, blob, archivos } = await hacer();
+      descargarBlob(nombre, blob);
+      setDescargado({ nombre, archivos });
+    } catch (e) {
+      setFallo(e?.message || String(e));
+    }
     setDescargando("");
-    setDescargado(archivo);
   };
-  const descargar = () => bajar("tarjetas", ARCHIVO_TARJETAS_ACOMODACION, () => pdfTarjetasAcomodacion(tarjetas, opciones, adornos));
+  const descargar = (salida) =>
+    bajar(salida, () => descargarTarjetas(tarjetas, opciones, adornos, { salida, alAvanzar: (hechos, total) => setProgreso(`${hechos}/${total}`) }));
   // La hoja de muestra (él, v99.1): todos los acabados, para
   // imprimirla y elegir en vivo; con la hoja y las marcas elegidas.
-  const descargarMuestra = () => bajar("muestra", ARCHIVO_MUESTRA_ACABADOS, () => pdfMuestra(opciones, adornos));
+  const descargarMuestra = () => bajar("muestra", async () => ({ nombre: ARCHIVO_MUESTRA_ACABADOS, blob: await pdfMuestra(opciones, adornos), archivos: 1 }));
+  const rotuloDescarga = (salida) => (descargando === salida ? progreso || "Preparando…" : salida.toUpperCase());
 
   return (
     <ModalFlotante pantallaEntera titulo="Tarjetas de acomodación" onCerrar={onCerrar}>
-      <div className="flex flex-wrap items-center gap-2 justify-end zurdo:flex-row-reverse mb-3" data-botones-tarjetas>
-        <Boton variante="secundario" onClick={onCerrar}>
-          Cancelar
-        </Boton>
-        <Boton variante="secundario" icono={Palette} onClick={descargarMuestra} disabled={!!descargando || adornos === undefined} data-muestra-acabados>
-          {descargando === "muestra" ? "Preparando…" : "Muestra"}
-        </Boton>
-        <Boton variante="principal" icono={Download} onClick={descargar} disabled={!!descargando || !tarjetas.length || adornos === undefined}>
-          {descargando === "tarjetas" ? "Preparando…" : "Descargar"}
-        </Boton>
+      {/* Los cuatro, del mismo ancho (norma 4); «PDF» y «PNG» descargan,
+          del lado del pulgar (el zurdo, en espejo: norma 1.4). */}
+      <div className="flex justify-end zurdo:justify-start mb-3">
+        <div className="grid grid-cols-4 gap-2 w-full sm:w-auto" data-botones-tarjetas>
+          <Boton variante="secundario" tamano="estrecho" onClick={onCerrar} className="zurdo:order-4">
+            Cancelar
+          </Boton>
+          <Boton
+            variante="secundario"
+            tamano="estrecho"
+            icono={Palette}
+            titulo="Muestra de los acabados, para imprimirla y elegir"
+            onClick={descargarMuestra}
+            disabled={!!descargando || adornos === undefined}
+            // En el móvil no cabe con su icono: el icono se aplastaba en un punto.
+            className="zurdo:order-3 [&>svg]:hidden sm:[&>svg]:block"
+            data-muestra-acabados
+          >
+            {descargando === "muestra" ? "Preparando…" : "Muestra"}
+          </Boton>
+          {["pdf", "png"].map((salida, i) => (
+            <Boton
+              key={salida}
+              variante="principal"
+              tamano="estrecho"
+              icono={Download}
+              titulo={`Descargar en ${salida.toUpperCase()}`}
+              onClick={() => descargar(salida)}
+              disabled={!!descargando || !tarjetas.length || adornos === undefined}
+              className={i ? "zurdo:order-1" : "zurdo:order-2"}
+              data-descargar={salida}
+            >
+              {rotuloDescarga(salida)}
+            </Boton>
+          ))}
+        </div>
       </div>
       {/* La descarga pasa fuera de la pantalla: dice dónde está (norma 9). */}
       {descargado && (
         <p className="text-xs mb-3" style={{ color: C.ink }} data-descargado>
-          Descargado: {descargado}. Lo tienes en tu carpeta de Descargas.
+          {descargado.nombre.endsWith(".zip")
+            ? `Descargado: ${descargado.nombre}, con ${plural(descargado.archivos, "archivo", "archivos")}. Lo tienes en tu carpeta de Descargas: ábrelo con doble clic.`
+            : `Descargado: ${descargado.nombre}. Lo tienes en tu carpeta de Descargas.`}
+        </p>
+      )}
+      {/* Norma 13: qué ha podido pasar y qué probar. */}
+      {fallo && (
+        <p className="text-sm mb-3" style={{ color: C.wax }} data-fallo-descarga>
+          No se pudo preparar la descarga. Prueba otra vez o, si sigue, desde el ordenador (en PNG, cada imagen es grande para un
+          móvil). <span className="text-xs" style={{ opacity: OP.secundario }}>({fallo})</span>
         </p>
       )}
       {/* La hoja, con qué se corta y el formato, en una sola línea (norma 6).
-          La hoja solo dice «A4» o «A3»: más estrecha, para que «Para plegar»
-          y «Tijera o cúter» quepan enteros en el móvil. */}
-      <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: "minmax(0, 0.6fr) minmax(0, 1.2fr) minmax(0, 1.2fr)" }} data-opciones-tarjetas>
+          Cada una, del ancho de su texto más largo («Suelta», «Tijera o
+          cúter», «Para plegar»): así caben enteros en el móvil (390). */}
+      <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.25fr) minmax(0, 1.15fr)" }} data-opciones-tarjetas>
         <Field label="Hoja">
           <Desplegable aria-label="Hoja" value={opciones.hoja} onChange={(e) => elegir({ hoja: e.target.value })} style={{ minHeight: DEDO }}>
             {Object.entries(HOJAS).map(([clave, h]) => (
@@ -202,7 +257,15 @@ export function VentanaTarjetasAcomodacion({
           </Desplegable>
         </Field>
         <Field label="Cortar con">
-          <Desplegable aria-label="Cortar con" value={opciones.corte} onChange={(e) => elegir({ corte: e.target.value })} style={{ minHeight: DEDO }}>
+          {/* Suelta, sin marcas: el borde de la página es el corte. */}
+          <Desplegable
+            aria-label="Cortar con"
+            value={opciones.corte}
+            onChange={(e) => elegir({ corte: e.target.value })}
+            disabled={suelta}
+            title={suelta ? "«Suelta» no lleva marcas: el borde de la página es el corte" : undefined}
+            style={{ minHeight: DEDO, ...(suelta ? { opacity: OP.secundario } : {}) }}
+          >
             {CORTES.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.rotulo}
@@ -226,9 +289,11 @@ export function VentanaTarjetasAcomodacion({
         </Field>
       </div>
       <p className="text-sm mb-1" style={{ color: C.ink }} data-resumen-tarjetas>
-        {tarjetas.length
-          ? `${plural(tarjetas.length, "tarjeta", "tarjetas")} en ${plural(hojas, `hoja ${hoja.rotulo}`, `hojas ${hoja.rotulo}`)}, ${porHoja} por hoja.`
-          : "Nadie tiene mesa todavía."}
+        {!tarjetas.length
+          ? "Nadie tiene mesa todavía."
+          : suelta
+            ? `${plural(tarjetas.length, "tarjeta", "tarjetas")}, cada una en su archivo, de ${cm(papel.ancho)} × ${cm(papel.alto)} cm.`
+            : `${plural(tarjetas.length, "tarjeta", "tarjetas")} en ${plural(hojas, `hoja ${hoja.rotulo}`, `hojas ${hoja.rotulo}`)}, ${porHoja} por hoja.`}
       </p>
       {adornos === null && (
         <p className="text-sm mb-1" style={{ color: C.wax }} data-sin-adornos>
@@ -241,14 +306,26 @@ export function VentanaTarjetasAcomodacion({
           {sinMesa === 1 ? "1 confirmado sin mesa se queda sin tarjeta." : `${sinMesa} confirmados sin mesa se quedan sin tarjeta.`}
         </p>
       )}
-      <div className="flex flex-col gap-3 mt-2" data-vista-previa>
+      {/* Suelta, las tarjetas en rejilla: una debajo de otra, 126 no se
+          acabarían nunca. */}
+      <div
+        className={suelta ? "grid gap-2 mt-2" : "flex flex-col gap-3 mt-2"}
+        style={suelta ? { gridTemplateColumns: `repeat(auto-fill, minmax(${opciones.formato === "cara" ? 150 : 120}px, 1fr))` } : undefined}
+        data-vista-previa
+      >
         {imagenes === null ? (
           <p className="text-sm" style={{ color: C.charcoal, opacity: OP.secundario }}>
             Preparando la vista previa…
           </p>
         ) : (
           imagenes.map((src, i) => (
-            <img key={i} src={src} alt={`Hoja ${i + 1} de ${imagenes.length}`} className="rounded" style={{ width: "100%", height: "auto", border: `1px solid ${C.line}` }} />
+            <img
+              key={i}
+              src={src}
+              alt={`${suelta ? "Tarjeta" : "Hoja"} ${i + 1} de ${imagenes.length}`}
+              className={suelta ? "" : "rounded"}
+              style={{ width: "100%", height: "auto", border: `1px solid ${C.line}` }}
+            />
           ))
         )}
       </div>
@@ -263,7 +340,11 @@ export function VentanaTarjetasAcomodacion({
           cada forma de cortar: rayitas en los bordes para la guillotina, líneas enteras para tijera o cúter, y marcas en las esquinas para
           el plóter (cada marca de plóter tiene las suyas: confírmalo con quien corte). Salen mesa por mesa, y la letra pequeña de la
           esquina es su familia dentro de la mesa, para repartirlas sin separar a nadie; quien viene solo no lleva letra. «Muestra»
-          descarga los acabados, uno en cada cara y con su número, para imprimirlos y elegir viéndolos de verdad.
+          descarga los acabados, uno en cada cara y con su número, para imprimirlos y elegir viéndolos de verdad (con «Suelta», en
+          A4). Hoja «Suelta», para el rotulista: cada tarjeta en su archivo, de su medida de siempre y sin marcas (el borde es el
+          corte), numeradas en el orden de las mesas; llegan todas juntas en un .zip, que se abre con doble clic. «PDF» o «PNG», el
+          formato de los archivos; el PNG, a calidad de imprenta (300 ppp). Con A4 o A3, el PDF es un solo archivo y el PNG, uno
+          por hoja.
         </p>
       </details>
     </ModalFlotante>

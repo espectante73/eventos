@@ -32,8 +32,17 @@ import { descargarBlob } from "./descargas";
 import { EDAD_EMAIL } from "./invitados";
 import { PdfEnLienzo, crearCanvas } from "./pdfEnLienzo";
 import { SERIF, imagenesDe, registrarLetras } from "./tarjetasAcomodacion";
+import { bytesDePdf, conCeros, nombreDeArchivo, paginaEnPng, zipDeArchivos } from "./archivosImprenta";
 
 export const ARCHIVO_TARJETAS_QR = "tarjetas-qr.pdf";
+// La hoja (él, v101.7, para el rotulista): A4, dos por folio, como
+// siempre; o «Suelta», cada tarjeta en su archivo, de su medida de siempre
+// (10,5 × 29,7 cm abierta), sin la línea de corte: el borde es el corte.
+export const HOJAS_QR = [
+  { id: "a4", rotulo: "A4" },
+  { id: "suelta", rotulo: "Suelta" },
+];
+export const HOJA_QR_POR_DEFECTO = "a4";
 // Su texto (él, v68: 2 por persona de 16 o más), en dos líneas parejas.
 export const TITULO_TARJETA = ["Puedes subir hasta", "2 fotos del evento:"];
 // Qué foto es cada una (él, v92.9: «a cada familia le pedimos que suba una
@@ -243,14 +252,18 @@ export function tarjetasDeMesas(codigos = [], enlaceDe) {
 // del doblez, a lo ancho y de puntos, bajo las tarjetas que haya. Finas.
 // `tarjetas`: [{ numero, qr }], cada una con el QR de su mesa. `adornos`: el
 // adorno y las letras (cargarAdornos de las tarjetas de acomodación), o null.
-export function dibujarTarjetasQr(pdf, nombreEvento, tarjetas, adornos = null) {
-  for (let i = 0; i < tarjetas.length; i += 2) {
-    if (i) pdf.addPage();
-    const par = tarjetas.slice(i, i + 2);
+// Suelta: una por página, de la medida de la tarjeta, con el doblez y sin
+// la línea de corte.
+export function dibujarTarjetasQr(pdf, nombreEvento, tarjetas, adornos = null, { hoja = HOJA_QR_POR_DEFECTO } = {}) {
+  const suelta = hoja === "suelta";
+  const porHoja = suelta ? 1 : 2;
+  for (let i = 0; i < tarjetas.length; i += porHoja) {
+    if (i) pdf.addPage(...(suelta ? [[ANCHO_CARA, ALTO_PAGINA], "portrait"] : []));
+    const par = tarjetas.slice(i, i + porHoja);
     pdf.setDrawColor(C.line);
     pdf.setLineWidth(0.4);
     pdf.setLineDashPattern([4, 3], 0);
-    pdf.line(ANCHO_CARA, 0, ANCHO_CARA, ALTO_PAGINA);
+    if (!suelta) pdf.line(ANCHO_CARA, 0, ANCHO_CARA, ALTO_PAGINA);
     pdf.setLineDashPattern([1, 2], 0);
     pdf.line(0, ALTO_CARA, par.length * ANCHO_CARA, ALTO_CARA);
     pdf.setLineDashPattern([], 0);
@@ -271,21 +284,70 @@ export function crearQr(qrcode, enlace) {
 
 const conQr = (qrcode, tarjetas) => tarjetas.map((t) => ({ numero: t.numero, qr: crearQr(qrcode, t.enlace) }));
 
-// `tarjetas`: las de las mesas (tarjetasDeMesas), al menos una.
-export async function descargarTarjetasQr({ nombreEvento, tarjetas }, adornos = null) {
-  // jsPDF y el QR pesan: se cargan solo al usarlos, como en acomodadores.
-  const [{ jsPDF }, { default: qrcode }] = await Promise.all([import("jspdf"), import("qrcode-generator")]);
-  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-  registrarLetras(pdf, adornos);
-  dibujarTarjetasQr(pdf, nombreEvento, conQr(qrcode, tarjetas), adornos);
-  descargarBlob(ARCHIVO_TARJETAS_QR, pdf.output("blob"));
+// La página, en puntos: el folio o, suelta, la tarjeta.
+const medidaQr = (hoja) => ({ ancho: hoja === "suelta" ? ANCHO_CARA : ANCHO_PAGINA, alto: ALTO_PAGINA });
+const porHojaQr = (hoja) => (hoja === "suelta" ? 1 : 2);
+function porPaginas(tarjetas, hoja) {
+  const paginas = [];
+  for (let i = 0; i < tarjetas.length; i += porHojaQr(hoja)) paginas.push(tarjetas.slice(i, i + porHojaQr(hoja)));
+  return paginas;
 }
 
-// La vista previa: cada folio, como imagen.
-export async function vistaPreviaTarjetasQr({ nombreEvento, tarjetas }, adornos = null, { escala = 1.2, crearLienzo = crearCanvas } = {}) {
+async function nuevoPdf(hoja, adornos) {
+  const { jsPDF } = await import("jspdf");
+  const m = medidaQr(hoja);
+  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: hoja === "suelta" ? [m.ancho, m.alto] : "a4" });
+  registrarLetras(pdf, adornos);
+  return pdf;
+}
+
+// `tarjetas`: las de las mesas (tarjetasDeMesas), al menos una. En PDF con
+// A4, un solo archivo, como siempre; si no, un .zip con un archivo por
+// página (él, v101.7): suelta, uno por mesa («mesa-01.pdf»); en PNG con A4,
+// uno por folio. `hoja`: "a4" o "suelta"; `salida`: "pdf" o "png".
+// Devuelve { nombre, archivos }.
+export async function descargarTarjetasQr({ nombreEvento, tarjetas }, adornos = null, { hoja = HOJA_QR_POR_DEFECTO, salida = "pdf", alAvanzar, crearLienzo } = {}) {
+  // jsPDF y el QR pesan: se cargan solo al usarlos, como en acomodadores.
   const { default: qrcode } = await import("qrcode-generator");
-  const lienzo = new PdfEnLienzo({ medida: { ancho: ANCHO_PAGINA, alto: ALTO_PAGINA }, escala, crearLienzo, imagenes: imagenesDe(adornos) });
-  dibujarTarjetasQr(lienzo, nombreEvento, conQr(qrcode, tarjetas), adornos);
-  if (!lienzo.ctx) return [];
-  return lienzo.paginas.map((p) => p.toDataURL("image/jpeg", 0.9));
+  const conSuQr = conQr(qrcode, tarjetas);
+  const suelta = hoja === "suelta";
+  if (salida === "pdf" && !suelta) {
+    const pdf = await nuevoPdf(hoja, adornos);
+    dibujarTarjetasQr(pdf, nombreEvento, conSuQr, adornos, { hoja });
+    descargarBlob(ARCHIVO_TARJETAS_QR, pdf.output("blob"));
+    return { nombre: ARCHIVO_TARJETAS_QR, archivos: 1 };
+  }
+  const paginas = porPaginas(conSuQr, hoja);
+  const imagenes = imagenesDe(adornos);
+  const blob = await zipDeArchivos(
+    paginas.length,
+    async (i) => {
+      const nombre = suelta ? nombreDeArchivo("mesa", conCeros(paginas[i][0].numero)) : nombreDeArchivo("folio", conCeros(i + 1));
+      if (salida === "png") {
+        const datos = await paginaEnPng((l) => dibujarTarjetasQr(l, nombreEvento, paginas[i], adornos, { hoja }), medidaQr(hoja), { imagenes, crearLienzo });
+        return { nombre: `${nombre}.png`, datos };
+      }
+      const pdf = await nuevoPdf(hoja, adornos);
+      dibujarTarjetasQr(pdf, nombreEvento, paginas[i], adornos, { hoja });
+      return { nombre: `${nombre}.pdf`, datos: bytesDePdf(pdf) };
+    },
+    alAvanzar,
+  );
+  const nombre = `tarjetas-qr-${suelta ? "sueltas-" : ""}${salida}.zip`;
+  descargarBlob(nombre, blob);
+  return { nombre, archivos: paginas.length };
+}
+
+// La vista previa: cada folio o, suelta, cada tarjeta, como imagen.
+export async function vistaPreviaTarjetasQr({ nombreEvento, tarjetas }, adornos = null, { hoja = HOJA_QR_POR_DEFECTO, escala = 1.2, crearLienzo = crearCanvas } = {}) {
+  const { default: qrcode } = await import("qrcode-generator");
+  const imagenes = imagenesDe(adornos);
+  const salida = [];
+  for (const deEsta of porPaginas(conQr(qrcode, tarjetas), hoja)) {
+    const lienzo = new PdfEnLienzo({ medida: medidaQr(hoja), escala, crearLienzo, imagenes });
+    dibujarTarjetasQr(lienzo, nombreEvento, deEsta, adornos, { hoja });
+    if (!lienzo.ctx) return [];
+    salida.push(lienzo.paginas[0].toDataURL("image/jpeg", 0.9));
+  }
+  return salida;
 }

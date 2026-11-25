@@ -208,8 +208,9 @@ export function CuentaLocalHoja({ data, onPrecios }) {
         <Cabecera>Personas</Cabecera>
         <Linea concepto="Adultos" importe={personas.adulto} />
         {/* El DJ cuenta para el local como un adulto más; lo invita el
-            evento (v95.6). */}
-        {personas.dj > 0 && <Linea detalle concepto={personas.dj === 1 ? "De ellos, el DJ: lo invita el evento" : "De ellos, DJ: los invita el evento"} importe={personas.dj} />}
+            evento (v95.6). Entre paréntesis y sin cifra (él, v101.7: es
+            aclaratorio, y el 1 confundía: ya está dentro de los adultos). */}
+        {personas.dj > 0 && <Linea detalle concepto={personas.dj === 1 ? "(El DJ lo invita el evento)" : "(A los DJ los invita el evento)"} importe="" />}
         <Linea concepto={`Niños${edades.nino}`} importe={personas.nino} fondo={C.paperDark} />
         {personas.bebe > 0 && <Linea concepto={`Bebés${edades.bebe}`} importe={`${personas.bebe} · gratis`} />}
 
