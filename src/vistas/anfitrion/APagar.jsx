@@ -84,9 +84,10 @@ export function APagarHoja({ data, resumen, recaudado, propinas, soloLectura = f
         <Cabecera>Entra</Cabecera>
         <Linea concepto="Recaudado" importe={euros(recaudado)} />
         <Linea detalle concepto={`${plural(desglose.adulto.personas, "adulto", "adultos")}${edades.adulto} × ${euros(desglose.precioAdulto)}`} importe={euros(desglose.adulto.importe)} />
-        {/* El DJ no paga entrada: lo invita el evento (v95.6). Se ve aquí,
-            a 0 €, y lo que cuesta en el local va en Sale, en su apunte. */}
-        {desglose.dj.personas > 0 && <Linea detalle concepto={`${plural(desglose.dj.personas, "DJ", "DJ")}, lo invita el evento`} importe={euros(0)} />}
+        {/* El DJ no paga entrada: lo invita el evento (v95.6). En «Entra»
+            no sale (él, v101.7: aquí va el dinero que llega de verdad, y del
+            DJ no llega nada); lo que cuesta en el local, en Sale, en su
+            apunte. */}
         {(desglose.nino.personas > 0 || desglose.precioNino > 0) && (
           <Linea detalle concepto={`${plural(desglose.nino.personas, "niño", "niños")}${edades.nino} × ${euros(desglose.precioNino)}`} importe={euros(desglose.nino.importe)} />
         )}
@@ -160,7 +161,7 @@ export function APagarHoja({ data, resumen, recaudado, propinas, soloLectura = f
           Cómo se calcula
         </summary>
         <p className="mt-2" style={{ opacity: OP.secundario }}>
-          Entra lo ya recaudado —cada pagado por el precio de su entrada, según su edad— y las propinas de los acuses: el total bruto que tiene que haber. Debajo, lo que dicen los acuses y lo que aún tienen los colaboradores; si no suman lo mismo, sale la diferencia en rosa y, si la app la ve, la causa: pagados que no lleva ningún colaborador, invitados de un acuse que ya no figuran como pagados, o acuses con otro importe que el de hoy (cambiado a mano, o cambió después un precio o una edad). El DJ no paga entrada: lo invita el evento, y se ve a 0 €. Sale lo del local (los confirmados de la Lista por lo que cobra el local por persona, más lo demás del local), con la parte del DJ en su propio apunte, «Invitación del DJ»; lo que cobra el DJ y la suma de tu hoja de Gastos. El precio de la entrada de los invitados no cambia nada de esto: solo se comparten las edades.
+          Entra lo ya recaudado —cada pagado por el precio de su entrada, según su edad— y las propinas de los acuses: el total bruto que tiene que haber. Debajo, lo que dicen los acuses y lo que aún tienen los colaboradores; si no suman lo mismo, sale la diferencia en rosa y, si la app la ve, la causa: pagados que no lleva ningún colaborador, invitados de un acuse que ya no figuran como pagados, o acuses con otro importe que el de hoy (cambiado a mano, o cambió después un precio o una edad). El DJ no paga entrada (lo invita el evento): en Entra no aparece, porque de él no llega dinero. Sale lo del local (los confirmados de la Lista por lo que cobra el local por persona, más lo demás del local), con la parte del DJ en su propio apunte, «Invitación del DJ»; lo que cobra el DJ y la suma de tu hoja de Gastos. El precio de la entrada de los invitados no cambia nada de esto: solo se comparten las edades.
         </p>
       </details>
     </div>

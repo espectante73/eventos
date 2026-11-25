@@ -185,8 +185,12 @@ it("«Entra» desglosado por edades, y comprobado con los acuses", () => {
   const { vista } = dibujar();
   const texto = document.body.textContent;
   expect(texto).toContain(`2 adultos (8 años o más) × ${euros(47)}${euros(94)}`);
-  // v95.6: el DJ no paga entrada, lo invita el evento; se ve, a 0 €.
-  expect(texto).toContain(`1 DJ, lo invita el evento${euros(0)}`);
+  // v95.6: el DJ no paga entrada, lo invita el evento. v101.7 (él): en
+  // «Entra» va el dinero que llega, y del DJ no llega nada: no sale ahí.
+  const entra = texto.slice(texto.indexOf("Entra"), texto.indexOf("Propinas"));
+  expect(entra).toContain(`Recaudado`);
+  expect(entra).toContain(`1 niño (de 4 a 7 años)`);
+  expect(entra).not.toContain("DJ");
   expect(texto).toContain(`1 niño (de 4 a 7 años) × ${euros(35)}${euros(35)}`);
   expect(texto).toContain("1 bebé (hasta 3 años)gratis");
   // Sin colaboradores en la prueba: nada entregado, y los 3 pagados no los

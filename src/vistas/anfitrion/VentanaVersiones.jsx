@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "101.8",
+    cambios: [
+      "Contabilidad, «Entra»: ya no sale la línea del DJ a 0 €. En «Entra» va el dinero que llega de verdad al administrador, y del DJ no llega nada. Su invitación sigue en «Sale», en su propio apunte, «Invitación del DJ». Las cifras no cambian.",
+    ],
+  },
+  {
     version: "101.7",
     cambios: [
       "Tarjetas de acomodación y tarjetas QR, para el rotulista: en «Hoja», la nueva «Suelta». Cada tarjeta sale en su propio archivo, con la medida de siempre (8,56 × 10,8 cm la de plegar, 8,56 × 5,4 la de una cara; las QR, 10,5 × 29,7 abiertas) y sin marcas de corte: el borde es el corte. Llegan todas juntas en un .zip, numeradas en el orden de las mesas. Con vista previa, como siempre.",
