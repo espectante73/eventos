@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "101.6",
+    cambios: [
+      "Recuento del tablón en la Lista: el negro es quien NO PUEDE entrar, porque no tiene teléfono, tenga la edad que tenga; el rojo, quien puede y aún no ha entrado; el verde, quien ya entró. Los menores, que antes no contaban, cuentan como todos: con teléfono, rojo o verde; sin él, negro.",
+      "El negro es fijo: depende de los datos de cada invitado, no de si entra o no.",
+    ],
+  },
+  {
     version: "101.5",
     cambios: [
       "Lista de invitados, el recuento del tablón: un tercer circulito, negro, con quienes no tienen tablón porque no tienen teléfono (su enlace personal se manda por WhatsApp). El rojo cuenta ahora solo a quienes sí podrían entrar y aún no lo han hecho; el verde, a quienes ya entraron.",

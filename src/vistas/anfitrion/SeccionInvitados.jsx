@@ -138,8 +138,8 @@ function VistaMesa({ mesa, mesas, ocupacionMesa }) {
 
 function CirculoTablon({ estado }) {
   if (!estado) return null;
-  // Negro (v101.5): sin teléfono no tiene tablón; su enlace va por WhatsApp.
-  const sinTablon = !estado.entro && estado.sinTelefono;
+  // Negro (v101.5-101.6): no puede entrar, no tiene teléfono.
+  const sinTablon = !estado.entro && estado.sinTablon;
   const titulo = estado.entro
     ? `Entró al tablón el ${fechaYHora(estado.cuando)}`
     : sinTablon
@@ -1538,14 +1538,14 @@ export function SeccionInvitados({
             <RecuadroCifras cifras={resumen} />
             {/* Quién ha entrado al tablón, contado con sus circulitos y
                 nada más (él, v75.3: «muy simplificado»). Sale cuando han
-                llegado las entradas. El negro (v101.5), quien no tiene
-                tablón: sin teléfono, no le llega su enlace. */}
+                llegado las entradas. El negro (v101.5-101.6), quien no puede
+                entrar: no tiene teléfono, tenga la edad que tenga. */}
             {recuentoTablon && (
               <RecuadroCifras
                 cifras={[
                   { value: recuentoTablon.entraron, punto: C.enVivo, titulo: "Han entrado al tablón" },
                   { value: recuentoTablon.sinEntrar, punto: C.peligro, titulo: "Aún no han entrado al tablón, y podrían" },
-                  { value: recuentoTablon.sinTablon, punto: C.negro, titulo: "Sin tablón: no tienen teléfono, y su enlace personal se manda por WhatsApp" },
+                  { value: recuentoTablon.sinTablon, punto: C.negro, titulo: "Sin tablón: no tienen teléfono, así que no pueden entrar" },
                 ]}
               />
             )}

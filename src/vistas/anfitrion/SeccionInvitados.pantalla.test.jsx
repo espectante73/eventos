@@ -631,8 +631,8 @@ describe("ordenar por niveles", () => {
 
 // v75.2 (él): quién ha entrado al tablón, con un circulito tras el nombre.
 describe("el circulito del tablón", () => {
-  // Omar, con teléfono: puede entrar (sin él, no tiene tablón, v101.5).
-  const conTelefono = data.invitados.map((g) => (g.id === "g2" ? { ...g, telefono: "+34600000000" } : g));
+  // Jacob y Omar, con teléfono: tienen tablón (sin él, no, v101.5).
+  const conTelefono = data.invitados.map((g) => (["g1", "g2"].includes(g.id) ? { ...g, telefono: "+34600000000" } : g));
   const conEntradas = (entradasTablon, invitados = conTelefono) =>
     dibujarYSoltar(
       <SeccionInvitados
@@ -649,11 +649,18 @@ describe("el circulito del tablón", () => {
       />
     );
 
-  it("verde quien entró, rojo el confirmado que no; nada a no confirmados ni menores", () => {
+  it("verde quien entró, rojo el que no, negro quien no tiene teléfono; nada a los no confirmados", () => {
     const html = conEntradas({ g1: "2026-10-27T17:40:00Z" });
     expect(html.match(/aria-label="Entró al tablón el /g)).toHaveLength(1);
-    // Rojo: solo Omar (Míriam y Loly sin confirmar; Lucía, menor).
+    // Rojo: solo Omar (Míriam y Loly sin confirmar); Lucía, sin teléfono, negro (v101.6).
     expect(html.match(/aria-label="Aún no ha entrado al tablón"/g)).toHaveLength(1);
+    expect(html.match(/aria-label="Sin tablón: no tiene teléfono[^"]*"/g)).toHaveLength(1);
+  });
+
+  it("la edad no importa: la niña con teléfono puede entrar, en rojo", () => {
+    const html = conEntradas({ g1: "2026-10-27T17:40:00Z" }, conTelefono.map((g) => (g.id === "g4" ? { ...g, telefono: "+34611111111" } : g)));
+    expect(html.match(/aria-label="Aún no ha entrado al tablón"/g)).toHaveLength(2);
+    expect(html).not.toMatch(/aria-label="Sin tablón: no tiene teléfono/);
   });
 
   it("arriba, el recuento: cuántos entraron, cuántos podrían y no, y cuántos no tienen tablón", () => {
@@ -661,15 +668,16 @@ describe("el circulito del tablón", () => {
     // El puntito arriba, donde va el rótulo; la cifra, debajo.
     expect(html).toMatch(/aria-label="Han entrado al tablón"[^>]*><\/span>\u200b<\/div><div[^>]*>1</);
     expect(html).toMatch(/aria-label="Aún no han entrado al tablón, y podrían"[^>]*><\/span>\u200b<\/div><div[^>]*>1</);
-    expect(html).toMatch(/aria-label="Sin tablón: no tienen teléfono[^"]*"[^>]*><\/span>\u200b<\/div><div[^>]*>0</);
+    expect(html).toMatch(/aria-label="Sin tablón: no tienen teléfono[^"]*"[^>]*><\/span>\u200b<\/div><div[^>]*>1</);
   });
 
-  it("sin teléfono, negro: no tiene tablón, y el rojo ya no lo cuenta (v101.5)", () => {
+  it("sin teléfono, negro, haya entrado o no: el negro es fijo (v101.5-101.6)", () => {
     const html = conEntradas({ g1: "2026-10-27T17:40:00Z" }, data.invitados);
-    expect(html.match(/aria-label="Sin tablón: no tiene teléfono[^"]*"/g)).toHaveLength(1);
-    expect(html).not.toMatch(/aria-label="Aún no ha entrado al tablón"/);
-    expect(html).toMatch(/aria-label="Aún no han entrado al tablón, y podrían"[^>]*><\/span>\u200b<\/div><div[^>]*>0</);
-    expect(html).toMatch(/aria-label="Sin tablón: no tienen teléfono[^"]*"[^>]*><\/span>\u200b<\/div><div[^>]*>1</);
+    // Jacob (aunque entró), Omar y Lucía, ninguno con teléfono.
+    expect(html.match(/aria-label="Sin tablón: no tiene teléfono[^"]*"/g)).toHaveLength(3);
+    expect(html).not.toMatch(/aria-label="(Aún no ha entrado al tablón|Entró al tablón)/);
+    expect(html).toMatch(/aria-label="Han entrado al tablón"[^>]*><\/span>\u200b<\/div><div[^>]*>0</);
+    expect(html).toMatch(/aria-label="Sin tablón: no tienen teléfono[^"]*"[^>]*><\/span>\u200b<\/div><div[^>]*>3</);
   });
 
   it("mientras no han llegado las entradas, ningún circulito", () => {

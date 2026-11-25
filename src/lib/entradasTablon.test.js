@@ -9,12 +9,12 @@ const entradas = { 1: "2026-10-27T17:40:00Z" };
 describe("estadoTablon", () => {
   it("verde si ha entrado, rojo si no", () => {
     expect(estadoTablon(g(), entradas, evento)).toEqual({ entro: true, cuando: "2026-10-27T17:40:00Z" });
-    expect(estadoTablon(g(), {}, evento)).toEqual({ entro: false, sinAnio: false, sinTelefono: false });
+    expect(estadoTablon(g(), {}, evento)).toEqual({ entro: false, sinAnio: false, sinTablon: false });
   });
 
-  it("sin teléfono no tiene tablón (su enlace va por WhatsApp); si entró, verde igual (v101.5)", () => {
-    expect(estadoTablon(g({ telefono: " " }), {}, evento)).toEqual({ entro: false, sinAnio: false, sinTelefono: true });
-    expect(estadoTablon(g({ telefono: "" }), entradas, evento).entro).toBe(true);
+  it("sin teléfono no tiene tablón (su enlace va por WhatsApp); el negro es fijo: no mira las entradas", () => {
+    expect(estadoTablon(g({ telefono: " " }), {}, evento)).toEqual({ entro: false, sinAnio: false, sinTablon: true });
+    expect(estadoTablon(g({ telefono: "" }), entradas, evento)).toEqual({ entro: false, sinAnio: false, sinTablon: true });
   });
 
   it("nada mientras no han llegado las entradas", () => {
@@ -27,20 +27,20 @@ describe("estadoTablon", () => {
     expect(estadoTablon(g({ noAsiste: true }), {}, evento)).toBe(null);
   });
 
-  it("los de 15 cumplidos sí; los menores, no", () => {
-    expect(estadoTablon(g({ anioNacimiento: "2011" }), {}, evento)).toEqual({ entro: false, sinAnio: false, sinTelefono: false });
-    expect(estadoTablon(g({ anioNacimiento: "2012" }), {}, evento)).toBe(null);
+  it("la edad no importa: un menor con teléfono puede entrar; sin él, no (v101.6)", () => {
+    expect(estadoTablon(g({ anioNacimiento: "2015" }), {}, evento)).toEqual({ entro: false, sinAnio: false, sinTablon: false });
+    expect(estadoTablon(g({ anioNacimiento: "2015", telefono: "" }), {}, evento)).toEqual({ entro: false, sinAnio: false, sinTablon: true });
   });
 
   it("sin año no puede entrar todavía: rojo, y se dice por qué", () => {
-    expect(estadoTablon(g({ anioNacimiento: "" }), {}, evento)).toEqual({ entro: false, sinAnio: true, sinTelefono: false });
+    expect(estadoTablon(g({ anioNacimiento: "" }), {}, evento)).toEqual({ entro: false, sinAnio: true, sinTablon: false });
   });
 });
 
 describe("contarTablon", () => {
-  it("cuenta los verdes, los rojos y los negros (sin tablón); los que no llevan, no cuentan", () => {
-    const lista = [g(), g({ id: "2" }), g({ id: "5", telefono: "" }), g({ id: "3", confirmado: false }), g({ id: "4", anioNacimiento: "2015" })];
-    expect(contarTablon(lista, entradas, evento)).toEqual({ entraron: 1, sinEntrar: 1, sinTablon: 1 });
+  it("cuenta los verdes, los rojos y los negros (sin teléfono); los no confirmados, no cuentan", () => {
+    const lista = [g(), g({ id: "2" }), g({ id: "5", telefono: "" }), g({ id: "3", confirmado: false }), g({ id: "4", anioNacimiento: "2015" }), g({ id: "6", anioNacimiento: "2018", telefono: "" })];
+    expect(contarTablon(lista, entradas, evento)).toEqual({ entraron: 1, sinEntrar: 2, sinTablon: 2 });
     expect(contarTablon(lista, null, evento)).toBe(null);
   });
 });
