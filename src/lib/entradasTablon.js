@@ -9,6 +9,11 @@
 // y, de ellos, los de EDAD_EMAIL cumplidos (él: «menores de 16 no cuentan»; 15 desde la v98; la
 // misma edad que el email propio y las fotos de la fiesta). «No asiste»,
 // tampoco.
+//
+// Un tercer color (él, v101.5: «necesito un tercer indicador de que no hay
+// tablón»): quien no ha entrado y no tiene teléfono no tiene tablón, porque
+// su enlace personal se le manda por WhatsApp. Así el rojo cuenta solo a
+// quien SÍ podría entrar y no lo ha hecho.
 import { calcularEdad, EDAD_EMAIL } from "./invitados";
 
 // `entradas`: { idInvitado: última entrada }, o null mientras no ha llegado
@@ -18,7 +23,8 @@ export function estadoTablon(g, entradas, evento) {
   const edad = calcularEdad(g.anioNacimiento, evento);
   if (edad !== null && edad < EDAD_EMAIL) return null;
   const cuando = entradas[g.id];
-  return cuando ? { entro: true, cuando } : { entro: false, sinAnio: edad === null };
+  if (cuando) return { entro: true, cuando };
+  return { entro: false, sinAnio: edad === null, sinTelefono: !String(g.telefono || "").trim() };
 }
 
 // El recuento de la cabecera de la Lista (él, v75.2: «otros dos contadores
@@ -28,5 +34,6 @@ export function contarTablon(invitados, entradas, evento) {
   if (!entradas) return null;
   const estados = invitados.map((g) => estadoTablon(g, entradas, evento)).filter(Boolean);
   const entraron = estados.filter((e) => e.entro).length;
-  return { entraron, sinEntrar: estados.length - entraron };
+  const sinTablon = estados.filter((e) => !e.entro && e.sinTelefono).length;
+  return { entraron, sinEntrar: estados.length - entraron - sinTablon, sinTablon };
 }

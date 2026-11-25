@@ -631,10 +631,12 @@ describe("ordenar por niveles", () => {
 
 // v75.2 (él): quién ha entrado al tablón, con un circulito tras el nombre.
 describe("el circulito del tablón", () => {
-  const conEntradas = (entradasTablon) =>
+  // Omar, con teléfono: puede entrar (sin él, no tiene tablón, v101.5).
+  const conTelefono = data.invitados.map((g) => (g.id === "g2" ? { ...g, telefono: "+34600000000" } : g));
+  const conEntradas = (entradasTablon, invitados = conTelefono) =>
     dibujarYSoltar(
       <SeccionInvitados
-        data={{ ...data, entradasTablon }}
+        data={{ ...data, invitados, entradasTablon }}
         asignarColaborador={() => null}
         ocupacionMesa={() => 1}
         panelFlotante={null}
@@ -654,11 +656,20 @@ describe("el circulito del tablón", () => {
     expect(html.match(/aria-label="Aún no ha entrado al tablón"/g)).toHaveLength(1);
   });
 
-  it("arriba, el recuento: cuántos entraron y cuántos no", () => {
+  it("arriba, el recuento: cuántos entraron, cuántos podrían y no, y cuántos no tienen tablón", () => {
     const html = conEntradas({ g1: "2026-10-27T17:40:00Z" });
     // El puntito arriba, donde va el rótulo; la cifra, debajo.
     expect(html).toMatch(/aria-label="Han entrado al tablón"[^>]*><\/span>\u200b<\/div><div[^>]*>1</);
-    expect(html).toMatch(/aria-label="Aún no han entrado al tablón"[^>]*><\/span>\u200b<\/div><div[^>]*>1</);
+    expect(html).toMatch(/aria-label="Aún no han entrado al tablón, y podrían"[^>]*><\/span>\u200b<\/div><div[^>]*>1</);
+    expect(html).toMatch(/aria-label="Sin tablón: no tienen teléfono[^"]*"[^>]*><\/span>\u200b<\/div><div[^>]*>0</);
+  });
+
+  it("sin teléfono, negro: no tiene tablón, y el rojo ya no lo cuenta (v101.5)", () => {
+    const html = conEntradas({ g1: "2026-10-27T17:40:00Z" }, data.invitados);
+    expect(html.match(/aria-label="Sin tablón: no tiene teléfono[^"]*"/g)).toHaveLength(1);
+    expect(html).not.toMatch(/aria-label="Aún no ha entrado al tablón"/);
+    expect(html).toMatch(/aria-label="Aún no han entrado al tablón, y podrían"[^>]*><\/span>\u200b<\/div><div[^>]*>0</);
+    expect(html).toMatch(/aria-label="Sin tablón: no tienen teléfono[^"]*"[^>]*><\/span>\u200b<\/div><div[^>]*>1</);
   });
 
   it("mientras no han llegado las entradas, ningún circulito", () => {

@@ -138,14 +138,18 @@ function VistaMesa({ mesa, mesas, ocupacionMesa }) {
 
 function CirculoTablon({ estado }) {
   if (!estado) return null;
+  // Negro (v101.5): sin teléfono no tiene tablón; su enlace va por WhatsApp.
+  const sinTablon = !estado.entro && estado.sinTelefono;
   const titulo = estado.entro
     ? `Entró al tablón el ${fechaYHora(estado.cuando)}`
-    : estado.sinAnio
-      ? "Aún no ha entrado al tablón: falta su año de nacimiento, y sin él la puerta no le deja"
-      : "Aún no ha entrado al tablón";
+    : sinTablon
+      ? "Sin tablón: no tiene teléfono, y su enlace personal se manda por WhatsApp"
+      : estado.sinAnio
+        ? "Aún no ha entrado al tablón: falta su año de nacimiento, y sin él la puerta no le deja"
+        : "Aún no ha entrado al tablón";
   return (
     <span className="ml-1.5 flex items-center">
-      <Circulito color={estado.entro ? C.enVivo : C.peligro} titulo={titulo} />
+      <Circulito color={estado.entro ? C.enVivo : sinTablon ? C.negro : C.peligro} titulo={titulo} />
     </span>
   );
 }
@@ -1534,12 +1538,14 @@ export function SeccionInvitados({
             <RecuadroCifras cifras={resumen} />
             {/* Quién ha entrado al tablón, contado con sus circulitos y
                 nada más (él, v75.3: «muy simplificado»). Sale cuando han
-                llegado las entradas. */}
+                llegado las entradas. El negro (v101.5), quien no tiene
+                tablón: sin teléfono, no le llega su enlace. */}
             {recuentoTablon && (
               <RecuadroCifras
                 cifras={[
                   { value: recuentoTablon.entraron, punto: C.enVivo, titulo: "Han entrado al tablón" },
-                  { value: recuentoTablon.sinEntrar, punto: C.peligro, titulo: "Aún no han entrado al tablón" },
+                  { value: recuentoTablon.sinEntrar, punto: C.peligro, titulo: "Aún no han entrado al tablón, y podrían" },
+                  { value: recuentoTablon.sinTablon, punto: C.negro, titulo: "Sin tablón: no tienen teléfono, y su enlace personal se manda por WhatsApp" },
                 ]}
               />
             )}

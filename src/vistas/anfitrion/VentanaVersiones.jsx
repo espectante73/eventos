@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "101.5",
+    cambios: [
+      "Lista de invitados, el recuento del tablón: un tercer circulito, negro, con quienes no tienen tablón porque no tienen teléfono (su enlace personal se manda por WhatsApp). El rojo cuenta ahora solo a quienes sí podrían entrar y aún no lo han hecho; el verde, a quienes ya entraron.",
+      "Tras cada nombre, el mismo color: negro, «Sin tablón». Si alguien sin teléfono entra igualmente, sale en verde.",
+    ],
+  },
+  {
     version: "101.4",
     cambios: [
       "Acomodación: «Vaciar mesas» deja de estar encima de «Sin mesa» y pasa a la fila de botones, junto a «Auto-asignar»: siete botones iguales, en una sola línea con «Acomodación terminada» (en el móvil, los siete iconos en una fila).",
