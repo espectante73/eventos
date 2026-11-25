@@ -32,7 +32,7 @@
 // sitios, plano y quién se sienta dónde). Cargar una la pone como prueba,
 // mesas incluidas: mientras está cargada, también las mesas son prueba.
 import { useLayoutEffect, useRef, useState } from "react";
-import { Check, AlertTriangle, Lock, LockOpen, Plus, Minus, Bookmark, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Link2, Settings, Map as IconoPlano } from "lucide-react";
+import { Check, AlertTriangle, Lock, LockOpen, Plus, Minus, Bookmark, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Link2, Settings, WandSparkles, Map as IconoPlano } from "lucide-react";
 import { C, OP, R, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -85,6 +85,10 @@ import {
 // cabecera de una mesa (las sillas, el círculo y «Vaciar»), y lo que suman
 // márgenes y bordes de la pastilla (px-3, borde 2, hueco 2) y del recuadro
 // (p-1.5, borde 3), con un poco de holgura.
+// El rótulo de los botones de arriba: en el móvil, solo el icono (v101.3).
+// Escondido, no ocupa hueco: el botón queda cuadrado.
+const RotuloBoton = ({ children }) => <span className="hidden sm:inline">{children}</span>;
+
 const ANCHO_MINIMO = 212;
 const MEDIDAS_PASTILLA = { icono: 20, fijo: 24 + 4 + 8 + 12 + 2 * 3 + 6, minimo: ANCHO_MINIMO };
 // «Sin mesa» plegada o no (él, v98.7), en este aparato.
@@ -234,6 +238,8 @@ function AcomodacionTerminada({ evento, invitados, hayPrueba, persistEvento, pre
       onCambiar={cambiar}
       icono={terminada ? LockOpen : Lock}
       nota={terminada ? "Ya se pueden enviar las invitaciones." : "Mientras diga «No», no se envía ninguna invitación."}
+      compacto
+      className="flex-shrink-0"
     />
   );
 }
@@ -645,7 +651,9 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
     <>
     <VentanaFlotante
       clave="mesas"
-      titulo="Mesas y acomodación"
+      // El nombre del menú (v74.7); el largo partía la cabecera en dos
+      // líneas en el móvil y tapaba las cifras (v101.3).
+      titulo="Acomodación"
       onCerrar={onCerrar}
       fijo={fijo}
       llena
@@ -657,33 +665,39 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
           cifras={[
             { label: "Confirmados", value: confirmacion.confirmados },
             { label: "Sin confirmar", value: confirmacion.sinConfirmar },
+            // Cuántas quedan libres de cada tamaño del local (v101.2), en la
+            // cabecera con las demás (él, v101.3); en rojo, si faltan.
+            ...usoDelLocal(local, mesas).map((t) => ({
+              label: `Libres de ${t.sitios}`,
+              value: t.faltan ? `${t.faltan === 1 ? "falta" : "faltan"} ${t.faltan}` : `${t.cuantas - t.usadas} de ${t.cuantas}`,
+              alerta: t.faltan > 0,
+              titulo: `Mesas de ${t.sitios} sitios: el local tiene ${t.cuantas}; en Acomodación se usan ${t.usadas + t.faltan}`,
+            })),
           ]}
         />
       }
     >
       <div className="flex flex-col" style={{ flex: 1, minHeight: 0 }}>
-        <AcomodacionTerminada evento={evento} invitados={invitados} hayPrueba={hayPrueba} persistEvento={persistEvento} preguntar={preguntar} />
-        <div className="flex items-center gap-2 flex-wrap mb-2">
-          <span className="text-xs px-2 py-0.5 rounded" style={{ background: C.paperDark, color: C.charcoal }}>
-            {!hayPrueba
-              ? "PRUEBA · sin cambios"
-              : prueba.cargada
-                ? `PRUEBA · Acomodación ${prueba.cargada}${prueba.sucia ? " con cambios" : ""}, aún sin aplicar`
-                : cambian === 0
-                  ? "PRUEBA · mesas en otro orden, aún sin guardar"
-                  : `PRUEBA · ${cambian} ${cambian === 1 ? "familia cambia" : "familias cambian"} de mesa, aún sin guardar`}
-          </span>
+        {/* Todo en una sola línea (él, v101.3: «estamos acumulando cosas en
+            diferentes líneas»): el candado de las invitaciones con su Sí/No
+            pegado y los botones. En el móvil no cabe: los botones, solo con
+            su icono, en su propia fila. Cómo va la prueba, al pie, junto a
+            «Descartar» y «Aplicar» (él: «si hay una etiqueta que declara
+            algo, el botón tiene que estar cerca»). */}
+        <div className="flex items-center gap-2 flex-wrap mb-2 zurdo:flex-row-reverse">
+          <AcomodacionTerminada evento={evento} invitados={invitados} hayPrueba={hayPrueba} persistEvento={persistEvento} preguntar={preguntar} />
           <span className="flex-1" />
-          {/* Los seis, del mismo ancho (norma 4); en el móvil, de dos en dos. */}
-          <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 w-full sm:w-auto">
-            <Boton variante="secundario" icono={IconoPlano} aria-pressed={verPlano} onClick={() => setVerPlano((v) => !v)}>
-              {verPlano ? "Ver las mesas" : "Plano de mesas"}
+          {/* Los seis, del mismo ancho (norma 4), con su icono; en el móvil,
+              solo el icono, los seis en una fila. */}
+          <div className="grid grid-cols-6 gap-2 w-full sm:w-auto">
+            <Boton variante="secundario" icono={IconoPlano} aria-pressed={verPlano} titulo={verPlano ? "Ver las mesas" : "Plano de mesas"} onClick={() => setVerPlano((v) => !v)}>
+              <RotuloBoton>{verPlano ? "Mesas" : "Plano"}</RotuloBoton>
             </Boton>
-            <Boton variante="secundario" titulo="Propone un reparto de todas las familias, también las que aún no han confirmado (nunca los «No asiste»), en la prueba: se repasa y se aplica" disabled={verPlano} onClick={autoAsignar}>
-              Auto-asignar
+            <Boton variante="secundario" icono={WandSparkles} titulo="Auto-asignar: propone un reparto de todas las familias, también las que aún no han confirmado (nunca los «No asiste»), en la prueba: se repasa y se aplica" disabled={verPlano} onClick={autoAsignar}>
+              <RotuloBoton>Auto-asignar</RotuloBoton>
             </Boton>
-            <Boton variante="secundario" icono={Plus} onClick={anadirMesa}>
-              Añadir mesa
+            <Boton variante="secundario" icono={Plus} titulo="Añadir mesa" onClick={anadirMesa}>
+              <RotuloBoton>Añadir mesa</RotuloBoton>
             </Boton>
             {/* Las memorias, en el desplegable de toda la app (él, v75). */}
             <MenuFlotante
@@ -696,10 +710,10 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
                   icono={Bookmark}
                   className="w-full"
                   disabled={!memorias}
-                  titulo={memorias ? "Guardar la acomodación de ahora, o cargar una guardada" : "Falta subir el SQL de la versión 75"}
+                  titulo={memorias ? "Memorias: guardar la acomodación de ahora, o cargar una guardada" : "Falta subir el SQL de la versión 75"}
                   onClick={toggle}
                 >
-                  Memorias
+                  <RotuloBoton>Memorias</RotuloBoton>
                 </Boton>
               )}
             />
@@ -707,39 +721,23 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
               variante="secundario"
               icono={Link2}
               disabled={!hayJuntos || verPlano}
-              titulo={hayJuntos ? "Familias que viajan juntas y se sientan juntas, sin juntarlas como familia" : "Falta subir el SQL de la versión 101.1"}
+              titulo={hayJuntos ? "Van juntos: familias que viajan juntas y se sientan juntas, sin juntarlas como familia" : "Falta subir el SQL de la versión 101.1"}
               onClick={() => setVerJuntos(true)}
             >
-              Van juntos
+              <RotuloBoton>Van juntos</RotuloBoton>
             </Boton>
             {/* La configuración de la sección, su ruedita (como «Precios del local»). */}
             <Boton
               variante="secundario"
               icono={Settings}
               disabled={faltaSqlMesasLocal(evento)}
-              titulo={faltaSqlMesasLocal(evento) ? "Falta subir el SQL de la versión 101.2" : "Las mesas que tiene el local, por tamaño: el máximo"}
+              titulo={faltaSqlMesasLocal(evento) ? "Falta subir el SQL de la versión 101.2" : "Del local: las mesas que tiene el local, por tamaño, como máximo"}
               onClick={() => setVerLocal(true)}
             >
-              Del local
+              <RotuloBoton>Del local</RotuloBoton>
             </Boton>
           </div>
         </div>
-        {/* Cuántas quedan libres de cada tamaño, en su propia línea (en la
-            cabecera, en el móvil, no se verían); en rojo, si faltan. */}
-        {local.length > 0 && (
-          <div data-libres-local className="flex mb-2">
-            <div className="rounded p-1" style={{ background: C.ink }}>
-              <RecuadroCifras
-                cifras={usoDelLocal(local, mesas).map((t) => ({
-                  label: `Libres de ${t.sitios}`,
-                  value: t.faltan ? `${t.faltan === 1 ? "falta" : "faltan"} ${t.faltan}` : `${t.cuantas - t.usadas} de ${t.cuantas}`,
-                  alerta: t.faltan > 0,
-                  titulo: `Mesas de ${t.sitios} sitios: el local tiene ${t.cuantas}; en Acomodación se usan ${t.usadas + t.faltan}`,
-                }))}
-              />
-            </div>
-          </div>
-        )}
         {aviso && <LineaAviso className="text-sm mb-2">{aviso}</LineaAviso>}
         {avisosAuto.map((a) => (
           <LineaAviso key={a.familia} className="text-sm mb-1">
@@ -818,17 +816,27 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
         )}
 
         <div className="flex items-center gap-2 flex-wrap justify-end zurdo:flex-row-reverse mt-3 pt-3" style={{ borderTop: `1px solid ${C.line}` }}>
-          {/* La ayuda, al pie y plegada (norma 5); en el móvil, en su línea. */}
-          <details className="text-xs w-full sm:w-auto mr-auto zurdo:mr-0 zurdo:ml-auto" style={{ color: C.charcoal }}>
+          {/* La ayuda, al pie y plegada (norma 5); a su lado, cómo va la
+              prueba, pegada a sus botones. */}
+          <details className="text-xs mr-auto zurdo:mr-0 zurdo:ml-auto" style={{ color: C.charcoal }}>
             <summary className="cursor-pointer select-none whitespace-nowrap" style={{ opacity: OP.secundario }}>
               Cómo se usa
             </summary>
             <p className="mt-2" style={{ opacity: OP.secundario }}>
               Arrastra cada familia a su mesa; en el móvil, tócala y luego toca la mesa. Sombreadas, las que aún no han
               confirmado: su sitio queda reservado. Sentar, Vaciar y Auto-asignar son una prueba hasta «Aplicar a la
-              Lista»; las mesas y sus sitios se guardan al momento. Con candado, las familias que ya tienen su invitación: su mesa queda fija; tócalas si hubiera que cambiarla. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba. Al quitar una, las demás se corren y quedan 1, 2, 3… «Bloquear», bajo el número de la mesa: nadie sale de ella, ni con «Vaciar mesas», y no se puede quitar; sus sitios libres sí se pueden llenar. «Van juntos»: familias que se sientan juntas sin ser una familia; la cadena 🔗 con su número las señala, y al mover una va todo el grupo. «Del local»: cuántas mesas tiene el local de cada tamaño; es el máximo: ninguna mesa pasa de su tamaño ni hay más de las que tiene, y debajo de los botones se ve cuántas quedan libres.
+              Lista»; las mesas y sus sitios se guardan al momento. Con candado, las familias que ya tienen su invitación: su mesa queda fija; tócalas si hubiera que cambiarla. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba. Al quitar una, las demás se corren y quedan 1, 2, 3… «Bloquear», bajo el número de la mesa: nadie sale de ella, ni con «Vaciar mesas», y no se puede quitar; sus sitios libres sí se pueden llenar. «Van juntos»: familias que se sientan juntas sin ser una familia; la cadena 🔗 con su número las señala, y al mover una va todo el grupo. «Del local»: cuántas mesas tiene el local de cada tamaño; es el máximo: ninguna mesa pasa de su tamaño ni hay más de las que tiene, y arriba, en la cabecera, se ve cuántas quedan libres. «Acomodación terminada»: mientras diga «No», no se envía ninguna invitación. En el móvil, los botones van solo con su icono: Plano, Auto-asignar, Añadir mesa, Memorias, Van juntos y Del local.
             </p>
           </details>
+          <span className="text-xs px-2 py-0.5 rounded truncate min-w-0" style={{ background: C.paperDark, color: C.charcoal }}>
+            {!hayPrueba
+              ? "PRUEBA · sin cambios"
+              : prueba.cargada
+                ? `PRUEBA · Acomodación ${prueba.cargada}${prueba.sucia ? " con cambios" : ""}, aún sin aplicar`
+                : cambian === 0
+                  ? "PRUEBA · mesas en otro orden, aún sin guardar"
+                  : `PRUEBA · ${cambian} ${cambian === 1 ? "familia cambia" : "familias cambian"} de mesa, aún sin guardar`}
+          </span>
           <Boton variante="secundario" onClick={descartar} disabled={!hayPrueba}>
             Descartar
           </Boton>

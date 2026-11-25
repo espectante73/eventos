@@ -42,6 +42,14 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "101.3",
+    cambios: [
+      "Acomodación, arriba en una sola línea: «Acomodación terminada» con su Sí/No pegado al rótulo (antes, con la ventana a pantalla entera, quedaba al otro extremo) y, al lado, los seis botones iguales. En el móvil, los botones van solo con su icono, los seis en una fila.",
+      "Las mesas libres de cada tamaño del local, en la cabecera junto a Confirmados y Sin confirmar. Cómo va la prueba («PRUEBA · sin cambios»), al pie, junto a «Descartar» y «Aplicar a la Lista». La ventana se llama como en el menú: «Acomodación».",
+      "«Canciones cerradas», en la Lista: su Sí/No, también pegado a su rótulo.",
+    ],
+  },
+  {
     version: "101.2",
     cambios: [
       "Acomodación: botón «Del local» (con la ruedita), para poner cuántas mesas tiene el local de cada tamaño (por ejemplo, 4 de 11 y 10 de 9). Al pie dice cuántos comensales caben como mucho.",

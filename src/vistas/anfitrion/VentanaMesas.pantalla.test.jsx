@@ -61,7 +61,8 @@ describe("«Acomodación terminada», el candado de las invitaciones (v90.7)", (
 
   it("sin marcar dice que no se envía ninguna; «Sí» pregunta antes, con los confirmados sin mesa", () => {
     const { vista, eventos, boton } = dibujar();
-    expect(vista.contenedor.textContent).toContain("Mientras diga «No», no se envía ninguna invitación.");
+    // En una sola línea (v101.3): lo que pasa ahora, al pasar por encima.
+    expect(vista.contenedor.querySelector('[title="Mientras diga «No», no se envía ninguna invitación."]')).toBeTruthy();
     expect(mitad(vista, "No").getAttribute("aria-checked")).toBe("true");
     vista.pulsar(mitad(vista, "Sí"));
     expect(document.body.textContent).toContain("¿Acomodación terminada?");
@@ -69,7 +70,7 @@ describe("«Acomodación terminada», el candado de las invitaciones (v90.7)", (
     expect(eventos).toEqual([]);
     vista.pulsar(boton("Sí"));
     expect(eventos.at(-1).acomodacionTerminada).toBe(true);
-    expect(vista.contenedor.textContent).toContain("Ya se pueden enviar las invitaciones.");
+    expect(vista.contenedor.querySelector('[title="Ya se pueden enviar las invitaciones."]')).toBeTruthy();
     vista.desmontar();
   });
 
@@ -595,20 +596,21 @@ describe("«Van juntos» (v101.1)", () => {
 
 describe("«Mesas del local» (v101.2)", () => {
   const LOCAL = [{ sitios: 11, cuantas: 1 }, { sitios: 9, cuantas: 2 }];
-  const libres = () => document.body.querySelector("[data-libres-local]");
+  // En la cabecera, tras Confirmados y Sin confirmar (v101.3).
+  const cabecera = () => document.body.querySelector("[data-extra-ventana]").textContent;
 
   it("sin el SQL subido, «Del local» se apaga y dice por qué; sin configurar, sin línea de libres", () => {
     const { vista, boton } = dibujar();
     expect(boton("Del local").disabled).toBe(true);
     expect(boton("Del local").title).toBe("Falta subir el SQL de la versión 101.2");
-    expect(libres()).toBeNull();
+    expect(cabecera()).not.toContain("Libres");
     vista.desmontar();
   });
 
-  it("abre su ventana; debajo de los botones, cuántas quedan libres de cada tamaño", () => {
+  it("abre su ventana; en la cabecera, cuántas quedan libres de cada tamaño", () => {
     const { vista, boton } = dibujar({ evento: { mesasLocal: LOCAL } });
     // La 6 (2 sitios) y la 7 (9) gastan las dos de 9; la de 11, libre.
-    expect(libres().textContent).toBe("Libres de 111 de 1" + "Libres de 90 de 2");
+    expect(cabecera()).toContain("Libres de 111 de 1" + "Libres de 90 de 2");
     vista.pulsar(boton("Del local"));
     expect(document.body.textContent).toContain("Mesas del local");
     vista.desmontar();
@@ -638,7 +640,7 @@ describe("«Mesas del local» (v101.2)", () => {
 
   it("con más mesas de las que tiene el local, en rojo cuántas faltan", () => {
     const { vista } = dibujar({ evento: { mesasLocal: [{ sitios: 9, cuantas: 1 }] } });
-    expect(libres().textContent).toBe("Libres de 9falta 1");
+    expect(cabecera()).toContain("Libres de 9falta 1");
     vista.desmontar();
   });
 });

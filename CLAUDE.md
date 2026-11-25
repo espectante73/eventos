@@ -155,7 +155,8 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    y definidos una sola vez**. Lo vigila `reglas-del-proyecto.test.js` en
    la fila del colaborador. **En un formulario, igual:** lo que va junto
    (rótulo, casilla, campo o foto) en una sola línea; si no cabe, se
-   estrecha.
+   estrecha. El botón, **pegado a su rótulo**: nunca al otro extremo de
+   una ventana ancha.
 7. **Una sola pieza, no sincronizar**: si dos sitios tienen que decir
    siempre lo mismo —un componente, una constante, una función, qué es
    una familia (`claveFamilia`), cómo se nombra a alguien
