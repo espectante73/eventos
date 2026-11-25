@@ -156,7 +156,9 @@ export function confirmarConSuFamilia(invitados, id, mesas) {
 // Sienta a TODOS, también a los que aún no han confirmado (él, v75.1:
 // «estoy contando con los posibles invitados… siempre»); nunca a los «No
 // asiste». Cuenta los sitios ya reservados (ocupacion).
-export function autoAsignarMesas(invitados, mesas) {
+// `bloque` (v101.1, «Van juntos»): qué se sienta junto; por defecto, la
+// familia. Las que van juntas, un solo bloque.
+export function autoAsignarMesas(invitados, mesas, { bloque = claveFamiliaMesa } = {}) {
   const nuevos = invitados.map((g) => ({ ...g }));
   const ocupados = {};
   mesas.forEach((m) => {
@@ -165,7 +167,7 @@ export function autoAsignarMesas(invitados, mesas) {
 
   const grupos = {};
   nuevos.forEach((g) => {
-    if (seSientaEnMesa(g, true)) (grupos[claveFamiliaMesa(g)] = grupos[claveFamiliaMesa(g)] || []).push(g);
+    if (seSientaEnMesa(g, true)) (grupos[bloque(g)] = grupos[bloque(g)] || []).push(g);
   });
 
   const avisos = [];
@@ -183,7 +185,7 @@ export function autoAsignarMesas(invitados, mesas) {
   ordenados.forEach((grupo) => {
     const sinMesa = grupo.filter((g) => !g.mesa);
     if (sinMesa.length === 0) return;
-    const familia = nombreFamilia(grupo[0]);
+    const familia = [...new Set(grupo.map(nombreFamilia))].join(" y ");
     const usadas = [...new Set(grupo.filter((g) => g.mesa).map((g) => g.mesa))];
 
     if (usadas.length > 1) {

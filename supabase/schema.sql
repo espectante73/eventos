@@ -276,7 +276,12 @@ CREATE TABLE public.orden_familias (
     "grupoFamiliar" text NOT NULL,
     orden text[] DEFAULT '{}'::text[] NOT NULL,
     "invitacionEnviada" boolean DEFAULT false NOT NULL,
-    "invitacionEnviadaEn" timestamp with time zone
+    "invitacionEnviadaEn" timestamp with time zone,
+    -- «Van juntos» (él, v101.1): las familias con el mismo código se sientan
+    -- juntas en Acomodación, sin ser una familia (invitación, pago y fotos,
+    -- de cada una). Vive aquí, por familia, para que trg_mudar_datos_familia
+    -- se lo lleve si cambia el código. Sin "not null" (1.7, regla 7).
+    "vanJuntos" text
 );
 
 -- Una foto por familia, guardada como texto (base64).
@@ -1571,20 +1576,25 @@ begin
     raise exception 'No autorizado para guardar el orden de las familias';
   end if;
 
-  insert into orden_familias ("grupoFamiliar", "orden", "invitacionEnviada", "invitacionEnviadaEn")
+  -- «vanJuntos» (v101.1): quien no lo manda (un colaborador, que no lee
+  -- esta tabla; una pestaña de antes) no lo borra: se queda el que había.
+  insert into orden_familias ("grupoFamiliar", "orden", "invitacionEnviada", "invitacionEnviadaEn", "vanJuntos")
   select v->>'grupoFamiliar',
          coalesce(
            (select array_agg(x) from jsonb_array_elements_text(v->'orden') x),
            '{}'::text[]
          ),
          coalesce((v->>'invitacionEnviada')::boolean, false),
-         (v->>'invitacionEnviadaEn')::timestamptz
+         (v->>'invitacionEnviadaEn')::timestamptz,
+         case when v ? 'vanJuntos' then nullif(v->>'vanJuntos', '')
+              else (select o."vanJuntos" from orden_familias o where o."grupoFamiliar" = v->>'grupoFamiliar') end
   from jsonb_array_elements(coalesce(p_filas, '[]'::jsonb)) v
   where coalesce(v->>'grupoFamiliar', '') <> ''
   on conflict ("grupoFamiliar") do update set
     "orden"               = excluded."orden",
     "invitacionEnviada"   = excluded."invitacionEnviada",
-    "invitacionEnviadaEn" = excluded."invitacionEnviadaEn";
+    "invitacionEnviadaEn" = excluded."invitacionEnviadaEn",
+    "vanJuntos"           = excluded."vanJuntos";
 end;
 $$;
 

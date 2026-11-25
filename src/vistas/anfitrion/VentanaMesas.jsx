@@ -21,6 +21,10 @@
 // están «sí o sí tienen que ir en esa mesa». Es del mobiliario (al momento);
 // la regla, en lib/repartoMesas.js (mesaBloqueada).
 //
+// «Van juntos» (él, v101.1): familias que se sientan juntas sin ser una
+// familia, en su ventanita (VentanaVanJuntos); la cadena con el número de
+// su grupo en cada una. Al mover una, va el grupo entero.
+//
 // Con ratón, una mesa se arrastra por su cabecera sobre otra (él, v83): ocupa
 // su lugar y todas se renumeran, en la PRUEBA, llevándose a su gente.
 //
@@ -28,7 +32,7 @@
 // sitios, plano y quién se sienta dónde). Cargar una la pone como prueba,
 // mesas incluidas: mientras está cargada, también las mesas son prueba.
 import { useLayoutEffect, useRef, useState } from "react";
-import { Check, AlertTriangle, Lock, LockOpen, Plus, Minus, Bookmark, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Map as IconoPlano } from "lucide-react";
+import { Check, AlertTriangle, Lock, LockOpen, Plus, Minus, Bookmark, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Link2, Map as IconoPlano } from "lucide-react";
 import { C, OP, R, T } from "../../theme";
 import { VentanaFlotante } from "../../components/VentanaFlotante";
 import { Boton } from "../../components/Boton";
@@ -42,6 +46,7 @@ import { RecuadroSiNo } from "../../components/RecuadroSiNo";
 import { MarcaDj } from "../../components/MarcaDj";
 import { esAparatoTactil } from "../../lib/mano";
 import { VentanaCambiarMesa } from "./VentanaCambiarMesa";
+import { VentanaVanJuntos, MarcaJuntos } from "./VentanaVanJuntos";
 import { nombreCompleto, fechaYHora } from "../../lib/formato";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import { alergiasUniformes } from "../../lib/alergias";
@@ -68,6 +73,9 @@ import {
   anchoColumnas,
   conBloqueo,
   mesaBloqueada,
+  gruposJuntos,
+  juntarFamilias,
+  separarJuntos,
 } from "../../lib/repartoMesas";
 
 // El ancho de los recuadros, uno para todos (norma 6), el del nombre más
@@ -131,6 +139,8 @@ function Familia({ familia, cogida, onCoger }) {
       </span>
       <span className="flex items-center gap-1.5 flex-shrink-0">
         {familia.fija && <Lock size={13} aria-label="Mesa fija: invitación enviada" />}
+        {/* «Van juntos» (v101.1): la cadena con el número de su grupo. */}
+        {familia.junto && <MarcaJuntos numero={familia.junto} />}
         {/* Alergias o intolerancias: en la familia que las tiene, no en la
             mesa (él, v74.9: «solo donde aplique»). Quién y qué, al pasar
             por encima. */}
@@ -227,7 +237,7 @@ function AcomodacionTerminada({ evento, invitados, hayPrueba, persistEvento, pre
 }
 
 export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
-  const { invitados, evento, persistInvitados, persistMesas, persistEvento, ordenFamiliares } = data;
+  const { invitados, evento, persistInvitados, persistMesas, persistEvento, ordenFamiliares, persistOrdenFamiliares } = data;
   const { borrador } = prueba;
   // Las mesas que se ven: las de la memoria cargada o, si no hay, las de verdad.
   const mesas = prueba.mesas ?? data.mesas;
@@ -248,7 +258,13 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
 
   const vista = conBorrador(invitados, borrador);
   const confirmacion = cuentaConfirmacion(invitados);
-  const familias = familiasParaRepartir(vista, { conSinConfirmar, ordenFamiliares });
+  // Con el número de su grupo de «Van juntos» (v101.1), si va con otras.
+  const grupos = gruposJuntos(familiasParaRepartir(vista, { conSinConfirmar, ordenFamiliares }), ordenFamiliares);
+  const numeroJuntos = new Map(grupos.flatMap((grupo) => grupo.familias.map((f) => [f.clave, grupo.numero])));
+  const familias = familiasParaRepartir(vista, { conSinConfirmar, ordenFamiliares }).map((f) => ({ ...f, junto: numeroJuntos.get(f.clave) || null }));
+  // Sin la columna en la base (falta subir el SQL de la v101.1), no hay «Van juntos».
+  const hayJuntos = Object.values(ordenFamiliares || {}).some((d) => d && Object.hasOwn(d, "vanJuntos"));
+  const [verJuntos, setVerJuntos] = useState(false);
   const sinMesa = familias.filter((f) => f.mesa == null).sort(porNombre);
 
   // El ancho del nombre más largo (v98.7): se mide con un texto escondido,
@@ -352,10 +368,20 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
     });
   const autoAsignar = () => {
     limpiarAvisos();
-    const { borrador: siguiente, avisos } = autoAsignarEnBorrador(invitados, borrador, mesas);
+    const { borrador: siguiente, avisos } = autoAsignarEnBorrador(invitados, borrador, mesas, ordenFamiliares);
     setBorrador(siguiente);
     setAvisosAuto(avisos);
   };
+  // «Van juntos» (v101.1): la marca, al momento; sentarlas juntas, en la prueba.
+  const juntar = (idA, idB) => {
+    limpiarAvisos();
+    const { ordenFamiliares: siguiente, borrador: nuevo, aviso: motivo } = juntarFamilias(invitados, borrador, idA, idB, mesas, { ordenFamiliares, conSinConfirmar });
+    if (motivo) return motivo;
+    persistOrdenFamiliares(siguiente);
+    if (nuevo !== borrador) setBorrador(nuevo);
+    return "";
+  };
+  const separar = (id) => persistOrdenFamiliares(separarJuntos(ordenFamiliares, id));
   // Al aplicar, la prueba pasa a la Lista y los botones se apagan: se dice
   // aquí que está guardado (norma 9), o parecería que no ha hecho nada.
   // Con una memoria cargada, también sus mesas; quien quedara en una mesa
@@ -633,8 +659,8 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
                   : `PRUEBA · ${cambian} ${cambian === 1 ? "familia cambia" : "familias cambian"} de mesa, aún sin guardar`}
           </span>
           <span className="flex-1" />
-          {/* Los cuatro, del mismo ancho (norma 4); en el móvil, dos y dos. */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full sm:w-auto">
+          {/* Los cinco, del mismo ancho (norma 4); en el móvil, de dos en dos. */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 w-full sm:w-auto">
             <Boton variante="secundario" icono={IconoPlano} aria-pressed={verPlano} onClick={() => setVerPlano((v) => !v)}>
               {verPlano ? "Ver las mesas" : "Plano de mesas"}
             </Boton>
@@ -662,6 +688,15 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
                 </Boton>
               )}
             />
+            <Boton
+              variante="secundario"
+              icono={Link2}
+              disabled={!hayJuntos || verPlano}
+              titulo={hayJuntos ? "Familias que viajan juntas y se sientan juntas, sin juntarlas como familia" : "Falta subir el SQL de la versión 101.1"}
+              onClick={() => setVerJuntos(true)}
+            >
+              Van juntos
+            </Boton>
           </div>
         </div>
         {aviso && <LineaAviso className="text-sm mb-2">{aviso}</LineaAviso>}
@@ -750,7 +785,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
             <p className="mt-2" style={{ opacity: OP.secundario }}>
               Arrastra cada familia a su mesa; en el móvil, tócala y luego toca la mesa. Sombreadas, las que aún no han
               confirmado: su sitio queda reservado. Sentar, Vaciar y Auto-asignar son una prueba hasta «Aplicar a la
-              Lista»; las mesas y sus sitios se guardan al momento. Con candado, las familias que ya tienen su invitación: su mesa queda fija; tócalas si hubiera que cambiarla. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba. Al quitar una, las demás se corren y quedan 1, 2, 3… «Bloquear», bajo el número de la mesa: nadie sale de ella, ni con «Vaciar mesas», y no se puede quitar; sus sitios libres sí se pueden llenar.
+              Lista»; las mesas y sus sitios se guardan al momento. Con candado, las familias que ya tienen su invitación: su mesa queda fija; tócalas si hubiera que cambiarla. Con el ratón, arrastra una mesa por su cabecera sobre otra para cambiar el orden: se renumeran solas, también en la prueba. Al quitar una, las demás se corren y quedan 1, 2, 3… «Bloquear», bajo el número de la mesa: nadie sale de ella, ni con «Vaciar mesas», y no se puede quitar; sus sitios libres sí se pueden llenar. «Van juntos»: familias que se sientan juntas sin ser una familia; la cadena 🔗 con su número las señala, y al mover una va todo el grupo.
             </p>
           </details>
           <Boton variante="secundario" onClick={descartar} disabled={!hayPrueba}>
@@ -764,6 +799,7 @@ export function VentanaMesas({ data, prueba, setPrueba, onCerrar, fijo }) {
       {ventanaPregunta}
     </VentanaFlotante>
     {familiaCambiando && <VentanaCambiarMesa data={data} familia={familiaCambiando} onCerrar={() => setCambiandoMesa(null)} />}
+    {verJuntos && <VentanaVanJuntos familias={familias} grupos={grupos} onJuntar={juntar} onSeparar={separar} onCerrar={() => setVerJuntos(false)} />}
     </>
   );
 }

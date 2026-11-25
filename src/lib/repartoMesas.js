@@ -7,8 +7,9 @@
 // La prueba es un BORRADOR de solo las mesas que cambian, { idInvitado:
 // mesa }, nunca una copia de la Lista: si mientras tanto un colaborador
 // confirma a alguien, al aplicar no se le pisa (norma 12).
-import { asignarMesaConSuFamilia, autoAsignarMesas, claveFamiliaMesa, mesaFija, ocupacion, seSientaEnMesa } from "./mesas";
-import { nombreCompleto } from "./formato";
+import { asignarMesaConSuFamilia, autoAsignarMesas, claveFamiliaMesa, claveInvitacion, mesaFija, ocupacion, seSientaEnMesa } from "./mesas";
+import { listaConY, nombreCompleto } from "./formato";
+import { uid } from "./id";
 import { tieneAlergiaReal, esDj } from "./invitados";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
@@ -51,6 +52,8 @@ export function familiasParaRepartir(vista, { conSinConfirmar = false, ordenFami
 export function moverFamilia(invitados, borrador, idRepresentante, numero, mesas, { conSinConfirmar = false, ordenFamiliares } = {}) {
   const vista = conBorrador(invitados, borrador);
   const representante = vista.find((g) => g.id === idRepresentante);
+  const bloque = familiasQueVanCon(vista, representante, { conSinConfirmar, ordenFamiliares });
+  if (bloque.length > 1) return moverBloque(invitados, borrador, vista, bloque, numero, mesas, { conSinConfirmar, ordenFamiliares });
   const desde = representante?.mesa ?? null;
   if (desde != null && desde !== numero && mesaBloqueada(mesas, desde)) {
     return { borrador, aviso: `La mesa ${desde} está bloqueada: nadie sale de ella. Desmarca «Bloqueada» para cambiarla.` };
@@ -77,6 +80,105 @@ export function conBloqueo(mesas, numero, bloqueada) {
   return mesas.map((m) => (m.numero === numero ? { ...m, bloqueada: Boolean(bloqueada) } : m));
 }
 
+// ---------- «Van juntos» (él, v101.1) ----------
+//
+// Familias que viajan juntas y se sientan juntas, sin hacerlas una familia
+// (él: «no quiero vincularlos por apellidos»): la invitación, el pago y las
+// fotos siguen siendo de cada una. La marca, un código común en
+// orden_familias (`vanJuntos`), por familia: si se le cambia el código de
+// familia, la base se lo muda con ella. Al mover una, va todo el grupo;
+// Auto-asignar las sienta juntas; si no caben, no se mueve nada y se dice.
+
+export const grupoJuntos = (g, ordenFamiliares) => (g ? ordenFamiliares?.[claveInvitacion(g)]?.vanJuntos || null : null);
+
+const porNombreFamilia = (a, b) => a.nombre.localeCompare(b.nombre, "es");
+
+// Los grupos de ahora, de las familias que se sientan, numerados 1, 2, 3…
+// por orden alfabético de su primera familia (el número de la cadena 🔗).
+// Un grupo que se ha quedado con una sola familia no cuenta.
+export function gruposJuntos(familias, ordenFamiliares) {
+  const porGrupo = new Map();
+  for (const f of familias) {
+    const id = grupoJuntos(f.representante, ordenFamiliares);
+    if (id) porGrupo.set(id, [...(porGrupo.get(id) || []), f]);
+  }
+  return [...porGrupo.entries()]
+    .filter(([, fs]) => fs.length > 1)
+    .map(([id, fs]) => ({ id, familias: [...fs].sort(porNombreFamilia) }))
+    .sort((a, b) => porNombreFamilia(a.familias[0], b.familias[0]))
+    .map((grupo, i) => ({ ...grupo, numero: i + 1 }));
+}
+
+// La familia de `g` y las que van con ella (familiasParaRepartir).
+function familiasQueVanCon(vista, g, { conSinConfirmar, ordenFamiliares }) {
+  const id = grupoJuntos(g, ordenFamiliares);
+  if (!id) return [];
+  return familiasParaRepartir(vista, { conSinConfirmar, ordenFamiliares }).filter((f) => grupoJuntos(f.representante, ordenFamiliares) === id);
+}
+
+// Mover un grupo entero a una mesa (o a «Sin mesa»): todo o nada.
+function moverBloque(invitados, borrador, vista, bloque, numero, mesas, { conSinConfirmar, ordenFamiliares }) {
+  const claves = new Set(bloque.map((f) => f.clave));
+  const sentados = vista.filter((g) => claves.has(claveFamiliaMesa(g)) && seSientaEnMesa(g, conSinConfirmar));
+  const nombres = listaConY(bloque.map((f) => f.nombre));
+  const sale = sentados.find((g) => g.mesa != null && g.mesa !== numero && mesaBloqueada(mesas, g.mesa));
+  if (sale) return { borrador, aviso: `La mesa ${sale.mesa} está bloqueada: nadie sale de ella. Desmarca «Bloqueada» para cambiarla.` };
+  const mesa = numero != null && mesas.find((m) => m.numero === numero);
+  if (mesa) {
+    const entran = sentados.filter((g) => g.mesa !== numero).length;
+    const libres = Math.max(mesa.capacidad - ocupacion(vista, numero), 0);
+    if (entran > libres) {
+      const quedan = libres === 0 ? "no queda ningún sitio" : libres === 1 ? "solo queda 1 sitio" : `solo quedan ${libres} sitios`;
+      return { borrador, aviso: `${nombres} van juntos: son ${sentados.length} y en la mesa ${numero} ${quedan}. Sube la capacidad de la mesa o elige otra.` };
+    }
+  }
+  let lista = vista;
+  for (const f of bloque) {
+    const suyos = sentados.filter((g) => claveFamiliaMesa(g) === f.clave);
+    if (suyos.every((g) => (g.mesa ?? null) === numero)) continue;
+    const { invitados: tras, aviso } = asignarMesaConSuFamilia(lista, f.representante.id, numero, mesas, { comoSeLlama: `de ${f.nombre}`, conSinConfirmar, ordenFamiliares });
+    if (aviso) return { borrador, aviso };
+    lista = tras;
+  }
+  return { borrador: borradorDesde(invitados, lista), aviso: "" };
+}
+
+// Juntar dos familias: la primera va con la segunda (y con las que ya iban
+// con cualquiera de las dos: un solo grupo). Lo que en la vida real va
+// junto, la app lo junta sola (norma 11): si la segunda tiene mesa, el
+// grupo se sienta en ella; si no y la primera sí, en la de la primera. En la
+// prueba, como sentar. Si no caben, no se junta nada y se dice. Devuelve
+// { ordenFamiliares, borrador, aviso }; el código del grupo, `nuevoId`.
+export function juntarFamilias(invitados, borrador, idA, idB, mesas, { ordenFamiliares = {}, conSinConfirmar = false, nuevoId = uid } = {}) {
+  const vista = conBorrador(invitados, borrador);
+  const a = vista.find((g) => g.id === idA);
+  const b = vista.find((g) => g.id === idB);
+  const sinCambios = { ordenFamiliares, borrador };
+  if (!a || !b) return { ...sinCambios, aviso: "Elige las dos familias." };
+  if (claveFamiliaMesa(a) === claveFamiliaMesa(b)) return { ...sinCambios, aviso: "Es la misma familia: ya se sientan juntos." };
+  const ga = grupoJuntos(a, ordenFamiliares);
+  const gb = grupoJuntos(b, ordenFamiliares);
+  if (ga && ga === gb) return { ...sinCambios, aviso: "Ya van juntos." };
+  const id = gb || ga || nuevoId();
+  const siguiente = { ...ordenFamiliares };
+  const marcar = (clave) => {
+    siguiente[clave] = { orden: [], invitacionEnviada: false, invitacionEnviadaEn: null, ...siguiente[clave], vanJuntos: id };
+  };
+  for (const [clave, datos] of Object.entries(ordenFamiliares)) if (datos?.vanJuntos && (datos.vanJuntos === ga || datos.vanJuntos === gb)) marcar(clave);
+  marcar(claveInvitacion(a));
+  marcar(claveInvitacion(b));
+  const destino = b.mesa ?? a.mesa ?? null;
+  if (destino == null) return { ordenFamiliares: siguiente, borrador, aviso: "" };
+  const { borrador: sentado, aviso } = moverFamilia(invitados, borrador, b.mesa != null ? idA : idB, destino, mesas, { conSinConfirmar, ordenFamiliares: siguiente });
+  if (aviso) return { ...sinCambios, aviso };
+  return { ordenFamiliares: siguiente, borrador: sentado, aviso: "" };
+}
+
+// Separar un grupo: cada familia, por su cuenta. Nadie cambia de mesa.
+export function separarJuntos(ordenFamiliares = {}, id) {
+  return Object.fromEntries(Object.entries(ordenFamiliares).map(([clave, datos]) => [clave, datos?.vanJuntos === id ? { ...datos, vanJuntos: null } : datos]));
+}
+
 // La cifra de una familia en su pastilla: cuántos son; con parte sin
 // confirmar, «2+1» (sombreada si no ha confirmado nadie: él, v74.2).
 export function cifraFamilia(f) {
@@ -95,7 +197,8 @@ export function anchoColumnas(familias, { medirNombre, medirCifra, icono, fijo, 
   for (const f of familias) {
     const dj = esDj(f.representante);
     const nombre = medirNombre(f.nombre, dj) + (dj ? icono : 0);
-    const resto = medirCifra(cifraFamilia(f)) + (f.fija ? icono : 0) + (f.conAlergia?.length ? icono : 0);
+    // `junto`: el número de su grupo de «Van juntos» (v101.1), con su cadena.
+    const resto = medirCifra(cifraFamilia(f)) + (f.fija ? icono : 0) + (f.conAlergia?.length ? icono : 0) + (f.junto ? icono + medirCifra(String(f.junto)) : 0);
     mayor = Math.max(mayor, Math.ceil(nombre + resto + fijo));
   }
   return mayor;
@@ -182,9 +285,14 @@ export function vaciarTodasEnBorrador(invitados, borrador, ordenFamiliares, mesa
   return borradorDesde(invitados, propuesta);
 }
 
-// Auto-asignar, en la prueba: lo propone sobre lo que ya hay en ella.
-export function autoAsignarEnBorrador(invitados, borrador, mesas) {
-  const { invitados: propuesta, avisos } = autoAsignarMesas(conBorrador(invitados, borrador), mesas);
+// Auto-asignar, en la prueba: lo propone sobre lo que ya hay en ella. Las
+// que van juntas (v101.1), como un bloque.
+export function autoAsignarEnBorrador(invitados, borrador, mesas, ordenFamiliares) {
+  const bloque = (g) => {
+    const id = grupoJuntos(g, ordenFamiliares);
+    return id ? `juntos:${id}` : claveFamiliaMesa(g);
+  };
+  const { invitados: propuesta, avisos } = autoAsignarMesas(conBorrador(invitados, borrador), mesas, { bloque });
   return { borrador: borradorDesde(invitados, propuesta), avisos };
 }
 

@@ -20,20 +20,26 @@ const mesas = [
   { numero: 7, capacidad: 9 },
 ];
 
-function dibujar({ conMesas = mesas, lista = invitados, evento = {} } = {}) {
+function dibujar({ conMesas = mesas, lista = invitados, evento = {}, orden } = {}) {
   const guardados = [];
   const mesasGuardadas = [];
   const eventos = [];
+  const ordenes = [];
   function Prueba() {
     const [prueba, setPrueba] = useState(PRUEBA_VACIA);
     const [ev, setEv] = useState(evento);
+    const [ord, setOrd] = useState(orden);
     const persistEvento = (e) => {
       eventos.push(e);
       setEv(e);
     };
+    const persistOrdenFamiliares = (o) => {
+      ordenes.push(o);
+      setOrd(o);
+    };
     return (
       <VentanaMesas
-        data={{ invitados: lista, mesas: conMesas, evento: ev, persistEvento, persistInvitados: (l) => guardados.push(l), persistMesas: (l) => void mesasGuardadas.push(l) }}
+        data={{ invitados: lista, mesas: conMesas, evento: ev, persistEvento, persistInvitados: (l) => guardados.push(l), persistMesas: (l) => void mesasGuardadas.push(l), ordenFamiliares: ord, persistOrdenFamiliares }}
         prueba={prueba}
         setPrueba={setPrueba}
         onCerrar={() => {}}
@@ -47,7 +53,7 @@ function dibujar({ conMesas = mesas, lista = invitados, evento = {} } = {}) {
   // busca es el de la pregunta.
   const boton = (t) => [...document.body.querySelectorAll('button:not([role="radio"])')].find((b) => b.textContent.trim() === t || b.title === t);
   const enMesa = (n, t) => [...columna(`Mesa ${n}`).querySelectorAll("button")].find((b) => b.textContent.trim() === t || b.title === t);
-  return { vista, guardados, mesasGuardadas, eventos, familia, columna, boton, enMesa };
+  return { vista, guardados, mesasGuardadas, eventos, ordenes, familia, columna, boton, enMesa };
 }
 
 describe("«Acomodación terminada», el candado de las invitaciones (v90.7)", () => {
@@ -528,6 +534,61 @@ describe("«Bloquear» una mesa (v101)", () => {
   it("si la única gente sentada está en una bloqueada, «Vaciar mesas» se apaga", () => {
     const { vista, boton } = dibujar({ conMesas: conMarca });
     expect(boton("Vaciar mesas").disabled).toBe(true);
+    vista.desmontar();
+  });
+});
+
+describe("«Van juntos» (v101.1)", () => {
+  // Con la columna en la base: las filas traen `vanJuntos`.
+  const orden = { García01: { orden: [], invitacionEnviada: false, invitacionEnviadaEn: null, vanJuntos: null } };
+  const elegir = (vista, etiqueta, valor) => vista.elegir(document.body.querySelector(`[aria-label="${etiqueta}"]`), valor);
+
+  it("sin el SQL subido, el botón se apaga y dice por qué", () => {
+    const { vista, boton } = dibujar();
+    expect(boton("Van juntos").disabled).toBe(true);
+    expect(boton("Van juntos").title).toBe("Falta subir el SQL de la versión 101.1");
+    vista.desmontar();
+  });
+
+  it("juntar guarda la marca y, si la segunda tiene mesa, sienta a la primera con ella en la prueba", () => {
+    const { vista, boton, ordenes, columna, familia } = dibujar({ orden, conMesas: [{ numero: 6, capacidad: 5 }, { numero: 7, capacidad: 9 }] });
+    vista.pulsar(boton("Van juntos"));
+    expect(document.body.textContent).toContain("Todavía no hay familias que vayan juntas.");
+    elegir(vista, "La familia que va", "1");
+    elegir(vista, "Con qué familia va", "3");
+    vista.pulsar(boton("Juntar"));
+    const ultima = ordenes.at(-1);
+    expect(ultima.García01.vanJuntos).toBeTruthy();
+    expect(ultima.Expósito01.vanJuntos).toBe(ultima.García01.vanJuntos);
+    expect(document.body.textContent).toContain("Van juntos: García, Isaias y Expósito, Rosi.");
+    // En la mesa 6 de Rosi, con la cadena y el número 1.
+    expect(columna("Mesa 6").textContent).toContain("García, Isaias");
+    expect(familia("García, Isaias").querySelector('[aria-label="Van juntos, grupo 1"]')).not.toBeNull();
+    expect(familia("Expósito, Rosi").querySelector('[aria-label="Van juntos, grupo 1"]')).not.toBeNull();
+    vista.desmontar();
+  });
+
+  it("si no caben juntas, no se juntan y lo dice", () => {
+    const { vista, boton, ordenes } = dibujar({ orden });
+    vista.pulsar(boton("Van juntos"));
+    elegir(vista, "La familia que va", "1");
+    elegir(vista, "Con qué familia va", "3");
+    vista.pulsar(boton("Juntar"));
+    expect(ordenes).toEqual([]);
+    expect(document.body.textContent).toContain("van juntos: son 3 y en la mesa 6 solo quedan 1 sitio".replace("quedan 1 sitio", "queda 1 sitio"));
+    vista.desmontar();
+  });
+
+  it("la X las separa, preguntando antes; nadie cambia de mesa", () => {
+    const juntas = { García01: { vanJuntos: "g" }, Expósito01: { vanJuntos: "g" } };
+    const { vista, boton, ordenes, guardados } = dibujar({ orden: juntas });
+    vista.pulsar(boton("Van juntos"));
+    expect(document.body.querySelector('[data-grupo="1"]').textContent).toContain("Expósito, Rosi · García, Isaias");
+    vista.pulsar(boton("Separarlas"));
+    expect(document.body.textContent).toContain("Expósito, Rosi y García, Isaias dejan de ir juntos. Nadie cambia de mesa.");
+    vista.pulsar(boton("Sí"));
+    expect(ordenes.at(-1)).toEqual({ García01: { vanJuntos: null }, Expósito01: { vanJuntos: null } });
+    expect(guardados).toEqual([]);
     vista.desmontar();
   });
 });

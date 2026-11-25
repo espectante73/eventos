@@ -1,7 +1,7 @@
 // v74 (él): probar el reparto moviendo familias enteras; que no deje sentar
 // a más de los que caben; y nada se guarda hasta «Aplicar a la Lista».
 import { describe, it, expect } from "vitest";
-import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador, moverMesa, vaciarMesaEnBorrador, fijosEnMesa, quitarMesaRenumerando, cifraFamilia, anchoColumnas, mesaBloqueada, conBloqueo } from "./repartoMesas";
+import { conBorrador, familiasParaRepartir, moverFamilia, aplicarBorrador, familiasQueCambian, ocupacion, memoriaDesde, conMemoria, cargarMemoria, vaciarTodasEnBorrador, autoAsignarEnBorrador, moverMesa, vaciarMesaEnBorrador, fijosEnMesa, quitarMesaRenumerando, cifraFamilia, anchoColumnas, mesaBloqueada, conBloqueo, gruposJuntos, juntarFamilias, separarJuntos, grupoJuntos } from "./repartoMesas";
 import { ROL_FAMILIAR } from "./rolFamiliar";
 
 const g = (id, apellido, nombre, rol, extra = {}) => ({ id, apellido, nombre, grupoFamiliar: `${apellido}01`, rolFamiliar: rol, confirmado: true, mesa: null, ...extra });
@@ -359,5 +359,88 @@ describe("una mesa bloqueada (v101)", () => {
   it("cambia de orden con su gente y su marca", () => {
     const { mesas: nuevas } = moverMesa(invitados, {}, conLa6, 6, 7);
     expect(nuevas).toEqual([{ numero: 1, capacidad: 10 }, { numero: 2, capacidad: 3, bloqueada: true }]);
+  });
+});
+
+describe("«Van juntos» (v101.1)", () => {
+  // García (3), Expósito (1, mesa 6), Pérez (Loli; Pablo sin confirmar).
+  const tres = [
+    { numero: 6, capacidad: 3 },
+    { numero: 7, capacidad: 10 },
+    { numero: 8, capacidad: 4 },
+  ];
+  const ids = () => "g1";
+
+  it("juntar marca las dos familias con el mismo código, sin tocar lo demás de cada una", () => {
+    const orden = { García01: { orden: ["2", "1"], invitacionEnviada: false, invitacionEnviadaEn: null } };
+    const { ordenFamiliares, borrador, aviso } = juntarFamilias(invitados, {}, "1", "5", tres, { ordenFamiliares: orden, nuevoId: ids });
+    expect(aviso).toBe("");
+    expect(borrador).toEqual({});
+    expect(ordenFamiliares.García01).toEqual({ orden: ["2", "1"], invitacionEnviada: false, invitacionEnviadaEn: null, vanJuntos: "g1" });
+    expect(ordenFamiliares.Pérez01).toEqual({ orden: [], invitacionEnviada: false, invitacionEnviadaEn: null, vanJuntos: "g1" });
+    expect(grupoJuntos(invitados[0], ordenFamiliares)).toBe("g1");
+  });
+
+  it("si la segunda tiene mesa, la primera se sienta con ella, en la prueba", () => {
+    const { borrador, aviso } = juntarFamilias(invitados, {}, "5", "4", tres, { nuevoId: ids });
+    expect(aviso).toBe("");
+    expect(borrador).toEqual({ 5: 6 });
+  });
+
+  it("si no caben juntas, no se junta nada y se dice con la cifra", () => {
+    const { ordenFamiliares, borrador, aviso } = juntarFamilias(invitados, {}, "1", "4", tres, { nuevoId: ids });
+    expect(ordenFamiliares).toEqual({});
+    expect(borrador).toEqual({});
+    expect(aviso).toBe("García, Isaias y Expósito, Rosi van juntos: son 4 y en la mesa 6 solo quedan 2 sitios. Sube la capacidad de la mesa o elige otra.");
+  });
+
+  it("la misma familia, o dos que ya van juntas: lo dice", () => {
+    expect(juntarFamilias(invitados, {}, "1", "2", tres).aviso).toBe("Es la misma familia: ya se sientan juntos.");
+    const orden = { García01: { vanJuntos: "g1" }, Pérez01: { vanJuntos: "g1" } };
+    expect(juntarFamilias(invitados, {}, "1", "5", tres, { ordenFamiliares: orden }).aviso).toBe("Ya van juntos.");
+  });
+
+  it("juntar con una que ya iba con otra: un solo grupo", () => {
+    const orden = { García01: { vanJuntos: "a" }, Pérez01: { vanJuntos: "a" } };
+    // Expósito tiene mesa (la 6) y la otra no: el grupo entero se sienta en la suya.
+    const { ordenFamiliares, borrador, aviso } = juntarFamilias(invitados, {}, "4", "5", [{ numero: 6, capacidad: 10 }], { ordenFamiliares: orden, nuevoId: ids });
+    expect(aviso).toBe("");
+    expect([ordenFamiliares.García01.vanJuntos, ordenFamiliares.Pérez01.vanJuntos, ordenFamiliares.Expósito01.vanJuntos]).toEqual(["a", "a", "a"]);
+    expect(borrador).toEqual({ 1: 6, 2: 6, 3: 6, 5: 6 });
+  });
+
+  it("mover una mueve el grupo entero; si no caben, nada", () => {
+    const orden = { García01: { vanJuntos: "g1" }, Pérez01: { vanJuntos: "g1" } };
+    // Como en la ventana: también los que aún no han confirmado (Pablo).
+    const opciones = { ordenFamiliares: orden, conSinConfirmar: true };
+    expect(moverFamilia(invitados, {}, "5", 7, tres, opciones)).toEqual({ borrador: { 1: 7, 2: 7, 3: 7, 5: 7, 6: 7 }, aviso: "" });
+    const { borrador, aviso } = moverFamilia(invitados, {}, "1", 8, tres, opciones);
+    expect(borrador).toEqual({});
+    expect(aviso).toBe("García, Isaias y Pérez, Pablo van juntos: son 5 y en la mesa 8 solo quedan 4 sitios. Sube la capacidad de la mesa o elige otra.");
+    // A «Sin mesa», también juntas.
+    expect(moverFamilia(invitados, { 1: 7, 2: 7, 3: 7, 5: 7, 6: 7 }, "1", null, tres, opciones).borrador).toEqual({});
+  });
+
+  it("de una mesa bloqueada no sale nadie del grupo", () => {
+    const orden = { Expósito01: { vanJuntos: "g1" }, Pérez01: { vanJuntos: "g1" } };
+    const { aviso } = moverFamilia(invitados, {}, "5", 7, conBloqueo(tres, 6, true), { ordenFamiliares: orden });
+    expect(aviso).toContain("La mesa 6 está bloqueada");
+  });
+
+  it("Auto-asignar las sienta juntas", () => {
+    const orden = { García01: { vanJuntos: "g1" }, Pérez01: { vanJuntos: "g1" } };
+    const { borrador } = autoAsignarEnBorrador(invitados, {}, [{ numero: 6, capacidad: 2 }, { numero: 7, capacidad: 10 }], orden);
+    expect(new Set(["1", "2", "3", "5", "6"].map((id) => borrador[id]))).toEqual(new Set([7]));
+  });
+
+  it("los grupos, numerados por su primera familia; uno que se quedó solo no cuenta", () => {
+    const orden = { Pérez01: { vanJuntos: "b" }, García01: { vanJuntos: "b" }, Expósito01: { vanJuntos: "c" } };
+    const grupos = gruposJuntos(familiasParaRepartir(invitados, { ordenFamiliares: orden }), orden);
+    expect(grupos.map((gr) => [gr.numero, gr.id, gr.familias.map((f) => f.nombre)])).toEqual([[1, "b", ["García, Isaias", "Pérez, Loli"]]]);
+  });
+
+  it("separar deja a cada una por su cuenta, sin tocar lo demás", () => {
+    const orden = { García01: { orden: ["1"], vanJuntos: "b" }, Pérez01: { vanJuntos: "b" }, Otra01: { vanJuntos: "c" } };
+    expect(separarJuntos(orden, "b")).toEqual({ García01: { orden: ["1"], vanJuntos: null }, Pérez01: { vanJuntos: null }, Otra01: { vanJuntos: "c" } });
   });
 });

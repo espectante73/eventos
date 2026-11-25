@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "101.1",
+    cambios: [
+      "Acomodación: botón «Van juntos», para familias que viajan juntas y deben sentarse juntas sin hacerlas una familia (la invitación, el pago y las fotos siguen siendo de cada una). En su ventanita se elige una familia «con» otra y «Juntar»; si la segunda ya tiene mesa, la primera se sienta con ella, en la prueba, y si no caben no se juntan y lo dice con la cifra. Cada grupo, en una línea con su X para separarlas.",
+      "En las mesas, cada familia que va con otras lleva una cadena con el número de su grupo. Al mover una, va todo el grupo (todo o nada, también con mesas bloqueadas), y «Auto-asignar» las sienta juntas.",
+    ],
+  },
+  {
     version: "101",
     cambios: [
       "Acomodación: cada mesa lleva bajo su número una casilla «Bloquear», para los invitados que sí o sí tienen que ir en esa mesa. Bloqueada, nadie sale de ella: ni moviéndolo (lo avisa), ni con su «Vaciar», ni con «Vaciar mesas», y no se puede quitar. Sus sitios libres sí se pueden llenar, a mano o con «Auto-asignar». Se guarda al momento, como los sitios, y va en las memorias.",

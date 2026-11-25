@@ -60,6 +60,23 @@ function avisar(mensaje, error) {
 
 // `esTokenAnfitrion`: mi_rol() ya dijo que `rol` es la llave del anfitrión
 // (App.jsx). Así no se pregunta antes si es un colaborador (v72.2).
+// Una fila de orden_familias, de la base a la app y de vuelta. `vanJuntos`
+// («Van juntos», v101.1) solo viaja si se tiene: quien no lo leyó (sin el
+// SQL subido, o un colaborador que no ve la tabla) no lo manda, y la base
+// conserva el que hubiera (guardar_orden_familias).
+const datosDeOrdenFamilia = (r) => ({
+  orden: r.orden,
+  invitacionEnviada: r.invitacionEnviada,
+  invitacionEnviadaEn: r.invitacionEnviadaEn,
+  ...(Object.hasOwn(r, "vanJuntos") ? { vanJuntos: r.vanJuntos } : {}),
+});
+const filaDeOrdenFamilia = (d) => ({
+  orden: d.orden || [],
+  invitacionEnviada: Boolean(d.invitacionEnviada),
+  invitacionEnviadaEn: d.invitacionEnviadaEn || null,
+  ...(Object.hasOwn(d, "vanJuntos") ? { vanJuntos: d.vanJuntos || null } : {}),
+});
+
 export function useLedgerData(rol, esTokenAnfitrion = false) {
   const [evento, setEvento] = useState(EVENTO_POR_DEFECTO);
   const [colaboradores, setColaboradores] = useState([]);
@@ -403,14 +420,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
           if (tokenTablonCargado) setTokenTablon(tokenTablonCargado);
           setOrdenFamiliares(
             Object.fromEntries(
-              (ordenFilas || []).map((r) => [
-                r.grupoFamiliar,
-                {
-                  orden: r.orden,
-                  invitacionEnviada: r.invitacionEnviada,
-                  invitacionEnviadaEn: r.invitacionEnviadaEn,
-                },
-              ])
+              (ordenFilas || []).map((r) => [r.grupoFamiliar, datosDeOrdenFamilia(r)])
             )
           );
           setEsAnfitrion(true);
@@ -726,25 +736,11 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     const anterior = ordenFamiliaresRef.current;
     setOrdenFamiliares(next);
     ordenFamiliaresRef.current = next;
-    const filas = Object.entries(next).map(([grupoFamiliar, datos]) => ({
-      grupoFamiliar,
-      orden: datos.orden || [],
-      invitacionEnviada: Boolean(datos.invitacionEnviada),
-      invitacionEnviadaEn: datos.invitacionEnviadaEn || null,
-    }));
+    const filas = Object.entries(next).map(([grupoFamiliar, datos]) => ({ grupoFamiliar, ...filaDeOrdenFamilia(datos) }));
     // Norma 12. Aquí hay un segundo escritor que no es una persona: el
     // trigger `invitados_invalidar_invitacion` pone `invitacionEnviada`
     // a false solo. Mandar la colección entera lo deshacía.
-    const yaEstaba = Object.fromEntries(
-      Object.entries(anterior).map(([g, d]) => [
-        g,
-        JSON.stringify({
-          orden: d.orden || [],
-          invitacionEnviada: Boolean(d.invitacionEnviada),
-          invitacionEnviadaEn: d.invitacionEnviadaEn || null,
-        }),
-      ])
-    );
+    const yaEstaba = Object.fromEntries(Object.entries(anterior).map(([g, d]) => [g, JSON.stringify(filaDeOrdenFamilia(d))]));
     const cambiadas = filas.filter(({ grupoFamiliar, ...resto }) => yaEstaba[grupoFamiliar] !== JSON.stringify(resto));
     if (cambiadas.length === 0) return;
     const { error } = await supabase.rpc("guardar_orden_familias", {
@@ -1089,10 +1085,7 @@ export function useLedgerData(rol, esTokenAnfitrion = false) {
     if (ordenFilas) {
       setOrdenFamiliares(
         Object.fromEntries(
-          ordenFilas.map((r) => [
-            r.grupoFamiliar,
-            { orden: r.orden, invitacionEnviada: r.invitacionEnviada, invitacionEnviadaEn: r.invitacionEnviadaEn },
-          ])
+          ordenFilas.map((r) => [r.grupoFamiliar, datosDeOrdenFamilia(r)])
         )
       );
     }
