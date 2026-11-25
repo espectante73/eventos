@@ -24,6 +24,24 @@ it("abierto: su frase, su nombre, alergias, canciones, boda, email y si guarda s
   vista.desmontar();
 });
 
+// v101.9 (él): «este modelo… con la palabra mostrar / ocultar», y el tono
+// de color diciendo que ahí hay algo oculto.
+it("en su franja: plegado dice «Mostrar» y no enseña los datos; abierto, «Ocultar»; tocarla avisa", () => {
+  let alternadas = 0;
+  const plegado = montar(<RegistroTablon yo={yo} evento={evento} abierta={false} onAlternar={() => (alternadas += 1)} />);
+  const franja = plegado.contenedor.querySelector("[data-franja-plegable]");
+  expect(franja.textContent).toBe("Comprueba tus datosMostrar");
+  expect(franja.getAttribute("aria-expanded")).toBe("false");
+  expect(franja.style.background).toContain("rgba(217, 183, 120, 0.16)");
+  expect(plegado.contenedor.textContent).not.toContain("Alergias");
+  plegado.pulsar(franja);
+  expect(alternadas).toBe(1);
+  plegado.desmontar();
+  const abierto = montar(<RegistroTablon yo={yo} evento={evento} abierta onAlternar={() => {}} />);
+  expect(abierto.contenedor.querySelector("[data-franja-plegable]").textContent).toBe("Comprueba tus datosOcultar");
+  abierto.desmontar();
+});
+
 it("si es su propio colaborador, lo corrige él; sin boda si no es matrimonio", () => {
   const vista = montar(<RegistroTablon yo={{ ...yo, colaboradorEsYo: true, anioBoda: null }} evento={evento} abierta onAlternar={() => {}} />);
   const texto = vista.contenedor.textContent;

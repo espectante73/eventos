@@ -126,7 +126,9 @@ en la propuesta cuáles se han comprobado. Lo fuerza
    - **Lo que se PULSA** (también desplegables, títulos plegables e
      iconos de las tablas) → `Boton`: relieve, clic y vibración. Los
      apartados de un formulario llevan solo su rótulo y una flecha grande
-     (`SeccionPlegable sencilla`).
+     (`SeccionPlegable sencilla`). Lo plegado que esconde algo que hay que
+     ver, en su franja de otro tono con «Mostrar» / «Ocultar» del lado del
+     pulgar (`SeccionPlegable franja`; él: «lo usaremos más»).
    - **Lo que es un LINK** a otro sitio —otra pantalla del login, otra
      web— → `EnlaceTexto`: subrayado y en gris, el estándar de internet.
      Suelto lleva `py-2`: en el móvil un link fino se falla.

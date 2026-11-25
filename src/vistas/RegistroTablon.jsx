@@ -73,7 +73,9 @@ export function RegistroTablon({ yo, evento, canciones, abierta, onAlternar }) {
     // Sobre el verde: el rótulo en su dorado de siempre y los datos en
     // blanco, como las rondas de encima.
     <div>
-      <SeccionPlegable sencilla titulo="Comprueba tus datos" abierta={abierta} onAlternar={onAlternar}>
+      {/* En su franja, con «Mostrar» / «Ocultar» (él, v101.9: «el tono de
+          color debe indicar que ahí hay algo oculto»). */}
+      <SeccionPlegable franja titulo="Comprueba tus datos" abierta={abierta} onAlternar={onAlternar}>
         <div className="space-y-1 text-sm pb-1" style={{ color: C.blanco }}>
           {/* Su frase, más corta (él, v85.4: el título ya dice «Comprueba»).
               Si es su propio colaborador, se corrige él. */}

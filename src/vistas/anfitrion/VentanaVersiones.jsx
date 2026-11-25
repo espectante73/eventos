@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "101.9",
+    cambios: [
+      "Tablón, «Comprueba tus datos»: en una franja de otro tono, que dice que ahí hay algo plegado, con el rótulo dentro y, del lado del pulgar, «Mostrar» o «Ocultar» y su flecha (el modelo B del boceto). Toda la franja se toca.",
+      "Queda como modelo de la app para lo plegado que esconde algo que hay que ver.",
+    ],
+  },
+  {
     version: "101.8",
     cambios: [
       "Contabilidad, «Entra»: ya no sale la línea del DJ a 0 €. En «Entra» va el dinero que llega de verdad al administrador, y del DJ no llega nada. Su invitación sigue en «Sale», en su propio apunte, «Invitación del DJ». Las cifras no cambian.",
