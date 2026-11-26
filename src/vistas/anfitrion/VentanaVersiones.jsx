@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "103",
+    cambios: [
+      "«Lo invita el evento»: en la Lista, con «Editar», el regalo de la columna «Pagado». Pregunta si es para toda la familia (con «No», solo esa persona). Quedan pagados sin que nadie les cobre: la invitación sale con el sello PAGADO, y valen el QR, el tablón («Pagado», sin cifra) y la entrada. Antes tienen que estar sus datos (año y alergias), como al cobrar. Fuera de «Editar», el regalo dorado en vez del visto.",
+      "Contabilidad: no están en «Entra» (no traen dinero). En «Sale → Local», cada familia en su propio apunte, «Invitación de Barrios: 2 adultos», como el del DJ; la cuenta del local lo aclara. El colaborador no puede quitarles el pago: se le dice que lo cambia el anfitrión.",
+    ],
+  },
+  {
     version: "102.2",
     cambios: [
       "Multimedia, con dos ordenadores abiertos a la vez: los dos podían elegir «Este reproduce el sonido». Los dos obedecían al mando y le mandaban su estado, que se pisaba, y el mando se bloqueaba. Ahora solo puede sonar uno: el segundo lo dice («Ya suena otro ordenador») y deja elegir «Mando a distancia» o Vídeo. Si aun así coinciden, todos lo avisan en rojo.",

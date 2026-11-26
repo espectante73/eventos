@@ -27,13 +27,13 @@ const INVITADOS = [
 ];
 const GASTOS = [{ id: "g", concepto: "Imprenta", importe: "30" }];
 
-function dibujar({ evento = EVENTO, ventana = false, colaboradores = [] } = {}) {
+function dibujar({ evento = EVENTO, ventana = false, colaboradores = [], invitados = INVITADOS } = {}) {
   const eventos = [];
   function Prueba() {
     const [ev, setEv] = useState(evento);
     const data = {
       evento: ev,
-      invitados: INVITADOS,
+      invitados,
       gastos: GASTOS,
       colaboradores,
       persistEvento: (e) => {
@@ -42,7 +42,7 @@ function dibujar({ evento = EVENTO, ventana = false, colaboradores = [] } = {}) 
       },
     };
     const recaudado = 47 + 47 + 35;
-    const resumen = resumenAPagar({ evento: ev, invitados: INVITADOS, gastos: GASTOS, recaudado, propinas: 10 });
+    const resumen = resumenAPagar({ evento: ev, invitados, gastos: GASTOS, recaudado, propinas: 10 });
     return ventana ? <VentanaLocal data={data} onCerrar={() => {}} /> : <APagarHoja data={data} resumen={resumen} recaudado={recaudado} propinas={10} onLocal={() => {}} />;
   }
   const vista = montar(<Prueba />);
@@ -78,6 +78,34 @@ it("con los precios del local: adultos, la invitación del DJ en su apunte, niñ
   expect(texto).toContain(`Local${euros(330)}`);
   expect(texto).toContain(`Total que sale${euros(560)}`);
   expect(texto).toContain(`Faltan${euros(421)}`);
+  vista.desmontar();
+});
+
+// v103 (él: «su importe lo invita el evento»): como el DJ, su apunte en el
+// local, con sus nombres; en «Entra» no están (no traen dinero).
+it("la familia que invita el evento: su apunte en el local, y fuera de «Entra»", () => {
+  const aPagar = { partidas: [{ id: "1", concepto: "Menú", adulto: "60", nino: "30" }, { id: "2", concepto: "Tarta", adulto: "5", nino: "5" }], otros: [], dj: "" };
+  const pareja = [
+    { id: "j", apellido: "Barrios", nombre: "Jacob", grupoFamiliar: "Barrios", confirmado: true, pagado: true, invitaEvento: true, anioNacimiento: "1980" },
+    { id: "l", apellido: "Barrios", nombre: "Lucía", grupoFamiliar: "Barrios", confirmado: true, pagado: true, invitaEvento: true, anioNacimiento: "1982" },
+  ];
+  const { vista } = dibujar({ evento: { ...EVENTO, aPagar }, invitados: [...INVITADOS, ...pareja] });
+  const texto = document.body.textContent;
+  // Corto, para que quepa en el móvil; entero, con los nombres, encima.
+  expect(texto).toContain(`Invitación de Barrios: 2 adultos${euros(130)}`);
+  expect(document.body.querySelector(`[title="Invitación de Barrios (Jacob y Lucía): 2 adultos × ${euros(65)}"]`)).not.toBeNull();
+  // Los demás adultos siguen siendo 2; el total del local, con todos.
+  expect(texto).toContain(`2 adultos × ${euros(65)}${euros(130)}`);
+  expect(texto).toContain(`Local${euros(65 * 5 + 35)}`);
+  // En «Entra», solo los 2 adultos que pagaron.
+  expect(texto).toContain(`2 adultos (8 años o más) × ${euros(47)}${euros(94)}`);
+  vista.desmontar();
+});
+
+it("la cuenta del local lo aclara, sin cifra, como el DJ", () => {
+  const invitado = { id: "j", confirmado: true, pagado: true, invitaEvento: true, anioNacimiento: "1980" };
+  const vista = montar(<CuentaLocalHoja data={{ evento: EVENTO, invitados: [...INVITADOS, invitado] }} />);
+  expect(document.body.textContent).toContain("(1 persona invitada por el evento)");
   vista.desmontar();
 });
 

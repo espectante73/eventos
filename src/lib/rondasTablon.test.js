@@ -47,6 +47,10 @@ describe("«Pagado» con su importe (v70.1)", () => {
     expect(recaudacion({})).toBe("Pagado");
     expect(recaudacion({ anio: "2025" })).toBe("Pagado");
   });
+  // v103: está pagado, pero no lo pagó él.
+  it("si lo invita el evento, «Pagado» sin cifra", () => {
+    expect(recaudacion({ anio: "1975", invitaEvento: true })).toBe("Pagado");
+  });
 });
 
 // v87.2 (él): «Te falta», al abrir el tablón.

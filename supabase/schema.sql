@@ -239,7 +239,14 @@ CREATE TABLE public.invitados (
     -- Cuándo le abrió el anfitrión el WhatsApp del «Aviso de pago» (v89.1,
     -- él): la ventana dice «Avisado 17 nov». Es de cada persona, no de la
     -- familia (el aviso va a cada una). Sin "not null".
-    "avisoPagoEn" timestamp with time zone
+    "avisoPagoEn" timestamp with time zone,
+    -- «Lo invita el evento» (v103, él: «su importe lo invita el evento… debe
+    -- de salir el sello pagado porque sí está pagado pero no por ellos»). Lo
+    -- marca el anfitrión en la Lista; la base lo deja pagado lo guarde quien
+    -- lo guarde (trg_pago_y_asistencia). No entra dinero por ellos: en la
+    -- Contabilidad no están en «Entra» y el local lleva su propio apunte.
+    -- Sin "not null".
+    "invitaEvento" boolean
 );
 
 -- Quién ayuda a recoger datos y qué permisos tiene cada uno.
@@ -864,7 +871,7 @@ REVOKE EXECUTE ON FUNCTION public.colaborador_canciones_dj() FROM PUBLIC, anon;
 -- escape a mí, no necesita nombres de personas»), para el colaborador con
 -- el permiso «contabilidad_ver». Solo cifras: los invitados SIN nombre ni
 -- contacto, con lo justo para las cuentas (edad, confirmado, pagado, si es
--- el DJ —la zona no sale— y su colaborador). Los colaboradores, con su
+-- el DJ —la zona no sale—, si lo invita el evento —v103— y su colaborador). Los colaboradores, con su
 -- nombre y sus entregas. Solo con sesión (el revoke de abajo).
 CREATE OR REPLACE FUNCTION public.colaborador_contabilidad() RETURNS jsonb
     LANGUAGE plpgsql STABLE SECURITY DEFINER
@@ -883,6 +890,7 @@ begin
     'invitados', coalesce((select jsonb_agg(jsonb_build_object(
         'id', i."id", 'colaboradorId', i."colaboradorId", 'confirmado', i."confirmado",
         'noAsiste', i."noAsiste", 'pagado', i."pagado", 'anioNacimiento', i."anioNacimiento",
+        'invitaEvento', i."invitaEvento",
         'zona', case when upper(trim(i."zona")) = 'DJ' then 'DJ' else '' end))
       from invitados i), '[]'::jsonb),
     'colaboradores', coalesce((select jsonb_agg(jsonb_build_object(
@@ -2099,7 +2107,8 @@ begin
     "grupoFamiliar","mesa","anioNacimiento","anioBoda","email",
     "cancion","alergias","observaciones","pagado","rolesTrabajo",
     "excluidoTablon","rolFamiliar","presente","excepcionesRevision","sinCancion","sinEmail",
-    "conservarDatos","noAsiste","pagoPendienteHasta","plazosPago","telefono","avisoPagoEn"
+    "conservarDatos","noAsiste","pagoPendienteHasta","plazosPago","telefono","avisoPagoEn",
+    "invitaEvento"
   )
   select
     (f->>'id')::uuid, f->>'nombre', f->>'apellido', f->>'zona',
@@ -2121,7 +2130,8 @@ begin
     nullif(f->>'pagoPendienteHasta', '')::date,
     coalesce((f->>'plazosPago')::integer, 0),
     f->>'telefono',
-    nullif(f->>'avisoPagoEn', '')::timestamptz
+    nullif(f->>'avisoPagoEn', '')::timestamptz,
+    (f->>'invitaEvento')::boolean
   from jsonb_array_elements(p_filas) as f
   on conflict ("id") do update set
     "nombre"=excluded."nombre", "apellido"=excluded."apellido",
@@ -2145,7 +2155,9 @@ begin
     "telefono"=coalesce(excluded."telefono", invitados."telefono"),
     -- Igual el «Avisado» del aviso de pago (v89.1): una pantalla abierta
     -- antes no lo conoce, y su guardado no puede borrarlo.
-    "avisoPagoEn"=coalesce(excluded."avisoPagoEn", invitados."avisoPagoEn");
+    "avisoPagoEn"=coalesce(excluded."avisoPagoEn", invitados."avisoPagoEn"),
+    -- Y «Lo invita el evento» (v103): una pantalla de antes no lo conoce.
+    "invitaEvento"=coalesce(excluded."invitaEvento", invitados."invitaEvento");
 
   -- Solo se borra si de verdad llega la lista de quién debe quedar: un
   -- p_ids nulo por error no puede vaciar la tabla.
@@ -3794,6 +3806,7 @@ CREATE FUNCTION public.foto_fiesta_quitada(p_ruta text) RETURNS boolean
 --                     solo con su enlace personal: tablon_mi_email.
 --   faltaFotoBoda     «Te falta» (v87.2, él): sí o no, solo del esposo o la
 --                     esposa (null: no es matrimonio). Ni la foto ni su ruta.
+--   invitaEvento      lo invita el evento (v103): su «Pagado» va sin importe.
 CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER
     SET search_path TO 'public', 'extensions', 'pg_temp'
@@ -3813,6 +3826,7 @@ CREATE FUNCTION public.tablon_quien_soy(p_token uuid, p_respuesta text) RETURNS 
     'anioBoda', case when y."rolFamiliar" in ('esposo', 'esposa') then y."anioBoda" end,
     'tieneEmail', coalesce(trim(y."email"), '') <> '',
     'zona', trim(coalesce(y."zona", '')),
+    'invitaEvento', coalesce(y."invitaEvento", false),
     'faltaFotoBoda', case when y."rolFamiliar" in ('esposo', 'esposa') then not exists (
       select 1 from fotos_familiares f
       where f."grupoFamiliar" = coalesce(y."grupoFamiliar", '')
@@ -3958,10 +3972,18 @@ $$;
 -- Lo que va solo con el pago y la confirmación (v61), venga de quien venga
 -- (colaborador o anfitrión): al pagar desaparece el pago pendiente y sus
 -- plazos; al volver a confirmar a alguien, deja de ser «No asiste».
+-- A quien invita el evento (v103) se le tiene por pagado siempre: nadie
+-- puede quitárselo sin quitar antes la marca; y al quitarla, vuelve a estar
+-- sin pagar (lo suyo no lo cobró nadie).
 CREATE FUNCTION public.trg_pago_y_asistencia() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 begin
+  if coalesce(new."invitaEvento", false) then
+    new."pagado" := true;
+  elsif TG_OP = 'UPDATE' and coalesce(old."invitaEvento", false) then
+    new."pagado" := false;
+  end if;
   if new."pagado" then
     new."pagoPendienteHasta" := null;
     new."plazosPago" := 0;

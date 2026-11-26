@@ -323,6 +323,14 @@ export function esDj(g) {
   return String(g?.zona || "").trim().toUpperCase() === "DJ";
 }
 
+// «Lo invita el evento» (él, v103: «su importe lo invita el evento… debe de
+// salir el sello pagado porque sí está pagado pero no por ellos»). Lo marca
+// el anfitrión en la Lista (lib/invitaEvento.js) y la base lo deja pagado
+// (trg_pago_y_asistencia): sello PAGADO, invitación, QR y entrada como
+// cualquiera. Pero no entra dinero por él: su entrada vale 0 € (no se le
+// cobra, no está en «Entra») y el local lleva su propio apunte, como el DJ.
+export const loInvitaElEvento = (g) => g?.invitaEvento === true;
+
 // Importe que le corresponde a un invitado según su edad (calculada a partir del
 // año de nacimiento y la fecha del evento) y el rango/precios fijados en Configuración.
 // Por debajo de "desde" no paga (bebés); entre "desde" y "hasta" paga precio niño;
@@ -335,7 +343,7 @@ export function esDj(g) {
 // él, «la invitación al DJ tiene que quedar como un asiento independiente».
 // Las v95.2-95.5 le cobraron 47 €: no volver a hacerlo.
 export function importeEsperadoInvitado(g, evento) {
-  if (esDj(g)) return 0;
+  if (esDj(g) || loInvitaElEvento(g)) return 0;
   const tramo = tramoDeEdad(g?.anioNacimiento, evento);
   if (tramo === TRAMO.BEBE) return 0;
   return parsePrecio(tramo === TRAMO.NINO ? evento?.precioNino : evento?.precioAdulto);
@@ -358,12 +366,13 @@ export function tramoDeEdad(anioNacimiento, evento) {
 // Lo que se debería recoger en total (él, v84.8, en Contabilidad): los
 // confirmados con su edad (importeEsperadoInvitado) y los sin confirmar
 // TODOS como adultos —él: «suponiendo que sean adultos»; es la cifra más
-// alta—. Los de «No asiste», fuera (cuentaConfirmacion); el DJ, a 0.
+// alta—. Los de «No asiste», fuera (cuentaConfirmacion); el DJ y a quien
+// invita el evento, a 0.
 export function previstoARecoger(invitados = [], evento) {
   const precioAdulto = parsePrecio(evento?.precioAdulto);
   const sinConfirmar = invitados.filter((g) => !g.confirmado && !g.noAsiste);
   const deConfirmados = invitados.filter((g) => g.confirmado).reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
-  const deSinConfirmar = sinConfirmar.reduce((s, g) => s + (esDj(g) ? 0 : precioAdulto), 0);
+  const deSinConfirmar = sinConfirmar.reduce((s, g) => s + (esDj(g) || loInvitaElEvento(g) ? 0 : precioAdulto), 0);
   return { total: deConfirmados + deSinConfirmar, deConfirmados, deSinConfirmar, sinConfirmar: sinConfirmar.length };
 }
 

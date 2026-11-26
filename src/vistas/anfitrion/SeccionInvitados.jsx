@@ -28,6 +28,7 @@ import {
   Tag,
   Star,
   ShieldOff,
+  Gift,
   ClipboardCheck,
   Download,
   ListChecks,
@@ -45,7 +46,7 @@ import {
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { contactosDeInvitados, notaDelEvento, ARCHIVO_CONTACTOS } from "../../lib/exportarContactos";
 import { descargarBlob } from "../../lib/descargas";
-import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, dentroDelTramo, textoTramo, hayTramo, enLaLlegada, LLEGADA, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion } from "../../lib/invitados";
+import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, dentroDelTramo, textoTramo, hayTramo, enLaLlegada, LLEGADA, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion, loInvitaElEvento, esDj } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora, contiene } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } from "../../lib/matrimonios";
@@ -93,6 +94,7 @@ import {
   marcarResponsable as fijarResponsable,
 } from "../../lib/edicionInvitados";
 import { estadoTablon, contarTablon } from "../../lib/entradasTablon";
+import { marcarInvitaEvento, preguntaInvitaEvento, faltaSqlInvitaEvento } from "../../lib/invitaEvento";
 import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
 import { FORMULARIO_INVITADO } from "../../lib/iconosVentanas";
 import { VentanaImportarTelefonos } from "./VentanaImportarTelefonos";
@@ -436,6 +438,27 @@ export function SeccionInvitados({
   // confirmado -- empezando por el propio anfitrión, cuyo nombre es
   // información pública (ver schema.sql, "excluidoTablon").
   const alternarExcluidoTablon = (id) => persistInvitados(alternarTablon(invitados, id).invitados);
+
+  // «Lo invita el evento» (v103), con su pregunta de la familia (norma 11):
+  // «No» es solo a esa persona; la ✕, nada.
+  const faltaSqlInvita = faltaSqlInvitaEvento(invitados);
+  const pedirInvitaEvento = (g) => {
+    const p = preguntaInvitaEvento(invitados, g.id);
+    if (!p) return;
+    const aplicar = (familia) => {
+      const { invitados: siguiente, aviso } = marcarInvitaEvento(invitados, g.id, p.marcar, { familia, evento });
+      if (siguiente !== invitados) persistInvitados(siguiente);
+      avisarLista(aviso);
+    };
+    preguntar({
+      titulo: p.titulo,
+      texto: p.texto,
+      rotulo: "Sí",
+      peligro: !p.marcar,
+      alConfirmar: () => aplicar(p.familia),
+      ...(p.familia && { otra: { rotulo: "No", alConfirmar: () => aplicar(false) } }),
+    });
+  };
 
   const anadirRolNuevo = (id) => {
     const rol = nuevoRolTexto.trim();
@@ -2078,9 +2101,28 @@ export function SeccionInvitados({
                       </span>
                     )}
                   </span>
-                  <span style={celda(9, { justifyContent: "center", textAlign: "center" })}>
+                  <span style={celda(9, { justifyContent: "center", textAlign: "center", gap: 4 })}>
+                    {/* «Lo invita el evento» (v103): en «Editar», su botón
+                        junto a lo pagado; fuera, el regalo en vez del visto. */}
+                    {modoEdicion && !esDj(g) && (g.confirmado || loInvitaElEvento(g)) && (
+                      <Boton
+                        tamano="pequeno"
+                        onClick={() => pedirInvitaEvento(g)}
+                        disabled={faltaSqlInvita}
+                        titulo={faltaSqlInvita ? "Falta subir el SQL de la versión 103" : loInvitaElEvento(g) ? "Lo invita el evento (quitar)" : "Lo invita el evento"}
+                        aria-label="Lo invita el evento"
+                        aria-pressed={loInvitaElEvento(g)}
+                        data-invita-evento={g.id}
+                        className="relative z-[1]"
+                        style={{ padding: 5 }}
+                      >
+                        <Gift size={14} style={{ color: loInvitaElEvento(g) ? C.gold : C.charcoal, opacity: loInvitaElEvento(g) ? 1 : OP.apagado }} />
+                      </Boton>
+                    )}
                     {g.confirmado ? (
-                      g.pagado ? (
+                      loInvitaElEvento(g) ? (
+                        !modoEdicion && <Gift size={20} style={{ color: C.gold }} aria-label="Pagado: lo invita el evento" title="Pagado: lo invita el evento" />
+                      ) : g.pagado ? (
                         <Check size={20} style={{ color: C.ink }} />
                       ) : (
                         <span

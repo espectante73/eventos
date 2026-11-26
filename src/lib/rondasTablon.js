@@ -19,9 +19,11 @@ import { euros } from "./formato";
 // `yo` viene de tablon_quien_soy: solo sí o no, nunca sus datos. Sin esos
 // tres (el servidor aún sin el SQL v69.4) no hay guía: mejor nada que una
 // ronda equivocada.
-// El importe de su entrada: el año con el que entró y su zona (el DJ, 0 €).
+// El importe de su entrada: el año con el que entró y su zona (el DJ, 0 €);
+// a quien invita el evento (v103), 0 €: su «Pagado» va sin cifra.
 // Una sola cuenta para la guía y para «Te falta» (norma 7).
-const importeDe = (yo, evento) => (yo?.anio ? importeEsperadoInvitado({ anioNacimiento: yo.anio, zona: yo.zona }, evento) : 0);
+const importeDe = (yo, evento) =>
+  yo?.anio ? importeEsperadoInvitado({ anioNacimiento: yo.anio, zona: yo.zona, invitaEvento: yo.invitaEvento }, evento) : 0;
 
 export function rondasTablon(yo, evento) {
   if (!yo || yo.datosCompletos === undefined) return null;

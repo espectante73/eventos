@@ -740,6 +740,60 @@ describe("la columna Teléfono", () => {
   });
 });
 
+// v103 (él): «su importe lo invita el evento… debe de salir el sello pagado».
+describe("Lo invita el evento", () => {
+  const montarCon = (lista, persistInvitados = () => {}) =>
+    montar(
+      <SeccionInvitados
+        data={{ ...data, invitados: lista, persistInvitados }}
+        asignarColaborador={() => null}
+        ocupacionMesa={() => 1}
+        panelFlotante={null}
+        setPanelFlotante={() => {}}
+        colaboradoresPendientes={[]}
+        filtros={FILTROS_VACIOS}
+        setFiltros={() => {}}
+        onCerrar={() => {}}
+        fijo
+      />
+    );
+  const botones = () => [...document.body.querySelectorAll("button")];
+  const editar = (vista) => {
+    vista.pulsar(botones().find((b) => b.textContent.includes("Acciones")));
+    vista.pulsar(botones().find((b) => b.textContent.trim().endsWith("Edición")));
+  };
+  const conColumna = invitados.map((x) => ({ ...x, invitaEvento: null, ...(x.id === "g2" ? { alergias: "No" } : {}) }));
+
+  it("con «Editar», el regalo en Pagado pregunta por la familia; «Sí», todos sus confirmados pagados", () => {
+    const guardado = vi.fn();
+    const vista = montarCon(conColumna, guardado);
+    expect(document.body.querySelector("[data-invita-evento]")).toBeNull();
+    editar(vista);
+    vista.pulsar(document.body.querySelector('[data-invita-evento="g2"]'));
+    expect(document.body.textContent).toContain("¿Lo invita el evento a toda la familia?");
+    vista.pulsar(botones().find((b) => b.textContent.trim() === "Sí"));
+    const lista = guardado.mock.calls.at(-1)[0];
+    const de = (id) => lista.find((g) => g.id === id);
+    expect([de("g2").invitaEvento, de("g2").pagado, de("g4").invitaEvento, de("g4").pagado]).toEqual([true, true, true, true]);
+    // Míriam no está confirmada: no entra.
+    expect(de("g3").invitaEvento).toBeNull();
+    vista.desmontar();
+  });
+
+  it("fuera de «Editar», el regalo dorado en vez del visto", () => {
+    const vista = montarCon(conColumna.map((x) => (x.id === "g1" ? { ...x, invitaEvento: true } : x)));
+    expect(document.body.querySelectorAll('[aria-label="Pagado: lo invita el evento"]')).toHaveLength(1);
+    vista.desmontar();
+  });
+
+  it("sin el SQL de la v103, el botón no se puede pulsar", () => {
+    const vista = montarCon(invitados);
+    editar(vista);
+    expect(document.body.querySelector('[data-invita-evento="g2"]').disabled).toBe(true);
+    vista.desmontar();
+  });
+});
+
 // v78.3 (él): «no me encuentra a la familia N´gabu».
 it("el buscador encuentra «N'gabu» escrito «N´gabu», sin mayúsculas ni tildes", () => {
   const conNgabu = [...invitados, { id: "g9", nombre: "Amélie", apellido: "N'gabu", grupoFamiliar: "N'gabu01", rolFamiliar: ROL_FAMILIAR.SUELTO, rolesTrabajo: [], confirmado: true, anioNacimiento: "1980", alergias: "No", email: "", mesa: null }];

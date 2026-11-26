@@ -8,9 +8,9 @@
 import { useState } from "react";
 import { Plus, Settings } from "lucide-react";
 import { C, R, T, OP, DEDO, inputStyle } from "../../theme";
-import { euros, parsePrecio, fechaCorta } from "../../lib/formato";
+import { euros, parsePrecio, fechaCorta, listaConY } from "../../lib/formato";
 import { uid } from "../../lib/id";
-import { aPagarDe, faltaSqlAPagar, precioPorPersona, limpiarLocal, conDj, personasDelLocal, cuentaDelLocal, desgloseRecaudado } from "../../lib/aPagar";
+import { aPagarDe, faltaSqlAPagar, precioPorPersona, limpiarLocal, conDj, personasDelLocal, cuentaDelLocal, desgloseRecaudado, invitacionesDelEvento } from "../../lib/aPagar";
 import { cuadreEntregas, desglosePropinas } from "../../lib/entregas";
 import { PREGUNTA_DESCARTAR } from "../../lib/cambiosSinGuardar";
 import { TextInput } from "../../components/Formulario";
@@ -30,11 +30,12 @@ const fila = (fondo, extra = {}) => ({ display: "grid", gridTemplateColumns: COL
 
 // Una línea: el concepto a la izquierda y el importe a la derecha. `detalle`,
 // una línea de desglose (más pequeña, metida y en gris).
-function Linea({ concepto, importe, detalle = false, fondo = C.blanco, estilo }) {
+function Linea({ concepto, importe, detalle = false, fondo = C.blanco, estilo, titulo }) {
   const gris = detalle ? { opacity: OP.secundario } : undefined;
   return (
     <div style={fila(fondo, { ...(detalle ? { fontSize: T.pequeno, color: C.charcoal } : {}), ...estilo })}>
-      <span className={`truncate ${detalle ? "pl-5 pr-2" : "px-2"}`} style={gris}>
+      {/* Recortado en el móvil: entero, al dejar el dedo o el ratón encima. */}
+      <span className={`truncate ${detalle ? "pl-5 pr-2" : "px-2"}`} style={gris} title={titulo || (typeof concepto === "string" ? concepto : undefined)}>
         {concepto}
       </span>
       <span className="px-2 text-right truncate" style={gris}>
@@ -68,6 +69,8 @@ export function APagarHoja({ data, resumen, recaudado, propinas, soloLectura = f
   const [aviso, setAviso] = useState("");
   const { personas, local, tusGastos, entra, sale, diferencia } = resumen;
   const guardado = aPagarDe(evento);
+  // Cada familia que invita el evento, su apunte (v103).
+  const invitaciones = invitacionesDelEvento(invitados, evento, local.porPersona);
 
   const guardarDj = (texto) => {
     const { valor, aviso: motivo } = conDj(evento?.aPagar, texto);
@@ -119,12 +122,18 @@ export function APagarHoja({ data, resumen, recaudado, propinas, soloLectura = f
           <Linea detalle concepto="Sin precios del local todavía" importe="" />
         ) : (
           <>
-            <Linea detalle concepto={`${plural(personas.adulto - personas.dj, "adulto", "adultos")} × ${euros(local.porPersona.adulto)}`} importe={euros(local.adultosSinDj)} />
+            <Linea detalle concepto={`${plural(personas.adulto - personas.dj - personas.invitaAdulto, "adulto", "adultos")} × ${euros(local.porPersona.adulto)}`} importe={euros(local.adultosResto)} />
             {/* La invitación del DJ, su propio apunte (v95.6, él: «un asiento
                 independiente»): lo que el local cobra por él, que paga el
                 evento. Ya suma en «Local», no es un gasto aparte. */}
             {personas.dj > 0 && <Linea detalle concepto={`Invitación del DJ: ${plural(personas.dj, "adulto", "adultos")} × ${euros(local.porPersona.adulto)}`} importe={euros(local.invitacionDj)} />}
-            {(personas.nino > 0 || local.porPersona.nino > 0) && <Linea detalle concepto={`${plural(personas.nino, "niño", "niños")} × ${euros(local.porPersona.nino)}`} importe={euros(local.ninos)} />}
+            {/* Igual cada familia que invita el evento (v103). */}
+            {invitaciones.map((f) => (
+              <Linea key={f.clave || "invitacion"} detalle concepto={conceptoInvitacion(f)} titulo={detalleInvitacion(f, local.porPersona)} importe={euros(f.importe)} />
+            ))}
+            {(personas.nino > 0 || local.porPersona.nino > 0) && (
+              <Linea detalle concepto={`${plural(personas.nino - personas.invitaNino, "niño", "niños")} × ${euros(local.porPersona.nino)}`} importe={euros(local.ninosResto)} />
+            )}
             {personas.bebe > 0 && <Linea detalle concepto={plural(personas.bebe, "bebé", "bebés")} importe="gratis" />}
           </>
         )}
@@ -161,11 +170,24 @@ export function APagarHoja({ data, resumen, recaudado, propinas, soloLectura = f
           Cómo se calcula
         </summary>
         <p className="mt-2" style={{ opacity: OP.secundario }}>
-          Entra lo ya recaudado —cada pagado por el precio de su entrada, según su edad— y las propinas de los acuses: el total bruto que tiene que haber. Debajo, lo que dicen los acuses y lo que aún tienen los colaboradores; si no suman lo mismo, sale la diferencia en rosa y, si la app la ve, la causa: pagados que no lleva ningún colaborador, invitados de un acuse que ya no figuran como pagados, o acuses con otro importe que el de hoy (cambiado a mano, o cambió después un precio o una edad). El DJ no paga entrada (lo invita el evento): en Entra no aparece, porque de él no llega dinero. Sale lo del local (los confirmados de la Lista por lo que cobra el local por persona, más lo demás del local), con la parte del DJ en su propio apunte, «Invitación del DJ»; lo que cobra el DJ y la suma de tu hoja de Gastos. El precio de la entrada de los invitados no cambia nada de esto: solo se comparten las edades.
+          Entra lo ya recaudado —cada pagado por el precio de su entrada, según su edad— y las propinas de los acuses: el total bruto que tiene que haber. Debajo, lo que dicen los acuses y lo que aún tienen los colaboradores; si no suman lo mismo, sale la diferencia en rosa y, si la app la ve, la causa: pagados que no lleva ningún colaborador, invitados de un acuse que ya no figuran como pagados, o acuses con otro importe que el de hoy (cambiado a mano, o cambió después un precio o una edad). El DJ no paga entrada (lo invita el evento): en Entra no aparece, porque de él no llega dinero. Igual quien tiene marcado en la Lista «Lo invita el evento»: cuenta como pagado (invitación con el sello, QR y entrada), pero nadie se lo cobra. Sale lo del local (los confirmados de la Lista por lo que cobra el local por persona, más lo demás del local), con la parte del DJ en su propio apunte, «Invitación del DJ», y la de cada familia que invita el evento en el suyo; lo que cobra el DJ y la suma de tu hoja de Gastos. El precio de la entrada de los invitados no cambia nada de esto: solo se comparten las edades.
         </p>
       </details>
     </div>
   );
+}
+
+// «Invitación de Barrios: 2 adultos», como «Invitación del DJ». Corto, para
+// que quepa en una línea del ancho del móvil (norma 6): el precio ya está en
+// la línea de los adultos. Entero, con los nombres, al dejar el dedo o el
+// ratón encima. Sin nombres (quien solo repasa las cifras), «Invitación del
+// evento».
+const cuantosInvita = (f) =>
+  [f.adulto && plural(f.adulto, "adulto", "adultos"), f.nino && plural(f.nino, "niño", "niños")].filter(Boolean).join(" y ");
+const conceptoInvitacion = (f) => `${f.familia ? `Invitación de ${f.familia}` : "Invitación del evento"}: ${cuantosInvita(f)}`;
+function detalleInvitacion(f, porPersona) {
+  const precios = [f.adulto && `${plural(f.adulto, "adulto", "adultos")} × ${euros(porPersona.adulto)}`, f.nino && `${plural(f.nino, "niño", "niños")} × ${euros(porPersona.nino)}`].filter(Boolean).join(" + ");
+  return `${f.familia ? `Invitación de ${f.familia}` : "Invitación del evento"}${f.nombres.length ? ` (${listaConY(f.nombres)})` : ""}: ${precios}`;
 }
 
 // ---------- La cuenta del local ----------
@@ -212,6 +234,10 @@ export function CuentaLocalHoja({ data, onPrecios }) {
             evento (v95.6). Entre paréntesis y sin cifra (él, v101.7: es
             aclaratorio, y el 1 confundía: ya está dentro de los adultos). */}
         {personas.dj > 0 && <Linea detalle concepto={personas.dj === 1 ? "(El DJ lo invita el evento)" : "(A los DJ los invita el evento)"} importe="" />}
+        {/* Los que invita el evento (v103), aclaratorio y sin cifra, como el DJ. */}
+        {personas.invitaAdulto + personas.invitaNino > 0 && (
+          <Linea detalle concepto={`(${plural(personas.invitaAdulto + personas.invitaNino, "persona invitada", "personas invitadas")} por el evento)`} importe="" />
+        )}
         <Linea concepto={`Niños${edades.nino}`} importe={personas.nino} fondo={C.paperDark} />
         {personas.bebe > 0 && <Linea concepto={`Bebés${edades.bebe}`} importe={`${personas.bebe} · gratis`} />}
 

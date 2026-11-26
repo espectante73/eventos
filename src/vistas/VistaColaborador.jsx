@@ -6,7 +6,8 @@ import { useState, useEffect, useRef } from "react";
 import { Bell, Calendar, Check, ChevronDown, ChevronRight, ClipboardList, Euro, Lock, Mail, Megaphone, Music, Send, User, UserCog, X } from "lucide-react";
 import { supabase } from "../supabaseClient";
 import { MenuFlotante } from "../components/MenuFlotante";
-import { datosCompletos, pideDatosDeBoda, pideEmail, estadoDatos, familiasSinEmail, emailObligatorio, faltanObligatorios, fichasIncompletasDe, claveFamilia, importeEsperadoInvitado, resolverColaborador, fichaCerradaAlColaborador, comoColaborador, esDj } from "../lib/invitados";
+import { datosCompletos, pideDatosDeBoda, pideEmail, estadoDatos, familiasSinEmail, emailObligatorio, faltanObligatorios, fichasIncompletasDe, claveFamilia, importeEsperadoInvitado, resolverColaborador, fichaCerradaAlColaborador, comoColaborador, esDj, loInvitaElEvento } from "../lib/invitados";
+import { AVISO_INVITA_EVENTO_COLABORADOR } from "../lib/invitaEvento";
 import { colaboradorEsDj, leerEquipo } from "../lib/equipoColaboradores";
 import { VentanaContabilidadColaborador } from "./VentanaContabilidadColaborador";
 import { VentanaCancionesDj } from "./VentanaCancionesDj";
@@ -732,6 +733,11 @@ function FilaInvitadoColaborador({
   const exigir = requisitosActivos(evento);
 
   const confirmarPago = async () => {
+    // Lo invita el evento (v103): pagado sin cobrarle; solo el anfitrión lo quita.
+    if (g.pagado && loInvitaElEvento(g)) {
+      preguntar({ titulo: "Lo invita el evento", texto: `${nombreCompleto(g)}\n${AVISO_INVITA_EVENTO_COLABORADOR}`, soloAviso: true });
+      return;
+    }
     if (exigir && !g.pagado && !datosCompletos(g)) {
       preguntar({
         titulo: "Todavía no",
@@ -966,6 +972,11 @@ function FilaFamilia({ familia, evento, marcarFamilia, marcarMiembros, responder
 
   const preguntarTodos = (campo, valor) => {
     if (!rep) return;
+    // Toda la familia la invita el evento (v103): no hay pago que quitar.
+    if (campo === "pagado" && !valor && familia.miembros.every(loInvitaElEvento)) {
+      preguntar({ titulo: "Lo invita el evento", texto: `${familia.etiqueta}\n${AVISO_INVITA_EVENTO_COLABORADOR}`, soloAviso: true });
+      return;
+    }
     if (campo === "presente" && valor && exigir && !marcadoAbierto) {
       preguntar({ titulo: "Todavía no", texto: "El anfitrión todavía no ha abierto el control de llegadas.", soloAviso: true });
       return;

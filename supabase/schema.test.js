@@ -746,6 +746,31 @@ describe("el teléfono del invitado", () => {
   });
 });
 
+// v103 (él): «su importe lo invita el evento… debe de salir el sello pagado».
+describe("lo invita el evento", () => {
+  it("queda pagado lo guarde quien lo guarde, y al quitar la marca vuelve a sin pagar", () => {
+    const d = cuerpoDe("trg_pago_y_asistencia");
+    expect(d).toMatch(/if coalesce\(new\."invitaEvento", false\) then\s+new\."pagado" := true;/);
+    expect(d).toMatch(/elsif TG_OP = 'UPDATE' and coalesce\(old\."invitaEvento", false\) then\s+new\."pagado" := false;/);
+    // Antes que lo que va con pagar: el plazo pendiente también se borra.
+    expect(d.indexOf('"invitaEvento"')).toBeLessThan(d.indexOf('if new."pagado" then'));
+  });
+
+  it("lo guarda el anfitrión; una pantalla de antes no lo borra", () => {
+    const f = cuerpoDe("anfitrion_guardar_invitados");
+    expect(f).toContain(`(f->>'invitaEvento')::boolean`);
+    expect(f).toContain(`"invitaEvento"=coalesce(excluded."invitaEvento", invitados."invitaEvento")`);
+  });
+
+  it("la Contabilidad del colaborador lo sabe (para no contarlo en «Entra»)", () => {
+    expect(cuerpoDe("colaborador_contabilidad")).toContain(`'invitaEvento', i."invitaEvento"`);
+  });
+
+  it("puede ir vacío: reponer una foto del Deshacer de antes no falla", () => {
+    expect(sql).toMatch(/"invitaEvento" boolean\n\);/);
+  });
+});
+
 // v79 (él): los avisos al móvil.
 describe("los avisos al móvil", () => {
   it("nadie lee la tabla de móviles", () => {
@@ -1073,7 +1098,8 @@ describe("el enlace personal del propio colaborador", () => {
 // su texto se puede cambiar como los otros mensajes de WhatsApp.
 describe("el aviso de pago", () => {
   it("cuándo se avisó, por persona, sin «not null»", () => {
-    expect(sql).toContain('"avisoPagoEn" timestamp with time zone\n);');
+    // Sin «not null» (desde la v103 ya no es la última columna).
+    expect(sql).toMatch(/"avisoPagoEn" timestamp with time zone,?\n/);
   });
   it("lo guarda el anfitrión, y una pantalla abierta antes no lo borra", () => {
     const g = cuerpoDe("anfitrion_guardar_invitados");
