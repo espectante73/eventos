@@ -48,8 +48,11 @@ describe("«Pagado» con su importe (v70.1)", () => {
     expect(recaudacion({ anio: "2025" })).toBe("Pagado");
   });
   // v103: está pagado, pero no lo pagó él.
-  it("si lo invita el evento, «Pagado» sin cifra", () => {
+  it("si lo invita el evento, «Pagado» sin cifra y con el regalo (v103.1)", () => {
     expect(recaudacion({ anio: "1975", invitaEvento: true })).toBe("Pagado");
+    const ronda = (yo) => rondasTablon({ datosCompletos: true, pagado: true, presente: false, anio: "1975", ...yo }, evento)[1];
+    expect(ronda({ invitaEvento: true }).regalo).toBe(true);
+    expect(ronda({}).regalo).toBeUndefined();
   });
 });
 

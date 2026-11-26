@@ -32,7 +32,15 @@ export function rondasTablon(yo, evento) {
   const estado = (n, hecha) => (hecha ? "hecha" : ronda === n ? "ahora" : "pendiente");
   return [
     { id: "datos", etiqueta: "Datos", estado: estado(1, yo.datosCompletos), nota: "Completos" },
-    { id: "recaudacion", etiqueta: "Recaudación", estado: estado(2, yo.pagado), nota: importe > 0 ? `Pagado · ${euros(importe)}` : "Pagado" },
+    // A quien invita el evento (v103.1, él: «deberían poder ver ese regalo
+    // dorado en pago»), el regalo de la Lista en vez del visto.
+    {
+      id: "recaudacion",
+      etiqueta: "Recaudación",
+      estado: estado(2, yo.pagado),
+      nota: importe > 0 ? `Pagado · ${euros(importe)}` : "Pagado",
+      ...(yo.invitaEvento === true && { regalo: true }),
+    },
     { id: "acreditacion", etiqueta: "Acreditación", estado: estado(3, ronda === 3 && yo.presente), nota: "Ya estás dentro" },
   ];
 }

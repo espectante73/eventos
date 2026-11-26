@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "103.1",
+    cambios: [
+      "Tablón: a quien lo invita el evento, la guía muestra en «Recaudación» el regalo dorado (el de la Lista) en vez del visto, junto a «Pagado».",
+    ],
+  },
+  {
     version: "103",
     cambios: [
       "«Lo invita el evento»: en la Lista, con «Editar», el regalo de la columna «Pagado». Pregunta si es para toda la familia (con «No», solo esa persona). Quedan pagados sin que nadie les cobre: la invitación sale con el sello PAGADO, y valen el QR, el tablón («Pagado», sin cifra) y la entrada. Antes tienen que estar sus datos (año y alergias), como al cobrar. Fuera de «Editar», el regalo dorado en vez del visto.",

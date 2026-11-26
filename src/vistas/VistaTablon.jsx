@@ -10,7 +10,7 @@
 // la monta ANTES de tocar nada de sesión/login en cuanto detecta
 // ?tablon= en la URL (ver el routing al principio de App.jsx).
 import { Fragment, useState, useEffect, useCallback, useRef } from "react";
-import { Calendar, CalendarPlus, Clock, MapPin, Lock, Music, Pause, ArrowLeft, User, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, CalendarPlus, Clock, MapPin, Lock, Music, Pause, ArrowLeft, User, Check, ChevronDown, ChevronUp, Gift } from "lucide-react";
 import { C, inputStyle, OP, S, T, DEDO, FONDO_VERDE, DORADO, conAlfa } from "../theme";
 import { supabase } from "../supabaseClient";
 import { useFichaInstalacion, fichaDelTablon } from "../lib/fichaInstalacion";
@@ -910,7 +910,8 @@ export function VistaTablon({ token }) {
                     {r.estado === "ahora" && <span style={{ ...ROTULO_CUENTA_ATRAS, color: C.goldClaro }}>Ahora</span>}
                     {r.estado === "hecha" && (
                       <span className="flex items-center gap-1 text-sm" style={{ color: C.goldClaro }}>
-                        <Check size={15} aria-hidden />
+                        {/* Lo invita el evento (v103.1): el regalo, como en la Lista. */}
+                        {r.regalo ? <Gift size={15} aria-label="Lo invita el evento" data-regalo /> : <Check size={15} aria-hidden />}
                         {r.nota}
                       </span>
                     )}

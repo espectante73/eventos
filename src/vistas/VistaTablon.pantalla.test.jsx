@@ -207,3 +207,21 @@ it("con la fecha confirmada, «Añadir a mi calendario»; sin confirmar, no", as
   expect(texto()).not.toContain("Añadir a mi calendario");
   vista.desmontar();
 });
+
+// v103.1 (él: «los que son invitados por el evento deberían poder ver ese
+// regalo dorado en pago»).
+it("a quien invita el evento, «Recaudación» con el regalo en vez del visto", async () => {
+  valen = [`${CLAVE} 1975`];
+  localStorage.setItem("tablon-respuesta-t1", `${CLAVE} 1975`);
+  quien = { ...ANA, alergias: "No", pagado: true, presente: false, invitaEvento: true };
+  let vista = await abrir();
+  const ronda = () => document.body.querySelector('[data-ronda="recaudacion"]');
+  expect(ronda().getAttribute("data-estado")).toBe("hecha");
+  expect(ronda().querySelector("[data-regalo]")).toBeTruthy();
+  expect(ronda().textContent).toContain("Pagado");
+  vista.desmontar();
+  quien = { ...ANA, alergias: "No", pagado: true, presente: false, invitaEvento: false };
+  vista = await abrir();
+  expect(ronda().querySelector("[data-regalo]")).toBeNull();
+  vista.desmontar();
+});
