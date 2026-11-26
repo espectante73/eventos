@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "102.2",
+    cambios: [
+      "Multimedia, con dos ordenadores abiertos a la vez: los dos podían elegir «Este reproduce el sonido». Los dos obedecían al mando y le mandaban su estado, que se pisaba, y el mando se bloqueaba. Ahora solo puede sonar uno: el segundo lo dice («Ya suena otro ordenador») y deja elegir «Mando a distancia» o Vídeo. Si aun así coinciden, todos lo avisan en rojo.",
+    ],
+  },
+  {
     version: "102.1",
     cambios: [
       "Canciones para bailar, «Exportar CSV» → «Pasar a Spotify»: copia cada canción una vez y abre aparte la página de TuneMyMusic que la pasa a Spotify. Allí se pega, se entra con la cuenta de Spotify y se crea la lista. La tiene también el DJ, con lo que esté viendo.",

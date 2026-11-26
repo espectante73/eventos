@@ -151,8 +151,13 @@ export function useMandoMusica({ onOrden, onEstado, rol, canal: nombreCanal = NO
         // `private`: sin sesión de anfitrión no se entra (v55, la política
         // está en schema.sql, puede_usar_canal). Antes cualquiera con la
         // clave pública podía unirse y mandar órdenes.
+        // ⚠️ `presence.key`: sin ella, Supabase da a cada conexión una
+        // clave suya y el filtro de abajo («todos menos yo») nunca quitaba
+        // a este aparato: cada uno se contaba entre «los otros». Hacía
+        // falta para ver si hay OTRO reproductor (v102.2, él: «dos MacBook
+        // a la vez con el multimedia… con el mando, ahí se bloqueó»).
         const canal = supabase.channel(nombreCanal, {
-          config: { private: true, broadcast: { self: false } },
+          config: { private: true, broadcast: { self: false }, presence: { key: ID_APARATO } },
         });
 
         canal.on("presence", { event: "sync" }, () => {
@@ -279,6 +284,9 @@ export function useMandoMusica({ onOrden, onEstado, rol, canal: nombreCanal = NO
     // "Está el otro" es lo que se muestra en la cabecera; `conectado`
     // (canal enganchado) se queda para el diagnóstico de por qué no.
     hayReproductor: otrosAparatos.includes("reproductor"),
+    // Cuántos OTROS aparatos dicen que suenan: con dos, el mando no sabe a
+    // cuál hacer caso (cada uno manda su estado y se pisan).
+    reproductoresOtros: otrosAparatos.filter((r) => r === "reproductor").length,
     hayMando: otrosAparatos.includes("mando"),
     hayPantalla: otrosAparatos.includes("pantalla"),
     enviarOrden,

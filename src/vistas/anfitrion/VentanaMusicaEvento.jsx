@@ -749,7 +749,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
     [esReproductor]
   );
 
-  const { conectado, estadoCanal, detalleCanal, hayReproductor, hayMando, enviarOrden, enviarEstado } = useMandoMusica({
+  const { conectado, estadoCanal, detalleCanal, hayReproductor, hayMando, reproductoresOtros, enviarOrden, enviarEstado } = useMandoMusica({
     onOrden: alRecibirOrden,
     onEstado: alRecibirEstado,
     rol,
@@ -757,6 +757,13 @@ export function VentanaMusicaEvento({ data, ventana }) {
   // El aparato que le falta a este para poder trabajar: el mando espera
   // al ordenador y el ordenador espera al mando.
   const estaElOtro = esReproductor ? hayMando : hayReproductor;
+  // Dos ordenadores que suenan a la vez (v102.2, él: «dos MacBook a la vez
+  // con el multimedia… con el mando, ahí se bloqueó»): los dos obedecen cada
+  // orden y los dos mandan su estado, que en el mando se pisan cada 2 s. Solo
+  // puede sonar uno: el segundo ya no puede elegirlo, y si aun así coinciden
+  // (los dos a la vez), se avisa en todos.
+  const hayDosReproductores = reproductoresOtros + (esReproductor ? 1 : 0) >= 2;
+  const TEXTO_YA_SUENA_OTRO = "Ya hay otro ordenador que reproduce el sonido, y solo puede haber uno: con dos, el mando no sabe a cuál hacer caso. En este, elige «Mando a distancia»; para la tele, la pestaña Vídeo.";
 
   // El reproductor informa de su estado: al cambiar algo relevante, y
   // además cada 2s mientras suena (para que la barra de progreso del
@@ -865,6 +872,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
 
   // ---------- El primer clic: declara el aparato Y desbloquea el audio ----------
   const declararReproductor = () => {
+    if (reproductoresOtros > 0) {
+      setAviso(TEXTO_YA_SUENA_OTRO);
+      return;
+    }
     setRol("reproductor");
     setAviso("");
     // Se "tocan" los dos elementos dentro del propio gesto real, para
@@ -1903,6 +1914,14 @@ export function VentanaMusicaEvento({ data, ventana }) {
     </div>
   ) : null;
 
+  // Con dos que suenan, en rojo y por encima de todo: es lo que bloquea.
+  const avisoDosOrdenadores = hayDosReproductores ? (
+    <p data-dos-reproductores className="px-4 py-3" style={{ borderRadius: 14, background: "rgba(228,120,130,0.14)", color: claro ? "#8E2530" : "#F0A4AC", fontSize: M.texto }}>
+      <strong style={{ fontWeight: 600 }}>Hay dos ordenadores reproduciendo el sonido a la vez.</strong> El mando no sabe a cuál hacer caso: cierra
+      Multimedia en uno de los dos.
+    </p>
+  ) : null;
+
   // Los cuatro paneles reordenables. "pistas" solo existe en el
   // ordenador: en el móvil no se eligen archivos (la lección de la
   // primera prueba fue justo esa, que el mando no gestiona ficheros).
@@ -2110,7 +2129,7 @@ export function VentanaMusicaEvento({ data, ventana }) {
               <span className="flex items-center gap-2" style={{ fontSize: 17, fontWeight: 600 }}>
                 <Speaker size={20} /> Este reproduce el sonido
               </span>
-              <span style={{ fontSize: 13, opacity: 0.7 }}>El ordenador conectado a los altavoces</span>
+              <span style={{ fontSize: 13, opacity: 0.7 }}>{reproductoresOtros > 0 ? "Ya suena otro ordenador" : "El ordenador conectado a los altavoces"}</span>
             </button>
             <button
               onClick={() => setRol("mando")}
@@ -2122,6 +2141,8 @@ export function VentanaMusicaEvento({ data, ventana }) {
               </span>
               <span style={{ fontSize: 13, color: P.tenue }}>Controla el sonido sin tocar el ordenador</span>
             </button>
+            {/* Por qué no deja ser el que suena (ya suena otro, v102.2). */}
+            {avisoVisible}
           </div>
         )}
 
@@ -2133,9 +2154,10 @@ export function VentanaMusicaEvento({ data, ventana }) {
             {/* El panel de aspecto y los avisos van SIEMPRE los primeros
                 y ocupan la fila entera: no son paneles reordenables, son
                 cosas que hay que ver antes de tocar nada. */}
-            {(panelAspecto || avisoCanal || avisoVisible) && (
+            {(panelAspecto || avisoDosOrdenadores || avisoCanal || avisoVisible) && (
               <div className="w-full flex flex-col gap-2.5" style={{ marginBottom: enHorizontal ? 0 : -4 }}>
                 {panelAspecto}
+                {avisoDosOrdenadores}
                 {avisoCanal}
                 {avisoVisible}
               </div>
