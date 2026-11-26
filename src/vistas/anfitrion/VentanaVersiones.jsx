@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "102.1",
+    cambios: [
+      "Canciones para bailar, «Exportar CSV» → «Pasar a Spotify»: copia cada canción una vez y abre aparte la página de TuneMyMusic que la pasa a Spotify. Allí se pega, se entra con la cuenta de Spotify y se crea la lista. La tiene también el DJ, con lo que esté viendo.",
+      "Permisos, «El día del evento» → «Ver el cronograma»: quien lo tenga (el DJ) ve el cronograma del día en su inicio, aunque no esté visible para todos los colaboradores.",
+    ],
+  },
+  {
     version: "102",
     cambios: [
       "Día del evento, sobres de los matrimonios y tarjetas de acomodación: la fecha del evento («11 diciembre 2026»), abajo del todo y en dorado. En el sobre, alineada como el nombre; en la tarjeta, centrada en cada cara, en la línea de la letra de la familia.",

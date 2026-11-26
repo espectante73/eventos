@@ -76,6 +76,12 @@ describe("los grupos de la ventana Permisos", () => {
     expect(agrupadas.length).toBe(claves.length);
   });
 
+  // v102.1 (él, para el DJ): solo mirar, sin aviso rojo.
+  it("ver el cronograma: de vista, con su etiqueta y su grupo", () => {
+    expect(PERMISOS_DE_VISTA).toContain(PERMISOS.CRONOGRAMA_VER);
+    expect(ETIQUETAS_PERMISOS[PERMISOS.CRONOGRAMA_VER]).toBe("Ver el cronograma (el horario del día)");
+    expect(GRUPOS_PERMISOS.find((g) => g.claves.includes(PERMISOS.CRONOGRAMA_VER)).titulo).toBe("El día del evento");
+  });
   it("la música, junta", () => {
     const musica = GRUPOS_PERMISOS.find((g) => g.titulo === "Música");
     expect(musica.claves).toEqual([PERMISOS.MULTIMEDIA, PERMISOS.CANCIONES_DJ]);

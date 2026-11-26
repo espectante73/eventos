@@ -169,6 +169,41 @@ export function enlaceDeezer(d, catalogo) {
   return `https://www.deezer.com/search/${encodeURIComponent(consultaDe(d.cancion))}`;
 }
 
+// «Pasar a Spotify» (v102.1, él: «otra forma para que sea directo a
+// Spotify, más sencillo», también para el DJ): la lista se copia, cada
+// canción una vez, «Canción - Artista» una por línea, y se abre la página de
+// TuneMyMusic que pega una lista de texto en Spotify. Directo con la API de
+// Spotify, no: desde 2026 exige Premium al dueño de la conexión.
+export const URL_TEXTO_A_SPOTIFY = "https://www.tunemymusic.com/es/transfer/freetext-to-spotify";
+export function textoParaSpotify(distintas, catalogo) {
+  return filasAppleMusic(distintas, catalogo)
+    .map(([titulo, artista]) => (artista ? `${titulo} - ${artista}` : titulo))
+    .join("\n");
+}
+
+// Copia y abre, en el propio clic y desde la ventana que tiene el foco
+// (CLAUDE.md 2.2): la página se abre sin esperar a la copia. Devuelve el
+// aviso que hay que enseñar: { tipo: "ok" | "error", texto }.
+export async function pasarASpotify(win, distintas, catalogo) {
+  if (!distintas.length) return { tipo: "error", texto: "Todavía no hay canciones que pasar." };
+  // La copia, ANTES de abrir (con la página nueva delante, esta ya no tiene
+  // el foco y el navegador no deja copiar); su respuesta, después.
+  let copia;
+  try {
+    copia = win.navigator.clipboard.writeText(textoParaSpotify(distintas, catalogo)).then(
+      () => true,
+      () => false,
+    );
+  } catch {
+    copia = Promise.resolve(false);
+  }
+  win.open(URL_TEXTO_A_SPOTIFY, "_blank", "noopener,noreferrer");
+  const n = distintas.length;
+  return (await copia)
+    ? { tipo: "ok", texto: `${n === 1 ? "Copiada 1 canción" : `Copiadas ${n} canciones`}: ${n === 1 ? "pégala" : "pégalas"} en TuneMyMusic (se ha abierto aparte) y elige Spotify.` }
+    : { tipo: "error", texto: "El navegador no dejó copiar la lista: vuelve a pulsar «Pasar a Spotify» con esta ventana delante." };
+}
+
 // El CSV para pasarla a Apple Music con TuneMyMusic (v81): cada canción
 // distinta una vez, con la canción y el artista en columnas aparte (como
 // Deezer la tiene, si la encontró).

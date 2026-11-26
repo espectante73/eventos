@@ -412,6 +412,29 @@ describe("las canciones, en lista", () => {
     vista.desmontar();
   });
 
+  // v102.1 (él: «otra forma para que sea directo a Spotify, más sencillo»).
+  it("«Exportar CSV» → «Pasar a Spotify»: cada canción una vez, copiada; TuneMyMusic aparte; y lo dice en la cabecera", async () => {
+    const copiado = [];
+    const abiertas = [];
+    const portapapeles = navigator.clipboard;
+    const abrirOriginal = window.open;
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (t) => copiado.push(t) } });
+    window.open = (url) => abiertas.push(url);
+    const vista = abrir();
+    const boton = (t) => [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === t);
+    vista.pulsar(boton("Exportar CSV"));
+    expect(boton("Para Apple Music")).toBeTruthy();
+    await act(async () => {
+      boton("Pasar a Spotify").click();
+    });
+    expect(copiado[0].split("\n")).toHaveLength(2);
+    expect(abiertas).toEqual(["https://www.tunemymusic.com/es/transfer/freetext-to-spotify"]);
+    expect(document.body.querySelector("[data-aviso-spotify]").textContent).toBe("Copiadas 2 canciones: pégalas en TuneMyMusic (se ha abierto aparte) y elige Spotify.");
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: portapapeles });
+    window.open = abrirOriginal;
+    vista.desmontar();
+  });
+
   it("sin nombres; la misma canción, una fila por quien la pidió y escrita igual", () => {
     const vista = abrir();
     expect(filas()).toEqual(["★★|Bailando — Enrique Iglesias|41", "★★|Bailando — Enrique Iglesias|36", "★|La bamba — Ritchie Valens|36"]);

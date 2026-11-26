@@ -110,3 +110,27 @@ it("lo que no estaba ayer sale en rojo, con su título en rojo, y «Ver solo esa
   expect(memoria.ultima).toEqual(clavesDelDj(DATOS));
   vista.desmontar();
 });
+
+// v102.1 (él: «con opción para el DJ también»): «Exportar CSV» → «Pasar a
+// Spotify» copia lo que se ve, abre TuneMyMusic y dice cuántas.
+it("«Pasar a Spotify»: copia las canciones, abre TuneMyMusic y lo dice debajo", async () => {
+  const copiado = [];
+  const abiertas = [];
+  const portapapeles = navigator.clipboard;
+  const abrirOriginal = window.open;
+  Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (t) => copiado.push(t) } });
+  window.open = (url) => abiertas.push(url);
+  const vista = await abrir({ esAnfitrion: false });
+  const boton = (t) => [...document.body.querySelectorAll("button")].find((b) => b.textContent.trim() === t);
+  vista.pulsar(boton("Exportar CSV"));
+  await act(async () => {
+    boton("Pasar a Spotify").click();
+  });
+  // En el orden en que se ven.
+  expect(copiado).toEqual(["Bailando - Enrique Iglesias\nTu Cariñito - Edwin Rivera"]);
+  expect(abiertas).toEqual(["https://www.tunemymusic.com/es/transfer/freetext-to-spotify"]);
+  expect(document.body.querySelector("[data-aviso-spotify]").textContent).toBe("Copiadas 2 canciones: pégalas en TuneMyMusic (se ha abierto aparte) y elige Spotify.");
+  Object.defineProperty(navigator, "clipboard", { configurable: true, value: portapapeles });
+  window.open = abrirOriginal;
+  vista.desmontar();
+});

@@ -103,7 +103,8 @@ import { VentanaCompartirDj } from "./VentanaCompartirDj";
 import { MarcaDj } from "../../components/MarcaDj";
 import { EscucharCancion } from "../../components/EscucharCancion";
 import { consultaDeFila } from "../../lib/escuchar";
-import { cancionesDistintas, duracionTotal, textoDuracion, noEncontrada, filasAppleMusic } from "../../lib/repasoCanciones";
+import { cancionesDistintas, duracionTotal, textoDuracion, noEncontrada, filasAppleMusic, pasarASpotify } from "../../lib/repasoCanciones";
+import { LineaAviso } from "../../components/LineaAviso";
 import { pideTelefono, telefonoParaVer } from "../../lib/telefono";
 import { alergiasUniformes } from "../../lib/alergias";
 import { useSeccion } from "../../lib/useSeccion";
@@ -263,6 +264,8 @@ export function SeccionInvitados({
   const [cancionACorregir, setCancionACorregir] = useState(null);
   const [repasandoCanciones, setRepasandoCanciones] = useState(false);
   const [compartiendoDj, setCompartiendoDj] = useState(false);
+  // Lo que pasó al «Pasar a Spotify» (v102.1): { tipo, texto }.
+  const [avisoSpotify, setAvisoSpotify] = useState(null);
   const [modoEdicion, setModoEdicion] = useState(false);
 
   // "avisoPendiente" vive en el servidor (columna en invitados), no solo
@@ -486,6 +489,12 @@ export function SeccionInvitados({
       filasAppleMusic(cancionesDistintas(cancionesPedidas(invitados, () => null)), evento.catalogoCanciones),
       ","
     );
+
+  // «Pasar a Spotify» (v102.1): las mismas canciones que el CSV de Apple
+  // Music, copiadas, y TuneMyMusic abierto aparte. Desde la ventana que
+  // tiene el foco: la Lista puede ser una ventana del sistema (`ventana`).
+  const pasarCancionesASpotify = async () =>
+    setAvisoSpotify(await pasarASpotify(ventana || window, cancionesDistintas(cancionesPedidas(invitados, () => null)), evento.catalogoCanciones));
 
   const imprimirPanelActivo = () => {
     setTimeout(() => {
@@ -2190,7 +2199,10 @@ export function SeccionInvitados({
           iconoTitulo={panelFlotante === "alergias" ? AlertTriangle : undefined}
           // El dorado de todas las cabeceras, también Alergias: en verde
           // oscuro (v80.2: «no tiene nombre») y en rojo (v88.9) no se leía.
-          onCerrar={() => setPanelFlotante(null)}
+          onCerrar={() => {
+            setPanelFlotante(null);
+            setAvisoSpotify(null);
+          }}
           movible
           // Las cifras de las canciones, en la cabecera como las de la Lista
           // (él, v80.5: en una franja aparte se cortaban al desplazar). Más
@@ -2210,6 +2222,7 @@ export function SeccionInvitados({
                   opciones={[
                     { id: "lista", etiqueta: "La lista", onClick: exportarPanelActivoCSV },
                     { id: "apple", etiqueta: "Para Apple Music", onClick: exportarAppleMusic },
+                    { id: "spotify", etiqueta: "Pasar a Spotify", onClick: pasarCancionesASpotify },
                   ]}
                   render={({ ref, toggle }) => (
                     <Boton ref={ref} variante="secundario" icono={Copy} onClick={toggle}>
@@ -2237,9 +2250,17 @@ export function SeccionInvitados({
                   <Download size={14} /> Lista para acomodadores
                 </Boton>
               )}
-              <span className="text-xs ml-auto" style={{ color: C.charcoal, opacity: OP.secundario }}>
-                Si no se abre el diálogo de impresión, usa Cmd/Ctrl+P.
-              </span>
+              {/* Lo que pasó al «Pasar a Spotify», en el sitio de la nota de
+                  imprimir: en la cabecera, sin una línea nueva encima. */}
+              {panelFlotante === "canciones" && avisoSpotify ? (
+                <LineaAviso tipo={avisoSpotify.tipo} className="text-xs ml-auto" style={{ maxWidth: "26rem" }}>
+                  <span data-aviso-spotify>{avisoSpotify.texto}</span>
+                </LineaAviso>
+              ) : (
+                <span className="text-xs ml-auto" style={{ color: C.charcoal, opacity: OP.secundario }}>
+                  Si no se abre el diálogo de impresión, usa Cmd/Ctrl+P.
+                </span>
+              )}
             </>
           }
         >

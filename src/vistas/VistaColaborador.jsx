@@ -1261,6 +1261,8 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
   const [cancionesDjAbierta, setCancionesDjAbierta] = useState(false);
   // «Contabilidad», solo cifras, para repasarla (v95).
   const puedeVerContabilidad = tienePermiso(colaborador, PERMISOS.CONTABILIDAD_VER);
+  // El cronograma, solo para quien tenga el permiso (v102.1: el DJ).
+  const puedeVerCronograma = tienePermiso(colaborador, PERMISOS.CRONOGRAMA_VER);
   const [contabilidadAbierta, setContabilidadAbierta] = useState(false);
   // La lista y lo nuevo en ella (v92): lo usan el aviso rojo del inicio y la
   // ventana. Mirarla es tenerla abierta; ver el aviso no cuenta.
@@ -1649,8 +1651,9 @@ export function VistaColaborador({ data, colaboradorId, esAnfitrionOriginal, set
       {/* Cronograma/logística del día -- se dibuja solo a partir de
           evento.cronogramaBloques (ver lib/cronograma.js). Oculto por
           defecto, solo aparece aquí si el anfitrión ha marcado "Visible
-          para colaboradores" en Configuración → Cronograma. */}
-      {evento.cronogramaVisibleColaboradores && Array.isArray(evento.cronogramaBloques) && evento.cronogramaBloques.length > 0 && (
+          para colaboradores" en Configuración → Cronograma, o si este
+          colaborador tiene el permiso «Ver el cronograma» (v102.1). */}
+      {(evento.cronogramaVisibleColaboradores || puedeVerCronograma) && Array.isArray(evento.cronogramaBloques) && evento.cronogramaBloques.length > 0 && (
         <img
           src={generarImagenCronograma(evento.cronogramaHoraInicio || "18:00", evento.cronogramaBloques)}
           alt="Cronograma del día"

@@ -80,7 +80,8 @@ describe("norma 4: en los menús, iconos que llenan su cuadrado", () => {
 // y «Canciones para bailar» se salían. Si no cabe, se abrevia.
 describe("norma 4: rótulos de menú que caben en su botón", () => {
   // Sin icono hay más sitio: medido, cabe.
-  const MEDIDOS = new Set(["Para Apple Music"]);
+  // «Pasar a Spotify» (v102.1), en el mismo menú y más corto que ese.
+  const MEDIDOS = new Set(["Para Apple Music", "Pasar a Spotify"]);
   it("ningún rótulo de más de 13 letras", () => {
     const fuera = archivos.flatMap((r) =>
       [...sinComentarios(leer(r)).matchAll(/etiqueta: "([^"]+)"/g)]

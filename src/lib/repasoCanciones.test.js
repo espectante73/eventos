@@ -15,6 +15,9 @@ import {
   buscarEnDeezer,
   enlaceDeezer,
   filasAppleMusic,
+  textoParaSpotify,
+  pasarASpotify,
+  URL_TEXTO_A_SPOTIFY,
   DURACION_ESTIMADA,
 } from "./repasoCanciones";
 
@@ -147,5 +150,35 @@ describe("para el DJ y para Apple Music (v81)", () => {
       ["Despacito", "Luis Fonsi"],
       ["Canción inventada", ""],
     ]);
+  });
+
+  // v102.1 (él: «otra forma para que sea directo a Spotify, más sencillo»).
+  it("Spotify: las mismas, una por línea, «Canción - Artista», para pegarlas en TuneMyMusic", () => {
+    expect(textoParaSpotify(distintas, catalogo)).toBe("Chica Ye-Ye - Conchita Velasco\nMi jaca - Estrellita Castro\nDespacito - Luis Fonsi\nCanción inventada");
+  });
+
+  it("«Pasar a Spotify»: copia PRIMERO (con el foco aún aquí) y abre TuneMyMusic sin esperar; dice cuántas", async () => {
+    const pasos = [];
+    const win = {
+      navigator: { clipboard: { writeText: (t) => (pasos.push(["copia", t.split("\n").length]), Promise.resolve()) } },
+      open: (url, destino) => pasos.push(["abre", url, destino]),
+    };
+    const aviso = await pasarASpotify(win, distintas, catalogo);
+    expect(pasos).toEqual([
+      ["copia", 4],
+      ["abre", URL_TEXTO_A_SPOTIFY, "_blank"],
+    ]);
+    expect(aviso).toEqual({ tipo: "ok", texto: "Copiadas 4 canciones: pégalas en TuneMyMusic (se ha abierto aparte) y elige Spotify." });
+  });
+
+  it("si el navegador no deja copiar, lo dice y qué hacer; sin canciones, ni copia ni abre", async () => {
+    const abiertas = [];
+    const falla = { navigator: { clipboard: { writeText: () => Promise.reject(new Error("no")) } }, open: (u) => abiertas.push(u) };
+    expect((await pasarASpotify(falla, distintas, catalogo)).tipo).toBe("error");
+    const sinPortapapeles = { navigator: {}, open: (u) => abiertas.push(u) };
+    expect((await pasarASpotify(sinPortapapeles, distintas, catalogo)).texto).toContain("vuelve a pulsar «Pasar a Spotify»");
+    abiertas.length = 0;
+    expect(await pasarASpotify(falla, [], catalogo)).toEqual({ tipo: "error", texto: "Todavía no hay canciones que pasar." });
+    expect(abiertas).toEqual([]);
   });
 });

@@ -19,7 +19,8 @@ import { LineaAviso } from "./LineaAviso";
 import { EncabezadoOrdenable } from "./Widgets";
 import { EscucharCancion } from "./EscucharCancion";
 import { estrellas, ordenarCanciones, tocarOrdenCanciones, ORDEN_CANCIONES_INICIAL } from "../lib/canciones";
-import { enlaceDeezer } from "../lib/repasoCanciones";
+import { enlaceDeezer, pasarASpotify } from "../lib/repasoCanciones";
+import { MenuFlotante } from "./MenuFlotante";
 import { filasDelDj, filtrarPeticiones, textoCancionesNuevas } from "../lib/dj";
 import { descargarCSV } from "../lib/descargas";
 import { consultaDeFila } from "../lib/escuchar";
@@ -40,6 +41,8 @@ export function ListaCancionesDj({ datos, escuchar, hora, motivo, nuevas = SIN_N
   const [filtro, setFiltro] = useState({ texto: "", desde: "", hasta: "" });
   const [orden, setOrden] = useState(ORDEN_CANCIONES_INICIAL);
   const [soloNuevas, setSoloNuevas] = useState(false);
+  // Lo que pasó al «Pasar a Spotify» (v102.1): { tipo, texto }.
+  const [avisoSpotify, setAvisoSpotify] = useState(null);
 
   const catalogo = datos.catalogo || {};
   const todas = filasDelDj(datos);
@@ -54,6 +57,12 @@ export function ListaCancionesDj({ datos, escuchar, hora, motivo, nuevas = SIN_N
       ["Veces", "Canción", "Edad"],
       filas.map((f) => [f.veces, f.cancion, f.edad ?? ""])
     );
+  // «Pasar a Spotify» (v102.1, él: «con opción para el DJ también»): lo que
+  // se ve (con sus filtros, como el CSV), cada canción una vez.
+  const pasarAlSpotify = async () => {
+    const distintas = [...new Map(filas.map((f) => [f.clave, f])).values()];
+    setAvisoSpotify(await pasarASpotify(window, distintas, catalogo));
+  };
   const edad = { ...inputStyle, width: 56, textAlign: "center", minWidth: 0 };
 
   return (
@@ -131,13 +140,28 @@ export function ListaCancionesDj({ datos, escuchar, hora, motivo, nuevas = SIN_N
         <Boton variante="principal" icono={Printer} onClick={() => window.print()}>
           Imprimir / PDF
         </Boton>
-        <Boton variante="secundario" icono={Copy} onClick={exportar}>
-          Exportar CSV
-        </Boton>
+        {/* Como en la ventana del anfitrión: «Exportar CSV» con sus opciones. */}
+        <MenuFlotante
+          anchor="bottom-left"
+          opciones={[
+            { id: "lista", etiqueta: "La lista", onClick: exportar },
+            { id: "spotify", etiqueta: "Pasar a Spotify", onClick: pasarAlSpotify },
+          ]}
+          render={({ ref, toggle }) => (
+            <Boton ref={ref} variante="secundario" icono={Copy} onClick={toggle}>
+              Exportar CSV
+            </Boton>
+          )}
+        />
         <span className="ml-auto zurdo:ml-0 zurdo:mr-auto" style={{ color: C.charcoal, opacity: OP.secundario, fontSize: T.pequeno }}>
           {hora && `Se actualiza sola · ${hora.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}`}
         </span>
       </div>
+      {avisoSpotify && (
+        <LineaAviso tipo={avisoSpotify.tipo} className="text-sm oculto-al-imprimir">
+          <span data-aviso-spotify>{avisoSpotify.texto}</span>
+        </LineaAviso>
+      )}
       {motivo && <LineaAviso className="text-sm">{motivo}</LineaAviso>}
     </div>
   );

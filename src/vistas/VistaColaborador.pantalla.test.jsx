@@ -13,6 +13,9 @@ import { VistaColaborador } from "./VistaColaborador";
 import { ROL_FAMILIAR } from "../lib/rolFamiliar";
 import { LO_NUEVO_HASTA } from "../lib/loNuevo";
 
+// La imagen del cronograma se dibuja en un lienzo, y aquí no hay: de pega.
+vi.mock("../lib/cronograma", async (original) => ({ ...(await original()), generarImagenCronograma: () => "data:image/png;base64,CRONO" }));
+
 const evento = {
   fecha: "2026-11-13",
   hora: "18:00",
@@ -953,6 +956,22 @@ it("con el permiso de la lista (v91.5), sale «Canciones» en su menú", () => {
   vista.pulsar(botones().find((b) => b.textContent.includes("Abrir sección")));
   expect(botones().map((b) => b.textContent.trim())).toContain("Canciones");
   vista.desmontar();
+});
+
+// v102.1 (él: «quiero darle permiso [al DJ] para ver el cronograma»): con el
+// permiso, lo ve aunque no esté «Visible para colaboradores»; sin él, no.
+it("con el permiso «Ver el cronograma», el cronograma del día en su inicio; sin él, no", () => {
+  const conCronograma = { ...evento, cronogramaVisibleColaboradores: false, cronogramaHoraInicio: "18:00", cronogramaBloques: [{ texto: "Cena", duracionMin: 90 }] };
+  const ver = (permisos) => {
+    const vista = montar(
+      <VistaColaborador data={{ ...data, evento: conCronograma, colaboradores: [{ ...colaboradores[0], permisos }] }} colaboradorId="c1" esAnfitrionOriginal={false} setRol={() => {}} anfitrionToken={null} onCerrarSesion={() => {}} />
+    );
+    const hay = Boolean(document.body.querySelector('img[alt="Cronograma del día"]'));
+    vista.desmontar();
+    return hay;
+  };
+  expect(ver(["cronograma_ver"])).toBe(true);
+  expect(ver([])).toBe(false);
 });
 
 // v92 (él): «si hay cambios, un aviso al DJ en rojo "canciones nuevas o
