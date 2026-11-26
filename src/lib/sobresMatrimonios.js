@@ -101,6 +101,10 @@ const ENTRE_MESA = 6; // del corazón (o los nombres) a la mesa
 const HUECO = 10; // entre el bloque del nombre y el logo
 const ALTO_LOGO = 24 * MM; // pegado al nombre
 const ALTO_LOGO_CENTRO = 40 * MM; // solo, en el centro del sobre
+// La fecha del evento, abajo del todo (v102), y lo que deja libre encima.
+const TAM_FECHA = 11;
+const ESPACIADO_FECHA = 1;
+const ENTRE_FECHA = 10;
 
 // El bloque del nombre, una columna centrada: el APELLIDO (si se elige), los
 // nombres, el corazón y la mesa. `cabe`: el ancho que tiene.
@@ -205,7 +209,11 @@ function dibujarSobre(pdf, sobre, opciones, logo, adornos, W, H) {
   const derecha = pos.endsWith("Derecha");
   const alinear = izquierda ? "izquierda" : derecha ? "derecha" : "centro";
   const bx = izquierda ? MARGEN : derecha ? W - MARGEN - anchoBloque : (W - anchoBloque) / 2;
-  const by = pos.startsWith("arriba") ? MARGEN : pos.startsWith("abajo") ? H - MARGEN - altoBloque : (H - altoBloque) / 2;
+  // Con la fecha abajo, el bloque nunca baja hasta ella: abajo, sube lo
+  // justo; en el centro, solo si no cabe.
+  const fecha = opciones.fecha || "";
+  const suelo = H - MARGEN - (fecha ? TAM_FECHA * ALTO_CIFRA + ENTRE_FECHA : 0);
+  const by = pos.startsWith("arriba") ? MARGEN : pos.startsWith("abajo") ? suelo - altoBloque : Math.min((H - altoBloque) / 2, suelo - altoBloque);
   // Dentro del bloque, cada parte alineada como el nombre.
   const enLinea = (ancho) => (alinear === "izquierda" ? bx : alinear === "derecha" ? bx + anchoBloque - ancho : bx + (anchoBloque - ancho) / 2);
 
@@ -227,6 +235,17 @@ function dibujarSobre(pdf, sobre, opciones, logo, adornos, W, H) {
     const ls = tamLogo(Math.min(ALTO_LOGO_CENTRO, H - 2 * MARGEN));
     pdf.addImage(logo.dato, "PNG", (W - ls.ancho) / 2, (H - ls.alto) / 2, ls.ancho, ls.alto, "logo", "FAST");
   }
+
+  // La fecha del evento (él, v102: «11 diciembre 2026… en la parte más
+  // baja, en línea con el resto de la impresión, color dorado»): abajo del
+  // todo, alineada como el nombre (a su izquierda, a su derecha o al centro).
+  if (fecha) {
+    pdf.setFont(...(adornos ? [SERIF, "normal"] : ["helvetica", "bold"]));
+    pdf.setFontSize(TAM_FECHA);
+    pdf.setTextColor(C.gold);
+    const anchoFecha = pdf.getTextWidth(fecha) + ESPACIADO_FECHA * (fecha.length - 1);
+    pdf.text(fecha, enLinea(anchoFecha), H - MARGEN, { charSpace: ESPACIADO_FECHA });
+  }
 }
 
 const medidaSobre = (opciones) => {
@@ -237,7 +256,8 @@ const medidaSobre = (opciones) => {
 // Todos los sobres, uno por página. `logo`: { dato (data URL del PNG),
 // imagen (la misma, cargada), proporcion (alto / ancho) }, o null.
 // `adornos`: las letras y el corazón de la invitación (cargarAdornos de las
-// tarjetas de acomodación), o null.
+// tarjetas de acomodación), o null. `opciones.fecha`: la del evento, ya
+// escrita (fechaImpresa), o nada.
 export function dibujarSobres(pdf, sobres, opciones = OPCIONES_SOBRES_POR_DEFECTO, logo = null, adornos = null) {
   const o = { ...OPCIONES_SOBRES_POR_DEFECTO, ...opciones };
   const { ancho, alto } = medidaSobre(o);

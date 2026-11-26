@@ -69,9 +69,12 @@ function Opcion({ etiqueta, valor, opciones, onCambiar, vista }) {
 // `vistaPrevia`, `cargarLogo` y `cargarAdornos`: quien dibuja, quien trae el
 // logo y quien las letras y el corazón (las pruebas pasan unos sin lienzo ni
 // red).
+// `fecha`: la del evento, ya escrita para imprimirla abajo (fechaImpresa,
+// v102), o nada.
 export function VentanaSobresMatrimonios({
   invitados,
   fechaEvento,
+  fecha,
   onCerrar,
   vistaPrevia = vistaPreviaSobres,
   cargarLogo = cargarLogoDeLaApp,
@@ -84,6 +87,8 @@ export function VentanaSobresMatrimonios({
     guardarOpciones(nuevas);
   };
   const sobre = SOBRES[opciones.sobre];
+  // Lo que se dibuja: lo elegido y la fecha (que no se guarda: es de la base).
+  const paraDibujar = useMemo(() => (fecha ? { ...opciones, fecha } : opciones), [opciones, fecha]);
   const { sobres, sinMesa } = useMemo(() => sobresDeMatrimonios(invitados, fechaEvento), [invitados, fechaEvento]);
 
   // El logo, una vez; si no llega, los sobres salen sin él y se dice.
@@ -114,15 +119,15 @@ export function VentanaSobresMatrimonios({
   useEffect(() => {
     if (cargando) return undefined;
     setImagenes(null);
-    const t = setTimeout(() => setImagenes(vistaPrevia(sobres, opciones, logo, adornos)), 30);
+    const t = setTimeout(() => setImagenes(vistaPrevia(sobres, paraDibujar, logo, adornos)), 30);
     return () => clearTimeout(t);
-  }, [sobres, opciones, logo, adornos, cargando, vistaPrevia]);
+  }, [sobres, paraDibujar, logo, adornos, cargando, vistaPrevia]);
 
   const [descargando, setDescargando] = useState(false);
   const [descargado, setDescargado] = useState("");
   const descargar = async () => {
     setDescargando(true);
-    descargarBlob(ARCHIVO_SOBRES, await pdfSobres(sobres, opciones, logo, adornos));
+    descargarBlob(ARCHIVO_SOBRES, await pdfSobres(sobres, paraDibujar, logo, adornos));
     setDescargando(false);
     setDescargado(ARCHIVO_SOBRES);
   };

@@ -24,6 +24,7 @@ import { crearZip } from "../../lib/zip";
 import { descargarBlob } from "../../lib/descargas";
 import { bajarFotosFiesta, archivoFotosEvento } from "../../lib/fotosFiesta";
 import { tarjetasDeMesas } from "../../lib/pdfTarjetasQr";
+import { fechaImpresa } from "../../lib/formato";
 import { construirEnlaceTablon, construirEnlaceMesa } from "../../lib/url";
 import { ENVIO_BLOQUEADO } from "../../lib/invitados";
 import { VentanaTarjetasAcomodacion } from "./VentanaTarjetasAcomodacion";
@@ -266,8 +267,8 @@ export function VentanaDiaEvento({ data, onCerrar, marcador = {} }) {
         )}
       </div>
       {tarjetasQr && <VentanaTarjetasQr nombreEvento={evento.nombre} tarjetas={tarjetasQr} onCerrar={() => setTarjetasQr(null)} />}
-      {verTarjetasAcomodacion && <VentanaTarjetasAcomodacion invitados={invitados || []} onCerrar={() => setVerTarjetasAcomodacion(false)} />}
-      {verSobres && <VentanaSobresMatrimonios invitados={invitados || []} fechaEvento={evento.fecha} onCerrar={() => setVerSobres(false)} />}
+      {verTarjetasAcomodacion && <VentanaTarjetasAcomodacion invitados={invitados || []} fecha={fechaImpresa(evento)} onCerrar={() => setVerTarjetasAcomodacion(false)} />}
+      {verSobres && <VentanaSobresMatrimonios invitados={invitados || []} fechaEvento={evento.fecha} fecha={fechaImpresa(evento)} onCerrar={() => setVerSobres(false)} />}
       {ventanaPregunta}
     </VentanaFlotante>
   );

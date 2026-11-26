@@ -53,6 +53,26 @@ it("cambiar el sobre, el nombre, dónde va y el logo rehace la vista previa y se
   vista.desmontar();
 });
 
+// v102: la fecha (de la base, ya escrita) llega al dibujo, pero no se
+// recuerda con lo elegido: si cambia en la base, sale la nueva.
+it("la fecha del evento llega a la vista previa y no se guarda con las opciones", async () => {
+  const llamadas = [];
+  const vista = montar(
+    <VentanaSobresMatrimonios invitados={invitados} fechaEvento="2026-12-11" fecha="11 diciembre 2026" onCerrar={() => {}} vistaPrevia={(s, o) => (llamadas.push(o), [])} cargarLogo={cargarLogo} cargarAdornos={cargarAdornos} />,
+  );
+  await esperar();
+  expect(llamadas.at(-1).fecha).toBe("11 diciembre 2026");
+  const [sobre] = document.body.querySelectorAll("[data-opciones-sobres] select");
+  act(() => {
+    sobre.value = "americano";
+    sobre.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  await esperar();
+  expect(llamadas.at(-1)).toMatchObject({ sobre: "americano", fecha: "11 diciembre 2026" });
+  expect(JSON.parse(window.localStorage.getItem("sobres-matrimonios-opciones")).fecha).toBeUndefined();
+  vista.desmontar();
+});
+
 it("si el logo no llega, se dice y los sobres salen sin él", async () => {
   const llamadas = [];
   const vista = montar(

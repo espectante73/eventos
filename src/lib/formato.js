@@ -46,6 +46,14 @@ export function formatearFecha(fechaISO) {
   return `${parseInt(dia, 10)} ${MESES_ES[mesIndice]} ${anio}`;
 }
 
+// La fecha que se imprime en las tarjetas de acomodación y los sobres (él,
+// v102: «11 diciembre 2026», abajo y en dorado): solo la confirmada y a la
+// vista; si no, nada (imprimir una provisional sería mentir en papel).
+export function fechaImpresa(evento) {
+  if (!evento?.fecha || evento.fechaSinConfirmar || evento.tablonOcultarFecha) return "";
+  return formatearFecha(evento.fecha);
+}
+
 // Día de la semana en español, calculado en UTC a propósito: "fechaISO" es
 // solo YYYY-MM-DD (sin hora), y construir la fecha en la zona horaria
 // local podría desplazarla al día anterior/siguiente según dónde se abra

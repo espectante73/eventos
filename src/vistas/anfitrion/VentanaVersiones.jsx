@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "102",
+    cambios: [
+      "Día del evento, sobres de los matrimonios y tarjetas de acomodación: la fecha del evento («11 diciembre 2026»), abajo del todo y en dorado. En el sobre, alineada como el nombre; en la tarjeta, centrada en cada cara, en la línea de la letra de la familia.",
+      "Sale de la fecha del evento guardada en la app. Si está marcada como sin confirmar, no se imprime.",
+    ],
+  },
+  {
     version: "101.9",
     cambios: [
       "Tablón, «Comprueba tus datos»: en una franja de otro tono, que dice que ahí hay algo plegado, con el rótulo dentro y, del lado del pulgar, «Mostrar» o «Ocultar» y su flecha (el modelo B del boceto). Toda la franja se toca.",

@@ -180,6 +180,9 @@ const COLUMNA_NUMERO = 56; // de la línea al hueco del marco
 const TAM_NUMERO_GRANDE = 44;
 const TAM_MESA = 8;
 const ESPACIADO_MESA = 2.5;
+// La fecha del evento, abajo (v102): pequeña, con aire entre letras.
+const TAM_FECHA = 8;
+const ESPACIADO_FECHA = 0.8;
 const MEDIO_ALTO_LINEA = 46.5; // la línea, de arriba abajo desde el centro
 // Los nombres de las dos letras de la invitación: en jsPDF y en el lienzo
 // (pdfEnLienzo.js). Si no se cargaron, las de siempre de jsPDF. También
@@ -302,6 +305,17 @@ function cara(pdf, x, y, ancho, alto, girada, t, estilo, adornos) {
     pdf.setTextColor(estilo.familia);
     escribir(t.familia, x + MARCO + 6, y + alto - MARCO - 6);
   }
+  // La fecha del evento (él, v102: «11 diciembre 2026… en la parte más
+  // baja, en línea con el resto de la impresión, color dorado»): abajo del
+  // todo, a la altura de la letra de la familia, centrada en la tarjeta
+  // (él: «no queda centrada con respecto a la tarjeta»; antes, bajo el nombre).
+  if (t.fecha) {
+    pdf.setFont(serif, estiloSerif);
+    pdf.setFontSize(TAM_FECHA);
+    pdf.setTextColor(estilo.letraNombre);
+    const anchoFecha = pdf.getTextWidth(t.fecha) + ESPACIADO_FECHA * (t.fecha.length - 1);
+    escribir(t.fecha, cx - anchoFecha / 2, y + alto - MARCO - 6, ESPACIADO_FECHA);
+  }
 }
 
 // Una tarjeta abierta: la cara de arriba, girada, y la de abajo. Las dos
@@ -322,11 +336,13 @@ function tarjeta(pdf, x, y, ancho, adornos, [tArriba, estiloArriba], [tAbajo, es
 // Todas las hojas: las tarjetas en rejilla, centradas, y por fuera las
 // marcas para cortar, las de la forma de cortar elegida. `pdf` es un jsPDF o un
 // PdfEnLienzo (la vista previa); `adornos`, el adorno y las letras de la
-// invitación (cargarAdornos), si se cargaron. Devuelve cuántas hojas salieron.
+// invitación (cargarAdornos), si se cargaron. `fecha`: la del evento, ya
+// escrita («11 diciembre 2026», fechaImpresa), o nada. Devuelve cuántas
+// hojas salieron.
 export function dibujarTarjetasAcomodacion(
   pdf,
   tarjetas,
-  { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, acabado: idAcabado, formato = OPCIONES_POR_DEFECTO.formato } = {},
+  { hoja = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, acabado: idAcabado, formato = OPCIONES_POR_DEFECTO.formato, fecha = "" } = {},
   adornos = null,
 ) {
   const estilo = acabado(idAcabado);
@@ -335,7 +351,7 @@ export function dibujarTarjetasAcomodacion(
   for (let h = 0; h < hojas; h++) {
     if (h > 0) nuevaPagina(pdf, hoja, formato);
     const deEsta = tarjetas.slice(h * sitio.porHoja, (h + 1) * sitio.porHoja);
-    deEsta.forEach((t, i) => sitio.poner(pdf, ...sitio.hueco(i), adornos, [t, estilo]));
+    deEsta.forEach((t, i) => sitio.poner(pdf, ...sitio.hueco(i), adornos, [{ ...t, fecha }, estilo]));
     if (!sitio.suelta) marcasDeLaHoja(pdf, sitio, deEsta.length, corte);
   }
   return hojas;
@@ -393,12 +409,12 @@ export const ARCHIVO_MUESTRA_ACABADOS = "muestra-acabados-tarjetas.pdf";
 const TAM_LEYENDA = 9;
 export function dibujarMuestraAcabados(
   pdf,
-  { hoja: hojaElegida = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, formato = OPCIONES_POR_DEFECTO.formato } = {},
+  { hoja: hojaElegida = OPCIONES_POR_DEFECTO.hoja, corte = OPCIONES_POR_DEFECTO.corte, formato = OPCIONES_POR_DEFECTO.formato, fecha = "" } = {},
   adornos = null,
 ) {
   const hoja = hojaDeMuestra(hojaElegida);
   const sitio = colocacion(hoja, formato);
-  const conNumero = (i) => [{ ...EJEMPLO, familia: String(i + 1) }, ACABADOS[i]];
+  const conNumero = (i) => [{ ...EJEMPLO, familia: String(i + 1), fecha }, ACABADOS[i]];
   // Plegadas, un acabado en cada cara; de una cara, uno por tarjeta.
   const porTarjeta = sitio.plegada ? 2 : 1;
   const cuantas = Math.ceil(ACABADOS.length / porTarjeta);
@@ -656,10 +672,10 @@ export function vistaPreviaTarjetasAcomodacion(tarjetas, opciones, adornos = nul
 // La muestra de un acabado, para elegirlo: una cara de una tarjeta de
 // ejemplo, del mismo dibujo que el PDF. En la esquina, su número, el mismo
 // que en la hoja de muestra (v99.1): lo impreso y la paleta, a la par.
-export function muestraAcabado(idAcabado, adornos = null, { escala = 1, crearLienzo = crearCanvas } = {}) {
+export function muestraAcabado(idAcabado, adornos = null, { escala = 1, crearLienzo = crearCanvas, fecha = "" } = {}) {
   const medida = { ancho: ANCHO_TARJETA * MM, alto: ALTO_CARA * MM };
   const lienzo = new PdfEnLienzo({ medida, escala, crearLienzo, imagenes: imagenesDe(adornos) });
   const numero = ACABADOS.findIndex((a) => a.id === idAcabado) + 1;
-  cara(lienzo, 0, 0, medida.ancho, medida.alto, false, { ...EJEMPLO, familia: numero ? String(numero) : EJEMPLO.familia }, acabado(idAcabado), adornos);
+  cara(lienzo, 0, 0, medida.ancho, medida.alto, false, { ...EJEMPLO, familia: numero ? String(numero) : EJEMPLO.familia, fecha }, acabado(idAcabado), adornos);
   return lienzo.ctx ? lienzo.paginas[0].toDataURL("image/png") : "";
 }

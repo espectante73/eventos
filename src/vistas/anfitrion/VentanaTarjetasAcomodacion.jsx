@@ -111,9 +111,11 @@ function ElegirAcabado({ valor, onCambiar, muestras }) {
 // `vistaPrevia` y `muestra`: quien dibuja las hojas y las muestras (las
 // pruebas pasan unos sin lienzo); `pdfMuestra`, la hoja de muestra;
 // `descargarTarjetas`, los archivos de las tarjetas; `cargarAdornos`, quien
-// trae el adorno y las letras de la invitación.
+// trae el adorno y las letras de la invitación. `fecha`: la del evento, ya
+// escrita para imprimirla abajo (fechaImpresa, v102), o nada.
 export function VentanaTarjetasAcomodacion({
   invitados,
+  fecha,
   onCerrar,
   vistaPrevia = vistaPreviaTarjetasAcomodacion,
   muestra = muestraAcabado,
@@ -128,6 +130,8 @@ export function VentanaTarjetasAcomodacion({
     guardarOpciones(nuevas);
   };
   const { tarjetas, sinMesa } = useMemo(() => tarjetasDeAcomodacion(invitados), [invitados]);
+  // Lo que se dibuja: lo elegido y la fecha (que no se guarda: es de la base).
+  const paraDibujar = useMemo(() => (fecha ? { ...opciones, fecha } : opciones), [opciones, fecha]);
   const { porHoja } = rejilla(opciones.hoja, opciones.formato);
   const hojas = Math.max(1, Math.ceil(tarjetas.length / porHoja));
   const hoja = HOJAS[opciones.hoja];
@@ -149,8 +153,8 @@ export function VentanaTarjetasAcomodacion({
 
   // Las muestras: una cara, tal cual saldrá.
   const muestras = useMemo(
-    () => (adornos === undefined ? {} : Object.fromEntries(ACABADOS.map((a) => [a.id, muestra(a.id, adornos, { escala: 0.6 })]))),
-    [muestra, adornos],
+    () => (adornos === undefined ? {} : Object.fromEntries(ACABADOS.map((a) => [a.id, muestra(a.id, adornos, { escala: 0.6, fecha })]))),
+    [muestra, adornos, fecha],
   );
 
   // Las hojas se dibujan justo después de abrir (y de tener los adornos):
@@ -159,9 +163,9 @@ export function VentanaTarjetasAcomodacion({
   useEffect(() => {
     if (adornos === undefined) return undefined;
     setImagenes(null);
-    const t = setTimeout(() => setImagenes(vistaPrevia(tarjetas, opciones, adornos)), 30);
+    const t = setTimeout(() => setImagenes(vistaPrevia(tarjetas, paraDibujar, adornos)), 30);
     return () => clearTimeout(t);
-  }, [tarjetas, opciones, vistaPrevia, adornos]);
+  }, [tarjetas, paraDibujar, vistaPrevia, adornos]);
 
   // Lo que se está preparando: "" (nada), "muestra", "pdf" o "png"; con
   // muchos archivos, el botón cuenta («37/126»).
@@ -183,10 +187,10 @@ export function VentanaTarjetasAcomodacion({
     setDescargando("");
   };
   const descargar = (salida) =>
-    bajar(salida, () => descargarTarjetas(tarjetas, opciones, adornos, { salida, alAvanzar: (hechos, total) => setProgreso(`${hechos}/${total}`) }));
+    bajar(salida, () => descargarTarjetas(tarjetas, paraDibujar, adornos, { salida, alAvanzar: (hechos, total) => setProgreso(`${hechos}/${total}`) }));
   // La hoja de muestra (él, v99.1): todos los acabados, para
   // imprimirla y elegir en vivo; con la hoja y las marcas elegidas.
-  const descargarMuestra = () => bajar("muestra", async () => ({ nombre: ARCHIVO_MUESTRA_ACABADOS, blob: await pdfMuestra(opciones, adornos), archivos: 1 }));
+  const descargarMuestra = () => bajar("muestra", async () => ({ nombre: ARCHIVO_MUESTRA_ACABADOS, blob: await pdfMuestra(paraDibujar, adornos), archivos: 1 }));
   const rotuloDescarga = (salida) => (descargando === salida ? progreso || "Preparando…" : salida.toUpperCase());
 
   return (

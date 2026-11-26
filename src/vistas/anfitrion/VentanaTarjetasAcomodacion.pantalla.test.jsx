@@ -270,6 +270,37 @@ it("el adorno y las letras de la invitación llegan a la vista previa, a las mue
   vista.desmontar();
 });
 
+// v102: la fecha (de la base, ya escrita) llega a la vista previa, a las
+// muestras de la paleta y a la hoja de muestra; no se recuerda con lo elegido.
+it("la fecha del evento llega a todo lo que se dibuja y no se guarda con las opciones", async () => {
+  const previa = [];
+  const muestras = [];
+  const pedidas = [];
+  const crear = URL.createObjectURL;
+  URL.createObjectURL = () => "blob:muestra";
+  const vista = montar(
+    <VentanaTarjetasAcomodacion
+      invitados={invitados}
+      fecha="11 diciembre 2026"
+      onCerrar={() => {}}
+      vistaPrevia={(t, o) => (previa.push(o), [])}
+      muestra={(id, a, o) => (muestras.push(o), muestra(id))}
+      pdfMuestra={async (o) => (pedidas.push(o), new Blob(["%PDF"]))}
+      cargarAdornos={cargarAdornos}
+    />,
+  );
+  await esperar();
+  expect(previa.at(-1).fecha).toBe("11 diciembre 2026");
+  expect(muestras.at(-1).fecha).toBe("11 diciembre 2026");
+  vista.pulsar(document.body.querySelector("[data-muestra-acabados]"));
+  await esperar();
+  expect(pedidas[0].fecha).toBe("11 diciembre 2026");
+  const guardadas = window.localStorage.getItem("tarjetas-acomodacion-opciones");
+  expect(guardadas === null || JSON.parse(guardadas).fecha === undefined).toBe(true);
+  URL.createObjectURL = crear;
+  vista.desmontar();
+});
+
 it("si no llegan, la vista previa sale igual (sin ellas) y se dice", async () => {
   const previa = [];
   const vista = montar(

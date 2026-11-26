@@ -102,7 +102,7 @@ function hojaDePega() {
     // v99.6: los marcos, con esquinas rectas (rect con «S»); un relleno, con «F».
     rect: (x, y, w, h, estilo) => {
       (estilo === "S" ? recuadros : rellenos).push(estilo);
-      if (estilo === "S") trazos.push({ x, y, grosor });
+      if (estilo === "S") trazos.push({ x, y, w, grosor });
     },
     setLineWidth: (g) => (grosor = g),
     line: (x1, y1, x2, y2) => lineas.push({ x1, y1, x2, y2 }),
@@ -403,6 +403,36 @@ describe("los acabados de la invitación", () => {
     const derecha = (t) => textos.find((x) => x.t === t && x.angle === 0);
     expect(derecha("Ana").y).toBeGreaterThan(derecha("MEDINA").y);
     expect(derecha("A").fuente).toBe("fraunces");
+  });
+  // v102 (él): «falta fecha evento… en la parte más baja, en línea con el
+  // resto de la impresión, color dorado».
+  it("la fecha del evento, en las dos caras: abajo, a la altura de la letra de la familia, dorada y centrada en la tarjeta", () => {
+    const fecha = "11 diciembre 2026";
+    const { pdf, textos, trazos } = hojaDePega();
+    dibujarTarjetasAcomodacion(pdf, [ana], { hoja: "a4", acabado: "blancoHojas", fecha }, ADORNOS);
+    const fechas = textos.filter((x) => x.t === fecha);
+    expect(fechas.map((x) => [x.angle, x.color, x.fuente])).toEqual([
+      [180, C.gold, "fraunces"],
+      [0, C.gold, "fraunces"],
+    ]);
+    const derecha = (t) => textos.find((x) => x.t === t && x.angle === 0);
+    expect(derecha(fecha).y).toBeCloseTo(derecha("A").y);
+    expect(derecha(fecha).y).toBeGreaterThan(derecha("Ana").y + 20);
+    const anchoFecha = fecha.length * 5 + 0.8 * (fecha.length - 1);
+    // Centrada en la tarjeta (él, v102), no bajo el nombre: en el medio del
+    // marco, que está centrado en la cara.
+    const medioTarjeta = trazos[0].x + trazos[0].w / 2;
+    expect(derecha(fecha).x + anchoFecha / 2).toBeCloseTo(medioTarjeta);
+    expect(derecha("Ana").x + ("Ana".length * 5) / 2).toBeLessThan(medioTarjeta - 10);
+    // Sin fecha (sin confirmar), nada.
+    const sin = hojaDePega();
+    dibujarTarjetasAcomodacion(sin.pdf, [ana], { hoja: "a4", acabado: "blancoHojas" }, ADORNOS);
+    expect(sin.textos.map((x) => x.t)).not.toContain(fecha);
+  });
+  it("también en la hoja de muestra, en cada cara", () => {
+    const { pdf, textos } = hojaDePega();
+    dibujarMuestraAcabados(pdf, { hoja: "a4", fecha: "11 diciembre 2026" }, ADORNOS);
+    expect(textos.filter((x) => x.t === "11 diciembre 2026")).toHaveLength(4);
   });
   it("si el adorno y las letras no se cargaron, sale como uno blanco de marco dorado, con la letra de siempre", () => {
     const { pdf, textos, imagenes, rellenos } = hojaDePega();

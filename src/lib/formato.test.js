@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cuentaAtrasEvento, valorDireccion, formatearFecha, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY, valorFechaEvento, TEXTO_SIN_FECHA, euros, paraBuscar, contiene } from "./formato";
+import { cuentaAtrasEvento, valorDireccion, formatearFecha, fechaImpresa, formatearDiaSemana, ordenarPorApellidoNombre, parsePrecio, listaConY, valorFechaEvento, TEXTO_SIN_FECHA, euros, paraBuscar, contiene } from "./formato";
 
 describe("formatearFecha", () => {
   it("convierte ISO a formato largo en español", () => {
@@ -9,6 +9,19 @@ describe("formatearFecha", () => {
     expect(formatearFecha("")).toBe("");
     expect(formatearFecha("13/11/2026")).toBe("13/11/2026");
     expect(formatearFecha("2026-99-13")).toBe("2026-99-13");
+  });
+});
+
+// v102 (él): la fecha impresa en sobres y tarjetas, «11 diciembre 2026».
+describe("fechaImpresa", () => {
+  it("la del evento, escrita larga", () => {
+    expect(fechaImpresa({ fecha: "2026-12-11" })).toBe("11 diciembre 2026");
+  });
+  it("sin fecha, o sin confirmar (o oculta en el tablón), no se imprime: una provisional no va al papel", () => {
+    expect(fechaImpresa({ fecha: "" })).toBe("");
+    expect(fechaImpresa(null)).toBe("");
+    expect(fechaImpresa({ fecha: "2026-12-11", fechaSinConfirmar: true })).toBe("");
+    expect(fechaImpresa({ fecha: "2026-12-11", tablonOcultarFecha: true })).toBe("");
   });
 });
 

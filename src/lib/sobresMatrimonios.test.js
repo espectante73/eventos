@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { sobresDeMatrimonios, dibujarSobres, SOBRES } from "./sobresMatrimonios";
 import { matrimoniosConLosQueVienenSolos } from "./matrimonios";
+import { C } from "../theme";
 
 const g = (id, nombre, apellido, grupoFamiliar, rolFamiliar, mesa, extra = {}) => ({ id, nombre, apellido, grupoFamiliar, rolFamiliar, mesa, confirmado: true, ...extra });
 const INVITADOS = [
@@ -39,15 +40,17 @@ function hojaDePega() {
   const paginas = [];
   const circulos = [];
   let fuente = "";
+  let color = null;
   const pdf = {
     addPage: (formato, orientacion) => paginas.push([formato, orientacion]),
     getTextWidth: (t) => t.length * 6,
-    text: (t, x, y, o = {}) => textos.push({ t, x, y, fuente, ...o }),
+    text: (t, x, y, o = {}) => textos.push({ t, x, y, fuente, color, ...o }),
+    setTextColor: (c) => (color = c),
     addImage: (...a) => imagenes.push(a),
     setFont: (f) => (fuente = f),
     circle: (x, y, r) => circulos.push({ x, y, r }),
   };
-  for (const f of ["setFillColor", "setDrawColor", "setTextColor", "setLineWidth", "setFontSize"]) pdf[f] = () => {};
+  for (const f of ["setFillColor", "setDrawColor", "setLineWidth", "setFontSize"]) pdf[f] = () => {};
   return { pdf, textos, imagenes, paginas, circulos };
 }
 const LOGO = { dato: "data:image/png;base64,AAA", imagen: null, proporcion: 0.9 };
@@ -119,6 +122,38 @@ describe("dibujarSobres", () => {
     const sin = hojaDePega();
     dibujarSobres(sin.pdf, [sobres[0]], { sobre: "americano", nombre: "centro", logo: "encima" }, null);
     expect(sin.imagenes).toHaveLength(0);
+  });
+  // v102 (él): «falta fecha evento… en la parte más baja, en línea con el
+  // resto de la impresión, color dorado».
+  it("la fecha del evento: abajo del todo, en dorado y alineada como el nombre; sin fecha, nada", () => {
+    const mm = 72 / 25.4;
+    const alto = SOBRES.c6.alto * mm;
+    const ancho = SOBRES.c6.ancho * mm;
+    const fecha = "11 diciembre 2026";
+    const anchoFecha = fecha.length * 6 + 1 * (fecha.length - 1);
+    const centro = hojaDePega();
+    dibujarSobres(centro.pdf, [sobres[0]], { sobre: "c6", formato: "apellido", nombre: "centro", logo: "sin", fecha }, LOGO, ADORNOS);
+    const abajo = centro.textos.at(-1);
+    expect([abajo.t, abajo.fuente, abajo.color]).toEqual([fecha, "fraunces", C.gold]);
+    expect(abajo.y).toBeCloseTo(alto - 15 * mm);
+    expect(abajo.x + anchoFecha / 2).toBeCloseTo(ancho / 2);
+    expect(centro.textos.slice(0, -1).every((x) => x.y < abajo.y - 8)).toBe(true);
+    const derecha = hojaDePega();
+    dibujarSobres(derecha.pdf, [sobres[0]], { sobre: "c6", nombre: "abajoDerecha", logo: "sin", fecha }, LOGO, ADORNOS);
+    expect(derecha.textos.at(-1).x + anchoFecha).toBeCloseTo(ancho - 15 * mm);
+    const sin = hojaDePega();
+    dibujarSobres(sin.pdf, [sobres[0]], { sobre: "c6", nombre: "centro", logo: "sin" }, LOGO, ADORNOS);
+    expect(sin.textos.map((x) => x.t)).not.toContain(fecha);
+  });
+  it("con el nombre abajo, sube lo justo para no pisar la fecha", () => {
+    const con = hojaDePega();
+    dibujarSobres(con.pdf, [sobres[0]], { sobre: "americano", nombre: "abajoDerecha", logo: "sin", fecha: "11 diciembre 2026" }, LOGO, ADORNOS);
+    const sin = hojaDePega();
+    dibujarSobres(sin.pdf, [sobres[0]], { sobre: "americano", nombre: "abajoDerecha", logo: "sin" }, LOGO, ADORNOS);
+    const fecha = con.textos.at(-1);
+    const circulo = con.circulos[0];
+    expect(circulo.y + circulo.r).toBeLessThan(fecha.y - 11 * 0.716);
+    expect(circulo.y).toBeLessThan(sin.circulos[0].y);
   });
   it("nombre abajo a la derecha: dentro del margen, pegado a la derecha y abajo", () => {
     const h = hojaDePega();
