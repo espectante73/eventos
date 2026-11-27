@@ -137,7 +137,9 @@ export function HuecoFoto({ titulo, enlace, ocupada, subiendo, onElegir, onQuita
       {/* Encima de la esquina de la miniatura, no al lado: así la columna
           mide siempre lo mismo haya foto o no, y los títulos de arriba
           siguen cayendo centrados. */}
-      {!soloLectura && ocupada && (
+      {/* Sin `onQuitar` no hay papelera (v103.4): la del Formulario se
+          cambia, no se quita. */}
+      {!soloLectura && ocupada && onQuitar && (
         // yaPregunta: Aniversarios y el formulario del colaborador enseñan su
         // propia pregunta, con el nombre del matrimonio.
         <BotonQuitar

@@ -5,7 +5,16 @@ import { montar } from "../../pruebas/dibujar";
 import { ROL_FAMILIAR } from "../../lib/rolFamiliar";
 
 // Sin almacén de verdad: los enlaces temporales no hacen falta aquí.
-vi.mock("../../lib/fotosAlmacen", async (original) => ({ ...(await original()), enlacesTemporales: async () => ({}) }));
+// Ni la subida (v103.4): se apunta qué se sube y encima de qué.
+const subidas = [];
+vi.mock("../../lib/fotosAlmacen", async (original) => ({
+  ...(await original()),
+  enlacesTemporales: async () => ({}),
+  subirFotoMatrimonio: async (archivo, familia, carpeta, rutaVieja) => {
+    subidas.push({ familia, carpeta, rutaVieja });
+    return `${carpeta}/${familia}.jpg`;
+  },
+}));
 const { VentanaAniversarios } = await import("./VentanaAniversarios");
 
 const g = (id, nombre, familia, rol) => ({ id, nombre, apellido: familia, grupoFamiliar: `${familia}01`, rolFamiliar: rol, anioBoda: "2010", confirmado: true });
@@ -283,4 +292,41 @@ describe("pasar por las fotos en grande", () => {
     expect(botones().find((b) => b.title === "Siguiente (→)")).toBeUndefined();
     vista.desmontar();
   });
+});
+
+// v103.4 (él): pagada la ficha, el colaborador ya no puede cambiar la foto
+// de boda; el anfitrión, aquí, en grande. La de plantilla (de antes de la
+// v70.9) no se cambia.
+it("Boda: en grande, «Cambiar foto» cambia la original, encima de la suya", async () => {
+  const { act } = await import("react");
+  const foto = "data:image/jpeg;base64,eA==";
+  const guardadas = [];
+  const vista = montar(
+    <VentanaAniversarios
+      data={{
+        invitados,
+        evento: { fecha: "2026-12-11" },
+        fotosFamiliares: { Martíni01: foto },
+        fotosAniversario: {},
+        fotosBodaFinal: { Martíni01: foto },
+        fotosSinBoda: {},
+        persistFotosAniversario: () => {},
+        persistFotosBodaFinal: () => {},
+        persistFotosFamiliares: (f) => guardadas.push(f),
+      }}
+      onCerrar={() => {}}
+    />
+  );
+  const clic = async (b) => act(async () => b.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  const botones = () => [...document.body.querySelectorAll("button")];
+  await clic(botones().find((b) => b.title === "Boda — ver en grande"));
+  expect(document.body.textContent, "con la de plantilla a la vista, no").not.toContain("Cambiar foto");
+  await clic(botones().find((b) => b.textContent.trim() === "Ver original"));
+  expect(document.body.textContent).toContain("Cambiar foto");
+  const entrada = document.body.querySelector("#aniversarios-subir-original");
+  Object.defineProperty(entrada, "files", { value: [new File(["x"], "nueva.jpg", { type: "image/jpeg" })] });
+  await act(async () => entrada.dispatchEvent(new Event("change", { bubbles: true })));
+  expect(subidas.at(-1)).toEqual({ familia: "Martíni01", carpeta: "boda", rutaVieja: foto });
+  expect(guardadas.at(-1)).toEqual({ Martíni01: "boda/Martíni01.jpg" });
+  vista.desmontar();
 });

@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "103.4",
+    cambios: [
+      "La foto de boda que ya tienen, se puede cambiar: pagada la ficha, su colaborador ya no puede tocarla. En el Formulario (Lista → Formulario → buscar → Boda), tocándola sale en grande con «Cambiar foto»; la nueva se ve con «Nueva» y se sube al «Guardar». En Aniversarios, en grande, la original de Boda también tiene «Cambiar foto».",
+      "La nueva va encima de la vieja, en el mismo archivo: no queda ningún resto. La de Aniversario montada con la vieja no cambia sola: hay que montarla de nuevo.",
+    ],
+  },
+  {
     version: "103.3",
     cambios: [
       "La app, siempre en claro: con el Mac o el iPhone en modo oscuro, Safari (su «Adaptive Dark Mode», desde la 27.3) repintaba de negro las páginas claras; la Lista salía negra y la papelera en rosa. Ahora la app le dice que es solo clara, también en las ventanas aparte (Lista, Novedades…), y se ve como siempre.",

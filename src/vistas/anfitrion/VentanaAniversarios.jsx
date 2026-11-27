@@ -118,6 +118,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
     fotosSinBoda,
     persistFotosAniversario,
     persistFotosBodaFinal,
+    persistFotosFamiliares,
   } = data;
   const [enlaces, setEnlaces] = useState({});
   // Avisar al terminar una descarga, y dónde está (norma 9).
@@ -147,9 +148,11 @@ export function VentanaAniversarios({ data, onCerrar }) {
     [invitados, evento?.fecha]
   );
 
-  // Las dos fotos que gestiona el anfitrión desde aquí. La original de boda
-  // no está: esa la sube el colaborador y aquí solo se mira y se descarga.
+  // Las fotos que se cambian desde aquí. La original de boda la sube el
+  // colaborador, pero con la ficha pagada ya no puede tocarla: desde la
+  // v103.4 (él) el anfitrión la cambia aquí, en grande, y en el Formulario.
   const TIPOS = {
+    original: { mapa: fotosFamiliares, guardar: persistFotosFamiliares, carpeta: CARPETA.BODA, nombre: "de boda" },
     aniversario: { mapa: fotosAniversario, guardar: persistFotosAniversario, carpeta: CARPETA.ANIVERSARIO, nombre: "de aniversario" },
     bodaFinal: { mapa: fotosBodaFinal, guardar: persistFotosBodaFinal, carpeta: CARPETA.BODA_FINAL, nombre: "de boda con plantilla" },
   };
@@ -239,7 +242,8 @@ export function VentanaAniversarios({ data, onCerrar }) {
     setError("");
     setSubiendo(`${tipo}:${familia}`);
     try {
-      const ruta = await subirFotoMatrimonio(file, familia, t.carpeta);
+      // Encima de la que ya tiene, en su misma ruta (rutaParaCambiar).
+      const ruta = await subirFotoMatrimonio(file, familia, t.carpeta, t.mapa?.[familia]);
       await t.guardar({ ...(t.mapa || {}), [familia]: ruta });
       setRecargaEnlaces((n) => n + 1);
     } catch (e) {
@@ -568,7 +572,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
                 // "No tienen": el colaborador marcó que ese matrimonio no
                 // tiene foto de boda. Así se sabe que no falta, que no hay.
                 marca={falta4K(final) ? "Falta 4K" : !original && fotosSinBoda?.[m.familia] ? "No tienen" : ""}
-                subiendo={subiendo === `bodaFinal:${m.familia}`}
+                subiendo={subiendo === `bodaFinal:${m.familia}` || subiendo === `original:${m.familia}`}
                 onQuitar={() => setPorQuitar({ matrimonio: m, tipo: "bodaFinal" })}
                 onVer={() => setEnGrande({ matrimonio: m, tipo: "boda", cual: final ? "final" : "original" })}
               />
@@ -596,10 +600,9 @@ export function VentanaAniversarios({ data, onCerrar }) {
           const original = fotosFamiliares?.[m.familia] || "";
           const final = fotosBodaFinal?.[m.familia] || "";
           const valor = esBoda ? (enGrande.cual === "final" ? final : original) : fotosAniversario?.[m.familia];
-          const tipoSubida = esBoda ? "bodaFinal" : "aniversario";
           // La que se ve: aniversario, o en boda la original o la de plantilla.
           const cualSeVe = !esBoda ? "aniversario" : enGrande.cual === "final" ? "bodaFinal" : "original";
-          const idInput = `aniversarios-subir-${tipoSubida}`;
+          const idInput = `aniversarios-subir-${cualSeVe}`;
           const titulo = esBoda
             ? `Boda (${enGrande.cual === "final" ? "con plantilla" : "original"}) — ${nombreMatrimonio(m)}`
             : `Aniversario — ${nombreMatrimonio(m)}`;
@@ -625,17 +628,18 @@ export function VentanaAniversarios({ data, onCerrar }) {
               }
               acciones={
                 <>
-                  {/* Solo en Aniversario se sube (v70.9): en Boda está la
-                      original del colaborador. Es un <label> y no un
-                      <Boton>: tiene que disparar el <input type="file"> de
-                      al lado. Se le clava el mismo aspecto con
+                  {/* Se cambian la de Aniversario y, desde la v103.4 (él),
+                      la original de Boda. La de plantilla no: es de antes
+                      de la v70.9, cuando se subía aquí. Es un <label> y no
+                      un <Boton>: tiene que disparar el <input type="file">
+                      de al lado. Se le clava el mismo aspecto con
                       estilosBoton para que no desafine. */}
                   {valor && enOrdenador && (
                     <Boton icono={Download} onClick={() => descargarUna(m, cualSeVe)} disabled={Boolean(descargando)}>
                       {descargando === `una:${cualSeVe}:${m.familia}` ? "Preparando…" : "Descargar"}
                     </Boton>
                   )}
-                  {!esBoda && (
+                  {cualSeVe !== "bodaFinal" && (
                     <>
                       <label
                         htmlFor={idInput}
@@ -654,7 +658,7 @@ export function VentanaAniversarios({ data, onCerrar }) {
                           e.target.value = "";
                           if (!file) return;
                           setEnGrande(null);
-                          subir(tipoSubida, m.familia, file);
+                          subir(cualSeVe, m.familia, file);
                         }}
                       />
                     </>

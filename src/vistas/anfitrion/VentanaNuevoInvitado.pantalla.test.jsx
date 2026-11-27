@@ -10,9 +10,9 @@ import { VentanaNuevoInvitado } from "./VentanaNuevoInvitado";
 const subidas = [];
 vi.mock("../../lib/fotosAlmacen", () => ({
   CARPETA: { BODA: "boda" },
-  subirFotoMatrimonio: async (archivo, familia, carpeta) => {
-    subidas.push({ nombre: archivo.name, familia, carpeta });
-    return `${carpeta}/${familia}.jpg`;
+  subirFotoMatrimonio: async (archivo, familia, carpeta, rutaVieja) => {
+    subidas.push({ nombre: archivo.name, familia, carpeta, rutaVieja });
+    return rutaVieja || `${carpeta}/${familia}.jpg`;
   },
   useEnlaceFoto: (ruta) => (ruta ? `https://foto/${ruta}` : ""),
 }));
@@ -162,8 +162,31 @@ it("si la familia ya tiene la foto, se enseña y no se pide otra", () => {
   vista.elegir(q('select[aria-label="Familia"]'), "Pacheco01");
   vista.elegir(q('select[aria-label="Rol"]'), "esposo");
   vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Boda")));
-  expect(document.body.textContent).toContain("Ya la tienen");
+  expect(document.body.textContent).toContain("Ya está");
   expect(q('input[type="file"]')).toBe(null);
+  vista.desmontar();
+});
+
+// v103.4 (él): pagada la ficha, su colaborador ya no puede cambiar la foto;
+// el anfitrión sí, aquí. La nueva espera y va encima de la vieja al guardar.
+it("la que ya tienen, tocándola, en grande con «Cambiar foto»: al guardar, la nueva va encima de la suya", async () => {
+  const lista = INVITADOS.map((g) => (g.id === "1" ? { ...g, anioBoda: "2010" } : g));
+  const { vista, fotosGuardadas, q, boton } = dibujar(lista, { Pacheco01: "boda/pacheco-viejo.jpg" });
+  vista.elegir(q('select[aria-label="Elegir invitado"]'), "1");
+  vista.pulsar([...document.body.querySelectorAll("button")].find((b) => b.textContent.includes("Boda")));
+  expect(document.body.textContent).toContain("Ya está");
+  // Se cambia, no se quita: sin papelera.
+  expect(q('[title="Quitar Foto de boda"]')).toBe(null);
+  vista.pulsar(boton("Foto de boda — ver en grande"));
+  expect(document.body.textContent).toContain("Cambiar foto");
+  const entrada = q("input[data-cambiar-foto-boda]");
+  Object.defineProperty(entrada, "files", { value: [new File(["x"], "nueva.jpg", { type: "image/jpeg" })] });
+  await act(async () => entrada.dispatchEvent(new Event("change", { bubbles: true })));
+  expect(document.body.textContent).toMatch(/Nueva/);
+  await act(async () => boton("Guardar").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+  expect(subidas.at(-1)).toEqual({ nombre: "nueva.jpg", familia: "Pacheco01", carpeta: "boda", rutaVieja: "boda/pacheco-viejo.jpg" });
+  expect(fotosGuardadas.at(-1)).toEqual({ Pacheco01: "boda/pacheco-viejo.jpg" });
+  expect(document.body.textContent).toContain("Ya está");
   vista.desmontar();
 });
 

@@ -114,8 +114,19 @@ function medidasDe(file) {
 // «ninguna debe quedar sin ser 4K»).
 export const llegaA4K = ({ ancho, alto }) => ancho >= ANCHO_MAXIMO || alto >= ALTO_MAXIMO;
 
-export async function subirFotoMatrimonio(file, familia, carpeta = CARPETA.ANIVERSARIO) {
-  const ruta = `${carpeta}/${nombreArchivoFamilia(familia)}.jpg`;
+// Al CAMBIAR una foto ya puesta (v103.4), la nueva va ENCIMA de la vieja,
+// en su misma ruta: no queda ningún resto en el cajón, tampoco si la familia
+// cambió de código (v98.3: la base muda la clave, no el archivo). Sin foto
+// en el cajón (o de otra carpeta), la ruta de siempre de la familia.
+export function rutaParaCambiar(rutaVieja, familia, carpeta) {
+  return esRutaAlmacen(rutaVieja) && String(rutaVieja).startsWith(`${carpeta}/`)
+    ? rutaVieja
+    : `${carpeta}/${nombreArchivoFamilia(familia)}.jpg`;
+}
+
+// `rutaVieja`: la que ya tiene, si se está cambiando (rutaParaCambiar).
+export async function subirFotoMatrimonio(file, familia, carpeta = CARPETA.ANIVERSARIO, rutaVieja = "") {
+  const ruta = rutaParaCambiar(rutaVieja, familia, carpeta);
   if (carpeta !== CARPETA.BODA) {
     const medidas = await medidasDe(file);
     if (!llegaA4K(medidas))
@@ -205,8 +216,10 @@ export function esRutaAlmacen(valor) {
 }
 
 // Lo que va en el src de un <img> para un valor guardado. Pide el enlace
-// temporal si hace falta; mientras llega, cadena vacía.
-export function useEnlaceFoto(valor) {
+// temporal si hace falta; mientras llega, cadena vacía. `recarga`: subirlo
+// pide un enlace nuevo aunque la ruta sea la misma (una foto cambiada va
+// encima de la vieja, y el navegador seguiría enseñando la de su caché).
+export function useEnlaceFoto(valor, recarga = 0) {
   const [enlace, setEnlace] = useState(esRutaAlmacen(valor) ? "" : valor || "");
   useEffect(() => {
     if (!esRutaAlmacen(valor)) {
@@ -221,7 +234,7 @@ export function useEnlaceFoto(valor) {
     return () => {
       cancelado = true;
     };
-  }, [valor]);
+  }, [valor, recarga]);
   return enlace;
 }
 

@@ -10,6 +10,7 @@ import {
   sinFotosDeFamilias,
   matrimoniosParaEncargo,
   hojaDeEncargo,
+  rutaParaCambiar,
 } from "./fotosAlmacen";
 
 // El nombre del archivo tiene que ser ESTABLE: volver a subir la foto de una
@@ -190,5 +191,22 @@ describe("las fotos de una familia que se va", () => {
     expect(r.boda).toBe(fotos.boda);
     expect(r.sinBoda).toBe(fotos.sinBoda);
     expect(r.rutas).toEqual([]);
+  });
+});
+
+// v103.4 (él): cambiar una foto ya puesta la deja ENCIMA de la vieja, en su
+// misma ruta, para no dejar restos en el cajón.
+describe("rutaParaCambiar", () => {
+  it("la que ya tiene en el cajón, aunque la familia haya cambiado de código", () => {
+    expect(rutaParaCambiar("boda/pacheco-viejo.jpg", "Pacheco02", "boda")).toBe("boda/pacheco-viejo.jpg");
+  });
+  it("sin foto, de otra carpeta o de fuera del cajón, la de siempre de su familia", () => {
+    expect(rutaParaCambiar("", "Pacheco01", "boda")).toBe("boda/pacheco01.jpg");
+    expect(rutaParaCambiar(undefined, "Pacheco01", "boda")).toBe("boda/pacheco01.jpg");
+    expect(rutaParaCambiar("aniversario/pacheco01.jpg", "Pacheco01", "boda")).toBe("boda/pacheco01.jpg");
+    expect(rutaParaCambiar("data:image/jpeg;base64,eA==", "Pacheco01", "boda")).toBe("boda/pacheco01.jpg");
+  });
+  it("la carpeta cuenta entera: «boda-final» no es «boda»", () => {
+    expect(rutaParaCambiar("boda-final/pacheco01.jpg", "Pacheco01", "boda")).toBe("boda/pacheco01.jpg");
   });
 });

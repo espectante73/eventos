@@ -33,14 +33,14 @@
 // «Añadir»: ya también busca, confirma y corrige), y busca por colaborador.
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Check } from "lucide-react";
-import { C, DEDO, OP, inputStyle } from "../../theme";
-import { VentanaFlotante } from "../../components/VentanaFlotante";
+import { C, DEDO, OP, R, inputStyle } from "../../theme";
+import { ModalFlotante, VentanaFlotante } from "../../components/VentanaFlotante";
 import { Field, TextInput, Desplegable, ElegirSiNo, ANCHO_ANIO } from "../../components/Formulario";
-import { Boton } from "../../components/Boton";
+import { Boton, estilosBoton } from "../../components/Boton";
 import { LineaAviso } from "../../components/LineaAviso";
 import { BotonQuitar, usePreguntaSeguridad } from "../../components/PreguntaSeguridad";
 import { SeccionPlegable } from "../../components/SeccionPlegable";
-import { HuecoFoto } from "../../components/HuecoFoto";
+import { HuecoFoto, estiloMarcoFoto } from "../../components/HuecoFoto";
 import { BuscadorInvitado } from "../../components/BuscadorInvitado";
 import { CampoCancion } from "../../components/CampoCancion";
 import { ElegirAlergias, CasillaConservarDatos } from "../../components/CamposFicha";
@@ -158,7 +158,13 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
   const [subiendo, setSubiendo] = useState(false);
   useEffect(() => () => fotoNueva && URL.revokeObjectURL(fotoNueva.vista), [fotoNueva]);
   const fotoFamilia = fotosFamiliares[ficha.grupoFamiliar] || "";
-  const enlaceFamilia = useEnlaceFoto(fotoFamilia);
+  // Cambiada, la foto va encima de la vieja (misma ruta): la recarga pide
+  // un enlace nuevo, o se seguiría viendo la de antes.
+  const [recargaFoto, setRecargaFoto] = useState(0);
+  const enlaceFamilia = useEnlaceFoto(fotoFamilia, recargaFoto);
+  // La que ya tienen, en grande y con «Cambiar foto» (v103.4, él): pagada,
+  // su colaborador ya no puede, y lo hace el anfitrión aquí.
+  const [verFoto, setVerFoto] = useState(false);
 
   const hayCambios = JSON.stringify(ficha) !== JSON.stringify(base) || Boolean(fotoNueva);
   const empezar = (f, id) => {
@@ -205,7 +211,7 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
   };
   const terminarGuardado = async (siguiente, motivo) => {
     const nuevo = editandoId ? siguiente.find((g) => g.id === editandoId) : siguiente.at(-1);
-    const conFoto = Boolean(fotoNueva && nuevo && pideDatosDeBoda(nuevo) && !fotoFamilia);
+    const conFoto = Boolean(fotoNueva && nuevo && pideDatosDeBoda(nuevo));
     // Al editar, la foto sola también es un cambio.
     if (siguiente === invitados && !(motivo === SIN_CAMBIOS && conFoto)) {
       setAviso(motivo);
@@ -217,7 +223,8 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
     if (conFoto) {
       setSubiendo(true);
       try {
-        ruta = await subirFotoMatrimonio(fotoNueva.archivo, nuevo.grupoFamiliar, CARPETA.BODA);
+        // Si ya tenían, encima de la suya (rutaParaCambiar).
+        ruta = await subirFotoMatrimonio(fotoNueva.archivo, nuevo.grupoFamiliar, CARPETA.BODA, fotosFamiliares[nuevo.grupoFamiliar]);
       } catch (_) {
         setSubiendo(false);
         setAviso("No se ha podido procesar la foto de boda. Prueba con otra.");
@@ -226,7 +233,10 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
       setSubiendo(false);
     }
     if (siguiente !== invitados) persistInvitados(siguiente);
-    if (ruta) persistFotosFamiliares?.({ ...fotosFamiliares, [nuevo.grupoFamiliar]: ruta });
+    if (ruta) {
+      persistFotosFamiliares?.({ ...fotosFamiliares, [nuevo.grupoFamiliar]: ruta });
+      setRecargaFoto((n) => n + 1);
+    }
     setAviso(motivo === SIN_CAMBIOS ? "" : motivo);
     setGuardado(`Guardado: ${nombreCompleto(nuevo)}.`);
     // Al editar, se queda con lo ya guardado. Al añadir, lo de la familia se
@@ -393,10 +403,21 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
               </Field>
               <Field label="Foto">
               {fotoFamilia ? (
+                // Tocándola, en grande con «Cambiar foto» (v103.4); la nueva
+                // espera aquí y se sube al guardar, como en la ficha.
                 <div className="flex items-center gap-2">
-                  <HuecoFoto ajustada soloLectura titulo="Foto de boda" enlace={enlaceFamilia} ocupada />
-                  <span className="text-xs" style={{ color: C.charcoal, opacity: OP.secundario }}>
-                    Ya la tienen
+                  <HuecoFoto
+                    ajustada
+                    titulo="Foto de boda"
+                    enlace={fotoNueva?.vista || enlaceFamilia}
+                    ocupada
+                    subiendo={subiendo}
+                    onVer={() => setVerFoto(true)}
+                  />
+                  {/* Corto y en una línea (norma 6): al lado de la foto
+                      solo caben unos 45 px. */}
+                  <span className="text-xs whitespace-nowrap" style={{ color: fotoNueva ? C.ink : C.charcoal, opacity: fotoNueva ? 1 : OP.secundario, fontWeight: fotoNueva ? 600 : undefined }}>
+                    {fotoNueva ? "Nueva" : "Ya está"}
                   </span>
                 </div>
               ) : (
@@ -461,6 +482,31 @@ export function VentanaNuevoInvitado({ data, onCerrar }) {
           * Obligatorios. Lo demás lo puede completar su colaborador.
         </p>
       </div>
+      {/* La foto de boda en grande, y el cambio desde ahí: como en la ficha
+          del colaborador y en Aniversarios. */}
+      {verFoto && (fotoNueva?.vista || enlaceFamilia) && (
+        <ModalFlotante titulo="Foto de boda" onCerrar={() => setVerFoto(false)} ancho={860}>
+          <div style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: R.caja, overflow: "hidden", ...estiloMarcoFoto(10) }}>
+            <img src={fotoNueva?.vista || enlaceFamilia} alt="Foto de boda" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+          </div>
+          <label className="boton-3d inline-flex items-center justify-center font-medium cursor-pointer mt-3" style={estilosBoton("principal", "normal")}>
+            Cambiar foto
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              data-cambiar-foto-boda
+              onChange={(e) => {
+                const file = e.target.files && e.target.files[0];
+                e.target.value = "";
+                if (!file) return;
+                setVerFoto(false);
+                setFotoNueva({ archivo: file, vista: URL.createObjectURL(file) });
+              }}
+            />
+          </label>
+        </ModalFlotante>
+      )}
       {ventanaPregunta}
     </VentanaFlotante>
   );
