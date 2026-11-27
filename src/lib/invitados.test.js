@@ -165,10 +165,14 @@ describe("edadPromedio", () => {
 });
 
 describe("importeEsperadoInvitado", () => {
-  it("el DJ contratado (la zona DJ, escrita como sea) no paga; los demás, su precio (v84.2)", () => {
+  // v84.2 el DJ no paga; desde la v103.2 por su regalo, como cualquiera que
+  // invita el evento (él: «registrados igual»), no por su zona.
+  it("quien invita el evento (el DJ también) no paga; los demás, su precio, el DJ sin regalo también", () => {
     const ev = { fecha: "2026-12-11", precioAdulto: "45", precioNino: "20", edadNinoDesde: "2", edadNinoHasta: "12" };
-    for (const zona of ["DJ", " dj "]) expect(importeEsperadoInvitado({ anioNacimiento: "1985", zona }, ev)).toBe(0);
+    expect(importeEsperadoInvitado({ anioNacimiento: "1985", zona: "DJ", invitaEvento: true }, ev)).toBe(0);
+    expect(importeEsperadoInvitado({ anioNacimiento: "1985", zona: "Icod", invitaEvento: true }, ev)).toBe(0);
     expect(importeEsperadoInvitado({ anioNacimiento: "1985", zona: "Icod" }, ev)).toBe(45);
+    expect(importeEsperadoInvitado({ anioNacimiento: "1985", zona: "DJ" }, ev)).toBe(45);
   });
 
   const evento = {
@@ -457,7 +461,7 @@ describe("previstoARecoger", () => {
     { id: "1", confirmado: true, anioNacimiento: "1985" }, // adulto: 50
     { id: "2", confirmado: true, anioNacimiento: "2020" }, // niño: 25
     { id: "3", confirmado: true, anioNacimiento: "2025" }, // bebé: 0
-    { id: "4", confirmado: true, anioNacimiento: "1980", zona: "DJ" }, // el DJ: 0
+    { id: "4", confirmado: true, anioNacimiento: "1980", zona: "DJ", invitaEvento: true }, // el DJ, con su regalo: 0
     { id: "5", confirmado: false, anioNacimiento: "2020" }, // sin confirmar: como adulto, 50
     { id: "6", confirmado: false }, // sin confirmar: 50
     { id: "7", confirmado: false, noAsiste: true, anioNacimiento: "1985" }, // no asiste: fuera

@@ -63,12 +63,12 @@ describe("Lo invita el evento", () => {
     expect(aviso).toBe("Barrios, Jacob ya figuraba como pagado: si se cobró, ese dinero ya no cuenta en «Entra».");
   });
 
-  it("al DJ no: ya lo invita el evento por ser el DJ, con su propio apunte", () => {
-    const { invitados, aviso } = marcarInvitaEvento([dj], "d", true);
-    expect(invitados[0].invitaEvento).toBeUndefined();
-    expect(aviso).toContain("DJ");
-    // Ni de rebote, marcando a toda su familia.
-    expect(aQuienInvita([dj, { ...dj, id: "d2", zona: "" }], "d2", true).map((g) => g.id)).toEqual(["d2"]);
+  // v103.2 (él: «todos los que son invitados por el evento registrados igual»).
+  it("el DJ, con su regalo como los demás", () => {
+    const { invitados, aviso } = marcarInvitaEvento([{ ...dj, alergias: "No" }], "d", true, { evento });
+    expect(aviso).toBe("");
+    expect(invitados[0]).toMatchObject({ invitaEvento: true, pagado: true });
+    expect(importeEsperadoInvitado(invitados[0], evento)).toBe(0);
   });
 
   it("su entrada vale 0 €: ni se le cobra, ni cuenta en lo previsto ni en lo recaudado", () => {

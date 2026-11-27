@@ -1135,13 +1135,15 @@ describe("la foto de familia", () => {
 });
 
 // v85.8 (él): el DJ no paga. Las familias que se cobran juntas llegan de la
-// base al colaborador; sin la zona, el DJ sumaba el precio de adulto.
-describe("las familias del colaborador traen la zona, para el importe", () => {
+// base al colaborador; sin la zona, el DJ sumaba el precio de adulto. Desde
+// la v103.2 lo que decide es el regalo («Lo invita el evento»), también para
+// el DJ: sin él, a quien invita el evento le sumaría su entrada.
+describe("las familias del colaborador traen si lo invita el evento, para el importe", () => {
   for (const nombre of ["colaborador_familia_de", "colaborador_mis_familias"]) {
     it(nombre, () => {
       const f = cuerpoDe(nombre);
-      expect(f).toMatch(/RETURNS TABLE\([^)]*\bzona text\)/);
-      expect(f).toContain(`coalesce(i."zona", '')`);
+      expect(f).toMatch(/RETURNS TABLE\([^)]*\bzona text, "invitaEvento" boolean\)/);
+      expect(f).toContain(`coalesce(i."zona", ''), coalesce(i."invitaEvento", false)`);
     });
   }
 });

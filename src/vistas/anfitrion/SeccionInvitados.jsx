@@ -46,7 +46,7 @@ import {
 import { C, inputStyle, filtroColumnaStyle, R, T, OP, conAlfa } from "../../theme";
 import { contactosDeInvitados, notaDelEvento, ARCHIVO_CONTACTOS } from "../../lib/exportarContactos";
 import { descargarBlob } from "../../lib/descargas";
-import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, dentroDelTramo, textoTramo, hayTramo, enLaLlegada, LLEGADA, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion, loInvitaElEvento, esDj } from "../../lib/invitados";
+import { datosCompletos, FALTAS_DATOS, tieneAlergiaReal, resolverColaborador, parseImport, calcularEdad, edadPromedio, dentroDelTramo, textoTramo, hayTramo, enLaLlegada, LLEGADA, comoColaborador, claveFamilia, cuentaLlegadas, cuentaConfirmacion, loInvitaElEvento } from "../../lib/invitados";
 import { nombreCompleto, ordenarPorApellidoNombre, fechaYHora, contiene } from "../../lib/formato";
 import { ROL_FAMILIAR, LETRA_ROL, NOMBRE_ROL } from "../../lib/rolFamiliar";
 import { contarMatrimonios, conyugesSueltos, vieneSinPareja, anioDelEvento } from "../../lib/matrimonios";
@@ -2104,7 +2104,7 @@ export function SeccionInvitados({
                   <span style={celda(9, { justifyContent: "center", textAlign: "center", gap: 4 })}>
                     {/* «Lo invita el evento» (v103): en «Editar», su botón
                         junto a lo pagado; fuera, el regalo en vez del visto. */}
-                    {modoEdicion && !esDj(g) && (g.confirmado || loInvitaElEvento(g)) && (
+                    {modoEdicion && (g.confirmado || loInvitaElEvento(g)) && (
                       <Boton
                         tamano="pequeno"
                         onClick={() => pedirInvitaEvento(g)}

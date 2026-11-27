@@ -786,6 +786,15 @@ describe("Lo invita el evento", () => {
     vista.desmontar();
   });
 
+  // v103.2 (él: «todos los que son invitados por el evento registrados igual»).
+  it("el DJ también lleva el regalo, como los demás", () => {
+    const conDj = [...conColumna, { ...conColumna[0], id: "dj", nombre: "Música", apellido: "Prueba", grupoFamiliar: "Prueba01", zona: "DJ", rolesTrabajo: [], pagado: false }];
+    const vista = montarCon(conDj);
+    editar(vista);
+    expect(document.body.querySelector('[data-invita-evento="dj"]')).toBeTruthy();
+    vista.desmontar();
+  });
+
   it("sin el SQL de la v103, el botón no se puede pulsar", () => {
     const vista = montarCon(invitados);
     editar(vista);

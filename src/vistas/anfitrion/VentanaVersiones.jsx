@@ -42,6 +42,13 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "103.2",
+    cambios: [
+      "Todos los que invita el evento, registrados igual: el DJ también lleva el regalo de «Lo invita el evento» (se lo puso el SQL de esta versión), y sale pagado sin que nadie lo marque: regalo en la Lista y en su tablón, sello PAGADO en su invitación. La zona «DJ» queda para su papel (cascos, canciones, mesa, fuera del equipo); el dinero lo decide solo el regalo. Si se le quita, pagaría como cualquiera.",
+      "Contabilidad: «Invitación del DJ: 1 adulto» es ya el mismo apunte que los demás (el primero); en la cuenta del local, una sola nota para todos: «(3 personas invitadas por el evento)».",
+    ],
+  },
+  {
     version: "103.1",
     cambios: [
       "Tablón: a quien lo invita el evento, la guía muestra en «Recaudación» el regalo dorado (el de la Lista) en vez del visto, junto a «Pagado».",

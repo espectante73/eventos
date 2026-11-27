@@ -7,7 +7,8 @@
 // de la invitación, el QR, el tablón y la entrada. Pero nadie cobra nada: su
 // entrada vale 0 € (importeEsperadoInvitado), no está en «Entra», y lo que
 // cobra el local por ella va en su propio apunte (invitacionesDelEvento, en
-// lib/aPagar.js), como el DJ.
+// lib/aPagar.js). El DJ, igual (v103.2, él: «todos los que son invitados por
+// el evento registrados igual»): con su regalo, su apunte «Invitación del DJ».
 //
 // Quitarlo la deja sin pagar: lo suyo no lo cobró ningún colaborador.
 //
@@ -19,25 +20,22 @@
 // alergias): pagado, la ficha se cierra al colaborador
 // (fichaCerradaAlColaborador), y ya no podría rellenarlos. Si a alguno le
 // faltan, no se marca a nadie y se avisa. En Modo Pruebas, no se exige.
-import { claveFamilia, datosCompletos, esDj, loInvitaElEvento } from "./invitados";
+import { claveFamilia, datosCompletos, loInvitaElEvento } from "./invitados";
 import { listaConY, nombreCompleto } from "./formato";
 import { requisitosActivos } from "./modoPruebas";
 
-// A quién toca: la persona, o los confirmados de su familia. El DJ nunca (ya
-// lo invita el evento por ser el DJ, v95.6, con su propio apunte).
+// A quién toca: la persona, o los confirmados de su familia.
 export function aQuienInvita(invitados = [], id, familia = false) {
   const g = invitados.find((x) => x.id === id);
   if (!g) return [];
   const clave = claveFamilia(g);
-  const todos = familia && clave ? invitados.filter((x) => x.id === id || (x.confirmado && claveFamilia(x) === clave)) : [g];
-  return todos.filter((x) => !esDj(x));
+  return familia && clave ? invitados.filter((x) => x.id === id || (x.confirmado && claveFamilia(x) === clave)) : [g];
 }
 
 // `valor`: true marca, false quita. Devuelve { invitados, aviso }.
 export function marcarInvitaEvento(invitados = [], id, valor, { familia = false, evento } = {}) {
   const g = invitados.find((x) => x.id === id);
   if (!g) return { invitados, aviso: "No se encuentra a esa persona en la Lista: vuelve a abrirla." };
-  if (esDj(g)) return { invitados, aviso: "Al DJ ya lo invita el evento: lleva su propio apunte en la Contabilidad." };
 
   const marcar = Boolean(valor);
   const cambian = aQuienInvita(invitados, id, familia).filter((x) => loInvitaElEvento(x) !== marcar);

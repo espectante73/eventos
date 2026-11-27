@@ -108,10 +108,11 @@ describe("el cuadre de los acuses con lo recaudado", () => {
 
   // v95.6: el DJ no paga entrada, lo invita el evento. Su acuse se cerró
   // con él a 0 € y cuadra; la v95.5 lo daba por «no cuadra» (47 € de más).
+  // Desde la v103.2, por su regalo («Lo invita el evento»), no por su zona.
   it("el acuse que lleva al DJ a 0 € cuadra: el evento lo invita", () => {
     const invitados = [
       { id: "a", colaboradorId: "c1", confirmado: true, pagado: true, anioNacimiento: "1980" },
-      { id: "dj", colaboradorId: "c1", confirmado: true, pagado: true, anioNacimiento: "1975", zona: "DJ" },
+      { id: "dj", colaboradorId: "c1", confirmado: true, pagado: true, anioNacimiento: "1975", zona: "DJ", invitaEvento: true },
     ];
     const colaboradores = [{ id: "c1", entregas: [{ id: "e1", importe: 47, invitados: ["a", "dj"] }] }];
     const c = cuadreEntregas({ invitados, evento, colaboradores, recaudado: 47, propinas: 0 });

@@ -87,10 +87,10 @@ export function APagarHoja({ data, resumen, recaudado, propinas, soloLectura = f
         <Cabecera>Entra</Cabecera>
         <Linea concepto="Recaudado" importe={euros(recaudado)} />
         <Linea detalle concepto={`${plural(desglose.adulto.personas, "adulto", "adultos")}${edades.adulto} × ${euros(desglose.precioAdulto)}`} importe={euros(desglose.adulto.importe)} />
-        {/* El DJ no paga entrada: lo invita el evento (v95.6). En «Entra»
-            no sale (él, v101.7: aquí va el dinero que llega de verdad, y del
-            DJ no llega nada); lo que cuesta en el local, en Sale, en su
-            apunte. */}
+        {/* Quien invita el evento (el regalo; el DJ también) no paga
+            entrada. En «Entra» no sale (él, v101.7: aquí va el dinero que
+            llega de verdad, y de ellos no llega nada); lo que cuestan en el
+            local, en Sale, en su apunte. */}
         {(desglose.nino.personas > 0 || desglose.precioNino > 0) && (
           <Linea detalle concepto={`${plural(desglose.nino.personas, "niño", "niños")}${edades.nino} × ${euros(desglose.precioNino)}`} importe={euros(desglose.nino.importe)} />
         )}
@@ -122,12 +122,11 @@ export function APagarHoja({ data, resumen, recaudado, propinas, soloLectura = f
           <Linea detalle concepto="Sin precios del local todavía" importe="" />
         ) : (
           <>
-            <Linea detalle concepto={`${plural(personas.adulto - personas.dj - personas.invitaAdulto, "adulto", "adultos")} × ${euros(local.porPersona.adulto)}`} importe={euros(local.adultosResto)} />
-            {/* La invitación del DJ, su propio apunte (v95.6, él: «un asiento
-                independiente»): lo que el local cobra por él, que paga el
-                evento. Ya suma en «Local», no es un gasto aparte. */}
-            {personas.dj > 0 && <Linea detalle concepto={`Invitación del DJ: ${plural(personas.dj, "adulto", "adultos")} × ${euros(local.porPersona.adulto)}`} importe={euros(local.invitacionDj)} />}
-            {/* Igual cada familia que invita el evento (v103). */}
+            <Linea detalle concepto={`${plural(personas.adulto - personas.invitaAdulto, "adulto", "adultos")} × ${euros(local.porPersona.adulto)}`} importe={euros(local.adultosResto)} />
+            {/* Quien invita el evento, su propio apunte (v95.6, él: «un asiento
+                independiente»): primero el DJ, luego cada familia (v103,
+                v103.2). Lo que el local cobra por ellos, que paga el evento:
+                ya suma en «Local», no es un gasto aparte. */}
             {invitaciones.map((f) => (
               <Linea key={f.clave || "invitacion"} detalle concepto={conceptoInvitacion(f)} titulo={detalleInvitacion(f, local.porPersona)} importe={euros(f.importe)} />
             ))}
@@ -170,24 +169,25 @@ export function APagarHoja({ data, resumen, recaudado, propinas, soloLectura = f
           Cómo se calcula
         </summary>
         <p className="mt-2" style={{ opacity: OP.secundario }}>
-          Entra lo ya recaudado —cada pagado por el precio de su entrada, según su edad— y las propinas de los acuses: el total bruto que tiene que haber. Debajo, lo que dicen los acuses y lo que aún tienen los colaboradores; si no suman lo mismo, sale la diferencia en rosa y, si la app la ve, la causa: pagados que no lleva ningún colaborador, invitados de un acuse que ya no figuran como pagados, o acuses con otro importe que el de hoy (cambiado a mano, o cambió después un precio o una edad). El DJ no paga entrada (lo invita el evento): en Entra no aparece, porque de él no llega dinero. Igual quien tiene marcado en la Lista «Lo invita el evento»: cuenta como pagado (invitación con el sello, QR y entrada), pero nadie se lo cobra. Sale lo del local (los confirmados de la Lista por lo que cobra el local por persona, más lo demás del local), con la parte del DJ en su propio apunte, «Invitación del DJ», y la de cada familia que invita el evento en el suyo; lo que cobra el DJ y la suma de tu hoja de Gastos. El precio de la entrada de los invitados no cambia nada de esto: solo se comparten las edades.
+          Entra lo ya recaudado —cada pagado por el precio de su entrada, según su edad— y las propinas de los acuses: el total bruto que tiene que haber. Debajo, lo que dicen los acuses y lo que aún tienen los colaboradores; si no suman lo mismo, sale la diferencia en rosa y, si la app la ve, la causa: pagados que no lleva ningún colaborador, invitados de un acuse que ya no figuran como pagados, o acuses con otro importe que el de hoy (cambiado a mano, o cambió después un precio o una edad). Quien tiene en la Lista el regalo de «Lo invita el evento» —el DJ también— cuenta como pagado (invitación con el sello, QR y entrada), pero nadie se lo cobra: en Entra no aparece, porque de él no llega dinero. Sale lo del local (los confirmados de la Lista por lo que cobra el local por persona, más lo demás del local), con lo de quien invita el evento en su propio apunte: «Invitación del DJ» y una por familia; lo que cobra el DJ y la suma de tu hoja de Gastos. El precio de la entrada de los invitados no cambia nada de esto: solo se comparten las edades.
         </p>
       </details>
     </div>
   );
 }
 
-// «Invitación de Barrios: 2 adultos», como «Invitación del DJ». Corto, para
+// «Invitación de Barrios: 2 adultos», o «Invitación del DJ: 1 adulto». Corto, para
 // que quepa en una línea del ancho del móvil (norma 6): el precio ya está en
 // la línea de los adultos. Entero, con los nombres, al dejar el dedo o el
 // ratón encima. Sin nombres (quien solo repasa las cifras), «Invitación del
 // evento».
 const cuantosInvita = (f) =>
   [f.adulto && plural(f.adulto, "adulto", "adultos"), f.nino && plural(f.nino, "niño", "niños")].filter(Boolean).join(" y ");
-const conceptoInvitacion = (f) => `${f.familia ? `Invitación de ${f.familia}` : "Invitación del evento"}: ${cuantosInvita(f)}`;
+const quienInvita = (f) => (f.dj ? "Invitación del DJ" : f.familia ? `Invitación de ${f.familia}` : "Invitación del evento");
+const conceptoInvitacion = (f) => `${quienInvita(f)}: ${cuantosInvita(f)}`;
 function detalleInvitacion(f, porPersona) {
   const precios = [f.adulto && `${plural(f.adulto, "adulto", "adultos")} × ${euros(porPersona.adulto)}`, f.nino && `${plural(f.nino, "niño", "niños")} × ${euros(porPersona.nino)}`].filter(Boolean).join(" + ");
-  return `${f.familia ? `Invitación de ${f.familia}` : "Invitación del evento"}${f.nombres.length ? ` (${listaConY(f.nombres)})` : ""}: ${precios}`;
+  return `${quienInvita(f)}${f.nombres.length && !f.dj ? ` (${listaConY(f.nombres)})` : ""}: ${precios}`;
 }
 
 // ---------- La cuenta del local ----------
@@ -230,11 +230,9 @@ export function CuentaLocalHoja({ data, onPrecios }) {
       <div className="text-sm" style={CAJA}>
         <Cabecera>Personas</Cabecera>
         <Linea concepto="Adultos" importe={personas.adulto} />
-        {/* El DJ cuenta para el local como un adulto más; lo invita el
-            evento (v95.6). Entre paréntesis y sin cifra (él, v101.7: es
-            aclaratorio, y el 1 confundía: ya está dentro de los adultos). */}
-        {personas.dj > 0 && <Linea detalle concepto={personas.dj === 1 ? "(El DJ lo invita el evento)" : "(A los DJ los invita el evento)"} importe="" />}
-        {/* Los que invita el evento (v103), aclaratorio y sin cifra, como el DJ. */}
+        {/* Los que invita el evento, el DJ también (v103.2): cuentan para el
+            local como uno más. Entre paréntesis y sin cifra (él, v101.7: es
+            aclaratorio, ya están dentro de los adultos y los niños). */}
         {personas.invitaAdulto + personas.invitaNino > 0 && (
           <Linea detalle concepto={`(${plural(personas.invitaAdulto + personas.invitaNino, "persona invitada", "personas invitadas")} por el evento)`} importe="" />
         )}

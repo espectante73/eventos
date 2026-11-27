@@ -511,12 +511,10 @@ export function VistaTablon({ token }) {
   ) : null;
 
   const cuentaAtras = cuentaAtrasEvento(evento);
-  // Su zona, para el importe del DJ (0 €): la de tablon_quien_soy (v85.8).
-  // La de la noticia de las zonas solo llega si está publicada: sin ella,
-  // al DJ le salían 47 €.
-  const yoConZona = yo && { ...yo, zona: yo.zona ?? zonas?.miZona };
-  const rondas = rondasTablon(yoConZona, evento);
-  const pendientes = pendientesDelTablon(yoConZona, evento);
+  // El importe lo decide el regalo de la Lista, que trae tablon_quien_soy
+  // (v103; el DJ también, v103.2: antes, su zona).
+  const rondas = rondasTablon(yo, evento);
+  const pendientes = pendientesDelTablon(yo, evento);
 
   if (estado === "cargando") {
     return (

@@ -316,9 +316,9 @@ export function edadPromedio(invitados, evento) {
 
 // El DJ contratado (él, v84.2): la zona «DJ» de la Lista es él y nadie más; él
 // la llamó así para identificarlo en toda la app. Un invitado más, con su QR
-// y su mesa, con la entrada a 0 €: la única excepción. Ni casilla (un dato
-// nuevo para una persona) ni la norma de la edad (un año falso lo contaría
-// como niño).
+// y su mesa. La zona decide lo de su papel (los cascos, sus canciones, su
+// mesa, fuera del equipo), no el dinero: su entrada la invita el evento con
+// el regalo, como a cualquiera (loInvitaElEvento, v103.2).
 export function esDj(g) {
   return String(g?.zona || "").trim().toUpperCase() === "DJ";
 }
@@ -328,22 +328,26 @@ export function esDj(g) {
 // el anfitrión en la Lista (lib/invitaEvento.js) y la base lo deja pagado
 // (trg_pago_y_asistencia): sello PAGADO, invitación, QR y entrada como
 // cualquiera. Pero no entra dinero por él: su entrada vale 0 € (no se le
-// cobra, no está en «Entra») y el local lleva su propio apunte, como el DJ.
+// cobra, no está en «Entra») y el local lleva su propio apunte.
+// ⚠️ Es la ÚNICA marca de «no paga», también para el DJ (v103.2, él: «todos
+// los que son invitados por el evento registrados igual»); antes el DJ iba a
+// 0 € por su zona. El SQL v103.2 se lo puso al DJ que había.
 export const loInvitaElEvento = (g) => g?.invitaEvento === true;
 
 // Importe que le corresponde a un invitado según su edad (calculada a partir del
 // año de nacimiento y la fecha del evento) y el rango/precios fijados en Configuración.
 // Por debajo de "desde" no paga (bebés); entre "desde" y "hasta" paga precio niño;
 // de "hasta" en adelante paga precio adulto.
-// ⚠️ El DJ NO paga entrada: lo invita el evento (v95.6, decidido con él tras
-// razonarlo: «él no me los ha dado; el evento lo invita a su entrada»; sus
-// 47 € salían del sobrante, y cobrarlos y apuntarlos de gasto los contaba dos
-// veces). El local SÍ le cobra como a un adulto más, y eso va en su propio
-// apunte, «Invitación del DJ» (personasDelLocal `dj`, costeLocal `invitacionDj`):
-// él, «la invitación al DJ tiene que quedar como un asiento independiente».
-// Las v95.2-95.5 le cobraron 47 €: no volver a hacerlo.
+// ⚠️ A quien invita el evento (el regalo), 0 €. El DJ también, con su regalo
+// (v95.6, decidido con él tras razonarlo: «él no me los ha dado; el evento lo
+// invita a su entrada»; sus 47 € salían del sobrante, y cobrarlos y
+// apuntarlos de gasto los contaba dos veces). El local SÍ le cobra como a un
+// adulto más, y eso va en su propio apunte, «Invitación del DJ»
+// (invitacionesDelEvento): él, «la invitación al DJ tiene que quedar como un
+// asiento independiente». Las v95.2-95.5 le cobraron 47 €: no volver a
+// hacerlo (si el DJ sale a 47 €, le falta el regalo en la Lista).
 export function importeEsperadoInvitado(g, evento) {
-  if (esDj(g) || loInvitaElEvento(g)) return 0;
+  if (loInvitaElEvento(g)) return 0;
   const tramo = tramoDeEdad(g?.anioNacimiento, evento);
   if (tramo === TRAMO.BEBE) return 0;
   return parsePrecio(tramo === TRAMO.NINO ? evento?.precioNino : evento?.precioAdulto);
@@ -366,13 +370,13 @@ export function tramoDeEdad(anioNacimiento, evento) {
 // Lo que se debería recoger en total (él, v84.8, en Contabilidad): los
 // confirmados con su edad (importeEsperadoInvitado) y los sin confirmar
 // TODOS como adultos —él: «suponiendo que sean adultos»; es la cifra más
-// alta—. Los de «No asiste», fuera (cuentaConfirmacion); el DJ y a quien
-// invita el evento, a 0.
+// alta—. Los de «No asiste», fuera (cuentaConfirmacion); a quien invita el
+// evento (el DJ también), a 0.
 export function previstoARecoger(invitados = [], evento) {
   const precioAdulto = parsePrecio(evento?.precioAdulto);
   const sinConfirmar = invitados.filter((g) => !g.confirmado && !g.noAsiste);
   const deConfirmados = invitados.filter((g) => g.confirmado).reduce((s, g) => s + importeEsperadoInvitado(g, evento), 0);
-  const deSinConfirmar = sinConfirmar.reduce((s, g) => s + (esDj(g) || loInvitaElEvento(g) ? 0 : precioAdulto), 0);
+  const deSinConfirmar = sinConfirmar.reduce((s, g) => s + (loInvitaElEvento(g) ? 0 : precioAdulto), 0);
   return { total: deConfirmados + deSinConfirmar, deConfirmados, deSinConfirmar, sinConfirmar: sinConfirmar.length };
 }
 

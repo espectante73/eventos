@@ -99,7 +99,9 @@ export function miembrosDesdeLista(invitados, colaboradorId, datosCompletos) {
       esMio: g.colaboradorId === colaboradorId,
       pagoPendienteHasta: g.pagoPendienteHasta || null,
       plazosPago: Number(g.plazosPago) || 0,
-      // La zona, para el importe: el DJ entra a 0 € (esDj, v85.8).
+      // La zona (los cascos del DJ) y si lo invita el evento: con el regalo,
+      // su importe es 0 € (v103.2: también el DJ; antes, por su zona).
       zona: g.zona || "",
+      invitaEvento: g.invitaEvento === true,
     }));
 }

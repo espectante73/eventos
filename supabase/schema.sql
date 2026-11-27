@@ -245,7 +245,8 @@ CREATE TABLE public.invitados (
     -- marca el anfitrión en la Lista; la base lo deja pagado lo guarde quien
     -- lo guarde (trg_pago_y_asistencia). No entra dinero por ellos: en la
     -- Contabilidad no están en «Entra» y el local lleva su propio apunte.
-    -- Sin "not null".
+    -- El DJ también (v103.2, él: «todos los que son invitados por el evento
+    -- registrados igual»): antes iba a 0 € por su zona. Sin "not null".
     "invitaEvento" boolean
 );
 
@@ -2734,10 +2735,11 @@ $$;
 -- familia (grupo familiar o, si está vacío, el apellido: lib/invitados.js,
 -- claveFamilia), aunque parte la lleve OTRO colaborador (un matrimonio
 -- puede tener dos). Solo lo que hace falta para preguntar: nombre, año de
--- nacimiento y zona (para el importe: el DJ, a 0 €), si tiene los datos
--- obligatorios, y si ya ha pagado o llegado. Nada de alergias ni contacto.
+-- nacimiento, zona y si lo invita el evento (el importe: con el regalo, a
+-- 0 €, también el DJ desde la v103.2), si tiene los datos obligatorios, y
+-- si ya ha pagado o llegado. Nada de alergias ni contacto.
 CREATE FUNCTION public.colaborador_familia_de(p_colaborador_id uuid, p_invitado_id uuid)
-    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "datosCompletos" boolean, pagado boolean, presente boolean, zona text)
+    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "datosCompletos" boolean, pagado boolean, presente boolean, zona text, "invitaEvento" boolean)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -2757,7 +2759,7 @@ begin
     select i."id", i."nombre", i."apellido", i."anioNacimiento",
       (coalesce(i."anioNacimiento", '') <> '' and coalesce(i."alergias", '') <> ''),
       coalesce(i."pagado", false), coalesce(i."presente", false),
-      coalesce(i."zona", '')
+      coalesce(i."zona", ''), coalesce(i."invitaEvento", false)
     from invitados i
     where i."confirmado" = true
       and lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) = v_familia;
@@ -3023,11 +3025,12 @@ CREATE FUNCTION public.colaborador_mi_perfil(p_colaborador_id uuid) RETURNS SETO
 -- Las familias del colaborador, completas (v60): para cobrar y acreditar
 -- por familia ve también a los miembros que lleva otro colaborador (un
 -- matrimonio puede tener dos). Lo justo para agrupar y cobrar: nombre,
--- años (importe y aniversario), zona (el DJ entra a 0 €), papel en la
--- familia, si tiene sus datos obligatorios y si ha pagado o llegado. Nada
--- de alergias ni contacto.
+-- años (importe y aniversario), zona, si lo invita el evento (con el
+-- regalo entra a 0 €, también el DJ desde la v103.2), papel en la familia,
+-- si tiene sus datos obligatorios y si ha pagado o llegado. Nada de
+-- alergias ni contacto.
 CREATE FUNCTION public.colaborador_mis_familias(p_colaborador_id uuid)
-    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "anioBoda" text, "grupoFamiliar" text, "rolFamiliar" text, "datosCompletos" boolean, pagado boolean, presente boolean, "esMio" boolean, "pagoPendienteHasta" date, "plazosPago" integer, zona text)
+    RETURNS TABLE(id uuid, nombre text, apellido text, "anioNacimiento" text, "anioBoda" text, "grupoFamiliar" text, "rolFamiliar" text, "datosCompletos" boolean, pagado boolean, presente boolean, "esMio" boolean, "pagoPendienteHasta" date, "plazosPago" integer, zona text, "invitaEvento" boolean)
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'public', 'pg_temp'
     AS $$
@@ -3046,7 +3049,7 @@ begin
       coalesce(i."pagado", false), coalesce(i."presente", false),
       i."colaboradorId" is not distinct from p_colaborador_id,
       i."pagoPendienteHasta", coalesce(i."plazosPago", 0),
-      coalesce(i."zona", '')
+      coalesce(i."zona", ''), coalesce(i."invitaEvento", false)
     from invitados i
     where i."confirmado" = true
       and lower(trim(coalesce(nullif(i."grupoFamiliar", ''), i."apellido", ''))) in (select m.clave from mias m where m.clave <> '');

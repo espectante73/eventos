@@ -36,20 +36,17 @@ export const faltaSqlAPagar = (evento) => !evento || !("aPagar" in evento);
 
 // Los confirmados, por tramo de edad. `sinAnio`: cuántos de los adultos lo
 // son por no tener año (se enseña, para que se sepa que la cifra puede bajar).
-// `dj`: cuántos de los adultos son el DJ, que el evento invita (v95.6): el
-// local le cobra igual, pero su parte va en su propio apunte. Igual
-// `invitaAdulto` e `invitaNino`: los que invita el evento (v103, la marca
-// de la Lista), cada familia en su apunte (invitacionesDelEvento).
+// `invitaAdulto` e `invitaNino`: los que invita el evento (el regalo de la
+// Lista, v103; el DJ también, v103.2): el local les cobra igual, pero su
+// parte va en su propio apunte (invitacionesDelEvento).
 export function personasDelLocal(invitados = [], evento) {
-  const cuenta = { adulto: 0, nino: 0, bebe: 0, sinAnio: 0, dj: 0, invitaAdulto: 0, invitaNino: 0 };
+  const cuenta = { adulto: 0, nino: 0, bebe: 0, sinAnio: 0, invitaAdulto: 0, invitaNino: 0 };
   for (const g of invitados) {
     if (!g.confirmado) continue;
     const tramo = tramoDeEdad(g.anioNacimiento, evento);
     cuenta[tramo]++;
     if (calcularEdad(g.anioNacimiento, evento) === null) cuenta.sinAnio++;
-    if (esDj(g)) {
-      if (tramo === TRAMO.ADULTO) cuenta.dj++;
-    } else if (loInvitaElEvento(g)) {
+    if (loInvitaElEvento(g)) {
       if (tramo === TRAMO.ADULTO) cuenta.invitaAdulto++;
       if (tramo === TRAMO.NINO) cuenta.invitaNino++;
     }
@@ -60,15 +57,13 @@ export function personasDelLocal(invitados = [], evento) {
 // Lo que cobra el local por cada persona: la suma de sus partidas.
 export const precioPorPersona = (partidas = []) => ({ adulto: suma(partidas, "adulto"), nino: suma(partidas, "nino") });
 
-// `invitacionDj`: lo que cuesta en el local el DJ, que invita el evento
-// (v95.6, él: «un asiento independiente»); ya está dentro de `adultos`.
-// `invitacionEvento`: lo de los demás que invita el evento (v103), también
-// dentro de `adultos` y `ninos`. `adultosResto` y `ninosResto` son los demás,
-// para enseñarlos por separado sin que la suma cambie ni un céntimo.
+// `invitacionEvento`: lo que cuesta en el local quien invita el evento (v103;
+// el DJ también, v103.2), ya dentro de `adultos` y `ninos`. `adultosResto` y
+// `ninosResto` son los demás, para enseñarlos por separado sin que la suma
+// cambie ni un céntimo.
 export function costeLocal(aPagar, personas) {
   const porPersona = precioPorPersona(aPagar.partidas);
   const adultos = redondear(personas.adulto * porPersona.adulto);
-  const invitacionDj = redondear((personas.dj || 0) * porPersona.adulto);
   const invitaAdultos = redondear((personas.invitaAdulto || 0) * porPersona.adulto);
   const invitaNinos = redondear((personas.invitaNino || 0) * porPersona.nino);
   const ninos = redondear(personas.nino * porPersona.nino);
@@ -76,8 +71,7 @@ export function costeLocal(aPagar, personas) {
   return {
     porPersona,
     adultos,
-    adultosResto: redondear(adultos - invitacionDj - invitaAdultos),
-    invitacionDj,
+    adultosResto: redondear(adultos - invitaAdultos),
     invitacionEvento: redondear(invitaAdultos + invitaNinos),
     ninos,
     ninosResto: redondear(ninos - invitaNinos),
@@ -89,22 +83,25 @@ export function costeLocal(aPagar, personas) {
 // El apunte de cada familia que invita el evento (v103), en «Sale → Local»:
 // su apellido (como la invitación: el grupo familiar puede ser un código),
 // sus nombres, cuántos adultos y niños, y lo que cobra el local por ellos.
+// El DJ, el primero y aparte (`dj`), como «Invitación del DJ» (v95.6, él:
+// «un asiento independiente»): la misma marca, su propio nombre (v103.2).
 // Los bebés no cuestan: no salen. Sin nombres (quien solo repasa las cifras,
-// v95), una sola línea con todos (`familia` vacía).
+// v95), una sola línea con todos (`familia` vacía), y la del DJ.
 export function invitacionesDelEvento(invitados = [], evento, porPersona = { adulto: 0, nino: 0 }) {
   const familias = new Map();
   for (const g of invitados) {
-    if (!g.confirmado || esDj(g) || !loInvitaElEvento(g)) continue;
+    if (!g.confirmado || !loInvitaElEvento(g)) continue;
     const tramo = tramoDeEdad(g.anioNacimiento, evento);
     if (tramo === TRAMO.BEBE) continue;
-    const clave = claveFamilia(g);
-    if (!familias.has(clave)) familias.set(clave, { clave, familia: texto(g.apellido) || texto(g.grupoFamiliar), nombres: [], adulto: 0, nino: 0 });
+    const dj = esDj(g);
+    const clave = dj ? "\u0000dj" : claveFamilia(g);
+    if (!familias.has(clave)) familias.set(clave, { clave, dj, familia: dj ? "" : texto(g.apellido) || texto(g.grupoFamiliar), nombres: [], adulto: 0, nino: 0 });
     const f = familias.get(clave);
     if (texto(g.nombre)) f.nombres.push(texto(g.nombre));
     f[tramo]++;
   }
   return [...familias.values()]
-    .sort((a, b) => a.familia.localeCompare(b.familia))
+    .sort((a, b) => Number(b.dj) - Number(a.dj) || a.familia.localeCompare(b.familia))
     .map((f) => ({ ...f, importe: redondear(f.adulto * porPersona.adulto + f.nino * porPersona.nino) }));
 }
 
@@ -125,25 +122,20 @@ export function cuentaDelLocal(aPagar, personas) {
 }
 
 // Lo recaudado, por edades (él, v94.5: «cuántos de más de 8 años pagaron los
-// 47 €, cuántos como niños»): los confirmados ya pagados, sin el DJ (lo
-// invita el evento: va aparte, `dj`, v95.6) ni los demás que invita el
-// evento (`invitaEvento`, v103), cada uno
+// 47 €, cuántos como niños»): los confirmados ya pagados, sin los que invita
+// el evento (`invitaEvento`, v103; el DJ también, v103.2), cada uno
 // por el precio de su entrada (importeEsperadoInvitado: la suma es la misma
 // de «Recaudado»). Los bebés no pagan: salen todos los confirmados.
 export function desgloseRecaudado(invitados = [], evento) {
-  const tramos = { adulto: { personas: 0, importe: 0 }, nino: { personas: 0, importe: 0 }, bebe: { personas: 0 }, dj: { personas: 0 }, invitaEvento: { personas: 0 } };
+  const tramos = { adulto: { personas: 0, importe: 0 }, nino: { personas: 0, importe: 0 }, bebe: { personas: 0 }, invitaEvento: { personas: 0 } };
   for (const g of invitados) {
     if (!g.confirmado) continue;
-    if (esDj(g)) {
-      tramos.dj.personas++;
-      continue;
-    }
     const tramo = tramoDeEdad(g.anioNacimiento, evento);
     if (tramo === TRAMO.BEBE) {
       tramos.bebe.personas++;
       continue;
     }
-    // A quien invita el evento (v103), igual que al DJ: no trae dinero.
+    // A quien invita el evento (v103), el DJ también: no trae dinero.
     if (loInvitaElEvento(g)) {
       tramos.invitaEvento.personas++;
       continue;

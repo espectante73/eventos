@@ -18,11 +18,16 @@ describe("tramoDeEdad (la misma para la entrada y para el local)", () => {
     expect(calcularEdad("2026", evento)).toBe(0);
     expect(importeEsperadoInvitado({ anioNacimiento: "2026" }, evento)).toBe(0);
   });
-  it("la entrada sigue igual: 47 adulto, 35 niño, 0 bebé y DJ", () => {
+  it("la entrada sigue igual: 47 adulto, 35 niño, 0 bebé y quien invita el evento", () => {
     expect(importeEsperadoInvitado({ anioNacimiento: "1980" }, evento)).toBe(47);
     expect(importeEsperadoInvitado({ anioNacimiento: "2020" }, evento)).toBe(35);
     expect(importeEsperadoInvitado({ anioNacimiento: "2024" }, evento)).toBe(0);
-    expect(importeEsperadoInvitado({ anioNacimiento: "1980", zona: "DJ" }, evento)).toBe(0);
+    expect(importeEsperadoInvitado({ anioNacimiento: "1980", zona: "DJ", invitaEvento: true }, evento)).toBe(0);
+  });
+  // v103.2 (él: «todos los que son invitados por el evento registrados
+  // igual»): lo decide el regalo, no la zona. Un DJ sin regalo pagaría.
+  it("la zona «DJ» ya no decide el importe: sin el regalo, paga como cualquiera", () => {
+    expect(importeEsperadoInvitado({ anioNacimiento: "1980", zona: "DJ" }, evento)).toBe(47);
   });
 });
 
@@ -41,24 +46,25 @@ describe("personasDelLocal", () => {
   it("solo los confirmados, el DJ también; los sin año, como adultos y contados aparte", () => {
     const invitados = [
       { confirmado: true, anioNacimiento: "1980" },
-      { confirmado: true, anioNacimiento: "1985", zona: "DJ" },
+      { confirmado: true, anioNacimiento: "1985", zona: "DJ", invitaEvento: true },
       { confirmado: true, anioNacimiento: "" },
       { confirmado: true, anioNacimiento: "2020" },
       { confirmado: true, anioNacimiento: "2025" },
       { confirmado: false, anioNacimiento: "1990" },
       { noAsiste: true, anioNacimiento: "1990" },
     ];
-    expect(personasDelLocal(invitados, evento)).toEqual({ adulto: 3, nino: 1, bebe: 1, sinAnio: 1, dj: 1, invitaAdulto: 0, invitaNino: 0 });
+    expect(personasDelLocal(invitados, evento)).toEqual({ adulto: 3, nino: 1, bebe: 1, sinAnio: 1, invitaAdulto: 1, invitaNino: 0 });
   });
   // v95.6 (él: «el evento lo invita a su entrada»; «la invitación al DJ
   // tiene que quedar como un asiento independiente»): la entrada del DJ,
   // 0 €, y se ve aparte; el local le cobra como a un adulto más.
-  it("el DJ no paga entrada (aparte en lo recaudado), pero el local sí le cuenta como adulto", () => {
-    const dj = { confirmado: true, pagado: true, anioNacimiento: "1985", zona: "DJ" };
+  // v103.2: con su regalo, como cualquiera que invita el evento.
+  it("el DJ no paga entrada (fuera de lo recaudado), pero el local sí le cuenta como adulto", () => {
+    const dj = { confirmado: true, pagado: true, anioNacimiento: "1985", zona: "DJ", invitaEvento: true };
     expect(importeEsperadoInvitado(dj, evento)).toBe(0);
     expect(desgloseRecaudado([dj], evento).adulto).toEqual({ personas: 0, importe: 0 });
-    expect(desgloseRecaudado([dj], evento).dj).toEqual({ personas: 1 });
-    expect(personasDelLocal([dj], evento)).toMatchObject({ adulto: 1, dj: 1 });
+    expect(desgloseRecaudado([dj], evento).invitaEvento).toEqual({ personas: 1 });
+    expect(personasDelLocal([dj], evento)).toMatchObject({ adulto: 1, invitaAdulto: 1 });
   });
 });
 
@@ -80,7 +86,6 @@ describe("costeLocal", () => {
       porPersona: { adulto: 86.5, nino: 35 },
       adultos: 8650,
       adultosResto: 8650,
-      invitacionDj: 0,
       invitacionEvento: 0,
       ninos: 350,
       ninosResto: 350,
@@ -88,24 +93,15 @@ describe("costeLocal", () => {
       total: 9200,
     });
   });
-  // v95.6: la invitación del DJ, su propio apunte. Sale de los adultos, no
-  // se suma aparte: el total al local no cambia ni un céntimo.
-  it("la invitación del DJ, aparte: adultos sin el DJ + su invitación = los adultos; el total, igual", () => {
-    const c = costeLocal(aPagar, { adulto: 117, nino: 4, bebe: 2, dj: 1 });
-    expect(c.invitacionDj).toBe(86.5);
-    expect(c.adultosResto).toBe(116 * 86.5);
-    expect(c.adultosResto + c.invitacionDj).toBe(c.adultos);
-    expect(c.total).toBe(costeLocal(aPagar, { adulto: 117, nino: 4, bebe: 2 }).total);
-  });
-
-  // v103 (él: «su importe lo invita el evento»): como el DJ, su propio
-  // apunte, sacado de los adultos y los niños; el total, igual.
-  it("lo que invita el evento, aparte: los demás + el DJ + la invitación = lo mismo de antes", () => {
-    const c = costeLocal(aPagar, { adulto: 117, nino: 4, bebe: 2, dj: 1, invitaAdulto: 2, invitaNino: 1 });
-    expect(c.invitacionEvento).toBe(2 * 86.5 + 35);
+  // v95.6 y v103 (él: «un asiento independiente»; «su importe lo invita el
+  // evento»): quien invita el evento —el DJ también, v103.2— en su propio
+  // apunte, sacado de los adultos y los niños: el total, igual.
+  it("lo que invita el evento, aparte: los demás + la invitación = lo mismo de antes", () => {
+    const c = costeLocal(aPagar, { adulto: 117, nino: 4, bebe: 2, invitaAdulto: 3, invitaNino: 1 });
+    expect(c.invitacionEvento).toBe(3 * 86.5 + 35);
     expect(c.adultosResto).toBe(114 * 86.5);
     expect(c.ninosResto).toBe(3 * 35);
-    expect(c.adultosResto + c.invitacionDj + c.ninosResto + c.invitacionEvento).toBe(c.adultos + c.ninos);
+    expect(c.adultosResto + c.ninosResto + c.invitacionEvento).toBe(c.adultos + c.ninos);
     expect(c.total).toBe(costeLocal(aPagar, { adulto: 117, nino: 4, bebe: 2 }).total);
   });
 });
@@ -121,30 +117,39 @@ describe("invitacionesDelEvento (v103): un apunte por familia que invita el even
     { id: "d", apellido: "Brown", nombre: "DJ", zona: "DJ", confirmado: true, invitaEvento: true, anioNacimiento: "1985" },
   ];
 
-  it("cada familia con sus nombres, sus adultos y niños y lo que cobra el local (los bebés no cuestan)", () => {
+  it("el DJ el primero y aparte; luego cada familia con sus nombres, sus adultos y niños y lo que cobra el local (los bebés no cuestan)", () => {
     expect(invitacionesDelEvento(invitados, evento, { adulto: 86.5, nino: 35 })).toEqual([
-      { clave: "abreu", familia: "Abreu", nombres: ["Ana"], adulto: 1, nino: 0, importe: 86.5 },
-      { clave: "barrios", familia: "Barrios", nombres: ["Jacob", "Lucía"], adulto: 1, nino: 1, importe: 121.5 },
+      { clave: "\u0000dj", dj: true, familia: "", nombres: ["DJ"], adulto: 1, nino: 0, importe: 86.5 },
+      { clave: "abreu", dj: false, familia: "Abreu", nombres: ["Ana"], adulto: 1, nino: 0, importe: 86.5 },
+      { clave: "barrios", dj: false, familia: "Barrios", nombres: ["Jacob", "Lucía"], adulto: 1, nino: 1, importe: 121.5 },
     ]);
+  });
+
+  it("un DJ sin el regalo no tiene apunte: paga como cualquiera (v103.2)", () => {
+    const sinRegalo = invitados.map((g) => (g.zona === "DJ" ? { ...g, invitaEvento: null } : g));
+    expect(invitacionesDelEvento(sinRegalo, evento, { adulto: 1, nino: 1 }).some((f) => f.dj)).toBe(false);
   });
 
   it("sus apuntes suman lo mismo que la invitación del evento en costeLocal", () => {
     const personas = personasDelLocal(invitados, evento);
-    expect(personas).toMatchObject({ invitaAdulto: 2, invitaNino: 1, dj: 1 });
+    expect(personas).toMatchObject({ invitaAdulto: 3, invitaNino: 1 });
     const porPersona = { adulto: 86.5, nino: 35 };
     const total = invitacionesDelEvento(invitados, evento, porPersona).reduce((s, f) => s + f.importe, 0);
     expect(total).toBe(costeLocal({ partidas: [{ id: "1", concepto: "Menú", adulto: "86,50", nino: "35" }], otros: [] }, personas).invitacionEvento);
   });
 
-  it("no traen dinero: fuera de lo recaudado, como el DJ", () => {
+  it("no traen dinero, el DJ tampoco: fuera de lo recaudado", () => {
     const d = desgloseRecaudado(invitados, evento);
     expect(d.adulto).toEqual({ personas: 1, importe: 47 });
-    expect(d.invitaEvento).toEqual({ personas: 3 });
+    expect(d.invitaEvento).toEqual({ personas: 4 });
   });
 
   it("sin nombres (quien solo repasa las cifras), una sola línea con todos", () => {
     const sinNombres = invitados.map(({ id, confirmado, pagado, invitaEvento, anioNacimiento, zona }) => ({ id, confirmado, pagado, invitaEvento, anioNacimiento, zona }));
-    expect(invitacionesDelEvento(sinNombres, evento, { adulto: 10, nino: 5 })).toEqual([{ clave: "", familia: "", nombres: [], adulto: 2, nino: 1, importe: 25 }]);
+    expect(invitacionesDelEvento(sinNombres, evento, { adulto: 10, nino: 5 })).toEqual([
+      { clave: "\u0000dj", dj: true, familia: "", nombres: [], adulto: 1, nino: 0, importe: 10 },
+      { clave: "", dj: false, familia: "", nombres: [], adulto: 2, nino: 1, importe: 25 },
+    ]);
   });
 });
 
@@ -230,14 +235,14 @@ describe("conDj", () => {
 });
 
 describe("desgloseRecaudado (v94.5: cuántos pagaron como adultos y como niños)", () => {
-  it("los pagados por su edad, sin el DJ; los bebés, todos los confirmados; la suma es «Recaudado»", () => {
+  it("los pagados por su edad, sin quien invita el evento (el DJ); los bebés, todos los confirmados; la suma es «Recaudado»", () => {
     const invitados = [
       { id: "a", confirmado: true, pagado: true, anioNacimiento: "1980" },
       { id: "s", confirmado: true, pagado: true, anioNacimiento: "" }, // sin año: adulto
       { id: "n", confirmado: true, pagado: true, anioNacimiento: "2020" },
       { id: "np", confirmado: true, pagado: false, anioNacimiento: "2021" }, // niño sin pagar
       { id: "b", confirmado: true, pagado: false, anioNacimiento: "2025" },
-      { id: "dj", confirmado: true, pagado: true, anioNacimiento: "1975", zona: "DJ" },
+      { id: "dj", confirmado: true, pagado: true, anioNacimiento: "1975", zona: "DJ", invitaEvento: true },
       { id: "x", confirmado: false, pagado: true, anioNacimiento: "1990" },
     ];
     const d = desgloseRecaudado(invitados, evento);

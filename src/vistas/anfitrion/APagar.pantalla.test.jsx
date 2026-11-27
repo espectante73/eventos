@@ -20,7 +20,7 @@ const EVENTO = { fecha: "2026-12-11", precioAdulto: "47", precioNino: "35", edad
 const INVITADOS = [
   { id: "a", confirmado: true, pagado: true, anioNacimiento: "1980" },
   { id: "b", confirmado: true, pagado: true, anioNacimiento: "1982" },
-  { id: "dj", confirmado: true, pagado: false, anioNacimiento: "1975", zona: "DJ" },
+  { id: "dj", confirmado: true, pagado: true, anioNacimiento: "1975", zona: "DJ", invitaEvento: true },
   { id: "n", confirmado: true, pagado: true, anioNacimiento: "2020" },
   { id: "bebe", confirmado: true, pagado: false, anioNacimiento: "2025" },
   { id: "x", confirmado: false, anioNacimiento: "1990" },
@@ -70,7 +70,8 @@ it("con los precios del local: adultos, la invitación del DJ en su apunte, niñ
   const texto = document.body.textContent;
   // v95.6: el DJ, que invita el evento, en su propio apunte; 130 + 65 = 195.
   expect(texto).toContain(`2 adultos × ${euros(65)}${euros(130)}`);
-  expect(texto).toContain(`Invitación del DJ: 1 adulto × ${euros(65)}${euros(65)}`);
+  // v103.2: el mismo apunte que quien invita el evento, con su nombre.
+  expect(texto).toContain(`Invitación del DJ: 1 adulto${euros(65)}`);
   expect(texto).toContain(`1 niño × ${euros(35)}${euros(35)}`);
   expect(texto).toContain("1 bebégratis");
   expect(texto).toContain(`Otros del local${euros(100)}`);
@@ -102,10 +103,11 @@ it("la familia que invita el evento: su apunte en el local, y fuera de «Entra»
   vista.desmontar();
 });
 
-it("la cuenta del local lo aclara, sin cifra, como el DJ", () => {
+it("la cuenta del local lo aclara, sin cifra, con el DJ en la misma nota", () => {
   const invitado = { id: "j", confirmado: true, pagado: true, invitaEvento: true, anioNacimiento: "1980" };
   const vista = montar(<CuentaLocalHoja data={{ evento: EVENTO, invitados: [...INVITADOS, invitado] }} />);
-  expect(document.body.textContent).toContain("(1 persona invitada por el evento)");
+  expect(document.body.textContent).toContain("(2 personas invitadas por el evento)");
+  expect(document.body.textContent).not.toContain("El DJ lo invita");
   vista.desmontar();
 });
 
@@ -181,8 +183,9 @@ it("la cuenta del local: las personas, cada servicio con su desglose y el total;
   const texto = document.body.textContent;
   // 3 adultos (uno es el DJ: lo invita el evento), 1 niño, 1 bebé gratis.
   expect(texto).toContain("Adultos3");
-  // Aclaratorio, entre paréntesis y sin cifra (él, v101.7).
-  expect(texto).toContain("Adultos3(El DJ lo invita el evento)Niños");
+  // Aclaratorio, entre paréntesis y sin cifra (él, v101.7); el DJ, en la
+  // nota de todos los que invita el evento (v103.2).
+  expect(texto).toContain("Adultos3(1 persona invitada por el evento)Niños");
   expect(texto).toContain("Niños (de 4 a 7 años)1");
   expect(texto).toContain("Bebés (hasta 3 años)1 · gratis");
   expect(texto).toContain(`Cóctel${euros(53)}`);
