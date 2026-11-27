@@ -7,6 +7,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Solo en claro (v103.3): el «Adaptive Dark Mode» de Safari 27.3 repinta
+   de negro las páginas claras si el sistema está en modo oscuro. Lo mismo
+   que la etiqueta de index.html, también para las ventanas aparte, que
+   copian estas reglas. */
+:root {
+  color-scheme: light only;
+}
+
 /* Repaso visual 2026-08-12 ("toque más moderno", a petición del
    usuario): dos utilidades pensadas para reutilizarse en toda la app a
    medida que se vaya extendiendo el repaso (empezado por la cabecera,

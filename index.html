@@ -24,6 +24,12 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Las Bodas" />
     <meta name="theme-color" content="#1F3A2E" />
+    <!-- Solo en claro (v103.3): el «Adaptive Dark Mode» de Safari 27.3, con
+         el Mac o el iPhone en modo oscuro, repinta de negro las páginas
+         claras (la Lista salía en negro y la papelera en rosa). Esto le
+         dice que la app es solo clara. También en las ventanas aparte
+         (lib/usePopupWindow.js) y en index.css. -->
+    <meta name="color-scheme" content="light only" />
     <!-- Miniatura al compartir cualquier enlace de esta web en WhatsApp/
          Facebook (og:image) -- a petición del usuario, 2026-08-25.
          ESTÁTICO a propósito: el rastreador que genera la vista previa

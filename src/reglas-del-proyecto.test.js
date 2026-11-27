@@ -641,3 +641,17 @@ describe("las imágenes de un PDF, comprimidas", () => {
     }
   });
 });
+
+// v103.3: con el sistema en modo oscuro, el «Adaptive Dark Mode» de Safari
+// 27.3 repinta de negro las páginas claras (su Lista salió negra, con la
+// papelera en rosa). La app es solo clara: lo dice en index.html, en
+// index.css y en cada ventana aparte, que no hereda el <head>.
+describe("la app, solo en claro", () => {
+  it("index.html, index.css y las ventanas aparte lo declaran", () => {
+    expect(leer("index.html")).toContain('<meta name="color-scheme" content="light only" />');
+    expect(leer("src/index.css")).toMatch(/:root\s*\{\s*color-scheme:\s*light only;/);
+    const ventana = leer("src/lib/usePopupWindow.js");
+    expect(ventana).toContain('metaColor.name = "color-scheme";');
+    expect(ventana).toContain('metaColor.content = "light only";');
+  });
+});

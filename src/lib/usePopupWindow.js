@@ -119,6 +119,13 @@ export function usePopupWindow({ nombreVentana, ancho = 480, alto = 720 }) {
     metaViewport.name = "viewport";
     metaViewport.content = "width=device-width, initial-scale=1";
     ventana.document.head.appendChild(metaViewport);
+    // Solo en claro, como index.html (v103.3): esta ventana no hereda su
+    // <head>, y sin la etiqueta Safari la repinta de negro con el modo
+    // oscuro del sistema (la Lista salía negra, con la papelera en rosa).
+    const metaColor = ventana.document.createElement("meta");
+    metaColor.name = "color-scheme";
+    metaColor.content = "light only";
+    ventana.document.head.appendChild(metaColor);
 
     // Los estilos de la app: la ventana arranca con un documento en blanco.
     copiarEstilos(document, ventana.document);

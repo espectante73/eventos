@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "103.3",
+    cambios: [
+      "La app, siempre en claro: con el Mac o el iPhone en modo oscuro, Safari (su «Adaptive Dark Mode», desde la 27.3) repintaba de negro las páginas claras; la Lista salía negra y la papelera en rosa. Ahora la app le dice que es solo clara, también en las ventanas aparte (Lista, Novedades…), y se ve como siempre.",
+    ],
+  },
+  {
     version: "103.2",
     cambios: [
       "Todos los que invita el evento, registrados igual: el DJ también lleva el regalo de «Lo invita el evento» (se lo puso el SQL de esta versión), y sale pagado sin que nadie lo marque: regalo en la Lista y en su tablón, sello PAGADO en su invitación. La zona «DJ» queda para su papel (cascos, canciones, mesa, fuera del equipo); el dinero lo decide solo el regalo. Si se le quita, pagaría como cualquiera.",
