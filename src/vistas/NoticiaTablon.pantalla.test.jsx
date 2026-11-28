@@ -23,3 +23,18 @@ it("la tarjeta envuelve lo suyo y el cuerpo enseña las zonas", () => {
   expect(vista.contenedor.querySelector('[data-zona="Icod"]')).toBeTruthy();
   vista.desmontar();
 });
+
+// v103.5 (él): la fecha de publicación, corta, debajo de la etiqueta.
+it("la fecha de publicación va debajo de «NOVEDADES» o «FAQ»; sin fecha, nada", () => {
+  const conFecha = montar(<CabeceraNoticia titulo="El autobús" esNovedad abierta={false} fecha="2026-11-28T10:00:00Z" />);
+  const fecha = conFecha.contenedor.querySelector("[data-fecha-noticia]");
+  expect(fecha.textContent).toBe("28 nov");
+  expect(fecha.previousElementSibling.textContent).toBe("NOVEDADES");
+  conFecha.desmontar();
+  const faq = montar(<CabeceraNoticia titulo="¿Hay autobús?" esNovedad={false} abierta={false} fecha="2026-09-01" />);
+  expect(faq.contenedor.querySelector("[data-fecha-noticia]").previousElementSibling.textContent).toBe("FAQ");
+  faq.desmontar();
+  const sinFecha = montar(<CabeceraNoticia titulo="De dónde venimos" esNovedad abierta />);
+  expect(sinFecha.contenedor.querySelector("[data-fecha-noticia]")).toBeNull();
+  sinFecha.desmontar();
+});

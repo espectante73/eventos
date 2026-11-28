@@ -14,7 +14,7 @@ import { Calendar, CalendarPlus, Clock, MapPin, Lock, Music, Pause, ArrowLeft, U
 import { C, inputStyle, OP, S, T, DEDO, FONDO_VERDE, DORADO, conAlfa } from "../theme";
 import { supabase } from "../supabaseClient";
 import { useFichaInstalacion, fichaDelTablon } from "../lib/fichaInstalacion";
-import { formatearFecha, valorFechaEvento, valorDireccion, cuentaAtrasEvento, opcionesAnios } from "../lib/formato";
+import { valorFechaEvento, valorDireccion, cuentaAtrasEvento, opcionesAnios } from "../lib/formato";
 import { entrarTablon, anioDeRespuesta, respuestaGuardadaDelEnlace, esRespuestaPersonal, claveDelEnlacePersonal, NO_ENCONTRADO, ANIO_NO_COINCIDE, SOLO_PERSONAL, AVISO_ENLACE_PERSONAL, AVISO_ENLACE_GENERAL } from "../lib/tablonEntrada";
 import { getClaveTablonFromUrl, getQrMesaFromUrl } from "../lib/url";
 import { InfoItem } from "../components/Portada";
@@ -686,26 +686,19 @@ export function VistaTablon({ token }) {
         const abierta = idAbierto === n.id;
         return (
           <TarjetaNoticia key={n.id}>
-            {/* La fecha va dentro del apartado abierto: en la cabecera no
-                cabe con la letra del móvil aumentada (CabeceraNoticia). */}
+            {/* La fecha, debajo de la etiqueta (v103.5, CabeceraNoticia). */}
             <button
               onClick={() => alternar(n.id)}
               className="boton-3d w-full flex items-start justify-between gap-2 px-4 py-3 text-left"
             >
-              <CabeceraNoticia titulo={n.titulo} esNovedad={n.esNovedad} abierta={abierta} />
+              <CabeceraNoticia titulo={n.titulo} esNovedad={n.esNovedad} abierta={abierta} fecha={n.automatica ? "" : n.creadaEn} />
             </button>
             {abierta && n.automatica && <CuerpoZonas datos={zonas} />}
             {abierta && !n.automatica && (
-              <div style={{ borderTop: `1px solid ${C.line}` }}>
-                <p className="px-4 pt-2.5 text-xs" style={{ color: C.charcoal, opacity: OP.tenue }}>
-                  {formatearFecha(String(n.creadaEn).slice(0, 10))}
-                </p>
-              </div>
-            )}
-            {abierta && !n.automatica && (
               <div
-                className="px-4 pt-2 pb-4 text-sm"
+                className="px-4 pt-3 pb-4 text-sm"
                 style={{
+                  borderTop: `1px solid ${C.line}`,
                   color: C.charcoal,
                   // Sin esto, un salto de línea o un tabulador sueltos
                   // (Enter/Tab en VentanaNovedades) se colapsan como

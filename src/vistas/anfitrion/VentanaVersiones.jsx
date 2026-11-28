@@ -42,6 +42,12 @@ const RESUMEN_VERSIONES_ANTERIORES = [
 // leer de un vistazo.
 const HISTORIAL_VERSIONES = [
   {
+    version: "103.5",
+    cambios: [
+      "En el tablón, la fecha de publicación de cada noticia va debajo de su etiqueta «NOVEDADES» o «FAQ», corta («28 nov»): se ve sin abrirla. Dentro ya no se repite. «De dónde venimos» no lleva fecha (no se publica un día concreto).",
+    ],
+  },
+  {
     version: "103.4",
     cambios: [
       "La foto de boda que ya tienen, se puede cambiar: pagada la ficha, su colaborador ya no puede tocarla. En el Formulario (Lista → Formulario → buscar → Boda), tocándola sale en grande con «Cambiar foto»; la nueva se ve con «Nueva» y se sube al «Guardar». En Aniversarios, en grande, la original de Boda también tiene «Cambiar foto».",
